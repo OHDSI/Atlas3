@@ -1,0 +1,52 @@
+{
+  "name": "atlas-cohort-builder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "OHDSI Atlas Cohort Builder",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "format": "prettier --write src/",
+    "test:unit": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report playwright-report",
+    "test:visual": "playwright test tests/e2e/visual-comparison.spec.ts",
+    "check-all": "npm run type-check && npm run lint && npm run test:unit && npm run build"
+  },
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "date-fns": "^3.0.0",
+    "pinia": "^2.1.0",
+    "sass": "^1.93.3",
+    "uuid": "^13.0.0",
+    "vite-plugin-vuetify": "^2.1.2",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.0",
+    "vuetify": "^3.5.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/lodash-es": "^4.17.12",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/test-utils": "^2.4.0",
+    "eslint": "^8.55.0",
+    "eslint-plugin-vue": "^9.19.0",
+    "husky": "^8.0.0",
+    "jsdom": "^27.1.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.9.3",
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0",
+    "vue-tsc": "^3.1.2"
+  }
+}

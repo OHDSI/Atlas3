@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Test results
+playwright-report/
+test-results/
+
+# Generated files
+*.min.js
+*.bundle.js
+
+# Logs
+*.log

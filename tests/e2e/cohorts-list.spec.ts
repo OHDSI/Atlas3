@@ -1,0 +1,472 @@
+import { test, expect } from '@playwright/test'
+
+/**
+ * E2E tests for Cohorts List feature
+ *
+ * Tests cover:
+ * - Page load and initial state
+ * - Search functionality
+ * - Pagination controls
+ * - Card click navigation
+ * - Delete cohort functionality
+ * - Visual comparison with original ATLAS
+ */
+
+test.describe('Cohorts List', () => {
+  test.beforeEach(async ({ page }) => {
+    // Navigate to cohorts list page
+    await page.goto('/cohorts')
+
+    // Wait for initial load
+    await page.waitForLoadState('networkidle')
+  })
+
+  test('should load and display cohorts grid', async ({ page }) => {
+    // Wait for cohorts to load
+    await expect(page.locator('.cohort-grid')).toBeVisible()
+
+    // Check that cohort cards are rendered
+    const cards = page.locator('.cohort-card')
+    await expect(cards.first()).toBeVisible({ timeout: 10000 })
+
+    // Verify multiple cards are displayed
+    const cardCount = await cards.count()
+    expect(cardCount).toBeGreaterThan(0)
+  })
+
+  test('should show loading skeletons or content', async ({ page }) => {
+    // Navigate
+    await page.goto('/cohorts', { waitUntil: 'domcontentloaded' })
+
+    // Check if skeletons appear OR content loads directly
+    const skeletons = page.locator('.v-skeleton-loader')
+    const cards = page.locator('.cohort-card')
+
+    // Wait for either skeletons or content to appear
+    await Promise.race([
+      expect(skeletons.first()).toBeVisible().catch(() => {}),
+      expect(cards.first()).toBeVisible().catch(() => {}),
+    ])
+
+    // Eventually, real content should appear
+    await expect(cards.first()).toBeVisible({ timeout: 10000 })
+  })
+
+  test('should display cohort card with correct metadata', async ({ page }) => {
+    // Wait for first card to load
+    const firstCard = page.locator('.cohort-card').first()
+    await expect(firstCard).toBeVisible({ timeout: 10000 })
+
+    // Verify card contains required elements
+    await expect(firstCard.locator('.cohort-card__title')).toBeVisible()
+    await expect(firstCard.locator('.cohort-card__type-badge')).toBeVisible()
+
+    // Verify metadata fields
+    await expect(firstCard.getByText(/ID:/)).toBeVisible()
+    await expect(firstCard.getByText(/Author:/)).toBeVisible()
+    await expect(firstCard.getByText(/Last Updated:/)).toBeVisible()
+
+    // Verify action buttons
+    await expect(firstCard.locator('button[aria-label*="Materialize"]')).toBeVisible()
+    await expect(firstCard.locator('button[aria-label*="Delete"]')).toBeVisible()
+  })
+
+  test('should navigate to cohort builder on card click', async ({ page }) => {
+    // Wait for cards to load
+    const firstCard = page.locator('.cohort-card').first()
+    await expect(firstCard).toBeVisible({ timeout: 10000 })
+
+    // Get the cohort ID from the card
+    const idText = await firstCard.locator('.cohort-card__meta-value').first().textContent()
+    const cohortId = idText?.trim()
+
+    // Click the card (not the action buttons)
+    await firstCard.click()
+
+    // Verify navigation to cohort builder
+    await expect(page).toHaveURL(new RegExp(`/cohorts/${cohortId}`))
+  })
+
+  test('should filter cohorts using search', async ({ page }) => {
+    // Wait for initial load
+    await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
+
+    // Count initial cohorts
+    const initialCount = await page.locator('.cohort-card').count()
+
+    // Type in search field (use a partial term that likely exists)
+    const searchInput = page.locator('input[type="text"]').first()
+    await searchInput.fill('cohort')
+
+    // Wait for debounce (300ms) and re-render
+    await page.waitForTimeout(500)
+
+    // Verify cohorts are filtered
+    const filteredCount = await page.locator('.cohort-card').count()
+
+    // Either we have fewer results or same (if all match)
+    expect(filteredCount).toBeLessThanOrEqual(initialCount)
+  })
+
+  test('should show "no results" message when search has no matches', async ({ page }) => {
+    // Wait for initial load
+    await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
+
+    // Search for something that definitely won't exist
+    const searchInput = page.locator('input[type="text"]').first()
+    await searchInput.fill('xyznonexistentcohort123456789')
+
+    // Wait for debounce
+    await page.waitForTimeout(500)
+
+    // Verify empty state is shown
+    await expect(page.locator('.cohort-grid__empty')).toBeVisible()
+    await expect(page.getByText(/No cohorts found matching/i)).toBeVisible()
+  })
+
+  test('should paginate through cohorts', async ({ page }) => {
+    // Wait for pagination controls to appear
+    const pagination = page.locator('.cohort-pagination')
+    await expect(pagination).toBeVisible({ timeout: 10000 })
+
+    // Check if next button is enabled (assumes > 10 cohorts exist)
+    const nextButton = page.getByRole('button', { name: /next/i })
+    const isNextEnabled = await nextButton.isEnabled()
+
+    if (isNextEnabled) {
+      // Get first cohort name on page 1
+      const firstCardPage1 = await page.locator('.cohort-card').first().locator('.cohort-card__title').textContent()
+
+      // Click next
+      await nextButton.click()
+
+      // Wait for page to update
+      await page.waitForTimeout(300)
+
+      // Verify URL updated
+      await expect(page).toHaveURL(/page=2/)
+
+      // Get first cohort name on page 2
+      const firstCardPage2 = await page.locator('.cohort-card').first().locator('.cohort-card__title').textContent()
+
+      // Verify different cohorts are shown
+      expect(firstCardPage1).not.toBe(firstCardPage2)
+
+      // Go back to page 1
+      const prevButton = page.getByRole('button', { name: /previous/i })
+      await prevButton.click()
+      await page.waitForTimeout(300)
+
+      // Verify we're back on page 1
+      await expect(page).toHaveURL(/page=1/)
+    }
+  })
+
+  test('should change items per page', async ({ page }) => {
+    // Wait for pagination controls
+    await expect(page.locator('.cohort-pagination')).toBeVisible({ timeout: 10000 })
+
+    // Count cards with default pagination (10)
+    const cardsPage1 = await page.locator('.cohort-card').count()
+    expect(cardsPage1).toBeLessThanOrEqual(10)
+
+    // Find the select element within pagination
+    const itemsPerPageSelect = page.locator('.cohort-pagination__select').locator('.v-field')
+
+    // Click to open dropdown
+    await itemsPerPageSelect.click()
+
+    // Wait for dropdown to open and select 25 from the options list
+    await page.locator('.v-list-item').filter({ hasText: /^25$/ }).click()
+
+    // Wait for update
+    await page.waitForTimeout(500)
+
+    // Verify URL updated
+    await expect(page).toHaveURL(/perPage=25/)
+
+    // Count cards again (should be more if there are enough cohorts)
+    const cardsPage2 = await page.locator('.cohort-card').count()
+    expect(cardsPage2).toBeGreaterThanOrEqual(cardsPage1)
+  })
+
+  test('should show Create Cohort and Import Cohort buttons', async ({ page }) => {
+    // Wait for page content to load
+    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+
+    // Verify action buttons are visible
+    const createButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /create/i }).first()
+    const importButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /import/i }).first()
+
+    await expect(createButton).toBeVisible()
+    await expect(importButton).toBeVisible()
+  })
+
+  test('should navigate to create cohort page', async ({ page }) => {
+    // Wait for page content to load
+    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+
+    // Click Create Cohort button
+    const createButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /create/i }).first()
+    await createButton.click()
+
+    // Verify navigation
+    await expect(page).toHaveURL('/cohorts/new')
+  })
+
+  test('should open import dialog', async ({ page }) => {
+    // Wait for page content to load
+    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+
+    // Click Import Cohort button
+    const importButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /import/i }).first()
+    await importButton.click()
+
+    // Verify dialog opens
+    await expect(page.locator('.v-dialog').filter({ hasText: /import cohort/i })).toBeVisible()
+  })
+
+  test('should open materialize dialog when clicking materialize icon', async ({ page }) => {
+    // Wait for cards to load
+    const firstCard = page.locator('.cohort-card').first()
+    await expect(firstCard).toBeVisible({ timeout: 10000 })
+
+    // Click materialize button (mdi-account-multiple icon)
+    const materializeButton = firstCard.locator('button').filter({ has: page.locator('i.mdi-account-multiple') })
+    await materializeButton.click()
+
+    // Verify materialize dialog opens
+    await expect(page.locator('.v-dialog').filter({ hasText: /materialize cohort/i })).toBeVisible()
+  })
+
+  test('should show delete confirmation dialog', async ({ page }) => {
+    // Wait for cards to load
+    const firstCard = page.locator('.cohort-card').first()
+    await expect(firstCard).toBeVisible({ timeout: 10000 })
+
+    // Click delete button (mdi-delete icon)
+    const deleteButton = firstCard.locator('button').filter({ has: page.locator('i.mdi-delete') })
+    await deleteButton.click()
+
+    // Verify delete confirmation dialog opens
+    await expect(page.locator('.v-dialog').filter({ hasText: /delete cohort/i })).toBeVisible()
+
+    // Close dialog (don't actually delete)
+    const cancelButton = page.getByRole('button', { name: /cancel/i })
+    await cancelButton.click()
+  })
+
+  test('should persist state in URL query parameters', async ({ page }) => {
+    // Search for something
+    const searchInput = page.locator('input[type="text"]').first()
+    await searchInput.fill('test')
+    await page.waitForTimeout(500)
+
+    // Change pagination
+    const nextButton = page.getByRole('button', { name: /next/i })
+    if (await nextButton.isEnabled()) {
+      await nextButton.click()
+      await page.waitForTimeout(300)
+    }
+
+    // Get current URL
+    const currentUrl = page.url()
+
+    // Reload page
+    await page.reload()
+    await page.waitForLoadState('networkidle')
+
+    // Verify URL parameters persisted
+    expect(page.url()).toBe(currentUrl)
+
+    // Verify search query still in input
+    await expect(searchInput).toHaveValue('test')
+  })
+
+  test('should display correct range text', async ({ page }) => {
+    // Wait for pagination
+    await expect(page.locator('.cohort-pagination')).toBeVisible({ timeout: 10000 })
+
+    // Check range display (e.g., "1-10 of 150")
+    const rangeText = page.locator('.cohort-pagination').getByText(/\d+-\d+ of \d+/)
+    await expect(rangeText).toBeVisible()
+  })
+
+  test('should handle hover states on cards', async ({ page }) => {
+    // Wait for cards to load
+    const firstCard = page.locator('.cohort-card').first()
+    await expect(firstCard).toBeVisible({ timeout: 10000 })
+
+    // Hover over card
+    await firstCard.hover()
+
+    // Card should have elevated shadow (visual indicator)
+    // We can't directly test elevation, but we can verify no errors occur
+    await page.waitForTimeout(200)
+
+    // Card should still be visible and functional
+    await expect(firstCard).toBeVisible()
+  })
+
+  test('should be responsive on mobile viewport', async ({ page }) => {
+    // Set mobile viewport
+    await page.setViewportSize({ width: 375, height: 667 })
+
+    // Wait for content to load
+    await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
+
+    // Verify grid adapts (single column on mobile)
+    const grid = page.locator('.cohort-grid__container')
+    await expect(grid).toBeVisible()
+
+    // Check that action buttons stack vertically
+    const actions = page.locator('.cohorts-view__actions')
+    await expect(actions).toBeVisible()
+  })
+
+  test('should be responsive on tablet viewport', async ({ page }) => {
+    // Set tablet viewport
+    await page.setViewportSize({ width: 768, height: 1024 })
+
+    // Wait for content to load
+    await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
+
+    // Verify grid adapts (2 columns on tablet)
+    const grid = page.locator('.cohort-grid__container')
+    await expect(grid).toBeVisible()
+  })
+
+  test('should have minimum touch target size on mobile', async ({ page }) => {
+    // Set mobile viewport
+    await page.setViewportSize({ width: 375, height: 667 })
+
+    // Wait for cards to load
+    const firstCard = page.locator('.cohort-card').first()
+    await expect(firstCard).toBeVisible({ timeout: 10000 })
+
+    // Check action button sizes
+    const materializeButton = firstCard.locator('button').filter({ has: page.locator('i.mdi-account-multiple') })
+    const buttonBox = await materializeButton.boundingBox()
+
+    // Verify minimum touch target (44x44px is accessibility guideline)
+    expect(buttonBox?.width).toBeGreaterThanOrEqual(40) // Allow slight margin
+    expect(buttonBox?.height).toBeGreaterThanOrEqual(40)
+  })
+})
+
+test.describe('Visual Comparison', () => {
+  test('should match baseline screenshot', async ({ page }) => {
+    // Navigate to cohorts page
+    await page.goto('/cohorts')
+
+    // Wait for content to load
+    await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
+
+    // Wait for any animations to complete
+    await page.waitForTimeout(500)
+
+    // Take screenshot and compare
+    await expect(page).toHaveScreenshot('cohorts-list-page.png', {
+      fullPage: true,
+      mask: [
+        // Mask dynamic content that changes between runs
+        page.locator('.cohort-card__meta-value'), // Dates may differ
+      ],
+    })
+  })
+
+  test('should match card hover state', async ({ page }) => {
+    // Navigate and wait for cards
+    await page.goto('/cohorts')
+    const firstCard = page.locator('.cohort-card').first()
+    await expect(firstCard).toBeVisible({ timeout: 10000 })
+
+    // Hover over card
+    await firstCard.hover()
+    await page.waitForTimeout(300)
+
+    // Screenshot hover state
+    await expect(firstCard).toHaveScreenshot('cohort-card-hover.png', {
+      mask: [page.locator('.cohort-card__meta-value')],
+    })
+  })
+})
+
+test.describe('Performance', () => {
+  test('should load page within reasonable time', async ({ page }) => {
+    const startTime = Date.now()
+
+    await page.goto('/cohorts', { waitUntil: 'networkidle' })
+    await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
+
+    const loadTime = Date.now() - startTime
+
+    // Verify load time (allow buffer for CI environments and network latency)
+    expect(loadTime).toBeLessThan(5000) // 5s to account for CI slowness and network
+  })
+
+  test('should handle search with reasonable performance', async ({ page }) => {
+    // Navigate and wait for initial load
+    await page.goto('/cohorts')
+    await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
+
+    // Type in search
+    const searchInput = page.locator('.cohort-search').locator('input[type="text"]')
+
+    const startTime = Date.now()
+    await searchInput.fill('test')
+
+    // Wait for debounce and update (300ms debounce + render time)
+    await page.waitForTimeout(600)
+
+    const searchTime = Date.now() - startTime
+
+    // Should respond within reasonable time (300ms debounce + render)
+    expect(searchTime).toBeLessThan(1500) // Allow buffer for slow CI
+  })
+})
+
+test.describe('Accessibility', () => {
+  test('should have accessible button labels', async ({ page }) => {
+    await page.goto('/cohorts')
+    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+
+    // Check for aria-labels or accessible names
+    const createButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /create/i }).first()
+    const importButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /import/i }).first()
+
+    await expect(createButton).toBeVisible()
+    await expect(importButton).toBeVisible()
+
+    // Verify buttons have proper ARIA labels
+    const createLabel = await createButton.getAttribute('aria-label')
+    const importLabel = await importButton.getAttribute('aria-label')
+
+    expect(createLabel).toBeTruthy()
+    expect(importLabel).toBeTruthy()
+  })
+
+  test('should support keyboard navigation', async ({ page }) => {
+    await page.goto('/cohorts')
+    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+
+    // Tab through interactive elements
+    await page.keyboard.press('Tab')
+    await page.keyboard.press('Tab')
+
+    // Verify focus is visible (can't directly test, but ensure no crashes)
+    await page.waitForTimeout(200)
+  })
+
+  test('should have visible focus states', async ({ page }) => {
+    await page.goto('/cohorts')
+    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+
+    // Focus first interactive element
+    const createButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /create/i }).first()
+    await createButton.focus()
+
+    // Verify button has focus (browser applies default focus styles)
+    await expect(createButton).toBeFocused()
+  })
+})

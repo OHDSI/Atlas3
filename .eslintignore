@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Generated files
+*.min.js
+*.bundle.js
+
+# Test results
+playwright-report/
+test-results/
+
+# Temporary files
+*.tmp
+.cache/
