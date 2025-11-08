@@ -1,184 +1,95 @@
 <template>
-  <v-card data-testid="entry-event-card" :elevation="isExpanded ? 4 : 2" class="mb-3">
-    <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">mdi-calendar-check</v-icon>
-      <span>{{ eventTypeLabel }}</span>
-      <v-spacer />
-
-      <!-- Summary chips when collapsed -->
-      <div v-if="!isExpanded" class="d-flex ga-2 mr-2">
-        <v-chip v-if="hasCardinality" size="small" color="primary" variant="tonal">
-          {{ cardinalityDisplay }}
-        </v-chip>
-        <v-chip v-if="hasTemporalWindows" size="small" color="secondary" variant="tonal">
-          {{ temporalWindowDisplay }}
-        </v-chip>
+  <div data-testid="entry-event-card" class="event-card mb-3">
+    <!-- Cardinality Sidebar -->
+    <div class="cardinality-sidebar" :class="`cardinality-${cardinalityType}`">
+      <div class="cardinality-label">
+        {{ cardinalityDisplay }}
       </div>
+    </div>
 
-      <v-btn
-        icon
-        size="small"
-        variant="text"
-        @click="toggleExpanded"
-      >
-        <v-icon>{{ isExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-      </v-btn>
-      <v-btn
-        icon
-        size="small"
-        variant="text"
-        color="error"
-        @click="emit('remove')"
-      >
-        <v-icon>mdi-delete</v-icon>
-      </v-btn>
-    </v-card-title>
-
-    <v-expand-transition>
-      <v-card-text v-show="isExpanded">
-        <v-select
-          :model-value="event.criteriaType"
-          label="Event Type"
-          :items="eventTypeOptions"
-          item-title="label"
-          item-value="value"
-          variant="outlined"
-          density="comfortable"
-          data-testid="event-type-selector"
-          @update:model-value="updateCriteriaType"
-        />
-
-        <div v-if="event.conceptSet" class="mt-3">
-          <v-chip
-            closable
-            color="primary"
-            @click:close="removeConceptSet"
-          >
-            {{ event.conceptSet.name }}
-          </v-chip>
+    <!-- Event Content -->
+    <div class="event-content">
+      <!-- Event Header -->
+      <div class="event-header">
+      <div class="event-header__left">
+        <div class="event-type-indicator">
+          <span class="event-type-label">{{ eventTypeLabel }}</span>
         </div>
-
+      </div>
+      <div class="event-header__right">
         <v-btn
-          v-else
-          color="primary"
-          variant="outlined"
-          class="mt-3"
-          data-testid="concept-set-picker"
-          @click="emit('select-concept-set')"
+          icon
+          size="small"
+          variant="text"
+          @click="toggleExpanded"
         >
-          <v-icon class="mr-2">mdi-plus</v-icon>
-          Select Concept Set
+          <v-icon>{{ isExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
         </v-btn>
+        <v-btn
+          icon
+          size="small"
+          variant="text"
+          color="primary"
+          @click="emit('remove')"
+        >
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+      </div>
+    </div>
 
-        <!-- Cardinality Section -->
-        <v-divider class="my-4" />
-        <div class="mb-3">
-          <div class="d-flex align-center mb-2">
-            <span class="text-subtitle-2">Cardinality</span>
-            <v-spacer />
-            <v-btn
-              v-if="!showCardinalityEditor && !hasCardinality"
-              size="small"
-              variant="outlined"
-              prepend-icon="mdi-counter"
-              @click="addCardinality"
+    <!-- Event Body -->
+    <transition name="expand">
+      <div v-show="isExpanded" class="event-body">
+        <!-- Event Concept Set -->
+        <div class="concept-set-section">
+          <div v-if="event.conceptSet" class="concept-set-selected">
+            <v-chip
+              closable
+              color="primary"
+              @click="emit('edit-concept-set', event.conceptSet)"
+              @click:close="removeConceptSet"
+              style="cursor: pointer;"
             >
-              Add Cardinality
-            </v-btn>
+              {{ event.conceptSet.name }}
+            </v-chip>
           </div>
-
-          <div v-if="showCardinalityEditor || hasCardinality">
-            <CardinalityEditor
-              :model-value="event.cardinality"
-              @update:model-value="updateCardinality"
-            />
-            <v-btn
-              v-if="hasCardinality"
-              size="small"
-              variant="text"
-              color="error"
-              class="mt-2"
-              @click="removeCardinality"
-            >
-              Remove Cardinality
-            </v-btn>
-          </div>
-        </div>
-
-        <!-- Temporal Window Section -->
-        <v-divider class="my-4" />
-        <div class="mb-3">
-          <div class="d-flex align-center mb-2">
-            <span class="text-subtitle-2">Temporal Windows</span>
-            <v-spacer />
-            <v-btn
-              v-if="!showTemporalWindowEditor && !hasTemporalWindows"
-              size="small"
-              variant="outlined"
-              prepend-icon="mdi-calendar-range"
-              @click="showTemporalWindowEditor = true"
-            >
-              Add Temporal Window
-            </v-btn>
-          </div>
-
-          <div v-if="showTemporalWindowEditor || hasTemporalWindows">
-            <TemporalWindowEditor
-              :model-value="event.temporalWindow"
-              @update:model-value="updateTemporalWindows"
-            />
-            <v-btn
-              v-if="hasTemporalWindows"
-              size="small"
-              variant="text"
-              color="error"
-              class="mt-2"
-              @click="removeTemporalWindow"
-            >
-              Remove Temporal Window
-            </v-btn>
-          </div>
+          <v-btn
+            v-else
+            color="primary"
+            variant="outlined"
+            size="small"
+            data-testid="concept-set-picker"
+            @click="emit('select-concept-set')"
+          >
+            <v-icon class="mr-2">mdi-plus</v-icon>
+            Select Concept Set
+          </v-btn>
         </div>
 
         <!-- Attributes Section -->
-        <v-divider class="my-4" />
-        <div class="mb-3">
-          <div class="d-flex align-center mb-2">
-            <span class="text-subtitle-2">Attributes</span>
-            <v-spacer />
-            <v-btn
-              v-if="!showAttributesEditor && !hasAttributes"
-              size="small"
-              variant="outlined"
-              prepend-icon="mdi-filter"
-              @click="addAttributes"
-            >
-              Add Attributes
-            </v-btn>
-          </div>
-
-          <div v-if="showAttributesEditor || hasAttributes">
-            <AttributesEditor
-              :model-value="event.attributes || []"
-              :criteria-type="event.criteriaType"
-              @update:model-value="updateAttributes"
-            />
-          </div>
+        <div class="attributes-section mt-3">
+          <AttributesEditor
+            :model-value="event.attributes || []"
+            :criteria-type="event.criteriaType"
+            :cardinality="event.cardinality"
+            :temporal-window="event.temporalWindow"
+            @update:model-value="updateAttributes"
+            @update:cardinality="updateCardinality"
+            @update:temporal-window="updateTemporalWindows"
+          />
         </div>
-      </v-card-text>
-    </v-expand-transition>
-  </v-card>
+      </div>
+    </transition>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import type { CohortEvent, CriteriaType } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
+import type { Cardinality, TemporalWindow } from '@/models/event.types'
 import { useUIStore } from '@/stores/ui'
-import { useCardinality } from '@/composables/useCardinality'
-import { useTemporalWindows } from '@/composables/useTemporalWindows'
-import CardinalityEditor from '@/components/cohort-builder/CardinalityEditor.vue'
-import TemporalWindowEditor from '@/components/cohort-builder/TemporalWindowEditor.vue'
 import AttributesEditor from '@/components/cohort-builder/AttributesEditor.vue'
 
 interface Props {
@@ -191,17 +102,20 @@ const emit = defineEmits<{
   'update': [event: CohortEvent]
   'remove': []
   'select-concept-set': []
+  'edit-concept-set': [conceptSet: any]
 }>()
 
 const uiStore = useUIStore()
-const { formatCardinalityDisplay, defaultCardinality } = useCardinality()
-const { formatTemporalWindowDisplay } = useTemporalWindows()
 
-const showCardinalityEditor = ref(false)
-const showTemporalWindowEditor = ref(false)
-const showAttributesEditor = ref(false)
-
-const isExpanded = computed(() => uiStore.expandedEventCards.has(props.event.id))
+// Expand card by default when component is mounted
+const isExpanded = computed(() => {
+  // If the card is not in the store yet, expand it by default
+  if (!uiStore.expandedEventCards.has(props.event.id)) {
+    uiStore.expandedEventCards.add(props.event.id)
+    return true
+  }
+  return uiStore.expandedEventCards.has(props.event.id)
+})
 
 function toggleExpanded() {
   uiStore.toggleEventCard(props.event.id)
@@ -221,39 +135,28 @@ const eventTypeLabel = computed(() => {
   return option?.label ?? 'Entry Event'
 })
 
-const hasCardinality = computed(() => props.event.cardinality !== undefined)
-const hasTemporalWindows = computed(() => props.event.temporalWindow !== undefined)
-const hasAttributes = computed(() => props.event.attributes && props.event.attributes.length > 0)
+const cardinalityType = computed(() => {
+  if (!props.event.cardinality) return 'at_least'
+  return props.event.cardinality.type.toLowerCase().replace(/_/g, '_')
+})
 
 const cardinalityDisplay = computed(() => {
-  if (!props.event.cardinality) return null
-  return formatCardinalityDisplay(props.event.cardinality)
+  if (!props.event.cardinality) return 'At least 1'
+  const typeMap: Record<string, string> = {
+    'AT_LEAST': 'At least',
+    'EXACTLY': 'Exactly',
+    'AT_MOST': 'At most'
+  }
+  const type = typeMap[props.event.cardinality.type] || 'At least'
+  return `${type} ${props.event.cardinality.count ?? 1}`
 })
 
-const temporalWindowDisplay = computed(() => {
-  if (!props.event.temporalWindow) return null
-  return formatTemporalWindowDisplay(props.event.temporalWindow)
-})
-
-function updateCriteriaType(newType: CriteriaType) {
-  emit('update', {
-    ...props.event,
-    criteriaType: newType,
-  })
-}
 
 function removeConceptSet() {
   emit('update', {
     ...props.event,
     conceptSet: undefined,
   })
-}
-
-function addCardinality() {
-  // Initialize cardinality with default value BEFORE showing editor
-  // This prevents race condition with user input
-  updateCardinality(defaultCardinality())
-  showCardinalityEditor.value = true
 }
 
 function updateCardinality(cardinality: CohortEvent['cardinality']) {
@@ -263,29 +166,11 @@ function updateCardinality(cardinality: CohortEvent['cardinality']) {
   })
 }
 
-function removeCardinality() {
-  const updated = { ...props.event }
-  delete updated.cardinality
-  emit('update', updated)
-  showCardinalityEditor.value = false
-}
-
 function updateTemporalWindows(temporalWindow: CohortEvent['temporalWindow']) {
   emit('update', {
     ...props.event,
     temporalWindow,
   })
-}
-
-function removeTemporalWindow() {
-  const updated = { ...props.event }
-  delete updated.temporalWindow
-  emit('update', updated)
-  showTemporalWindowEditor.value = false
-}
-
-function addAttributes() {
-  showAttributesEditor.value = true
 }
 
 function updateAttributes(attributes: EventAttribute[]) {
@@ -297,7 +182,157 @@ function updateAttributes(attributes: EventAttribute[]) {
 </script>
 
 <style scoped>
-.v-card {
-  transition: all 0.2s ease;
+.event-card {
+  display: flex;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.cardinality-sidebar {
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  border-right: 1px solid #1f425a;
+}
+
+.cardinality-at_least {
+  background: linear-gradient(to right, #1f425a 30%, #ebf2fa 30%);
+}
+
+.cardinality-exactly {
+  background: linear-gradient(to right, #2e7d32 30%, #e8f5e9 30%);
+}
+
+.cardinality-at_most {
+  background: linear-gradient(to right, #c62828 30%, #ffebee 30%);
+}
+
+.cardinality-label {
+  writing-mode: sideways-lr;
+  text-orientation: sideways;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f425a;
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+  padding-left: 8px;
+}
+
+.cardinality-exactly .cardinality-label {
+  color: #2e7d32;
+}
+
+.cardinality-at_most .cardinality-label {
+  color: #c62828;
+}
+
+.event-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.event-header__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.event-type-indicator {
+  display: flex;
+  align-items: center;
+}
+
+.event-type-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f425a;
+}
+
+.event-header__right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.event-body {
+  padding: 16px;
+}
+
+.concept-set-section {
+  margin-bottom: 16px;
+}
+
+.concept-set-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.concept-set-selected {
+  margin-top: 4px;
+}
+
+.temporal-section,
+.cardinality-section,
+.attributes-section {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.temporal-section-header,
+.cardinality-section-header,
+.attributes-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.temporal-section-label,
+.cardinality-section-label,
+.attributes-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 1000px;
+  opacity: 1;
 }
 </style>

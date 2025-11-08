@@ -6,7 +6,23 @@ import { ref, computed } from 'vue'
 import { useConceptSetsStore } from '@/stores/conceptSets'
 import type { Concept, ConceptSet } from '@/models/concept-set.types'
 import * as webapi from '@/services/webapi'
-import { debounce } from 'lodash-es'
+
+// Simple debounce implementation
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+  
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
+      timeout = null
+      func(...args)
+    }
+    
+    if (timeout) {
+      clearTimeout(timeout)
+    }
+    timeout = setTimeout(later, wait)
+  }
+}
 
 export function useConceptSets() {
   const store = useConceptSetsStore()

@@ -1,195 +1,288 @@
 <template>
-  <v-container fluid>
-    <!-- Toolbar with Import/Export -->
-    <v-row>
-      <v-col cols="12">
-        <v-card>
-          <v-card-actions class="justify-space-between">
-            <div>
-              <v-btn
-                variant="outlined"
-                prepend-icon="mdi-upload"
-                data-testid="import-atlas-json"
-                @click="fileInputRef?.click()"
-              >
-                Import Atlas JSON
-              </v-btn>
-              <input
-                ref="fileInputRef"
-                type="file"
-                accept=".json"
-                style="display: none"
-                @change="handleFileImport"
-              />
-              <v-btn
-                variant="outlined"
-                prepend-icon="mdi-download"
-                class="ml-2"
-                data-testid="export-atlas-json"
-                :disabled="!canSave"
-                @click="handleExportAtlas"
-              >
-                Export Atlas JSON
-              </v-btn>
-            </div>
-            <div>
-              <v-btn
-                variant="text"
-                @click="handleCancel"
-              >
-                Cancel
-              </v-btn>
-              <v-btn
-                color="primary"
-                :disabled="!canSave"
-                @click="handleSave"
-              >
-                Save Cohort
-              </v-btn>
-            </div>
-          </v-card-actions>
-        </v-card>
-      </v-col>
-    </v-row>
+  <div class="cohort-builder">
+    <!-- Breadcrumb Navigation -->
+    <nav class="cohort-builder__breadcrumb">
+      <span class="cohort-builder__breadcrumb-item cohort-builder__breadcrumb-item--link" @click="router.push('/cohorts')">Cohorts</span>
+      <span class="cohort-builder__breadcrumb-separator">›</span>
+      <span class="cohort-builder__breadcrumb-item cohort-builder__breadcrumb-item--active">
+        {{ cohortName || 'New Cohort' }}
+      </span>
+    </nav>
 
-    <!-- Generation Toolbar (T119) -->
-    <v-row v-if="cohortId">
-      <v-col cols="12">
-        <v-card variant="outlined">
-          <v-card-title class="text-subtitle-1">Cohort Generation</v-card-title>
-          <v-card-text>
-            <v-row align="center">
-              <v-col cols="12" md="4">
-                <v-select
-                  v-model="selectedSourceKey"
-                  :items="sourceItems"
-                  :loading="isLoadingSources"
-                  label="Select Data Source"
-                  item-title="label"
-                  item-value="value"
-                  data-testid="source-selector"
-                  :disabled="isGenerating"
-                />
-              </v-col>
-              <v-col cols="12" md="3">
-                <v-btn
-                  color="primary"
-                  :disabled="!selectedSourceKey || isGenerating"
-                  :loading="isGenerating"
-                  prepend-icon="mdi-play"
-                  data-testid="generate-cohort-btn"
-                  @click="handleGenerate"
-                >
-                  Generate Cohort
-                </v-btn>
-              </v-col>
-              <v-col cols="12" md="5">
-                <!-- Generation Status -->
-                <div v-if="currentJob" data-testid="generation-status">
-                  <v-chip
-                    :color="getStatusColor(currentJob.status)"
-                    :prepend-icon="getStatusIcon(currentJob.status)"
+    <!-- Top Toolbar -->
+    <div class="cohort-builder__toolbar">
+      <div class="cohort-builder__toolbar-left">
+        <div class="cohort-builder__cohort-name">
+          <label class="cohort-builder__label">COHORT NAME:</label>
+          <input
+            v-model="cohortName"
+            class="cohort-builder__name-input"
+            placeholder="Enter cohort name..."
+            data-testid="cohort-name-input"
+          />
+        </div>
+
+        <!-- Validation Notification Icon -->
+        <v-badge
+          v-if="validationWarnings.length > 0"
+          :content="validationWarnings.length"
+          :color="highestSeverityColor"
+          class="cohort-builder__validation-badge"
+        >
+          <v-icon
+            color="primary"
+            icon="mdi-message-text"
+            size="small"
+            @click="showValidationDialog = true"
+            data-testid="validation-icon"
+            style="cursor: pointer"
+          />
+        </v-badge>
+
+        <!-- Validation Messages Dialog -->
+        <v-dialog v-model="showValidationDialog" max-width="800">
+          <v-card>
+            <v-card-title class="d-flex align-center">
+              <v-icon :color="highestSeverityColor" class="mr-2">mdi-message-text</v-icon>
+              Validation Messages
+            </v-card-title>
+            <v-card-text>
+              <v-table>
+                <thead>
+                  <tr>
+                    <th class="text-left" style="width: 120px">Severity</th>
+                    <th class="text-left">Message</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(warning, idx) in validationWarnings"
+                    :key="idx"
+                    :class="{
+                      'bg-error-lighten-4': warning.severity === 'CRITICAL',
+                      'bg-warning-lighten-4': warning.severity === 'WARNING',
+                      'bg-info-lighten-4': warning.severity === 'INFO'
+                    }"
                   >
-                    {{ getStatusText(currentJob.status) }}
-                  </v-chip>
-                  <span v-if="currentJob.personCount !== undefined" class="ml-3" data-testid="patient-count">
-                    <strong>{{ currentJob.personCount.toLocaleString() }}</strong> patients
-                  </span>
-                  <v-progress-linear
-                    v-if="isGenerating"
-                    indeterminate
-                    color="primary"
-                    class="mt-2"
-                  />
-                </div>
-                <!-- Error Display -->
-                <v-alert
-                  v-if="generationError"
-                  type="error"
-                  variant="tonal"
-                  density="compact"
-                  closable
-                  data-testid="generation-error"
-                  @click:close="generationError = null"
-                >
-                  {{ generationError }}
-                  <v-btn
-                    size="small"
-                    variant="text"
-                    class="ml-2"
-                    data-testid="retry-generation-btn"
-                    @click="handleGenerate"
-                  >
-                    Retry
-                  </v-btn>
-                </v-alert>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+                    <td>
+                      <v-chip
+                        :color="warning.severity === 'CRITICAL' ? 'error' : warning.severity === 'WARNING' ? 'warning' : 'info'"
+                        size="small"
+                        label
+                      >
+                        {{ warning.severity }}
+                      </v-chip>
+                    </td>
+                    <td>{{ warning.message }}</td>
+                  </tr>
+                </tbody>
+              </v-table>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn color="primary" @click="showValidationDialog = false">Close</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </div>
 
-    <v-row>
-      <v-col cols="12">
-        <cohort-metadata
-          :name="cohortName"
-          :description="cohortDescription"
-          @update:name="cohortName = $event"
-          @update:description="cohortDescription = $event"
+      <div class="cohort-builder__toolbar-center">
+        <!-- Center area intentionally empty -->
+      </div>
+
+      <div class="cohort-builder__toolbar-right">
+        <v-btn
+          v-if="cohortId"
+          color="primary"
+          variant="flat"
+          prepend-icon="mdi-database-cog"
+          :disabled="!canSave"
+          data-testid="generate-btn"
+          @click="openGenerationPanel"
+        >
+          Generate
+        </v-btn>
+        <v-btn
+          variant="outlined"
+          @click="handleCancel"
+        >
+          Cancel
+        </v-btn>
+        <v-btn
+          color="primary"
+          variant="flat"
+          :disabled="!canSave"
+          @click="handleSave"
+        >
+          Save
+        </v-btn>
+      </div>
+    </div>
+
+    <!-- Cohort Entry Events -->
+    <div class="section-wrapper mb-6">
+      <div class="section-header">
+        <div class="section-title-container">
+          <h3 class="section-title">Cohort Entry Events</h3>
+        </div>
+
+        <div class="section-controls">
+          <v-btn-toggle
+            v-model="qualifyingLimit"
+            mandatory
+            density="compact"
+            variant="outlined"
+            divided
+          >
+            <v-btn value="FIRST" size="small">Earliest</v-btn>
+            <v-btn value="ALL" size="small">All</v-btn>
+            <v-btn value="LAST" size="small">Latest</v-btn>
+          </v-btn-toggle>
+        </div>
+
+        <div class="section-obs-period">
+          <span class="obs-period-label">Continuous Observation Period</span>
+          <span class="obs-period-text">observation period of at least</span>
+          <v-text-field
+            v-model.number="observationPeriod.priorDays"
+            type="number"
+            density="compact"
+            variant="outlined"
+            hide-details
+            style="width: 80px;"
+            min="0"
+          />
+          <span class="obs-period-text">days before and</span>
+          <v-text-field
+            v-model.number="observationPeriod.postDays"
+            type="number"
+            density="compact"
+            variant="outlined"
+            hide-details
+            style="width: 80px;"
+            min="0"
+          />
+          <span class="obs-period-text">days after event</span>
+        </div>
+      </div>
+
+      <entry-events-list
+        :events="entryEvents"
+        @update:events="entryEvents = $event"
+        @select-concept-set="handleSelectConceptSet"
+        @edit-concept-set="handleEditConceptSet"
+      />
+
+      <!-- Additional Criteria (restricts entry events) -->
+      <div v-if="additionalCriteria" class="mt-4">
+        <div class="additional-criteria-header">
+          <span class="additional-criteria-label">WITH</span>
+          <v-btn-toggle
+            v-model="additionalCriteria.qualifyingLimit"
+            mandatory
+            density="compact"
+            variant="outlined"
+            divided
+            class="ml-4"
+          >
+            <v-btn value="FIRST" size="small">Earliest</v-btn>
+            <v-btn value="ALL" size="small">All</v-btn>
+            <v-btn value="LAST" size="small">Latest</v-btn>
+          </v-btn-toggle>
+        </div>
+        <criteria-group-editor
+          v-model="additionalCriteria"
+          @select-concept-set="handleSelectConceptSetForAdditionalCriteria"
+          @edit-concept-set="handleEditConceptSet"
+          @remove="removeAdditionalCriteria"
         />
-      </v-col>
-    </v-row>
-
-    <!-- Observation Period -->
-    <v-row>
-      <v-col cols="12">
-        <observation-period-block
-          v-model="observationPeriod"
-        />
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col cols="12" md="8">
-        <entry-events-list
-          :events="entryEvents"
-          @update:events="entryEvents = $event"
-          @select-concept-set="handleSelectConceptSet"
-        />
-      </v-col>
-
-      <v-col cols="12" md="4">
-        <concept-set-selector />
-      </v-col>
-    </v-row>
+      </div>
+      <v-btn
+        v-else
+        class="mt-4"
+        variant="outlined"
+        prepend-icon="mdi-filter-plus"
+        @click="addAdditionalCriteria"
+      >
+        Add Qualifying Criteria
+      </v-btn>
+    </div>
 
     <!-- Inclusion Criteria -->
-    <v-row>
-      <v-col cols="12">
-        <inclusion-criteria-panel
-          v-model="inclusionRules"
-          :qualifying-limit="qualifyingLimit"
-          @update:qualifying-limit="qualifyingLimit = $event"
-          @select-concept-set="handleSelectConceptSetForCriteria"
-        />
-      </v-col>
-    </v-row>
+    <div class="section-wrapper mb-6">
+      <div class="section-header section-header--centered">
+        <div class="section-title-container">
+          <h3 class="section-title">Inclusion Criteria</h3>
+        </div>
+
+        <div class="section-controls section-controls--center">
+          <v-btn-toggle
+            v-model="inclusionQualifyingLimit"
+            mandatory
+            density="compact"
+            variant="outlined"
+            divided
+          >
+            <v-btn value="FIRST" size="small">Earliest</v-btn>
+            <v-btn value="ALL" size="small">All</v-btn>
+            <v-btn value="LAST" size="small">Latest</v-btn>
+          </v-btn-toggle>
+        </div>
+
+        <div class="section-spacer"></div>
+      </div>
+      <inclusion-criteria-panel
+        v-model="inclusionRules"
+        :qualifying-limit="inclusionQualifyingLimit"
+        @update:qualifying-limit="inclusionQualifyingLimit = $event"
+        @select-concept-set="handleSelectConceptSetForCriteria"
+        @edit-concept-set="handleEditConceptSet"
+      />
+    </div>
 
     <!-- Exit Criteria -->
-    <v-row>
-      <v-col cols="12">
-        <exit-criteria-panel
-          v-model="exitCriteria"
-        />
-      </v-col>
-    </v-row>
+    <div class="section-wrapper mb-6">
+      <div class="section-header section-header--centered">
+        <div class="section-title-container">
+          <h3 class="section-title">Exit Criteria</h3>
+        </div>
 
-    <!-- Concept Set Selection Dialog -->
+        <div class="section-controls section-controls--center">
+          <v-btn-toggle
+            v-model="exitCriteria.strategy"
+            mandatory
+            density="compact"
+            variant="outlined"
+            divided
+          >
+            <v-btn value="CONTINUOUS_OBSERVATION" size="small">Continuous observation</v-btn>
+            <v-btn value="FIXED_DURATION" size="small">Fixed duration to initial event</v-btn>
+            <v-btn value="DRUG_EXPOSURE" size="small">Continuous drug exposure</v-btn>
+          </v-btn-toggle>
+        </div>
+
+        <div class="section-spacer"></div>
+      </div>
+      <exit-criteria-panel
+        v-model="exitCriteria"
+      />
+    </div>
+
+    <!-- Concept Set Selection Dialog (shows all system concept sets) -->
     <concept-set-selection-dialog
       v-model="isConceptSetDialogOpen"
-      :event-id="selectedEventId"
       @concept-set-selected="handleConceptSetSelected"
+      @edit-concept-set="handleEditConceptSet"
+      @create-new="handleCreateNewConceptSet"
+    />
+
+    <!-- Concept Set Editor Side Panel (for editing/creating concept sets) -->
+    <concept-set-editor
+      v-if="conceptSetsStore.editorOpen"
+      :model-value="conceptSetsStore.editorOpen"
+      :concept-set="conceptSetsStore.currentSet"
+      @update:model-value="(value) => { if (!value) conceptSetsStore.closeEditor() }"
+      @save="handleConceptSetSaved"
     />
 
     <!-- Error Snackbar -->
@@ -217,16 +310,38 @@
     >
       {{ successMessage }}
     </v-snackbar>
-  </v-container>
+
+    <!-- Loading Overlay -->
+    <v-overlay
+      v-model="isLoadingCohort"
+      class="align-center justify-center"
+      persistent
+    >
+      <v-progress-circular
+        indeterminate
+        size="64"
+        color="primary"
+      />
+      <div class="text-h6 mt-4">Loading cohort...</div>
+    </v-overlay>
+
+    <!-- Generation Panel -->
+    <generation-panel
+      v-model="isGenerationPanelOpen"
+      :cohort-id="cohortId"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCohortStore } from '@/stores/cohort'
-import { useConceptSetsStore } from '@/stores/conceptSets'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import { useAtlasConverter } from '@/composables/useAtlasConverter'
+import { getCohortDefinition, validateCohortDefinition } from '@/services/webapi'
+import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas-converter'
 import type {
   CohortEvent,
   ConceptSetReference,
@@ -234,15 +349,17 @@ import type {
   ExitCriteria,
   ObservationPeriod,
   QualifyingLimit,
-  CohortDefinition
+  CohortDefinition,
+  CriteriaGroup
 } from '@/models/cohort.types'
-import CohortMetadata from './CohortMetadata.vue'
+import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
 import EntryEventsList from './EntryEventsList.vue'
-import ConceptSetSelector from './ConceptSetSelector.vue'
 import ConceptSetSelectionDialog from './ConceptSetSelectionDialog.vue'
+import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import InclusionCriteriaPanel from '../cohort-builder/InclusionCriteriaPanel.vue'
 import ExitCriteriaPanel from '../cohort-builder/ExitCriteriaPanel.vue'
-import ObservationPeriodBlock from '../cohort-builder/ObservationPeriodBlock.vue'
+import CriteriaGroupEditor from '../cohort-builder/CriteriaGroupEditor.vue'
+import GenerationPanel from './GenerationPanel.vue'
 
 interface Props {
   id?: string
@@ -260,16 +377,24 @@ const { importFromFile, downloadAtlasJSON, conversionError } = useAtlasConverter
 const cohortName = ref('')
 const cohortDescription = ref('')
 const entryEvents = ref<CohortEvent[]>([])
+const additionalCriteria = ref<CriteriaGroup | undefined>(undefined)
 const inclusionRules = ref<InclusionRule[]>([])
-const exitCriteria = ref<ExitCriteria | undefined>(undefined)
-const observationPeriod = ref<ObservationPeriod | undefined>(undefined)
-const qualifyingLimit = ref<QualifyingLimit>('ALL')
+const exitCriteria = ref<ExitCriteria>({ strategy: 'CONTINUOUS_OBSERVATION' })
+const observationPeriod = ref<ObservationPeriod>({ priorDays: 0, postDays: 0 })
+const qualifyingLimit = ref<QualifyingLimit>('ALL') // For entry events
+const inclusionQualifyingLimit = ref<QualifyingLimit>('ALL') // For inclusion criteria
 
 // UI state
+const showValidationDialog = ref(false)
+const isGenerationPanelOpen = ref(false)
+
+// UI state
+// If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
+const isLoadingCohort = ref(!!props.id)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const isConceptSetDialogOpen = ref(false)
-const selectedEventId = ref<string | null>(null)
 const selectedCriteriaContext = ref<{
+  eventId?: string | null
   ruleIndex: number
   groupIndex: number
   eventIndex: number
@@ -283,6 +408,11 @@ const fileInput = ref<HTMLInputElement | null>(null)
 // Generation state (T119, T120)
 const selectedSourceKey = ref<string | null>(null)
 const generationError = ref<string | null>(null)
+
+// Validation state
+const validationWarnings = ref<ValidationWarning[]>([])
+const isValidating = ref(false)
+let validationDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
 const cohortId = computed(() => props.id ? Number(props.id) : null)
 
@@ -310,7 +440,46 @@ const isGenerating = computed(() => {
   return currentJob.value?.status === 'PENDING' || currentJob.value?.status === 'RUNNING'
 })
 
+// Validation computed properties
+const groupedWarningsBySeverity = computed(() => {
+  const grouped: Record<ValidationSeverity, ValidationWarning[]> = {
+    CRITICAL: [],
+    WARNING: [],
+    INFO: [],
+  }
+
+  validationWarnings.value.forEach(warning => {
+    grouped[warning.severity].push(warning)
+  })
+
+  return grouped
+})
+
+const highestSeverity = computed((): ValidationSeverity | null => {
+  if (validationWarnings.value.length === 0) return null
+  if (groupedWarningsBySeverity.value.CRITICAL.length > 0) return 'CRITICAL'
+  if (groupedWarningsBySeverity.value.WARNING.length > 0) return 'WARNING'
+  return 'INFO'
+})
+
+const highestSeverityColor = computed(() => {
+  const severity = highestSeverity.value
+  if (severity === 'CRITICAL') return 'error'
+  if (severity === 'WARNING') return 'warning'
+  return 'info'
+})
+
+const highestSeverityIcon = computed(() => {
+  const severity = highestSeverity.value
+  if (severity === 'CRITICAL') return 'mdi-alert-circle'
+  if (severity === 'WARNING') return 'mdi-alert'
+  return 'mdi-information'
+})
+
 onMounted(async () => {
+  // Load all concept sets from the API so user can select any system concept set
+  await conceptSetsStore.fetchAll()
+  
   if (props.id) {
     loadCohort(props.id)
   } else {
@@ -335,67 +504,302 @@ watch(
   () => props.id,
   (newId) => {
     if (newId) {
+      isLoadingCohort.value = true
       loadCohort(newId)
     }
   }
 )
 
-function loadCohort(_id: string) {
-  const cohort = cohortStore.currentCohort
-  if (cohort) {
-    cohortName.value = cohort.name
-    cohortDescription.value = cohort.description ?? ''
-    entryEvents.value = cohort.entryEvents
-    inclusionRules.value = cohort.inclusionRules || []
-    exitCriteria.value = cohort.exitCriteria
-    observationPeriod.value = cohort.observationPeriod
-    qualifyingLimit.value = cohort.qualifyingLimit || 'ALL'
+async function loadCohort(id: string) {
+  isLoadingCohort.value = true
+  try {
+    // Fetch cohort definition from WebAPI
+    const cohortId = parseInt(id, 10)
+    const atlasCohort = await getCohortDefinition(cohortId)
+
+    if (!atlasCohort) {
+      console.error(`Failed to load cohort ${id}`)
+      return
+    }
+
+    // Parse expression if it's a string
+    const expression = typeof atlasCohort.expression === 'string'
+      ? JSON.parse(atlasCohort.expression)
+      : atlasCohort.expression
+
+    // Convert Atlas JSON to internal format
+    const converted = convertAtlasToInternal(expression)
+
+    // Create cohort definition with converted data
+    const cohortDef: CohortDefinition = {
+      id: atlasCohort.id,
+      name: atlasCohort.name,
+      description: atlasCohort.description || '',
+      entryEvents: converted.entryEvents || [],
+      inclusionRules: converted.inclusionRules || [],
+      exitCriteria: converted.exitCriteria || { strategy: 'CONTINUOUS_OBSERVATION' },
+      observationPeriod: converted.observationPeriod || { priorDays: 0, postDays: 0 },
+      qualifyingLimit: converted.qualifyingLimit || 'ALL',
+      inclusionQualifyingLimit: converted.inclusionQualifyingLimit || 'ALL',
+      additionalCriteria: converted.additionalCriteria,
+      conceptSets: converted.conceptSets || [],
+    }
+
+    // Update store with loaded cohort
+    cohortStore.setCohort(cohortDef)
+    cohortStore.markClean()
+
+    // Update local state
+    cohortName.value = cohortDef.name
+    cohortDescription.value = cohortDef.description
+    entryEvents.value = cohortDef.entryEvents
+    additionalCriteria.value = cohortDef.additionalCriteria
+    inclusionRules.value = cohortDef.inclusionRules
+    exitCriteria.value = cohortDef.exitCriteria
+    observationPeriod.value = cohortDef.observationPeriod || { priorDays: 0, postDays: 0 }
+    qualifyingLimit.value = cohortDef.qualifyingLimit
+    inclusionQualifyingLimit.value = cohortDef.inclusionQualifyingLimit || 'ALL'
+
+    // Concept sets are already part of the cohort data structure (entryEvents, inclusionRules, etc.)
+    // No need to load them separately into the store
+
+    // Validate cohort after loading
+    await validateCohort()
+  } catch (error) {
+    console.error(`Error loading cohort ${id}:`, error)
+  } finally {
+    isLoadingCohort.value = false
   }
 }
 
+/**
+ * Validate the current cohort definition
+ */
+async function validateCohort() {
+  if (!cohortName.value || entryEvents.value.length === 0) {
+    validationWarnings.value = []
+    return
+  }
+
+  try {
+    isValidating.value = true
+
+    // Extract all unique concept sets from events and inclusion rules
+    const conceptSetsMap = new Map<string, ConceptSetReference>()
+
+    // Extract from entry events
+    entryEvents.value.forEach(event => {
+      if (event.conceptSet) {
+        conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+      }
+    })
+
+    // Extract from additional criteria
+    if (additionalCriteria.value?.events) {
+      additionalCriteria.value.events.forEach(event => {
+        if (event.conceptSet) {
+          conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+        }
+      })
+    }
+
+    // Extract from inclusion rules
+    inclusionRules.value.forEach(rule => {
+      if (rule.groups) {
+        rule.groups.forEach(group => {
+          if (group.events) {
+            group.events.forEach(event => {
+              if (event.conceptSet) {
+                conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+              }
+            })
+          }
+        })
+      }
+    })
+
+    // Build cohort definition
+    const cohortDef: CohortDefinition = {
+      id: cohortId.value,
+      name: cohortName.value,
+      description: cohortDescription.value,
+      entryEvents: entryEvents.value,
+      additionalCriteria: additionalCriteria.value,
+      inclusionRules: inclusionRules.value,
+      exitCriteria: exitCriteria.value,
+      observationPeriod: observationPeriod.value,
+      qualifyingLimit: qualifyingLimit.value,
+      inclusionQualifyingLimit: inclusionQualifyingLimit.value,
+      conceptSets: Array.from(conceptSetsMap.values()),
+    }
+
+    // Convert to Atlas format for validation
+    const atlasExpression = convertInternalToAtlas(cohortDef)
+
+    // Call validation endpoint
+    const result = await validateCohortDefinition(cohortName.value, atlasExpression)
+    validationWarnings.value = result.warnings || []
+  } catch (error) {
+    console.error('Failed to validate cohort:', error)
+    validationWarnings.value = []
+  } finally {
+    isValidating.value = false
+  }
+}
+
+/**
+ * Debounced validation trigger
+ */
+function triggerValidation() {
+  if (validationDebounceTimer) {
+    clearTimeout(validationDebounceTimer)
+  }
+
+  validationDebounceTimer = setTimeout(() => {
+    validateCohort()
+  }, 2000) // 2 second debounce
+}
+
+// Watch for changes to cohort definition and trigger validation
+watch(
+  [cohortName, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
+  () => {
+    triggerValidation()
+  },
+  { deep: true }
+)
+
 function handleSelectConceptSet(eventId: string) {
-  selectedEventId.value = eventId
-  selectedCriteriaContext.value = null
+  selectedCriteriaContext.value = { eventId, ruleIndex: -1, groupIndex: -1, eventIndex: -1 }
   isConceptSetDialogOpen.value = true
 }
 
 function handleSelectConceptSetForCriteria(context: { ruleIndex: number; groupIndex: number; eventIndex: number }) {
-  selectedCriteriaContext.value = context
-  selectedEventId.value = null
+  selectedCriteriaContext.value = { ...context, eventId: null }
   isConceptSetDialogOpen.value = true
 }
 
-function handleConceptSetSelected(conceptSetId: number | string) {
-  const conceptSet = conceptSetsStore.conceptSets.get(conceptSetId)
-  if (!conceptSet) return
+function handleSelectConceptSetForAdditionalCriteria(eventIndex: number) {
+  selectedCriteriaContext.value = { eventId: null, ruleIndex: -2, groupIndex: 0, eventIndex }
+  isConceptSetDialogOpen.value = true
+}
 
+function addAdditionalCriteria() {
+  additionalCriteria.value = {
+    id: `criteria_group_${Date.now()}`,
+    logicType: 'ALL',
+    qualifyingLimit: 'ALL',
+    events: [],
+  }
+}
+
+function removeAdditionalCriteria() {
+  additionalCriteria.value = undefined
+}
+
+/**
+ * Called when user selects an existing concept set from the dialog
+ */
+async function handleConceptSetSelected(conceptSet: any) {
+  if (!conceptSet || !selectedCriteriaContext.value) return
+
+  // Fetch the full concept set with items if we only have a reference
+  let fullConceptSet = conceptSet
+  if (conceptSet.id && (!conceptSet.items || conceptSet.items.length === 0)) {
+    await conceptSetsStore.fetchOne(conceptSet.id)
+    fullConceptSet = conceptSetsStore.currentSet
+  }
+
+  // Copy the entire concept set including items into the cohort definition
+  const conceptSetRef: ConceptSetReference = {
+    id: fullConceptSet.id,
+    name: fullConceptSet.name,
+    items: fullConceptSet.items || [],
+  }
+
+  assignConceptSetToContext(conceptSetRef)
+  isConceptSetDialogOpen.value = false
+}
+
+/**
+ * Called when user clicks "Edit" on a concept set (from chip or dialog)
+ */
+async function handleEditConceptSet(conceptSet: any) {
+  // Close dialog if it's open
+  isConceptSetDialogOpen.value = false
+
+  // Use the embedded concept set items directly (don't fetch from API)
+  // The concept set is embedded in the cohort definition with all its items
+  conceptSetsStore.currentSet = {
+    ...conceptSet,
+    items: conceptSet.items || []
+  }
+  conceptSetsStore.editorOpen = true
+}
+
+/**
+ * Called when user clicks "Create New" in the dialog
+ */
+function handleCreateNewConceptSet() {
+  // Close dialog and open editor in create mode
+  isConceptSetDialogOpen.value = false
+  conceptSetsStore.openCreateEditor()
+}
+
+/**
+ * Called when a concept set is saved in the editor
+ * This updates the cohort definition with the saved concept set
+ */
+function handleConceptSetSaved() {
+  // After save, the store.currentSet should hold the saved concept set
+  const conceptSet = conceptSetsStore.currentSet
+  if (!conceptSet || !selectedCriteriaContext.value) return
+
+  // Copy the entire concept set including items into the cohort definition
   const conceptSetRef: ConceptSetReference = {
     id: conceptSet.id,
     name: conceptSet.name,
+    items: conceptSet.items || [],
   }
 
+  assignConceptSetToContext(conceptSetRef)
+}
+
+/**
+ * Helper to assign a concept set to the current context (entry event or criteria)
+ */
+function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
+  if (!selectedCriteriaContext.value) return
+
   // Handle entry event selection
-  if (selectedEventId.value) {
-    const eventIndex = entryEvents.value.findIndex(e => e.id === selectedEventId.value)
+  if (selectedCriteriaContext.value.eventId) {
+    const eventIndex = entryEvents.value.findIndex(e => e.id === selectedCriteriaContext.value!.eventId)
     if (eventIndex === -1) return
 
     const currentEvent = entryEvents.value[eventIndex]
     if (!currentEvent) return
 
     entryEvents.value[eventIndex] = {
-      id: currentEvent.id,
-      criteriaType: currentEvent.criteriaType,
+      ...currentEvent,
       conceptSet: conceptSetRef,
-      cardinality: currentEvent.cardinality,
-      temporalWindow: currentEvent.temporalWindow,
-      attributes: currentEvent.attributes,
-      nestedCriteria: currentEvent.nestedCriteria,
     }
+  }
+  // Handle additional criteria event selection
+  else if (selectedCriteriaContext.value.ruleIndex === -2) {
+    const { eventIndex } = selectedCriteriaContext.value
+    if (!additionalCriteria.value) return
 
-    selectedEventId.value = null
+    const event = additionalCriteria.value.events[eventIndex]
+    if (!event) return
+
+    // Update the event's concept set
+    event.conceptSet = conceptSetRef
+
+    // Trigger reactivity
+    additionalCriteria.value = { ...additionalCriteria.value }
   }
   // Handle criteria group event selection
-  else if (selectedCriteriaContext.value) {
+  else if (selectedCriteriaContext.value.ruleIndex >= 0) {
     const { ruleIndex, groupIndex, eventIndex } = selectedCriteriaContext.value
     const rule = inclusionRules.value[ruleIndex]
     if (!rule) return
@@ -411,11 +815,9 @@ function handleConceptSetSelected(conceptSetId: number | string) {
 
     // Trigger reactivity
     inclusionRules.value = [...inclusionRules.value]
-
-    selectedCriteriaContext.value = null
   }
 
-  isConceptSetDialogOpen.value = false
+  selectedCriteriaContext.value = null
 }
 
 function handleSave() {
@@ -427,6 +829,8 @@ function handleSave() {
     description: cohortDescription.value || undefined,
     entryEvents: entryEvents.value,
     qualifyingLimit: qualifyingLimit.value,
+    inclusionQualifyingLimit: inclusionQualifyingLimit.value,
+    additionalCriteria: additionalCriteria.value,
     inclusionRules: inclusionRules.value,
     conceptSets: gatherConceptSets(),
     exitCriteria: exitCriteria.value,
@@ -448,6 +852,10 @@ function handleSave() {
 
 function handleCancel() {
   router.push('/cohorts')
+}
+
+function openGenerationPanel() {
+  isGenerationPanelOpen.value = true
 }
 
 function gatherConceptSets(): ConceptSetReference[] {
@@ -481,10 +889,12 @@ async function handleFileImport(event: Event) {
     cohortName.value = importedCohort.name || ''
     cohortDescription.value = importedCohort.description || ''
     entryEvents.value = importedCohort.entryEvents || []
+    additionalCriteria.value = importedCohort.additionalCriteria
     inclusionRules.value = importedCohort.inclusionRules || []
     exitCriteria.value = importedCohort.exitCriteria
     observationPeriod.value = importedCohort.observationPeriod
     qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
+    inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
 
     successMessage.value = 'Atlas JSON imported successfully'
     showSuccess.value = true
@@ -505,6 +915,8 @@ function handleExportAtlas() {
     description: cohortDescription.value || undefined,
     entryEvents: entryEvents.value,
     qualifyingLimit: qualifyingLimit.value,
+    inclusionQualifyingLimit: inclusionQualifyingLimit.value,
+    additionalCriteria: additionalCriteria.value,
     inclusionRules: inclusionRules.value,
     conceptSets: gatherConceptSets(),
     exitCriteria: exitCriteria.value,
@@ -594,3 +1006,304 @@ function getStatusText(status: string): string {
   }
 }
 </script>
+
+<style scoped>
+.cohort-builder {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Breadcrumb Navigation */
+.cohort-builder__breadcrumb {
+  padding: 0 0 8px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.cohort-builder__breadcrumb-item {
+  color: #666;
+}
+
+.cohort-builder__breadcrumb-item--link {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.cohort-builder__breadcrumb-item--link:hover {
+  color: #1f425a;
+  text-decoration: underline;
+}
+
+.cohort-builder__breadcrumb-item--active {
+  color: #1f425a;
+  font-weight: 500;
+}
+
+.cohort-builder__breadcrumb-separator {
+  margin: 0 8px;
+  color: #999;
+}
+
+/* Top Toolbar */
+.cohort-builder__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background-color: white;
+  border-bottom: 1px solid #dee2e6;
+  gap: 24px;
+}
+
+.cohort-builder__toolbar-left,
+.cohort-builder__toolbar-center,
+.cohort-builder__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cohort-builder__toolbar-center {
+  flex: 1;
+  justify-content: center;
+}
+
+.cohort-builder__cohort-name {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.cohort-builder__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  letter-spacing: 0.5px;
+}
+
+.cohort-builder__name-display {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.cohort-builder__name-input {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  border: 1px solid #e0e0e0;
+  background: white;
+  outline: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  min-width: 250px;
+}
+
+.cohort-builder__name-input:hover {
+  border-color: #1f425a;
+}
+
+.cohort-builder__name-input:focus {
+  border-color: #1f425a;
+  box-shadow: 0 0 0 2px rgba(31, 66, 90, 0.1);
+}
+
+.cohort-builder__patient-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.cohort-builder__count {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Section Panels */
+.cohort-builder__section {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.cohort-builder__section-header {
+  color: #dc3545;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.cohort-builder__section-content {
+  padding: 20px;
+}
+
+.gap-3 {
+  gap: 12px;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+/* Toggle Button Styling */
+:deep(.v-btn-toggle) {
+  border: 1px solid #1f425a;
+}
+
+:deep(.v-btn-toggle .v-btn) {
+  border-color: #1f425a !important;
+  color: #1f425a;
+  background-color: white;
+}
+
+:deep(.v-btn-toggle .v-btn--active) {
+  background-color: #1f425a !important;
+  color: white !important;
+}
+
+:deep(.v-btn-toggle .v-btn:hover:not(.v-btn--active)) {
+  background-color: rgba(31, 66, 90, 0.04);
+}
+
+/* Section Layout */
+.section-wrapper {
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.section-header--centered {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.section-title-container {
+  flex: 1;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgb(var(--v-theme-orange));
+}
+
+.section-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.section-controls--center {
+  justify-self: center;
+}
+
+.section-spacer {
+  /* Empty spacer for grid layout */
+}
+
+.section-obs-period {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 12px;
+  padding-left: 32px;
+}
+
+.obs-period-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+  margin-right: 12px;
+}
+
+.obs-period-text {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Validation Badge and Tooltip */
+.cohort-builder__validation-badge {
+  margin-left: 12px;
+}
+
+.validation-tooltip {
+  padding: 8px 0;
+}
+
+.validation-severity-group {
+  margin-bottom: 12px;
+}
+
+.validation-severity-group:last-child {
+  margin-bottom: 0;
+}
+
+.validation-severity-header {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+  padding: 0 8px;
+  color: white;
+}
+
+.validation-warnings-list {
+  list-style: none;
+  padding: 0 8px;
+  margin: 0;
+}
+
+.validation-warning-item {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 4px;
+  padding-left: 16px;
+  position: relative;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.validation-warning-item::before {
+  content: '•';
+  position: absolute;
+  left: 4px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.validation-warning-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Additional Criteria Header */
+.additional-criteria-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.additional-criteria-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+</style>

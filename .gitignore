@@ -2,7 +2,12 @@
 node_modules/
 .pnp/
 .pnp.js
-
+*md
+specs/
+.claude/
+*png
+.gemini
+.mcp.json
 # Build outputs
 dist/
 build/

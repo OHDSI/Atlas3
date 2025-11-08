@@ -96,10 +96,32 @@ export const useWebAPIStore = defineStore('webapi', () => {
    */
   async function generateCohort(cohortId: number, sourceKey: string): Promise<GenerationJob | null> {
     try {
+      // Check if there's an existing job for this cohort/source combination
+      const existingJobs = getJobsByCohortId(cohortId)
+      const existingJob = existingJobs.find(j => j.sourceKey === sourceKey)
+
+      // Immediately update UI to show "Starting generation..." status
+      if (existingJob) {
+        // Update existing job to show it's starting
+        updateGenerationJob(existingJob.id, {
+          ...existingJob,
+          status: 'PENDING',
+        })
+      }
+
       const job = await webapi.generateCohort(cohortId, sourceKey)
 
       if (job) {
-        addGenerationJob(job)
+        // Update or add the job
+        if (existingJob) {
+          updateGenerationJob(existingJob.id, {
+            ...job,
+            id: existingJob.id, // Keep the same ID for updates
+          })
+        } else {
+          addGenerationJob(job)
+        }
+
         // Start polling for status updates
         pollGenerationStatus(cohortId)
       }
@@ -212,6 +234,50 @@ export const useWebAPIStore = defineStore('webapi', () => {
     pollingTimers.clear()
   }
 
+  /**
+   * Fetch existing generation info for a cohort and convert to GenerationJob format
+   * This loads previously generated cohort data from the backend
+   */
+  async function fetchCohortGenerationInfo(cohortId: number): Promise<void> {
+    try {
+      const infoList = await webapi.getCohortGenerationInfo(cohortId)
+
+      if (!infoList || infoList.length === 0) {
+        return
+      }
+
+      // Convert each generation info to a GenerationJob
+      // We need to map sourceId to sourceKey
+      for (const info of infoList) {
+        // Find the source that matches this sourceId
+        const source = sources.value.find(s => s.sourceId === info.id.sourceId)
+        if (!source) {
+          console.warn(`Could not find source with ID ${info.id.sourceId}`)
+          continue
+        }
+
+        // Create a GenerationJob from the info
+        const job: GenerationJob = {
+          id: info.id.sourceId, // Use sourceId as job ID (since we don't have a separate job ID)
+          cohortDefinitionId: info.id.cohortDefinitionId,
+          sourceKey: source.sourceKey,
+          status: info.status,
+          startTime: info.startTime ? new Date(info.startTime).toISOString() : undefined,
+          endTime: info.executionDuration && info.startTime
+            ? new Date(info.startTime + info.executionDuration).toISOString()
+            : undefined,
+          personCount: info.personCount ?? undefined,
+          recordCount: info.recordCount ?? undefined,
+          failMessage: info.failMessage ?? undefined,
+        }
+
+        addGenerationJob(job)
+      }
+    } catch (error) {
+      console.error('Failed to fetch cohort generation info:', error)
+    }
+  }
+
   return {
     // State
     sources,
@@ -234,6 +300,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
     clearJobs,
     // Generation workflow
     fetchSources,
+    fetchCohortGenerationInfo,
     generateCohort,
     pollGenerationStatus,
     stopPolling,

@@ -1,7 +1,6 @@
 <template>
-  <v-card class="exit-criteria-panel">
-    <v-card-title class="text-h6">Exit Criteria</v-card-title>
-    <v-card-text>
+  <div class="exit-criteria-panel">
+    <div class="panel-content">
       <!-- Exit Strategy Selector -->
       <v-select
         :model-value="modelValue?.strategy || 'CONTINUOUS_OBSERVATION'"
@@ -34,8 +33,8 @@
           Add Censoring Event
         </v-btn>
       </div>
-    </v-card-text>
-  </v-card>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -68,3 +67,13 @@ function addCensoringEvent() {
   // Placeholder
 }
 </script>
+
+<style scoped>
+.exit-criteria-panel {
+  background: white;
+}
+
+.panel-content {
+  padding: 16px;
+}
+</style>

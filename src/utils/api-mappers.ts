@@ -1,0 +1,142 @@
+/**
+ * API Response Mappers
+ * Convert WebAPI UPPERCASE responses to camelCase TypeScript interfaces
+ */
+import type { Concept, ConceptSetItem, ConceptSet, ConceptSetExpression } from '@/models/concept-set.types'
+
+/**
+ * Map WebAPI concept response (UPPERCASE) to Concept interface (camelCase)
+ */
+export function mapConceptFromAPI(raw: {
+  CONCEPT_ID: number
+  CONCEPT_NAME: string
+  CONCEPT_CODE: string
+  DOMAIN_ID: string
+  VOCABULARY_ID: string
+  CONCEPT_CLASS_ID: string
+  STANDARD_CONCEPT: string | null
+  INVALID_REASON: string | null
+}): Concept {
+  return {
+    conceptId: raw.CONCEPT_ID,
+    conceptName: raw.CONCEPT_NAME,
+    conceptCode: raw.CONCEPT_CODE,
+    domainId: raw.DOMAIN_ID,
+    vocabularyId: raw.VOCABULARY_ID,
+    conceptClassId: raw.CONCEPT_CLASS_ID,
+    standardConcept: raw.STANDARD_CONCEPT,
+    invalidReason: raw.INVALID_REASON,
+  }
+}
+
+/**
+ * Map Concept to ConceptSetItem (adds default flags)
+ */
+export function conceptToConceptSetItem(
+  concept: Concept,
+  options?: {
+    isExcluded?: boolean
+    includeDescendants?: boolean
+    includeMapped?: boolean
+  }
+): ConceptSetItem {
+  return {
+    ...concept,
+    isExcluded: options?.isExcluded ?? false,
+    includeDescendants: options?.includeDescendants ?? false,
+    includeMapped: options?.includeMapped ?? false,
+  }
+}
+
+/**
+ * Map WebAPI concept set response to ConceptSet interface
+ */
+export function mapConceptSetFromAPI(raw: {
+  id: number
+  name: string
+  createdDate?: string | number
+  createdBy?: string | { id: number; name: string | null; login: string }
+  modifiedDate?: string | number
+  modifiedBy?: string | { id: number; name: string | null; login: string }
+  shared?: boolean
+  expression?: {
+    items?: Array<{
+      concept: {
+        CONCEPT_ID: number
+        CONCEPT_NAME: string
+        CONCEPT_CODE: string
+        DOMAIN_ID: string
+        VOCABULARY_ID: string
+        CONCEPT_CLASS_ID: string
+        STANDARD_CONCEPT: string | null
+        INVALID_REASON: string | null
+      }
+      isExcluded: boolean
+      includeDescendants: boolean
+      includeMapped: boolean
+    }>
+  }
+}): ConceptSet {
+  // Extract user login from user object if present
+  const getLogin = (userOrString: string | { login: string } | undefined) => {
+    if (!userOrString) return undefined
+    if (typeof userOrString === 'string') return userOrString
+    return userOrString.login
+  }
+
+  return {
+    id: raw.id,
+    name: raw.name,
+    createdDate: raw.createdDate,
+    createdBy: getLogin(raw.createdBy),
+    modifiedDate: raw.modifiedDate,
+    modifiedBy: getLogin(raw.modifiedBy),
+    shared: raw.shared ?? false,
+    items: raw.expression?.items?.map((item) => ({
+      conceptId: item.concept.CONCEPT_ID,
+      conceptName: item.concept.CONCEPT_NAME,
+      conceptCode: item.concept.CONCEPT_CODE,
+      domainId: item.concept.DOMAIN_ID,
+      vocabularyId: item.concept.VOCABULARY_ID,
+      conceptClassId: item.concept.CONCEPT_CLASS_ID,
+      standardConcept: item.concept.STANDARD_CONCEPT,
+      invalidReason: item.concept.INVALID_REASON,
+      isExcluded: item.isExcluded,
+      includeDescendants: item.includeDescendants,
+      includeMapped: item.includeMapped,
+    })) || [],
+  }
+}
+
+/**
+ * Map ConceptSet to WebAPI format for save operations
+ */
+export function mapConceptSetToAPI(conceptSet: ConceptSet): {
+  id?: number
+  name: string
+  shared?: boolean
+  expression: ConceptSetExpression
+} {
+  return {
+    id: typeof conceptSet.id === 'number' ? conceptSet.id : undefined,
+    name: conceptSet.name,
+    shared: conceptSet.shared,
+    expression: {
+      items: conceptSet.items.map((item) => ({
+        concept: {
+          CONCEPT_ID: item.conceptId,
+          CONCEPT_NAME: item.conceptName,
+          CONCEPT_CODE: item.conceptCode,
+          DOMAIN_ID: item.domainId,
+          VOCABULARY_ID: item.vocabularyId,
+          CONCEPT_CLASS_ID: item.conceptClassId,
+          STANDARD_CONCEPT: item.standardConcept,
+          INVALID_REASON: item.invalidReason,
+        },
+        isExcluded: item.isExcluded,
+        includeDescendants: item.includeDescendants,
+        includeMapped: item.includeMapped,
+      })),
+    },
+  }
+}

@@ -31,7 +31,7 @@ const router = createRouter({
     {
       path: '/concepts',
       name: 'concepts',
-      redirect: '/',
+      component: () => import('@/views/ConceptsView.vue'),
     },
   ],
 })

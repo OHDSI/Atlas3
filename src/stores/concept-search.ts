@@ -1,0 +1,213 @@
+/**
+ * Concept Search Store
+ * State management for concept search functionality
+ */
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { searchConcepts, getConceptRecordCounts } from '@/services/concept-search.service'
+import type { Concept } from '@/models/concept-set.types'
+import { getSourceKey } from '@/config/webapi'
+
+// Debounce utility
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+  
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
+      timeout = null
+      func(...args)
+    }
+    
+    if (timeout) {
+      clearTimeout(timeout)
+    }
+    timeout = setTimeout(later, wait)
+  }
+}
+
+export const useConceptSearchStore = defineStore('concept-search', () => {
+  // ============================================================================
+  // State
+  // ============================================================================
+
+  const searchTerm = ref<string>('')
+  const allConcepts = ref<Concept[]>([])  // All search results
+  const loading = ref<boolean>(false)
+  const loadingRecordCounts = ref<boolean>(false)
+  const error = ref<string | null>(null)
+
+  // Pagination state
+  const page = ref<number>(1)
+  const itemsPerPage = ref<number>(25)
+  
+  // Sorting state
+  const sortBy = ref<string | null>('conceptId')
+  const sortDesc = ref<boolean>(false)
+
+  // ============================================================================
+  // Getters
+  // ============================================================================
+
+  const totalCount = computed(() => allConcepts.value.length)
+
+  // Client-side pagination and sorting
+  const concepts = computed(() => {
+    let sorted = [...allConcepts.value]
+
+    // Apply sorting
+    if (sortBy.value) {
+      sorted.sort((a, b) => {
+        const key = sortBy.value as keyof Concept
+        const aVal = a[key]
+        const bVal = b[key]
+
+        if (aVal === null || aVal === undefined) return 1
+        if (bVal === null || bVal === undefined) return -1
+
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return sortDesc.value 
+            ? bVal.localeCompare(aVal)
+            : aVal.localeCompare(bVal)
+        }
+
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortDesc.value ? bVal - aVal : aVal - bVal
+        }
+
+        return 0
+      })
+    }
+
+    // Apply pagination
+    const start = (page.value - 1) * itemsPerPage.value
+    const end = start + itemsPerPage.value
+    
+    return sorted.slice(start, end)
+  })
+
+  const isEmpty = computed(() => allConcepts.value.length === 0)
+
+  const pageRangeText = computed(() => {
+    if (totalCount.value === 0) return '0-0 of 0'
+    const start = (page.value - 1) * itemsPerPage.value + 1
+    const end = Math.min(page.value * itemsPerPage.value, totalCount.value)
+    return `${start}-${end} of ${totalCount.value}`
+  })
+
+  // ============================================================================
+  // Actions
+  // ============================================================================
+
+  /**
+   * Search for concepts
+   */
+  async function search(term: string) {
+    // Validation: minimum 3 characters
+    if (term.length < 3) {
+      allConcepts.value = []
+      error.value = null
+      return
+    }
+
+    searchTerm.value = term
+    loading.value = true
+    error.value = null
+
+    try {
+      const sourceKey = getSourceKey()
+      const result = await searchConcepts(sourceKey, term)
+
+      // Show results immediately without record counts
+      allConcepts.value = result.concepts
+      loading.value = false
+      page.value = 1
+
+      // Fetch record counts in the background
+      loadingRecordCounts.value = true
+      const conceptIds = result.concepts.map(c => c.conceptId)
+      const recordCounts = await getConceptRecordCounts(sourceKey, conceptIds)
+
+      // Merge record counts into concepts
+      allConcepts.value = result.concepts.map(concept => ({
+        ...concept,
+        recordCount: recordCounts.get(concept.conceptId)?.recordCount,
+        descendantRecordCount: recordCounts.get(concept.conceptId)?.descendantRecordCount,
+        personCount: recordCounts.get(concept.conceptId)?.personCount,
+        descendantPersonCount: recordCounts.get(concept.conceptId)?.descendantPersonCount,
+      }))
+
+      loadingRecordCounts.value = false
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to search concepts'
+      console.error('Concept search error:', err)
+      allConcepts.value = []
+      loading.value = false
+      loadingRecordCounts.value = false
+    }
+  }
+
+  /**
+   * Debounced search (300ms delay)
+   * T034: Prevent excessive API calls
+   */
+  const debouncedSearch = debounce(search, 300)
+
+  /**
+   * Update sorting
+   */
+  function updateSort(newSortBy: string, newSortDesc: boolean) {
+    sortBy.value = newSortBy
+    sortDesc.value = newSortDesc
+  }
+
+  /**
+   * Update pagination
+   */
+  function updatePagination(newPage: number, newItemsPerPage: number) {
+    page.value = newPage
+    itemsPerPage.value = newItemsPerPage
+  }
+
+  /**
+   * Clear search results
+   */
+  function clearSearch() {
+    searchTerm.value = ''
+    allConcepts.value = []
+    error.value = null
+    page.value = 1
+  }
+
+  // ============================================================================
+  // Return
+  // ============================================================================
+
+  return {
+    // State
+    searchTerm,
+    concepts,
+    allConcepts,
+    loading,
+    loadingRecordCounts,
+    error,
+    page,
+    itemsPerPage,
+    sortBy,
+    sortDesc,
+
+    // Getters
+    totalCount,
+    isEmpty,
+    pageRangeText,
+
+    // Actions
+    search,
+    debouncedSearch,
+    updateSort,
+    updatePagination,
+    clearSearch,
+  }
+})

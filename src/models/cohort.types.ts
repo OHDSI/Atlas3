@@ -5,7 +5,7 @@
 
 import type { Cardinality, TemporalWindow, EventAttribute } from './event.types'
 
-export type QualifyingLimit = 'ALL' | 'EARLIEST' | 'LATEST'
+export type QualifyingLimit = 'ALL' | 'FIRST' | 'LAST'
 
 export interface ObservationPeriod {
   priorDays: number
@@ -22,7 +22,9 @@ export interface CohortDefinition {
   modifiedDate?: number
   entryEvents: CohortEvent[]
   qualifyingLimit: QualifyingLimit
+  inclusionQualifyingLimit?: QualifyingLimit
   observationPeriod?: ObservationPeriod
+  additionalCriteria?: CriteriaGroup // Criteria that restrict/qualify entry events
   inclusionRules: InclusionRule[]
   exitCriteria?: ExitCriteria
   conceptSets: ConceptSetReference[]
@@ -51,6 +53,7 @@ export interface CriteriaGroup {
   id: string
   logicType: LogicType
   count?: number // For AT_LEAST and AT_MOST
+  qualifyingLimit?: QualifyingLimit // For primary criteria limit (used in AdditionalCriteria)
   events: CohortEvent[]
   nestedGroups?: CriteriaGroup[] // Recursive nesting support
 }
@@ -81,6 +84,7 @@ export interface ConceptSetReference {
   id: number | string // Number from WebAPI, string (UUID) for client-side
   name: string
   conceptCount?: number
+  items?: any[] // Full concept set items to embed in cohort definition
 }
 
 // 12 OHDSI criteria types per spec.md FR-002

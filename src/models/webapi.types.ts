@@ -75,8 +75,8 @@ export const CohortGenerationIdSchema = z.object({
 // WebAPI cohort definition generation info response
 export const CohortGenerationInfoSchema = z.object({
   id: CohortGenerationIdSchema,
-  startTime: z.number().optional(),
-  executionDuration: z.number().optional(),
+  startTime: z.number().nullable().optional(),
+  executionDuration: z.number().nullable().optional(),
   status: z.enum(['PENDING', 'RUNNING', 'COMPLETE', 'FAILED']),
   isValid: z.boolean().optional(),
   isCanceled: z.boolean().optional(),
@@ -131,3 +131,29 @@ export type CohortDefinitionSummary = z.infer<typeof CohortDefinitionSummarySche
 export const CohortDefinitionListSchema = z.array(CohortDefinitionSummarySchema)
 
 export type CohortDefinitionList = z.infer<typeof CohortDefinitionListSchema>
+
+/**
+ * UI state for generation panel
+ */
+export interface GenerationPanelState {
+  isOpen: boolean
+  cohortId: number | null
+  pollingActive: boolean
+  lastRefresh?: Date
+}
+
+/**
+ * Derived state for individual data source tiles
+ */
+export interface DataSourceTileState {
+  source: CDMSource
+  tileStatus: TileStatus
+  job?: GenerationJob
+  patientCount?: number
+  errorMessage?: string
+}
+
+/**
+ * UI status for data source tiles
+ */
+export type TileStatus = 'idle' | 'generating' | 'complete' | 'failed'

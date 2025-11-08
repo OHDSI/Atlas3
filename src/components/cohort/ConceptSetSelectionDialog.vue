@@ -1,94 +1,212 @@
 <template>
-  <v-dialog
+  <v-navigation-drawer
     :model-value="modelValue"
-    max-width="600"
+    location="right"
+    temporary
+    :width="drawerWidth"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">mdi-book-open-variant</v-icon>
-        <span>Select Concept Set</span>
+    <v-card flat class="h-100 d-flex flex-column">
+      <!-- Header -->
+      <v-card-title class="d-flex align-center bg-primary pa-4">
+        <span class="text-h6">Select Concept Set</span>
         <v-spacer />
         <v-btn
-          icon
-          size="small"
+          icon="mdi-close"
           variant="text"
           @click="close"
-        >
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
+        />
       </v-card-title>
 
-      <v-card-text>
-        <p v-if="conceptSetsList.length === 0" class="text-body-2 text-medium-emphasis text-center py-8">
-          <v-icon size="48" class="mb-2">mdi-book-open-variant</v-icon>
-          <br>
-          No concept sets available. Create a concept set first in the right panel.
-        </p>
+      <!-- Content -->
+      <v-card-text class="flex-grow-1 overflow-y-auto pa-6">
+        <!-- Search -->
+        <v-text-field
+          v-model="searchTerm"
+          placeholder="Search concept sets..."
+          prepend-inner-icon="mdi-magnify"
+          clearable
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          class="mb-4"
+        />
 
-        <v-list v-else>
+        <!-- Loading -->
+        <v-progress-linear v-if="loading" indeterminate class="mb-2" />
+
+        <!-- Empty State -->
+        <div v-if="!loading && filteredSets.length === 0" class="text-center py-8">
+          <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-book-open-variant</v-icon>
+          <p class="text-body-1 text-medium-emphasis">
+            {{ searchTerm ? 'No concept sets match your search' : 'No concept sets available' }}
+          </p>
+          <v-btn
+            color="primary"
+            variant="outlined"
+            class="mt-4"
+            @click="onCreateNew"
+          >
+            <v-icon start>mdi-plus</v-icon>
+            Create New Concept Set
+          </v-btn>
+        </div>
+
+        <!-- Concept Sets List -->
+        <v-list v-else class="border rounded">
           <v-list-item
-            v-for="conceptSet in conceptSetsList"
+            v-for="conceptSet in paginatedSets"
             :key="conceptSet.id"
-            @click="selectConceptSet(conceptSet.id)"
+            @click="selectConceptSet(conceptSet)"
           >
             <template #prepend>
-              <v-icon>mdi-book-open-variant</v-icon>
+              <v-avatar color="primary" size="40">
+                <v-icon>mdi-book-open-variant</v-icon>
+              </v-avatar>
             </template>
 
-            <v-list-item-title>{{ conceptSet.name }}</v-list-item-title>
+            <v-list-item-title class="font-weight-medium">
+              {{ conceptSet.name }}
+            </v-list-item-title>
             <v-list-item-subtitle>
-              {{ conceptSet.concepts.length }} concept{{ conceptSet.concepts.length === 1 ? '' : 's' }}
+              {{ conceptSet.conceptCount || 0 }} concept{{ conceptSet.conceptCount === 1 ? '' : 's' }}
+              <span v-if="conceptSet.shared" class="ml-2">• Shared</span>
             </v-list-item-subtitle>
 
             <template #append>
+              <v-btn
+                icon="mdi-pencil"
+                size="small"
+                variant="text"
+                @click.stop="onEditClick(conceptSet)"
+              />
               <v-icon>mdi-chevron-right</v-icon>
             </template>
           </v-list-item>
         </v-list>
+
+        <!-- Pagination -->
+        <div v-if="!loading && filteredSets.length > itemsPerPage" class="mt-4 d-flex align-center justify-space-between">
+          <div class="text-caption text-medium-emphasis">
+            Showing {{ ((page - 1) * itemsPerPage) + 1 }}-{{ Math.min(page * itemsPerPage, filteredSets.length) }} of {{ filteredSets.length }} concept sets
+          </div>
+          <v-pagination
+            v-model="page"
+            :length="totalPages"
+            :total-visible="5"
+            size="small"
+          />
+        </div>
       </v-card-text>
 
-      <v-card-actions>
+      <!-- Actions -->
+      <v-card-actions class="pa-4 border-t">
+        <v-btn
+          color="primary"
+          variant="outlined"
+          @click="onCreateNew"
+        >
+          <v-icon start>mdi-plus</v-icon>
+          Create New
+        </v-btn>
         <v-spacer />
         <v-btn
           variant="text"
           @click="close"
         >
-          Cancel
+          Close
         </v-btn>
       </v-card-actions>
     </v-card>
-  </v-dialog>
+  </v-navigation-drawer>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useConceptSetsStore } from '@/stores/conceptSets'
+import { ref, computed, watch } from 'vue'
+import { useConceptSetsStore } from '@/stores/concept-sets'
+import type { ConceptSetListItem } from '@/models/concept-set.types'
 
 interface Props {
   modelValue: boolean
-  eventId: string | null
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'concept-set-selected': [conceptSetId: number | string]
+  'concept-set-selected': [conceptSet: ConceptSetListItem]
+  'edit-concept-set': [conceptSet: ConceptSetListItem]
+  'create-new': []
 }>()
 
 const conceptSetsStore = useConceptSetsStore()
+const searchTerm = ref('')
+const loading = computed(() => conceptSetsStore.loading)
+const page = ref(1)
+const itemsPerPage = ref(50)
 
-const conceptSetsList = computed(() => {
-  return Array.from(conceptSetsStore.conceptSets.values())
+// Fixed width to match ConceptSetEditor (85% of viewport)
+const drawerWidth = computed(() => {
+  return Math.min(window.innerWidth * 0.85, 1400)
 })
 
-function selectConceptSet(conceptSetId: number | string) {
-  emit('concept-set-selected', conceptSetId)
+// Filter concept sets based on search term
+const filteredSets = computed(() => {
+  const sets = conceptSetsStore.conceptSets
+  if (!searchTerm.value) {
+    return sets
+  }
+
+  const term = searchTerm.value.toLowerCase()
+  return sets.filter((set) =>
+    set.name.toLowerCase().includes(term)
+  )
+})
+
+// Paginated sets to prevent rendering thousands of items
+const paginatedSets = computed(() => {
+  const start = (page.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
+  return filteredSets.value.slice(start, end)
+})
+
+const totalPages = computed(() => 
+  Math.ceil(filteredSets.value.length / itemsPerPage.value)
+)
+
+// Watch for dialog opening to refresh data
+watch(() => props.modelValue, async (isOpen) => {
+  if (isOpen && conceptSetsStore.conceptSets.length === 0) {
+    await conceptSetsStore.fetchAll()
+  }
+})
+
+// Reset page when search changes
+watch(searchTerm, () => {
+  page.value = 1
+})
+
+function selectConceptSet(conceptSet: ConceptSetListItem) {
+  emit('concept-set-selected', conceptSet)
   close()
+}
+
+function onEditClick(conceptSet: ConceptSetListItem) {
+  emit('edit-concept-set', conceptSet)
+}
+
+function onCreateNew() {
+  emit('create-new')
 }
 
 function close() {
   emit('update:modelValue', false)
+  searchTerm.value = ''
 }
 </script>
+
+<style scoped>
+.border-t {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+</style>

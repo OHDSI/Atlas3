@@ -1,25 +1,62 @@
 <template>
-  <v-card>
-    <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">mdi-calendar-multiple</v-icon>
-      <span>Entry Events</span>
-      <v-spacer />
-      <v-btn
-        color="primary"
-        variant="outlined"
-        size="small"
-        data-testid="add-entry-event"
-        @click="addEvent"
-      >
-        <v-icon class="mr-2">mdi-plus</v-icon>
-        Add Event
-      </v-btn>
-    </v-card-title>
+  <div class="events-container">
+    <!-- Vertical "ALL" Label -->
+    <div class="vertical-label-container">
+      <div class="vertical-label">ALL</div>
+    </div>
 
-    <v-card-text>
-      <p v-if="events.length === 0" class="text-body-2 text-medium-emphasis">
-        No entry events defined. Click "Add Event" to create the first entry event.
-      </p>
+    <!-- Main Content Area -->
+    <div class="flex-grow-1">
+      <div v-if="events.length === 0" class="empty-state">
+        <v-menu>
+          <template #activator="{ props }">
+            <v-btn
+              v-bind="props"
+              color="primary"
+              variant="outlined"
+              size="small"
+              data-testid="add-entry-event"
+            >
+              <v-icon class="mr-2">mdi-plus</v-icon>
+              Add filter
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item
+              v-for="eventType in eventTypeOptions"
+              :key="eventType.value"
+              :title="eventType.label"
+              @click="addEvent(eventType.value)"
+            />
+          </v-list>
+        </v-menu>
+      </div>
+
+      <div v-else class="events-with-add-button">
+        <v-menu>
+          <template #activator="{ props }">
+            <v-btn
+              v-bind="props"
+              color="primary"
+              variant="outlined"
+              size="small"
+              data-testid="add-entry-event"
+              class="mb-4"
+            >
+              <v-icon class="mr-2">mdi-plus</v-icon>
+              Add filter
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item
+              v-for="eventType in eventTypeOptions"
+              :key="eventType.value"
+              :title="eventType.label"
+              @click="addEvent(eventType.value)"
+            />
+          </v-list>
+        </v-menu>
+      </div>
 
       <entry-event-card
         v-for="event in events"
@@ -28,9 +65,10 @@
         @update="updateEvent"
         @remove="removeEvent(event.id)"
         @select-concept-set="selectConceptSetForEvent(event.id)"
+        @edit-concept-set="$emit('edit-concept-set', $event)"
       />
-    </v-card-text>
-  </v-card>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -47,12 +85,25 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:events': [events: CohortEvent[]]
   'select-concept-set': [eventId: string]
+  'edit-concept-set': [conceptSet: any]
 }>()
 
-function addEvent() {
+const eventTypeOptions = [
+  { label: 'Condition Occurrence', value: 'ConditionOccurrence' },
+  { label: 'Drug Exposure', value: 'DrugExposure' },
+  { label: 'Procedure Occurrence', value: 'ProcedureOccurrence' },
+  { label: 'Observation', value: 'Observation' },
+  { label: 'Measurement', value: 'Measurement' },
+  { label: 'Visit Occurrence', value: 'VisitOccurrence' },
+  { label: 'Device Exposure', value: 'DeviceExposure' },
+  { label: 'Observation Period', value: 'ObservationPeriod' },
+  { label: 'Death', value: 'Death' },
+]
+
+function addEvent(criteriaType: string) {
   const newEvent: CohortEvent = {
     id: uuidv4(),
-    criteriaType: 'ConditionOccurrence',
+    criteriaType,
     attributes: [],
   }
 
@@ -77,3 +128,60 @@ function selectConceptSetForEvent(eventId: string) {
   emit('select-concept-set', eventId)
 }
 </script>
+
+<style scoped>
+.events-container {
+  display: flex;
+  background: white;
+}
+
+.vertical-label-container {
+  display: flex;
+  align-items: center;
+  width: 30px;
+  border: 1px solid #1f425a;
+  position: relative;
+}
+
+.vertical-label-container::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 30%;
+  background: #1f425a;
+}
+
+.vertical-label {
+  writing-mode: sideways-lr;
+  text-orientation: sideways;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f425a;
+  user-select: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  padding-left: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.flex-grow-1 {
+  flex: 1;
+  padding: 24px 16px;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 120px;
+}
+
+.events-with-add-button {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+</style>
+

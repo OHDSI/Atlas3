@@ -57,8 +57,8 @@ const handleNewCohort = () => {
 <style scoped>
 .landing {
   min-height: 100%;
-  background-color: #f2f0f1;
-  color: #1f425a;
+  background-color: rgb(var(--v-theme-background));
+  color: rgb(var(--v-theme-primary));
   display: flex;
   padding: 32px;
   font-size: 16px;
@@ -90,7 +90,7 @@ const handleNewCohort = () => {
   font-weight: 300;
   margin: 0 0 2rem 0;
   letter-spacing: 0.2em;
-  color: #1f425a;
+  color: rgb(var(--v-theme-primary));
 }
 
 .landing__description {
@@ -100,16 +100,16 @@ const handleNewCohort = () => {
 .landing__description p {
   line-height: 1.6;
   margin: 0;
-  color: #1f425a;
+  color: rgb(var(--v-theme-primary));
 }
 
 .landing__link {
-  color: #1f425a;
+  color: rgb(var(--v-theme-primary));
   text-decoration: underline;
 }
 
 .landing__link:hover {
-  color: #2d5f7f;
+  color: rgb(var(--v-theme-accent));
 }
 
 .landing__documentation {
@@ -118,14 +118,14 @@ const handleNewCohort = () => {
 
 .landing__documentation p {
   margin: 0;
-  color: #1f425a;
+  color: rgb(var(--v-theme-primary));
 }
 
 .landing__section-title {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0 0 1rem 0;
-  color: #1f425a;
+  color: rgb(var(--v-theme-primary));
 }
 
 .landing__actions {
@@ -139,7 +139,7 @@ const handleNewCohort = () => {
   font-size: 16px;
   font-weight: 500;
   border-radius: 4px;
-  border: 2px solid #1f425a;
+  border: 2px solid rgb(var(--v-theme-primary));
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   text-decoration: none;
@@ -149,22 +149,22 @@ const handleNewCohort = () => {
 
 .landing__button--outline {
   background-color: transparent;
-  color: #1f425a;
+  color: rgb(var(--v-theme-primary));
 }
 
 .landing__button--outline:hover {
-  background-color: #1f425a;
+  background-color: rgb(var(--v-theme-primary));
   color: white;
 }
 
 .landing__button--secondary {
-  color: #1f425a;
-  border-color: #eb6622;
+  color: rgb(var(--v-theme-primary));
+  border-color: rgb(var(--v-theme-orange));
   background-color: white;
 }
 
 .landing__button--secondary:hover {
-  background-color: #eb6622;
+  background-color: rgb(var(--v-theme-orange));
   color: white;
 }
 

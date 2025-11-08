@@ -13,8 +13,8 @@ interface UsePaginationOptions {
 
 export function usePagination(totalItems: Ref<number>, options: UsePaginationOptions = {}) {
   const {
-    defaultItemsPerPage = 10,
-    itemsPerPageOptions = [10, 25, 50, 100],
+    defaultItemsPerPage = 60,
+    itemsPerPageOptions = [60, 120, 240],
   } = options
 
   const router = useRouter()

@@ -25,7 +25,8 @@ export default createVuetify({
           info: '#2196F3',
           success: '#4CAF50',
           warning: '#FB8C00',
-          background: '#FFFFFF',
+          orange: '#eb6622',     // Atlas orange accent color
+          background: '#f2f0f1', // Light grey background matching landing page
           surface: '#FFFFFF',
         },
       },

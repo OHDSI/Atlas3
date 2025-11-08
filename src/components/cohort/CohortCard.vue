@@ -10,14 +10,12 @@
       {{ cohort.name }}
     </v-card-title>
 
-    <v-card-subtitle class="cohort-card__subtitle">
-      <div class="cohort-card__type">
-        <v-icon size="16" color="#37474f">mdi-web</v-icon>
-        <span class="cohort-card__type-text">Atlas Cohort Definition</span>
-      </div>
-    </v-card-subtitle>
-
-    <v-card-text class="cohort-card__content">
+  <v-card-subtitle class="cohort-card__subtitle">
+    <div class="cohort-card__type">
+      <v-icon size="16" color="#1f425a">mdi-web</v-icon>
+      <span class="cohort-card__type-text">Atlas Cohort Definition</span>
+    </div>
+  </v-card-subtitle>    <v-card-text class="cohort-card__content">
       <div class="cohort-card__meta">
         <div class="cohort-card__meta-item">
           <span class="cohort-card__meta-label">ID:</span>
@@ -50,7 +48,7 @@
             class="cohort-card__action-btn"
             @click.stop="$emit('materialize', cohort)"
           >
-            <v-icon color="#37474f" size="22">mdi-account-multiple</v-icon>
+            <v-icon color="#1f425a" size="22">mdi-account-multiple</v-icon>
           </v-btn>
         </template>
       </v-tooltip>
@@ -66,7 +64,7 @@
             class="cohort-card__action-btn"
             @click.stop="$emit('delete', cohort)"
           >
-            <v-icon color="#37474f" size="22">mdi-delete-outline</v-icon>
+            <v-icon color="#1f425a" size="22">mdi-delete-outline</v-icon>
           </v-btn>
         </template>
       </v-tooltip>
@@ -136,21 +134,21 @@ function handleCardClick() {
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
-  border: 1px solid #ddd;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   border-radius: 4px;
 }
 
 .cohort-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-  border-color: #ccc;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.18);
+  border-color: #d0d0d0;
 }
 
 .cohort-card__title {
   font-size: 0.9375rem;
   font-weight: 400;
-  color: #ef5350;
+  color: rgb(var(--v-theme-orange));
   word-break: break-word;
   padding: 16px 16px 8px;
   line-height: 1.3;
@@ -169,7 +167,7 @@ function handleCardClick() {
 .cohort-card__type-text {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #37474f;
+  color: #1f425a;
 }
 
 .cohort-card__content {
@@ -192,12 +190,12 @@ function handleCardClick() {
 
 .cohort-card__meta-label {
   font-weight: 700;
-  color: #424242;
+  color: #333;
   min-width: 85px;
 }
 
 .cohort-card__meta-value {
-  color: #616161;
+  color: #666;
   font-weight: 400;
 }
 

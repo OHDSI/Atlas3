@@ -1,10 +1,10 @@
 <template>
   <div class="cohort-grid">
-    <!-- Loading State -->
+    <!-- Loading State - Skeleton Cards -->
     <div v-if="loading" class="cohort-grid__container">
       <v-skeleton-loader
         v-for="i in skeletonCount"
-        :key="`skeleton-${i}`"
+        :key="i"
         type="card"
         class="cohort-grid__skeleton"
       />
@@ -112,6 +112,7 @@ const emptyMessage = computed(() => {
 <style scoped>
 .cohort-grid {
   width: 100%;
+  padding: 0 24px;
 }
 
 .cohort-grid__container {

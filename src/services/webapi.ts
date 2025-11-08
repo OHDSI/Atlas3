@@ -12,9 +12,15 @@ import {
   type CDMSource,
   type GenerationJob,
   type CohortGenerationInfoList,
+  type GenerationStatus,
 } from '@/models/webapi.types'
 import { ConceptSearchResponseSchema, type Concept, type ConceptSet } from '@/models/concept-set.types'
 import type { AtlasCohortDefinition } from '@/models/atlas.types'
+import type { ValidationResponse } from '@/models/cohort-validation.types'
+import {
+  WebAPIReportResponseSchema,
+  type WebAPIReportResponse
+} from '@/models/report.types'
 
 // Use relative path for proxy to avoid CORS in development
 // Override with VITE_WEBAPI_URL environment variable if needed
@@ -214,28 +220,47 @@ export async function deleteCohortDefinition(id: number): Promise<boolean> {
 
 /**
  * Generate cohort for a specific data source
- * Endpoint: POST /cohortdefinition/{id}/generate/{sourceKey}
+ * Endpoint: GET /cohortdefinition/{id}/generate/{sourceKey}
+ * Returns job execution info that needs to be converted to GenerationJob format
  */
 export async function generateCohort(
   cohortId: number,
   sourceKey: string
 ): Promise<GenerationJob | null> {
   try {
-    const data = await fetchJSON<unknown>(
+    const data = await fetchJSON<any>(
       `/cohortdefinition/${cohortId}/generate/${sourceKey}`,
       {
-        method: 'POST',
+        method: 'GET',
       }
     )
 
-    const parsed = GenerationJobSchema.safeParse(data)
+    // The API returns a job execution object with format:
+    // { status: "STARTING", executionId: number, jobParameters: {...} }
+    // We need to convert this to our GenerationJob format
 
-    if (!parsed.success) {
-      console.error('Generation job validation error:', parsed.error)
-      return null
+    // Map status from job execution to our GenerationStatus
+    let status: GenerationStatus = 'PENDING'
+    if (data.status === 'STARTING' || data.status === 'STARTED') {
+      status = 'PENDING'
+    } else if (data.status === 'RUNNING') {
+      status = 'RUNNING'
+    } else if (data.status === 'COMPLETED' || data.status === 'COMPLETE') {
+      status = 'COMPLETE'
+    } else if (data.status === 'FAILED') {
+      status = 'FAILED'
     }
 
-    return parsed.data
+    const job: GenerationJob = {
+      id: data.executionId || Date.now(),
+      cohortDefinitionId: cohortId,
+      sourceKey: sourceKey,
+      status: status,
+      startTime: data.startDate ? new Date(data.startDate).toISOString() : undefined,
+      endTime: data.endDate ? new Date(data.endDate).toISOString() : undefined,
+    }
+
+    return job
   } catch (error) {
     console.error('Failed to generate cohort:', error)
     return null
@@ -358,4 +383,619 @@ export async function deleteCohort(id: number): Promise<void> {
   await fetchJSON(`/cohortdefinition/${id}`, {
     method: 'DELETE',
   })
+}
+
+/**
+ * Validate cohort definition and get warnings
+ * Endpoint: POST /cohortdefinition/checkV2
+ * @param name Cohort name
+ * @param expression Cohort expression object
+ * @returns Validation response with warnings
+ */
+export async function validateCohortDefinition(
+  name: string,
+  expression: object
+): Promise<ValidationResponse> {
+  try {
+    const data = await fetchJSON<ValidationResponse>('/cohortdefinition/checkV2', {
+      method: 'POST',
+      body: JSON.stringify({ name, expression }),
+    })
+    return data
+  } catch (error) {
+    console.error('Failed to validate cohort definition:', error)
+    // Return empty warnings on error
+    return { warnings: [] }
+  }
+}
+
+// ============================================================================
+// Report Endpoints (Feature: 005-cohort-reports)
+// ============================================================================
+
+/**
+ * Get comprehensive cohort report data for a generated cohort
+ * Endpoint: GET /cohortdefinition/{id}/report/{sourceKey}
+ * T015: Primary report data endpoint
+ *
+ * @param cohortId Cohort definition ID
+ * @param sourceKey Data source key (e.g., "SYNPUF5", "SYNPUF1K")
+ * @returns Complete report data including person, condition eras, drug eras, cohort specific
+ */
+export async function getCohortReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<WebAPIReportResponse | null> {
+  try {
+    const data = await fetchJSON<unknown>(
+      `/cohortdefinition/${cohortId}/report/${sourceKey}`
+    )
+
+    // Validate response structure
+    const parsed = WebAPIReportResponseSchema.safeParse(data)
+
+    if (!parsed.success) {
+      console.error('Cohort report validation error:', parsed.error)
+      return null
+    }
+
+    return parsed.data
+  } catch (error) {
+    console.error(`Failed to fetch cohort report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get person demographics report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/person
+ * T016: Individual report endpoint
+ */
+export async function getPersonReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIPersonRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIPersonRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/person`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch person report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get condition eras report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/conditionera
+ * T016: Individual report endpoint
+ */
+export async function getConditionErasReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIConditionEraRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIConditionEraRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/conditionera`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch condition eras report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get condition occurrence report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/condition
+ * T079: Condition occurrence report
+ */
+export async function getConditionReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIConditionRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIConditionRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/condition`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch condition report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get drug eras report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugera
+ * T016: Individual report endpoint
+ */
+export async function getDrugErasReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIDrugEraRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrugEraRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/drugera`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch drug eras report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get cohort-specific analytics report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/cohortspecific
+ * T016: Individual report endpoint
+ */
+export async function getCohortSpecificReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPICohortSpecificRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPICohortSpecificRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/cohortspecific`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch cohort specific report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Trigger Full Analysis batch job
+ * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/fullAnalysis
+ * T104: Action button batch job trigger
+ */
+export async function triggerFullAnalysis(
+  cohortId: number,
+  sourceKey: string
+): Promise<boolean> {
+  try {
+    await fetchJSON(`/cohortdefinition/${cohortId}/report/${sourceKey}/fullAnalysis`, {
+      method: 'POST',
+    })
+    return true
+  } catch (error) {
+    console.error(`Failed to trigger full analysis for ${cohortId}/${sourceKey}:`, error)
+    return false
+  }
+}
+
+/**
+ * Trigger Quick Analysis batch job
+ * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/quickAnalysis
+ * T105: Action button batch job trigger
+ */
+export async function triggerQuickAnalysis(
+  cohortId: number,
+  sourceKey: string
+): Promise<boolean> {
+  try {
+    await fetchJSON(`/cohortdefinition/${cohortId}/report/${sourceKey}/quickAnalysis`, {
+      method: 'POST',
+    })
+    return true
+  } catch (error) {
+    console.error(`Failed to trigger quick analysis for ${cohortId}/${sourceKey}:`, error)
+    return false
+  }
+}
+
+/**
+ * Trigger Utilization batch job
+ * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/utilization
+ * T106: Action button batch job trigger
+ */
+export async function triggerUtilization(
+  cohortId: number,
+  sourceKey: string
+): Promise<boolean> {
+  try {
+    await fetchJSON(`/cohortdefinition/${cohortId}/report/${sourceKey}/utilization`, {
+      method: 'POST',
+    })
+    return true
+  } catch (error) {
+    console.error(`Failed to trigger utilization analysis for ${cohortId}/${sourceKey}:`, error)
+    return false
+  }
+}
+
+/**
+ * Get persons exposure baseline report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/observationperiod
+ * T090: Persons exposure baseline report
+ */
+export async function getPersonsExposureBaselineReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIPersonsExposureRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIPersonsExposureRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/observationperiod`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch persons exposure baseline report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get persons exposure cohort report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/cohort
+ * T091: Persons exposure cohort report
+ */
+export async function getPersonsExposureCohortReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIPersonsExposureRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIPersonsExposureRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/cohort`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch persons exposure cohort report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get visits baseline report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitsbaseline
+ * T092: Visits baseline report
+ */
+export async function getVisitsBaselineReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIVisitsRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIVisitsRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/visitsbaseline`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch visits baseline report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get visit dates baseline report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitdatesbaseline
+ * T093: Visit dates baseline report
+ */
+export async function getVisitDatesBaselineReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIVisitDatesRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIVisitDatesRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/visitdatesbaseline`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch visit dates baseline report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get care site visit dates baseline report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/caresitevisitdatesbaseline
+ * T094: Care site visit dates baseline report
+ */
+export async function getCareSiteVisitDatesBaselineReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPICareSiteVisitDatesRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPICareSiteVisitDatesRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/caresitevisitdatesbaseline`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch care site visit dates baseline report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get visits cohort report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitscohort
+ * T095: Visits cohort report
+ */
+export async function getVisitsCohortReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIVisitsRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIVisitsRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/visitscohort`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch visits cohort report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get visit dates cohort report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitdatescohort
+ * T096: Visit dates cohort report
+ */
+export async function getVisitDatesCohortReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIVisitDatesRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIVisitDatesRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/visitdatescohort`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch visit dates cohort report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get care site visit dates cohort report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/caresitevisitdatescohort
+ * T097: Care site visit dates cohort report
+ */
+export async function getCareSiteVisitDatesCohortReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPICareSiteVisitDatesRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPICareSiteVisitDatesRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/caresitevisitdatescohort`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch care site visit dates cohort report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get drug utilization baseline report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugutilizationbaseline
+ * T098: Drug utilization baseline report
+ */
+export async function getDrugUtilizationBaselineReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIDrugUtilizationRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrugUtilizationRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/drugutilizationbaseline`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch drug utilization baseline report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get drug utilization cohort report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugutilizationcohort
+ * T099: Drug utilization cohort report
+ */
+export async function getDrugUtilizationCohortReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIDrugUtilizationRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrugUtilizationRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/drugutilizationcohort`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch drug utilization cohort report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get Heracles Heel report (data quality)
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/heraclesheel
+ * T100: Heracles Heel report
+ */
+export async function getHeraclesHeelReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIHeraclesHeelRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIHeraclesHeelRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/heraclesheel`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch Heracles Heel report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get conditions by index report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/conditionsbyindex
+ * T080: Conditions by index report
+ */
+export async function getConditionsByIndexReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIConditionsByIndexRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIConditionsByIndexRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/conditionsbyindex`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch conditions by index report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get death report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/death
+ * T081: Death report
+ */
+export async function getDeathReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIDeathRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDeathRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/death`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch death report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get drug exposure report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugexposure
+ * T082: Drug exposure report
+ */
+export async function getDrugExposureReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIDrugExposureRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrugExposureRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/drugexposure`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch drug exposure report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get drugs by index report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugsbyindex
+ * T083: Drugs by index report
+ */
+export async function getDrugsByIndexReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIDrugsByIndexRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrugsByIndexRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/drugsbyindex`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch drugs by index report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get observation periods report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/observationperiod
+ * T084: Observation periods report
+ */
+export async function getObservationPeriodsReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIObservationPeriodsRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIObservationPeriodsRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/observationperiod`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch observation periods report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get procedure report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/procedure
+ * T085: Procedure report
+ */
+export async function getProcedureReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIProcedureRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIProcedureRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/procedure`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch procedure report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get procedures by index report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/proceduresbyindex
+ * T086: Procedures by index report
+ */
+export async function getProceduresByIndexReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIProceduresByIndexRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIProceduresByIndexRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/proceduresbyindex`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch procedures by index report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get data completeness report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/datacompleteness
+ * T087: Data completeness report
+ */
+export async function getDataCompletenessReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIDataCompletenessRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDataCompletenessRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/datacompleteness`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch data completeness report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get entropy report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/entropy
+ * T088: Entropy report
+ */
+export async function getEntropyReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPIEntropyRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIEntropyRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/entropy`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch entropy report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get tornado report
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/tornado
+ * T089: Tornado report
+ */
+export async function getTornadoReport(
+  cohortId: number,
+  sourceKey: string
+): Promise<import('@/models/report.types').WebAPITornadoRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPITornadoRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/tornado`
+    )
+  } catch (error) {
+    console.error(`Failed to fetch tornado report for ${cohortId}/${sourceKey}:`, error)
+    return null
+  }
 }

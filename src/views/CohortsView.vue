@@ -1,38 +1,31 @@
 <template>
-  <v-container fluid class="cohorts-view">
-    <v-row>
-      <v-col cols="12">
-        <div class="cohorts-view__top-bar">
-          <div class="cohorts-view__actions">
-            <v-btn
-              color="primary"
-              variant="elevated"
-              size="large"
-              class="cohorts-view__action-btn"
-              aria-label="Create new cohort"
-              @click="handleCreateCohort"
-            >
-              <v-icon start>mdi-plus</v-icon>
-              Create Cohort
-            </v-btn>
+  <div class="page-wrapper">
+    <div class="page-card">
+      <v-container fluid class="cohorts-view">
+        <v-row>
+          <v-col cols="12">
+            <div class="cohorts-view__actions">
+          <v-btn
+            color="primary"
+            variant="flat"
+            size="large"
+            class="cohorts-view__action-btn"
+            aria-label="Create new cohort"
+            @click="handleCreateCohort"
+          >
+            Create Cohort
+          </v-btn>
 
-            <v-btn
-              color="primary"
-              variant="elevated"
-              size="large"
-              class="cohorts-view__action-btn"
-              aria-label="Import cohort from JSON"
-              @click="handleImportCohort"
-            >
-              <v-icon start>mdi-import</v-icon>
-              Import Cohort
-            </v-btn>
-          </div>
-          
-          <cohort-search
-            v-model="searchQuery"
-            class="cohorts-view__search"
-          />
+          <v-btn
+            color="primary"
+            variant="flat"
+            size="large"
+            class="cohorts-view__action-btn"
+            aria-label="Import cohort from JSON"
+            @click="handleImportCohort"
+          >
+            Import Cohort
+          </v-btn>
         </div>
       </v-col>
     </v-row>
@@ -149,18 +142,31 @@
 
   <!-- Fixed pagination bar at bottom -->
   <div v-if="!loading && !error && filteredCohorts.length > 0" class="cohorts-view__pagination-bar">
-    <cohort-pagination
-      :page="page"
-      :items-per-page="itemsPerPage"
-      :items-per-page-options="itemsPerPageOptions"
-      :total-items="totalItems"
-      :can-go-previous="canGoPrevious"
-      :can-go-next="canGoNext"
-      :range-display="rangeDisplay"
-      @previous="previousPage"
-      @next="nextPage"
-      @update:items-per-page="setItemsPerPage"
-    />
+    <div class="cohorts-view__pagination-content">
+      <div class="cohorts-view__pagination-search">
+        <label for="cohort-search" class="cohorts-view__pagination-label">Search:</label>
+        <cohort-search
+          id="cohort-search"
+          v-model="searchQuery"
+          class="cohorts-view__search-input"
+        />
+      </div>
+
+      <cohort-pagination
+        :page="page"
+        :items-per-page="itemsPerPage"
+        :items-per-page-options="itemsPerPageOptions"
+        :total-items="totalItems"
+        :can-go-previous="canGoPrevious"
+        :can-go-next="canGoNext"
+        :range-display="rangeDisplay"
+        @previous="previousPage"
+        @next="nextPage"
+        @update:items-per-page="setItemsPerPage"
+      />
+    </div>
+  </div>
+    </div>
   </div>
 </template>
 
@@ -277,36 +283,60 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.cohorts-view {
-  padding: 24px;
-  padding-bottom: 72px; /* Space for fixed pagination (48px + gap) */
-  background-color: #f5f5f5;
-  min-height: calc(100vh - 64px);
-}
-
-.cohorts-view__top-bar {
+.page-wrapper {
+  min-height: 100%;
+  background-color: rgb(var(--v-theme-background));
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-  margin-bottom: 24px;
+  padding: 32px;
+  box-sizing: border-box;
 }
 
+.page-card {
+  border-radius: 18px;
+  padding: 30px;
+  background-color: white;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.cohorts-view {
+  padding: 0;
+  padding-bottom: 80px; /* Space for fixed pagination */
+}
+
+/* Breadcrumb */
+.cohorts-view__breadcrumb {
+  padding: 16px 24px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.cohorts-view__breadcrumb-item {
+  font-size: 1rem;
+  color: #666;
+}
+
+.cohorts-view__breadcrumb-item--active {
+  font-weight: 500;
+  color: #333;
+}
+
+/* Actions */
 .cohorts-view__actions {
   display: flex;
-  gap: 12px;
-  flex: 1;
+  gap: 16px;
+  padding: 20px 24px;
 }
 
 .cohorts-view__action-btn {
   flex: 1;
+  text-transform: none;
+  font-weight: 400;
+  letter-spacing: normal;
 }
 
-.cohorts-view__search {
-  flex: 0 0 auto;
-  width: 300px;
-}
-
+/* Pagination Bar */
 .cohorts-view__pagination-bar {
   position: fixed;
   bottom: 0;
@@ -317,21 +347,46 @@ onMounted(() => {
   padding: 12px 24px;
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
   z-index: 100;
+}
+
+.cohorts-view__pagination-content {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  height: 48px;
+  gap: 24px;
+  max-width: 100%;
+}
+
+.cohorts-view__pagination-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cohorts-view__pagination-label {
+  font-size: 0.875rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+.cohorts-view__search-input {
+  width: 200px;
 }
 
 /* Responsive adjustments */
 @media (max-width: 960px) {
-  .cohorts-view__top-bar {
+  .cohorts-view__pagination-content {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
 
-  .cohorts-view__search {
-    width: 100%;
+  .cohorts-view__pagination-search {
+    justify-content: flex-start;
+  }
+
+  .cohorts-view__search-input {
+    flex: 1;
   }
 }
 
