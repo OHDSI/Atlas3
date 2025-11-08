@@ -43,7 +43,8 @@ const logoOhdsiSrc = logoOhdsiPng
 
 const navigationItems = ref<NavigationItem[]>([
   { id: 'concepts', title: 'Concepts', route: '/concepts', visible: true, active: false },
-  { id: 'cohorts', title: 'Cohorts', route: '/cohorts', visible: true, active: true }
+  { id: 'cohorts', title: 'Cohorts', route: '/cohorts', visible: true, active: true },
+  { id: 'datasources', title: 'Data Sources', route: '/datasources', visible: true, active: false }
 ])
 
 const handleLogoClick = () => {

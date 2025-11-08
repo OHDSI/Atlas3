@@ -33,6 +33,12 @@ const router = createRouter({
       name: 'concepts',
       component: () => import('@/views/ConceptsView.vue'),
     },
+    {
+      path: '/datasources/:sourceKey?/:reportType?',
+      name: 'datasources',
+      component: () => import('@/views/DataSourcesView.vue'),
+      props: true,
+    },
   ],
 })
 
