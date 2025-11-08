@@ -208,7 +208,7 @@ const exportData = computed(() => {
 /**
  * Custom filter function for search
  */
-function customFilter(value: any, query: string, item?: any) {
+function customFilter(_value: any, query: string, item?: any) {
   if (!query) return true
   const searchLower = query.toLowerCase()
 

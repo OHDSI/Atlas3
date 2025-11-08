@@ -97,17 +97,20 @@ async function loadData() {
   if (currentReport.value && 'data' in currentReport.value) {
     const data = currentReport.value.data
 
+    const rows = (data as unknown as any[]).map((item: any) => ({
+      date: item.date,
+      visitCount: item.visitCount,
+      personCount: item.personCount
+    }))
+
     tableData.value = {
       headers: [
         { key: 'date', title: 'Date', sortable: true },
         { key: 'visitCount', title: 'Visit Count', sortable: true, align: 'end' },
         { key: 'personCount', title: 'Person Count', sortable: true, align: 'end' }
       ],
-      rows: data.map(item => ({
-        date: item.date,
-        visitCount: item.visitCount,
-        personCount: item.personCount
-      }))
+      rows,
+      totalRows: rows.length
     }
   }
 }

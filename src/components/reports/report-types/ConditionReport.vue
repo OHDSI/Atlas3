@@ -43,8 +43,8 @@
       <!-- Data table -->
       <DataTable
         v-else-if="tableData"
-        :items="tableData.rows"
-        :headers="tableData.headers"
+        :items="tableData?.rows ?? []"
+        :headers="tableData?.headers ?? []"
         :loading="loading"
       />
 
@@ -97,6 +97,14 @@ async function loadData() {
   if (currentReport.value && 'prevalence' in currentReport.value) {
     const data = currentReport.value.prevalence
 
+    const rows = (data as any[]).map((item: any) => ({
+      conceptId: item.conceptId,
+      conceptName: item.conceptName || 'Unknown',
+      recordsPerPerson: item.recordsPerPerson?.toFixed(2) || 'N/A',
+      personCount: item.personCount,
+      prevalence: item.prevalence?.toFixed(2) || 'N/A'
+    }))
+
     tableData.value = {
       headers: [
         { key: 'conceptId', title: 'Concept ID', sortable: true },
@@ -105,13 +113,8 @@ async function loadData() {
         { key: 'personCount', title: 'Person Count', sortable: true, align: 'end' },
         { key: 'prevalence', title: 'Prevalence (%)', sortable: true, align: 'end' }
       ],
-      rows: data.map(item => ({
-        conceptId: item.conceptId,
-        conceptName: item.conceptName || 'Unknown',
-        recordsPerPerson: item.recordsPerPerson?.toFixed(2) || 'N/A',
-        personCount: item.personCount,
-        prevalence: item.prevalence?.toFixed(2) || 'N/A'
-      }))
+      rows,
+      totalRows: rows.length
     }
   }
 }

@@ -97,6 +97,13 @@ async function loadData() {
   if (currentReport.value && 'data' in currentReport.value) {
     const data = currentReport.value.data
 
+    const rows = (data as unknown as any[]).map((item: any) => ({
+      careSiteId: item.careSiteId,
+      careSiteName: item.careSiteName || 'Unknown',
+      visitCount: item.visitCount,
+      personCount: item.personCount
+    }))
+
     tableData.value = {
       headers: [
         { key: 'careSiteId', title: 'Care Site ID', sortable: true },
@@ -104,12 +111,8 @@ async function loadData() {
         { key: 'visitCount', title: 'Visit Count', sortable: true, align: 'end' },
         { key: 'personCount', title: 'Person Count', sortable: true, align: 'end' }
       ],
-      rows: data.map(item => ({
-        careSiteId: item.careSiteId,
-        careSiteName: item.careSiteName || 'Unknown',
-        visitCount: item.visitCount,
-        personCount: item.personCount
-      }))
+      rows,
+      totalRows: rows.length
     }
   }
 }

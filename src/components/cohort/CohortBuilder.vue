@@ -391,7 +391,6 @@ const isGenerationPanelOpen = ref(false)
 // UI state
 // If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
 const isLoadingCohort = ref(!!props.id)
-const fileInputRef = ref<HTMLInputElement | null>(null)
 const isConceptSetDialogOpen = ref(false)
 const selectedCriteriaContext = ref<{
   eventId?: string | null
@@ -418,26 +417,6 @@ const cohortId = computed(() => props.id ? Number(props.id) : null)
 
 const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && entryEvents.value.length > 0
-})
-
-// Generation computed properties
-const sourceItems = computed(() => {
-  return webapiStore.sourcesList.map(source => ({
-    label: `${source.sourceName} (${source.sourceKey})`,
-    value: source.sourceKey,
-  }))
-})
-
-const isLoadingSources = computed(() => webapiStore.isLoadingSources)
-
-const currentJob = computed(() => {
-  if (!cohortId.value) return null
-  const jobs = webapiStore.getJobsByCohortId(cohortId.value)
-  return jobs.length > 0 ? jobs[jobs.length - 1] : null
-})
-
-const isGenerating = computed(() => {
-  return currentJob.value?.status === 'PENDING' || currentJob.value?.status === 'RUNNING'
 })
 
 // Validation computed properties
@@ -467,13 +446,6 @@ const highestSeverityColor = computed(() => {
   if (severity === 'CRITICAL') return 'error'
   if (severity === 'WARNING') return 'warning'
   return 'info'
-})
-
-const highestSeverityIcon = computed(() => {
-  const severity = highestSeverity.value
-  if (severity === 'CRITICAL') return 'mdi-alert-circle'
-  if (severity === 'WARNING') return 'mdi-alert'
-  return 'mdi-information'
 })
 
 onMounted(async () => {
@@ -522,10 +494,14 @@ async function loadCohort(id: string) {
       return
     }
 
-    // Parse expression if it's a string
-    const expression = typeof atlasCohort.expression === 'string'
-      ? JSON.parse(atlasCohort.expression)
-      : atlasCohort.expression
+    // Parse expression if it's a string (stored as JSON in WebAPI)
+    let expression
+    if (typeof atlasCohort === 'object' && 'expression' in atlasCohort) {
+      const exprValue = (atlasCohort as any).expression
+      expression = typeof exprValue === 'string' ? JSON.parse(exprValue) : exprValue
+    } else {
+      expression = atlasCohort
+    }
 
     // Convert Atlas JSON to internal format
     const converted = convertAtlasToInternal(expression)
@@ -551,14 +527,14 @@ async function loadCohort(id: string) {
 
     // Update local state
     cohortName.value = cohortDef.name
-    cohortDescription.value = cohortDef.description
+    cohortDescription.value = cohortDef.description ?? ''
     entryEvents.value = cohortDef.entryEvents
     additionalCriteria.value = cohortDef.additionalCriteria
     inclusionRules.value = cohortDef.inclusionRules
-    exitCriteria.value = cohortDef.exitCriteria
+    exitCriteria.value = cohortDef.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
     observationPeriod.value = cohortDef.observationPeriod || { priorDays: 0, postDays: 0 }
     qualifyingLimit.value = cohortDef.qualifyingLimit
-    inclusionQualifyingLimit.value = cohortDef.inclusionQualifyingLimit || 'ALL'
+    inclusionQualifyingLimit.value = cohortDef.inclusionQualifyingLimit ?? 'ALL'
 
     // Concept sets are already part of the cohort data structure (entryEvents, inclusionRules, etc.)
     // No need to load them separately into the store
@@ -605,22 +581,18 @@ async function validateCohort() {
 
     // Extract from inclusion rules
     inclusionRules.value.forEach(rule => {
-      if (rule.groups) {
-        rule.groups.forEach(group => {
-          if (group.events) {
-            group.events.forEach(event => {
-              if (event.conceptSet) {
-                conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
-              }
-            })
+      rule.criteriaGroups.forEach(group => {
+        group.events.forEach(event => {
+          if (event.conceptSet) {
+            conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
           }
         })
-      }
+      })
     })
 
     // Build cohort definition
     const cohortDef: CohortDefinition = {
-      id: cohortId.value,
+      id: cohortId.value ?? undefined,
       name: cohortName.value,
       description: cohortDescription.value,
       entryEvents: entryEvents.value,
@@ -757,7 +729,7 @@ function handleConceptSetSaved() {
 
   // Copy the entire concept set including items into the cohort definition
   const conceptSetRef: ConceptSetReference = {
-    id: conceptSet.id,
+    id: conceptSet.id!,
     name: conceptSet.name,
     items: conceptSet.items || [],
   }
@@ -871,7 +843,8 @@ function gatherConceptSets(): ConceptSetReference[] {
 }
 
 // Atlas JSON Import/Export
-async function handleFileImport(event: Event) {
+// @ts-expect-error - Planned feature, not yet implemented in UI
+async function _handleFileImport(event: Event) {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
   if (!file) return
@@ -891,8 +864,8 @@ async function handleFileImport(event: Event) {
     entryEvents.value = importedCohort.entryEvents || []
     additionalCriteria.value = importedCohort.additionalCriteria
     inclusionRules.value = importedCohort.inclusionRules || []
-    exitCriteria.value = importedCohort.exitCriteria
-    observationPeriod.value = importedCohort.observationPeriod
+    exitCriteria.value = importedCohort.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+    observationPeriod.value = importedCohort.observationPeriod ?? { priorDays: 0, postDays: 0 }
     qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
     inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
 
@@ -906,7 +879,8 @@ async function handleFileImport(event: Event) {
   }
 }
 
-function handleExportAtlas() {
+// @ts-expect-error - Planned feature, not yet implemented in UI
+function _handleExportAtlas() {
   if (!canSave.value) return
 
   const cohortDefinition: CohortDefinition = {
@@ -936,7 +910,8 @@ function handleExportAtlas() {
 }
 
 // Generation functions (T117, T119, T120)
-async function handleGenerate() {
+// @ts-expect-error - Planned feature, not yet implemented in UI
+async function _handleGenerate() {
   if (!cohortId.value || !selectedSourceKey.value) {
     generationError.value = 'Please save the cohort and select a data source first'
     return
@@ -961,7 +936,8 @@ async function handleGenerate() {
   }
 }
 
-function getStatusColor(status: string): string {
+// @ts-expect-error - Helper for planned generation feature
+function _getStatusColor(status: string): string {
   switch (status) {
     case 'COMPLETE':
       return 'success'
@@ -976,7 +952,8 @@ function getStatusColor(status: string): string {
   }
 }
 
-function getStatusIcon(status: string): string {
+// @ts-expect-error - Helper for planned generation feature
+function _getStatusIcon(status: string): string {
   switch (status) {
     case 'COMPLETE':
       return 'mdi-check-circle'
@@ -991,7 +968,8 @@ function getStatusIcon(status: string): string {
   }
 }
 
-function getStatusText(status: string): string {
+// @ts-expect-error - Helper for planned generation feature
+function _getStatusText(status: string): string {
   switch (status) {
     case 'COMPLETE':
       return 'Complete'

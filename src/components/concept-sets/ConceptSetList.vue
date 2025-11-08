@@ -42,7 +42,7 @@
                 variant="text"
                 color="primary"
                 :data-testid="`edit-concept-set-${conceptSet.id}`"
-                @click="$emit('edit', conceptSet.id)"
+                @click="conceptSet.id && $emit('edit', conceptSet.id)"
               />
               <v-btn
                 icon="mdi-delete"
@@ -50,7 +50,7 @@
                 variant="text"
                 color="error"
                 :data-testid="`delete-concept-set-${conceptSet.id}`"
-                @click="handleDelete(conceptSet.id)"
+                @click="conceptSet.id && handleDelete(conceptSet.id)"
               />
             </div>
           </template>
@@ -129,12 +129,12 @@ const filteredConceptSets = computed(() => {
   const query = searchFilter.value.toLowerCase()
   return props.conceptSets.filter((cs) =>
     cs.name.toLowerCase().includes(query) ||
-    cs.id.toString().includes(query)
+    (cs.id?.toString() || '').includes(query)
   )
 })
 
 function getConceptCount(conceptSet: ConceptSet): number {
-  return conceptSet.expression?.items?.length || 0
+  return conceptSet.items?.length || 0
 }
 
 function handleDelete(id: number | string) {

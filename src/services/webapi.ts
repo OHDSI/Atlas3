@@ -7,7 +7,6 @@
  */
 import {
   CDMSourceListSchema,
-  GenerationJobSchema,
   CohortGenerationInfoListSchema,
   type CDMSource,
   type GenerationJob,
@@ -159,7 +158,17 @@ export async function searchConcepts(
     return []
   }
 
-  return parsed.data
+  // Map UPPERCASE API fields to camelCase
+  return parsed.data.map(c => ({
+    conceptId: c.CONCEPT_ID,
+    conceptName: c.CONCEPT_NAME,
+    conceptCode: c.CONCEPT_CODE,
+    domainId: c.DOMAIN_ID,
+    vocabularyId: c.VOCABULARY_ID,
+    conceptClassId: c.CONCEPT_CLASS_ID,
+    standardConcept: c.STANDARD_CONCEPT,
+    invalidReason: c.INVALID_REASON,
+  }))
 }
 
 /**
@@ -439,7 +448,13 @@ export async function getCohortReport(
       return null
     }
 
-    return parsed.data
+    // Ensure summary is not undefined
+    if (!parsed.data.summary) {
+      console.error('Cohort report missing summary')
+      return null
+    }
+
+    return parsed.data as WebAPIReportResponse
   } catch (error) {
     console.error(`Failed to fetch cohort report for ${cohortId}/${sourceKey}:`, error)
     return null

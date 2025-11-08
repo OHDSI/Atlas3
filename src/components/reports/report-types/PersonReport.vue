@@ -152,7 +152,7 @@ const props = defineProps<{
 /**
  * Reports composable
  */
-const { loadReport, currentReportData, isLoading, hasError, errorMessage } = useReports()
+const { loadReport, currentReportData } = useReports()
 
 /**
  * Section loading and error states

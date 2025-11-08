@@ -25,7 +25,9 @@ export const useConceptSetsStore = defineStore('conceptSets', () => {
 
   // Actions
   function addConceptSet(conceptSet: ConceptSet) {
-    conceptSets.value.set(conceptSet.id, conceptSet)
+    if (conceptSet.id !== undefined) {
+      conceptSets.value.set(conceptSet.id, conceptSet)
+    }
   }
 
   function updateConceptSet(id: number | string, conceptSet: ConceptSet) {

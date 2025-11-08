@@ -40,7 +40,7 @@
               @update:model-value="updateAttributeValue(index, $event)"
             />
 
-            <template v-if="attribute.operator === 'BETWEEN' || attribute.operator === 'NOT_BETWEEN'">
+            <template v-if="attribute.type === 'numericRange' && (attribute.operator === 'BETWEEN')">
               <span class="and-text">and</span>
               <v-text-field
                 :model-value="attribute.extent"
@@ -85,7 +85,7 @@
             />
 
             <v-text-field
-              v-if="attribute.operator === 'BETWEEN' || attribute.operator === 'AFTER'"
+              v-if="attribute.type === 'dateRange' && (attribute.operator === 'BETWEEN' || attribute.operator === 'GREATER_THAN')"
               :model-value="attribute.value"
               type="date"
               density="compact"
@@ -97,7 +97,7 @@
             />
 
             <v-text-field
-              v-if="attribute.operator === 'BETWEEN' || attribute.operator === 'BEFORE'"
+              v-if="attribute.type === 'dateRange' && (attribute.operator === 'BETWEEN' || attribute.operator === 'LESS_THAN')"
               :model-value="attribute.extent"
               type="date"
               density="compact"
@@ -150,16 +150,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import type {
-  EventAttribute,
-  NumericRangeAttribute,
-  ConceptSetAttribute,
-  DateRangeAttribute,
-  NumericOperator,
-  NumericAttributeKey,
-  ConceptAttributeKey,
-  DateAttributeKey
+  EventAttribute
 } from '@/models/event.types'
 import type { CriteriaType } from '@/models/cohort.types'
 
@@ -245,6 +238,7 @@ const dateOperators = [
 function updateAttributeOperator(index: number, operator: string) {
   const newAttributes = [...props.modelValue]
   const attr = newAttributes[index]
+  if (!attr) return
   if (attr.type === 'numericRange' || attr.type === 'dateRange') {
     newAttributes[index] = { ...attr, operator: operator as any }
   }
@@ -254,13 +248,15 @@ function updateAttributeOperator(index: number, operator: string) {
 function updateAttributeValue(index: number, value: any) {
   const newAttributes = [...props.modelValue]
   const attr = newAttributes[index]
-  newAttributes[index] = { ...attr, value }
+  if (!attr) return
+  newAttributes[index] = { ...attr, value } as EventAttribute
   emit('update:modelValue', newAttributes)
 }
 
 function updateAttributeExtent(index: number, extent: any) {
   const newAttributes = [...props.modelValue]
   const attr = newAttributes[index]
+  if (!attr) return
   if ('extent' in attr) {
     newAttributes[index] = { ...attr, extent }
   }
@@ -317,9 +313,6 @@ function getAttributeLabel(attributeKey: string): string {
 
 function openConceptSetPicker() {
   // TODO: Implement concept set picker dialog
-  // For now, use a mock concept set
-  editingAttribute.value.conceptSetId = 8507
-  editingAttribute.value.conceptSetName = 'Male'
 }
 </script>
 

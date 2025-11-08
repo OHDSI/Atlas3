@@ -289,8 +289,8 @@ export function toHierarchicalTreemapData(
   // Convert to hierarchical structure
   return Object.entries(grouped).map(([category, items]) => ({
     name: category,
-    value: items.reduce((sum, item) => sum + Number(item[valueKey]), 0),
-    children: items.map(item => ({
+    value: (items as any[]).reduce((sum: number, item: any) => sum + Number(item[valueKey]), 0),
+    children: (items as any[]).map((item: any) => ({
       name: String(item[nameKey]),
       value: Number(item[valueKey])
     }))

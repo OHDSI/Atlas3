@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import { v4 as uuidv4 } from 'uuid'
-import type { CohortEvent } from '@/models/cohort.types'
+import type { CohortEvent, CriteriaType } from '@/models/cohort.types'
 import EntryEventCard from './EntryEventCard.vue'
 
 interface Props {
@@ -103,7 +103,7 @@ const eventTypeOptions = [
 function addEvent(criteriaType: string) {
   const newEvent: CohortEvent = {
     id: uuidv4(),
-    criteriaType,
+    criteriaType: criteriaType as CriteriaType,
     attributes: [],
   }
 

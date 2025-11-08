@@ -69,8 +69,7 @@
               {{ conceptSet.name }}
             </v-list-item-title>
             <v-list-item-subtitle>
-              {{ conceptSet.conceptCount || 0 }} concept{{ conceptSet.conceptCount === 1 ? '' : 's' }}
-              <span v-if="conceptSet.shared" class="ml-2">• Shared</span>
+              {{ (conceptSetsStore.conceptSets.find((cs: any) => cs.id === conceptSet.id) as any)?.items?.length || 0 }} concept{{ ((conceptSetsStore.conceptSets.find((cs: any) => cs.id === conceptSet.id) as any)?.items?.length || 0) === 1 ? '' : 's' }}
             </v-list-item-subtitle>
 
             <template #append>

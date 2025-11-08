@@ -5,7 +5,7 @@
  * CRITICAL: Uses ?? operator for zero-count preservation (not ||)
  */
 
-import type { CohortDefinition, CohortEvent } from '@/models/cohort.types'
+import type { CohortDefinition, CohortEvent, CriteriaType } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
 
 // Atlas JSON types (complete)
@@ -66,7 +66,7 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
     })),
 
     PrimaryCriteria: {
-      CriteriaList: cohort.entryEvents.map(convertEventToAtlas),
+      CriteriaList: cohort.entryEvents.map((event) => convertEventToAtlas(event, false)),
       ObservationWindow: cohort.observationPeriod ? {
         PriorDays: cohort.observationPeriod.priorDays,
         PostDays: cohort.observationPeriod.postDays,
@@ -374,7 +374,7 @@ function convertAtlasToEvent(atlasEvent: any, conceptSets?: any[]): CohortEvent 
 
   const event: CohortEvent = {
     id: generateId(),
-    criteriaType,
+    criteriaType: criteriaType as CriteriaType,
     conceptSet: conceptSet ? {
       id: conceptSet.id,
       name: conceptSet.name,

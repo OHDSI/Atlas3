@@ -93,8 +93,9 @@ const chartOption = computed(() => {
   const baseOption = defaultTreemapOptions(props.data, props.title)
 
   // Override roam setting if zoom is disabled
-  if (!props.enableZoom && baseOption.series && baseOption.series[0]) {
-    baseOption.series[0].roam = false
+  if (!props.enableZoom && baseOption.series && Array.isArray(baseOption.series) && baseOption.series[0]) {
+    const seriesItem = baseOption.series[0] as any
+    seriesItem.roam = false
   }
 
   return baseOption

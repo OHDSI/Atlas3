@@ -97,6 +97,14 @@ async function loadData() {
   if (currentReport.value && 'results' in currentReport.value) {
     const data = currentReport.value.results
 
+    const rows = (data as any[]).map((item: any) => ({
+      analysisId: item.analysisId,
+      analysisName: item.analysisName,
+      heelRule: item.heelRule,
+      recordCount: item.recordCount,
+      severity: item.severity
+    }))
+
     tableData.value = {
       headers: [
         { key: 'analysisId', title: 'Analysis ID', sortable: true },
@@ -105,13 +113,8 @@ async function loadData() {
         { key: 'recordCount', title: 'Record Count', sortable: true, align: 'end' },
         { key: 'severity', title: 'Severity', sortable: true }
       ],
-      rows: data.map(item => ({
-        analysisId: item.analysisId,
-        analysisName: item.analysisName,
-        heelRule: item.heelRule,
-        recordCount: item.recordCount,
-        severity: item.severity
-      }))
+      rows,
+      totalRows: rows.length
     }
   }
 }

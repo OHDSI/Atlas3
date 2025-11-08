@@ -22,13 +22,13 @@
           <v-list v-if="concepts.length > 0" data-testid="concept-list">
             <v-list-item
               v-for="(item, index) in concepts"
-              :key="item.concept.conceptId"
+              :key="item.conceptId"
             >
               <v-list-item-title>
-                {{ item.concept.conceptName }}
+                {{ item.conceptName }}
               </v-list-item-title>
               <v-list-item-subtitle>
-                ID: {{ item.concept.conceptId }} | {{ item.concept.domainId }} | {{ item.concept.vocabularyId }}
+                ID: {{ item.conceptId }} | {{ item.domainId }} | {{ item.vocabularyId }}
               </v-list-item-subtitle>
 
               <template #append>
@@ -113,7 +113,7 @@ const emit = defineEmits<{
   'add-concepts': []
 }>()
 
-const concepts = computed(() => props.modelValue?.expression?.items || [])
+const concepts = computed(() => props.modelValue?.items || [])
 const conceptCount = computed(() => concepts.value.length)
 const canSave = computed(() => {
   return props.modelValue?.name && props.modelValue.name.trim().length > 0
@@ -136,11 +136,7 @@ function removeConcept(index: number) {
 
   emit('update:modelValue', {
     ...props.modelValue,
-    concepts: updatedItems.map(item => item.concept).filter((c): c is typeof c & {} => c !== undefined),
-    expression: {
-      ...props.modelValue.expression,
-      items: updatedItems,
-    },
+    items: updatedItems,
   })
 }
 
@@ -149,7 +145,7 @@ function updateIncludeDescendants(index: number, value: boolean) {
 
   const updatedItems = [...concepts.value]
   const currentItem = updatedItems[index]
-  if (!currentItem || !currentItem.concept) return
+  if (!currentItem) return
 
   updatedItems[index] = {
     ...currentItem,
@@ -158,11 +154,7 @@ function updateIncludeDescendants(index: number, value: boolean) {
 
   emit('update:modelValue', {
     ...props.modelValue,
-    concepts: updatedItems.map(item => item.concept).filter((c): c is typeof c & {} => c !== undefined),
-    expression: {
-      ...props.modelValue.expression,
-      items: updatedItems,
-    },
+    items: updatedItems,
   })
 }
 </script>

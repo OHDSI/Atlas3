@@ -89,7 +89,7 @@
                 v-for="criteriaType in criteriaTypes"
                 :key="criteriaType.value"
                 :title="criteriaType.label"
-                @click="addEvent(criteriaType.value)"
+                @click="addEvent(criteriaType.value as CriteriaType)"
               />
             </v-list>
           </v-menu>
@@ -172,7 +172,7 @@
                           min="1"
                           density="compact"
                           class="mt-3"
-                          @update:model-value="updateEventCardinalityCount(index, $event)"
+                          @update:model-value="updateEventCardinalityCount(index, Number($event))"
                         />
                       </v-card-text>
                     </v-card>
@@ -315,9 +315,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
-import type { CriteriaGroup, CohortEvent } from '@/models/cohort.types'
+import type { CriteriaGroup, CohortEvent, LogicType, CriteriaType } from '@/models/cohort.types'
 import type { EventAttribute, TemporalWindow } from '@/models/event.types'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
 import AttributesEditor from './AttributesEditor.vue'
@@ -347,17 +347,8 @@ const localGroup = ref<CriteriaGroup>(props.modelValue || {
 
 const validationError = ref('')
 const showMatchTypeDialog = ref(false)
-const showCardinalityDialog = ref(false)
-const cardinalityType = ref('AT_LEAST')
-const cardinalityCount = ref(1)
 const matchTypeTemp = ref('ALL')
 const matchTypeCount = ref(1)
-const cardinalityTypes = [
-  { value: 'EXACTLY', title: 'Exactly' },
-  { value: 'AT_LEAST', title: 'At least' },
-  { value: 'AT_MOST', title: 'At most' },
-  { value: 'ALL', title: 'All' },
-]
 
 // Watch for external changes
 watch(() => props.modelValue, (newVal) => {
@@ -365,14 +356,6 @@ watch(() => props.modelValue, (newVal) => {
     localGroup.value = { ...newVal }
   }
 }, { deep: true })
-
-// Logic types
-const logicTypes = [
-  { value: 'ALL', label: 'ALL - All events must occur' },
-  { value: 'ANY', label: 'ANY - At least one event must occur' },
-  { value: 'AT_LEAST', label: 'AT LEAST - Minimum count of events' },
-  { value: 'AT_MOST', label: 'AT MOST - Maximum count of events' },
-]
 
 // Criteria types for event type selector
 const criteriaTypes = [
@@ -392,30 +375,14 @@ const criteriaTypes = [
 
 const selectedEventIndex = ref<number | null>(null)
 
-// Computed
-const requiresCount = computed(() => {
-  return localGroup.value.logicType === 'AT_LEAST' || localGroup.value.logicType === 'AT_MOST'
-})
-
-const countLabel = computed(() => {
-  return localGroup.value.logicType === 'AT_LEAST' ? 'Minimum Count' : 'Maximum Count'
-})
-
 // Methods
-function onLogicTypeChange() {
-  if (!requiresCount.value) {
-    delete localGroup.value.count
-  } else if (!localGroup.value.count) {
-    localGroup.value.count = 1
-  }
-}
 
 function getEventTypeLabel(criteriaType: string): string {
   const type = criteriaTypes.find(t => t.value === criteriaType)
   return type?.label || criteriaType
 }
 
-function addEvent(criteriaType: string) {
+function addEvent(criteriaType: CriteriaType) {
   // Create a new event with the selected criteria type
   const newEvent: CohortEvent = {
     id: uuidv4(),
@@ -496,22 +463,6 @@ function removeNestedGroup(index: number) {
   }
 }
 
-function validate(): boolean {
-  validationError.value = ''
-
-  if (requiresCount.value && !localGroup.value.count) {
-    validationError.value = `Count is required for ${localGroup.value.logicType} logic`
-    return false
-  }
-
-  if (requiresCount.value && localGroup.value.count! < 1) {
-    validationError.value = 'Count must be at least 1'
-    return false
-  }
-
-  return true
-}
-
 function emitUpdate() {
   emit('update:modelValue', localGroup.value)
 }
@@ -547,21 +498,15 @@ function getMatchTypeDisplay(): string {
   }
 }
 
-function getCardinalityDisplay(): string {
-  // For now, return a default display. This can be enhanced based on event requirements
-  return 'At least 1'
-}
-
 function onMenuOpen(isOpen: boolean) {
   if (isOpen) {
-    // Initialize menu state when opening
     matchTypeTemp.value = localGroup.value.logicType || 'ALL'
     matchTypeCount.value = localGroup.value.count || 1
   }
 }
 
 function confirmMatchType() {
-  localGroup.value.logicType = matchTypeTemp.value
+  localGroup.value.logicType = matchTypeTemp.value as LogicType
   if (matchTypeTemp.value === 'AT_LEAST' || matchTypeTemp.value === 'AT_MOST') {
     localGroup.value.count = matchTypeCount.value
   } else {
@@ -571,15 +516,9 @@ function confirmMatchType() {
   emitUpdate()
 }
 
-function updateCardinality() {
-  // Update cardinality logic here
-  // This is a placeholder for future cardinality implementation
-  showCardinalityDialog.value = false
-}
-
 function getCardinalityType(event: CohortEvent): string {
   if (!event.cardinality) return 'at_least'
-  return event.cardinality.type.toLowerCase().replace(/_/g, '_')
+  return event.cardinality.type.toLowerCase()
 }
 
 function getCardinalityDisplayForEvent(event: CohortEvent): string {
@@ -598,7 +537,8 @@ function updateEventCardinality(index: number, type: string, count: number) {
   if (event) {
     event.cardinality = {
       type: type as 'AT_LEAST' | 'EXACTLY' | 'AT_MOST',
-      count: count
+      count: count,
+      countingMethod: 'ALL'
     }
     emitUpdate()
   }

@@ -210,16 +210,22 @@ function addNewRule() {
 
 function openEditDialog(index: number) {
   editingRuleIndex.value = index
-  editingName.value = props.modelValue[index].name
-  showEditDialog.value = true
+  const rule = props.modelValue[index]
+  if (rule) {
+    editingName.value = rule.name
+    showEditDialog.value = true
+  }
 }
 
 function saveEditedName() {
   if (editingRuleIndex.value === null) return
 
   const updatedRules = [...props.modelValue]
-  updatedRules[editingRuleIndex.value].name = editingName.value || `New Inclusion Rule ${editingRuleIndex.value + 1}`
-  emit('update:modelValue', updatedRules)
+  const rule = updatedRules[editingRuleIndex.value]
+  if (rule) {
+    rule.name = editingName.value || `New Inclusion Rule ${editingRuleIndex.value + 1}`
+    emit('update:modelValue', updatedRules)
+  }
 
   showEditDialog.value = false
   editingRuleIndex.value = null
@@ -228,9 +234,12 @@ function saveEditedName() {
 
 function updateRuleDescription(index: number, event: Event) {
   const updatedRules = [...props.modelValue]
-  const input = event.target as HTMLInputElement
-  updatedRules[index].description = input.value || undefined
-  emit('update:modelValue', updatedRules)
+  const rule = updatedRules[index]
+  if (rule) {
+    const input = event.target as HTMLInputElement
+    rule.description = input.value || undefined
+    emit('update:modelValue', updatedRules)
+  }
 }
 
 function handleSelectConceptSet(ruleIndex: number, groupIndex: number, eventIndex: number) {

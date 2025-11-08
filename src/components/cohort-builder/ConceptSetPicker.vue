@@ -93,10 +93,7 @@ const showCreateNew = ref(false)
 const newConceptSet = ref<ConceptSet>({
   id: 'new',
   name: '',
-  concepts: [],
-  expression: {
-    items: [],
-  },
+  items: [],
 })
 
 const conceptSetItems = computed(() => {
@@ -113,12 +110,12 @@ async function handleSelect(id: number | string | undefined) {
   }
 
   const conceptSet = await getConceptSet(id)
-  if (conceptSet) {
+  if (conceptSet && conceptSet.id !== undefined) {
     selectedConceptSet.value = conceptSet
     emit('update:modelValue', {
       id: conceptSet.id,
       name: conceptSet.name,
-      conceptCount: conceptSet.expression?.items?.length || 0,
+      conceptCount: conceptSet.items?.length || 0,
     })
   }
 }
@@ -140,36 +137,37 @@ function openSearchFromEditor() {
 async function handleSaveNew() {
   // Add selected concepts to the new concept set
   if (selectedConcepts.value.length > 0) {
-    newConceptSet.value.concepts = selectedConcepts.value
-    if (newConceptSet.value.expression) {
-      newConceptSet.value.expression.items = selectedConcepts.value.map((concept) => ({
-        concept,
-        includeDescendants: true,
-        includeMapped: false,
-        isExcluded: false,
-      }))
-    }
+    newConceptSet.value.items = selectedConcepts.value.map((concept) => ({
+      conceptId: concept.conceptId,
+      conceptName: concept.conceptName,
+      conceptCode: concept.conceptCode,
+      domainId: concept.domainId,
+      vocabularyId: concept.vocabularyId,
+      conceptClassId: concept.conceptClassId,
+      standardConcept: concept.standardConcept,
+      invalidReason: concept.invalidReason,
+      includeDescendants: true,
+      includeMapped: false,
+      isExcluded: false,
+    }))
   }
 
   const created = await createConceptSet(newConceptSet.value)
 
-  if (created) {
+  if (created && created.id !== undefined) {
     selectedConceptSetId.value = created.id
     selectedConceptSet.value = created
     emit('update:modelValue', {
       id: created.id,
       name: created.name,
-      conceptCount: created.expression?.items?.length || 0,
+      conceptCount: created.items?.length || 0,
     })
 
     // Reset
     newConceptSet.value = {
       id: 'new',
       name: '',
-      concepts: [],
-      expression: {
-        items: [],
-      },
+      items: [],
     }
     clearSelectedConcepts()
     showCreateNew.value = false
@@ -177,7 +175,7 @@ async function handleSaveNew() {
 }
 
 function getConceptCount(conceptSet: ConceptSet): number {
-  return conceptSet.expression?.items?.length || 0
+  return conceptSet.items?.length || 0
 }
 
 // Load concept sets on mount

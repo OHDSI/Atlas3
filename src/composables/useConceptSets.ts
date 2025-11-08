@@ -82,7 +82,7 @@ export function useConceptSets() {
     try {
       const updated = await webapi.updateConceptSet(conceptSet)
 
-      if (updated) {
+      if (updated && updated.id !== undefined) {
         store.updateConceptSet(updated.id, updated)
       }
     } catch (error) {

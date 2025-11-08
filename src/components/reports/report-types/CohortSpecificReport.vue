@@ -226,13 +226,13 @@ const durationDistributionData = computed<BarChartData | null>(() => {
     if (!acc[bin]) {
       acc[bin] = 0
     }
-    acc[bin] += item.percentOfPopulation
+    acc[bin] = (acc[bin] ?? 0) + (item.percentOfPopulation ?? 0)
     return acc
   }, {} as Record<string, number>)
 
   const binOrder = ['< 30 days', '30-90 days', '90-180 days', '180-365 days', '> 1 year']
-  const categories = binOrder.filter(bin => grouped[bin])
-  const values = categories.map(bin => grouped[bin])
+  const categories = binOrder.filter(bin => grouped[bin] !== undefined)
+  const values = categories.map(bin => grouped[bin]!)
 
   return {
     categories,

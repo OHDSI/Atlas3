@@ -212,14 +212,14 @@ const headers = computed(() => {
     { title: 'Domain', key: 'domainId', sortable: true, width: '120px' },
     { title: 'Class', key: 'conceptClassId', sortable: true, width: '150px' },
     { title: 'Validity', key: 'invalidReason', sortable: true, width: '100px' },
-    { title: 'RC', key: 'recordCount', sortable: true, width: '100px', align: 'end' },
-    { title: 'DRC', key: 'descendantRecordCount', sortable: true, width: '100px', align: 'end' },
-    { title: 'PC', key: 'personCount', sortable: true, width: '100px', align: 'end' },
-    { title: 'DPC', key: 'descendantPersonCount', sortable: true, width: '100px', align: 'end' },
+    { title: 'RC', key: 'recordCount', sortable: true, width: '100px', align: 'end' as const },
+    { title: 'DRC', key: 'descendantRecordCount', sortable: true, width: '100px', align: 'end' as const },
+    { title: 'PC', key: 'personCount', sortable: true, width: '100px', align: 'end' as const },
+    { title: 'DPC', key: 'descendantPersonCount', sortable: true, width: '100px', align: 'end' as const },
   ]
 
   if (props.showAddButton) {
-    baseHeaders.push({ title: '', key: 'actions', sortable: false, width: '100px' } as any)
+    return [...baseHeaders, { title: '', key: 'actions', sortable: false, width: '100px' }]
   }
 
   return baseHeaders

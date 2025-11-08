@@ -30,7 +30,7 @@
               <span class="font-weight-medium">{{ conceptSet.name }}</span>
               <v-spacer />
               <v-chip size="small" class="mr-2">
-                {{ conceptSet.concepts.length }} concept{{ conceptSet.concepts.length === 1 ? '' : 's' }}
+                {{ conceptSet.items.length }} concept{{ conceptSet.items.length === 1 ? '' : 's' }}
               </v-chip>
             </div>
           </v-expansion-panel-title>
@@ -41,17 +41,17 @@
               label="Name"
               variant="outlined"
               density="compact"
-              @update:model-value="updateConceptSetName(conceptSet.id, $event)"
+              @update:model-value="conceptSet.id && updateConceptSetName(conceptSet.id, $event)"
             />
 
-            <div v-if="conceptSet.concepts.length > 0" class="mt-3">
+            <div v-if="conceptSet.items.length > 0" class="mt-3">
               <p class="text-subtitle-2 mb-2">Concepts:</p>
               <v-chip
-                v-for="concept in conceptSet.concepts"
+                v-for="concept in conceptSet.items"
                 :key="concept.conceptId"
                 closable
                 class="mr-2 mb-2"
-                @click:close="removeConcept(conceptSet.id, concept.conceptId)"
+                @click:close="conceptSet.id && removeConcept(conceptSet.id, concept.conceptId)"
               >
                 {{ concept.conceptName }}
               </v-chip>
@@ -62,7 +62,7 @@
                 color="primary"
                 variant="outlined"
                 size="small"
-                @click="openSearchDialog(conceptSet.id)"
+                @click="conceptSet.id && openSearchDialog(conceptSet.id)"
               >
                 <v-icon class="mr-2">mdi-plus</v-icon>
                 Add Concepts
@@ -72,7 +72,7 @@
                 color="error"
                 variant="outlined"
                 size="small"
-                @click="deleteConceptSet(conceptSet.id)"
+                @click="conceptSet.id && deleteConceptSet(conceptSet.id)"
               >
                 <v-icon class="mr-2">mdi-delete</v-icon>
                 Delete
@@ -110,7 +110,7 @@ function createNewConceptSet() {
   const newConceptSet: ConceptSet = {
     id: uuidv4(),
     name: `Concept Set ${conceptSetsList.value.length + 1}`,
-    concepts: [],
+    items: [],
   }
 
   conceptSetsStore.addConceptSet(newConceptSet)
@@ -130,11 +130,11 @@ function removeConcept(conceptSetId: number | string, conceptId: number) {
   const conceptSet = conceptSetsStore.conceptSets.get(conceptSetId)
   if (!conceptSet) return
 
-  const updatedConcepts = conceptSet.concepts.filter(c => c.conceptId !== conceptId)
+  const updatedItems = conceptSet.items.filter(item => item.conceptId !== conceptId)
 
   conceptSetsStore.addConceptSet({
     ...conceptSet,
-    concepts: updatedConcepts,
+    items: updatedItems,
   })
 }
 
@@ -153,13 +153,27 @@ function handleConceptsSelected(concepts: Concept[]) {
   const conceptSet = conceptSetsStore.conceptSets.get(currentConceptSetId.value)
   if (!conceptSet) return
 
-  // Add new concepts, avoiding duplicates
-  const existingIds = new Set(conceptSet.concepts.map(c => c.conceptId))
-  const newConcepts = concepts.filter(c => !existingIds.has(c.conceptId))
+  // Add new concepts as items, avoiding duplicates
+  const existingIds = new Set(conceptSet.items.map(item => item.conceptId))
+  const newItems = concepts
+    .filter(c => !existingIds.has(c.conceptId))
+    .map(c => ({
+      conceptId: c.conceptId,
+      conceptName: c.conceptName,
+      conceptCode: c.conceptCode,
+      domainId: c.domainId,
+      vocabularyId: c.vocabularyId,
+      conceptClassId: c.conceptClassId,
+      standardConcept: c.standardConcept,
+      invalidReason: c.invalidReason,
+      isExcluded: false,
+      includeDescendants: false,
+      includeMapped: false,
+    }))
 
   conceptSetsStore.addConceptSet({
     ...conceptSet,
-    concepts: [...conceptSet.concepts, ...newConcepts],
+    items: [...conceptSet.items, ...newItems],
   })
 
   currentConceptSetId.value = null

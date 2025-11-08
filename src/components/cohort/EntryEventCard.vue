@@ -88,7 +88,6 @@
 import { computed } from 'vue'
 import type { CohortEvent, CriteriaType } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
-import type { Cardinality, TemporalWindow } from '@/models/event.types'
 import { useUIStore } from '@/stores/ui'
 import AttributesEditor from '@/components/cohort-builder/AttributesEditor.vue'
 

@@ -100,7 +100,7 @@ const props = defineProps<{
 /**
  * Reports composable
  */
-const { loadReport, currentReportData, isLoading, errorMessage } = useReports()
+const { loadReport, currentReportData } = useReports()
 
 /**
  * State
@@ -170,7 +170,7 @@ const tableHeaders: TableHeader[] = [
 const tableData = computed<TableRow[]>(() => {
   if (!reportData.value?.prevalence) return []
 
-  return reportData.value.prevalence.map(item => ({
+  return (reportData.value.prevalence as any[]).map((item: any) => ({
     conceptId: item.conceptId,
     soc: item.soc || '-',
     hlt: item.hlt || '-',

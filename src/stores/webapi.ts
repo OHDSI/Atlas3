@@ -209,7 +209,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
     // Start polling
     const timer = setInterval(poll, POLL_INTERVAL_MS)
-    pollingTimers.set(cohortId, timer)
+    pollingTimers.set(cohortId, timer as unknown as number)
 
     // Do an immediate poll
     await poll()

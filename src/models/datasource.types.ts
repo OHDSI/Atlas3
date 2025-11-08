@@ -132,12 +132,12 @@ export interface PersonReport {
 }
 
 export interface ObservationPeriodReport {
-  ageAtFirst?: BarChartData
-  observationLength?: BarChartData
+  ageAtFirst?: import('@/models/report.types').BarChartData
+  observationLength?: import('@/models/report.types').BarChartData
   cumulativeObservation?: MultiLineChartData
   observedByMonth?: MultiLineChartData
   ageByGender?: MultiLineChartData
-  durationByGender?: BarChartData
+  durationByGender?: import('@/models/report.types').BarChartData
   observationLengthStats?: Array<{ attributeName: string; attributeValue: string }>
 }
 

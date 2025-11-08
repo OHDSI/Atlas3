@@ -286,22 +286,16 @@ export function transformPersonReport(raw: any): import('@/models/datasource.typ
  * Specialized transformer for observation period data
  */
 export function transformObservationPeriodReport(raw: any): import('@/models/datasource.types').ObservationPeriodReport {
-  // Age at First Observation
-  const ageAtFirst: import('@/models/datasource.types').BarChartData | undefined = raw.ageAtFirst ? {
+  // Age at First Observation - convert to simple BarChartData format
+  const ageAtFirst: any = raw.ageAtFirst ? {
     categories: raw.ageAtFirst.map((item: any) => item.intervalIndex?.toString() || ''),
-    series: [{
-      name: 'Person Count',
-      data: raw.ageAtFirst.map((item: any) => item.countValue || 0)
-    }]
+    values: raw.ageAtFirst.map((item: any) => item.countValue || 0)
   } : undefined
 
-  // Observation Length Distribution
-  const observationLength: import('@/models/datasource.types').BarChartData | undefined = raw.observationLength ? {
+  // Observation Length Distribution - convert to simple BarChartData format
+  const observationLength: any = raw.observationLength ? {
     categories: raw.observationLength.map((item: any) => item.intervalIndex?.toString() || ''),
-    series: [{
-      name: 'Person Count',
-      data: raw.observationLength.map((item: any) => item.countValue || 0)
-    }]
+    values: raw.observationLength.map((item: any) => item.countValue || 0)
   } : undefined
 
   // Cumulative Observation
@@ -326,7 +320,12 @@ export function transformObservationPeriodReport(raw: any): import('@/models/dat
   let ageByGender: import('@/models/datasource.types').MultiLineChartData | undefined
   if (raw.ageByGender && raw.ageByGender.length > 0) {
     const grouped = new Map<string, number[]>()
-    const categories: string[] = [...new Set(raw.ageByGender.map((item: any) => item.intervalIndex?.toString() || ''))]
+    const categorySet = new Set<string>()
+    raw.ageByGender.forEach((item: any) => {
+      const cat = item.intervalIndex?.toString() || ''
+      categorySet.add(cat)
+    })
+    const categories: string[] = Array.from(categorySet)
     
     raw.ageByGender.forEach((item: any) => {
       const series = item.seriesName || 'Unknown'
@@ -345,13 +344,10 @@ export function transformObservationPeriodReport(raw: any): import('@/models/dat
     }
   }
 
-  // Duration by Gender
-  const durationByGender: import('@/models/datasource.types').BarChartData | undefined = raw.durationByGender ? {
+  // Duration by Gender - convert to simple BarChartData format
+  const durationByGender: any = raw.durationByGender ? {
     categories: raw.durationByGender.map((item: any) => item.category || item.seriesName || ''),
-    series: [{
-      name: 'Average Duration (days)',
-      data: raw.durationByGender.map((item: any) => item.averageLength || item.medianValue || 0)
-    }]
+    values: raw.durationByGender.map((item: any) => item.averageLength || item.medianValue || 0)
   } : undefined
 
   return {
@@ -391,8 +387,13 @@ export function transformDeathReport(raw: any): import('@/models/datasource.type
   // Prevalence by Gender, Age, Year - complex multi-series chart
   let prevalenceByGenderAgeYear: import('@/models/datasource.types').MultiLineChartData | undefined
   if (raw.prevalenceByGenderAgeYear && raw.prevalenceByGenderAgeYear.length > 0) {
-    const grouped = new Map<string, Map<string, number[]>>()
-    const years = [...new Set(raw.prevalenceByGenderAgeYear.map((item: any) => item.xCalendarYear?.toString() || ''))]
+    const grouped = new Map<string, Map<string, number>>()
+    const yearSet = new Set<string>()
+    raw.prevalenceByGenderAgeYear.forEach((item: any) => {
+      const year = item.xCalendarYear?.toString() || ''
+      yearSet.add(year)
+    })
+    const years: string[] = Array.from(yearSet).sort()
     
     raw.prevalenceByGenderAgeYear.forEach((item: any) => {
       const ageGroup = item.trellisName || 'Unknown'
@@ -400,12 +401,11 @@ export function transformDeathReport(raw: any): import('@/models/datasource.type
       const key = `${gender} (${ageGroup})`
       
       if (!grouped.has(key)) {
-        grouped.set(key, new Map())
+        grouped.set(key, new Map<string, number>())
       }
       
       const yearData = grouped.get(key)!
       const year = item.xCalendarYear?.toString() || ''
-      const idx = years.indexOf(year)
       
       if (!yearData.has(year)) {
         yearData.set(year, item.yPrevalence1000Pp || 0)
@@ -413,10 +413,10 @@ export function transformDeathReport(raw: any): import('@/models/datasource.type
     })
 
     prevalenceByGenderAgeYear = {
-      categories: years.sort(),
+      categories: years,
       series: Array.from(grouped.entries()).map(([name, yearData]) => ({
         name,
-        data: years.sort().map(year => yearData.get(year) || 0)
+        data: years.map(year => yearData.get(year) || 0)
       }))
     }
   }

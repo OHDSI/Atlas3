@@ -31,7 +31,7 @@
         <transition name="slide-fade" mode="out-in">
           <div v-if="showReports && selectedSourceKey" key="reports">
             <report-panel
-              :cohort-id="cohortId"
+              :cohort-id="cohortId ?? 0"
               :source-key="selectedSourceKey"
               :is-open="showReports"
               @close="handleCloseReports"

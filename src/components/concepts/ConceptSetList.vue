@@ -50,9 +50,9 @@
         items-per-page-text="Rows per page:"
         class="elevation-1"
       >
-        <!-- Name with Shared indicator -->
+        <!-- Name -->
         <template #item.name="{ item }">
-          {{ item.name }}{{ item.shared ? ' (Shared)' : '' }}
+          {{ item.name }}
         </template>
 
         <!-- Created Date -->
@@ -181,7 +181,7 @@ const headers = [
   { title: 'Created', key: 'createdDate', sortable: true, width: '120px' },
   { title: 'Updated', key: 'modifiedDate', sortable: true, width: '120px' },
   { title: 'Author', key: 'createdBy', sortable: true, width: '150px' },
-  { title: '', key: 'actions', sortable: false, width: '80px', align: 'center' },
+  { title: '', key: 'actions', sortable: false, width: '80px', align: 'center' as const },
 ]
 
 // ============================================================================
@@ -214,12 +214,15 @@ function onAddClick() {
   store.openCreateEditor()
 }
 
-function onEditClick(id: number | string) {
-  store.openEditEditor(id)
+function onEditClick(id: number | string | undefined) {
+  if (id !== undefined) {
+    store.openEditEditor(id)
+  }
 }
 
-function onDeleteClick(item: ConceptSetListItem) {
-  deleteTarget.value = item
+function onDeleteClick(id: number | string) {
+  const item = store.filteredSets.find(s => s.id === id)
+  deleteTarget.value = item || null
   deleteDialog.value = true
 }
 

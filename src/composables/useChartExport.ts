@@ -72,7 +72,7 @@ export function useChartExport() {
       // Get SVG string from chart
       const svg = chart.renderToSVGString({
         backgroundColor
-      })
+      } as any)
 
       // Create blob and download
       const blob = new Blob([svg], { type: 'image/svg+xml' })

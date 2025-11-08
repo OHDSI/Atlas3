@@ -64,7 +64,7 @@
     </v-row>
 
     <!-- Prevalence by Gender, Age, Year -->
-    <v-row v-if="data.prevalenceByGenderAgeYear && data.prevalenceByGenderAgeYear.length > 0">
+    <v-row v-if="data.prevalenceByGenderAgeYear && data.prevalenceByGenderAgeYear.series.length > 0">
       <v-col cols="12">
         <ChartSection title="Death Prevalence by Gender, Age Group, and Year">
           <MultiLineChart
