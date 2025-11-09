@@ -1,4 +1,6 @@
 import { useAuthStore } from '@/stores/auth'
+import { getTokenExpiration } from '@/utils/jwt'
+import { tokenRefreshService } from './tokenRefresh'
 
 export function setupAuthInterceptor() {
   const originalFetch = window.fetch
@@ -17,8 +19,40 @@ export function setupAuthInterceptor() {
         const token = authStore.token
 
         if (token) {
-          requestInit.headers = new Headers(requestInit.headers || {})
-          requestInit.headers.set('Authorization', `Bearer ${token}`)
+          // Check if token needs refresh before request (T015-T016)
+          const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+          const isRefreshEndpoint = url?.includes('/user/refresh')
+          
+          if (!isRefreshEndpoint) {
+            const expiration = getTokenExpiration(token)
+            
+            if (expiration) {
+              const now = new Date()
+              const minutesUntilExpiry = (expiration.getTime() - now.getTime()) / (60 * 1000)
+
+              // Refresh if less than 5 minutes remaining (T016)
+              if (minutesUntilExpiry < 5 && minutesUntilExpiry > 0) {
+                console.log(`[AuthInterceptor] Token expiring in ${minutesUntilExpiry.toFixed(1)} minutes, refreshing...`)
+                await tokenRefreshService.refreshToken()
+                // Get updated token after refresh
+                const refreshedToken = authStore.token
+                if (refreshedToken) {
+                  requestInit.headers = new Headers(requestInit.headers || {})
+                  requestInit.headers.set('Authorization', `Bearer ${refreshedToken}`)
+                }
+              } else {
+                requestInit.headers = new Headers(requestInit.headers || {})
+                requestInit.headers.set('Authorization', `Bearer ${token}`)
+              }
+            } else {
+              requestInit.headers = new Headers(requestInit.headers || {})
+              requestInit.headers.set('Authorization', `Bearer ${token}`)
+            }
+          } else {
+            // For refresh endpoint, use current token
+            requestInit.headers = new Headers(requestInit.headers || {})
+            requestInit.headers.set('Authorization', `Bearer ${token}`)
+          }
         }
       } catch (e) {
         // Store not ready yet, continue without token
@@ -28,7 +62,7 @@ export function setupAuthInterceptor() {
       // Make the actual fetch request
       const response = await originalFetch(input, requestInit)
 
-      // Handle authentication errors (but don't fail if store not ready)
+      // Handle authentication errors (T018)
       try {
         const authStore = useAuthStore()
         

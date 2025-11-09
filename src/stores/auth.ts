@@ -6,7 +6,7 @@ import { refreshManager } from '@/services/auth/refreshManager'
 import { authConfig } from '@/config/auth.config'
 
 export const useAuthStore = defineStore('auth', {
-  state: (): AuthState & { refreshTimeoutId: number | null; isRunningAs: boolean; originalUser: UserInfo | null } => ({
+  state: (): AuthState & { refreshTimeoutId: number | null; isRunningAs: boolean; originalUser: UserInfo | null; sessionExpiryModalOpen: boolean; sessionExpiresAt: Date | null } => ({
     token: null,
     user: null,
     permissions: {},
@@ -22,6 +22,8 @@ export const useAuthStore = defineStore('auth', {
     refreshTimeoutId: null,
     isRunningAs: false,
     originalUser: null,
+    sessionExpiryModalOpen: false,
+    sessionExpiresAt: null,
   }),
 
   getters: {
@@ -62,6 +64,11 @@ export const useAuthStore = defineStore('auth', {
       this.user = user
       if (user) {
         this.permissions = user.permissionIdx || {}
+        
+        // Clear permission cache when user changes (T088)
+        import('@/services/auth/permissions').then(({ permissionService }) => {
+          permissionService.clearCache()
+        })
       } else {
         this.permissions = {}
       }
@@ -96,6 +103,11 @@ export const useAuthStore = defineStore('auth', {
 
       storageManager.clearAll()
       this.cancelRefreshTimer()
+      
+      // Clear permission cache on logout (T088)
+      import('@/services/auth/permissions').then(({ permissionService }) => {
+        permissionService.clearCache()
+      })
     },
 
     setRunAsState(targetUser: UserInfo) {
@@ -235,6 +247,26 @@ export const useAuthStore = defineStore('auth', {
           }
         }
       })
+    },
+
+    showSessionExpiryModal(expiresAt: Date) {
+      this.sessionExpiryModalOpen = true
+      this.sessionExpiresAt = expiresAt
+    },
+
+    hideSessionExpiryModal() {
+      this.sessionExpiryModalOpen = false
+    },
+
+    async extendSession(): Promise<void> {
+      try {
+        const { tokenRefreshService } = await import('@/services/auth/tokenRefresh')
+        await tokenRefreshService.refreshToken()
+        this.hideSessionExpiryModal()
+      } catch (error) {
+        console.error('Failed to extend session:', error)
+        throw error
+      }
     },
   },
 })

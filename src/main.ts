@@ -2,7 +2,7 @@
  * Main Application Entry Point
  * Atlas Cohort Builder - Vue 3 + Vuetify
  */
-import { createApp } from 'vue'
+import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
 import vuetify from './plugins/vuetify'
@@ -12,6 +12,7 @@ import { useAuthStore } from './stores/auth'
 import { useLocaleStore } from './stores/locale'
 import { initializePluginFramework } from './plugins'
 import { setupGlobalMessageHandler } from './plugins/messaging/HostMessageBus'
+import { tokenExpiryService } from './services/auth/tokenExpiry'
 
 // SystemJS is loaded from index.html with import map for 'vue'
 console.log('[Main] SystemJS available:', !!window.System);
@@ -95,6 +96,15 @@ Promise.all([
     console.error('[i18n] Initialization failed:', error)
   })
 ]).then(async () => {
+  // Setup token expiry watcher (T038)
+  watch(() => authStore.token, (newToken) => {
+    if (newToken) {
+      tokenExpiryService.setupExpiryWarning(newToken)
+    } else {
+      tokenExpiryService.cancelExpiryWarning()
+    }
+  }, { immediate: true })
+  
   // Initialize plugin framework after auth is ready
   try {
     const authContext = {
