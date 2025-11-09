@@ -6,6 +6,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { authConfig } from '@/config/auth.config'
+import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -66,6 +67,7 @@ const router = createRouter({
       component: () => import('@/views/LandingView.vue'),
       meta: { isOpenIDCallback: true },
     },
+    ...generatePluginRoutes(),
   ],
 })
 

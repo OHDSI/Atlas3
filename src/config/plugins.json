@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "plugins": [
+    {
+      "id": "hello-world-plugin",
+      "name": "Hello World",
+      "version": "1.0.0",
+      "entryPoint": "hello-world-plugin/index.js",
+      "menuItems": [
+        {
+          "id": "main",
+          "name": "Hello World",
+          "route": "/plugins/hello-world-plugin/main",
+          "icon": "mdi-hand-wave",
+          "order": 0
+        }
+      ],
+      "metadata": {
+        "author": "Atlas Team",
+        "description": "A simple Hello World plugin demonstrating the plugin framework",
+        "homepage": "https://github.com/ohdsi/atlas"
+      }
+    }
+  ],
+  "settings": {
+    "enableHotReload": true,
+    "loadTimeout": 30000,
+    "pluginsPath": "plugins",
+    "showLoadingIndicators": true
+  }
+}

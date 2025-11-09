@@ -59,6 +59,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 import { authConfig } from '@/config/auth.config'
+import { generatePluginMenuItems } from '@/plugins/navigation/PluginMenuIntegration'
 import LoginModal from '@/components/auth/LoginModal.vue'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
@@ -88,11 +89,39 @@ const navigationItems = ref<NavigationItem[]>([
   { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true }
 ])
 
+// Load plugin menu items
+function loadPluginMenuItems() {
+  try {
+    const pluginMenuItems = generatePluginMenuItems()
+    
+    // Add plugin menu items to navigation
+    pluginMenuItems.forEach(pluginItem => {
+      if (pluginItem.visible) {
+        navigationItems.value.push({
+          id: pluginItem.id,
+          titleKey: pluginItem.name, // Use name directly as title
+          route: pluginItem.route,
+          visible: true,
+          active: false
+        })
+      }
+    })
+    
+    console.log('[NavBar] Loaded plugin menu items:', pluginMenuItems.length)
+  } catch (error) {
+    console.error('[NavBar] Failed to load plugin menu items:', error)
+  }
+}
+
 function getNavTitle(key: string): string {
   const defaults: Record<string, string> = {
     'navigation.conceptsets': 'Concept Sets',
     'navigation.cohortdefinitions': 'Cohorts',
     'navigation.datasources': 'Data Sources'
+  }
+  // If key starts with a capital letter, it's likely a direct title (from plugin)
+  if (key && key.length > 0 && key[0] === key[0].toUpperCase()) {
+    return key
   }
   return t(key, defaults[key] || key).value
 }
@@ -131,6 +160,9 @@ const updateActiveNavFromRoute = () => {
 }
 
 onMounted(() => {
+  // Load plugin menu items
+  loadPluginMenuItems()
+  
   updateActiveNavFromRoute()
   router.afterEach(() => {
     updateActiveNavFromRoute()

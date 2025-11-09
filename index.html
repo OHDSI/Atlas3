@@ -5,6 +5,30 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atlas Cohort Builder</title>
+    <!-- Load SystemJS before everything else -->
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/node_modules/systemjs/dist/extras/named-register.js"></script>
+    <!-- Load Vue globally so SystemJS plugins can use it -->
+    <script src="/node_modules/vue/dist/vue.global.js"></script>
+    <script>
+      // Register Vue with SystemJS using System.register
+      if (window.System && window.Vue) {
+        window.System.register('vue', [], function(_export) {
+          'use strict';
+          return {
+            execute: function() {
+              // Export all Vue exports
+              for (var key in window.Vue) {
+                _export(key, window.Vue[key]);
+              }
+              // Also export default
+              _export('default', window.Vue);
+              console.log('[SystemJS] Registered Vue module');
+            }
+          };
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
