@@ -10,7 +10,7 @@
       <!-- Header -->
       <v-card-title class="d-flex align-center pa-4 border-b">
         <v-icon class="mr-2" color="primary">mdi-database-cog</v-icon>
-        <span class="text-h6">{{ t('cohortDefinitions.cohortDefinitionManager.generateTitle', 'Generate Cohort') }}</span>
+        <span class="text-h6">{{ t('common.generateCohort', 'Generate Cohort') }}</span>
         <v-spacer />
         <v-btn icon="mdi-close" variant="text" @click="close" />
       </v-card-title>
@@ -19,12 +19,12 @@
       <v-card-text class="flex-grow-1 overflow-y-auto pa-6">
         <!-- Unsaved cohort message -->
         <v-alert v-if="!cohortId" type="warning" variant="tonal" class="mb-4">
-          {{ t('cohortDefinitions.cohortDefinitionManager.saveBeforeGenerate', 'Please save the cohort before generating.') }}
+          {{ t('cohortDefinitions.saveDefinitionBefore', 'Please save the cohort before generating.') }}
         </v-alert>
 
         <!-- No sources message -->
         <v-alert v-else-if="sources.length === 0" type="info" variant="tonal">
-          {{ t('cohortDefinitions.cohortDefinitionManager.noDataSources', 'No data sources configured.') }}
+          {{ t('common.noDataSources', 'No data sources configured.') }}
         </v-alert>
 
         <!-- Show reports when a data source is selected -->
@@ -54,7 +54,7 @@
             <div class="generation-grid__analysis">
               <p class="text-subtitle-1 font-weight-medium mb-4">{{ t('cohortDefinitions.cohort.modals.analysisTypes.title', 'Analysis Options') }}</p>
               <div class="text-body-2 text-grey">
-                {{ t('cohortDefinitions.cohortDefinitionManager.clickDataSource', 'Click a data source to view reports') }}
+                {{ t('common.clickDataSource', 'Click a data source to view reports') }}
               </div>
             </div>
           </div>

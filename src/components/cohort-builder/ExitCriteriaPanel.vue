@@ -7,7 +7,7 @@
         :items="exitStrategies"
         item-title="label"
         item-value="value"
-        :label="t('cohortDefinitions.exit.strategy', 'Exit Strategy').value"
+        :label="t('common.exitStrategy', 'Exit Strategy').value"
         data-testid="exit-strategy-selector"
         @update:model-value="updateStrategy"
       />
@@ -17,7 +17,7 @@
         v-if="modelValue?.strategy === 'FIXED_DURATION'"
         :model-value="modelValue.offset"
         type="number"
-        :label="t('cohortDefinitions.exit.duration', 'Duration (days)').value"
+        :label="t('common.durationDays', 'Duration (days)').value"
         data-testid="exit-offset-input"
         @update:model-value="updateOffset"
       />
@@ -30,7 +30,7 @@
           data-testid="add-censoring-event"
           @click="addCensoringEvent"
         >
-          {{ t('cohortDefinitions.exit.addCensoringEvent', 'Add Censoring Event') }}
+          {{ t('components.cohortExpressionEditor.addCensoringEvent', 'Add Censoring Event') }}
         </v-btn>
       </div>
     </div>
@@ -53,9 +53,9 @@ const emit = defineEmits<{
 }>()
 
 const exitStrategies = [
-  { value: 'CONTINUOUS_OBSERVATION', label: t('cohortDefinitions.exit.continuousObservation', 'Continuous Observation - Exit when observation ends').value },
-  { value: 'FIXED_DURATION', label: t('cohortDefinitions.exit.fixedDuration', 'Fixed Duration - Exit after fixed days').value },
-  { value: 'CUSTOM_EVENT', label: t('cohortDefinitions.exit.customEvent', 'Custom Event - Exit on specific event').value },
+  { value: 'CONTINUOUS_OBSERVATION', label: t('options.endOfContinuousObservation', 'Continuous Observation - Exit when observation ends').value },
+  { value: 'FIXED_DURATION', label: t('options.fixedDurationRelativeToInitialEvent', 'Fixed Duration - Exit after fixed days').value },
+  { value: 'CUSTOM_EVENT', label: t('common.customEvent', 'Custom Event - Exit on specific event').value },
 ]
 
 function updateStrategy(strategy: string) {

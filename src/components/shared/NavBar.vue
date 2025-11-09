@@ -83,9 +83,9 @@ const signInLabel = t('common.menu', 'Sign In')
 const signOutLabel = t('common.menu', 'Sign Out')
 
 const navigationItems = ref<NavigationItem[]>([
+  { id: 'datasources', titleKey: 'navigation.datasources', route: '/datasources', visible: true, active: false },
   { id: 'concepts', titleKey: 'navigation.conceptsets', route: '/concepts', visible: true, active: false },
-  { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true },
-  { id: 'datasources', titleKey: 'navigation.datasources', route: '/datasources', visible: true, active: false }
+  { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true }
 ])
 
 function getNavTitle(key: string): string {
@@ -97,7 +97,8 @@ function getNavTitle(key: string): string {
   return t(key, defaults[key] || key).value
 }
 
-const handleLogoClick = () => {
+const handleLogoClick = async () => {
+  await router.isReady()
   router.push('/')
 }
 
@@ -105,7 +106,8 @@ const handleOhdsiClick = () => {
   window.open('https://ohdsi.org', '_blank')
 }
 
-const handleNavClick = (item: NavigationItem) => {
+const handleNavClick = async (item: NavigationItem) => {
+  await router.isReady()
   navigationItems.value.forEach(navItem => {
     navItem.active = navItem.id === item.id
   })

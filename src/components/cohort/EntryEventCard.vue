@@ -62,7 +62,7 @@
             @click="emit('select-concept-set')"
           >
             <v-icon class="mr-2">mdi-plus</v-icon>
-            {{ t('cohortDefinitions.designTab.selectConceptSet') }}
+            {{ t('common.selectConceptSet', 'Select Concept Set') }}
           </v-btn>
         </div>
 
@@ -133,7 +133,7 @@ const eventTypeOptions = [
 
 const eventTypeLabel = computed(() => {
   const option = eventTypeOptions.find(opt => opt.value === props.event.criteriaType)
-  return option?.label ?? t('cohortDefinitions.designTab.tabs.primary')
+  return option?.label ?? t('components.cohortExpressionEditor.cohortEntryEvents')
 })
 
 const cardinalityType = computed(() => {
@@ -142,13 +142,13 @@ const cardinalityType = computed(() => {
 })
 
 const cardinalityDisplay = computed(() => {
-  if (!props.event.cardinality) return `${t('cohortDefinitions.designTab.cardinalityOptions.atLeast')} 1`
+  if (!props.event.cardinality) return `${t('options.atLeast', 'At least')} 1`
   const typeMap: Record<string, string> = {
-    'AT_LEAST': tv('cohortDefinitions.designTab.cardinalityOptions.atLeast'),
-    'EXACTLY': tv('cohortDefinitions.designTab.cardinalityOptions.exactly'),
-    'AT_MOST': tv('cohortDefinitions.designTab.cardinalityOptions.atMost')
+    'AT_LEAST': tv('options.atLeast', 'At least'),
+    'EXACTLY': tv('options.exactly', 'Exactly'),
+    'AT_MOST': tv('options.atMost', 'At most')
   }
-  const type = typeMap[props.event.cardinality.type] || t('cohortDefinitions.designTab.cardinalityOptions.atLeast')
+  const type = typeMap[props.event.cardinality.type] || t('options.atLeast', 'At least')
   return `${type} ${props.event.cardinality.count ?? 1}`
 })
 

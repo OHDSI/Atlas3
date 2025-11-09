@@ -17,14 +17,14 @@
             data-testid="add-inclusion-rule"
             @click="addNewRule"
           >
-            {{ t('cohortDefinitions.inclusionCriteria.new', 'New Inclusion Criteria') }}
+            {{ t('components.cohortExpressionEditor.newInclusionCriteria', 'New Inclusion Criteria') }}
           </v-btn>
         </div>
 
         <!-- Empty State -->
         <v-alert v-if="modelValue.length === 0" color="grey-lighten-4" variant="outlined" class="mb-4">
           <div style="color: #666;">
-            {{ t('cohortDefinitions.inclusionCriteria.emptyState', 'No inclusion rules defined. Inclusion rules allow you to specify additional requirements for patients to be included in the cohort beyond the entry events.') }}
+            {{ t('components.cohortExpressionEditor.inclusionCriteriaText', 'No inclusion rules defined. Inclusion rules allow you to specify additional requirements for patients to be included in the cohort beyond the entry events.') }}
           </div>
         </v-alert>
 

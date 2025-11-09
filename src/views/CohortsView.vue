@@ -10,10 +10,10 @@
             variant="flat"
             size="large"
             class="cohorts-view__action-btn"
-            :aria-label="t('cohortDefinitions.cohortDefinitionManager.createCohort', 'Create new cohort').value"
+            :aria-label="t('common.createCohort', 'Create new cohort').value"
             @click="handleCreateCohort"
           >
-            {{ t('cohortDefinitions.cohortDefinitionManager.createCohort', 'Create Cohort') }}
+            {{ t('common.createCohort', 'Create Cohort') }}
           </v-btn>
 
           <v-btn
@@ -21,10 +21,10 @@
             variant="flat"
             size="large"
             class="cohorts-view__action-btn"
-            :aria-label="t('cohortDefinitions.import.ariaLabel', 'Import cohort from JSON').value"
+            :aria-label="t('common.importCohort', 'Import cohort from JSON').value"
             @click="handleImportCohort"
           >
-            {{ t('cohortDefinitions.import.title', 'Import Cohort') }}
+            {{ t('common.importCohort', 'Import Cohort') }}
           </v-btn>
         </div>
       </v-col>
@@ -52,12 +52,12 @@
     >
       <v-card>
         <v-card-title class="text-h5">
-          {{ t('cohortDefinitions.import.title', 'Import Cohort') }}
+          {{ t('common.importCohort', 'Import Cohort') }}
         </v-card-title>
         <v-card-text>
           <p class="mb-4">{{ t('common.comingSoon', 'Import functionality will be implemented in a future update.') }}</p>
           <p class="text-body-2 text-grey">
-            {{ t('cohortDefinitions.import.description', 'This will allow you to import cohort definitions from ATLAS JSON format.') }}
+            {{ t('common.importCohortDescription', 'This will allow you to import cohort definitions from ATLAS JSON format.') }}
           </p>
         </v-card-text>
         <v-card-actions>
@@ -80,13 +80,13 @@
     >
       <v-card>
         <v-card-title class="text-h5">
-          {{ t('cohortDefinitions.materialize.title', 'Materialize Cohort') }}
+          {{ t('common.materializeCohort', 'Materialize Cohort') }}
         </v-card-title>
         <v-card-text>
           <p class="mb-2"><strong>{{ t('columns.name', 'Cohort') }}:</strong> {{ selectedCohort?.name }}</p>
           <p class="mb-4"><strong>{{ t('columns.id', 'ID') }}:</strong> {{ selectedCohort?.id }}</p>
           <p class="text-body-2 text-grey">
-            {{ t('cohortDefinitions.materialize.description', 'Materialize functionality will be implemented in a future update. This will generate the patient list for this cohort definition.') }}
+            {{ t('common.materializeCohortDescription', 'Materialize functionality will be implemented in a future update. This will generate the patient list for this cohort definition.') }}
           </p>
         </v-card-text>
         <v-card-actions>
@@ -109,10 +109,10 @@
     >
       <v-card>
         <v-card-title class="text-h5">
-          {{ t('cohortDefinitions.confirms.deleteTitle', 'Delete Cohort?') }}
+          {{ t('common.deleteCohortTitle', 'Delete Cohort?') }}
         </v-card-title>
         <v-card-text>
-          <p class="mb-2">{{ t('cohortDefinitions.confirms.delete', 'Are you sure you want to delete this cohort?') }}</p>
+          <p class="mb-2">{{ t('cohortDefinitions.cohortDefinitionManager.confirms.delete', 'Delete cohort definition? Warning: deletion can not be undone!') }}</p>
           <p class="mb-2"><strong>{{ selectedCohort?.name }}</strong></p>
           <p class="text-body-2 text-error">
             {{ t('common.cannotUndo', 'This action cannot be undone.') }}

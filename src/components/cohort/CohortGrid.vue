@@ -20,7 +20,7 @@
     >
       <div class="cohort-grid__error">
         <div class="cohort-grid__error-message">
-          {{ error.message || t('cohortDefinitions.cohortDefinitionManager.errorLoading', 'Failed to load cohorts').value }}
+          {{ error.message || t('common.errorLoadingCohorts', 'Failed to load cohorts').value }}
         </div>
         <v-btn
           color="error"
@@ -51,7 +51,7 @@
         @click="$emit('create-cohort')"
       >
         <v-icon start>mdi-plus</v-icon>
-        {{ t('cohortDefinitions.cohortDefinitionManager.createCohort', 'Create Cohort').value }}
+        {{ t('common.createCohort', 'Create Cohort').value }}
       </v-btn>
     </div>
 

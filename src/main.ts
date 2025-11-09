@@ -72,16 +72,24 @@ app.use(vuetify)
 // Setup authentication interceptor
 setupAuthInterceptor()
 
-// Initialize auth store from storage (async to fetch user info)
+// Initialize stores before mounting
 const authStore = useAuthStore()
-authStore.initializeFromStorage().catch((error) => {
-  console.error('[Auth] Initialization failed:', error)
-})
-
-// Initialize locale store for i18n support
 const localeStore = useLocaleStore()
-localeStore.initialize().catch((error) => {
-  console.error('[i18n] Initialization failed:', error)
-})
 
-app.mount('#app')
+// Wait for router and stores to initialize before mounting
+// This ensures the app is fully ready when rendered
+Promise.all([
+  router.isReady(),
+  authStore.initializeFromStorage().catch((error) => {
+    console.error('[Auth] Initialization failed:', error)
+  }),
+  localeStore.initialize().catch((error) => {
+    console.error('[i18n] Initialization failed:', error)
+  })
+]).then(() => {
+  app.mount('#app')
+}).catch((error) => {
+  console.error('[App] Initialization failed:', error)
+  // Mount anyway with fallback translations
+  app.mount('#app')
+})

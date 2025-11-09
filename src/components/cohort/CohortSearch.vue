@@ -2,13 +2,13 @@
   <v-text-field
     :model-value="modelValue"
     class="cohort-search"
-    :placeholder="t('cohortDefinitions.cohortDefinitionManager.filterPlaceholder', 'Filter cohorts...').value"
+    :placeholder="t('common.filterCohorts', 'Filter cohorts...').value"
     prepend-inner-icon="mdi-magnify"
     clearable
     variant="outlined"
     density="comfortable"
     hide-details
-    :aria-label="t('cohortDefinitions.cohortDefinitionManager.searchAriaLabel', 'Search cohorts by name').value"
+    :aria-label="t('common.searchCohorts', 'Search cohorts by name').value"
     @update:model-value="handleInput"
   />
 </template>

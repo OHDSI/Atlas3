@@ -2,7 +2,7 @@
   <div class="events-container">
     <!-- Vertical "ALL" Label -->
     <div class="vertical-label-container">
-      <div class="vertical-label">{{ t('cohortDefinitions.designTab.qualifiedLimitOptions.all').value.toUpperCase() }}</div>
+      <div class="vertical-label">{{ t('options.all').value.toUpperCase() }}</div>
     </div>
 
     <!-- Main Content Area -->
@@ -18,7 +18,7 @@
               data-testid="add-entry-event"
             >
               <v-icon class="mr-2">mdi-plus</v-icon>
-              {{ t('cohortDefinitions.designTab.addFilter') }}
+              {{ t('common.addFilter', 'Add Filter') }}
             </v-btn>
           </template>
           <v-list>
@@ -44,7 +44,7 @@
               class="mb-4"
             >
               <v-icon class="mr-2">mdi-plus</v-icon>
-              {{ t('cohortDefinitions.designTab.addFilter') }}
+              {{ t('common.addFilter', 'Add Filter') }}
             </v-btn>
           </template>
           <v-list>

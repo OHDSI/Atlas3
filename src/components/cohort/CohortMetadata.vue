@@ -5,7 +5,7 @@
       <v-text-field
         v-model="localName"
         :label="t('columns.name', 'Name').value"
-        :placeholder="t('cohortDefinitions.cohortDefinitionManager.namePlaceholder', 'Enter cohort name').value"
+        :placeholder="t('common.enterCohortName', 'Enter cohort name').value"
         variant="outlined"
         density="comfortable"
         :rules="[rules.required]"
@@ -15,7 +15,7 @@
       <v-textarea
         v-model="localDescription"
         :label="t('columns.description', 'Description').value"
-        :placeholder="t('cohortDefinitions.cohortDefinitionManager.descriptionPlaceholder', 'Enter cohort description (optional)').value"
+        :placeholder="t('common.enterCohortDescription', 'Enter cohort description (optional)').value"
         variant="outlined"
         density="comfortable"
         rows="3"

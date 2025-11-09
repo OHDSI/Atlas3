@@ -9,7 +9,7 @@
     <v-card flat class="h-100 d-flex flex-column">
       <!-- Header -->
       <v-card-title class="d-flex align-center bg-primary pa-4">
-        <span class="text-h6">{{ t('cohortDefinitions.designTab.selectConceptSet') }}</span>
+        <span class="text-h6">{{ t('common.selectConceptSet', 'Select Concept Set') }}</span>
         <v-spacer />
         <v-btn
           icon="mdi-close"

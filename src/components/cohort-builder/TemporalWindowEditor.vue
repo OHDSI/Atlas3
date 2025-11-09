@@ -128,10 +128,10 @@ const endReferencePoint = computed(() => temporalWindow.value.endWindow?.referen
 
 // Reference point options
 const referencePointOptions: Array<{ value: Window['referencePoint'], label: string }> = [
-  { value: 'INDEX_START', label: t('cohortDefinitions.temporal.indexStart', 'Index Start').value },
-  { value: 'INDEX_END', label: t('cohortDefinitions.temporal.indexEnd', 'Index End').value },
-  { value: 'EVENT_START', label: t('cohortDefinitions.temporal.eventStart', 'Event Start').value },
-  { value: 'EVENT_END', label: t('cohortDefinitions.temporal.eventEnd', 'Event End').value },
+  { value: 'INDEX_START', label: t('options.indexStartDate', 'Index Start').value },
+  { value: 'INDEX_END', label: t('options.indexEndDate', 'Index End').value },
+  { value: 'EVENT_START', label: t('options.eventStarts', 'Event Start').value },
+  { value: 'EVENT_END', label: t('options.eventEnds', 'Event End').value },
 ]
 
 // Apply preset
@@ -156,13 +156,13 @@ watch(
 
 <template>
   <v-card class="temporal-window-editor" elevation="0" variant="outlined">
-    <v-card-title class="text-subtitle-1">{{ t('cohortDefinitions.temporal.title', 'Temporal Windows') }}</v-card-title>
+    <v-card-title class="text-subtitle-1">{{ t('common.temporalWindows', 'Temporal Windows') }}</v-card-title>
     <v-card-text>
       <!-- Presets -->
       <v-row dense>
         <v-col cols="12">
           <v-select
-            :label="t('cohortDefinitions.temporal.presets', 'Quick Presets').value"
+            :label="t('common.presets', 'Quick Presets').value"
             :items="presetOptions"
             item-title="label"
             item-value="value"
@@ -179,14 +179,14 @@ watch(
 
       <!-- Start Window -->
       <div class="mb-4">
-        <div class="text-subtitle-2 mb-2">{{ t('cohortDefinitions.temporal.startWindow', 'Start Window') }}</div>
+        <div class="text-subtitle-2 mb-2">{{ t('common.startWindow', 'Start Window') }}</div>
         <v-row dense>
           <v-col cols="12" md="4">
             <v-text-field
               :model-value="startDays"
               type="number"
-              :label="t('cohortDefinitions.temporal.startDays', 'Start Days').value"
-              :aria-label="t('cohortDefinitions.temporal.startDays', 'Start Days').value"
+              :label="t('common.startDays', 'Start Days').value"
+              :aria-label="t('common.startDays', 'Start Days').value"
               density="compact"
               variant="outlined"
               min="0"
@@ -199,13 +199,13 @@ watch(
             <v-select
               :model-value="startDirection"
               :items="[
-                { value: 'before', label: t('cohortDefinitions.temporal.before', 'Before').value },
-                { value: 'after', label: t('cohortDefinitions.temporal.after', 'After').value },
+                { value: 'before', label: t('options.before', 'Before').value },
+                { value: 'after', label: t('options.after', 'After').value },
               ]"
               item-title="label"
               item-value="value"
-              :label="t('cohortDefinitions.temporal.startDirection', 'Start Direction').value"
-              :aria-label="t('cohortDefinitions.temporal.startDirection', 'Start Direction').value"
+              :label="t('common.startDirection', 'Start Direction').value"
+              :aria-label="t('common.startDirection', 'Start Direction').value"
               density="compact"
               variant="outlined"
               hide-details
@@ -215,8 +215,8 @@ watch(
           <v-col cols="12" md="4">
             <v-checkbox
               :model-value="startAllTime"
-              :label="t('cohortDefinitions.temporal.allTime', 'All time').value"
-              :aria-label="t('cohortDefinitions.temporal.allTime', 'All time').value"
+              :label="t('common.allTime', 'All time').value"
+              :aria-label="t('common.allTime', 'All time').value"
               density="compact"
               hide-details
               @update:model-value="updateStartAllTime"
@@ -245,14 +245,14 @@ watch(
 
       <!-- End Window -->
       <div>
-        <div class="text-subtitle-2 mb-2">{{ t('cohortDefinitions.temporal.endWindow', 'End Window') }}</div>
+        <div class="text-subtitle-2 mb-2">{{ t('common.endWindow', 'End Window') }}</div>
         <v-row dense>
           <v-col cols="12" md="4">
             <v-text-field
               :model-value="endDays"
               type="number"
-              :label="t('cohortDefinitions.temporal.endDays', 'End Days').value"
-              :aria-label="t('cohortDefinitions.temporal.endDays', 'End Days').value"
+              :label="t('common.endDays', 'End Days').value"
+              :aria-label="t('common.endDays', 'End Days').value"
               density="compact"
               variant="outlined"
               min="0"
@@ -265,13 +265,13 @@ watch(
             <v-select
               :model-value="endDirection"
               :items="[
-                { value: 'before', label: t('cohortDefinitions.temporal.before', 'Before').value },
-                { value: 'after', label: t('cohortDefinitions.temporal.after', 'After').value },
+                { value: 'before', label: t('options.before', 'Before').value },
+                { value: 'after', label: t('options.after', 'After').value },
               ]"
               item-title="label"
               item-value="value"
-              :label="t('cohortDefinitions.temporal.endDirection', 'End Direction').value"
-              :aria-label="t('cohortDefinitions.temporal.endDirection', 'End Direction').value"
+              :label="t('common.endDirection', 'End Direction').value"
+              :aria-label="t('common.endDirection', 'End Direction').value"
               density="compact"
               variant="outlined"
               hide-details
@@ -281,8 +281,8 @@ watch(
           <v-col cols="12" md="4">
             <v-checkbox
               :model-value="endAllTime"
-              :label="t('cohortDefinitions.temporal.allTime', 'All time').value"
-              :aria-label="t('cohortDefinitions.temporal.allTime', 'All time').value"
+              :label="t('common.allTime', 'All time').value"
+              :aria-label="t('common.allTime', 'All time').value"
               density="compact"
               hide-details
               @update:model-value="updateEndAllTime"
