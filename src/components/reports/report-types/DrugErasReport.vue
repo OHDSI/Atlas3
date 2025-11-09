@@ -42,12 +42,12 @@
             :export-filename="`drug-eras-${sourceKey}.csv`"
           />
           <v-alert v-else type="info" variant="tonal">
-            No drug era data available
+            {{ t('common.noData') }}
           </v-alert>
         </div>
 
         <v-alert v-else type="info" variant="tonal">
-          No report data available
+          {{ t('common.noData') }}
         </v-alert>
       </v-card-text>
     </v-card>
@@ -57,6 +57,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useReports } from '@/composables/useReports'
+import { useI18n } from '@/composables/useI18n'
 import type { DrugErasReport, TableHeader, TableRow } from '@/models/report.types'
 import DataTable from '../tables/DataTable.vue'
 
@@ -67,6 +68,11 @@ const props = defineProps<{
   cohortId: number
   sourceKey: string
 }>()
+
+/**
+ * i18n
+ */
+const { t } = useI18n()
 
 /**
  * Reports composable

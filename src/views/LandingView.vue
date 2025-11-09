@@ -6,27 +6,20 @@
           <h1 class="landing__title">ATLAS</h1>
 
           <div class="landing__description">
-            <p>
-              ATLAS is an open source application developed as a part of
-              <a href="https://ohdsi.org" target="_blank" class="landing__link">OHDSI</a>
-              intended to provide a unified interface to patient level data and analytics.
-            </p>
+            <p v-html="tv('home.description', 'ATLAS is an open source application developed as a part of <a href=\'http://www.ohdsi.org\' target=\'_new\'>OHDSI</a> intended to provide a unified interface to patient level data and analytics.')"></p>
           </div>
 
           <div class="landing__documentation">
-            <h2 class="landing__section-title">Documentation</h2>
-            <p>
-              The ATLAS user guide can be found
-              <a href="https://data2evidence.org/docs/" class="landing__link" target="_blank">here</a>.
-            </p>
+            <h2 class="landing__section-title">{{ t('home.documentation.title', 'Documentation') }}</h2>
+            <p v-html="tv('home.documentation.text', 'The ATLAS user guide can be found <a target=\'_new\' href=\'http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas\'>here</a>.')"></p>
           </div>
 
           <div class="landing__actions">
             <button class="landing__button landing__button--outline" @click="handleSearchConcepts">
-              Search Concepts
+              {{ t('home.gettingStarted.vocabulary.button', 'Search the Vocabulary') }}
             </button>
             <button class="landing__button landing__button--secondary" @click="handleNewCohort">
-              New Cohort
+              {{ t('home.gettingStarted.newCohort.button', 'Define a New Cohort') }}
             </button>
           </div>
         </div>
@@ -41,9 +34,11 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useI18n } from '@/composables/useI18n'
 import atlasLogo from '@/assets/icons/atlas-loading.svg'
 
 const router = useRouter()
+const { t, tv } = useI18n()
 
 const handleSearchConcepts = () => {
   router.push('/concepts')
@@ -103,12 +98,14 @@ const handleNewCohort = () => {
   color: rgb(var(--v-theme-primary));
 }
 
-.landing__link {
+.landing__description :deep(a),
+.landing__documentation :deep(a) {
   color: rgb(var(--v-theme-primary));
   text-decoration: underline;
 }
 
-.landing__link:hover {
+.landing__description :deep(a):hover,
+.landing__documentation :deep(a):hover {
   color: rgb(var(--v-theme-accent));
 }
 

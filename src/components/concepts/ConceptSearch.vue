@@ -5,8 +5,8 @@
       <v-card-text>
         <v-text-field
           v-model="searchInput"
-          label="Search for concepts"
-          placeholder="Enter at least 3 characters to search..."
+          :label="t('search.headingTitle', 'Search for concepts').value"
+          :placeholder="t('search.placeholder', 'Enter at least 3 characters to search...').value"
           prepend-inner-icon="mdi-magnify"
           clearable
           variant="outlined"
@@ -24,14 +24,14 @@
               :loading="loading"
               @click="onSearch"
             >
-              Search
+              {{ t('search.buttonTitle', 'Search') }}
             </v-btn>
           </template>
         </v-text-field>
 
         <!-- Search hint -->
         <div class="text-caption text-grey mt-1">
-          Search across SNOMED, ICD, RxNorm, LOINC, and other standard vocabularies
+          {{ t('search.vocabulariesInfo', 'Search across SNOMED, ICD, RxNorm, LOINC, and other standard vocabularies') }}
         </div>
       </v-card-text>
     </v-card>
@@ -64,8 +64,11 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import ConceptTable from './ConceptTable.vue'
+
+const { t } = useI18n()
 
 // ============================================================================
 // Store

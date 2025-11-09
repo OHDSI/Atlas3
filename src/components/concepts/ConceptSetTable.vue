@@ -56,7 +56,7 @@
           size="small"
           label
         >
-          {{ item.invalidReason ? 'Invalid' : 'Valid' }}
+          {{ item.invalidReason ? t('commonErrors.invalid', 'Invalid').value : t('commonErrors.valid', 'Valid').value }}
         </v-chip>
       </template>
 
@@ -76,7 +76,7 @@
         <div class="text-center py-8">
           <v-icon size="64" color="grey-lighten-1">mdi-folder-open</v-icon>
           <p class="text-body-1 mt-4 text-grey">
-            No concepts selected
+            {{ t('cs.manager.noConcepts', 'No concepts selected').value }}
           </p>
           <p class="text-caption text-grey">
             Search for concepts and add them to this concept set
@@ -98,7 +98,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
+
+const { t } = useI18n()
 
 // ============================================================================
 // Props & Emits
@@ -123,17 +126,17 @@ const emit = defineEmits<{
 // ============================================================================
 
 const headers = [
-  { title: 'Descendants', key: 'includeDescendants', sortable: false, width: '100px' },
-  { title: 'Mapped', key: 'includeMapped', sortable: false, width: '80px' },
-  { title: 'Exclude', key: 'isExcluded', sortable: false, width: '80px' },
-  { title: 'ID', key: 'conceptId', sortable: true, width: '100px' },
-  { title: 'Code', key: 'conceptCode', sortable: true, width: '120px' },
-  { title: 'Name', key: 'conceptName', sortable: true },
-  { title: 'Vocabulary', key: 'vocabularyId', sortable: true, width: '120px' },
-  { title: 'Type', key: 'standardConcept', sortable: true, width: '140px' },
-  { title: 'Domain', key: 'domainId', sortable: true, width: '120px' },
-  { title: 'Class', key: 'conceptClassId', sortable: true, width: '150px' },
-  { title: 'Validity', key: 'invalidReason', sortable: true, width: '100px' },
+  { title: t('columns.descendants', 'Descendants').value, key: 'includeDescendants', sortable: false, width: '100px' },
+  { title: t('columns.mapped', 'Mapped').value, key: 'includeMapped', sortable: false, width: '80px' },
+  { title: t('columns.exclude', 'Exclude').value, key: 'isExcluded', sortable: false, width: '80px' },
+  { title: t('columns.conceptId', 'ID').value, key: 'conceptId', sortable: true, width: '100px' },
+  { title: t('columns.conceptCode', 'Code').value, key: 'conceptCode', sortable: true, width: '120px' },
+  { title: t('columns.conceptName', 'Name').value, key: 'conceptName', sortable: true },
+  { title: t('columns.vocabulary', 'Vocabulary').value, key: 'vocabularyId', sortable: true, width: '120px' },
+  { title: t('columns.type', 'Type').value, key: 'standardConcept', sortable: true, width: '140px' },
+  { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true, width: '120px' },
+  { title: t('columns.class', 'Class').value, key: 'conceptClassId', sortable: true, width: '150px' },
+  { title: t('columns.validEndDate', 'Validity').value, key: 'invalidReason', sortable: true, width: '100px' },
   { title: '', key: 'actions', sortable: false, width: '60px' },
 ]
 
@@ -148,9 +151,9 @@ function getConceptTypeColor(concept: ConceptSetItem): string {
 }
 
 function getConceptTypeLabel(concept: ConceptSetItem): string {
-  if (concept.standardConcept === 'S') return 'Standard'
-  if (concept.standardConcept === 'C') return 'Classification'
-  return 'Non-Standard'
+  if (concept.standardConcept === 'S') return t('search.standard', 'Standard').value
+  if (concept.standardConcept === 'C') return t('search.classification', 'Classification').value
+  return t('search.nonStandard', 'Non-Standard').value
 }
 
 function onToggleDescendants(item: ConceptSetItem) {

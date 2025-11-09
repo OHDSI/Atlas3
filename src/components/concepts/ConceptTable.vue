@@ -27,7 +27,7 @@
           size="small"
           label
         >
-          {{ item.invalidReason ? 'Invalid' : 'Valid' }}
+          {{ item.invalidReason ? t('commonErrors.invalid', 'Invalid').value : t('commonErrors.valid', 'Valid').value }}
         </v-chip>
       </template>
 
@@ -162,7 +162,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
+
+const { t } = useI18n()
 
 // ============================================================================
 // Props & Emits
@@ -204,18 +207,18 @@ const emit = defineEmits<{
 // Add actions column if showAddButton is true
 const headers = computed(() => {
   const baseHeaders = [
-    { title: 'ID', key: 'conceptId', sortable: true, width: '100px' },
-    { title: 'Code', key: 'conceptCode', sortable: true, width: '120px' },
-    { title: 'Name', key: 'conceptName', sortable: true },
-    { title: 'Vocabulary', key: 'vocabularyId', sortable: true, width: '120px' },
-    { title: 'Type', key: 'standardConcept', sortable: true, width: '140px' },
-    { title: 'Domain', key: 'domainId', sortable: true, width: '120px' },
-    { title: 'Class', key: 'conceptClassId', sortable: true, width: '150px' },
-    { title: 'Validity', key: 'invalidReason', sortable: true, width: '100px' },
-    { title: 'RC', key: 'recordCount', sortable: true, width: '100px', align: 'end' as const },
-    { title: 'DRC', key: 'descendantRecordCount', sortable: true, width: '100px', align: 'end' as const },
-    { title: 'PC', key: 'personCount', sortable: true, width: '100px', align: 'end' as const },
-    { title: 'DPC', key: 'descendantPersonCount', sortable: true, width: '100px', align: 'end' as const },
+    { title: t('columns.conceptId', 'ID').value, key: 'conceptId', sortable: true, width: '100px' },
+    { title: t('columns.conceptCode', 'Code').value, key: 'conceptCode', sortable: true, width: '120px' },
+    { title: t('columns.conceptName', 'Name').value, key: 'conceptName', sortable: true },
+    { title: t('columns.vocabulary', 'Vocabulary').value, key: 'vocabularyId', sortable: true, width: '120px' },
+    { title: t('columns.type', 'Type').value, key: 'standardConcept', sortable: true, width: '140px' },
+    { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true, width: '120px' },
+    { title: t('columns.class', 'Class').value, key: 'conceptClassId', sortable: true, width: '150px' },
+    { title: t('columns.validEndDate', 'Validity').value, key: 'invalidReason', sortable: true, width: '100px' },
+    { title: t('columns.rcTooltip', 'RC').value, key: 'recordCount', sortable: true, width: '100px', align: 'end' as const },
+    { title: t('columns.drcTooltip', 'DRC').value, key: 'descendantRecordCount', sortable: true, width: '100px', align: 'end' as const },
+    { title: t('columns.pcTooltip', 'PC').value, key: 'personCount', sortable: true, width: '100px', align: 'end' as const },
+    { title: t('columns.dpcTooltip', 'DPC').value, key: 'descendantPersonCount', sortable: true, width: '100px', align: 'end' as const },
   ]
 
   if (props.showAddButton) {
@@ -251,9 +254,9 @@ function getConceptTypeColor(concept: Concept): string {
 }
 
 function getConceptTypeLabel(concept: Concept): string {
-  if (concept.standardConcept === 'S') return 'Standard'
-  if (concept.standardConcept === 'C') return 'Classification'
-  return 'Non-Standard'
+  if (concept.standardConcept === 'S') return t('search.standard', 'Standard').value
+  if (concept.standardConcept === 'C') return t('search.classification', 'Classification').value
+  return t('search.nonStandard', 'Non-Standard').value
 }
 
 function onPageChange(newPage: number) {

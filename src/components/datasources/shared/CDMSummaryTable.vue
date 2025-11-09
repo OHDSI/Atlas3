@@ -1,17 +1,17 @@
 <template>
   <v-card class="cdm-summary-table" variant="outlined">
     <v-card-title class="text-h6 bg-grey-lighten-4">
-      CDM Summary
+      {{ t('dataSources.dashboardReport.cdmSummary', 'CDM Summary') }}
     </v-card-title>
     <v-card-text>
       <v-table density="comfortable">
         <tbody>
           <tr>
-            <td class="font-weight-medium">Source Name</td>
+            <td class="font-weight-medium">{{ t('common.sourceName', 'Source Name') }}</td>
             <td>{{ data.sourceName }}</td>
           </tr>
           <tr>
-            <td class="font-weight-medium">Total Persons</td>
+            <td class="font-weight-medium">{{ t('dataSources.numberOfPeople', 'Number of People') }}</td>
             <td>{{ formatNumber(data.personCount) }}</td>
           </tr>
         </tbody>
@@ -21,7 +21,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '@/composables/useI18n'
 import { formatNumber } from '@/utils/datasource-formatters'
+
+const { t } = useI18n()
 
 interface Props {
   data: {

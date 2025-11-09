@@ -2,7 +2,7 @@
   <v-card>
     <v-card-title class="d-flex align-center">
       <v-icon class="mr-2">mdi-book-open-variant</v-icon>
-      <span>Concept Sets</span>
+      <span>{{ t('conceptSets.title') }}</span>
       <v-spacer />
       <v-btn
         color="primary"
@@ -11,13 +11,13 @@
         @click="createNewConceptSet"
       >
         <v-icon class="mr-2">mdi-plus</v-icon>
-        New Concept Set
+        {{ t('conceptSets.newConceptSet') }}
       </v-btn>
     </v-card-title>
 
     <v-card-text>
       <p v-if="conceptSetsList.length === 0" class="text-body-2 text-medium-emphasis">
-        No concept sets defined. Click "New Concept Set" to create one.
+        {{ t('conceptSets.noConceptSets') }}
       </p>
 
       <v-expansion-panels v-else>
@@ -30,7 +30,7 @@
               <span class="font-weight-medium">{{ conceptSet.name }}</span>
               <v-spacer />
               <v-chip size="small" class="mr-2">
-                {{ conceptSet.items.length }} concept{{ conceptSet.items.length === 1 ? '' : 's' }}
+                {{ t('conceptSets.conceptCount', { count: conceptSet.items.length }) }}
               </v-chip>
             </div>
           </v-expansion-panel-title>
@@ -38,14 +38,14 @@
           <v-expansion-panel-text>
             <v-text-field
               :model-value="conceptSet.name"
-              label="Name"
+              :label="tv('common.name')"
               variant="outlined"
               density="compact"
               @update:model-value="conceptSet.id && updateConceptSetName(conceptSet.id, $event)"
             />
 
             <div v-if="conceptSet.items.length > 0" class="mt-3">
-              <p class="text-subtitle-2 mb-2">Concepts:</p>
+              <p class="text-subtitle-2 mb-2">{{ t('conceptSets.concepts') }}</p>
               <v-chip
                 v-for="concept in conceptSet.items"
                 :key="concept.conceptId"
@@ -65,7 +65,7 @@
                 @click="conceptSet.id && openSearchDialog(conceptSet.id)"
               >
                 <v-icon class="mr-2">mdi-plus</v-icon>
-                Add Concepts
+                {{ t('conceptSets.addConcepts') }}
               </v-btn>
 
               <v-btn
@@ -75,7 +75,7 @@
                 @click="conceptSet.id && deleteConceptSet(conceptSet.id)"
               >
                 <v-icon class="mr-2">mdi-delete</v-icon>
-                Delete
+                {{ t('common.delete') }}
               </v-btn>
             </div>
           </v-expansion-panel-text>
@@ -93,9 +93,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
+import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
 import { useConceptSetsStore } from '@/stores/conceptSets'
 import ConceptSearchDialog from './ConceptSearchDialog.vue'
+
+const { t, tv } = useI18n()
 
 const conceptSetsStore = useConceptSetsStore()
 
@@ -109,7 +112,7 @@ const conceptSetsList = computed(() => {
 function createNewConceptSet() {
   const newConceptSet: ConceptSet = {
     id: uuidv4(),
-    name: `Concept Set ${conceptSetsList.value.length + 1}`,
+    name: tv('conceptSets.defaultName', { number: conceptSetsList.value.length + 1 }),
     items: [],
   }
 

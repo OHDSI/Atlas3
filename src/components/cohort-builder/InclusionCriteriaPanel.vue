@@ -17,15 +17,14 @@
             data-testid="add-inclusion-rule"
             @click="addNewRule"
           >
-            New Inclusion Criteria
+            {{ t('cohortDefinitions.inclusionCriteria.new', 'New Inclusion Criteria') }}
           </v-btn>
         </div>
 
         <!-- Empty State -->
         <v-alert v-if="modelValue.length === 0" color="grey-lighten-4" variant="outlined" class="mb-4">
           <div style="color: #666;">
-            No inclusion rules defined. Inclusion rules allow you to specify additional requirements
-            for patients to be included in the cohort beyond the entry events.
+            {{ t('cohortDefinitions.inclusionCriteria.emptyState', 'No inclusion rules defined. Inclusion rules allow you to specify additional requirements for patients to be included in the cohort beyond the entry events.') }}
           </div>
         </v-alert>
 
@@ -125,8 +124,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
+import { useI18n } from '@/composables/useI18n'
 import type { InclusionRule, CriteriaGroup, QualifyingLimit } from '@/models/cohort.types'
 import CriteriaGroupEditor from './CriteriaGroupEditor.vue'
+
+const { t } = useI18n()
 
 interface Props {
   modelValue: InclusionRule[]

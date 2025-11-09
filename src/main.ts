@@ -9,6 +9,7 @@ import vuetify from './plugins/vuetify'
 import App from './App.vue'
 import { setupAuthInterceptor } from './services/auth/authInterceptor'
 import { useAuthStore } from './stores/auth'
+import { useLocaleStore } from './stores/locale'
 
 // ECharts imports for tree-shaking
 import ECharts from 'vue-echarts'
@@ -75,6 +76,12 @@ setupAuthInterceptor()
 const authStore = useAuthStore()
 authStore.initializeFromStorage().catch((error) => {
   console.error('[Auth] Initialization failed:', error)
+})
+
+// Initialize locale store for i18n support
+const localeStore = useLocaleStore()
+localeStore.initialize().catch((error) => {
+  console.error('[i18n] Initialization failed:', error)
 })
 
 app.mount('#app')

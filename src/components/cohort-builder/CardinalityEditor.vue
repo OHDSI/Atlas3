@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { Cardinality } from '@/models/event.types'
 import { useCardinality } from '@/composables/useCardinality'
 
@@ -11,6 +12,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: Cardinality]
 }>()
 
+const { t, tv } = useI18n()
 const {
   validateCardinality,
   defaultCardinality,
@@ -97,7 +99,7 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
 
 <template>
   <v-card class="cardinality-editor" elevation="0" variant="outlined">
-    <v-card-title class="text-subtitle-1">Cardinality</v-card-title>
+    <v-card-title class="text-subtitle-1">{{ t('components.cardinalityInput.title') }}</v-card-title>
     <v-card-text>
       <v-row dense>
         <!-- Cardinality Type Dropdown -->
@@ -107,7 +109,7 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
             :items="typeOptions"
             item-title="label"
             item-value="value"
-            label="Cardinality Type"
+            :label="tv('components.cardinalityInput.type')"
             aria-label="Cardinality Type"
             density="compact"
             variant="outlined"
@@ -118,7 +120,7 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
 
         <!-- Count Input - Using native input for Playwright compatibility -->
         <v-col cols="12" md="4">
-          <label class="v-label" for="count-input">Count</label>
+          <label class="v-label" for="count-input">{{ t('components.cardinalityInput.count') }}</label>
           <input
             id="count-input"
             :value="count"
@@ -139,7 +141,7 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
             :items="countingMethodOptions"
             item-title="label"
             item-value="value"
-            label="Counting Method"
+            :label="tv('components.cardinalityInput.countingMethod')"
             aria-label="Counting Method"
             density="compact"
             variant="outlined"
@@ -170,16 +172,16 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
         <v-col cols="12">
           <div class="text-caption text-medium-emphasis mt-2">
             <template v-if="cardinality.type === 'AT_LEAST'">
-              Event must occur at least {{ count }} time(s)
+              {{ t('components.cardinalityInput.help.atLeast', { count }) }}
             </template>
             <template v-else-if="cardinality.type === 'EXACTLY'">
-              Event must occur exactly {{ count }} time(s)
+              {{ t('components.cardinalityInput.help.exactly', { count }) }}
               <span v-if="count === 0" class="text-warning">
-                (exclusion criteria - event must NOT occur)
+                {{ t('components.cardinalityInput.help.exclusion') }}
               </span>
             </template>
             <template v-else-if="cardinality.type === 'AT_MOST'">
-              Event must occur at most {{ count }} time(s)
+              {{ t('components.cardinalityInput.help.atMost', { count }) }}
             </template>
           </div>
         </v-col>

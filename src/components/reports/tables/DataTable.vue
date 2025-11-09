@@ -16,7 +16,7 @@
         v-model="searchQuery"
         density="compact"
         variant="outlined"
-        label="Search table"
+        :label="tv('common.search')"
         prepend-inner-icon="mdi-magnify"
         hide-details
         clearable
@@ -36,7 +36,7 @@
               prepend-icon="mdi-view-column"
               size="small"
             >
-              Columns
+              {{ t('common.columns') }}
             </v-btn>
           </template>
           <v-list>
@@ -86,7 +86,7 @@
       <!-- No data slot -->
       <template #no-data>
         <v-alert type="info" variant="tonal" class="ma-4">
-          No data available
+          {{ t('common.noData') }}
         </v-alert>
       </template>
 
@@ -106,8 +106,14 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { TableHeader, TableRow } from '@/models/report.types'
 import TableExport from './TableExport.vue'
+
+/**
+ * i18n
+ */
+const { t, tv } = useI18n()
 
 /**
  * Props

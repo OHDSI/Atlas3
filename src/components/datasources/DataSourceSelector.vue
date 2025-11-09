@@ -4,7 +4,7 @@
     :items="dataSourceItems"
     :loading="loading"
     :disabled="disabled || loading"
-    label="Data Source"
+    :label="t('dataSources.title', 'Data Source').value"
     item-title="label"
     item-value="value"
     variant="outlined"
@@ -20,7 +20,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { DataSource } from '@/models/datasource.types'
+
+const { t } = useI18n()
 
 interface Props {
   modelValue: number | null

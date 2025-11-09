@@ -3,8 +3,8 @@
     <!-- Search Input -->
     <v-text-field
       v-model="searchInput"
-      label="Search for concepts to add"
-      placeholder="Enter at least 3 characters..."
+      :label="tv('conceptSearchInline.searchLabel')"
+      :placeholder="tv('conceptSearchInline.searchPlaceholder')"
       prepend-inner-icon="mdi-magnify"
       clearable
       variant="outlined"
@@ -23,7 +23,7 @@
           :loading="loading"
           @click="onSearch"
         >
-          Search
+          {{ t('common.search') }}
         </v-btn>
       </template>
     </v-text-field>
@@ -59,10 +59,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import ConceptTable from './ConceptTable.vue'
 import type { Concept } from '@/models/concept-set.types'
+
+const { t, tv } = useI18n()
 
 // ============================================================================
 // Stores

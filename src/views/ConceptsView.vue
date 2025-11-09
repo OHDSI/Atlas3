@@ -10,8 +10,8 @@
           density="comfortable"
           centered
         >
-          <v-tab value="search">Concept Search</v-tab>
-          <v-tab value="sets">Concept Sets</v-tab>
+          <v-tab value="search">{{ t('search.tabs.search', 'Concept Search') }}</v-tab>
+          <v-tab value="sets">{{ t('cs.manager.title', 'Concept Sets') }}</v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
@@ -31,6 +31,7 @@
 <script setup lang="ts">
 import { ref, provide, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from '@/composables/useI18n'
 import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
 import ConceptSetList from '@/components/concepts/ConceptSetList.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -38,6 +39,7 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 const route = useRoute()
 const router = useRouter()
 const conceptSetsStore = useConceptSetsStore()
+const { t } = useI18n()
 
 // Active tab state - sync with URL query
 const activeTab = ref<string>((route.query.tab as string) || 'search')

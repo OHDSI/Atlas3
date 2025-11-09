@@ -8,7 +8,7 @@
     <v-card>
       <v-card-title class="d-flex align-center">
         <v-icon class="mr-2">mdi-magnify</v-icon>
-        <span>Search Concepts</span>
+        <span>{{ t('search.title') }}</span>
         <v-spacer />
         <v-btn
           icon
@@ -23,8 +23,8 @@
       <v-card-text>
         <v-text-field
           v-model="searchQuery"
-          label="Search concepts"
-          placeholder="Enter search term..."
+          :label="tv('search.searchConcepts')"
+          :placeholder="tv('search.searchPlaceholder')"
           variant="outlined"
           density="comfortable"
           prepend-inner-icon="mdi-magnify"
@@ -34,7 +34,7 @@
 
         <v-select
           v-model="selectedDomain"
-          label="Domain (optional)"
+          :label="tv('facets.domain')"
           :items="domainOptions"
           variant="outlined"
           density="comfortable"
@@ -49,19 +49,19 @@
           class="mt-3"
           @click="performSearch"
         >
-          Search
+          {{ t('common.search') }}
         </v-btn>
 
         <v-divider class="my-4" />
 
         <loading-spinner
           v-if="isSearching"
-          message="Searching concepts..."
+          :message="tv('search.searchingConcepts')"
         />
 
         <div v-else-if="searchResults.length > 0">
           <p class="text-subtitle-2 mb-2">
-            Found {{ searchResults.length }} concept{{ searchResults.length === 1 ? '' : 's' }}
+            {{ t('search.foundResults', { count: searchResults.length }) }}
           </p>
 
           <v-list>
@@ -84,12 +84,12 @@
 
         <div v-else-if="hasSearched" class="text-center text-medium-emphasis py-4">
           <v-icon size="48" class="mb-2">mdi-magnify-remove-outline</v-icon>
-          <p>No concepts found</p>
+          <p>{{ t('search.noResults') }}</p>
         </div>
 
         <div v-else class="text-center text-medium-emphasis py-4">
           <v-icon size="48" class="mb-2">mdi-magnify</v-icon>
-          <p>Enter a search term to find concepts</p>
+          <p>{{ t('search.enterSearchTerm') }}</p>
         </div>
       </v-card-text>
 
@@ -99,14 +99,14 @@
           variant="text"
           @click="close"
         >
-          Cancel
+          {{ t('common.cancel') }}
         </v-btn>
         <v-btn
           color="primary"
           :disabled="selectedConcepts.length === 0"
           @click="addSelectedConcepts"
         >
-          Add {{ selectedConcepts.length }} Concept{{ selectedConcepts.length === 1 ? '' : 's' }}
+          {{ t('cs.modal.buttons.add', { count: selectedConcepts.length }) }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -115,6 +115,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
 import { useConceptSetsStore } from '@/stores/conceptSets'
 import { useWebAPIStore } from '@/stores/webapi'
@@ -125,6 +126,7 @@ interface Props {
 }
 
 defineProps<Props>()
+const { t, tv } = useI18n()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]

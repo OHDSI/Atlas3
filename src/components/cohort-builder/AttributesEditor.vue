@@ -41,7 +41,7 @@
             />
 
             <template v-if="attribute.type === 'numericRange' && (attribute.operator === 'BETWEEN')">
-              <span class="and-text">and</span>
+              <span class="and-text">{{ t('common.and') }}</span>
               <v-text-field
                 :model-value="attribute.extent"
                 type="number"
@@ -134,7 +134,7 @@
           prepend-icon="mdi-plus"
           data-testid="add-attribute-button"
         >
-          Add Attribute
+          {{ t('cohort.addAttribute') }}
         </v-btn>
       </template>
       <v-list>
@@ -151,10 +151,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type {
   EventAttribute
 } from '@/models/event.types'
 import type { CriteriaType } from '@/models/cohort.types'
+
+const { t } = useI18n()
 
 interface Props {
   modelValue: EventAttribute[]

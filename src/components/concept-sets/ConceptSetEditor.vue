@@ -1,14 +1,14 @@
 <template>
   <v-card>
     <v-card-title>
-      {{ modelValue?.id ? 'Edit Concept Set' : 'Create Concept Set' }}
+      {{ modelValue?.id ? t('conceptSetEditor.editTitle') : t('conceptSetEditor.createTitle') }}
     </v-card-title>
     <v-card-text>
       <!-- Concept Set Name -->
       <v-text-field
         :model-value="modelValue?.name || ''"
-        label="Concept Set Name"
-        placeholder="e.g., Type 2 Diabetes"
+        :label="tv('conceptSetEditor.nameLabel')"
+        :placeholder="tv('conceptSetEditor.namePlaceholder')"
         data-testid="concept-set-name"
         @update:model-value="updateName"
       />
@@ -16,7 +16,7 @@
       <!-- Concept List -->
       <v-card variant="outlined" class="mt-4">
         <v-card-title class="text-subtitle-1">
-          Concepts ({{ conceptCount }})
+          {{ t('conceptSetEditor.conceptsCount', { count: conceptCount }) }}
         </v-card-title>
         <v-card-text>
           <v-list v-if="concepts.length > 0" data-testid="concept-list">
@@ -28,14 +28,18 @@
                 {{ item.conceptName }}
               </v-list-item-title>
               <v-list-item-subtitle>
-                ID: {{ item.conceptId }} | {{ item.domainId }} | {{ item.vocabularyId }}
+                {{ t('conceptSetEditor.conceptDetails', { 
+                  id: item.conceptId, 
+                  domain: item.domainId, 
+                  vocabulary: item.vocabularyId 
+                }) }}
               </v-list-item-subtitle>
 
               <template #append>
                 <!-- Include Descendants Checkbox -->
                 <v-checkbox
                   :model-value="item.includeDescendants"
-                  label="Include descendants"
+                  :label="tv('conceptSetEditor.includeDescendants')"
                   hide-details
                   density="compact"
                   :data-testid="`include-descendants-${index}`"
@@ -56,7 +60,7 @@
           </v-list>
 
           <v-alert v-else type="info" variant="text">
-            No concepts added yet. Use the search to add concepts.
+            {{ t('conceptSetEditor.noConceptsYet') }}
           </v-alert>
 
           <!-- Add Concept Button -->
@@ -67,7 +71,7 @@
             data-testid="add-concept-btn"
             @click="$emit('add-concepts')"
           >
-            Add Concepts
+            {{ t('conceptSets.addConcepts') }}
           </v-btn>
         </v-card-text>
       </v-card>
@@ -81,7 +85,7 @@
         data-testid="cancel-edit"
         @click="$emit('cancel')"
       >
-        Cancel
+        {{ t('common.cancel') }}
       </v-btn>
       <v-btn
         color="primary"
@@ -90,7 +94,7 @@
         :disabled="!canSave"
         @click="$emit('save')"
       >
-        Save
+        {{ t('common.save') }}
       </v-btn>
     </v-card-actions>
   </v-card>
@@ -98,7 +102,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'
+
+const { t, tv } = useI18n()
 
 interface Props {
   modelValue?: ConceptSet

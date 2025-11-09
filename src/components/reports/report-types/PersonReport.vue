@@ -8,7 +8,7 @@
 <template>
   <div class="person-report">
     <v-card elevation="0" class="mb-4">
-      <v-card-title class="text-h6">Year of Birth Distribution</v-card-title>
+      <v-card-title class="text-h6">{{ t('dataSources.personReport.yearOfBirth') }}</v-card-title>
       <v-card-text>
         <div v-if="sectionLoading('yearOfBirth')">
           <v-skeleton-loader type="image" height="400" />
@@ -25,7 +25,7 @@
               variant="text"
               @click="retrySections"
             >
-              Retry
+              {{ t('common.retry') }}
             </v-btn>
           </template>
         </v-alert>
@@ -35,19 +35,19 @@
           :height="400"
         />
         <v-alert v-else type="info" variant="tonal">
-          No year of birth data available
+          {{ t('common.noData') }}
         </v-alert>
       </v-card-text>
     </v-card>
 
     <v-card elevation="0">
-      <v-card-title class="text-h6">Demographics</v-card-title>
+      <v-card-title class="text-h6">{{ t('common.demographics') }}</v-card-title>
       <v-card-text>
         <v-row>
           <!-- Gender -->
           <v-col cols="12" md="4">
             <v-card variant="outlined">
-              <v-card-title class="text-subtitle-1">Gender</v-card-title>
+              <v-card-title class="text-subtitle-1">{{ t('dataSources.personReport.gender') }}</v-card-title>
               <v-card-text>
                 <div v-if="sectionLoading('gender')">
                   <v-skeleton-loader type="image" height="350" />
@@ -58,7 +58,7 @@
                   variant="tonal"
                   density="compact"
                 >
-                  Failed to load
+                  {{ t('common.failedToLoad') }}
                 </v-alert>
                 <PieChart
                   v-else-if="genderData && genderData.length > 0"
@@ -66,7 +66,7 @@
                   :height="350"
                 />
                 <v-alert v-else type="info" variant="tonal" density="compact">
-                  No data
+                  {{ t('common.noData') }}
                 </v-alert>
               </v-card-text>
             </v-card>
@@ -75,7 +75,7 @@
           <!-- Race -->
           <v-col cols="12" md="4">
             <v-card variant="outlined">
-              <v-card-title class="text-subtitle-1">Race</v-card-title>
+              <v-card-title class="text-subtitle-1">{{ t('dataSources.personReport.race') }}</v-card-title>
               <v-card-text>
                 <div v-if="sectionLoading('race')">
                   <v-skeleton-loader type="image" height="350" />
@@ -86,7 +86,7 @@
                   variant="tonal"
                   density="compact"
                 >
-                  Failed to load
+                  {{ t('common.failedToLoad') }}
                 </v-alert>
                 <PieChart
                   v-else-if="raceData && raceData.length > 0"
@@ -94,7 +94,7 @@
                   :height="350"
                 />
                 <v-alert v-else type="info" variant="tonal" density="compact">
-                  No data
+                  {{ t('common.noData') }}
                 </v-alert>
               </v-card-text>
             </v-card>
@@ -103,7 +103,7 @@
           <!-- Ethnicity -->
           <v-col cols="12" md="4">
             <v-card variant="outlined">
-              <v-card-title class="text-subtitle-1">Ethnicity</v-card-title>
+              <v-card-title class="text-subtitle-1">{{ t('dataSources.personReport.ethnicity') }}</v-card-title>
               <v-card-text>
                 <div v-if="sectionLoading('ethnicity')">
                   <v-skeleton-loader type="image" height="350" />
@@ -114,7 +114,7 @@
                   variant="tonal"
                   density="compact"
                 >
-                  Failed to load
+                  {{ t('common.failedToLoad') }}
                 </v-alert>
                 <PieChart
                   v-else-if="ethnicityData && ethnicityData.length > 0"
@@ -122,7 +122,7 @@
                   :height="350"
                 />
                 <v-alert v-else type="info" variant="tonal" density="compact">
-                  No data
+                  {{ t('common.noData') }}
                 </v-alert>
               </v-card-text>
             </v-card>
@@ -136,10 +136,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useReports } from '@/composables/useReports'
+import { useI18n } from '@/composables/useI18n'
 import type { PersonReport, BarChartData, PieChartData } from '@/models/report.types'
 import { toBarChartData, toPieChartData } from '@/services/report-mapper'
 import BarChart from '../charts/BarChart.vue'
 import PieChart from '../charts/PieChart.vue'
+
+/**
+ * i18n
+ */
+const { t } = useI18n()
 
 /**
  * Props

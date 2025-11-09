@@ -6,7 +6,7 @@
         <v-row>
           <v-col cols="12">
             <div class="datasources-view__header">
-              <h1 class="text-h4 mb-2">Data Sources</h1>
+              <h1 class="text-h4 mb-2">{{ t('dataSources.headingTitle', 'Data Sources') }}</h1>
               <p v-if="selectedSource && store.selectedReportType" class="text-subtitle-1 text-medium-emphasis">
                 {{ selectedSource.sourceName }} - {{ reportTypeLabel }}
               </p>
@@ -46,7 +46,7 @@
                   variant="text"
                   @click="store.retryFetchSources"
                 >
-                  Retry
+                  {{ t('common.retry', 'Retry') }}
                 </v-btn>
               </div>
             </v-alert>
@@ -64,7 +64,7 @@
                   variant="text"
                   @click="store.retryFetchReport"
                 >
-                  Retry
+                  {{ t('common.retry', 'Retry') }}
                 </v-btn>
               </div>
             </v-alert>
@@ -142,6 +142,7 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
 import DataSourceSelector from '@/components/datasources/DataSourceSelector.vue'
@@ -155,6 +156,7 @@ import ClinicalDomainReport from '@/components/datasources/ClinicalDomainReport.
 
 const router = useRouter()
 const store = useDataSourcesStore()
+const { t } = useI18n()
 
 // Get props from route
 interface Props {

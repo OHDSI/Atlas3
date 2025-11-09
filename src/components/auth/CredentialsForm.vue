@@ -2,8 +2,8 @@
   <v-form @submit.prevent="handleSubmit" ref="formRef">
     <v-text-field
       v-model="credentials.username"
-      :label="provider.loginPlaceholder || 'Username'"
-      :placeholder="provider.loginPlaceholder || 'Enter username'"
+      :label="provider.loginPlaceholder || t('columns.login', 'Username').value"
+      :placeholder="provider.loginPlaceholder || t('columns.login', 'Enter username').value"
       variant="outlined"
       prepend-inner-icon="mdi-account"
       :disabled="loading"
@@ -14,8 +14,8 @@
 
     <v-text-field
       v-model="credentials.password"
-      :label="provider.passwordPlaceholder || 'Password'"
-      :placeholder="provider.passwordPlaceholder || 'Enter password'"
+      :label="provider.passwordPlaceholder || t('common.password', 'Password').value"
+      :placeholder="provider.passwordPlaceholder || t('common.password', 'Enter password').value"
       type="password"
       variant="outlined"
       prepend-inner-icon="mdi-lock"
@@ -27,14 +27,17 @@
 
     <v-btn type="submit" color="primary" block size="large" :loading="loading">
       <v-icon left>mdi-login</v-icon>
-      Sign In
+      {{ t('common.menu', 'Sign In') }}
     </v-btn>
   </v-form>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { AuthProvider, LoginCredentials } from '@/models/auth.types'
+
+const { t } = useI18n()
 
 interface Props {
   provider: AuthProvider
@@ -56,7 +59,7 @@ const credentials = ref<LoginCredentials>({
 })
 
 function required(value: string) {
-  return !!value || 'This field is required'
+  return !!value || t('common.requiredField', 'This field is required').value
 }
 
 async function handleSubmit() {

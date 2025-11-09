@@ -62,7 +62,7 @@
             @click="emit('select-concept-set')"
           >
             <v-icon class="mr-2">mdi-plus</v-icon>
-            Select Concept Set
+            {{ t('cohortDefinitions.designTab.selectConceptSet') }}
           </v-btn>
         </div>
 
@@ -86,6 +86,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent, CriteriaType } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
 import { useUIStore } from '@/stores/ui'
@@ -96,6 +97,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const { t, tv } = useI18n()
 
 const emit = defineEmits<{
   'update': [event: CohortEvent]
@@ -121,17 +123,17 @@ function toggleExpanded() {
 }
 
 const eventTypeOptions = [
-  { label: 'Condition Occurrence', value: 'ConditionOccurrence' as CriteriaType },
-  { label: 'Drug Exposure', value: 'DrugExposure' as CriteriaType },
-  { label: 'Procedure Occurrence', value: 'ProcedureOccurrence' as CriteriaType },
-  { label: 'Observation', value: 'Observation' as CriteriaType },
-  { label: 'Measurement', value: 'Measurement' as CriteriaType },
-  { label: 'Visit Occurrence', value: 'VisitOccurrence' as CriteriaType },
+  { label: tv('cohortDefinitions.criteriaOptions.conditionOccurrence'), value: 'ConditionOccurrence' as CriteriaType },
+  { label: tv('cohortDefinitions.criteriaOptions.drugExposure'), value: 'DrugExposure' as CriteriaType },
+  { label: tv('cohortDefinitions.criteriaOptions.procedureOccurrence'), value: 'ProcedureOccurrence' as CriteriaType },
+  { label: tv('cohortDefinitions.criteriaOptions.observation'), value: 'Observation' as CriteriaType },
+  { label: tv('cohortDefinitions.criteriaOptions.measurement'), value: 'Measurement' as CriteriaType },
+  { label: tv('cohortDefinitions.criteriaOptions.visitOccurrence'), value: 'VisitOccurrence' as CriteriaType },
 ]
 
 const eventTypeLabel = computed(() => {
   const option = eventTypeOptions.find(opt => opt.value === props.event.criteriaType)
-  return option?.label ?? 'Entry Event'
+  return option?.label ?? t('cohortDefinitions.designTab.tabs.primary')
 })
 
 const cardinalityType = computed(() => {
@@ -140,13 +142,13 @@ const cardinalityType = computed(() => {
 })
 
 const cardinalityDisplay = computed(() => {
-  if (!props.event.cardinality) return 'At least 1'
+  if (!props.event.cardinality) return `${t('cohortDefinitions.designTab.cardinalityOptions.atLeast')} 1`
   const typeMap: Record<string, string> = {
-    'AT_LEAST': 'At least',
-    'EXACTLY': 'Exactly',
-    'AT_MOST': 'At most'
+    'AT_LEAST': tv('cohortDefinitions.designTab.cardinalityOptions.atLeast'),
+    'EXACTLY': tv('cohortDefinitions.designTab.cardinalityOptions.exactly'),
+    'AT_MOST': tv('cohortDefinitions.designTab.cardinalityOptions.atMost')
   }
-  const type = typeMap[props.event.cardinality.type] || 'At least'
+  const type = typeMap[props.event.cardinality.type] || t('cohortDefinitions.designTab.cardinalityOptions.atLeast')
   return `${type} ${props.event.cardinality.count ?? 1}`
 })
 

@@ -3,7 +3,7 @@
     <div class="cohort-pagination__controls">
       <!-- Items per page selector -->
       <div class="cohort-pagination__per-page">
-        <span class="cohort-pagination__label">Items per page:</span>
+        <span class="cohort-pagination__label">{{ t('datatable.language.lengthMenu', 'Items per page:') }}</span>
         <v-select
           :model-value="itemsPerPage"
           :items="itemsPerPageOptions"
@@ -11,7 +11,7 @@
           variant="outlined"
           hide-details
           class="cohort-pagination__select"
-          aria-label="Select number of items per page"
+          :aria-label="t('common.selectItemsPerPage', 'Select number of items per page').value"
           @update:model-value="$emit('update:items-per-page', $event)"
         />
       </div>
@@ -28,7 +28,7 @@
           size="small"
           variant="text"
           :disabled="!canGoPrevious"
-          aria-label="Previous page"
+          :aria-label="t('common.previousPage', 'Previous page').value"
           @click="$emit('previous')"
         />
         <v-btn
@@ -36,7 +36,7 @@
           size="small"
           variant="text"
           :disabled="!canGoNext"
-          aria-label="Next page"
+          :aria-label="t('common.nextPage', 'Next page').value"
           @click="$emit('next')"
         />
       </div>
@@ -45,6 +45,9 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 interface Props {
   page: number
   itemsPerPage: number

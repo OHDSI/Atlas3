@@ -1,6 +1,6 @@
 <template>
   <v-card variant="outlined">
-    <v-card-title class="text-subtitle-1">Select Concept Set</v-card-title>
+    <v-card-title class="text-subtitle-1">{{ t('cs.manager.selectConceptSet', 'Select Concept Set') }}</v-card-title>
     <v-card-text>
       <!-- Existing Concept Set Selector -->
       <v-select
@@ -8,7 +8,7 @@
         :items="conceptSetItems"
         item-title="label"
         item-value="value"
-        label="Choose Concept Set"
+        :label="t('cs.manager.chooseConceptSet', 'Choose Concept Set').value"
         clearable
         data-testid="concept-set-selector"
         @update:model-value="handleSelect"
@@ -18,13 +18,13 @@
             <template #prepend>
               <v-icon>mdi-magnify</v-icon>
             </template>
-            <v-list-item-title>Search for concepts...</v-list-item-title>
+            <v-list-item-title>{{ t('search.searchConcepts', 'Search for concepts...') }}</v-list-item-title>
           </v-list-item>
           <v-list-item @click="showCreateNew = true">
             <template #prepend>
               <v-icon>mdi-plus</v-icon>
             </template>
-            <v-list-item-title>Create new concept set...</v-list-item-title>
+            <v-list-item-title>{{ t('cs.manager.createNew', 'Create new concept set...') }}</v-list-item-title>
           </v-list-item>
           <v-divider class="my-2" />
         </template>
@@ -61,10 +61,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'
 import ConceptSearch from '@/components/concept-sets/ConceptSearch.vue'
 import ConceptSetEditor from '@/components/concept-sets/ConceptSetEditor.vue'
 import type { ConceptSetReference, ConceptSet, Concept } from '@/models/concept-set.types'
+
+const { t } = useI18n()
 
 interface Props {
   modelValue?: ConceptSetReference

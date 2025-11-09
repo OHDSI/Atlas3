@@ -9,7 +9,7 @@
     <v-card flat class="h-100 d-flex flex-column">
       <!-- Header -->
       <v-card-title class="d-flex align-center bg-primary pa-4">
-        <span class="text-h6">{{ isEditMode ? 'Edit Concept Set' : 'New Concept Set' }}</span>
+        <span class="text-h6">{{ isEditMode ? t('common.edit', 'Edit').value : t('common.create', 'New').value }} {{ t('common.conceptSet', 'Concept Set').value }}</span>
         <v-spacer />
         <v-btn
           icon="mdi-close"
@@ -23,8 +23,8 @@
         <v-form ref="formRef" v-model="formValid">
           <v-text-field
             v-model="form.name"
-            label="Name"
-            placeholder="Enter concept set name"
+            :label="t('columns.name', 'Name').value"
+            :placeholder="t('cs.manager.pleaseProvideNameMessage', 'Enter concept set name').value"
             variant="outlined"
             :rules="nameRules"
             :disabled="loading"
@@ -37,11 +37,11 @@
           <v-tabs v-model="activeTab" bg-color="grey-lighten-3" class="mb-4">
             <v-tab value="search">
               <v-icon start>mdi-magnify</v-icon>
-              Search
+              {{ t('search.tabs.search', 'Search') }}
             </v-tab>
             <v-tab value="selected">
               <v-icon start>mdi-checkbox-marked-circle</v-icon>
-              Selected concepts ({{ itemCount }})
+              {{ t('cs.manager.selectedConcepts', 'Selected concepts') }} ({{ itemCount }})
             </v-tab>
           </v-tabs>
 
@@ -75,7 +75,7 @@
           variant="text"
           @click="onClose"
         >
-          Close
+          {{ t('common.close', 'Close') }}
         </v-btn>
         
         <v-spacer />
@@ -87,7 +87,7 @@
           :disabled="loading"
           @click="onDelete"
         >
-          Delete
+          {{ t('common.delete', 'Delete') }}
         </v-btn>
         
         <v-btn
@@ -97,7 +97,7 @@
           :loading="loading"
           @click="onSave"
         >
-          {{ isEditMode ? 'Update' : 'Create' }}
+          {{ isEditMode ? t('common.save', 'Update') : t('common.create', 'Create') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -106,10 +106,13 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
 import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
+
+const { t } = useI18n()
 
 // ============================================================================
 // Props & Emits
@@ -176,8 +179,8 @@ const drawerWidth = computed(() => {
 // ============================================================================
 
 const nameRules = [
-  (v: string) => !!v || 'Name is required',
-  (v: string) => (v && v.length >= 1 && v.length <= 255) || 'Name must be between 1 and 255 characters',
+  (v: string) => !!v || t('commonErrors.required', 'Name is required').value,
+  (v: string) => (v && v.length >= 1 && v.length <= 255) || t('commonErrors.lengthValidation', 'Name must be between 1 and 255 characters').value,
 ]
 
 // ============================================================================

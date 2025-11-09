@@ -9,7 +9,7 @@
   <v-card elevation="0">
     <v-card-title class="text-h6">
       <v-icon class="mr-2">mdi-heart-broken</v-icon>
-      Death
+      {{ t('common.death') }}
     </v-card-title>
 
     <v-divider />
@@ -35,7 +35,7 @@
             size="small"
             @click="loadData"
           >
-            Retry
+            {{ t('common.retry') }}
           </v-btn>
         </div>
       </v-alert>
@@ -55,7 +55,7 @@
         variant="tonal"
         icon="mdi-information"
       >
-        No death data available
+        {{ t('common.noData') }}
       </v-alert>
     </v-card-text>
   </v-card>
@@ -64,8 +64,14 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useReports } from '@/composables/useReports'
+import { useI18n } from '@/composables/useI18n'
 import type { TableData } from '@/models/report.types'
 import DataTable from '@/components/reports/tables/DataTable.vue'
+
+/**
+ * i18n
+ */
+const { t, tv } = useI18n()
 
 /**
  * Props
@@ -107,11 +113,11 @@ async function loadData() {
 
     tableData.value = {
       headers: [
-        { key: 'conceptId', title: 'Concept ID', sortable: true },
-        { key: 'conceptName', title: 'Cause of Death', sortable: true },
-        { key: 'recordsPerPerson', title: 'Records Per Person', sortable: true, align: 'end' },
-        { key: 'personCount', title: 'Person Count', sortable: true, align: 'end' },
-        { key: 'prevalence', title: 'Prevalence (%)', sortable: true, align: 'end' }
+        { key: 'conceptId', title: tv('columns.conceptId'), sortable: true },
+        { key: 'conceptName', title: tv('common.causeOfDeath'), sortable: true },
+        { key: 'recordsPerPerson', title: tv('columns.recordsPerPerson'), sortable: true, align: 'end' },
+        { key: 'personCount', title: tv('columns.personCount'), sortable: true, align: 'end' },
+        { key: 'prevalence', title: tv('dataSources.prevalence'), sortable: true, align: 'end' }
       ],
       rows,
       totalRows: rows.length

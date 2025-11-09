@@ -33,7 +33,7 @@
           :height="400"
         />
         <v-alert v-else type="info" variant="tonal">
-          No prevalence data available
+          {{ t('common.noData') }}
         </v-alert>
       </v-card-text>
     </v-card>
@@ -102,7 +102,7 @@
           :height="400"
         />
         <v-alert v-else type="info" variant="tonal">
-          No age distribution data available
+          {{ t('common.noData') }}
         </v-alert>
       </v-card-text>
     </v-card>
@@ -127,7 +127,7 @@
           :height="400"
         />
         <v-alert v-else type="info" variant="tonal">
-          No duration distribution data available
+          {{ t('common.noData') }}
         </v-alert>
       </v-card-text>
     </v-card>
@@ -137,10 +137,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useReports } from '@/composables/useReports'
+import { useI18n } from '@/composables/useI18n'
 import type { CohortSpecificReport, BarChartData, LineChartData } from '@/models/report.types'
 import { toBarChartData, toLineChartData } from '@/services/report-mapper'
 import BarChart from '../charts/BarChart.vue'
 import LineChart from '../charts/LineChart.vue'
+
+/**
+ * i18n
+ */
+const { t } = useI18n()
 
 /**
  * Props

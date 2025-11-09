@@ -20,7 +20,7 @@
                 class="flex-1"
                 @click="matchTypeTemp = 'ALL'"
               >
-                All
+                {{ t('common.all', 'All') }}
               </v-btn>
               <v-btn
                 :variant="matchTypeTemp === 'ANY' ? 'tonal' : 'outlined'"
@@ -29,7 +29,7 @@
                 class="flex-1"
                 @click="matchTypeTemp = 'ANY'"
               >
-                Any
+                {{ t('common.any', 'Any') }}
               </v-btn>
               <v-btn
                 :variant="matchTypeTemp === 'AT_LEAST' ? 'tonal' : 'outlined'"
@@ -38,7 +38,7 @@
                 class="flex-1"
                 @click="matchTypeTemp = 'AT_LEAST'"
               >
-                At least
+                {{ t('common.atLeast', 'At least') }}
               </v-btn>
               <v-btn
                 :variant="matchTypeTemp === 'AT_MOST' ? 'tonal' : 'outlined'"
@@ -47,14 +47,14 @@
                 class="flex-1"
                 @click="matchTypeTemp = 'AT_MOST'"
               >
-                At most
+                {{ t('common.atMost', 'At most') }}
               </v-btn>
             </div>
             <v-text-field
               v-if="matchTypeTemp === 'AT_LEAST' || matchTypeTemp === 'AT_MOST'"
               v-model.number="matchTypeCount"
               type="number"
-              label="Count"
+              :label="t('common.count', 'Count').value"
               min="1"
               density="compact"
               class="mt-3"
@@ -62,8 +62,8 @@
           </v-card-text>
           <v-card-actions class="pa-2">
             <v-spacer />
-            <v-btn variant="text" size="small" @click="showMatchTypeDialog = false">Cancel</v-btn>
-            <v-btn color="primary" size="small" @click="confirmMatchType">OK</v-btn>
+            <v-btn variant="text" size="small" @click="showMatchTypeDialog = false">{{ t('common.cancel', 'Cancel') }}</v-btn>
+            <v-btn color="primary" size="small" @click="confirmMatchType">{{ t('common.ok', 'OK') }}</v-btn>
           </v-card-actions>
         </v-card>
       </v-menu>
@@ -317,11 +317,14 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
+import { useI18n } from '@/composables/useI18n'
 import type { CriteriaGroup, CohortEvent, LogicType, CriteriaType } from '@/models/cohort.types'
 import type { EventAttribute, TemporalWindow } from '@/models/event.types'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
+
+const { t } = useI18n()
 
 interface Props {
   modelValue?: CriteriaGroup
@@ -490,11 +493,11 @@ function updateEventConceptSet(index: number, conceptSet: { id: number; name: st
 // Display helpers
 function getMatchTypeDisplay(): string {
   switch (localGroup.value.logicType) {
-    case 'ALL': return 'All'
-    case 'ANY': return 'Any'
-    case 'AT_LEAST': return `At least ${localGroup.value.count || 1}`
-    case 'AT_MOST': return `At most ${localGroup.value.count || 1}`
-    default: return 'All'
+    case 'ALL': return t('common.all', 'All').value
+    case 'ANY': return t('common.any', 'Any').value
+    case 'AT_LEAST': return `${t('common.atLeast', 'At least').value} ${localGroup.value.count || 1}`
+    case 'AT_MOST': return `${t('common.atMost', 'At most').value} ${localGroup.value.count || 1}`
+    default: return t('common.all', 'All').value
   }
 }
 
@@ -522,13 +525,13 @@ function getCardinalityType(event: CohortEvent): string {
 }
 
 function getCardinalityDisplayForEvent(event: CohortEvent): string {
-  if (!event.cardinality) return 'At least 1'
+  if (!event.cardinality) return `${t('common.atLeast', 'At least').value} 1`
   const typeMap: Record<string, string> = {
-    'AT_LEAST': 'At least',
-    'EXACTLY': 'Exactly',
-    'AT_MOST': 'At most'
+    'AT_LEAST': t('common.atLeast', 'At least').value,
+    'EXACTLY': t('common.exactly', 'Exactly').value,
+    'AT_MOST': t('common.atMost', 'At most').value
   }
-  const type = typeMap[event.cardinality.type] || 'At least'
+  const type = typeMap[event.cardinality.type] || t('common.atLeast', 'At least').value
   return `${type} ${event.cardinality.count ?? 1}`
 }
 

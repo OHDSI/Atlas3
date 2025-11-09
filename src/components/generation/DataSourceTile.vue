@@ -15,7 +15,7 @@
     <v-card-text class="data-source-tile__content">
       <!-- Status display -->
       <div v-if="tileStatus === 'idle'" class="tile-status">
-        Ready to generate
+        {{ t('common.readyToGenerate', 'Ready to generate') }}
       </div>
 
       <div v-else-if="tileStatus === 'generating'" class="tile-status tile-status--generating">
@@ -31,7 +31,7 @@
       <div v-else-if="tileStatus === 'complete'" class="tile-status tile-status--complete">
         <div class="patient-count">
           <div class="patient-count__number">{{ patientCount?.toLocaleString() || '0' }}</div>
-          <div class="patient-count__label">Patients</div>
+          <div class="patient-count__label">{{ t('common.patients', 'Patients') }}</div>
         </div>
         <v-chip
           size="small"
@@ -39,13 +39,13 @@
           variant="outlined"
           class="mt-2"
         >
-          Click to view reports
+          {{ t('common.clickToViewReports', 'Click to view reports') }}
         </v-chip>
       </div>
 
       <div v-else-if="tileStatus === 'failed'" class="tile-status tile-status--failed">
         <v-icon color="error">mdi-alert-circle</v-icon>
-        <span class="ml-2 text-error">{{ failMessage || 'Failed' }}</span>
+        <span class="ml-2 text-error">{{ failMessage || t('common.failed', 'Failed').value }}</span>
       </div>
     </v-card-text>
 
@@ -59,7 +59,7 @@
         :loading="tileStatus === 'generating'"
         @click.stop="handleGenerate"
       >
-        {{ tileStatus === 'complete' ? 'Regenerate' : 'Generate' }}
+        {{ tileStatus === 'complete' ? t('common.regenerate', 'Regenerate').value : t('common.generate', 'Generate').value }}
       </v-btn>
     </v-card-actions>
   </v-card>
@@ -67,8 +67,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
 import type { CDMSource, TileStatus } from '@/models/webapi.types'
+
+const { t } = useI18n()
 
 interface Props {
   source: CDMSource

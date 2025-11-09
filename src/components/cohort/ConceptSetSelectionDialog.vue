@@ -9,7 +9,7 @@
     <v-card flat class="h-100 d-flex flex-column">
       <!-- Header -->
       <v-card-title class="d-flex align-center bg-primary pa-4">
-        <span class="text-h6">Select Concept Set</span>
+        <span class="text-h6">{{ t('cohortDefinitions.designTab.selectConceptSet') }}</span>
         <v-spacer />
         <v-btn
           icon="mdi-close"
@@ -23,7 +23,7 @@
         <!-- Search -->
         <v-text-field
           v-model="searchTerm"
-          placeholder="Search concept sets..."
+          :placeholder="tv('cs.manager.search.placeholder')"
           prepend-inner-icon="mdi-magnify"
           clearable
           variant="outlined"
@@ -39,7 +39,7 @@
         <div v-if="!loading && filteredSets.length === 0" class="text-center py-8">
           <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-book-open-variant</v-icon>
           <p class="text-body-1 text-medium-emphasis">
-            {{ searchTerm ? 'No concept sets match your search' : 'No concept sets available' }}
+            {{ searchTerm ? t('cs.manager.search.noResults') : t('cs.manager.noConceptSets') }}
           </p>
           <v-btn
             color="primary"
@@ -48,7 +48,7 @@
             @click="onCreateNew"
           >
             <v-icon start>mdi-plus</v-icon>
-            Create New Concept Set
+            {{ t('cs.manager.new') }}
           </v-btn>
         </div>
 
@@ -87,7 +87,11 @@
         <!-- Pagination -->
         <div v-if="!loading && filteredSets.length > itemsPerPage" class="mt-4 d-flex align-center justify-space-between">
           <div class="text-caption text-medium-emphasis">
-            Showing {{ ((page - 1) * itemsPerPage) + 1 }}-{{ Math.min(page * itemsPerPage, filteredSets.length) }} of {{ filteredSets.length }} concept sets
+            {{ t('datatable.pagination.showing', { 
+              from: ((page - 1) * itemsPerPage) + 1, 
+              to: Math.min(page * itemsPerPage, filteredSets.length), 
+              total: filteredSets.length 
+            }) }}
           </div>
           <v-pagination
             v-model="page"
@@ -106,14 +110,14 @@
           @click="onCreateNew"
         >
           <v-icon start>mdi-plus</v-icon>
-          Create New
+          {{ t('common.createNew') }}
         </v-btn>
         <v-spacer />
         <v-btn
           variant="text"
           @click="close"
         >
-          Close
+          {{ t('common.close') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -122,6 +126,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 
@@ -130,6 +135,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const { t, tv } = useI18n()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]

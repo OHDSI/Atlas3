@@ -10,10 +10,10 @@
             variant="flat"
             size="large"
             class="cohorts-view__action-btn"
-            aria-label="Create new cohort"
+            :aria-label="t('cohortDefinitions.cohortDefinitionManager.createCohort', 'Create new cohort').value"
             @click="handleCreateCohort"
           >
-            Create Cohort
+            {{ t('cohortDefinitions.cohortDefinitionManager.createCohort', 'Create Cohort') }}
           </v-btn>
 
           <v-btn
@@ -21,10 +21,10 @@
             variant="flat"
             size="large"
             class="cohorts-view__action-btn"
-            aria-label="Import cohort from JSON"
+            :aria-label="t('cohortDefinitions.import.ariaLabel', 'Import cohort from JSON').value"
             @click="handleImportCohort"
           >
-            Import Cohort
+            {{ t('cohortDefinitions.import.title', 'Import Cohort') }}
           </v-btn>
         </div>
       </v-col>
@@ -52,12 +52,12 @@
     >
       <v-card>
         <v-card-title class="text-h5">
-          Import Cohort
+          {{ t('cohortDefinitions.import.title', 'Import Cohort') }}
         </v-card-title>
         <v-card-text>
-          <p class="mb-4">Import functionality will be implemented in a future update.</p>
+          <p class="mb-4">{{ t('common.comingSoon', 'Import functionality will be implemented in a future update.') }}</p>
           <p class="text-body-2 text-grey">
-            This will allow you to import cohort definitions from ATLAS JSON format.
+            {{ t('cohortDefinitions.import.description', 'This will allow you to import cohort definitions from ATLAS JSON format.') }}
           </p>
         </v-card-text>
         <v-card-actions>
@@ -67,7 +67,7 @@
             variant="text"
             @click="showImportDialog = false"
           >
-            Close
+            {{ t('common.close', 'Close') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -80,13 +80,13 @@
     >
       <v-card>
         <v-card-title class="text-h5">
-          Materialize Cohort
+          {{ t('cohortDefinitions.materialize.title', 'Materialize Cohort') }}
         </v-card-title>
         <v-card-text>
-          <p class="mb-2"><strong>Cohort:</strong> {{ selectedCohort?.name }}</p>
-          <p class="mb-4"><strong>ID:</strong> {{ selectedCohort?.id }}</p>
+          <p class="mb-2"><strong>{{ t('columns.name', 'Cohort') }}:</strong> {{ selectedCohort?.name }}</p>
+          <p class="mb-4"><strong>{{ t('columns.id', 'ID') }}:</strong> {{ selectedCohort?.id }}</p>
           <p class="text-body-2 text-grey">
-            Materialize functionality will be implemented in a future update. This will generate the patient list for this cohort definition.
+            {{ t('cohortDefinitions.materialize.description', 'Materialize functionality will be implemented in a future update. This will generate the patient list for this cohort definition.') }}
           </p>
         </v-card-text>
         <v-card-actions>
@@ -96,7 +96,7 @@
             variant="text"
             @click="showMaterializeDialog = false"
           >
-            Close
+            {{ t('common.close', 'Close') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -109,13 +109,13 @@
     >
       <v-card>
         <v-card-title class="text-h5">
-          Delete Cohort?
+          {{ t('cohortDefinitions.confirms.deleteTitle', 'Delete Cohort?') }}
         </v-card-title>
         <v-card-text>
-          <p class="mb-2">Are you sure you want to delete this cohort?</p>
+          <p class="mb-2">{{ t('cohortDefinitions.confirms.delete', 'Are you sure you want to delete this cohort?') }}</p>
           <p class="mb-2"><strong>{{ selectedCohort?.name }}</strong></p>
           <p class="text-body-2 text-error">
-            This action cannot be undone.
+            {{ t('common.cannotUndo', 'This action cannot be undone.') }}
           </p>
         </v-card-text>
         <v-card-actions>
@@ -125,7 +125,7 @@
             variant="text"
             @click="showDeleteDialog = false"
           >
-            Cancel
+            {{ t('common.cancel', 'Cancel') }}
           </v-btn>
           <v-btn
             color="error"
@@ -133,7 +133,7 @@
             :loading="deleting"
             @click="confirmDelete"
           >
-            Delete
+            {{ t('common.delete', 'Delete') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -144,7 +144,7 @@
   <div v-if="!loading && !error && filteredCohorts.length > 0" class="cohorts-view__pagination-bar">
     <div class="cohorts-view__pagination-content">
       <div class="cohorts-view__pagination-search">
-        <label for="cohort-search" class="cohorts-view__pagination-label">Search:</label>
+        <label for="cohort-search" class="cohorts-view__pagination-label">{{ t('common.search', 'Search') }}:</label>
         <cohort-search
           id="cohort-search"
           v-model="searchQuery"
@@ -173,6 +173,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
 import { deleteCohort } from '@/services/webapi'
@@ -182,6 +183,7 @@ import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 const router = useRouter()
+const { t } = useI18n()
 const showImportDialog = ref(false)
 const showMaterializeDialog = ref(false)
 const showDeleteDialog = ref(false)

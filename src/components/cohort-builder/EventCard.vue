@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
 import { useCardinality } from '@/composables/useCardinality'
@@ -7,6 +8,8 @@ import { useTemporalWindows } from '@/composables/useTemporalWindows'
 import CardinalityEditor from './CardinalityEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   event: CohortEvent
@@ -30,18 +33,18 @@ const showAttributesEditor = ref(false)
 // Format criteria type for display
 const criteriaTypeLabel = computed(() => {
   const typeMap: Record<string, string> = {
-    ConditionOccurrence: 'Condition',
-    DrugExposure: 'Drug',
-    ProcedureOccurrence: 'Procedure',
-    Measurement: 'Measurement',
-    Observation: 'Observation',
-    DeviceExposure: 'Device',
-    VisitOccurrence: 'Visit',
-    Death: 'Death',
-    Specimen: 'Specimen',
-    DrugEra: 'Drug Era',
-    ConditionEra: 'Condition Era',
-    DoseEra: 'Dose Era',
+    ConditionOccurrence: t('options.type.condition', 'Condition').value,
+    DrugExposure: t('options.type.drug', 'Drug').value,
+    ProcedureOccurrence: t('options.type.procedure', 'Procedure').value,
+    Measurement: t('options.type.measurement', 'Measurement').value,
+    Observation: t('options.type.observation', 'Observation').value,
+    DeviceExposure: t('common.device', 'Device').value,
+    VisitOccurrence: t('common.visit', 'Visit').value,
+    Death: t('common.death', 'Death').value,
+    Specimen: t('common.specimen', 'Specimen').value,
+    DrugEra: t('options.type.drugEra', 'Drug Era').value,
+    ConditionEra: t('options.type.conditionEra', 'Condition Era').value,
+    DoseEra: t('common.doseEra', 'Dose Era').value,
   }
   return typeMap[props.event.criteriaType] || props.event.criteriaType
 })

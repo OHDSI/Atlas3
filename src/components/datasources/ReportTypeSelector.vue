@@ -3,7 +3,7 @@
     :model-value="modelValue"
     :items="reportTypeItems"
     :disabled="disabled"
-    label="Report Type"
+    :label="t('common.reportType', 'Report Type').value"
     item-title="label"
     item-value="value"
     variant="outlined"
@@ -19,7 +19,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
+
+const { t } = useI18n()
 
 interface Props {
   modelValue: ReportType | null

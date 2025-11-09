@@ -2,7 +2,7 @@
   <div class="events-container">
     <!-- Vertical "ALL" Label -->
     <div class="vertical-label-container">
-      <div class="vertical-label">ALL</div>
+      <div class="vertical-label">{{ t('cohortDefinitions.designTab.qualifiedLimitOptions.all').value.toUpperCase() }}</div>
     </div>
 
     <!-- Main Content Area -->
@@ -18,7 +18,7 @@
               data-testid="add-entry-event"
             >
               <v-icon class="mr-2">mdi-plus</v-icon>
-              Add filter
+              {{ t('cohortDefinitions.designTab.addFilter') }}
             </v-btn>
           </template>
           <v-list>
@@ -44,7 +44,7 @@
               class="mb-4"
             >
               <v-icon class="mr-2">mdi-plus</v-icon>
-              Add filter
+              {{ t('cohortDefinitions.designTab.addFilter') }}
             </v-btn>
           </template>
           <v-list>
@@ -73,6 +73,7 @@
 
 <script setup lang="ts">
 import { v4 as uuidv4 } from 'uuid'
+import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent, CriteriaType } from '@/models/cohort.types'
 import EntryEventCard from './EntryEventCard.vue'
 
@@ -81,6 +82,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const { t, tv } = useI18n()
 
 const emit = defineEmits<{
   'update:events': [events: CohortEvent[]]
@@ -89,15 +91,15 @@ const emit = defineEmits<{
 }>()
 
 const eventTypeOptions = [
-  { label: 'Condition Occurrence', value: 'ConditionOccurrence' },
-  { label: 'Drug Exposure', value: 'DrugExposure' },
-  { label: 'Procedure Occurrence', value: 'ProcedureOccurrence' },
-  { label: 'Observation', value: 'Observation' },
-  { label: 'Measurement', value: 'Measurement' },
-  { label: 'Visit Occurrence', value: 'VisitOccurrence' },
-  { label: 'Device Exposure', value: 'DeviceExposure' },
-  { label: 'Observation Period', value: 'ObservationPeriod' },
-  { label: 'Death', value: 'Death' },
+  { label: tv('cohortDefinitions.criteriaOptions.conditionOccurrence'), value: 'ConditionOccurrence' },
+  { label: tv('cohortDefinitions.criteriaOptions.drugExposure'), value: 'DrugExposure' },
+  { label: tv('cohortDefinitions.criteriaOptions.procedureOccurrence'), value: 'ProcedureOccurrence' },
+  { label: tv('cohortDefinitions.criteriaOptions.observation'), value: 'Observation' },
+  { label: tv('cohortDefinitions.criteriaOptions.measurement'), value: 'Measurement' },
+  { label: tv('cohortDefinitions.criteriaOptions.visitOccurrence'), value: 'VisitOccurrence' },
+  { label: tv('cohortDefinitions.criteriaOptions.deviceExposure'), value: 'DeviceExposure' },
+  { label: tv('cohortDefinitions.criteriaOptions.observationPeriod'), value: 'ObservationPeriod' },
+  { label: tv('cohortDefinitions.criteriaOptions.death'), value: 'Death' },
 ]
 
 function addEvent(criteriaType: string) {

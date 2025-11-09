@@ -9,17 +9,20 @@
           <template v-for="item in navigationItems" :key="item.id">
             <li v-if="item.visible" class="nav-bar__nav-item" :class="{ 'nav-bar__nav-item--active': item.active }">
               <a href="#" class="nav-bar__nav-link" @click.prevent="handleNavClick(item)">
-                {{ item.title }}
+                {{ getNavTitle(item.titleKey) }}
               </a>
             </li>
           </template>
         </ul>
       </nav>
       <div class="nav-bar__right" tabindex="0">
+        <!-- Language Selector -->
+        <LanguageSelector />
+        
         <!-- Authentication UI -->
         <div v-if="!auth.isAuthenticated.value" class="nav-bar__auth">
           <v-btn variant="text" @click="auth.openLoginModal()" prepend-icon="mdi-login">
-            Sign In
+            {{ signInLabel }}
           </v-btn>
         </div>
         <div v-else class="nav-bar__user">
@@ -35,7 +38,7 @@
                 <template v-slot:prepend>
                   <v-icon>mdi-logout</v-icon>
                 </template>
-                <v-list-item-title>Sign Out</v-list-item-title>
+                <v-list-item-title>{{ signOutLabel }}</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -54,14 +57,16 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import { useI18n } from '@/composables/useI18n'
 import { authConfig } from '@/config/auth.config'
 import LoginModal from '@/components/auth/LoginModal.vue'
+import LanguageSelector from '@/components/LanguageSelector.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
 import logoOhdsiPng from '@/assets/icons/ohdsi.png'
 
 interface NavigationItem {
   id: string
-  title: string
+  titleKey: string
   route: string
   visible: boolean
   active: boolean
@@ -69,15 +74,28 @@ interface NavigationItem {
 
 const router = useRouter()
 const auth = useAuth()
+const { t } = useI18n()
 
 const logoSrc = logoSvg
 const logoOhdsiSrc = logoOhdsiPng
 
+const signInLabel = t('common.menu', 'Sign In')
+const signOutLabel = t('common.menu', 'Sign Out')
+
 const navigationItems = ref<NavigationItem[]>([
-  { id: 'concepts', title: 'Concepts', route: '/concepts', visible: true, active: false },
-  { id: 'cohorts', title: 'Cohorts', route: '/cohorts', visible: true, active: true },
-  { id: 'datasources', title: 'Data Sources', route: '/datasources', visible: true, active: false }
+  { id: 'concepts', titleKey: 'navigation.conceptsets', route: '/concepts', visible: true, active: false },
+  { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true },
+  { id: 'datasources', titleKey: 'navigation.datasources', route: '/datasources', visible: true, active: false }
 ])
+
+function getNavTitle(key: string): string {
+  const defaults: Record<string, string> = {
+    'navigation.conceptsets': 'Concept Sets',
+    'navigation.cohortdefinitions': 'Cohorts',
+    'navigation.datasources': 'Data Sources'
+  }
+  return t(key, defaults[key] || key).value
+}
 
 const handleLogoClick = () => {
   router.push('/')

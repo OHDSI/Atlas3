@@ -13,22 +13,22 @@
   <v-card-subtitle class="cohort-card__subtitle">
     <div class="cohort-card__type">
       <v-icon size="16" color="#1f425a">mdi-web</v-icon>
-      <span class="cohort-card__type-text">Atlas Cohort Definition</span>
+      <span class="cohort-card__type-text">{{ typeLabel }}</span>
     </div>
   </v-card-subtitle>    <v-card-text class="cohort-card__content">
       <div class="cohort-card__meta">
         <div class="cohort-card__meta-item">
-          <span class="cohort-card__meta-label">ID:</span>
+          <span class="cohort-card__meta-label">{{ idLabel }}:</span>
           <span class="cohort-card__meta-value">{{ cohort.id }}</span>
         </div>
 
         <div class="cohort-card__meta-item">
-          <span class="cohort-card__meta-label">By:</span>
+          <span class="cohort-card__meta-label">{{ byLabel }}:</span>
           <span class="cohort-card__meta-value">{{ formatUser(cohort.createdBy) }}</span>
         </div>
 
         <div class="cohort-card__meta-item">
-          <span class="cohort-card__meta-label">Updated On:</span>
+          <span class="cohort-card__meta-label">{{ updatedOnLabel }}:</span>
           <span class="cohort-card__meta-value">{{ formatDate(cohort.modifiedDate) }}</span>
         </div>
       </div>
@@ -37,7 +37,7 @@
     <v-card-actions class="cohort-card__actions">
       <v-spacer />
       
-      <v-tooltip text="Materialize Cohort" location="top">
+      <v-tooltip :text="materializeTooltip" location="top">
         <template #activator="{ props: tooltipProps }">
           <v-btn
             v-bind="tooltipProps"
@@ -53,7 +53,7 @@
         </template>
       </v-tooltip>
 
-      <v-tooltip text="Delete Cohort" location="top">
+      <v-tooltip :text="deleteTooltip" location="top">
         <template #activator="{ props: tooltipProps }">
           <v-btn
             v-bind="tooltipProps"
@@ -75,6 +75,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from '@/composables/useI18n'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 interface Props {
@@ -90,28 +91,38 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 const router = useRouter()
 const hover = ref(false)
+const { t, locale } = useI18n()
+
+const typeLabel = t('cohortDefinitions.cohort.modals.cohortDefinition.title', 'Cohort Definition')
+const idLabel = t('columns.id', 'ID')
+const byLabel = t('columns.author', 'Author')
+const updatedOnLabel = t('columns.modified', 'Modified')
+const materializeTooltip = t('common.generate', 'Generate')
+const deleteTooltip = t('common.delete', 'Delete')
+const unknownLabel = t('common.anonymous', 'Unknown')
+const naLabel = t('common.noData', 'N/A')
 
 /**
  * Format user object or string to display name
  */
 function formatUser(userValue: unknown): string {
-  if (!userValue) return 'Unknown'
+  if (!userValue) return unknownLabel.value
   if (typeof userValue === 'string') return userValue
   if (typeof userValue === 'object' && userValue !== null) {
     const user = userValue as Record<string, unknown>
-    return (user.name || user.login || user.id || 'Unknown') as string
+    return (user.name || user.login || user.id || unknownLabel.value) as string
   }
-  return 'Unknown'
+  return unknownLabel.value
 }
 
 /**
  * Format ISO 8601 date or timestamp to user-friendly format
  */
 function formatDate(dateValue: string | number | null | undefined): string {
-  if (!dateValue) return 'N/A'
+  if (!dateValue) return naLabel.value
   const date = new Date(dateValue)
-  if (isNaN(date.getTime())) return 'N/A'
-  return date.toLocaleDateString('en-US', {
+  if (isNaN(date.getTime())) return naLabel.value
+  return date.toLocaleDateString(locale.value, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

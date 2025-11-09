@@ -20,7 +20,7 @@
     >
       <div class="cohort-grid__error">
         <div class="cohort-grid__error-message">
-          {{ error.message || 'Failed to load cohorts' }}
+          {{ error.message || t('cohortDefinitions.cohortDefinitionManager.errorLoading', 'Failed to load cohorts').value }}
         </div>
         <v-btn
           color="error"
@@ -29,7 +29,7 @@
           @click="$emit('retry')"
         >
           <v-icon start>mdi-refresh</v-icon>
-          Retry
+          {{ t('common.refresh', 'Retry') }}
         </v-btn>
       </div>
     </v-alert>
@@ -39,7 +39,7 @@
       <v-icon size="80" color="grey-lighten-1">
         mdi-folder-open-outline
       </v-icon>
-      <h2 class="cohort-grid__empty-title">No cohorts found</h2>
+      <h2 class="cohort-grid__empty-title">{{ t('common.noData', 'No cohorts found').value }}</h2>
       <p class="cohort-grid__empty-subtitle">
         {{ emptyMessage }}
       </p>
@@ -51,7 +51,7 @@
         @click="$emit('create-cohort')"
       >
         <v-icon start>mdi-plus</v-icon>
-        Create Cohort
+        {{ t('cohortDefinitions.cohortDefinitionManager.createCohort', 'Create Cohort').value }}
       </v-btn>
     </div>
 
@@ -71,8 +71,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import CohortCard from './CohortCard.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
+
+const { t } = useI18n()
 
 interface Props {
   cohorts: CohortDefinitionSummary[]

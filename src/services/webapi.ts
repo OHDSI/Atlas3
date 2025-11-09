@@ -63,6 +63,7 @@ function isRetryableError(error: unknown, statusCode?: number): boolean {
 /**
  * Generic fetch wrapper with error handling and retry logic
  * T132: Exponential backoff with 3 attempts, 500ms initial delay
+ * T028: Adds User-Language header for i18n support
  */
 async function fetchJSON<T>(
   endpoint: string,
@@ -73,10 +74,14 @@ async function fetchJSON<T>(
 
   for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
     try {
+      // T028: Get current locale from localStorage for User-Language header
+      const locale = localStorage.getItem('locale') || 'en'
+      
       const response = await fetch(url, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
+          'User-Language': locale,
           ...options?.headers,
         },
       })

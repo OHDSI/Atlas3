@@ -9,7 +9,7 @@
   <v-card elevation="0">
     <v-card-title class="text-h6">
       <v-icon class="mr-2">mdi-alert-circle-check</v-icon>
-      Heracles Heel - Data Quality
+      {{ t('common.dataQuality') }}
     </v-card-title>
 
     <v-divider />
@@ -35,7 +35,7 @@
             size="small"
             @click="loadData"
           >
-            Retry
+            {{ t('common.retry') }}
           </v-btn>
         </div>
       </v-alert>
@@ -55,7 +55,7 @@
         variant="tonal"
         icon="mdi-check-circle"
       >
-        No data quality issues detected
+        {{ t('common.noIssuesDetected') }}
       </v-alert>
     </v-card-text>
   </v-card>
@@ -64,8 +64,14 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useReports } from '@/composables/useReports'
+import { useI18n } from '@/composables/useI18n'
 import type { TableData } from '@/models/report.types'
 import DataTable from '@/components/reports/tables/DataTable.vue'
+
+/**
+ * i18n
+ */
+const { t } = useI18n()
 
 /**
  * Props

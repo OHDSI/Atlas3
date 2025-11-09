@@ -2,19 +2,22 @@
   <v-text-field
     :model-value="modelValue"
     class="cohort-search"
-    placeholder="Filter cohorts..."
+    :placeholder="t('cohortDefinitions.cohortDefinitionManager.filterPlaceholder', 'Filter cohorts...').value"
     prepend-inner-icon="mdi-magnify"
     clearable
     variant="outlined"
     density="comfortable"
     hide-details
-    aria-label="Search cohorts by name"
+    :aria-label="t('cohortDefinitions.cohortDefinitionManager.searchAriaLabel', 'Search cohorts by name').value"
     @update:model-value="handleInput"
   />
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 interface Props {
   modelValue: string

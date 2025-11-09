@@ -2,14 +2,14 @@
   <v-card>
     <v-card-title>
       <div class="d-flex justify-space-between align-center">
-        <span>Concept Sets</span>
+        <span>{{ t('conceptSets.title') }}</span>
         <v-btn
           prepend-icon="mdi-plus"
           color="primary"
           data-testid="create-concept-set"
           @click="$emit('create')"
         >
-          Create New
+          {{ t('conceptSetList.createNew') }}
         </v-btn>
       </div>
     </v-card-title>
@@ -18,7 +18,7 @@
       <!-- Search Filter -->
       <v-text-field
         v-model="searchFilter"
-        label="Search Concept Sets"
+        :label="tv('conceptSetList.searchLabel')"
         prepend-inner-icon="mdi-magnify"
         clearable
         density="compact"
@@ -32,7 +32,7 @@
           v-for="conceptSet in filteredConceptSets"
           :key="conceptSet.id"
           :title="conceptSet.name"
-          :subtitle="`ID: ${conceptSet.id} | ${getConceptCount(conceptSet)} concepts`"
+          :subtitle="tv('conceptSetList.subtitle', { id: conceptSet.id ?? 0, count: getConceptCount(conceptSet) })"
         >
           <template #append>
             <div class="d-flex gap-2">
@@ -76,10 +76,10 @@
         data-testid="empty-concept-sets"
       >
         <template v-if="searchFilter">
-          No concept sets match "{{ searchFilter }}"
+          {{ t('conceptSetList.noMatch', { query: searchFilter }) }}
         </template>
         <template v-else>
-          No concept sets created yet. Click "Create New" to get started.
+          {{ t('conceptSetList.noConceptSets') }}
         </template>
       </v-alert>
     </v-card-text>
@@ -87,14 +87,14 @@
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="showDeleteDialog" max-width="400">
       <v-card>
-        <v-card-title>Confirm Delete</v-card-title>
+        <v-card-title>{{ t('conceptSetList.confirmDeleteTitle') }}</v-card-title>
         <v-card-text>
-          Are you sure you want to delete this concept set? This action cannot be undone.
+          {{ t('conceptSetList.confirmDeleteMessage') }}
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showDeleteDialog = false">Cancel</v-btn>
-          <v-btn color="error" variant="elevated" @click="confirmDelete">Delete</v-btn>
+          <v-btn variant="text" @click="showDeleteDialog = false">{{ t('common.cancel') }}</v-btn>
+          <v-btn color="error" variant="elevated" @click="confirmDelete">{{ t('common.delete') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -103,7 +103,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'
+
+const { t, tv } = useI18n()
 
 interface Props {
   conceptSets: ConceptSet[]

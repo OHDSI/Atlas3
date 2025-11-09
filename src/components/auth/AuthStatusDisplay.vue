@@ -12,8 +12,8 @@
     </template>
     
     <div>
-      <strong v-if="isExpiringSoon">Session Expiring Soon</strong>
-      <strong v-else>Session Active</strong>
+      <strong v-if="isExpiringSoon">{{ t('auth.sessionExpiringSoon') }}</strong>
+      <strong v-else>{{ t('auth.sessionActive') }}</strong>
       <p class="text-body-2 mt-1">
         {{ statusMessage }}
       </p>
@@ -26,7 +26,7 @@
         @click="handleRefresh"
         :loading="isRefreshing"
       >
-        Extend Session
+        {{ t('auth.extendSession') }}
       </v-btn>
     </template>
   </v-alert>
@@ -35,6 +35,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 const auth = useAuth()
 const dismissed = ref(false)
@@ -56,22 +59,22 @@ const showWarning = computed(() => {
 })
 
 const statusMessage = computed(() => {
-  if (!tokenExpirationDate.value) return 'Token information not available'
+  if (!tokenExpirationDate.value) return t('auth.tokenInfoNotAvailable')
   
   const minutesRemaining = Math.floor(timeRemaining.value / 60000)
   
   if (minutesRemaining <= 0) {
-    return 'Your session has expired. Please sign in again.'
+    return t('auth.sessionExpired')
   } else if (minutesRemaining <= 5) {
-    return `Your session will expire in ${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}. Click "Extend Session" to continue.`
+    return t('auth.sessionExpiringMinutes', { minutes: minutesRemaining })
   } else if (minutesRemaining <= 10) {
-    return `Your session will expire in ${minutesRemaining} minutes.`
+    return t('auth.sessionExpiringInMinutes', { minutes: minutesRemaining })
   } else {
     const hoursRemaining = Math.floor(minutesRemaining / 60)
     if (hoursRemaining >= 1) {
-      return `Session active for ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}`
+      return t('auth.sessionActiveHours', { hours: hoursRemaining })
     }
-    return `Session active for ${minutesRemaining} minutes`
+    return t('auth.sessionActiveMinutes', { minutes: minutesRemaining })
   }
 })
 

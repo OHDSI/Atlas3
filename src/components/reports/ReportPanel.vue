@@ -11,7 +11,7 @@
     <v-card-title class="d-flex align-center justify-space-between pa-4 border-b">
       <div class="d-flex align-center gap-2">
         <v-icon>mdi-chart-box</v-icon>
-        <span class="text-h6">Cohort Reports</span>
+        <span class="text-h6">{{ t('common.cohortReports') }}</span>
         <v-chip v-if="sourceKey" size="small" variant="outlined">
           {{ sourceKey }}
         </v-chip>
@@ -29,7 +29,7 @@
     <!-- Action buttons section -->
     <v-card-text class="pa-4">
       <div class="action-buttons-section mb-4">
-        <div class="text-subtitle-2 mb-2">Generate Reports</div>
+        <div class="text-subtitle-2 mb-2">{{ t('common.generateReports') }}</div>
         <v-btn-group variant="outlined" divided>
           <v-btn
             :disabled="loading || !cohortId || !sourceKey"
@@ -37,7 +37,7 @@
             prepend-icon="mdi-chart-multiple"
             @click="handleFullAnalysis"
           >
-            Full Analysis
+            {{ t('common.fullAnalysis') }}
           </v-btn>
           <v-btn
             :disabled="loading || !cohortId || !sourceKey"
@@ -45,7 +45,7 @@
             prepend-icon="mdi-chart-timeline-variant"
             @click="handleQuickAnalysis"
           >
-            Quick Analysis
+            {{ t('common.quickAnalysis') }}
           </v-btn>
           <v-btn
             :disabled="loading || !cohortId || !sourceKey"
@@ -53,7 +53,7 @@
             prepend-icon="mdi-chart-bar"
             @click="handleUtilization"
           >
-            Utilization
+            {{ t('common.utilization') }}
           </v-btn>
         </v-btn-group>
       </div>
@@ -91,7 +91,7 @@
             size="small"
             @click="handleRetry"
           >
-            Retry
+            {{ t('common.retry') }}
           </v-btn>
         </div>
       </v-alert>
@@ -112,10 +112,9 @@
         variant="tonal"
         icon="mdi-alert-circle-outline"
       >
-        <div class="text-subtitle-2 mb-1">Report Not Yet Implemented</div>
+        <div class="text-subtitle-2 mb-1">{{ t('common.reportNotImplemented') }}</div>
         <div class="text-body-2">
-          The "{{ currentReportType }}" report is in the roadmap but not yet available.
-          Currently supported reports: Person (Demographics), Condition Eras, Drug Eras, Cohort Specific, and Condition Occurrence.
+          {{ t('common.reportNotImplementedMessage', { reportType: currentReportType }) }}
         </div>
       </v-alert>
 
@@ -126,7 +125,7 @@
         variant="tonal"
         icon="mdi-information"
       >
-        Select a report type to view cohort analytics
+        {{ t('common.selectReportType') }}
       </v-alert>
     </v-card-text>
 
@@ -143,7 +142,7 @@
           variant="text"
           @click="showToast = false"
         >
-          Close
+          {{ t('common.close') }}
         </v-btn>
       </template>
     </v-snackbar>
@@ -153,6 +152,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, defineAsyncComponent, onUnmounted } from 'vue'
 import { useReports } from '@/composables/useReports'
+import { useI18n } from '@/composables/useI18n'
 import type { ReportType, ReportAction } from '@/models/report.types'
 import {
   triggerFullAnalysis,
@@ -161,6 +161,11 @@ import {
   getCohortGenerationInfo
 } from '@/services/webapi'
 import ReportSelector from './ReportSelector.vue'
+
+/**
+ * i18n
+ */
+const { t } = useI18n()
 
 /**
  * Props

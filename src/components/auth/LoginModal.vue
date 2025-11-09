@@ -3,7 +3,7 @@
     <v-card>
       <v-card-title class="text-h5 bg-primary">
         <v-icon left>mdi-login</v-icon>
-        Sign In
+        {{ t('common.menu', 'Sign In') }}
       </v-card-title>
 
       <v-card-text class="pa-6">
@@ -12,7 +12,7 @@
         </v-alert>
 
         <div v-if="!selectedProvider">
-          <p class="text-subtitle-1 mb-4">Select an authentication provider:</p>
+          <p class="text-subtitle-1 mb-4">{{ t('components.authProviderSelect.info', 'Select an authentication provider:') }}</p>
 
           <v-list>
             <v-list-item
@@ -32,7 +32,7 @@
         <div v-else>
           <v-btn text @click="backToProviders" class="mb-4">
             <v-icon left>mdi-arrow-left</v-icon>
-            Back
+            {{ t('common.back', 'Back') }}
           </v-btn>
 
           <CredentialsForm
@@ -46,7 +46,7 @@
 
       <v-card-actions v-if="!authConfig.userAuthenticationEnabled">
         <v-spacer></v-spacer>
-        <v-btn text @click="close">Skip Login</v-btn>
+        <v-btn text @click="close">{{ t('components.authProviderSelect.skipLogin', 'Skip Login') }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -55,11 +55,13 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
+import { useI18n } from '@/composables/useI18n'
 import { authConfig } from '@/config/auth.config'
 import type { AuthProvider, LoginCredentials } from '@/models/auth.types'
 import CredentialsForm from './CredentialsForm.vue'
 
 const auth = useAuth()
+const { t } = useI18n()
 
 const isOpen = computed({
   get: () => auth.loginModalOpen.value,

@@ -2,7 +2,7 @@
   <v-card>
     <v-card-title class="text-h6">
       <v-icon left>mdi-account-switch</v-icon>
-      Run As User
+      {{ t('auth.runAsUser') }}
     </v-card-title>
 
     <v-card-text>
@@ -13,9 +13,9 @@
       <v-alert v-if="isRunningAs" type="info" variant="tonal" class="mb-4">
         <div class="d-flex align-center justify-space-between">
           <div>
-            <div class="text-subtitle-2">Currently running as:</div>
+            <div class="text-subtitle-2">{{ t('auth.currentlyRunningAs') }}</div>
             <div class="text-h6">{{ targetUsername }}</div>
-            <div class="text-caption mt-1">Original user: {{ originalUsername }}</div>
+            <div class="text-caption mt-1">{{ t('auth.originalUser', { username: originalUsername }) }}</div>
           </div>
           <v-btn
             color="primary"
@@ -24,15 +24,15 @@
             :loading="isExiting"
           >
             <v-icon left>mdi-exit-run</v-icon>
-            Exit Run As
+            {{ t('auth.exitRunAs') }}
           </v-btn>
         </div>
       </v-alert>
 
       <v-text-field
         v-model="targetUser"
-        label="Target Username"
-        placeholder="Enter username to impersonate"
+        :label="tv('auth.targetUsername')"
+        :placeholder="tv('auth.enterUsernameToImpersonate')"
         variant="outlined"
         prepend-inner-icon="mdi-account"
         :disabled="isRunningAs || isLoading"
@@ -49,13 +49,12 @@
         @click="handleRunAs"
       >
         <v-icon left>mdi-account-switch</v-icon>
-        Run As User
+        {{ t('auth.runAsUser') }}
       </v-btn>
 
       <v-alert type="warning" variant="tonal" class="mt-4">
         <div class="text-caption">
-          <strong>Warning:</strong> Running as another user will assume their permissions and identity.
-          All actions will be performed as the target user.
+          <strong>{{ t('common.warning') }}:</strong> {{ t('auth.runAsWarning') }}
         </div>
       </v-alert>
     </v-card-text>
@@ -65,6 +64,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
+import { useI18n } from '@/composables/useI18n'
+
+const { t, tv } = useI18n()
 
 const auth = useAuth()
 const targetUser = ref('')
@@ -94,7 +96,7 @@ async function handleRunAs() {
     await auth.runAs(targetUser.value.trim())
     targetUser.value = ''
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to run as user'
+    const message = error instanceof Error ? error.message : tv('auth.failedToRunAsUser')
     errorMessage.value = message
   } finally {
     isLoading.value = false
@@ -108,7 +110,7 @@ async function handleExitRunAs() {
   try {
     await auth.exitRunAs()
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to exit run-as'
+    const message = error instanceof Error ? error.message : tv('auth.failedToExitRunAs')
     errorMessage.value = message
   } finally {
     isExiting.value = false

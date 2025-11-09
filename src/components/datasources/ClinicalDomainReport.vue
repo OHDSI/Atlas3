@@ -4,11 +4,11 @@
       <v-tabs v-model="activeTab" bg-color="grey-lighten-4">
         <v-tab value="treemap">
           <v-icon icon="mdi-chart-tree" class="mr-2" />
-          Treemap
+          {{ t('common.treemap', 'Treemap') }}
         </v-tab>
         <v-tab value="table">
           <v-icon icon="mdi-table" class="mr-2" />
-          Table
+          {{ t('common.table', 'Table') }}
         </v-tab>
       </v-tabs>
 
@@ -32,10 +32,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { ClinicalDomainReport as ClinicalDomainReportData, ReportType } from '@/models/datasource.types'
 import { getMetricLabel } from '@/utils/datasource-formatters'
 import DomainPrevalenceTreemap from '@/components/datasources/DomainPrevalenceTreemap.vue'
 import DomainPrevalenceTable from '@/components/datasources/DomainPrevalenceTable.vue'
+
+const { t } = useI18n()
 
 interface Props {
   data: ClinicalDomainReportData

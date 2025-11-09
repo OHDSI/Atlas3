@@ -6,18 +6,18 @@
           <v-card color="error" variant="tonal">
             <v-card-title class="d-flex align-center">
               <v-icon icon="mdi-alert-circle" class="mr-2" />
-              Something Went Wrong
+              {{ t('common.error', 'Something Went Wrong') }}
             </v-card-title>
             <v-card-text>
               <p class="mb-4">
-                An unexpected error occurred. This has been logged for investigation.
+                {{ t('commonErrors.unexpectedError', 'An unexpected error occurred. This has been logged for investigation.').value }}
               </p>
 
               <v-expansion-panels v-if="errorDetails" variant="accordion">
                 <v-expansion-panel>
                   <v-expansion-panel-title>
                     <v-icon icon="mdi-information-outline" class="mr-2" />
-                    Error Details
+                    {{ t('commonErrors.errorDetails', 'Error Details') }}
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>
                     <pre class="error-details">{{ errorDetails }}</pre>
@@ -32,14 +32,14 @@
                 prepend-icon="mdi-refresh"
                 @click="handleReset"
               >
-                Reload Page
+                {{ t('common.refresh', 'Reload Page') }}
               </v-btn>
               <v-btn
                 variant="text"
                 prepend-icon="mdi-arrow-left"
                 @click="handleGoBack"
               >
-                Go Back
+                {{ t('common.goBack', 'Go Back') }}
               </v-btn>
             </v-card-actions>
           </v-card>
@@ -53,8 +53,10 @@
 <script setup lang="ts">
 import { ref, onErrorCaptured } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from '@/composables/useI18n'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const hasError = ref(false)
 const errorDetails = ref<string | null>(null)

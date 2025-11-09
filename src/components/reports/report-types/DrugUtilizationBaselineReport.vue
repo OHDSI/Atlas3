@@ -9,7 +9,7 @@
   <v-card elevation="0">
     <v-card-title class="text-h6">
       <v-icon class="mr-2">mdi-pill</v-icon>
-      Drug Utilization - Baseline Period
+      {{ t('options.reporting.drugUtilizationDuringBaselinePeriod') }} Period
     </v-card-title>
 
     <v-divider />
@@ -55,7 +55,7 @@
         variant="tonal"
         icon="mdi-information"
       >
-        No baseline drug utilization data available
+        {{ t('common.noData') }}
       </v-alert>
     </v-card-text>
   </v-card>
@@ -64,6 +64,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useReports } from '@/composables/useReports'
+import { useI18n } from '@/composables/useI18n'
 import type { TableData } from '@/models/report.types'
 import DataTable from '@/components/reports/tables/DataTable.vue'
 
@@ -74,6 +75,11 @@ const props = defineProps<{
   cohortId: number
   sourceKey: string
 }>()
+
+/**
+ * i18n
+ */
+const { t } = useI18n()
 
 /**
  * Reports composable

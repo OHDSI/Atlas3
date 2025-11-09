@@ -1,12 +1,12 @@
 <template>
   <v-card>
-    <v-card-title>Search OHDSI Vocabulary</v-card-title>
+    <v-card-title>{{ t('conceptSearch.title') }}</v-card-title>
     <v-card-text>
       <!-- Search Input -->
       <v-text-field
         v-model="searchQuery"
-        label="Search Concepts"
-        placeholder="Enter concept name (e.g., diabetes, metformin)"
+        :label="tv('conceptSearch.searchLabel')"
+        :placeholder="tv('conceptSearch.searchPlaceholder')"
         prepend-inner-icon="mdi-magnify"
         clearable
         data-testid="concept-search-input"
@@ -18,7 +18,7 @@
       <v-select
         v-model="selectedDomain"
         :items="domains"
-        label="Filter by Domain"
+        :label="tv('conceptSearch.filterByDomain')"
         clearable
         data-testid="domain-filter"
         @update:model-value="handleDomainChange"
@@ -49,10 +49,17 @@
               {{ item.conceptName }}
             </v-list-item-title>
             <v-list-item-subtitle>
-              ID: {{ item.conceptId }} | Domain: {{ item.domainId }} | Vocabulary: {{ item.vocabularyId }}
+              {{ t('conceptSearch.conceptInfo', { 
+                id: item.conceptId, 
+                domain: item.domainId, 
+                vocabulary: item.vocabularyId 
+              }) }}
             </v-list-item-subtitle>
             <v-list-item-subtitle>
-              Code: {{ item.conceptCode }} | Class: {{ item.conceptClassId }}
+              {{ t('conceptSearch.conceptDetails', { 
+                code: item.conceptCode, 
+                class: item.conceptClassId 
+              }) }}
             </v-list-item-subtitle>
           </v-list-item>
           <v-divider />
@@ -66,7 +73,7 @@
         variant="tonal"
         data-testid="no-results-message"
       >
-        No concepts found for "{{ searchQuery }}"
+        {{ t('conceptSearch.noResults', { query: searchQuery }) }}
       </v-alert>
 
       <!-- Instructions -->
@@ -75,7 +82,7 @@
         type="info"
         variant="text"
       >
-        Enter a search term to find concepts in the OHDSI vocabulary
+        {{ t('conceptSearch.instructions') }}
       </v-alert>
     </v-card-text>
   </v-card>
@@ -83,8 +90,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'
 import type { Concept } from '@/models/concept-set.types'
+
+const { t, tv } = useI18n()
 
 const emit = defineEmits<{
   'select-concept': [concept: Concept]

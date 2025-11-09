@@ -1,11 +1,11 @@
 <template>
   <v-card>
-    <v-card-title>Cohort Definition</v-card-title>
+    <v-card-title>{{ t('cohortDefinitions.cohort.modals.cohortDefinition.title', 'Cohort Definition') }}</v-card-title>
     <v-card-text>
       <v-text-field
         v-model="localName"
-        label="Name"
-        placeholder="Enter cohort name"
+        :label="t('columns.name', 'Name').value"
+        :placeholder="t('cohortDefinitions.cohortDefinitionManager.namePlaceholder', 'Enter cohort name').value"
         variant="outlined"
         density="comfortable"
         :rules="[rules.required]"
@@ -14,8 +14,8 @@
 
       <v-textarea
         v-model="localDescription"
-        label="Description"
-        placeholder="Enter cohort description (optional)"
+        :label="t('columns.description', 'Description').value"
+        :placeholder="t('cohortDefinitions.cohortDefinitionManager.descriptionPlaceholder', 'Enter cohort description (optional)').value"
         variant="outlined"
         density="comfortable"
         rows="3"
@@ -27,6 +27,9 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 interface Props {
   name: string
@@ -53,6 +56,6 @@ watch(() => props.description, (newVal) => {
 })
 
 const rules = {
-  required: (value: string) => !!value || 'This field is required',
+  required: (value: string) => !!value || t('commonErrors.required', 'This field is required').value,
 }
 </script>

@@ -6,7 +6,7 @@
         <div class="d-flex align-center justify-space-between gap-4">
           <v-text-field
             :model-value="store.filterTerm"
-            placeholder="Search"
+            :placeholder="t('common.search', 'Search').value"
             prepend-inner-icon="mdi-magnify"
             clearable
             variant="outlined"
@@ -22,7 +22,7 @@
             variant="flat"
             @click="onAddClick"
           >
-            Add concept set
+            {{ t('cs.manager.addConceptsButton', 'Add concept set') }}
           </v-btn>
         </div>
       </v-card-text>
@@ -47,7 +47,7 @@
         :items="store.filteredSets"
         :loading="store.loading"
         :items-per-page="itemsPerPage"
-        items-per-page-text="Rows per page:"
+        :items-per-page-text="t('datatable.language.lengthMenu', 'Rows per page:').value"
         class="elevation-1"
       >
         <!-- Name -->
@@ -87,10 +87,10 @@
           <div class="text-center py-8">
             <v-icon size="64" color="grey-lighten-1">mdi-folder-open</v-icon>
             <p class="text-body-1 mt-4 text-grey">
-              {{ store.loading ? 'Loading...' : 'No concept sets found' }}
+              {{ store.loading ? t('common.loadingWithDots', 'Loading...') : t('common.noData', 'No concept sets found') }}
             </p>
             <p class="text-caption text-grey" v-if="!store.loading">
-              Click "Add concept set" to create your first concept set
+              {{ t('cs.manager.emptyStateMessage', 'Click "Add concept set" to create your first concept set') }}
             </p>
           </div>
         </template>
@@ -111,11 +111,11 @@
     <v-dialog v-model="deleteDialog" max-width="500">
       <v-card>
         <v-card-title class="text-h6">
-          Delete Concept Set
+          {{ t('common.delete', 'Delete') }} {{ t('common.conceptSet', 'Concept Set') }}
         </v-card-title>
         
         <v-card-text>
-          Are you sure you want to delete "{{ deleteTarget?.name }}"? This action cannot be undone.
+          {{ t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete') }} "{{ deleteTarget?.name }}"?
         </v-card-text>
         
         <v-card-actions>
@@ -124,7 +124,7 @@
             variant="text"
             @click="deleteDialog = false"
           >
-            Cancel
+            {{ t('common.cancel', 'Cancel') }}
           </v-btn>
           <v-btn
             color="error"
@@ -132,7 +132,7 @@
             :loading="store.loading"
             @click="confirmDelete"
           >
-            Delete
+            {{ t('common.delete', 'Delete') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -152,10 +152,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
+
+const { t } = useI18n()
 
 // ============================================================================
 // Store
@@ -176,11 +179,11 @@ const deleteTarget = ref<ConceptSetListItem | null>(null)
 // ============================================================================
 
 const headers = [
-  { title: 'ID', key: 'id', sortable: true, width: '100px' },
-  { title: 'Name', key: 'name', sortable: true },
-  { title: 'Created', key: 'createdDate', sortable: true, width: '120px' },
-  { title: 'Updated', key: 'modifiedDate', sortable: true, width: '120px' },
-  { title: 'Author', key: 'createdBy', sortable: true, width: '150px' },
+  { title: t('columns.id', 'ID').value, key: 'id', sortable: true, width: '100px' },
+  { title: t('columns.name', 'Name').value, key: 'name', sortable: true },
+  { title: t('columns.created', 'Created').value, key: 'createdDate', sortable: true, width: '120px' },
+  { title: t('columns.updated', 'Updated').value, key: 'modifiedDate', sortable: true, width: '120px' },
+  { title: t('columns.author', 'Author').value, key: 'createdBy', sortable: true, width: '150px' },
   { title: '', key: 'actions', sortable: false, width: '80px', align: 'center' as const },
 ]
 

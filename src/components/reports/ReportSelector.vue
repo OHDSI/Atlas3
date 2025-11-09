@@ -12,7 +12,7 @@
       :items="reportItems"
       item-title="label"
       item-value="type"
-      label="Select Report Type"
+      :label="tv('reports.selectReportType')"
       :disabled="disabled"
       variant="outlined"
       density="comfortable"
@@ -35,7 +35,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { ReportType } from '@/models/report.types'
+
+const { tv } = useI18n()
 
 /**
  * Props
@@ -55,164 +59,164 @@ const emit = defineEmits<{
 /**
  * Report type definitions with metadata
  */
-const reportItems = [
+const reportItems = computed(() => [
   {
     type: 'person' as ReportType,
-    label: 'Person (Demographics)',
-    description: 'Year of birth and demographic distributions',
+    label: tv('reports.types.person.label'),
+    description: tv('reports.types.person.description'),
     icon: 'mdi-account-group'
   },
   {
     type: 'condition-eras' as ReportType,
-    label: 'Condition Eras',
-    description: 'Condition prevalence and duration analysis',
+    label: tv('reports.types.conditionEras.label'),
+    description: tv('reports.types.conditionEras.description'),
     icon: 'mdi-medical-bag'
   },
   {
     type: 'drug-eras' as ReportType,
-    label: 'Drug Eras',
-    description: 'Drug exposure prevalence and duration',
+    label: tv('reports.types.drugEras.label'),
+    description: tv('reports.types.drugEras.description'),
     icon: 'mdi-pill'
   },
   {
     type: 'cohort-specific' as ReportType,
-    label: 'Cohort Specific',
-    description: 'Cohort timeline and distribution analytics',
+    label: tv('reports.types.cohortSpecific.label'),
+    description: tv('reports.types.cohortSpecific.description'),
     icon: 'mdi-chart-timeline-variant'
   },
   {
     type: 'condition' as ReportType,
-    label: 'Condition Occurrence',
-    description: 'Individual condition occurrences',
+    label: tv('reports.types.condition.label'),
+    description: tv('reports.types.condition.description'),
     icon: 'mdi-hospital-box'
   },
   {
     type: 'conditions-by-index' as ReportType,
-    label: 'Conditions by Index',
-    description: 'Conditions relative to cohort start',
+    label: tv('reports.types.conditionsByIndex.label'),
+    description: tv('reports.types.conditionsByIndex.description'),
     icon: 'mdi-calendar-clock'
   },
   {
     type: 'death' as ReportType,
-    label: 'Death',
-    description: 'Mortality data and causes',
+    label: tv('reports.types.death.label'),
+    description: tv('reports.types.death.description'),
     icon: 'mdi-heart-pulse'
   },
   {
     type: 'drug-exposure' as ReportType,
-    label: 'Drug Exposure',
-    description: 'Individual drug exposure events',
+    label: tv('reports.types.drugExposure.label'),
+    description: tv('reports.types.drugExposure.description'),
     icon: 'mdi-medication'
   },
   {
     type: 'drugs-by-index' as ReportType,
-    label: 'Drugs by Index',
-    description: 'Drug exposures relative to cohort start',
+    label: tv('reports.types.drugsByIndex.label'),
+    description: tv('reports.types.drugsByIndex.description'),
     icon: 'mdi-calendar-range'
   },
   {
     type: 'observation-periods' as ReportType,
-    label: 'Observation Periods',
-    description: 'Patient observation period coverage',
+    label: tv('reports.types.observationPeriods.label'),
+    description: tv('reports.types.observationPeriods.description'),
     icon: 'mdi-calendar-multiple'
   },
   {
     type: 'procedure' as ReportType,
-    label: 'Procedure Occurrence',
-    description: 'Procedure events and frequency',
+    label: tv('reports.types.procedure.label'),
+    description: tv('reports.types.procedure.description'),
     icon: 'mdi-medical-bag'
   },
   {
     type: 'procedures-by-index' as ReportType,
-    label: 'Procedures by Index',
-    description: 'Procedures relative to cohort start',
+    label: tv('reports.types.proceduresByIndex.label'),
+    description: tv('reports.types.proceduresByIndex.description'),
     icon: 'mdi-calendar-check'
   },
   {
     type: 'data-completeness' as ReportType,
-    label: 'Data Completeness',
-    description: 'Data quality metrics',
+    label: tv('reports.types.dataCompleteness.label'),
+    description: tv('reports.types.dataCompleteness.description'),
     icon: 'mdi-database-check'
   },
   {
     type: 'entropy' as ReportType,
-    label: 'Entropy',
-    description: 'Data entropy analysis',
+    label: tv('reports.types.entropy.label'),
+    description: tv('reports.types.entropy.description'),
     icon: 'mdi-chart-scatter-plot'
   },
   {
     type: 'tornado' as ReportType,
-    label: 'Tornado',
-    description: 'Tornado diagram visualization',
+    label: tv('reports.types.tornado.label'),
+    description: tv('reports.types.tornado.description'),
     icon: 'mdi-weather-tornado'
   },
   {
     type: 'persons-exposure-baseline' as ReportType,
-    label: 'Persons/Exposure (Baseline)',
-    description: 'Baseline period persons and exposures',
+    label: tv('reports.types.personsExposureBaseline.label'),
+    description: tv('reports.types.personsExposureBaseline.description'),
     icon: 'mdi-account-clock'
   },
   {
     type: 'persons-exposure-cohort' as ReportType,
-    label: 'Persons/Exposure (Cohort)',
-    description: 'Cohort period persons and exposures',
+    label: tv('reports.types.personsExposureCohort.label'),
+    description: tv('reports.types.personsExposureCohort.description'),
     icon: 'mdi-account-group-outline'
   },
   {
     type: 'visits-baseline' as ReportType,
-    label: 'Visits (Baseline)',
-    description: 'Baseline period visit data',
+    label: tv('reports.types.visitsBaseline.label'),
+    description: tv('reports.types.visitsBaseline.description'),
     icon: 'mdi-hospital-building'
   },
   {
     type: 'visit-dates-baseline' as ReportType,
-    label: 'Visit Dates (Baseline)',
-    description: 'Baseline visit date distribution',
+    label: tv('reports.types.visitDatesBaseline.label'),
+    description: tv('reports.types.visitDatesBaseline.description'),
     icon: 'mdi-calendar'
   },
   {
     type: 'care-site-visit-dates-baseline' as ReportType,
-    label: 'Care Site Visit Dates (Baseline)',
-    description: 'Baseline care site visit patterns',
+    label: tv('reports.types.careSiteVisitDatesBaseline.label'),
+    description: tv('reports.types.careSiteVisitDatesBaseline.description'),
     icon: 'mdi-domain'
   },
   {
     type: 'visits-cohort' as ReportType,
-    label: 'Visits (Cohort)',
-    description: 'Cohort period visit data',
+    label: tv('reports.types.visitsCohort.label'),
+    description: tv('reports.types.visitsCohort.description'),
     icon: 'mdi-hospital'
   },
   {
     type: 'visit-dates-cohort' as ReportType,
-    label: 'Visit Dates (Cohort)',
-    description: 'Cohort visit date distribution',
+    label: tv('reports.types.visitDatesCohort.label'),
+    description: tv('reports.types.visitDatesCohort.description'),
     icon: 'mdi-calendar-month'
   },
   {
     type: 'care-site-visit-dates-cohort' as ReportType,
-    label: 'Care Site Visit Dates (Cohort)',
-    description: 'Cohort care site visit patterns',
+    label: tv('reports.types.careSiteVisitDatesCohort.label'),
+    description: tv('reports.types.careSiteVisitDatesCohort.description'),
     icon: 'mdi-office-building'
   },
   {
     type: 'drug-utilization-baseline' as ReportType,
-    label: 'Drug Utilization (Baseline)',
-    description: 'Baseline drug utilization patterns',
+    label: tv('reports.types.drugUtilizationBaseline.label'),
+    description: tv('reports.types.drugUtilizationBaseline.description'),
     icon: 'mdi-pill-multiple'
   },
   {
     type: 'drug-utilization-cohort' as ReportType,
-    label: 'Drug Utilization (Cohort)',
-    description: 'Cohort drug utilization patterns',
+    label: tv('reports.types.drugUtilizationCohort.label'),
+    description: tv('reports.types.drugUtilizationCohort.description'),
     icon: 'mdi-medication-outline'
   },
   {
     type: 'heracles-heel' as ReportType,
-    label: 'Heracles Heel',
-    description: 'Data quality Achilles Heel results',
+    label: tv('reports.types.heraclesHeel.label'),
+    description: tv('reports.types.heraclesHeel.description'),
     icon: 'mdi-alert-circle'
   }
-]
+])
 
 /**
  * Handle selection change

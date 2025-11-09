@@ -56,7 +56,7 @@
               :export-filename="`condition-eras-${sourceKey}.csv`"
             />
             <v-alert v-else type="info" variant="tonal">
-              No condition era data available
+              {{ t('common.noData') }}
             </v-alert>
           </v-window-item>
 
@@ -69,13 +69,13 @@
               :height="600"
             />
             <v-alert v-else type="info" variant="tonal">
-              No treemap data available
+              {{ t('common.noData') }}
             </v-alert>
           </v-window-item>
         </v-window>
 
         <v-alert v-else type="info" variant="tonal">
-          No report data available
+          {{ t('common.noData') }}
         </v-alert>
       </v-card-text>
     </v-card>
@@ -85,6 +85,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useReports } from '@/composables/useReports'
+import { useI18n } from '@/composables/useI18n'
 import type { ConditionErasReport, TableHeader, TableRow } from '@/models/report.types'
 import DataTable from '../tables/DataTable.vue'
 import TreemapChart from '../charts/TreemapChart.vue'
@@ -96,6 +97,11 @@ const props = defineProps<{
   cohortId: number
   sourceKey: string
 }>()
+
+/**
+ * i18n
+ */
+const { t } = useI18n()
 
 /**
  * Reports composable
