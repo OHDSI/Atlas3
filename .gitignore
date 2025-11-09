@@ -1,12 +1,23 @@
 # Dependencies
+.gitignore
 node_modules/
 .pnp/
 .pnp.js
 *md
-specs/
 .claude/
 *png
 .gemini
+sp*
+sp*
+.sp*
+playwright.config.ts
+.env*
+*md
+.gitignore
+check-config.html
+/*.sh
+
+
 .mcp.json
 # Build outputs
 dist/
@@ -67,3 +78,4 @@ desktop.ini
 *.seed
 *.pid
 *.pid.lock
+.gitignore
