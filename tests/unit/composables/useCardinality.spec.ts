@@ -1,9 +1,20 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
 import { useCardinality } from '@/composables/useCardinality'
 import type { Cardinality } from '@/models/event.types'
 
 describe('useCardinality', () => {
-  const { validateCardinality, formatCardinalityDisplay, defaultCardinality } = useCardinality()
+  let validateCardinality: ReturnType<typeof useCardinality>['validateCardinality']
+  let formatCardinalityDisplay: ReturnType<typeof useCardinality>['formatCardinalityDisplay']
+  let defaultCardinality: ReturnType<typeof useCardinality>['defaultCardinality']
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    const cardinality = useCardinality()
+    validateCardinality = cardinality.validateCardinality
+    formatCardinalityDisplay = cardinality.formatCardinalityDisplay
+    defaultCardinality = cardinality.defaultCardinality
+  })
 
   describe('validateCardinality', () => {
     it('should validate AT_LEAST requires count >= 1', () => {

@@ -1,3 +1,4 @@
+import { createPinia, setActivePinia } from 'pinia'
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
@@ -15,6 +16,10 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }))
 
 describe('InclusionCriteriaPanel', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   const createWrapper = (inclusionRules: InclusionRule[] = []) => {
     return mount(InclusionCriteriaPanel, {
       global: { plugins: [vuetify] },
@@ -36,6 +41,7 @@ describe('InclusionCriteriaPanel', () => {
   it('should emit update when adding rule', async () => {
     const wrapper = createWrapper()
     await wrapper.find('[data-testid="add-inclusion-rule"]').trigger('click')
+    await wrapper.vm.$nextTick()
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
   })

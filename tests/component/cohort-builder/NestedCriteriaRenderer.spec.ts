@@ -1,3 +1,4 @@
+import { createPinia, setActivePinia } from 'pinia'
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
@@ -15,6 +16,10 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }))
 
 describe('NestedCriteriaRenderer', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   const createWrapper = (nested: NestedCriteria, depth: number = 0) => {
     return mount(NestedCriteriaRenderer, {
       global: { plugins: [vuetify] },

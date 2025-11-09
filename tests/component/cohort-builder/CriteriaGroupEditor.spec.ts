@@ -1,3 +1,4 @@
+import { createPinia, setActivePinia } from 'pinia'
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
@@ -15,6 +16,10 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }))
 
 describe('CriteriaGroupEditor', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   const createWrapper = (group?: CriteriaGroup) => {
     return mount(CriteriaGroupEditor, {
       global: { plugins: [vuetify] },
@@ -22,8 +27,9 @@ describe('CriteriaGroupEditor', () => {
     })
   }
 
-  it('should show logic type selector', () => {
+  it('should show logic type selector', async () => {
     const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
     const selector = wrapper.find('[data-testid="logic-type-selector"]')
     expect(selector.exists()).toBe(true)
   })
@@ -37,6 +43,7 @@ describe('CriteriaGroupEditor', () => {
     }
 
     const wrapper = createWrapper(group)
+    await wrapper.vm.$nextTick()
     const countInput = wrapper.find('[data-testid="logic-count-input"]')
     expect(countInput.exists()).toBe(true)
   })

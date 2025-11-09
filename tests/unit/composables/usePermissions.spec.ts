@@ -1,22 +1,23 @@
-/**
- * Unit Tests: usePermissions Composable
- * 
- * Tests for Vue composable that wraps permission service
- */
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePermissions } from '@/composables/usePermissions';
+import { permissionService } from '@/services/auth/permissions';
+import { createPinia, setActivePinia } from 'pinia';
 
-// Mock dependencies
+// Mock auth store to return test data
+const mockUser = {
+  id: '1',
+  login: 'testuser',
+  permissionIdx: {
+    cohort: ['cohort:*:get', 'cohort:123:*'],
+    conceptset: ['conceptset:*:put'],
+    report: ['report:*:post']
+  }
+};
+
 vi.mock('@/stores/auth', () => ({
   useAuthStore: vi.fn(() => ({
-    user: {
-      permissionIdx: {
-        cohort: ['cohort:*:get', 'cohort:123:*'],
-        conceptset: ['conceptset:*:put'],
-        report: ['report:*:post']
-      }
-    }
+    user: mockUser,
+    token: 'test-token'
   }))
 }));
 
@@ -26,7 +27,9 @@ vi.mock('@/services/auth/permissions', () => ({
     getCacheStats: vi.fn(() => ({
       hitRate: 85.5,
       size: 10,
-      totalChecks: 20
+      totalChecks: 20,
+      totalHits: 17,
+      totalMisses: 3
     })),
     clearCache: vi.fn()
   }
@@ -34,12 +37,13 @@ vi.mock('@/services/auth/permissions', () => ({
 
 describe('usePermissions', () => {
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.clearAllMocks();
   });
 
   describe('T097: hasPermission method', () => {
     it('should check single permission', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       vi.mocked(permissionService.hasPermission).mockReturnValue(true);
 
       const { hasPermission } = usePermissions();
@@ -58,7 +62,7 @@ describe('usePermissions', () => {
     });
 
     it('should return false when user lacks permission', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       vi.mocked(permissionService.hasPermission).mockReturnValue(false);
 
       const { hasPermission } = usePermissions();
@@ -68,7 +72,7 @@ describe('usePermissions', () => {
     });
 
     it('should extract permissions from permissionIdx correctly', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       vi.mocked(permissionService.hasPermission).mockReturnValue(true);
 
       const { hasPermission } = usePermissions();
@@ -94,7 +98,7 @@ describe('usePermissions', () => {
         }))
       }));
 
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       vi.mocked(permissionService.hasPermission).mockReturnValue(false);
 
       const { hasPermission } = usePermissions();
@@ -107,7 +111,7 @@ describe('usePermissions', () => {
 
   describe('T098: hasAnyPermission method', () => {
     it('should return true if user has any of the permissions', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       
       // Mock: has first permission, not others
       vi.mocked(permissionService.hasPermission)
@@ -126,7 +130,7 @@ describe('usePermissions', () => {
     });
 
     it('should return false if user has none of the permissions', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       
       vi.mocked(permissionService.hasPermission).mockReturnValue(false);
 
@@ -141,7 +145,7 @@ describe('usePermissions', () => {
     });
 
     it('should short-circuit on first match', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       
       vi.mocked(permissionService.hasPermission)
         .mockReturnValueOnce(true); // First call returns true
@@ -167,7 +171,7 @@ describe('usePermissions', () => {
 
   describe('T099: hasAllPermissions method', () => {
     it('should return true if user has all permissions', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       
       vi.mocked(permissionService.hasPermission).mockReturnValue(true);
 
@@ -183,7 +187,7 @@ describe('usePermissions', () => {
     });
 
     it('should return false if user lacks any permission', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       
       vi.mocked(permissionService.hasPermission)
         .mockReturnValueOnce(true)   // cohort:123:get - true
@@ -201,7 +205,7 @@ describe('usePermissions', () => {
     });
 
     it('should short-circuit on first failure', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       
       vi.mocked(permissionService.hasPermission)
         .mockReturnValueOnce(true)   // First check passes
@@ -228,7 +232,7 @@ describe('usePermissions', () => {
 
   describe('T100: cacheHitRate computed property', () => {
     it('should return cache hit rate from permission service', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       
       vi.mocked(permissionService.getCacheStats).mockReturnValue({
         hitRate: 92.5,
@@ -243,7 +247,7 @@ describe('usePermissions', () => {
     });
 
     it('should be reactive to cache stats changes', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       
       // Initial state
       vi.mocked(permissionService.getCacheStats).mockReturnValue({
@@ -268,7 +272,7 @@ describe('usePermissions', () => {
     });
 
     it('should handle zero cache checks gracefully', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       
       vi.mocked(permissionService.getCacheStats).mockReturnValue({
         hitRate: 0,
@@ -283,7 +287,7 @@ describe('usePermissions', () => {
 
   describe('Cache management', () => {
     it('should provide clearCache method', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
 
       const { clearCache } = usePermissions();
       clearCache();
@@ -309,7 +313,7 @@ describe('usePermissions', () => {
 
   describe('Integration scenarios', () => {
     it('should work with typical permission check patterns', () => {
-      const { permissionService } = require('@/services/auth/permissions');
+      // Using imported permissionService
       
       vi.mocked(permissionService.hasPermission)
         .mockReturnValueOnce(true)  // canView

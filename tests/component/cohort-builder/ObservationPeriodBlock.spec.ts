@@ -1,3 +1,4 @@
+import { createPinia, setActivePinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
@@ -18,6 +19,10 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }))
 
 describe('ObservationPeriodBlock', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   const createWrapper = (observationPeriod?: ObservationPeriod) => {
     return mount(ObservationPeriodBlock, {
       global: {

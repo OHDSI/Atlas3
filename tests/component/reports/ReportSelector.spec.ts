@@ -1,3 +1,4 @@
+import { createPinia, setActivePinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, VueWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
@@ -19,6 +20,10 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }))
 
 describe('ReportSelector', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   let wrapper: VueWrapper
 
   const createWrapper = (props?: { modelValue?: ReportType | null; disabled?: boolean }) => {
@@ -103,6 +108,10 @@ describe('ReportSelector', () => {
   // ==========================================
 
   describe('Rendering', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should render the component', () => {
       wrapper = createWrapper()
       expect(wrapper.find('.report-selector').exists()).toBe(true)
@@ -155,6 +164,10 @@ describe('ReportSelector', () => {
   // ==========================================
 
   describe('Report Type Selection', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should emit update:modelValue when report type is selected', async () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
@@ -196,6 +209,10 @@ describe('ReportSelector', () => {
   // ==========================================
 
   describe('Report Metadata Display', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should display correct label for person report', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
@@ -262,6 +279,10 @@ describe('ReportSelector', () => {
   // ==========================================
 
   describe('Props Validation', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should accept null as modelValue', () => {
       wrapper = createWrapper({ modelValue: null })
       const select = wrapper.findComponent({ name: 'VSelect' })
@@ -312,6 +333,10 @@ describe('ReportSelector', () => {
   // ==========================================
 
   describe('Keyboard Navigation', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should support keyboard interaction via v-select', async () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
@@ -347,6 +372,10 @@ describe('ReportSelector', () => {
   // ==========================================
 
   describe('Edge Cases', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should handle rapid selection changes', async () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
@@ -413,6 +442,10 @@ describe('ReportSelector', () => {
   // ==========================================
 
   describe('Integration Scenarios', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should work in form context - selecting report for generation', async () => {
       wrapper = createWrapper({ modelValue: null })
       const select = wrapper.findComponent({ name: 'VSelect' })
@@ -480,6 +513,10 @@ describe('ReportSelector', () => {
   // ==========================================
 
   describe('All 26 Report Types Coverage', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should include person report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
@@ -668,6 +705,10 @@ describe('ReportSelector', () => {
   // ==========================================
 
   describe('Component Structure', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should have report-selector CSS class', () => {
       wrapper = createWrapper()
       expect(wrapper.classes()).toContain('report-selector')

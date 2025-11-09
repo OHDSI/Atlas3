@@ -2,6 +2,7 @@
  * Component Test: ErrorBoundary
  * Tests error boundary component for graceful error handling (T131)
  */
+import { createPinia, setActivePinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, VueWrapper } from '@vue/test-utils'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -54,6 +55,10 @@ const ConditionalErrorComponent = defineComponent({
 })
 
 describe('ErrorBoundary', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   let wrapper: VueWrapper<any>
   let consoleErrorSpy: any
 
@@ -70,6 +75,10 @@ describe('ErrorBoundary', () => {
   })
 
   describe('error-free rendering', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should render child components when no error occurs', () => {
       wrapper = mount(ErrorBoundary, {
         global: {
@@ -106,6 +115,10 @@ describe('ErrorBoundary', () => {
   })
 
   describe('error capturing', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should capture and display errors from child components', async () => {
       wrapper = mount(ErrorBoundary, {
         global: {
@@ -189,6 +202,10 @@ describe('ErrorBoundary', () => {
   })
 
   describe('error UI elements', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should display error icon', async () => {
       wrapper = mount(ErrorBoundary, {
         global: {
@@ -264,6 +281,10 @@ describe('ErrorBoundary', () => {
   })
 
   describe('error recovery actions', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should reload page when reload button is clicked', async () => {
       // Mock window.location.reload
       const reloadMock = vi.fn()
@@ -317,6 +338,10 @@ describe('ErrorBoundary', () => {
   })
 
   describe('dynamic error scenarios', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should handle errors that occur after initial render', async () => {
       wrapper = mount(ErrorBoundary, {
         global: {
@@ -340,6 +365,10 @@ describe('ErrorBoundary', () => {
   })
 
   describe('error details formatting', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should include error message in details', async () => {
       wrapper = mount(ErrorBoundary, {
         global: {
@@ -363,6 +392,10 @@ describe('ErrorBoundary', () => {
   })
 
   describe('accessibility', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should have proper semantic structure', async () => {
       wrapper = mount(ErrorBoundary, {
         global: {
@@ -404,6 +437,10 @@ describe('ErrorBoundary', () => {
   })
 
   describe('layout and styling', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should center error message on screen', async () => {
       wrapper = mount(ErrorBoundary, {
         global: {

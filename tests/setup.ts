@@ -43,3 +43,19 @@ global.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
 } as any
+
+// Mock visualViewport (required for Vuetify modals/overlays)
+Object.defineProperty(window, 'visualViewport', {
+  writable: true,
+  value: {
+    width: 1024,
+    height: 768,
+    scale: 1,
+    offsetLeft: 0,
+    offsetTop: 0,
+    pageLeft: 0,
+    pageTop: 0,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  },
+})

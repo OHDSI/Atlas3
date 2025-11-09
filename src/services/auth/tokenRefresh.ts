@@ -110,6 +110,20 @@ class TokenRefreshService {
   getState(): TokenRefreshState {
     return { ...this.state };
   }
+
+  /**
+   * Reset service state (for testing)
+   */
+  resetState(): void {
+    this.state = {
+      isRefreshing: false,
+      refreshPromise: null,
+      retryCount: 0,
+      lastRefreshTime: null,
+      lastFailureTime: null,
+      lastError: null
+    };
+  }
 }
 
 export const tokenRefreshService = new TokenRefreshService();

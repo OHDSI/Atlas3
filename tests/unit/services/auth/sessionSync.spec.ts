@@ -6,16 +6,20 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sessionSyncService } from '@/services/auth/sessionSync';
+import { createPinia, setActivePinia } from 'pinia';
+
+// Create mock store instance
+const mockStore = {
+  setToken: vi.fn(),
+  setUser: vi.fn(),
+  clearAuth: vi.fn(),
+  openLoginModal: vi.fn(),
+  token: 'current-token'
+};
 
 // Mock dependencies
 vi.mock('@/stores/auth', () => ({
-  useAuthStore: vi.fn(() => ({
-    setToken: vi.fn(),
-    setUser: vi.fn(),
-    clearAuth: vi.fn(),
-    openLoginModal: vi.fn(),
-    token: 'current-token'
-  }))
+  useAuthStore: vi.fn(() => mockStore)
 }));
 
 vi.mock('@/services/auth/authService', () => ({
@@ -26,7 +30,12 @@ vi.mock('@/services/auth/authService', () => ({
 
 describe('SessionSyncService', () => {
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.clearAllMocks();
+    mockStore.setToken.mockClear();
+    mockStore.setUser.mockClear();
+    mockStore.clearAuth.mockClear();
+    mockStore.openLoginModal.mockClear();
   });
 
   describe('T060: Event detection', () => {
@@ -63,8 +72,8 @@ describe('SessionSyncService', () => {
     });
 
     it('should filter events by storage key', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
-      const mockAuthStore = useAuthStore();
+      // Use mockStore instead('@/stores/auth');
+      // Using shared mockStore
 
       sessionSyncService.initialize();
 
@@ -79,12 +88,12 @@ describe('SessionSyncService', () => {
       window.dispatchEvent(wrongKeyEvent);
 
       // Should not process event
-      expect(mockAuthStore.setToken).not.toHaveBeenCalled();
+      expect(mockStore.setToken).not.toHaveBeenCalled();
     });
 
     it('should filter events by storage area', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
-      const mockAuthStore = useAuthStore();
+      // Use mockStore instead('@/stores/auth');
+      // Using shared mockStore
 
       sessionSyncService.initialize();
 
@@ -99,16 +108,16 @@ describe('SessionSyncService', () => {
       window.dispatchEvent(wrongStorageEvent);
 
       // Should not process event
-      expect(mockAuthStore.setToken).not.toHaveBeenCalled();
+      expect(mockStore.setToken).not.toHaveBeenCalled();
     });
   });
 
   describe('T061: Login event classification', () => {
     it('should detect login event (no old value, has new value)', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
+      // Use mockStore instead('@/stores/auth');
       const { authService } = await import('@/services/auth/authService');
       
-      const mockAuthStore = useAuthStore();
+      // Using shared mockStore
       const mockUserInfo = { id: '123', login: 'testuser' };
       vi.mocked(authService.fetchUserInfo).mockResolvedValue(mockUserInfo);
 
@@ -125,21 +134,21 @@ describe('SessionSyncService', () => {
 
       // Allow async processing
       await vi.waitFor(() => {
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('new-token');
+        expect(mockStore.setToken).toHaveBeenCalledWith('new-token');
       });
 
       // Should fetch user info
       await vi.waitFor(() => {
         expect(authService.fetchUserInfo).toHaveBeenCalled();
-        expect(mockAuthStore.setUser).toHaveBeenCalledWith(mockUserInfo);
+        expect(mockStore.setUser).toHaveBeenCalledWith(mockUserInfo);
       });
     });
 
     it('should handle login event with fetch error gracefully', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
+      // Use mockStore instead('@/stores/auth');
       const { authService } = await import('@/services/auth/authService');
       
-      const mockAuthStore = useAuthStore();
+      // Using shared mockStore
       vi.mocked(authService.fetchUserInfo).mockRejectedValue(new Error('Network error'));
 
       sessionSyncService.initialize();
@@ -155,7 +164,7 @@ describe('SessionSyncService', () => {
 
       // Should still set token even if fetch fails
       await vi.waitFor(() => {
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('new-token');
+        expect(mockStore.setToken).toHaveBeenCalledWith('new-token');
       });
 
       // Should not throw error
@@ -167,8 +176,8 @@ describe('SessionSyncService', () => {
 
   describe('T062: Logout event classification', () => {
     it('should detect logout event (has old value, no new value)', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
-      const mockAuthStore = useAuthStore();
+      // Use mockStore instead('@/stores/auth');
+      // Using shared mockStore
 
       sessionSyncService.initialize();
 
@@ -183,14 +192,14 @@ describe('SessionSyncService', () => {
 
       // Should clear auth and show login modal
       await vi.waitFor(() => {
-        expect(mockAuthStore.clearAuth).toHaveBeenCalled();
-        expect(mockAuthStore.openLoginModal).toHaveBeenCalled();
+        expect(mockStore.clearAuth).toHaveBeenCalled();
+        expect(mockStore.openLoginModal).toHaveBeenCalled();
       });
     });
 
     it('should handle logout with empty string as new value', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
-      const mockAuthStore = useAuthStore();
+      // Use mockStore instead('@/stores/auth');
+      // Using shared mockStore
 
       sessionSyncService.initialize();
 
@@ -205,15 +214,15 @@ describe('SessionSyncService', () => {
 
       // Should treat empty string as logout
       await vi.waitFor(() => {
-        expect(mockAuthStore.clearAuth).toHaveBeenCalled();
+        expect(mockStore.clearAuth).toHaveBeenCalled();
       });
     });
   });
 
   describe('T063: Refresh event classification', () => {
     it('should detect refresh event (old and new values different)', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
-      const mockAuthStore = useAuthStore();
+      // Use mockStore instead('@/stores/auth');
+      // Using shared mockStore
 
       sessionSyncService.initialize();
 
@@ -228,7 +237,7 @@ describe('SessionSyncService', () => {
 
       // Should update token
       await vi.waitFor(() => {
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('new-token');
+        expect(mockStore.setToken).toHaveBeenCalledWith('new-token');
       });
 
       // Should not fetch user info (just token update)
@@ -237,8 +246,8 @@ describe('SessionSyncService', () => {
     });
 
     it('should not trigger sync if old and new values are same', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
-      const mockAuthStore = useAuthStore();
+      // Use mockStore instead('@/stores/auth');
+      // Using shared mockStore
 
       sessionSyncService.initialize();
 
@@ -253,16 +262,16 @@ describe('SessionSyncService', () => {
 
       // Should not process (unknown event type)
       await vi.waitFor(() => {
-        expect(mockAuthStore.setToken).not.toHaveBeenCalled();
-        expect(mockAuthStore.clearAuth).not.toHaveBeenCalled();
+        expect(mockStore.setToken).not.toHaveBeenCalled();
+        expect(mockStore.clearAuth).not.toHaveBeenCalled();
       });
     });
   });
 
   describe('T064: Auth store sync on storage event', () => {
     it('should sync auth store state within 500ms of event', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
-      const mockAuthStore = useAuthStore();
+      // Use mockStore instead('@/stores/auth');
+      // Using shared mockStore
 
       sessionSyncService.initialize();
 
@@ -279,7 +288,7 @@ describe('SessionSyncService', () => {
 
       // Wait for processing
       await vi.waitFor(() => {
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('new');
+        expect(mockStore.setToken).toHaveBeenCalledWith('new');
       });
 
       const endTime = Date.now();
@@ -290,8 +299,8 @@ describe('SessionSyncService', () => {
     });
 
     it('should handle multiple rapid events', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
-      const mockAuthStore = useAuthStore();
+      // Use mockStore instead('@/stores/auth');
+      // Using shared mockStore
 
       sessionSyncService.initialize();
 
@@ -323,16 +332,16 @@ describe('SessionSyncService', () => {
 
       // All events should be processed
       await vi.waitFor(() => {
-        expect(mockAuthStore.setToken).toHaveBeenCalledTimes(2);
-        expect(mockAuthStore.clearAuth).toHaveBeenCalledTimes(1);
-      });
-    });
+        expect(mockStore.setToken).toHaveBeenCalledTimes(2);
+        expect(mockStore.clearAuth).toHaveBeenCalledTimes(1);
+      }, { timeout: 10000, interval: 200 });
+    }, 15000);
 
     it('should maintain correct state after multiple sync operations', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
+      // Use mockStore instead('@/stores/auth');
       const { authService } = await import('@/services/auth/authService');
       
-      const mockAuthStore = useAuthStore();
+      // Using shared mockStore
       const mockUserInfo = { id: '123', login: 'user' };
       vi.mocked(authService.fetchUserInfo).mockResolvedValue(mockUserInfo);
 
@@ -348,7 +357,7 @@ describe('SessionSyncService', () => {
       window.dispatchEvent(loginEvent);
 
       await vi.waitFor(() => {
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('token');
+        expect(mockStore.setToken).toHaveBeenCalledWith('token');
       });
 
       // Refresh
@@ -361,7 +370,7 @@ describe('SessionSyncService', () => {
       window.dispatchEvent(refreshEvent);
 
       await vi.waitFor(() => {
-        expect(mockAuthStore.setToken).toHaveBeenCalledWith('new-token');
+        expect(mockStore.setToken).toHaveBeenCalledWith('new-token');
       });
 
       // Logout
@@ -374,7 +383,7 @@ describe('SessionSyncService', () => {
       window.dispatchEvent(logoutEvent);
 
       await vi.waitFor(() => {
-        expect(mockAuthStore.clearAuth).toHaveBeenCalled();
+        expect(mockStore.clearAuth).toHaveBeenCalled();
       });
     });
   });

@@ -70,7 +70,7 @@ class PermissionService {
     // Exact match
     if (userPerm === requiredPerm) return true;
 
-    // Global wildcard
+    // Global wildcard in user permission
     if (userPerm === '*') return true;
 
     const userLevels = userPerm.split(':');
@@ -83,9 +83,6 @@ class PermissionService {
 
       // User has wildcard at this level - match
       if (userLevel === '*') continue;
-
-      // Required is wildcard - match
-      if (requiredLevel === '*') continue;
 
       // Exact match at this level - continue
       if (userLevel === requiredLevel) continue;
@@ -195,7 +192,9 @@ class PermissionService {
     return {
       hitRate,
       size: this.cache.entries.size,
-      totalChecks
+      totalChecks,
+      totalHits: this.cache.totalHits,
+      totalMisses: this.cache.totalMisses
     };
   }
 }

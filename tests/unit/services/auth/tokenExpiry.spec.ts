@@ -1,11 +1,12 @@
-/**
- * Unit Tests: Token Expiry Service
- * 
- * Tests for proactive token expiry detection and warning timers
- */
-
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { tokenExpiryService } from '@/services/auth/tokenExpiry';
+import { createPinia, setActivePinia } from 'pinia';
+
+// Create mock instances
+const mockAuthStore = {
+  showSessionExpiryModal: vi.fn(),
+  hideSessionExpiryModal: vi.fn()
+};
 
 // Mock dependencies
 vi.mock('@/utils/jwt', () => ({
@@ -13,15 +14,15 @@ vi.mock('@/utils/jwt', () => ({
 }));
 
 vi.mock('@/stores/auth', () => ({
-  useAuthStore: vi.fn(() => ({
-    showSessionExpiryModal: vi.fn(),
-    hideSessionExpiryModal: vi.fn()
-  }))
+  useAuthStore: vi.fn(() => mockAuthStore)
 }));
 
 describe('TokenExpiryService', () => {
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.clearAllMocks();
+    mockAuthStore.showSessionExpiryModal.mockClear();
+    mockAuthStore.hideSessionExpiryModal.mockClear();
     vi.useFakeTimers();
   });
 
@@ -83,9 +84,6 @@ describe('TokenExpiryService', () => {
   describe('T041: Warning shown at correct time', () => {
     it('should show warning 5 minutes before expiration', async () => {
       const { getTokenExpiration } = await import('@/utils/jwt');
-      const { useAuthStore } = await import('@/stores/auth');
-      
-      const mockAuthStore = useAuthStore();
       
       // Token expires in 10 minutes
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
@@ -99,14 +97,15 @@ describe('TokenExpiryService', () => {
 
       // Advance to 5 minutes (warning time) - should show warning
       await vi.advanceTimersByTimeAsync(1 * 60 * 1000);
-      expect(mockAuthStore.showSessionExpiryModal).toHaveBeenCalledWith(expiresAt);
+      
+      // Wait for async call
+      await vi.waitFor(() => {
+        expect(mockAuthStore.showSessionExpiryModal).toHaveBeenCalledWith(expiresAt);
+      });
     });
 
     it('should show warning immediately if token already in warning window', async () => {
       const { getTokenExpiration } = await import('@/utils/jwt');
-      const { useAuthStore } = await import('@/stores/auth');
-      
-      const mockAuthStore = useAuthStore();
       
       // Token expires in 3 minutes (already past warning time)
       const expiresAt = new Date(Date.now() + 3 * 60 * 1000);
@@ -114,8 +113,10 @@ describe('TokenExpiryService', () => {
 
       tokenExpiryService.setupExpiryWarning('token');
 
-      // Should show immediately
-      expect(mockAuthStore.showSessionExpiryModal).toHaveBeenCalledWith(expiresAt);
+      // Wait for async call
+      await vi.waitFor(() => {
+        expect(mockAuthStore.showSessionExpiryModal).toHaveBeenCalledWith(expiresAt);
+      });
     });
 
     it('should calculate warning time correctly', async () => {
@@ -136,9 +137,9 @@ describe('TokenExpiryService', () => {
   describe('T042: Duplicate warning prevention', () => {
     it('should not show warning twice for same token', async () => {
       const { getTokenExpiration } = await import('@/utils/jwt');
-      const { useAuthStore } = await import('@/stores/auth');
+      // Using shared mockAuthStore
       
-      const mockAuthStore = useAuthStore();
+      // mockAuthStore already defined
       
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
       vi.mocked(getTokenExpiration).mockReturnValue(expiresAt);
@@ -176,9 +177,9 @@ describe('TokenExpiryService', () => {
 
     it('should allow warning for new token after cancellation', async () => {
       const { getTokenExpiration } = await import('@/utils/jwt');
-      const { useAuthStore } = await import('@/stores/auth');
+      // Using shared mockAuthStore
       
-      const mockAuthStore = useAuthStore();
+      // mockAuthStore already defined
       
       // First token
       const expires1 = new Date(Date.now() + 10 * 60 * 1000);
@@ -224,9 +225,9 @@ describe('TokenExpiryService', () => {
 
     it('should not trigger warning after cancellation', async () => {
       const { getTokenExpiration } = await import('@/utils/jwt');
-      const { useAuthStore } = await import('@/stores/auth');
+      // Using shared mockAuthStore
       
-      const mockAuthStore = useAuthStore();
+      // mockAuthStore already defined
       
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
       vi.mocked(getTokenExpiration).mockReturnValue(expiresAt);
@@ -245,12 +246,12 @@ describe('TokenExpiryService', () => {
     });
 
     it('should handle dismissExpiryWarning()', async () => {
-      const { useAuthStore } = await import('@/stores/auth');
-      const mockAuthStore = useAuthStore();
-
       tokenExpiryService.dismissExpiryWarning();
 
-      expect(mockAuthStore.hideSessionExpiryModal).toHaveBeenCalled();
+      // Wait for async call
+      await vi.waitFor(() => {
+        expect(mockAuthStore.hideSessionExpiryModal).toHaveBeenCalled();
+      });
     });
   });
 

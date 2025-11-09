@@ -50,6 +50,9 @@ describe('Concept Search Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    
+    // Mock getConceptRecordCounts to return empty map by default
+    vi.mocked(conceptSearchService.getConceptRecordCounts).mockResolvedValue(new Map())
   })
 
   describe('Initial State', () => {

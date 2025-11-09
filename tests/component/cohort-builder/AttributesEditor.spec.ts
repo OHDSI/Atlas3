@@ -1,3 +1,4 @@
+import { createPinia, setActivePinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
@@ -18,6 +19,10 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }))
 
 describe('AttributesEditor', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   const createWrapper = (attributes: EventAttribute[] = []) => {
     return mount(AttributesEditor, {
       global: {
@@ -31,6 +36,10 @@ describe('AttributesEditor', () => {
   }
 
   describe('Attribute List Display', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should display empty state when no attributes', () => {
       const wrapper = createWrapper([])
       expect(wrapper.text()).toContain('No attributes added')
@@ -91,6 +100,10 @@ describe('AttributesEditor', () => {
   })
 
   describe('Add Attribute', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should show add attribute button', () => {
       const wrapper = createWrapper()
       const addButton = wrapper.find('[data-testid="add-attribute-button"]')
@@ -119,6 +132,10 @@ describe('AttributesEditor', () => {
   })
 
   describe('Numeric Attributes', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should show numeric operators', async () => {
       const wrapper = createWrapper()
       await wrapper.find('[data-testid="add-attribute-button"]').trigger('click')
@@ -185,6 +202,10 @@ describe('AttributesEditor', () => {
   })
 
   describe('Concept Set Attributes', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should show concept set picker for concept attributes', async () => {
       const wrapper = createWrapper()
       await wrapper.find('[data-testid="add-attribute-button"]').trigger('click')
@@ -200,6 +221,10 @@ describe('AttributesEditor', () => {
   })
 
   describe('Edit and Remove', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should allow editing attributes', async () => {
       const attributes: NumericRangeAttribute[] = [
         {
@@ -249,6 +274,10 @@ describe('AttributesEditor', () => {
   })
 
   describe('Emit Updates', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should emit update when adding attribute', async () => {
       const wrapper = createWrapper()
       await wrapper.find('[data-testid="add-attribute-button"]').trigger('click')
@@ -276,6 +305,10 @@ describe('AttributesEditor', () => {
   })
 
   describe('Available Attributes by Criteria Type', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
     it('should show condition-specific attributes for ConditionOccurrence', () => {
       const wrapper = mount(AttributesEditor, {
         global: {
