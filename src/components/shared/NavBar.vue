@@ -16,15 +16,46 @@
         </ul>
       </nav>
       <div class="nav-bar__right" tabindex="0">
-        <img :src="logoOhdsiSrc" alt="OHDSI" height="36" role="button" @click="handleOhdsiClick" />
+        <!-- Authentication UI -->
+        <div v-if="!auth.isAuthenticated.value" class="nav-bar__auth">
+          <v-btn variant="text" @click="auth.openLoginModal()" prepend-icon="mdi-login">
+            Sign In
+          </v-btn>
+        </div>
+        <div v-else class="nav-bar__user">
+          <v-menu>
+            <template v-slot:activator="{ props }">
+              <v-btn variant="text" v-bind="props" append-icon="mdi-menu-down">
+                <v-icon left>mdi-account-circle</v-icon>
+                {{ auth.userDisplayName.value }}
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item @click="handleLogout">
+                <template v-slot:prepend>
+                  <v-icon>mdi-logout</v-icon>
+                </template>
+                <v-list-item-title>Sign Out</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </div>
+        
+        <img :src="logoOhdsiSrc" alt="OHDSI" height="36" role="button" @click="handleOhdsiClick" class="ml-4" />
       </div>
     </div>
+
+    <!-- Login Modal -->
+    <LoginModal />
   </header>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
+import { authConfig } from '@/config/auth.config'
+import LoginModal from '@/components/auth/LoginModal.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
 import logoOhdsiPng from '@/assets/icons/ohdsi.png'
 
@@ -37,6 +68,7 @@ interface NavigationItem {
 }
 
 const router = useRouter()
+const auth = useAuth()
 
 const logoSrc = logoSvg
 const logoOhdsiSrc = logoOhdsiPng
@@ -56,13 +88,18 @@ const handleOhdsiClick = () => {
 }
 
 const handleNavClick = (item: NavigationItem) => {
-  // Update active state
   navigationItems.value.forEach(navItem => {
     navItem.active = navItem.id === item.id
   })
-
-  // Navigate to route
   router.push(item.route)
+}
+
+async function handleLogout() {
+  try {
+    await auth.logout()
+  } catch (error) {
+    console.error('Logout failed:', error)
+  }
 }
 
 const updateActiveNavFromRoute = () => {
@@ -75,10 +112,13 @@ const updateActiveNavFromRoute = () => {
 
 onMounted(() => {
   updateActiveNavFromRoute()
-  // Listen for route changes
   router.afterEach(() => {
     updateActiveNavFromRoute()
   })
+
+  if (authConfig.enableSkipLogin && !auth.isAuthenticated.value) {
+    auth.openLoginModal()
+  }
 })
 </script>
 
@@ -119,6 +159,11 @@ onMounted(() => {
 .nav-bar__right img {
   padding: 0.5rem 0;
   cursor: pointer;
+}
+
+.nav-bar__auth,
+.nav-bar__user {
+  margin-right: 1rem;
 }
 
 .nav-bar__nav {

@@ -34,11 +34,11 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      // Proxy WebAPI requests to avoid CORS issues
+      // Proxy WebAPI requests to local WebAPI instance
       '/WebAPI': {
-        target: 'https://atlas-demo.ohdsi.org',
+        target: 'http://127.0.0.1:8080',
         changeOrigin: true,
-        secure: true,
+        secure: false,
         rewrite: (path) => path,
       },
     },

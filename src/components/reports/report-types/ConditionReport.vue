@@ -18,7 +18,7 @@
       <!-- Loading state -->
       <div v-if="loading" class="py-8">
         <v-skeleton-loader type="table" />
-      </v-div>
+      </div>
 
       <!-- Error state -->
       <v-alert

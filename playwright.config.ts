@@ -9,11 +9,17 @@ export default defineConfig({
   // Use 'list' reporter to avoid HTML server hanging
   // HTML report still generated but not served/opened
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
+  timeout: 60000, // 60 seconds per test
+  expect: {
+    timeout: 10000, // 10 seconds for expect assertions
+  },
 
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    actionTimeout: 10000, // 10 seconds for actions
+    navigationTimeout: 30000, // 30 seconds for page loads
   },
 
   projects: [
