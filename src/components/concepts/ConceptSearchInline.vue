@@ -11,10 +11,10 @@
       density="comfortable"
       :error-messages="validationError"
       :disabled="loading"
+      class="mb-4"
       @update:model-value="onSearchInput"
       @click:clear="onClear"
       @keyup.enter="onSearch"
-      class="mb-4"
     >
       <template #append>
         <v-btn

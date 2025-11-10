@@ -1,23 +1,43 @@
 <template>
-  <div class="nested-criteria-renderer" :style="{ marginLeft: `${depth * 24}px` }">
+  <div
+    class="nested-criteria-renderer"
+    :style="{ marginLeft: `${depth * 24}px` }"
+  >
     <!-- Depth Warning -->
-    <v-alert v-if="depth > 10" type="warning" variant="tonal" class="mb-2">
+    <v-alert
+      v-if="depth > 10"
+      type="warning"
+      variant="tonal"
+      class="mb-2"
+    >
       <v-icon>mdi-alert</v-icon>
       Deep nesting detected ({{ depth }} levels). Consider simplifying your criteria structure.
     </v-alert>
 
     <!-- Logic Type Display -->
     <div class="logic-header">
-      <v-chip size="small" :color="getLogicColor(nested.logicType)">
+      <v-chip
+        size="small"
+        :color="getLogicColor(nested.logicType)"
+      >
         {{ formatLogicType(nested.logicType, nested.count) }}
       </v-chip>
     </div>
 
     <!-- Events List -->
-    <v-list v-if="nested.events.length > 0" density="compact" class="mt-2">
-      <v-list-item v-for="event in nested.events" :key="event.id">
+    <v-list
+      v-if="nested.events.length > 0"
+      density="compact"
+      class="mt-2"
+    >
+      <v-list-item
+        v-for="event in nested.events"
+        :key="event.id"
+      >
         <template #prepend>
-          <v-icon size="small">mdi-chevron-right</v-icon>
+          <v-icon size="small">
+            mdi-chevron-right
+          </v-icon>
         </template>
 
         <v-list-item-title class="text-caption">
@@ -27,8 +47,14 @@
     </v-list>
 
     <!-- Recursive Nested Criteria -->
-    <div v-if="nested.events.length > 0" class="nested-children">
-      <template v-for="event in nested.events" :key="`nested-${event.id}`">
+    <div
+      v-if="nested.events.length > 0"
+      class="nested-children"
+    >
+      <template
+        v-for="event in nested.events"
+        :key="`nested-${event.id}`"
+      >
         <NestedCriteriaRenderer
           v-if="event.nestedCriteria"
           :nested="event.nestedCriteria"

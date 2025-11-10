@@ -8,11 +8,19 @@
 <template>
   <div class="cohort-specific-report">
     <!-- Prevalence by Month -->
-    <v-card elevation="0" class="mb-4">
-      <v-card-title class="text-h6">Prevalence by Month</v-card-title>
+    <v-card
+      elevation="0"
+      class="mb-4"
+    >
+      <v-card-title class="text-h6">
+        Prevalence by Month
+      </v-card-title>
       <v-card-text>
         <div v-if="sectionLoading('prevalence')">
-          <v-skeleton-loader type="image" height="400" />
+          <v-skeleton-loader
+            type="image"
+            height="400"
+          />
         </div>
         <v-alert
           v-else-if="sectionError('prevalence')"
@@ -21,7 +29,11 @@
         >
           {{ sectionError('prevalence') }}
           <template #append>
-            <v-btn size="small" variant="text" @click="retrySections">
+            <v-btn
+              size="small"
+              variant="text"
+              @click="retrySections"
+            >
               Retry
             </v-btn>
           </template>
@@ -32,62 +44,101 @@
           title="Monthly Prevalence (per 1000 people)"
           :height="400"
         />
-        <v-alert v-else type="info" variant="tonal">
+        <v-alert
+          v-else
+          type="info"
+          variant="tonal"
+        >
           {{ t('common.noData') }}
         </v-alert>
       </v-card-text>
     </v-card>
 
     <!-- Cohort Start Summary -->
-    <v-card elevation="0" class="mb-4">
-      <v-card-title class="text-h6">Cohort Summary</v-card-title>
+    <v-card
+      elevation="0"
+      class="mb-4"
+    >
+      <v-card-title class="text-h6">
+        Cohort Summary
+      </v-card-title>
       <v-card-text>
-        <div v-if="reportData?.cohortStart" class="cohort-summary">
+        <div
+          v-if="reportData?.cohortStart"
+          class="cohort-summary"
+        >
           <v-row>
-            <v-col cols="12" md="4">
+            <v-col
+              cols="12"
+              md="4"
+            >
               <v-card variant="outlined">
                 <v-card-text class="text-center">
                   <div class="text-h4 font-weight-bold">
                     {{ reportData.cohortStart.totalPersons.toLocaleString() }}
                   </div>
-                  <div class="text-subtitle-2 text-grey">Total Persons</div>
+                  <div class="text-subtitle-2 text-grey">
+                    Total Persons
+                  </div>
                 </v-card-text>
               </v-card>
             </v-col>
-            <v-col cols="12" md="4">
+            <v-col
+              cols="12"
+              md="4"
+            >
               <v-card variant="outlined">
                 <v-card-text class="text-center">
                   <div class="text-h6">
                     {{ reportData.cohortStart.startDate || '-' }}
                   </div>
-                  <div class="text-subtitle-2 text-grey">Start Date</div>
+                  <div class="text-subtitle-2 text-grey">
+                    Start Date
+                  </div>
                 </v-card-text>
               </v-card>
             </v-col>
-            <v-col cols="12" md="4">
+            <v-col
+              cols="12"
+              md="4"
+            >
               <v-card variant="outlined">
                 <v-card-text class="text-center">
                   <div class="text-h6">
                     {{ reportData.cohortStart.endDate || '-' }}
                   </div>
-                  <div class="text-subtitle-2 text-grey">End Date</div>
+                  <div class="text-subtitle-2 text-grey">
+                    End Date
+                  </div>
                 </v-card-text>
               </v-card>
             </v-col>
           </v-row>
         </div>
-        <v-alert v-else type="info" variant="tonal">
+        <v-alert
+          v-else
+          type="info"
+          variant="tonal"
+        >
           No cohort summary available
         </v-alert>
       </v-card-text>
     </v-card>
 
     <!-- Age Distribution -->
-    <v-card elevation="0" class="mb-4">
-      <v-card-title class="text-h6">Age Distribution</v-card-title>
+    <v-card
+      elevation="0"
+      class="mb-4"
+    >
+      <v-card-title class="text-h6">
+        Age Distribution
+      </v-card-title>
       <v-card-text>
         <div v-if="sectionLoading('age')">
-          <v-skeleton-loader type="image" height="400" />
+          <v-skeleton-loader
+            type="image"
+            height="400"
+          />
         </div>
         <v-alert
           v-else-if="sectionError('age')"
@@ -101,7 +152,11 @@
           :data="ageDistributionData"
           :height="400"
         />
-        <v-alert v-else type="info" variant="tonal">
+        <v-alert
+          v-else
+          type="info"
+          variant="tonal"
+        >
           {{ t('common.noData') }}
         </v-alert>
       </v-card-text>
@@ -109,10 +164,15 @@
 
     <!-- Duration Distribution -->
     <v-card elevation="0">
-      <v-card-title class="text-h6">Duration Distribution</v-card-title>
+      <v-card-title class="text-h6">
+        Duration Distribution
+      </v-card-title>
       <v-card-text>
         <div v-if="sectionLoading('duration')">
-          <v-skeleton-loader type="image" height="400" />
+          <v-skeleton-loader
+            type="image"
+            height="400"
+          />
         </div>
         <v-alert
           v-else-if="sectionError('duration')"
@@ -126,7 +186,11 @@
           :data="durationDistributionData"
           :height="400"
         />
-        <v-alert v-else type="info" variant="tonal">
+        <v-alert
+          v-else
+          type="info"
+          variant="tonal"
+        >
           {{ t('common.noData') }}
         </v-alert>
       </v-card-text>

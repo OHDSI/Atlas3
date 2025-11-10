@@ -55,7 +55,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
 
   // Client-side pagination and sorting
   const concepts = computed(() => {
-    let sorted = [...allConcepts.value]
+    const sorted = [...allConcepts.value]
 
     // Apply sorting
     if (sortBy.value) {

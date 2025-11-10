@@ -25,19 +25,32 @@
 
       <div class="feature-section">
         <h3>Host Communication</h3>
-        <button @click="sendNotification">Show Notification</button>
-        <button @click="requestNavigation">Navigate to Home</button>
-        <button @click="requestData">Request Data from Host</button>
+        <button @click="sendNotification">
+          Show Notification
+        </button>
+        <button @click="requestNavigation">
+          Navigate to Home
+        </button>
+        <button @click="requestData">
+          Request Data from Host
+        </button>
       </div>
 
       <div class="feature-section">
         <h3>Plugin State</h3>
         <p>Counter: {{ counter }}</p>
-        <button @click="counter++">Increment</button>
-        <button @click="counter--">Decrement</button>
+        <button @click="counter++">
+          Increment
+        </button>
+        <button @click="counter--">
+          Decrement
+        </button>
       </div>
 
-      <div v-if="lastMessage" class="feature-section">
+      <div
+        v-if="lastMessage"
+        class="feature-section"
+      >
         <h3>Last Message</h3>
         <pre>{{ lastMessage }}</pre>
       </div>

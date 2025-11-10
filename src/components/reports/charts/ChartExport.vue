@@ -8,7 +8,10 @@
 -->
 <template>
   <div class="chart-export-controls">
-    <v-btn-group variant="outlined" density="compact">
+    <v-btn-group
+      variant="outlined"
+      density="compact"
+    >
       <v-btn
         size="small"
         prepend-icon="mdi-image"

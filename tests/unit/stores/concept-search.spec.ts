@@ -1,7 +1,6 @@
 /**
  * Concept Search Store Tests
  * Tests for concept search state management
- * Task: T035 [P1] [US1]
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'

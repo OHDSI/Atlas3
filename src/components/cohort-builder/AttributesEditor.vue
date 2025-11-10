@@ -1,7 +1,10 @@
 <template>
   <div class="attributes-editor">
     <!-- Attribute List - Always Visible (No Inline Editing) -->
-    <div v-if="modelValue.length > 0" class="attributes-list">
+    <div
+      v-if="modelValue.length > 0"
+      class="attributes-list"
+    >
       <div
         v-for="(attribute, index) in modelValue"
         :key="index"

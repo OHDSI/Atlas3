@@ -64,7 +64,7 @@ use([
 const app = createApp(App)
 
 // Register ECharts component globally
-app.component('v-chart', ECharts)
+app.component('VChart', ECharts)
 
 // Install Pinia (state management)
 app.use(createPinia())

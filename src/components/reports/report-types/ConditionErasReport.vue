@@ -8,16 +8,25 @@
 <template>
   <div class="condition-eras-report">
     <v-card elevation="0">
-      <v-card-title class="text-h6">Condition Era Prevalence</v-card-title>
+      <v-card-title class="text-h6">
+        Condition Era Prevalence
+      </v-card-title>
 
       <!-- Tabs for Table vs Treemap view -->
-      <v-tabs v-model="activeTab" bg-color="transparent">
+      <v-tabs
+        v-model="activeTab"
+        bg-color="transparent"
+      >
         <v-tab value="table">
-          <v-icon start>mdi-table</v-icon>
+          <v-icon start>
+            mdi-table
+          </v-icon>
           Table View
         </v-tab>
         <v-tab value="treemap">
-          <v-icon start>mdi-chart-tree</v-icon>
+          <v-icon start>
+            mdi-chart-tree
+          </v-icon>
           Treemap View
         </v-tab>
       </v-tabs>
@@ -46,7 +55,10 @@
           </template>
         </v-alert>
 
-        <v-window v-else-if="reportData" v-model="activeTab">
+        <v-window
+          v-else-if="reportData"
+          v-model="activeTab"
+        >
           <!-- Table View -->
           <v-window-item value="table">
             <DataTable
@@ -55,7 +67,11 @@
               :items="tableData"
               :export-filename="`condition-eras-${sourceKey}.csv`"
             />
-            <v-alert v-else type="info" variant="tonal">
+            <v-alert
+              v-else
+              type="info"
+              variant="tonal"
+            >
               {{ t('common.noData') }}
             </v-alert>
           </v-window-item>
@@ -68,13 +84,21 @@
               title="Condition Era Prevalence by Person Count"
               :height="600"
             />
-            <v-alert v-else type="info" variant="tonal">
+            <v-alert
+              v-else
+              type="info"
+              variant="tonal"
+            >
               {{ t('common.noData') }}
             </v-alert>
           </v-window-item>
         </v-window>
 
-        <v-alert v-else type="info" variant="tonal">
+        <v-alert
+          v-else
+          type="info"
+          variant="tonal"
+        >
           {{ t('common.noData') }}
         </v-alert>
       </v-card-text>

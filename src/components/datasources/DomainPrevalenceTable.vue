@@ -9,7 +9,10 @@
       class="mb-4"
     >
       <div class="d-flex align-center">
-        <v-icon icon="mdi-information-outline" class="mr-2" />
+        <v-icon
+          icon="mdi-information-outline"
+          class="mr-2"
+        />
         <span class="text-caption">
           Large dataset detected ({{ formatNumber(props.data.length) }} entries). 
           Displaying top 1,000 entries by prevalence for performance. 
@@ -20,7 +23,10 @@
 
     <div class="table-controls mb-4">
       <v-row>
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6"
+        >
           <v-text-field
             v-model="search"
             label="Search"
@@ -31,7 +37,11 @@
             clearable
           />
         </v-col>
-        <v-col cols="12" md="6" class="d-flex justify-end align-center gap-2">
+        <v-col
+          cols="12"
+          md="6"
+          class="d-flex justify-end align-center gap-2"
+        >
           <v-btn
             variant="outlined"
             prepend-icon="mdi-content-copy"

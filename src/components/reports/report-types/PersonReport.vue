@@ -7,11 +7,19 @@
 -->
 <template>
   <div class="person-report">
-    <v-card elevation="0" class="mb-4">
-      <v-card-title class="text-h6">{{ t('dataSources.personReport.yearOfBirth') }}</v-card-title>
+    <v-card
+      elevation="0"
+      class="mb-4"
+    >
+      <v-card-title class="text-h6">
+        {{ t('dataSources.personReport.yearOfBirth') }}
+      </v-card-title>
       <v-card-text>
         <div v-if="sectionLoading('yearOfBirth')">
-          <v-skeleton-loader type="image" height="400" />
+          <v-skeleton-loader
+            type="image"
+            height="400"
+          />
         </div>
         <v-alert
           v-else-if="sectionError('yearOfBirth')"
@@ -34,23 +42,37 @@
           :data="yearOfBirthData"
           :height="400"
         />
-        <v-alert v-else type="info" variant="tonal">
+        <v-alert
+          v-else
+          type="info"
+          variant="tonal"
+        >
           {{ t('common.noData') }}
         </v-alert>
       </v-card-text>
     </v-card>
 
     <v-card elevation="0">
-      <v-card-title class="text-h6">{{ t('common.demographics') }}</v-card-title>
+      <v-card-title class="text-h6">
+        {{ t('common.demographics') }}
+      </v-card-title>
       <v-card-text>
         <v-row>
           <!-- Gender -->
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-card variant="outlined">
-              <v-card-title class="text-subtitle-1">{{ t('dataSources.personReport.gender') }}</v-card-title>
+              <v-card-title class="text-subtitle-1">
+                {{ t('dataSources.personReport.gender') }}
+              </v-card-title>
               <v-card-text>
                 <div v-if="sectionLoading('gender')">
-                  <v-skeleton-loader type="image" height="350" />
+                  <v-skeleton-loader
+                    type="image"
+                    height="350"
+                  />
                 </div>
                 <v-alert
                   v-else-if="sectionError('gender')"
@@ -65,7 +87,12 @@
                   :data="genderData"
                   :height="350"
                 />
-                <v-alert v-else type="info" variant="tonal" density="compact">
+                <v-alert
+                  v-else
+                  type="info"
+                  variant="tonal"
+                  density="compact"
+                >
                   {{ t('common.noData') }}
                 </v-alert>
               </v-card-text>
@@ -73,12 +100,20 @@
           </v-col>
 
           <!-- Race -->
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-card variant="outlined">
-              <v-card-title class="text-subtitle-1">{{ t('dataSources.personReport.race') }}</v-card-title>
+              <v-card-title class="text-subtitle-1">
+                {{ t('dataSources.personReport.race') }}
+              </v-card-title>
               <v-card-text>
                 <div v-if="sectionLoading('race')">
-                  <v-skeleton-loader type="image" height="350" />
+                  <v-skeleton-loader
+                    type="image"
+                    height="350"
+                  />
                 </div>
                 <v-alert
                   v-else-if="sectionError('race')"
@@ -93,7 +128,12 @@
                   :data="raceData"
                   :height="350"
                 />
-                <v-alert v-else type="info" variant="tonal" density="compact">
+                <v-alert
+                  v-else
+                  type="info"
+                  variant="tonal"
+                  density="compact"
+                >
                   {{ t('common.noData') }}
                 </v-alert>
               </v-card-text>
@@ -101,12 +141,20 @@
           </v-col>
 
           <!-- Ethnicity -->
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-card variant="outlined">
-              <v-card-title class="text-subtitle-1">{{ t('dataSources.personReport.ethnicity') }}</v-card-title>
+              <v-card-title class="text-subtitle-1">
+                {{ t('dataSources.personReport.ethnicity') }}
+              </v-card-title>
               <v-card-text>
                 <div v-if="sectionLoading('ethnicity')">
-                  <v-skeleton-loader type="image" height="350" />
+                  <v-skeleton-loader
+                    type="image"
+                    height="350"
+                  />
                 </div>
                 <v-alert
                   v-else-if="sectionError('ethnicity')"
@@ -121,7 +169,12 @@
                   :data="ethnicityData"
                   :height="350"
                 />
-                <v-alert v-else type="info" variant="tonal" density="compact">
+                <v-alert
+                  v-else
+                  type="info"
+                  variant="tonal"
+                  density="compact"
+                >
                   {{ t('common.noData') }}
                 </v-alert>
               </v-card-text>

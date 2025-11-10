@@ -1,6 +1,6 @@
 /**
  * Unit Test: chart-config utilities
- * Tests ECharts configuration helpers (T128)
+ * Tests ECharts configuration helpers
  */
 import { describe, it, expect } from 'vitest'
 import {

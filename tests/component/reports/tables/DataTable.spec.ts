@@ -1,7 +1,6 @@
 /**
  * DataTable Component Tests
  * Feature: 005-cohort-reports
- * Task: T135
  *
  * Comprehensive tests for DataTable component covering:
  * - Rendering (table, headers, data rows)

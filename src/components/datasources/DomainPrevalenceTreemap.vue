@@ -1,9 +1,16 @@
 <template>
   <div class="domain-prevalence-treemap">
     <div class="treemap-instructions mb-4">
-      <v-alert type="info" variant="tonal" density="compact">
+      <v-alert
+        type="info"
+        variant="tonal"
+        density="compact"
+      >
         <div class="d-flex align-center">
-          <v-icon icon="mdi-information-outline" class="mr-2" />
+          <v-icon
+            icon="mdi-information-outline"
+            class="mr-2"
+          />
           <span>
             <strong>Ctrl+Click</strong> to zoom in, <strong>Alt+Click</strong> to reset zoom
           </span>

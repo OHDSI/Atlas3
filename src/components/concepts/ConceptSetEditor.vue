@@ -6,7 +6,10 @@
     :width="drawerWidth"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <v-card flat class="h-100 d-flex flex-column">
+    <v-card
+      flat
+      class="h-100 d-flex flex-column"
+    >
       <!-- Header -->
       <v-card-title class="d-flex align-center bg-primary pa-4">
         <span class="text-h6">{{ isEditMode ? t('common.edit', 'Edit').value : t('common.create', 'New').value }} {{ t('common.conceptSet', 'Concept Set').value }}</span>
@@ -20,7 +23,10 @@
 
       <!-- Form Fields -->
       <v-card-text class="flex-grow-1 overflow-y-auto pa-6">
-        <v-form ref="formRef" v-model="formValid">
+        <v-form
+          ref="formRef"
+          v-model="formValid"
+        >
           <v-text-field
             v-model="form.name"
             :label="t('columns.name', 'Name').value"
@@ -34,18 +40,29 @@
           <v-divider class="my-4" />
 
           <!-- Tabs for concept building (T088, T089, T090) -->
-          <v-tabs v-model="activeTab" bg-color="grey-lighten-3" class="mb-4">
+          <v-tabs
+            v-model="activeTab"
+            bg-color="grey-lighten-3"
+            class="mb-4"
+          >
             <v-tab value="search">
-              <v-icon start>mdi-magnify</v-icon>
+              <v-icon start>
+                mdi-magnify
+              </v-icon>
               {{ t('search.tabs.search', 'Search') }}
             </v-tab>
             <v-tab value="selected">
-              <v-icon start>mdi-checkbox-marked-circle</v-icon>
+              <v-icon start>
+                mdi-checkbox-marked-circle
+              </v-icon>
               {{ t('cs.manager.selectedConcepts', 'Selected concepts') }} ({{ itemCount }})
             </v-tab>
           </v-tabs>
 
-          <v-window v-model="activeTab" class="mt-4">
+          <v-window
+            v-model="activeTab"
+            class="mt-4"
+          >
             <!-- Search Tab -->
             <v-window-item value="search">
               <ConceptSearchInline

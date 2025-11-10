@@ -27,7 +27,10 @@
       />
 
       <!-- Concept Sets List -->
-      <v-list v-if="filteredConceptSets.length > 0" data-testid="concept-set-list">
+      <v-list
+        v-if="filteredConceptSets.length > 0"
+        data-testid="concept-set-list"
+      >
         <v-list-item
           v-for="conceptSet in filteredConceptSets"
           :key="conceptSet.id"
@@ -85,7 +88,10 @@
     </v-card-text>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="showDeleteDialog" max-width="400">
+    <v-dialog
+      v-model="showDeleteDialog"
+      max-width="400"
+    >
       <v-card>
         <v-card-title>{{ t('conceptSetList.confirmDeleteTitle') }}</v-card-title>
         <v-card-text>
@@ -93,8 +99,19 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showDeleteDialog = false">{{ t('common.cancel') }}</v-btn>
-          <v-btn color="error" variant="elevated" @click="confirmDelete">{{ t('common.delete') }}</v-btn>
+          <v-btn
+            variant="text"
+            @click="showDeleteDialog = false"
+          >
+            {{ t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="elevated"
+            @click="confirmDelete"
+          >
+            {{ t('common.delete') }}
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

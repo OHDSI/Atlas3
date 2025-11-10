@@ -1,7 +1,6 @@
 /**
  * Concept Search E2E Tests
  * End-to-end tests for concept search functionality
- * Tasks: T038, T039, T040, T041, T042
  */
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
@@ -20,7 +19,7 @@ test.describe('Concept Search', () => {
   })
 
   /**
-   * T038: Search for "diabetes" and verify results
+   * Search for "diabetes" and verify results
    */
   test('should search for "diabetes" and display results', async ({ page }) => {
     // Find search input - use the actual placeholder text or label
@@ -55,7 +54,7 @@ test.describe('Concept Search', () => {
   })
 
   /**
-   * T039: Sort by Name column
+   * Sort by Name column
    */
   test('should sort results by Name column', async ({ page }) => {
     // Search for concepts first
@@ -94,7 +93,7 @@ test.describe('Concept Search', () => {
   })
 
   /**
-   * T040: Paginate through 100+ results
+   * Paginate through 100+ results
    */
   test('should paginate through results with 100+ items', async ({ page }) => {
     // Search for a common term that returns many results
@@ -135,7 +134,7 @@ test.describe('Concept Search', () => {
   })
 
   /**
-   * T040 continued: Test items per page selector
+   * Test items per page selector
    */
   test('should change items per page', async ({ page }) => {
     // Search for concepts
@@ -165,7 +164,7 @@ test.describe('Concept Search', () => {
   })
 
   /**
-   * T166: Zero results validation
+   * Zero results validation
    */
   test('should display empty state when no results found', async ({ page }) => {
     // Search for nonsense that should return no results
@@ -204,7 +203,7 @@ test.describe('Concept Search', () => {
   })
 
   /**
-   * T167: Performance - search completes within 5 seconds
+   * Performance - search completes within 5 seconds
    */
   test('should complete search within 5 seconds', async ({ page }) => {
     const searchInput = page.locator('input[type="text"]').first()

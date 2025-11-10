@@ -1,11 +1,26 @@
 <template>
-  <v-card variant="outlined" class="criteria-group-editor">
+  <v-card
+    variant="outlined"
+    class="criteria-group-editor"
+  >
     <v-card-text class="d-flex">
       <!-- Vertical Match Type Label -->
-      <v-menu v-model="showMatchTypeDialog" :close-on-content-click="false" location="end" @update:model-value="onMenuOpen">
+      <v-menu
+        v-model="showMatchTypeDialog"
+        :close-on-content-click="false"
+        location="end"
+        @update:model-value="onMenuOpen"
+      >
         <template #activator="{ props: menuProps }">
-          <div class="vertical-label-container" v-bind="menuProps">
-            <div class="vertical-label match-type-label" :data-type="localGroup.logicType || 'ALL'" title="Click to change match type">
+          <div
+            class="vertical-label-container"
+            v-bind="menuProps"
+          >
+            <div
+              class="vertical-label match-type-label"
+              :data-type="localGroup.logicType || 'ALL'"
+              title="Click to change match type"
+            >
               {{ getMatchTypeDisplay() }}
             </div>
           </div>
@@ -62,8 +77,20 @@
           </v-card-text>
           <v-card-actions class="pa-2">
             <v-spacer />
-            <v-btn variant="text" size="small" @click="showMatchTypeDialog = false">{{ t('common.cancel', 'Cancel') }}</v-btn>
-            <v-btn color="primary" size="small" @click="confirmMatchType">{{ t('common.ok', 'OK') }}</v-btn>
+            <v-btn
+              variant="text"
+              size="small"
+              @click="showMatchTypeDialog = false"
+            >
+              {{ t('common.cancel', 'Cancel') }}
+            </v-btn>
+            <v-btn
+              color="primary"
+              size="small"
+              @click="confirmMatchType"
+            >
+              {{ t('common.ok', 'OK') }}
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-menu>
@@ -104,7 +131,11 @@
         </div>
 
         <!-- Validation Error -->
-        <v-alert v-if="validationError" type="error" class="mb-2">
+        <v-alert
+          v-if="validationError"
+          type="error"
+          class="mb-2"
+        >
           {{ validationError }}
         </v-alert>
 
@@ -113,7 +144,10 @@
           <div class="d-flex">
             <!-- Events List -->
             <div class="flex-grow-1">
-              <div v-if="localGroup.events.length > 0" class="events-list">
+              <div
+                v-if="localGroup.events.length > 0"
+                class="events-list"
+              >
                 <div
                   v-for="(event, index) in localGroup.events"
                   :key="event.id"
@@ -121,7 +155,10 @@
                   data-testid="group-event-item"
                 >
                   <!-- Cardinality Sidebar with Menu -->
-                  <v-menu :close-on-content-click="false" location="end">
+                  <v-menu
+                    :close-on-content-click="false"
+                    location="end"
+                  >
                     <template #activator="{ props: menuProps }">
                       <div
                         class="cardinality-sidebar"
@@ -207,7 +244,9 @@
                           data-testid="concept-set-picker"
                           @click="selectConceptSetForEvent(index)"
                         >
-                          <v-icon class="mr-2">mdi-plus</v-icon>
+                          <v-icon class="mr-2">
+                            mdi-plus
+                          </v-icon>
                           Select Concept Set
                         </v-btn>
                         <v-chip
@@ -225,7 +264,11 @@
 
                       <!-- Temporal Window Display/Editor -->
                       <div class="temporal-window-section mt-2">
-                        <v-menu v-if="event.temporalWindow" :close-on-content-click="false" location="end">
+                        <v-menu
+                          v-if="event.temporalWindow"
+                          :close-on-content-click="false"
+                          location="end"
+                        >
                           <template #activator="{ props: menuProps }">
                             <v-chip
                               size="small"
@@ -236,11 +279,19 @@
                               closable
                               @click:close="removeTemporalWindow(index)"
                             >
-                              <v-icon start size="small">mdi-calendar-range</v-icon>
+                              <v-icon
+                                start
+                                size="small"
+                              >
+                                mdi-calendar-range
+                              </v-icon>
                               {{ formatTemporalWindowDisplay(event.temporalWindow) }}
                             </v-chip>
                           </template>
-                          <v-card class="temporal-window-menu" style="min-width: 500px;">
+                          <v-card
+                            class="temporal-window-menu"
+                            style="min-width: 500px;"
+                          >
                             <v-card-text class="pa-3">
                               <TemporalWindowEditor
                                 :model-value="event.temporalWindow"
@@ -273,7 +324,11 @@
                 </div>
               </div>
 
-              <v-alert v-else color="grey-lighten-4" variant="outlined">
+              <v-alert
+                v-else
+                color="grey-lighten-4"
+                variant="outlined"
+              >
                 <div style="color: #666;">
                   No events in group. Add events to build criteria logic.
                 </div>
@@ -282,33 +337,38 @@
           </div>
         </div>
 
-      <!-- Nested Groups (if any) -->
-      <div v-if="localGroup.nestedGroups && localGroup.nestedGroups.length > 0" class="mt-4">
-        <div class="text-subtitle-2 mb-2">Nested Groups</div>
+        <!-- Nested Groups (if any) -->
         <div
-          v-for="(nested, idx) in localGroup.nestedGroups"
-          :key="nested.id"
-          class="nested-group-item"
-          data-testid="nested-group"
+          v-if="localGroup.nestedGroups && localGroup.nestedGroups.length > 0"
+          class="mt-4"
         >
-          <CriteriaGroupEditor
-            :model-value="nested"
-            @update:model-value="updateNestedGroup(idx, $event)"
-            @remove="removeNestedGroup(idx)"
-          />
+          <div class="text-subtitle-2 mb-2">
+            Nested Groups
+          </div>
+          <div
+            v-for="(nested, idx) in localGroup.nestedGroups"
+            :key="nested.id"
+            class="nested-group-item"
+            data-testid="nested-group"
+          >
+            <CriteriaGroupEditor
+              :model-value="nested"
+              @update:model-value="updateNestedGroup(idx, $event)"
+              @remove="removeNestedGroup(idx)"
+            />
+          </div>
         </div>
-      </div>
 
-      <!-- Add Nested Group Button -->
-      <v-btn
-        class="mt-2"
-        variant="outlined"
-        prepend-icon="mdi-folder-plus"
-        data-testid="add-nested-group"
-        @click="addNestedGroup"
-      >
-        Add Nested Group
-      </v-btn>
+        <!-- Add Nested Group Button -->
+        <v-btn
+          class="mt-2"
+          variant="outlined"
+          prepend-icon="mdi-folder-plus"
+          data-testid="add-nested-group"
+          @click="addNestedGroup"
+        >
+          Add Nested Group
+        </v-btn>
       </div>
     </v-card-text>
   </v-card>

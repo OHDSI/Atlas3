@@ -6,13 +6,20 @@
   Main report container with action buttons, report selector, and dynamic report loading
 -->
 <template>
-  <v-card class="report-panel" elevation="0">
+  <v-card
+    class="report-panel"
+    elevation="0"
+  >
     <!-- Header with close button -->
     <v-card-title class="d-flex align-center justify-space-between pa-4 border-b">
       <div class="d-flex align-center gap-2">
         <v-icon>mdi-chart-box</v-icon>
         <span class="text-h6">{{ t('common.cohortReports') }}</span>
-        <v-chip v-if="sourceKey" size="small" variant="outlined">
+        <v-chip
+          v-if="sourceKey"
+          size="small"
+          variant="outlined"
+        >
           {{ sourceKey }}
         </v-chip>
       </div>
@@ -29,8 +36,13 @@
     <!-- Action buttons section -->
     <v-card-text class="pa-4">
       <div class="action-buttons-section mb-4">
-        <div class="text-subtitle-2 mb-2">{{ t('common.generateReports') }}</div>
-        <v-btn-group variant="outlined" divided>
+        <div class="text-subtitle-2 mb-2">
+          {{ t('common.generateReports') }}
+        </div>
+        <v-btn-group
+          variant="outlined"
+          divided
+        >
           <v-btn
             :disabled="loading || !cohortId || !sourceKey"
             :loading="activeAction === 'full-analysis'"
@@ -72,7 +84,10 @@
       <v-divider class="my-4" />
 
       <!-- Loading state -->
-      <div v-if="loading" class="report-loading">
+      <div
+        v-if="loading"
+        class="report-loading"
+      >
         <v-skeleton-loader type="article, article" />
       </div>
 
@@ -97,7 +112,10 @@
       </v-alert>
 
       <!-- Report content -->
-      <div v-else-if="currentReportType && cohortId && sourceKey && currentReportComponent" class="report-content">
+      <div
+        v-else-if="currentReportType && cohortId && sourceKey && currentReportComponent"
+        class="report-content"
+      >
         <component
           :is="currentReportComponent"
           :cohort-id="cohortId"
@@ -112,7 +130,9 @@
         variant="tonal"
         icon="mdi-alert-circle-outline"
       >
-        <div class="text-subtitle-2 mb-1">{{ t('common.reportNotImplemented') }}</div>
+        <div class="text-subtitle-2 mb-1">
+          {{ t('common.reportNotImplemented') }}
+        </div>
         <div class="text-body-2">
           {{ t('common.reportNotImplementedMessage', { reportType: currentReportType }) }}
         </div>

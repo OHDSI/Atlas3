@@ -8,7 +8,10 @@
 <template>
   <div class="line-chart-container">
     <!-- Export controls -->
-    <div v-if="!loading && showExport" class="chart-export-toolbar">
+    <div
+      v-if="!loading && showExport"
+      class="chart-export-toolbar"
+    >
       <ChartExport
         :chart-instance="chartInstance"
         :filename="exportFilename"

@@ -1,12 +1,12 @@
 /**
  * Unit Test: useReports Composable
- * Tests composable wrapper for reports store (T129)
+ * Tests composable wrapper for reports store
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useReports } from '@/composables/useReports'
 import { useReportsStore } from '@/stores/reports'
-import type { PersonReport, ReportType } from '@/models/report.types'
+import type { PersonReport } from '@/models/report.types'
 import * as webapi from '@/services/webapi'
 import * as mapper from '@/services/report-mapper'
 

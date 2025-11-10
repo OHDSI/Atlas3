@@ -1,7 +1,6 @@
 /**
  * Data Sources Feature - Clinical Domain Reports E2E Tests
  * Feature: 006-datasources
- * Task: T078
  * 
  * Tests User Story 5: Observation Period and Death Reports
  */
@@ -16,7 +15,7 @@ test.describe('Data Sources - Clinical Domain Reports (Observation Period & Deat
     await page.waitForLoadState('networkidle')
   })
 
-  test('T078.1 - Observation Period report displays correctly', async ({ page }) => {
+  test('Observation Period report displays correctly', async ({ page }) => {
     // Select data source
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -36,7 +35,7 @@ test.describe('Data Sources - Clinical Domain Reports (Observation Period & Deat
     await expect(page.locator('text=Table')).toBeVisible()
   })
 
-  test('T078.2 - Death report displays correctly', async ({ page }) => {
+  test('Death report displays correctly', async ({ page }) => {
     // Select data source
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -53,7 +52,7 @@ test.describe('Data Sources - Clinical Domain Reports (Observation Period & Deat
     await expect(page.locator('[data-testid="treemap-view"]')).toBeVisible()
   })
 
-  test('T078.3 - Treemap view functionality', async ({ page }) => {
+  test('Treemap view functionality', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -71,7 +70,7 @@ test.describe('Data Sources - Clinical Domain Reports (Observation Period & Deat
     await expect(page.locator('[data-testid="treemap-view"] canvas')).toBeVisible()
   })
 
-  test('T078.4 - Table view functionality', async ({ page }) => {
+  test('Table view functionality', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -96,7 +95,7 @@ test.describe('Data Sources - Clinical Domain Reports (Observation Period & Deat
     await expect(page.locator('button:has-text("Copy")')).toBeVisible()
   })
 
-  test('T078.5 - Table search functionality', async ({ page }) => {
+  test('Table search functionality', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -123,7 +122,7 @@ test.describe('Data Sources - Clinical Domain Reports (Observation Period & Deat
     expect(filteredRows).toBeLessThanOrEqual(initialRows)
   })
 
-  test('T078.6 - Table status text', async ({ page }) => {
+  test('Table status text', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -145,7 +144,7 @@ test.describe('Data Sources - Clinical Domain Reports (Observation Period & Deat
     await expect(statusText).toContainText(/Showing.*entries/)
   })
 
-  test('T078.7 - Switch between Observation Period and Death reports', async ({ page }) => {
+  test('Switch between Observation Period and Death reports', async ({ page }) => {
     // Select source
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -176,7 +175,7 @@ test.describe('Data Sources - Clinical Domain Reports (Observation Period & Deat
     await expect(page.locator('[data-testid="treemap-view"]')).toBeVisible()
   })
 
-  test('T078.8 - Large dataset virtualization warning', async ({ page }) => {
+  test('Large dataset virtualization warning', async ({ page }) => {
     // This test checks if the large dataset warning appears when applicable
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()

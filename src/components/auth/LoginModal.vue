@@ -1,28 +1,46 @@
 <template>
-  <v-dialog v-model="isOpen" max-width="500" persistent>
+  <v-dialog
+    v-model="isOpen"
+    max-width="500"
+    persistent
+  >
     <v-card>
       <v-card-title class="text-h5 bg-primary">
-        <v-icon left>mdi-login</v-icon>
+        <v-icon left>
+          mdi-login
+        </v-icon>
         {{ t('common.menu', 'Sign In') }}
       </v-card-title>
 
       <v-card-text class="pa-6">
-        <v-alert v-if="errorMessage" type="error" class="mb-4" closable @click:close="clearError">
+        <v-alert
+          v-if="errorMessage"
+          type="error"
+          class="mb-4"
+          closable
+          @click:close="clearError"
+        >
           {{ errorMessage }}
         </v-alert>
 
         <div v-if="!selectedProvider">
-          <p class="text-subtitle-1 mb-4">{{ t('components.authProviderSelect.info', 'Select an authentication provider:') }}</p>
+          <p class="text-subtitle-1 mb-4">
+            {{ t('components.authProviderSelect.info', 'Select an authentication provider:') }}
+          </p>
 
           <v-list>
             <v-list-item
               v-for="provider in providers"
               :key="provider.name"
-              @click="selectProvider(provider)"
               class="mb-2"
+              @click="selectProvider(provider)"
             >
               <template #prepend>
-                <v-icon :icon="provider.icon" size="24" class="mr-3"></v-icon>
+                <v-icon
+                  :icon="provider.icon"
+                  size="24"
+                  class="mr-3"
+                />
               </template>
               <v-list-item-title>{{ provider.name }}</v-list-item-title>
             </v-list-item>
@@ -30,8 +48,14 @@
         </div>
 
         <div v-else>
-          <v-btn text @click="backToProviders" class="mb-4">
-            <v-icon left>mdi-arrow-left</v-icon>
+          <v-btn
+            text
+            class="mb-4"
+            @click="backToProviders"
+          >
+            <v-icon left>
+              mdi-arrow-left
+            </v-icon>
             {{ t('common.back', 'Back') }}
           </v-btn>
 
@@ -45,8 +69,13 @@
       </v-card-text>
 
       <v-card-actions v-if="!authConfig.userAuthenticationEnabled">
-        <v-spacer></v-spacer>
-        <v-btn text @click="close">{{ t('components.authProviderSelect.skipLogin', 'Skip Login') }}</v-btn>
+        <v-spacer />
+        <v-btn
+          text
+          @click="close"
+        >
+          {{ t('components.authProviderSelect.skipLogin', 'Skip Login') }}
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

@@ -43,7 +43,7 @@ describe('usePermissions', () => {
     vi.clearAllMocks();
   });
 
-  describe('T097: hasPermission method', () => {
+  describe('hasPermission method', () => {
     it('should check single permission', () => {
       // Using imported permissionService
       vi.mocked(permissionService.hasPermission).mockReturnValue(true);
@@ -111,7 +111,7 @@ describe('usePermissions', () => {
     });
   });
 
-  describe('T098: hasAnyPermission method', () => {
+  describe('hasAnyPermission method', () => {
     it('should return true if user has any of the permissions', () => {
       // Using imported permissionService
       
@@ -171,7 +171,7 @@ describe('usePermissions', () => {
     });
   });
 
-  describe('T099: hasAllPermissions method', () => {
+  describe('hasAllPermissions method', () => {
     it('should return true if user has all permissions', () => {
       // Using imported permissionService
       
@@ -232,7 +232,7 @@ describe('usePermissions', () => {
     });
   });
 
-  describe('T100: cacheHitRate computed property', () => {
+  describe('cacheHitRate computed property', () => {
     it('should return cache hit rate from permission service', () => {
       // Using imported permissionService
       

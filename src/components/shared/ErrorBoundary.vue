@@ -1,11 +1,24 @@
 <template>
-  <div v-if="hasError" class="error-boundary">
+  <div
+    v-if="hasError"
+    class="error-boundary"
+  >
     <v-container>
       <v-row justify="center">
-        <v-col cols="12" md="8" lg="6">
-          <v-card color="error" variant="tonal">
+        <v-col
+          cols="12"
+          md="8"
+          lg="6"
+        >
+          <v-card
+            color="error"
+            variant="tonal"
+          >
             <v-card-title class="d-flex align-center">
-              <v-icon icon="mdi-alert-circle" class="mr-2" />
+              <v-icon
+                icon="mdi-alert-circle"
+                class="mr-2"
+              />
               {{ t('common.error', 'Something Went Wrong') }}
             </v-card-title>
             <v-card-text>
@@ -13,10 +26,16 @@
                 {{ t('commonErrors.unexpectedError', 'An unexpected error occurred. This has been logged for investigation.').value }}
               </p>
 
-              <v-expansion-panels v-if="errorDetails" variant="accordion">
+              <v-expansion-panels
+                v-if="errorDetails"
+                variant="accordion"
+              >
                 <v-expansion-panel>
                   <v-expansion-panel-title>
-                    <v-icon icon="mdi-information-outline" class="mr-2" />
+                    <v-icon
+                      icon="mdi-information-outline"
+                      class="mr-2"
+                    />
                     {{ t('commonErrors.errorDetails', 'Error Details') }}
                   </v-expansion-panel-title>
                   <v-expansion-panel-text>

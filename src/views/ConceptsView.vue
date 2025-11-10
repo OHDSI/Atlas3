@@ -10,8 +10,12 @@
           density="comfortable"
           centered
         >
-          <v-tab value="search">{{ t('search.tabs.search', 'Concept Search') }}</v-tab>
-          <v-tab value="sets">{{ t('cs.manager.title', 'Concept Sets') }}</v-tab>
+          <v-tab value="search">
+            {{ t('search.tabs.search', 'Concept Search') }}
+          </v-tab>
+          <v-tab value="sets">
+            {{ t('cs.manager.title', 'Concept Sets') }}
+          </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">

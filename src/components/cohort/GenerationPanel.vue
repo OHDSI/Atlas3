@@ -6,30 +6,57 @@
     :width="drawerWidth"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <v-card flat class="h-100 d-flex flex-column">
+    <v-card
+      flat
+      class="h-100 d-flex flex-column"
+    >
       <!-- Header -->
       <v-card-title class="d-flex align-center pa-4 border-b">
-        <v-icon class="mr-2" color="primary">mdi-database-cog</v-icon>
+        <v-icon
+          class="mr-2"
+          color="primary"
+        >
+          mdi-database-cog
+        </v-icon>
         <span class="text-h6">{{ t('common.generateCohort', 'Generate Cohort') }}</span>
         <v-spacer />
-        <v-btn icon="mdi-close" variant="text" @click="close" />
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          @click="close"
+        />
       </v-card-title>
 
       <!-- Content -->
       <v-card-text class="flex-grow-1 overflow-y-auto pa-6">
         <!-- Unsaved cohort message -->
-        <v-alert v-if="!cohortId" type="warning" variant="tonal" class="mb-4">
+        <v-alert
+          v-if="!cohortId"
+          type="warning"
+          variant="tonal"
+          class="mb-4"
+        >
           {{ t('cohortDefinitions.saveDefinitionBefore', 'Please save the cohort before generating.') }}
         </v-alert>
 
         <!-- No sources message -->
-        <v-alert v-else-if="sources.length === 0" type="info" variant="tonal">
+        <v-alert
+          v-else-if="sources.length === 0"
+          type="info"
+          variant="tonal"
+        >
           {{ t('common.noDataSources', 'No data sources configured.') }}
         </v-alert>
 
         <!-- Show reports when a data source is selected -->
-        <transition name="slide-fade" mode="out-in">
-          <div v-if="showReports && selectedSourceKey" key="reports">
+        <transition
+          name="slide-fade"
+          mode="out-in"
+        >
+          <div
+            v-if="showReports && selectedSourceKey"
+            key="reports"
+          >
             <report-panel
               :cohort-id="cohortId ?? 0"
               :source-key="selectedSourceKey"
@@ -39,10 +66,16 @@
           </div>
 
           <!-- Grid layout (data sources + analysis options) -->
-          <div v-else key="grid" class="generation-grid">
+          <div
+            v-else
+            key="grid"
+            class="generation-grid"
+          >
             <!-- Left: Data source tiles (40%) -->
             <div class="generation-grid__tiles">
-              <p class="text-subtitle-1 font-weight-medium mb-4">{{ t('common.dataSources', 'Data Sources') }}</p>
+              <p class="text-subtitle-1 font-weight-medium mb-4">
+                {{ t('common.dataSources', 'Data Sources') }}
+              </p>
               <data-source-tile-grid
                 :cohort-id="cohortId"
                 :sources="sources"
@@ -52,7 +85,9 @@
 
             <!-- Right: Analysis options (60%) -->
             <div class="generation-grid__analysis">
-              <p class="text-subtitle-1 font-weight-medium mb-4">{{ t('cohortDefinitions.cohort.modals.analysisTypes.title', 'Analysis Options') }}</p>
+              <p class="text-subtitle-1 font-weight-medium mb-4">
+                {{ t('cohortDefinitions.cohort.modals.analysisTypes.title', 'Analysis Options') }}
+              </p>
               <div class="text-body-2 text-grey">
                 {{ t('common.clickDataSource', 'Click a data source to view reports') }}
               </div>

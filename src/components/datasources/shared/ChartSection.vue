@@ -1,16 +1,30 @@
 <template>
-  <v-card class="chart-section" variant="outlined">
+  <v-card
+    class="chart-section"
+    variant="outlined"
+  >
     <v-card-title class="text-h6 bg-grey-lighten-4">
       {{ title }}
     </v-card-title>
     <v-card-text>
-      <v-skeleton-loader v-if="loading" type="image" height="300" />
+      <v-skeleton-loader
+        v-if="loading"
+        type="image"
+        height="300"
+      />
       
-      <v-alert v-else-if="error" type="error" variant="tonal">
+      <v-alert
+        v-else-if="error"
+        type="error"
+        variant="tonal"
+      >
         {{ error }}
       </v-alert>
       
-      <div v-else class="chart-section__content">
+      <div
+        v-else
+        class="chart-section__content"
+      >
         <slot />
       </div>
     </v-card-text>

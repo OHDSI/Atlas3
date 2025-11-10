@@ -1,7 +1,10 @@
 <template>
   <div class="concept-set-list">
     <!-- Header with Search and Add Button -->
-    <v-card flat class="mb-4">
+    <v-card
+      flat
+      class="mb-4"
+    >
       <v-card-text>
         <div class="d-flex align-center justify-space-between gap-4">
           <v-text-field
@@ -85,11 +88,19 @@
         <!-- No data message -->
         <template #no-data>
           <div class="text-center py-8">
-            <v-icon size="64" color="grey-lighten-1">mdi-folder-open</v-icon>
+            <v-icon
+              size="64"
+              color="grey-lighten-1"
+            >
+              mdi-folder-open
+            </v-icon>
             <p class="text-body-1 mt-4 text-grey">
               {{ store.loading ? t('common.loadingWithDots', 'Loading...') : t('common.noData', 'No concept sets found') }}
             </p>
-            <p class="text-caption text-grey" v-if="!store.loading">
+            <p
+              v-if="!store.loading"
+              class="text-caption text-grey"
+            >
               {{ t('cs.manager.emptyStateMessage', 'Click "Add concept set" to create your first concept set') }}
             </p>
           </div>
@@ -108,7 +119,10 @@
     </v-card>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="500">
+    <v-dialog
+      v-model="deleteDialog"
+      max-width="500"
+    >
       <v-card>
         <v-card-title class="text-h6">
           {{ t('common.delete', 'Delete') }} {{ t('common.conceptSet', 'Concept Set') }}

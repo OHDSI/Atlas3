@@ -1,171 +1,190 @@
 <template>
   <div class="page-wrapper">
     <div class="page-card">
-      <v-container fluid class="cohorts-view">
+      <v-container
+        fluid
+        class="cohorts-view"
+      >
         <v-row>
           <v-col cols="12">
             <div class="cohorts-view__actions">
-          <v-btn
-            color="primary"
-            variant="flat"
-            size="large"
-            class="cohorts-view__action-btn"
-            :aria-label="t('common.createCohort', 'Create new cohort').value"
-            @click="handleCreateCohort"
-          >
-            {{ t('common.createCohort', 'Create Cohort') }}
-          </v-btn>
+              <v-btn
+                color="primary"
+                variant="flat"
+                size="large"
+                class="cohorts-view__action-btn"
+                :aria-label="t('common.createCohort', 'Create new cohort').value"
+                @click="handleCreateCohort"
+              >
+                {{ t('common.createCohort', 'Create Cohort') }}
+              </v-btn>
 
-          <v-btn
-            color="primary"
-            variant="flat"
-            size="large"
-            class="cohorts-view__action-btn"
-            :aria-label="t('common.importCohort', 'Import cohort from JSON').value"
-            @click="handleImportCohort"
-          >
-            {{ t('common.importCohort', 'Import Cohort') }}
-          </v-btn>
+              <v-btn
+                color="primary"
+                variant="flat"
+                size="large"
+                class="cohorts-view__action-btn"
+                :aria-label="t('common.importCohort', 'Import cohort from JSON').value"
+                @click="handleImportCohort"
+              >
+                {{ t('common.importCohort', 'Import Cohort') }}
+              </v-btn>
+            </div>
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col cols="12">
+            <cohort-grid
+              :cohorts="paginatedCohorts"
+              :loading="loading"
+              :error="error"
+              :search-query="searchQuery"
+              @retry="fetchCohorts"
+              @create-cohort="handleCreateCohort"
+              @materialize="handleMaterialize"
+              @delete="handleDeleteClick"
+            />
+          </v-col>
+        </v-row>
+
+        <!-- Import Dialog -->
+        <v-dialog
+          v-model="showImportDialog"
+          max-width="600px"
+        >
+          <v-card>
+            <v-card-title class="text-h5">
+              {{ t('common.importCohort', 'Import Cohort') }}
+            </v-card-title>
+            <v-card-text>
+              <p class="mb-4">
+                {{ t('common.comingSoon', 'Import functionality will be implemented in a future update.') }}
+              </p>
+              <p class="text-body-2 text-grey">
+                {{ t('common.importCohortDescription', 'This will allow you to import cohort definitions from ATLAS JSON format.') }}
+              </p>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                color="grey"
+                variant="text"
+                @click="showImportDialog = false"
+              >
+                {{ t('common.close', 'Close') }}
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+        <!-- Materialize Dialog -->
+        <v-dialog
+          v-model="showMaterializeDialog"
+          max-width="600px"
+        >
+          <v-card>
+            <v-card-title class="text-h5">
+              {{ t('common.materializeCohort', 'Materialize Cohort') }}
+            </v-card-title>
+            <v-card-text>
+              <p class="mb-2">
+                <strong>{{ t('columns.name', 'Cohort') }}:</strong> {{ selectedCohort?.name }}
+              </p>
+              <p class="mb-4">
+                <strong>{{ t('columns.id', 'ID') }}:</strong> {{ selectedCohort?.id }}
+              </p>
+              <p class="text-body-2 text-grey">
+                {{ t('common.materializeCohortDescription', 'Materialize functionality will be implemented in a future update. This will generate the patient list for this cohort definition.') }}
+              </p>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                color="grey"
+                variant="text"
+                @click="showMaterializeDialog = false"
+              >
+                {{ t('common.close', 'Close') }}
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+        <!-- Delete Confirmation Dialog -->
+        <v-dialog
+          v-model="showDeleteDialog"
+          max-width="500px"
+        >
+          <v-card>
+            <v-card-title class="text-h5">
+              {{ t('common.deleteCohortTitle', 'Delete Cohort?') }}
+            </v-card-title>
+            <v-card-text>
+              <p class="mb-2">
+                {{ t('cohortDefinitions.cohortDefinitionManager.confirms.delete', 'Delete cohort definition? Warning: deletion can not be undone!') }}
+              </p>
+              <p class="mb-2">
+                <strong>{{ selectedCohort?.name }}</strong>
+              </p>
+              <p class="text-body-2 text-error">
+                {{ t('common.cannotUndo', 'This action cannot be undone.') }}
+              </p>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                color="grey"
+                variant="text"
+                @click="showDeleteDialog = false"
+              >
+                {{ t('common.cancel', 'Cancel') }}
+              </v-btn>
+              <v-btn
+                color="error"
+                variant="elevated"
+                :loading="deleting"
+                @click="confirmDelete"
+              >
+                {{ t('common.delete', 'Delete') }}
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </v-container>
+
+      <!-- Fixed pagination bar at bottom -->
+      <div
+        v-if="!loading && !error && filteredCohorts.length > 0"
+        class="cohorts-view__pagination-bar"
+      >
+        <div class="cohorts-view__pagination-content">
+          <div class="cohorts-view__pagination-search">
+            <label
+              for="cohort-search"
+              class="cohorts-view__pagination-label"
+            >{{ t('common.search', 'Search') }}:</label>
+            <cohort-search
+              id="cohort-search"
+              v-model="searchQuery"
+              class="cohorts-view__search-input"
+            />
+          </div>
+
+          <cohort-pagination
+            :page="page"
+            :items-per-page="itemsPerPage"
+            :items-per-page-options="itemsPerPageOptions"
+            :total-items="totalItems"
+            :can-go-previous="canGoPrevious"
+            :can-go-next="canGoNext"
+            :range-display="rangeDisplay"
+            @previous="previousPage"
+            @next="nextPage"
+            @update:items-per-page="setItemsPerPage"
+          />
         </div>
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col cols="12">
-        <cohort-grid
-          :cohorts="paginatedCohorts"
-          :loading="loading"
-          :error="error"
-          :search-query="searchQuery"
-          @retry="fetchCohorts"
-          @create-cohort="handleCreateCohort"
-          @materialize="handleMaterialize"
-          @delete="handleDeleteClick"
-        />
-      </v-col>
-    </v-row>
-
-    <!-- Import Dialog -->
-    <v-dialog
-      v-model="showImportDialog"
-      max-width="600px"
-    >
-      <v-card>
-        <v-card-title class="text-h5">
-          {{ t('common.importCohort', 'Import Cohort') }}
-        </v-card-title>
-        <v-card-text>
-          <p class="mb-4">{{ t('common.comingSoon', 'Import functionality will be implemented in a future update.') }}</p>
-          <p class="text-body-2 text-grey">
-            {{ t('common.importCohortDescription', 'This will allow you to import cohort definitions from ATLAS JSON format.') }}
-          </p>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            color="grey"
-            variant="text"
-            @click="showImportDialog = false"
-          >
-            {{ t('common.close', 'Close') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Materialize Dialog -->
-    <v-dialog
-      v-model="showMaterializeDialog"
-      max-width="600px"
-    >
-      <v-card>
-        <v-card-title class="text-h5">
-          {{ t('common.materializeCohort', 'Materialize Cohort') }}
-        </v-card-title>
-        <v-card-text>
-          <p class="mb-2"><strong>{{ t('columns.name', 'Cohort') }}:</strong> {{ selectedCohort?.name }}</p>
-          <p class="mb-4"><strong>{{ t('columns.id', 'ID') }}:</strong> {{ selectedCohort?.id }}</p>
-          <p class="text-body-2 text-grey">
-            {{ t('common.materializeCohortDescription', 'Materialize functionality will be implemented in a future update. This will generate the patient list for this cohort definition.') }}
-          </p>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            color="grey"
-            variant="text"
-            @click="showMaterializeDialog = false"
-          >
-            {{ t('common.close', 'Close') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Delete Confirmation Dialog -->
-    <v-dialog
-      v-model="showDeleteDialog"
-      max-width="500px"
-    >
-      <v-card>
-        <v-card-title class="text-h5">
-          {{ t('common.deleteCohortTitle', 'Delete Cohort?') }}
-        </v-card-title>
-        <v-card-text>
-          <p class="mb-2">{{ t('cohortDefinitions.cohortDefinitionManager.confirms.delete', 'Delete cohort definition? Warning: deletion can not be undone!') }}</p>
-          <p class="mb-2"><strong>{{ selectedCohort?.name }}</strong></p>
-          <p class="text-body-2 text-error">
-            {{ t('common.cannotUndo', 'This action cannot be undone.') }}
-          </p>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            color="grey"
-            variant="text"
-            @click="showDeleteDialog = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="elevated"
-            :loading="deleting"
-            @click="confirmDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-container>
-
-  <!-- Fixed pagination bar at bottom -->
-  <div v-if="!loading && !error && filteredCohorts.length > 0" class="cohorts-view__pagination-bar">
-    <div class="cohorts-view__pagination-content">
-      <div class="cohorts-view__pagination-search">
-        <label for="cohort-search" class="cohorts-view__pagination-label">{{ t('common.search', 'Search') }}:</label>
-        <cohort-search
-          id="cohort-search"
-          v-model="searchQuery"
-          class="cohorts-view__search-input"
-        />
       </div>
-
-      <cohort-pagination
-        :page="page"
-        :items-per-page="itemsPerPage"
-        :items-per-page-options="itemsPerPageOptions"
-        :total-items="totalItems"
-        :can-go-previous="canGoPrevious"
-        :can-go-next="canGoNext"
-        :range-display="rangeDisplay"
-        @previous="previousPage"
-        @next="nextPage"
-        @update:items-per-page="setItemsPerPage"
-      />
-    </div>
-  </div>
     </div>
   </div>
 </template>

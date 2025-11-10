@@ -10,12 +10,17 @@
       {{ cohort.name }}
     </v-card-title>
 
-  <v-card-subtitle class="cohort-card__subtitle">
-    <div class="cohort-card__type">
-      <v-icon size="16" color="#1f425a">mdi-web</v-icon>
-      <span class="cohort-card__type-text">{{ typeLabel }}</span>
-    </div>
-  </v-card-subtitle>    <v-card-text class="cohort-card__content">
+    <v-card-subtitle class="cohort-card__subtitle">
+      <div class="cohort-card__type">
+        <v-icon
+          size="16"
+          color="#1f425a"
+        >
+          mdi-web
+        </v-icon>
+        <span class="cohort-card__type-text">{{ typeLabel }}</span>
+      </div>
+    </v-card-subtitle>    <v-card-text class="cohort-card__content">
       <div class="cohort-card__meta">
         <div class="cohort-card__meta-item">
           <span class="cohort-card__meta-label">{{ idLabel }}:</span>
@@ -37,7 +42,10 @@
     <v-card-actions class="cohort-card__actions">
       <v-spacer />
       
-      <v-tooltip :text="materializeTooltip" location="top">
+      <v-tooltip
+        :text="materializeTooltip"
+        location="top"
+      >
         <template #activator="{ props: tooltipProps }">
           <v-btn
             v-bind="tooltipProps"
@@ -48,12 +56,20 @@
             class="cohort-card__action-btn"
             @click.stop="$emit('materialize', cohort)"
           >
-            <v-icon color="#1f425a" size="22">mdi-account-multiple</v-icon>
+            <v-icon
+              color="#1f425a"
+              size="22"
+            >
+              mdi-account-multiple
+            </v-icon>
           </v-btn>
         </template>
       </v-tooltip>
 
-      <v-tooltip :text="deleteTooltip" location="top">
+      <v-tooltip
+        :text="deleteTooltip"
+        location="top"
+      >
         <template #activator="{ props: tooltipProps }">
           <v-btn
             v-bind="tooltipProps"
@@ -64,7 +80,12 @@
             class="cohort-card__action-btn"
             @click.stop="$emit('delete', cohort)"
           >
-            <v-icon color="#1f425a" size="22">mdi-delete-outline</v-icon>
+            <v-icon
+              color="#1f425a"
+              size="22"
+            >
+              mdi-delete-outline
+            </v-icon>
           </v-btn>
         </template>
       </v-tooltip>

@@ -2,12 +2,17 @@
   <div class="events-container">
     <!-- Vertical "ALL" Label -->
     <div class="vertical-label-container">
-      <div class="vertical-label">{{ t('options.all').value.toUpperCase() }}</div>
+      <div class="vertical-label">
+        {{ t('options.all').value.toUpperCase() }}
+      </div>
     </div>
 
     <!-- Main Content Area -->
     <div class="flex-grow-1">
-      <div v-if="events.length === 0" class="empty-state">
+      <div
+        v-if="events.length === 0"
+        class="empty-state"
+      >
         <v-menu>
           <template #activator="{ props }">
             <v-btn
@@ -17,7 +22,9 @@
               size="small"
               data-testid="add-entry-event"
             >
-              <v-icon class="mr-2">mdi-plus</v-icon>
+              <v-icon class="mr-2">
+                mdi-plus
+              </v-icon>
               {{ t('common.addFilter', 'Add Filter') }}
             </v-btn>
           </template>
@@ -32,7 +39,10 @@
         </v-menu>
       </div>
 
-      <div v-else class="events-with-add-button">
+      <div
+        v-else
+        class="events-with-add-button"
+      >
         <v-menu>
           <template #activator="{ props }">
             <v-btn
@@ -43,7 +53,9 @@
               data-testid="add-entry-event"
               class="mb-4"
             >
-              <v-icon class="mr-2">mdi-plus</v-icon>
+              <v-icon class="mr-2">
+                mdi-plus
+              </v-icon>
               {{ t('common.addFilter', 'Add Filter') }}
             </v-btn>
           </template>

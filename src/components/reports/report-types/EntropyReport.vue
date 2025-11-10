@@ -8,7 +8,9 @@
 <template>
   <v-card elevation="0">
     <v-card-title class="text-h6">
-      <v-icon class="mr-2">mdi-chart-scatter-plot</v-icon>
+      <v-icon class="mr-2">
+        mdi-chart-scatter-plot
+      </v-icon>
       Entropy Analysis
     </v-card-title>
 
@@ -16,7 +18,10 @@
 
     <v-card-text>
       <!-- Loading state -->
-      <div v-if="loading" class="py-8">
+      <div
+        v-if="loading"
+        class="py-8"
+      >
         <v-skeleton-loader type="table" />
       </div>
 

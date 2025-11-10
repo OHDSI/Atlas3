@@ -25,7 +25,7 @@ describe('SessionExpiryModal.vue', () => {
     }
   });
 
-  describe('T044: Countdown display', () => {
+  describe('Countdown display', () => {
     it('should display countdown timer', async () => {
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
 
@@ -132,7 +132,7 @@ describe('SessionExpiryModal.vue', () => {
     });
   });
 
-  describe('T045: "Extend Session" button click', () => {
+  describe('"Extend Session" button click', () => {
     it('should emit extend event when button clicked', async () => {
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
@@ -211,7 +211,7 @@ describe('SessionExpiryModal.vue', () => {
     });
   });
 
-  describe('T046: "Logout" button click', () => {
+  describe('"Logout" button click', () => {
     it('should emit logout event when button clicked', async () => {
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
@@ -265,7 +265,7 @@ describe('SessionExpiryModal.vue', () => {
     });
   });
 
-  describe('T047: Expired event emission', () => {
+  describe('Expired event emission', () => {
     it('should emit expired event when countdown reaches zero', async () => {
       vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
       const expiresAt = new Date('2024-01-01T00:00:02Z'); // 2 seconds

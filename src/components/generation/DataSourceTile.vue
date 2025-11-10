@@ -14,11 +14,17 @@
 
     <v-card-text class="data-source-tile__content">
       <!-- Status display -->
-      <div v-if="tileStatus === 'idle'" class="tile-status">
+      <div
+        v-if="tileStatus === 'idle'"
+        class="tile-status"
+      >
         {{ t('common.readyToGenerate', 'Ready to generate') }}
       </div>
 
-      <div v-else-if="tileStatus === 'generating'" class="tile-status tile-status--generating">
+      <div
+        v-else-if="tileStatus === 'generating'"
+        class="tile-status tile-status--generating"
+      >
         <v-progress-circular
           indeterminate
           size="24"
@@ -28,10 +34,17 @@
         <span class="ml-2">{{ statusText }}</span>
       </div>
 
-      <div v-else-if="tileStatus === 'complete'" class="tile-status tile-status--complete">
+      <div
+        v-else-if="tileStatus === 'complete'"
+        class="tile-status tile-status--complete"
+      >
         <div class="patient-count">
-          <div class="patient-count__number">{{ patientCount?.toLocaleString() || '0' }}</div>
-          <div class="patient-count__label">{{ t('common.patients', 'Patients') }}</div>
+          <div class="patient-count__number">
+            {{ patientCount?.toLocaleString() || '0' }}
+          </div>
+          <div class="patient-count__label">
+            {{ t('common.patients', 'Patients') }}
+          </div>
         </div>
         <v-chip
           size="small"
@@ -43,8 +56,13 @@
         </v-chip>
       </div>
 
-      <div v-else-if="tileStatus === 'failed'" class="tile-status tile-status--failed">
-        <v-icon color="error">mdi-alert-circle</v-icon>
+      <div
+        v-else-if="tileStatus === 'failed'"
+        class="tile-status tile-status--failed"
+      >
+        <v-icon color="error">
+          mdi-alert-circle
+        </v-icon>
         <span class="ml-2 text-error">{{ failMessage || t('common.failed', 'Failed').value }}</span>
       </div>
     </v-card-text>

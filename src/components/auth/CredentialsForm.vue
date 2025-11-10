@@ -1,5 +1,8 @@
 <template>
-  <v-form @submit.prevent="handleSubmit" ref="formRef">
+  <v-form
+    ref="formRef"
+    @submit.prevent="handleSubmit"
+  >
     <v-text-field
       v-model="credentials.username"
       :label="provider.loginPlaceholder || t('columns.login', 'Username').value"
@@ -10,7 +13,7 @@
       :rules="[required]"
       required
       class="mb-3"
-    ></v-text-field>
+    />
 
     <v-text-field
       v-model="credentials.password"
@@ -23,10 +26,18 @@
       :rules="[required]"
       required
       class="mb-4"
-    ></v-text-field>
+    />
 
-    <v-btn type="submit" color="primary" block size="large" :loading="loading">
-      <v-icon left>mdi-login</v-icon>
+    <v-btn
+      type="submit"
+      color="primary"
+      block
+      size="large"
+      :loading="loading"
+    >
+      <v-icon left>
+        mdi-login
+      </v-icon>
       {{ t('common.menu', 'Sign In') }}
     </v-btn>
   </v-form>

@@ -1,41 +1,80 @@
 <template>
   <header class="nav-bar">
     <div class="nav-bar__container">
-      <div class="nav-bar__logo" @click="handleLogoClick" role="button" tabindex="0">
-        <img :src="logoSrc" alt="ATLAS" height="20" />
+      <div
+        class="nav-bar__logo"
+        role="button"
+        tabindex="0"
+        @click="handleLogoClick"
+      >
+        <img
+          :src="logoSrc"
+          alt="ATLAS"
+          height="20"
+        >
       </div>
       <nav class="nav-bar__nav">
         <ul class="nav-bar__nav-list">
-          <template v-for="item in navigationItems" :key="item.id">
-            <li v-if="item.visible" class="nav-bar__nav-item" :class="{ 'nav-bar__nav-item--active': item.active }">
-              <a href="#" class="nav-bar__nav-link" @click.prevent="handleNavClick(item)">
+          <template
+            v-for="item in navigationItems"
+            :key="item.id"
+          >
+            <li
+              v-if="item.visible"
+              class="nav-bar__nav-item"
+              :class="{ 'nav-bar__nav-item--active': item.active }"
+            >
+              <a
+                href="#"
+                class="nav-bar__nav-link"
+                @click.prevent="handleNavClick(item)"
+              >
                 {{ getNavTitle(item.titleKey) }}
               </a>
             </li>
           </template>
         </ul>
       </nav>
-      <div class="nav-bar__right" tabindex="0">
+      <div
+        class="nav-bar__right"
+        tabindex="0"
+      >
         <!-- Language Selector -->
         <LanguageSelector />
         
         <!-- Authentication UI -->
-        <div v-if="!auth.isAuthenticated.value" class="nav-bar__auth">
-          <v-btn variant="text" @click="auth.openLoginModal()" prepend-icon="mdi-login">
+        <div
+          v-if="!auth.isAuthenticated.value"
+          class="nav-bar__auth"
+        >
+          <v-btn
+            variant="text"
+            prepend-icon="mdi-login"
+            @click="auth.openLoginModal()"
+          >
             {{ signInLabel }}
           </v-btn>
         </div>
-        <div v-else class="nav-bar__user">
+        <div
+          v-else
+          class="nav-bar__user"
+        >
           <v-menu>
-            <template v-slot:activator="{ props }">
-              <v-btn variant="text" v-bind="props" append-icon="mdi-menu-down">
-                <v-icon left>mdi-account-circle</v-icon>
+            <template #activator="{ props }">
+              <v-btn
+                variant="text"
+                v-bind="props"
+                append-icon="mdi-menu-down"
+              >
+                <v-icon left>
+                  mdi-account-circle
+                </v-icon>
                 {{ auth.userDisplayName.value }}
               </v-btn>
             </template>
             <v-list>
               <v-list-item @click="handleLogout">
-                <template v-slot:prepend>
+                <template #prepend>
                   <v-icon>mdi-logout</v-icon>
                 </template>
                 <v-list-item-title>{{ signOutLabel }}</v-list-item-title>
@@ -44,7 +83,14 @@
           </v-menu>
         </div>
         
-        <img :src="logoOhdsiSrc" alt="OHDSI" height="36" role="button" @click="handleOhdsiClick" class="ml-4" />
+        <img
+          :src="logoOhdsiSrc"
+          alt="OHDSI"
+          height="36"
+          role="button"
+          class="ml-4"
+          @click="handleOhdsiClick"
+        >
       </div>
     </div>
 

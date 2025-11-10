@@ -1,6 +1,6 @@
 /**
  * Unit Test: report-mapper.ts
- * Tests report data mapping functions (T126)
+ * Tests report data mapping functions
  */
 import { describe, it, expect } from 'vitest'
 import {

@@ -1,7 +1,10 @@
 <template>
   <div class="cohort-grid">
     <!-- Loading State - Skeleton Cards -->
-    <div v-if="loading" class="cohort-grid__container">
+    <div
+      v-if="loading"
+      class="cohort-grid__container"
+    >
       <v-skeleton-loader
         v-for="i in skeletonCount"
         :key="i"
@@ -28,18 +31,28 @@
           class="mt-4"
           @click="$emit('retry')"
         >
-          <v-icon start>mdi-refresh</v-icon>
+          <v-icon start>
+            mdi-refresh
+          </v-icon>
           {{ t('common.refresh', 'Retry') }}
         </v-btn>
       </div>
     </v-alert>
 
     <!-- Empty State -->
-    <div v-else-if="cohorts.length === 0" class="cohort-grid__empty">
-      <v-icon size="80" color="grey-lighten-1">
+    <div
+      v-else-if="cohorts.length === 0"
+      class="cohort-grid__empty"
+    >
+      <v-icon
+        size="80"
+        color="grey-lighten-1"
+      >
         mdi-folder-open-outline
       </v-icon>
-      <h2 class="cohort-grid__empty-title">{{ t('common.noData', 'No cohorts found').value }}</h2>
+      <h2 class="cohort-grid__empty-title">
+        {{ t('common.noData', 'No cohorts found').value }}
+      </h2>
       <p class="cohort-grid__empty-subtitle">
         {{ emptyMessage }}
       </p>
@@ -50,13 +63,18 @@
         class="mt-4"
         @click="$emit('create-cohort')"
       >
-        <v-icon start>mdi-plus</v-icon>
+        <v-icon start>
+          mdi-plus
+        </v-icon>
         {{ t('common.createCohort', 'Create Cohort').value }}
       </v-btn>
     </div>
 
     <!-- Cohorts Grid -->
-    <div v-else class="cohort-grid__container">
+    <div
+      v-else
+      class="cohort-grid__container"
+    >
       <cohort-card
         v-for="cohort in cohorts"
         :key="cohort.id"

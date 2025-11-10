@@ -1,7 +1,6 @@
 /**
  * Concept Set CRUD E2E Tests
  * End-to-end tests for concept set management
- * Tasks: T079, T080, T081, T082, T083
  */
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
@@ -19,7 +18,7 @@ test.describe('Concept Set CRUD Operations', () => {
   })
 
   /**
-   * T079: Create new concept set
+   * Create new concept set
    */
   test('should create a new concept set', async ({ page }) => {
     // Look for "Add concept set" or similar button
@@ -72,7 +71,7 @@ test.describe('Concept Set CRUD Operations', () => {
   })
 
   /**
-   * T080: Edit existing concept set
+   * Edit existing concept set
    */
   test('should edit an existing concept set', async ({ page }) => {
     // Check if there are any concept sets to edit
@@ -119,7 +118,7 @@ test.describe('Concept Set CRUD Operations', () => {
   })
 
   /**
-   * T081: Delete concept set
+   * Delete concept set
    */
   test('should delete a concept set', async ({ page }) => {
     // Prefer deleting an existing concept set if present; otherwise skip
@@ -166,7 +165,7 @@ test.describe('Concept Set CRUD Operations', () => {
   })
 
   /**
-   * T082: Filter concept sets by name
+   * Filter concept sets by name
    */
   test('should filter concept sets by name', async ({ page }) => {
     // Get initial row count
@@ -219,7 +218,7 @@ test.describe('Concept Set CRUD Operations', () => {
   })
 
   /**
-   * T083: Side panel opens and closes
+   * Side panel opens and closes
    */
   test('should open and close side panel correctly', async ({ page }) => {
     const drawer = page.locator('.v-navigation-drawer')
@@ -256,7 +255,7 @@ test.describe('Concept Set CRUD Operations', () => {
   })
 
   /**
-   * T083 continued: Side panel with unsaved changes
+   * Side panel with unsaved changes
    */
   test('should confirm before closing with unsaved changes', async ({ page }) => {
     // Open create panel

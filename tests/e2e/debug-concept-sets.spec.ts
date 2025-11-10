@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test } from '@playwright/test'
 
 test('debug concept sets loading', async ({ page }) => {
   // Listen for console messages

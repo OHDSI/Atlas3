@@ -1,11 +1,11 @@
 /**
  * Unit Test: Reports Store
- * Tests Pinia store for report management (T127)
+ * Tests Pinia store for report management
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useReportsStore } from '@/stores/reports'
-import type { PersonReport, ReportType } from '@/models/report.types'
+import type { PersonReport } from '@/models/report.types'
 import * as webapi from '@/services/webapi'
 import * as mapper from '@/services/report-mapper'
 

@@ -1,6 +1,6 @@
 /**
  * Unit Test: Cohort Store - Auto-Save and Draft Management
- * Tests SessionStorage auto-save, restore, and draft clearing (T122, T123)
+ * Tests SessionStorage auto-save, restore, and draft clearing
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
@@ -23,7 +23,7 @@ describe('Cohort Store - Auto-Save and Draft Management', () => {
     sessionStorage.clear()
   })
 
-  describe('saveToDraft (T122)', () => {
+  describe('saveToDraft', () => {
     it('should save cohort to sessionStorage when dirty', () => {
       const cohort: CohortDefinition = {
         name: 'Test Cohort',
@@ -93,7 +93,7 @@ describe('Cohort Store - Auto-Save and Draft Management', () => {
     })
   })
 
-  describe('restoreFromDraft (T123)', () => {
+  describe('restoreFromDraft', () => {
     it('should restore cohort from sessionStorage', () => {
       const cohort: CohortDefinition = {
         name: 'Restored Cohort',

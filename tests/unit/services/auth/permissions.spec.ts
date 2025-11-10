@@ -12,7 +12,7 @@ describe('PermissionService', () => {
     permissionService.clearCache();
   });
 
-  describe('T089: Exact match', () => {
+  describe('Exact match', () => {
     it('should match exact permission strings', () => {
       const userPerms = ['cohort:123:get', 'conceptset:456:put'];
       
@@ -41,7 +41,7 @@ describe('PermissionService', () => {
     });
   });
 
-  describe('T090: Single-level wildcard ("cohort:*:get")', () => {
+  describe('Single-level wildcard ("cohort:*:get")', () => {
     it('should match any instance with resource wildcard', () => {
       const userPerms = ['cohort:*:get'];
       
@@ -65,7 +65,7 @@ describe('PermissionService', () => {
     });
   });
 
-  describe('T091: Two-level wildcard ("cohort:123:*")', () => {
+  describe('Two-level wildcard ("cohort:123:*")', () => {
     it('should match any action with action wildcard', () => {
       const userPerms = ['cohort:123:*'];
       
@@ -89,7 +89,7 @@ describe('PermissionService', () => {
     });
   });
 
-  describe('T092: Global wildcard ("*")', () => {
+  describe('Global wildcard ("*")', () => {
     it('should match any permission with global wildcard', () => {
       const userPerms = ['*'];
       
@@ -107,7 +107,7 @@ describe('PermissionService', () => {
     });
   });
 
-  describe('T093: No match scenarios', () => {
+  describe('No match scenarios', () => {
     it('should return false when no permissions match', () => {
       const userPerms = ['cohort:123:get'];
       
@@ -138,7 +138,7 @@ describe('PermissionService', () => {
     });
   });
 
-  describe('T094: Permission cache hit', () => {
+  describe('Permission cache hit', () => {
     it('should cache permission check results', () => {
       const userPerms = ['cohort:*:get'];
       
@@ -182,7 +182,7 @@ describe('PermissionService', () => {
     });
   });
 
-  describe('T095: Cache TTL expiration', () => {
+  describe('Cache TTL expiration', () => {
     it('should expire cache entries after TTL', async () => {
       const userPerms = ['cohort:123:get'];
       
@@ -212,7 +212,7 @@ describe('PermissionService', () => {
     });
   });
 
-  describe('T096: LRU eviction', () => {
+  describe('LRU eviction', () => {
     it('should evict oldest entry when cache is full', () => {
       const userPerms = ['*']; // Global permission for simplicity
       

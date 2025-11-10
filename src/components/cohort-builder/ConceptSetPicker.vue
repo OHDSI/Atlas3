@@ -1,6 +1,8 @@
 <template>
   <v-card variant="outlined">
-    <v-card-title class="text-subtitle-1">{{ t('cs.manager.selectConceptSet', 'Select Concept Set') }}</v-card-title>
+    <v-card-title class="text-subtitle-1">
+      {{ t('cs.manager.selectConceptSet', 'Select Concept Set') }}
+    </v-card-title>
     <v-card-text>
       <!-- Existing Concept Set Selector -->
       <v-select
@@ -43,12 +45,20 @@
     </v-card-text>
 
     <!-- Concept Search Dialog -->
-    <v-dialog v-model="showSearch" max-width="800" scrollable>
+    <v-dialog
+      v-model="showSearch"
+      max-width="800"
+      scrollable
+    >
       <ConceptSearch @select-concept="handleConceptSelect" />
     </v-dialog>
 
     <!-- Create New Concept Set Dialog -->
-    <v-dialog v-model="showCreateNew" max-width="600" scrollable>
+    <v-dialog
+      v-model="showCreateNew"
+      max-width="600"
+      scrollable
+    >
       <ConceptSetEditor
         v-model="newConceptSet"
         @save="handleSaveNew"

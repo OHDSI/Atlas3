@@ -14,12 +14,18 @@
       />
 
       <!-- Concept List -->
-      <v-card variant="outlined" class="mt-4">
+      <v-card
+        variant="outlined"
+        class="mt-4"
+      >
         <v-card-title class="text-subtitle-1">
           {{ t('conceptSetEditor.conceptsCount', { count: conceptCount }) }}
         </v-card-title>
         <v-card-text>
-          <v-list v-if="concepts.length > 0" data-testid="concept-list">
+          <v-list
+            v-if="concepts.length > 0"
+            data-testid="concept-list"
+          >
             <v-list-item
               v-for="(item, index) in concepts"
               :key="item.conceptId"
@@ -59,7 +65,11 @@
             </v-list-item>
           </v-list>
 
-          <v-alert v-else type="info" variant="text">
+          <v-alert
+            v-else
+            type="info"
+            variant="text"
+          >
             {{ t('conceptSetEditor.noConceptsYet') }}
           </v-alert>
 

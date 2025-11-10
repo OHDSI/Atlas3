@@ -1,7 +1,6 @@
 /**
  * Concept Set Builder E2E Tests
  * End-to-end tests for building concept sets with concepts
- * Tasks: T116, T117, T118, T119, T120, T121, T122
  */
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
@@ -34,7 +33,7 @@ test.describe('Concept Set Builder', () => {
   })
 
   /**
-   * T116: Add concept to concept set from search
+   * Add concept to concept set from search
    */
   test('should add concept from search to concept set', async ({ page }) => {
     const drawer = page.locator('.v-navigation-drawer')
@@ -71,7 +70,7 @@ test.describe('Concept Set Builder', () => {
   })
 
   /**
-   * T117: Remove concept from concept set
+   * Remove concept from concept set
    */
   test('should remove concept from concept set', async ({ page }) => {
     const drawer = page.locator('.v-navigation-drawer')
@@ -108,7 +107,7 @@ test.describe('Concept Set Builder', () => {
   })
 
   /**
-   * T118: Toggle Descendants flag
+   * Toggle Descendants flag
    */
   test('should toggle Descendants flag', async ({ page }) => {
     const drawer = page.locator('.v-navigation-drawer')
@@ -152,7 +151,7 @@ test.describe('Concept Set Builder', () => {
   })
 
   /**
-   * T119: Toggle Mapped flag
+   * Toggle Mapped flag
    */
   test('should toggle Mapped flag', async ({ page }) => {
     const drawer = page.locator('.v-navigation-drawer')
@@ -190,7 +189,7 @@ test.describe('Concept Set Builder', () => {
   })
 
   /**
-   * T120: Toggle Exclude flag
+   * Toggle Exclude flag
    */
   test('should toggle Exclude flag', async ({ page }) => {
     const drawer = page.locator('.v-navigation-drawer')
@@ -228,7 +227,7 @@ test.describe('Concept Set Builder', () => {
   })
 
   /**
-   * T121: Save concept set with 50+ concepts
+   * Save concept set with 50+ concepts
    */
   test('should save concept set with multiple concepts', async ({ page }) => {
     const drawer = page.locator('.v-navigation-drawer')
@@ -297,7 +296,7 @@ test.describe('Concept Set Builder', () => {
   })
 
   /**
-   * T122: Performance test - Side panel responsive with 100+ concepts
+   * Performance test - Side panel responsive with 100+ concepts
    * Note: This is a simplified test; adding 100+ concepts manually would be slow
    */
   test('should remain responsive with many concepts', async ({ page }) => {

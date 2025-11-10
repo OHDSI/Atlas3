@@ -17,7 +17,11 @@
       </div>
 
       <!-- Range display -->
-      <div class="cohort-pagination__range" role="status" aria-live="polite">
+      <div
+        class="cohort-pagination__range"
+        role="status"
+        aria-live="polite"
+      >
         {{ rangeDisplay }}
       </div>
 

@@ -1,7 +1,13 @@
 <template>
-  <div data-testid="entry-event-card" class="event-card mb-3">
+  <div
+    data-testid="entry-event-card"
+    class="event-card mb-3"
+  >
     <!-- Cardinality Sidebar -->
-    <div class="cardinality-sidebar" :class="`cardinality-${cardinalityType}`">
+    <div
+      class="cardinality-sidebar"
+      :class="`cardinality-${cardinalityType}`"
+    >
       <div class="cardinality-label">
         {{ cardinalityDisplay }}
       </div>
@@ -11,75 +17,83 @@
     <div class="event-content">
       <!-- Event Header -->
       <div class="event-header">
-      <div class="event-header__left">
-        <div class="event-type-indicator">
-          <span class="event-type-label">{{ eventTypeLabel }}</span>
-        </div>
-      </div>
-      <div class="event-header__right">
-        <v-btn
-          icon
-          size="small"
-          variant="text"
-          @click="toggleExpanded"
-        >
-          <v-icon>{{ isExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-        </v-btn>
-        <v-btn
-          icon
-          size="small"
-          variant="text"
-          color="primary"
-          @click="emit('remove')"
-        >
-          <v-icon>mdi-delete</v-icon>
-        </v-btn>
-      </div>
-    </div>
-
-    <!-- Event Body -->
-    <transition name="expand">
-      <div v-show="isExpanded" class="event-body">
-        <!-- Event Concept Set -->
-        <div class="concept-set-section">
-          <div v-if="event.conceptSet" class="concept-set-selected">
-            <v-chip
-              closable
-              color="primary"
-              @click="emit('edit-concept-set', event.conceptSet)"
-              @click:close="removeConceptSet"
-              style="cursor: pointer;"
-            >
-              {{ event.conceptSet.name }}
-            </v-chip>
+        <div class="event-header__left">
+          <div class="event-type-indicator">
+            <span class="event-type-label">{{ eventTypeLabel }}</span>
           </div>
+        </div>
+        <div class="event-header__right">
           <v-btn
-            v-else
-            color="primary"
-            variant="outlined"
+            icon
             size="small"
-            data-testid="concept-set-picker"
-            @click="emit('select-concept-set')"
+            variant="text"
+            @click="toggleExpanded"
           >
-            <v-icon class="mr-2">mdi-plus</v-icon>
-            {{ t('common.selectConceptSet', 'Select Concept Set') }}
+            <v-icon>{{ isExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+          </v-btn>
+          <v-btn
+            icon
+            size="small"
+            variant="text"
+            color="primary"
+            @click="emit('remove')"
+          >
+            <v-icon>mdi-delete</v-icon>
           </v-btn>
         </div>
-
-        <!-- Attributes Section -->
-        <div class="attributes-section mt-3">
-          <AttributesEditor
-            :model-value="event.attributes || []"
-            :criteria-type="event.criteriaType"
-            :cardinality="event.cardinality"
-            :temporal-window="event.temporalWindow"
-            @update:model-value="updateAttributes"
-            @update:cardinality="updateCardinality"
-            @update:temporal-window="updateTemporalWindows"
-          />
-        </div>
       </div>
-    </transition>
+
+      <!-- Event Body -->
+      <transition name="expand">
+        <div
+          v-show="isExpanded"
+          class="event-body"
+        >
+          <!-- Event Concept Set -->
+          <div class="concept-set-section">
+            <div
+              v-if="event.conceptSet"
+              class="concept-set-selected"
+            >
+              <v-chip
+                closable
+                color="primary"
+                style="cursor: pointer;"
+                @click="emit('edit-concept-set', event.conceptSet)"
+                @click:close="removeConceptSet"
+              >
+                {{ event.conceptSet.name }}
+              </v-chip>
+            </div>
+            <v-btn
+              v-else
+              color="primary"
+              variant="outlined"
+              size="small"
+              data-testid="concept-set-picker"
+              @click="emit('select-concept-set')"
+            >
+              <v-icon class="mr-2">
+                mdi-plus
+              </v-icon>
+              {{ t('common.selectConceptSet', 'Select Concept Set') }}
+            </v-btn>
+          </div>
+
+          <!-- Attributes Section -->
+          <div class="attributes-section mt-3">
+            <AttributesEditor
+              :model-value="event.attributes || []"
+              :criteria-type="event.criteriaType"
+              :cardinality="event.cardinality"
+              :temporal-window="event.temporalWindow"
+              @update:model-value="updateAttributes"
+              @update:cardinality="updateCardinality"
+              @update:temporal-window="updateTemporalWindows"
+            />
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>

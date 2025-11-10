@@ -1,29 +1,50 @@
 <template>
   <v-card>
     <v-card-title class="text-h6">
-      <v-icon left>mdi-account-switch</v-icon>
+      <v-icon left>
+        mdi-account-switch
+      </v-icon>
       {{ t('auth.runAsUser') }}
     </v-card-title>
 
     <v-card-text>
-      <v-alert v-if="errorMessage" type="error" class="mb-4" closable @click:close="errorMessage = null">
+      <v-alert
+        v-if="errorMessage"
+        type="error"
+        class="mb-4"
+        closable
+        @click:close="errorMessage = null"
+      >
         {{ errorMessage }}
       </v-alert>
 
-      <v-alert v-if="isRunningAs" type="info" variant="tonal" class="mb-4">
+      <v-alert
+        v-if="isRunningAs"
+        type="info"
+        variant="tonal"
+        class="mb-4"
+      >
         <div class="d-flex align-center justify-space-between">
           <div>
-            <div class="text-subtitle-2">{{ t('auth.currentlyRunningAs') }}</div>
-            <div class="text-h6">{{ targetUsername }}</div>
-            <div class="text-caption mt-1">{{ t('auth.originalUser', { username: originalUsername }) }}</div>
+            <div class="text-subtitle-2">
+              {{ t('auth.currentlyRunningAs') }}
+            </div>
+            <div class="text-h6">
+              {{ targetUsername }}
+            </div>
+            <div class="text-caption mt-1">
+              {{ t('auth.originalUser', { username: originalUsername }) }}
+            </div>
           </div>
           <v-btn
             color="primary"
             variant="outlined"
-            @click="handleExitRunAs"
             :loading="isExiting"
+            @click="handleExitRunAs"
           >
-            <v-icon left>mdi-exit-run</v-icon>
+            <v-icon left>
+              mdi-exit-run
+            </v-icon>
             {{ t('auth.exitRunAs') }}
           </v-btn>
         </div>
@@ -36,9 +57,9 @@
         variant="outlined"
         prepend-inner-icon="mdi-account"
         :disabled="isRunningAs || isLoading"
-        @keyup.enter="handleRunAs"
         class="mb-3"
-      ></v-text-field>
+        @keyup.enter="handleRunAs"
+      />
 
       <v-btn
         color="primary"
@@ -48,11 +69,17 @@
         :disabled="!targetUser.trim() || isRunningAs"
         @click="handleRunAs"
       >
-        <v-icon left>mdi-account-switch</v-icon>
+        <v-icon left>
+          mdi-account-switch
+        </v-icon>
         {{ t('auth.runAsUser') }}
       </v-btn>
 
-      <v-alert type="warning" variant="tonal" class="mt-4">
+      <v-alert
+        type="warning"
+        variant="tonal"
+        class="mt-4"
+      >
         <div class="text-caption">
           <strong>{{ t('common.warning') }}:</strong> {{ t('auth.runAsWarning') }}
         </div>

@@ -1,7 +1,6 @@
 /**
  * Data Sources Feature - Person Demographics Report E2E Tests
  * Feature: 006-datasources
- * Task: T050
  * 
  * Tests User Story 3: Person Demographics Report
  */
@@ -16,7 +15,7 @@ test.describe('Data Sources - Person Demographics Report', () => {
     await page.waitForLoadState('networkidle')
   })
 
-  test('T050.1 - Person report selection', async ({ page }) => {
+  test('Person report selection', async ({ page }) => {
     // Select data source
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -33,7 +32,7 @@ test.describe('Data Sources - Person Demographics Report', () => {
     await expect(page.locator('[data-testid="person-report"]')).toBeVisible()
   })
 
-  test('T050.2 - Four charts display', async ({ page }) => {
+  test('Four charts display', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -50,7 +49,7 @@ test.describe('Data Sources - Person Demographics Report', () => {
     await expect(page.locator('[data-testid="chart-ethnicity"]')).toBeVisible()
   })
 
-  test('T050.3 - Tooltips work', async ({ page }) => {
+  test('Tooltips work', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -81,7 +80,7 @@ test.describe('Data Sources - Person Demographics Report', () => {
     await page.waitForTimeout(500)
   })
 
-  test('T050.4 - Chart descriptions visible', async ({ page }) => {
+  test('Chart descriptions visible', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -98,7 +97,7 @@ test.describe('Data Sources - Person Demographics Report', () => {
     await expect(page.locator('text=Ethnicity Distribution')).toBeVisible()
   })
 
-  test('T050.5 - Responsive layout (3 columns for demographics)', async ({ page }) => {
+  test('Responsive layout (3 columns for demographics)', async ({ page }) => {
     // Set viewport to desktop size
     await page.setViewportSize({ width: 1280, height: 720 })
     

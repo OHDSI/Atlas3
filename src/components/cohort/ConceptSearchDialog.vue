@@ -7,7 +7,9 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">mdi-magnify</v-icon>
+        <v-icon class="mr-2">
+          mdi-magnify
+        </v-icon>
         <span>{{ t('search.title') }}</span>
         <v-spacer />
         <v-btn
@@ -82,13 +84,29 @@
           </v-list>
         </div>
 
-        <div v-else-if="hasSearched" class="text-center text-medium-emphasis py-4">
-          <v-icon size="48" class="mb-2">mdi-magnify-remove-outline</v-icon>
+        <div
+          v-else-if="hasSearched"
+          class="text-center text-medium-emphasis py-4"
+        >
+          <v-icon
+            size="48"
+            class="mb-2"
+          >
+            mdi-magnify-remove-outline
+          </v-icon>
           <p>{{ t('search.noResults') }}</p>
         </div>
 
-        <div v-else class="text-center text-medium-emphasis py-4">
-          <v-icon size="48" class="mb-2">mdi-magnify</v-icon>
+        <div
+          v-else
+          class="text-center text-medium-emphasis py-4"
+        >
+          <v-icon
+            size="48"
+            class="mb-2"
+          >
+            mdi-magnify
+          </v-icon>
           <p>{{ t('search.enterSearchTerm') }}</p>
         </div>
       </v-card-text>

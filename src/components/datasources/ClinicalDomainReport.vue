@@ -1,13 +1,22 @@
 <template>
   <div class="clinical-domain-report">
     <v-card variant="outlined">
-      <v-tabs v-model="activeTab" bg-color="grey-lighten-4">
+      <v-tabs
+        v-model="activeTab"
+        bg-color="grey-lighten-4"
+      >
         <v-tab value="treemap">
-          <v-icon icon="mdi-chart-tree" class="mr-2" />
+          <v-icon
+            icon="mdi-chart-tree"
+            class="mr-2"
+          />
           {{ t('common.treemap', 'Treemap') }}
         </v-tab>
         <v-tab value="table">
-          <v-icon icon="mdi-table" class="mr-2" />
+          <v-icon
+            icon="mdi-table"
+            class="mr-2"
+          />
           {{ t('common.table', 'Table') }}
         </v-tab>
       </v-tabs>

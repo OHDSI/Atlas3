@@ -1,6 +1,10 @@
 <template>
   <div class="dashboard-gender-chart">
-    <v-skeleton-loader v-if="loading" type="image" :height="height" />
+    <v-skeleton-loader
+      v-if="loading"
+      type="image"
+      :height="height"
+    />
     <v-chart
       v-else
       ref="chartRef"

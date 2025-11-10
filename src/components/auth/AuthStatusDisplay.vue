@@ -19,12 +19,15 @@
       </p>
     </div>
     
-    <template #append v-if="isExpiringSoon">
+    <template
+      v-if="isExpiringSoon"
+      #append
+    >
       <v-btn
         size="small"
         variant="outlined"
-        @click="handleRefresh"
         :loading="isRefreshing"
+        @click="handleRefresh"
       >
         {{ t('auth.extendSession') }}
       </v-btn>

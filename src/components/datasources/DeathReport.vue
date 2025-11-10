@@ -20,7 +20,10 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="stat in data.ageAtDeath" :key="stat.category">
+                <tr
+                  v-for="stat in data.ageAtDeath"
+                  :key="stat.category"
+                >
                   <td>{{ stat.category }}</td>
                   <td>{{ stat.minValue }}</td>
                   <td>{{ stat.p10Value }}</td>

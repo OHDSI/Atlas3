@@ -2,7 +2,10 @@
   <div class="cohort-builder">
     <!-- Breadcrumb Navigation -->
     <nav class="cohort-builder__breadcrumb">
-      <span class="cohort-builder__breadcrumb-item cohort-builder__breadcrumb-item--link" @click="router.push('/cohorts')">{{ t('navigation.cohortdefinitions') }}</span>
+      <span
+        class="cohort-builder__breadcrumb-item cohort-builder__breadcrumb-item--link"
+        @click="router.push('/cohorts')"
+      >{{ t('navigation.cohortdefinitions') }}</span>
       <span class="cohort-builder__breadcrumb-separator">›</span>
       <span class="cohort-builder__breadcrumb-item cohort-builder__breadcrumb-item--active">
         {{ cohortName || t('cohortDefinitions.newDefinition') }}
@@ -19,7 +22,7 @@
             class="cohort-builder__name-input"
             :placeholder="tv('cohortDefinitions.newDefinitionTitle')"
             data-testid="cohort-name-input"
-          />
+          >
         </div>
 
         <!-- Validation Notification Icon -->
@@ -33,25 +36,40 @@
             color="primary"
             icon="mdi-message-text"
             size="small"
-            @click="showValidationDialog = true"
             data-testid="validation-icon"
             style="cursor: pointer"
+            @click="showValidationDialog = true"
           />
         </v-badge>
 
         <!-- Validation Messages Dialog -->
-        <v-dialog v-model="showValidationDialog" max-width="800">
+        <v-dialog
+          v-model="showValidationDialog"
+          max-width="800"
+        >
           <v-card>
             <v-card-title class="d-flex align-center">
-              <v-icon :color="highestSeverityColor" class="mr-2">mdi-message-text</v-icon>
+              <v-icon
+                :color="highestSeverityColor"
+                class="mr-2"
+              >
+                mdi-message-text
+              </v-icon>
               {{ t('cc.viewEdit.tabs.messages') }}
             </v-card-title>
             <v-card-text>
               <v-table>
                 <thead>
                   <tr>
-                    <th class="text-left" style="width: 120px">{{ t('common.severity', 'Severity') }}</th>
-                    <th class="text-left">{{ t('common.message', 'Message') }}</th>
+                    <th
+                      class="text-left"
+                      style="width: 120px"
+                    >
+                      {{ t('common.severity', 'Severity') }}
+                    </th>
+                    <th class="text-left">
+                      {{ t('common.message', 'Message') }}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -80,7 +98,12 @@
             </v-card-text>
             <v-card-actions>
               <v-spacer />
-              <v-btn color="primary" @click="showValidationDialog = false">{{ t('common.close') }}</v-btn>
+              <v-btn
+                color="primary"
+                @click="showValidationDialog = false"
+              >
+                {{ t('common.close') }}
+              </v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -123,7 +146,9 @@
     <div class="section-wrapper mb-6">
       <div class="section-header">
         <div class="section-title-container">
-          <h3 class="section-title">{{ t('components.cohortExpressionEditor.cohortEntryEvents') }}</h3>
+          <h3 class="section-title">
+            {{ t('components.cohortExpressionEditor.cohortEntryEvents') }}
+          </h3>
         </div>
 
         <div class="section-controls">
@@ -134,9 +159,24 @@
             variant="outlined"
             divided
           >
-            <v-btn value="FIRST" size="small">Earliest</v-btn>
-            <v-btn value="ALL" size="small">All</v-btn>
-            <v-btn value="LAST" size="small">Latest</v-btn>
+            <v-btn
+              value="FIRST"
+              size="small"
+            >
+              Earliest
+            </v-btn>
+            <v-btn
+              value="ALL"
+              size="small"
+            >
+              All
+            </v-btn>
+            <v-btn
+              value="LAST"
+              size="small"
+            >
+              Latest
+            </v-btn>
           </v-btn-toggle>
         </div>
 
@@ -174,7 +214,10 @@
       />
 
       <!-- Additional Criteria (restricts entry events) -->
-      <div v-if="additionalCriteria" class="mt-4">
+      <div
+        v-if="additionalCriteria"
+        class="mt-4"
+      >
         <div class="additional-criteria-header">
           <span class="additional-criteria-label">WITH</span>
           <v-btn-toggle
@@ -185,9 +228,24 @@
             divided
             class="ml-4"
           >
-            <v-btn value="FIRST" size="small">{{ t('options.earliestEvents', 'First') }}</v-btn>
-            <v-btn value="ALL" size="small">{{ t('options.all') }}</v-btn>
-            <v-btn value="LAST" size="small">{{ t('options.last', 'Last') }}</v-btn>
+            <v-btn
+              value="FIRST"
+              size="small"
+            >
+              {{ t('options.earliestEvents', 'First') }}
+            </v-btn>
+            <v-btn
+              value="ALL"
+              size="small"
+            >
+              {{ t('options.all') }}
+            </v-btn>
+            <v-btn
+              value="LAST"
+              size="small"
+            >
+              {{ t('options.last', 'Last') }}
+            </v-btn>
           </v-btn-toggle>
         </div>
         <criteria-group-editor
@@ -212,7 +270,9 @@
     <div class="section-wrapper mb-6">
       <div class="section-header section-header--centered">
         <div class="section-title-container">
-          <h3 class="section-title">{{ t('components.cohortExpressionEditor.inclusionCriteriaTitle') }}</h3>
+          <h3 class="section-title">
+            {{ t('components.cohortExpressionEditor.inclusionCriteriaTitle') }}
+          </h3>
         </div>
 
         <div class="section-controls section-controls--center">
@@ -223,13 +283,28 @@
             variant="outlined"
             divided
           >
-            <v-btn value="FIRST" size="small">{{ t('options.earliestEvents', 'First') }}</v-btn>
-            <v-btn value="ALL" size="small">{{ t('options.all') }}</v-btn>
-            <v-btn value="LAST" size="small">{{ t('options.last', 'Last') }}</v-btn>
+            <v-btn
+              value="FIRST"
+              size="small"
+            >
+              {{ t('options.earliestEvents', 'First') }}
+            </v-btn>
+            <v-btn
+              value="ALL"
+              size="small"
+            >
+              {{ t('options.all') }}
+            </v-btn>
+            <v-btn
+              value="LAST"
+              size="small"
+            >
+              {{ t('options.last', 'Last') }}
+            </v-btn>
           </v-btn-toggle>
         </div>
 
-        <div class="section-spacer"></div>
+        <div class="section-spacer" />
       </div>
       <inclusion-criteria-panel
         v-model="inclusionRules"
@@ -244,7 +319,9 @@
     <div class="section-wrapper mb-6">
       <div class="section-header section-header--centered">
         <div class="section-title-container">
-          <h3 class="section-title">{{ t('components.cohortExpressionEditor.cohortExitTitle') }}</h3>
+          <h3 class="section-title">
+            {{ t('components.cohortExpressionEditor.cohortExitTitle') }}
+          </h3>
         </div>
 
         <div class="section-controls section-controls--center">
@@ -255,13 +332,28 @@
             variant="outlined"
             divided
           >
-            <v-btn value="CONTINUOUS_OBSERVATION" size="small">{{ t('options.endOfContinuousObservation') }}</v-btn>
-            <v-btn value="FIXED_DURATION" size="small">{{ t('options.fixedDurationRelativeToInitialEvent') }}</v-btn>
-            <v-btn value="DRUG_EXPOSURE" size="small">{{ t('options.endOfContinuousDrugExposure') }}</v-btn>
+            <v-btn
+              value="CONTINUOUS_OBSERVATION"
+              size="small"
+            >
+              {{ t('options.endOfContinuousObservation') }}
+            </v-btn>
+            <v-btn
+              value="FIXED_DURATION"
+              size="small"
+            >
+              {{ t('options.fixedDurationRelativeToInitialEvent') }}
+            </v-btn>
+            <v-btn
+              value="DRUG_EXPOSURE"
+              size="small"
+            >
+              {{ t('options.endOfContinuousDrugExposure') }}
+            </v-btn>
           </v-btn-toggle>
         </div>
 
-        <div class="section-spacer"></div>
+        <div class="section-spacer" />
       </div>
       <exit-criteria-panel
         v-model="exitCriteria"
@@ -322,7 +414,9 @@
         size="64"
         color="primary"
       />
-      <div class="text-h6 mt-4">{{ t('cohortDefinitions.loading', 'Loading cohort definition...') }}</div>
+      <div class="text-h6 mt-4">
+        {{ t('cohortDefinitions.loading', 'Loading cohort definition...') }}
+      </div>
     </v-overlay>
 
     <!-- Generation Panel -->

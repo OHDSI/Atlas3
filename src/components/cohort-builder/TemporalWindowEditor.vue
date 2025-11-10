@@ -155,8 +155,14 @@ watch(
 </script>
 
 <template>
-  <v-card class="temporal-window-editor" elevation="0" variant="outlined">
-    <v-card-title class="text-subtitle-1">{{ t('common.temporalWindows', 'Temporal Windows') }}</v-card-title>
+  <v-card
+    class="temporal-window-editor"
+    elevation="0"
+    variant="outlined"
+  >
+    <v-card-title class="text-subtitle-1">
+      {{ t('common.temporalWindows', 'Temporal Windows') }}
+    </v-card-title>
     <v-card-text>
       <!-- Presets -->
       <v-row dense>
@@ -179,9 +185,14 @@ watch(
 
       <!-- Start Window -->
       <div class="mb-4">
-        <div class="text-subtitle-2 mb-2">{{ t('common.startWindow', 'Start Window') }}</div>
+        <div class="text-subtitle-2 mb-2">
+          {{ t('common.startWindow', 'Start Window') }}
+        </div>
         <v-row dense>
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-text-field
               :model-value="startDays"
               type="number"
@@ -195,7 +206,10 @@ watch(
               @update:model-value="(v) => updateStartDays(Number(v))"
             />
           </v-col>
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-select
               :model-value="startDirection"
               :items="[
@@ -212,7 +226,10 @@ watch(
               @update:model-value="updateStartDirection"
             />
           </v-col>
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-checkbox
               :model-value="startAllTime"
               :label="t('common.allTime', 'All time').value"
@@ -223,7 +240,10 @@ watch(
             />
           </v-col>
         </v-row>
-        <v-row dense class="mt-2">
+        <v-row
+          dense
+          class="mt-2"
+        >
           <v-col cols="12">
             <v-select
               :model-value="startReferencePoint"
@@ -245,9 +265,14 @@ watch(
 
       <!-- End Window -->
       <div>
-        <div class="text-subtitle-2 mb-2">{{ t('common.endWindow', 'End Window') }}</div>
+        <div class="text-subtitle-2 mb-2">
+          {{ t('common.endWindow', 'End Window') }}
+        </div>
         <v-row dense>
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-text-field
               :model-value="endDays"
               type="number"
@@ -261,7 +286,10 @@ watch(
               @update:model-value="(v) => updateEndDays(Number(v))"
             />
           </v-col>
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-select
               :model-value="endDirection"
               :items="[
@@ -278,7 +306,10 @@ watch(
               @update:model-value="updateEndDirection"
             />
           </v-col>
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-checkbox
               :model-value="endAllTime"
               :label="t('common.allTime', 'All time').value"
@@ -289,7 +320,10 @@ watch(
             />
           </v-col>
         </v-row>
-        <v-row dense class="mt-2">
+        <v-row
+          dense
+          class="mt-2"
+        >
           <v-col cols="12">
             <v-select
               :model-value="endReferencePoint"
@@ -308,11 +342,24 @@ watch(
       </div>
 
       <!-- Validation Error Messages -->
-      <v-row v-if="!validation.isValid" dense>
+      <v-row
+        v-if="!validation.isValid"
+        dense
+      >
         <v-col cols="12">
-          <v-alert type="error" variant="tonal" density="compact" class="mt-2">
+          <v-alert
+            type="error"
+            variant="tonal"
+            density="compact"
+            class="mt-2"
+          >
             <ul class="pl-4">
-              <li v-for="error in validation.errors" :key="error">{{ error }}</li>
+              <li
+                v-for="error in validation.errors"
+                :key="error"
+              >
+                {{ error }}
+              </li>
             </ul>
           </v-alert>
         </v-col>

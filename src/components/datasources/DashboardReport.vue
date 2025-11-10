@@ -7,7 +7,10 @@
     </v-row>
 
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col
+        cols="12"
+        md="6"
+      >
         <ChartSection :title="t('dataSources.dashboardReport.populationByGender', 'Population by Gender').value">
           <DashboardGenderChart
             :data="data.genderDistribution"
@@ -16,7 +19,10 @@
         </ChartSection>
       </v-col>
       
-      <v-col cols="12" md="6">
+      <v-col
+        cols="12"
+        md="6"
+      >
         <ChartSection :title="t('dataSources.dashboardReport.ageAtFirstObservation', 'Age at First Observation').value">
           <DashboardAgeChart
             :data="data.ageDistribution"
@@ -27,7 +33,10 @@
     </v-row>
 
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col
+        cols="12"
+        md="6"
+      >
         <ChartSection :title="t('dataSources.dashboardReport.cumulativeObservation', 'Cumulative Observation').value">
           <DashboardCumulativeChart
             :data="data.cumulativeObservation"
@@ -36,7 +45,10 @@
         </ChartSection>
       </v-col>
       
-      <v-col cols="12" md="6">
+      <v-col
+        cols="12"
+        md="6"
+      >
         <ChartSection :title="t('dataSources.dashboardReport.personsWithContinuousObservationByMonth', 'Persons With Continuous Observation By Month').value">
           <DashboardObservationMonthChart
             :data="data.observationByMonth"

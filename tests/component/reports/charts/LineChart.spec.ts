@@ -1,7 +1,6 @@
 /**
  * LineChart Component Tests
  * Feature: 005-cohort-reports
- * Task: T133
  *
  * Comprehensive tests for LineChart component covering:
  * - Rendering with valid data
@@ -14,7 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { mount, VueWrapper } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'

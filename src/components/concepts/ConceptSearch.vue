@@ -1,7 +1,10 @@
 <template>
   <div class="concept-search">
     <!-- Search Input -->
-    <v-card flat class="mb-4">
+    <v-card
+      flat
+      class="mb-4"
+    >
       <v-card-text>
         <v-text-field
           v-model="searchInput"

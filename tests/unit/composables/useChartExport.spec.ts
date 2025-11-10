@@ -1,7 +1,6 @@
 /**
  * Unit tests for useChartExport composable
  * Feature: 005-cohort-reports
- * Task: T130
  *
  * Tests chart and table export functionality (PNG, SVG, CSV, clipboard)
  */

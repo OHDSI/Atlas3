@@ -6,7 +6,10 @@
       color="primary"
       indeterminate
     />
-    <p v-if="message" class="text-body-2 mt-2">
+    <p
+      v-if="message"
+      class="text-body-2 mt-2"
+    >
       {{ message }}
     </p>
   </div>

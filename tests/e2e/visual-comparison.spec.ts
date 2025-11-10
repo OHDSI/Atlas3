@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test'
-import { setupBasicMocks } from './helpers/api-mocks'
 import * as path from 'path'
 import * as fs from 'fs'
 import { fileURLToPath } from 'url'
@@ -60,7 +59,7 @@ async function closeContexts(refContext: any, implContext: any) {
   await implContext.close().catch(() => {})
 }
 
-test.describe('Visual Comparison: Entry Events & Basic UI (T061a)', () => {
+test.describe('Visual Comparison: Entry Events & Basic UI', () => {
   test('Compare CohortBuilder layout', async ({ browser }) => {
     test.setTimeout(60000) // Increase timeout to 60 seconds
 
@@ -74,12 +73,12 @@ test.describe('Visual Comparison: Entry Events & Basic UI (T061a)', () => {
       // Capture full page screenshots
       if (refLoaded) {
         await refPage.screenshot({
-          path: path.join(SCREENSHOTS_DIR, 'T061a-cohort-builder-reference.png'),
+          path: path.join(SCREENSHOTS_DIR, 'cohort-builder-reference.png'),
           fullPage: true
         })
       }
       await implPage.screenshot({
-        path: path.join(SCREENSHOTS_DIR, 'T061a-cohort-builder-implementation.png'),
+        path: path.join(SCREENSHOTS_DIR, 'cohort-builder-implementation.png'),
         fullPage: true
       })
 
@@ -88,7 +87,7 @@ test.describe('Visual Comparison: Entry Events & Basic UI (T061a)', () => {
         const refToolbar = refPage.locator('[role="toolbar"], .v-toolbar, .toolbar')
         if (await refToolbar.count() > 0) {
           await refToolbar.first().screenshot({
-            path: path.join(SCREENSHOTS_DIR, 'T061a-toolbar-reference.png')
+            path: path.join(SCREENSHOTS_DIR, 'toolbar-reference.png')
           })
         }
       }
@@ -96,7 +95,7 @@ test.describe('Visual Comparison: Entry Events & Basic UI (T061a)', () => {
       const implToolbar = implPage.locator('[role="toolbar"], .v-toolbar, .toolbar')
       if (await implToolbar.count() > 0) {
         await implToolbar.first().screenshot({
-          path: path.join(SCREENSHOTS_DIR, 'T061a-toolbar-implementation.png')
+          path: path.join(SCREENSHOTS_DIR, 'toolbar-implementation.png')
         })
       }
 
@@ -119,12 +118,12 @@ test.describe('Visual Comparison: Entry Events & Basic UI (T061a)', () => {
       // Capture entry events panel area
       if (refLoaded) {
         await refPage.screenshot({
-          path: path.join(SCREENSHOTS_DIR, 'T061a-entry-events-empty-reference.png'),
+          path: path.join(SCREENSHOTS_DIR, 'entry-events-empty-reference.png'),
           fullPage: true
         })
       }
       await implPage.screenshot({
-        path: path.join(SCREENSHOTS_DIR, 'T061a-entry-events-empty-implementation.png'),
+        path: path.join(SCREENSHOTS_DIR, 'entry-events-empty-implementation.png'),
         fullPage: true
       })
 
@@ -151,7 +150,7 @@ test.describe('Visual Comparison: Entry Events & Basic UI (T061a)', () => {
         await implPage.waitForTimeout(500)
 
         await implPage.screenshot({
-          path: path.join(SCREENSHOTS_DIR, 'T061a-event-card-collapsed-implementation.png'),
+          path: path.join(SCREENSHOTS_DIR, 'event-card-collapsed-implementation.png'),
           fullPage: true
         })
 
@@ -162,7 +161,7 @@ test.describe('Visual Comparison: Entry Events & Basic UI (T061a)', () => {
           await implPage.waitForTimeout(500)
 
           await implPage.screenshot({
-            path: path.join(SCREENSHOTS_DIR, 'T061a-event-card-expanded-implementation.png'),
+            path: path.join(SCREENSHOTS_DIR, 'event-card-expanded-implementation.png'),
             fullPage: true
           })
         }
@@ -177,7 +176,7 @@ test.describe('Visual Comparison: Entry Events & Basic UI (T061a)', () => {
             await refPage.waitForTimeout(500)
 
             await refPage.screenshot({
-              path: path.join(SCREENSHOTS_DIR, 'T061a-event-card-collapsed-reference.png'),
+              path: path.join(SCREENSHOTS_DIR, 'event-card-collapsed-reference.png'),
               fullPage: true
             })
           }
@@ -193,7 +192,7 @@ test.describe('Visual Comparison: Entry Events & Basic UI (T061a)', () => {
   })
 })
 
-test.describe('Visual Comparison: Cardinality & Temporal Windows (T072a)', () => {
+test.describe('Visual Comparison: Cardinality & Temporal Windows', () => {
   test('Compare CardinalityEditor', async ({ browser }) => {
     test.setTimeout(60000)
 
@@ -222,7 +221,7 @@ test.describe('Visual Comparison: Cardinality & Temporal Windows (T072a)', () =>
         await implPage.waitForTimeout(500)
 
         await implPage.screenshot({
-          path: path.join(SCREENSHOTS_DIR, 'T072a-cardinality-editor-implementation.png'),
+          path: path.join(SCREENSHOTS_DIR, 'cardinality-editor-implementation.png'),
           fullPage: true
         })
       }
@@ -261,7 +260,7 @@ test.describe('Visual Comparison: Cardinality & Temporal Windows (T072a)', () =>
         await implPage.waitForTimeout(500)
 
         await implPage.screenshot({
-          path: path.join(SCREENSHOTS_DIR, 'T072a-temporal-window-editor-implementation.png'),
+          path: path.join(SCREENSHOTS_DIR, 'temporal-window-editor-implementation.png'),
           fullPage: true
         })
       }
@@ -273,7 +272,7 @@ test.describe('Visual Comparison: Cardinality & Temporal Windows (T072a)', () =>
   })
 })
 
-test.describe('Visual Comparison: Concept Set Management (T105a)', () => {
+test.describe('Visual Comparison: Concept Set Management', () => {
   test('Compare ConceptSetList', async ({ browser }) => {
     test.setTimeout(60000)
 
@@ -294,7 +293,7 @@ test.describe('Visual Comparison: Concept Set Management (T105a)', () => {
       }
 
       await implPage.screenshot({
-        path: path.join(SCREENSHOTS_DIR, 'T105a-concept-set-list-implementation.png'),
+        path: path.join(SCREENSHOTS_DIR, 'concept-set-list-implementation.png'),
         fullPage: true
       })
 
@@ -305,7 +304,7 @@ test.describe('Visual Comparison: Concept Set Management (T105a)', () => {
   })
 })
 
-test.describe('Visual Comparison: Generation UI (T121a)', () => {
+test.describe('Visual Comparison: Generation UI', () => {
   test('Compare generation toolbar (requires saved cohort)', async ({ browser }) => {
     test.setTimeout(60000)
 
@@ -331,7 +330,7 @@ test.describe('Visual Comparison: Generation UI (T121a)', () => {
 
       // Capture generation toolbar area
       await implPage.screenshot({
-        path: path.join(SCREENSHOTS_DIR, 'T121a-generation-toolbar-implementation.png'),
+        path: path.join(SCREENSHOTS_DIR, 'generation-toolbar-implementation.png'),
         fullPage: true
       })
 

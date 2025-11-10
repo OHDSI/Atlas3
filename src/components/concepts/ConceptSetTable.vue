@@ -74,7 +74,12 @@
       <!-- No data message -->
       <template #no-data>
         <div class="text-center py-8">
-          <v-icon size="64" color="grey-lighten-1">mdi-folder-open</v-icon>
+          <v-icon
+            size="64"
+            color="grey-lighten-1"
+          >
+            mdi-folder-open
+          </v-icon>
           <p class="text-body-1 mt-4 text-grey">
             {{ t('cs.manager.noConcepts', 'No concepts selected').value }}
           </p>

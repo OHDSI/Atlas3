@@ -6,7 +6,10 @@
     :width="drawerWidth"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <v-card flat class="h-100 d-flex flex-column">
+    <v-card
+      flat
+      class="h-100 d-flex flex-column"
+    >
       <!-- Header -->
       <v-card-title class="d-flex align-center bg-primary pa-4">
         <span class="text-h6">{{ t('common.selectConceptSet', 'Select Concept Set') }}</span>
@@ -33,11 +36,24 @@
         />
 
         <!-- Loading -->
-        <v-progress-linear v-if="loading" indeterminate class="mb-2" />
+        <v-progress-linear
+          v-if="loading"
+          indeterminate
+          class="mb-2"
+        />
 
         <!-- Empty State -->
-        <div v-if="!loading && filteredSets.length === 0" class="text-center py-8">
-          <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-book-open-variant</v-icon>
+        <div
+          v-if="!loading && filteredSets.length === 0"
+          class="text-center py-8"
+        >
+          <v-icon
+            size="64"
+            color="grey-lighten-1"
+            class="mb-4"
+          >
+            mdi-book-open-variant
+          </v-icon>
           <p class="text-body-1 text-medium-emphasis">
             {{ searchTerm ? t('cs.manager.search.noResults') : t('cs.manager.noConceptSets') }}
           </p>
@@ -47,20 +63,28 @@
             class="mt-4"
             @click="onCreateNew"
           >
-            <v-icon start>mdi-plus</v-icon>
+            <v-icon start>
+              mdi-plus
+            </v-icon>
             {{ t('cs.manager.new') }}
           </v-btn>
         </div>
 
         <!-- Concept Sets List -->
-        <v-list v-else class="border rounded">
+        <v-list
+          v-else
+          class="border rounded"
+        >
           <v-list-item
             v-for="conceptSet in paginatedSets"
             :key="conceptSet.id"
             @click="selectConceptSet(conceptSet)"
           >
             <template #prepend>
-              <v-avatar color="primary" size="40">
+              <v-avatar
+                color="primary"
+                size="40"
+              >
                 <v-icon>mdi-book-open-variant</v-icon>
               </v-avatar>
             </template>
@@ -85,7 +109,10 @@
         </v-list>
 
         <!-- Pagination -->
-        <div v-if="!loading && filteredSets.length > itemsPerPage" class="mt-4 d-flex align-center justify-space-between">
+        <div
+          v-if="!loading && filteredSets.length > itemsPerPage"
+          class="mt-4 d-flex align-center justify-space-between"
+        >
           <div class="text-caption text-medium-emphasis">
             {{ t('datatable.pagination.showing', { 
               from: ((page - 1) * itemsPerPage) + 1, 
@@ -109,7 +136,9 @@
           variant="outlined"
           @click="onCreateNew"
         >
-          <v-icon start>mdi-plus</v-icon>
+          <v-icon start>
+            mdi-plus
+          </v-icon>
           {{ t('common.createNew') }}
         </v-btn>
         <v-spacer />

@@ -132,15 +132,28 @@ const removeEvent = () => {
 </script>
 
 <template>
-  <v-card class="event-card mb-3" elevation="1">
+  <v-card
+    class="event-card mb-3"
+    elevation="1"
+  >
     <!-- Header -->
     <v-card-title class="d-flex align-center pa-3">
-      <v-icon class="mr-2" size="small">mdi-medical-bag</v-icon>
+      <v-icon
+        class="mr-2"
+        size="small"
+      >
+        mdi-medical-bag
+      </v-icon>
       <div class="flex-grow-1">
-        <div class="text-subtitle-1">{{ criteriaTypeLabel }}</div>
+        <div class="text-subtitle-1">
+          {{ criteriaTypeLabel }}
+        </div>
         <div class="text-caption text-medium-emphasis">
           {{ event.conceptSet?.name || 'No concept set' }}
-          <span v-if="event.conceptSet?.conceptCount" class="ml-1">
+          <span
+            v-if="event.conceptSet?.conceptCount"
+            class="ml-1"
+          >
             ({{ event.conceptSet.conceptCount }} concepts)
           </span>
         </div>
@@ -152,22 +165,61 @@ const removeEvent = () => {
         :class="{ 'rotate-180': expanded }"
         @click="toggleExpanded"
       />
-      <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="removeEvent" />
+      <v-btn
+        icon="mdi-delete"
+        variant="text"
+        size="small"
+        color="error"
+        @click="removeEvent"
+      />
     </v-card-title>
 
     <!-- Summary Chips -->
-    <v-card-text v-if="hasCardinality || hasTemporalWindows || hasAttributes" class="pt-0 pb-2">
+    <v-card-text
+      v-if="hasCardinality || hasTemporalWindows || hasAttributes"
+      class="pt-0 pb-2"
+    >
       <div class="d-flex flex-wrap ga-2">
-        <v-chip v-if="hasCardinality" size="small" color="primary" variant="tonal">
-          <v-icon start size="small">mdi-counter</v-icon>
+        <v-chip
+          v-if="hasCardinality"
+          size="small"
+          color="primary"
+          variant="tonal"
+        >
+          <v-icon
+            start
+            size="small"
+          >
+            mdi-counter
+          </v-icon>
           {{ cardinalityDisplay }}
         </v-chip>
-        <v-chip v-if="hasTemporalWindows" size="small" color="secondary" variant="tonal">
-          <v-icon start size="small">mdi-calendar-range</v-icon>
+        <v-chip
+          v-if="hasTemporalWindows"
+          size="small"
+          color="secondary"
+          variant="tonal"
+        >
+          <v-icon
+            start
+            size="small"
+          >
+            mdi-calendar-range
+          </v-icon>
           {{ temporalWindowDisplay }}
         </v-chip>
-        <v-chip v-if="hasAttributes" size="small" color="accent" variant="tonal">
-          <v-icon start size="small">mdi-filter</v-icon>
+        <v-chip
+          v-if="hasAttributes"
+          size="small"
+          color="accent"
+          variant="tonal"
+        >
+          <v-icon
+            start
+            size="small"
+          >
+            mdi-filter
+          </v-icon>
           {{ event.attributes!.length }} attribute{{ event.attributes!.length > 1 ? 's' : '' }}
         </v-chip>
       </div>
@@ -210,9 +262,14 @@ const removeEvent = () => {
           </div>
 
           <!-- Cardinality Editor -->
-          <div v-if="hasCardinality || showCardinalityEditor" class="mb-4">
+          <div
+            v-if="hasCardinality || showCardinalityEditor"
+            class="mb-4"
+          >
             <div class="d-flex align-center mb-2">
-              <div class="text-subtitle-2 flex-grow-1">Cardinality</div>
+              <div class="text-subtitle-2 flex-grow-1">
+                Cardinality
+              </div>
               <v-btn
                 v-if="hasCardinality"
                 icon="mdi-close"
@@ -228,9 +285,14 @@ const removeEvent = () => {
           </div>
 
           <!-- Temporal Window Editor -->
-          <div v-if="hasTemporalWindows || showTemporalWindowEditor" class="mb-4">
+          <div
+            v-if="hasTemporalWindows || showTemporalWindowEditor"
+            class="mb-4"
+          >
             <div class="d-flex align-center mb-2">
-              <div class="text-subtitle-2 flex-grow-1">Temporal Windows</div>
+              <div class="text-subtitle-2 flex-grow-1">
+                Temporal Windows
+              </div>
               <v-btn
                 v-if="hasTemporalWindows"
                 icon="mdi-close"
@@ -246,7 +308,10 @@ const removeEvent = () => {
           </div>
 
           <!-- Attributes Editor -->
-          <div v-if="hasAttributes || showAttributesEditor" class="mb-4">
+          <div
+            v-if="hasAttributes || showAttributesEditor"
+            class="mb-4"
+          >
             <AttributesEditor
               :model-value="event.attributes || []"
               :criteria-type="event.criteriaType"
@@ -266,12 +331,28 @@ const removeEvent = () => {
             <div class="mb-1">
               <strong>Concept Set ID:</strong> {{ event.conceptSet?.id || 'N/A' }}
             </div>
-            <div v-if="event.restrictVisit" class="mb-1">
-              <v-icon size="small" color="info">mdi-information</v-icon>
+            <div
+              v-if="event.restrictVisit"
+              class="mb-1"
+            >
+              <v-icon
+                size="small"
+                color="info"
+              >
+                mdi-information
+              </v-icon>
               Event must occur in same visit as index
             </div>
-            <div v-if="event.ignoreObservationPeriod" class="mb-1">
-              <v-icon size="small" color="warning">mdi-alert</v-icon>
+            <div
+              v-if="event.ignoreObservationPeriod"
+              class="mb-1"
+            >
+              <v-icon
+                size="small"
+                color="warning"
+              >
+                mdi-alert
+              </v-icon>
               Event can occur outside observation period
             </div>
           </div>

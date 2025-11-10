@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useConceptSets } from '@/composables/useConceptSets'
 import type { Concept, ConceptSet } from '@/models/concept-set.types'

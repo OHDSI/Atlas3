@@ -1,6 +1,6 @@
 /**
  * Component Test: ErrorBoundary
- * Tests error boundary component for graceful error handling (T131)
+ * Tests error boundary component for graceful error handling
  */
 import { createPinia, setActivePinia } from 'pinia'
 import { describe, it, expect, beforeEach, vi } from 'vitest'

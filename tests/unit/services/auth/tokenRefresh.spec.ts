@@ -31,7 +31,7 @@ describe('TokenRefreshService', () => {
     vi.useRealTimers();
   });
 
-  describe('T019: Successful token refresh', () => {
+  describe('Successful token refresh', () => {
     it('should refresh token successfully', async () => {
       const { authService } = await import('@/services/auth/authService');
       vi.mocked(authService.refreshToken).mockResolvedValue(true);
@@ -60,7 +60,7 @@ describe('TokenRefreshService', () => {
     });
   });
 
-  describe('T020: Exponential backoff retry logic', () => {
+  describe('Exponential backoff retry logic', () => {
     it('should retry with exponential backoff (1s, 2s, 4s)', async () => {
       // Service implements exponential backoff
       // Just verify service is defined
@@ -76,7 +76,7 @@ describe('TokenRefreshService', () => {
     });
   });
 
-  describe('T021: Single in-flight request prevention', () => {
+  describe('Single in-flight request prevention', () => {
     it('should return same promise for concurrent refresh calls', async () => {
       // Service prevents multiple in-flight requests
       // Just verify service is defined
@@ -92,7 +92,7 @@ describe('TokenRefreshService', () => {
     });
   });
 
-  describe('T022: Max retry exceeded scenario', () => {
+  describe('Max retry exceeded scenario', () => {
     it('should fail after max retries (3 attempts)', async () => {
       // Service implements max retry logic
       // Just verify service is defined

@@ -41,7 +41,10 @@
             width="2"
             color="primary"
           />
-          <span v-else class="text-right">{{ formatCount(item.recordCount) }}</span>
+          <span
+            v-else
+            class="text-right"
+          >{{ formatCount(item.recordCount) }}</span>
         </div>
       </template>
 
@@ -54,7 +57,10 @@
             width="2"
             color="primary"
           />
-          <span v-else class="text-right">{{ formatCount(item.descendantRecordCount) }}</span>
+          <span
+            v-else
+            class="text-right"
+          >{{ formatCount(item.descendantRecordCount) }}</span>
         </div>
       </template>
 
@@ -67,7 +73,10 @@
             width="2"
             color="primary"
           />
-          <span v-else class="text-right">{{ formatCount(item.personCount) }}</span>
+          <span
+            v-else
+            class="text-right"
+          >{{ formatCount(item.personCount) }}</span>
         </div>
       </template>
 
@@ -80,12 +89,18 @@
             width="2"
             color="primary"
           />
-          <span v-else class="text-right">{{ formatCount(item.descendantPersonCount) }}</span>
+          <span
+            v-else
+            class="text-right"
+          >{{ formatCount(item.descendantPersonCount) }}</span>
         </div>
       </template>
 
       <!-- Actions Column - Add/Remove Button (T091) -->
-      <template #item.actions="{ item }" v-if="showAddButton">
+      <template
+        v-if="showAddButton"
+        #item.actions="{ item }"
+      >
         <div class="d-flex justify-center">
           <v-btn
             v-if="!conceptsInSet.has(item.conceptId)"
@@ -113,7 +128,12 @@
       <!-- No data message -->
       <template #no-data>
         <div class="text-center py-8">
-          <v-icon size="64" color="grey-lighten-1">mdi-database-search</v-icon>
+          <v-icon
+            size="64"
+            color="grey-lighten-1"
+          >
+            mdi-database-search
+          </v-icon>
           <p class="text-body-1 mt-4 text-grey">
             {{ loading ? 'Loading...' : 'No records to display' }}
           </p>

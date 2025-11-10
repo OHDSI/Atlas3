@@ -6,7 +6,7 @@
     src="/_gcp_iap/session_refresher"
     style="display: none;"
     @load="handleIframeLoad"
-  ></iframe>
+  />
 </template>
 
 <script setup lang="ts">

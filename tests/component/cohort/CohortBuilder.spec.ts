@@ -7,7 +7,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { useCohortStore } from '@/stores/cohort'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
 // Mock i18n composable with real translations

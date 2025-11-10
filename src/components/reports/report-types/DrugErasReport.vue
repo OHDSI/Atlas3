@@ -8,7 +8,9 @@
 <template>
   <div class="drug-eras-report">
     <v-card elevation="0">
-      <v-card-title class="text-h6">Drug Era Prevalence</v-card-title>
+      <v-card-title class="text-h6">
+        Drug Era Prevalence
+      </v-card-title>
 
       <v-divider />
 
@@ -41,12 +43,20 @@
             :items="tableData"
             :export-filename="`drug-eras-${sourceKey}.csv`"
           />
-          <v-alert v-else type="info" variant="tonal">
+          <v-alert
+            v-else
+            type="info"
+            variant="tonal"
+          >
             {{ t('common.noData') }}
           </v-alert>
         </div>
 
-        <v-alert v-else type="info" variant="tonal">
+        <v-alert
+          v-else
+          type="info"
+          variant="tonal"
+        >
           {{ t('common.noData') }}
         </v-alert>
       </v-card-text>

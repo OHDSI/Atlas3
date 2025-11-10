@@ -1,13 +1,21 @@
 <template>
   <div class="page-wrapper">
     <div class="page-card">
-      <v-container fluid class="datasources-view">
+      <v-container
+        fluid
+        class="datasources-view"
+      >
         <!-- Page Header -->
         <v-row>
           <v-col cols="12">
             <div class="datasources-view__header">
-              <h1 class="text-h4 mb-2">{{ t('dataSources.headingTitle', 'Data Sources') }}</h1>
-              <p v-if="selectedSource && store.selectedReportType" class="text-subtitle-1 text-medium-emphasis">
+              <h1 class="text-h4 mb-2">
+                {{ t('dataSources.headingTitle', 'Data Sources') }}
+              </h1>
+              <p
+                v-if="selectedSource && store.selectedReportType"
+                class="text-subtitle-1 text-medium-emphasis"
+              >
                 {{ selectedSource.sourceName }} - {{ reportTypeLabel }}
               </p>
             </div>
@@ -16,7 +24,10 @@
 
         <!-- Selectors -->
         <v-row>
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <DataSourceSelector
               :model-value="store.selectedSourceId"
               data-testid="datasource-selector"
@@ -25,7 +36,10 @@
               @update:model-value="handleSourceChange"
             />
           </v-col>
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <ReportTypeSelector
               :model-value="store.selectedReportType"
               data-testid="report-type-selector"
@@ -38,7 +52,10 @@
         <!-- Error State: Sources -->
         <v-row v-if="store.error.sources">
           <v-col cols="12">
-            <v-alert type="error" variant="tonal">
+            <v-alert
+              type="error"
+              variant="tonal"
+            >
               <div class="d-flex align-center justify-space-between">
                 <span>{{ store.error.sources }}</span>
                 <v-btn
@@ -56,7 +73,10 @@
         <!-- Error State: Report -->
         <v-row v-if="store.error.report">
           <v-col cols="12">
-            <v-alert type="error" variant="tonal">
+            <v-alert
+              type="error"
+              variant="tonal"
+            >
               <div class="d-flex align-center justify-space-between">
                 <span>{{ store.error.report }}</span>
                 <v-btn
@@ -118,9 +138,18 @@
               :report-type="store.selectedReportType"
             />
             
-            <div v-else class="text-center py-8">
-              <v-icon icon="mdi-information-outline" size="48" class="mb-4" />
-              <p class="text-body-1">Report type "{{ reportTypeLabel }}" is not yet implemented.</p>
+            <div
+              v-else
+              class="text-center py-8"
+            >
+              <v-icon
+                icon="mdi-information-outline"
+                size="48"
+                class="mb-4"
+              />
+              <p class="text-body-1">
+                Report type "{{ reportTypeLabel }}" is not yet implemented.
+              </p>
             </div>
           </v-col>
         </v-row>
@@ -129,8 +158,14 @@
         <v-row v-else-if="!store.loading.sources && store.sources.length === 0">
           <v-col cols="12">
             <div class="text-center py-8">
-              <v-icon icon="mdi-database-off" size="48" class="mb-4" />
-              <p class="text-body-1">No data sources available.</p>
+              <v-icon
+                icon="mdi-database-off"
+                size="48"
+                class="mb-4"
+              />
+              <p class="text-body-1">
+                No data sources available.
+              </p>
             </div>
           </v-col>
         </v-row>

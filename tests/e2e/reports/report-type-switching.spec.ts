@@ -44,7 +44,7 @@ test.describe('Report Type Switching', () => {
     // Select Person report
     const reportTypeSelector = page.getByTestId('report-type-selector')
     await reportTypeSelector.click()
-    let personOption = page.locator('.v-list-item').filter({ hasText: /person/i })
+    const personOption = page.locator('.v-list-item').filter({ hasText: /person/i })
     await personOption.click()
     await page.waitForTimeout(500)
     

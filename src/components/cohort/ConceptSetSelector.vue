@@ -1,7 +1,9 @@
 <template>
   <v-card>
     <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">mdi-book-open-variant</v-icon>
+      <v-icon class="mr-2">
+        mdi-book-open-variant
+      </v-icon>
       <span>{{ t('conceptSets.title') }}</span>
       <v-spacer />
       <v-btn
@@ -10,13 +12,18 @@
         size="small"
         @click="createNewConceptSet"
       >
-        <v-icon class="mr-2">mdi-plus</v-icon>
+        <v-icon class="mr-2">
+          mdi-plus
+        </v-icon>
         {{ t('conceptSets.newConceptSet') }}
       </v-btn>
     </v-card-title>
 
     <v-card-text>
-      <p v-if="conceptSetsList.length === 0" class="text-body-2 text-medium-emphasis">
+      <p
+        v-if="conceptSetsList.length === 0"
+        class="text-body-2 text-medium-emphasis"
+      >
         {{ t('conceptSets.noConceptSets') }}
       </p>
 
@@ -29,7 +36,10 @@
             <div class="d-flex align-center w-100">
               <span class="font-weight-medium">{{ conceptSet.name }}</span>
               <v-spacer />
-              <v-chip size="small" class="mr-2">
+              <v-chip
+                size="small"
+                class="mr-2"
+              >
                 {{ t('conceptSets.conceptCount', { count: conceptSet.items.length }) }}
               </v-chip>
             </div>
@@ -44,8 +54,13 @@
               @update:model-value="conceptSet.id && updateConceptSetName(conceptSet.id, $event)"
             />
 
-            <div v-if="conceptSet.items.length > 0" class="mt-3">
-              <p class="text-subtitle-2 mb-2">{{ t('conceptSets.concepts') }}</p>
+            <div
+              v-if="conceptSet.items.length > 0"
+              class="mt-3"
+            >
+              <p class="text-subtitle-2 mb-2">
+                {{ t('conceptSets.concepts') }}
+              </p>
               <v-chip
                 v-for="concept in conceptSet.items"
                 :key="concept.conceptId"
@@ -64,7 +79,9 @@
                 size="small"
                 @click="conceptSet.id && openSearchDialog(conceptSet.id)"
               >
-                <v-icon class="mr-2">mdi-plus</v-icon>
+                <v-icon class="mr-2">
+                  mdi-plus
+                </v-icon>
                 {{ t('conceptSets.addConcepts') }}
               </v-btn>
 
@@ -74,7 +91,9 @@
                 size="small"
                 @click="conceptSet.id && deleteConceptSet(conceptSet.id)"
               >
-                <v-icon class="mr-2">mdi-delete</v-icon>
+                <v-icon class="mr-2">
+                  mdi-delete
+                </v-icon>
                 {{ t('common.delete') }}
               </v-btn>
             </div>

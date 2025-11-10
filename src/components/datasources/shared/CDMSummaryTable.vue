@@ -1,5 +1,8 @@
 <template>
-  <v-card class="cdm-summary-table" variant="outlined">
+  <v-card
+    class="cdm-summary-table"
+    variant="outlined"
+  >
     <v-card-title class="text-h6 bg-grey-lighten-4">
       {{ t('dataSources.dashboardReport.cdmSummary', 'CDM Summary') }}
     </v-card-title>
@@ -7,11 +10,15 @@
       <v-table density="comfortable">
         <tbody>
           <tr>
-            <td class="font-weight-medium">{{ t('common.sourceName', 'Source Name') }}</td>
+            <td class="font-weight-medium">
+              {{ t('common.sourceName', 'Source Name') }}
+            </td>
             <td>{{ data.sourceName }}</td>
           </tr>
           <tr>
-            <td class="font-weight-medium">{{ t('dataSources.numberOfPeople', 'Number of People') }}</td>
+            <td class="font-weight-medium">
+              {{ t('dataSources.numberOfPeople', 'Number of People') }}
+            </td>
             <td>{{ formatNumber(data.personCount) }}</td>
           </tr>
         </tbody>

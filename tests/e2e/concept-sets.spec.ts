@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test'
-import { setupBasicMocks } from './helpers/api-mocks'
 
 /**
  * E2E Test for User Story 6: Manage Concept Sets and Terminology

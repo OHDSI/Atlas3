@@ -12,7 +12,10 @@
     </v-row>
 
     <v-row>
-      <v-col cols="12" md="4">
+      <v-col
+        cols="12"
+        md="4"
+      >
         <ChartSection :title="t('dataSources.personReport.gender', 'Gender').value">
           <PieChart
             :data="data.gender"
@@ -21,7 +24,10 @@
         </ChartSection>
       </v-col>
       
-      <v-col cols="12" md="4">
+      <v-col
+        cols="12"
+        md="4"
+      >
         <ChartSection :title="t('dataSources.personReport.race', 'Race').value">
           <PieChart
             :data="data.race"
@@ -30,7 +36,10 @@
         </ChartSection>
       </v-col>
       
-      <v-col cols="12" md="4">
+      <v-col
+        cols="12"
+        md="4"
+      >
         <ChartSection :title="t('dataSources.personReport.ethnicity', 'Ethnicity').value">
           <PieChart
             :data="data.ethnicity"

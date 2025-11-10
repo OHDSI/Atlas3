@@ -7,7 +7,11 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon icon="mdi-alert-circle" color="warning" class="mr-2" />
+        <v-icon
+          icon="mdi-alert-circle"
+          color="warning"
+          class="mr-2"
+        />
         Session Expiring Soon
       </v-card-title>
 

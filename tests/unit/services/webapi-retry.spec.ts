@@ -1,6 +1,6 @@
 /**
  * Unit Test: WebAPI Service - Network Retry Logic
- * Tests exponential backoff retry mechanism (T132)
+ * Tests exponential backoff retry mechanism
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import * as webapi from '@/services/webapi'
@@ -9,7 +9,7 @@ import * as webapi from '@/services/webapi'
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
-describe('WebAPI Service - Network Retry Logic (T132)', () => {
+describe('WebAPI Service - Network Retry Logic', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()

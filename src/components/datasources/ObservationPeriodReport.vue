@@ -1,7 +1,10 @@
 <template>
   <div class="observation-period-report">
     <!-- Age at First Observation -->
-    <ChartSection v-if="data.ageAtFirst" :title="t('dataSources.observationPeriodReport.ageAtFirstObservation', 'Age at First Observation').value">
+    <ChartSection
+      v-if="data.ageAtFirst"
+      :title="t('dataSources.observationPeriodReport.ageAtFirstObservation', 'Age at First Observation').value"
+    >
       <BarChart
         :data="data.ageAtFirst"
         :x-axis-label="t('dataSources.observationPeriodReport.age', 'Age').value"
@@ -11,7 +14,10 @@
     </ChartSection>
 
     <!-- Observation Length Distribution -->
-    <ChartSection v-if="data.observationLength" :title="t('dataSources.observationPeriodReport.observationLength', 'Observation Length').value">
+    <ChartSection
+      v-if="data.observationLength"
+      :title="t('dataSources.observationPeriodReport.observationLength', 'Observation Length').value"
+    >
       <BarChart
         :data="data.observationLength"
         :x-axis-label="t('dataSources.observationPeriodReport.days', 'Days').value"
@@ -21,7 +27,10 @@
     </ChartSection>
 
     <!-- Cumulative Observation -->
-    <ChartSection v-if="data.cumulativeObservation" :title="t('dataSources.observationPeriodReport.cumulativeObservation', 'Cumulative Observation').value">
+    <ChartSection
+      v-if="data.cumulativeObservation"
+      :title="t('dataSources.observationPeriodReport.cumulativeObservation', 'Cumulative Observation').value"
+    >
       <MultiLineChart
         :data="data.cumulativeObservation"
         :x-axis-label="t('dataSources.observationPeriodReport.days', 'Days').value"
@@ -31,7 +40,10 @@
     </ChartSection>
 
     <!-- Observed by Month -->
-    <ChartSection v-if="data.observedByMonth" :title="t('dataSources.observationPeriodReport.personsWithContinuousObservationByMonth', 'Persons With Continuous Observation By Month').value">
+    <ChartSection
+      v-if="data.observedByMonth"
+      :title="t('dataSources.observationPeriodReport.personsWithContinuousObservationByMonth', 'Persons With Continuous Observation By Month').value"
+    >
       <MultiLineChart
         :data="data.observedByMonth"
         :x-axis-label="t('dataSources.observationPeriodReport.date', 'Date').value"

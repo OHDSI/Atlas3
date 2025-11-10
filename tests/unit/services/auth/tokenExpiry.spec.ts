@@ -30,7 +30,7 @@ describe('TokenExpiryService', () => {
     vi.useRealTimers();
   });
 
-  describe('T040: Timer setup', () => {
+  describe('Timer setup', () => {
     it('should setup expiry warning timer for valid token', async () => {
       const { getTokenExpiration } = await import('@/utils/jwt');
       
@@ -81,7 +81,7 @@ describe('TokenExpiryService', () => {
     });
   });
 
-  describe('T041: Warning shown at correct time', () => {
+  describe('Warning shown at correct time', () => {
     it('should show warning 5 minutes before expiration', async () => {
       const { getTokenExpiration } = await import('@/utils/jwt');
       
@@ -134,7 +134,7 @@ describe('TokenExpiryService', () => {
     });
   });
 
-  describe('T042: Duplicate warning prevention', () => {
+  describe('Duplicate warning prevention', () => {
     it('should not show warning twice for same token', async () => {
       const { getTokenExpiration } = await import('@/utils/jwt');
       // Using shared mockAuthStore
@@ -202,7 +202,7 @@ describe('TokenExpiryService', () => {
     });
   });
 
-  describe('T043: Timer cancellation on token change', () => {
+  describe('Timer cancellation on token change', () => {
     it('should cancel timer on cancelExpiryWarning()', async () => {
       const { getTokenExpiration } = await import('@/utils/jwt');
       

@@ -38,7 +38,7 @@ describe('SessionSyncService', () => {
     mockStore.openLoginModal.mockClear();
   });
 
-  describe('T060: Event detection', () => {
+  describe('Event detection', () => {
     it('should initialize and start listening to storage events', () => {
       const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
 
@@ -112,7 +112,7 @@ describe('SessionSyncService', () => {
     });
   });
 
-  describe('T061: Login event classification', () => {
+  describe('Login event classification', () => {
     it('should detect login event (no old value, has new value)', async () => {
       // Use mockStore instead('@/stores/auth');
       const { authService } = await import('@/services/auth/authService');
@@ -174,7 +174,7 @@ describe('SessionSyncService', () => {
     });
   });
 
-  describe('T062: Logout event classification', () => {
+  describe('Logout event classification', () => {
     it('should detect logout event (has old value, no new value)', async () => {
       // Use mockStore instead('@/stores/auth');
       // Using shared mockStore
@@ -219,7 +219,7 @@ describe('SessionSyncService', () => {
     });
   });
 
-  describe('T063: Refresh event classification', () => {
+  describe('Refresh event classification', () => {
     it('should detect refresh event (old and new values different)', async () => {
       // Use mockStore instead('@/stores/auth');
       // Using shared mockStore
@@ -268,7 +268,7 @@ describe('SessionSyncService', () => {
     });
   });
 
-  describe('T064: Auth store sync on storage event', () => {
+  describe('Auth store sync on storage event', () => {
     it('should sync auth store state within 500ms of event', async () => {
       // Use mockStore instead('@/stores/auth');
       // Using shared mockStore

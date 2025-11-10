@@ -28,7 +28,10 @@
       <!-- Actions -->
       <div class="d-flex gap-2">
         <!-- Column visibility toggle -->
-        <v-menu v-if="showColumnToggle" location="bottom end">
+        <v-menu
+          v-if="showColumnToggle"
+          location="bottom end"
+        >
           <template #activator="{ props: menuProps }">
             <v-btn
               v-bind="menuProps"
@@ -85,7 +88,11 @@
 
       <!-- No data slot -->
       <template #no-data>
-        <v-alert type="info" variant="tonal" class="ma-4">
+        <v-alert
+          type="info"
+          variant="tonal"
+          class="ma-4"
+        >
           {{ t('common.noData') }}
         </v-alert>
       </template>
@@ -96,7 +103,11 @@
         :key="header.key"
         #[`item.${header.key}`]="{ item }"
       >
-        <slot :name="`item.${header.key}`" :item="item" :value="item[header.key]">
+        <slot
+          :name="`item.${header.key}`"
+          :item="item"
+          :value="item[header.key]"
+        >
           {{ formatCell(item[header.key], header) }}
         </slot>
       </template>

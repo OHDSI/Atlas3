@@ -3,29 +3,43 @@
     <div class="landing__card">
       <div class="landing__container">
         <div class="landing__content">
-          <h1 class="landing__title">ATLAS</h1>
+          <h1 class="landing__title">
+            ATLAS
+          </h1>
 
           <div class="landing__description">
-            <p v-html="tv('home.description', 'ATLAS is an open source application developed as a part of <a href=\'http://www.ohdsi.org\' target=\'_new\'>OHDSI</a> intended to provide a unified interface to patient level data and analytics.')"></p>
+            <p v-html="tv('home.description', 'ATLAS is an open source application developed as a part of <a href=\'http://www.ohdsi.org\' target=\'_new\'>OHDSI</a> intended to provide a unified interface to patient level data and analytics.')" />
           </div>
 
           <div class="landing__documentation">
-            <h2 class="landing__section-title">{{ t('home.documentation.title', 'Documentation') }}</h2>
-            <p v-html="tv('home.documentation.text', 'The ATLAS user guide can be found <a target=\'_new\' href=\'http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas\'>here</a>.')"></p>
+            <h2 class="landing__section-title">
+              {{ t('home.documentation.title', 'Documentation') }}
+            </h2>
+            <p v-html="tv('home.documentation.text', 'The ATLAS user guide can be found <a target=\'_new\' href=\'http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas\'>here</a>.')" />
           </div>
 
           <div class="landing__actions">
-            <button class="landing__button landing__button--outline" @click="handleSearchConcepts">
+            <button
+              class="landing__button landing__button--outline"
+              @click="handleSearchConcepts"
+            >
               {{ t('home.gettingStarted.vocabulary.button', 'Search the Vocabulary') }}
             </button>
-            <button class="landing__button landing__button--secondary" @click="handleNewCohort">
+            <button
+              class="landing__button landing__button--secondary"
+              @click="handleNewCohort"
+            >
               {{ t('home.gettingStarted.newCohort.button', 'Define a New Cohort') }}
             </button>
           </div>
         </div>
 
         <div class="landing__illustration">
-          <img :src="atlasLogo" alt="ATLAS" class="landing__logo" />
+          <img
+            :src="atlasLogo"
+            alt="ATLAS"
+            class="landing__logo"
+          >
         </div>
       </div>
     </div>

@@ -2,104 +2,123 @@
   <div class="events-container">
     <!-- Vertical "ALL" Label -->
     <div class="vertical-label-container">
-      <div class="vertical-label">ALL</div>
+      <div class="vertical-label">
+        ALL
+      </div>
     </div>
 
     <!-- Main Content Area -->
     <div class="flex-grow-1">
-        <!-- Add Rule Button (at top) -->
-        <div class="add-button-container-top">
-          <v-btn
-            color="primary"
-            variant="outlined"
-            prepend-icon="mdi-plus"
-            size="small"
-            data-testid="add-inclusion-rule"
-            @click="addNewRule"
-          >
-            {{ t('components.cohortExpressionEditor.newInclusionCriteria', 'New Inclusion Criteria') }}
-          </v-btn>
+      <!-- Add Rule Button (at top) -->
+      <div class="add-button-container-top">
+        <v-btn
+          color="primary"
+          variant="outlined"
+          prepend-icon="mdi-plus"
+          size="small"
+          data-testid="add-inclusion-rule"
+          @click="addNewRule"
+        >
+          {{ t('components.cohortExpressionEditor.newInclusionCriteria', 'New Inclusion Criteria') }}
+        </v-btn>
+      </div>
+
+      <!-- Empty State -->
+      <v-alert
+        v-if="modelValue.length === 0"
+        color="grey-lighten-4"
+        variant="outlined"
+        class="mb-4"
+      >
+        <div style="color: #666;">
+          {{ t('components.cohortExpressionEditor.inclusionCriteriaText', 'No inclusion rules defined. Inclusion rules allow you to specify additional requirements for patients to be included in the cohort beyond the entry events.') }}
         </div>
+      </v-alert>
 
-        <!-- Empty State -->
-        <v-alert v-if="modelValue.length === 0" color="grey-lighten-4" variant="outlined" class="mb-4">
-          <div style="color: #666;">
-            {{ t('components.cohortExpressionEditor.inclusionCriteriaText', 'No inclusion rules defined. Inclusion rules allow you to specify additional requirements for patients to be included in the cohort beyond the entry events.') }}
-          </div>
-        </v-alert>
-
-        <!-- Inclusion Rules Accordion -->
-        <v-expansion-panels v-else v-model="expandedPanel">
-          <v-expansion-panel
-            v-for="(rule, index) in modelValue"
-            :key="rule.id"
-            :value="index"
-            class="inclusion-rule-panel"
-          >
-            <v-expansion-panel-title>
-              <div class="rule-title-container">
-                <span class="rule-title-display">{{ rule.name }}</span>
-                <div class="rule-actions">
-                  <v-btn
-                    icon
-                    size="small"
-                    variant="text"
-                    @click.stop="openEditDialog(index)"
-                  >
-                    <v-icon size="small">mdi-pencil</v-icon>
-                  </v-btn>
-                  <v-btn
-                    icon
-                    size="small"
-                    variant="text"
-                    color="primary"
-                    data-testid="remove-inclusion-rule"
-                    @click.stop="removeRule(index)"
-                  >
-                    <v-icon>mdi-delete</v-icon>
-                  </v-btn>
-                </div>
+      <!-- Inclusion Rules Accordion -->
+      <v-expansion-panels
+        v-else
+        v-model="expandedPanel"
+      >
+        <v-expansion-panel
+          v-for="(rule, index) in modelValue"
+          :key="rule.id"
+          :value="index"
+          class="inclusion-rule-panel"
+        >
+          <v-expansion-panel-title>
+            <div class="rule-title-container">
+              <span class="rule-title-display">{{ rule.name }}</span>
+              <div class="rule-actions">
+                <v-btn
+                  icon
+                  size="small"
+                  variant="text"
+                  @click.stop="openEditDialog(index)"
+                >
+                  <v-icon size="small">
+                    mdi-pencil
+                  </v-icon>
+                </v-btn>
+                <v-btn
+                  icon
+                  size="small"
+                  variant="text"
+                  color="primary"
+                  data-testid="remove-inclusion-rule"
+                  @click.stop="removeRule(index)"
+                >
+                  <v-icon>mdi-delete</v-icon>
+                </v-btn>
               </div>
-            </v-expansion-panel-title>
+            </div>
+          </v-expansion-panel-title>
 
-            <v-expansion-panel-text>
-              <!-- Rule Description (editable) -->
-              <div class="rule-description-container mb-3">
-                <input
-                  v-model="rule.description"
-                  class="rule-description-input"
-                  placeholder="Enter a description for this inclusion rule..."
-                  @blur="updateRuleDescription(index, $event)"
-                />
-              </div>
-
-              <!-- Criteria Groups -->
-              <div v-for="(group, groupIndex) in rule.criteriaGroups" :key="group.id" class="mb-3">
-                <CriteriaGroupEditor
-                  :model-value="group"
-                  @update:model-value="updateGroup(index, groupIndex, $event)"
-                  @remove="removeGroup(index, groupIndex)"
-                  @select-concept-set="handleSelectConceptSet(index, groupIndex, $event)"
-                  @edit-concept-set="$emit('edit-concept-set', $event)"
-                />
-              </div>
-
-              <!-- Add Group Button -->
-              <v-btn
-                variant="outlined"
-                prepend-icon="mdi-plus"
-                size="small"
-                @click="addGroup(index)"
+          <v-expansion-panel-text>
+            <!-- Rule Description (editable) -->
+            <div class="rule-description-container mb-3">
+              <input
+                v-model="rule.description"
+                class="rule-description-input"
+                placeholder="Enter a description for this inclusion rule..."
+                @blur="updateRuleDescription(index, $event)"
               >
-                Add Criteria Group
-              </v-btn>
-            </v-expansion-panel-text>
-          </v-expansion-panel>
-        </v-expansion-panels>
+            </div>
+
+            <!-- Criteria Groups -->
+            <div
+              v-for="(group, groupIndex) in rule.criteriaGroups"
+              :key="group.id"
+              class="mb-3"
+            >
+              <CriteriaGroupEditor
+                :model-value="group"
+                @update:model-value="updateGroup(index, groupIndex, $event)"
+                @remove="removeGroup(index, groupIndex)"
+                @select-concept-set="handleSelectConceptSet(index, groupIndex, $event)"
+                @edit-concept-set="$emit('edit-concept-set', $event)"
+              />
+            </div>
+
+            <!-- Add Group Button -->
+            <v-btn
+              variant="outlined"
+              prepend-icon="mdi-plus"
+              size="small"
+              @click="addGroup(index)"
+            >
+              Add Criteria Group
+            </v-btn>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
     </div>
 
     <!-- Edit Name Dialog -->
-    <v-dialog v-model="showEditDialog" max-width="500">
+    <v-dialog
+      v-model="showEditDialog"
+      max-width="500"
+    >
       <v-card>
         <v-card-title>Edit Inclusion Rule Name</v-card-title>
         <v-card-text>
@@ -113,8 +132,18 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showEditDialog = false">Cancel</v-btn>
-          <v-btn color="primary" @click="saveEditedName">Save</v-btn>
+          <v-btn
+            variant="text"
+            @click="showEditDialog = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            @click="saveEditedName"
+          >
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

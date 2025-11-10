@@ -98,12 +98,21 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
 </script>
 
 <template>
-  <v-card class="cardinality-editor" elevation="0" variant="outlined">
-    <v-card-title class="text-subtitle-1">{{ t('components.cardinalityInput.title') }}</v-card-title>
+  <v-card
+    class="cardinality-editor"
+    elevation="0"
+    variant="outlined"
+  >
+    <v-card-title class="text-subtitle-1">
+      {{ t('components.cardinalityInput.title') }}
+    </v-card-title>
     <v-card-text>
       <v-row dense>
         <!-- Cardinality Type Dropdown -->
-        <v-col cols="12" md="4">
+        <v-col
+          cols="12"
+          md="4"
+        >
           <v-select
             :model-value="cardinality.type"
             :items="typeOptions"
@@ -119,8 +128,14 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
         </v-col>
 
         <!-- Count Input - Using native input for Playwright compatibility -->
-        <v-col cols="12" md="4">
-          <label class="v-label" for="count-input">{{ t('components.cardinalityInput.count') }}</label>
+        <v-col
+          cols="12"
+          md="4"
+        >
+          <label
+            class="v-label"
+            for="count-input"
+          >{{ t('components.cardinalityInput.count') }}</label>
           <input
             id="count-input"
             :value="count"
@@ -131,11 +146,14 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
             class="v-input__control"
             style="width: 100%; padding: 8px; border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)); border-radius: 4px;"
             @input="(e) => count = Number((e.target as HTMLInputElement).value)"
-          />
+          >
         </v-col>
 
         <!-- Counting Method Dropdown -->
-        <v-col cols="12" md="4">
+        <v-col
+          cols="12"
+          md="4"
+        >
           <v-select
             :model-value="cardinality.countingMethod"
             :items="countingMethodOptions"
@@ -152,7 +170,10 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
       </v-row>
 
       <!-- Validation Error Messages -->
-      <v-row v-if="!validation.isValid" dense>
+      <v-row
+        v-if="!validation.isValid"
+        dense
+      >
         <v-col cols="12">
           <v-alert
             type="error"
@@ -161,7 +182,12 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
             class="mt-2"
           >
             <ul class="pl-4">
-              <li v-for="error in validation.errors" :key="error">{{ error }}</li>
+              <li
+                v-for="error in validation.errors"
+                :key="error"
+              >
+                {{ error }}
+              </li>
             </ul>
           </v-alert>
         </v-col>
@@ -176,7 +202,10 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
             </template>
             <template v-else-if="cardinality.type === 'EXACTLY'">
               {{ t('components.cardinalityInput.help.exactly', { count }) }}
-              <span v-if="count === 0" class="text-warning">
+              <span
+                v-if="count === 0"
+                class="text-warning"
+              >
                 {{ t('components.cardinalityInput.help.exclusion') }}
               </span>
             </template>

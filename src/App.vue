@@ -12,7 +12,9 @@
           size="64"
           color="primary"
         />
-        <div class="mt-4 text-h6">{{ t('common.loading', 'Loading...') }}</div>
+        <div class="mt-4 text-h6">
+          {{ t('common.loading', 'Loading...') }}
+        </div>
       </div>
     </v-overlay>
 
