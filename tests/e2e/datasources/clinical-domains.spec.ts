@@ -7,9 +7,11 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { setupDatasourcesMocks } from '../helpers/api-mocks'
 
 test.describe('Data Sources - Clinical Domain Reports (Observation Period & Death)', () => {
   test.beforeEach(async ({ page }) => {
+    await setupDatasourcesMocks(page)
     await page.goto('/datasources')
     await page.waitForLoadState('networkidle')
   })

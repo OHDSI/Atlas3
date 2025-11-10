@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { setupBasicMocks } from './helpers/api-mocks'
 
 test.describe('Plugin Framework', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the app
+    await setupBasicMocks(page)
     await page.goto('/');
   });
 

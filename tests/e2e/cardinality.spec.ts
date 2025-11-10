@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { setupBasicMocks } from './helpers/api-mocks'
 
 test.describe('Cardinality and Temporal Windows', () => {
   test.beforeEach(async ({ page }) => {

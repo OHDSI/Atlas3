@@ -244,8 +244,8 @@ function toggleColumn(key: string) {
 function formatCell(value: any, header: TableHeader) {
   if (value == null) return '-'
 
-  // Format numbers with thousands separator
-  if (typeof value === 'number' && !header.key.includes('id')) {
+  // Format numbers with thousands separator (but not IDs)
+  if (typeof value === 'number' && !header.key.toLowerCase().includes('id')) {
     if (header.key.includes('percent') || header.key.includes('prevalence')) {
       return `${value.toFixed(1)}%`
     }

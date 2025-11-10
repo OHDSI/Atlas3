@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { setupBasicMocks } from './helpers/api-mocks'
 
 /**
  * E2E Test for User Story 3: Add Event Attributes and Filters
@@ -11,6 +12,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Event Attributes and Filters', () => {
   test.beforeEach(async ({ page }) => {
+    await setupBasicMocks(page)
     await page.goto('/cohorts/new')
     await page.waitForLoadState('networkidle')
   })

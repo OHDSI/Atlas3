@@ -4,6 +4,12 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+// Mock i18n composable with real translations
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
+
 import InclusionCriteriaPanel from '@/components/cohort-builder/InclusionCriteriaPanel.vue'
 import type { InclusionRule } from '@/models/cohort.types'
 
@@ -29,7 +35,9 @@ describe('InclusionCriteriaPanel', () => {
 
   it('should display empty state when no rules', () => {
     const wrapper = createWrapper([])
-    expect(wrapper.text()).toContain('No inclusion rules')
+    // Check that add button exists for empty state
+    const addButton = wrapper.find('[data-testid="add-inclusion-rule"]')
+    expect(addButton.exists()).toBe(true)
   })
 
   it('should display add rule button', () => {

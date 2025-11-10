@@ -82,11 +82,11 @@ describe('WebAPI Service - Network Retry Logic (T132)', () => {
 
     it('should use exponential backoff delays (500ms, 1000ms, 2000ms)', async () => {
       const delays: number[] = []
-      let lastTime = Date.now()
+      let lastTime: number | null = null
 
       mockFetch.mockImplementation(() => {
         const currentTime = Date.now()
-        if (delays.length > 0) {
+        if (lastTime !== null) {
           delays.push(currentTime - lastTime)
         }
         lastTime = currentTime
@@ -118,13 +118,16 @@ describe('WebAPI Service - Network Retry Logic (T132)', () => {
     it('should fail after 3 attempts', async () => {
       mockFetch.mockRejectedValue(new TypeError('Network request failed'))
 
-      const promise = webapi.fetchCDMSources()
+      // Start the promise and catch it to prevent unhandled rejection
+      const promise = webapi.fetchCDMSources().catch(err => err)
 
       // Advance through all retry attempts
       await vi.advanceTimersByTimeAsync(500)  // First retry
       await vi.advanceTimersByTimeAsync(1000) // Second retry
 
-      await expect(promise).rejects.toThrow('Network error')
+      const result = await promise
+      expect(result).toBeInstanceOf(Error)
+      expect(result.message).toContain('Network error')
       expect(mockFetch).toHaveBeenCalledTimes(3)
     })
   })
@@ -396,12 +399,14 @@ describe('WebAPI Service - Network Retry Logic (T132)', () => {
           statusText: 'Internal Server Error',
         })
 
-      const promise = webapi.fetchCDMSources()
+      // Catch the promise to prevent unhandled rejection
+      const promise = webapi.fetchCDMSources().catch(err => err)
 
       await vi.advanceTimersByTimeAsync(500)  // First retry
       await vi.advanceTimersByTimeAsync(1000) // Second retry
 
-      await expect(promise).rejects.toThrow()
+      const result = await promise
+      expect(result).toBeInstanceOf(Error)
       expect(mockFetch).toHaveBeenCalledTimes(3)
     })
   })
@@ -410,16 +415,16 @@ describe('WebAPI Service - Network Retry Logic (T132)', () => {
     it('should apply retry logic to concept search', async () => {
       const mockConcepts = [
         {
-          conceptId: 201826,
-          conceptName: 'Type 2 diabetes mellitus',
-          domainId: 'Condition',
-          vocabularyId: 'SNOMED',
-          conceptClassId: 'Clinical Finding',
-          conceptCode: '44054006',
-          standardConcept: 'S',
-          invalidReason: null,
-          validStartDate: '1970-01-01',
-          validEndDate: '2099-12-31',
+          CONCEPT_ID: 201826,
+          CONCEPT_NAME: 'Type 2 diabetes mellitus',
+          DOMAIN_ID: 'Condition',
+          VOCABULARY_ID: 'SNOMED',
+          CONCEPT_CLASS_ID: 'Clinical Finding',
+          CONCEPT_CODE: '44054006',
+          STANDARD_CONCEPT: 'S',
+          INVALID_REASON: null,
+          VALID_START_DATE: '1970-01-01',
+          VALID_END_DATE: '2099-12-31',
         }
       ]
 
@@ -430,7 +435,7 @@ describe('WebAPI Service - Network Retry Logic (T132)', () => {
           json: async () => mockConcepts,
         })
 
-      const promise = webapi.searchConcepts('diabetes')
+      const promise = webapi.searchConcepts('SYNPUF1K', 'diabetes')
 
       await vi.advanceTimersByTimeAsync(500)
 
@@ -490,9 +495,8 @@ describe('WebAPI Service - Network Retry Logic (T132)', () => {
       await promise
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[WebAPI] Network error'),
-        expect.stringContaining('attempt 1/3'),
-        expect.stringContaining('retrying in 500ms')
+        expect.stringContaining('[WebAPI] Network error (attempt 1/3), retrying in 500ms...'),
+        expect.anything()
       )
 
       consoleSpy.mockRestore()

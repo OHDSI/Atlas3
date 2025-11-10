@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { setupBasicMocks } from './helpers/api-mocks'
 
 /**
  * E2E Test for User Story 4: Create Inclusion Criteria Groups with Logic

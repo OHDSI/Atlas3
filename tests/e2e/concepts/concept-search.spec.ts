@@ -4,10 +4,12 @@
  * Tasks: T038, T039, T040, T041, T042
  */
 import { test, expect } from '@playwright/test'
+import { setupBasicMocks } from '../helpers/api-mocks'
 
 test.describe('Concept Search', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to concepts page
+    await setupBasicMocks(page)
     await page.goto('/concepts')
     
     // Wait for page to load

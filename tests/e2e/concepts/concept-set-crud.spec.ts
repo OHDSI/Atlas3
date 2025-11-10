@@ -4,10 +4,12 @@
  * Tasks: T079, T080, T081, T082, T083
  */
 import { test, expect } from '@playwright/test'
+import { setupBasicMocks } from '../helpers/api-mocks'
 
 test.describe('Concept Set CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to concepts page
+    await setupBasicMocks(page)
     await page.goto('/concepts')
     
     // Click on "Concept Sets" tab

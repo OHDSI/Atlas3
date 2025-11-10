@@ -4,8 +4,15 @@ import { mount, VueWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import ReportSelector from '@/components/reports/ReportSelector.vue'
 import type { ReportType } from '@/models/report.types'
+
+// Mock i18n composable with real translations
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../helpers/i18n-mock')
+  return mockUseI18n
+})
+
+import ReportSelector from '@/components/reports/ReportSelector.vue'
 
 const vuetify = createVuetify({
   components,

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { setupBasicMocks } from './helpers/api-mocks'
 import * as path from 'path'
 import * as fs from 'fs'
 import { fileURLToPath } from 'url'

@@ -474,9 +474,14 @@ describe('ErrorBoundary', () => {
       await wrapper.vm.$nextTick()
 
       const col = wrapper.findComponent({ name: 'VCol' })
-      expect(col.props('cols')).toBe(12)
-      expect(col.props('md')).toBe(8)
-      expect(col.props('lg')).toBe(6)
+      // Vuetify props may be strings or numbers depending on version
+      const cols = col.props('cols')
+      const md = col.props('md')
+      const lg = col.props('lg')
+
+      expect(cols == 12 || cols === '12').toBe(true)
+      expect(md == 8 || md === '8').toBe(true)
+      expect(lg == 6 || lg === '6').toBe(true)
     })
   })
 })

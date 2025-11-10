@@ -1,6 +1,6 @@
 <template>
   <v-dialog
-    :model-value="visible"
+    :model-value="modelValue"
     :persistent="true"
     max-width="480"
     @update:model-value="handleDismiss"
@@ -61,13 +61,14 @@ const emit = defineEmits<{
   logout: [];
   dismiss: [];
   expired: [];
+  'update:model-value': [value: boolean];
 }>();
 
 const localRemainingSeconds = ref(props.remainingSeconds);
 let countdownInterval: NodeJS.Timeout | null = null;
 
 // Update remaining time every second (T032)
-watch(() => props.visible, (isVisible) => {
+watch(() => props.modelValue, (isVisible) => {
   if (isVisible) {
     // Start countdown
     countdownInterval = setInterval(() => {
@@ -117,7 +118,8 @@ const countdownColorClass = computed(() => {
 });
 
 // Handle dismiss (X button or ESC key) (T034)
-function handleDismiss() {
+function handleDismiss(value: boolean) {
+  emit('update:model-value', value);
   emit('dismiss');
 }
 </script>

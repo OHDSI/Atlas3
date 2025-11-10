@@ -24,14 +24,14 @@
 
     <!-- Session Expiry Modal (T036-T037) -->
     <SessionExpiryModal
-      :visible="authStore.sessionExpiryModalOpen"
+      :model-value="authStore.sessionExpiryModalOpen"
       :expires-at="authStore.sessionExpiresAt || new Date()"
       :remaining-seconds="remainingSeconds"
       :is-extending="authStore.isRefreshing"
       :extension-error="extensionError"
       @extend="handleExtendSession"
       @logout="handleLogout"
-      @dismiss="handleDismissModal"
+      @update:model-value="handleDismissModal"
       @expired="handleExpired"
     />
   </v-app>

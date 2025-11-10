@@ -120,7 +120,7 @@ function getNavTitle(key: string): string {
     'navigation.datasources': 'Data Sources'
   }
   // If key starts with a capital letter, it's likely a direct title (from plugin)
-  if (key && key.length > 0 && key[0] === key[0].toUpperCase()) {
+  if (key && key.length > 0 && key[0] && key[0] === key[0].toUpperCase()) {
     return key
   }
   return t(key, defaults[key] || key).value

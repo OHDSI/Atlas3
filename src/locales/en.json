@@ -94,6 +94,7 @@
     "preview": "Preview",
     "progress": "Progress",
     "refresh": "Refresh",
+    "retry": "Retry",
     "save": "Save",
     "search": "Search",
     "select": "Select",
@@ -242,6 +243,18 @@
     }
   },
   "components": {
+    "cardinalityInput": {
+      "title": "Cardinality",
+      "type": "Type",
+      "count": "Count",
+      "countingMethod": "Counting Method",
+      "help": {
+        "atLeast": "Must have at least {count} occurrence(s)",
+        "exactly": "Must have exactly {count} occurrence(s)",
+        "atMost": "Must have at most {count} occurrence(s)",
+        "exclusion": "(excludes all events)"
+      }
+    },
     "authorship": {
       "created": "created",
       "versionCreated": "version created",
@@ -2766,6 +2779,10 @@
     "rejectWarning": "Without accepting this terms & conditions you can't use Atlas",
     "title": "License Agreement"
   },
+  "cohort": {
+    "addAttribute": "Add Attribute...",
+    "noAttributesAdded": "No attributes added"
+  },
   "cohortDefinitions": {
     "closeYourCurrentCohort": "Please close your current cohort definition before creating a new one",
     "cohort": {
@@ -2910,6 +2927,19 @@
         "messages": "Messages",
         "versions": "Versions",
         "reporting": "Reporting"
+      },
+      "designTab": {
+        "cardinalityOptions": {
+          "atLeast": "At Least",
+          "exactly": "Exactly",
+          "atMost": "At Most"
+        },
+        "countingOptions": {
+          "all": "All Occurrences",
+          "distinctConcept": "Distinct Concept",
+          "distinctDate": "Distinct Start Date",
+          "distinctVisit": "Distinct Visit"
+        }
       }
     },
     "cohortCaption": "Cohort #<%=id%>",

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { setupBasicMocks } from './helpers/api-mocks'
 
 /**
  * E2E Test for User Story 5: Define Exit Criteria and Observation Periods

@@ -27,14 +27,14 @@ import type { Component } from 'vue';
 export interface SessionExpiryModalProps {
   /**
    * Controls modal visibility
-   * 
+   *
    * Should be bound to reactive state that updates when:
    * - Expiry warning timer fires
    * - User extends session (closes modal)
    * - User logs out (closes modal)
    * - Token expires (replaced by login modal)
    */
-  visible: boolean;
+  modelValue: boolean;
 
   /**
    * Timestamp when the session will expire

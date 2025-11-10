@@ -14,7 +14,7 @@ export class PluginAuthService {
       } : null,
       token: authStore.token,
       isAuthenticated: authStore.isAuthenticated,
-      hasPermission(permission: string): boolean {
+      hasPermission(_permission: string): boolean {
         if (!this.user) return false;
         // TODO: Implement proper permission checking with permissionIdx
         return true;

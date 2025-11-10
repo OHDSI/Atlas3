@@ -4,12 +4,14 @@
  * Tasks: T116, T117, T118, T119, T120, T121, T122
  */
 import { test, expect } from '@playwright/test'
+import { setupBasicMocks } from '../helpers/api-mocks'
 
 test.describe('Concept Set Builder', () => {
   let testConceptSetName: string
 
   test.beforeEach(async ({ page }) => {
     // Navigate to concepts page and create a test concept set
+    await setupBasicMocks(page)
     await page.goto('/concepts')
     
     // Switch to Concept Sets tab
