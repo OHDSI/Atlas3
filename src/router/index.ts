@@ -6,7 +6,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { authConfig } from '@/config/auth.config'
-import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes'
+import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

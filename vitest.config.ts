@@ -14,6 +14,12 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['node_modules/', 'vue-mri-ui-lib/', 'tests/e2e/**'],
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
     server: {
       deps: {
         inline: ['vuetify'],

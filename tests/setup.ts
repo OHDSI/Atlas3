@@ -4,6 +4,14 @@
  */
 import { vi } from 'vitest'
 
+// Mock SystemJS for plugin framework (prevent errors during test initialization)
+if (!window.System) {
+  window.System = {
+    import: vi.fn().mockResolvedValue({}),
+    register: vi.fn(),
+  } as any
+}
+
 // Mock window.matchMedia (required for Vuetify components)
 const matchMediaMock = vi.fn().mockImplementation(query => ({
   matches: false,
@@ -59,3 +67,22 @@ Object.defineProperty(window, 'visualViewport', {
     removeEventListener: vi.fn(),
   },
 })
+
+// Mock global fetch to prevent unhandled rejections in tests
+// Individual tests can override this mock with more specific behavior
+global.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  status: 200,
+  statusText: 'OK',
+  json: async () => ({}),
+  text: async () => '',
+  blob: async () => new Blob(),
+  arrayBuffer: async () => new ArrayBuffer(0),
+  headers: new Headers(),
+  redirected: false,
+  type: 'basic',
+  url: '',
+  clone: function() { return this },
+  body: null,
+  bodyUsed: false,
+} as Response)

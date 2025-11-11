@@ -105,7 +105,7 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 import { authConfig } from '@/config/auth.config'
-import { generatePluginMenuItems } from '@/plugins/navigation/PluginMenuIntegration'
+import { generatePluginMenuItems } from '@/plugins/navigation/PluginMenuIntegration.ts'
 import LoginModal from '@/components/auth/LoginModal.vue'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
@@ -139,9 +139,9 @@ const navigationItems = ref<NavigationItem[]>([
 function loadPluginMenuItems() {
   try {
     const pluginMenuItems = generatePluginMenuItems()
-    
+
     // Add plugin menu items to navigation
-    pluginMenuItems.forEach(pluginItem => {
+    pluginMenuItems.forEach((pluginItem) => {
       if (pluginItem.visible) {
         navigationItems.value.push({
           id: pluginItem.id,
@@ -152,7 +152,7 @@ function loadPluginMenuItems() {
         })
       }
     })
-    
+
     console.log('[NavBar] Loaded plugin menu items:', pluginMenuItems.length)
   } catch (error) {
     console.error('[NavBar] Failed to load plugin menu items:', error)

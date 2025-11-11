@@ -165,25 +165,20 @@ describe('useChartExport', () => {
     it('should set exporting flag to true during export', async () => {
       const { exportToPNG, exporting } = useChartExport()
 
-      // Mock getDataURL to return a promise so we can check mid-execution
-      let resolveExport: () => void
-      const exportDelay = new Promise<void>((resolve) => {
-        resolveExport = resolve
-      })
+      // Track when getDataURL is called to verify exporting flag
+      let exportingFlagDuringExport = false
 
       mockChart.getDataURL = vi.fn().mockImplementation(() => {
-        // Flag should be true when this is called
-        setTimeout(() => resolveExport(), 0)
+        // Check the flag when this is called (should be true)
+        exportingFlagDuringExport = exporting.value
         return 'data:image/png;base64,mockImageData'
       })
 
-      const exportPromise = exportToPNG(mockChart)
+      await exportToPNG(mockChart)
 
-      // Wait a tick for the async function to start
-      await Promise.resolve()
-      await exportDelay
-
-      await exportPromise
+      // The flag should have been true during export
+      expect(exportingFlagDuringExport).toBe(true)
+      // And false after export completes
       expect(exporting.value).toBe(false)
     })
 
@@ -289,24 +284,20 @@ describe('useChartExport', () => {
     it('should set exporting flag to true during export', async () => {
       const { exportToSVG, exporting } = useChartExport()
 
-      // Mock renderToSVGString to allow checking mid-execution
-      let resolveExport: () => void
-      const exportDelay = new Promise<void>((resolve) => {
-        resolveExport = resolve
-      })
+      // Track when renderToSVGString is called to verify exporting flag
+      let exportingFlagDuringExport = false
 
       mockChart.renderToSVGString = vi.fn().mockImplementation(() => {
-        setTimeout(() => resolveExport(), 0)
+        // Check the flag when this is called (should be true)
+        exportingFlagDuringExport = exporting.value
         return '<svg>mock svg content</svg>'
       })
 
-      const exportPromise = exportToSVG(mockChart)
+      await exportToSVG(mockChart)
 
-      // Wait a tick for the async function to start
-      await Promise.resolve()
-      await exportDelay
-
-      await exportPromise
+      // The flag should have been true during export
+      expect(exportingFlagDuringExport).toBe(true)
+      // And false after export completes
       expect(exporting.value).toBe(false)
     })
 
