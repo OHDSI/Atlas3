@@ -12,13 +12,11 @@ import type { CSVExportData } from '@/models/report.types'
 
 // Mock papaparse
 vi.mock('papaparse', () => ({
-  default: {
-    unparse: vi.fn((data: unknown, options?: unknown) => {
-      // Simple CSV conversion for testing
-      const rows = data as string[][]
-      return rows.map(row => row.join(',')).join('\n')
-    })
-  }
+  unparse: vi.fn((data: unknown, options?: unknown) => {
+    // Simple CSV conversion for testing
+    const rows = data as string[][]
+    return rows.map(row => row.join(',')).join('\n')
+  })
 }))
 
 describe('useChartExport', () => {
@@ -369,7 +367,7 @@ describe('useChartExport', () => {
 
       await exportToCSV(mockCSVData)
 
-      expect(Papa.default.unparse).toHaveBeenCalledWith(
+      expect(Papa.unparse).toHaveBeenCalledWith(
         [mockCSVData.headers, ...mockCSVData.rows],
         {
           quotes: true,
@@ -423,7 +421,7 @@ describe('useChartExport', () => {
       const Papa = await import('papaparse')
 
       const error = new Error('CSV generation failed')
-      vi.mocked(Papa.default.unparse).mockImplementationOnce(() => {
+      vi.mocked(Papa.unparse).mockImplementationOnce(() => {
         throw error
       })
 
@@ -437,7 +435,7 @@ describe('useChartExport', () => {
       const { exportToCSV, exportError } = useChartExport()
       const Papa = await import('papaparse')
 
-      vi.mocked(Papa.default.unparse).mockImplementationOnce(() => {
+      vi.mocked(Papa.unparse).mockImplementationOnce(() => {
         throw 'String error'
       })
 
@@ -518,7 +516,7 @@ describe('useChartExport', () => {
 
         await copyToClipboard(mockClipboardData)
 
-        expect(Papa.default.unparse).toHaveBeenCalledWith(
+        expect(Papa.unparse).toHaveBeenCalledWith(
           [mockClipboardData.headers, ...mockClipboardData.rows],
           {
             quotes: false,
