@@ -55,7 +55,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import Papa from 'papaparse'
+import * as Papa from 'papaparse'
 
 /**
  * Props

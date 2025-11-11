@@ -8,7 +8,7 @@
 
 import { ref } from 'vue'
 import type { EChartsType } from 'echarts/core'
-import Papa from 'papaparse'
+import * as Papa from 'papaparse'
 import type { ChartExportOptions, CSVExportData } from '@/models/report.types'
 
 export function useChartExport() {

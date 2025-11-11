@@ -8,7 +8,8 @@ import type {
   LocaleState,
   LocaleCode,
   LocaleFormat,
-  TranslationCache
+  TranslationCache,
+  Translations
 } from '@/types/i18n'
 import { i18nService } from '@/services/i18n'
 
@@ -205,7 +206,8 @@ export const useLocaleStore = defineStore('locale', {
       try {
         // Import English translations directly
         const englishTranslations = await import('@/locales/en.json')
-        this.translations = englishTranslations.default || englishTranslations
+        // TypeScript with resolveJsonModule provides JSON directly, not as .default
+        this.translations = englishTranslations as Translations
       } catch (error) {
         console.error('Failed to load fallback translations:', error)
         // Provide minimal fallback translations
