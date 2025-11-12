@@ -27,7 +27,8 @@ export default defineConfig({
     },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'json-summary', 'html'],
+      reportsDirectory: './coverage',
       exclude: [
         'node_modules/',
         'vue-mri-ui-lib/',

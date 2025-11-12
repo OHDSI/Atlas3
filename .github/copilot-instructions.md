@@ -9,6 +9,10 @@ Auto-generated from all feature plans. Last updated: 2025-11-03
 - TypeScript 5.9.3 (strict mode), Vue 3.4+ + Vue 3.4+, Vuetify 3.5+ (UI components/modal), Pinia 2.1+ (state management), Vue Router 4.2+, JWT decode library (jwt-decode or jose) (007-authentication-login)
 - Browser localStorage for tokens and permissions, sessionStorage for temporary state (007-authentication-login)
 - Browser localStorage (language preference), Pinia store (translation bundles, locale state), in-memory cache (fetched translations) (008-translation-support)
+- TypeScript 5.9.3 (strict mode) + Vue 3.4+ (Composition API with `<script setup>`) + single-spa ^6.0.0, Vue 3.4+, Vue Router 4.2+, Pinia 2.1+, Vuetify 3.5+, Vite 5.4+ (009-plugin-framework)
+- Browser localStorage (plugin state caching), JSON configuration file (plugins.json) (009-plugin-framework)
+- TypeScript 5.9.3 (strict mode) + Vue 3.4+ (Composition API with `<script setup>`) + Vue 3.4+, Pinia 2.1+ (state management), Axios (HTTP client), Vuetify 3.5+ (UI components for modal), jwt-decode or jose (JWT parsing) (010-auth-enhancements)
+- Browser localStorage (token storage), Pinia store (auth state), in-memory cache (permission results) (010-auth-enhancements)
 
 - TypeScript 5.x (strict mode), Vue 3.4+ (Composition API with `<script setup>`) (001-atlas-cohort-builder)
 
@@ -47,9 +51,9 @@ npm run check-all
 TypeScript 5.x (strict mode), Vue 3.4+ (Composition API with `<script setup>`): Follow standard conventions
 
 ## Recent Changes
+- 010-auth-enhancements: Added TypeScript 5.9.3 (strict mode) + Vue 3.4+ (Composition API with `<script setup>`) + Vue 3.4+, Pinia 2.1+ (state management), Axios (HTTP client), Vuetify 3.5+ (UI components for modal), jwt-decode or jose (JWT parsing)
+- 009-plugin-framework: Added TypeScript 5.9.3 (strict mode) + Vue 3.4+ (Composition API with `<script setup>`) + single-spa ^6.0.0, Vue 3.4+, Vue Router 4.2+, Pinia 2.1+, Vuetify 3.5+, Vite 5.4+
 - 008-translation-support: Added TypeScript 5.9.3 with strict mode enabled
-- 007-authentication-login: Added TypeScript 5.9.3 (strict mode), Vue 3.4+ + Vue 3.4+, Vuetify 3.5+ (UI components/modal), Pinia 2.1+ (state management), Vue Router 4.2+, JWT decode library (jwt-decode or jose)
-- 006-datasources: Added TypeScript 5.9.3 (strict mode) + Vue 3.4+, Vuetify 3.5+, Vue Router 4.2+, Pinia, ECharts 6.0+, vue-echarts 8.0+, Zod
 
 
 <!-- MANUAL ADDITIONS START -->
