@@ -5,8 +5,9 @@
 
 import { z } from 'zod'
 import type { Locale, TranslationBundle, LocaleCode, Translations } from '@/types/i18n'
+import { WEBAPI_BASE_URL } from '@/config/webapi'
 
-const API_BASE_URL = import.meta.env.VITE_WEBAPI_URL || ''
+const API_BASE_URL = WEBAPI_BASE_URL
 
 // T029: Zod schemas for runtime validation
 const LocaleSchema = z.object({
@@ -59,10 +60,7 @@ export async function fetchLocales(): Promise<Locale[]> {
   } catch (error) {
     console.error('Error fetching locales:', error)
     return [
-      { code: 'en', name: 'English' },
-      { code: 'de', name: 'Deutsch' },
-      { code: 'fr', name: 'Français' },
-      { code: 'es', name: 'Español' }
+      { code: 'en', name: 'English' }
     ]
   }
 }

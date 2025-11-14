@@ -11,9 +11,39 @@
       class="h-100 d-flex flex-column"
     >
       <!-- Header -->
-      <v-card-title class="d-flex align-center bg-primary pa-4">
+      <v-card-title class="d-flex align-center pa-4 border-b">
+        <v-icon
+          class="mr-2"
+          color="primary"
+        >
+          mdi-shape
+        </v-icon>
         <span class="text-h6">{{ isEditMode ? t('common.edit', 'Edit').value : t('common.create', 'New').value }} {{ t('common.conceptSet', 'Concept Set').value }}</span>
         <v-spacer />
+
+        <!-- Action Buttons -->
+        <v-btn
+          v-if="isEditMode"
+          color="error"
+          variant="outlined"
+          :disabled="loading"
+          class="mr-2"
+          @click="onDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </v-btn>
+
+        <v-btn
+          color="primary"
+          variant="flat"
+          :disabled="!formValid || loading"
+          :loading="loading"
+          class="mr-2"
+          @click="onSave"
+        >
+          {{ isEditMode ? t('common.save', 'Save') : t('common.create', 'Create') }}
+        </v-btn>
+
         <v-btn
           icon="mdi-close"
           variant="text"
@@ -85,38 +115,6 @@
           </v-window>
         </v-form>
       </v-card-text>
-
-      <!-- Actions -->
-      <v-card-actions class="pa-4 border-t">
-        <v-btn
-          variant="text"
-          @click="onClose"
-        >
-          {{ t('common.close', 'Close') }}
-        </v-btn>
-        
-        <v-spacer />
-        
-        <v-btn
-          v-if="isEditMode"
-          color="error"
-          variant="outlined"
-          :disabled="loading"
-          @click="onDelete"
-        >
-          {{ t('common.delete', 'Delete') }}
-        </v-btn>
-        
-        <v-btn
-          color="primary"
-          variant="flat"
-          :disabled="!formValid || loading"
-          :loading="loading"
-          @click="onSave"
-        >
-          {{ isEditMode ? t('common.save', 'Update') : t('common.create', 'Create') }}
-        </v-btn>
-      </v-card-actions>
     </v-card>
   </v-navigation-drawer>
 </template>
@@ -321,5 +319,9 @@ function onToggleExclude(conceptId: number) {
 <style scoped>
 .border-t {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.border-b {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
 </style>

@@ -5,6 +5,15 @@
 
 import type { Cardinality, TemporalWindow, EventAttribute } from './event.types'
 
+/**
+ * Tag for cohort organization and filtering
+ */
+export interface Tag {
+  id?: number
+  name: string
+  color?: string
+}
+
 export type QualifyingLimit = 'ALL' | 'FIRST' | 'LAST'
 
 export interface ObservationPeriod {
@@ -20,6 +29,7 @@ export interface CohortDefinition {
   createdDate?: number
   modifiedBy?: unknown
   modifiedDate?: number
+  tags?: Tag[]
   entryEvents: CohortEvent[]
   qualifyingLimit: QualifyingLimit
   inclusionQualifyingLimit?: QualifyingLimit

@@ -81,21 +81,16 @@ setupAuthInterceptor()
 // Setup plugin message handler
 setupGlobalMessageHandler(router)
 
-// Initialize stores before mounting
+// Initialize stores
 const authStore = useAuthStore()
 const localeStore = useLocaleStore()
 
-// Wait for router and stores to initialize before mounting
-// This ensures the app is fully ready when rendered
-Promise.all([
-  router.isReady(),
-  authStore.initializeFromStorage().catch((error) => {
-    console.error('[Auth] Initialization failed:', error)
-  }),
-  localeStore.initialize().catch((error) => {
-    console.error('[i18n] Initialization failed:', error)
-  })
-]).then(async () => {
+// Mount app first, then initialize stores asynchronously
+// This ensures the app is interactive immediately
+router.isReady().then(async () => {
+  // Mount the app first so it's interactive
+  app.mount('#app')
+
   // Setup token expiry watcher (T038)
   watch(() => authStore.token, (newToken) => {
     if (newToken) {
@@ -104,34 +99,42 @@ Promise.all([
       tokenExpiryService.cancelExpiryWarning()
     }
   }, { immediate: true })
-  
-  // Initialize plugin framework after auth is ready
-  try {
-    const authContext = {
-      user: authStore.user ? {
-        id: authStore.user.login || '',
-        username: authStore.user.displayName || authStore.user.login || '',
-        email: authStore.user.email,
-        permissions: [], // Convert permissionIdx to array if needed
-      } : null,
-      token: authStore.token,
-      isAuthenticated: authStore.isAuthenticated,
-      hasPermission(_permission: string): boolean {
-        if (!this.user) return false;
-        // TODO: Implement proper permission checking with permissionIdx
-        return true;
-      },
-    };
-    
-    await initializePluginFramework(authContext);
-    console.log('[App] Plugin framework initialized');
-  } catch (error) {
-    console.error('[App] Plugin framework initialization failed:', error);
-  }
-  
-  app.mount('#app')
+
+  // Initialize stores asynchronously after mount
+  Promise.all([
+    authStore.initializeFromStorage().catch((error) => {
+      console.error('[Auth] Initialization failed:', error)
+    }),
+    localeStore.initialize().catch((error) => {
+      console.error('[i18n] Initialization failed:', error)
+    })
+  ]).then(async () => {
+    // Initialize plugin framework after auth is ready
+    try {
+      const authContext = {
+        user: authStore.user ? {
+          id: authStore.user.login || '',
+          username: authStore.user.displayName || authStore.user.login || '',
+          email: authStore.user.email,
+          permissions: [], // Convert permissionIdx to array if needed
+        } : null,
+        token: authStore.token,
+        isAuthenticated: authStore.isAuthenticated,
+        hasPermission(_permission: string): boolean {
+          if (!this.user) return false;
+          // TODO: Implement proper permission checking with permissionIdx
+          return true;
+        },
+      };
+
+      await initializePluginFramework(authContext);
+      console.log('[App] Plugin framework initialized');
+    } catch (error) {
+      console.error('[App] Plugin framework initialization failed:', error);
+    }
+  })
 }).catch((error) => {
-  console.error('[App] Initialization failed:', error)
-  // Mount anyway with fallback translations
+  console.error('[App] Router initialization failed:', error)
+  // Mount anyway
   app.mount('#app')
 })

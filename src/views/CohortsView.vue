@@ -33,18 +33,69 @@
           </v-col>
         </v-row>
 
+        <!-- Filters -->
         <v-row>
           <v-col cols="12">
+            <cohort-filters
+              :filters="filters"
+              :available-tags="availableTags"
+              :available-authors="availableAuthors"
+              :active-filter-count="activeFilterCount"
+              @update:filters="filters = $event"
+              @clear="clearFilters"
+            />
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <v-col cols="12">
+            <!-- Filtering indicator -->
+            <div
+              v-if="filtering"
+              class="cohorts-view__filtering"
+            >
+              <v-progress-linear
+                indeterminate
+                color="primary"
+                height="2"
+              />
+              <div class="cohorts-view__filtering-text">
+                Filtering {{ cohorts.length.toLocaleString() }} cohorts...
+              </div>
+            </div>
+
             <cohort-grid
               :cohorts="paginatedCohorts"
               :loading="loading"
               :error="error"
               :search-query="searchQuery"
+              :selected-tags="filters.selectedTags"
               @retry="fetchCohorts"
               @create-cohort="handleCreateCohort"
-              @materialize="handleMaterialize"
+              @generate="handleGenerate"
               @delete="handleDeleteClick"
+              @tag-click="handleTagClick"
             />
+          </v-col>
+        </v-row>
+
+        <!-- Pagination -->
+        <v-row v-if="!loading && !error && filteredCohorts.length > 0">
+          <v-col cols="12">
+            <div class="cohorts-view__pagination">
+              <cohort-pagination
+                :page="page"
+                :items-per-page="itemsPerPage"
+                :items-per-page-options="itemsPerPageOptions"
+                :total-items="totalItems"
+                :can-go-previous="canGoPrevious"
+                :can-go-next="canGoNext"
+                :range-display="rangeDisplay"
+                @previous="previousPage"
+                @next="nextPage"
+                @update:items-per-page="setItemsPerPage"
+              />
+            </div>
           </v-col>
         </v-row>
 
@@ -71,39 +122,6 @@
                 color="grey"
                 variant="text"
                 @click="showImportDialog = false"
-              >
-                {{ t('common.close', 'Close') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-
-        <!-- Materialize Dialog -->
-        <v-dialog
-          v-model="showMaterializeDialog"
-          max-width="600px"
-        >
-          <v-card>
-            <v-card-title class="text-h5">
-              {{ t('common.materializeCohort', 'Materialize Cohort') }}
-            </v-card-title>
-            <v-card-text>
-              <p class="mb-2">
-                <strong>{{ t('columns.name', 'Cohort') }}:</strong> {{ selectedCohort?.name }}
-              </p>
-              <p class="mb-4">
-                <strong>{{ t('columns.id', 'ID') }}:</strong> {{ selectedCohort?.id }}
-              </p>
-              <p class="text-body-2 text-grey">
-                {{ t('common.materializeCohortDescription', 'Materialize functionality will be implemented in a future update. This will generate the patient list for this cohort definition.') }}
-              </p>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn
-                color="grey"
-                variant="text"
-                @click="showMaterializeDialog = false"
               >
                 {{ t('common.close', 'Close') }}
               </v-btn>
@@ -151,40 +169,13 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+
+        <!-- Generation Panel -->
+        <generation-panel
+          v-model="showGenerationPanel"
+          :cohort-id="selectedCohort?.id"
+        />
       </v-container>
-
-      <!-- Fixed pagination bar at bottom -->
-      <div
-        v-if="!loading && !error && filteredCohorts.length > 0"
-        class="cohorts-view__pagination-bar"
-      >
-        <div class="cohorts-view__pagination-content">
-          <div class="cohorts-view__pagination-search">
-            <label
-              for="cohort-search"
-              class="cohorts-view__pagination-label"
-            >{{ t('common.search', 'Search') }}:</label>
-            <cohort-search
-              id="cohort-search"
-              v-model="searchQuery"
-              class="cohorts-view__search-input"
-            />
-          </div>
-
-          <cohort-pagination
-            :page="page"
-            :items-per-page="itemsPerPage"
-            :items-per-page-options="itemsPerPageOptions"
-            :total-items="totalItems"
-            :can-go-previous="canGoPrevious"
-            :can-go-next="canGoNext"
-            :range-display="rangeDisplay"
-            @previous="previousPage"
-            @next="nextPage"
-            @update:items-per-page="setItemsPerPage"
-          />
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -197,25 +188,33 @@ import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
 import { deleteCohort } from '@/services/webapi'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
-import CohortSearch from '@/components/cohort/CohortSearch.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
+import CohortFilters from '@/components/cohort/CohortFilters.vue'
+import GenerationPanel from '@/components/cohort/GenerationPanel.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 const router = useRouter()
 const { t } = useI18n()
 const showImportDialog = ref(false)
-const showMaterializeDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showGenerationPanel = ref(false)
 const selectedCohort = ref<CohortDefinitionSummary | null>(null)
 const deleting = ref(false)
 
 // Cohorts state management
 const {
+  cohorts,
   loading,
+  filtering,
   error,
   searchQuery,
+  filters,
   filteredCohorts,
+  availableTags,
+  availableAuthors,
+  activeFilterCount,
   fetchCohorts,
+  clearFilters,
 } = useCohorts()
 
 // Pagination state management
@@ -257,11 +256,11 @@ function handleImportCohort() {
 }
 
 /**
- * Open materialize dialog
+ * Open generation panel for a cohort
  */
-function handleMaterialize(cohort: CohortDefinitionSummary) {
+function handleGenerate(cohort: CohortDefinitionSummary) {
   selectedCohort.value = cohort
-  showMaterializeDialog.value = true
+  showGenerationPanel.value = true
 }
 
 /**
@@ -270,6 +269,20 @@ function handleMaterialize(cohort: CohortDefinitionSummary) {
 function handleDeleteClick(cohort: CohortDefinitionSummary) {
   selectedCohort.value = cohort
   showDeleteDialog.value = true
+}
+
+/**
+ * Handle tag click - toggle tag filter on/off
+ */
+function handleTagClick(tagName: string) {
+  const index = filters.value.selectedTags.indexOf(tagName)
+  if (index === -1) {
+    // Tag not selected - add it
+    filters.value.selectedTags.push(tagName)
+  } else {
+    // Tag already selected - remove it
+    filters.value.selectedTags.splice(index, 1)
+  }
 }
 
 /**
@@ -322,7 +335,6 @@ onMounted(() => {
 
 .cohorts-view {
   padding: 0;
-  padding-bottom: 80px; /* Space for fixed pagination */
 }
 
 /* Breadcrumb */
@@ -357,63 +369,31 @@ onMounted(() => {
   letter-spacing: normal;
 }
 
-/* Pagination Bar */
-.cohorts-view__pagination-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: #ffffff;
-  border-top: 1px solid #e0e0e0;
-  padding: 12px 24px;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
-  z-index: 100;
-}
-
-.cohorts-view__pagination-content {
+/* Pagination */
+.cohorts-view__pagination {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 24px;
-  max-width: 100%;
-}
-
-.cohorts-view__pagination-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.cohorts-view__pagination-label {
-  font-size: 0.875rem;
-  color: #666;
-  white-space: nowrap;
-}
-
-.cohorts-view__search-input {
-  width: 200px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 960px) {
-  .cohorts-view__pagination-content {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .cohorts-view__pagination-search {
-    justify-content: flex-start;
-  }
-
-  .cohorts-view__search-input {
-    flex: 1;
-  }
+  justify-content: center;
+  padding: 24px 0;
 }
 
 @media (max-width: 599px) {
   .cohorts-view__actions {
     flex-direction: column;
   }
+}
+
+/* Filtering indicator */
+.cohorts-view__filtering {
+  margin-bottom: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 12px 16px;
+}
+
+.cohorts-view__filtering-text {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: #666;
+  text-align: center;
 }
 </style>

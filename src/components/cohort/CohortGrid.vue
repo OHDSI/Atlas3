@@ -79,9 +79,11 @@
         v-for="cohort in cohorts"
         :key="cohort.id"
         :cohort="cohort"
+        :selected-tags="selectedTags"
         class="cohort-grid__card"
-        @materialize="$emit('materialize', $event)"
+        @generate="$emit('generate', $event)"
         @delete="$emit('delete', $event)"
+        @tag-click="$emit('tag-click', $event)"
       />
     </div>
   </div>
@@ -100,19 +102,22 @@ interface Props {
   loading?: boolean
   error?: Error | null
   searchQuery?: string
+  selectedTags?: string[]
 }
 
 interface Emits {
   (e: 'retry'): void
   (e: 'create-cohort'): void
-  (e: 'materialize', cohort: CohortDefinitionSummary): void
+  (e: 'generate', cohort: CohortDefinitionSummary): void
   (e: 'delete', cohort: CohortDefinitionSummary): void
+  (e: 'tag-click', tagName: string): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   error: null,
   searchQuery: '',
+  selectedTags: () => [],
 })
 
 defineEmits<Emits>()

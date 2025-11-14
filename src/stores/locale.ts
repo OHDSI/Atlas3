@@ -50,10 +50,7 @@ export const useLocaleStore = defineStore('locale', {
         // Set default locales in case WebAPI fails
         if (this.availableLocales.length === 0) {
           this.availableLocales = [
-            { code: 'en', name: 'English' },
-            { code: 'de', name: 'Deutsch' },
-            { code: 'fr', name: 'Français' },
-            { code: 'es', name: 'Español' }
+            { code: 'en', name: 'English' }
           ]
         }
         
@@ -83,10 +80,7 @@ export const useLocaleStore = defineStore('locale', {
       } catch (error) {
         console.error('Failed to fetch available locales:', error)
         this.availableLocales = [
-          { code: 'en', name: 'English' },
-          { code: 'de', name: 'Deutsch' },
-          { code: 'fr', name: 'Français' },
-          { code: 'es', name: 'Español' }
+          { code: 'en', name: 'English' }
         ]
       }
     },

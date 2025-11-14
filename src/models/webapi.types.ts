@@ -4,6 +4,15 @@
  */
 import { z } from 'zod'
 
+// Tag schema for cohort organization
+export const TagSchema = z.object({
+  id: z.number().optional(),
+  name: z.string(),
+  color: z.string().optional(),
+})
+
+export type Tag = z.infer<typeof TagSchema>
+
 export interface Daimon {
   sourceDaimonId: number
   daimonType: string
@@ -123,7 +132,7 @@ export const CohortDefinitionSummarySchema = z.object({
   modifiedDate: z.number().optional(), // Unix timestamp in milliseconds
   hasWriteAccess: z.boolean().optional(),
   hasReadAccess: z.boolean().optional(),
-  tags: z.array(z.unknown()).optional(),
+  tags: z.array(TagSchema).optional(),
 }).passthrough() // Allow additional fields from WebAPI
 
 export type CohortDefinitionSummary = z.infer<typeof CohortDefinitionSummarySchema>

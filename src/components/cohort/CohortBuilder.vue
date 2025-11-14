@@ -10,37 +10,221 @@
       <span class="cohort-builder__breadcrumb-item cohort-builder__breadcrumb-item--active">
         {{ cohortName || t('cohortDefinitions.newDefinition') }}
       </span>
+      <v-tooltip
+        :text="t('common.editName', 'Edit name').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tooltipProps }">
+          <v-icon
+            v-bind="tooltipProps"
+            size="small"
+            class="cohort-builder__breadcrumb-edit-icon"
+            @click="showEditNameDialog = true"
+          >
+            mdi-pencil
+          </v-icon>
+        </template>
+      </v-tooltip>
     </nav>
+
+    <!-- Edit Name Dialog -->
+    <v-dialog
+      v-model="showEditNameDialog"
+      max-width="600px"
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon
+            color="primary"
+            class="mr-2"
+          >
+            mdi-pencil
+          </v-icon>
+          {{ t('common.editCohortName', 'Edit Cohort Name') }}
+        </v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="editingName"
+            :label="t('columns.name', 'Name').value"
+            :placeholder="tv('cohortDefinitions.newDefinitionTitle')"
+            variant="outlined"
+            autofocus
+            @keyup.enter="saveEditedName"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="text"
+            @click="showEditNameDialog = false"
+          >
+            {{ t('common.cancel', 'Cancel') }}
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            @click="saveEditedName"
+          >
+            {{ t('common.save', 'Save') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- Top Toolbar -->
     <div class="cohort-builder__toolbar">
       <div class="cohort-builder__toolbar-left">
-        <div class="cohort-builder__cohort-name">
-          <label class="cohort-builder__label">{{ t('columns.name').value.toUpperCase() }}:</label>
+        <div class="cohort-builder__cohort-description">
+          <label class="cohort-builder__label">{{ t('columns.description', 'DESCRIPTION').value.toUpperCase() }}:</label>
           <input
-            v-model="cohortName"
-            class="cohort-builder__name-input"
-            :placeholder="tv('cohortDefinitions.newDefinitionTitle')"
-            data-testid="cohort-name-input"
+            v-model="cohortDescription"
+            class="cohort-builder__description-input"
+            :placeholder="t('common.description', 'Description').value"
+            data-testid="cohort-description-input"
           >
         </div>
 
-        <!-- Validation Notification Icon -->
-        <v-badge
-          v-if="validationWarnings.length > 0"
-          :content="validationWarnings.length"
-          :color="highestSeverityColor"
-          class="cohort-builder__validation-badge"
+        <!-- Concept Sets Icon -->
+        <v-tooltip
+          v-if="usedConceptSets.length > 0"
+          :text="t('conceptSets.title', 'Concept Sets').value"
+          location="bottom"
         >
-          <v-icon
-            color="primary"
-            icon="mdi-message-text"
-            size="small"
-            data-testid="validation-icon"
-            style="cursor: pointer"
-            @click="showValidationDialog = true"
-          />
-        </v-badge>
+          <template #activator="{ props: tooltipProps }">
+            <v-badge
+              v-bind="tooltipProps"
+              :content="usedConceptSets.length"
+              color="primary"
+              class="cohort-builder__validation-badge"
+            >
+              <v-icon
+                color="primary"
+                icon="mdi-shape"
+                size="small"
+                data-testid="concept-sets-icon"
+                style="cursor: pointer"
+                @click="showConceptSetsDialog = true"
+              />
+            </v-badge>
+          </template>
+        </v-tooltip>
+
+        <!-- Validation Notification Icon -->
+        <v-tooltip
+          v-if="isValidating"
+          :text="t('common.validating', 'Validating cohort...').value"
+          location="bottom"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <v-progress-circular
+              v-bind="tooltipProps"
+              indeterminate
+              size="20"
+              width="2"
+              color="primary"
+              class="cohort-builder__validation-badge"
+            />
+          </template>
+        </v-tooltip>
+        <v-tooltip
+          v-else-if="validationWarnings.length > 0"
+          :text="t('cc.viewEdit.tabs.messages', 'View validation messages').value"
+          location="bottom"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <v-badge
+              v-bind="tooltipProps"
+              :content="validationWarnings.length"
+              :color="highestSeverityColor"
+              class="cohort-builder__validation-badge"
+            >
+              <v-icon
+                color="primary"
+                icon="mdi-message-text"
+                size="small"
+                data-testid="validation-icon"
+                style="cursor: pointer"
+                @click="showValidationDialog = true"
+              />
+            </v-badge>
+          </template>
+        </v-tooltip>
+
+        <!-- Concept Sets Dialog -->
+        <v-dialog
+          v-model="showConceptSetsDialog"
+          max-width="900"
+        >
+          <v-card>
+            <v-card-title class="d-flex align-center">
+              <v-icon
+                color="primary"
+                class="mr-2"
+              >
+                mdi-shape
+              </v-icon>
+              {{ t('conceptSets.title', 'Concept Sets') }}
+            </v-card-title>
+            <v-card-text>
+              <v-table>
+                <thead>
+                  <tr>
+                    <th class="text-left">
+                      {{ t('columns.id', 'ID') }}
+                    </th>
+                    <th class="text-left">
+                      {{ t('columns.name', 'Name') }}
+                    </th>
+                    <th class="text-left">
+                      {{ t('common.concepts', 'Concepts') }}
+                    </th>
+                    <th class="text-left">
+                      {{ t('common.actions', 'Actions') }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="conceptSet in usedConceptSets"
+                    :key="conceptSet.id"
+                  >
+                    <td>{{ conceptSet.id }}</td>
+                    <td>{{ conceptSet.name }}</td>
+                    <td>{{ conceptSet.items?.length || 0 }}</td>
+                    <td>
+                      <v-btn
+                        icon
+                        size="small"
+                        variant="text"
+                        @click="handleViewConceptSet(conceptSet)"
+                      >
+                        <v-icon size="small">
+                          mdi-eye
+                        </v-icon>
+                      </v-btn>
+                    </td>
+                  </tr>
+                </tbody>
+              </v-table>
+              <div
+                v-if="usedConceptSets.length === 0"
+                class="text-center py-8 text-grey"
+              >
+                {{ t('common.noConceptSets', 'No concept sets in this cohort') }}
+              </div>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                color="primary"
+                @click="showConceptSetsDialog = false"
+              >
+                {{ t('common.close') }}
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
 
         <!-- Validation Messages Dialog -->
         <v-dialog
@@ -115,17 +299,6 @@
 
       <div class="cohort-builder__toolbar-right">
         <v-btn
-          v-if="cohortId"
-          color="primary"
-          variant="flat"
-          prepend-icon="mdi-database-cog"
-          :disabled="!canSave"
-          data-testid="generate-btn"
-          @click="openGenerationPanel"
-        >
-          {{ t('components.generation.generate') }}
-        </v-btn>
-        <v-btn
           variant="outlined"
           @click="handleCancel"
         >
@@ -137,7 +310,26 @@
           :disabled="!canSave"
           @click="handleSave"
         >
+          <v-icon
+            v-if="hasUnsavedChanges"
+            start
+            size="small"
+            color="white"
+          >
+            mdi-circle
+          </v-icon>
           {{ t('common.save') }}
+        </v-btn>
+        <v-btn
+          v-if="cohortId"
+          color="orange"
+          variant="outlined"
+          prepend-icon="mdi-database-cog"
+          :disabled="!canSave"
+          data-testid="generate-btn"
+          @click="openGenerationPanel"
+        >
+          {{ t('components.generation.generate') }}
         </v-btn>
       </div>
     </div>
@@ -428,8 +620,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useCohortStore } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
@@ -463,6 +655,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const router = useRouter()
+const route = useRoute()
 const cohortStore = useCohortStore()
 const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
@@ -482,6 +675,7 @@ const inclusionQualifyingLimit = ref<QualifyingLimit>('ALL') // For inclusion cr
 
 // UI state
 const showValidationDialog = ref(false)
+const showConceptSetsDialog = ref(false)
 const isGenerationPanelOpen = ref(false)
 
 // UI state
@@ -499,6 +693,10 @@ const errorMessage = ref('')
 const showSuccess = ref(false)
 const successMessage = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+const showEditNameDialog = ref(false)
+const editingName = ref('')
+const hasUnsavedChanges = ref(false)
+const isConfirmingNavigation = ref(false) // Flag to prevent double confirmation
 
 // Generation state (T119, T120)
 const selectedSourceKey = ref<string | null>(null)
@@ -544,10 +742,44 @@ const highestSeverityColor = computed(() => {
   return 'info'
 })
 
+/**
+ * Gather all unique concept sets used in this cohort
+ */
+const usedConceptSets = computed(() => {
+  const conceptSetsMap = new Map<string, ConceptSetReference>()
+
+  // Extract from entry events
+  entryEvents.value.forEach(event => {
+    if (event.conceptSet) {
+      conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+    }
+  })
+
+  // Extract from additional criteria
+  if (additionalCriteria.value?.events) {
+    additionalCriteria.value.events.forEach(event => {
+      if (event.conceptSet) {
+        conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+      }
+    })
+  }
+
+  // Extract from inclusion rules
+  inclusionRules.value.forEach(rule => {
+    rule.criteriaGroups.forEach(group => {
+      group.events.forEach(event => {
+        if (event.conceptSet) {
+          conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+        }
+      })
+    })
+  })
+
+  return Array.from(conceptSetsMap.values())
+})
+
 onMounted(async () => {
-  // Load all concept sets from the API so user can select any system concept set
-  await conceptSetsStore.fetchAll()
-  
+  // Start loading cohort definition immediately (don't await)
   if (props.id) {
     loadCohort(props.id)
   } else {
@@ -559,13 +791,68 @@ onMounted(async () => {
     }
   }
 
-  // Load CDM sources for generation (T116)
-  await webapiStore.fetchSources()
+  // Load resources in parallel in the background (don't block rendering)
+  Promise.all([
+    // Load all concept sets from the API so user can select any system concept set
+    conceptSetsStore.fetchAll(),
+    // Load CDM sources for generation (T116)
+    webapiStore.fetchSources().then(() => {
+      // Auto-select first source if available
+      if (webapiStore.sourcesList.length > 0 && !selectedSourceKey.value) {
+        selectedSourceKey.value = webapiStore.sourcesList[0]?.sourceKey || null
+      }
+    })
+  ])
 
-  // Auto-select first source if available
-  if (webapiStore.sourcesList.length > 0 && !selectedSourceKey.value) {
-    selectedSourceKey.value = webapiStore.sourcesList[0]?.sourceKey || null
+  // Check if we should open the generation panel (from cohort overview)
+  if (route.query.generate === 'true') {
+    isGenerationPanelOpen.value = true
   }
+
+  // Add beforeunload handler to warn when closing tab/window with unsaved changes
+  window.addEventListener('beforeunload', handleBeforeUnload)
+})
+
+// Navigation guard to prevent losing unsaved changes
+let navigationConfirmed = false
+onBeforeRouteLeave((to, from, next) => {
+  // If navigation was already confirmed or there are no unsaved changes, allow it
+  if (!hasUnsavedChanges.value || navigationConfirmed) {
+    navigationConfirmed = false // Reset for next time
+    next()
+    return
+  }
+
+  // Check if we're already showing a confirmation dialog
+  if (isConfirmingNavigation.value) {
+    next(false)
+    return
+  }
+
+  isConfirmingNavigation.value = true
+  const confirmed = confirm(t('common.unsavedChangesWarning', 'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.').value)
+  isConfirmingNavigation.value = false
+
+  if (confirmed) {
+    navigationConfirmed = true // Remember that user confirmed
+    next()
+  } else {
+    next(false)
+  }
+})
+
+// Browser beforeunload handler to warn when closing tab/window with unsaved changes
+const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+  if (hasUnsavedChanges.value) {
+    event.preventDefault()
+    // Modern browsers require returnValue to be set
+    event.returnValue = ''
+    return ''
+  }
+}
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
 watch(
@@ -587,6 +874,7 @@ async function loadCohort(id: string) {
 
     if (!atlasCohort) {
       console.error(`Failed to load cohort ${id}`)
+      isLoadingCohort.value = false
       return
     }
 
@@ -632,14 +920,16 @@ async function loadCohort(id: string) {
     qualifyingLimit.value = cohortDef.qualifyingLimit
     inclusionQualifyingLimit.value = cohortDef.inclusionQualifyingLimit ?? 'ALL'
 
-    // Concept sets are already part of the cohort data structure (entryEvents, inclusionRules, etc.)
-    // No need to load them separately into the store
+    // Reset unsaved changes flag after loading
+    hasUnsavedChanges.value = false
 
-    // Validate cohort after loading
-    await validateCohort()
+    // Hide loading overlay immediately - cohort is now visible
+    isLoadingCohort.value = false
+
+    // Validate cohort in the background (don't await)
+    validateCohort()
   } catch (error) {
     console.error(`Error loading cohort ${id}:`, error)
-  } finally {
     isLoadingCohort.value = false
   }
 }
@@ -737,6 +1027,30 @@ watch(
   { deep: true }
 )
 
+// Watch to populate editingName when dialog opens
+watch(showEditNameDialog, (newValue) => {
+  if (newValue) {
+    editingName.value = cohortName.value
+  }
+})
+
+// Watch for changes to cohort definition and mark as unsaved
+watch(
+  [cohortName, cohortDescription, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
+  () => {
+    hasUnsavedChanges.value = true
+  },
+  { deep: true }
+)
+
+/**
+ * Save edited cohort name
+ */
+function saveEditedName() {
+  cohortName.value = editingName.value
+  showEditNameDialog.value = false
+}
+
 function handleSelectConceptSet(eventId: string) {
   selectedCriteriaContext.value = { eventId, ruleIndex: -1, groupIndex: -1, eventIndex: -1 }
   isConceptSetDialogOpen.value = true
@@ -803,6 +1117,17 @@ async function handleEditConceptSet(conceptSet: any) {
     items: conceptSet.items || []
   }
   conceptSetsStore.editorOpen = true
+}
+
+/**
+ * Open concept set editor from the concept sets dialog
+ */
+function handleViewConceptSet(conceptSet: any) {
+  // Close the concept sets dialog
+  showConceptSetsDialog.value = false
+
+  // Open the concept set editor
+  handleEditConceptSet(conceptSet)
 }
 
 /**
@@ -908,6 +1233,7 @@ function handleSave() {
   cohortStore.setCohort(cohortDefinition)
   cohortStore.markClean()
   cohortStore.clearDraft() // Clear draft after successful save
+  hasUnsavedChanges.value = false // Reset unsaved changes flag
 
   successMessage.value = 'Cohort saved successfully'
   showSuccess.value = true
@@ -919,6 +1245,7 @@ function handleSave() {
 }
 
 function handleCancel() {
+  // The onBeforeRouteLeave guard will handle the unsaved changes confirmation
   router.push('/cohorts')
 }
 
@@ -1118,6 +1445,20 @@ function _getStatusText(status: string): string {
   color: #999;
 }
 
+.cohort-builder__breadcrumb-edit-icon {
+  margin-left: 8px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.2s;
+  opacity: 0.7;
+}
+
+.cohort-builder__breadcrumb-edit-icon:hover {
+  color: rgb(var(--v-theme-primary));
+  opacity: 1;
+  transform: scale(1.1);
+}
+
 /* Top Toolbar */
 .cohort-builder__toolbar {
   display: flex;
@@ -1142,7 +1483,14 @@ function _getStatusText(status: string): string {
   justify-content: center;
 }
 
-.cohort-builder__cohort-name {
+.cohort-builder__cohort-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cohort-builder__cohort-name,
+.cohort-builder__cohort-description {
   display: flex;
   align-items: baseline;
   gap: 12px;
@@ -1153,6 +1501,7 @@ function _getStatusText(status: string): string {
   font-weight: 600;
   color: #666;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .cohort-builder__name-display {
@@ -1161,7 +1510,8 @@ function _getStatusText(status: string): string {
   color: #333;
 }
 
-.cohort-builder__name-input {
+.cohort-builder__name-input,
+.cohort-builder__description-input {
   font-size: 16px;
   font-weight: 500;
   color: #333;
@@ -1172,13 +1522,21 @@ function _getStatusText(status: string): string {
   border-radius: 4px;
   transition: all 0.2s;
   min-width: 250px;
+  flex: 1;
 }
 
-.cohort-builder__name-input:hover {
+.cohort-builder__description-input {
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.cohort-builder__name-input:hover,
+.cohort-builder__description-input:hover {
   border-color: #1f425a;
 }
 
-.cohort-builder__name-input:focus {
+.cohort-builder__name-input:focus,
+.cohort-builder__description-input:focus {
   border-color: #1f425a;
   box-shadow: 0 0 0 2px rgba(31, 66, 90, 0.1);
 }
