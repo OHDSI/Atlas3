@@ -9,62 +9,27 @@
 
     <!-- Main Content Area -->
     <div class="flex-grow-1">
-      <div
-        v-if="events.length === 0"
-        class="empty-state"
-      >
+      <!-- Add Filter Button -->
+      <div class="add-filter-wrapper">
         <v-menu>
           <template #activator="{ props }">
             <v-btn
               v-bind="props"
-              color="primary"
               variant="outlined"
-              size="small"
+              prepend-icon="mdi-plus"
+              size="default"
               data-testid="add-entry-event"
             >
-              <v-icon class="mr-2">
-                mdi-plus
-              </v-icon>
-              {{ t('common.addFilter', 'Add Filter') }}
+              {{ t('components.criteriaGroup.addCriteria').value }}
             </v-btn>
           </template>
           <v-list>
             <v-list-item
-              v-for="eventType in eventTypeOptions"
-              :key="eventType.value"
-              :title="eventType.label"
-              @click="addEvent(eventType.value)"
-            />
-          </v-list>
-        </v-menu>
-      </div>
-
-      <div
-        v-else
-        class="events-with-add-button"
-      >
-        <v-menu>
-          <template #activator="{ props }">
-            <v-btn
-              v-bind="props"
-              color="primary"
-              variant="outlined"
-              size="small"
-              data-testid="add-entry-event"
-              class="mb-4"
-            >
-              <v-icon class="mr-2">
-                mdi-plus
-              </v-icon>
-              {{ t('common.addFilter', 'Add Filter') }}
-            </v-btn>
-          </template>
-          <v-list>
-            <v-list-item
-              v-for="eventType in eventTypeOptions"
-              :key="eventType.value"
-              :title="eventType.label"
-              @click="addEvent(eventType.value)"
+              v-for="filter in availableFilters"
+              :key="filter.criteriaType"
+              :title="filter.name"
+              :subtitle="filter.description"
+              @click="handleFilterTypeSelected(filter.criteriaType)"
             />
           </v-list>
         </v-menu>
@@ -84,8 +49,10 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
+import { useFilterConfig } from '@/composables/useFilterConfig'
 import type { CohortEvent, CriteriaType } from '@/models/cohort.types'
 import EntryEventCard from './EntryEventCard.vue'
 
@@ -94,7 +61,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { t, tv } = useI18n()
+const { t } = useI18n()
 
 const emit = defineEmits<{
   'update:events': [events: CohortEvent[]]
@@ -102,22 +69,19 @@ const emit = defineEmits<{
   'edit-concept-set': [conceptSet: any]
 }>()
 
-const eventTypeOptions = [
-  { label: tv('cohortDefinitions.criteriaOptions.conditionOccurrence'), value: 'ConditionOccurrence' },
-  { label: tv('cohortDefinitions.criteriaOptions.drugExposure'), value: 'DrugExposure' },
-  { label: tv('cohortDefinitions.criteriaOptions.procedureOccurrence'), value: 'ProcedureOccurrence' },
-  { label: tv('cohortDefinitions.criteriaOptions.observation'), value: 'Observation' },
-  { label: tv('cohortDefinitions.criteriaOptions.measurement'), value: 'Measurement' },
-  { label: tv('cohortDefinitions.criteriaOptions.visitOccurrence'), value: 'VisitOccurrence' },
-  { label: tv('cohortDefinitions.criteriaOptions.deviceExposure'), value: 'DeviceExposure' },
-  { label: tv('cohortDefinitions.criteriaOptions.observationPeriod'), value: 'ObservationPeriod' },
-  { label: tv('cohortDefinitions.criteriaOptions.death'), value: 'Death' },
-]
+// Get available filters for initial events section
+const { availableFilters } = useFilterConfig(ref('initialEvents'))
 
-function addEvent(criteriaType: string) {
+/**
+ * Handle filter type selection from menu
+ * Creates a new event with the selected filter type
+ */
+function handleFilterTypeSelected(filterType: string) {
+  if (!filterType) return
+
   const newEvent: CohortEvent = {
     id: uuidv4(),
-    criteriaType: criteriaType as CriteriaType,
+    criteriaType: filterType as CriteriaType,
     attributes: [],
   }
 
@@ -185,16 +149,7 @@ function selectConceptSetForEvent(eventId: string) {
   padding: 24px 16px;
 }
 
-.empty-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 120px;
-}
-
-.events-with-add-button {
-  display: flex;
-  justify-content: center;
+.add-filter-wrapper {
   margin-bottom: 16px;
 }
 </style>

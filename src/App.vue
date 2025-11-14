@@ -21,6 +21,11 @@
     <NavBar />
 
     <v-main>
+      <!-- Configuration validation warnings (FR-016) -->
+      <v-container class="pt-4">
+        <ConfigurationWarningBanner />
+      </v-container>
+
       <router-view />
     </v-main>
 
@@ -43,6 +48,7 @@
 import { computed, ref } from 'vue'
 import NavBar from '@/components/shared/NavBar.vue'
 import SessionExpiryModal from '@/components/auth/SessionExpiryModal.vue'
+import ConfigurationWarningBanner from '@/components/cohort-builder/ConfigurationWarningBanner.vue'
 import { useLocaleStore } from '@/stores/locale'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'

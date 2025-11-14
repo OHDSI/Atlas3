@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import { useI18n } from '@/composables/useI18n'
+import { useFilterConfig } from '@/composables/useFilterConfig'
 import type { CohortEvent } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
 import { useCardinality } from '@/composables/useCardinality'
@@ -9,12 +9,13 @@ import CardinalityEditor from './CardinalityEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
 
-const { t } = useI18n()
-
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   event: CohortEvent
   index?: number
-}>()
+  section?: string
+}>(), {
+  section: 'criteriaGroup' // Default section context
+})
 
 const emit = defineEmits<{
   remove: []
@@ -24,29 +25,20 @@ const emit = defineEmits<{
 const { formatCardinalityDisplay, defaultCardinality } = useCardinality()
 const { formatTemporalWindowDisplay } = useTemporalWindows()
 
+// Use configuration-driven filter list (supports all 16 filter types)
+const sectionRef = ref(props.section)
+const { availableFilters } = useFilterConfig(sectionRef)
+
 // Expand/collapse state
 const expanded = ref(false)
 const showCardinalityEditor = ref(false)
 const showTemporalWindowEditor = ref(false)
 const showAttributesEditor = ref(false)
 
-// Format criteria type for display
+// Format criteria type for display using configuration
 const criteriaTypeLabel = computed(() => {
-  const typeMap: Record<string, string> = {
-    ConditionOccurrence: t('options.type.condition', 'Condition').value,
-    DrugExposure: t('options.type.drug', 'Drug').value,
-    ProcedureOccurrence: t('options.type.procedure', 'Procedure').value,
-    Measurement: t('options.type.measurement', 'Measurement').value,
-    Observation: t('options.type.observation', 'Observation').value,
-    DeviceExposure: t('common.device', 'Device').value,
-    VisitOccurrence: t('common.visit', 'Visit').value,
-    Death: t('common.death', 'Death').value,
-    Specimen: t('common.specimen', 'Specimen').value,
-    DrugEra: t('options.type.drugEra', 'Drug Era').value,
-    ConditionEra: t('options.type.conditionEra', 'Condition Era').value,
-    DoseEra: t('common.doseEra', 'Dose Era').value,
-  }
-  return typeMap[props.event.criteriaType] || props.event.criteriaType
+  const filter = availableFilters.value.find(f => f.criteriaType === props.event.criteriaType)
+  return filter?.name || props.event.criteriaType
 })
 
 // Check if event has cardinality
@@ -315,6 +307,7 @@ const removeEvent = () => {
             <AttributesEditor
               :model-value="event.attributes || []"
               :criteria-type="event.criteriaType"
+              :section="section"
               @update:model-value="updateAttributes"
             />
           </div>

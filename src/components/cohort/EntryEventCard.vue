@@ -85,6 +85,7 @@
             <AttributesEditor
               :model-value="event.attributes || []"
               :criteria-type="event.criteriaType"
+              section="initialEvents"
               :cardinality="event.cardinality"
               :temporal-window="event.temporalWindow"
               @update:model-value="updateAttributes"
@@ -99,8 +100,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { useFilterConfig } from '@/composables/useFilterConfig'
 import type { CohortEvent, CriteriaType } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
 import { useUIStore } from '@/stores/ui'
@@ -136,17 +138,18 @@ function toggleExpanded() {
   uiStore.toggleEventCard(props.event.id)
 }
 
-const eventTypeOptions = [
-  { label: tv('cohortDefinitions.criteriaOptions.conditionOccurrence'), value: 'ConditionOccurrence' as CriteriaType },
-  { label: tv('cohortDefinitions.criteriaOptions.drugExposure'), value: 'DrugExposure' as CriteriaType },
-  { label: tv('cohortDefinitions.criteriaOptions.procedureOccurrence'), value: 'ProcedureOccurrence' as CriteriaType },
-  { label: tv('cohortDefinitions.criteriaOptions.observation'), value: 'Observation' as CriteriaType },
-  { label: tv('cohortDefinitions.criteriaOptions.measurement'), value: 'Measurement' as CriteriaType },
-  { label: tv('cohortDefinitions.criteriaOptions.visitOccurrence'), value: 'VisitOccurrence' as CriteriaType },
-]
+// Use configuration-driven filter list (supports all 16 filter types)
+const { availableFilters } = useFilterConfig(ref('initialEvents'))
+
+const eventTypeOptions = computed(() => {
+  return availableFilters.value.map(filter => ({
+    label: filter.name,
+    value: filter.criteriaType as CriteriaType
+  }))
+})
 
 const eventTypeLabel = computed(() => {
-  const option = eventTypeOptions.find(opt => opt.value === props.event.criteriaType)
+  const option = eventTypeOptions.value.find(opt => opt.value === props.event.criteriaType)
   return option?.label ?? t('components.cohortExpressionEditor.cohortEntryEvents')
 })
 

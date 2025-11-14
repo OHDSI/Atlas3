@@ -144,8 +144,17 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
     case 'ConditionOccurrence':
       criteriaTypeObj.ConditionTypeExclude = false
       break
+    case 'ConditionEra':
+      criteriaTypeObj.EraTypeExclude = false
+      break
     case 'DrugExposure':
       criteriaTypeObj.DrugTypeExclude = false
+      break
+    case 'DrugEra':
+      criteriaTypeObj.EraTypeExclude = false
+      break
+    case 'DoseEra':
+      criteriaTypeObj.EraTypeExclude = false
       break
     case 'ProcedureOccurrence':
       criteriaTypeObj.ProcedureTypeExclude = false
@@ -156,14 +165,29 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
     case 'Observation':
       criteriaTypeObj.ObservationTypeExclude = false
       break
+    case 'ObservationPeriod':
+      criteriaTypeObj.PeriodTypeExclude = false
+      break
     case 'VisitOccurrence':
       criteriaTypeObj.VisitTypeExclude = false
+      break
+    case 'VisitDetail':
+      criteriaTypeObj.VisitDetailTypeExclude = false
       break
     case 'DeviceExposure':
       criteriaTypeObj.DeviceTypeExclude = false
       break
     case 'Specimen':
       criteriaTypeObj.SpecimenTypeExclude = false
+      break
+    case 'Death':
+      criteriaTypeObj.DeathTypeExclude = false
+      break
+    case 'PayerPlanPeriod':
+      criteriaTypeObj.PeriodTypeExclude = false
+      break
+    case 'LocationRegion':
+      // LocationRegion doesn't have a type exclude flag in Atlas
       break
   }
 

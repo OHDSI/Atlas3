@@ -108,7 +108,7 @@
                 size="small"
                 data-testid="add-event-to-group"
               >
-                Add Filter
+                {{ t('components.criteriaGroup.addCriteria').value }}
               </v-btn>
             </template>
             <v-list>
@@ -116,6 +116,7 @@
                 v-for="criteriaType in criteriaTypes"
                 :key="criteriaType.value"
                 :title="criteriaType.label"
+                :subtitle="criteriaType.description"
                 @click="addEvent(criteriaType.value as CriteriaType)"
               />
             </v-list>
@@ -375,9 +376,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
+import { useFilterConfig } from '@/composables/useFilterConfig'
 import type { CriteriaGroup, CohortEvent, LogicType, CriteriaType } from '@/models/cohort.types'
 import type { EventAttribute, TemporalWindow } from '@/models/event.types'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
@@ -420,28 +422,23 @@ watch(() => props.modelValue, (newVal) => {
   }
 }, { deep: true })
 
-// Criteria types for event type selector
-const criteriaTypes = [
-  { value: 'ConditionOccurrence', label: 'Condition Occurrence' },
-  { value: 'DrugExposure', label: 'Drug Exposure' },
-  { value: 'ProcedureOccurrence', label: 'Procedure Occurrence' },
-  { value: 'Measurement', label: 'Measurement' },
-  { value: 'Observation', label: 'Observation' },
-  { value: 'DeviceExposure', label: 'Device Exposure' },
-  { value: 'VisitOccurrence', label: 'Visit Occurrence' },
-  { value: 'Death', label: 'Death' },
-  { value: 'Specimen', label: 'Specimen' },
-  { value: 'DrugEra', label: 'Drug Era' },
-  { value: 'ConditionEra', label: 'Condition Era' },
-  { value: 'DoseEra', label: 'Dose Era' },
-]
+// Use configuration-driven filter list (supports all 16 filter types)
+const { availableFilters } = useFilterConfig(ref('criteriaGroup'))
+
+const criteriaTypes = computed(() => {
+  return availableFilters.value.map(filter => ({
+    value: filter.criteriaType,
+    label: filter.name,
+    description: filter.description
+  }))
+})
 
 const selectedEventIndex = ref<number | null>(null)
 
 // Methods
 
 function getEventTypeLabel(criteriaType: string): string {
-  const type = criteriaTypes.find(t => t.value === criteriaType)
+  const type = criteriaTypes.value.find(t => t.value === criteriaType)
   return type?.label || criteriaType
 }
 

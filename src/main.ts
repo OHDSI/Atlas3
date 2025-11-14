@@ -13,6 +13,7 @@ import { useLocaleStore } from './stores/locale'
 import { initializePluginFramework } from './plugins/index.ts'
 import { setupGlobalMessageHandler } from './plugins/messaging/HostMessageBus.ts'
 import { tokenExpiryService } from './services/auth/tokenExpiry'
+import { configLoaderService } from './services/config-loader.service'
 
 // SystemJS is loaded from index.html with import map for 'vue'
 console.log('[Main] SystemJS available:', !!window.System);
@@ -88,6 +89,26 @@ const localeStore = useLocaleStore()
 // Mount app first, then initialize stores asynchronously
 // This ensures the app is interactive immediately
 router.isReady().then(async () => {
+  // Load configuration early (eager loading - FR-001)
+  console.log('[Config] Loading atlas-config.json...')
+  try {
+    const validationResult = await configLoaderService.loadConfiguration()
+    if (validationResult.valid) {
+      console.log('[Config] Configuration loaded successfully')
+    } else if (validationResult.validFilterTypes.length > 0) {
+      console.warn(
+        `[Config] Configuration loaded with errors (${validationResult.validFilterTypes.length} valid filters)`
+      )
+    } else {
+      console.error('[Config] Configuration loading failed - no valid filters')
+    }
+
+    // Make validation result available globally for UI components (FR-016)
+    app.provide('configValidationResult', validationResult)
+  } catch (error) {
+    console.error('[Config] Critical error loading configuration:', error)
+  }
+
   // Mount the app first so it's interactive
   app.mount('#app')
 

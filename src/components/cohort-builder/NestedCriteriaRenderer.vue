@@ -66,7 +66,10 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { NestedCriteria, CriteriaType } from '@/models/cohort.types'
+import { useI18n } from '@/composables/useI18n'
+import { useFilterConfig } from '@/composables/useFilterConfig'
 
 interface Props {
   nested: NestedCriteria
@@ -77,13 +80,16 @@ withDefaults(defineProps<Props>(), {
   depth: 0,
 })
 
-// Format logic type for display
+const { t } = useI18n()
+const { availableFilters } = useFilterConfig(ref('criteriaGroup'))
+
+// Format logic type for display with i18n
 function formatLogicType(logicType: string, count?: number): string {
   const labels: Record<string, string> = {
-    ALL: 'ALL of',
-    ANY: 'ANY of',
-    AT_LEAST: `At least ${count ?? 0} of`,
-    AT_MOST: `At most ${count ?? 0} of`,
+    ALL: t('options.allOf', 'ALL of').value,
+    ANY: t('options.anyOf', 'ANY of').value,
+    AT_LEAST: `${t('options.atLeast', 'At least').value} ${count ?? 0} ${t('options.of', 'of').value}`,
+    AT_MOST: `${t('options.atMost', 'At most').value} ${count ?? 0} ${t('options.of', 'of').value}`,
   }
   return labels[logicType] || logicType
 }
@@ -99,23 +105,10 @@ function getLogicColor(logicType: string): string {
   return colors[logicType] || 'grey'
 }
 
-// Format event type
+// Format event type using configuration-driven labels (supports all 16 filter types)
 function formatEventType(type: CriteriaType): string {
-  const typeMap: Record<string, string> = {
-    ConditionOccurrence: 'Condition',
-    DrugExposure: 'Drug',
-    ProcedureOccurrence: 'Procedure',
-    Measurement: 'Measurement',
-    Observation: 'Observation',
-    VisitOccurrence: 'Visit',
-    DeviceExposure: 'Device',
-    Death: 'Death',
-    Specimen: 'Specimen',
-    DrugEra: 'Drug Era',
-    ConditionEra: 'Condition Era',
-    DoseEra: 'Dose Era',
-  }
-  return typeMap[type] || type
+  const filter = availableFilters.value.find(f => f.criteriaType === type)
+  return filter?.name || type
 }
 </script>
 

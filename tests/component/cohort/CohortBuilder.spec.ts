@@ -17,11 +17,9 @@ vi.mock('@/composables/useI18n', async () => {
 
 // Mock webapi service to prevent actual API calls
 vi.mock('@/services/webapi', () => ({
-  default: {
-    fetchCDMSources: vi.fn().mockResolvedValue([]),
-    getAllConceptSets: vi.fn().mockResolvedValue([]),
-    getCohortDefinition: vi.fn().mockResolvedValue(null),
-  }
+  fetchCDMSources: vi.fn().mockResolvedValue([]),
+  getAllConceptSets: vi.fn().mockResolvedValue([]),
+  getCohortDefinition: vi.fn().mockResolvedValue(null),
 }))
 
 import CohortBuilder from '@/components/cohort/CohortBuilder.vue'

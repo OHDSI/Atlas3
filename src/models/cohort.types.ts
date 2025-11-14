@@ -107,17 +107,21 @@ export interface ConceptSetReference {
 // 12 OHDSI criteria types per spec.md FR-002
 export type CriteriaType =
   | 'ConditionOccurrence'
+  | 'ConditionEra'
   | 'DrugExposure'
+  | 'DrugEra'
+  | 'DoseEra'
   | 'ProcedureOccurrence'
   | 'Measurement'
   | 'Observation'
+  | 'ObservationPeriod'
   | 'DeviceExposure'
   | 'VisitOccurrence'
+  | 'VisitDetail'
   | 'Death'
   | 'Specimen'
-  | 'DrugEra'
-  | 'ConditionEra'
-  | 'DoseEra'
+  | 'PayerPlanPeriod'
+  | 'LocationRegion'
 
 // Import from event.types.ts (will be defined there)
 export type { Cardinality, TemporalWindow, EventAttribute, DateAdjustment } from './event.types'

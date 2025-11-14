@@ -1,0 +1,95 @@
+<template>
+  <v-alert
+    v-if="validationResult && validationResult.invalidFilterTypes.length > 0"
+    type="warning"
+    variant="tonal"
+    prominent
+    closable
+    class="configuration-warning-banner"
+  >
+    <v-alert-title class="d-flex align-center">
+      <v-icon start>
+        mdi-alert-circle-outline
+      </v-icon>
+      Configuration Validation Warnings
+    </v-alert-title>
+
+    <div class="mt-2">
+      <p class="mb-2">
+        Some filter types in the configuration are invalid or misconfigured.
+        These filters will not be available in the UI:
+      </p>
+
+      <!-- Expandable details section -->
+      <v-expansion-panels variant="accordion">
+        <v-expansion-panel>
+          <v-expansion-panel-title>
+            <span class="font-weight-medium">
+              Invalid Filter Types ({{ validationResult.invalidFilterTypes.length }})
+            </span>
+          </v-expansion-panel-title>
+          <v-expansion-panel-text>
+            <v-list dense>
+              <v-list-item
+                v-for="filterType in validationResult.invalidFilterTypes"
+                :key="filterType"
+              >
+                <template #prepend>
+                  <v-icon size="small">
+                    mdi-close-circle
+                  </v-icon>
+                </template>
+                <v-list-item-title>{{ filterType }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
+
+      <p class="mt-3 text-caption">
+        Contact your administrator to update the configuration file (atlas-config.json).
+      </p>
+    </div>
+  </v-alert>
+</template>
+
+<script setup lang="ts">
+/**
+ * ConfigurationWarningBanner Component
+ *
+ * Displays validation errors from configuration loading.
+ * Shows when invalid filter types are detected in atlas-config.json.
+ *
+ * Features (T051-T053):
+ * - Warning alert display (T051)
+ * - Expandable details section with invalid filter list (T052)
+ * - Integrates with app layout when validation errors exist (T053)
+ */
+
+import { ref, onMounted } from 'vue'
+import { configLoaderService } from '@/services/config-loader.service'
+import type { ValidationResult } from '@/models/config.types'
+
+const validationResult = ref<ValidationResult | null>(null)
+
+onMounted(() => {
+  // Get validation result from config loader service
+  validationResult.value = configLoaderService.getValidationResult()
+
+  // Subscribe to configuration changes (for hot-reload)
+  configLoaderService.onConfigurationChange(() => {
+    validationResult.value = configLoaderService.getValidationResult()
+  })
+})
+</script>
+
+<style scoped>
+.configuration-warning-banner {
+  margin-bottom: 16px;
+}
+
+/* Ensure expansion panel text is properly styled */
+:deep(.v-expansion-panel-text__wrapper) {
+  padding: 12px 16px;
+}
+</style>

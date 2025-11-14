@@ -137,15 +137,16 @@
           prepend-icon="mdi-plus"
           data-testid="add-attribute-button"
         >
-          {{ t('cohort.addAttribute') }}
+          {{ t('components.common.addAttribute').value }}
         </v-btn>
       </template>
       <v-list>
         <v-list-item
           v-for="attr in availableAttributes"
-          :key="attr.id"
+          :key="attr.key"
           :title="attr.label"
-          @click="addAttributeOfType(attr.id, attr.type)"
+          :subtitle="attr.description"
+          @click="addAttributeOfType(attr.key, attr.type)"
         />
       </v-list>
     </v-menu>
@@ -153,8 +154,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import type {
   EventAttribute
 } from '@/models/event.types'
@@ -165,62 +167,40 @@ const { t } = useI18n()
 interface Props {
   modelValue: EventAttribute[]
   criteriaType: CriteriaType
+  section?: string // Optional section context (e.g., 'initialEvents', 'criteriaGroup')
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  section: 'criteriaGroup' // Default to criteria group context
+})
+
 const emit = defineEmits<{
   'update:modelValue': [value: EventAttribute[]]
 }>()
 
-// No editing state needed - attributes are always visible
+// Convert PascalCase criteriaType to camelCase for config lookup
+// e.g., 'ConditionOccurrence' -> 'conditionOccurrence'
+const toCamelCase = (str: string): string => {
+  return str.charAt(0).toLowerCase() + str.slice(1)
+}
 
-// Available attributes by criteria type
-const availableAttributes = computed(() => {
-  const commonAttributes = [
-    { id: 'age', label: 'Age', type: 'numeric' },
-    { id: 'gender', label: 'Gender', type: 'conceptSet' },
-  ]
+// Use attribute configuration composable
+const criteriaTypeKey = ref(toCamelCase(props.criteriaType))
+const sectionRef = ref(props.section)
+const { attributes, getAttributeLabel } = useAttributeConfig(
+  criteriaTypeKey,
+  sectionRef
+)
 
-  const typeSpecificAttributes: Record<string, any[]> = {
-    ConditionOccurrence: [
-      { id: 'conditionType', label: 'Condition Type', type: 'conceptSet' },
-      { id: 'conditionStatus', label: 'Condition Status', type: 'conceptSet' },
-      { id: 'occurrenceStartDate', label: 'Occurrence Start Date', type: 'date' },
-    ],
-    DrugExposure: [
-      { id: 'drugType', label: 'Drug Type', type: 'conceptSet' },
-      { id: 'quantity', label: 'Quantity', type: 'numeric' },
-      { id: 'days', label: 'Days Supply', type: 'numeric' },
-      { id: 'doseValue', label: 'Dose Value', type: 'numeric' },
-    ],
-    Measurement: [
-      { id: 'valueAsNumber', label: 'Value as Number', type: 'numeric' },
-      { id: 'valueAsConcept', label: 'Value as Concept', type: 'conceptSet' },
-      { id: 'rangeLow', label: 'Range Low', type: 'numeric' },
-      { id: 'rangeHigh', label: 'Range High', type: 'numeric' },
-      { id: 'measurementDate', label: 'Measurement Date', type: 'date' },
-    ],
-    ProcedureOccurrence: [
-      { id: 'procedureType', label: 'Procedure Type', type: 'conceptSet' },
-      { id: 'procedureDate', label: 'Procedure Date', type: 'date' },
-    ],
-    Observation: [
-      { id: 'valueAsNumber', label: 'Value as Number', type: 'numeric' },
-      { id: 'valueAsString', label: 'Value as String', type: 'text' },
-      { id: 'valueAsConcept', label: 'Value as Concept', type: 'conceptSet' },
-    ],
-    VisitOccurrence: [
-      { id: 'visitType', label: 'Visit Type', type: 'conceptSet' },
-      { id: 'visitStartDate', label: 'Visit Start Date', type: 'date' },
-      { id: 'visitEndDate', label: 'Visit End Date', type: 'date' },
-    ],
-  }
-
-  return [
-    ...commonAttributes,
-    ...(typeSpecificAttributes[props.criteriaType] || []),
-  ]
+// Watch for criteriaType changes and update the key
+watch(() => props.criteriaType, (newType) => {
+  criteriaTypeKey.value = toCamelCase(newType)
 })
+
+// Transform configuration attributes to match legacy availableAttributes format
+// This maintains backward compatibility with existing component logic
+// Note: getAttributeDescription is used internally by the composable to populate descriptions
+const availableAttributes = attributes
 
 // Operator lists
 const numericOperators = [
@@ -312,10 +292,8 @@ function removeAttribute(index: number) {
   emit('update:modelValue', newAttributes)
 }
 
-function getAttributeLabel(attributeKey: string): string {
-  const attr = availableAttributes.value.find(a => a.id === attributeKey)
-  return attr?.label || attributeKey
-}
+// Note: getAttributeLabel is now provided by useAttributeConfig composable
+// and is already exposed for use in template
 
 function openConceptSetPicker() {
   // TODO: Implement concept set picker dialog

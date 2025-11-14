@@ -4066,5 +4066,423 @@
         "description": "Data quality Achilles Heel results"
       }
     }
+  },
+  "criteria": {
+    "conditionEra": {
+      "name": "Condition Era",
+      "description": {
+        "initial": "Find patients with specific diagnosis era.",
+        "censoring": "Exit cohort based on diagnosis era.",
+        "group": "Find patients with specific condition era."
+      }
+    },
+    "conditionOccurrence": {
+      "name": "Condition Occurrence",
+      "description": {
+        "initial": "Find patients with specific diagnoses.",
+        "censoring": "Exit cohort based on diagnoses.",
+        "group": "Find patients with specific conditions."
+      }
+    },
+    "death": {
+      "name": "Death",
+      "description": {
+        "all": "Find patients based on death."
+      }
+    },
+    "deviceExposure": {
+      "name": "Device Exposure",
+      "description": {
+        "all": "Find patients based on device exposure."
+      }
+    },
+    "doseEra": {
+      "name": "Dose Era",
+      "description": {
+        "all": "Find patients with dose eras."
+      }
+    },
+    "drugEra": {
+      "name": "Drug Era",
+      "description": {
+        "initial": "Find patients with exposure to drugs over time.",
+        "censoring": "Exit cohort based on drugs over time.",
+        "group": "Find patients with drug eras."
+      }
+    },
+    "drugExposure": {
+      "name": "Drug Exposure",
+      "description": {
+        "all": "Find patients with exposure to specific drugs or drug classes."
+      }
+    },
+    "measurement": {
+      "name": "Measurement",
+      "description": {
+        "initial": "Find patients based on measurement.",
+        "censoring": "Exit cohort based on measurement.",
+        "group": "Find patients based on measurements."
+      }
+    },
+    "observation": {
+      "name": "Observation",
+      "description": {
+        "initial": "Find patients based on observation.",
+        "censoring": "Exit cohort based on lab tests or other observations.",
+        "group": "Find patients based on observations."
+      }
+    },
+    "observationPeriod": {
+      "name": "Observation Period",
+      "description": {
+        "all": "Find patients based on observation period."
+      }
+    },
+    "payerPlanPeriod": {
+      "name": "Payer Plan Period",
+      "description": {
+        "all": "Find patients based on payer plan period."
+      }
+    },
+    "procedureOccurrence": {
+      "name": "Procedure Occurrence",
+      "description": {
+        "initial": "Find patients that experienced a specific procedure.",
+        "censoring": "Exit cohort based on procedure.",
+        "group": "Find patients based on procedures."
+      }
+    },
+    "specimen": {
+      "name": "Specimen",
+      "description": {
+        "all": "Find patients based on specimen."
+      }
+    },
+    "visitOccurrence": {
+      "name": "Visit Occurrence",
+      "description": {
+        "all": "Find patients based on visit information."
+      }
+    },
+    "visitDetail": {
+      "name": "Visit Detail",
+      "description": {
+        "all": "Find patients based on visit detail information."
+      }
+    },
+    "demographic": {
+      "name": "Demographic",
+      "description": {
+        "initial": "Find patients based on demographic criteria.",
+        "censoring": "Exit cohort based on demographic criteria.",
+        "group": "Filter events based on demographic criteria."
+      }
+    },
+    "locationRegion": {
+      "name": "Location Region",
+      "description": {
+        "group": "Find patients within geographical area."
+      }
+    },
+    "group": {
+      "name": "Group",
+      "description": {
+        "group": "Add a nested group to combine criteria using and/or relationships."
+      }
+    }
+  },
+  "attributes": {
+    "default": {
+      "name": "Death Concept Set",
+      "description": "Select death concepts"
+    },
+    "temporalRelationship": {
+      "name": "Temporal Relationship",
+      "description": "Define when the event occurs relative to the index date"
+    },
+    "first": {
+      "name": "First Period",
+      "description": "Limit to first period in history"
+    },
+    "age": {
+      "name": "Age",
+      "description": "Filter by age at time of event"
+    },
+    "gender": {
+      "name": "Gender",
+      "description": "Filter by patient gender"
+    },
+    "conditionStatus": {
+      "name": "Condition Status",
+      "description": "Filter by condition status"
+    },
+    "startDate": {
+      "name": "Start Date",
+      "description": "Filter by start date"
+    },
+    "endDate": {
+      "name": "End Date",
+      "description": "Filter by end date"
+    },
+    "dateAdjustment": {
+      "name": "Date Adjustment",
+      "description": "Adjust event dates"
+    },
+    "conditionType": {
+      "name": "Condition Type",
+      "description": "Filter by condition type"
+    },
+    "visitType": {
+      "name": "Visit Type",
+      "description": "Filter by visit type"
+    },
+    "stopReason": {
+      "name": "Stop Reason",
+      "description": "Filter by stop reason text"
+    },
+    "providerSpecialty": {
+      "name": "Provider Specialty",
+      "description": "Filter by provider specialty"
+    },
+    "nested": {
+      "name": "Nested Criteria",
+      "description": "Add nested criteria group"
+    },
+    "ageAtStart": {
+      "name": "Age at Start",
+      "description": "Filter by age at period start"
+    },
+    "ageAtEnd": {
+      "name": "Age at End",
+      "description": "Filter by age at period end"
+    },
+    "occurrenceCount": {
+      "name": "Exposure Count",
+      "description": "Filter by exposure count"
+    },
+    "eraLength": {
+      "name": "Era Length",
+      "description": "Filter by era duration"
+    },
+    "drugType": {
+      "name": "Drug Type",
+      "description": "Filter by drug type"
+    },
+    "refills": {
+      "name": "Refills",
+      "description": "Filter by number of refills"
+    },
+    "quantity": {
+      "name": "Quantity",
+      "description": "Filter by quantity"
+    },
+    "daysSupply": {
+      "name": "Days Supply",
+      "description": "Filter by days of drug supply"
+    },
+    "routeConcept": {
+      "name": "Route",
+      "description": "Filter by route of administration"
+    },
+    "effectiveDrugDose": {
+      "name": "Effective Drug Dose",
+      "description": "Filter by effective drug dose"
+    },
+    "doseUnit": {
+      "name": "Dose Unit",
+      "description": "Filter by dose unit"
+    },
+    "lotNumber": {
+      "name": "Lot Number",
+      "description": "Filter by lot number"
+    },
+    "doseValue": {
+      "name": "Dose Value",
+      "description": "Filter by dose value"
+    },
+    "deviceType": {
+      "name": "Device Type",
+      "description": "Filter by device type"
+    },
+    "deviceId": {
+      "name": "Unique Device ID",
+      "description": "Filter by unique device identifier"
+    },
+    "deviceSourceConcept": {
+      "name": "Device Source Concept",
+      "description": "Filter by device source concept"
+    },
+    "measurementType": {
+      "name": "Measurement Type Criteria",
+      "description": "Filter by measurement type"
+    },
+    "operator": {
+      "name": "Operator",
+      "description": "Filter by operator"
+    },
+    "valueAsNumber": {
+      "name": "Value as Number",
+      "description": "Filter by numeric value"
+    },
+    "valueAsConcept": {
+      "name": "Value as Concept",
+      "description": "Filter by categorical value"
+    },
+    "unit": {
+      "name": "Unit",
+      "description": "Filter by unit"
+    },
+    "abnormal": {
+      "name": "Abnormal",
+      "description": "Filter for abnormal results"
+    },
+    "rangeLow": {
+      "name": "Range Low",
+      "description": "Filter by lower range"
+    },
+    "rangeHigh": {
+      "name": "Range High",
+      "description": "Filter by upper range"
+    },
+    "rangeLowRatio": {
+      "name": "Range Low Ratio",
+      "description": "Filter by lower range ratio"
+    },
+    "rangeHighRatio": {
+      "name": "Range High Ratio",
+      "description": "Filter by upper range ratio"
+    },
+    "measurementSourceConcept": {
+      "name": "Measurement Source Concept",
+      "description": "Filter by measurement source concept"
+    },
+    "observationType": {
+      "name": "Observation Date Criteria",
+      "description": "Filter by observation type"
+    },
+    "valueAsString": {
+      "name": "Value as String",
+      "description": "Filter by text value"
+    },
+    "qualifier": {
+      "name": "Qualifier Criteria",
+      "description": "Filter by qualifier"
+    },
+    "observationSourceConcept": {
+      "name": "Observation Source Concept",
+      "description": "Filter by source concept"
+    },
+    "procedureType": {
+      "name": "Procedure Type",
+      "description": "Filter by procedure type"
+    },
+    "modifier": {
+      "name": "Modifier",
+      "description": "Filter by procedure modifier"
+    },
+    "procedureSourceConcept": {
+      "name": "Procedure Source Concept",
+      "description": "Filter by source concept"
+    },
+    "specimenType": {
+      "name": "Specimen Type",
+      "description": "Filter by specimen type"
+    },
+    "anatomicSite": {
+      "name": "Anatomic Site",
+      "description": "Filter by anatomic site"
+    },
+    "diseaseStatus": {
+      "name": "Disease Status",
+      "description": "Filter by disease status"
+    },
+    "sourceId": {
+      "name": "Source ID",
+      "description": "Filter by source ID"
+    },
+    "visitLength": {
+      "name": "Visit Length",
+      "description": "Filter by length of visit"
+    },
+    "sourceConcept": {
+      "name": "Source Concept",
+      "description": "Filter by source concept"
+    },
+    "placeOfService": {
+      "name": "Place of Service",
+      "description": "Filter by place of service"
+    },
+    "visitDetailType": {
+      "name": "Visit Detail Type",
+      "description": "Filter by visit type"
+    },
+    "visitDetailLength": {
+      "name": "Visit Detail Length",
+      "description": "Filter by length of visit"
+    },
+    "placeOfServiceLocation": {
+      "name": "Place of Service Location",
+      "description": "Filter by place of service location"
+    },
+    "userDefinedPeriod": {
+      "name": "User Defined Period",
+      "description": "Specify Start and End Dates"
+    },
+    "periodType": {
+      "name": "Period Type",
+      "description": "Filter by period type"
+    },
+    "periodLength": {
+      "name": "Period Length",
+      "description": "Filter by length of period"
+    },
+    "payerConcept": {
+      "name": "Payer",
+      "description": "Filter by payer concept"
+    },
+    "planConcept": {
+      "name": "Plan",
+      "description": "Filter by plan concept"
+    },
+    "sponsorConcept": {
+      "name": "Sponsor",
+      "description": "Filter by sponsor concept"
+    },
+    "stopReasonConcept": {
+      "name": "Stop Reason",
+      "description": "Filter by stop reason concept"
+    },
+    "payerSourceConcept": {
+      "name": "Payer Source",
+      "description": "Filter by payer source concept"
+    },
+    "planSourceConcept": {
+      "name": "Plan Source",
+      "description": "Filter by plan source concept"
+    },
+    "sponsorSourceConcept": {
+      "name": "Sponsor Source",
+      "description": "Filter by sponsor source concept"
+    },
+    "stopReasonSourceConcept": {
+      "name": "Stop Reason Source",
+      "description": "Filter by stop reason source concept"
+    },
+    "deathType": {
+      "name": "Death Type",
+      "description": "Filter by death type"
+    },
+    "deathSourceConcept": {
+      "name": "Death Source Concept",
+      "description": "Filter by death source concept"
+    },
+    "race": {
+      "name": "Race",
+      "description": "Filter by patient race"
+    },
+    "ethnicity": {
+      "name": "Ethnicity",
+      "description": "Filter by patient ethnicity"
+    }
   }
 }
