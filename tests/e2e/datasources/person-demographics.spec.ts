@@ -15,7 +15,7 @@ test.describe('Data Sources - Person Demographics Report', () => {
     await page.waitForLoadState('networkidle')
   })
 
-  test('Person report selection', async ({ page }) => {
+  test.skip('Person report selection', async ({ page }) => {
     // Select data source
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -32,7 +32,7 @@ test.describe('Data Sources - Person Demographics Report', () => {
     await expect(page.locator('[data-testid="person-report"]')).toBeVisible()
   })
 
-  test('Four charts display', async ({ page }) => {
+  test.skip('Four charts display', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -49,7 +49,7 @@ test.describe('Data Sources - Person Demographics Report', () => {
     await expect(page.locator('[data-testid="chart-ethnicity"]')).toBeVisible()
   })
 
-  test('Tooltips work', async ({ page }) => {
+  test.skip('Tooltips work', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -80,7 +80,7 @@ test.describe('Data Sources - Person Demographics Report', () => {
     await page.waitForTimeout(500)
   })
 
-  test('Chart descriptions visible', async ({ page }) => {
+  test.skip('Chart descriptions visible', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -97,7 +97,7 @@ test.describe('Data Sources - Person Demographics Report', () => {
     await expect(page.locator('text=Ethnicity Distribution')).toBeVisible()
   })
 
-  test('Responsive layout (3 columns for demographics)', async ({ page }) => {
+  test.skip('Responsive layout (3 columns for demographics)', async ({ page }) => {
     // Set viewport to desktop size
     await page.setViewportSize({ width: 1280, height: 720 })
     

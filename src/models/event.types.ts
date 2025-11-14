@@ -15,6 +15,8 @@ export interface Cardinality {
   type: CardinalityType
   count: number // >= 0 (zero is valid for EXACTLY/AT_MOST exclusion)
   countingMethod: CountingMethod
+  isDistinct?: boolean
+  countColumn?: string
 }
 
 export interface TemporalWindow {
@@ -112,3 +114,13 @@ export type DateOperator =
   | 'NOT_EQUAL'
   | 'BETWEEN'
   | 'NOT_BETWEEN'
+
+/**
+ * DateAdjustment - Defines how criterion event dates are shifted
+ */
+export interface DateAdjustment {
+  startWith: 'START_DATE' | 'END_DATE'
+  startOffset: number
+  endWith: 'START_DATE' | 'END_DATE'
+  endOffset: number
+}

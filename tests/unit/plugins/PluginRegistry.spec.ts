@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PluginRegistry } from '@/plugins/core/PluginRegistry';
-import { PluginRegistration, PluginLifecycleState } from '@/models/PluginModels';
+import { PluginRegistration } from '@/models/PluginModels';
 
 describe('PluginRegistry', () => {
   let registry: PluginRegistry;

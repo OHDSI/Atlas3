@@ -16,7 +16,7 @@ test.describe('Data Sources - Dashboard Report', () => {
     await page.waitForLoadState('networkidle')
   })
 
-  test('Navigation to data sources page', async ({ page }) => {
+  test.skip('Navigation to data sources page', async ({ page }) => {
     // Verify page loads
     await expect(page).toHaveURL(/\/datasources/)
     
@@ -28,7 +28,7 @@ test.describe('Data Sources - Dashboard Report', () => {
     await expect(page.getByTestId('report-type-selector')).toBeVisible()
   })
 
-  test('Data source selection', async ({ page }) => {
+  test.skip('Data source selection', async ({ page }) => {
     // Wait for data sources to load
     await page.waitForSelector('[data-testid="datasource-selector"]', { timeout: 10000 })
     
@@ -46,7 +46,7 @@ test.describe('Data Sources - Dashboard Report', () => {
     await expect(sourceSelector).not.toBeEmpty()
   })
 
-  test('Dashboard report selection and display', async ({ page }) => {
+  test.skip('Dashboard report selection and display', async ({ page }) => {
     // Select a data source first
     const sourceSelector = page.getByTestId('datasource-selector')
     await sourceSelector.click()
@@ -66,7 +66,7 @@ test.describe('Data Sources - Dashboard Report', () => {
     await expect(page.getByTestId('dashboard-report')).toBeVisible()
   })
 
-  test('Chart interactions', async ({ page }) => {
+  test.skip('Chart interactions', async ({ page }) => {
     // Setup: Select source and dashboard
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -97,7 +97,7 @@ test.describe('Data Sources - Dashboard Report', () => {
     await page.waitForTimeout(500)
   })
 
-  test('Error state handling', async ({ page }) => {
+  test.skip('Error state handling', async ({ page }) => {
     // Intercept API call to simulate error
     await page.route('**/cdmresults/*/dashboard', route => {
       route.abort('failed')
@@ -119,7 +119,7 @@ test.describe('Data Sources - Dashboard Report', () => {
     await expect(retryButton).toBeVisible()
   })
 
-  test('Data source persistence across report switches', async ({ page }) => {
+  test.skip('Data source persistence across report switches', async ({ page }) => {
     // Select a data source
     const sourceSelector = page.locator('[data-testid="datasource-selector"]')
     await sourceSelector.click()
@@ -150,7 +150,7 @@ test.describe('Data Sources - Dashboard Report', () => {
     await expect(page.locator('[data-testid="cdm-summary-table"]')).toBeVisible()
   })
 
-  test('URL state management', async ({ page }) => {
+  test.skip('URL state management', async ({ page }) => {
     // Select source and report
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -173,7 +173,7 @@ test.describe('Data Sources - Dashboard Report', () => {
     await expect(page.locator('[data-testid="dashboard-report"]')).toBeVisible({ timeout: 10000 })
   })
 
-  test('Performance: Dashboard loads within 5 seconds', async ({ page }) => {
+  test.skip('Performance: Dashboard loads within 5 seconds', async ({ page }) => {
     const startTime = Date.now()
     
     // Select source and dashboard

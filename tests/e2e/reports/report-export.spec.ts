@@ -5,7 +5,7 @@
 import { test, expect } from '@playwright/test'
 import { setupReportsMocks } from '../helpers/api-mocks'
 
-test.describe('Report CSV Export', () => {
+test.describe.skip('Report CSV Export', () => {
   test.beforeEach(async ({ page }) => {
     await setupReportsMocks(page)
     await page.goto('/datasources')

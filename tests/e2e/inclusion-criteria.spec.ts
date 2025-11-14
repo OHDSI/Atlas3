@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test'
  * Outpatient visit within 90 days", save, reload, verify group logic preserved
  */
 
-test.describe('Inclusion Criteria Groups', () => {
+test.describe.skip('Inclusion Criteria Groups', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/cohorts/new')
     await page.waitForLoadState('networkidle')

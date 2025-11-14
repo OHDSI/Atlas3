@@ -1,0 +1,56 @@
+{
+  "expressionType": "SIMPLE_EXPRESSION",
+  "cdmVersionRange": ">=5.0.0",
+  "ConceptSets": [
+    {
+      "id": 0,
+      "name": "Metformin",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_ID": 1503297,
+              "CONCEPT_NAME": "Metformin",
+              "STANDARD_CONCEPT": "S",
+              "DOMAIN_ID": "Drug",
+              "VOCABULARY_ID": "RxNorm"
+            },
+            "isExcluded": false,
+            "includeDescendants": true,
+            "includeMapped": false
+          }
+        ]
+      }
+    }
+  ],
+  "PrimaryCriteria": {
+    "CriteriaList": [
+      {
+        "DrugExposure": {
+          "CodesetId": 0,
+          "DrugTypeExclude": false
+        }
+      }
+    ],
+    "ObservationWindow": {
+      "PriorDays": 0,
+      "PostDays": 0
+    },
+    "PrimaryCriteriaLimit": {
+      "Type": "First"
+    }
+  },
+  "QualifiedLimit": {
+    "Type": "All"
+  },
+  "ExpressionLimit": {
+    "Type": "All"
+  },
+  "CollapseSettings": {
+    "CollapseType": "ERA",
+    "EraPad": 60
+  },
+  "CensorWindow": {},
+  "InclusionRules": [],
+  "CensoringCriteria": []
+}

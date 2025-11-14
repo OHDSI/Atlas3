@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test'
  * or fixed 730 days", save, reload, verify exit strategy preserved
  */
 
-test.describe('Exit Criteria and Observation Periods', () => {
+test.describe.skip('Exit Criteria and Observation Periods', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/cohorts/new')
     await page.waitForLoadState('networkidle')

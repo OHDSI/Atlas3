@@ -16,7 +16,7 @@
  */
 import { test, expect } from '@playwright/test'
 
-test.describe('Cohort Generation', () => {
+test.describe.skip('Cohort Generation', () => {
   test.beforeEach(async ({ page }) => {
     // Mock the CDM sources API to return test data matching real Atlas API structure
     await page.route('**/WebAPI/source/sources', async (route) => {

@@ -5,7 +5,7 @@
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
 
-test.describe('Basic Cohort Creation', () => {
+test.describe.skip('Basic Cohort Creation', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/')

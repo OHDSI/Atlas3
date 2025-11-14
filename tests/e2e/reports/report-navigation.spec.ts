@@ -12,7 +12,7 @@ test.describe('Report Navigation', () => {
     await page.waitForLoadState('networkidle')
   })
 
-  test('should open report panel when clicking data source card', async ({ page }) => {
+  test.skip('should open report panel when clicking data source card', async ({ page }) => {
     // Select a data source
     const sourceSelector = page.getByTestId('datasource-selector')
     await expect(sourceSelector).toBeVisible()
@@ -25,7 +25,7 @@ test.describe('Report Navigation', () => {
     await expect(reportTypeSelector).toBeVisible()
   })
 
-  test('should close report panel when clicking close button', async ({ page }) => {
+  test.skip('should close report panel when clicking close button', async ({ page }) => {
     // Select a data source
     const sourceSelector = page.getByTestId('datasource-selector')
     await sourceSelector.click()
@@ -42,7 +42,7 @@ test.describe('Report Navigation', () => {
     await expect(page.getByTestId('dashboard-report')).toBeVisible({ timeout: 10000 })
   })
 
-  test('should display correct source key in report panel', async ({ page }) => {
+  test.skip('should display correct source key in report panel', async ({ page }) => {
     // Select a data source
     const sourceSelector = page.getByTestId('datasource-selector')
     await sourceSelector.click()

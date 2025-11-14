@@ -3,7 +3,7 @@
  * Core types for OHDSI cohort definitions
  */
 
-import type { Cardinality, TemporalWindow, EventAttribute } from './event.types'
+import type { Cardinality, TemporalWindow, EventAttribute, DateAdjustment } from './event.types'
 
 /**
  * Tag for cohort organization and filtering
@@ -38,6 +38,12 @@ export interface CohortDefinition {
   inclusionRules: InclusionRule[]
   exitCriteria?: ExitCriteria
   conceptSets: ConceptSetReference[]
+  // Missing attributes for Atlas compatibility
+  expressionType?: string
+  cdmVersionRange?: string
+  collapseSettings?: CollapseSettings
+  censorWindow?: Period
+  censoringCriteria?: CohortEvent[]
 }
 
 export interface CohortEvent {
@@ -50,6 +56,7 @@ export interface CohortEvent {
   nestedCriteria?: NestedCriteria
   restrictVisit?: boolean // Event must occur in same visit as index
   ignoreObservationPeriod?: boolean // Event can occur outside observation period
+  dateAdjustment?: DateAdjustment
 }
 
 export interface InclusionRule {
@@ -113,7 +120,7 @@ export type CriteriaType =
   | 'DoseEra'
 
 // Import from event.types.ts (will be defined there)
-export type { Cardinality, TemporalWindow, EventAttribute } from './event.types'
+export type { Cardinality, TemporalWindow, EventAttribute, DateAdjustment } from './event.types'
 
 // Cohorts Page State (for list view)
 import type { CohortDefinitionSummary } from './webapi.types'
@@ -132,4 +139,28 @@ export interface PaginationState {
   page: number
   itemsPerPage: number
   totalItems: number
+}
+
+/**
+ * CollapseSettings - Configuration for episode collapsing
+ */
+export interface CollapseSettings {
+  collapseType: string
+  eraPad: number
+}
+
+/**
+ * Period - Date range with optional start and end dates
+ */
+export interface Period {
+  startDate?: DateField
+  endDate?: DateField
+}
+
+/**
+ * DateField - Anchor date with offset
+ */
+export interface DateField {
+  dateField: 'START_DATE' | 'END_DATE'
+  offset?: number
 }

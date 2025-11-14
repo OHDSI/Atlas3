@@ -1,9 +1,19 @@
 <template>
   <div class="plugin-error-ui">
-    <v-icon size="64" color="error">mdi-alert-circle</v-icon>
+    <v-icon
+      size="64"
+      color="error"
+    >
+      mdi-alert-circle
+    </v-icon>
     <h2>Plugin Failed to Load</h2>
-    <p class="error-message">{{ error?.message || 'Unknown error occurred' }}</p>
-    <div class="error-details" v-if="showDetails">
+    <p class="error-message">
+      {{ error?.message || 'Unknown error occurred' }}
+    </p>
+    <div
+      v-if="showDetails"
+      class="error-details"
+    >
       <p><strong>Plugin ID:</strong> {{ pluginId }}</p>
       <p><strong>Timestamp:</strong> {{ formatTimestamp(error?.timestamp) }}</p>
       <pre v-if="error?.stack">{{ error.stack }}</pre>

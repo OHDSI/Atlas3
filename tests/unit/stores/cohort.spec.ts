@@ -2,14 +2,23 @@
  * Cohort Store Tests
  * Tests for cohort state management
  */
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useCohortStore } from '@/stores/cohort'
-import type { CohortEvent } from '@/models/cohort.types'
+import type { CohortEvent, CohortDefinition } from '@/models/cohort.types'
+import * as cohortCache from '@/utils/cohort-cache'
+
+// Mock IndexedDB for testing
+import 'fake-indexeddb/auto'
 
 describe('Cohort Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   describe('Initial State', () => {
@@ -228,6 +237,227 @@ describe('Cohort Store', () => {
 
       store.setCohort(cohort)
       expect(store.hasInclusionRules).toBe(true)
+    })
+  })
+
+  describe('Validation', () => {
+    it('should validate cohort with required fields', () => {
+      const store = useCohortStore()
+      const validCohort: CohortDefinition = {
+        name: 'Valid Cohort',
+        entryEvents: [
+          {
+            id: 'event-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [],
+          },
+        ],
+        qualifyingLimit: 'ALL',
+        inclusionRules: [],
+        conceptSets: [],
+      }
+
+      store.setCohort(validCohort)
+
+      expect(store.validationErrors).toHaveLength(0)
+      expect(store.isReadOnly).toBe(false)
+      expect(store.hasValidationErrors).toBe(false)
+      expect(store.canSave).toBe(true)
+    })
+
+    it('should detect missing cohort name', () => {
+      const store = useCohortStore()
+      const invalidCohort: CohortDefinition = {
+        name: '',
+        entryEvents: [
+          {
+            id: 'event-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [],
+          },
+        ],
+        qualifyingLimit: 'ALL',
+        inclusionRules: [],
+        conceptSets: [],
+      }
+
+      store.setCohort(invalidCohort)
+
+      expect(store.validationErrors.length).toBeGreaterThan(0)
+      expect(store.validationErrors.some((err) => err.field === 'name')).toBe(true)
+      expect(store.isReadOnly).toBe(true)
+      expect(store.canSave).toBe(false)
+    })
+
+    it('should detect missing entry events', () => {
+      const store = useCohortStore()
+      const invalidCohort: CohortDefinition = {
+        name: 'Test Cohort',
+        entryEvents: [],
+        qualifyingLimit: 'ALL',
+        inclusionRules: [],
+        conceptSets: [],
+      }
+
+      store.setCohort(invalidCohort)
+
+      expect(store.validationErrors.length).toBeGreaterThan(0)
+      expect(store.validationErrors.some((err) => err.field === 'entryEvents')).toBe(true)
+      expect(store.isReadOnly).toBe(true)
+    })
+  })
+
+  describe('Caching', () => {
+    it('should cache cohort on successful load', async () => {
+      const store = useCohortStore()
+      const mockCohort: CohortDefinition = {
+        id: 123,
+        name: 'Test Cohort',
+        entryEvents: [
+          {
+            id: 'event-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [],
+          },
+        ],
+        qualifyingLimit: 'ALL',
+        inclusionRules: [],
+        conceptSets: [],
+      }
+
+      // Save to cache first
+      await cohortCache.saveCohortToCache(mockCohort)
+
+      // Load from cache
+      const result = await store.loadCohort(123)
+
+      expect(result).not.toBeNull()
+      expect(result?.id).toBe(123)
+      expect(store.currentCohort?.id).toBe(123)
+    })
+
+    it('should use getCachedCohort as fallback', async () => {
+      const store = useCohortStore()
+      const mockCohort: CohortDefinition = {
+        id: 456,
+        name: 'Cached Cohort',
+        entryEvents: [
+          {
+            id: 'event-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [],
+          },
+        ],
+        qualifyingLimit: 'FIRST',
+        inclusionRules: [],
+        conceptSets: [],
+      }
+
+      // Save to cache
+      await cohortCache.saveCohortToCache(mockCohort)
+
+      // Use fallback method
+      const result = await store.getCachedCohort(456)
+
+      expect(result).not.toBeNull()
+      expect(result?.name).toBe('Cached Cohort')
+    })
+  })
+
+  describe('Save with Retry Logic', () => {
+    it('should successfully save cohort', async () => {
+      const store = useCohortStore()
+      const validCohort: CohortDefinition = {
+        id: 111,
+        name: 'Save Test',
+        entryEvents: [
+          {
+            id: 'event-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [],
+          },
+        ],
+        qualifyingLimit: 'ALL',
+        inclusionRules: [],
+        conceptSets: [],
+      }
+
+      store.setCohort(validCohort)
+      store.markDirty()
+
+      const result = await store.saveCohort()
+
+      expect(result).toBe(true)
+      expect(store.isDirty).toBe(false)
+      expect(store.retryState.attempt).toBe(0)
+      expect(store.retryState.isRetrying).toBe(false)
+    })
+
+    it('should not save when validation errors exist', async () => {
+      const store = useCohortStore()
+      const invalidCohort: CohortDefinition = {
+        name: '',
+        entryEvents: [],
+        qualifyingLimit: 'ALL',
+        inclusionRules: [],
+        conceptSets: [],
+      }
+
+      store.setCohort(invalidCohort)
+      store.markDirty()
+
+      const result = await store.saveCohort()
+
+      expect(result).toBe(false)
+      expect(store.canSave).toBe(false)
+    })
+
+    it('should retry on failure with exponential backoff', async () => {
+      const store = useCohortStore()
+      const cohort: CohortDefinition = {
+        id: 222,
+        name: 'Retry Test',
+        entryEvents: [
+          {
+            id: 'event-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [],
+          },
+        ],
+        qualifyingLimit: 'ALL',
+        inclusionRules: [],
+        conceptSets: [],
+      }
+
+      store.setCohort(cohort)
+
+      // Mock saveCohortToCache to fail twice, then succeed
+      let attempts = 0
+      const originalSave = cohortCache.saveCohortToCache
+      vi.spyOn(cohortCache, 'saveCohortToCache').mockImplementation(async (coh, src) => {
+        attempts++
+        if (attempts < 3) {
+          throw new Error('Network error')
+        }
+        // Succeed on third attempt
+        return originalSave(coh, src || 'local')
+      })
+
+      const result = await store.saveCohort()
+
+      expect(result).toBe(true)
+      expect(attempts).toBe(3)
+      expect(store.retryState.attempt).toBe(0) // Reset after success
+    }, 15000) // Increase timeout for retry delays
+
+    it('should cancel retry', async () => {
+      const store = useCohortStore()
+
+      store.cancelRetry()
+
+      expect(store.retryState.attempt).toBe(0)
+      expect(store.retryState.isRetrying).toBe(false)
+      expect(store.retryState.nextRetryAt).toBeNull()
     })
   })
 })

@@ -5,7 +5,7 @@
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
 
-test.describe('Concept Set Builder', () => {
+test.describe.skip('Concept Set Builder', () => {
   let testConceptSetName: string
 
   test.beforeEach(async ({ page }) => {

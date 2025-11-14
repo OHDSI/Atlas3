@@ -1,0 +1,65 @@
+{
+  "expressionType": "SIMPLE_EXPRESSION",
+  "cdmVersionRange": ">=5.0.0",
+  "ConceptSets": [
+    {
+      "id": 0,
+      "name": "Coronary Artery Bypass",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_ID": 4336464,
+              "CONCEPT_NAME": "Coronary artery bypass grafting",
+              "STANDARD_CONCEPT": "S",
+              "DOMAIN_ID": "Procedure",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "isExcluded": false,
+            "includeDescendants": true,
+            "includeMapped": false
+          }
+        ]
+      }
+    }
+  ],
+  "PrimaryCriteria": {
+    "CriteriaList": [
+      {
+        "ProcedureOccurrence": {
+          "CodesetId": 0,
+          "ProcedureTypeExclude": false
+        }
+      }
+    ],
+    "ObservationWindow": {
+      "PriorDays": 365,
+      "PostDays": 30
+    },
+    "PrimaryCriteriaLimit": {
+      "Type": "First"
+    }
+  },
+  "QualifiedLimit": {
+    "Type": "First"
+  },
+  "ExpressionLimit": {
+    "Type": "All"
+  },
+  "CollapseSettings": {
+    "CollapseType": "ERA",
+    "EraPad": 180
+  },
+  "CensorWindow": {
+    "StartDate": {
+      "DateField": "START_DATE",
+      "Offset": 0
+    },
+    "EndDate": {
+      "DateField": "END_DATE",
+      "Offset": 90
+    }
+  },
+  "InclusionRules": [],
+  "CensoringCriteria": []
+}

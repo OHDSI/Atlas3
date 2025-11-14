@@ -1,6 +1,10 @@
 <template>
   <div class="plugin-loading-state">
-    <v-progress-circular indeterminate color="primary" size="64" />
+    <v-progress-circular
+      indeterminate
+      color="primary"
+      size="64"
+    />
     <p>Loading plugin...</p>
   </div>
 </template>

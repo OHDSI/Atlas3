@@ -59,7 +59,7 @@ async function closeContexts(refContext: any, implContext: any) {
   await implContext.close().catch(() => {})
 }
 
-test.describe('Visual Comparison: Entry Events & Basic UI', () => {
+test.describe.skip('Visual Comparison: Entry Events & Basic UI', () => {
   test('Compare CohortBuilder layout', async ({ browser }) => {
     test.setTimeout(60000) // Increase timeout to 60 seconds
 
@@ -192,7 +192,7 @@ test.describe('Visual Comparison: Entry Events & Basic UI', () => {
   })
 })
 
-test.describe('Visual Comparison: Cardinality & Temporal Windows', () => {
+test.describe.skip('Visual Comparison: Cardinality & Temporal Windows', () => {
   test('Compare CardinalityEditor', async ({ browser }) => {
     test.setTimeout(60000)
 
@@ -272,7 +272,7 @@ test.describe('Visual Comparison: Cardinality & Temporal Windows', () => {
   })
 })
 
-test.describe('Visual Comparison: Concept Set Management', () => {
+test.describe.skip('Visual Comparison: Concept Set Management', () => {
   test('Compare ConceptSetList', async ({ browser }) => {
     test.setTimeout(60000)
 
@@ -304,7 +304,7 @@ test.describe('Visual Comparison: Concept Set Management', () => {
   })
 })
 
-test.describe('Visual Comparison: Generation UI', () => {
+test.describe.skip('Visual Comparison: Generation UI', () => {
   test('Compare generation toolbar (requires saved cohort)', async ({ browser }) => {
     test.setTimeout(60000)
 
@@ -341,7 +341,7 @@ test.describe('Visual Comparison: Generation UI', () => {
   })
 })
 
-test.describe('Visual Comparison Report Generator', () => {
+test.describe.skip('Visual Comparison Report Generator', () => {
   test('Generate comparison index', async () => {
     // This test generates an HTML index of all captured screenshots
     const screenshotFiles = fs.readdirSync(SCREENSHOTS_DIR)

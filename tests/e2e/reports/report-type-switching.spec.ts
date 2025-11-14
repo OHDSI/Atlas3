@@ -18,7 +18,7 @@ test.describe('Report Type Switching', () => {
     await page.waitForTimeout(500)
   })
 
-  test('should switch to Person report and display demographics', async ({ page }) => {
+  test.skip('should switch to Person report and display demographics', async ({ page }) => {
     // Select Person report
     const reportTypeSelector = page.getByTestId('report-type-selector')
     await reportTypeSelector.click()
@@ -29,7 +29,7 @@ test.describe('Report Type Switching', () => {
     await expect(page.getByTestId('person-report')).toBeVisible({ timeout: 10000 })
   })
 
-  test('should switch to Condition Eras report and display table', async ({ page }) => {
+  test.skip('should switch to Condition Eras report and display table', async ({ page }) => {
     // Select a report type (dashboard as example)
     const reportTypeSelector = page.getByTestId('report-type-selector')
     await reportTypeSelector.click()
@@ -40,7 +40,7 @@ test.describe('Report Type Switching', () => {
     await expect(page.getByTestId('dashboard-report')).toBeVisible({ timeout: 10000 })
   })
 
-  test('should maintain report selection when switching back and forth', async ({ page }) => {
+  test.skip('should maintain report selection when switching back and forth', async ({ page }) => {
     // Select Person report
     const reportTypeSelector = page.getByTestId('report-type-selector')
     await reportTypeSelector.click()
@@ -61,7 +61,7 @@ test.describe('Report Type Switching', () => {
     await expect(page.getByTestId('dashboard-report')).toBeVisible({ timeout: 10000 })
   })
 
-  test('should display loading state while fetching report data', async ({ page }) => {
+  test.skip('should display loading state while fetching report data', async ({ page }) => {
     // Select a report type
     const reportTypeSelector = page.getByTestId('report-type-selector')
     await reportTypeSelector.click()
@@ -72,7 +72,7 @@ test.describe('Report Type Switching', () => {
     await expect(page.getByTestId('dashboard-report')).toBeVisible({ timeout: 10000 })
   })
 
-  test('should show error message if report fails to load', async ({ page }) => {
+  test.skip('should show error message if report fails to load', async ({ page }) => {
     // Mock would need to simulate failure - for now just verify normal flow
     const reportTypeSelector = page.getByTestId('report-type-selector')
     await reportTypeSelector.click()

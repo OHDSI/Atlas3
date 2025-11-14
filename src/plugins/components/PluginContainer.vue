@@ -1,13 +1,20 @@
 <template>
   <div class="plugin-container">
-    <div v-if="hasError" class="plugin-error">
+    <div
+      v-if="hasError"
+      class="plugin-error"
+    >
       <PluginErrorUI 
         :error="error" 
         :plugin-id="pluginId"
         @retry="handleRetry"
       />
     </div>
-    <div v-else :id="pluginContainerId" class="plugin-mount-point"></div>
+    <div
+      v-else
+      :id="pluginContainerId"
+      class="plugin-mount-point"
+    />
   </div>
 </template>
 

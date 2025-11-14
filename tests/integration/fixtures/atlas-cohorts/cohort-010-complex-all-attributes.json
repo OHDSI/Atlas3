@@ -1,0 +1,211 @@
+{
+  "expressionType": "SIMPLE_EXPRESSION",
+  "cdmVersionRange": ">=5.3.0",
+  "ConceptSets": [
+    {
+      "id": 0,
+      "name": "Coronary Artery Disease",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_ID": 318443,
+              "CONCEPT_NAME": "Coronary arteriosclerosis",
+              "STANDARD_CONCEPT": "S",
+              "DOMAIN_ID": "Condition",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "isExcluded": false,
+            "includeDescendants": true,
+            "includeMapped": false
+          }
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "name": "Statins",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_ID": 1539403,
+              "CONCEPT_NAME": "Atorvastatin",
+              "STANDARD_CONCEPT": "S",
+              "DOMAIN_ID": "Drug",
+              "VOCABULARY_ID": "RxNorm"
+            },
+            "isExcluded": false,
+            "includeDescendants": true,
+            "includeMapped": false
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "Heart Failure",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_ID": 316139,
+              "CONCEPT_NAME": "Heart failure",
+              "STANDARD_CONCEPT": "S",
+              "DOMAIN_ID": "Condition",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "isExcluded": false,
+            "includeDescendants": true,
+            "includeMapped": false
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "Death Events",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_ID": 4216643,
+              "CONCEPT_NAME": "Dead",
+              "STANDARD_CONCEPT": "S",
+              "DOMAIN_ID": "Observation",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "isExcluded": false,
+            "includeDescendants": false,
+            "includeMapped": false
+          }
+        ]
+      }
+    }
+  ],
+  "PrimaryCriteria": {
+    "CriteriaList": [
+      {
+        "ConditionOccurrence": {
+          "CodesetId": 0,
+          "ConditionTypeExclude": false,
+          "Age": {
+            "Value": 18,
+            "Op": "gte"
+          }
+        }
+      }
+    ],
+    "ObservationWindow": {
+      "PriorDays": 365,
+      "PostDays": 0
+    },
+    "PrimaryCriteriaLimit": {
+      "Type": "First"
+    }
+  },
+  "QualifiedLimit": {
+    "Type": "First"
+  },
+  "ExpressionLimit": {
+    "Type": "Last"
+  },
+  "CollapseSettings": {
+    "CollapseType": "ERA",
+    "EraPad": 30
+  },
+  "CensorWindow": {
+    "StartDate": {
+      "DateField": "START_DATE",
+      "Offset": 0
+    },
+    "EndDate": {
+      "DateField": "END_DATE",
+      "Offset": 730
+    }
+  },
+  "InclusionRules": [
+    {
+      "name": "Has statin exposure within 30 days",
+      "expression": {
+        "Type": "ALL",
+        "CriteriaList": [
+          {
+            "Criteria": {
+              "DrugExposure": {
+                "CodesetId": 1,
+                "DrugTypeExclude": false
+              }
+            },
+            "StartWindow": {
+              "Start": {
+                "Coeff": -1
+              },
+              "End": {
+                "Days": 30,
+                "Coeff": 1
+              },
+              "UseIndexEnd": false,
+              "UseEventEnd": false
+            },
+            "Occurrence": {
+              "Type": 2,
+              "Count": 1,
+              "IsDistinct": false
+            }
+          }
+        ],
+        "DemographicCriteriaList": [],
+        "Groups": []
+      }
+    },
+    {
+      "name": "No history of heart failure",
+      "expression": {
+        "Type": "ALL",
+        "CriteriaList": [
+          {
+            "Criteria": {
+              "ConditionOccurrence": {
+                "CodesetId": 2,
+                "ConditionTypeExclude": false
+              }
+            },
+            "StartWindow": {
+              "Start": {
+                "Coeff": -1
+              },
+              "End": {
+                "Days": 0,
+                "Coeff": -1
+              },
+              "UseIndexEnd": false,
+              "UseEventEnd": false
+            },
+            "Occurrence": {
+              "Type": 0,
+              "Count": 0,
+              "IsDistinct": false
+            }
+          }
+        ],
+        "DemographicCriteriaList": [],
+        "Groups": []
+      }
+    }
+  ],
+  "CensoringCriteria": [
+    {
+      "Observation": {
+        "CodesetId": 3,
+        "ObservationTypeExclude": false
+      }
+    },
+    {
+      "ConditionOccurrence": {
+        "CodesetId": 2,
+        "ConditionTypeExclude": false
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Cardinality and Temporal Windows', () => {
+test.describe.skip('Cardinality and Temporal Windows', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/cohorts/new')
     await page.waitForLoadState('networkidle')

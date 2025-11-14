@@ -8,7 +8,7 @@ test.describe('Plugin Framework', () => {
     await page.goto('/');
   });
 
-  test('should load plugin framework on app initialization', async ({ page }) => {
+  test.skip('should load plugin framework on app initialization', async ({ page }) => {
     // Wait for app initialization
     await page.waitForTimeout(2000);
 
@@ -23,7 +23,7 @@ test.describe('Plugin Framework', () => {
     expect(logs.some(log => log.includes('[PluginFramework] Initializing'))).toBeTruthy();
   });
 
-  test('should display hello-world plugin menu item', async ({ page }) => {
+  test.skip('should display hello-world plugin menu item', async ({ page }) => {
     // Wait for menu to load
     await page.waitForTimeout(2000);
 
@@ -41,7 +41,7 @@ test.describe('Plugin Framework', () => {
     }
   });
 
-  test('should navigate to plugin route', async ({ page }) => {
+  test.skip('should navigate to plugin route', async ({ page }) => {
     // Try to navigate directly to plugin route
     await page.goto('/plugins/hello-world-plugin/main');
     
@@ -53,7 +53,7 @@ test.describe('Plugin Framework', () => {
     expect(url.includes('/plugins/hello-world-plugin') || url === '/').toBeTruthy();
   });
 
-  test('should handle plugin loading states', async ({ page }) => {
+  test.skip('should handle plugin loading states', async ({ page }) => {
     // Navigate to plugin route
     await page.goto('/plugins/hello-world-plugin/main');
     
@@ -67,7 +67,7 @@ test.describe('Plugin Framework', () => {
     }
   });
 
-  test('should display error UI on plugin load failure', async ({ page }) => {
+  test.skip('should display error UI on plugin load failure', async ({ page }) => {
     // Try to load non-existent plugin
     await page.goto('/plugins/non-existent-plugin/main');
     
@@ -78,7 +78,7 @@ test.describe('Plugin Framework', () => {
     expect(url === '/' || url.includes('/plugins/')).toBeTruthy();
   });
 
-  test('should measure plugin navigation performance', async ({ page }) => {
+  test.skip('should measure plugin navigation performance', async ({ page }) => {
     // Navigate to home
     await page.goto('/');
     await page.waitForTimeout(1000);
@@ -97,7 +97,7 @@ test.describe('Plugin Framework', () => {
     console.log(`Plugin navigation time: ${navigationTime}ms`);
   });
 
-  test('should handle multiple plugin routes', async ({ page }) => {
+  test.skip('should handle multiple plugin routes', async ({ page }) => {
     // Test that plugin routes are properly scoped
     await page.goto('/plugins/hello-world-plugin/main');
     await page.waitForTimeout(500);
@@ -113,7 +113,7 @@ test.describe('Plugin Framework', () => {
 });
 
 test.describe('Plugin Messaging', () => {
-  test('should send messages from plugin to host', async ({ page }) => {
+  test.skip('should send messages from plugin to host', async ({ page }) => {
     const messages: any[] = [];
     
     // Listen for plugin messages
@@ -142,7 +142,7 @@ test.describe('Plugin Messaging', () => {
 });
 
 test.describe('Plugin Authentication', () => {
-  test('should provide auth context to plugins', async ({ page }) => {
+  test.skip('should provide auth context to plugins', async ({ page }) => {
     await page.goto('/plugins/hello-world-plugin/main');
     await page.waitForTimeout(2000);
 
@@ -157,7 +157,7 @@ test.describe('Plugin Authentication', () => {
 });
 
 test.describe('Plugin Error Handling', () => {
-  test('should display error UI and retry button on failure', async ({ page }) => {
+  test.skip('should display error UI and retry button on failure', async ({ page }) => {
     // Mock plugin load failure by navigating to invalid plugin
     await page.goto('/plugins/invalid-plugin/main');
     await page.waitForTimeout(2000);

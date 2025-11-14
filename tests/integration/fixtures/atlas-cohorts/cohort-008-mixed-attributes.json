@@ -1,0 +1,119 @@
+{
+  "expressionType": "SIMPLE_EXPRESSION",
+  "cdmVersionRange": ">=5.0.0",
+  "ConceptSets": [
+    {
+      "id": 0,
+      "name": "Stroke",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_ID": 381591,
+              "CONCEPT_NAME": "Cerebrovascular accident",
+              "STANDARD_CONCEPT": "S",
+              "DOMAIN_ID": "Condition",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "isExcluded": false,
+            "includeDescendants": true,
+            "includeMapped": false
+          }
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "name": "Anticoagulants",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_ID": 1308216,
+              "CONCEPT_NAME": "Warfarin",
+              "STANDARD_CONCEPT": "S",
+              "DOMAIN_ID": "Drug",
+              "VOCABULARY_ID": "RxNorm"
+            },
+            "isExcluded": false,
+            "includeDescendants": true,
+            "includeMapped": false
+          }
+        ]
+      }
+    }
+  ],
+  "PrimaryCriteria": {
+    "CriteriaList": [
+      {
+        "ConditionOccurrence": {
+          "CodesetId": 0,
+          "ConditionTypeExclude": false
+        }
+      }
+    ],
+    "ObservationWindow": {
+      "PriorDays": 90,
+      "PostDays": 30
+    },
+    "PrimaryCriteriaLimit": {
+      "Type": "First"
+    }
+  },
+  "QualifiedLimit": {
+    "Type": "First"
+  },
+  "ExpressionLimit": {
+    "Type": "All"
+  },
+  "CollapseSettings": {
+    "CollapseType": "ERA",
+    "EraPad": 14
+  },
+  "CensorWindow": {
+    "StartDate": {
+      "DateField": "START_DATE",
+      "Offset": 0
+    },
+    "EndDate": {
+      "DateField": "END_DATE",
+      "Offset": 180
+    }
+  },
+  "InclusionRules": [
+    {
+      "name": "Has anticoagulant exposure",
+      "expression": {
+        "Type": "ANY",
+        "CriteriaList": [
+          {
+            "Criteria": {
+              "DrugExposure": {
+                "CodesetId": 1,
+                "DrugTypeExclude": false
+              }
+            },
+            "StartWindow": {
+              "Start": {
+                "Coeff": -1
+              },
+              "End": {
+                "Coeff": 1
+              },
+              "UseIndexEnd": false,
+              "UseEventEnd": false
+            },
+            "Occurrence": {
+              "Type": 2,
+              "Count": 1,
+              "IsDistinct": false
+            }
+          }
+        ],
+        "DemographicCriteriaList": [],
+        "Groups": []
+      }
+    }
+  ],
+  "CensoringCriteria": []
+}

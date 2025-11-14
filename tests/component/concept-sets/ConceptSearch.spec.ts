@@ -133,14 +133,24 @@ describe('ConceptSearch', () => {
   it('should clear search when clear button is clicked', async () => {
     const wrapper = createWrapper()
 
-    // Find clear button
-    const clearBtn = wrapper.find('[data-testid="clear-search"]')
+    // First set a search value
+    const searchInput = wrapper.find('[data-testid="concept-search-input"]')
+    const input = searchInput.find('input')
 
-    if (clearBtn.exists()) {
-      await clearBtn.trigger('click')
+    if (input.exists()) {
+      await input.setValue('test query')
 
-      const searchInput = wrapper.find('[data-testid="concept-search-input"]')
-      expect(searchInput.element.value).toBe('')
+      // Find and trigger the clear button
+      const clearBtn = wrapper.find('[data-testid="clear-search"]')
+
+      if (clearBtn.exists()) {
+        await clearBtn.trigger('click')
+        await wrapper.vm.$nextTick()
+
+        // Check if input was cleared
+        const clearedInput = searchInput.find('input')
+        expect(clearedInput.element.value).toBe('')
+      }
     }
   })
 })

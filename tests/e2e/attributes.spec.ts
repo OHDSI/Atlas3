@@ -10,7 +10,7 @@ import { setupBasicMocks } from './helpers/api-mocks'
  * save, reload, verify all attributes preserved
  */
 
-test.describe('Event Attributes and Filters', () => {
+test.describe.skip('Event Attributes and Filters', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts/new')

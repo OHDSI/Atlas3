@@ -5,11 +5,12 @@
  * CRITICAL: Uses ?? operator for zero-count preservation (not ||)
  */
 
-import type { CohortDefinition, CohortEvent, CriteriaType } from '@/models/cohort.types'
+import type { CohortDefinition, CohortEvent, CriteriaType, Period, DateField } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
 
 // Atlas JSON types (complete)
 interface AtlasJSON {
+  expressionType?: string
   cdmVersionRange?: string
   ConceptSets: any[]
   PrimaryCriteria: {
@@ -40,8 +41,11 @@ interface AtlasJSON {
  */
 export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
   return {
+    // Expression type - required by Atlas
+    expressionType: cohort.expressionType ?? "SIMPLE_EXPRESSION",
+
     // CDM version range - required by checkV2
-    cdmVersionRange: ">=5.0.0",
+    cdmVersionRange: cohort.cdmVersionRange ?? ">=5.0.0",
 
     ConceptSets: cohort.conceptSets.map((cs, index) => ({
       id: index,
@@ -98,23 +102,27 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
       },
     })),
 
-    // CensoringCriteria - currently not supported in conversion
-    // TODO: Implement proper censoring criteria conversion when needed
-    CensoringCriteria: [],
+    // CensoringCriteria - US4: Convert censoring criteria events
+    CensoringCriteria: cohort.censoringCriteria?.map(e => convertEventToAtlas(e, false)) || [],
 
-    QualifiedLimit: { Type: cohort.qualifyingLimit || 'All' },
+    QualifiedLimit: { Type: capitalizeFirst(cohort.qualifyingLimit || 'All') },
 
     // Expression limit - required by checkV2
-    ExpressionLimit: { Type: cohort.inclusionQualifyingLimit || "All" },
+    ExpressionLimit: cohort.inclusionQualifyingLimit
+      ? { Type: capitalizeFirst(cohort.inclusionQualifyingLimit) }
+      : { Type: "All" },
 
     // Collapse settings - required by checkV2
-    CollapseSettings: {
+    CollapseSettings: cohort.collapseSettings ? {
+      CollapseType: cohort.collapseSettings.collapseType,
+      EraPad: cohort.collapseSettings.eraPad,
+    } : {
       CollapseType: "ERA",
       EraPad: 0,
     },
 
     // Censor window - required by checkV2
-    CensorWindow: {},
+    CensorWindow: cohort.censorWindow ? convertPeriodToAtlas(cohort.censorWindow) : {},
   }
 }
 
@@ -182,7 +190,13 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
             event.cardinality.type === 'AT_MOST' ? 1 :
             event.cardinality.type === 'AT_LEAST' ? 2 : 0,
       Count: event.cardinality.count ?? 1, // CRITICAL: ?? preserves 0
-      IsDistinct: false, // Required field
+      CountMethod: event.cardinality.countingMethod || 'ALL',
+      // US4: Extended cardinality attributes
+      IsDistinct: event.cardinality.isDistinct ?? false,
+    }
+    // Only add CountColumn if it's present
+    if (event.cardinality.countColumn) {
+      atlasEvent.Occurrence.CountColumn = event.cardinality.countColumn
     }
   }
 
@@ -206,6 +220,16 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
         UseIndexEnd: event.temporalWindow.startWindow.referencePoint === 'INDEX_END',
         UseEventEnd: event.temporalWindow.startWindow.referencePoint === 'EVENT_END',
       }
+    }
+  }
+
+  // US4: Add DateAdjustment conversion
+  if (event.dateAdjustment) {
+    atlasEvent.DateAdjustment = {
+      StartWith: event.dateAdjustment.startWith,
+      StartOffset: event.dateAdjustment.startOffset,
+      EndWith: event.dateAdjustment.endWith,
+      EndOffset: event.dateAdjustment.endOffset,
     }
   }
 
@@ -253,13 +277,29 @@ function convertAttributeToAtlas(attr: EventAttribute): any {
  */
 export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefinition> {
   return {
+    // Phase 1 attributes - preserve from Atlas
+    expressionType: atlas.expressionType,
+    cdmVersionRange: atlas.cdmVersionRange,
+    collapseSettings: atlas.CollapseSettings ? {
+      collapseType: atlas.CollapseSettings.CollapseType,
+      eraPad: atlas.CollapseSettings.EraPad,
+    } : undefined,
+    censorWindow: atlas.CensorWindow && Object.keys(atlas.CensorWindow).length > 0
+      ? convertPeriodFromAtlas(atlas.CensorWindow)
+      : undefined,
+    censoringCriteria: atlas.CensoringCriteria && atlas.CensoringCriteria.length > 0
+      ? atlas.CensoringCriteria.map(e => convertAtlasToEvent(e, atlas.ConceptSets))
+      : undefined,
+
     entryEvents: atlas.PrimaryCriteria?.CriteriaList?.map(e => convertAtlasToEvent(e, atlas.ConceptSets)) || [],
     observationPeriod: atlas.PrimaryCriteria?.ObservationWindow ? {
       priorDays: atlas.PrimaryCriteria.ObservationWindow.PriorDays,
       postDays: atlas.PrimaryCriteria.ObservationWindow.PostDays,
     } : undefined,
     qualifyingLimit: (atlas.QualifiedLimit?.Type?.toUpperCase() || 'ALL') as any,
-    inclusionQualifyingLimit: (atlas.ExpressionLimit?.Type?.toUpperCase() || 'ALL') as any,
+    inclusionQualifyingLimit: atlas.ExpressionLimit?.Type
+      ? (atlas.ExpressionLimit.Type.toUpperCase() as any)
+      : undefined,
     // Parse AdditionalCriteria
     additionalCriteria: (atlas.AdditionalCriteria?.CriteriaList && atlas.AdditionalCriteria.CriteriaList.length > 0) ? {
       id: generateId(),
@@ -402,6 +442,9 @@ function convertAtlasToEvent(atlasEvent: any, conceptSets?: any[]): CohortEvent 
             atlasEvent.Occurrence.Type === 2 ? 'AT_LEAST' : 'EXACTLY',
       count: atlasEvent.Occurrence.Count ?? 1, // CRITICAL: ?? preserves 0
       countingMethod: atlasEvent.Occurrence.CountMethod || 'ALL',
+      // US4: Extended cardinality attributes
+      isDistinct: atlasEvent.Occurrence.IsDistinct,
+      countColumn: atlasEvent.Occurrence.CountColumn,
     } : undefined,
     attributes: [], // Will be populated below
   }
@@ -436,6 +479,16 @@ function convertAtlasToEvent(atlasEvent: any, conceptSets?: any[]): CohortEvent 
   }
   if (atlasEvent.IgnoreObservationPeriod !== undefined) {
     event.ignoreObservationPeriod = atlasEvent.IgnoreObservationPeriod
+  }
+
+  // US4: Extract DateAdjustment
+  if (atlasEvent.DateAdjustment) {
+    event.dateAdjustment = {
+      startWith: atlasEvent.DateAdjustment.StartWith,
+      startOffset: atlasEvent.DateAdjustment.StartOffset,
+      endWith: atlasEvent.DateAdjustment.EndWith,
+      endOffset: atlasEvent.DateAdjustment.EndOffset,
+    }
   }
 
   return event
@@ -674,9 +727,71 @@ function convertAtlasToOperator(atlasOp: string): string {
   return map[atlasOp] || 'EQUAL'
 }
 
+/**
+ * Convert internal Period to Atlas format
+ */
+function convertPeriodToAtlas(period: Period): any {
+  const result: any = {}
+
+  if (period.startDate) {
+    result.StartDate = convertDateFieldToAtlas(period.startDate)
+  }
+
+  if (period.endDate) {
+    result.EndDate = convertDateFieldToAtlas(period.endDate)
+  }
+
+  return result
+}
+
+/**
+ * Convert internal DateField to Atlas format
+ */
+function convertDateFieldToAtlas(dateField: DateField): any {
+  return {
+    DateField: dateField.dateField,
+    Offset: dateField.offset ?? 0,
+  }
+}
+
+/**
+ * Convert Atlas Period to internal format
+ */
+function convertPeriodFromAtlas(atlasPeriod: any): Period {
+  const period: Period = {}
+
+  if (atlasPeriod.StartDate) {
+    period.startDate = convertDateFieldFromAtlas(atlasPeriod.StartDate)
+  }
+
+  if (atlasPeriod.EndDate) {
+    period.endDate = convertDateFieldFromAtlas(atlasPeriod.EndDate)
+  }
+
+  return period
+}
+
+/**
+ * Convert Atlas DateField to internal format
+ */
+function convertDateFieldFromAtlas(atlasDateField: any): DateField {
+  return {
+    dateField: atlasDateField.DateField,
+    offset: atlasDateField.Offset,
+  }
+}
+
 // Helpers
 function convertToPascalCase(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+/**
+ * Capitalize first letter and lowercase the rest
+ * Converts: "FIRST" -> "First", "ALL" -> "All", "LAST" -> "Last"
+ */
+function capitalizeFirst(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
 }
 
 function convertOperatorToAtlas(op: string): string {

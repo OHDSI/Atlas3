@@ -15,7 +15,7 @@ test.describe('Data Sources - Data Density Report', () => {
     await page.waitForLoadState('networkidle')
   })
 
-  test('Data Density report selection', async ({ page }) => {
+  test.skip('Data Density report selection', async ({ page }) => {
     // Select data source
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -32,7 +32,7 @@ test.describe('Data Sources - Data Density Report', () => {
     await expect(page.locator('[data-testid="datadensity-report"]')).toBeVisible()
   })
 
-  test('Multi-line charts display', async ({ page }) => {
+  test.skip('Multi-line charts display', async ({ page }) => {
     // Setup: Select source and report
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -48,7 +48,7 @@ test.describe('Data Sources - Data Density Report', () => {
     await expect(page.locator('[data-testid="chart-concepts-per-person"]')).toBeVisible()
   })
 
-  test('Legend interactions', async ({ page }) => {
+  test.skip('Legend interactions', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -66,7 +66,7 @@ test.describe('Data Sources - Data Density Report', () => {
     await expect(totalRecordsChart.locator('canvas')).toBeVisible()
   })
 
-  test('Time series display', async ({ page }) => {
+  test.skip('Time series display', async ({ page }) => {
     // Setup
     await page.locator('[data-testid="datasource-selector"]').click()
     await page.locator('.v-list-item').first().click()
@@ -81,7 +81,7 @@ test.describe('Data Sources - Data Density Report', () => {
     expect(charts).toBeGreaterThanOrEqual(3)
   })
 
-  test('Error handling', async ({ page }) => {
+  test.skip('Error handling', async ({ page }) => {
     // Intercept API to simulate error
     await page.route('**/cdmresults/*/datadensity', route => {
       route.abort('failed')

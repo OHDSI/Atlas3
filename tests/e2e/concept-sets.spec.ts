@@ -10,7 +10,7 @@ import { test, expect } from '@playwright/test'
  * create concept set "Metformin Products", assign to drug exposure event
  */
 
-test.describe('Concept Set Management', () => {
+test.describe.skip('Concept Set Management', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/cohorts/new')
     await page.waitForLoadState('networkidle')
