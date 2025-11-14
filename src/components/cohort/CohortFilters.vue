@@ -43,7 +43,7 @@
               v-if="localFilters.author"
               size="small"
               closable
-              @click:close="localFilters.author = undefined"
+              @click:close="localFilters.author = ''"
             >
               {{ authorLabel }}: {{ localFilters.author }}
             </v-chip>

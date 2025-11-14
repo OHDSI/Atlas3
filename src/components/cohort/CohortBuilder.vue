@@ -815,7 +815,7 @@ onMounted(async () => {
 
 // Navigation guard to prevent losing unsaved changes
 let navigationConfirmed = false
-onBeforeRouteLeave((to, from, next) => {
+onBeforeRouteLeave((_to, _from, next) => {
   // If navigation was already confirmed or there are no unsaved changes, allow it
   if (!hasUnsavedChanges.value || navigationConfirmed) {
     navigationConfirmed = false // Reset for next time

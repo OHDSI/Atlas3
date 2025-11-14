@@ -173,7 +173,7 @@
         <!-- Generation Panel -->
         <generation-panel
           v-model="showGenerationPanel"
-          :cohort-id="selectedCohort?.id"
+          :cohort-id="selectedCohort?.id ?? null"
         />
       </v-container>
     </div>
