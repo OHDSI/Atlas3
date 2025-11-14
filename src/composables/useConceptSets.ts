@@ -49,7 +49,7 @@ export function useConceptSets() {
 
       store.setSearchResults(results)
     } catch (error) {
-      console.error('Concept search error:', error)
+      console.error('Concept search error:', error instanceof Error ? error.message : String(error))
       store.setSearchResults([])
       throw error
     } finally {
@@ -70,7 +70,7 @@ export function useConceptSets() {
 
       return created
     } catch (error) {
-      console.error('Failed to create concept set:', error)
+      console.error('Failed to create concept set:', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -86,7 +86,7 @@ export function useConceptSets() {
         store.updateConceptSet(updated.id, updated)
       }
     } catch (error) {
-      console.error('Failed to update concept set:', error)
+      console.error('Failed to update concept set:', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -102,7 +102,7 @@ export function useConceptSets() {
         store.removeConceptSet(id)
       }
     } catch (error) {
-      console.error('Failed to delete concept set:', error)
+      console.error('Failed to delete concept set:', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -127,7 +127,7 @@ export function useConceptSets() {
 
       return conceptSet
     } catch (error) {
-      console.error('Failed to get concept set:', error)
+      console.error('Failed to get concept set:', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -143,7 +143,7 @@ export function useConceptSets() {
         store.addConceptSet(cs)
       })
     } catch (error) {
-      console.error('Failed to load concept sets:', error)
+      console.error('Failed to load concept sets:', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
