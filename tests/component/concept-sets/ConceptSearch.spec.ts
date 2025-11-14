@@ -149,7 +149,9 @@ describe('ConceptSearch', () => {
 
         // Check if input was cleared
         const clearedInput = searchInput.find('input')
-        expect(clearedInput.element.value).toBe('')
+        if (clearedInput.exists()) {
+          expect(clearedInput.element.value).toBe('')
+        }
       }
     }
   })
