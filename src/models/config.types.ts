@@ -32,11 +32,14 @@ export type AttributeType = z.infer<typeof AttributeTypeSchema>
  * Filter Type Configuration Schema
  *
  * Defines metadata for a single filter type (e.g., Condition Occurrence, Drug Exposure).
- * Uses i18n locale keys for all user-facing text.
+ * Supports both i18n keys and plain text values for backward compatibility.
  */
 export const FilterTypeConfigSchema = z.object({
   /** i18n locale key for filter display name (e.g., "criteria.conditionOccurrence.name") */
-  nameKey: z.string().min(1, 'Filter nameKey cannot be empty'),
+  nameKey: z.string().min(1, 'Filter nameKey cannot be empty').optional(),
+
+  /** Plain text display name (legacy format, use nameKey for i18n) */
+  name: z.string().min(1, 'Filter name cannot be empty').optional(),
 
   /**
    * Context-specific i18n locale keys for descriptions
@@ -46,14 +49,30 @@ export const FilterTypeConfigSchema = z.object({
   descriptionKeys: z.record(
     z.string(),
     z.string().min(1, 'Description key cannot be empty')
-  ),
+  ).optional(),
+
+  /**
+   * Context-specific plain text descriptions (legacy format, use descriptionKeys for i18n)
+   * Keys: 'initial', 'censoring', 'group', or 'all'
+   * Values: Plain text descriptions
+   */
+  descriptions: z.record(
+    z.string(),
+    z.string().min(1, 'Description cannot be empty')
+  ).optional(),
 
   /** If false, concept set selector is hidden in UI (default: true) */
   requiresConceptSet: z.boolean().default(true).optional(),
 
   /** If true, filter only available in criteria groups, not initial/censoring events (default: false) */
   groupOnly: z.boolean().default(false).optional(),
-})
+}).refine(
+  (data) => data.nameKey || data.name,
+  { message: 'Either nameKey or name must be provided' }
+).refine(
+  (data) => data.descriptionKeys || data.descriptions,
+  { message: 'Either descriptionKeys or descriptions must be provided' }
+)
 
 export type FilterTypeConfig = z.infer<typeof FilterTypeConfigSchema>
 
@@ -61,7 +80,7 @@ export type FilterTypeConfig = z.infer<typeof FilterTypeConfigSchema>
  * Attribute Configuration Schema
  *
  * Defines metadata for a single attribute within a filter type.
- * Uses i18n locale keys for labels and descriptions.
+ * Supports both i18n keys and plain text values for backward compatibility.
  */
 export const AttributeConfigSchema = z.object({
   /** Attribute identifier (camelCase, must match attribute keys in cohort definition) */
@@ -70,10 +89,16 @@ export const AttributeConfigSchema = z.object({
     .regex(/^[a-z][a-zA-Z0-9]*$/, 'Attribute id must be camelCase'),
 
   /** i18n locale key for attribute display label (e.g., "attributes.age.name") */
-  nameKey: z.string().min(1, 'Attribute nameKey cannot be empty'),
+  nameKey: z.string().min(1, 'Attribute nameKey cannot be empty').optional(),
+
+  /** Plain text display label (legacy format, use nameKey for i18n) */
+  name: z.string().min(1, 'Attribute name cannot be empty').optional(),
 
   /** i18n locale key for attribute help text/tooltip (e.g., "attributes.age.description") */
-  descriptionKey: z.string().min(1, 'Attribute descriptionKey cannot be empty'),
+  descriptionKey: z.string().min(1, 'Attribute descriptionKey cannot be empty').optional(),
+
+  /** Plain text help text (legacy format, use descriptionKey for i18n) */
+  description: z.string().min(1, 'Attribute description cannot be empty').optional(),
 
   /** Attribute type - determines which UI component to render */
   type: AttributeTypeSchema,
@@ -250,4 +275,122 @@ export interface ValidationResult {
 
   /** Timestamp of validation */
   timestamp: Date
+}
+
+// ============================================================================
+// Configuration Panel Types (Feature: 013-config-panel)
+// ============================================================================
+
+/**
+ * Tag interface - represents a tag or tag group in Atlas
+ * Tag Groups are tags with empty groups array
+ * Tags have a parent group in the groups array
+ */
+export interface Tag {
+  id?: number
+  name: string
+  color?: string
+  icon?: string
+  mandatory?: boolean
+  showGroup?: boolean
+  multiSelection?: boolean
+  allowCustom?: boolean
+  description?: string
+  createdDate?: string
+  createdBy?: { login: string }
+  groups: Tag[]
+  count?: number
+  permissionProtected?: boolean
+}
+
+/**
+ * Alias for backward compatibility
+ */
+export type TagGroup = Tag
+
+/**
+ * Vocabulary Schema Configuration interface
+ */
+export interface VocabularySchemaConfig {
+  schema: string
+}
+
+/**
+ * Configuration Panel State interface - manages UI state for the panel
+ */
+export interface ConfigPanelState {
+  isOpen: boolean
+  activeSection: 'cache' | 'sources' | 'vocabulary' | 'tags'
+  scrollPosition: number
+}
+
+/**
+ * Zod schema for Tag/TagGroup validation (Atlas format)
+ */
+export const tagSchema = z.object({
+  id: z.number().optional(),
+  name: z.string()
+    .min(1, 'Name is required')
+    .max(255, 'Name must be less than 255 characters'),
+  color: z.string()
+    .regex(/^#[0-9A-F]{6}$/i, 'Invalid color format (must be hex: #RRGGBB)')
+    .optional(),
+  icon: z.string().max(50, 'Icon name too long').optional(),
+  mandatory: z.boolean().optional(),
+  showGroup: z.boolean().optional(),
+  multiSelection: z.boolean().optional(),
+  allowCustom: z.boolean().optional(),
+  description: z.string().max(1000, 'Description too long').optional(),
+  createdDate: z.string().optional(),
+  createdBy: z.object({ login: z.string() }).optional(),
+  groups: z.array(z.any()).default([]),
+  count: z.number().optional(),
+  permissionProtected: z.boolean().optional()
+})
+
+/**
+ * Alias for backward compatibility
+ */
+export const tagGroupSchema = tagSchema
+
+/**
+ * Zod schema for Vocabulary Schema configuration
+ */
+export const vocabularySchemaSchema = z.object({
+  schema: z.string()
+    .min(1, 'Schema name is required')
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'Schema must start with letter/underscore and contain only alphanumeric characters and underscores')
+    .max(63, 'Schema name too long (max 63 characters)')
+})
+
+/**
+ * Type inference from Zod schemas
+ */
+export type TagGroupInput = z.infer<typeof tagGroupSchema>
+export type VocabularySchemaInput = z.infer<typeof vocabularySchemaSchema>
+
+/**
+ * Validates a schema name according to PostgreSQL identifier rules
+ *
+ * @param schema - The schema name to validate
+ * @returns True if valid, error message if invalid
+ */
+export function validateSchemaName(schema: string): true | string {
+  if (!schema || schema.length === 0) {
+    return 'Schema name is required'
+  }
+
+  if (schema.length > 63) {
+    return 'Schema name too long (max 63 characters)'
+  }
+
+  if (!/^[a-zA-Z_]/.test(schema)) {
+    return 'Schema must start with a letter or underscore'
+  }
+
+  if (!/^[a-zA-Z0-9_]+$/.test(schema)) {
+    return 'Schema can only contain letters, numbers, and underscores'
+  }
+
+  return true
 }

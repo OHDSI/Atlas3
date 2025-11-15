@@ -3,7 +3,7 @@
     <div class="pa-4">
       <div class="d-flex align-center mb-3">
         <h3 class="text-h6">
-          {{ t('exitCriteria.eventPersistence', 'Event Persistence').value }}
+          {{ t('components.cohortExpressionEditor.eventPersistence', 'Event Persistence:') }}
         </h3>
         <v-tooltip location="right">
           <template #activator="{ props }">
@@ -29,13 +29,16 @@
       </v-alert>
 
       <!-- Conditional Fields for Fixed Duration -->
-      <div v-if="selectedStrategy === 'FIXED_DURATION'" class="strategy-fields">
+      <div
+        v-if="selectedStrategy === 'FIXED_DURATION'"
+        class="strategy-fields"
+      >
         <v-row>
           <v-col cols="6">
             <v-select
               v-model="fixedDurationDateField"
               :items="dateFieldOptions"
-              :label="t('exitCriteria.fields.dateField', 'Date Field').value"
+              :label="t('exitCriteria.fields.dateField', 'Date Field')"
               :disabled="disabled"
               variant="outlined"
               density="compact"
@@ -45,7 +48,7 @@
             <v-text-field
               v-model.number="fixedDurationOffset"
               type="number"
-              :label="t('exitCriteria.fields.offset', 'Offset (days)').value"
+              :label="t('exitCriteria.fields.offset', 'Offset (days)')"
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -56,7 +59,10 @@
       </div>
 
       <!-- Conditional Fields for Drug Exposure -->
-      <div v-if="selectedStrategy === 'CONTINUOUS_DRUG'" class="strategy-fields">
+      <div
+        v-if="selectedStrategy === 'CONTINUOUS_DRUG'"
+        class="strategy-fields"
+      >
         <!-- Concept Set Selection Button/Chip -->
         <div class="mb-4">
           <v-btn
@@ -66,7 +72,7 @@
             :disabled="disabled"
             @click="openConceptSetDialog"
           >
-            {{ t('customEraStrategy.selectDrugConceptSet', 'Select Drug Concept Set').value }}
+            {{ t('customEraStrategy.selectDrugConceptSet', 'Select Drug Concept Set') }}
           </v-btn>
           <v-chip
             v-else
@@ -85,7 +91,7 @@
             <v-text-field
               v-model.number="persistenceWindow"
               type="number"
-              :label="t('exitCriteria.fields.persistenceWindow', 'Persistence Window (days)').value"
+              :label="t('exitCriteria.fields.persistenceWindow', 'Persistence Window (days)')"
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -101,7 +107,7 @@
                       class="text-medium-emphasis"
                     />
                   </template>
-                  <span>{{ t('exitCriteria.help.persistenceWindow', 'Maximum gap days between exposures').value }}</span>
+                  <span>{{ t('exitCriteria.help.persistenceWindow', 'Maximum gap days between exposures') }}</span>
                 </v-tooltip>
               </template>
             </v-text-field>
@@ -110,7 +116,7 @@
             <v-text-field
               v-model.number="surveillanceWindow"
               type="number"
-              :label="t('exitCriteria.fields.surveillanceWindow', 'Surveillance Window (days)').value"
+              :label="t('exitCriteria.fields.surveillanceWindow', 'Surveillance Window (days)')"
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -126,7 +132,7 @@
                       class="text-medium-emphasis"
                     />
                   </template>
-                  <span>{{ t('exitCriteria.help.surveillanceWindow', 'Additional days after final exposure before cohort exit').value }}</span>
+                  <span>{{ t('exitCriteria.help.surveillanceWindow', 'Additional days after final exposure before cohort exit') }}</span>
                 </v-tooltip>
               </template>
             </v-text-field>
@@ -141,7 +147,7 @@
           density="compact"
           class="mt-2"
         >
-          {{ t('exitCriteria.help.missingDaysSupply', 'If days supply is missing, system assumes 1 day per exposure').value }}
+          {{ t('exitCriteria.help.missingDaysSupply', 'If days supply is missing, system assumes 1 day per exposure') }}
         </v-alert>
       </div>
     </div>
@@ -155,7 +161,7 @@ import { useEventPersistence } from '@/composables/useEventPersistence'
 import type { ExitCriteria, ExitStrategy, ConceptSetReference } from '@/models/cohort.types'
 import type { ValidationError } from '@/models/validation.types'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 interface Props {
   modelValue: ExitCriteria
@@ -171,7 +177,7 @@ const emit = defineEmits<{
 }>()
 
 // Use the event persistence composable
-const { state, switchStrategy, toExitCriteria } = useEventPersistence(props.modelValue)
+const { state, toExitCriteria } = useEventPersistence(props.modelValue)
 
 // Local state for UI binding
 const selectedStrategy = ref<ExitStrategy>(state.strategy)
@@ -183,8 +189,8 @@ const surveillanceWindow = ref(state.drugExposure.surveillanceWindow)
 
 // Date field options
 const dateFieldOptions = [
-  { value: 'START_DATE', title: t('exitCriteria.fields.startDate', 'Start Date').value },
-  { value: 'END_DATE', title: t('exitCriteria.fields.endDate', 'End Date').value }
+  { value: 'START_DATE', title: tv('exitCriteria.fields.startDate', 'Start Date') },
+  { value: 'END_DATE', title: tv('exitCriteria.fields.endDate', 'End Date') }
 ]
 
 // Selected concept set for drug exposure
@@ -197,11 +203,11 @@ const selectedConceptSet = computed(() => {
 const strategyHelpText = computed(() => {
   switch (selectedStrategy.value) {
     case 'CONTINUOUS_OBSERVATION':
-      return t('exitCriteria.help.continuousObservation', 'Event persists until observation period ends').value
+      return tv('exitCriteria.help.continuousObservation', 'Event persists until observation period ends')
     case 'FIXED_DURATION':
-      return t('exitCriteria.help.fixedDuration', 'Event persists for a specified number of days from start or end date').value
+      return tv('exitCriteria.help.fixedDuration', 'Event persists for a specified number of days from start or end date')
     case 'CONTINUOUS_DRUG':
-      return t('exitCriteria.help.drugExposure', 'Event persists based on continuous drug exposure with allowable gaps between exposures').value
+      return tv('exitCriteria.help.drugExposure', 'Event persists based on continuous drug exposure with allowable gaps between exposures')
     default:
       return ''
   }
@@ -210,15 +216,9 @@ const strategyHelpText = computed(() => {
 // Validation rules
 const nonNegativeRule = (value: number) => {
   if (value < 0) {
-    return t('exitCriteria.validation.offsetNonNegative', 'Offset values must be non-negative').value
+    return tv('exitCriteria.validation.offsetNonNegative', 'Offset values must be non-negative')
   }
   return true
-}
-
-// Handle strategy change
-function handleStrategyChange(newStrategy: ExitStrategy) {
-  switchStrategy(newStrategy)
-  emitUpdate()
 }
 
 // Open concept set selection dialog for drug exposure
@@ -258,7 +258,7 @@ function validateFields() {
     if (fixedDurationOffset.value === undefined) {
       errors.push({
         field: 'exitCriteria.offset',
-        message: t('exitCriteria.validation.offsetRequired', 'Offset is required for fixed duration strategy').value,
+        message: tv('exitCriteria.validation.offsetRequired', 'Offset is required for fixed duration strategy'),
         severity: 'error'
       })
     }
@@ -268,7 +268,7 @@ function validateFields() {
     if (!drugConceptSetId.value) {
       errors.push({
         field: 'exitCriteria.conceptSet',
-        message: t('exitCriteria.validation.conceptSetRequired', 'Drug concept set required for this strategy').value,
+        message: tv('exitCriteria.validation.conceptSetRequired', 'Drug concept set required for this strategy'),
         severity: 'warning'
       })
     }
@@ -277,23 +277,36 @@ function validateFields() {
   emit('validation-error', errors)
 }
 
-// Watch for changes and emit updates
-watch([fixedDurationDateField, fixedDurationOffset, drugConceptSetId, persistenceWindow, surveillanceWindow], () => {
-  emitUpdate()
+// Flag to prevent circular updates during prop sync
+let _syncingFromProps = false
+
+// Watch for changes and emit updates (but skip if we're syncing from props)
+watch([selectedStrategy, fixedDurationDateField, fixedDurationOffset, drugConceptSetId, persistenceWindow, surveillanceWindow], () => {
+  if (!_syncingFromProps) {
+    emitUpdate()
+  }
 })
 
-// Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  selectedStrategy.value = newValue.strategy
-  if (newValue.strategy === 'FIXED_DURATION') {
-    fixedDurationDateField.value = newValue.dateField || 'START_DATE'
-    fixedDurationOffset.value = newValue.offset || 0
-  } else if (newValue.strategy === 'CONTINUOUS_DRUG') {
-    drugConceptSetId.value = newValue.conceptSet?.id.toString() || null
-    persistenceWindow.value = newValue.persistenceWindow || 30
-    surveillanceWindow.value = newValue.surveillanceWindow || 7
+// Watch for external changes - only sync when strategy actually changes to prevent infinite loop
+// This prevents the bidirectional watcher loop that was causing "Maximum recursive updates exceeded"
+watch(() => props.modelValue.strategy, (newStrategy, oldStrategy) => {
+  if (newStrategy !== oldStrategy) {
+    _syncingFromProps = true
+    selectedStrategy.value = newStrategy
+
+    // Sync strategy-specific fields
+    if (newStrategy === 'FIXED_DURATION') {
+      fixedDurationDateField.value = props.modelValue.dateField || 'START_DATE'
+      fixedDurationOffset.value = props.modelValue.offset || 0
+    } else if (newStrategy === 'CONTINUOUS_DRUG') {
+      drugConceptSetId.value = props.modelValue.conceptSet?.id.toString() || null
+      persistenceWindow.value = props.modelValue.persistenceWindow || 30
+      surveillanceWindow.value = props.modelValue.surveillanceWindow || 7
+    }
+
+    _syncingFromProps = false
   }
-}, { deep: true })
+})
 </script>
 
 <style scoped>

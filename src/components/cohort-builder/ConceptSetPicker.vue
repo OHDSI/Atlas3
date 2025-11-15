@@ -10,7 +10,7 @@
         :items="conceptSetItems"
         item-title="label"
         item-value="value"
-        :label="t('cs.manager.chooseConceptSet', 'Choose Concept Set').value"
+        :label="t('cs.manager.chooseConceptSet', 'Choose Concept Set')"
         clearable
         data-testid="concept-set-selector"
         @update:model-value="handleSelect"

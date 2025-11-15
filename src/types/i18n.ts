@@ -75,6 +75,7 @@ export interface LocaleState {
   loading: boolean
   error: string | null
   translationCache: Map<LocaleCode, TranslationCache>
+  initialized: boolean
 }
 
 /**

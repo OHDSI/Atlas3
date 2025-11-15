@@ -76,7 +76,7 @@
               <v-icon class="mr-2">
                 mdi-plus
               </v-icon>
-              {{ t('common.selectConceptSet', 'Select Concept Set') }}
+              {{ t('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set') }}
             </v-btn>
           </div>
 

@@ -3,7 +3,7 @@
     <!-- Vertical "ALL" Label -->
     <div class="vertical-label-container">
       <div class="vertical-label">
-        {{ t('options.all').value.toUpperCase() }}
+        {{ tv('options.all').toUpperCase() }}
       </div>
     </div>
 
@@ -20,7 +20,7 @@
               size="default"
               data-testid="add-entry-event"
             >
-              {{ t('components.criteriaGroup.addCriteria').value }}
+              {{ t('components.criteriaGroup.addCriteria') }}
             </v-btn>
           </template>
           <v-list>
@@ -61,7 +61,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 const emit = defineEmits<{
   'update:events': [events: CohortEvent[]]

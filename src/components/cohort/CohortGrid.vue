@@ -66,7 +66,7 @@
         <v-icon start>
           mdi-plus
         </v-icon>
-        {{ t('common.createCohort', 'Create Cohort').value }}
+        {{ t('cohortDefinitions.newDefinition', 'New Cohort').value }}
       </v-btn>
     </div>
 

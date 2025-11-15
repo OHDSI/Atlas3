@@ -37,7 +37,7 @@
     <v-card-text class="pa-4">
       <div class="action-buttons-section mb-4">
         <div class="text-subtitle-2 mb-2">
-          {{ t('common.generateReports') }}
+          {{ t('cohortDefinitions.cohortDefinitionManager.panels.reportSelections', 'Report Selections') }}
         </div>
         <v-btn-group
           variant="outlined"

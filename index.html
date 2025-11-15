@@ -11,23 +11,66 @@
     <!-- Load Vue globally so SystemJS plugins can use it -->
     <script src="/node_modules/vue/dist/vue.global.js"></script>
     <script>
-      // Register Vue with SystemJS using System.register
-      if (window.System && window.Vue) {
-        window.System.register('vue', [], function(_export) {
+      // Register Vue with SystemJS using import map and module registration
+      (function() {
+        'use strict';
+
+        // Ensure SystemJS and Vue are loaded
+        if (!window.System) {
+          console.error('[SystemJS] window.System is not available!');
+          return;
+        }
+
+        if (!window.Vue) {
+          console.error('[SystemJS] window.Vue is not available!');
+          return;
+        }
+
+        console.log('[SystemJS] Registering Vue module...', Object.keys(window.Vue).slice(0, 10));
+
+        // Create a module wrapper for Vue - SystemJS expects a plain object
+        var vueModule = window.Vue;
+
+        // Use System.register to define the 'vue' module
+        // This creates a proper module that can be imported
+        window.System.register('vue', [], function(_export, _context) {
           'use strict';
           return {
+            setters: [],
             execute: function() {
-              // Export all Vue exports
-              for (var key in window.Vue) {
-                _export(key, window.Vue[key]);
-              }
-              // Also export default
-              _export('default', window.Vue);
-              console.log('[SystemJS] Registered Vue module');
+              // Export the entire Vue object as default
+              _export('default', vueModule);
+
+              // Export commonly used named exports
+              _export('h', vueModule.h);
+              _export('createApp', vueModule.createApp);
+              _export('ref', vueModule.ref);
+              _export('reactive', vueModule.reactive);
+              _export('computed', vueModule.computed);
+              _export('watch', vueModule.watch);
+              _export('onMounted', vueModule.onMounted);
+              _export('onUnmounted', vueModule.onUnmounted);
+              _export('provide', vueModule.provide);
+              _export('inject', vueModule.inject);
+              _export('nextTick', vueModule.nextTick);
+              _export('defineComponent', vueModule.defineComponent);
+              _export('toRefs', vueModule.toRefs);
+              _export('toRef', vueModule.toRef);
+
+              console.log('[SystemJS] Vue module exports registered');
             }
           };
         });
-      }
+
+        console.log('[SystemJS] Vue module registered successfully');
+
+        // Verify the module is accessible
+        window.System.import('vue').then(function(module) {
+          console.log('[SystemJS] Vue module import test successful - has h:', !!module.h, 'has createApp:', !!module.createApp);
+        }).catch(function(err) {
+          console.error('[SystemJS] Vue module import test failed:', err);
+        });
+      })();
     </script>
   </head>
   <body>

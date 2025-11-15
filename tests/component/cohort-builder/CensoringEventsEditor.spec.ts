@@ -83,7 +83,7 @@ describe('CensoringEventsEditor', () => {
     expect(addButton).toBeDefined()
   })
 
-  it('should emit add-event when add button is clicked', async () => {
+  it('should emit select-censoring-concept-set when add button is clicked', async () => {
     const wrapper = createWrapper()
 
     const addButton = wrapper.findAllComponents({ name: 'VBtn' }).find(btn =>
@@ -95,8 +95,7 @@ describe('CensoringEventsEditor', () => {
       await addButton.trigger('click')
       await wrapper.vm.$nextTick()
 
-      expect(wrapper.emitted('add-event')).toBeTruthy()
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+      expect(wrapper.emitted('select-censoring-concept-set')).toBeTruthy()
     }
   })
 

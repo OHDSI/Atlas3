@@ -114,8 +114,14 @@ export function useAttributeConfig(
       return humanizeKey(attributeKey)
     }
 
-    // Resolve translation using nameKey
-    return tv(config.nameKey, humanizeKey(attributeKey))
+    // Support both i18n (nameKey) and plain text (name) formats
+    if (config.nameKey) {
+      return tv(config.nameKey, humanizeKey(attributeKey))
+    } else if (config.name) {
+      return config.name
+    }
+
+    return humanizeKey(attributeKey)
   }
 
   /**
@@ -129,12 +135,18 @@ export function useAttributeConfig(
    */
   function getAttributeDescription(attributeKey: string): string {
     const config = getAttribute(attributeKey)
-    if (!config || !config.descriptionKey) {
+    if (!config) {
       return ''
     }
 
-    // Resolve translation using descriptionKey
-    return tv(config.descriptionKey, '')
+    // Support both i18n (descriptionKey) and plain text (description) formats
+    if (config.descriptionKey) {
+      return tv(config.descriptionKey, '')
+    } else if (config.description) {
+      return config.description
+    }
+
+    return ''
   }
 
   /**

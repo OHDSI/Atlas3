@@ -4,12 +4,20 @@
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import type { ConfigPanelState } from '@/models/config.types'
 
 export const useUIStore = defineStore('ui', () => {
   // State
   const expandedPanels = ref<Set<string>>(new Set())
   const openModals = ref<Set<string>>(new Set())
   const expandedEventCards = ref<Set<string>>(new Set())
+
+  // Configuration Panel State (Feature: 013-config-panel)
+  const configPanelState = ref<ConfigPanelState>({
+    isOpen: false,
+    activeSection: 'cache',
+    scrollPosition: 0
+  })
 
   // Actions
   function togglePanel(panelId: string) {
@@ -62,11 +70,29 @@ export const useUIStore = defineStore('ui', () => {
     expandedEventCards.value.clear()
   }
 
+  // Configuration Panel Actions (Feature: 013-config-panel)
+  function openConfigPanel() {
+    configPanelState.value.isOpen = true
+  }
+
+  function closeConfigPanel() {
+    configPanelState.value.isOpen = false
+  }
+
+  function setConfigPanelSection(section: 'cache' | 'vocabulary' | 'tags') {
+    configPanelState.value.activeSection = section
+  }
+
+  function setConfigPanelScroll(position: number) {
+    configPanelState.value.scrollPosition = position
+  }
+
   return {
     // State
     expandedPanels,
     openModals,
     expandedEventCards,
+    configPanelState,
     // Actions
     togglePanel,
     expandPanel,
@@ -78,5 +104,9 @@ export const useUIStore = defineStore('ui', () => {
     toggleEventCard,
     isEventCardExpanded,
     clearAll,
+    openConfigPanel,
+    closeConfigPanel,
+    setConfigPanelSection,
+    setConfigPanelScroll,
   }
 })

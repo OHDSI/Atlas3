@@ -18,7 +18,9 @@
         <div class="license-content">
           <!-- SNOMED License Section -->
           <div class="license-section mb-6">
-            <h2 class="text-h6 mb-3">SNOMED INTERNATIONAL SNOMED CT LICENSE AGREEMENT</h2>
+            <h2 class="text-h6 mb-3">
+              SNOMED INTERNATIONAL SNOMED CT LICENSE AGREEMENT
+            </h2>
             <div class="license-text">
               <p>
                 <strong>SNOMED International SNOMED CT Browser</strong> includes SNOMED Clinical
@@ -29,8 +31,7 @@
                   href="http://www.snomed.org"
                   target="_blank"
                   rel="noopener noreferrer"
-                  >www.snomed.org</a
-                >)
+                >www.snomed.org</a>)
               </p>
               <p>
                 Use of SNOMED CT in <strong>SNOMED International SNOMED CT Browser</strong> is
@@ -47,8 +48,7 @@
                     href="http://www.snomed.org/resource/resource/117"
                     target="_blank"
                     rel="noopener noreferrer"
-                    >on the SNOMED International website</a
-                  >).
+                  >on the SNOMED International website</a>).
                 </li>
                 <li>
                   Information about Affiliate Licensing is available at
@@ -56,22 +56,19 @@
                     href="http://www.snomed.org/snomed-ct/get-snomed-ct"
                     target="_blank"
                     rel="noopener noreferrer"
-                    >http://www.snomed.org/snomed-ct/get-snomed-ct</a
-                  >. Individuals or organizations wishing to register as SNOMED International
+                  >http://www.snomed.org/snomed-ct/get-snomed-ct</a>. Individuals or organizations wishing to register as SNOMED International
                   Affiliates can register at
                   <a
                     href="https://mlds.ihtsdotools.org"
                     target="_blank"
                     rel="noopener noreferrer"
-                    >mlds.ihtsdotools.org</a
-                  >, subject to
+                  >mlds.ihtsdotools.org</a>, subject to
                   acceptance of the Affiliate License Agreement (see
                   <a
                     href="http://www.snomed.org/resource/resource/117"
                     target="_blank"
                     rel="noopener noreferrer"
-                    >on the SNOMED International website)</a
-                  >.
+                  >on the SNOMED International website)</a>.
                 </li>
                 <li>
                   The current list of SNOMED International Member Territories can be viewed at
@@ -79,8 +76,7 @@
                     href="http://www.snomed.org/members"
                     target="_blank"
                     rel="noopener noreferrer"
-                    >www.snomed.org/members</a
-                  >. Countries
+                  >www.snomed.org/members</a>. Countries
                   not included in that list are "Non-Member Territories".
                 </li>
                 <li>
@@ -145,7 +141,9 @@
 
           <!-- HemOnc License Section -->
           <div class="license-section">
-            <h2 class="text-h6 mb-3">HemOnc license agreement</h2>
+            <h2 class="text-h6 mb-3">
+              HemOnc license agreement
+            </h2>
             <div class="license-text">
               <p>
                 The HemOnc Vocabulary is a derivative product of HemOnc.org, which is wholly owned
@@ -204,8 +202,7 @@
                 contact us by emailing
                 <a
                   href="mailto:licensing@hemonc.org"
-                  >licensing@hemonc.org</a
-                >.
+                >licensing@hemonc.org</a>.
               </p>
               <p>
                 You agree to indemnify and hold HemOnc.org LLC and all parties who have contributed
@@ -214,7 +211,9 @@
                 to--legal fees
               </p>
 
-              <p class="font-weight-bold mt-4">Definitions</p>
+              <p class="font-weight-bold mt-4">
+                Definitions
+              </p>
               <p>
                 Data Analysis System: a computer system that is used to analyze records or other
                 data, but not if that system is also a Data Creation System
@@ -229,8 +228,7 @@
                   href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  >CC BY-NC-SA 4.0</a
-                >
+                >CC BY-NC-SA 4.0</a>
                 license to the full HemOnc ontology
               </p>
             </div>

@@ -42,7 +42,6 @@ describe('ExitCriteriaPanel', () => {
 
   const createWrapper = (props?: {
     modelValue?: ExitCriteria
-    censorWindow?: Period | null
     censoringCriteria?: CohortEvent[]
     conceptSets?: ConceptSetReference[]
   }) => {
@@ -52,7 +51,6 @@ describe('ExitCriteriaPanel', () => {
       },
       props: {
         modelValue: props?.modelValue,
-        censorWindow: props?.censorWindow,
         censoringCriteria: props?.censoringCriteria || [],
         conceptSets: props?.conceptSets || mockConceptSets,
       },
@@ -64,23 +62,17 @@ describe('ExitCriteriaPanel', () => {
     expect(wrapper.find('.exit-criteria-panel').exists()).toBe(true)
   })
 
-  it('should render all three sub-components', () => {
+  it('should render all sub-components', () => {
     const wrapper = createWrapper()
 
-    // Should have EventPersistenceSelector, CensorWindowEditor, and CensoringEventsEditor
+    // Should have EventPersistenceSelector and CensoringEventsEditor
     expect(wrapper.html()).toContain('Event Persistence')
-    expect(wrapper.html()).toContain('Censor Window')
     expect(wrapper.html()).toContain('Censoring Events')
   })
 
-  it('should display censor window when provided', () => {
-    const censorWindow: Period = {
-      startDate: { dateField: 'START_DATE', offset: 0 },
-      endDate: { dateField: 'END_DATE', offset: 365 }
-    }
-
-    const wrapper = createWrapper({ censorWindow })
-    expect(wrapper.find('.censor-window-editor').exists()).toBe(true)
+  it('should display event persistence selector', () => {
+    const wrapper = createWrapper()
+    expect(wrapper.find('.event-persistence-selector').exists()).toBe(true)
   })
 
   it('should display censoring events when provided', () => {
@@ -99,11 +91,13 @@ describe('ExitCriteriaPanel', () => {
       strategy: 'FIXED_DURATION',
       offset: 365
     }
-    const censorWindow: Period = {
-      startDate: { dateField: 'START_DATE', offset: 0 }
-    }
+    const censoringCriteria: CohortEvent[] = [{
+      id: 'test-1',
+      criteriaType: 'Death',
+      attributes: []
+    }]
 
-    const wrapper = createWrapper({ modelValue: exitCriteria, censorWindow })
+    const wrapper = createWrapper({ modelValue: exitCriteria, censoringCriteria })
 
     // The warning should appear when both legacy and new formats exist
     expect(wrapper.html()).toContain('legacy')
@@ -116,18 +110,19 @@ describe('ExitCriteriaPanel', () => {
     expect(wrapper.vm.aggregatedErrors).toBeDefined()
   })
 
-  it('should emit updates for censor window changes', async () => {
+  it('should emit updates for exit criteria changes', async () => {
     const wrapper = createWrapper()
 
-    // When CensorWindowEditor emits update, panel should propagate it
-    const censorWindowEditor = wrapper.findComponent({ name: 'CensorWindowEditor' })
-    if (censorWindowEditor.exists()) {
-      await censorWindowEditor.vm.$emit('update:modelValue', {
-        startDate: { dateField: 'START_DATE', offset: 10 }
+    // When EventPersistenceSelector emits update, panel should propagate it
+    const eventPersistence = wrapper.findComponent({ name: 'EventPersistenceSelector' })
+    if (eventPersistence.exists()) {
+      await eventPersistence.vm.$emit('update:modelValue', {
+        strategy: 'FIXED_DURATION',
+        offset: 30
       })
       await wrapper.vm.$nextTick()
 
-      expect(wrapper.emitted('update:censorWindow')).toBeTruthy()
+      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     }
   })
 

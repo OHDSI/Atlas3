@@ -13,10 +13,10 @@
                 variant="flat"
                 size="large"
                 class="cohorts-view__action-btn"
-                :aria-label="t('common.createCohort', 'Create new cohort').value"
+                :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
                 @click="handleCreateCohort"
               >
-                {{ t('common.createCohort', 'Create Cohort') }}
+                {{ t('cohortDefinitions.newDefinition', 'New Cohort') }}
               </v-btn>
 
               <v-btn
@@ -24,10 +24,10 @@
                 variant="flat"
                 size="large"
                 class="cohorts-view__action-btn"
-                :aria-label="t('common.importCohort', 'Import cohort from JSON').value"
+                :aria-label="t('common.import', 'Import cohort from JSON').value"
                 @click="handleImportCohort"
               >
-                {{ t('common.importCohort', 'Import Cohort') }}
+                {{ t('common.import', 'Import') }}
               </v-btn>
             </div>
           </v-col>
@@ -106,14 +106,14 @@
         >
           <v-card>
             <v-card-title class="text-h5">
-              {{ t('common.importCohort', 'Import Cohort') }}
+              {{ t('common.import', 'Import') }}
             </v-card-title>
             <v-card-text>
               <p class="mb-4">
                 {{ t('common.comingSoon', 'Import functionality will be implemented in a future update.') }}
               </p>
               <p class="text-body-2 text-grey">
-                {{ t('common.importCohortDescription', 'This will allow you to import cohort definitions from ATLAS JSON format.') }}
+                {{ t('cohortDefinitions.cohortDefinitionManager.panels.importConceptSetExpression', 'Import Concept Set Expression') }}
               </p>
             </v-card-text>
             <v-card-actions>

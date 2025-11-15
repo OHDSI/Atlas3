@@ -67,9 +67,10 @@ function getTranslation(
     if (englishBundle) {
       translation = getNestedValue(englishBundle.bundle.translations, key)
     }
-    
+
     // T036: Log missing translation in dev mode
-    if (isDev && !translation) {
+    // Only warn if translations have been initialized to avoid noise during app startup
+    if (isDev && !translation && localeStore.initialized) {
       console.warn(`[i18n] Missing translation for key: "${key}" in locale: ${localeStore.locale}`)
     }
   }

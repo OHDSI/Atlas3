@@ -1,6 +1,11 @@
 <template>
   <header class="nav-bar">
     <div class="nav-bar__container">
+      <img
+        :src="logoOhdsiOnlySrc"
+        alt="OHDSI"
+        class="nav-bar__ohdsi-logo"
+      >
       <div
         class="nav-bar__logo"
         role="button"
@@ -39,9 +44,32 @@
         class="nav-bar__right"
         tabindex="0"
       >
+        <!-- Feedback Button -->
+        <v-btn
+          rounded
+          color="orange"
+          variant="flat"
+          size="small"
+          href="https://forms.office.com/r/2JzrYy1yDP"
+          target="_blank"
+          class="mr-4"
+        >
+          Feedback
+        </v-btn>
+
         <!-- Language Selector -->
         <LanguageSelector />
-        
+
+        <!-- Configuration Panel Icon (Feature: 013-config-panel) -->
+        <v-btn
+          icon
+          variant="text"
+          aria-label="Open configuration panel"
+          @click="handleConfigClick"
+        >
+          <v-icon>mdi-cog</v-icon>
+        </v-btn>
+
         <!-- Authentication UI -->
         <div
           v-if="!auth.isAuthenticated.value"
@@ -82,15 +110,6 @@
             </v-list>
           </v-menu>
         </div>
-        
-        <img
-          :src="logoOhdsiSrc"
-          alt="OHDSI"
-          height="36"
-          role="button"
-          class="ml-4"
-          @click="handleOhdsiClick"
-        >
       </div>
     </div>
 
@@ -104,12 +123,14 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
+import { useUIStore } from '@/stores/ui'
 import { authConfig } from '@/config/auth.config'
 import { generatePluginMenuItems, type PluginMenuItem } from '@/plugins/navigation/PluginMenuIntegration.ts'
+import { pluginRegistry } from '@/plugins/core/PluginRegistry'
 import LoginModal from '@/components/auth/LoginModal.vue'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
-import logoOhdsiPng from '@/assets/icons/ohdsi.png'
+import logoOhdsiOnlyPng from '@/assets/icons/OHDSI logo only - colored.png'
 
 interface NavigationItem {
   id: string
@@ -122,12 +143,13 @@ interface NavigationItem {
 const router = useRouter()
 const auth = useAuth()
 const { t } = useI18n()
+const uiStore = useUIStore()
 
 const logoSrc = logoSvg
-const logoOhdsiSrc = logoOhdsiPng
+const logoOhdsiOnlySrc = logoOhdsiOnlyPng
 
-const signInLabel = t('common.menu', 'Sign In')
-const signOutLabel = t('common.menu', 'Sign Out')
+const signInLabel = t('components.userBar.signin', 'Sign In')
+const signOutLabel = t('components.userBar.signout', 'Sign Out')
 
 const navigationItems = ref<NavigationItem[]>([
   { id: 'datasources', titleKey: 'navigation.datasources', route: '/datasources', visible: true, active: false },
@@ -139,6 +161,12 @@ const navigationItems = ref<NavigationItem[]>([
 function loadPluginMenuItems() {
   try {
     const pluginMenuItems = generatePluginMenuItems()
+
+    // Remove existing plugin menu items first to avoid duplicates
+    // Keep only the core navigation items (datasources, concepts, cohorts)
+    navigationItems.value = navigationItems.value.filter(item =>
+      !item.id.includes('-') // Plugin IDs contain hyphens (e.g., "hello-world-plugin-main")
+    )
 
     // Add plugin menu items to navigation
     pluginMenuItems.forEach((pluginItem: PluginMenuItem) => {
@@ -197,6 +225,15 @@ async function handleLogout() {
   }
 }
 
+function handleConfigClick() {
+  // Toggle the config panel state
+  if (uiStore.configPanelState.isOpen) {
+    uiStore.closeConfigPanel()
+  } else {
+    uiStore.openConfigPanel()
+  }
+}
+
 const updateActiveNavFromRoute = () => {
   const currentPath = router.currentRoute.value.path
   
@@ -206,9 +243,42 @@ const updateActiveNavFromRoute = () => {
 }
 
 onMounted(() => {
-  // Load plugin menu items
+  // Load plugin menu items initially (will be empty if plugins haven't loaded yet)
   loadPluginMenuItems()
-  
+
+  // Set up plugin state watchers
+  const watchedPlugins = new Set<string>()
+
+  const setupPluginWatchers = () => {
+    const plugins = pluginRegistry.getAllPlugins()
+    plugins.forEach(plugin => {
+      if (!watchedPlugins.has(plugin.registration.id)) {
+        watchedPlugins.add(plugin.registration.id)
+        pluginRegistry.onStateChange(plugin.registration.id, (state) => {
+          if (state === 'loaded') {
+            console.log(`[NavBar] Plugin ${plugin.registration.id} loaded, reloading menu items`)
+            loadPluginMenuItems()
+          }
+        })
+      }
+    })
+  }
+
+  // Initial setup
+  setupPluginWatchers()
+
+  // Check periodically for new plugins (for 5 seconds)
+  let checkCount = 0
+  const maxChecks = 10 // Check every 500ms for 5 seconds
+  const intervalId = setInterval(() => {
+    setupPluginWatchers()
+    checkCount++
+    if (checkCount >= maxChecks) {
+      clearInterval(intervalId)
+      console.log('[NavBar] Stopped checking for new plugins')
+    }
+  }, 500)
+
   updateActiveNavFromRoute()
   router.afterEach(() => {
     updateActiveNavFromRoute()
@@ -234,11 +304,18 @@ onMounted(() => {
   height: 100%;
 }
 
+.nav-bar__ohdsi-logo {
+  display: block;
+  height: 52px;
+  margin-left: 1rem;
+  margin-right: 0.25rem;
+}
+
 .nav-bar__logo {
   display: flex;
   align-items: center;
   padding: 0.5rem 0;
-  margin-left: 2rem;
+  margin-left: 0.25rem;
   cursor: pointer;
 }
 
@@ -247,11 +324,11 @@ onMounted(() => {
 }
 
 .nav-bar__right {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 2rem;
+  padding-right: 0.5rem;
+  margin-left: auto;
 }
 
 .nav-bar__right img {
@@ -261,7 +338,7 @@ onMounted(() => {
 
 .nav-bar__auth,
 .nav-bar__user {
-  margin-right: 1rem;
+  margin-right: 0;
 }
 
 .nav-bar__nav {

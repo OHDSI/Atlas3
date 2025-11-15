@@ -267,7 +267,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 const { t, locale } = useI18n()
 
-const filtersLabel = t('common.filters', 'Filters')
+const filtersLabel = t('components.filterPanel.title', 'Filter panel')
 const searchLabel = t('common.search', 'Search')
 const tagsLabel = t('common.tags', 'Tags')
 const authorLabel = t('columns.author', 'Author')

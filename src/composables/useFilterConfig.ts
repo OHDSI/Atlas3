@@ -110,8 +110,9 @@ export function useFilterConfig(section: Ref<string>): UseFilterConfigReturn {
           return null
         }
 
-        // Resolve locale keys to translated strings
-        const name = tv(config.nameKey, key) // Fallback to key if translation missing
+        // Resolve locale keys to translated strings or use plain text
+        // Support both i18n (nameKey) and plain text (name) formats
+        const name = config.nameKey ? tv(config.nameKey, key) : (config.name || key)
         const description = getFilterDescription(key)
 
         return {
@@ -144,11 +145,14 @@ export function useFilterConfig(section: Ref<string>): UseFilterConfigReturn {
       return filterType
     }
 
-    const { descriptionKeys } = config
+    // Support both i18n (descriptionKeys) and plain text (descriptions) formats
+    const descriptionKeys = config.descriptionKeys
+    const descriptions = config.descriptions
 
     // Try section-specific description first
     const sectionKey = section.value
     let descriptionKey: string | undefined
+    let description: string | undefined
 
     // Map section IDs to description context keys
     const contextMap: Record<string, string> = {
@@ -158,16 +162,31 @@ export function useFilterConfig(section: Ref<string>): UseFilterConfigReturn {
     }
 
     const context = contextMap[sectionKey]
-    if (context && descriptionKeys[context]) {
-      descriptionKey = descriptionKeys[context]
-    } else if (descriptionKeys.all) {
-      // Fallback to "all" context
-      descriptionKey = descriptionKeys.all
+
+    // Try i18n keys first if available
+    if (descriptionKeys) {
+      if (context && descriptionKeys[context]) {
+        descriptionKey = descriptionKeys[context]
+      } else if (descriptionKeys.all) {
+        descriptionKey = descriptionKeys.all
+      }
+
+      if (descriptionKey) {
+        return tv(descriptionKey, `Find patients with ${filterType}`)
+      }
     }
 
-    // Resolve translation
-    if (descriptionKey) {
-      return tv(descriptionKey, `Find patients with ${filterType}`)
+    // Fall back to plain text descriptions
+    if (descriptions) {
+      if (context && descriptions[context]) {
+        description = descriptions[context]
+      } else if (descriptions.all) {
+        description = descriptions.all
+      }
+
+      if (description) {
+        return description
+      }
     }
 
     return `Find patients with ${filterType}` // Ultimate fallback

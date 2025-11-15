@@ -18,7 +18,7 @@
         v-if="tileStatus === 'idle'"
         class="tile-status"
       >
-        {{ t('common.readyToGenerate', 'Ready to generate') }}
+        {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
       </div>
 
       <div
@@ -77,7 +77,7 @@
         :loading="tileStatus === 'generating'"
         @click.stop="handleGenerate"
       >
-        {{ tileStatus === 'complete' ? t('common.regenerate', 'Regenerate').value : t('common.generate', 'Generate').value }}
+        {{ t('components.analysisExecution.buttons.generate', 'Generate').value }}
       </v-btn>
     </v-card-actions>
   </v-card>

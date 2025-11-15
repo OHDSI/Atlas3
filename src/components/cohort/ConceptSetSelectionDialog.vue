@@ -12,7 +12,7 @@
     >
       <!-- Header -->
       <v-card-title class="d-flex align-center bg-primary pa-4">
-        <span class="text-h6">{{ t('common.selectConceptSet', 'Select Concept Set') }}</span>
+        <span class="text-h6">{{ t('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set') }}</span>
         <v-spacer />
         <v-btn
           icon="mdi-close"
@@ -26,7 +26,7 @@
         <!-- Search -->
         <v-text-field
           v-model="searchTerm"
-          :placeholder="tv('cs.manager.search.placeholder')"
+          :placeholder="tv('datatable.language.searchPlaceholder')"
           prepend-inner-icon="mdi-magnify"
           clearable
           variant="outlined"
@@ -139,7 +139,7 @@
           <v-icon start>
             mdi-plus
           </v-icon>
-          {{ t('common.createNew') }}
+          {{ t('common.create') }}
         </v-btn>
         <v-spacer />
         <v-btn

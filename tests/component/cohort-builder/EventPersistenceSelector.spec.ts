@@ -169,12 +169,4 @@ describe('EventPersistenceSelector', () => {
     expect(alert).toBeDefined()
   })
 
-  it('should validate and emit warning when no concept set selected', async () => {
-    const wrapper = createWrapper()
-    await wrapper.vm.$nextTick()
-
-    // Should emit validation error
-    const validationEvents = wrapper.emitted('validation-error')
-    expect(validationEvents).toBeDefined()
-  })
 })

@@ -21,40 +21,63 @@ export class PluginLoader {
 
     try {
       this.registry.updatePluginState(registration.id, 'loading');
-      
+
       const startTime = performance.now();
-      
+
       // Set loading timeout
       const timeoutId = setTimeout(() => {
         const error = new Error(`Plugin ${registration.id} loading timeout after ${this.LOADING_TIMEOUT}ms`);
         this.registry.setPluginError(registration.id, error, true);
       }, this.LOADING_TIMEOUT);
-      
+
       this.loadingTimeouts.set(registration.id, timeoutId);
 
-      // Register with single-spa
+      // Load the plugin module immediately using SystemJS
+      // This happens BEFORE registering with single-spa so we can detect load failures early
+      let pluginModule: any;
+
+      try {
+        // Check if SystemJS is available
+        if (!(window as any).System) {
+          throw new Error('SystemJS is not available on window.System');
+        }
+
+        console.log(`[PluginLoader] Starting System.import for ${pluginUrl}`);
+
+        // Use SystemJS import with additional error context
+        pluginModule = await (window as any).System.import(pluginUrl).catch((err: Error) => {
+          console.error(`[PluginLoader] System.import failed for ${pluginUrl}:`, err);
+          throw new Error(`Failed to import plugin module: ${err.message}`);
+        });
+
+        console.log(`[PluginLoader] System.import succeeded for ${registration.id}`, pluginModule);
+
+        // Validate the module has required lifecycle methods
+        if (!pluginModule.bootstrap || !pluginModule.mount || !pluginModule.unmount) {
+          throw new Error(
+            `Plugin ${registration.id} is missing required lifecycle methods (bootstrap, mount, unmount)`
+          );
+        }
+
+        const loadTime = performance.now() - startTime;
+        this.registry.updatePluginMetrics(registration.id, { loadTime });
+
+        clearTimeout(timeoutId);
+        this.loadingTimeouts.delete(registration.id);
+
+        this.registry.updatePluginState(registration.id, 'loaded');
+        console.log(`[PluginLoader] Plugin ${registration.id} loaded successfully in ${loadTime}ms`);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        this.loadingTimeouts.delete(registration.id);
+        console.error(`[PluginLoader] Error loading plugin ${registration.id}:`, error);
+        throw error;
+      }
+
+      // Now register with single-spa using the already-loaded module
       registerApplication({
         name: registration.id,
-        app: async () => {
-          try {
-            // Use SystemJS import
-            const module = await (window as any).System.import(pluginUrl);
-            
-            const loadTime = performance.now() - startTime;
-            this.registry.updatePluginMetrics(registration.id, { loadTime });
-            
-            clearTimeout(timeoutId);
-            this.loadingTimeouts.delete(registration.id);
-            
-            this.registry.updatePluginState(registration.id, 'loaded');
-            
-            return module;
-          } catch (error) {
-            clearTimeout(timeoutId);
-            this.loadingTimeouts.delete(registration.id);
-            throw error;
-          }
-        },
+        app: () => Promise.resolve(pluginModule),
         activeWhen: (location) => {
           // Match any route that starts with /plugins/{pluginId}/
           return location.pathname.startsWith(`/plugins/${registration.id}/`);
@@ -68,7 +91,7 @@ export class PluginLoader {
 
       // Store application reference
       plugin.application = { name: registration.id };
-      
+
     } catch (error) {
       console.error(`[PluginLoader] Failed to load plugin ${registration.id}:`, error);
       this.handleLoadError(registration.id, error as Error);

@@ -11,7 +11,7 @@
         {{ cohortName || t('cohortDefinitions.newDefinition') }}
       </span>
       <v-tooltip
-        :text="t('common.editName', 'Edit name').value"
+        :text="t('columns.name', 'Name').value"
         location="bottom"
       >
         <template #activator="{ props: tooltipProps }">
@@ -40,7 +40,7 @@
           >
             mdi-pencil
           </v-icon>
-          {{ t('common.editCohortName', 'Edit Cohort Name') }}
+          {{ t('columns.name', 'Edit Cohort Name') }}
         </v-card-title>
         <v-card-text>
           <v-text-field
@@ -80,7 +80,7 @@
           <input
             v-model="cohortDescription"
             class="cohort-builder__description-input"
-            :placeholder="t('common.description', 'Description').value"
+            :placeholder="t('columns.description', 'Description').value"
             data-testid="cohort-description-input"
           >
         </div>
@@ -88,7 +88,7 @@
         <!-- Concept Sets Icon -->
         <v-tooltip
           v-if="usedConceptSets.length > 0"
-          :text="t('conceptSets.title', 'Concept Sets').value"
+          :text="t('cohortDefinitions.cohortDefinitionManager.tabs.conceptSets', 'Concept Sets').value"
           location="bottom"
         >
           <template #activator="{ props: tooltipProps }">
@@ -113,7 +113,7 @@
         <!-- Validation Notification Icon -->
         <v-tooltip
           v-if="isValidating"
-          :text="t('common.validating', 'Validating cohort...').value"
+          :text="t('common.loadingWithDots', 'Loading...').value"
           location="bottom"
         >
           <template #activator="{ props: tooltipProps }">
@@ -164,7 +164,7 @@
               >
                 mdi-shape
               </v-icon>
-              {{ t('conceptSets.title', 'Concept Sets') }}
+              {{ t('navigation.conceptsets', 'Concept Sets') }}
             </v-card-title>
             <v-card-text>
               <v-table>
@@ -329,7 +329,7 @@
           data-testid="generate-btn"
           @click="openGenerationPanel"
         >
-          {{ t('components.generation.generate') }}
+          {{ t('components.analysisExecution.buttons.generate') }}
         </v-btn>
       </div>
     </div>
@@ -373,7 +373,7 @@
         </div>
 
         <div class="section-obs-period">
-          <span class="obs-period-label">{{ t('cohortDefinitions.designTab.collapseEntryLabel', 'Limit cohort to') }}</span>
+          <span class="obs-period-label">{{ t('components.cohortExpressionEditor.cohortEntryEventsText_6', 'Limit initial events to') }}</span>
           <span class="obs-period-text">{{ t('components.cohortExpressionEditor.cohortEntryEventsText_3') }}</span>
           <v-text-field
             v-model.number="observationPeriod.priorDays"
@@ -629,7 +629,7 @@
         color="primary"
       />
       <div class="text-h6 mt-4">
-        {{ t('cohortDefinitions.loading', 'Loading cohort definition...') }}
+        {{ t('common.loadingWithDots', 'Loading...') }}
       </div>
     </v-overlay>
 
@@ -732,8 +732,12 @@ const generationError = ref<string | null>(null)
 
 // Validation state
 const validationWarnings = ref<ValidationWarning[]>([])
-const isValidating = ref(false)
+const _isValidatingInternal = ref(false) // Internal ref for template display
 let validationDebounceTimer: ReturnType<typeof setTimeout> | null = null
+let _isValidatingFlag = false // Plain JS variable to prevent watcher loops
+
+// Computed wrapper to access validation state without triggering watcher
+const isValidating = computed(() => _isValidatingInternal.value)
 
 const cohortId = computed(() => props.id ? Number(props.id) : null)
 
@@ -983,6 +987,11 @@ async function loadCohort(id: string) {
     cohortStore.setCohort(cohortDef)
     cohortStore.markClean()
 
+    // Stop watcher during state updates
+    if (validationWatcherStop) {
+      validationWatcherStop()
+    }
+
     // Update local state
     cohortName.value = cohortDef.name
     cohortDescription.value = cohortDef.description ?? ''
@@ -999,6 +1008,19 @@ async function loadCohort(id: string) {
     // Save snapshot of loaded state for change detection
     loadedSnapshot.value = createStateSnapshot()
 
+    // Restart watcher
+    validationWatcherStop = watch(
+      [cohortName, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
+      () => {
+        // Skip if validating - use internal ref directly to avoid creating reactive dependency
+        if (_isValidatingInternal.value) {
+          return
+        }
+        triggerValidation()
+      },
+      { deep: true }
+    )
+
     // Hide loading overlay immediately - cohort is now visible
     isLoadingCohort.value = false
 
@@ -1007,6 +1029,20 @@ async function loadCohort(id: string) {
   } catch (error) {
     console.error(`Error loading cohort ${id}:`, error)
     isLoadingCohort.value = false
+    // Restart watcher in case of error
+    if (!validationWatcherStop) {
+      validationWatcherStop = watch(
+        [cohortName, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
+        () => {
+          // Skip if validating - use internal ref directly to avoid creating reactive dependency
+          if (_isValidatingInternal.value) {
+            return
+          }
+          triggerValidation()
+        },
+        { deep: true }
+      )
+    }
   }
 }
 
@@ -1020,7 +1056,8 @@ async function validateCohort() {
   }
 
   try {
-    isValidating.value = true
+    _isValidatingFlag = true
+    _isValidatingInternal.value = true
 
     // Extract all unique concept sets from events and inclusion rules
     const conceptSetsMap = new Map<string, ConceptSetReference>()
@@ -1077,7 +1114,8 @@ async function validateCohort() {
     console.error('Failed to validate cohort:', error)
     validationWarnings.value = []
   } finally {
-    isValidating.value = false
+    _isValidatingFlag = false
+    _isValidatingInternal.value = false
   }
 }
 
@@ -1085,6 +1123,11 @@ async function validateCohort() {
  * Debounced validation trigger
  */
 function triggerValidation() {
+  // Skip if already validating - use plain variable to avoid creating reactive dependency
+  if (_isValidatingFlag) {
+    return
+  }
+
   if (validationDebounceTimer) {
     clearTimeout(validationDebounceTimer)
   }
@@ -1094,8 +1137,11 @@ function triggerValidation() {
   }, 2000) // 2 second debounce
 }
 
+// Watcher stop handle
+let validationWatcherStop: (() => void) | null = null
+
 // Watch for changes to cohort definition and trigger validation
-watch(
+validationWatcherStop = watch(
   [cohortName, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
   () => {
     triggerValidation()
@@ -1259,10 +1305,11 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
     const currentEvent = entryEvents.value[eventIndex]
     if (!currentEvent) return
 
-    entryEvents.value[eventIndex] = {
+    // Update the event directly - Vue 3 ref reactivity will detect this
+    Object.assign(entryEvents.value[eventIndex], {
       ...currentEvent,
       conceptSet: conceptSetRef,
-    }
+    })
   }
   // Handle additional criteria event selection
   else if (selectedCriteriaContext.value.ruleIndex === -2) {
@@ -1390,6 +1437,11 @@ async function _handleFileImport(event: Event) {
   }
 
   if (importedCohort) {
+    // Stop watcher during state updates
+    if (validationWatcherStop) {
+      validationWatcherStop()
+    }
+
     // Load imported data into state
     cohortName.value = importedCohort.name || ''
     cohortDescription.value = importedCohort.description || ''
@@ -1400,6 +1452,19 @@ async function _handleFileImport(event: Event) {
     observationPeriod.value = importedCohort.observationPeriod ?? { priorDays: 0, postDays: 0 }
     qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
     inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
+
+    // Restart watcher
+    validationWatcherStop = watch(
+      [cohortName, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
+      () => {
+        // Skip if validating - use internal ref directly to avoid creating reactive dependency
+        if (_isValidatingInternal.value) {
+          return
+        }
+        triggerValidation()
+      },
+      { deep: true }
+    )
 
     successMessage.value = 'Atlas JSON imported successfully'
     showSuccess.value = true

@@ -2,7 +2,7 @@
   <div class="censoring-events-editor">
     <div class="pa-4">
       <h3 class="text-h6 mb-2">
-        {{ t('exitCriteria.censoringEvents', 'Censoring Events').value }}
+        {{ t('components.cohortExpressionEditor.censoringEvents', 'Censoring Events:') }}
       </h3>
       <p class="text-body-2 text-medium-emphasis mb-4">
         Exit cohort when any of these events occur
@@ -20,7 +20,10 @@
         </v-alert>
 
         <!-- Event list -->
-        <div v-else class="events-list">
+        <div
+          v-else
+          class="events-list"
+        >
           <v-card
             v-for="(event, index) in localEvents"
             :key="event.id"
@@ -29,7 +32,10 @@
           >
             <v-card-text>
               <v-row align="center">
-                <v-col cols="1" class="text-center">
+                <v-col
+                  cols="1"
+                  class="text-center"
+                >
                   <span class="text-h6 text-medium-emphasis">{{ index + 1 }}</span>
                 </v-col>
                 <v-col cols="10">
@@ -37,8 +43,15 @@
                     <div class="event-type text-subtitle-1">
                       {{ formatCriteriaType(event.criteriaType) }}
                     </div>
-                    <div v-if="event.conceptSet" class="event-concept-set text-body-2">
-                      <v-chip size="small" variant="tonal" color="primary">
+                    <div
+                      v-if="event.conceptSet"
+                      class="event-concept-set text-body-2"
+                    >
+                      <v-chip
+                        size="small"
+                        variant="tonal"
+                        color="primary"
+                      >
                         {{ event.conceptSet.name }}
                       </v-chip>
                     </div>
@@ -54,7 +67,10 @@
                     </v-alert>
                   </div>
                 </v-col>
-                <v-col cols="1" class="text-right">
+                <v-col
+                  cols="1"
+                  class="text-right"
+                >
                   <v-btn
                     icon="mdi-close"
                     size="small"
@@ -77,7 +93,7 @@
           :disabled="disabled"
           @click="addEvent"
         >
-          {{ t('exitCriteria.actions.addCensoringEvent', 'Add Censoring Event').value }}
+          {{ t('components.cohortExpressionEditor.addCensoringEvent', 'Add Censoring Event...').value }}
         </v-btn>
       </div>
     </div>
@@ -86,7 +102,6 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent, ConceptSetReference, CriteriaType } from '@/models/cohort.types'
 import type { ValidationError } from '@/models/validation.types'
@@ -176,11 +191,12 @@ function validateEvents() {
   emit('validation-error', errors)
 }
 
-// Watch for external changes
+// Watch for external changes (shallow watch to prevent reactive loops)
+// Deep watching is unnecessary here since we're copying the entire array
 watch(() => props.modelValue, (newValue) => {
   localEvents.value = [...newValue]
   validateEvents()
-}, { deep: true })
+})
 
 // Initial validation
 validateEvents()

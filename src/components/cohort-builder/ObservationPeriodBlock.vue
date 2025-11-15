@@ -7,16 +7,16 @@
       <v-text-field
         :model-value="modelValue?.priorDays || 0"
         type="number"
-        :label="t('common.priorDays', 'Prior Days').value"
-        :hint="t('common.priorDaysHint', 'Days of continuous observation before entry').value"
+        :label="t('common.priorDays', 'Prior Days')"
+        :hint="t('common.priorDaysHint', 'Days of continuous observation before entry')"
         data-testid="prior-days-input"
         @update:model-value="updatePrior"
       />
       <v-text-field
         :model-value="modelValue?.postDays || 0"
         type="number"
-        :label="t('common.postDays', 'Post Days').value"
-        :hint="t('common.postDaysHint', 'Days of continuous observation after entry').value"
+        :label="t('common.postDays', 'Post Days')"
+        :hint="t('common.postDaysHint', 'Days of continuous observation after entry')"
         data-testid="post-days-input"
         @update:model-value="updatePost"
       />

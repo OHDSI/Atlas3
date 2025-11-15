@@ -147,7 +147,9 @@
     "reportNotImplemented": "Report Not Yet Implemented",
     "reportNotImplementedMessage": "This report is in the roadmap but not yet available.",
     "selectReportType": "Select a report type to view cohort analytics",
-    "columns": "Columns"
+    "columns": "Columns",
+    "editName": "Edit Name",
+    "description": "Description"
   },
   "commonErrors": {
     "noSources": "The current WebAPI has no sources defined.<br/>Please add one or more on <a href=\"#/configure\">configuration</a> page.",
@@ -3070,7 +3072,10 @@
     "noConceptSets": "No concept sets to export",
     "runDiagnostics": "Run diagnostics",
     "saveDefinitionBefore": "You must save the definition before you can export",
-    "title": "Cohort Definitions"
+    "title": "Cohort Definitions",
+    "designTab": {
+      "collapseEntryLabel": "Collapse Cohort Entry Events"
+    }
   },
   "const": {
     "disabledReason": {
@@ -4487,9 +4492,9 @@
   },
   "exitCriteria": {
     "title": "Exit Criteria",
-    "eventPersistence": "Event Persistence",
+    "eventPersistence": "Event Persistence:",
     "censorWindow": "Censor Window",
-    "censoringEvents": "Censoring Events",
+    "censoringEvents": "Censoring Events:",
     "strategies": {
       "continuousObservation": "End of Continuous Observation",
       "fixedDuration": "Fixed Duration Relative to Initial Event",
@@ -4529,6 +4534,142 @@
     },
     "warnings": {
       "legacyConflict": "This cohort has both legacy and new exit criteria formats. Displaying Atlas format."
+    }
+  },
+  "config": {
+    "title": "Configuration",
+    "panel": {
+      "title": "Configuration Panel",
+      "close": "Close configuration panel"
+    },
+    "sections": {
+      "cache": "Cache Management",
+      "vocabulary": "Vocabulary Schema",
+      "tags": "Tag Management"
+    },
+    "cache": {
+      "title": "Cache Management",
+      "description": "Manage cached configuration data to troubleshoot loading issues or clear stale data.",
+      "clearButton": "Clear Configuration Cache",
+      "confirmTitle": "Clear Configuration Cache",
+      "confirmMessage": "Are you sure you want to clear the configuration cache? This will remove all cached data and may temporarily slow down the application.",
+      "success": "Configuration cache cleared successfully",
+      "error": "Failed to clear configuration cache",
+      "stats": {
+        "title": "Cache Statistics",
+        "itemCount": "Cached Items",
+        "estimatedSize": "Estimated Size"
+      }
+    },
+    "vocabulary": {
+      "title": "Vocabulary Schema",
+      "description": "Configure the database schema where vocabulary tables are located.",
+      "label": "Schema Name",
+      "hint": "Database schema containing vocabulary tables (e.g., public, cdm_vocab)",
+      "placeholder": "Enter schema name",
+      "success": "Vocabulary schema updated",
+      "error": "Failed to update vocabulary schema",
+      "undo": "Undo",
+      "validation": {
+        "required": "Schema name is required",
+        "invalidFormat": "Schema name must start with a letter or underscore",
+        "invalidChars": "Schema name can only contain letters, numbers, and underscores",
+        "tooLong": "Schema name must be 63 characters or less"
+      }
+    },
+    "tags": {
+      "title": "Tag Management",
+      "description": "Create and manage tag groups for organizing cohorts and concept sets.",
+      "createButton": "Create Tag Group",
+      "table": {
+        "headers": {
+          "name": "Name",
+          "color": "Color",
+          "icon": "Icon",
+          "mandatory": "Mandatory",
+          "showColumn": "Show Column",
+          "multiple": "Multiple",
+          "freeForm": "Free-form",
+          "created": "Created",
+          "author": "Author",
+          "description": "Description",
+          "actions": "Actions"
+        },
+        "empty": "No tag groups found",
+        "loading": "Loading tag groups..."
+      },
+      "dialog": {
+        "createTitle": "Create Tag Group",
+        "editTitle": "Edit Tag Group",
+        "fields": {
+          "name": {
+            "label": "Name",
+            "hint": "Descriptive name for this tag group",
+            "required": "Name is required"
+          },
+          "color": {
+            "label": "Color",
+            "hint": "Color swatch for visual identification"
+          },
+          "icon": {
+            "label": "Icon",
+            "hint": "Material Design Icon name (e.g., mdi-tag)",
+            "placeholder": "mdi-tag"
+          },
+          "description": {
+            "label": "Description",
+            "hint": "Optional description of this tag group's purpose"
+          },
+          "mandatory": {
+            "label": "Mandatory",
+            "hint": "Tags from this group are required on all assets"
+          },
+          "showColumn": {
+            "label": "Show as Column",
+            "hint": "Display as a column in asset tables"
+          },
+          "multiple": {
+            "label": "Allow Multiple",
+            "hint": "Allow multiple tags from this group per asset"
+          },
+          "freeForm": {
+            "label": "Free-form",
+            "hint": "Allow users to create custom tags in this group"
+          }
+        },
+        "actions": {
+          "save": "Save",
+          "create": "Create",
+          "cancel": "Cancel"
+        }
+      },
+      "delete": {
+        "confirmTitle": "Delete Tag Group",
+        "confirmMessage": "Are you sure you want to delete \"%{name}\"?",
+        "success": "Tag group deleted successfully",
+        "error": "Failed to delete tag group",
+        "errorNonEmpty": "Cannot delete tag group: the group contains tags. Please delete all tags first.",
+        "undo": "Undo"
+      },
+      "create": {
+        "success": "Tag group created successfully",
+        "error": "Failed to create tag group",
+        "undo": "Undo"
+      },
+      "update": {
+        "success": "Tag group updated successfully",
+        "error": "Failed to update tag group",
+        "undo": "Undo"
+      }
+    },
+    "accessibility": {
+      "openPanel": "Open configuration panel",
+      "closePanel": "Close configuration panel",
+      "cacheSection": "Navigate to cache management section",
+      "vocabularySection": "Navigate to vocabulary schema section",
+      "tagsSection": "Navigate to tag management section",
+      "editTagGroup": "Edit tag group %{name}",
+      "deleteTagGroup": "Delete tag group %{name}"
     }
   }
 }

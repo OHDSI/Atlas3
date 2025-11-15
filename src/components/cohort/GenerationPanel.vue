@@ -18,7 +18,7 @@
         >
           mdi-database-cog
         </v-icon>
-        <span class="text-h6">{{ t('common.generateCohort', 'Generate Cohort') }}</span>
+        <span class="text-h6">{{ t('cohortDefinitions.cohortDefinitionManager.tabs.generation', 'Generation') }}</span>
         <v-spacer />
         <v-btn
           icon="mdi-close"
@@ -45,7 +45,7 @@
           type="info"
           variant="tonal"
         >
-          {{ t('common.noDataSources', 'No data sources configured.') }}
+          {{ t('components.generation.pickAtLeastOneSourceAlert', 'No data sources configured.') }}
         </v-alert>
 
         <!-- Show reports when a data source is selected -->
@@ -74,7 +74,7 @@
             <!-- Left: Data source tiles (40%) -->
             <div class="generation-grid__tiles">
               <p class="text-subtitle-1 font-weight-medium mb-4">
-                {{ t('common.dataSources', 'Data Sources') }}
+                {{ t('navigation.datasources', 'Data Sources') }}
               </p>
               <data-source-tile-grid
                 :cohort-id="cohortId"
@@ -89,7 +89,7 @@
                 {{ t('cohortDefinitions.cohort.modals.analysisTypes.title', 'Analysis Options') }}
               </p>
               <div class="text-body-2 text-grey">
-                {{ t('common.clickDataSource', 'Click a data source to view reports') }}
+                {{ t('profiles.selectADataSource', 'Select a Data Source') }}
               </div>
             </div>
           </div>

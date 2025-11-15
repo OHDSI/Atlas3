@@ -3,7 +3,7 @@
  * Types for validation errors and results
  */
 
-import type { ExitStrategy, ConceptSetReference } from './cohort.types'
+import type { ExitStrategy } from './cohort.types'
 
 /**
  * ValidationError - Standardized error representation for validation feedback

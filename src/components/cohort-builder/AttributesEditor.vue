@@ -137,7 +137,7 @@
           prepend-icon="mdi-plus"
           data-testid="add-attribute-button"
         >
-          {{ t('components.common.addAttribute').value }}
+          {{ t('components.common.addAttribute') }}
         </v-btn>
       </template>
       <v-list>
@@ -252,7 +252,7 @@ function updateAttributeExtent(index: number, extent: any) {
 function addAttributeOfType(attributeKey: string, attributeType: string) {
   // Create a default attribute based on the type
   let newAttribute: any
-  if (attributeType === 'numeric') {
+  if (attributeType === 'numericRange') {
     newAttribute = {
       type: 'numericRange',
       attributeKey,
@@ -265,7 +265,7 @@ function addAttributeOfType(attributeKey: string, attributeType: string) {
       attributeKey,
       conceptSet: { id: '', name: '' },
     }
-  } else if (attributeType === 'date') {
+  } else if (attributeType === 'dateRange') {
     newAttribute = {
       type: 'dateRange',
       attributeKey,

@@ -17,7 +17,11 @@
         :subtitle="item.raw.description"
       >
         <template #append>
-          <v-chip v-if="item.raw.groupOnly" size="x-small" color="primary">
+          <v-chip
+            v-if="item.raw.groupOnly"
+            size="x-small"
+            color="primary"
+          >
             Group Only
           </v-chip>
           <v-chip

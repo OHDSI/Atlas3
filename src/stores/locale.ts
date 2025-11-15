@@ -22,7 +22,8 @@ export const useLocaleStore = defineStore('locale', {
     availableLocales: [],
     loading: false,
     error: null,
-    translationCache: new Map<LocaleCode, TranslationCache>()
+    translationCache: new Map<LocaleCode, TranslationCache>(),
+    initialized: false
   }),
 
   getters: {
@@ -46,27 +47,31 @@ export const useLocaleStore = defineStore('locale', {
       try {
         // Load English translations immediately (bundled)
         await this.loadFallbackTranslations()
-        
+
         // Set default locales in case WebAPI fails
         if (this.availableLocales.length === 0) {
           this.availableLocales = [
             { code: 'en', name: 'English' }
           ]
         }
-        
+
         // Try to fetch available locales from WebAPI
         await this.fetchAvailableLocales()
-        
+
         const savedLocale = localStorage.getItem('locale')
         const detectedLocale = this.detectBrowserLanguage()
         const initialLocale = savedLocale || detectedLocale || 'en'
-        
+
         // Always fetch from WebAPI, even for English
         await this.changeLocale(initialLocale)
+
+        // Mark as initialized after initial translations are loaded
+        this.initialized = true
       } catch (error) {
         console.error('Failed to initialize locale store:', error)
         this.error = 'Failed to initialize translations'
         // English fallback is already loaded
+        this.initialized = true
       }
     },
 

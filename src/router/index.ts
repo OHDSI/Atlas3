@@ -5,6 +5,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useUIStore } from '@/stores/ui'
 import { authConfig } from '@/config/auth.config'
 import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
 
@@ -173,6 +174,22 @@ router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, 
       // This prevents redirect loops and allows the app to render
       next()
       return
+    }
+  }
+
+  next()
+})
+
+/**
+ * Configuration Panel Guard - Auto-close panel on navigation (Feature: 013-config-panel)
+ */
+router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  // Auto-close config panel when navigating to a different route
+  if (from.path !== to.path) {
+    const uiStore = useUIStore()
+
+    if (uiStore.configPanelState.isOpen) {
+      uiStore.closeConfigPanel()
     }
   }
 

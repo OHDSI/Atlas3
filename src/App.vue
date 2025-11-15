@@ -48,6 +48,9 @@
       @update:model-value="handleDismissModal"
       @expired="handleExpired"
     />
+
+    <!-- Configuration Panel (Feature: 013-config-panel) -->
+    <ConfigPanel />
   </v-app>
 </template>
 
@@ -57,6 +60,7 @@ import NavBar from '@/components/shared/NavBar.vue'
 import SessionExpiryModal from '@/components/auth/SessionExpiryModal.vue'
 import ConfigurationWarningBanner from '@/components/cohort-builder/ConfigurationWarningBanner.vue'
 import LicenseAgreementDialog from '@/components/shared/LicenseAgreementDialog.vue'
+import ConfigPanel from '@/components/config/ConfigPanel.vue'
 import { useLocaleStore } from '@/stores/locale'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'

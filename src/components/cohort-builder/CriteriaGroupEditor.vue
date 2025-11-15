@@ -69,7 +69,7 @@
               v-if="matchTypeTemp === 'AT_LEAST' || matchTypeTemp === 'AT_MOST'"
               v-model.number="matchTypeCount"
               type="number"
-              :label="t('common.count', 'Count').value"
+              :label="t('common.count', 'Count')"
               min="1"
               density="compact"
               class="mt-3"
@@ -108,7 +108,7 @@
                 size="small"
                 data-testid="add-event-to-group"
               >
-                {{ t('components.criteriaGroup.addCriteria').value }}
+                {{ t('components.criteriaGroup.addCriteria') }}
               </v-btn>
             </template>
             <v-list>

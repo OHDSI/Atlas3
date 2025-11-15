@@ -3,7 +3,7 @@
     <div class="pa-4">
       <div class="d-flex align-center mb-2">
         <h3 class="text-h6">
-          {{ t('exitCriteria.censorWindow', 'Censor Window').value }}
+          {{ t('components.cohortExpressionEditor.censoringEvents', 'Censor Window').value }}
         </h3>
         <v-tooltip location="right">
           <template #activator="{ props }">
@@ -14,7 +14,7 @@
               class="ml-2 text-medium-emphasis"
             />
           </template>
-          <span>{{ t('exitCriteria.help.censorWindow', 'Defines observation period boundaries relative to index event').value }}</span>
+          <span>{{ t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras').value }}</span>
         </v-tooltip>
       </div>
       <p class="text-body-2 text-medium-emphasis mb-4">
@@ -25,14 +25,14 @@
         <!-- Start Date Configuration -->
         <div class="date-config-section">
           <h4 class="text-subtitle-1 mb-2">
-            {{ t('exitCriteria.fields.startDate', 'Start Date').value }}
+            {{ t('options.startDate', 'Start Date').value }}
           </h4>
           <v-row>
             <v-col cols="6">
               <v-select
                 v-model="localStartDateField"
                 :items="dateFieldOptions"
-                :label="t('exitCriteria.fields.dateField', 'Date Field').value"
+                :label="t('common.select', 'Date Field').value"
                 :disabled="disabled"
                 variant="outlined"
                 density="compact"
@@ -43,7 +43,7 @@
               <v-text-field
                 v-model.number="localStartOffset"
                 type="number"
-                :label="t('exitCriteria.fields.offset', 'Offset (days)').value"
+                :label="t('components.cohortExpressionEditor.days', 'Offset (days)').value"
                 :disabled="disabled"
                 :rules="[offsetRule]"
                 variant="outlined"
@@ -71,14 +71,14 @@
         <!-- End Date Configuration -->
         <div class="date-config-section mt-4">
           <h4 class="text-subtitle-1 mb-2">
-            {{ t('exitCriteria.fields.endDate', 'End Date').value }}
+            {{ t('options.endDate', 'End Date').value }}
           </h4>
           <v-row>
             <v-col cols="6">
               <v-select
                 v-model="localEndDateField"
                 :items="dateFieldOptions"
-                :label="t('exitCriteria.fields.dateField', 'Date Field').value"
+                :label="t('common.select', 'Date Field').value"
                 :disabled="disabled"
                 variant="outlined"
                 density="compact"
@@ -89,7 +89,7 @@
               <v-text-field
                 v-model.number="localEndOffset"
                 type="number"
-                :label="t('exitCriteria.fields.offset', 'Offset (days)').value"
+                :label="t('components.cohortExpressionEditor.days', 'Offset (days)').value"
                 :disabled="disabled"
                 :rules="[offsetRule]"
                 variant="outlined"
@@ -133,7 +133,7 @@
           :disabled="disabled"
           @click="clearCensorWindow"
         >
-          {{ t('exitCriteria.actions.clearCensorWindow', 'Clear Censor Window').value }}
+          {{ t('components.filterPanel.buttons.clear', 'Clear Censor Window').value }}
         </v-btn>
       </div>
     </div>
@@ -143,7 +143,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import type { Period, DateField } from '@/models/cohort.types'
+import type { Period } from '@/models/cohort.types'
 import type { ValidationError } from '@/models/validation.types'
 
 const { t } = useI18n()
@@ -175,8 +175,8 @@ const localEndOffset = ref<number>(
 
 // Date field options
 const dateFieldOptions = [
-  { value: 'START_DATE', title: t('exitCriteria.fields.startDate', 'Start Date').value },
-  { value: 'END_DATE', title: t('exitCriteria.fields.endDate', 'End Date').value }
+  { value: 'START_DATE', title: t('options.startDate', 'Start Date').value },
+  { value: 'END_DATE', title: t('options.endDate', 'End Date').value }
 ]
 
 // Validation

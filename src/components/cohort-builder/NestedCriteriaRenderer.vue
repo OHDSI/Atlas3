@@ -80,16 +80,16 @@ withDefaults(defineProps<Props>(), {
   depth: 0,
 })
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const { availableFilters } = useFilterConfig(ref('criteriaGroup'))
 
 // Format logic type for display with i18n
 function formatLogicType(logicType: string, count?: number): string {
   const labels: Record<string, string> = {
-    ALL: t('options.allOf', 'ALL of').value,
-    ANY: t('options.anyOf', 'ANY of').value,
-    AT_LEAST: `${t('options.atLeast', 'At least').value} ${count ?? 0} ${t('options.of', 'of').value}`,
-    AT_MOST: `${t('options.atMost', 'At most').value} ${count ?? 0} ${t('options.of', 'of').value}`,
+    ALL: tv('options.allOf', 'ALL of'),
+    ANY: tv('options.anyOf', 'ANY of'),
+    AT_LEAST: `${tv('options.atLeast', 'At least')} ${count ?? 0} ${tv('options.of', 'of')}`,
+    AT_MOST: `${tv('options.atMost', 'At most')} ${count ?? 0} ${tv('options.of', 'of')}`,
   }
   return labels[logicType] || logicType
 }

@@ -34,7 +34,7 @@
 
       <!-- Search Results -->
       <v-virtual-scroll
-        v-if="searchResults.length > 0"
+        v-if="searchResults && searchResults.length > 0"
         :items="searchResults"
         height="400"
         item-height="80"
@@ -68,7 +68,7 @@
 
       <!-- No Results Message -->
       <v-alert
-        v-if="searchQuery && !isSearching && searchResults.length === 0"
+        v-if="searchQuery && !isSearching && searchResults && searchResults.length === 0"
         type="info"
         variant="tonal"
         data-testid="no-results-message"
@@ -78,7 +78,7 @@
 
       <!-- Instructions -->
       <v-alert
-        v-if="!searchQuery && searchResults.length === 0"
+        v-if="!searchQuery && (!searchResults || searchResults.length === 0)"
         type="info"
         variant="text"
       >

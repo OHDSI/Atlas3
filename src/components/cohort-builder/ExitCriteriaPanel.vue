@@ -38,11 +38,22 @@
     </div>
 
     <!-- Validation aggregation (errors from sub-components) -->
-    <div v-if="aggregatedErrors.length > 0" class="validation-summary mt-4">
-      <v-alert type="error" variant="tonal">
-        <div class="text-subtitle-2 mb-2">Validation Errors:</div>
+    <div
+      v-if="aggregatedErrors.length > 0"
+      class="validation-summary mt-4"
+    >
+      <v-alert
+        type="error"
+        variant="tonal"
+      >
+        <div class="text-subtitle-2 mb-2">
+          Validation Errors:
+        </div>
         <ul>
-          <li v-for="error in aggregatedErrors" :key="error.field">
+          <li
+            v-for="error in aggregatedErrors"
+            :key="error.field"
+          >
             <strong>{{ error.field }}:</strong> {{ error.message }}
           </li>
         </ul>
@@ -52,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import EventPersistenceSelector from './EventPersistenceSelector.vue'
 import CensoringEventsEditor from './CensoringEventsEditor.vue'
@@ -81,9 +92,17 @@ const emit = defineEmits<{
   'select-censoring-concept-set': []
 }>()
 
-// Local state
-const localExitCriteria = ref<ExitCriteria>(props.modelValue || { strategy: 'CONTINUOUS_OBSERVATION' })
-const localCensoringEvents = ref<CohortEvent[]>([...props.censoringCriteria])
+// Use computed properties with getters/setters instead of bidirectional watchers
+// This prevents the infinite reactive loop that was causing "Maximum recursive updates exceeded"
+const localExitCriteria = computed<ExitCriteria>({
+  get: () => props.modelValue || { strategy: 'CONTINUOUS_OBSERVATION' },
+  set: (value) => emit('update:modelValue', value)
+})
+
+const localCensoringEvents = computed<CohortEvent[]>({
+  get: () => props.censoringCriteria || [],
+  set: (value) => emit('update:censoringCriteria', value)
+})
 
 // Validation errors from sub-components
 const eventPersistenceErrors = ref<ValidationError[]>([])
@@ -132,30 +151,10 @@ function handleAddCensoringEvent() {
   emit('update:censoringCriteria', localCensoringEvents.value)
 }
 
-function handleRemoveCensoringEvent(index: number) {
+function handleRemoveCensoringEvent(_index: number) {
   // Event already removed by sub-component, just propagate
   emit('update:censoringCriteria', localCensoringEvents.value)
 }
-
-// Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    localExitCriteria.value = newValue
-  }
-}, { deep: true })
-
-watch(() => props.censoringCriteria, (newValue) => {
-  localCensoringEvents.value = [...newValue]
-}, { deep: true })
-
-// Watch for local changes and emit updates
-watch(localExitCriteria, (newValue) => {
-  emit('update:modelValue', newValue)
-}, { deep: true })
-
-watch(localCensoringEvents, (newValue) => {
-  emit('update:censoringCriteria', newValue)
-}, { deep: true })
 </script>
 
 <style scoped>

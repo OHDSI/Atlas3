@@ -117,9 +117,16 @@ export class PluginRegistry {
     if (!this.stateListeners.has(pluginId)) {
       this.stateListeners.set(pluginId, []);
     }
-    
+
     this.stateListeners.get(pluginId)!.push(callback);
-    
+
+    // Immediately call the callback with the current state if plugin exists
+    // This handles the case where the plugin is already loaded when the listener is attached
+    const plugin = this.plugins.get(pluginId);
+    if (plugin) {
+      callback(plugin.state);
+    }
+
     return () => {
       const listeners = this.stateListeners.get(pluginId);
       if (listeners) {
