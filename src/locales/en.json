@@ -4484,5 +4484,51 @@
       "name": "Ethnicity",
       "description": "Filter by patient ethnicity"
     }
+  },
+  "exitCriteria": {
+    "title": "Exit Criteria",
+    "eventPersistence": "Event Persistence",
+    "censorWindow": "Censor Window",
+    "censoringEvents": "Censoring Events",
+    "strategies": {
+      "continuousObservation": "End of Continuous Observation",
+      "fixedDuration": "Fixed Duration Relative to Initial Event",
+      "drugExposure": "End of Continuous Drug Exposure"
+    },
+    "fields": {
+      "dateField": "Date Field",
+      "offset": "Offset (days)",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "conceptSet": "Drug Concept Set",
+      "persistenceWindow": "Persistence Window (days)",
+      "surveillanceWindow": "Surveillance Window (days)"
+    },
+    "help": {
+      "continuousObservation": "Event persists until observation period ends",
+      "fixedDuration": "Event persists for a specified number of days from start or end date",
+      "drugExposure": "Event persists based on continuous drug exposure with allowable gaps between exposures",
+      "censorWindow": "Defines observation period boundaries relative to index event",
+      "persistenceWindow": "Maximum gap days between exposures",
+      "surveillanceWindow": "Additional days after final exposure before cohort exit",
+      "missingDaysSupply": "If days supply is missing, system assumes 1 day per exposure"
+    },
+    "validation": {
+      "offsetNonNegative": "Offset values must be non-negative",
+      "offsetRequired": "Offset is required for fixed duration strategy",
+      "conceptSetRequired": "Drug concept set required for this strategy",
+      "conceptSetNotFound": "Concept set not found in this cohort",
+      "invalidConceptSetReference": "Invalid concept set reference",
+      "startGreaterThanEnd": "Start offset must be less than or equal to end offset",
+      "nonDrugConcepts": "Drug concept set contains {count} non-drug concepts"
+    },
+    "actions": {
+      "addCensoringEvent": "Add Censoring Event",
+      "clearCensorWindow": "Clear Censor Window",
+      "removeCensoringEvent": "Remove"
+    },
+    "warnings": {
+      "legacyConflict": "This cohort has both legacy and new exit criteria formats. Displaying Atlas format."
+    }
   }
 }

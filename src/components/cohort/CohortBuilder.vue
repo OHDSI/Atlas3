@@ -355,19 +355,19 @@
               value="FIRST"
               size="small"
             >
-              Earliest
+              {{ t('options.earliestEvents', 'First') }}
             </v-btn>
             <v-btn
               value="ALL"
               size="small"
             >
-              All
+              {{ t('options.all') }}
             </v-btn>
             <v-btn
               value="LAST"
               size="small"
             >
-              Latest
+              {{ t('options.latestEvents', 'Latest') }}
             </v-btn>
           </v-btn-toggle>
         </div>
@@ -436,7 +436,7 @@
               value="LAST"
               size="small"
             >
-              {{ t('options.last', 'Last') }}
+              {{ t('options.latestEvents', 'Latest') }}
             </v-btn>
           </v-btn-toggle>
         </div>
@@ -491,7 +491,7 @@
               value="LAST"
               size="small"
             >
-              {{ t('options.last', 'Last') }}
+              {{ t('options.latestEvents', 'Latest') }}
             </v-btn>
           </v-btn-toggle>
         </div>
@@ -537,7 +537,7 @@
               {{ t('options.fixedDurationRelativeToInitialEvent') }}
             </v-btn>
             <v-btn
-              value="DRUG_EXPOSURE"
+              value="CONTINUOUS_DRUG"
               size="small"
             >
               {{ t('options.endOfContinuousDrugExposure') }}
@@ -549,6 +549,28 @@
       </div>
       <exit-criteria-panel
         v-model="exitCriteria"
+        :censoring-criteria="censoringCriteria"
+        :concept-sets="usedConceptSets"
+        @update:censoring-criteria="censoringCriteria = $event"
+        @select-drug-concept-set="handleSelectDrugConceptSet"
+        @select-censoring-concept-set="handleSelectCensoringConceptSet"
+      />
+    </div>
+
+    <!-- Cohort Eras -->
+    <div class="section-wrapper mb-6">
+      <div class="section-header section-header--centered">
+        <div class="section-title-container">
+          <h3 class="section-title">
+            {{ t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras') }}
+          </h3>
+        </div>
+
+        <div class="section-spacer" />
+      </div>
+      <censor-window-editor
+        v-model="censorWindow"
+        @validation-error="handleCensorWindowValidation"
       />
     </div>
 
@@ -634,6 +656,7 @@ import type {
   ConceptSetReference,
   InclusionRule,
   ExitCriteria,
+  Period,
   ObservationPeriod,
   QualifyingLimit,
   CohortDefinition,
@@ -645,6 +668,7 @@ import ConceptSetSelectionDialog from './ConceptSetSelectionDialog.vue'
 import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import InclusionCriteriaPanel from '../cohort-builder/InclusionCriteriaPanel.vue'
 import ExitCriteriaPanel from '../cohort-builder/ExitCriteriaPanel.vue'
+import CensorWindowEditor from '../cohort-builder/CensorWindowEditor.vue'
 import CriteriaGroupEditor from '../cohort-builder/CriteriaGroupEditor.vue'
 import GenerationPanel from './GenerationPanel.vue'
 
@@ -669,6 +693,8 @@ const entryEvents = ref<CohortEvent[]>([])
 const additionalCriteria = ref<CriteriaGroup | undefined>(undefined)
 const inclusionRules = ref<InclusionRule[]>([])
 const exitCriteria = ref<ExitCriteria>({ strategy: 'CONTINUOUS_OBSERVATION' })
+const censorWindow = ref<Period | null>(null)
+const censoringCriteria = ref<CohortEvent[]>([])
 const observationPeriod = ref<ObservationPeriod>({ priorDays: 0, postDays: 0 })
 const qualifyingLimit = ref<QualifyingLimit>('ALL') // For entry events
 const inclusionQualifyingLimit = ref<QualifyingLimit>('ALL') // For inclusion criteria
@@ -695,8 +721,10 @@ const successMessage = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const showEditNameDialog = ref(false)
 const editingName = ref('')
-const hasUnsavedChanges = ref(false)
 const isConfirmingNavigation = ref(false) // Flag to prevent double confirmation
+
+// Snapshot of the loaded/saved state for change detection
+const loadedSnapshot = ref<string | null>(null)
 
 // Generation state (T119, T120)
 const selectedSourceKey = ref<string | null>(null)
@@ -711,6 +739,40 @@ const cohortId = computed(() => props.id ? Number(props.id) : null)
 
 const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && entryEvents.value.length > 0
+})
+
+/**
+ * Create a snapshot of the current cohort state for change detection
+ */
+function createStateSnapshot(): string {
+  return JSON.stringify({
+    name: cohortName.value,
+    description: cohortDescription.value,
+    entryEvents: entryEvents.value,
+    additionalCriteria: additionalCriteria.value,
+    inclusionRules: inclusionRules.value,
+    exitCriteria: exitCriteria.value,
+    censorWindow: censorWindow.value,
+    censoringCriteria: censoringCriteria.value,
+    observationPeriod: observationPeriod.value,
+    qualifyingLimit: qualifyingLimit.value,
+    inclusionQualifyingLimit: inclusionQualifyingLimit.value,
+  })
+}
+
+/**
+ * Computed property that detects if there are unsaved changes
+ * by comparing current state with the loaded snapshot
+ */
+const hasUnsavedChanges = computed(() => {
+  if (!loadedSnapshot.value) {
+    // No snapshot means we're in a new cohort, check if there's any content
+    return cohortName.value.trim().length > 0 || entryEvents.value.length > 0
+  }
+
+  // Compare current state with loaded snapshot
+  const currentSnapshot = createStateSnapshot()
+  return currentSnapshot !== loadedSnapshot.value
 })
 
 // Validation computed properties
@@ -773,6 +835,18 @@ const usedConceptSets = computed(() => {
         }
       })
     })
+  })
+
+  // Extract from exit criteria (drug exposure)
+  if (exitCriteria.value?.conceptSet) {
+    conceptSetsMap.set(exitCriteria.value.conceptSet.name, exitCriteria.value.conceptSet)
+  }
+
+  // Extract from censoring criteria
+  censoringCriteria.value.forEach(event => {
+    if (event.conceptSet) {
+      conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+    }
   })
 
   return Array.from(conceptSetsMap.values())
@@ -916,12 +990,14 @@ async function loadCohort(id: string) {
     additionalCriteria.value = cohortDef.additionalCriteria
     inclusionRules.value = cohortDef.inclusionRules
     exitCriteria.value = cohortDef.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+    censorWindow.value = cohortDef.censorWindow ?? null
+    censoringCriteria.value = cohortDef.censoringCriteria ?? []
     observationPeriod.value = cohortDef.observationPeriod || { priorDays: 0, postDays: 0 }
     qualifyingLimit.value = cohortDef.qualifyingLimit
     inclusionQualifyingLimit.value = cohortDef.inclusionQualifyingLimit ?? 'ALL'
 
-    // Reset unsaved changes flag after loading
-    hasUnsavedChanges.value = false
+    // Save snapshot of loaded state for change detection
+    loadedSnapshot.value = createStateSnapshot()
 
     // Hide loading overlay immediately - cohort is now visible
     isLoadingCohort.value = false
@@ -1034,15 +1110,6 @@ watch(showEditNameDialog, (newValue) => {
   }
 })
 
-// Watch for changes to cohort definition and mark as unsaved
-watch(
-  [cohortName, cohortDescription, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
-  () => {
-    hasUnsavedChanges.value = true
-  },
-  { deep: true }
-)
-
 /**
  * Save edited cohort name
  */
@@ -1064,6 +1131,26 @@ function handleSelectConceptSetForCriteria(context: { ruleIndex: number; groupIn
 function handleSelectConceptSetForAdditionalCriteria(eventIndex: number) {
   selectedCriteriaContext.value = { eventId: null, ruleIndex: -2, groupIndex: 0, eventIndex }
   isConceptSetDialogOpen.value = true
+}
+
+// Track which part of exit criteria needs the concept set
+const exitCriteriaSelectionType = ref<'DRUG_EXPOSURE' | 'CENSORING_EVENT' | null>(null)
+
+function handleSelectDrugConceptSet() {
+  exitCriteriaSelectionType.value = 'DRUG_EXPOSURE'
+  selectedCriteriaContext.value = { eventId: null, ruleIndex: -3, groupIndex: 0, eventIndex: 0 }
+  isConceptSetDialogOpen.value = true
+}
+
+function handleSelectCensoringConceptSet() {
+  exitCriteriaSelectionType.value = 'CENSORING_EVENT'
+  selectedCriteriaContext.value = { eventId: null, ruleIndex: -3, groupIndex: 0, eventIndex: 0 }
+  isConceptSetDialogOpen.value = true
+}
+
+function handleCensorWindowValidation() {
+  // Handle censor window validation errors
+  // Currently just logging for now, could be used for aggregated validation display
 }
 
 function addAdditionalCriteria() {
@@ -1209,6 +1296,26 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
     // Trigger reactivity
     inclusionRules.value = [...inclusionRules.value]
   }
+  // Handle exit criteria concept set selection
+  else if (selectedCriteriaContext.value.ruleIndex === -3) {
+    if (exitCriteriaSelectionType.value === 'DRUG_EXPOSURE') {
+      // Set concept set for drug exposure strategy
+      exitCriteria.value = {
+        ...exitCriteria.value,
+        conceptSet: conceptSetRef
+      }
+    } else if (exitCriteriaSelectionType.value === 'CENSORING_EVENT') {
+      // Create new censoring event with this concept set
+      const newEvent: CohortEvent = {
+        id: `censoring_${Date.now()}`,
+        criteriaType: 'DrugExposure', // Default, user might need to change
+        attributes: [],
+        conceptSet: conceptSetRef
+      }
+      censoringCriteria.value = [...censoringCriteria.value, newEvent]
+    }
+    exitCriteriaSelectionType.value = null
+  }
 
   selectedCriteriaContext.value = null
 }
@@ -1233,7 +1340,9 @@ function handleSave() {
   cohortStore.setCohort(cohortDefinition)
   cohortStore.markClean()
   cohortStore.clearDraft() // Clear draft after successful save
-  hasUnsavedChanges.value = false // Reset unsaved changes flag
+
+  // Update snapshot after save to reflect new saved state
+  loadedSnapshot.value = createStateSnapshot()
 
   successMessage.value = 'Cohort saved successfully'
   showSuccess.value = true

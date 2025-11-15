@@ -29,6 +29,13 @@
       <router-view />
     </v-main>
 
+    <!-- License Agreement Dialog -->
+    <LicenseAgreementDialog
+      v-model="showLicenseDialog"
+      @accept="handleAcceptLicense"
+      @reject="handleRejectLicense"
+    />
+
     <!-- Session Expiry Modal (T036-T037) -->
     <SessionExpiryModal
       :model-value="authStore.sessionExpiryModalOpen"
@@ -45,17 +52,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import NavBar from '@/components/shared/NavBar.vue'
 import SessionExpiryModal from '@/components/auth/SessionExpiryModal.vue'
 import ConfigurationWarningBanner from '@/components/cohort-builder/ConfigurationWarningBanner.vue'
+import LicenseAgreementDialog from '@/components/shared/LicenseAgreementDialog.vue'
 import { useLocaleStore } from '@/stores/locale'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
+import { useLicenseAgreement } from '@/composables/useLicenseAgreement'
 
 const localeStore = useLocaleStore()
 const authStore = useAuthStore()
 const { t } = useI18n()
+const {
+  showLicenseDialog,
+  acceptLicense,
+  rejectLicense,
+  checkLicenseStatus
+} = useLicenseAgreement()
 
 // Show overlay while initial translations are loading
 const isInitializing = computed(() => {
@@ -100,6 +115,20 @@ function handleExpired() {
   authStore.clearAuth()
   authStore.openLoginModal()
 }
+
+// License agreement handlers
+function handleAcceptLicense() {
+  acceptLicense()
+}
+
+function handleRejectLicense() {
+  rejectLicense()
+}
+
+// Check license status on mount
+onMounted(() => {
+  checkLicenseStatus()
+})
 </script>
 
 <style scoped>

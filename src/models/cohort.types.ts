@@ -87,7 +87,10 @@ export type LogicType = 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
 export interface ExitCriteria {
   strategy: ExitStrategy
   offset?: number // Days offset for exit
+  dateField?: 'START_DATE' | 'END_DATE' // Which date to offset from (for FIXED_DURATION)
   conceptSet?: ConceptSetReference // For CONTINUOUS_DRUG exit
+  persistenceWindow?: number // Gap days between exposures (for CONTINUOUS_DRUG)
+  surveillanceWindow?: number // Additional days after final exposure (for CONTINUOUS_DRUG)
   censoringEvents?: CohortEvent[] // Events that cause exit
 }
 
