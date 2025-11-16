@@ -8,12 +8,13 @@
       <div
         v-for="(attribute, index) in modelValue"
         :key="index"
-        class="attribute-container mb-3"
+        class="attribute-container mb-2"
       >
-        <!-- Attribute Title (Left Side) -->
-        <div class="attribute-title">
-          {{ getAttributeLabel(attribute.attributeKey) }}
-        </div>
+        <template v-if="attribute">
+          <!-- Attribute Title (Left Side) -->
+          <div class="attribute-title">
+            {{ getAttributeLabel(attribute.attributeKey) }}
+          </div>
 
         <!-- Attribute Input (Middle) -->
         <div class="attribute-input">
@@ -113,43 +114,19 @@
           </template>
         </div>
 
-        <!-- Delete Button (Right Side) -->
-        <div class="attribute-actions">
-          <v-btn
-            icon="mdi-delete"
-            size="small"
-            variant="text"
-            data-testid="remove-attribute-button"
-            @click="removeAttribute(index)"
-          />
-        </div>
+          <!-- Delete Button (Right Side) -->
+          <div class="attribute-actions">
+            <v-btn
+              icon="mdi-delete"
+              size="small"
+              variant="text"
+              data-testid="remove-attribute-button"
+              @click="removeAttribute(index)"
+            />
+          </div>
+        </template>
       </div>
     </div>
-
-    <!-- Add Attribute Button -->
-    <v-menu>
-      <template #activator="{ props }">
-        <v-btn
-          v-bind="props"
-          color="primary"
-          variant="outlined"
-          size="small"
-          prepend-icon="mdi-plus"
-          data-testid="add-attribute-button"
-        >
-          {{ t('components.common.addAttribute') }}
-        </v-btn>
-      </template>
-      <v-list>
-        <v-list-item
-          v-for="attr in availableAttributes"
-          :key="attr.key"
-          :title="attr.label"
-          :subtitle="attr.description"
-          @click="addAttributeOfType(attr.key, attr.type)"
-        />
-      </v-list>
-    </v-menu>
   </div>
 </template>
 
@@ -168,14 +145,17 @@ interface Props {
   modelValue: EventAttribute[]
   criteriaType: CriteriaType
   section?: string // Optional section context (e.g., 'initialEvents', 'criteriaGroup')
+  hasNestedCriteria?: boolean // Whether the event already has nested criteria
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  section: 'criteriaGroup' // Default to criteria group context
+  section: 'criteriaGroup', // Default to criteria group context
+  hasNestedCriteria: false
 })
 
 const emit = defineEmits<{
   'update:modelValue': [value: EventAttribute[]]
+  'add-nested-criteria': []
 }>()
 
 // Convert PascalCase criteriaType to camelCase for config lookup
@@ -196,6 +176,16 @@ const { attributes, getAttributeLabel } = useAttributeConfig(
 watch(() => props.criteriaType, (newType) => {
   criteriaTypeKey.value = toCamelCase(newType)
 })
+
+// Watch for undefined values in modelValue and clean them up
+watch(() => props.modelValue, (newValue) => {
+  const hasUndefined = newValue.some(attr => attr === undefined || attr === null)
+  if (hasUndefined) {
+    // Filter out undefined/null values
+    const cleaned = newValue.filter(attr => attr !== undefined && attr !== null)
+    emit('update:modelValue', cleaned)
+  }
+}, { immediate: true })
 
 // Transform configuration attributes to match legacy availableAttributes format
 // This maintains backward compatibility with existing component logic
@@ -250,6 +240,12 @@ function updateAttributeExtent(index: number, extent: any) {
 }
 
 function addAttributeOfType(attributeKey: string, attributeType: string) {
+  // Handle nested criteria type specially - emit event instead of adding attribute
+  if (attributeType === 'nested') {
+    emit('add-nested-criteria')
+    return
+  }
+
   // Create a default attribute based on the type
   let newAttribute: any
   if (attributeType === 'numericRange') {
@@ -319,12 +315,12 @@ function openConceptSetPicker() {
 .attribute-title {
   display: flex;
   align-items: center;
-  padding: 15px;
+  padding: 8px 12px;
   flex: 1;
   max-width: 20%;
   color: rgb(var(--v-theme-primary));
   background: #ebf2fa;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
   border-right: 1px solid rgb(var(--v-theme-primary));
 }
@@ -332,33 +328,52 @@ function openConceptSetPicker() {
 .attribute-input {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 8px 15px;
+  gap: 8px;
+  padding: 4px 12px;
   flex: 2;
   border-right: 1px solid rgb(var(--v-theme-primary));
   color: rgb(var(--v-theme-primary));
 }
 
 .attribute-input .operator-select {
-  min-width: 200px;
-  max-width: 200px;
+  min-width: 180px;
+  max-width: 180px;
 }
 
 .attribute-input .value-input {
-  min-width: 80px;
-  max-width: 120px;
+  min-width: 70px;
+  max-width: 100px;
 }
 
 .attribute-input .and-text {
-  font-size: 14px;
+  font-size: 12px;
   color: rgb(var(--v-theme-primary));
+}
+
+/* Make controls even more compact */
+.attribute-input :deep(.v-field) {
+  font-size: 13px;
+}
+
+.attribute-input :deep(.v-field__input) {
+  padding: 4px 8px;
+  min-height: 32px;
+}
+
+.attribute-input :deep(.v-field__append-inner) {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.attribute-input :deep(.v-select__selection-text) {
+  font-size: 13px;
 }
 
 .attribute-actions {
   display: flex;
   align-items: center;
   background: #ebf2fa;
-  padding: 0 8px;
+  padding: 0 4px;
 }
 
 .attribute-actions .v-btn {

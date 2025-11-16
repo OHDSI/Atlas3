@@ -18,10 +18,15 @@ export interface AtlasCohortDefinition {
   modifiedDate?: number
   ConceptSets: AtlasConceptSet[]
   PrimaryCriteria: AtlasPrimaryCriteria
+  AdditionalCriteria?: unknown
   QualifiedLimit?: AtlasQualifiedLimit
+  ExpressionLimit?: unknown
   InclusionRules?: AtlasInclusionRule[]
   CensoringCriteria?: AtlasCensoringCriteria[]
   EndStrategy?: AtlasEndStrategy
+  CollapseSettings?: unknown
+  CensorWindow?: unknown
+  cdmVersionRange?: string
 }
 
 export interface AtlasConceptSet {

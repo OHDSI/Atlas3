@@ -1019,3 +1019,44 @@ export async function getTornadoReport(
     return null
   }
 }
+
+/**
+ * Get printfriendly HTML representation of cohort definition
+ * POST /cohortdefinition/printfriendly/cohort?format=html
+ * The endpoint expects just the expression object from the cohort definition
+ */
+export async function getCohortPrintFriendly(
+  cohortDefinition: AtlasCohortDefinition
+): Promise<string | null> {
+  try {
+    const url = `${BASE_URL}/cohortdefinition/printfriendly/cohort?format=html`
+    const locale = localStorage.getItem('locale') || 'en'
+
+    // The cohort definition from WebAPI has structure: { id, name, description, expression: {...} }
+    // The printfriendly endpoint expects just the expression property
+    let payload = (cohortDefinition as any).expression || cohortDefinition
+
+    // If expression is a string, parse it first
+    if (typeof payload === 'string') {
+      payload = JSON.parse(payload)
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Language': locale,
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    return await response.text()
+  } catch (error) {
+    console.error('Failed to fetch print-friendly cohort:', error)
+    return null
+  }
+}

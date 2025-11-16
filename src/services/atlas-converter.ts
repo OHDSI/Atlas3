@@ -263,6 +263,17 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
     atlasEvent.IgnoreObservationPeriod = event.ignoreObservationPeriod ?? false
   }
 
+  // Convert nested criteria to Atlas CorrelatedCriteria structure
+  if (event.nestedCriteria) {
+    atlasEvent.CorrelatedCriteria = {
+      Type: event.nestedCriteria.logicType,
+      Count: event.nestedCriteria.count,
+      CriteriaList: event.nestedCriteria.events.map(e => convertEventToAtlas(e, true)),
+      DemographicCriteriaList: [],
+      Groups: []
+    }
+  }
+
   return atlasEvent
 }
 
@@ -512,6 +523,16 @@ function convertAtlasToEvent(atlasEvent: any, conceptSets?: any[]): CohortEvent 
       startOffset: atlasEvent.DateAdjustment.StartOffset,
       endWith: atlasEvent.DateAdjustment.EndWith,
       endOffset: atlasEvent.DateAdjustment.EndOffset,
+    }
+  }
+
+  // Convert Atlas CorrelatedCriteria to nested criteria
+  if (atlasEvent.CorrelatedCriteria) {
+    event.nestedCriteria = {
+      id: generateId(),
+      logicType: atlasEvent.CorrelatedCriteria.Type || 'ALL',
+      count: atlasEvent.CorrelatedCriteria.Count,
+      events: atlasEvent.CorrelatedCriteria.CriteriaList?.map((e: any) => convertAtlasToEvent(e, conceptSets)) || []
     }
   }
 

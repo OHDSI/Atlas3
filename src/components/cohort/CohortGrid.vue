@@ -84,6 +84,7 @@
         @generate="$emit('generate', $event)"
         @delete="$emit('delete', $event)"
         @tag-click="$emit('tag-click', $event)"
+        @show-info="$emit('show-info', $event)"
       />
     </div>
   </div>
@@ -111,6 +112,7 @@ interface Emits {
   (e: 'generate', cohort: CohortDefinitionSummary): void
   (e: 'delete', cohort: CohortDefinitionSummary): void
   (e: 'tag-click', tagName: string): void
+  (e: 'show-info', cohort: CohortDefinitionSummary): void
 }
 
 const props = withDefaults(defineProps<Props>(), {

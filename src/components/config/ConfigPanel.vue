@@ -124,14 +124,16 @@ const scrollContainer = ref<HTMLElement>()
 
 /**
  * Computed drawer width - responsive based on viewport size
- * Mobile (≤768px): 100%
- * Tablet/Desktop: 85% with max 1400px
+ * Mobile (≤768px): Use pixel value to avoid percentage issues
+ * Tablet/Desktop: 85% with max 1400px, min 300px
  */
 const drawerWidth = computed(() => {
   if (windowWidth.value <= 768) {
-    return '100%'
+    return windowWidth.value
   }
-  return Math.min(windowWidth.value * 0.85, 1400)
+  // Ensure drawer doesn't exceed viewport and has minimum usable width
+  const calculatedWidth = Math.min(windowWidth.value * 0.85, 1400)
+  return Math.max(calculatedWidth, 300)
 })
 
 /**
@@ -181,6 +183,12 @@ onUnmounted(() => {
 <style scoped>
 .config-panel {
   height: 100%;
+}
+
+/* Ensure drawer doesn't overflow viewport */
+.config-panel :deep(.v-navigation-drawer__content) {
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .config-panel__card {

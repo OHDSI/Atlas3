@@ -90,7 +90,31 @@
       </div>
 
       <v-spacer />
-      
+
+      <v-tooltip
+        :text="infoTooltip"
+        location="top"
+      >
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            v-bind="tooltipProps"
+            icon
+            size="small"
+            variant="text"
+            aria-label="Cohort information"
+            class="cohort-card__action-btn"
+            @click.stop="$emit('show-info', cohort)"
+          >
+            <v-icon
+              color="#1f425a"
+              size="22"
+            >
+              mdi-information-outline
+            </v-icon>
+          </v-btn>
+        </template>
+      </v-tooltip>
+
       <v-tooltip
         :text="materializeTooltip"
         location="top"
@@ -157,6 +181,7 @@ interface Emits {
   (e: 'generate', cohort: CohortDefinitionSummary): void
   (e: 'delete', cohort: CohortDefinitionSummary): void
   (e: 'tag-click', tagName: string): void
+  (e: 'show-info', cohort: CohortDefinitionSummary): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -171,6 +196,7 @@ const idLabel = t('columns.id', 'ID')
 const byLabel = t('columns.author', 'Author')
 const createdLabel = t('columns.created', 'Created')
 const updatedOnLabel = t('columns.modified', 'Modified')
+const infoTooltip = t('common.cohortInformation', 'Cohort Information')
 const materializeTooltip = t('components.analysisExecution.buttons.generate', 'Generate')
 const deleteTooltip = t('common.delete', 'Delete')
 const unknownLabel = t('common.anonymous', 'Unknown')

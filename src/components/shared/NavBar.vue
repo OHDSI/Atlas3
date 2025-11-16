@@ -18,7 +18,8 @@
           height="20"
         >
       </div>
-      <nav class="nav-bar__nav">
+      <!-- Full menu for larger screens -->
+      <nav class="nav-bar__nav d-none d-md-block">
         <ul class="nav-bar__nav-list">
           <template
             v-for="item in navigationItems"
@@ -40,6 +41,38 @@
           </template>
         </ul>
       </nav>
+
+      <!-- Dropdown menu for smaller screens -->
+      <div class="nav-bar__nav-dropdown d-md-none">
+        <v-menu>
+          <template #activator="{ props: menuProps }">
+            <v-btn
+              v-bind="menuProps"
+              variant="text"
+              append-icon="mdi-menu-down"
+            >
+              <v-icon start>
+                mdi-menu
+              </v-icon>
+              {{ t('navigation.menu', 'Menu') }}
+            </v-btn>
+          </template>
+          <v-list>
+            <template
+              v-for="item in navigationItems"
+              :key="item.id"
+            >
+              <v-list-item
+                v-if="item.visible"
+                :active="item.active"
+                @click="handleNavClick(item)"
+              >
+                <v-list-item-title>{{ getNavTitle(item.titleKey) }}</v-list-item-title>
+              </v-list-item>
+            </template>
+          </v-list>
+        </v-menu>
+      </div>
       <div
         class="nav-bar__right"
         tabindex="0"
@@ -342,13 +375,17 @@ onMounted(() => {
 }
 
 .nav-bar__nav {
-  padding-left: 2rem;
+  padding-left: 1.5rem;
+}
+
+.nav-bar__nav-dropdown {
+  padding-left: 1rem;
 }
 
 .nav-bar__nav-list {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -361,15 +398,24 @@ onMounted(() => {
 
 .nav-bar__nav-link {
   display: inline-block;
-  padding: 18px;
+  padding: 18px 12px;
   color: #1f425a;
   font-weight: 400;
   text-decoration: none;
   transition: color 0.15s ease-in-out;
+  font-size: 16px;
 }
 
 .nav-bar__nav-link:hover {
   color: #2d5f7f;
+}
+
+/* Reduce font size on lg breakpoint (1280px-1919px) for better fit */
+@media (min-width: 960px) and (max-width: 1279px) {
+  .nav-bar__nav-link {
+    font-size: 14px;
+    padding: 18px 8px;
+  }
 }
 
 .nav-bar__nav-item--active .nav-bar__nav-link {

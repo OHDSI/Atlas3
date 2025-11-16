@@ -76,14 +76,58 @@
     <div class="cohort-builder__toolbar">
       <div class="cohort-builder__toolbar-left">
         <div class="cohort-builder__cohort-description">
-          <label class="cohort-builder__label">{{ t('columns.description', 'DESCRIPTION').value.toUpperCase() }}:</label>
+          <label class="cohort-builder__label d-none d-md-inline">{{ t('columns.description', 'DESCRIPTION').value.toUpperCase() }}:</label>
+          <!-- Inline input for larger screens -->
           <input
             v-model="cohortDescription"
-            class="cohort-builder__description-input"
+            class="cohort-builder__description-input d-none d-md-inline-block"
             :placeholder="t('columns.description', 'Description').value"
             data-testid="cohort-description-input"
           >
+          <!-- Icon button for smaller screens -->
+          <v-tooltip
+            :text="t('columns.description', 'Description').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tooltipProps }">
+              <v-btn
+                v-bind="tooltipProps"
+                class="d-md-none"
+                icon="mdi-text"
+                variant="text"
+                size="small"
+                @click="showDescriptionDialog = true"
+              />
+            </template>
+          </v-tooltip>
         </div>
+
+        <!-- Description Dialog for smaller screens -->
+        <v-dialog
+          v-model="showDescriptionDialog"
+          max-width="600"
+        >
+          <v-card>
+            <v-card-title>{{ t('columns.description', 'Description').value }}</v-card-title>
+            <v-card-text>
+              <v-textarea
+                v-model="cohortDescription"
+                :placeholder="t('columns.description', 'Description').value"
+                rows="3"
+                variant="outlined"
+                data-testid="cohort-description-dialog-input"
+              />
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                @click="showDescriptionDialog = false"
+              >
+                {{ t('common.close', 'Close') }}
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
 
         <!-- Concept Sets Icon -->
         <v-tooltip
@@ -298,12 +342,16 @@
       </div>
 
       <div class="cohort-builder__toolbar-right">
+        <!-- Cancel Button -->
         <v-btn
           variant="outlined"
           @click="handleCancel"
         >
-          {{ t('common.cancel') }}
+          <v-icon class="d-md-none">mdi-close</v-icon>
+          <span class="d-none d-md-inline">{{ t('common.cancel') }}</span>
         </v-btn>
+
+        <!-- Save Button -->
         <v-btn
           color="primary"
           variant="flat"
@@ -315,35 +363,45 @@
             start
             size="small"
             color="white"
+            class="d-none d-md-inline"
           >
             mdi-circle
           </v-icon>
-          {{ t('common.save') }}
+          <v-icon class="d-md-none">mdi-content-save</v-icon>
+          <span class="d-none d-md-inline">{{ t('common.save') }}</span>
         </v-btn>
+
+        <!-- Generate Button -->
         <v-btn
           v-if="cohortId"
           color="orange"
           variant="outlined"
-          prepend-icon="mdi-database-cog"
           :disabled="!canSave"
           data-testid="generate-btn"
           @click="openGenerationPanel"
         >
-          {{ t('components.analysisExecution.buttons.generate') }}
+          <v-icon
+            class="d-none d-md-inline"
+            start
+          >
+            mdi-database-cog
+          </v-icon>
+          <v-icon class="d-md-none">mdi-database-cog</v-icon>
+          <span class="d-none d-md-inline">{{ t('components.analysisExecution.buttons.generate') }}</span>
         </v-btn>
       </div>
     </div>
 
     <!-- Cohort Entry Events -->
     <div class="section-wrapper mb-6">
-      <div class="section-header">
+      <div class="section-header section-header--centered">
         <div class="section-title-container">
           <h3 class="section-title">
             {{ t('components.cohortExpressionEditor.cohortEntryEvents') }}
           </h3>
         </div>
 
-        <div class="section-controls">
+        <div class="section-controls section-controls--center">
           <v-btn-toggle
             v-model="qualifyingLimit"
             mandatory
@@ -372,35 +430,14 @@
           </v-btn-toggle>
         </div>
 
-        <div class="section-obs-period">
-          <span class="obs-period-label">{{ t('components.cohortExpressionEditor.cohortEntryEventsText_6', 'Limit initial events to') }}</span>
-          <span class="obs-period-text">{{ t('components.cohortExpressionEditor.cohortEntryEventsText_3') }}</span>
-          <v-text-field
-            v-model.number="observationPeriod.priorDays"
-            type="number"
-            density="compact"
-            variant="outlined"
-            hide-details
-            style="width: 80px;"
-            min="0"
-          />
-          <span class="obs-period-text">{{ t('components.cohortExpressionEditor.cohortEntryEventsText_4') }}</span>
-          <v-text-field
-            v-model.number="observationPeriod.postDays"
-            type="number"
-            density="compact"
-            variant="outlined"
-            hide-details
-            style="width: 80px;"
-            min="0"
-          />
-          <span class="obs-period-text">{{ t('components.cohortExpressionEditor.cohortEntryEventsText_5') }}</span>
-        </div>
+        <div class="section-spacer" />
       </div>
 
       <entry-events-list
         :events="entryEvents"
+        :observation-period="observationPeriod"
         @update:events="entryEvents = $event"
+        @update:observation-period="observationPeriod = $event"
         @select-concept-set="handleSelectConceptSet"
         @edit-concept-set="handleEditConceptSet"
       />
@@ -452,6 +489,7 @@
         class="mt-4"
         variant="outlined"
         prepend-icon="mdi-filter-plus"
+        size="small"
         @click="addAdditionalCriteria"
       >
         {{ t('components.cohortExpressionEditor.newInclusionCriteria') }}
@@ -528,19 +566,22 @@
               value="CONTINUOUS_OBSERVATION"
               size="small"
             >
-              {{ t('options.endOfContinuousObservation') }}
+              <span class="d-none d-lg-inline">{{ t('options.endOfContinuousObservation') }}</span>
+              <span class="d-lg-none">{{ t('options.continuousObs', 'Continuous Obs.') }}</span>
             </v-btn>
             <v-btn
               value="FIXED_DURATION"
               size="small"
             >
-              {{ t('options.fixedDurationRelativeToInitialEvent') }}
+              <span class="d-none d-lg-inline">{{ t('options.fixedDurationRelativeToInitialEvent') }}</span>
+              <span class="d-lg-none">{{ t('options.fixedDuration', 'Fixed Duration') }}</span>
             </v-btn>
             <v-btn
               value="CONTINUOUS_DRUG"
               size="small"
             >
-              {{ t('options.endOfContinuousDrugExposure') }}
+              <span class="d-none d-lg-inline">{{ t('options.endOfContinuousDrugExposure') }}</span>
+              <span class="d-lg-none">{{ t('options.continuousDrug', 'Continuous Drug') }}</span>
             </v-btn>
           </v-btn-toggle>
         </div>
@@ -689,6 +730,7 @@ const { t, tv } = useI18n()
 // Core cohort state
 const cohortName = ref('')
 const cohortDescription = ref('')
+const showDescriptionDialog = ref(false)
 const entryEvents = ref<CohortEvent[]>([])
 const additionalCriteria = ref<CriteriaGroup | undefined>(undefined)
 const inclusionRules = ref<InclusionRule[]>([])
@@ -1174,7 +1216,8 @@ function handleSelectConceptSetForCriteria(context: { ruleIndex: number; groupIn
   isConceptSetDialogOpen.value = true
 }
 
-function handleSelectConceptSetForAdditionalCriteria(eventIndex: number) {
+function handleSelectConceptSetForAdditionalCriteria(eventIndexOrContext: number | { eventIndex: number; eventId: string }) {
+  const eventIndex = typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
   selectedCriteriaContext.value = { eventId: null, ruleIndex: -2, groupIndex: 0, eventIndex }
   isConceptSetDialogOpen.value = true
 }

@@ -75,6 +75,7 @@
               @generate="handleGenerate"
               @delete="handleDeleteClick"
               @tag-click="handleTagClick"
+              @show-info="handleShowInfo"
             />
           </v-col>
         </v-row>
@@ -175,6 +176,62 @@
           v-model="showGenerationPanel"
           :cohort-id="selectedCohort?.id ?? null"
         />
+
+        <!-- Cohort Info Dialog -->
+        <v-dialog
+          v-model="showCohortInfoDialog"
+          max-width="900px"
+          scrollable
+        >
+          <v-card>
+            <v-card-title class="d-flex align-center">
+              <v-icon
+                color="primary"
+                class="mr-2"
+              >
+                mdi-information-outline
+              </v-icon>
+              {{ t('common.cohortInformation', 'Cohort Information') }}
+            </v-card-title>
+            <v-divider />
+            <v-card-text
+              v-if="cohortInfoHtml"
+              style="max-height: 600px;"
+              class="cohort-info-content"
+            >
+              <div v-html="cohortInfoHtml" />
+            </v-card-text>
+            <v-card-text
+              v-else-if="loadingCohortInfo"
+              class="text-center pa-6"
+            >
+              <v-progress-circular
+                indeterminate
+                color="primary"
+              />
+              <div class="mt-4">
+                {{ t('common.loading', 'Loading') }}...
+              </div>
+            </v-card-text>
+            <v-card-text
+              v-else
+              class="text-center pa-6 text-error"
+            >
+              {{ t('common.failedToLoad', 'Failed to load cohort information') }}
+            </v-card-text>
+            <v-divider />
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                color="grey"
+                variant="text"
+                @click="showCohortInfoDialog = false"
+              >
+                {{ t('common.close', 'Close') }}
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-container>
     </div>
   </div>
@@ -186,7 +243,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
-import { deleteCohort } from '@/services/webapi'
+import { deleteCohort, getCohortDefinition, getCohortPrintFriendly } from '@/services/webapi'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import CohortFilters from '@/components/cohort/CohortFilters.vue'
@@ -200,6 +257,11 @@ const showDeleteDialog = ref(false)
 const showGenerationPanel = ref(false)
 const selectedCohort = ref<CohortDefinitionSummary | null>(null)
 const deleting = ref(false)
+
+// Cohort info dialog state
+const showCohortInfoDialog = ref(false)
+const cohortInfoHtml = ref<string | null>(null)
+const loadingCohortInfo = ref(false)
 
 // Cohorts state management
 const {
@@ -295,10 +357,10 @@ async function confirmDelete() {
 
   try {
     await deleteCohort(selectedCohort.value.id)
-    
+
     // Refresh cohort list
     await fetchCohorts()
-    
+
     // Close dialog
     showDeleteDialog.value = false
     selectedCohort.value = null
@@ -307,6 +369,31 @@ async function confirmDelete() {
     // Error handling could be enhanced with a snackbar notification
   } finally {
     deleting.value = false
+  }
+}
+
+/**
+ * Show cohort info dialog and fetch print-friendly HTML
+ */
+async function handleShowInfo(cohort: CohortDefinitionSummary) {
+  selectedCohort.value = cohort
+  showCohortInfoDialog.value = true
+  loadingCohortInfo.value = true
+  cohortInfoHtml.value = null
+
+  try {
+    // Fetch the full cohort definition
+    const atlasDefinition = await getCohortDefinition(cohort.id)
+    if (atlasDefinition) {
+      // Get print-friendly HTML
+      const html = await getCohortPrintFriendly(atlasDefinition)
+      cohortInfoHtml.value = html
+    }
+  } catch (error) {
+    console.error('Failed to fetch cohort print-friendly view:', error)
+    cohortInfoHtml.value = null
+  } finally {
+    loadingCohortInfo.value = false
   }
 }
 
@@ -395,5 +482,122 @@ onMounted(() => {
   font-size: 0.875rem;
   color: #666;
   text-align: center;
+}
+
+/* Cohort Info Dialog Styling */
+.cohort-info-content :deep(h1),
+.cohort-info-content :deep(h2),
+.cohort-info-content :deep(h3),
+.cohort-info-content :deep(h4) {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.cohort-info-content :deep(h1) {
+  font-size: 1.5rem;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+.cohort-info-content :deep(h2) {
+  font-size: 1.25rem;
+  color: rgb(var(--v-theme-primary));
+}
+
+.cohort-info-content :deep(h3) {
+  font-size: 1.1rem;
+}
+
+.cohort-info-content :deep(h4) {
+  font-size: 1rem;
+}
+
+.cohort-info-content :deep(p) {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.cohort-info-content :deep(ul),
+.cohort-info-content :deep(ol) {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  padding-left: 0.5rem;
+}
+
+.cohort-info-content :deep(li) {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.cohort-info-content :deep(ul ul),
+.cohort-info-content :deep(ol ol),
+.cohort-info-content :deep(ul ol),
+.cohort-info-content :deep(ol ul) {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.cohort-info-content :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.cohort-info-content :deep(th),
+.cohort-info-content :deep(td) {
+  padding: 0.75rem;
+  text-align: left;
+  border: 1px solid #e0e0e0;
+}
+
+.cohort-info-content :deep(th) {
+  background-color: #f5f5f5;
+  font-weight: 600;
+  color: #333;
+}
+
+.cohort-info-content :deep(tr:nth-child(even)) {
+  background-color: #fafafa;
+}
+
+.cohort-info-content :deep(strong),
+.cohort-info-content :deep(b) {
+  font-weight: 600;
+  color: #333;
+}
+
+.cohort-info-content :deep(code) {
+  background-color: #f5f5f5;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.cohort-info-content :deep(pre) {
+  background-color: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+/* Specific styling for entry/exit events and inclusion criteria */
+.cohort-info-content :deep(.event),
+.cohort-info-content :deep(.criteria) {
+  background-color: #f9f9f9;
+  border-left: 3px solid rgb(var(--v-theme-primary));
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 4px;
+}
+
+.cohort-info-content :deep(.entry-event),
+.cohort-info-content :deep(.exit-event) {
+  padding-left: 1rem;
+  margin-top: 0.5rem;
 }
 </style>

@@ -23,14 +23,30 @@
           </div>
         </div>
         <div class="event-header__right">
-          <v-btn
-            icon
-            size="small"
-            variant="text"
-            @click="toggleExpanded"
-          >
-            <v-icon>{{ isExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
-          </v-btn>
+          <v-menu>
+            <template #activator="{ props: menuProps }">
+              <v-btn
+                v-bind="menuProps"
+                prepend-icon="mdi-plus"
+                size="small"
+                variant="text"
+                color="primary"
+                data-testid="add-attribute-button"
+              >
+                {{ t('components.common.addAttribute') }}
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item
+                v-for="attr in availableAttributes"
+                :key="attr.key"
+                :title="attr.label"
+                :subtitle="attr.description"
+                :disabled="attr.type === 'nested' && !!props.event.nestedCriteria"
+                @click="addAttribute(attr.key, attr.type)"
+              />
+            </v-list>
+          </v-menu>
           <v-btn
             icon
             size="small"
@@ -44,11 +60,7 @@
       </div>
 
       <!-- Event Body -->
-      <transition name="expand">
-        <div
-          v-show="isExpanded"
-          class="event-body"
-        >
+      <div class="event-body">
           <!-- Event Concept Set -->
           <div class="concept-set-section">
             <div
@@ -86,27 +98,44 @@
               :model-value="event.attributes || []"
               :criteria-type="event.criteriaType"
               section="initialEvents"
+              :has-nested-criteria="!!event.nestedCriteria"
               :cardinality="event.cardinality"
               :temporal-window="event.temporalWindow"
               @update:model-value="updateAttributes"
               @update:cardinality="updateCardinality"
               @update:temporal-window="updateTemporalWindows"
+              @add-nested-criteria="addNestedCriteria"
             />
           </div>
-        </div>
-      </transition>
+
+          <!-- Nested Criteria Section -->
+          <div
+            v-if="event.nestedCriteria"
+            class="nested-criteria-section mt-3"
+          >
+            <NestedCriteriaEditor
+              :model-value="event.nestedCriteria"
+              :depth="1"
+              @update:model-value="updateNestedCriteria"
+              @remove="removeNestedCriteria"
+              @select-concept-set="emit('select-concept-set')"
+            />
+          </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
-import type { CohortEvent, CriteriaType } from '@/models/cohort.types'
+import { useAttributeConfig } from '@/composables/useAttributeConfig'
+import type { CohortEvent, CriteriaType, NestedCriteria } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
-import { useUIStore } from '@/stores/ui'
 import AttributesEditor from '@/components/cohort-builder/AttributesEditor.vue'
+import NestedCriteriaEditor from '@/components/cohort-builder/NestedCriteriaEditor.vue'
 
 interface Props {
   event: CohortEvent
@@ -121,22 +150,6 @@ const emit = defineEmits<{
   'select-concept-set': []
   'edit-concept-set': [conceptSet: any]
 }>()
-
-const uiStore = useUIStore()
-
-// Expand card by default when component is mounted
-const isExpanded = computed(() => {
-  // If the card is not in the store yet, expand it by default
-  if (!uiStore.expandedEventCards.has(props.event.id)) {
-    uiStore.expandedEventCards.add(props.event.id)
-    return true
-  }
-  return uiStore.expandedEventCards.has(props.event.id)
-})
-
-function toggleExpanded() {
-  uiStore.toggleEventCard(props.event.id)
-}
 
 // Use configuration-driven filter list (supports all 16 filter types)
 const { availableFilters } = useFilterConfig(ref('initialEvents'))
@@ -169,6 +182,16 @@ const cardinalityDisplay = computed(() => {
   return `${type} ${props.event.cardinality.count ?? 1}`
 })
 
+// Helper to convert PascalCase to camelCase for config lookup
+const toCamelCase = (str: string): string => {
+  return str.charAt(0).toLowerCase() + str.slice(1)
+}
+
+// Get available attributes for the event
+const criteriaTypeKey = computed(() => toCamelCase(props.event.criteriaType))
+const sectionRef = ref('initialEvents')
+const { attributes: availableAttributes } = useAttributeConfig(criteriaTypeKey, sectionRef)
+
 
 function removeConceptSet() {
   emit('update', {
@@ -195,6 +218,76 @@ function updateAttributes(attributes: EventAttribute[]) {
   emit('update', {
     ...props.event,
     attributes,
+  })
+}
+
+function addNestedCriteria() {
+  emit('update', {
+    ...props.event,
+    nestedCriteria: {
+      id: uuidv4(),
+      logicType: 'ALL',
+      events: []
+    }
+  })
+}
+
+function updateNestedCriteria(nested: NestedCriteria) {
+  emit('update', {
+    ...props.event,
+    nestedCriteria: nested
+  })
+}
+
+function removeNestedCriteria() {
+  const updated = { ...props.event }
+  delete updated.nestedCriteria
+  emit('update', updated)
+}
+
+function addAttribute(attributeKey: string, attributeType: string) {
+  // Handle nested criteria type specially - emit event instead of adding attribute
+  if (attributeType === 'nested') {
+    addNestedCriteria()
+    return
+  }
+
+  // Create a default attribute based on the type
+  let newAttribute: any
+  if (attributeType === 'numericRange') {
+    newAttribute = {
+      type: 'numericRange',
+      attributeKey,
+      operator: 'GREATER_THAN_OR_EQUAL',
+      value: 0,
+    }
+  } else if (attributeType === 'conceptSet') {
+    newAttribute = {
+      type: 'conceptSet',
+      attributeKey,
+      conceptSet: { id: '', name: '' },
+    }
+  } else if (attributeType === 'dateRange') {
+    newAttribute = {
+      type: 'dateRange',
+      attributeKey,
+      operator: 'AFTER',
+      value: new Date().toISOString().split('T')[0],
+    }
+  } else if (attributeType === 'text') {
+    newAttribute = {
+      type: 'text',
+      attributeKey,
+      operator: 'CONTAINS',
+      value: '',
+    }
+  }
+
+  // Add the new attribute to the event
+  const currentAttributes = props.event.attributes || []
+  emit('update', {
+    ...props.event,
+    attributes: [...currentAttributes, newAttribute]
   })
 }
 </script>
@@ -310,13 +403,16 @@ function updateAttributes(attributes: EventAttribute[]) {
 }
 
 .temporal-section,
-.cardinality-section,
-.attributes-section {
+.cardinality-section {
   margin-top: 16px;
   padding: 12px;
   background: #f9f9f9;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
+}
+
+.attributes-section {
+  margin-top: 16px;
 }
 
 .temporal-section-header,
@@ -334,23 +430,5 @@ function updateAttributes(attributes: EventAttribute[]) {
   font-size: 13px;
   font-weight: 600;
   color: #333;
-}
-
-.expand-enter-active,
-.expand-leave-active {
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-.expand-enter-from,
-.expand-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-
-.expand-enter-to,
-.expand-leave-from {
-  max-height: 1000px;
-  opacity: 1;
 }
 </style>

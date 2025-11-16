@@ -9,7 +9,7 @@
 
     <!-- Main Content Area -->
     <div class="flex-grow-1">
-      <!-- Add Filter Button -->
+      <!-- Add Filter Button and Observation Period -->
       <div class="add-filter-wrapper">
         <v-menu>
           <template #activator="{ props }">
@@ -17,7 +17,7 @@
               v-bind="props"
               variant="outlined"
               prepend-icon="mdi-plus"
-              size="default"
+              size="small"
               data-testid="add-entry-event"
             >
               {{ t('components.criteriaGroup.addCriteria') }}
@@ -33,7 +33,72 @@
             />
           </v-list>
         </v-menu>
+
+        <!-- Observation Period Chip -->
+        <v-chip
+          class="obs-period-chip"
+          variant="outlined"
+          size="small"
+          @click="showObsPeriodDialog = true"
+        >
+          <v-icon start size="small">mdi-calendar-range</v-icon>
+          <!-- Short version for small screens -->
+          <span class="d-md-none">
+            {{ observationPeriod.priorDays }} {{ t('common.before', 'before') }} {{ observationPeriod.postDays }} {{ t('common.after', 'after') }}
+          </span>
+          <!-- Full version for larger screens -->
+          <span class="d-none d-md-inline">
+            {{ observationPeriod.priorDays }} {{ t('common.days', 'days') }} {{ t('common.before', 'before') }} {{ t('common.and', 'and') }} {{ observationPeriod.postDays }} {{ t('common.days', 'days') }} {{ t('common.after', 'after') }} {{ t('components.cohortExpressionEditor.eventIndexDate', 'the event index date') }}
+          </span>
+        </v-chip>
       </div>
+
+      <!-- Observation Period Dialog -->
+      <v-dialog
+        v-model="showObsPeriodDialog"
+        max-width="500"
+      >
+        <v-card>
+          <v-card-title>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_6', 'Observation Period') }}</v-card-title>
+          <v-card-text>
+            <div class="obs-period-dialog-content">
+              <div class="obs-period-field">
+                <label>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_3') }}</label>
+                <v-text-field
+                  :model-value="observationPeriod.priorDays"
+                  type="number"
+                  density="compact"
+                  variant="outlined"
+                  hide-details
+                  min="0"
+                  @update:model-value="updateObservationPeriod('priorDays', $event)"
+                />
+              </div>
+              <div class="obs-period-field">
+                <label>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_4') }}</label>
+                <v-text-field
+                  :model-value="observationPeriod.postDays"
+                  type="number"
+                  density="compact"
+                  variant="outlined"
+                  hide-details
+                  min="0"
+                  @update:model-value="updateObservationPeriod('postDays', $event)"
+                />
+              </div>
+              <div class="obs-period-info">
+                {{ t('components.cohortExpressionEditor.cohortEntryEventsText_5') }}
+              </div>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn @click="showObsPeriodDialog = false">
+              {{ t('common.close', 'Close') }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
 
       <entry-event-card
         v-for="event in events"
@@ -53,11 +118,12 @@ import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
-import type { CohortEvent, CriteriaType } from '@/models/cohort.types'
+import type { CohortEvent, CriteriaType, ObservationPeriod } from '@/models/cohort.types'
 import EntryEventCard from './EntryEventCard.vue'
 
 interface Props {
   events: CohortEvent[]
+  observationPeriod: ObservationPeriod
 }
 
 const props = defineProps<Props>()
@@ -65,12 +131,16 @@ const { t, tv } = useI18n()
 
 const emit = defineEmits<{
   'update:events': [events: CohortEvent[]]
+  'update:observation-period': [period: ObservationPeriod]
   'select-concept-set': [eventId: string]
   'edit-concept-set': [conceptSet: any]
 }>()
 
 // Get available filters for initial events section
 const { availableFilters } = useFilterConfig(ref('initialEvents'))
+
+// Dialog state
+const showObsPeriodDialog = ref(false)
 
 /**
  * Handle filter type selection from menu
@@ -104,6 +174,13 @@ function removeEvent(eventId: string) {
 
 function selectConceptSetForEvent(eventId: string) {
   emit('select-concept-set', eventId)
+}
+
+function updateObservationPeriod(field: 'priorDays' | 'postDays', value: number) {
+  emit('update:observation-period', {
+    ...props.observationPeriod,
+    [field]: Number(value) || 0
+  })
 }
 </script>
 
@@ -150,7 +227,41 @@ function selectConceptSetForEvent(eventId: string) {
 }
 
 .add-filter-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 16px;
+  gap: 16px;
+}
+
+.obs-period-chip {
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.obs-period-dialog-content {
+  padding: 16px 0;
+}
+
+.obs-period-field {
+  margin-bottom: 16px;
+}
+
+.obs-period-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.obs-period-info {
+  font-size: 12px;
+  color: #666;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  margin-top: 16px;
 }
 </style>
 

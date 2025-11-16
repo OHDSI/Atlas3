@@ -80,7 +80,7 @@ withDefaults(defineProps<Props>(), {
   depth: 0,
 })
 
-const { t, tv } = useI18n()
+const { tv } = useI18n()
 const { availableFilters } = useFilterConfig(ref('criteriaGroup'))
 
 // Format logic type for display with i18n

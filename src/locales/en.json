@@ -847,12 +847,14 @@
     "criteriaGroup": {
       "addAdditionalConstraint": "add additional constraint",
       "addCriteria": "Add criteria to group...",
+      "addNestedGroup": "Add Nested Group",
       "and": "and",
       "between": "between",
       "criteriaGroupText_1": "restrict to the same visit occurrence",
       "criteriaGroupText_2": "allow events from outside observation period",
       "deleteCriteria": "Delete Criteria",
       "deleteGroup": "Delete Group",
+      "removeNestedGroup": "Remove Nested Group",
       "followingCriteria": "of the following criteria:",
       "having": "having",
       "havingCapital": "Having",
@@ -863,7 +865,23 @@
       "where": "where",
       "with": "with",
       "withFollowingCriteria": "with the following event criteria:",
-      "occurringWithinTheSameVisit": "occurring within the same visit"
+      "occurringWithinTheSameVisit": "occurring within the same visit",
+      "nestedCriteria": {
+        "title": "Nested Criteria",
+        "addCriteria": "Add Criteria",
+        "logicTypes": {
+          "all": "ALL of the following",
+          "any": "ANY of the following",
+          "atLeast": "At least {count}",
+          "atMost": "At most {count}"
+        },
+        "selectLogicType": "Select logic type",
+        "selectCount": "Select count",
+        "maxDepthWarning": "Maximum nesting depth (10 levels) reached",
+        "depthWarning": "Nesting depth is {depth}/10",
+        "removeGroup": "Remove Nested Group",
+        "confirmRemove": "Are you sure you want to remove this nested group and all its criteria?"
+      }
     },
     "customEraStrategy": {
       "customEraStrategyText_1": "Continuous Exposure Persistence:",

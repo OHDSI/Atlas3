@@ -273,7 +273,8 @@ function updateRuleDescription(index: number, event: Event) {
   }
 }
 
-function handleSelectConceptSet(ruleIndex: number, groupIndex: number, eventIndex: number) {
+function handleSelectConceptSet(ruleIndex: number, groupIndex: number, eventIndexOrContext: number | { eventIndex: number; eventId: string }) {
+  const eventIndex = typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
   emit('select-concept-set', { ruleIndex, groupIndex, eventIndex })
 }
 </script>

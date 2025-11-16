@@ -117,7 +117,7 @@
                 :key="criteriaType.value"
                 :title="criteriaType.label"
                 :subtitle="criteriaType.description"
-                @click="addEvent(criteriaType.value as CriteriaType)"
+                @click="criteriaType.value === 'Group' ? addNestedGroup() : addEvent(criteriaType.value as CriteriaType)"
               />
             </v-list>
           </v-menu>
@@ -223,93 +223,122 @@
                       <div class="event-type-label">
                         {{ getEventTypeLabel(event.criteriaType) }}
                       </div>
-                      <v-btn
-                        icon="mdi-delete"
-                        size="small"
-                        variant="text"
-                        color="primary"
-                        data-testid="remove-event-from-group"
-                        @click="removeEvent(index)"
-                      />
+                      <div class="event-header-actions">
+                        <v-menu>
+                          <template #activator="{ props: menuProps }">
+                            <v-btn
+                              v-bind="menuProps"
+                              prepend-icon="mdi-plus"
+                              size="small"
+                              variant="text"
+                              color="primary"
+                              data-testid="add-attribute-button"
+                            >
+                              {{ t('components.common.addAttribute') }}
+                            </v-btn>
+                          </template>
+                          <v-list>
+                            <v-list-item
+                              v-for="attr in getAvailableAttributesForEvent(event)"
+                              :key="attr.key"
+                              :title="attr.label"
+                              :subtitle="attr.description"
+                              :disabled="attr.type === 'nested' && !!event.nestedCriteria"
+                              @click="addAttributeToEvent(index, attr.key, attr.type)"
+                            />
+                          </v-list>
+                        </v-menu>
+                        <v-btn
+                          icon="mdi-delete"
+                          size="small"
+                          variant="text"
+                          color="primary"
+                          data-testid="remove-event-from-group"
+                          @click="removeEvent(index)"
+                        />
+                      </div>
                     </div>
 
                     <!-- Event Body -->
                     <div class="event-body">
-                      <!-- Concept Set Picker -->
-                      <div class="concept-set-section">
-                        <v-btn
-                          v-if="!event.conceptSet || event.conceptSet.id === 0"
-                          color="primary"
-                          variant="outlined"
-                          size="small"
-                          data-testid="concept-set-picker"
-                          @click="selectConceptSetForEvent(index)"
-                        >
-                          <v-icon class="mr-2">
-                            mdi-plus
-                          </v-icon>
-                          Select Concept Set
-                        </v-btn>
-                        <v-chip
-                          v-else
-                          closable
-                          color="primary"
-                          data-testid="selected-concept-set"
-                          style="cursor: pointer;"
-                          @click="emit('edit-concept-set', event.conceptSet)"
-                          @click:close="clearConceptSet(index)"
-                        >
-                          {{ event.conceptSet.name }}
-                        </v-chip>
-                      </div>
-
-                      <!-- Temporal Window Display/Editor -->
-                      <div class="temporal-window-section mt-2">
-                        <v-menu
-                          v-if="event.temporalWindow"
-                          :close-on-content-click="false"
-                          location="end"
-                        >
-                          <template #activator="{ props: menuProps }">
-                            <v-chip
-                              size="small"
-                              color="secondary"
-                              variant="tonal"
-                              v-bind="menuProps"
-                              style="cursor: pointer;"
-                              closable
-                              @click:close="removeTemporalWindow(index)"
-                            >
-                              <v-icon
-                                start
-                                size="small"
-                              >
-                                mdi-calendar-range
-                              </v-icon>
-                              {{ formatTemporalWindowDisplay(event.temporalWindow) }}
-                            </v-chip>
-                          </template>
-                          <v-card
-                            class="temporal-window-menu"
-                            style="min-width: 500px;"
+                      <!-- Concept Set and Temporal Window Row -->
+                      <div class="concept-temporal-row">
+                        <!-- Concept Set Picker -->
+                        <div class="concept-set-section">
+                          <v-btn
+                            v-if="!event.conceptSet || event.conceptSet.id === 0"
+                            color="primary"
+                            variant="outlined"
+                            size="small"
+                            data-testid="concept-set-picker"
+                            @click="selectConceptSetForEvent(index)"
                           >
-                            <v-card-text class="pa-3">
-                              <TemporalWindowEditor
-                                :model-value="event.temporalWindow"
-                                @update:model-value="updateEventTemporalWindow(index, $event)"
-                              />
-                            </v-card-text>
-                          </v-card>
-                        </v-menu>
-                        <v-btn
-                          v-else
-                          size="small"
-                          variant="outlined"
-                          prepend-icon="mdi-calendar-range"
-                          @click="addTemporalWindow(index)"
-                        >
-                          Add Temporal Window
-                        </v-btn>
+                            <v-icon class="mr-2">
+                              mdi-plus
+                            </v-icon>
+                            Select Concept Set
+                          </v-btn>
+                          <v-chip
+                            v-else
+                            closable
+                            color="primary"
+                            data-testid="selected-concept-set"
+                            style="cursor: pointer;"
+                            @click="emit('edit-concept-set', event.conceptSet)"
+                            @click:close="clearConceptSet(index)"
+                          >
+                            {{ event.conceptSet.name }}
+                          </v-chip>
+                        </div>
+
+                        <!-- Temporal Window Display/Editor -->
+                        <div class="temporal-window-section">
+                          <v-menu
+                            v-if="event.temporalWindow"
+                            :close-on-content-click="false"
+                            location="end"
+                          >
+                            <template #activator="{ props: menuProps }">
+                              <v-chip
+                                size="small"
+                                color="secondary"
+                                variant="tonal"
+                                v-bind="menuProps"
+                                style="cursor: pointer;"
+                                closable
+                                @click:close="removeTemporalWindow(index)"
+                              >
+                                <v-icon
+                                  start
+                                  size="small"
+                                >
+                                  mdi-calendar-range
+                                </v-icon>
+                                {{ formatTemporalWindowDisplay(event.temporalWindow) }}
+                              </v-chip>
+                            </template>
+                            <v-card
+                              class="temporal-window-menu"
+                              style="min-width: 500px;"
+                            >
+                              <v-card-text class="pa-3">
+                                <TemporalWindowEditor
+                                  :model-value="event.temporalWindow"
+                                  @update:model-value="updateEventTemporalWindow(index, $event)"
+                                />
+                              </v-card-text>
+                            </v-card>
+                          </v-menu>
+                          <v-btn
+                            v-else
+                            size="small"
+                            variant="outlined"
+                            prepend-icon="mdi-calendar-range"
+                            @click="addTemporalWindow(index)"
+                          >
+                            Add Temporal Window
+                          </v-btn>
+                        </div>
                       </div>
 
                       <!-- Attributes Section -->
@@ -317,7 +346,23 @@
                         <AttributesEditor
                           :model-value="event.attributes || []"
                           :criteria-type="event.criteriaType"
+                          :has-nested-criteria="!!event.nestedCriteria"
                           @update:model-value="updateEventAttributes(index, $event)"
+                          @add-nested-criteria="addNestedCriteria(index)"
+                        />
+                      </div>
+
+                      <!-- Nested Criteria Section -->
+                      <div
+                        v-if="event.nestedCriteria"
+                        class="nested-criteria-section mt-3"
+                      >
+                        <NestedCriteriaEditor
+                          :model-value="event.nestedCriteria"
+                          :depth="1"
+                          @update:model-value="updateEventNestedCriteria(index, $event)"
+                          @remove="removeEventNestedCriteria(index)"
+                          @select-concept-set="$emit('select-concept-set', $event)"
                         />
                       </div>
                     </div>
@@ -343,9 +388,6 @@
           v-if="localGroup.nestedGroups && localGroup.nestedGroups.length > 0"
           class="mt-4"
         >
-          <div class="text-subtitle-2 mb-2">
-            Nested Groups
-          </div>
           <div
             v-for="(nested, idx) in localGroup.nestedGroups"
             :key="nested.id"
@@ -359,17 +401,6 @@
             />
           </div>
         </div>
-
-        <!-- Add Nested Group Button -->
-        <v-btn
-          class="mt-2"
-          variant="outlined"
-          prepend-icon="mdi-folder-plus"
-          data-testid="add-nested-group"
-          @click="addNestedGroup"
-        >
-          Add Nested Group
-        </v-btn>
       </div>
     </v-card-text>
   </v-card>
@@ -380,9 +411,11 @@ import { ref, watch, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
-import type { CriteriaGroup, CohortEvent, LogicType, CriteriaType } from '@/models/cohort.types'
+import NestedCriteriaEditor from './NestedCriteriaEditor.vue'
+import type { CriteriaGroup, CohortEvent, LogicType, CriteriaType, NestedCriteria } from '@/models/cohort.types'
 import type { EventAttribute, TemporalWindow } from '@/models/event.types'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
+import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 
@@ -396,7 +429,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: CriteriaGroup]
   'remove': []
-  'select-concept-set': [eventIndex: number]
+  'select-concept-set': [context: { eventIndex: number; eventId: string } | number]
   'edit-concept-set': [conceptSet: any]
 }>()
 
@@ -491,6 +524,34 @@ function removeTemporalWindow(index: number) {
   const event = localGroup.value.events[index]
   if (event) {
     delete event.temporalWindow
+    emitUpdate()
+  }
+}
+
+function addNestedCriteria(index: number) {
+  const event = localGroup.value.events[index]
+  if (event) {
+    event.nestedCriteria = {
+      id: uuidv4(),
+      logicType: 'ALL',
+      events: []
+    }
+    emitUpdate()
+  }
+}
+
+function updateEventNestedCriteria(index: number, nested: NestedCriteria) {
+  const event = localGroup.value.events[index]
+  if (event) {
+    event.nestedCriteria = nested
+    emitUpdate()
+  }
+}
+
+function removeEventNestedCriteria(index: number) {
+  const event = localGroup.value.events[index]
+  if (event) {
+    delete event.nestedCriteria
     emitUpdate()
   }
 }
@@ -612,6 +673,69 @@ function updateEventCardinalityCount(index: number, count: number) {
   }
 }
 
+// Helper to convert PascalCase to camelCase for config lookup
+function toCamelCase(str: string): string {
+  return str.charAt(0).toLowerCase() + str.slice(1)
+}
+
+// Get available attributes for a specific event
+function getAvailableAttributesForEvent(event: CohortEvent) {
+  const criteriaTypeKey = ref(toCamelCase(event.criteriaType))
+  const sectionRef = ref('criteriaGroup')
+  const { attributes } = useAttributeConfig(criteriaTypeKey, sectionRef)
+  return attributes.value
+}
+
+// Add attribute to event
+function addAttributeToEvent(eventIndex: number, attributeKey: string, attributeType: string) {
+  const event = localGroup.value.events[eventIndex]
+  if (!event) return
+
+  // Handle nested criteria type specially - emit event instead of adding attribute
+  if (attributeType === 'nested') {
+    addNestedCriteria(eventIndex)
+    return
+  }
+
+  // Create a default attribute based on the type
+  let newAttribute: any
+  if (attributeType === 'numericRange') {
+    newAttribute = {
+      type: 'numericRange',
+      attributeKey,
+      operator: 'GREATER_THAN_OR_EQUAL',
+      value: 0,
+    }
+  } else if (attributeType === 'conceptSet') {
+    newAttribute = {
+      type: 'conceptSet',
+      attributeKey,
+      conceptSet: { id: '', name: '' },
+    }
+  } else if (attributeType === 'dateRange') {
+    newAttribute = {
+      type: 'dateRange',
+      attributeKey,
+      operator: 'AFTER',
+      value: new Date().toISOString().split('T')[0],
+    }
+  } else if (attributeType === 'text') {
+    newAttribute = {
+      type: 'text',
+      attributeKey,
+      operator: 'CONTAINS',
+      value: '',
+    }
+  }
+
+  // Add the new attribute to the event
+  if (!event.attributes) {
+    event.attributes = []
+  }
+  event.attributes.push(newAttribute)
+  emitUpdate()
+}
+
 // Expose method for parent to call
 defineExpose({
   updateEventConceptSet,
@@ -631,10 +755,7 @@ defineExpose({
 }
 
 .nested-group-item {
-  margin-left: 24px;
   margin-bottom: 12px;
-  border-left: 3px solid #1976d2;
-  padding-left: 12px;
 }
 
 .vertical-label-container {
@@ -840,6 +961,12 @@ defineExpose({
   border-bottom: 1px solid #e0e0e0;
 }
 
+.criteria-event-card .event-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .criteria-event-card .event-type-label {
   font-size: 14px;
   font-weight: 600;
@@ -850,8 +977,20 @@ defineExpose({
   padding: 16px;
 }
 
-.criteria-event-card .concept-set-section {
+.criteria-event-card .concept-temporal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 16px;
+  gap: 12px;
+}
+
+.criteria-event-card .concept-set-section {
+  flex: 0 0 auto;
+}
+
+.criteria-event-card .temporal-window-section {
+  flex: 0 0 auto;
 }
 
 .criteria-event-card .attributes-section {
