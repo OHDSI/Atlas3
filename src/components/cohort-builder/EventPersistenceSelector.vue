@@ -38,7 +38,7 @@
             <v-select
               v-model="fixedDurationDateField"
               :items="dateFieldOptions"
-              :label="t('exitCriteria.fields.dateField', 'Date Field')"
+              :label="t('exitCriteria.fields.dateField', 'Date Field').value"
               :disabled="disabled"
               variant="outlined"
               density="compact"
@@ -48,7 +48,7 @@
             <v-text-field
               v-model.number="fixedDurationOffset"
               type="number"
-              :label="t('exitCriteria.fields.offset', 'Offset (days)')"
+              :label="t('exitCriteria.fields.offset', 'Offset (days)').value"
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -91,7 +91,7 @@
             <v-text-field
               v-model.number="persistenceWindow"
               type="number"
-              :label="t('exitCriteria.fields.persistenceWindow', 'Persistence Window (days)')"
+              :label="t('exitCriteria.fields.persistenceWindow', 'Persistence Window (days)').value"
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -116,7 +116,7 @@
             <v-text-field
               v-model.number="surveillanceWindow"
               type="number"
-              :label="t('exitCriteria.fields.surveillanceWindow', 'Surveillance Window (days)')"
+              :label="t('exitCriteria.fields.surveillanceWindow', 'Surveillance Window (days)').value"
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"

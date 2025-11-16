@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { useNestedCriteria } from '@/composables/useNestedCriteria'
 import type { NestedCriteria, CohortEvent } from '@/models/cohort.types'
 

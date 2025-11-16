@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod'
-import type { NestedCriteria, CohortEvent } from './cohort.types'
+import type { CohortEvent } from './cohort.types'
 
 /**
  * Logic type enumeration schema
@@ -15,7 +15,7 @@ export const LogicTypeSchema = z.enum(['ALL', 'ANY', 'AT_LEAST', 'AT_MOST'])
  * Validation schema for NestedCriteria
  * Recursively validates nested event structures
  */
-export const NestedCriteriaSchema = z.lazy(() =>
+export const NestedCriteriaSchema: z.ZodType<any> = z.lazy(() =>
   z.object({
     id: z.string().uuid('Invalid UUID format for nested criteria ID'),
     logicType: LogicTypeSchema,
@@ -67,7 +67,7 @@ const EventAttributeSchema = z.object({
  * Validation schema for CohortEvent
  * Supports recursive nested criteria within events
  */
-export const CohortEventSchema = z.lazy(() =>
+export const CohortEventSchema: z.ZodType<any> = z.lazy(() =>
   z.object({
     id: z.string().uuid('Invalid UUID format for event ID'),
     criteriaType: z.string().min(1, 'Criteria type is required'),

@@ -347,7 +347,9 @@
           variant="outlined"
           @click="handleCancel"
         >
-          <v-icon class="d-md-none">mdi-close</v-icon>
+          <v-icon class="d-md-none">
+            mdi-close
+          </v-icon>
           <span class="d-none d-md-inline">{{ t('common.cancel') }}</span>
         </v-btn>
 
@@ -367,7 +369,9 @@
           >
             mdi-circle
           </v-icon>
-          <v-icon class="d-md-none">mdi-content-save</v-icon>
+          <v-icon class="d-md-none">
+            mdi-content-save
+          </v-icon>
           <span class="d-none d-md-inline">{{ t('common.save') }}</span>
         </v-btn>
 
@@ -386,7 +390,9 @@
           >
             mdi-database-cog
           </v-icon>
-          <v-icon class="d-md-none">mdi-database-cog</v-icon>
+          <v-icon class="d-md-none">
+            mdi-database-cog
+          </v-icon>
           <span class="d-none d-md-inline">{{ t('components.analysisExecution.buttons.generate') }}</span>
         </v-btn>
       </div>
@@ -1349,10 +1355,10 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
     if (!currentEvent) return
 
     // Update the event directly - Vue 3 ref reactivity will detect this
-    Object.assign(entryEvents.value[eventIndex], {
+    entryEvents.value[eventIndex] = {
       ...currentEvent,
       conceptSet: conceptSetRef,
-    })
+    }
   }
   // Handle additional criteria event selection
   else if (selectedCriteriaContext.value.ruleIndex === -2) {

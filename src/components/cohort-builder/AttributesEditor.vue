@@ -16,103 +16,103 @@
             {{ getAttributeLabel(attribute.attributeKey) }}
           </div>
 
-        <!-- Attribute Input (Middle) -->
-        <div class="attribute-input">
-          <!-- Numeric Range Attributes -->
-          <template v-if="attribute.type === 'numericRange'">
-            <v-select
-              :model-value="attribute.operator"
-              :items="numericOperators"
-              item-title="label"
-              item-value="value"
-              density="compact"
-              variant="outlined"
-              hide-details
-              class="operator-select"
-              data-testid="attribute-operator-selector"
-              @update:model-value="updateAttributeOperator(index, $event)"
-            />
+          <!-- Attribute Input (Middle) -->
+          <div class="attribute-input">
+            <!-- Numeric Range Attributes -->
+            <template v-if="attribute.type === 'numericRange'">
+              <v-select
+                :model-value="attribute.operator"
+                :items="numericOperators"
+                item-title="label"
+                item-value="value"
+                density="compact"
+                variant="outlined"
+                hide-details
+                class="operator-select"
+                data-testid="attribute-operator-selector"
+                @update:model-value="updateAttributeOperator(index, $event)"
+              />
 
-            <v-text-field
-              :model-value="attribute.value"
-              type="number"
-              density="compact"
-              variant="outlined"
-              hide-details
-              class="value-input"
-              data-testid="attribute-value-input"
-              @update:model-value="updateAttributeValue(index, $event)"
-            />
-
-            <template v-if="attribute.type === 'numericRange' && (attribute.operator === 'BETWEEN')">
-              <span class="and-text">{{ t('common.and') }}</span>
               <v-text-field
-                :model-value="attribute.extent"
+                :model-value="attribute.value"
                 type="number"
                 density="compact"
                 variant="outlined"
                 hide-details
                 class="value-input"
-                data-testid="attribute-extent-input"
+                data-testid="attribute-value-input"
+                @update:model-value="updateAttributeValue(index, $event)"
+              />
+
+              <template v-if="attribute.type === 'numericRange' && (attribute.operator === 'BETWEEN')">
+                <span class="and-text">{{ t('common.and') }}</span>
+                <v-text-field
+                  :model-value="attribute.extent"
+                  type="number"
+                  density="compact"
+                  variant="outlined"
+                  hide-details
+                  class="value-input"
+                  data-testid="attribute-extent-input"
+                  @update:model-value="updateAttributeExtent(index, $event)"
+                />
+              </template>
+            </template>
+
+            <!-- Concept Set Attributes -->
+            <template v-else-if="attribute.type === 'conceptSet'">
+              <v-text-field
+                :model-value="attribute.conceptSet.name"
+                readonly
+                density="compact"
+                variant="outlined"
+                hide-details
+                data-testid="attribute-concept-set-picker"
+                append-icon="mdi-magnify"
+                @click:append="openConceptSetPicker"
+              />
+            </template>
+
+            <!-- Date Range Attributes -->
+            <template v-else-if="attribute.type === 'dateRange'">
+              <v-select
+                :model-value="attribute.operator"
+                :items="dateOperators"
+                item-title="label"
+                item-value="value"
+                density="compact"
+                variant="outlined"
+                hide-details
+                class="operator-select"
+                data-testid="attribute-operator-selector"
+                @update:model-value="updateAttributeOperator(index, $event)"
+              />
+
+              <v-text-field
+                v-if="attribute.type === 'dateRange' && (attribute.operator === 'BETWEEN' || attribute.operator === 'GREATER_THAN')"
+                :model-value="attribute.value"
+                type="date"
+                density="compact"
+                variant="outlined"
+                hide-details
+                class="value-input"
+                data-testid="attribute-start-date-input"
+                @update:model-value="updateAttributeValue(index, $event)"
+              />
+
+              <v-text-field
+                v-if="attribute.type === 'dateRange' && (attribute.operator === 'BETWEEN' || attribute.operator === 'LESS_THAN')"
+                :model-value="attribute.extent"
+                type="date"
+                density="compact"
+                variant="outlined"
+                hide-details
+                class="value-input"
+                data-testid="attribute-end-date-input"
                 @update:model-value="updateAttributeExtent(index, $event)"
               />
             </template>
-          </template>
-
-          <!-- Concept Set Attributes -->
-          <template v-else-if="attribute.type === 'conceptSet'">
-            <v-text-field
-              :model-value="attribute.conceptSet.name"
-              readonly
-              density="compact"
-              variant="outlined"
-              hide-details
-              data-testid="attribute-concept-set-picker"
-              append-icon="mdi-magnify"
-              @click:append="openConceptSetPicker"
-            />
-          </template>
-
-          <!-- Date Range Attributes -->
-          <template v-else-if="attribute.type === 'dateRange'">
-            <v-select
-              :model-value="attribute.operator"
-              :items="dateOperators"
-              item-title="label"
-              item-value="value"
-              density="compact"
-              variant="outlined"
-              hide-details
-              class="operator-select"
-              data-testid="attribute-operator-selector"
-              @update:model-value="updateAttributeOperator(index, $event)"
-            />
-
-            <v-text-field
-              v-if="attribute.type === 'dateRange' && (attribute.operator === 'BETWEEN' || attribute.operator === 'GREATER_THAN')"
-              :model-value="attribute.value"
-              type="date"
-              density="compact"
-              variant="outlined"
-              hide-details
-              class="value-input"
-              data-testid="attribute-start-date-input"
-              @update:model-value="updateAttributeValue(index, $event)"
-            />
-
-            <v-text-field
-              v-if="attribute.type === 'dateRange' && (attribute.operator === 'BETWEEN' || attribute.operator === 'LESS_THAN')"
-              :model-value="attribute.extent"
-              type="date"
-              density="compact"
-              variant="outlined"
-              hide-details
-              class="value-input"
-              data-testid="attribute-end-date-input"
-              @update:model-value="updateAttributeExtent(index, $event)"
-            />
-          </template>
-        </div>
+          </div>
 
           <!-- Delete Button (Right Side) -->
           <div class="attribute-actions">
@@ -167,7 +167,7 @@ const toCamelCase = (str: string): string => {
 // Use attribute configuration composable
 const criteriaTypeKey = ref(toCamelCase(props.criteriaType))
 const sectionRef = ref(props.section)
-const { attributes, getAttributeLabel } = useAttributeConfig(
+const { getAttributeLabel } = useAttributeConfig(
   criteriaTypeKey,
   sectionRef
 )
@@ -186,11 +186,6 @@ watch(() => props.modelValue, (newValue) => {
     emit('update:modelValue', cleaned)
   }
 }, { immediate: true })
-
-// Transform configuration attributes to match legacy availableAttributes format
-// This maintains backward compatibility with existing component logic
-// Note: getAttributeDescription is used internally by the composable to populate descriptions
-const availableAttributes = attributes
 
 // Operator lists
 const numericOperators = [
@@ -239,57 +234,11 @@ function updateAttributeExtent(index: number, extent: any) {
   emit('update:modelValue', newAttributes)
 }
 
-function addAttributeOfType(attributeKey: string, attributeType: string) {
-  // Handle nested criteria type specially - emit event instead of adding attribute
-  if (attributeType === 'nested') {
-    emit('add-nested-criteria')
-    return
-  }
-
-  // Create a default attribute based on the type
-  let newAttribute: any
-  if (attributeType === 'numericRange') {
-    newAttribute = {
-      type: 'numericRange',
-      attributeKey,
-      operator: 'GREATER_THAN_OR_EQUAL',
-      value: 0,
-    }
-  } else if (attributeType === 'conceptSet') {
-    newAttribute = {
-      type: 'conceptSet',
-      attributeKey,
-      conceptSet: { id: '', name: '' },
-    }
-  } else if (attributeType === 'dateRange') {
-    newAttribute = {
-      type: 'dateRange',
-      attributeKey,
-      operator: 'AFTER',
-      value: new Date().toISOString().split('T')[0],
-    }
-  } else if (attributeType === 'text') {
-    newAttribute = {
-      type: 'text',
-      attributeKey,
-      operator: 'CONTAINS',
-      value: '',
-    }
-  }
-
-  // Add the new attribute to the list
-  const updatedAttributes = [...props.modelValue, newAttribute]
-  emit('update:modelValue', updatedAttributes)
-}
-
 function removeAttribute(index: number) {
   const newAttributes = [...props.modelValue]
   newAttributes.splice(index, 1)
   emit('update:modelValue', newAttributes)
 }
-
-// Note: getAttributeLabel is now provided by useAttributeConfig composable
-// and is already exposed for use in template
 
 function openConceptSetPicker() {
   // TODO: Implement concept set picker dialog

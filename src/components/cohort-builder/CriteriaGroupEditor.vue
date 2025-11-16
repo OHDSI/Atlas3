@@ -69,7 +69,7 @@
               v-if="matchTypeTemp === 'AT_LEAST' || matchTypeTemp === 'AT_MOST'"
               v-model.number="matchTypeCount"
               type="number"
-              :label="t('common.count', 'Count')"
+              :label="t('common.count', 'Count').value"
               min="1"
               density="compact"
               class="mt-3"

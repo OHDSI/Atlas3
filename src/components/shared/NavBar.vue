@@ -238,10 +238,6 @@ const handleLogoClick = async () => {
   router.push('/')
 }
 
-const handleOhdsiClick = () => {
-  window.open('https://ohdsi.org', '_blank')
-}
-
 const handleNavClick = async (item: NavigationItem) => {
   await router.isReady()
   navigationItems.value.forEach(navItem => {

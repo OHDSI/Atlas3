@@ -41,7 +41,12 @@
           size="small"
           @click="showObsPeriodDialog = true"
         >
-          <v-icon start size="small">mdi-calendar-range</v-icon>
+          <v-icon
+            start
+            size="small"
+          >
+            mdi-calendar-range
+          </v-icon>
           <!-- Short version for small screens -->
           <span class="d-md-none">
             {{ observationPeriod.priorDays }} {{ t('common.before', 'before') }} {{ observationPeriod.postDays }} {{ t('common.after', 'after') }}
@@ -176,7 +181,7 @@ function selectConceptSetForEvent(eventId: string) {
   emit('select-concept-set', eventId)
 }
 
-function updateObservationPeriod(field: 'priorDays' | 'postDays', value: number) {
+function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string | number) {
   emit('update:observation-period', {
     ...props.observationPeriod,
     [field]: Number(value) || 0

@@ -10,7 +10,7 @@
         :items="conceptSetItems"
         item-title="label"
         item-value="value"
-        :label="t('cs.manager.chooseConceptSet', 'Choose Concept Set')"
+        :label="tv('cs.manager.chooseConceptSet', 'Choose Concept Set')"
         clearable
         data-testid="concept-set-selector"
         @update:model-value="handleSelect"
@@ -77,7 +77,7 @@ import ConceptSearch from '@/components/concept-sets/ConceptSearch.vue'
 import ConceptSetEditor from '@/components/concept-sets/ConceptSetEditor.vue'
 import type { ConceptSetReference, ConceptSet, Concept } from '@/models/concept-set.types'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 interface Props {
   modelValue?: ConceptSetReference

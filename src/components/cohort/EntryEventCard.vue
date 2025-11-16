@@ -61,66 +61,66 @@
 
       <!-- Event Body -->
       <div class="event-body">
-          <!-- Event Concept Set -->
-          <div class="concept-set-section">
-            <div
-              v-if="event.conceptSet"
-              class="concept-set-selected"
-            >
-              <v-chip
-                closable
-                color="primary"
-                style="cursor: pointer;"
-                @click="emit('edit-concept-set', event.conceptSet)"
-                @click:close="removeConceptSet"
-              >
-                {{ event.conceptSet.name }}
-              </v-chip>
-            </div>
-            <v-btn
-              v-else
-              color="primary"
-              variant="outlined"
-              size="small"
-              data-testid="concept-set-picker"
-              @click="emit('select-concept-set')"
-            >
-              <v-icon class="mr-2">
-                mdi-plus
-              </v-icon>
-              {{ t('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set') }}
-            </v-btn>
-          </div>
-
-          <!-- Attributes Section -->
-          <div class="attributes-section mt-3">
-            <AttributesEditor
-              :model-value="event.attributes || []"
-              :criteria-type="event.criteriaType"
-              section="initialEvents"
-              :has-nested-criteria="!!event.nestedCriteria"
-              :cardinality="event.cardinality"
-              :temporal-window="event.temporalWindow"
-              @update:model-value="updateAttributes"
-              @update:cardinality="updateCardinality"
-              @update:temporal-window="updateTemporalWindows"
-              @add-nested-criteria="addNestedCriteria"
-            />
-          </div>
-
-          <!-- Nested Criteria Section -->
+        <!-- Event Concept Set -->
+        <div class="concept-set-section">
           <div
-            v-if="event.nestedCriteria"
-            class="nested-criteria-section mt-3"
+            v-if="event.conceptSet"
+            class="concept-set-selected"
           >
-            <NestedCriteriaEditor
-              :model-value="event.nestedCriteria"
-              :depth="1"
-              @update:model-value="updateNestedCriteria"
-              @remove="removeNestedCriteria"
-              @select-concept-set="emit('select-concept-set')"
-            />
+            <v-chip
+              closable
+              color="primary"
+              style="cursor: pointer;"
+              @click="emit('edit-concept-set', event.conceptSet)"
+              @click:close="removeConceptSet"
+            >
+              {{ event.conceptSet.name }}
+            </v-chip>
           </div>
+          <v-btn
+            v-else
+            color="primary"
+            variant="outlined"
+            size="small"
+            data-testid="concept-set-picker"
+            @click="emit('select-concept-set')"
+          >
+            <v-icon class="mr-2">
+              mdi-plus
+            </v-icon>
+            {{ t('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set') }}
+          </v-btn>
+        </div>
+
+        <!-- Attributes Section -->
+        <div class="attributes-section mt-3">
+          <AttributesEditor
+            :model-value="event.attributes || []"
+            :criteria-type="event.criteriaType"
+            section="initialEvents"
+            :has-nested-criteria="!!event.nestedCriteria"
+            :cardinality="event.cardinality"
+            :temporal-window="event.temporalWindow"
+            @update:model-value="updateAttributes"
+            @update:cardinality="updateCardinality"
+            @update:temporal-window="updateTemporalWindows"
+            @add-nested-criteria="addNestedCriteria"
+          />
+        </div>
+
+        <!-- Nested Criteria Section -->
+        <div
+          v-if="event.nestedCriteria"
+          class="nested-criteria-section mt-3"
+        >
+          <NestedCriteriaEditor
+            :model-value="event.nestedCriteria"
+            :depth="1"
+            @update:model-value="updateNestedCriteria"
+            @remove="removeNestedCriteria"
+            @select-concept-set="emit('select-concept-set')"
+          />
+        </div>
       </div>
     </div>
   </div>

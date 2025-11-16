@@ -18,7 +18,7 @@ vi.mock('@/services/webapi', () => ({
 }))
 
 import ExitCriteriaPanel from '@/components/cohort-builder/ExitCriteriaPanel.vue'
-import type { ExitCriteria, Period, CohortEvent, ConceptSetReference } from '@/models/cohort.types'
+import type { ExitCriteria, CohortEvent, ConceptSetReference } from '@/models/cohort.types'
 
 const vuetify = createVuetify({
   components,
