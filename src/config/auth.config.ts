@@ -14,12 +14,20 @@ export interface AuthConfig {
  */
 function parseProvidersFromEnv(): AuthProvider[] {
   const providersJson = import.meta.env.VITE_AUTH_PROVIDERS
-  if (!providersJson) return []
+  console.log('[Auth Config] VITE_AUTH_PROVIDERS raw value:', providersJson)
+
+  if (!providersJson) {
+    console.warn('[Auth Config] VITE_AUTH_PROVIDERS is empty or undefined')
+    return []
+  }
 
   try {
-    return JSON.parse(providersJson)
+    const parsed = JSON.parse(providersJson)
+    console.log('[Auth Config] Parsed providers:', parsed)
+    return parsed
   } catch (error) {
-    console.error('Failed to parse VITE_AUTH_PROVIDERS:', error)
+    console.error('[Auth Config] Failed to parse VITE_AUTH_PROVIDERS:', error)
+    console.error('[Auth Config] Raw value was:', providersJson)
     return []
   }
 }
@@ -82,6 +90,9 @@ export const defaultAuthConfig: AuthConfig = {
 }
 
 export let authConfig: AuthConfig = { ...defaultAuthConfig }
+
+console.log('[Auth Config] Final authConfig:', authConfig)
+console.log('[Auth Config] Auth providers count:', authConfig.authProviders.length)
 
 export function setAuthConfig(config: Partial<AuthConfig>): void {
   authConfig = { ...authConfig, ...config }

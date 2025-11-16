@@ -82,10 +82,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 import { authConfig } from '@/config/auth.config'
+import { authService } from '@/services/auth/authService'
 import type { AuthProvider, LoginCredentials } from '@/models/auth.types'
 import CredentialsForm from './CredentialsForm.vue'
 
@@ -103,9 +104,33 @@ const isOpen = computed({
 
 const providers = ref<AuthProvider[]>(authConfig.authProviders)
 const selectedProvider = ref<AuthProvider | null>(null)
+const loadingProviders = ref(false)
 
 const isAuthenticating = computed(() => auth.isAuthenticating.value)
 const errorMessage = computed(() => auth.errorMessage.value)
+
+// Fetch OAuth providers from WebAPI on mount
+onMounted(async () => {
+  loadingProviders.value = true
+  try {
+    const fetchedProviders = await authService.fetchOAuthProviders()
+    console.log('[LoginModal] Fetched providers from WebAPI:', fetchedProviders)
+
+    if (fetchedProviders.length > 0) {
+      providers.value = fetchedProviders
+    } else {
+      // Fallback to config providers if WebAPI doesn't return any
+      console.log('[LoginModal] Using providers from config:', authConfig.authProviders)
+      providers.value = authConfig.authProviders
+    }
+  } catch (error) {
+    console.error('[LoginModal] Failed to fetch providers from WebAPI:', error)
+    // Fallback to config providers
+    providers.value = authConfig.authProviders
+  } finally {
+    loadingProviders.value = false
+  }
+})
 
 watch(
   () => auth.loginModalOpen.value,
@@ -122,11 +147,18 @@ watch(
 )
 
 function selectProvider(provider: AuthProvider) {
+  console.log('[LoginModal] Provider selected:', provider)
+  console.log('[LoginModal] isUseCredentialsForm:', provider.isUseCredentialsForm)
+  console.log('[LoginModal] ajax:', provider.ajax)
+
   selectedProvider.value = provider
 
   // For OAuth/redirect providers (non-AJAX), trigger redirect via authService
   if (!provider.isUseCredentialsForm && !provider.ajax) {
+    console.log('[LoginModal] Triggering OAuth redirect to:', provider.url)
     auth.login(provider.url)
+  } else {
+    console.log('[LoginModal] Not triggering redirect - isUseCredentialsForm:', provider.isUseCredentialsForm, 'ajax:', provider.ajax)
   }
 }
 

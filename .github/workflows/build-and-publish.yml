@@ -1,0 +1,76 @@
+name: Build and Publish
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@p-hoffmann'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:unit
+
+      - name: Run type check
+        run: npm run type-check
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Build production
+        run: npm run build
+
+      - name: Prepare package.json for publishing
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          COMMIT_ID=$(git rev-parse --short HEAD)
+          
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            # For develop branch: append timestamp and commit ID
+            cat package.json | jq --arg ts "$TIMESTAMP" --arg commit "$COMMIT_ID" '.name = "@p-hoffmann/atlas" | .version = .version + "-" + $ts + "-" + $commit | .publishConfig = {"registry": "https://npm.pkg.github.com"} | .repository = {"type": "git", "url": "git+https://github.com/p-hoffmann/Atlas.git"} | .files = ["dist"]' > package.json.tmp
+          else
+            # For main branch or tags: use version as-is
+            cat package.json | jq '.name = "@p-hoffmann/atlas" | .publishConfig = {"registry": "https://npm.pkg.github.com"} | .repository = {"type": "git", "url": "git+https://github.com/p-hoffmann/Atlas.git"} | .files = ["dist"]' > package.json.tmp
+          fi
+          
+          mv package.json.tmp package.json
+          echo "Package version: $(jq -r '.version' package.json)"
+
+      - name: Publish to GitHub Packages
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-dist
+          path: dist/
+          retention-days: 30

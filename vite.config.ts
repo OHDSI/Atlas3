@@ -5,6 +5,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/Atlas/',
   plugins: [
     vue(),
     // Vuetify plugin for auto-importing components and tree-shaking
@@ -34,9 +35,9 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      // Proxy WebAPI requests to atlas-demo.ohdsi.org
+      // Proxy WebAPI requests to localhost:41100
       '/WebAPI': {
-        target: 'https://atlas-demo.ohdsi.org',
+        target: 'https://localhost:41100',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,
