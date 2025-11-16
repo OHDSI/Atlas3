@@ -55,7 +55,14 @@ jobs:
 
       - name: Publish to GitHub Packages
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v'))
-        run: npm publish
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            # For develop branch: publish with 'next' tag for prerelease versions
+            npm publish --tag next
+          else
+            # For main branch or tags: publish with default 'latest' tag
+            npm publish
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
