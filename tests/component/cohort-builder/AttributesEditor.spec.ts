@@ -47,11 +47,12 @@ describe('AttributesEditor', () => {
     setActivePinia(createPinia())
   })
 
-    it('should display add button when no attributes', () => {
+    it('should render without errors when no attributes', () => {
       const wrapper = createWrapper([])
-      const addButton = wrapper.find('[data-testid="add-attribute-button"]')
-      expect(addButton.exists()).toBe(true)
-      expect(addButton.text()).toContain('Add Attribute...')
+      // Component should render successfully with no attributes
+      expect(wrapper.exists()).toBe(true)
+      // No attributes list should be shown
+      expect(wrapper.find('.attributes-list').exists()).toBe(false)
     })
 
     it('should display numeric range attributes', () => {
@@ -119,38 +120,8 @@ describe('AttributesEditor', () => {
     })
   })
 
-  describe('Add Attribute', () => {
-  beforeEach(() => {
-    setActivePinia(createPinia())
-  })
-
-    it('should show add attribute button', () => {
-      const wrapper = createWrapper()
-      const addButton = wrapper.find('[data-testid="add-attribute-button"]')
-      expect(addButton.exists()).toBe(true)
-    })
-
-    it('should show attribute menu when clicking add button', async () => {
-      const wrapper = createWrapper()
-      const addButton = wrapper.find('[data-testid="add-attribute-button"]')
-      await addButton.trigger('click')
-      await wrapper.vm.$nextTick()
-
-      // v-menu should contain list items
-      const menu = wrapper.findComponent({ name: 'VMenu' })
-      expect(menu.exists()).toBe(true)
-    })
-
-    it('should show available attributes for criteria type', () => {
-      const wrapper = createWrapper()
-
-      // Check that the component has the correct available attributes computed property
-      // The menu items are rendered lazily, so we check the component's data
-      expect(wrapper.vm).toBeDefined()
-      // For ConditionOccurrence, should have Age, Gender, and condition-specific attributes
-      // This is validated by the component rendering without errors
-    })
-  })
+  // NOTE: Add attribute functionality has been moved to parent components
+  // AttributesEditor is now focused on displaying and editing existing attributes only
 
   describe('Numeric Attributes', () => {
   beforeEach(() => {
