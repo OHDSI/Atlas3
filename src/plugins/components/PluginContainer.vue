@@ -4,11 +4,17 @@
       v-if="hasError"
       class="plugin-error"
     >
-      <PluginErrorUI 
-        :error="error" 
+      <PluginErrorUI
+        :error="error"
         :plugin-id="pluginId"
         @retry="handleRetry"
       />
+    </div>
+    <div
+      v-else-if="isLoading"
+      class="plugin-loading"
+    >
+      <PluginLoadingState />
     </div>
     <div
       v-else
@@ -23,6 +29,7 @@ import { ref, computed, onMounted, onUnmounted, onErrorCaptured } from 'vue';
 import { useRoute } from 'vue-router';
 import { pluginRegistry } from '@/plugins/index';
 import PluginErrorUI from './PluginErrorUI.vue';
+import PluginLoadingState from './PluginLoadingState.vue';
 
 const route = useRoute();
 const pluginId = computed(() => route.params.pluginId as string);
@@ -30,6 +37,7 @@ const pluginContainerId = computed(() => `plugin-${pluginId.value}`);
 
 const hasError = ref(false);
 const error = ref<any>(null);
+const isLoading = ref(true);
 
 let stateUnsubscribe: (() => void) | null = null;
 
@@ -37,16 +45,18 @@ onMounted(() => {
   const plugin = pluginRegistry.getPlugin(pluginId.value);
   if (plugin) {
     console.log(`[PluginContainer] Mounting container for plugin ${pluginId.value}, state:`, plugin.state);
-    
+
     hasError.value = plugin.state === 'error';
     error.value = plugin.error;
+    isLoading.value = plugin.state === 'loading' || plugin.state === 'not-loaded';
 
-    // Subscribe to state changes to catch errors
+    // Subscribe to state changes
     stateUnsubscribe = pluginRegistry.onStateChange(pluginId.value, (state) => {
       console.log(`[PluginContainer] Plugin ${pluginId.value} state changed to:`, state);
-      
+
       hasError.value = state === 'error';
-      
+      isLoading.value = state === 'loading' || state === 'not-loaded';
+
       if (state === 'error') {
         const p = pluginRegistry.getPlugin(pluginId.value);
         error.value = p?.error;
@@ -55,6 +65,7 @@ onMounted(() => {
   } else {
     console.error(`[PluginContainer] Plugin ${pluginId.value} not found in registry`);
     hasError.value = true;
+    isLoading.value = false;
     error.value = {
       message: `Plugin ${pluginId.value} not found`,
       timestamp: new Date(),

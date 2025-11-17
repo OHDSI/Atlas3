@@ -15,7 +15,7 @@ export class PluginLoader {
 
   async loadPlugin(plugin: PluginInstance): Promise<void> {
     const { registration } = plugin;
-    const pluginUrl = `/plugins/${registration.entryPoint}`;
+    const pluginUrl = `${import.meta.env.BASE_URL}plugins/${registration.entryPoint}`;
 
     console.log(`[PluginLoader] Loading plugin: ${registration.id} from ${pluginUrl}`);
 
@@ -80,12 +80,22 @@ export class PluginLoader {
         app: () => Promise.resolve(pluginModule),
         activeWhen: (location) => {
           // Match any route that starts with /plugins/{pluginId}/
-          return location.pathname.startsWith(`/plugins/${registration.id}/`);
+          // Need to account for the base path
+          const basePath = import.meta.env.BASE_URL;
+          const pluginPath = `${basePath}plugins/${registration.id}/`.replace(/\/+/g, '/');
+          const isActive = location.pathname.startsWith(pluginPath);
+          console.log(`[PluginLoader] activeWhen check for ${registration.id}: pathname=${location.pathname}, pluginPath=${pluginPath}, isActive=${isActive}`);
+          return isActive;
         },
-        customProps: {
-          name: registration.name,
-          authContext: plugin.authContext,
-          messageBus: plugin.messageBus,
+        customProps: () => {
+          const domElement = document.getElementById(`plugin-${registration.id}`);
+          console.log(`[PluginLoader] customProps for ${registration.id}: domElement=`, domElement);
+          return {
+            name: registration.name,
+            authContext: plugin.authContext,
+            messageBus: plugin.messageBus,
+            domElement: domElement,
+          };
         },
       });
 

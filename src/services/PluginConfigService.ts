@@ -10,16 +10,25 @@ export class PluginConfigService {
 
   async loadConfig(): Promise<PluginManifest> {
     try {
-      const response = await fetch('/src/config/plugins.json');
+      const pluginsUrl = `${import.meta.env.BASE_URL}config/plugins.json`;
+      const response = await fetch(pluginsUrl);
+
+      // If plugins.json doesn't exist (404), return empty manifest with defaults
+      if (response.status === 404) {
+        console.warn('[PluginConfigService] plugins.json not found, using default configuration');
+        this.manifest = this.createDefaultManifest();
+        return this.manifest;
+      }
+
       if (!response.ok) {
         throw new Error(`Failed to load plugins.json: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
-      
+
       // Validate with Zod schema
       const validated = PluginManifestSchema.parse(data);
-      
+
       // Apply defaults
       this.manifest = {
         ...validated,
@@ -28,7 +37,7 @@ export class PluginConfigService {
           ...validated.settings,
         },
       };
-      
+
       // Validate plugin IDs are unique
       const ids = new Set<string>();
       for (const plugin of this.manifest.plugins) {
@@ -36,7 +45,7 @@ export class PluginConfigService {
           throw new Error(`Duplicate plugin ID: ${plugin.id}`);
         }
         ids.add(plugin.id);
-        
+
         // Validate routes start with /plugins/{pluginId}/
         for (const menuItem of plugin.menuItems) {
           if (!menuItem.route.startsWith(`/plugins/${plugin.id}/`)) {
@@ -47,7 +56,7 @@ export class PluginConfigService {
           }
         }
       }
-      
+
       // Validate no route conflicts
       const routes = new Set<string>();
       for (const plugin of this.manifest.plugins) {
@@ -58,16 +67,70 @@ export class PluginConfigService {
           routes.add(menuItem.route);
         }
       }
-      
+
       return this.manifest;
     } catch (error) {
       console.error('[PluginConfigService] Failed to load config:', error);
+
+      // If parsing/validation failed, use default manifest as fallback
+      if (error instanceof Error && !error.message.includes('Failed to load plugins.json')) {
+        console.warn('[PluginConfigService] Using default configuration due to validation error');
+        this.manifest = this.createDefaultManifest();
+        return this.manifest;
+      }
+
       throw error;
     }
   }
 
+  private createDefaultManifest(): PluginManifest {
+    return {
+      version: '1.0',
+      plugins: [],
+      settings: {
+        ...DEFAULT_MANIFEST_SETTINGS,
+      },
+    };
+  }
+
   getManifest(): PluginManifest | null {
     return this.manifest;
+  }
+
+  getNavigationSettings(): { enabledCoreItems?: string[], disabledCoreItems?: string[] } | null {
+    return this.manifest?.settings?.navigation || null;
+  }
+
+  getPrimaryColor(): string | null {
+    return this.manifest?.settings?.theme?.primaryColor || null;
+  }
+
+  getLogoUrl(): string | null {
+    const logoUrl = this.manifest?.settings?.theme?.logoUrl || null;
+    console.log('[PluginConfigService] getLogoUrl called, returning:', logoUrl);
+    return logoUrl;
+  }
+
+  isCoreNavigationItemEnabled(itemId: string): boolean {
+    const navSettings = this.getNavigationSettings();
+
+    // If no navigation settings, all items are enabled by default
+    if (!navSettings) {
+      return true;
+    }
+
+    // If item is in disabledCoreItems, it's disabled (takes precedence)
+    if (navSettings.disabledCoreItems?.includes(itemId)) {
+      return false;
+    }
+
+    // If enabledCoreItems is specified and item is not in it, it's disabled
+    if (navSettings.enabledCoreItems && !navSettings.enabledCoreItems.includes(itemId)) {
+      return false;
+    }
+
+    // Otherwise, enabled
+    return true;
   }
 
   onChange(callback: (manifest: PluginManifest) => void): () => void {
@@ -85,7 +148,8 @@ export class PluginConfigService {
 
   setupHotReload(): void {
     if (import.meta.hot && this.manifest?.settings?.enableHotReload) {
-      import.meta.hot.accept('/src/config/plugins.json', async () => {
+      const pluginsUrl = `${import.meta.env.BASE_URL}config/plugins.json`;
+      import.meta.hot.accept(pluginsUrl, async () => {
         try {
           const oldManifest = this.manifest;
           await this.loadConfig();

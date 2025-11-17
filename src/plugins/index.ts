@@ -24,6 +24,13 @@ export async function initializePluginFramework(authContext: AuthContext): Promi
     const manifest = await pluginConfigService.loadConfig();
     console.log(`[PluginFramework] Loaded ${manifest.plugins.length} plugin(s)`);
 
+    // If no plugins configured, skip plugin loading but mark as initialized
+    if (manifest.plugins.length === 0) {
+      console.log('[PluginFramework] No plugins configured, skipping plugin loading');
+      initialized = true;
+      return;
+    }
+
     // Create plugin loader
     pluginLoader = new PluginLoader(pluginRegistry);
 
@@ -53,7 +60,9 @@ export async function initializePluginFramework(authContext: AuthContext): Promi
     console.log('[PluginFramework] Initialization complete');
   } catch (error) {
     console.error('[PluginFramework] Initialization failed:', error);
-    throw error;
+    // Don't throw error - allow app to continue without plugins
+    console.warn('[PluginFramework] Continuing without plugin support');
+    initialized = true;
   }
 }
 

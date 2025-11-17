@@ -22,9 +22,7 @@
 
     <v-main>
       <!-- Configuration validation warnings (FR-016) -->
-      <v-container class="pt-4">
-        <ConfigurationWarningBanner />
-      </v-container>
+      <ConfigurationWarningBanner />
 
       <router-view />
     </v-main>

@@ -1,23 +1,44 @@
 <template>
   <header class="nav-bar">
     <div class="nav-bar__container">
-      <img
-        :src="logoOhdsiOnlySrc"
-        alt="OHDSI"
-        class="nav-bar__ohdsi-logo"
-      >
+      <!-- Debug: Show what's being rendered -->
+      <!-- Custom logo (when configured) -->
       <div
-        class="nav-bar__logo"
+        v-if="customLogoUrl"
+        class="nav-bar__logo nav-bar__logo--custom"
         role="button"
         tabindex="0"
         @click="handleLogoClick"
       >
         <img
-          :src="logoSrc"
-          alt="ATLAS"
-          height="20"
+          :src="customLogoUrl"
+          alt="Logo"
+          class="nav-bar__custom-logo"
+          @error="handleLogoError"
+          @load="handleLogoLoad"
         >
       </div>
+
+      <!-- Default logos (OHDSI + ATLAS) -->
+      <template v-else>
+        <img
+          :src="logoOhdsiOnlySrc"
+          alt="OHDSI"
+          class="nav-bar__ohdsi-logo"
+        >
+        <div
+          class="nav-bar__logo"
+          role="button"
+          tabindex="0"
+          @click="handleLogoClick"
+        >
+          <img
+            :src="logoSrc"
+            alt="ATLAS"
+            height="20"
+          >
+        </div>
+      </template>
       <!-- Full menu for larger screens -->
       <nav class="nav-bar__nav d-none d-md-block">
         <ul class="nav-bar__nav-list">
@@ -160,6 +181,7 @@ import { useUIStore } from '@/stores/ui'
 import { authConfig } from '@/config/auth.config'
 import { generatePluginMenuItems, type PluginMenuItem } from '@/plugins/navigation/PluginMenuIntegration.ts'
 import { pluginRegistry } from '@/plugins/core/PluginRegistry'
+import { pluginConfigService } from '@/services/PluginConfigService'
 import LoginModal from '@/components/auth/LoginModal.vue'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
@@ -180,26 +202,33 @@ const uiStore = useUIStore()
 
 const logoSrc = logoSvg
 const logoOhdsiOnlySrc = logoOhdsiOnlyPng
+const customLogoUrl = ref<string | null>(null)
 
 const signInLabel = t('components.userBar.signin', 'Sign In')
 const signOutLabel = t('components.userBar.signout', 'Sign Out')
 
-const navigationItems = ref<NavigationItem[]>([
+// Core navigation items (will be filtered based on plugin configuration)
+const coreNavigationItems: NavigationItem[] = [
   { id: 'datasources', titleKey: 'navigation.datasources', route: '/datasources', visible: true, active: false },
   { id: 'concepts', titleKey: 'navigation.conceptsets', route: '/concepts', visible: true, active: false },
   { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true }
-])
+]
+
+const navigationItems = ref<NavigationItem[]>(getFilteredCoreNavigationItems())
+
+function getFilteredCoreNavigationItems(): NavigationItem[] {
+  return coreNavigationItems.filter(item =>
+    pluginConfigService.isCoreNavigationItemEnabled(item.id)
+  )
+}
 
 // Load plugin menu items
 function loadPluginMenuItems() {
   try {
     const pluginMenuItems = generatePluginMenuItems()
 
-    // Remove existing plugin menu items first to avoid duplicates
-    // Keep only the core navigation items (datasources, concepts, cohorts)
-    navigationItems.value = navigationItems.value.filter(item =>
-      !item.id.includes('-') // Plugin IDs contain hyphens (e.g., "hello-world-plugin-main")
-    )
+    // Start with filtered core navigation items based on plugin configuration
+    navigationItems.value = getFilteredCoreNavigationItems()
 
     // Add plugin menu items to navigation
     pluginMenuItems.forEach((pluginItem: PluginMenuItem) => {
@@ -238,6 +267,14 @@ const handleLogoClick = async () => {
   router.push('/')
 }
 
+const handleLogoError = (event: Event) => {
+  console.error('[NavBar] Custom logo failed to load:', customLogoUrl.value, event)
+}
+
+const handleLogoLoad = () => {
+  console.log('[NavBar] Custom logo loaded successfully:', customLogoUrl.value)
+}
+
 const handleNavClick = async (item: NavigationItem) => {
   await router.isReady()
   navigationItems.value.forEach(navItem => {
@@ -272,6 +309,17 @@ const updateActiveNavFromRoute = () => {
 }
 
 onMounted(() => {
+  // Load custom logo if configured
+  customLogoUrl.value = pluginConfigService.getLogoUrl()
+  console.log('[NavBar] Custom logo URL:', customLogoUrl.value)
+  console.log('[NavBar] customLogoUrl is truthy?', !!customLogoUrl.value)
+
+  // Watch for plugin config changes and update logo
+  pluginConfigService.onChange(() => {
+    customLogoUrl.value = pluginConfigService.getLogoUrl()
+    console.log('[NavBar] Logo updated from config change:', customLogoUrl.value)
+  })
+
   // Load plugin menu items initially (will be empty if plugins haven't loaded yet)
   loadPluginMenuItems()
 
@@ -352,6 +400,21 @@ onMounted(() => {
   display: block;
 }
 
+.nav-bar__logo--custom {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+  margin-left: 1rem;
+  cursor: pointer;
+}
+
+.nav-bar__custom-logo {
+  display: block;
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+}
+
 .nav-bar__right {
   display: flex;
   align-items: center;
@@ -395,7 +458,7 @@ onMounted(() => {
 .nav-bar__nav-link {
   display: inline-block;
   padding: 18px 12px;
-  color: #1f425a;
+  color: rgb(var(--v-theme-primary));
   font-weight: 400;
   text-decoration: none;
   transition: color 0.15s ease-in-out;
@@ -403,7 +466,7 @@ onMounted(() => {
 }
 
 .nav-bar__nav-link:hover {
-  color: #2d5f7f;
+  color: rgb(var(--v-theme-accent));
 }
 
 /* Reduce font size on lg breakpoint (1280px-1919px) for better fit */
@@ -425,7 +488,7 @@ onMounted(() => {
   left: 0;
   height: 0.5rem;
   width: 100%;
-  background-color: #1f425a;
+  background-color: rgb(var(--v-theme-primary));
   border-radius: 0.5rem 0.5rem 0 0;
 }
 </style>

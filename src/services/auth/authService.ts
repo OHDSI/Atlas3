@@ -104,14 +104,13 @@ class AuthService implements IAuthService {
       } else {
         // OAuth/redirect provider - ensure proper URL with slash
         const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-        
-        // Save current route for post-OAuth redirect
-        const currentRoute = window.location.pathname + window.location.search
-        if (currentRoute !== '/') {
-          sessionStorage.setItem('oauth_redirect_destination', currentRoute)
-        }
-        
-        window.location.href = `${baseUrl}${provider}`
+
+        // Build redirect URL with hash route (Atlas pattern)
+        const hashRoute = window.location.hash
+        const loginUrl = `${baseUrl}${provider}`
+
+        // Redirect with optional redirectUrl parameter for hash routes
+        window.location.href = hashRoute ? `${loginUrl}?redirectUrl=${encodeURIComponent(hashRoute)}` : loginUrl
         return
       }
 
@@ -311,16 +310,22 @@ class AuthService implements IAuthService {
   async fetchOAuthProviders(): Promise<AuthProvider[]> {
     try {
       const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-      const response = await fetch(`${baseUrl}user/oauth/providers`, {
+      const url = `${baseUrl}user/oauth/providers`
+      console.log('[Auth] Fetching OAuth providers from:', url)
+
+      const response = await fetch(url, {
         method: 'GET',
       })
 
+      console.log('[Auth] OAuth providers response status:', response.status)
+
       if (!response.ok) {
-        console.warn('[Auth] Failed to fetch OAuth providers from WebAPI')
+        console.warn('[Auth] Failed to fetch OAuth providers from WebAPI - status:', response.status)
         return []
       }
 
       const providers = await response.json()
+      console.log('[Auth] OAuth providers from WebAPI:', providers)
       return Array.isArray(providers) ? providers : []
     } catch (error) {
       console.error('[Auth] Error fetching OAuth providers:', error)

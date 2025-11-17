@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 import { authConfig } from '@/config/auth.config'
@@ -109,8 +109,8 @@ const loadingProviders = ref(false)
 const isAuthenticating = computed(() => auth.isAuthenticating.value)
 const errorMessage = computed(() => auth.errorMessage.value)
 
-// Fetch OAuth providers from WebAPI on mount
-onMounted(async () => {
+// Function to fetch providers from WebAPI
+async function fetchProviders() {
   loadingProviders.value = true
   try {
     const fetchedProviders = await authService.fetchOAuthProviders()
@@ -130,35 +130,43 @@ onMounted(async () => {
   } finally {
     loadingProviders.value = false
   }
-})
+}
 
+// Don't fetch on mount - wait for modal to open to ensure fresh data
+
+// Watch for modal open/close and fetch providers when it opens
 watch(
   () => auth.loginModalOpen.value,
-  (newValue) => {
-    if (newValue && providers.value.length === 1) {
-      const firstProvider = providers.value[0]
-      if (firstProvider) {
-        selectProvider(firstProvider)
+  async (newValue) => {
+    if (newValue) {
+      // Reset selection first
+      selectedProvider.value = null
+
+      // Fetch fresh providers whenever modal opens
+      await fetchProviders()
+
+      // IMPORTANT: Wait for providers to be fetched before auto-selecting
+      // This ensures we use the backend's isUseCredentialsForm value, not env var
+      // Only auto-select if it's a credentials form (not OAuth redirect)
+      if (providers.value.length === 1) {
+        const firstProvider = providers.value[0]
+        if (firstProvider && firstProvider.isUseCredentialsForm) {
+          selectProvider(firstProvider)
+        }
       }
-    } else if (!newValue) {
+    } else {
+      // Reset state when modal closes
       selectedProvider.value = null
     }
   }
 )
 
 function selectProvider(provider: AuthProvider) {
-  console.log('[LoginModal] Provider selected:', provider)
-  console.log('[LoginModal] isUseCredentialsForm:', provider.isUseCredentialsForm)
-  console.log('[LoginModal] ajax:', provider.ajax)
-
   selectedProvider.value = provider
 
   // For OAuth/redirect providers (non-AJAX), trigger redirect via authService
   if (!provider.isUseCredentialsForm && !provider.ajax) {
-    console.log('[LoginModal] Triggering OAuth redirect to:', provider.url)
     auth.login(provider.url)
-  } else {
-    console.log('[LoginModal] Not triggering redirect - isUseCredentialsForm:', provider.isUseCredentialsForm, 'ajax:', provider.ajax)
   }
 }
 

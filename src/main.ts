@@ -5,7 +5,8 @@
 import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
-import vuetify from './plugins/vuetify'
+import { createVuetifyInstance } from './plugins/vuetify'
+import { pluginConfigService } from './services/PluginConfigService'
 import App from './App.vue'
 import { setupAuthInterceptor } from './services/auth/authInterceptor'
 import { useAuthStore } from './stores/auth'
@@ -62,19 +63,39 @@ use([
   SVGRenderer
 ])
 
-const app = createApp(App)
+// Initialize app creation function (will be called after loading plugin config)
+async function initializeApp() {
+  // Load plugin configuration to get theme settings
+  let primaryColor: string | null = null
+  try {
+    await pluginConfigService.loadConfig()
+    primaryColor = pluginConfigService.getPrimaryColor()
+    if (primaryColor) {
+      console.log('[Main] Using custom primary color from plugins.json:', primaryColor)
+    }
+  } catch (error) {
+    console.warn('[Main] Failed to load plugin config for theme, using defaults:', error)
+  }
 
-// Register ECharts component globally
-app.component('VChart', ECharts)
+  // Create Vuetify instance with custom theme
+  const vuetify = createVuetifyInstance(primaryColor)
 
-// Install Pinia (state management)
-app.use(createPinia())
+  const app = createApp(App)
 
-// Install Vue Router
-app.use(router)
+  // Register ECharts component globally
+  app.component('VChart', ECharts)
 
-// Install Vuetify (UI framework)
-app.use(vuetify)
+  // Install Pinia (state management)
+  app.use(createPinia())
+
+  // Install Vue Router
+  app.use(router)
+
+  // Install Vuetify (UI framework)
+  app.use(vuetify)
+
+  return app
+}
 
 // Setup authentication interceptor
 setupAuthInterceptor()
@@ -82,13 +103,15 @@ setupAuthInterceptor()
 // Setup plugin message handler
 setupGlobalMessageHandler(router)
 
-// Initialize stores
-const authStore = useAuthStore()
-const localeStore = useLocaleStore()
+// Initialize and mount the app
+initializeApp().then(async (app) => {
+  // Initialize stores
+  const authStore = useAuthStore()
+  const localeStore = useLocaleStore()
 
-// Mount app first, then initialize stores asynchronously
-// This ensures the app is interactive immediately
-router.isReady().then(async () => {
+  // Mount app first, then initialize stores asynchronously
+  // This ensures the app is interactive immediately
+  await router.isReady().then(async () => {
   // Load configuration early (eager loading - FR-001)
   console.log('[Config] Loading atlas-config.json...')
   try {
@@ -154,8 +177,11 @@ router.isReady().then(async () => {
       console.error('[App] Plugin framework initialization failed:', error);
     }
   })
+  }).catch((error) => {
+    console.error('[App] Router initialization failed:', error)
+    // Mount anyway
+    app.mount('#app')
+  })
 }).catch((error) => {
-  console.error('[App] Router initialization failed:', error)
-  // Mount anyway
-  app.mount('#app')
+  console.error('[App] Application initialization failed:', error)
 })

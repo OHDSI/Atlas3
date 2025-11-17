@@ -6,12 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atlas Cohort Builder</title>
     <!-- Load SystemJS before everything else -->
-    <script src="/node_modules/systemjs/dist/system.js"></script>
-    <script src="/node_modules/systemjs/dist/extras/named-register.js"></script>
+    <script src="/Atlas/vendor/system.js"></script>
+    <script src="/Atlas/vendor/named-register.js"></script>
     <!-- Load Vue globally so SystemJS plugins can use it -->
-    <script src="/node_modules/vue/dist/vue.global.js"></script>
+    <script src="/Atlas/vendor/vue.global.js"></script>
+    <!-- Load Vue Router globally -->
+    <script src="/Atlas/vendor/vue-router.global.js"></script>
     <script>
-      // Register Vue with SystemJS using import map and module registration
+      // Register dependencies with SystemJS
       (function() {
         'use strict';
 
@@ -26,50 +28,86 @@
           return;
         }
 
-        console.log('[SystemJS] Registering Vue module...', Object.keys(window.Vue).slice(0, 10));
+        console.log('[SystemJS] Registering modules...');
 
-        // Create a module wrapper for Vue - SystemJS expects a plain object
-        var vueModule = window.Vue;
-
-        // Use System.register to define the 'vue' module
-        // This creates a proper module that can be imported
+        // Register Vue module
         window.System.register('vue', [], function(_export, _context) {
           'use strict';
           return {
             setters: [],
             execute: function() {
               // Export the entire Vue object as default
-              _export('default', vueModule);
+              _export('default', window.Vue);
 
-              // Export commonly used named exports
-              _export('h', vueModule.h);
-              _export('createApp', vueModule.createApp);
-              _export('ref', vueModule.ref);
-              _export('reactive', vueModule.reactive);
-              _export('computed', vueModule.computed);
-              _export('watch', vueModule.watch);
-              _export('onMounted', vueModule.onMounted);
-              _export('onUnmounted', vueModule.onUnmounted);
-              _export('provide', vueModule.provide);
-              _export('inject', vueModule.inject);
-              _export('nextTick', vueModule.nextTick);
-              _export('defineComponent', vueModule.defineComponent);
-              _export('toRefs', vueModule.toRefs);
-              _export('toRef', vueModule.toRef);
+              // Export all Vue APIs (comprehensive list)
+              var vueExports = [
+                'h', 'createApp', 'ref', 'reactive', 'computed', 'watch',
+                'onMounted', 'onUnmounted', 'provide', 'inject', 'nextTick',
+                'defineComponent', 'toRefs', 'toRef', 'createElementBlock',
+                'openBlock', 'createCommentVNode', 'createElementVNode',
+                'createBlock', 'createVNode', 'withCtx', 'renderList',
+                'Fragment', 'Teleport', 'Suspense', 'KeepAlive', 'Transition',
+                'TransitionGroup', 'withDirectives', 'resolveComponent',
+                'resolveDirective', 'resolveDynamicComponent', 'mergeProps',
+                'toHandlers', 'renderSlot', 'createSlots', 'withModifiers',
+                'withKeys', 'vShow', 'vModelText', 'vModelCheckbox',
+                'vModelRadio', 'vModelSelect', 'vModelDynamic', 'shallowRef',
+                'shallowReactive', 'readonly', 'shallowReadonly', 'isRef',
+                'isReactive', 'isReadonly', 'isProxy', 'toRaw', 'markRaw',
+                'unref', 'proxyRefs', 'customRef', 'triggerRef', 'watchEffect',
+                'watchPostEffect', 'watchSyncEffect', 'onBeforeMount',
+                'onBeforeUpdate', 'onUpdated', 'onBeforeUnmount', 'onActivated',
+                'onDeactivated', 'onErrorCaptured', 'onRenderTracked',
+                'onRenderTriggered', 'onServerPrefetch', 'getCurrentInstance',
+                'useSlots', 'useAttrs', 'useCssModule', 'useCssVars'
+              ];
 
-              console.log('[SystemJS] Vue module exports registered');
+              vueExports.forEach(function(key) {
+                if (window.Vue[key]) {
+                  _export(key, window.Vue[key]);
+                }
+              });
+
+              console.log('[SystemJS] Vue module registered with', vueExports.length, 'exports');
             }
           };
         });
 
-        console.log('[SystemJS] Vue module registered successfully');
+        // Register Vue Router module
+        window.System.register('vue-router', [], function(_export, _context) {
+          'use strict';
+          return {
+            setters: [],
+            execute: function() {
+              _export('default', window.VueRouter);
+              _export('createRouter', window.VueRouter.createRouter);
+              _export('createWebHistory', window.VueRouter.createWebHistory);
+              _export('useRouter', window.VueRouter.useRouter);
+              _export('useRoute', window.VueRouter.useRoute);
 
-        // Verify the module is accessible
-        window.System.import('vue').then(function(module) {
-          console.log('[SystemJS] Vue module import test successful - has h:', !!module.h, 'has createApp:', !!module.createApp);
-        }).catch(function(err) {
-          console.error('[SystemJS] Vue module import test failed:', err);
+              console.log('[SystemJS] Vue Router module registered');
+            }
+          };
         });
+
+        // Load and register single-spa-vue
+        window.System.import('/Atlas/vendor/single-spa-vue.js').then(function(module) {
+          console.log('[SystemJS] single-spa-vue loaded:', module);
+          // Register it under the 'single-spa-vue' name
+          window.System.register('single-spa-vue', [], function(_export) {
+            return {
+              setters: [],
+              execute: function() {
+                _export('default', module.default);
+                console.log('[SystemJS] single-spa-vue module registered');
+              }
+            };
+          });
+        }).catch(function(err) {
+          console.error('[SystemJS] Failed to load single-spa-vue:', err);
+        });
+
+        console.log('[SystemJS] Module registration started');
       })();
     </script>
   </head>

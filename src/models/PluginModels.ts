@@ -58,6 +58,14 @@ export interface PluginManifest {
     loadTimeout?: number;
     pluginsPath?: string;
     showLoadingIndicators?: boolean;
+    navigation?: {
+      enabledCoreItems?: string[]; // List of core navigation items to show (e.g., ['datasources', 'concepts', 'cohorts'])
+      disabledCoreItems?: string[]; // List of core navigation items to hide (takes precedence over enabledCoreItems)
+    };
+    theme?: {
+      primaryColor?: string; // Primary theme color override (hex color code, e.g., '#1f425a')
+      logoUrl?: string; // Custom logo URL/path (replaces default OHDSI + ATLAS logos)
+    };
   };
 }
 
@@ -181,6 +189,9 @@ export const PluginRegistrationSchema = z.object({
   }).optional(),
 });
 
+// Hex color validation regex (supports 3, 4, 6, and 8 digit hex codes)
+const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3}|[A-Fa-f0-9]{8}|[A-Fa-f0-9]{4})$/;
+
 export const PluginManifestSchema = z.object({
   version: z.string(),
   plugins: z.array(PluginRegistrationSchema),
@@ -189,6 +200,14 @@ export const PluginManifestSchema = z.object({
     loadTimeout: z.number().optional(),
     pluginsPath: z.string().optional(),
     showLoadingIndicators: z.boolean().optional(),
+    navigation: z.object({
+      enabledCoreItems: z.array(z.string()).optional(),
+      disabledCoreItems: z.array(z.string()).optional(),
+    }).optional(),
+    theme: z.object({
+      primaryColor: z.string().regex(hexColorRegex, 'Invalid hex color for primaryColor').optional(),
+      logoUrl: z.string().optional(),
+    }).optional(),
   }).optional(),
 });
 

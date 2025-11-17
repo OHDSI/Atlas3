@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "plugins": [],
+  "settings": {
+    "enableHotReload": true,
+    "loadTimeout": 30000,
+    "pluginsPath": "plugins",
+    "showLoadingIndicators": true,
+    "navigation": {
+      "enabledCoreItems": ["datasources", "concepts", "cohorts"]
+    },
+    "theme": {
+      "primaryColor": "#1f425a",
+      "logoUrl": "/custom-assets/my-logo.svg"
+    }
+  }
+}

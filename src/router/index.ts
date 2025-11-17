@@ -68,6 +68,12 @@ const router = createRouter({
       component: () => import('@/views/LandingView.vue'),
       meta: { isOpenIDCallback: true },
     },
+    {
+      path: '/:client/:token/:redirectUrl?',
+      name: 'oauth-token',
+      component: () => import('@/views/LandingView.vue'),
+      meta: { isOAuthCallback: true },
+    },
     ...generatePluginRoutes(),
   ],
 })
@@ -83,24 +89,78 @@ router.beforeEach(async (to, _from, next) => {
   
   if (isAuthCallback) {
     const authStore = useAuthStore()
-    
+
     try {
-      // Check for token in URL query parameters (some OAuth providers use this)
-      const token = to.query.token as string
-      
-      if (token) {
-        console.log('[OAuth] Token received in URL')
-        authStore.setToken(token)
-        
+      // Check for token in localStorage (Atlas pattern - backend sets this)
+      const localStorageToken = localStorage.getItem('bearerToken')
+      if (localStorageToken && localStorageToken !== 'null' && localStorageToken !== 'undefined') {
+        authStore.setToken(localStorageToken)
+
         // Fetch user info
         const { authService } = await import('@/services/auth/authService')
         const userInfo = await authService.fetchUserInfo()
         authStore.setUser(userInfo)
-        
+        authStore.setAuthClient('OpenID')
+
         // Restore destination URL or redirect to home
         const destination = sessionStorage.getItem('oauth_redirect_destination')
         sessionStorage.removeItem('oauth_redirect_destination')
-        
+
+        next(destination || '/')
+        return
+      }
+
+      // Check for token in URL path parameters (WebAPI pattern: /:client/:token/:redirectUrl?)
+      const tokenFromPath = to.params.token as string
+      const clientFromPath = to.params.client as string
+      const redirectUrlFromPath = to.params.redirectUrl as string
+
+      if (tokenFromPath) {
+        console.log('[OAuth] Token received in URL path (WebAPI pattern)')
+        console.log('[OAuth] Client:', clientFromPath)
+        console.log('[OAuth] Redirect URL:', redirectUrlFromPath)
+
+        authStore.setToken(tokenFromPath)
+
+        // Fetch user info
+        const { authService } = await import('@/services/auth/authService')
+        const userInfo = await authService.fetchUserInfo()
+        authStore.setUser(userInfo)
+        authStore.setAuthClient(clientFromPath || 'OpenID')
+
+        // Use redirectUrl from path or restore from sessionStorage
+        let destination = redirectUrlFromPath ? decodeURIComponent(redirectUrlFromPath) : null
+        if (!destination) {
+          destination = sessionStorage.getItem('oauth_redirect_destination')
+          sessionStorage.removeItem('oauth_redirect_destination')
+        }
+
+        // If destination matches the base path, redirect to root to avoid duplication
+        const basePath = import.meta.env.BASE_URL.replace(/\/$/, '')
+        if (destination === basePath || destination === `${basePath}/`) {
+          destination = '/'
+        }
+
+        next(destination || '/')
+        return
+      }
+
+      // Check for token in URL query parameters (some OAuth providers use this)
+      const token = to.query.token as string
+
+      if (token) {
+        console.log('[OAuth] Token received in URL query')
+        authStore.setToken(token)
+
+        // Fetch user info
+        const { authService } = await import('@/services/auth/authService')
+        const userInfo = await authService.fetchUserInfo()
+        authStore.setUser(userInfo)
+
+        // Restore destination URL or redirect to home
+        const destination = sessionStorage.getItem('oauth_redirect_destination')
+        sessionStorage.removeItem('oauth_redirect_destination')
+
         next(destination || '/')
         return
       }
@@ -160,16 +220,17 @@ router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, 
   }
 
   // Check if route requires authentication
-  const requiresAuth = to.meta.requiresAuth !== false // Default to true unless explicitly set to false
+  const requiresAuth = to.meta.requiresAuth === true // Default to false unless explicitly set to true
 
   if (requiresAuth) {
     const authStore = useAuthStore()
 
     // If not authenticated, show login modal and stay on current page
-    if (!authStore.isAuthenticated) {
+    // BUT only if authentication is actually enabled
+    if (!authStore.isAuthenticated && authConfig.userAuthenticationEnabled) {
       console.log('[Router] Route requires auth, opening login modal')
       authStore.openLoginModal()
-      
+
       // Allow navigation anyway - login modal will overlay
       // This prevents redirect loops and allows the app to render
       next()

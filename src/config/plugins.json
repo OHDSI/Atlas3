@@ -26,6 +26,13 @@
     "enableHotReload": true,
     "loadTimeout": 30000,
     "pluginsPath": "plugins",
-    "showLoadingIndicators": true
+    "showLoadingIndicators": true,
+    "navigation": {
+      "enabledCoreItems": ["datasources", "concepts", "cohorts"]
+    },
+    "theme": {
+      "primaryColor": "#1f425a",
+      "logoUrl": "https://www.ohdsi.org/wp-content/uploads/2015/02/h243-ohdsi-logo-with-text.png"
+    }
   }
 }
