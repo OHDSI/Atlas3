@@ -1,6 +1,10 @@
-# Atlas
+# Atlas3
 
-A modern web application for OHDSI ATLAS cohort definition and analysis, built with Vue 3 and TypeScript.
+> **⚠️ Development Version**: This is Atlas 3.0, a new version of OHDSI ATLAS currently under active development.
+>
+> **For the stable production-ready version (2.15), please visit: [github.com/OHDSI/Atlas](https://github.com/OHDSI/Atlas)**
+
+A complete reimplementation of OHDSI ATLAS for cohort definition and analysis, built with Vue 3 and TypeScript.
 
 ## Overview
 
@@ -154,7 +158,7 @@ Atlas supports a plugin architecture based on single-spa. Plugins can:
 
 ## Related Projects
 
-- [OHDSI ATLAS](https://github.com/OHDSI/Atlas) - Original ATLAS application
+- [OHDSI ATLAS](https://github.com/OHDSI/Atlas) - Stable ATLAS 2.15 release (production-ready)
 - [WebAPI](https://github.com/OHDSI/WebAPI) - Backend API service
 
 ## Support
