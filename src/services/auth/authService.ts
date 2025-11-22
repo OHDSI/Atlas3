@@ -152,10 +152,10 @@ class AuthService implements IAuthService {
 
     try {
       const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-      
+
       // Get auth client to determine logout method
       const authClient = storageManager.getAuthClient()
-      
+
       if (authClient === 'IAP') {
         // Google IAP logout - redirect to IAP logout URL
         console.log('[Auth] Performing Google IAP logout')
@@ -164,20 +164,43 @@ class AuthService implements IAuthService {
       } else if (authClient === 'SAML') {
         // SAML Single Logout
         console.log('[Auth] Performing SAML Single Logout')
-        await fetch(`${baseUrl}user/logout/saml`, {
+        const response = await fetch(`${baseUrl}user/logout/saml`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${authStore.token}`,
           },
         })
+
+        // Check if the response contains a redirect URL (auth-proxy OIDC logout)
+        if (response.ok) {
+          const data = await response.json().catch(() => null)
+          if (data?.redirect) {
+            console.log('[Auth] Redirecting to OIDC logout endpoint:', data.redirect)
+            authStore.clearAuth()
+            window.location.href = data.redirect
+            return
+          }
+        }
       } else {
         // Standard logout for other providers
-        await fetch(`${baseUrl}user/logout`, {
+        console.log('[Auth] Performing standard logout')
+        const response = await fetch(`${baseUrl}user/logout`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${authStore.token}`,
           },
         })
+
+        // Check if the response contains a redirect URL (auth-proxy OIDC logout)
+        if (response.ok) {
+          const data = await response.json().catch(() => null)
+          if (data?.redirect) {
+            console.log('[Auth] Redirecting to OIDC logout endpoint:', data.redirect)
+            authStore.clearAuth()
+            window.location.href = data.redirect
+            return
+          }
+        }
       }
     } catch (error) {
       console.error('Logout API call failed:', error)
