@@ -41,14 +41,8 @@ function handleTileClick(sourceKey: string) {
 
 <style scoped>
 .tiles-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: 1fr; /* Mobile-first: 1 column */
-}
-
-@media (min-width: 1280px) {
-  .tiles-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2 columns on large screens */
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 </style>

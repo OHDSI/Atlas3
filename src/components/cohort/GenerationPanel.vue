@@ -48,52 +48,54 @@
           {{ t('components.generation.pickAtLeastOneSourceAlert', 'No data sources configured.') }}
         </v-alert>
 
-        <!-- Show reports when a data source is selected -->
-        <transition
-          name="slide-fade"
-          mode="out-in"
-        >
-          <div
-            v-if="showReports && selectedSourceKey"
-            key="reports"
-          >
-            <report-panel
-              :cohort-id="cohortId ?? 0"
-              :source-key="selectedSourceKey"
-              :is-open="showReports"
-              @close="handleCloseReports"
+        <!-- Layout: Data sources on left, reports on right -->
+        <div class="generation-layout">
+          <!-- Left: Data source tiles (fixed width) -->
+          <div class="generation-layout__sidebar">
+            <p class="text-subtitle-1 font-weight-medium mb-4">
+              {{ t('navigation.datasources', 'Data Sources') }}
+            </p>
+            <data-source-tile-grid
+              :cohort-id="cohortId"
+              :sources="sources"
+              @tile-click="handleDataSourceClick"
             />
           </div>
 
-          <!-- Grid layout (data sources + analysis options) -->
-          <div
-            v-else
-            key="grid"
-            class="generation-grid"
-          >
-            <!-- Left: Data source tiles (40%) -->
-            <div class="generation-grid__tiles">
-              <p class="text-subtitle-1 font-weight-medium mb-4">
-                {{ t('navigation.datasources', 'Data Sources') }}
-              </p>
-              <data-source-tile-grid
-                :cohort-id="cohortId"
-                :sources="sources"
-                @tile-click="handleDataSourceClick"
-              />
-            </div>
-
-            <!-- Right: Analysis options (60%) -->
-            <div class="generation-grid__analysis">
-              <p class="text-subtitle-1 font-weight-medium mb-4">
-                {{ t('cohortDefinitions.cohort.modals.analysisTypes.title', 'Analysis Options') }}
-              </p>
-              <div class="text-body-2 text-grey">
-                {{ t('profiles.selectADataSource', 'Select a Data Source') }}
+          <!-- Right: Reports or placeholder -->
+          <div class="generation-layout__content">
+            <transition
+              name="slide-fade"
+              mode="out-in"
+            >
+              <div
+                v-if="showReports && selectedSourceKey"
+                key="reports"
+                class="h-100"
+              >
+                <report-panel
+                  :cohort-id="cohortId ?? 0"
+                  :source-key="selectedSourceKey"
+                  :is-open="showReports"
+                  @close="handleCloseReports"
+                />
               </div>
-            </div>
+
+              <div
+                v-else
+                key="placeholder"
+                class="placeholder-content"
+              >
+                <p class="text-subtitle-1 font-weight-medium mb-2">
+                  {{ t('cohortDefinitions.cohort.modals.analysisTypes.title', 'Analysis Options') }}
+                </p>
+                <div class="text-body-2 text-grey">
+                  {{ t('profiles.selectADataSource', 'Select a Data Source') }}
+                </div>
+              </div>
+            </transition>
           </div>
-        </transition>
+        </div>
       </v-card-text>
     </v-card>
   </v-navigation-drawer>
@@ -173,24 +175,42 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.generation-grid {
-  display: grid;
-  grid-template-columns: 40% 60%;
-  gap: 2rem;
+.generation-layout {
+  display: flex;
+  gap: 1.5rem;
   min-height: 100%;
 }
 
-.generation-grid__tiles {
-  /* Left column styles */
+.generation-layout__sidebar {
+  flex: 0 0 300px; /* Fixed width for data sources */
+  min-width: 300px;
+  max-width: 300px;
 }
 
-.generation-grid__analysis {
-  /* Right column styles */
+.generation-layout__content {
+  flex: 1;
+  min-width: 0; /* Allow content to shrink if needed */
+}
+
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
 }
 
 @media (max-width: 959px) {
-  .generation-grid {
-    grid-template-columns: 1fr;
+  .generation-layout {
+    flex-direction: column;
+  }
+
+  .generation-layout__sidebar {
+    flex: 0 0 auto;
+    min-width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -198,7 +218,7 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid rgb(var(--v-border-color));
 }
 
-/* T051: Transition animations for switching between grid and report views */
+/* Transition animations for switching between placeholder and report views */
 .slide-fade-enter-active {
   transition: all 0.3s ease-out;
 }
