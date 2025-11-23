@@ -209,8 +209,8 @@ test.describe('Cohorts List', () => {
     const importButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /import/i }).first()
     await importButton.click()
 
-    // Verify dialog opens
-    await expect(page.locator('.v-dialog').filter({ hasText: /import cohort/i })).toBeVisible()
+    // Verify dialog opens (dialog just shows "Import" as title)
+    await expect(page.locator('.v-dialog').filter({ hasText: /import/i })).toBeVisible()
   })
 
   test.skip('should open materialize dialog when clicking materialize icon', async ({ page }) => {
@@ -417,7 +417,10 @@ test.describe('Accessibility', () => {
   })
 
   test('should have visible focus states', async ({ page }) => {
+    // Setup mocks before navigation
+    await setupBasicMocks(page)
     await page.goto('/Atlas/cohorts')
+    await waitForNetworkIdle(page)
     await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
 
     // Focus first interactive element
