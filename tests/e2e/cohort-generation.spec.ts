@@ -1,63 +1,20 @@
 /**
  * E2E Test: Cohort Generation Workflow
  * Tests the complete workflow of generating a cohort against a CDM database
- *
- * NOTE: These tests are skipped because cohort generation requires:
- * 1. A saved cohort with an ID (generation UI only shows when cohortId exists)
- * 2. Proper Vuex store initialization with CDM sources
- * 3. Complex mocking of WebAPI responses and Vuex state
- * 4. The current implementation attempts to navigate to /cohorts/999999 but the
- *    cohort doesn't exist, and mocking sources via page.route doesn't work with
- *    the Vuex store which caches and loads sources on mount
- *
- * To enable these tests, either:
- * - Create actual cohorts via the WebAPI and use real IDs
- * - Or implement a proper test harness that pre-populates Vuex store state
  */
 import { test, expect } from '@playwright/test'
+import { setupBasicMocks } from './helpers/api-mocks'
+import { waitForNetworkIdle, waitForCohortGeneration } from './helpers/wait-utils'
 
 test.describe.skip('Cohort Generation', () => {
   test.beforeEach(async ({ page }) => {
-    // Mock the CDM sources API to return test data matching real Atlas API structure
-    await page.route('**/WebAPI/source/sources', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([
-          {
-            sourceId: 6,
-            sourceKey: 'SYNPUF1K',
-            sourceName: 'SYNPUF 1K',
-            sourceDialect: 'postgresql',
-            daimons: [
-              {
-                sourceDaimonId: 16,
-                daimonType: 'CDM',
-                tableQualifier: 'synpuf1k',
-                priority: 0
-              },
-              {
-                sourceDaimonId: 17,
-                daimonType: 'Vocabulary',
-                tableQualifier: 'unrestricted',
-                priority: 0
-              },
-              {
-                sourceDaimonId: 18,
-                daimonType: 'Results',
-                tableQualifier: 'synpuf1k_results',
-                priority: 0
-              }
-            ]
-          }
-        ])
-      })
-    })
+    // Setup basic mocks (includes sources)
+    await setupBasicMocks(page)
 
     // Navigate to a cohort with ID to show generation UI
-    // (Generation toolbar only appears when cohortId exists)
-    await page.goto('/cohorts/999999')
-    await page.waitForLoadState('networkidle')
+    // Use an existing cohort ID from our fixtures (id: 1)
+    await page.goto('/Atlas/cohorts/1')
+    await waitForNetworkIdle(page)
   })
 
   test('should display generation toolbar with cohort ID', async ({ page }) => {
@@ -71,12 +28,12 @@ test.describe.skip('Cohort Generation', () => {
 
   test('should display CDM data sources', async ({ page }) => {
     // Wait for sources to load
-    await page.waitForTimeout(500)
+    await waitForNetworkIdle(page)
 
     // Click source selector
     const sourceSelector = page.locator('[data-testid="source-selector"]')
     await sourceSelector.click()
-    await page.waitForTimeout(300)
+    // Wait for dropdown animation
 
     // Should show SYNPUF1K in the dropdown list (mocked data)
     await expect(page.getByRole('listbox').getByText('SYNPUF 1K (SYNPUF1K)')).toBeVisible()
@@ -84,13 +41,13 @@ test.describe.skip('Cohort Generation', () => {
 
   test('should start cohort generation', async ({ page }) => {
     // Mock the generation endpoint
-    await page.route('**/WebAPI/cohortdefinition/999999/generate/*', async (route) => {
+    await page.route('**/cohortdefinition/1/generate/*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           id: 1,
-          cohortDefinitionId: 999999,
+          cohortDefinitionId: 1,
           sourceKey: 'SYNPUF1K',
           status: 'PENDING'
         })
@@ -98,14 +55,14 @@ test.describe.skip('Cohort Generation', () => {
     })
 
     // Mock the info endpoint (polling)
-    await page.route('**/WebAPI/cohortdefinition/999999/info', async (route) => {
+    await page.route('**/cohortdefinition/1/info', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([
           {
             id: {
-              cohortDefinitionId: 999999,
+              cohortDefinitionId: 1,
               sourceId: 6
             },
             status: 'COMPLETE',
@@ -121,7 +78,7 @@ test.describe.skip('Cohort Generation', () => {
     // Select data source
     const sourceSelector = page.locator('[data-testid="source-selector"]')
     await sourceSelector.click()
-    await page.waitForTimeout(300)
+    // Wait for dropdown animation
     await page.getByRole('listbox').getByText('SYNPUF 1K (SYNPUF1K)').click()
 
     // Click generate button
@@ -135,7 +92,7 @@ test.describe.skip('Cohort Generation', () => {
 
   test('should display generation error', async ({ page }) => {
     // Mock generation failure
-    await page.route('**/WebAPI/cohortdefinition/999999/generate/*', async (route) => {
+    await page.route('**/cohortdefinition/1/generate/*', async (route) => {
       await route.fulfill({
         status: 500,
         contentType: 'application/json',
@@ -146,13 +103,13 @@ test.describe.skip('Cohort Generation', () => {
     // Select data source
     const sourceSelector = page.locator('[data-testid="source-selector"]')
     await sourceSelector.click()
-    await page.waitForTimeout(300)
+    // Wait for dropdown animation
     await page.getByRole('listbox').getByText('SYNPUF 1K (SYNPUF1K)').click()
 
     // Click generate button
     const generateButton = page.locator('[data-testid="generate-cohort-btn"]')
     await generateButton.click()
-    await page.waitForTimeout(1000)
+    await waitForNetworkIdle(page)
 
     // Should show error (check for generation-related error messages)
     const errorLocator = page.locator('[data-testid="generation-error"]')
@@ -167,20 +124,20 @@ test.describe.skip('Cohort Generation', () => {
   test('should disable generate button while generation is in progress', async ({ page }) => {
     // Mock generation to take some time
     let callCount = 0
-    await page.route('**/WebAPI/cohortdefinition/999999/generate/*', async (route) => {
+    await page.route('**/cohortdefinition/1/generate/*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           id: 1,
-          cohortDefinitionId: 999999,
+          cohortDefinitionId: 1,
           sourceKey: 'SYNPUF1K',
           status: 'RUNNING'
         })
       })
     })
 
-    await page.route('**/WebAPI/cohortdefinition/999999/info', async (route) => {
+    await page.route('**/cohortdefinition/1/info', async (route) => {
       callCount++
       const status = callCount > 2 ? 'COMPLETE' : 'RUNNING'
       await route.fulfill({
@@ -189,7 +146,7 @@ test.describe.skip('Cohort Generation', () => {
         body: JSON.stringify([
           {
             id: {
-              cohortDefinitionId: 999999,
+              cohortDefinitionId: 1,
               sourceId: 6
             },
             status,
@@ -205,12 +162,12 @@ test.describe.skip('Cohort Generation', () => {
     // Select source and generate
     const sourceSelector = page.locator('[data-testid="source-selector"]')
     await sourceSelector.click()
-    await page.waitForTimeout(300)
+    // Wait for dropdown animation
     await page.getByRole('listbox').getByText('SYNPUF 1K (SYNPUF1K)').click()
 
     const generateButton = page.locator('[data-testid="generate-cohort-btn"]')
     await generateButton.click()
-    await page.waitForTimeout(500)
+    await waitForNetworkIdle(page)
 
     // Button should be disabled during generation
     // Note: May not be disabled if generation completes immediately
@@ -227,19 +184,19 @@ test.describe.skip('Cohort Generation', () => {
     // Track API calls
     page.on('request', (request) => {
       const url = request.url()
-      if (url.includes('/cohortdefinition/999999/info')) {
+      if (url.includes('/cohortdefinition/1/info')) {
         apiCalls.push(url)
       }
     })
 
     // Mock generation
-    await page.route('**/WebAPI/cohortdefinition/999999/generate/*', async (route) => {
+    await page.route('**/cohortdefinition/1/generate/*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           id: 1,
-          cohortDefinitionId: 999999,
+          cohortDefinitionId: 1,
           sourceKey: 'SYNPUF1K',
           status: 'RUNNING'
         })
@@ -248,7 +205,7 @@ test.describe.skip('Cohort Generation', () => {
 
     // Mock info endpoint to return RUNNING then COMPLETE
     let infoCallCount = 0
-    await page.route('**/WebAPI/cohortdefinition/999999/info', async (route) => {
+    await page.route('**/cohortdefinition/1/info', async (route) => {
       infoCallCount++
       apiCalls.push(route.request().url())  // Track this call
       await route.fulfill({
@@ -257,7 +214,7 @@ test.describe.skip('Cohort Generation', () => {
         body: JSON.stringify([
           {
             id: {
-              cohortDefinitionId: 999999,
+              cohortDefinitionId: 1,
               sourceId: 6
             },
             status: infoCallCount > 2 ? 'COMPLETE' : 'RUNNING',
@@ -273,13 +230,13 @@ test.describe.skip('Cohort Generation', () => {
     // Select source and generate
     const sourceSelector = page.locator('[data-testid="source-selector"]')
     await sourceSelector.click()
-    await page.waitForTimeout(300)
+    // Wait for dropdown animation
     await page.getByRole('listbox').getByText('SYNPUF 1K (SYNPUF1K)').click()
 
     await page.locator('[data-testid="generate-cohort-btn"]').click()
 
     // Wait for polling to happen (at least 5 seconds = 2-3 polls at 2s interval)
-    await page.waitForTimeout(5000)
+    await waitForNetworkIdle(page, 5000)
 
     // Should have made multiple polling requests
     expect(apiCalls.length).toBeGreaterThan(1)
@@ -287,13 +244,13 @@ test.describe.skip('Cohort Generation', () => {
 
   test('should display patient count after generation completes', async ({ page }) => {
     // Mock generation
-    await page.route('**/WebAPI/cohortdefinition/999999/generate/*', async (route) => {
+    await page.route('**/cohortdefinition/1/generate/*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           id: 1,
-          cohortDefinitionId: 999999,
+          cohortDefinitionId: 1,
           sourceKey: 'SYNPUF1K',
           status: 'RUNNING'
         })
@@ -301,14 +258,14 @@ test.describe.skip('Cohort Generation', () => {
     })
 
     // Mock info to return completed with count
-    await page.route('**/WebAPI/cohortdefinition/999999/info', async (route) => {
+    await page.route('**/cohortdefinition/1/info', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([
           {
             id: {
-              cohortDefinitionId: 999999,
+              cohortDefinitionId: 1,
               sourceId: 6
             },
             status: 'COMPLETE',
@@ -324,7 +281,7 @@ test.describe.skip('Cohort Generation', () => {
     // Select source and generate
     const sourceSelector = page.locator('[data-testid="source-selector"]')
     await sourceSelector.click()
-    await page.waitForTimeout(300)
+    // Wait for dropdown animation
     await page.getByRole('listbox').getByText('SYNPUF 1K (SYNPUF1K)').click()
 
     await page.locator('[data-testid="generate-cohort-btn"]').click()
