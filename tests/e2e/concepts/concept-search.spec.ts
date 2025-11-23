@@ -48,8 +48,8 @@ test.describe('Concept Search', () => {
       }
     }
     
-    // Verify table structure exists
-    const table = page.locator('table')
+    // Verify table structure exists (use first() since there are multiple tables on page)
+    const table = page.locator('table').first()
     await expect(table).toBeVisible()
   })
 
@@ -67,8 +67,8 @@ test.describe('Concept Search', () => {
     // Wait for results
     await page.waitForTimeout(2000)
     
-    // Check if we have a table with results
-    const table = page.locator('table')
+    // Check if we have a table with results (use first() since there are multiple tables on page)
+    const table = page.locator('table').first()
     await expect(table).toBeVisible({ timeout: 5000 })
     
     // If there are results, try to sort

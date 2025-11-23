@@ -404,6 +404,7 @@ test.describe('Accessibility', () => {
   })
 
   test('should support keyboard navigation', async ({ page }) => {
+    await page.goto('/Atlas/cohorts')
     await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
 
     // Tab through interactive elements
