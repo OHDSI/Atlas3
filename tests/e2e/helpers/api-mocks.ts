@@ -19,6 +19,13 @@ import {
  * This includes sources, translations, and common endpoints
  */
 export async function setupBasicMocks(page: Page) {
+  // Auto-accept license agreement to prevent dialog from blocking tests
+  await page.addInitScript(() => {
+    const LICENSE_ACCEPTANCE_KEY = 'atlas3-license-acceptance-date'
+    // Set acceptance date to current time to bypass license dialog
+    localStorage.setItem(LICENSE_ACCEPTANCE_KEY, Date.now().toString())
+  })
+
   // Mock CDM sources endpoint
   await page.route('**/source/sources', async (route: Route) => {
     await route.fulfill({
