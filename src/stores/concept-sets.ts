@@ -13,7 +13,11 @@ import {
 } from '@/services/concept-set.service'
 import type { ConceptSet, ConceptSetListItem, ConceptSetItem } from '@/models/concept-set.types'
 import type { Concept } from '@/models/concept-set.types'
+import type { Version, VersionedAsset } from '@/components/versions/types'
 import { conceptToConceptSetItem } from '@/utils/api-mappers'
+import {
+  getVersion as getVersionAPI,
+} from '@/services/concept-set-versions.service'
 
 // Debounce utility
 function debounce<T extends (...args: any[]) => any>(
@@ -46,6 +50,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   const error = ref<string | null>(null)
   const filterTerm = ref<string>('')
   const editorOpen = ref<boolean>(false)
+
+  // Version preview state (T017)
+  const previewVersion = ref<Version | null>(null)
+  const isDirty = ref<boolean>(false)
 
   // ============================================================================
   // Getters
@@ -313,10 +321,107 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    */
   function isConceptInSet(conceptId: number): boolean {
     if (!currentSet.value) return false
-    
+
     return currentSet.value.items.some(
       (item) => item.conceptId === conceptId
     )
+  }
+
+  // ============================================================================
+  // Version Preview Actions (T018-T020)
+  // ============================================================================
+
+  /**
+   * Load a specific version for preview
+   * Fetches the historical version data and sets it as current with preview flag
+   * @param versionNumber - The version number to load
+   */
+  async function loadVersionPreview(versionNumber: number): Promise<void> {
+    if (!currentSet.value?.id) {
+      console.error('[ConceptSetsStore] Cannot load version preview: no current concept set ID')
+      throw new Error('No current concept set ID')
+    }
+
+    const conceptSetId = currentSet.value.id
+    if (typeof conceptSetId !== 'number') {
+      console.error('[ConceptSetsStore] Concept set ID must be a number for version preview')
+      throw new Error('Concept set ID must be a number')
+    }
+
+    try {
+      loading.value = true
+      const versionedAsset: VersionedAsset<ConceptSet> = await getVersionAPI(conceptSetId, versionNumber)
+
+      // Set preview version metadata
+      previewVersion.value = versionedAsset.versionDTO
+
+      // Replace current concept set with historical data
+      currentSet.value = versionedAsset.entityDTO
+
+      // Mark as clean (read-only mode, no editing)
+      isDirty.value = false
+
+      console.log(`[ConceptSetsStore] Loaded version ${versionNumber} for preview`)
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : `Failed to load version ${versionNumber}`
+      console.error(`[ConceptSetsStore] Failed to load version ${versionNumber}:`, err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Clear preview state and reload current version
+   * Returns to normal editing mode
+   */
+  async function clearPreviewVersion(): Promise<void> {
+    const wasPreviewingId = currentSet.value?.id
+
+    // Clear preview state
+    previewVersion.value = null
+
+    // Reload current version if we were previewing
+    if (wasPreviewingId) {
+      await fetchOne(wasPreviewingId)
+    }
+
+    console.log('[ConceptSetsStore] Preview cleared, returned to current version')
+  }
+
+  /**
+   * Save the currently previewed version as the new current version
+   * Creates a new version with the historical data
+   */
+  async function savePreviewAsCurrent(): Promise<boolean> {
+    if (!previewVersion.value) {
+      console.error('[ConceptSetsStore] Cannot save preview: not in preview mode')
+      return false
+    }
+
+    if (!currentSet.value) {
+      console.error('[ConceptSetsStore] Cannot save preview: no concept set data')
+      return false
+    }
+
+    try {
+      // Save the current (historical) data as new version
+      const result = await update(currentSet.value)
+
+      if (result) {
+        // Clear preview state after successful save
+        previewVersion.value = null
+        isDirty.value = false
+        console.log('[ConceptSetsStore] Preview saved as current version')
+        return true
+      }
+
+      return false
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to save preview as current'
+      console.error('[ConceptSetsStore] Failed to save preview as current:', err)
+      return false
+    }
   }
 
   // ============================================================================
@@ -331,6 +436,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     error,
     filterTerm,
     editorOpen,
+    previewVersion,
+    isDirty,
 
     // Getters
     filteredSets,
@@ -347,11 +454,16 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     openEditEditor,
     closeEditor,
     clearError,
-    
+
     // Phase 5: Building actions
     addConceptToSet,
     removeConceptFromSet,
     toggleConceptFlag,
     isConceptInSet,
+
+    // Version preview (T018-T020)
+    loadVersionPreview,
+    clearPreviewVersion,
+    savePreviewAsCurrent,
   }
 })

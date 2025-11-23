@@ -51,6 +51,7 @@
         :loading="store.loading"
         :items-per-page="itemsPerPage"
         :items-per-page-text="t('datatable.language.lengthMenu', 'Rows per page:').value"
+        :sort-by="[{ key: 'id', order: 'desc' }]"
         class="elevation-1"
       >
         <!-- Name -->

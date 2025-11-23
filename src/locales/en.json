@@ -2803,6 +2803,12 @@
     "addAttribute": "Add Attribute...",
     "noAttributesAdded": "No attributes added"
   },
+  "cohortBuilder": {
+    "tabs": {
+      "definition": "Definition",
+      "versions": "Versions"
+    }
+  },
   "cohortDefinitions": {
     "closeYourCurrentCohort": "Please close your current cohort definition before creating a new one",
     "cohort": {
@@ -4689,5 +4695,51 @@
       "editTagGroup": "Edit tag group %{name}",
       "deleteTagGroup": "Delete tag group %{name}"
     }
+  },
+  "versions": {
+    "tab": "Versions",
+    "current": "Current",
+    "version": "Version",
+    "author": "Author",
+    "created": "Created",
+    "comment": "Comment",
+    "actions": "Actions",
+    "addComment": "Add comment",
+    "editComment": "Edit comment",
+    "preview": "Preview",
+    "copy": "Create a copy",
+    "backToCurrent": "Back to current version",
+    "saveAsCurrent": "Save as current version",
+    "versionPreview": "Version {version} Preview",
+    "previewingVersion": "You are viewing Version {version}",
+    "confirmSaveAsCurrent": "Save this version as the current version?",
+    "confirmSaveAsCurrentMessage": "This will save the preview as a new current version. The existing draft will be replaced.",
+    "unsavedChanges": "You have unsaved changes. Proceeding will discard them. Continue?",
+    "filterByAuthor": "Filter by author",
+    "filterByDate": "Filter by date",
+    "loadError": "Unable to load version history. Please try again later.",
+    "previewError": "Unable to load version preview. Please try again.",
+    "copySuccess": "Copy created successfully",
+    "copyError": "Failed to create copy. Please try again.",
+    "commentSaved": "Comment saved successfully",
+    "commentSaveError": "Failed to save comment. Please try again.",
+    "versionNotFound": "Version not found. It may have been deleted.",
+    "saveSuccess": "Version saved as current successfully",
+    "saveError": "Failed to save version as current. Please try again.",
+    "previewTitle": "%{name} - Version %{version} Preview",
+    "loadingVersions": "Loading version history...",
+    "loadingPreview": "Loading version preview...",
+    "noVersions": "No version history available",
+    "commentPlaceholder": "Add a comment to describe this version...",
+    "commentDialogTitle": "Edit Version Comment",
+    "commentMaxLength": "Comment must be 500 characters or less",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "filterClear": "Clear filters",
+    "filterApply": "Apply filters",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "noComment": "No comment"
   }
 }

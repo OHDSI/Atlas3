@@ -9,8 +9,15 @@
       <span class="cohort-builder__breadcrumb-separator">›</span>
       <span class="cohort-builder__breadcrumb-item cohort-builder__breadcrumb-item--active">
         {{ cohortName || t('cohortDefinitions.newDefinition') }}
+        <span
+          v-if="isPreviewingVersion"
+          class="cohort-builder__preview-indicator"
+        >
+          - {{ t('versions.versionPreview', { version: cohortStore.previewVersion?.version || '' }) }}
+        </span>
       </span>
       <v-tooltip
+        v-if="!isPreviewingVersion"
         :text="t('columns.name', 'Name').value"
         location="bottom"
       >
@@ -26,6 +33,31 @@
         </template>
       </v-tooltip>
     </nav>
+
+    <!-- Back to Current Version Button -->
+    <div
+      v-if="isPreviewingVersion"
+      class="cohort-builder__preview-banner"
+    >
+      <v-alert
+        type="info"
+        variant="tonal"
+        density="compact"
+        class="mb-4"
+      >
+        <div class="d-flex align-center justify-space-between">
+          <span>{{ t('versions.previewingVersion', { version: cohortStore.previewVersion?.version || '' }) }}</span>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            prepend-icon="mdi-arrow-left"
+            @click="handleBackToCurrent"
+          >
+            {{ t('versions.backToCurrent', 'Back to Current') }}
+          </v-btn>
+        </div>
+      </v-alert>
+    </div>
 
     <!-- Edit Name Dialog -->
     <v-dialog
@@ -72,6 +104,7 @@
       </v-card>
     </v-dialog>
 
+    <!-- Definition Content -->
     <!-- Top Toolbar -->
     <div class="cohort-builder__toolbar">
       <div class="cohort-builder__toolbar-left">
@@ -82,6 +115,8 @@
             v-model="cohortDescription"
             class="cohort-builder__description-input d-none d-md-inline-block"
             :placeholder="t('columns.description', 'Description').value"
+            :disabled="isPreviewingVersion"
+            :readonly="isPreviewingVersion"
             data-testid="cohort-description-input"
           >
           <!-- Icon button for smaller screens -->
@@ -149,6 +184,31 @@
                 data-testid="concept-sets-icon"
                 style="cursor: pointer"
                 @click="showConceptSetsDialog = true"
+              />
+            </v-badge>
+          </template>
+        </v-tooltip>
+
+        <!-- Versions Icon -->
+        <v-tooltip
+          v-if="cohortId"
+          :text="t('versions.tab', 'Versions').value"
+          location="bottom"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <v-badge
+              v-bind="tooltipProps"
+              :content="versionCount"
+              color="primary"
+              class="cohort-builder__validation-badge"
+            >
+              <v-icon
+                color="primary"
+                icon="mdi-history"
+                size="small"
+                data-testid="versions-icon"
+                style="cursor: pointer"
+                @click="showVersionsDialog = true"
               />
             </v-badge>
           </template>
@@ -342,8 +402,9 @@
       </div>
 
       <div class="cohort-builder__toolbar-right">
-        <!-- Cancel Button -->
+        <!-- Cancel Button (hidden when previewing) -->
         <v-btn
+          v-if="!isPreviewingVersion"
           variant="outlined"
           @click="handleCancel"
         >
@@ -353,8 +414,9 @@
           <span class="d-none d-md-inline">{{ t('common.cancel') }}</span>
         </v-btn>
 
-        <!-- Save Button -->
+        <!-- Save Button (hidden when previewing) -->
         <v-btn
+          v-if="!isPreviewingVersion"
           color="primary"
           variant="flat"
           :disabled="!canSave"
@@ -375,9 +437,9 @@
           <span class="d-none d-md-inline">{{ t('common.save') }}</span>
         </v-btn>
 
-        <!-- Generate Button -->
+        <!-- Generate Button (hidden when previewing) -->
         <v-btn
-          v-if="cohortId"
+          v-if="cohortId && !isPreviewingVersion"
           color="orange"
           variant="outlined"
           :disabled="!canSave"
@@ -680,6 +742,37 @@
       </div>
     </v-overlay>
 
+    <!-- Versions Dialog -->
+    <v-dialog
+      v-model="showVersionsDialog"
+      max-width="1200px"
+      scrollable
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon
+            color="primary"
+            class="mr-2"
+          >
+            mdi-history
+          </v-icon>
+          {{ t('versions.tab', 'Versions') }}
+          <v-spacer />
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            @click="showVersionsDialog = false"
+          />
+        </v-card-title>
+        <v-card-text class="pa-0">
+          <versions-tab-content
+            v-if="cohortId"
+            :config="versionsConfig"
+          />
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <!-- Generation Panel -->
     <generation-panel
       v-model="isGenerationPanelOpen"
@@ -689,7 +782,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useCohortStore } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -718,6 +811,10 @@ import ExitCriteriaPanel from '../cohort-builder/ExitCriteriaPanel.vue'
 import CensorWindowEditor from '../cohort-builder/CensorWindowEditor.vue'
 import CriteriaGroupEditor from '../cohort-builder/CriteriaGroupEditor.vue'
 import GenerationPanel from './GenerationPanel.vue'
+import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
+import type { VersionsConfig, User } from '@/components/versions/types'
+import { format, parseISO } from 'date-fns'
+import * as cohortDefinitionVersionsService from '@/services/cohort-definition-versions.service'
 
 interface Props {
   id?: string
@@ -750,6 +847,7 @@ const inclusionQualifyingLimit = ref<QualifyingLimit>('ALL') // For inclusion cr
 // UI state
 const showValidationDialog = ref(false)
 const showConceptSetsDialog = ref(false)
+const showVersionsDialog = ref(false)
 const isGenerationPanelOpen = ref(false)
 
 // UI state
@@ -792,6 +890,22 @@ const cohortId = computed(() => props.id ? Number(props.id) : null)
 const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && entryEvents.value.length > 0
 })
+
+// Preview mode state
+const isPreviewingVersion = computed(() => {
+  return !!cohortStore.previewVersion
+})
+
+/**
+ * Navigate back to the current version from a preview
+ */
+async function handleBackToCurrent(): Promise<void> {
+  if (!cohortId.value) return
+
+  await router.push({
+    path: `/cohortdefinition/${cohortId.value}/version/current`,
+  })
+}
 
 /**
  * Create a snapshot of the current cohort state for change detection
@@ -903,6 +1017,74 @@ const usedConceptSets = computed(() => {
 
   return Array.from(conceptSetsMap.values())
 })
+
+// Versions configuration
+const versionsConfig = computed<VersionsConfig>(() => {
+  return {
+    assetType: 'cohortdefinition',
+    assetId: cohortId.value ?? 0,
+    currentVersion: () => {
+    const cohort = cohortStore.currentCohort
+    if (!cohort) {
+      return {
+        version: -1,
+        displayVersion: 'Current',
+        assetId: 0,
+        createdBy: { id: 0, name: 'Unknown' },
+        createdDate: new Date().toISOString(),
+        comment: null,
+        archived: false,
+        isCurrent: true,
+        isPreviewing: false,
+        formattedDate: '',
+      }
+    }
+
+    const dateStr = cohort.modifiedDate || cohort.createdDate
+    // Handle createdBy/modifiedBy which may be null or have different structure
+    const userInfo = cohort.modifiedBy || cohort.createdBy
+    const createdBy: User = userInfo && typeof userInfo === 'object' && 'name' in userInfo
+      ? userInfo as User
+      : { id: 0, name: 'Unknown' }
+
+    return {
+      version: -1,
+      displayVersion: 'Current',
+      assetId: cohort.id ?? 0,
+      createdBy,
+      createdDate: typeof dateStr === 'number' ? new Date(dateStr).toISOString() : (dateStr || new Date().toISOString()),
+      comment: null,
+      archived: false,
+      isCurrent: true,
+      isPreviewing: false,
+      formattedDate: dateStr ? format(typeof dateStr === 'number' ? new Date(dateStr) : parseISO(dateStr), 'PPpp') : '',
+    }
+  },
+  previewVersion: toRef(cohortStore, 'previewVersion'),
+  canEdit: computed(() => true), // TODO: Add actual permission check
+  isDirty: toRef(cohortStore, 'isDirty'),
+}})
+
+// Version count for badge display
+const versionCount = ref(0)
+
+// Load version count when cohort is loaded
+watch(cohortId, async (id) => {
+  if (id) {
+    try {
+      console.log('[Version Count] Fetching versions for cohort ID:', id)
+      const versions = await cohortDefinitionVersionsService.getVersions(id)
+      console.log('[Version Count] Retrieved versions:', versions)
+      versionCount.value = versions.length
+      console.log('[Version Count] Version count set to:', versionCount.value)
+    } catch (err) {
+      console.error('Failed to load version count:', err)
+      versionCount.value = 0
+    }
+  } else {
+    versionCount.value = 0
+  }
+}, { immediate: true })
 
 onMounted(async () => {
   // Start loading cohort definition immediately (don't await)
@@ -1960,5 +2142,27 @@ function _getStatusText(status: string): string {
   color: #333;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Tabs */
+.cohort-builder__tabs {
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.cohort-builder__tabs-window {
+  margin-top: 0;
+}
+
+/* Preview mode indicators */
+.cohort-builder__preview-indicator {
+  color: rgb(var(--v-theme-warning));
+  font-weight: normal;
+  font-size: 0.9em;
+  margin-left: 4px;
+}
+
+.cohort-builder__preview-banner {
+  margin-bottom: 16px;
 }
 </style>
