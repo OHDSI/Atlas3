@@ -120,7 +120,7 @@ test.describe('Concept Set CRUD Operations', () => {
   /**
    * Delete concept set
    */
-  test.skip('should delete a concept set', async ({ page }) => {
+  test('should delete a concept set', async ({ page }) => {
     // Prefer deleting an existing concept set if present; otherwise skip
     const tableRows = page.locator('table tbody tr')
     if ((await tableRows.count()) === 0) {
@@ -167,7 +167,7 @@ test.describe('Concept Set CRUD Operations', () => {
   /**
    * Filter concept sets by name
    */
-  test.skip('should filter concept sets by name', async ({ page }) => {
+  test('should filter concept sets by name', async ({ page }) => {
     // Get initial row count
     const table = page.locator('table tbody')
     const initialRows = await table.locator('tr').count()
