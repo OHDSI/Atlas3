@@ -389,6 +389,7 @@ test.describe('Performance', () => {
 
 test.describe('Accessibility', () => {
   test('should have accessible button labels', async ({ page }) => {
+    await setupBasicMocks(page)
     await page.goto('/Atlas/cohorts')
     await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
 
@@ -408,6 +409,7 @@ test.describe('Accessibility', () => {
   })
 
   test('should support keyboard navigation', async ({ page }) => {
+    await setupBasicMocks(page)
     await page.goto('/Atlas/cohorts')
     await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
 
