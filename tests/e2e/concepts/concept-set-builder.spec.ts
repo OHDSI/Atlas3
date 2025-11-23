@@ -11,7 +11,7 @@ test.describe.skip('Concept Set Builder', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to concepts page and create a test concept set
     await setupBasicMocks(page)
-    await page.goto('/concepts')
+    await page.goto('/Atlas/concepts')
     
     // Switch to Concept Sets tab
     const conceptSetsTab = page.getByRole('tab', { name: /concept sets/i })

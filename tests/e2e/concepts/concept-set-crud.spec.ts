@@ -9,7 +9,7 @@ test.describe('Concept Set CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to concepts page
     await setupBasicMocks(page)
-    await page.goto('/concepts')
+    await page.goto('/Atlas/concepts')
     
     // Click on "Concept Sets" tab
     const conceptSetsTab = page.getByRole('tab', { name: /concept sets/i })
@@ -347,7 +347,7 @@ test.describe('Concept Set CRUD Operations', () => {
    */
   test.skip('should show loading state while fetching', async ({ page }) => {
     // Navigate to fresh page
-    await page.goto('/concepts')
+    await page.goto('/Atlas/concepts')
     
     // Immediately check for loading indicator
     const loadingIndicator = page.locator('.v-progress-linear, .v-skeleton-loader, .v-data-table--loading')

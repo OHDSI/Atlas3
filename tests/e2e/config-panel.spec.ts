@@ -13,7 +13,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Configuration Panel', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to home page
-    await page.goto('/')
+    await page.goto('/Atlas/')
     await page.waitForLoadState('networkidle')
   })
 
@@ -103,7 +103,7 @@ test.describe('Configuration Panel', () => {
       await page.waitForSelector('.v-navigation-drawer:visible', { timeout: 5000 })
 
       // Navigate to a different route
-      await page.goto('/cohorts')
+      await page.goto('/Atlas/cohorts')
       await page.waitForLoadState('networkidle')
 
       // Panel should be closed
