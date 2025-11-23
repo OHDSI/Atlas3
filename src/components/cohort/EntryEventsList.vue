@@ -112,6 +112,8 @@
         @update="updateEvent"
         @remove="removeEvent(event.id)"
         @select-concept-set="selectConceptSetForEvent(event.id)"
+        @select-concept-set-for-attribute="(attributeIndex) => $emit('select-concept-set-for-attribute', event.id, attributeIndex)"
+        @select-concept-for-attribute="(attributeIndex, domainFilter) => $emit('select-concept-for-attribute', event.id, attributeIndex, domainFilter)"
         @edit-concept-set="$emit('edit-concept-set', $event)"
       />
     </div>
@@ -138,6 +140,8 @@ const emit = defineEmits<{
   'update:events': [events: CohortEvent[]]
   'update:observation-period': [period: ObservationPeriod]
   'select-concept-set': [eventId: string]
+  'select-concept-set-for-attribute': [eventId: string, attributeIndex: number]
+  'select-concept-for-attribute': [eventId: string, attributeIndex: number, domainFilter: string | undefined]
   'edit-concept-set': [conceptSet: any]
 }>()
 

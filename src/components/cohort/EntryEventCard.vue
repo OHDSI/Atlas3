@@ -105,6 +105,8 @@
             @update:cardinality="updateCardinality"
             @update:temporal-window="updateTemporalWindows"
             @add-nested-criteria="addNestedCriteria"
+            @select-concept-set-for-attribute="(attributeIndex) => $emit('select-concept-set-for-attribute', attributeIndex)"
+            @select-concept-for-attribute="(attributeIndex, domainFilter) => $emit('select-concept-for-attribute', attributeIndex, domainFilter)"
           />
         </div>
 
@@ -148,6 +150,8 @@ const emit = defineEmits<{
   'update': [event: CohortEvent]
   'remove': []
   'select-concept-set': []
+  'select-concept-set-for-attribute': [attributeIndex: number]
+  'select-concept-for-attribute': [attributeIndex: number, domainFilter: string | undefined]
   'edit-concept-set': [conceptSet: any]
 }>()
 
@@ -280,6 +284,47 @@ function addAttribute(attributeKey: string, attributeType: string) {
       attributeKey,
       operator: 'CONTAINS',
       value: '',
+    }
+  } else if (attributeType === 'boolean') {
+    newAttribute = {
+      type: 'boolean',
+      attributeKey,
+      value: true,
+    }
+  } else if (attributeType === 'concept') {
+    newAttribute = {
+      type: 'concept',
+      attributeKey,
+      concepts: [],
+    }
+  } else if (attributeType === 'temporalRelationship') {
+    newAttribute = {
+      type: 'temporalRelationship',
+      attributeKey,
+      temporalWindow: {
+        startWindow: undefined,
+        endWindow: undefined
+      },
+    }
+  } else if (attributeType === 'dateAdjustment') {
+    newAttribute = {
+      type: 'dateAdjustment',
+      attributeKey,
+      dateAdjustment: {
+        startWith: 'START_DATE',
+        startOffset: 0,
+        endWith: 'END_DATE',
+        endOffset: 0
+      },
+    }
+  } else if (attributeType === 'userDefinedPeriod') {
+    newAttribute = {
+      type: 'userDefinedPeriod',
+      attributeKey,
+      period: {
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0]
+      },
     }
   }
 

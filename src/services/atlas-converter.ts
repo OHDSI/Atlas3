@@ -278,33 +278,245 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
 }
 
 /**
+ * Helper: Convert text attribute to Atlas format
+ * Atlas format: Direct string value at attribute name key
+ * Example: { StopReason: "patient request" }
+ */
+function convertTextAttribute(attributeKey: string, value: string): any {
+  const attributeName = convertToPascalCase(attributeKey)
+  return { [attributeName]: value }
+}
+
+/**
+ * Helper: Parse text attribute from Atlas format
+ * @param attributeKey The attribute name in camelCase
+ * @param value The string value from Atlas JSON
+ * @returns Internal TextAttribute format
+ */
+export function parseTextAttribute(attributeKey: string, value: string): any {
+  return {
+    type: 'text',
+    attributeKey,
+    operator: 'CONTAINS', // Default operator - can be refined based on attribute config
+    value,
+  }
+}
+
+/**
+ * Helper: Convert boolean attribute to Atlas format
+ * Atlas format: Direct boolean value at attribute name key
+ * Example: { First: true }
+ */
+function convertBooleanAttribute(attributeKey: string, value: boolean): any {
+  const attributeName = convertToPascalCase(attributeKey)
+  return { [attributeName]: value }
+}
+
+/**
+ * Helper: Parse boolean attribute from Atlas format
+ * @param attributeKey The attribute name in camelCase
+ * @param value The boolean value from Atlas JSON
+ * @returns Internal BooleanAttribute format
+ */
+export function parseBooleanAttribute(attributeKey: string, value: boolean): any {
+  return {
+    type: 'boolean',
+    attributeKey,
+    value,
+  }
+}
+
+/**
+ * Helper: Convert concept attribute to Atlas format
+ * Atlas format: Array of concept objects
+ * Example: { Gender: [{ CONCEPT_ID: 8532, CONCEPT_NAME: "Female" }, { CONCEPT_ID: 8507, CONCEPT_NAME: "Male" }] }
+ */
+function convertConceptAttribute(attributeKey: string, concepts: any[]): any {
+  const attributeName = convertToPascalCase(attributeKey)
+  return { [attributeName]: concepts }
+}
+
+/**
+ * Helper: Parse concept attribute from Atlas format
+ * @param attributeKey The attribute name in camelCase
+ * @param concepts Array of concept objects from Atlas JSON
+ * @returns Internal ConceptAttribute format
+ */
+export function parseConceptAttribute(attributeKey: string, concepts: any[]): any {
+  return {
+    type: 'concept',
+    attributeKey,
+    concepts: concepts || [],
+  }
+}
+
+/**
+ * Helper: Convert temporal relationship attribute to Atlas format
+ * Atlas format: Nested StartWindow object with Start/End and reference point flags
+ * Example: { TemporalRelationship: { StartWindow: { Start: {...}, End: {...} } } }
+ */
+function convertTemporalRelationshipAttribute(attributeKey: string, temporalWindow: any): any {
+  const attributeName = convertToPascalCase(attributeKey)
+  const atlasWindow: any = {}
+
+  if (temporalWindow.startWindow) {
+    const startDays = temporalWindow.startWindow.days
+    const endDays = temporalWindow.endWindow?.days
+
+    atlasWindow.StartWindow = {
+      Start: {
+        ...(startDays !== null ? { Days: startDays } : {}),
+        Coeff: temporalWindow.startWindow.beforeAfter === 'AFTER' ? 1 : -1,
+      },
+      End: temporalWindow.endWindow ? {
+        ...(endDays !== null ? { Days: endDays } : {}),
+        Coeff: temporalWindow.endWindow.beforeAfter === 'AFTER' ? 1 : -1,
+      } : undefined,
+      UseIndexEnd: temporalWindow.startWindow.referencePoint === 'INDEX_END',
+      UseEventEnd: temporalWindow.startWindow.referencePoint === 'EVENT_END',
+    }
+  }
+
+  return { [attributeName]: atlasWindow }
+}
+
+/**
+ * Helper: Parse temporal relationship attribute from Atlas format
+ * @param attributeKey The attribute name in camelCase
+ * @param temporalWindowData The temporal window data from Atlas JSON
+ * @returns Internal TemporalRelationshipAttribute format
+ */
+export function parseTemporalRelationshipAttribute(attributeKey: string, temporalWindowData: any): any {
+  return {
+    type: 'temporalRelationship',
+    attributeKey,
+    temporalWindow: {
+      startWindow: temporalWindowData.StartWindow?.Start ? {
+        days: temporalWindowData.StartWindow.Start.Days !== undefined ? temporalWindowData.StartWindow.Start.Days : null,
+        beforeAfter: (temporalWindowData.StartWindow.Start.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
+        referencePoint: temporalWindowData.StartWindow.UseIndexEnd ? 'INDEX_END' :
+                       temporalWindowData.StartWindow.UseEventEnd ? 'EVENT_END' : 'INDEX_START',
+      } : undefined,
+      endWindow: temporalWindowData.StartWindow?.End ? {
+        days: temporalWindowData.StartWindow.End.Days !== undefined ? temporalWindowData.StartWindow.End.Days : null,
+        beforeAfter: (temporalWindowData.StartWindow.End.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
+        referencePoint: temporalWindowData.StartWindow.UseIndexEnd ? 'INDEX_END' :
+                       temporalWindowData.StartWindow.UseEventEnd ? 'EVENT_END' : 'INDEX_START',
+      } : undefined,
+    }
+  }
+}
+
+/**
+ * Helper: Convert date adjustment attribute to Atlas format
+ * Atlas format: DateAdjustment object with StartWith, StartOffset, EndWith, EndOffset
+ * Example: { DateAdjustment: { StartWith: "START_DATE", StartOffset: 0, EndWith: "END_DATE", EndOffset: 30 } }
+ */
+function convertDateAdjustmentAttribute(attributeKey: string, dateAdjustment: any): any {
+  const attributeName = convertToPascalCase(attributeKey)
+  return {
+    [attributeName]: {
+      StartWith: dateAdjustment.startWith,
+      StartOffset: dateAdjustment.startOffset,
+      EndWith: dateAdjustment.endWith,
+      EndOffset: dateAdjustment.endOffset,
+    }
+  }
+}
+
+/**
+ * Helper: Parse date adjustment attribute from Atlas format
+ * @param attributeKey The attribute name in camelCase
+ * @param dateAdjustmentData The date adjustment data from Atlas JSON
+ * @returns Internal DateAdjustmentAttribute format
+ */
+export function parseDateAdjustmentAttribute(attributeKey: string, dateAdjustmentData: any): any {
+  return {
+    type: 'dateAdjustment',
+    attributeKey,
+    dateAdjustment: {
+      startWith: dateAdjustmentData.StartWith || 'START_DATE',
+      startOffset: dateAdjustmentData.StartOffset || 0,
+      endWith: dateAdjustmentData.EndWith || 'END_DATE',
+      endOffset: dateAdjustmentData.EndOffset || 0,
+    }
+  }
+}
+
+/**
+ * Helper: Convert user defined period attribute to Atlas format
+ * Atlas format: PeriodStartDate and PeriodEndDate as separate fields
+ * Example: { PeriodStartDate: "2020-01-01", PeriodEndDate: "2020-12-31" }
+ */
+function convertUserDefinedPeriodAttribute(_attributeKey: string, period: any): any {
+  return {
+    PeriodStartDate: period.startDate,
+    PeriodEndDate: period.endDate,
+  }
+}
+
+/**
+ * Helper: Parse user defined period attribute from Atlas format
+ * @param attributeKey The attribute name in camelCase
+ * @param startDate The period start date from Atlas JSON
+ * @param endDate The period end date from Atlas JSON
+ * @returns Internal UserDefinedPeriodAttribute format
+ */
+export function parseUserDefinedPeriodAttribute(attributeKey: string, startDate: string, endDate: string): any {
+  return {
+    type: 'userDefinedPeriod',
+    attributeKey,
+    period: {
+      startDate,
+      endDate,
+    }
+  }
+}
+
+/**
  * Convert internal attribute to Atlas format
  * Maps camelCase to PascalCase and returns object with attribute as property
  * For example: { age: { operator: 'gte', value: 18 } } becomes { Age: { Op: 'gte', Value: 18 } }
  */
 function convertAttributeToAtlas(attr: EventAttribute): any {
-  const attributeName = convertToPascalCase(attr.attributeKey)
-  const result: any = {}
+  // Handle null/undefined attributes gracefully
+  if (!attr || typeof attr !== 'object' || !attr.type) {
+    console.warn('[atlas-converter] Skipping invalid attribute:', attr)
+    return {}
+  }
 
   if (attr.type === 'numericRange' || attr.type === 'dateRange') {
-    result[attributeName] = {
-      Op: convertOperatorToAtlas(attr.operator),
-      Value: attr.value,
+    const attributeName = convertToPascalCase(attr.attributeKey)
+    const result: any = {
+      [attributeName]: {
+        Op: convertOperatorToAtlas(attr.operator),
+        Value: attr.value,
+      }
     }
     // Only add Extent if it exists
     if (attr.extent !== undefined) {
       result[attributeName].Extent = attr.extent
     }
+    return result
   } else if (attr.type === 'conceptSet') {
     // For concept sets like Gender, Race, etc.
-    result[attributeName] = attr.conceptSet
+    const attributeName = convertToPascalCase(attr.attributeKey)
+    return { [attributeName]: attr.conceptSet }
+  } else if (attr.type === 'concept') {
+    return convertConceptAttribute(attr.attributeKey, attr.concepts)
   } else if (attr.type === 'boolean') {
-    result[attributeName] = attr.value
+    return convertBooleanAttribute(attr.attributeKey, attr.value)
   } else if (attr.type === 'text') {
-    result[attributeName] = attr.value
+    return convertTextAttribute(attr.attributeKey, attr.value)
+  } else if (attr.type === 'temporalRelationship') {
+    return convertTemporalRelationshipAttribute(attr.attributeKey, attr.temporalWindow)
+  } else if (attr.type === 'dateAdjustment') {
+    return convertDateAdjustmentAttribute(attr.attributeKey, attr.dateAdjustment)
+  } else if (attr.type === 'userDefinedPeriod') {
+    return convertUserDefinedPeriodAttribute(attr.attributeKey, attr.period)
   }
 
-  return result
+  return {}
 }
 
 /**
@@ -750,6 +962,21 @@ function extractAttributesFromCriteria(criteriaObj: any): any[] {
       attributeKey: 'first',
       value: criteriaObj.First,
     })
+  }
+
+  // TemporalRelationship - TemporalWindow attribute
+  if (criteriaObj.TemporalRelationship && criteriaObj.TemporalRelationship.StartWindow) {
+    attributes.push(parseTemporalRelationshipAttribute('temporalRelationship', criteriaObj.TemporalRelationship))
+  }
+
+  // DateAdjustment - Date adjustment attribute
+  if (criteriaObj.DateAdjustment && criteriaObj.DateAdjustment.StartWith) {
+    attributes.push(parseDateAdjustmentAttribute('dateAdjustment', criteriaObj.DateAdjustment))
+  }
+
+  // UserDefinedPeriod - Custom period with start and end dates
+  if (criteriaObj.PeriodStartDate && criteriaObj.PeriodEndDate) {
+    attributes.push(parseUserDefinedPeriodAttribute('userDefinedPeriod', criteriaObj.PeriodStartDate, criteriaObj.PeriodEndDate))
   }
 
   return attributes

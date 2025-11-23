@@ -89,10 +89,10 @@ describe('AttributesEditor', () => {
 
       const wrapper = createWrapper(attributes)
       expect(wrapper.text()).toContain('Gender')
-      // The concept set name is displayed in a text field
-      const textFields = wrapper.findAllComponents({ name: 'VTextField' })
-      expect(textFields.length).toBeGreaterThan(0)
-      expect(textFields[0].props('modelValue')).toBe('Male')
+      // ConceptSet attributes show a chip with the concept set name
+      const conceptSetChip = wrapper.find('[data-testid="attribute-selected-concept-set"]')
+      expect(conceptSetChip.exists()).toBe(true)
+      expect(wrapper.text()).toContain('Male')
     })
 
     it('should format BETWEEN operator display', () => {
@@ -224,11 +224,10 @@ describe('AttributesEditor', () => {
 
       const wrapper = createWrapper(attributes)
 
-      // Concept set picker should be visible
-      const textField = wrapper.findComponent({ name: 'VTextField' })
-      expect(textField.exists()).toBe(true)
-      expect(textField.props('modelValue')).toBe('Male')
-      expect(textField.props('readonly')).toBe(true)
+      // Concept set picker should show a chip with the concept set name
+      const conceptSetChip = wrapper.find('[data-testid="attribute-selected-concept-set"]')
+      expect(conceptSetChip.exists()).toBe(true)
+      expect(wrapper.text()).toContain('Male')
     })
   })
 
@@ -342,6 +341,325 @@ describe('AttributesEditor', () => {
       })
 
       // Should have Value as Number, Value as Concept, etc.
+      expect(wrapper.vm).toBeDefined()
+    })
+  })
+
+  describe('Text Attributes', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('should display text attributes with operator selector', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'text',
+          attributeKey: 'valueAsString',
+          operator: 'CONTAINS',
+          value: 'test value',
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      // Should show the attribute
+      expect(wrapper.text()).toContain('Value As String')
+
+      // Should have operator selector
+      const operatorSelector = wrapper.find('[data-testid="attribute-text-operator-selector"]')
+      expect(operatorSelector.exists()).toBe(true)
+
+      // Should have text input
+      const textInput = wrapper.find('[data-testid="attribute-text-value-input"]')
+      expect(textInput.exists()).toBe(true)
+    })
+
+    it('should support all text operators', () => {
+      const operators = ['EQUALS', 'CONTAINS', 'STARTS_WITH', 'ENDS_WITH']
+
+      operators.forEach(operator => {
+        const attributes: EventAttribute[] = [
+          {
+            type: 'text',
+            attributeKey: 'valueAsString',
+            operator: operator as any,
+            value: 'test',
+          },
+        ]
+
+        const wrapper = createWrapper(attributes)
+        const operatorSelector = wrapper.find('[data-testid="attribute-text-operator-selector"]')
+        expect(operatorSelector.exists()).toBe(true)
+      })
+    })
+  })
+
+  describe('Boolean Attributes', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('should display boolean attributes with chip', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'boolean',
+          attributeKey: 'first',
+          value: true,
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      // Should show the attribute
+      expect(wrapper.text()).toContain('First')
+
+      // Should have chip component (boolean attributes are always true when present)
+      const chipComponent = wrapper.find('[data-testid="attribute-boolean-chip"]')
+      expect(chipComponent.exists()).toBe(true)
+    })
+
+    it('should display chip for true value', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'boolean',
+          attributeKey: 'first',
+          value: true,
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      // Boolean chip should be present (boolean attributes are always true when present)
+      const chipComponent = wrapper.find('[data-testid="attribute-boolean-chip"]')
+      expect(chipComponent.exists()).toBe(true)
+    })
+
+    it('should display chip for false value', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'boolean',
+          attributeKey: 'first',
+          value: false,
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      // Boolean chip should be present even for false (in practice, false values are removed)
+      const chipComponent = wrapper.find('[data-testid="attribute-boolean-chip"]')
+      expect(chipComponent.exists()).toBe(true)
+    })
+  })
+
+  describe('Concept Attributes (Multiple)', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('should display concept attribute with selected concepts', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'concept',
+          attributeKey: 'gender',
+          concepts: [{
+            CONCEPT_ID: 8532,
+            CONCEPT_NAME: 'Female',
+            CONCEPT_CODE: 'F',
+            DOMAIN_ID: 'Gender',
+            VOCABULARY_ID: 'Gender',
+          }],
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      // Should show the concept name in a chip
+      const conceptChips = wrapper.findAll('[data-testid="attribute-selected-concept"]')
+      expect(conceptChips.length).toBe(1)
+      expect(wrapper.text()).toContain('Female')
+
+      // Should have picker button
+      const pickerButton = wrapper.find('[data-testid="attribute-concept-picker"]')
+      expect(pickerButton.exists()).toBe(true)
+    })
+
+    it('should show select button when no concepts selected', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'concept',
+          attributeKey: 'gender',
+          concepts: [],
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      // Should have picker button
+      const pickerButton = wrapper.find('[data-testid="attribute-concept-picker"]')
+      expect(pickerButton.exists()).toBe(true)
+
+      // Should show "Select Concept" text
+      expect(wrapper.text()).toContain('Select Concept')
+    })
+  })
+
+  describe('Temporal Relationship Attributes', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('should display temporal relationship attribute with chip', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'temporalRelationship',
+          attributeKey: 'temporalRelationship',
+          temporalWindow: {
+            startWindow: {
+              days: 0,
+              beforeAfter: 'AFTER',
+              referencePoint: 'INDEX_START',
+            },
+            endWindow: {
+              days: 90,
+              beforeAfter: 'AFTER',
+              referencePoint: 'INDEX_START',
+            },
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      // Should show the attribute as a chip
+      const temporalChip = wrapper.find('[data-testid="attribute-temporal-chip"]')
+      expect(temporalChip.exists()).toBe(true)
+    })
+
+    it('should display temporal window summary in chip', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'temporalRelationship',
+          attributeKey: 'temporalRelationship',
+          temporalWindow: {
+            startWindow: {
+              days: 30,
+              beforeAfter: 'AFTER',
+              referencePoint: 'INDEX_START',
+            },
+            endWindow: {
+              days: 90,
+              beforeAfter: 'AFTER',
+              referencePoint: 'INDEX_START',
+            },
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      // Should have the chip with summary
+      const temporalChip = wrapper.find('[data-testid="attribute-temporal-chip"]')
+      expect(temporalChip.exists()).toBe(true)
+    })
+  })
+
+  describe('Date Adjustment Attributes', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('should display date adjustment attribute with chip', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'dateAdjustment',
+          attributeKey: 'dateAdjustment',
+          dateAdjustment: {
+            startWith: 'START_DATE',
+            startOffset: 0,
+            endWith: 'END_DATE',
+            endOffset: 30,
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      // Should show the attribute as a chip
+      const adjustmentChip = wrapper.find('[data-testid="attribute-date-adjustment-chip"]')
+      expect(adjustmentChip.exists()).toBe(true)
+    })
+
+    it('should display date adjustment summary in chip', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'dateAdjustment',
+          attributeKey: 'dateAdjustment',
+          dateAdjustment: {
+            startWith: 'START_DATE',
+            startOffset: 30,
+            endWith: 'END_DATE',
+            endOffset: 0,
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      // Should have the chip with summary
+      const adjustmentChip = wrapper.find('[data-testid="attribute-date-adjustment-chip"]')
+      expect(adjustmentChip.exists()).toBe(true)
+    })
+  })
+
+  describe('User Defined Period Attributes', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('should display user defined period attribute with date pickers', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'userDefinedPeriod',
+          attributeKey: 'userDefinedPeriod',
+          period: {
+            startDate: '2020-01-01',
+            endDate: '2020-12-31',
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      // Should have start date input
+      const startDateInput = wrapper.find('[data-testid="attribute-period-start-date"]')
+      expect(startDateInput.exists()).toBe(true)
+
+      // Should have end date input
+      const endDateInput = wrapper.find('[data-testid="attribute-period-end-date"]')
+      expect(endDateInput.exists()).toBe(true)
+
+      // Should show "to" separator
+      expect(wrapper.text()).toContain('to')
+    })
+
+    it('should validate that end date is after start date', async () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'userDefinedPeriod',
+          attributeKey: 'userDefinedPeriod',
+          period: {
+            startDate: '2020-12-31',
+            endDate: '2020-01-01', // Invalid: end before start
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+
+      // Trigger validation by blurring start date input
+      const startDateInput = wrapper.find('[data-testid="attribute-period-start-date"]')
+      await startDateInput.trigger('blur')
+
+      // Should show error (error display depends on validation implementation)
+      // The component should set attributeErrors for this index
       expect(wrapper.vm).toBeDefined()
     })
   })

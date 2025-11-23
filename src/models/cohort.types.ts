@@ -52,7 +52,7 @@ export interface CohortEvent {
   conceptSet?: ConceptSetReference
   cardinality?: Cardinality
   temporalWindow?: TemporalWindow
-  attributes: EventAttribute[]
+  attributes?: EventAttribute[]
   nestedCriteria?: NestedCriteria
   restrictVisit?: boolean // Event must occur in same visit as index
   ignoreObservationPeriod?: boolean // Event can occur outside observation period

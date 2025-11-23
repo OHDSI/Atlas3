@@ -44,6 +44,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
     // Auto-select first source if none selected
     if (!selectedSource.value && sourcesList.length > 0) {
       selectedSource.value = sourcesList[0]?.sourceKey ?? null
+      console.log('[WebAPI Store] Auto-selected first source:', selectedSource.value, '| All sources:', sourcesList.map(s => s.sourceKey))
     }
   }
 

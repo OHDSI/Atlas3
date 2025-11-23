@@ -349,6 +349,8 @@
                           :has-nested-criteria="!!event.nestedCriteria"
                           @update:model-value="updateEventAttributes(index, $event)"
                           @add-nested-criteria="addNestedCriteria(index)"
+                          @select-concept-set-for-attribute="selectConceptSetForAttribute(index, $event)"
+                          @select-concept-for-attribute="(attributeIndex, domainFilter) => selectConceptForAttribute(index, attributeIndex, domainFilter)"
                         />
                       </div>
 
@@ -431,6 +433,7 @@ const emit = defineEmits<{
   'remove': []
   'select-concept-set': [context: { eventIndex: number; eventId: string } | number]
   'edit-concept-set': [conceptSet: any]
+  'select-concept': [context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined }]
 }>()
 
 // Composables
@@ -467,6 +470,8 @@ const criteriaTypes = computed(() => {
 })
 
 const selectedEventIndex = ref<number | null>(null)
+const selectedAttributeIndex = ref<number>(-1)
+const selectedConceptDomainFilter = ref<string | undefined>(undefined)
 
 // Methods
 
@@ -590,7 +595,22 @@ function emitUpdate() {
 
 function selectConceptSetForEvent(index: number) {
   selectedEventIndex.value = index
+  selectedAttributeIndex.value = -1 // Reset attribute index
   emit('select-concept-set', index)
+}
+
+function selectConceptSetForAttribute(eventIndex: number, attributeIndex: number) {
+  selectedEventIndex.value = eventIndex
+  selectedAttributeIndex.value = attributeIndex
+  selectedConceptDomainFilter.value = undefined
+  emit('select-concept-set', eventIndex)
+}
+
+function selectConceptForAttribute(eventIndex: number, attributeIndex: number, domainFilter: string | undefined) {
+  selectedEventIndex.value = eventIndex
+  selectedAttributeIndex.value = attributeIndex
+  selectedConceptDomainFilter.value = domainFilter
+  emit('select-concept', { eventIndex, attributeIndex, domainFilter })
 }
 
 function clearConceptSet(index: number) {
@@ -603,7 +623,24 @@ function clearConceptSet(index: number) {
 // Method to update event's concept set (called by parent)
 function updateEventConceptSet(index: number, conceptSet: { id: number; name: string }) {
   if (localGroup.value.events[index]) {
-    localGroup.value.events[index].conceptSet = conceptSet
+    // Check if we're updating an attribute's concept set or the event's concept set
+    if (selectedAttributeIndex.value >= 0) {
+      // Update attribute's concept set
+      const event = localGroup.value.events[index]
+      if (event && event.attributes && event.attributes[selectedAttributeIndex.value]) {
+        const attr = event.attributes[selectedAttributeIndex.value]
+        if (attr && attr.type === 'conceptSet') {
+          event.attributes[selectedAttributeIndex.value] = {
+            ...attr,
+            conceptSet: conceptSet
+          }
+        }
+      }
+      selectedAttributeIndex.value = -1 // Reset after update
+    } else {
+      // Update event's concept set
+      localGroup.value.events[index].conceptSet = conceptSet
+    }
     emitUpdate()
   }
 }
@@ -712,6 +749,12 @@ function addAttributeToEvent(eventIndex: number, attributeKey: string, attribute
       attributeKey,
       conceptSet: { id: '', name: '' },
     }
+  } else if (attributeType === 'concept') {
+    newAttribute = {
+      type: 'concept',
+      attributeKey,
+      concepts: [],
+    }
   } else if (attributeType === 'dateRange') {
     newAttribute = {
       type: 'dateRange',
@@ -726,6 +769,44 @@ function addAttributeToEvent(eventIndex: number, attributeKey: string, attribute
       operator: 'CONTAINS',
       value: '',
     }
+  } else if (attributeType === 'boolean') {
+    newAttribute = {
+      type: 'boolean',
+      attributeKey,
+      value: true,
+    }
+  } else if (attributeType === 'temporalRelationship') {
+    newAttribute = {
+      type: 'temporalRelationship',
+      attributeKey,
+      temporalWindow: {
+        startWindow: {
+          days: 0,
+          beforeAfter: 'AFTER',
+          referencePoint: 'INDEX_START',
+        },
+      },
+    }
+  } else if (attributeType === 'dateAdjustment') {
+    newAttribute = {
+      type: 'dateAdjustment',
+      attributeKey,
+      dateAdjustment: {
+        startWith: 'START_DATE',
+        startOffset: 0,
+        endWith: 'END_DATE',
+        endOffset: 0,
+      },
+    }
+  } else if (attributeType === 'userDefinedPeriod') {
+    newAttribute = {
+      type: 'userDefinedPeriod',
+      attributeKey,
+      period: {
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0],
+      },
+    }
   }
 
   // Add the new attribute to the event
@@ -736,9 +817,32 @@ function addAttributeToEvent(eventIndex: number, attributeKey: string, attribute
   emitUpdate()
 }
 
-// Expose method for parent to call
+// Method to update concept attribute (called by parent)
+function updateConceptAttribute(index: number, concepts: any[]) {
+  if (localGroup.value.events[index]) {
+    const event = localGroup.value.events[index]
+    if (event && event.attributes && selectedAttributeIndex.value >= 0) {
+      const attr = event.attributes[selectedAttributeIndex.value]
+      if (attr && attr.type === 'concept') {
+        // Add selected concepts to the existing array (support multi-select)
+        const existingConcepts = attr.concepts || []
+        const newConcepts = [...existingConcepts, ...concepts]
+        event.attributes[selectedAttributeIndex.value] = {
+          ...attr,
+          concepts: newConcepts
+        }
+      }
+      selectedAttributeIndex.value = -1 // Reset after update
+      selectedConceptDomainFilter.value = undefined
+      emitUpdate()
+    }
+  }
+}
+
+// Expose methods for parent to call
 defineExpose({
   updateEventConceptSet,
+  updateConceptAttribute,
 })
 </script>
 

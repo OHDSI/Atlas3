@@ -10,7 +10,7 @@
         <v-icon class="mr-2">
           mdi-magnify
         </v-icon>
-        <span>{{ t('search.title') }}</span>
+        <span>{{ tv('conceptSearch.title') }}</span>
         <v-spacer />
         <v-btn
           icon
@@ -25,8 +25,8 @@
       <v-card-text>
         <v-text-field
           v-model="searchQuery"
-          :label="tv('search.searchConcepts')"
-          :placeholder="tv('search.searchPlaceholder')"
+          :label="tv('conceptSearch.searchLabel')"
+          :placeholder="tv('conceptSearch.searchPlaceholder')"
           variant="outlined"
           density="comfortable"
           prepend-inner-icon="mdi-magnify"
@@ -36,7 +36,7 @@
 
         <v-select
           v-model="selectedDomain"
-          :label="tv('facets.domain')"
+          :label="tv('conceptSearch.filterByDomain')"
           :items="domainOptions"
           variant="outlined"
           density="comfortable"
@@ -44,44 +44,66 @@
           class="mt-3"
         />
 
-        <v-btn
-          color="primary"
-          :loading="isSearching"
-          :disabled="!searchQuery || searchQuery.length < 2"
-          class="mt-3"
-          @click="performSearch"
-        >
-          {{ t('common.search') }}
-        </v-btn>
+        <div class="d-flex align-center gap-2 mt-3">
+          <v-btn
+            color="primary"
+            :loading="isSearching"
+            :disabled="!searchQuery || searchQuery.length < 2"
+            @click="performSearch"
+          >
+            {{ t('common.search') }}
+          </v-btn>
+
+          <v-spacer />
+
+          <v-btn
+            variant="text"
+            @click="close"
+          >
+            {{ t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="primary"
+            :disabled="selectedConcepts.length === 0"
+            @click="addSelectedConcepts"
+          >
+            {{ t('common.add') }} ({{ selectedConcepts.length }})
+          </v-btn>
+        </div>
 
         <v-divider class="my-4" />
 
         <loading-spinner
           v-if="isSearching"
-          :message="tv('search.searchingConcepts')"
+          message="Searching concepts..."
         />
 
-        <div v-else-if="searchResults.length > 0">
+        <div v-else-if="searchResults && searchResults.length > 0">
           <p class="text-subtitle-2 mb-2">
-            {{ t('search.foundResults', { count: searchResults.length }) }}
+            Found {{ searchResults.length }} results
           </p>
 
-          <v-list>
-            <v-list-item
-              v-for="concept in searchResults"
-              :key="concept.conceptId"
-              @click="selectConcept(concept)"
-            >
-              <template #prepend>
-                <v-checkbox-btn :model-value="isSelected(concept.conceptId)" />
-              </template>
+          <v-virtual-scroll
+            :items="searchResults"
+            height="400"
+            item-height="72"
+          >
+            <template #default="{ item }">
+              <v-list-item
+                :key="item.conceptId"
+                @click="selectConcept(item)"
+              >
+                <template #prepend>
+                  <v-checkbox-btn :model-value="isSelected(item.conceptId)" />
+                </template>
 
-              <v-list-item-title>{{ concept.conceptName }}</v-list-item-title>
-              <v-list-item-subtitle>
-                ID: {{ concept.conceptId }} | Code: {{ concept.conceptCode }} | Domain: {{ concept.domainId }}
-              </v-list-item-subtitle>
-            </v-list-item>
-          </v-list>
+                <v-list-item-title>{{ item.conceptName }}</v-list-item-title>
+                <v-list-item-subtitle>
+                  ID: {{ item.conceptId }} | Code: {{ item.conceptCode }} | Domain: {{ item.domainId }}
+                </v-list-item-subtitle>
+              </v-list-item>
+            </template>
+          </v-virtual-scroll>
         </div>
 
         <div
@@ -94,7 +116,7 @@
           >
             mdi-magnify-remove-outline
           </v-icon>
-          <p>{{ t('search.noResults') }}</p>
+          <p>{{ t('conceptSearch.noResults', { query: searchQuery }) }}</p>
         </div>
 
         <div
@@ -107,32 +129,15 @@
           >
             mdi-magnify
           </v-icon>
-          <p>{{ t('search.enterSearchTerm') }}</p>
+          <p>{{ t('conceptSearch.instructions') }}</p>
         </div>
       </v-card-text>
-
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          variant="text"
-          @click="close"
-        >
-          {{ t('common.cancel') }}
-        </v-btn>
-        <v-btn
-          color="primary"
-          :disabled="selectedConcepts.length === 0"
-          @click="addSelectedConcepts"
-        >
-          {{ t('cs.modal.buttons.add', { count: selectedConcepts.length }) }}
-        </v-btn>
-      </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
 import { useConceptSetsStore } from '@/stores/conceptSets'
@@ -141,9 +146,11 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner.vue'
 
 interface Props {
   modelValue: boolean
+  domainFilter?: string
+  preSelectedConcepts?: Concept[]
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 const { t, tv } = useI18n()
 
 const emit = defineEmits<{
@@ -155,7 +162,7 @@ const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
 
 const searchQuery = ref('')
-const selectedDomain = ref<string | null>(null)
+const selectedDomain = ref<string | null>(props.domainFilter || null)
 const selectedConcepts = ref<Concept[]>([])
 const hasSearched = ref(false)
 
@@ -170,7 +177,16 @@ const domainOptions = [
 ]
 
 const isSearching = computed(() => conceptSetsStore.isSearching)
-const searchResults = computed(() => conceptSetsStore.searchResults)
+const searchResults = computed(() => {
+  const results = conceptSetsStore.searchResults || []
+
+  // Client-side domain filtering
+  if (selectedDomain.value && results.length > 0) {
+    return results.filter(concept => concept.domainId === selectedDomain.value)
+  }
+
+  return results
+})
 
 async function performSearch() {
   if (!searchQuery.value || searchQuery.value.length < 2) return
@@ -179,14 +195,26 @@ async function performSearch() {
     return
   }
 
+  console.log('[ConceptSearchDialog] Performing search:', {
+    sourceKey: webapiStore.selectedSource,
+    query: searchQuery.value,
+    domain: selectedDomain.value
+  })
+
   hasSearched.value = true
   selectedConcepts.value = []
 
-  await conceptSetsStore.searchConcepts(
-    webapiStore.selectedSource,
-    searchQuery.value,
-    selectedDomain.value ?? undefined
-  )
+  try {
+    // Don't pass domain to API - we filter client-side instead
+    await conceptSetsStore.searchConcepts(
+      webapiStore.selectedSource,
+      searchQuery.value
+    )
+    console.log('[ConceptSearchDialog] Search completed. Results:', conceptSetsStore.searchResults)
+  } catch (error) {
+    console.error('[ConceptSearchDialog] Search failed:', error)
+    // Don't crash - just show no results
+  }
 }
 
 function isSelected(conceptId: number): boolean {
@@ -214,8 +242,20 @@ function close() {
   emit('update:modelValue', false)
   // Reset state
   searchQuery.value = ''
-  selectedDomain.value = null
+  selectedDomain.value = props.domainFilter || null
   selectedConcepts.value = []
   hasSearched.value = false
 }
+
+// Watch for domainFilter changes when dialog opens
+watch(() => props.domainFilter, (newDomain) => {
+  selectedDomain.value = newDomain || null
+})
+
+// Watch for dialog opening to pre-populate selected concepts
+watch(() => props.modelValue, (isOpen) => {
+  if (isOpen && props.preSelectedConcepts) {
+    selectedConcepts.value = [...props.preSelectedConcepts]
+  }
+})
 </script>

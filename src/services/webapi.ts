@@ -155,26 +155,33 @@ export async function searchConcepts(
     endpoint += `&domain=${encodeURIComponent(domain)}`
   }
 
-  const data = await fetchJSON<unknown>(endpoint)
-  const parsed = ConceptSearchResponseSchema.safeParse(data)
+  console.log('[WebAPI] searchConcepts:', { sourceKey, query, domain, endpoint })
 
-  if (!parsed.success) {
-    console.error('Concept search validation error:', parsed.error)
-    return []
+  try {
+    const data = await fetchJSON<unknown>(endpoint)
+    console.log('[WebAPI] searchConcepts response received, concept count:', Array.isArray(data) ? data.length : 'not an array')
+    const parsed = ConceptSearchResponseSchema.safeParse(data)
+
+    if (!parsed.success) {
+      console.error('[WebAPI] Validation failed:', parsed.error)
+    }
+
+    return parsed.success ? parsed.data.map(c => ({
+      conceptId: c.CONCEPT_ID,
+      conceptName: c.CONCEPT_NAME,
+      conceptCode: c.CONCEPT_CODE,
+      domainId: c.DOMAIN_ID,
+      vocabularyId: c.VOCABULARY_ID,
+      conceptClassId: c.CONCEPT_CLASS_ID,
+      standardConcept: c.STANDARD_CONCEPT,
+      invalidReason: c.INVALID_REASON,
+    })) : []
+  } catch (error) {
+    console.error('[WebAPI] searchConcepts error:', error)
+    throw error
   }
-
-  // Map UPPERCASE API fields to camelCase
-  return parsed.data.map(c => ({
-    conceptId: c.CONCEPT_ID,
-    conceptName: c.CONCEPT_NAME,
-    conceptCode: c.CONCEPT_CODE,
-    domainId: c.DOMAIN_ID,
-    vocabularyId: c.VOCABULARY_ID,
-    conceptClassId: c.CONCEPT_CLASS_ID,
-    standardConcept: c.STANDARD_CONCEPT,
-    invalidReason: c.INVALID_REASON,
-  }))
 }
+
 
 /**
  * Get cohort definition by ID

@@ -159,6 +159,7 @@ watch(
     class="temporal-window-editor"
     elevation="0"
     variant="outlined"
+    color="white"
   >
     <v-card-title class="text-subtitle-1">
       {{ t('common.temporalWindows', 'Temporal Windows') }}
@@ -371,5 +372,11 @@ watch(
 <style scoped>
 .temporal-window-editor {
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  background-color: white;
+}
+
+.temporal-window-editor :deep(.v-card-title),
+.temporal-window-editor :deep(.v-card-text) {
+  color: rgba(0, 0, 0, 0.87);
 }
 </style>

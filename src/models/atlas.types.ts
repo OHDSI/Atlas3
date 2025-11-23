@@ -125,21 +125,85 @@ export interface AtlasEndStrategy {
  * Per contracts/atlas-json-schema.md
  */
 export const OPERATOR_TO_ATLAS: Record<string, string> = {
+  // Numeric and date operators
   GREATER_THAN: 'gt',
   LESS_THAN: 'lt',
   EQUAL: 'eq',
   NOT_EQUAL: '!eq',
   BETWEEN: 'bt',
+  NOT_BETWEEN: '!bt',
   GREATER_THAN_OR_EQUAL: 'gte',
   LESS_THAN_OR_EQUAL: 'lte',
+
+  // Text operators
+  CONTAINS: 'contains',
+  EQUALS: 'eq',
+  STARTS_WITH: 'startsWith',
+  ENDS_WITH: 'endsWith',
 }
 
 export const ATLAS_TO_OPERATOR: Record<string, string> = {
+  // Numeric and date operators
   gt: 'GREATER_THAN',
   lt: 'LESS_THAN',
   eq: 'EQUAL',
   '!eq': 'NOT_EQUAL',
   bt: 'BETWEEN',
+  '!bt': 'NOT_BETWEEN',
   gte: 'GREATER_THAN_OR_EQUAL',
   lte: 'LESS_THAN_OR_EQUAL',
+
+  // Text operators
+  contains: 'CONTAINS',
+  startsWith: 'STARTS_WITH',
+  endsWith: 'ENDS_WITH',
 }
+
+/**
+ * Atlas attribute field name mappings (PascalCase)
+ * Maps internal attributeKey to Atlas JSON field name
+ */
+export const ATTRIBUTE_KEY_TO_ATLAS: Record<string, string> = {
+  // Numeric attributes
+  age: 'Age',
+  ageAtStart: 'AgeAtStart',
+  valueAsNumber: 'ValueAsNumber',
+  visitLength: 'VisitLength',
+  eraLength: 'EraLength',
+  quantity: 'Quantity',
+
+  // Concept attributes
+  gender: 'Gender',
+  race: 'Race',
+  ethnicity: 'Ethnicity',
+  visitType: 'VisitType',
+  providerSpecialty: 'ProviderSpecialty',
+
+  // Date attributes
+  occurrenceStartDate: 'OccurrenceStartDate',
+  occurrenceEndDate: 'OccurrenceEndDate',
+  visitStartDate: 'VisitStartDate',
+  visitEndDate: 'VisitEndDate',
+  eraStartDate: 'EraStartDate',
+  eraEndDate: 'EraEndDate',
+
+  // Text attributes
+  valueAsString: 'ValueAsString',
+  sourceCode: 'SourceCode',
+  stopReason: 'StopReason',
+  sig: 'Sig',
+  lotNumber: 'LotNumber',
+  deviceId: 'UniqueDeviceId',
+
+  // Boolean attributes
+  first: 'First',
+  primary: 'Primary',
+  abnormal: 'Abnormal',
+}
+
+/**
+ * Reverse mapping: Atlas field name to internal attributeKey
+ */
+export const ATLAS_TO_ATTRIBUTE_KEY: Record<string, string> = Object.fromEntries(
+  Object.entries(ATTRIBUTE_KEY_TO_ATLAS).map(([k, v]) => [v, k])
+)
