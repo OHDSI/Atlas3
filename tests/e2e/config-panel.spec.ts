@@ -24,19 +24,25 @@ test.describe('Configuration Panel', () => {
   // Helper function to ensure config panel is open
   async function ensurePanelOpen(page) {
     const panel = page.locator('.v-navigation-drawer').filter({ hasText: /Configuration/ })
-    const isOpen = await panel.isVisible().catch(() => false)
+
+    // Always try to check current state and open if needed
+    let isOpen = await panel.isVisible().catch(() => false)
 
     if (!isOpen) {
-      // Try to find and click the config button
-      const configButton = page.getByRole('button', { name: /configuration/i })
+      // Find config button - use the actual aria-label from the UI
+      const configButton = page.locator('button[aria-label="Open configuration panel"]')
+        .or(page.getByRole('button', { name: /configuration/i }))
         .or(page.locator('[aria-label*="configuration"]'))
-        .or(page.locator('button').filter({ hasText: /config/i }))
-      await configButton.first().click()
+
+      if (await configButton.first().isVisible().catch(() => false)) {
+        await configButton.first().click()
+        // Wait for panel animation
+        await page.waitForTimeout(800)
+      }
     }
 
-    // Wait for panel animation to complete and ensure it's in viewport
-    await page.waitForTimeout(1000) // Wait for slide-in animation
-    await expect(panel).toBeVisible()
+    // Verify panel is now visible
+    await expect(panel).toBeVisible({ timeout: 5000 })
 
     return panel
   }
@@ -71,31 +77,37 @@ test.describe('Configuration Panel', () => {
     })
 
     test.skip('should navigate between sections', async ({ page }) => {
-      // SKIPPED: Config panel tabs are positioned outside viewport when panel opens on home page
-      // Panel slides in from right but tabs remain outside clickable area
-      // Needs investigation of panel positioning/animation
+      // SKIPPED: Config panel tabs positioned outside viewport - needs CSS/layout fix in navigation drawer
+      // Panel content (tabs) positioned beyond right edge of viewport, making them unclickable
+      // scrollIntoViewIfNeeded() doesn't help - fundamental drawer positioning issue
 
-      // Ensure panel is open
-      await ensurePanelOpen(page)
+      // Ensure panel is open and wait for animation
+      const panel = await ensurePanelOpen(page)
+
+      // Wait additional time for panel to fully settle into viewport
+      await page.waitForTimeout(500)
 
       // Find tabs using role="tab"
       const cacheTab = page.getByRole('tab', { name: /cache/i })
       const dataSourcesTab = page.getByRole('tab', { name: /data.*source/i })
       const tagsTab = page.getByRole('tab', { name: /tag/i })
 
-      // Click through tabs if they exist (use force since panel may be positioned off-screen)
+      // Click through tabs if they exist
       if (await cacheTab.isVisible().catch(() => false)) {
-        await cacheTab.click({ force: true })
+        await cacheTab.scrollIntoViewIfNeeded()
+        await cacheTab.click()
         await expect(page.locator('text=/Cache.*Management/i')).toBeVisible()
       }
 
       if (await dataSourcesTab.isVisible().catch(() => false)) {
-        await dataSourcesTab.click({ force: true })
+        await dataSourcesTab.scrollIntoViewIfNeeded()
+        await dataSourcesTab.click()
         await page.waitForTimeout(300)
       }
 
       if (await tagsTab.isVisible().catch(() => false)) {
-        await tagsTab.click({ force: true })
+        await tagsTab.scrollIntoViewIfNeeded()
+        await tagsTab.click()
         await page.waitForTimeout(300)
       }
     })
