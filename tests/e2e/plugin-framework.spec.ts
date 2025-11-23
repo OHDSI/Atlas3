@@ -41,10 +41,10 @@ test.describe('Plugin Framework', () => {
     }
   });
 
-  test.skip('should navigate to plugin route', async ({ page }) => {
+  test('should navigate to plugin route', async ({ page }) => {
     // Try to navigate directly to plugin route
     await page.goto('/plugins/hello-world-plugin/main');
-    
+
     // Wait for plugin or auth redirect
     await page.waitForTimeout(2000);
 
@@ -67,10 +67,10 @@ test.describe('Plugin Framework', () => {
     }
   });
 
-  test.skip('should display error UI on plugin load failure', async ({ page }) => {
+  test('should display error UI on plugin load failure', async ({ page }) => {
     // Try to load non-existent plugin
     await page.goto('/plugins/non-existent-plugin/main');
-    
+
     await page.waitForTimeout(2000);
 
     // Check for error UI or redirect
@@ -97,7 +97,7 @@ test.describe('Plugin Framework', () => {
     console.log(`Plugin navigation time: ${navigationTime}ms`);
   });
 
-  test.skip('should handle multiple plugin routes', async ({ page }) => {
+  test('should handle multiple plugin routes', async ({ page }) => {
     // Test that plugin routes are properly scoped
     await page.goto('/plugins/hello-world-plugin/main');
     await page.waitForTimeout(500);
@@ -157,7 +157,7 @@ test.describe('Plugin Authentication', () => {
 });
 
 test.describe('Plugin Error Handling', () => {
-  test.skip('should display error UI and retry button on failure', async ({ page }) => {
+  test('should display error UI and retry button on failure', async ({ page }) => {
     // Mock plugin load failure by navigating to invalid plugin
     await page.goto('/plugins/invalid-plugin/main');
     await page.waitForTimeout(2000);
@@ -165,10 +165,10 @@ test.describe('Plugin Error Handling', () => {
     // Check for error UI components
     const errorHeading = page.locator('text=Plugin Failed to Load');
     const hasError = await errorHeading.isVisible().catch(() => false);
-    
+
     if (hasError) {
       await expect(errorHeading).toBeVisible();
-      
+
       // Check for retry button
       const retryButton = page.locator('text=Retry');
       await expect(retryButton).toBeVisible();
