@@ -9,7 +9,7 @@ import { waitForNetworkIdle, waitForElement } from './helpers/wait-utils'
 test.describe('Basic Cohort Creation', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/')
+    await page.goto('/Atlas/')
     await waitForNetworkIdle(page)
   })
 
@@ -18,13 +18,13 @@ test.describe('Basic Cohort Creation', () => {
     await page.getByRole('button', { name: /new.*cohort/i }).click()
 
     // Verify we're on the cohort builder page
-    await expect(page).toHaveURL('/cohorts/new')
+    await expect(page).toHaveURL('/Atlas/cohorts/new')
     await expect(page.getByTestId('cohort-name-input')).toBeVisible()
   })
 
   test('should create a basic cohort with entry event', async ({ page }) => {
     // Navigate to cohort builder
-    await page.goto('/cohorts/new')
+    await page.goto('/Atlas/cohorts/new')
 
     // Wait for the page to load
     await page.waitForSelector('[data-testid="cohort-name-input"]')
@@ -57,7 +57,7 @@ test.describe('Basic Cohort Creation', () => {
   })
 
   test('should not allow saving without name', async ({ page }) => {
-    await page.goto('/cohorts/new')
+    await page.goto('/Atlas/cohorts/new')
     await page.waitForSelector('[data-testid="cohort-name-input"]')
 
     // Add an event but no name
@@ -71,7 +71,7 @@ test.describe('Basic Cohort Creation', () => {
   })
 
   test('should not allow saving without entry events', async ({ page }) => {
-    await page.goto('/cohorts/new')
+    await page.goto('/Atlas/cohorts/new')
     await page.waitForSelector('[data-testid="cohort-name-input"]')
 
     // Enter name but no events
@@ -84,7 +84,7 @@ test.describe('Basic Cohort Creation', () => {
   })
 
   test('should expand and collapse event card', async ({ page }) => {
-    await page.goto('/cohorts/new')
+    await page.goto('/Atlas/cohorts/new')
     await page.waitForSelector('[data-testid="cohort-name-input"]')
 
     // Add an event
@@ -98,7 +98,7 @@ test.describe('Basic Cohort Creation', () => {
   })
 
   test('should remove entry event', async ({ page }) => {
-    await page.goto('/cohorts/new')
+    await page.goto('/Atlas/cohorts/new')
     await page.waitForSelector('[data-testid="cohort-name-input"]')
 
     // Add name

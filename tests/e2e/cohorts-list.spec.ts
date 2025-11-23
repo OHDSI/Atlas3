@@ -20,7 +20,7 @@ test.describe('Cohorts List', () => {
     await setupBasicMocks(page)
 
     // Navigate to cohorts list page
-    await page.goto('/cohorts')
+    await page.goto('/Atlas/cohorts')
 
     // Wait for initial load
     await waitForNetworkIdle(page)
@@ -87,7 +87,7 @@ test.describe('Cohorts List', () => {
     await firstCard.click()
 
     // Verify navigation to cohort builder
-    await expect(page).toHaveURL(new RegExp(`/cohorts/${cohortId}`))
+    await expect(page).toHaveURL(new RegExp(`/Atlas/cohorts/${cohortId}`))
   })
 
   test('should filter cohorts using search', async ({ page }) => {
@@ -198,7 +198,7 @@ test.describe('Cohorts List', () => {
     await createButton.click()
 
     // Verify navigation
-    await expect(page).toHaveURL('/cohorts/new')
+    await expect(page).toHaveURL('/Atlas/cohorts/new')
   })
 
   test('should open import dialog', async ({ page }) => {
@@ -385,7 +385,7 @@ test.describe('Performance', () => {
 
 test.describe('Accessibility', () => {
   test('should have accessible button labels', async ({ page }) => {
-    await page.goto('/cohorts')
+    await page.goto('/Atlas/cohorts')
     await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
 
     // Check for aria-labels or accessible names
@@ -416,7 +416,7 @@ test.describe('Accessibility', () => {
   })
 
   test('should have visible focus states', async ({ page }) => {
-    await page.goto('/cohorts')
+    await page.goto('/Atlas/cohorts')
     await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
 
     // Focus first interactive element

@@ -20,7 +20,7 @@ import {
  */
 export async function setupBasicMocks(page: Page) {
   // Mock CDM sources endpoint
-  await page.route('**/WebAPI/source/sources', async (route: Route) => {
+  await page.route('**/source/sources', async (route: Route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -29,7 +29,7 @@ export async function setupBasicMocks(page: Page) {
   })
 
   // Mock translation/locales endpoint
-  await page.route('**/WebAPI/translation/locales', async (route: Route) => {
+  await page.route('**/translation/locales', async (route: Route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -38,7 +38,7 @@ export async function setupBasicMocks(page: Page) {
   })
 
   // Mock translation bundles (English fallback)
-  await page.route('**/WebAPI/translation/bundle/en', async (route: Route) => {
+  await page.route('**/translation/bundle/**', async (route: Route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -50,14 +50,17 @@ export async function setupBasicMocks(page: Page) {
   })
 
   // Mock cohort definitions list endpoint
-  await page.route('**/WebAPI/cohortdefinition', async (route: Route) => {
-    if (route.request().method() === 'GET') {
+  await page.route('**/cohortdefinition', async (route: Route) => {
+    const url = route.request().url()
+
+    // Only handle the list endpoint, not detail endpoints
+    if (url.match(/cohortdefinition$/) && route.request().method() === 'GET') {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(mockCohorts)
       })
-    } else if (route.request().method() === 'POST') {
+    } else if (url.match(/cohortdefinition$/) && route.request().method() === 'POST') {
       // Mock cohort creation
       const newCohort = JSON.parse(route.request().postData() || '{}')
       await route.fulfill({
@@ -76,9 +79,9 @@ export async function setupBasicMocks(page: Page) {
   })
 
   // Mock individual cohort detail endpoint
-  await page.route('**/WebAPI/cohortdefinition/*', async (route: Route) => {
+  await page.route('**/cohortdefinition/**', async (route: Route) => {
     const url = route.request().url()
-    const match = url.match(/cohortdefinition\/(\d+)/)
+    const match = url.match(/cohortdefinition\/(\d+)(?:$|\/|\?)/)
 
     if (match && route.request().method() === 'GET') {
       const cohortId = parseInt(match[1])
