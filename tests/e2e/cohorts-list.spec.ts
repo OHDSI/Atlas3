@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test'
+import { setupBasicMocks } from './helpers/api-mocks'
+import { waitForNetworkIdle, waitForElement, waitForApiRequest } from './helpers/wait-utils'
 
 /**
  * E2E tests for Cohorts List feature
@@ -14,11 +16,14 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Cohorts List', () => {
   test.beforeEach(async ({ page }) => {
+    // Setup API mocks
+    await setupBasicMocks(page)
+
     // Navigate to cohorts list page
     await page.goto('/cohorts')
 
     // Wait for initial load
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
   })
 
   test('should load and display cohorts grid', async ({ page }) => {
@@ -96,8 +101,8 @@ test.describe('Cohorts List', () => {
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('cohort')
 
-    // Wait for debounce (300ms) and re-render
-    await page.waitForTimeout(500)
+    // Wait for network to settle after debounce
+    await waitForNetworkIdle(page)
 
     // Verify cohorts are filtered
     const filteredCount = await page.locator('.cohort-card').count()
@@ -114,8 +119,8 @@ test.describe('Cohorts List', () => {
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('xyznonexistentcohort123456789')
 
-    // Wait for debounce
-    await page.waitForTimeout(500)
+    // Wait for network to settle after debounce
+    await waitForNetworkIdle(page)
 
     // Verify empty state is shown
     await expect(page.locator('.cohort-grid__empty')).toBeVisible()
@@ -139,7 +144,7 @@ test.describe('Cohorts List', () => {
       await nextButton.click()
 
       // Wait for page to update
-      await page.waitForTimeout(300)
+      await waitForNetworkIdle(page)
 
       // Verify URL updated
       await expect(page).toHaveURL(/page=2/)
@@ -153,7 +158,7 @@ test.describe('Cohorts List', () => {
       // Go back to page 1
       const prevButton = page.getByRole('button', { name: /previous/i })
       await prevButton.click()
-      await page.waitForTimeout(300)
+      await waitForNetworkIdle(page)
 
       // Verify we're back on page 1
       await expect(page).toHaveURL(/page=1/)
@@ -242,7 +247,7 @@ test.describe('Cohorts List', () => {
     // Search for something
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('test')
-    await page.waitForTimeout(500)
+    await waitForNetworkIdle(page)
 
     // Verify URL contains search query
     await expect(page).toHaveURL(/search=test/)
@@ -265,11 +270,7 @@ test.describe('Cohorts List', () => {
     // Hover over card
     await firstCard.hover()
 
-    // Card should have elevated shadow (visual indicator)
-    // We can't directly test elevation, but we can verify no errors occur
-    await page.waitForTimeout(200)
-
-    // Card should still be visible and functional
+    // Card should still be visible and functional (hover is CSS-only)
     await expect(firstCard).toBeVisible()
   })
 
@@ -321,14 +322,8 @@ test.describe('Cohorts List', () => {
 
 test.describe('Visual Comparison', () => {
   test.skip('should match baseline screenshot', async ({ page }) => {
-    // Navigate to cohorts page
-    await page.goto('/cohorts')
-
     // Wait for content to load
     await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
-
-    // Wait for any animations to complete
-    await page.waitForTimeout(500)
 
     // Take screenshot and compare
     await expect(page).toHaveScreenshot('cohorts-list-page.png', {
@@ -341,14 +336,12 @@ test.describe('Visual Comparison', () => {
   })
 
   test.skip('should match card hover state', async ({ page }) => {
-    // Navigate and wait for cards
-    await page.goto('/cohorts')
+    // Wait for cards
     const firstCard = page.locator('.cohort-card').first()
     await expect(firstCard).toBeVisible({ timeout: 10000 })
 
     // Hover over card
     await firstCard.hover()
-    await page.waitForTimeout(300)
 
     // Screenshot hover state
     await expect(firstCard).toHaveScreenshot('cohort-card-hover.png', {
@@ -371,8 +364,7 @@ test.describe('Performance', () => {
   })
 
   test.skip('should handle search with reasonable performance', async ({ page }) => {
-    // Navigate and wait for initial load
-    await page.goto('/cohorts')
+    // Wait for initial load
     await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
 
     // Type in search
@@ -381,8 +373,8 @@ test.describe('Performance', () => {
     const startTime = Date.now()
     await searchInput.fill('test')
 
-    // Wait for debounce and update (300ms debounce + render time)
-    await page.waitForTimeout(600)
+    // Wait for debounce and update
+    await waitForNetworkIdle(page)
 
     const searchTime = Date.now() - startTime
 
@@ -412,15 +404,15 @@ test.describe('Accessibility', () => {
   })
 
   test('should support keyboard navigation', async ({ page }) => {
-    await page.goto('/cohorts')
     await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
 
     // Tab through interactive elements
     await page.keyboard.press('Tab')
     await page.keyboard.press('Tab')
 
-    // Verify focus is visible (can't directly test, but ensure no crashes)
-    await page.waitForTimeout(200)
+    // Verify focus is working (no crashes)
+    const focusedElement = await page.evaluate(() => document.activeElement?.tagName)
+    expect(focusedElement).toBeTruthy()
   })
 
   test('should have visible focus states', async ({ page }) => {

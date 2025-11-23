@@ -4,11 +4,13 @@
  */
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
+import { waitForNetworkIdle, waitForElement } from './helpers/wait-utils'
 
-test.describe.skip('Basic Cohort Creation', () => {
+test.describe('Basic Cohort Creation', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/')
+    await waitForNetworkIdle(page)
   })
 
   test('should navigate to cohort builder', async ({ page }) => {
@@ -49,12 +51,7 @@ test.describe.skip('Basic Cohort Creation', () => {
       await firstConceptSet.click()
     }
 
-    // Verify save button becomes enabled after concept is selected
-    await page.waitForTimeout(500) // Wait for state update
-    const saveButton = page.getByRole('button', { name: /^save$/i })
-    
-    // Only test if save button is enabled when concept set is properly selected
-    // For now, just verify the UI elements are present
+    // Verify UI elements are present
     await expect(page.getByTestId('cohort-name-input')).toHaveValue('Test Cohort for Type 2 Diabetes')
     await expect(page.getByTestId('entry-event-card')).toBeVisible()
   })
