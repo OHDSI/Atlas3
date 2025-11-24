@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 
 interface DataSource {
   sourceKey: string
@@ -204,6 +204,25 @@ const showToast = ref(false)
 const showErrorToast = ref(false)
 const toastMessage = ref('')
 const errorMessage = ref('')
+
+// Watch for changes in selectedVocabulary and persist to localStorage
+watch(selectedVocabulary, (newValue) => {
+  if (newValue) {
+    localStorage.setItem('selectedVocabulary', newValue)
+  }
+})
+
+watch(selectedEvidence, (newValue) => {
+  if (newValue) {
+    localStorage.setItem('selectedEvidence', newValue)
+  }
+})
+
+watch(selectedResults, (newValue) => {
+  if (newValue) {
+    localStorage.setItem('selectedResults', newValue)
+  }
+})
 
 /**
  * Load data sources on mount
