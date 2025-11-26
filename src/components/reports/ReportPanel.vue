@@ -10,25 +10,17 @@
     class="report-panel"
     elevation="0"
   >
-    <!-- Header with close button -->
-    <v-card-title class="d-flex align-center justify-space-between pa-4 border-b">
-      <div class="d-flex align-center gap-2">
-        <v-icon>mdi-chart-box</v-icon>
-        <span class="text-h6">{{ t('common.cohortReports') }}</span>
-        <v-chip
-          v-if="sourceKey"
-          size="small"
-          variant="outlined"
-        >
-          {{ sourceKey }}
-        </v-chip>
-      </div>
-      <v-btn
-        icon="mdi-close"
-        variant="text"
+    <!-- Header -->
+    <v-card-title class="d-flex align-center gap-2 pa-4 border-b">
+      <v-icon>mdi-chart-box</v-icon>
+      <span class="text-h6">{{ t('ir.results.reports') }}</span>
+      <v-chip
+        v-if="sourceKey"
         size="small"
-        @click="handleClose"
-      />
+        variant="outlined"
+      >
+        {{ sourceKey }}
+      </v-chip>
     </v-card-title>
 
     <v-divider />
@@ -37,7 +29,7 @@
     <v-card-text class="pa-4">
       <div class="action-buttons-section mb-4">
         <div class="text-subtitle-2 mb-2">
-          {{ t('cohortDefinitions.cohortDefinitionManager.panels.reportSelections', 'Report Selections') }}
+          {{ t('components.analysisExecution.buttons.generating') }}
         </div>
         <v-btn-group
           variant="outlined"
@@ -49,7 +41,7 @@
             prepend-icon="mdi-chart-multiple"
             @click="handleFullAnalysis"
           >
-            {{ t('common.fullAnalysis') }}
+            Full Analysis
           </v-btn>
           <v-btn
             :disabled="loading || !cohortId || !sourceKey"
@@ -57,7 +49,7 @@
             prepend-icon="mdi-chart-timeline-variant"
             @click="handleQuickAnalysis"
           >
-            {{ t('common.quickAnalysis') }}
+            Quick Analysis
           </v-btn>
           <v-btn
             :disabled="loading || !cohortId || !sourceKey"
@@ -65,7 +57,7 @@
             prepend-icon="mdi-chart-bar"
             @click="handleUtilization"
           >
-            {{ t('common.utilization') }}
+            Utilization
           </v-btn>
         </v-btn-group>
       </div>
@@ -77,6 +69,7 @@
         <ReportSelector
           :model-value="currentReportType"
           :disabled="loading || !cohortId || !sourceKey"
+          :completed-analyses="completedAnalyses"
           @update:model-value="handleReportTypeChange"
         />
       </div>
@@ -88,6 +81,9 @@
         v-if="loading"
         class="report-loading"
       >
+        <div class="text-center pa-4">
+          {{ t('dataSources.loadingReport') }}
+        </div>
         <v-skeleton-loader type="article, article" />
       </div>
 
@@ -99,14 +95,15 @@
         closable
         @click:close="clearError"
       >
-        <div class="d-flex align-center justify-space-between">
-          <span>{{ error }}</span>
+        <div class="d-flex flex-column gap-2">
+          <span>{{ t('dataSources.errorLoadingReport') }}</span>
+          <span class="text-body-2">{{ error }}</span>
           <v-btn
             variant="text"
             size="small"
             @click="handleRetry"
           >
-            {{ t('common.retry') }}
+            {{ t('common.refresh') }}
           </v-btn>
         </div>
       </v-alert>
@@ -131,10 +128,10 @@
         icon="mdi-alert-circle-outline"
       >
         <div class="text-subtitle-2 mb-1">
-          {{ t('common.reportNotImplemented') }}
+          Report Not Yet Implemented
         </div>
         <div class="text-body-2">
-          {{ t('common.reportNotImplementedMessage', { reportType: currentReportType }) }}
+          This report is in the roadmap but not yet available.
         </div>
       </v-alert>
 
@@ -145,7 +142,7 @@
         variant="tonal"
         icon="mdi-information"
       >
-        {{ t('common.selectReportType') }}
+        Select a report type to view
       </v-alert>
     </v-card-text>
 
@@ -178,7 +175,8 @@ import {
   triggerFullAnalysis,
   triggerQuickAnalysis,
   triggerUtilization,
-  getCohortGenerationInfo
+  getCohortGenerationInfo,
+  getCompletedAnalyses
 } from '@/services/webapi'
 import ReportSelector from './ReportSelector.vue'
 
@@ -214,6 +212,11 @@ const {
   clearCurrent,
   setContext
 } = useReports()
+
+/**
+ * Completed analyses state
+ */
+const completedAnalyses = ref<number[]>([])
 
 /**
  * Active action state (T110)
@@ -306,14 +309,6 @@ const currentReportComponent = computed(() => {
 })
 
 /**
- * Handle close button
- */
-function handleClose() {
-  clearCurrent()
-  emit('close')
-}
-
-/**
  * Handle report type change
  */
 async function handleReportTypeChange(reportType: ReportType | null) {
@@ -377,7 +372,8 @@ function startJobPolling(jobType: string) {
         stopJobPolling()
         showToastNotification(`${jobType} completed successfully!`, 'success', 5000)
 
-        // Refresh the current report if one is loaded
+        // Refresh completed analyses and current report
+        await fetchCompletedAnalyses()
         if (currentReportType.value && props.cohortId && props.sourceKey) {
           await loadReport(props.cohortId, props.sourceKey, currentReportType.value)
         }
@@ -473,18 +469,36 @@ async function handleUtilization() {
 }
 
 /**
+ * Fetch completed analyses
+ */
+async function fetchCompletedAnalyses() {
+  if (!props.cohortId || !props.sourceKey) return
+
+  try {
+    completedAnalyses.value = await getCompletedAnalyses(props.cohortId, props.sourceKey)
+    console.log('[ReportPanel] Completed analyses:', completedAnalyses.value.length)
+  } catch (error) {
+    console.error('[ReportPanel] Failed to fetch completed analyses:', error)
+    completedAnalyses.value = []
+  }
+}
+
+/**
  * Watch for panel open/close
  */
 watch(
   () => props.isOpen,
-  (isOpen) => {
+  async (isOpen) => {
     if (isOpen && props.cohortId && props.sourceKey) {
       // Set initial context
       setContext(props.cohortId, props.sourceKey, 'person')
+      // Fetch completed analyses to filter available reports
+      await fetchCompletedAnalyses()
     } else if (!isOpen) {
       // Clear context and stop polling on close
       clearCurrent()
       stopJobPolling()
+      completedAnalyses.value = []
     }
   },
   { immediate: true }
