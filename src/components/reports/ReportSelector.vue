@@ -34,15 +34,17 @@
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ReportType } from '@/models/report.types'
+import { isReportAvailable } from '@/config/report-analysis-mapping'
 
 const { tv } = useI18n()
 
 /**
  * Props
  */
-defineProps<{
+const props = defineProps<{
   modelValue: ReportType | null
   disabled?: boolean
+  completedAnalyses?: number[]
 }>()
 
 /**
@@ -53,9 +55,9 @@ const emit = defineEmits<{
 }>()
 
 /**
- * Report type definitions with metadata
+ * All report type definitions with metadata
  */
-const reportItems = computed(() => [
+const allReportItems = [
   {
     type: 'person' as ReportType,
     label: tv('reports.types.person.label'),
@@ -212,7 +214,23 @@ const reportItems = computed(() => [
     description: tv('reports.types.heraclesHeel.description'),
     icon: 'mdi-alert-circle'
   }
-])
+]
+
+/**
+ * Filter report items based on completed analyses
+ * Only show reports that have all required analyses completed
+ */
+const reportItems = computed(() => {
+  // If no completed analyses provided, show all reports
+  if (!props.completedAnalyses || props.completedAnalyses.length === 0) {
+    return allReportItems
+  }
+
+  // Filter to only reports with completed data
+  return allReportItems.filter(item =>
+    isReportAvailable(item.type, props.completedAnalyses!)
+  )
+})
 
 /**
  * Handle selection change

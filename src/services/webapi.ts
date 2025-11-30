@@ -554,60 +554,101 @@ export async function getCohortSpecificReport(
 }
 
 /**
+ * Analysis IDs for different report types
+ * Based on Atlas Heracles analysis identifiers
+ */
+const FULL_ANALYSIS_IDS = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+  101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115,
+  200, 201, 202, 203, 204, 206, 207, 208, 209, 210, 211, 212, 213, 220,
+  301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 320,
+  400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 420,
+  500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515,
+  600, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 620,
+  700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 720,
+  800, 801, 802, 803, 804, 805, 806, 807, 808, 809, 810, 811, 812, 813, 814, 815, 816, 820,
+  900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 920,
+  1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1020,
+  1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1808, 1809, 1810, 1811, 1812, 1813, 1814, 1815, 1816, 1820
+]
+
+const QUICK_ANALYSIS_IDS = [
+  0, 1, 2, 101, 200, 301, 400, 500, 600, 700, 800, 900, 1000, 1800
+]
+
+/**
+ * Trigger cohort analysis job (Heracles)
+ * Endpoint: POST /cohortanalysis
+ * Based on Atlas implementation
+ */
+async function triggerCohortAnalysis(
+  cohortId: number,
+  sourceKey: string,
+  analysisIds: number[],
+  runHeraclesHeel: boolean = true,
+  rollupUtilization: boolean = false
+): Promise<boolean> {
+  try {
+    const cohortJob = {
+      jobName: `HERACLES_COHORT_${cohortId}_${sourceKey}`,
+      sourceKey: sourceKey,
+      smallCellCount: 5,
+      cohortDefinitionIds: [cohortId],
+      analysisIds: analysisIds,
+      runHeraclesHeel: runHeraclesHeel,
+      cohortPeriodOnly: false,
+      conditionConceptIds: [],
+      drugConceptIds: [],
+      procedureConceptIds: [],
+      observationConceptIds: [],
+      measurementConceptIds: [],
+      periods: [],
+      rollupUtilizationVisit: rollupUtilization,
+      rollupUtilizationDrug: rollupUtilization
+    }
+
+    await fetchJSON('/cohortanalysis', {
+      method: 'POST',
+      body: JSON.stringify(cohortJob),
+    })
+    return true
+  } catch (error) {
+    console.error(`Failed to trigger cohort analysis for ${cohortId}/${sourceKey}:`, error)
+    return false
+  }
+}
+
+/**
  * Trigger Full Analysis batch job
- * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/fullAnalysis
+ * Endpoint: POST /cohortanalysis
  */
 export async function triggerFullAnalysis(
   cohortId: number,
   sourceKey: string
 ): Promise<boolean> {
-  try {
-    await fetchJSON(`/cohortdefinition/${cohortId}/report/${sourceKey}/fullAnalysis`, {
-      method: 'POST',
-    })
-    return true
-  } catch (error) {
-    console.error(`Failed to trigger full analysis for ${cohortId}/${sourceKey}:`, error)
-    return false
-  }
+  return triggerCohortAnalysis(cohortId, sourceKey, FULL_ANALYSIS_IDS, true, true)
 }
 
 /**
  * Trigger Quick Analysis batch job
- * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/quickAnalysis
+ * Endpoint: POST /cohortanalysis
  */
 export async function triggerQuickAnalysis(
   cohortId: number,
   sourceKey: string
 ): Promise<boolean> {
-  try {
-    await fetchJSON(`/cohortdefinition/${cohortId}/report/${sourceKey}/quickAnalysis`, {
-      method: 'POST',
-    })
-    return true
-  } catch (error) {
-    console.error(`Failed to trigger quick analysis for ${cohortId}/${sourceKey}:`, error)
-    return false
-  }
+  return triggerCohortAnalysis(cohortId, sourceKey, QUICK_ANALYSIS_IDS, true, false)
 }
 
 /**
  * Trigger Utilization batch job
- * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/utilization
+ * Endpoint: POST /cohortanalysis
  */
 export async function triggerUtilization(
   cohortId: number,
   sourceKey: string
 ): Promise<boolean> {
-  try {
-    await fetchJSON(`/cohortdefinition/${cohortId}/report/${sourceKey}/utilization`, {
-      method: 'POST',
-    })
-    return true
-  } catch (error) {
-    console.error(`Failed to trigger utilization analysis for ${cohortId}/${sourceKey}:`, error)
-    return false
-  }
+  return triggerCohortAnalysis(cohortId, sourceKey, FULL_ANALYSIS_IDS, false, true)
 }
 
 /**
@@ -805,6 +846,26 @@ export async function getHeraclesHeelReport(
   } catch (error) {
     console.error(`Failed to fetch Heracles Heel report for ${cohortId}/${sourceKey}:`, error)
     return null
+  }
+}
+
+/**
+ * Get completed analyses for a cohort
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/analyses
+ * Returns array of completed analysis IDs
+ */
+export async function getCompletedAnalyses(
+  cohortId: number,
+  sourceKey: string
+): Promise<number[]> {
+  try {
+    const data = await fetchJSON<number[]>(
+      `/cohortresults/${sourceKey}/${cohortId}/analyses`
+    )
+    return data || []
+  } catch (error) {
+    console.error(`Failed to fetch completed analyses for ${cohortId}/${sourceKey}:`, error)
+    return []
   }
 }
 
