@@ -112,7 +112,9 @@ const isOpen = computed({
 const activeSection = computed({
   get: () => uiStore.configPanelState.activeSection === 'vocabulary' ? 'sources' : uiStore.configPanelState.activeSection,
   set: (value: 'cache' | 'sources' | 'tags') => {
-    uiStore.setConfigPanelSection(value as any)
+    // Map 'sources' to 'vocabulary' for the store
+    const storeValue = value === 'sources' ? 'vocabulary' : value
+    uiStore.setConfigPanelSection(storeValue)
   }
 })
 

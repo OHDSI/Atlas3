@@ -97,6 +97,7 @@ import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
 import type { CDMSource, TileStatus } from '@/models/webapi.types'
+import { logger } from '@/utils/logger'
 
 const { t } = useI18n()
 
@@ -151,7 +152,7 @@ async function handleGenerate() {
   try {
     await webapiStore.generateCohort(props.cohortId, props.source.sourceKey)
   } catch (error) {
-    console.error('Generation error:', error)
+    logger.error('DataSourceTile', 'Generation error', error)
     // Error will be displayed by the store or parent component
   }
 }

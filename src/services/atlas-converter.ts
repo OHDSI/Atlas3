@@ -5,34 +5,42 @@
  * CRITICAL: Uses ?? operator for zero-count preservation (not ||)
  */
 
-import type { CohortDefinition, CohortEvent, CriteriaType, Period, DateField } from '@/models/cohort.types'
+import type { CohortDefinition, CohortEvent, CriteriaType, Period, DateField, QualifyingLimit, LogicType } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
+import type {
+  AtlasConceptSet,
+  AtlasCriteria,
+  AtlasInclusionRule,
+  AtlasConcept,
+  ConceptSetItem,
+  AtlasCriteriaTypeObject
+} from '@/models/atlas.types'
 
 // Atlas JSON types (complete)
 interface AtlasJSON {
   expressionType?: string
   cdmVersionRange?: string
-  ConceptSets: any[]
+  ConceptSets: AtlasConceptSet[]
   PrimaryCriteria: {
-    CriteriaList: any[]
+    CriteriaList: AtlasCriteria[]
     ObservationWindow?: { PriorDays: number; PostDays: number }
     PrimaryCriteriaLimit?: { Type: string }
   }
   AdditionalCriteria?: {
     Type: string
-    CriteriaList: any[]
-    DemographicCriteriaList: any[]
-    Groups: any[]
+    CriteriaList: AtlasCriteria[]
+    DemographicCriteriaList: Record<string, unknown>[]
+    Groups: AtlasCriteria[]
   }
-  InclusionRules?: any[]
-  CensoringCriteria?: any[]
+  InclusionRules?: AtlasInclusionRule[]
+  CensoringCriteria?: AtlasCriteria[]
   QualifiedLimit?: { Type: string }
   ExpressionLimit?: { Type: string }
   CollapseSettings?: {
     CollapseType: string
     EraPad: number
   }
-  CensorWindow?: any
+  CensorWindow?: Record<string, unknown>
 }
 
 /**
@@ -51,8 +59,8 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
       id: typeof cs.id === 'number' ? cs.id : index,
       name: cs.name,
       expression: {
-        items: cs.items?.map((item: any) => {
-          const concept: any = {
+        items: cs.items?.map((item: ConceptSetItem) => {
+          const concept: AtlasConcept = {
             CONCEPT_ID: item.conceptId,
             CONCEPT_NAME: item.conceptName,
             DOMAIN_ID: item.domainId,
@@ -144,9 +152,9 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
  * @param event The event to convert
  * @param wrapInCriteria Whether to wrap the criteria in a "Criteria" object (for InclusionRules)
  */
-function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false): any {
+function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false): AtlasCriteria {
   // Build the criteria object with CodesetId and attributes
-  const criteriaTypeObj: any = {
+  const criteriaTypeObj: AtlasCriteriaTypeObject = {
     CodesetId: event.conceptSet && typeof event.conceptSet.id === 'number' ? event.conceptSet.id : 0,
   }
 
@@ -212,11 +220,11 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
     })
   }
 
-  const criteriaObject: any = {
+  const criteriaObject: Record<string, AtlasCriteriaTypeObject> = {
     [event.criteriaType]: criteriaTypeObj,
   }
 
-  const atlasEvent: any = wrapInCriteria ? { Criteria: criteriaObject } : criteriaObject
+  const atlasEvent: AtlasCriteria = wrapInCriteria ? { Criteria: criteriaObject } : criteriaObject
 
   // Add cardinality (CRITICAL: use ?? not ||)
   // Atlas Occurrence.Type mapping: 0 = EXACTLY, 1 = AT_MOST, 2 = AT_LEAST
@@ -294,7 +302,7 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
  * Atlas format: Direct string value at attribute name key
  * Example: { StopReason: "patient request" }
  */
-function convertTextAttribute(attributeKey: string, value: string): any {
+function convertTextAttribute(attributeKey: string, value: string): Record<string, string> {
   const attributeName = convertToPascalCase(attributeKey)
   return { [attributeName]: value }
 }
@@ -554,15 +562,15 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
       priorDays: atlas.PrimaryCriteria.ObservationWindow.PriorDays,
       postDays: atlas.PrimaryCriteria.ObservationWindow.PostDays,
     } : undefined,
-    qualifyingLimit: (atlas.QualifiedLimit?.Type?.toUpperCase() || 'ALL') as any,
+    qualifyingLimit: (atlas.QualifiedLimit?.Type?.toUpperCase() || 'ALL') as QualifyingLimit,
     inclusionQualifyingLimit: atlas.ExpressionLimit?.Type
-      ? (atlas.ExpressionLimit.Type.toUpperCase() as any)
+      ? (atlas.ExpressionLimit.Type.toUpperCase() as QualifyingLimit)
       : undefined,
     // Parse AdditionalCriteria
     additionalCriteria: (atlas.AdditionalCriteria?.CriteriaList && atlas.AdditionalCriteria.CriteriaList.length > 0) ? {
       id: generateId(),
-      logicType: (atlas.AdditionalCriteria.Type || 'ALL') as any,
-      qualifyingLimit: (atlas.PrimaryCriteria?.PrimaryCriteriaLimit?.Type?.toUpperCase() || 'ALL') as any,
+      logicType: (atlas.AdditionalCriteria.Type || 'ALL') as LogicType,
+      qualifyingLimit: (atlas.PrimaryCriteria?.PrimaryCriteriaLimit?.Type?.toUpperCase() || 'ALL') as QualifyingLimit,
       events: atlas.AdditionalCriteria.CriteriaList.map((e: any) => convertAtlasToEvent(e, atlas.ConceptSets)),
     } : undefined,
     inclusionRules: atlas.InclusionRules?.map((rule: any) => {
@@ -642,7 +650,7 @@ function convertAtlasToEvent(atlasEvent: any, conceptSets?: any[]): CohortEvent 
 
   if (atlasEvent.Criteria) {
     // Has Criteria wrapper (InclusionRules, AdditionalCriteria)
-    criteriaType = Object.keys(atlasEvent.Criteria)[0] as any
+    criteriaType = Object.keys(atlasEvent.Criteria)[0] || 'ConditionOccurrence'
     criteriaObj = atlasEvent.Criteria[criteriaType]
   } else {
     // No Criteria wrapper (PrimaryCriteria)

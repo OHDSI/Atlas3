@@ -6,6 +6,8 @@
  * Follows the same pattern as cohort-cache.ts (native IndexedDB API).
  */
 
+import { logger } from '@/utils/logger'
+
 const DB_NAME = 'atlas3_config_cache'
 const DB_VERSION = 1
 const CONFIG_STORE = 'config'
@@ -23,7 +25,7 @@ function openDatabase(): Promise<IDBDatabase> {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
 
     request.onerror = () => {
-      console.error('[ConfigCache] Failed to open database:', request.error)
+      logger.error('ConfigCache', 'Failed to open database', request.error)
       reject(request.error)
     }
 
@@ -37,7 +39,7 @@ function openDatabase(): Promise<IDBDatabase> {
       // Create object store if it doesn't exist
       if (!db.objectStoreNames.contains(CONFIG_STORE)) {
         db.createObjectStore(CONFIG_STORE)
-        console.log('[ConfigCache] Object store created')
+        logger.debug('ConfigCache', 'Object store created')
       }
     }
   })
@@ -59,12 +61,12 @@ export async function clearConfigCache(): Promise<void> {
 
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        console.log('[ConfigCache] Cache cleared successfully')
+        logger.info('ConfigCache', 'Cache cleared successfully')
         resolve()
       }
 
       request.onerror = () => {
-        console.error('[ConfigCache] Failed to clear cache:', request.error)
+        logger.error('ConfigCache', 'Failed to clear cache', request.error)
         reject(request.error)
       }
 
@@ -73,7 +75,7 @@ export async function clearConfigCache(): Promise<void> {
       }
     })
   } catch (error) {
-    console.error('[ConfigCache] Error clearing cache:', error)
+    logger.error('ConfigCache', 'Error clearing cache', error)
     throw error
   }
 }
@@ -105,7 +107,7 @@ export async function getCacheStats(): Promise<CacheStats> {
       }
 
       request.onerror = () => {
-        console.error('[ConfigCache] Failed to get cache stats:', request.error)
+        logger.error('ConfigCache', 'Failed to get cache stats', request.error)
         reject(request.error)
       }
 
@@ -114,7 +116,7 @@ export async function getCacheStats(): Promise<CacheStats> {
       }
     })
   } catch (error) {
-    console.error('[ConfigCache] Error getting cache stats:', error)
+    logger.error('ConfigCache', 'Error getting cache stats', error)
     throw error
   }
 }
@@ -128,7 +130,7 @@ export function getVocabularySchema(): string {
   try {
     return localStorage.getItem('atlas3-vocabulary-schema') || 'public'
   } catch (error) {
-    console.error('Failed to read vocabulary schema from localStorage:', error)
+    logger.error('ConfigCache', 'Failed to read vocabulary schema from localStorage', error)
     return 'public'
   }
 }
@@ -143,7 +145,7 @@ export function setVocabularySchema(schema: string): void {
   try {
     localStorage.setItem('atlas3-vocabulary-schema', schema)
   } catch (error) {
-    console.error('Failed to save vocabulary schema to localStorage:', error)
+    logger.error('ConfigCache', 'Failed to save vocabulary schema to localStorage', error)
     throw new Error('Failed to save vocabulary schema')
   }
 }

@@ -8,6 +8,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useUIStore } from '@/stores/ui'
+import { logger } from '@/utils/logger'
 
 const STORAGE_PREFIX = 'atlas3-config-panel'
 const SCROLL_DEBOUNCE = 500 // 500ms debounce for scroll position
@@ -49,7 +50,7 @@ export function useConfigPanel() {
         scrollPosition.value = parseInt(savedScroll, 10) || 0
       }
     } catch (error) {
-      console.error('Failed to load config panel state:', error)
+      logger.error('ConfigPanel', 'Failed to load config panel state', error)
       // Continue with defaults if localStorage fails
     }
   }
@@ -61,7 +62,7 @@ export function useConfigPanel() {
     try {
       localStorage.setItem(key, String(value))
     } catch (error) {
-      console.error('Failed to save config panel state:', error)
+      logger.error('ConfigPanel', 'Failed to save config panel state', error)
       // Non-critical: fail silently
     }
   }

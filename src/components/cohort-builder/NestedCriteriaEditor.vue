@@ -308,6 +308,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import type { NestedCriteria, CohortEvent, CriteriaType, LogicType, TemporalWindow, EventAttribute } from '@/models/cohort.types'
+import type { CardinalityType } from '@/models/event.types'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
 
@@ -438,13 +439,13 @@ function selectConceptSet(eventIndex: number, eventId: string) {
 }
 
 // Cardinality
-function updateCardinality(index: number, type: string) {
+function updateCardinality(index: number, type: CardinalityType) {
   const event = localNested.value.events[index]
   if (!event) return
   if (!event.cardinality) {
-    event.cardinality = { type: type as any, count: 1, countingMethod: 'ALL' }
+    event.cardinality = { type, count: 1, countingMethod: 'ALL' }
   } else {
-    event.cardinality.type = type as any
+    event.cardinality.type = type
   }
   emitUpdate()
 }

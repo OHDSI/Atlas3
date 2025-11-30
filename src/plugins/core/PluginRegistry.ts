@@ -1,10 +1,11 @@
-import { 
-  PluginInstance, 
-  PluginRegistration, 
+import {
+  PluginInstance,
+  PluginRegistration,
   PluginLifecycleState,
   AuthContext,
-  PluginMessageBus 
+  PluginMessageBus
 } from '@/models/PluginModels';
+import { logger } from '@/utils/logger';
 
 export class PluginRegistry {
   private plugins: Map<string, PluginInstance> = new Map();
@@ -28,8 +29,8 @@ export class PluginRegistry {
     };
 
     this.plugins.set(registration.id, instance);
-    console.log(`[PluginRegistry] Registered plugin: ${registration.id}`);
-    
+    logger.info('PluginRegistry', `Registered plugin: ${registration.id}`);
+
     return instance;
   }
 
@@ -51,7 +52,7 @@ export class PluginRegistry {
       this.plugins.delete(pluginId);
       this.stateListeners.delete(pluginId);
       this.notifyChangeListeners('removed', pluginId);
-      console.log(`[PluginRegistry] Unregistered plugin: ${pluginId}`);
+      logger.info('PluginRegistry', `Unregistered plugin: ${pluginId}`);
     }
   }
 
@@ -74,7 +75,7 @@ export class PluginRegistry {
     if (plugin) {
       plugin.state = state;
       this.notifyStateListeners(pluginId, state);
-      console.log(`[PluginRegistry] Plugin ${pluginId} state: ${state}`);
+      logger.debug('PluginRegistry', `Plugin ${pluginId} state: ${state}`);
     }
   }
 
@@ -93,7 +94,7 @@ export class PluginRegistry {
         recoverable,
       };
       this.notifyStateListeners(pluginId, 'error');
-      console.error(`[PluginRegistry] Plugin ${pluginId} error:`, error);
+      logger.error('PluginRegistry', `Plugin ${pluginId} error`, error);
     }
   }
 

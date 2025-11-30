@@ -143,6 +143,7 @@ import type { Concept } from '@/models/concept-set.types'
 import { useConceptSetsStore } from '@/stores/conceptSets'
 import { useWebAPIStore } from '@/stores/webapi'
 import LoadingSpinner from '@/components/shared/LoadingSpinner.vue'
+import { logger } from '@/utils/logger'
 
 interface Props {
   modelValue: boolean
@@ -191,7 +192,7 @@ const searchResults = computed(() => {
 async function performSearch() {
   if (!searchQuery.value || searchQuery.value.length < 2) return
   if (!webapiStore.selectedSource) {
-    console.error('No CDM source selected')
+    logger.error('ConceptSearchDialog', 'No CDM source selected')
     return
   }
 
@@ -205,7 +206,7 @@ async function performSearch() {
       searchQuery.value
     )
   } catch (error) {
-    console.error('[ConceptSearchDialog] Search failed:', error)
+    logger.error('ConceptSearchDialog', 'Search failed', error)
   }
 }
 

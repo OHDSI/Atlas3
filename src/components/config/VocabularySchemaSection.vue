@@ -88,6 +88,7 @@ import { watchDebounced } from '@vueuse/core'
 import { useConfigStore } from '@/stores/config'
 import { useConfigUndo } from '@/composables/useConfigUndo'
 import { validateSchemaName } from '@/models/config.types'
+import { logger } from '@/utils/logger'
 
 const configStore = useConfigStore()
 const { undoStack, isSaving, pushUndo, performUndo } = useConfigUndo<string>()
@@ -130,7 +131,7 @@ onMounted(async () => {
     localSchema.value = configStore.vocabularySchema
     previousSchema.value = configStore.vocabularySchema
   } catch (error) {
-    console.error('Failed to load vocabulary schema:', error)
+    logger.error('VocabularySchema', 'Failed to load vocabulary schema', error)
   }
 })
 

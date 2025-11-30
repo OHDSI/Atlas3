@@ -14,6 +14,7 @@ import {
 import type { ConceptSet, ConceptSetListItem, ConceptSetItem } from '@/models/concept-set.types'
 import type { Concept } from '@/models/concept-set.types'
 import { conceptToConceptSetItem } from '@/utils/api-mappers'
+import { logger } from '@/utils/logger'
 
 // Debounce utility
 function debounce<T extends (...args: any[]) => any>(
@@ -84,7 +85,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       conceptSets.value = await getAllConceptSets()
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch concept sets'
-      console.error('Fetch concept sets error:', err)
+      logger.error('ConceptSetsStore', 'Fetch concept sets error', err)
       conceptSets.value = []
     } finally {
       loading.value = false
@@ -107,7 +108,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch concept set'
-      console.error('Fetch concept set error:', err)
+      logger.error('ConceptSetsStore', 'Fetch concept set error', err)
       currentSet.value = null
     } finally {
       loading.value = false
@@ -134,7 +135,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to create concept set'
-      console.error('Create concept set error:', err)
+      logger.error('ConceptSetsStore', 'Create concept set error', err)
       return null
     } finally {
       loading.value = false
@@ -161,7 +162,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to update concept set'
-      console.error('Update concept set error:', err)
+      logger.error('ConceptSetsStore', 'Update concept set error', err)
       return null
     } finally {
       loading.value = false
@@ -190,7 +191,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to delete concept set'
-      console.error('Delete concept set error:', err)
+      logger.error('ConceptSetsStore', 'Delete concept set error', err)
       return false
     } finally {
       loading.value = false

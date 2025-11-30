@@ -1,5 +1,6 @@
 import type { BackoffConfig } from '@/models/auth.types'
 import { tokenManager } from './tokenManager'
+import { logger } from '@/utils/logger'
 
 export class RefreshManager {
   private readonly defaultConfig: BackoffConfig = {
@@ -24,7 +25,7 @@ export class RefreshManager {
           return true
         }
       } catch (error) {
-        console.error(`Refresh attempt ${attempt + 1} failed:`, error)
+        logger.error('RefreshManager', `Refresh attempt ${attempt + 1} failed`, error)
       }
 
       if (attempt < finalConfig.maxRetries - 1) {

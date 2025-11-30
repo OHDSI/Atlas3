@@ -1,4 +1,5 @@
 import { PluginMessageBus, HostMessage } from '@/models/PluginModels';
+import { logger } from '@/utils/logger';
 
 type MessageCallback<T = any> = (payload: T) => void;
 
@@ -20,7 +21,7 @@ export class HostMessageBus implements PluginMessageBus {
       timestamp: new Date(),
     };
 
-    console.log(`[HostMessageBus] Plugin ${this.pluginId} sent message:`, message);
+    logger.debug('HostMessageBus', `Plugin ${this.pluginId} sent message`, message);
 
     // Dispatch custom event for host to handle
     window.dispatchEvent(
@@ -45,7 +46,7 @@ export class HostMessageBus implements PluginMessageBus {
 
       this.pendingRequests.set(callbackId, { resolve, reject });
 
-      console.log(`[HostMessageBus] Plugin ${this.pluginId} sent request:`, message);
+      logger.debug('HostMessageBus', `Plugin ${this.pluginId} sent request`, message);
 
       window.dispatchEvent(
         new CustomEvent('plugin-message', { detail: message })
@@ -118,8 +119,8 @@ export function getHostMessageBus(pluginId: string): HostMessageBus | undefined 
 export function setupGlobalMessageHandler(router: any, notificationService?: any): void {
   window.addEventListener('plugin-message', ((event: CustomEvent<HostMessage>) => {
     const message = event.detail;
-    
-    console.log('[HostMessageBus] Received message from plugin:', message);
+
+    logger.debug('HostMessageBus', 'Received message from plugin', message);
 
     switch (message.type) {
       case 'navigation:request':
@@ -138,7 +139,7 @@ export function setupGlobalMessageHandler(router: any, notificationService?: any
         if (notificationService) {
           notificationService.show(message.payload);
         } else {
-          console.log('[HostMessageBus] Notification:', message.payload);
+          logger.debug('HostMessageBus', 'Notification', message.payload);
         }
         break;
 
@@ -153,11 +154,11 @@ export function setupGlobalMessageHandler(router: any, notificationService?: any
         break;
 
       case 'error:report':
-        console.error(`[Plugin ${message.sourcePluginId}] Error:`, message.payload);
+        logger.error('HostMessageBus', `Plugin ${message.sourcePluginId} error`, message.payload);
         break;
 
       default:
-        console.log(`[HostMessageBus] Unhandled message type: ${message.type}`);
+        logger.debug('HostMessageBus', `Unhandled message type: ${message.type}`);
     }
   }) as EventListener);
 }

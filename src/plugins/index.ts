@@ -4,29 +4,30 @@ import { PluginLoader } from './core/PluginLoader';
 import { setupPluginIsolation } from './core/PluginIsolation';
 import { createHostMessageBus } from './messaging/HostMessageBus';
 import { AuthContext } from '@/models/PluginModels';
+import { logger } from '@/utils/logger';
 
 let pluginLoader: PluginLoader | null = null;
 let initialized = false;
 
 export async function initializePluginFramework(authContext: AuthContext): Promise<void> {
   if (initialized) {
-    console.warn('[PluginFramework] Already initialized');
+    logger.warn('PluginFramework', 'Already initialized');
     return;
   }
 
   try {
-    console.log('[PluginFramework] Initializing...');
+    logger.info('PluginFramework', 'Initializing...');
 
     // Setup error isolation
     setupPluginIsolation();
 
     // Load plugin configuration
     const manifest = await pluginConfigService.loadConfig();
-    console.log(`[PluginFramework] Loaded ${manifest.plugins.length} plugin(s)`);
+    logger.info('PluginFramework', `Loaded ${manifest.plugins.length} plugin(s)`);
 
     // If no plugins configured, skip plugin loading but mark as initialized
     if (manifest.plugins.length === 0) {
-      console.log('[PluginFramework] No plugins configured, skipping plugin loading');
+      logger.info('PluginFramework', 'No plugins configured, skipping plugin loading');
       initialized = true;
       return;
     }
@@ -57,11 +58,11 @@ export async function initializePluginFramework(authContext: AuthContext): Promi
     pluginConfigService.setupHotReload();
 
     initialized = true;
-    console.log('[PluginFramework] Initialization complete');
+    logger.info('PluginFramework', 'Initialization complete');
   } catch (error) {
-    console.error('[PluginFramework] Initialization failed:', error);
+    logger.error('PluginFramework', 'Initialization failed', error);
     // Don't throw error - allow app to continue without plugins
-    console.warn('[PluginFramework] Continuing without plugin support');
+    logger.warn('PluginFramework', 'Continuing without plugin support');
     initialized = true;
   }
 }

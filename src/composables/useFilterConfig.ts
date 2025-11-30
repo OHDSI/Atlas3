@@ -15,6 +15,7 @@
 import { computed, ref, type Ref, type ComputedRef } from 'vue'
 import { configLoaderService } from '@/services/config-loader.service'
 import { useI18n } from '@/composables/useI18n'
+import { logger } from '@/utils/logger'
 import type {
   FilterTypeConfig,
   ValidationResult,
@@ -96,17 +97,13 @@ export function useFilterConfig(section: Ref<string>): UseFilterConfigReturn {
       section.value
     )
 
-    if (import.meta.env.DEV) {
-      console.log(`[useFilterConfig] Section: ${section.value}, Filter keys:`, filterKeys)
-    }
+    logger.debug('useFilterConfig', `Section: ${section.value}, Filter keys`, filterKeys)
 
     return filterKeys
       .map((key) => {
         const config = configLoaderService.getFilterConfig(key)
         if (!config) {
-          if (import.meta.env.DEV) {
-            console.warn(`[useFilterConfig] No config found for filter: ${key}`)
-          }
+          logger.warn('useFilterConfig', `No config found for filter: ${key}`)
           return null
         }
 

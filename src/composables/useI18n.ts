@@ -5,9 +5,8 @@
 import { computed } from 'vue'
 import type { ComputedRef } from 'vue'
 import { useLocaleStore } from '@/stores/locale'
+import { logger } from '@/utils/logger'
 import type { UseI18nReturn, LocaleCode, Locale, TranslationParams, LocaleFormat } from '@/types/i18n'
-
-const isDev = import.meta.env.DEV
 
 /**
  * Get nested value from object using dot notation
@@ -68,8 +67,8 @@ function getTranslation(
 
     // Log missing translation in dev mode
     // Only warn if translations have been initialized to avoid noise during app startup
-    if (isDev && !translation && localeStore.initialized) {
-      console.warn(`[i18n] Missing translation for key: "${key}" in locale: ${localeStore.locale}`)
+    if (!translation && localeStore.initialized) {
+      logger.warn('i18n', `Missing translation for key: "${key}" in locale: ${localeStore.locale}`)
     }
   }
 

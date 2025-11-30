@@ -1,6 +1,7 @@
 import { RouteRecordRaw } from 'vue-router';
 import { pluginRegistry } from '../core/PluginRegistry';
 import PluginContainer from '../components/PluginContainer.vue';
+import { logger } from '@/utils/logger';
 
 export function generatePluginRoutes(): RouteRecordRaw[] {
   const routes: RouteRecordRaw[] = [];
@@ -32,7 +33,7 @@ export function validatePluginRoute(pluginId: string, route: string): boolean {
     
     for (const menuItem of plugin.registration.menuItems) {
       if (menuItem.route === route) {
-        console.error(`Route conflict detected: ${route} is already used by plugin ${plugin.registration.id}`);
+        logger.error('PluginRoutes', `Route conflict detected: ${route} is already used by plugin ${plugin.registration.id}`);
         return false;
       }
     }

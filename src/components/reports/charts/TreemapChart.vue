@@ -37,6 +37,7 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import type { TreemapNode } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'
+import type { TreemapSeriesOption } from 'echarts/charts'
 import { defaultTreemapOptions, createResizeHandler } from '@/utils/chart-config'
 import ChartExport from './ChartExport.vue'
 
@@ -95,7 +96,7 @@ const chartOption = computed(() => {
 
   // Override roam setting if zoom is disabled
   if (!props.enableZoom && baseOption.series && Array.isArray(baseOption.series) && baseOption.series[0]) {
-    const seriesItem = baseOption.series[0] as any
+    const seriesItem = baseOption.series[0] as TreemapSeriesOption
     seriesItem.roam = false
   }
 

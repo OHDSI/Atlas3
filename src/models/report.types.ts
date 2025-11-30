@@ -921,3 +921,94 @@ export interface ReportData {
   fetchedAt: Date
   data: PersonReport | ConditionErasReport | ConditionReport | DrugErasReport | CohortSpecificReport | PersonsExposureReport | VisitsReport | VisitDatesReport | CareSiteVisitDatesReport | DrugUtilizationReport | HeraclesHeelReport | ConditionsByIndexReport | DeathReport | DrugExposureReport | DrugsByIndexReport | ObservationPeriodsReport | ProcedureReport | ProceduresByIndexReport | DataCompletenessReport | EntropyReport | TornadoReport
 }
+
+// ============================================================================
+// Type Guards for Report Data
+// ============================================================================
+
+/**
+ * Reports that have a 'prevalence' array with ConditionData items.
+ * This covers most standard prevalence-based reports.
+ */
+export type PrevalenceReport =
+  | ConditionReport
+  | ConditionsByIndexReport
+  | DeathReport
+  | DrugExposureReport
+  | DrugsByIndexReport
+  | ObservationPeriodsReport
+  | ProcedureReport
+  | ProceduresByIndexReport
+  | DataCompletenessReport
+  | EntropyReport
+  | TornadoReport
+  | PersonsExposureReport
+  | VisitsReport
+  | DrugUtilizationReport
+
+/**
+ * Type guard: check if report data has a 'prevalence' property
+ */
+export function hasPrevalence(data: unknown): data is PrevalenceReport {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    'prevalence' in data &&
+    Array.isArray((data as Record<string, unknown>).prevalence)
+  )
+}
+
+/**
+ * Type guard: check if report is a ConditionEras report
+ */
+export function isConditionErasReportData(data: unknown): data is ConditionErasReport {
+  return hasPrevalence(data) && (data as ConditionErasReport).prevalence?.every?.(
+    (item) => 'averageDuration' in item && ('soc' in item || 'hlt' in item || true)
+  )
+}
+
+/**
+ * Type guard: check if report is a DrugEras report
+ */
+export function isDrugErasReportData(data: unknown): data is DrugErasReport {
+  return hasPrevalence(data) && (data as DrugErasReport).prevalence?.every?.(
+    (item) => 'ingredient' in item
+  )
+}
+
+/**
+ * Type guard: check if report is a HeraclesHeel report
+ */
+export function isHeraclesHeelReportData(data: unknown): data is HeraclesHeelReport {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    'results' in data &&
+    Array.isArray((data as HeraclesHeelReport).results)
+  )
+}
+
+/**
+ * Type guard: check if report is a VisitDates report
+ */
+export function isVisitDatesReportData(data: unknown): data is VisitDatesReport {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    'data' in data &&
+    Array.isArray((data as VisitDatesReport).data)
+  )
+}
+
+/**
+ * Type guard: check if report is a CareSiteVisitDates report
+ */
+export function isCareSiteVisitDatesReportData(data: unknown): data is CareSiteVisitDatesReport {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    'data' in data &&
+    Array.isArray((data as CareSiteVisitDatesReport).data) &&
+    (data as CareSiteVisitDatesReport).data?.every?.((item) => 'careSiteId' in item)
+  )
+}

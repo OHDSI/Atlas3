@@ -1,6 +1,7 @@
 /**
  * Data Source Formatters and Transformers
  */
+import { logger } from '@/utils/logger'
 import type {
   DashboardAPIResponse,
   DashboardReport,
@@ -78,7 +79,7 @@ export function transformClinicalDomainReport(
   // For very large datasets, aggregate less significant entries
   let processedRaw = raw
   if (raw.length > AGGREGATION_THRESHOLD) {
-    console.log(`[Transformer] Large dataset detected (${raw.length} entries), aggregating nodes`)
+    logger.info('Transformer', `Large dataset detected (${raw.length} entries), aggregating nodes`)
     // Keep top 1000 by prevalence, aggregate rest as "Other"
     const sorted = [...raw].sort((a, b) => b.percentPersons - a.percentPersons)
     const top = sorted.slice(0, 1000)

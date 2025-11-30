@@ -6,6 +6,7 @@
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { logger } from '@/utils/logger'
 import type {
   ReportType,
   ReportData,
@@ -108,7 +109,7 @@ export const useReportsStore = defineStore('reports', () => {
 
       // Use cached data if less than 5 minutes old
       if (cacheAge < 5 * 60 * 1000) {
-        console.log('[Reports Store] Using cached data for', cacheKey)
+        logger.debug('ReportsStore', 'Using cached data for', cacheKey)
         currentReportType.value = reportType
         currentSourceKey.value = sourceKey
         currentCohortId.value = cohortId
@@ -298,11 +299,11 @@ export const useReportsStore = defineStore('reports', () => {
       currentSourceKey.value = sourceKey
       currentCohortId.value = cohortId
 
-      console.log('[Reports Store] Fetched and cached report:', cacheKey)
+      logger.debug('ReportsStore', 'Fetched and cached report', cacheKey)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       error.value = `Failed to fetch ${reportType} report: ${errorMessage}`
-      console.error('[Reports Store] Error fetching report:', err)
+      logger.error('ReportsStore', 'Error fetching report', err)
     } finally {
       loading.value = false
     }
@@ -321,7 +322,7 @@ export const useReportsStore = defineStore('reports', () => {
   function clearReport(cohortId: number, sourceKey: string, reportType: ReportType): void {
     const cacheKey = getCacheKey(cohortId, sourceKey, reportType)
     reportData.value.delete(cacheKey)
-    console.log('[Reports Store] Cleared cached report:', cacheKey)
+    logger.debug('ReportsStore', 'Cleared cached report', cacheKey)
   }
 
   /**
@@ -338,7 +339,7 @@ export const useReportsStore = defineStore('reports', () => {
    */
   function clearAllReports(): void {
     reportData.value.clear()
-    console.log('[Reports Store] Cleared all cached reports')
+    logger.debug('ReportsStore', 'Cleared all cached reports')
   }
 
   /**

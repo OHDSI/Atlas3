@@ -1,199 +1,23 @@
 <template>
   <div class="cohort-builder">
     <!-- Breadcrumb Navigation -->
-    <nav class="cohort-builder__breadcrumb">
-      <span
-        class="cohort-builder__breadcrumb-item cohort-builder__breadcrumb-item--link"
-        @click="router.push('/cohorts')"
-      >{{ t('navigation.cohortdefinitions') }}</span>
-      <span class="cohort-builder__breadcrumb-separator">›</span>
-      <span class="cohort-builder__breadcrumb-item cohort-builder__breadcrumb-item--active">
-        {{ cohortName || t('cohortDefinitions.newDefinition') }}
-      </span>
-      <v-tooltip
-        :text="t('columns.name', 'Name').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tooltipProps }">
-          <v-icon
-            v-bind="tooltipProps"
-            size="small"
-            class="cohort-builder__breadcrumb-edit-icon"
-            @click="showEditNameDialog = true"
-          >
-            mdi-pencil
-          </v-icon>
-        </template>
-      </v-tooltip>
-    </nav>
-
-    <!-- Edit Name Dialog -->
-    <v-dialog
-      v-model="showEditNameDialog"
-      max-width="600px"
-    >
-      <v-card>
-        <v-card-title class="d-flex align-center">
-          <v-icon
-            color="primary"
-            class="mr-2"
-          >
-            mdi-pencil
-          </v-icon>
-          {{ t('columns.name', 'Edit Cohort Name') }}
-        </v-card-title>
-        <v-card-text>
-          <v-text-field
-            v-model="editingName"
-            :label="t('columns.name', 'Name').value"
-            :placeholder="tv('cohortDefinitions.newDefinitionTitle')"
-            variant="outlined"
-            autofocus
-            @keyup.enter="saveEditedName"
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            color="grey"
-            variant="text"
-            @click="showEditNameDialog = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            @click="saveEditedName"
-          >
-            {{ t('common.save', 'Save') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <cohort-breadcrumb
+      v-model="cohortName"
+      @navigate-back="router.push('/cohorts')"
+    />
 
     <!-- Top Toolbar -->
     <div class="cohort-builder__toolbar">
       <div class="cohort-builder__toolbar-left">
-        <div class="cohort-builder__cohort-description">
-          <label class="cohort-builder__label d-none d-md-inline">{{ t('columns.description', 'DESCRIPTION').value.toUpperCase() }}:</label>
-          <!-- Inline input for larger screens -->
-          <input
-            v-model="cohortDescription"
-            class="cohort-builder__description-input d-none d-md-inline-block"
-            :placeholder="t('columns.description', 'Description').value"
-            data-testid="cohort-description-input"
-          >
-          <!-- Icon button for smaller screens -->
-          <v-tooltip
-            :text="t('columns.description', 'Description').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tooltipProps }">
-              <v-btn
-                v-bind="tooltipProps"
-                class="d-md-none"
-                icon="mdi-text"
-                variant="text"
-                size="small"
-                @click="showDescriptionDialog = true"
-              />
-            </template>
-          </v-tooltip>
-        </div>
-
-        <!-- Description Dialog for smaller screens -->
-        <v-dialog
-          v-model="showDescriptionDialog"
-          max-width="600"
-        >
-          <v-card>
-            <v-card-title>{{ t('columns.description', 'Description').value }}</v-card-title>
-            <v-card-text>
-              <v-textarea
-                v-model="cohortDescription"
-                :placeholder="t('columns.description', 'Description').value"
-                rows="3"
-                variant="outlined"
-                data-testid="cohort-description-dialog-input"
-              />
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn
-                @click="showDescriptionDialog = false"
-              >
-                {{ t('common.close', 'Close') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-
-        <!-- Concept Sets Icon -->
-        <v-tooltip
-          v-if="usedConceptSets.length > 0"
-          :text="t('cohortDefinitions.cohortDefinitionManager.tabs.conceptSets', 'Concept Sets').value"
-          location="bottom"
-        >
-          <template #activator="{ props: tooltipProps }">
-            <v-badge
-              v-bind="tooltipProps"
-              :content="usedConceptSets.length"
-              color="primary"
-              class="cohort-builder__validation-badge"
-            >
-              <v-icon
-                color="primary"
-                icon="mdi-shape"
-                size="small"
-                data-testid="concept-sets-icon"
-                style="cursor: pointer"
-                @click="showConceptSetsDialog = true"
-              />
-            </v-badge>
-          </template>
-        </v-tooltip>
-
-        <!-- Validation Notification Icon -->
-        <v-tooltip
-          v-if="isValidating"
-          :text="t('common.loadingWithDots', 'Loading...').value"
-          location="bottom"
-        >
-          <template #activator="{ props: tooltipProps }">
-            <v-progress-circular
-              v-bind="tooltipProps"
-              indeterminate
-              size="20"
-              width="2"
-              color="primary"
-              class="cohort-builder__validation-badge"
-            />
-          </template>
-        </v-tooltip>
-        <v-tooltip
-          v-else-if="validationWarnings.length > 0"
-          :text="t('cc.viewEdit.tabs.messages', 'View validation messages').value"
-          location="bottom"
-        >
-          <template #activator="{ props: tooltipProps }">
-            <v-badge
-              v-bind="tooltipProps"
-              :content="validationWarnings.length"
-              :color="highestSeverityColor"
-              class="cohort-builder__validation-badge"
-            >
-              <v-icon
-                color="primary"
-                icon="mdi-message-text"
-                size="small"
-                data-testid="validation-icon"
-                style="cursor: pointer"
-                @click="showValidationDialog = true"
-              />
-            </v-badge>
-          </template>
-        </v-tooltip>
+        <cohort-toolbar-status
+          v-model:description="cohortDescription"
+          :concept-set-count="usedConceptSets.length"
+          :validation-count="validationWarnings.length"
+          :validation-color="highestSeverityColor"
+          :is-validating="isValidating"
+          @show-concept-sets="showConceptSetsDialog = true"
+          @show-validation="showValidationDialog = true"
+        />
 
         <!-- Concept Sets Dialog -->
         <v-dialog
@@ -342,59 +166,14 @@
       </div>
 
       <div class="cohort-builder__toolbar-right">
-        <!-- Cancel Button -->
-        <v-btn
-          variant="outlined"
-          @click="handleCancel"
-        >
-          <v-icon class="d-md-none">
-            mdi-close
-          </v-icon>
-          <span class="d-none d-md-inline">{{ t('common.cancel') }}</span>
-        </v-btn>
-
-        <!-- Save Button -->
-        <v-btn
-          color="primary"
-          variant="flat"
-          :disabled="!canSave"
-          @click="handleSave"
-        >
-          <v-icon
-            v-if="hasUnsavedChanges"
-            start
-            size="small"
-            color="white"
-            class="d-none d-md-inline"
-          >
-            mdi-circle
-          </v-icon>
-          <v-icon class="d-md-none">
-            mdi-content-save
-          </v-icon>
-          <span class="d-none d-md-inline">{{ t('common.save') }}</span>
-        </v-btn>
-
-        <!-- Generate Button -->
-        <v-btn
-          v-if="cohortId"
-          color="orange"
-          variant="outlined"
-          :disabled="!canSave"
-          data-testid="generate-btn"
-          @click="openGenerationPanel"
-        >
-          <v-icon
-            class="d-none d-md-inline"
-            start
-          >
-            mdi-database-cog
-          </v-icon>
-          <v-icon class="d-md-none">
-            mdi-database-cog
-          </v-icon>
-          <span class="d-none d-md-inline">{{ t('components.analysisExecution.buttons.generate') }}</span>
-        </v-btn>
+        <cohort-toolbar-actions
+          :can-save="canSave"
+          :has-unsaved-changes="hasUnsavedChanges"
+          :show-generate="!!cohortId"
+          @cancel="handleCancel"
+          @save="handleSave"
+          @generate="openGenerationPanel"
+        />
       </div>
     </div>
 
@@ -703,6 +482,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
+import { logger } from '@/utils/logger'
 import { useCohortStore } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
@@ -710,6 +490,7 @@ import { useAtlasConverter } from '@/composables/useAtlasConverter'
 import { useI18n } from '@/composables/useI18n'
 import { getCohortDefinition, validateCohortDefinition } from '@/services/webapi'
 import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas-converter'
+import { isAtlasCohortDefinitionWrapper } from '@/models/atlas.types'
 import type {
   CohortEvent,
   ConceptSetReference,
@@ -731,6 +512,9 @@ import ExitCriteriaPanel from '../cohort-builder/ExitCriteriaPanel.vue'
 import CensorWindowEditor from '../cohort-builder/CensorWindowEditor.vue'
 import CriteriaGroupEditor from '../cohort-builder/CriteriaGroupEditor.vue'
 import GenerationPanel from './GenerationPanel.vue'
+import CohortBreadcrumb from './CohortBreadcrumb.vue'
+import CohortToolbarActions from './CohortToolbarActions.vue'
+import CohortToolbarStatus from './CohortToolbarStatus.vue'
 
 interface Props {
   id?: string
@@ -744,12 +528,11 @@ const cohortStore = useCohortStore()
 const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
 const { importFromFile, downloadAtlasJSON, conversionError } = useAtlasConverter()
-const { t, tv } = useI18n()
+const { t } = useI18n()
 
 // Core cohort state
 const cohortName = ref('')
 const cohortDescription = ref('')
-const showDescriptionDialog = ref(false)
 const entryEvents = ref<CohortEvent[]>([])
 const additionalCriteria = ref<CriteriaGroup | undefined>(undefined)
 const inclusionRules = ref<InclusionRule[]>([])
@@ -783,8 +566,6 @@ const errorMessage = ref('')
 const showSuccess = ref(false)
 const successMessage = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
-const showEditNameDialog = ref(false)
-const editingName = ref('')
 const isConfirmingNavigation = ref(false) // Flag to prevent double confirmation
 
 // Snapshot of the loaded/saved state for change detection
@@ -1056,6 +837,9 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
+  // Stop timers to prevent memory leaks
+  cohortStore.stopAutoSave()
+  cohortStore.cancelRetry()
 })
 
 watch(
@@ -1076,15 +860,15 @@ async function loadCohort(id: string) {
     const atlasCohort = await getCohortDefinition(cohortId)
 
     if (!atlasCohort) {
-      console.error(`Failed to load cohort ${id}`)
+      logger.error('CohortBuilder', `Failed to load cohort ${id}`)
       isLoadingCohort.value = false
       return
     }
 
     // Parse expression if it's a string (stored as JSON in WebAPI)
     let expression
-    if (typeof atlasCohort === 'object' && 'expression' in atlasCohort) {
-      const exprValue = (atlasCohort as any).expression
+    if (isAtlasCohortDefinitionWrapper(atlasCohort)) {
+      const exprValue = atlasCohort.expression
       expression = typeof exprValue === 'string' ? JSON.parse(exprValue) : exprValue
     } else {
       expression = atlasCohort
@@ -1152,7 +936,7 @@ async function loadCohort(id: string) {
     // Validate cohort in the background (don't await)
     validateCohort()
   } catch (error) {
-    console.error(`Error loading cohort ${id}:`, error)
+    logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
     isLoadingCohort.value = false
     // Restart watcher in case of error
     if (!validationWatcherStop) {
@@ -1236,7 +1020,7 @@ async function validateCohort() {
     const result = await validateCohortDefinition(cohortName.value, atlasExpression)
     validationWarnings.value = result.warnings || []
   } catch (error) {
-    console.error('Failed to validate cohort:', error)
+    logger.error('CohortBuilder', 'Failed to validate cohort', error)
     validationWarnings.value = []
   } finally {
     _isValidatingFlag = false
@@ -1274,20 +1058,6 @@ validationWatcherStop = watch(
   { deep: true }
 )
 
-// Watch to populate editingName when dialog opens
-watch(showEditNameDialog, (newValue) => {
-  if (newValue) {
-    editingName.value = cohortName.value
-  }
-})
-
-/**
- * Save edited cohort name
- */
-function saveEditedName() {
-  cohortName.value = editingName.value
-  showEditNameDialog.value = false
-}
 
 function handleSelectConceptSet(eventId: string) {
   selectedCriteriaContext.value = { eventId, ruleIndex: -1, groupIndex: -1, eventIndex: -1 }
@@ -1757,7 +1527,7 @@ async function _handleGenerate() {
     showSuccess.value = true
   } catch (error) {
     generationError.value = error instanceof Error ? error.message : 'Generation failed'
-    console.error('Generation error:', error)
+    logger.error('CohortBuilder', 'Generation error', error)
   }
 }
 

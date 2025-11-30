@@ -483,12 +483,11 @@ export function isTokenRefreshError(error: unknown): error is Error {
  * Type guard for checking if JWT payload is valid
  */
 export function isValidJWTPayload(payload: unknown): payload is JWTPayload {
-  return (
-    typeof payload === 'object' &&
-    payload !== null &&
-    'exp' in payload &&
-    typeof (payload as any).exp === 'number'
-  );
+  if (typeof payload !== 'object' || payload === null) {
+    return false
+  }
+  const obj = payload as Record<string, unknown>
+  return 'exp' in obj && typeof obj.exp === 'number'
 }
 
 /**

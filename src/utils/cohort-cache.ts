@@ -5,6 +5,7 @@
  */
 
 import type { CohortDefinition } from '@/models/cohort.types'
+import { logger } from '@/utils/logger'
 
 const DB_NAME = 'atlas3_cohort_cache'
 const DB_VERSION = 1
@@ -25,7 +26,7 @@ function openDatabase(): Promise<IDBDatabase> {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
 
     request.onerror = () => {
-      console.error('[CohortCache] Failed to open database:', request.error)
+      logger.error('CohortCache', 'Failed to open database', request.error)
       reject(request.error)
     }
 
@@ -40,7 +41,7 @@ function openDatabase(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'cohort.id' })
         objectStore.createIndex('timestamp', 'timestamp', { unique: false })
-        console.log('[CohortCache] Object store created')
+        logger.debug('CohortCache', 'Object store created')
       }
     }
   })
@@ -56,7 +57,7 @@ export async function saveCohortToCache(
   source: 'webapi' | 'local' = 'webapi'
 ): Promise<void> {
   if (!cohort.id) {
-    console.warn('[CohortCache] Cannot cache cohort without ID')
+    logger.warn('CohortCache', 'Cannot cache cohort without ID')
     return
   }
 
@@ -75,12 +76,12 @@ export async function saveCohortToCache(
 
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        console.log(`[CohortCache] Cohort ${cohort.id} cached successfully`)
+        logger.debug('CohortCache', `Cohort ${cohort.id} cached successfully`)
         resolve()
       }
 
       request.onerror = () => {
-        console.error('[CohortCache] Failed to cache cohort:', request.error)
+        logger.error('CohortCache', 'Failed to cache cohort', request.error)
         reject(request.error)
       }
 
@@ -89,7 +90,7 @@ export async function saveCohortToCache(
       }
     })
   } catch (error) {
-    console.error('[CohortCache] Error saving to cache:', error)
+    logger.error('CohortCache', 'Error saving to cache', error)
     throw error
   }
 }
@@ -112,7 +113,7 @@ export async function getCohortFromCache(cohortId: number | string): Promise<Coh
         const cachedData: CachedCohort | undefined = request.result
 
         if (!cachedData) {
-          console.log(`[CohortCache] Cohort ${cohortId} not found in cache`)
+          logger.debug('CohortCache', `Cohort ${cohortId} not found in cache`)
           resolve(null)
           return
         }
@@ -120,18 +121,18 @@ export async function getCohortFromCache(cohortId: number | string): Promise<Coh
         // Check if cache is expired
         const age = Date.now() - cachedData.timestamp
         if (age > CACHE_DURATION_MS) {
-          console.log(`[CohortCache] Cohort ${cohortId} cache expired (${Math.round(age / 1000 / 60)} minutes old)`)
+          logger.debug('CohortCache', `Cohort ${cohortId} cache expired (${Math.round(age / 1000 / 60)} minutes old)`)
           // Don't delete here - let clearExpiredCache handle it
           resolve(null)
           return
         }
 
-        console.log(`[CohortCache] Cohort ${cohortId} retrieved from cache (${Math.round(age / 1000)} seconds old)`)
+        logger.debug('CohortCache', `Cohort ${cohortId} retrieved from cache (${Math.round(age / 1000)} seconds old)`)
         resolve(cachedData.cohort)
       }
 
       request.onerror = () => {
-        console.error('[CohortCache] Failed to retrieve from cache:', request.error)
+        logger.error('CohortCache', 'Failed to retrieve from cache', request.error)
         reject(request.error)
       }
 
@@ -140,7 +141,7 @@ export async function getCohortFromCache(cohortId: number | string): Promise<Coh
       }
     })
   } catch (error) {
-    console.error('[CohortCache] Error retrieving from cache:', error)
+    logger.error('CohortCache', 'Error retrieving from cache', error)
     return null
   }
 }
@@ -158,12 +159,12 @@ export async function clearCache(): Promise<void> {
 
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        console.log('[CohortCache] All cached cohorts cleared')
+        logger.info('CohortCache', 'All cached cohorts cleared')
         resolve()
       }
 
       request.onerror = () => {
-        console.error('[CohortCache] Failed to clear cache:', request.error)
+        logger.error('CohortCache', 'Failed to clear cache', request.error)
         reject(request.error)
       }
 
@@ -172,7 +173,7 @@ export async function clearCache(): Promise<void> {
       }
     })
   } catch (error) {
-    console.error('[CohortCache] Error clearing cache:', error)
+    logger.error('CohortCache', 'Error clearing cache', error)
     throw error
   }
 }
@@ -191,12 +192,12 @@ export async function deleteCohortFromCache(cohortId: number | string): Promise<
 
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        console.log(`[CohortCache] Cohort ${cohortId} deleted from cache`)
+        logger.debug('CohortCache', `Cohort ${cohortId} deleted from cache`)
         resolve()
       }
 
       request.onerror = () => {
-        console.error('[CohortCache] Failed to delete from cache:', request.error)
+        logger.error('CohortCache', 'Failed to delete from cache', request.error)
         reject(request.error)
       }
 
@@ -205,7 +206,7 @@ export async function deleteCohortFromCache(cohortId: number | string): Promise<
       }
     })
   } catch (error) {
-    console.error('[CohortCache] Error deleting from cache:', error)
+    logger.error('CohortCache', 'Error deleting from cache', error)
     throw error
   }
 }
@@ -243,7 +244,7 @@ export async function clearExpiredCache(): Promise<void> {
           })
 
           if (expiredKeys.length > 0) {
-            console.log(`[CohortCache] Cleared ${expiredKeys.length} expired cache entries`)
+            logger.debug('CohortCache', `Cleared ${expiredKeys.length} expired cache entries`)
           }
 
           resolve()
@@ -251,7 +252,7 @@ export async function clearExpiredCache(): Promise<void> {
       }
 
       request.onerror = () => {
-        console.error('[CohortCache] Failed to clear expired cache:', request.error)
+        logger.error('CohortCache', 'Failed to clear expired cache', request.error)
         reject(request.error)
       }
 
@@ -260,7 +261,7 @@ export async function clearExpiredCache(): Promise<void> {
       }
     })
   } catch (error) {
-    console.error('[CohortCache] Error clearing expired cache:', error)
+    logger.error('CohortCache', 'Error clearing expired cache', error)
     throw error
   }
 }
@@ -322,7 +323,7 @@ export async function getCacheStats(): Promise<{
       }
     })
   } catch (error) {
-    console.error('[CohortCache] Error getting cache stats:', error)
+    logger.error('CohortCache', 'Error getting cache stats', error)
     return {
       totalCohorts: 0,
       expiredCohorts: 0,

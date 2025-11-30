@@ -12,7 +12,9 @@ interface ImportMeta {
 // SystemJS type declaration
 interface Window {
   System?: {
-    import<T = any>(moduleId: string): Promise<T>
-    register(deps: string[], declare: Function): void
+    import<T = unknown>(moduleId: string): Promise<T>
+    register(deps: string[], declare: (...args: unknown[]) => unknown): void
   }
+  // Plugin loader for retry functionality (set by PluginManager)
+  __pluginLoader?: import('@/plugins/core/PluginLoader').PluginLoader
 }

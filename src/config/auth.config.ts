@@ -1,4 +1,5 @@
 import type { AuthProvider } from '@/models/auth.types'
+import { logger } from '@/utils/logger'
 
 export interface AuthConfig {
   userAuthenticationEnabled: boolean
@@ -14,20 +15,19 @@ export interface AuthConfig {
  */
 function parseProvidersFromEnv(): AuthProvider[] {
   const providersJson = import.meta.env.VITE_AUTH_PROVIDERS
-  console.log('[Auth Config] VITE_AUTH_PROVIDERS raw value:', providersJson)
+  logger.debug('AuthConfig', 'VITE_AUTH_PROVIDERS raw value', providersJson)
 
   if (!providersJson) {
-    console.warn('[Auth Config] VITE_AUTH_PROVIDERS is empty or undefined')
+    logger.warn('AuthConfig', 'VITE_AUTH_PROVIDERS is empty or undefined')
     return []
   }
 
   try {
     const parsed = JSON.parse(providersJson)
-    console.log('[Auth Config] Parsed providers:', parsed)
+    logger.debug('AuthConfig', 'Parsed providers', parsed)
     return parsed
   } catch (error) {
-    console.error('[Auth Config] Failed to parse VITE_AUTH_PROVIDERS:', error)
-    console.error('[Auth Config] Raw value was:', providersJson)
+    logger.error('AuthConfig', 'Failed to parse VITE_AUTH_PROVIDERS', { error, rawValue: providersJson })
     return []
   }
 }
@@ -91,8 +91,8 @@ export const defaultAuthConfig: AuthConfig = {
 
 export let authConfig: AuthConfig = { ...defaultAuthConfig }
 
-console.log('[Auth Config] Final authConfig:', authConfig)
-console.log('[Auth Config] Auth providers count:', authConfig.authProviders.length)
+logger.debug('AuthConfig', 'Final authConfig', authConfig)
+logger.debug('AuthConfig', 'Auth providers count', authConfig.authProviders.length)
 
 export function setAuthConfig(config: Partial<AuthConfig>): void {
   authConfig = { ...authConfig, ...config }

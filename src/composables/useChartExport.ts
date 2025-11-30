@@ -8,6 +8,16 @@ import { ref } from 'vue'
 import type { EChartsType } from 'echarts/core'
 import * as Papa from 'papaparse'
 import type { ChartExportOptions, CSVExportData } from '@/models/report.types'
+import { logger } from '@/utils/logger'
+
+/**
+ * Options for renderToSVGString including backgroundColor
+ * ECharts types may not include all available options
+ */
+interface SVGRenderOptions {
+  useViewBox?: boolean
+  backgroundColor?: string
+}
 
 export function useChartExport() {
   const exporting = ref(false)
@@ -40,11 +50,11 @@ export function useChartExport() {
       // Trigger download
       downloadDataURL(dataURL, filename)
 
-      console.log('[useChartExport] Exported chart to PNG:', filename)
+      logger.info('ChartExport', 'Exported chart to PNG', filename)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to export PNG'
       exportError.value = message
-      console.error('[useChartExport] PNG export error:', error)
+      logger.error('ChartExport', 'PNG export error', error)
       throw error
     } finally {
       exporting.value = false
@@ -68,9 +78,10 @@ export function useChartExport() {
       } = options
 
       // Get SVG string from chart
+      // The backgroundColor option may not be in all ECharts type definitions
       const svg = chart.renderToSVGString({
         backgroundColor
-      } as any)
+      } as SVGRenderOptions)
 
       // Create blob and download
       const blob = new Blob([svg], { type: 'image/svg+xml' })
@@ -78,11 +89,11 @@ export function useChartExport() {
       downloadURL(url, filename)
       URL.revokeObjectURL(url)
 
-      console.log('[useChartExport] Exported chart to SVG:', filename)
+      logger.info('ChartExport', 'Exported chart to SVG', filename)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to export SVG'
       exportError.value = message
-      console.error('[useChartExport] SVG export error:', error)
+      logger.error('ChartExport', 'SVG export error', error)
       throw error
     } finally {
       exporting.value = false
@@ -115,11 +126,11 @@ export function useChartExport() {
       downloadURL(url, filename)
       URL.revokeObjectURL(url)
 
-      console.log('[useChartExport] Exported data to CSV:', filename)
+      logger.info('ChartExport', 'Exported data to CSV', filename)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to export CSV'
       exportError.value = message
-      console.error('[useChartExport] CSV export error:', error)
+      logger.error('ChartExport', 'CSV export error', error)
       throw error
     } finally {
       exporting.value = false
@@ -154,11 +165,11 @@ export function useChartExport() {
         await fallbackCopyToClipboard(tsv)
       }
 
-      console.log('[useChartExport] Copied data to clipboard')
+      logger.info('ChartExport', 'Copied data to clipboard')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to copy to clipboard'
       exportError.value = message
-      console.error('[useChartExport] Clipboard copy error:', error)
+      logger.error('ChartExport', 'Clipboard copy error', error)
       throw error
     } finally {
       exporting.value = false

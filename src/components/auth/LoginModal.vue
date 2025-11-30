@@ -87,6 +87,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 import { authConfig } from '@/config/auth.config'
 import { authService } from '@/services/auth/authService'
+import { logger } from '@/utils/logger'
 import type { AuthProvider, LoginCredentials } from '@/models/auth.types'
 import CredentialsForm from './CredentialsForm.vue'
 
@@ -114,17 +115,17 @@ async function fetchProviders() {
   loadingProviders.value = true
   try {
     const fetchedProviders = await authService.fetchOAuthProviders()
-    console.log('[LoginModal] Fetched providers from WebAPI:', fetchedProviders)
+    logger.debug('LoginModal', 'Fetched providers from WebAPI', fetchedProviders)
 
     if (fetchedProviders.length > 0) {
       providers.value = fetchedProviders
     } else {
       // Fallback to config providers if WebAPI doesn't return any
-      console.log('[LoginModal] Using providers from config:', authConfig.authProviders)
+      logger.debug('LoginModal', 'Using providers from config', authConfig.authProviders)
       providers.value = authConfig.authProviders
     }
   } catch (error) {
-    console.error('[LoginModal] Failed to fetch providers from WebAPI:', error)
+    logger.error('LoginModal', 'Failed to fetch providers from WebAPI', error)
     // Fallback to config providers
     providers.value = authConfig.authProviders
   } finally {
@@ -182,7 +183,7 @@ async function handleLogin(credentials: LoginCredentials) {
   try {
     await auth.login(provider.url, credentials)
   } catch (error) {
-    console.error('Login failed:', error)
+    logger.error('LoginModal', 'Login failed', error)
   }
 }
 

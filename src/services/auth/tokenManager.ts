@@ -1,5 +1,6 @@
 import { decodeJwt } from 'jose'
 import type { AuthToken, JWTPayload } from '@/models/auth.types'
+import { logger } from '@/utils/logger'
 
 export class TokenManager {
   parseToken(token: string): AuthToken | null {
@@ -19,7 +20,7 @@ export class TokenManager {
         isExpired,
       }
     } catch (error) {
-      console.error('Failed to parse token:', error)
+      logger.error('TokenManager', 'Failed to parse token', error)
       return null
     }
   }
