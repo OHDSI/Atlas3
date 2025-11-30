@@ -112,7 +112,7 @@ describe('usePermissions', () => {
   });
 
   describe('hasAnyPermission method', () => {
-    it('should return true if user has unknown of the permissions', () => {
+    it('should return true if user has any of the permissions', () => {
       // Using imported permissionService
       
       // Mock: has first permission, not others
