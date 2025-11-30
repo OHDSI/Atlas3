@@ -16,8 +16,10 @@ export const DEFAULT_SOURCE_KEY = 'SYNPUF1K'
 export const WEBAPI_BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
 
 /**
- * Get source key from environment or use default
+ * Get source key from localStorage (selected vocabulary) or use default
+ * The user selects the vocabulary source in the config panel, which is stored in localStorage
  */
 export function getSourceKey(): string {
-  return import.meta.env.VITE_CDM_SOURCE_KEY || DEFAULT_SOURCE_KEY
+  const selectedVocabulary = localStorage.getItem('selectedVocabulary')
+  return selectedVocabulary || DEFAULT_SOURCE_KEY
 }

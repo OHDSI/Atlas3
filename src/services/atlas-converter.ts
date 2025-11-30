@@ -48,24 +48,36 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
     cdmVersionRange: cohort.cdmVersionRange ?? ">=5.0.0",
 
     ConceptSets: cohort.conceptSets.map((cs, index) => ({
-      id: index,
+      id: typeof cs.id === 'number' ? cs.id : index,
       name: cs.name,
       expression: {
-        items: cs.items?.map((item: any) => ({
-          concept: {
+        items: cs.items?.map((item: any) => {
+          const concept: any = {
             CONCEPT_ID: item.conceptId,
             CONCEPT_NAME: item.conceptName,
-            CONCEPT_CODE: item.conceptCode,
             DOMAIN_ID: item.domainId,
             VOCABULARY_ID: item.vocabularyId,
             CONCEPT_CLASS_ID: item.conceptClassId,
-            STANDARD_CONCEPT: item.standardConcept,
-            INVALID_REASON: item.invalidReason,
-          },
-          isExcluded: item.isExcluded ?? false,
-          includeDescendants: item.includeDescendants ?? false,
-          includeMapped: item.includeMapped ?? false,
-        })) || []
+          }
+
+          // Only add optional fields if they exist
+          if (item.conceptCode !== undefined && item.conceptCode !== null) {
+            concept.CONCEPT_CODE = item.conceptCode
+          }
+          if (item.standardConcept !== undefined && item.standardConcept !== null) {
+            concept.STANDARD_CONCEPT = item.standardConcept
+          }
+          if (item.invalidReason !== undefined && item.invalidReason !== null) {
+            concept.INVALID_REASON = item.invalidReason
+          }
+
+          return {
+            concept,
+            isExcluded: item.isExcluded ?? false,
+            includeDescendants: item.includeDescendants ?? false,
+            includeMapped: item.includeMapped ?? false,
+          }
+        }) || []
       },
     })),
 
@@ -121,7 +133,7 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
       EraPad: 0,
     },
 
-    // Censor window - required by checkV2
+    // Censor window - required by checkV2 (empty object is acceptable)
     CensorWindow: cohort.censorWindow ? convertPeriodToAtlas(cohort.censorWindow) : {},
   }
 }
