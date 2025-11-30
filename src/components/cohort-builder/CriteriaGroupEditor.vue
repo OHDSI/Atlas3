@@ -100,9 +100,9 @@
         <!-- Header with Add Filter and Delete buttons -->
         <div class="group-header">
           <v-menu>
-            <template #activator="{ props }">
+            <template #activator="{ props: slotProps }">
               <v-btn
-                v-bind="props"
+                v-bind="slotProps"
                 variant="outlined"
                 prepend-icon="mdi-plus"
                 size="small"
@@ -415,7 +415,19 @@ import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import NestedCriteriaEditor from './NestedCriteriaEditor.vue'
 import type { CriteriaGroup, CohortEvent, LogicType, CriteriaType, NestedCriteria } from '@/models/cohort.types'
-import type { EventAttribute, TemporalWindow } from '@/models/event.types'
+import type {
+  EventAttribute,
+  TemporalWindow,
+  NumericAttributeKey,
+  ConceptAttributeKey,
+  DateAttributeKey,
+  TextAttributeKey,
+  BooleanAttributeKey,
+  TemporalAttributeKey,
+  DateAdjustmentAttributeKey,
+  UserDefinedPeriodAttributeKey,
+  Concept,
+} from '@/models/event.types'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import AttributesEditor from './AttributesEditor.vue'
@@ -432,7 +444,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: CriteriaGroup]
   'remove': []
   'select-concept-set': [context: { eventIndex: number; eventId: string } | number]
-  'edit-concept-set': [conceptSet: any]
+  'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
   'select-concept': [context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined }]
 }>()
 
@@ -735,50 +747,50 @@ function addAttributeToEvent(eventIndex: number, attributeKey: string, attribute
   }
 
   // Create a default attribute based on the type
-  let newAttribute: any
+  let newAttribute: EventAttribute | null = null
   if (attributeType === 'numericRange') {
     newAttribute = {
       type: 'numericRange',
-      attributeKey,
+      attributeKey: attributeKey as NumericAttributeKey,
       operator: 'GREATER_THAN_OR_EQUAL',
       value: 0,
     }
   } else if (attributeType === 'conceptSet') {
     newAttribute = {
       type: 'conceptSet',
-      attributeKey,
+      attributeKey: attributeKey as ConceptAttributeKey,
       conceptSet: { id: '', name: '' },
     }
   } else if (attributeType === 'concept') {
     newAttribute = {
       type: 'concept',
-      attributeKey,
-      concepts: [],
+      attributeKey: attributeKey as ConceptAttributeKey,
+      concepts: [] as Concept[],
     }
   } else if (attributeType === 'dateRange') {
     newAttribute = {
       type: 'dateRange',
-      attributeKey,
+      attributeKey: attributeKey as DateAttributeKey,
       operator: 'AFTER',
-      value: new Date().toISOString().split('T')[0],
+      value: new Date().toISOString().split('T')[0] ?? '',
     }
   } else if (attributeType === 'text') {
     newAttribute = {
       type: 'text',
-      attributeKey,
+      attributeKey: attributeKey as TextAttributeKey,
       operator: 'CONTAINS',
       value: '',
     }
   } else if (attributeType === 'boolean') {
     newAttribute = {
       type: 'boolean',
-      attributeKey,
+      attributeKey: attributeKey as BooleanAttributeKey,
       value: true,
     }
   } else if (attributeType === 'temporalRelationship') {
     newAttribute = {
       type: 'temporalRelationship',
-      attributeKey,
+      attributeKey: attributeKey as TemporalAttributeKey,
       temporalWindow: {
         startWindow: {
           days: 0,
@@ -790,7 +802,7 @@ function addAttributeToEvent(eventIndex: number, attributeKey: string, attribute
   } else if (attributeType === 'dateAdjustment') {
     newAttribute = {
       type: 'dateAdjustment',
-      attributeKey,
+      attributeKey: attributeKey as DateAdjustmentAttributeKey,
       dateAdjustment: {
         startWith: 'START_DATE',
         startOffset: 0,
@@ -803,15 +815,16 @@ function addAttributeToEvent(eventIndex: number, attributeKey: string, attribute
     const tomorrow = new Date(today.getTime() + 86400000) // +1 day in milliseconds
     newAttribute = {
       type: 'userDefinedPeriod',
-      attributeKey,
+      attributeKey: attributeKey as UserDefinedPeriodAttributeKey,
       period: {
-        startDate: today.toISOString().split('T')[0],
-        endDate: tomorrow.toISOString().split('T')[0],
+        startDate: today.toISOString().split('T')[0] || '',
+        endDate: tomorrow.toISOString().split('T')[0] || '',
       },
     }
   }
 
   // Add the new attribute to the event
+  if (!newAttribute) return
   if (!event.attributes) {
     event.attributes = []
   }
@@ -820,7 +833,7 @@ function addAttributeToEvent(eventIndex: number, attributeKey: string, attribute
 }
 
 // Method to update concept attribute (called by parent)
-function updateConceptAttribute(index: number, concepts: any[]) {
+function updateConceptAttribute(index: number, concepts: Concept[]) {
   if (localGroup.value.events[index]) {
     const event = localGroup.value.events[index]
     if (event && event.attributes && selectedAttributeIndex.value >= 0) {

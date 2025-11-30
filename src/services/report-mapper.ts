@@ -94,7 +94,7 @@ export function mapConditionErasReport(data: WebAPIConditionEraRaw): ConditionEr
 
   return {
     prevalence,
-    treemapData: prevalence.length > 0 ? toTreemapData(prevalence, 'conceptName', 'personCount') : undefined
+    treemapData: prevalence.length > 0 ? toTreemapData(prevalence as unknown as Record<string, unknown>[], 'conceptName', 'personCount') : undefined
   }
 }
 
@@ -148,7 +148,7 @@ export function mapDrugErasReport(data: WebAPIDrugEraRaw): DrugErasReport {
 
   return {
     prevalence,
-    treemapData: prevalence.length > 0 ? toTreemapData(prevalence, 'conceptName', 'personCount') : undefined
+    treemapData: prevalence.length > 0 ? toTreemapData(prevalence as unknown as Record<string, unknown>[], 'conceptName', 'personCount') : undefined
   }
 }
 
@@ -193,10 +193,10 @@ export function mapCohortSpecificReport(data: WebAPICohortSpecificRaw): CohortSp
  * @param valueKey Key for Y-axis values (e.g., 'count', 'personCount')
  * @param unit Optional unit label (e.g., 'People', 'Count')
  */
-export function toBarChartData(
-  data: any[],
-  categoryKey: string,
-  valueKey: string,
+export function toBarChartData<T extends object>(
+  data: T[],
+  categoryKey: keyof T,
+  valueKey: keyof T,
   unit?: string
 ): BarChartData {
   return {
@@ -212,10 +212,10 @@ export function toBarChartData(
  * @param nameKey Key for slice names (e.g., 'conceptName', 'gender')
  * @param valueKey Key for slice values (e.g., 'count', 'percentage')
  */
-export function toPieChartData(
-  data: any[],
-  nameKey: string,
-  valueKey: string
+export function toPieChartData<T extends object>(
+  data: T[],
+  nameKey: keyof T,
+  valueKey: keyof T
 ): PieChartData[] {
   return data.map(item => ({
     name: String(item[nameKey]),
@@ -230,10 +230,10 @@ export function toPieChartData(
  * @param yKey Key for Y-axis data (e.g., 'prevalence', 'count')
  * @param seriesName Optional series name for legend
  */
-export function toLineChartData(
-  data: any[],
-  xKey: string,
-  yKey: string,
+export function toLineChartData<T extends object>(
+  data: T[],
+  xKey: keyof T,
+  yKey: keyof T,
   seriesName?: string
 ): LineChartData {
   return {
@@ -249,10 +249,10 @@ export function toLineChartData(
  * @param nameKey Key for node names (e.g., 'conceptName')
  * @param valueKey Key for node values (e.g., 'personCount', 'prevalence')
  */
-export function toTreemapData(
-  data: any[],
-  nameKey: string,
-  valueKey: string
+export function toTreemapData<T extends object>(
+  data: T[],
+  nameKey: keyof T,
+  valueKey: keyof T
 ): TreemapNode[] {
   return data.map(item => ({
     name: String(item[nameKey]),

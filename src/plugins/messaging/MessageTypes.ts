@@ -30,25 +30,25 @@ export type HostMessageType =
 /**
  * Base message structure for all host-plugin messages
  */
-export interface HostMessage<TPayload = any> {
+export interface HostMessage<TPayload = unknown> {
   /** Message type identifier */
   type: HostMessageType | string;
-  
+
   /** ID of the plugin that sent the message */
   sourcePluginId: string;
-  
+
   /** Message payload (type varies by message type) */
   payload: TPayload;
-  
+
   /** Optional callback ID for request-response pattern */
   callbackId?: string;
-  
+
   /** Timestamp when message was created */
   timestamp: Date;
-  
+
   /** Optional correlation ID for message tracing */
   correlationId?: string;
-  
+
   /** Optional priority (higher = more urgent) */
   priority?: number;
 }
@@ -56,23 +56,23 @@ export interface HostMessage<TPayload = any> {
 /**
  * Response message from host to plugin
  */
-export interface HostMessageResponse<TData = any> {
+export interface HostMessageResponse<TData = unknown> {
   /** Callback ID from the original request */
   callbackId: string;
-  
+
   /** Whether the request was successful */
   success: boolean;
-  
+
   /** Response data if successful */
   data?: TData;
-  
+
   /** Error information if unsuccessful */
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
-  
+
   /** Timestamp of response */
   timestamp: Date;
 }
@@ -87,15 +87,15 @@ export interface HostMessageResponse<TData = any> {
 export interface NavigationRequestPayload {
   /** Target path to navigate to */
   path: string;
-  
+
   /** Whether to replace current history entry */
   replace?: boolean;
-  
+
   /** Query parameters to include */
   query?: Record<string, string | number | boolean>;
-  
+
   /** Optional state to pass with navigation */
-  state?: any;
+  state?: Record<string, unknown>;
 }
 
 /**
@@ -127,13 +127,13 @@ export interface NotificationPayload {
 export interface DataRequestPayload {
   /** Resource identifier (e.g., 'users', 'cohorts', 'concepts') */
   resource: string;
-  
+
   /** Optional resource ID for specific item */
   id?: string | number;
-  
+
   /** Optional query parameters */
-  params?: Record<string, any>;
-  
+  params?: Record<string, unknown>;
+
   /** Optional cache options */
   cache?: {
     enabled: boolean;
@@ -147,15 +147,15 @@ export interface DataRequestPayload {
 export interface DataUpdatePayload {
   /** Resource that was updated */
   resource: string;
-  
+
   /** ID of the updated item */
   id: string | number;
-  
+
   /** Type of update operation */
   operation: 'create' | 'update' | 'delete';
-  
+
   /** Updated data (for create/update) */
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 /**
@@ -178,13 +178,13 @@ export interface StateGetPayload {
 export interface StateSetPayload {
   /** State key to set */
   key: string;
-  
+
   /** Value to set */
-  value: any;
-  
+  value: unknown;
+
   /** Optional namespace for scoped state */
   namespace?: string;
-  
+
   /** Whether to merge with existing value (for objects) */
   merge?: boolean;
 }
@@ -195,19 +195,19 @@ export interface StateSetPayload {
 export interface ErrorReportPayload {
   /** Error message */
   message: string;
-  
+
   /** Error stack trace if available */
   stack?: string;
-  
+
   /** Error severity */
   severity: 'low' | 'medium' | 'high' | 'critical';
-  
+
   /** Error code/type */
   code?: string;
-  
+
   /** Additional context */
-  context?: Record<string, any>;
-  
+  context?: Record<string, unknown>;
+
   /** Whether error is recoverable */
   recoverable: boolean;
 }
@@ -245,7 +245,7 @@ export interface PluginMessageBus {
    * @param type - Message type
    * @param payload - Message payload
    */
-  send<TPayload = any>(
+  send<TPayload = unknown>(
     type: HostMessageType | string,
     payload: TPayload
   ): void;
@@ -257,7 +257,7 @@ export interface PluginMessageBus {
    * @param timeout - Optional timeout in milliseconds
    * @returns Promise resolving to response data
    */
-  request<TRequest = any, TResponse = any>(
+  request<TRequest = unknown, TResponse = unknown>(
     type: HostMessageType | string,
     payload: TRequest,
     timeout?: number
@@ -269,7 +269,7 @@ export interface PluginMessageBus {
    * @param callback - Callback function to handle messages
    * @returns Unsubscribe function
    */
-  subscribe<TPayload = any>(
+  subscribe<TPayload = unknown>(
     type: HostMessageType | string,
     callback: (payload: TPayload) => void
   ): () => void;
@@ -295,7 +295,7 @@ export interface HostMessageHandler {
    * @param message - The message to handle
    * @returns Optional response data
    */
-  handle<TPayload = any, TResponse = any>(
+  handle<TPayload = unknown, TResponse = unknown>(
     message: HostMessage<TPayload>
   ): Promise<TResponse> | TResponse | void;
 
@@ -338,13 +338,16 @@ export interface MessageValidator {
 /**
  * Type guard to check if object is a valid HostMessage
  */
-export function isHostMessage(obj: any): obj is HostMessage {
+export function isHostMessage(obj: unknown): obj is HostMessage {
   return (
-    obj &&
+    obj !== null &&
     typeof obj === 'object' &&
+    'type' in obj &&
     typeof obj.type === 'string' &&
+    'sourcePluginId' in obj &&
     typeof obj.sourcePluginId === 'string' &&
     'payload' in obj &&
+    'timestamp' in obj &&
     obj.timestamp instanceof Date
   );
 }
@@ -352,12 +355,15 @@ export function isHostMessage(obj: any): obj is HostMessage {
 /**
  * Type guard to check if object is a valid HostMessageResponse
  */
-export function isHostMessageResponse(obj: any): obj is HostMessageResponse {
+export function isHostMessageResponse(obj: unknown): obj is HostMessageResponse {
   return (
-    obj &&
+    obj !== null &&
     typeof obj === 'object' &&
+    'callbackId' in obj &&
     typeof obj.callbackId === 'string' &&
+    'success' in obj &&
     typeof obj.success === 'boolean' &&
+    'timestamp' in obj &&
     obj.timestamp instanceof Date
   );
 }

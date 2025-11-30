@@ -4,6 +4,7 @@
  */
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
+import { waitForNetworkIdle } from '../helpers/wait-utils'
 
 test.describe('Concept Set CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
@@ -144,24 +145,24 @@ test.describe('Concept Set CRUD Operations', () => {
 
     const drawer = page.locator('.v-navigation-drawer')
     await expect(drawer).toBeVisible()
-    
+
     // Click Delete button
     const deleteButton = page.getByRole('button', { name: /delete/i })
     await deleteButton.click()
-    
+
     // Handle confirmation dialog
     page.once('dialog', dialog => {
       expect(dialog.message()).toContain('delete')
       dialog.accept()
     })
-    
+
     // Wait for deletion and drawer to close
     await expect(drawer).not.toBeVisible({ timeout: 5000 })
-    
-  // Verify concept set no longer appears in the list
-  await page.waitForTimeout(1000)
-  const deletedRows = page.locator(`table tbody tr:has-text("${testName}")`)
-  await expect(deletedRows).toHaveCount(0, { timeout: 5000 })
+
+    // Verify concept set no longer appears in the list
+    await page.waitForTimeout(1000)
+    const deletedRows = page.locator(`table tbody tr:has-text("${testName}")`)
+    await expect(deletedRows).toHaveCount(0, { timeout: 5000 })
   })
 
   /**
@@ -170,7 +171,7 @@ test.describe('Concept Set CRUD Operations', () => {
   test('should filter concept sets by name', async ({ page }) => {
     // Get initial row count
     const table = page.locator('table tbody')
-    const initialRows = await table.locator('tr').count()
+    const _initialRows = await table.locator('tr').count()
     
     // Enter filter term - prefer the page-specific placeholder if present
     let filterInput = null
@@ -222,11 +223,10 @@ test.describe('Concept Set CRUD Operations', () => {
    */
   test('should load concept sets page', async ({ page }) => {
     // Just verify page loads
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
 
     // Page should be visible
-    const body = page.locator('body')
-    await expect(body).toBeVisible()
+    await expect(page.locator('body')).toBeVisible()
   })
 
   /**
@@ -240,10 +240,10 @@ test.describe('Concept Set CRUD Operations', () => {
       page.getByRole('button', { name: /create/i })
     ]
 
-    let found = false
+    let _found = false
     for (const button of addButtons) {
       if (await button.count() > 0) {
-        found = true
+        _found = true
         break
       }
     }
@@ -295,7 +295,7 @@ test.describe('Concept Set CRUD Operations', () => {
     await page.goto('/Atlas/concepts')
 
     // Immediately check for loading indicator
-    const loadingIndicator = page.locator('.v-progress-linear, .v-skeleton-loader, .v-data-table--loading')
+    const _loadingIndicator = page.locator('.v-progress-linear, .v-skeleton-loader, .v-data-table--loading')
 
     // Wait for table to load
     await page.waitForSelector('table tbody tr', { timeout: 5000 })
@@ -313,7 +313,6 @@ test.describe('Concept Set CRUD Operations', () => {
     await expect(page).toHaveURL(/\/concepts/)
 
     // Page should be interactive
-    const body = page.locator('body')
-    await expect(body).toBeVisible()
+    await expect(page.locator('body')).toBeVisible()
   })
 })

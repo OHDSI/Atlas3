@@ -249,7 +249,12 @@ export async function generateCohort(
   sourceKey: string
 ): Promise<GenerationJob | null> {
   try {
-    const data = await fetchJSON<any>(
+    const data = await fetchJSON<{
+      status?: string
+      executionId?: number
+      startDate?: string
+      endDate?: string
+    }>(
       `/cohortdefinition/${cohortId}/generate/${sourceKey}`,
       {
         method: 'GET',

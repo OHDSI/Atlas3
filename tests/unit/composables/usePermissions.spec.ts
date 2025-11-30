@@ -4,7 +4,7 @@ import { permissionService } from '@/services/auth/permissions';
 import { createPinia, setActivePinia } from 'pinia';
 
 // Mock auth store to return test data
-let mockUser: any = {
+let mockUser: unknown = {
   id: '1',
   login: 'testuser',
   permissionIdx: {

@@ -151,10 +151,10 @@ export async function getDashboardReport(sourceKey: string): Promise<DashboardRe
 export async function getDataDensityReport(sourceKey: string): Promise<DataDensityReport> {
   try {
     logger.debug('DataSource', `Fetching data density report for ${sourceKey}`)
-    const response = await fetchJSON<any>(`/cdmresults/${sourceKey}/datadensity`)
-    
-    const transformed = transformDataDensityReport(response)
-    
+    const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/datadensity`)
+
+    const transformed = transformDataDensityReport(response as Parameters<typeof transformDataDensityReport>[0])
+
     logger.debug('DataSource', `Successfully fetched data density report for ${sourceKey}`)
     return transformed
   } catch (error) {
@@ -169,10 +169,10 @@ export async function getDataDensityReport(sourceKey: string): Promise<DataDensi
 export async function getPersonReport(sourceKey: string): Promise<PersonReport> {
   try {
     logger.debug('DataSource', `Fetching person report for ${sourceKey}`)
-    const response = await fetchJSON<any>(`/cdmresults/${sourceKey}/person`)
-    
-    const transformed = transformPersonReport(response)
-    
+    const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/person`)
+
+    const transformed = transformPersonReport(response as Parameters<typeof transformPersonReport>[0])
+
     logger.debug('DataSource', `Successfully fetched person report for ${sourceKey}`)
     return transformed
   } catch (error) {
@@ -210,11 +210,11 @@ export async function getClinicalDomainReport(
 export async function getObservationPeriodReport(sourceKey: string): Promise<import('@/models/datasource.types').ObservationPeriodReport> {
   try {
     logger.debug('DataSource', `Fetching observation period report for ${sourceKey}`)
-    const response = await fetchJSON<any>(`/cdmresults/${sourceKey}/observationPeriod`)
-    
+    const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/observationPeriod`)
+
     const { transformObservationPeriodReport } = await import('@/utils/datasource-formatters')
-    const transformed = transformObservationPeriodReport(response)
-    
+    const transformed = transformObservationPeriodReport(response as Parameters<typeof transformObservationPeriodReport>[0])
+
     logger.debug('DataSource', `Successfully fetched observation period report for ${sourceKey}`)
     return transformed
   } catch (error) {
@@ -230,11 +230,11 @@ export async function getObservationPeriodReport(sourceKey: string): Promise<imp
 export async function getDeathReport(sourceKey: string): Promise<import('@/models/datasource.types').DeathReport> {
   try {
     logger.debug('DataSource', `Fetching death report for ${sourceKey}`)
-    const response = await fetchJSON<any>(`/cdmresults/${sourceKey}/death`)
-    
+    const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/death`)
+
     const { transformDeathReport } = await import('@/utils/datasource-formatters')
-    const transformed = transformDeathReport(response)
-    
+    const transformed = transformDeathReport(response as Parameters<typeof transformDeathReport>[0])
+
     logger.debug('DataSource', `Successfully fetched death report for ${sourceKey}`)
     return transformed
   } catch (error) {

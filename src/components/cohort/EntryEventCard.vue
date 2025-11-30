@@ -135,7 +135,18 @@ import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import type { CohortEvent, CriteriaType, NestedCriteria } from '@/models/cohort.types'
-import type { EventAttribute } from '@/models/event.types'
+import type {
+  EventAttribute,
+  NumericAttributeKey,
+  ConceptAttributeKey,
+  DateAttributeKey,
+  TextAttributeKey,
+  BooleanAttributeKey,
+  TemporalAttributeKey,
+  DateAdjustmentAttributeKey,
+  UserDefinedPeriodAttributeKey,
+  Concept,
+} from '@/models/event.types'
 import AttributesEditor from '@/components/cohort-builder/AttributesEditor.vue'
 import NestedCriteriaEditor from '@/components/cohort-builder/NestedCriteriaEditor.vue'
 
@@ -152,7 +163,7 @@ const emit = defineEmits<{
   'select-concept-set': []
   'select-concept-set-for-attribute': [attributeIndex: number]
   'select-concept-for-attribute': [attributeIndex: number, domainFilter: string | undefined]
-  'edit-concept-set': [conceptSet: any]
+  'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
 // Use configuration-driven filter list (supports all 16 filter types)
@@ -257,50 +268,50 @@ function addAttribute(attributeKey: string, attributeType: string) {
   }
 
   // Create a default attribute based on the type
-  let newAttribute: any
+  let newAttribute: EventAttribute | null = null
   if (attributeType === 'numericRange') {
     newAttribute = {
       type: 'numericRange',
-      attributeKey,
+      attributeKey: attributeKey as NumericAttributeKey,
       operator: 'GREATER_THAN_OR_EQUAL',
       value: 0,
     }
   } else if (attributeType === 'conceptSet') {
     newAttribute = {
       type: 'conceptSet',
-      attributeKey,
+      attributeKey: attributeKey as ConceptAttributeKey,
       conceptSet: { id: '', name: '' },
     }
   } else if (attributeType === 'dateRange') {
     newAttribute = {
       type: 'dateRange',
-      attributeKey,
+      attributeKey: attributeKey as DateAttributeKey,
       operator: 'AFTER',
-      value: new Date().toISOString().split('T')[0],
+      value: new Date().toISOString().split('T')[0] || '',
     }
   } else if (attributeType === 'text') {
     newAttribute = {
       type: 'text',
-      attributeKey,
+      attributeKey: attributeKey as TextAttributeKey,
       operator: 'CONTAINS',
       value: '',
     }
   } else if (attributeType === 'boolean') {
     newAttribute = {
       type: 'boolean',
-      attributeKey,
+      attributeKey: attributeKey as BooleanAttributeKey,
       value: true,
     }
   } else if (attributeType === 'concept') {
     newAttribute = {
       type: 'concept',
-      attributeKey,
-      concepts: [],
+      attributeKey: attributeKey as ConceptAttributeKey,
+      concepts: [] as Concept[],
     }
   } else if (attributeType === 'temporalRelationship') {
     newAttribute = {
       type: 'temporalRelationship',
-      attributeKey,
+      attributeKey: attributeKey as TemporalAttributeKey,
       temporalWindow: {
         startWindow: undefined,
         endWindow: undefined
@@ -309,7 +320,7 @@ function addAttribute(attributeKey: string, attributeType: string) {
   } else if (attributeType === 'dateAdjustment') {
     newAttribute = {
       type: 'dateAdjustment',
-      attributeKey,
+      attributeKey: attributeKey as DateAdjustmentAttributeKey,
       dateAdjustment: {
         startWith: 'START_DATE',
         startOffset: 0,
@@ -322,15 +333,16 @@ function addAttribute(attributeKey: string, attributeType: string) {
     const tomorrow = new Date(today.getTime() + 86400000) // +1 day in milliseconds
     newAttribute = {
       type: 'userDefinedPeriod',
-      attributeKey,
+      attributeKey: attributeKey as UserDefinedPeriodAttributeKey,
       period: {
-        startDate: today.toISOString().split('T')[0],
-        endDate: tomorrow.toISOString().split('T')[0]
+        startDate: today.toISOString().split('T')[0] || '',
+        endDate: tomorrow.toISOString().split('T')[0] || '',
       },
     }
   }
 
   // Add the new attribute to the event
+  if (!newAttribute) return
   const currentAttributes = props.event.attributes || []
   emit('update', {
     ...props.event,

@@ -10,9 +10,9 @@
     density="comfortable"
     @update:model-value="onFilterSelect"
   >
-    <template #item="{ props, item }">
+    <template #item="{ props: slotProps, item }">
       <v-list-item
-        v-bind="props"
+        v-bind="slotProps"
         :title="item.raw.name"
         :subtitle="item.raw.description"
       >

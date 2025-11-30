@@ -14,7 +14,7 @@ const MAX_UNDO_OPERATIONS = 5
 /**
  * Represents a single undoable operation
  */
-export interface UndoOperation<T = any> {
+export interface UndoOperation<T = unknown> {
   id: string
   timestamp: number
   previousValue: T
@@ -28,7 +28,7 @@ export interface UndoOperation<T = any> {
  * @template T - The type of value being managed
  * @returns Undo management functions and state
  */
-export function useConfigUndo<T = any>() {
+export function useConfigUndo<T = unknown>() {
   const undoStack: Ref<UndoOperation<T>[]> = ref([])
   const isSaving = ref(false)
 

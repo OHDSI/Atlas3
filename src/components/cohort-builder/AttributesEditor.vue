@@ -485,7 +485,7 @@ function updateAttributeOperator(index: number, operator: string) {
 
     if (wasExtentSet && !isBetweenOperator) {
       // Switching from BETWEEN to single-value operator - clear extent
-      const { extent, ...attrWithoutExtent } = numAttr
+      const { extent: _extent, ...attrWithoutExtent } = numAttr
       newAttributes[index] = { ...attrWithoutExtent, operator: operator as NumericOperator }
     } else {
       newAttributes[index] = { ...numAttr, operator: operator as NumericOperator }
@@ -498,7 +498,7 @@ function updateAttributeOperator(index: number, operator: string) {
 
     if (wasExtentSet && !isBetweenOperator) {
       // Switching from BETWEEN to single-value operator - clear extent
-      const { extent, ...attrWithoutExtent } = dateAttr
+      const { extent: _extent, ...attrWithoutExtent } = dateAttr
       newAttributes[index] = { ...attrWithoutExtent, operator: operator as DateOperator }
     } else {
       newAttributes[index] = { ...dateAttr, operator: operator as DateOperator }
@@ -511,7 +511,7 @@ function updateAttributeOperator(index: number, operator: string) {
   emit('update:modelValue', newAttributes)
 }
 
-function updateAttributeValue(index: number, value: any) {
+function updateAttributeValue(index: number, value: string | number) {
   const newAttributes = [...props.modelValue]
   const attr = newAttributes[index]
   if (!attr) return
@@ -519,12 +519,12 @@ function updateAttributeValue(index: number, value: any) {
   emit('update:modelValue', newAttributes)
 }
 
-function updateAttributeExtent(index: number, extent: any) {
+function updateAttributeExtent(index: number, extent: string | number) {
   const newAttributes = [...props.modelValue]
   const attr = newAttributes[index]
   if (!attr) return
   if ('extent' in attr) {
-    newAttributes[index] = { ...attr, extent }
+    newAttributes[index] = { ...attr, extent } as EventAttribute
   }
   emit('update:modelValue', newAttributes)
 }

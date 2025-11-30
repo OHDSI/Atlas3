@@ -80,8 +80,10 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  modelValue: undefined,
   conceptSets: () => [],
-  censoringCriteria: () => []
+  censoringCriteria: () => [],
+  disabled: false
 })
 
 const emit = defineEmits<{

@@ -4,6 +4,7 @@
  */
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
+import { waitForNetworkIdle } from '../helpers/wait-utils'
 
 test.describe('Concept Search', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,7 +13,7 @@ test.describe('Concept Search', () => {
     await page.goto('/Atlas/concepts')
 
     // Wait for page to load
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
     
     // Wait for the search input to be visible
     await page.waitForSelector('input[type="text"]', { timeout: 5000 })
@@ -257,38 +258,34 @@ test.describe('Concept Search', () => {
   test('should display concept type badges', async ({ page }) => {
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('diabetes')
-    
+
     // Trigger search
     const searchButton = page.getByRole('button', { name: 'Search', exact: true })
     await searchButton.click()
-    
+
     // Wait for loading to complete - look for absence of loading indicator
     await page.waitForTimeout(4000) // Give more time for API call
-    
+
     // Wait for table to not have loading state
     await page.locator('table tbody tr').first().waitFor({ timeout: 5000 })
-    
+
     // Check for v-chip badge elements
     const badges = page.locator('.v-chip')
     const badgeCount = await badges.count()
-    
+
     // If we have results, we should have badges
     const rows = page.locator('table tbody tr')
     const rowCount = await rows.count()
-    
+
     if (rowCount > 0) {
       const firstRowText = await rows.first().textContent()
       // Only expect badges if we have actual data (not loading/no data)
       if (firstRowText && !firstRowText.includes('Loading') && !firstRowText.includes('No records')) {
         expect(badgeCount).toBeGreaterThan(0)
-      } else {
-        // If no data, test should pass
-        expect(true).toBe(true)
       }
-    } else {
-      // If no rows, test should pass (maybe no data from API)
-      expect(true).toBe(true)
     }
+    // Test should pass regardless
+    expect(true).toBe(true)
   })
 
   /**
@@ -311,17 +308,17 @@ test.describe('Concept Search', () => {
    */
   test('should show loading skeleton during search', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/search/i)
-    
+
     // Start typing
     await searchInput.fill('diabetes')
-    
+
     // Immediately check for loading indicator
-    const loadingIndicator = page.locator('.v-progress-linear, .v-skeleton-loader, .v-data-table--loading')
-    
+    const _loadingIndicator = page.locator('.v-progress-linear, .v-skeleton-loader, .v-data-table--loading')
+
     // Loading indicator might appear briefly
     // This test may be flaky, so we just verify the table eventually loads
     await page.waitForSelector('table tbody tr', { timeout: 5000 })
-    
+
     const rows = page.locator('table tbody tr')
     expect(await rows.count()).toBeGreaterThan(0)
   })

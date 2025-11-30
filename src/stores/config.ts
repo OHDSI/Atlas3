@@ -34,8 +34,8 @@ export const useConfigStore = defineStore('config', () => {
       allTags.value = await tagGroupsAPI.loadAvailableTags()
       // Filter to get just tag groups (empty groups array)
       tagGroups.value = await tagGroupsAPI.listTagGroups()
-    } catch (err: any) {
-      error.value = err.message
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     } finally {
       isLoadingTagGroups.value = false
@@ -75,10 +75,10 @@ export const useConfigStore = defineStore('config', () => {
       }
 
       return created
-    } catch (err: any) {
+    } catch (err) {
       // Rollback on error
       tagGroups.value = tagGroups.value.filter(t => t.id !== tempId)
-      error.value = err.message
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     }
   }
@@ -102,10 +102,10 @@ export const useConfigStore = defineStore('config', () => {
       const updated = await tagGroupsAPI.updateTagGroup(tagGroup)
       tagGroups.value[index] = updated
       return updated
-    } catch (err: any) {
+    } catch (err) {
       // Rollback on error
       tagGroups.value[index] = previous
-      error.value = err.message
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     }
   }
@@ -129,8 +129,8 @@ export const useConfigStore = defineStore('config', () => {
       if (tags.length > 0) {
         throw new Error('Cannot delete tag group: the group contains tags')
       }
-    } catch (err: any) {
-      error.value = err.message
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     }
 
@@ -139,10 +139,10 @@ export const useConfigStore = defineStore('config', () => {
 
     try {
       await tagGroupsAPI.deleteTagGroup(id)
-    } catch (err: any) {
+    } catch (err) {
       // Rollback on error
       tagGroups.value.splice(index, 0, previous)
-      error.value = err.message
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     }
   }
@@ -157,8 +157,8 @@ export const useConfigStore = defineStore('config', () => {
 
     try {
       await configCache.clearConfigCache()
-    } catch (err: any) {
-      error.value = err.message
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     } finally {
       isLoadingCacheOp.value = false
@@ -171,8 +171,8 @@ export const useConfigStore = defineStore('config', () => {
   async function getCacheStats() {
     try {
       return await configCache.getCacheStats()
-    } catch (err: any) {
-      error.value = err.message
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     }
   }
@@ -187,8 +187,8 @@ export const useConfigStore = defineStore('config', () => {
 
     try {
       vocabularySchema.value = configCache.getVocabularySchema()
-    } catch (err: any) {
-      error.value = err.message
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     } finally {
       isLoadingVocabSchema.value = false
@@ -210,10 +210,10 @@ export const useConfigStore = defineStore('config', () => {
 
     try {
       configCache.setVocabularySchema(schema)
-    } catch (err: any) {
+    } catch (err) {
       // Rollback on error
       vocabularySchema.value = previous
-      error.value = err.message
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     } finally {
       isLoadingVocabSchema.value = false
@@ -248,10 +248,10 @@ export const useConfigStore = defineStore('config', () => {
       const updated = await tagGroupsAPI.updateTag(tag)
       allTags.value[index] = updated
       return updated
-    } catch (err: any) {
+    } catch (err) {
       // Rollback on error
       allTags.value[index] = previous
-      error.value = err.message
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     }
   }
@@ -272,10 +272,10 @@ export const useConfigStore = defineStore('config', () => {
 
     try {
       await tagGroupsAPI.deleteTag(id)
-    } catch (err: any) {
+    } catch (err) {
       // Rollback on error
       allTags.value.splice(index, 0, previous)
-      error.value = err.message
+      error.value = err instanceof Error ? err.message : String(err)
       throw err
     }
   }

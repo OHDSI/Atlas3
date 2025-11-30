@@ -114,9 +114,9 @@
         <!-- Header with Add Criteria and Delete buttons -->
         <div class="group-header d-flex align-center mb-2">
           <v-menu>
-            <template #activator="{ props }">
+            <template #activator="{ props: slotProps }">
               <v-btn
-                v-bind="props"
+                v-bind="slotProps"
                 variant="outlined"
                 prepend-icon="mdi-plus"
                 size="small"

@@ -35,8 +35,9 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
       axisPointer: {
         type: 'shadow'
       },
-      formatter: (params: any) => {
-        const param = Array.isArray(params) ? params[0] : params
+      formatter: (params: unknown) => {
+        const paramsArray = Array.isArray(params) ? params : [params]
+        const param = paramsArray[0] as { name: string; seriesName: string; value: number }
         const value = param.value.toLocaleString()
         const unit = data.unit ? ` ${data.unit}` : ''
         return `${param.name}<br/>${param.seriesName}: <strong>${value}${unit}</strong>`
@@ -100,10 +101,11 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
     } : undefined,
     tooltip: {
       trigger: 'item',
-      formatter: (params: any) => {
-        const value = params.value.toLocaleString()
-        const percent = params.percent.toFixed(1)
-        return `${params.name}<br/><strong>${value}</strong> (${percent}%)`
+      formatter: (params: unknown) => {
+        const p = params as { name: string; value: number; percent: number }
+        const value = p.value.toLocaleString()
+        const percent = p.percent.toFixed(1)
+        return `${p.name}<br/><strong>${value}</strong> (${percent}%)`
       }
     },
     legend: {
@@ -167,8 +169,9 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
     } : undefined,
     tooltip: {
       trigger: 'axis',
-      formatter: (params: any) => {
-        const param = Array.isArray(params) ? params[0] : params
+      formatter: (params: unknown) => {
+        const paramsArray = Array.isArray(params) ? params : [params]
+        const param = paramsArray[0] as { name: string; seriesName: string; value: number }
         const value = param.value.toLocaleString()
         return `${param.name}<br/>${param.seriesName}: <strong>${value}</strong>`
       }
@@ -240,9 +243,10 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
     } : undefined,
     tooltip: {
       trigger: 'item',
-      formatter: (params: any) => {
-        const value = params.value.toLocaleString()
-        return `${params.name}<br/><strong>${value}</strong>`
+      formatter: (params: unknown) => {
+        const p = params as { name: string; value: number }
+        const value = p.value.toLocaleString()
+        return `${p.name}<br/><strong>${value}</strong>`
       }
     },
     series: [
@@ -322,7 +326,7 @@ function assignTreemapColors(nodes: TreemapNode[], colorIndex = 0): TreemapNode[
 /**
  * Responsive chart resize handler
  */
-export function createResizeHandler(chart: any, debounceMs = 150) {
+export function createResizeHandler(chart: { isDisposed: () => boolean; resize: () => void }, debounceMs = 150) {
   let resizeTimer: ReturnType<typeof setTimeout> | null = null
 
   const handleResize = () => {
@@ -364,10 +368,11 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
   return {
     tooltip: {
       trigger: 'item',
-      formatter: (params: any) => {
-        const value = params.value.toLocaleString()
-        const percent = params.percent.toFixed(1)
-        return `<strong>${params.name}</strong><br/>Count: ${value}<br/>Percentage: ${percent}%`
+      formatter: (params: unknown) => {
+        const p = params as { name: string; value: number; percent: number }
+        const value = p.value.toLocaleString()
+        const percent = p.percent.toFixed(1)
+        return `<strong>${p.name}</strong><br/>Count: ${value}<br/>Percentage: ${percent}%`
       }
     },
     legend: {
@@ -425,8 +430,9 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
       axisPointer: {
         type: 'shadow'
       },
-      formatter: (params: any) => {
-        const param = Array.isArray(params) ? params[0] : params
+      formatter: (params: unknown) => {
+        const paramsArray = Array.isArray(params) ? params : [params]
+        const param = paramsArray[0] as { name: string; value: number }
         const value = param.value.toLocaleString()
         return `<strong>Age: ${param.name}</strong><br/>${data.unit || 'Count'}: ${value}`
       }
@@ -485,8 +491,9 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
   return {
     tooltip: {
       trigger: 'axis',
-      formatter: (params: any) => {
-        const param = Array.isArray(params) ? params[0] : params
+      formatter: (params: unknown) => {
+        const paramsArray = Array.isArray(params) ? params : [params]
+        const param = paramsArray[0] as { name: string; value: number | string }
         const value = typeof param.value === 'number' ? param.value.toFixed(1) : param.value
         return `<strong>${data.xAxisLabel || 'Year'}: ${param.name}</strong><br/>${data.yAxisLabel || 'Percentage'}: ${value}%`
       }
@@ -562,8 +569,9 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
   return {
     tooltip: {
       trigger: 'axis',
-      formatter: (params: any) => {
-        const param = Array.isArray(params) ? params[0] : params
+      formatter: (params: unknown) => {
+        const paramsArray = Array.isArray(params) ? params : [params]
+        const param = paramsArray[0] as { name: string; value: number }
         const value = param.value.toLocaleString()
         return `<strong>${param.name}</strong><br/>${data.yAxisLabel || 'Observations'}: ${value}`
       }
@@ -709,12 +717,17 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
   return {
     tooltip: {
       trigger: 'item',
-      formatter: (params: any) => {
-        const value = params.value.toLocaleString()
-        const name = params.name
-        const prevalence = params.data.prevalence
-        const metric = params.data.metric
-        
+      formatter: (params: unknown) => {
+        const p = params as {
+          name: string;
+          value: number;
+          data: { prevalence?: number; metric?: number }
+        }
+        const value = p.value.toLocaleString()
+        const name = p.name
+        const prevalence = p.data.prevalence
+        const metric = p.data.metric
+
         let tooltip = `<strong>${name}</strong><br/>`
         tooltip += `Value: ${value}<br/>`
         if (prevalence !== undefined) {
@@ -723,7 +736,7 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
         if (metric !== undefined) {
           tooltip += `Metric: ${metric.toFixed(2)}`
         }
-        
+
         return tooltip
       }
     },

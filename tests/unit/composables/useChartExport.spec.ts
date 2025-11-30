@@ -12,7 +12,7 @@ import type { CSVExportData } from '@/models/report.types'
 
 // Mock papaparse
 vi.mock('papaparse', () => ({
-  unparse: vi.fn((data: unknown, options?: unknown) => {
+  unparse: vi.fn((data: unknown, _options?: unknown) => {
     // Simple CSV conversion for testing
     const rows = data as string[][]
     return rows.map(row => row.join(',')).join('\n')

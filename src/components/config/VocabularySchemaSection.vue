@@ -179,12 +179,12 @@ watchDebounced(
       // Show success toast
       toastMessage.value = `Vocabulary schema updated to "${newValue}"`
       showToast.value = true
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Rollback on error
       localSchema.value = previousSchema.value
       configStore.vocabularySchema = previousSchema.value
 
-      errorMessage.value = error.message || 'Failed to update schema. Please try again.'
+      errorMessage.value = error instanceof Error ? error.message : 'Failed to update schema. Please try again.'
       showErrorToast.value = true
     } finally {
       isSaving.value = false
@@ -215,8 +215,8 @@ async function handleUndo() {
       toastMessage.value = `Reverted to "${previousValue}"`
       showToast.value = true
     })
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to undo. Please try again.'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to undo. Please try again.'
     showErrorToast.value = true
   }
 }

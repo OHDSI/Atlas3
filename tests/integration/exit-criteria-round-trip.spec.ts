@@ -5,8 +5,8 @@ import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas
 import type { CohortDefinition } from '@/models/cohort.types'
 
 describe('Exit Criteria Round-Trip Tests', () => {
-  let censorWindowFixture: any
-  let censoringCriteriaFixture: any
+  let censorWindowFixture: Record<string, unknown>
+  let censoringCriteriaFixture: Record<string, unknown>
 
   beforeAll(() => {
     // Load Atlas fixture files

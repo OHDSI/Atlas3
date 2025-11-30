@@ -6,9 +6,9 @@
           {{ t('components.cohortExpressionEditor.censoringEvents', 'Censor Window').value }}
         </h3>
         <v-tooltip location="right">
-          <template #activator="{ props }">
+          <template #activator="{ props: tooltipProps }">
             <v-icon
-              v-bind="props"
+              v-bind="tooltipProps"
               icon="mdi-help-circle-outline"
               size="small"
               class="ml-2 text-medium-emphasis"
@@ -52,9 +52,9 @@
               >
                 <template #append-inner>
                   <v-tooltip location="top">
-                    <template #activator="{ props }">
+                    <template #activator="{ props: tipProps }">
                       <v-icon
-                        v-bind="props"
+                        v-bind="tipProps"
                         icon="mdi-information-outline"
                         size="small"
                         class="text-medium-emphasis"
@@ -98,9 +98,9 @@
               >
                 <template #append-inner>
                   <v-tooltip location="top">
-                    <template #activator="{ props }">
+                    <template #activator="{ props: tipProps }">
                       <v-icon
-                        v-bind="props"
+                        v-bind="tipProps"
                         icon="mdi-information-outline"
                         size="small"
                         class="text-medium-emphasis"

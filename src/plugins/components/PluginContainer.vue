@@ -37,7 +37,12 @@ const pluginId = computed(() => route.params.pluginId as string);
 const pluginContainerId = computed(() => `plugin-${pluginId.value}`);
 
 const hasError = ref(false);
-const error = ref<any>(null);
+const error = ref<{
+  message: string;
+  stack?: string;
+  timestamp: Date;
+  recoverable: boolean;
+} | null>(null);
 const isLoading = ref(true);
 
 let stateUnsubscribe: (() => void) | null = null;
@@ -48,7 +53,7 @@ onMounted(() => {
     logger.debug('PluginContainer', `Mounting container for plugin ${pluginId.value}`, plugin.state);
 
     hasError.value = plugin.state === 'error';
-    error.value = plugin.error;
+    error.value = plugin.error ?? null;
     isLoading.value = plugin.state === 'loading' || plugin.state === 'not-loaded';
 
     // Subscribe to state changes
@@ -60,7 +65,7 @@ onMounted(() => {
 
       if (state === 'error') {
         const p = pluginRegistry.getPlugin(pluginId.value);
-        error.value = p?.error;
+        error.value = p?.error ?? null;
       }
     });
   } else {

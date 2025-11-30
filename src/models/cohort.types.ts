@@ -104,7 +104,7 @@ export interface ConceptSetReference {
   id: number | string // Number from WebAPI, string (UUID) for client-side
   name: string
   conceptCount?: number
-  items?: any[] // Full concept set items to embed in cohort definition
+  items?: unknown[] // Full concept set items to embed in cohort definition
 }
 
 // OHDSI criteria types

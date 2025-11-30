@@ -119,10 +119,10 @@ test.describe('Plugin Framework', () => {
 
 test.describe('Plugin Messaging', () => {
   test('should send messages from plugin to host', async ({ page }) => {
-    const messages: any[] = [];
+    const messages: unknown[] = [];
 
     // Listen for plugin messages
-    await page.exposeFunction('capturePluginMessage', (msg: any) => {
+    await page.exposeFunction('capturePluginMessage', (msg: unknown) => {
       messages.push(msg);
     });
 

@@ -11,15 +11,15 @@ import type { UseI18nReturn, LocaleCode, Locale, TranslationParams, LocaleFormat
 /**
  * Get nested value from object using dot notation
  */
-function getNestedValue(obj: any, path: string): string | undefined {
+function getNestedValue(obj: Record<string, unknown>, path: string): string | undefined {
   const keys = path.split('.')
-  let value = obj
+  let value: unknown = obj
 
   for (const key of keys) {
     if (value === undefined || value === null) {
       return undefined
     }
-    value = value[key]
+    value = (value as Record<string, unknown>)[key]
   }
 
   return typeof value === 'string' ? value : undefined
@@ -38,7 +38,7 @@ function interpolate(template: string, params: TranslationParams): string {
  * Get translation value directly (for use in v-bind, function calls, etc.)
  */
 function getTranslation(
-  localeStore: any,
+  localeStore: ReturnType<typeof useLocaleStore>,
   key: string,
   defaultValueOrParams?: string | TranslationParams,
   params?: TranslationParams

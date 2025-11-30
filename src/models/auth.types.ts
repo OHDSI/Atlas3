@@ -5,7 +5,7 @@ export interface JWTPayload extends JoseJWTPayload {
   exp?: number
   iat?: number
   iss?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface AuthToken {

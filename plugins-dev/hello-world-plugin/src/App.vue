@@ -61,10 +61,24 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 
+interface AuthContext {
+  isAuthenticated: boolean;
+  user?: {
+    id: number;
+    username: string;
+    permissions: string[];
+  };
+}
+
+interface MessageBus {
+  send: (type: string, payload: unknown) => void;
+  request: (type: string, payload: unknown) => Promise<unknown>;
+}
+
 const props = defineProps<{
   name: string;
-  authContext: any;
-  messageBus: any;
+  authContext: AuthContext;
+  messageBus: MessageBus;
 }>();
 
 const counter = ref(0);
@@ -92,8 +106,9 @@ async function requestData() {
       resource: 'user-preferences',
     });
     lastMessage.value = `Received data: ${JSON.stringify(data, null, 2)}`;
-  } catch (error: any) {
-    lastMessage.value = `Error: ${error.message}`;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    lastMessage.value = `Error: ${errorMessage}`;
   }
 }
 

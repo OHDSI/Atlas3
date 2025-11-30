@@ -118,7 +118,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       expect(converted.expressionType).toBe('NEXT_GEN_EXPRESSION')
 
       // Round-trip should maintain the value
-      const reconverted = convertInternalToAtlas(converted as any)
+      const reconverted = convertInternalToAtlas(converted as unknown)
       expect(reconverted.expressionType).toBe('NEXT_GEN_EXPRESSION')
     })
   })

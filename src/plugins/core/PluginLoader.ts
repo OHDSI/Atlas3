@@ -35,7 +35,12 @@ export class PluginLoader {
 
       // Load the plugin module immediately using SystemJS
       // This happens BEFORE registering with single-spa so we can detect load failures early
-      let pluginModule: any;
+      let pluginModule: {
+        bootstrap: (props: unknown) => Promise<void>;
+        mount: (props: unknown) => Promise<void>;
+        unmount: (props: unknown) => Promise<void>;
+        update?: (props: unknown) => Promise<void>;
+      };
 
       try {
         // Check if SystemJS is available
@@ -46,10 +51,12 @@ export class PluginLoader {
         logger.debug('PluginLoader', `Starting System.import for ${pluginUrl}`);
 
         // Use SystemJS import with additional error context
-        pluginModule = await window.System.import(pluginUrl).catch((err: Error) => {
+        const importedModule = await window.System.import(pluginUrl).catch((err: Error) => {
           logger.error('PluginLoader', `System.import failed for ${pluginUrl}`, err);
           throw new Error(`Failed to import plugin module: ${err.message}`);
         });
+
+        pluginModule = importedModule as typeof pluginModule;
 
         logger.debug('PluginLoader', `System.import succeeded for ${registration.id}`, pluginModule);
 

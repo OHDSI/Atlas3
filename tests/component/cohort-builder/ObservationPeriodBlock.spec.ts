@@ -54,7 +54,7 @@ describe('ObservationPeriodBlock', () => {
 
   it('should default to 0 days when no modelValue provided', () => {
     const wrapper = createWrapper()
-    const html = wrapper.html()
+    const _html = wrapper.html()
     // Check that inputs show 0 or empty (default behavior)
     expect(wrapper.find('[data-testid="prior-days-input"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="post-days-input"]').exists()).toBe(true)

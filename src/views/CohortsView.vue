@@ -199,6 +199,7 @@
               style="max-height: 600px;"
               class="cohort-info-content"
             >
+              <!-- eslint-disable-next-line vue/no-v-html -- trusted server content -->
               <div v-html="cohortInfoHtml" />
             </v-card-text>
             <v-card-text

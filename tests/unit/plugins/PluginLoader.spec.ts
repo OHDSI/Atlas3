@@ -86,6 +86,7 @@ describe('PluginLoader', () => {
 
   describe('startPluginFramework', () => {
     it.skip('should call single-spa start', () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { start } = require('single-spa');
       
       loader.startPluginFramework();
@@ -118,13 +119,13 @@ describe('PluginLoader', () => {
         mockPlugin.authContext,
         mockPlugin.messageBus
       );
-      
+
       registry.setPluginError('test-plugin', new Error('Test'), true);
-      
+
       await loader.retryPlugin('test-plugin');
-      
-      const plugin = registry.getPlugin('test-plugin');
-      expect(plugin?.error).toBeUndefined();
+
+      const _instance = registry.getPlugin('test-plugin');
+      expect(_instance?.error).toBeUndefined();
     });
 
     it('should throw error for non-existent plugin', async () => {

@@ -40,7 +40,7 @@ const vuetify = createVuetify({
 })
 
 describe('PersonReport.vue', () => {
-  let wrapper: VueWrapper<any>
+  let wrapper: VueWrapper
 
   const mockPersonData: PersonReportType = {
     yearOfBirth: [

@@ -5,6 +5,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import type { ReportType } from '@/models/report.types'
+type ReportItem = { type: string; label: string; description: string; icon: string }
 
 // Mock i18n composable with real translations
 vi.mock('@/composables/useI18n', async () => {
@@ -146,7 +147,7 @@ describe('ReportSelector', () => {
       expect(items).toHaveLength(26)
 
       // Verify all expected report types are present
-      const itemTypes = items.map((item: any) => item.type)
+      const itemTypes = items.map((item: ReportItem) => item.type)
       expectedReportTypes.forEach(type => {
         expect(itemTypes).toContain(type)
       })
@@ -157,7 +158,7 @@ describe('ReportSelector', () => {
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
 
-      items.forEach((item: any) => {
+      items.forEach((item: ReportItem) => {
         const metadata = reportMetadata[item.type as ReportType]
         expect(item.label).toBe(metadata.label)
         expect(item.description).toBe(metadata.description)
@@ -225,7 +226,7 @@ describe('ReportSelector', () => {
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
 
-      const personItem = items.find((item: any) => item.type === 'person')
+      const personItem = items.find((item: ReportItem) => item.type === 'person')
       expect(personItem.label).toBe('Person (Demographics)')
     })
 
@@ -234,7 +235,7 @@ describe('ReportSelector', () => {
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
 
-      const conditionErasItem = items.find((item: any) => item.type === 'condition-eras')
+      const conditionErasItem = items.find((item: ReportItem) => item.type === 'condition-eras')
       expect(conditionErasItem.description).toBe('Condition prevalence and duration analysis')
     })
 
@@ -243,7 +244,7 @@ describe('ReportSelector', () => {
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
 
-      const drugErasItem = items.find((item: any) => item.type === 'drug-eras')
+      const drugErasItem = items.find((item: ReportItem) => item.type === 'drug-eras')
       expect(drugErasItem.icon).toBe('mdi-pill')
     })
 
@@ -252,7 +253,7 @@ describe('ReportSelector', () => {
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
 
-      const labels = items.map((item: any) => item.label)
+      const labels = items.map((item: ReportItem) => item.label)
       const uniqueLabels = new Set(labels)
 
       expect(uniqueLabels.size).toBe(labels.length)
@@ -263,7 +264,7 @@ describe('ReportSelector', () => {
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
 
-      items.forEach((item: any) => {
+      items.forEach((item: ReportItem) => {
         expect(item.description).toBeTruthy()
         expect(item.description.length).toBeGreaterThan(10)
       })
@@ -274,7 +275,7 @@ describe('ReportSelector', () => {
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
 
-      items.forEach((item: any) => {
+      items.forEach((item: ReportItem) => {
         expect(item.icon).toBeTruthy()
         expect(item.icon).toMatch(/^mdi-/)
       })
@@ -528,182 +529,182 @@ describe('ReportSelector', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'person')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'person')).toBe(true)
     })
 
     it('should include condition-eras report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'condition-eras')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'condition-eras')).toBe(true)
     })
 
     it('should include drug-eras report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'drug-eras')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'drug-eras')).toBe(true)
     })
 
     it('should include cohort-specific report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'cohort-specific')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'cohort-specific')).toBe(true)
     })
 
     it('should include condition report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'condition')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'condition')).toBe(true)
     })
 
     it('should include conditions-by-index report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'conditions-by-index')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'conditions-by-index')).toBe(true)
     })
 
     it('should include death report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'death')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'death')).toBe(true)
     })
 
     it('should include drug-exposure report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'drug-exposure')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'drug-exposure')).toBe(true)
     })
 
     it('should include drugs-by-index report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'drugs-by-index')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'drugs-by-index')).toBe(true)
     })
 
     it('should include observation-periods report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'observation-periods')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'observation-periods')).toBe(true)
     })
 
     it('should include procedure report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'procedure')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'procedure')).toBe(true)
     })
 
     it('should include procedures-by-index report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'procedures-by-index')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'procedures-by-index')).toBe(true)
     })
 
     it('should include data-completeness report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'data-completeness')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'data-completeness')).toBe(true)
     })
 
     it('should include entropy report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'entropy')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'entropy')).toBe(true)
     })
 
     it('should include tornado report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'tornado')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'tornado')).toBe(true)
     })
 
     it('should include persons-exposure-baseline report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'persons-exposure-baseline')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'persons-exposure-baseline')).toBe(true)
     })
 
     it('should include persons-exposure-cohort report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'persons-exposure-cohort')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'persons-exposure-cohort')).toBe(true)
     })
 
     it('should include visits-baseline report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'visits-baseline')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'visits-baseline')).toBe(true)
     })
 
     it('should include visit-dates-baseline report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'visit-dates-baseline')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'visit-dates-baseline')).toBe(true)
     })
 
     it('should include care-site-visit-dates-baseline report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'care-site-visit-dates-baseline')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'care-site-visit-dates-baseline')).toBe(true)
     })
 
     it('should include visits-cohort report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'visits-cohort')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'visits-cohort')).toBe(true)
     })
 
     it('should include visit-dates-cohort report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'visit-dates-cohort')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'visit-dates-cohort')).toBe(true)
     })
 
     it('should include care-site-visit-dates-cohort report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'care-site-visit-dates-cohort')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'care-site-visit-dates-cohort')).toBe(true)
     })
 
     it('should include drug-utilization-baseline report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'drug-utilization-baseline')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'drug-utilization-baseline')).toBe(true)
     })
 
     it('should include drug-utilization-cohort report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'drug-utilization-cohort')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'drug-utilization-cohort')).toBe(true)
     })
 
     it('should include heracles-heel report type', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
-      expect(items.some((item: any) => item.type === 'heracles-heel')).toBe(true)
+      expect(items.some((item: ReportItem) => item.type === 'heracles-heel')).toBe(true)
     })
   })
 

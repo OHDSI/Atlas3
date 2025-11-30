@@ -69,8 +69,8 @@ export interface Concept {
   DOMAIN_ID?: string
   VOCABULARY_ID?: string
   CONCEPT_CLASS_ID?: string
-  STANDARD_CONCEPT?: string
-  INVALID_REASON?: string
+  STANDARD_CONCEPT?: string | null
+  INVALID_REASON?: string | null
 }
 
 /**
@@ -113,7 +113,7 @@ export interface BooleanAttribute {
  */
 export interface TemporalRelationshipAttribute {
   type: 'temporalRelationship'
-  attributeKey: string // Generic key for temporal relationships
+  attributeKey: TemporalAttributeKey
   temporalWindow: TemporalWindow
 }
 
@@ -124,7 +124,7 @@ export interface TemporalRelationshipAttribute {
  */
 export interface DateAdjustmentAttribute {
   type: 'dateAdjustment'
-  attributeKey: string // Generic key for date adjustments
+  attributeKey: DateAdjustmentAttributeKey
   dateAdjustment: DateAdjustment
 }
 
@@ -144,7 +144,7 @@ export interface UserDefinedPeriod {
  */
 export interface UserDefinedPeriodAttribute {
   type: 'userDefinedPeriod'
-  attributeKey: string // Generic key for user defined periods
+  attributeKey: UserDefinedPeriodAttributeKey
   period: UserDefinedPeriod
 }
 
@@ -169,6 +169,12 @@ export type DateAttributeKey =
 export type TextAttributeKey = 'valueAsString' | 'sourceCode'
 
 export type BooleanAttributeKey = 'first' | 'primary'
+
+export type TemporalAttributeKey = 'temporalRelationship'
+
+export type DateAdjustmentAttributeKey = 'dateAdjustment'
+
+export type UserDefinedPeriodAttributeKey = 'userDefinedPeriod'
 
 export type NumericOperator =
   | 'GREATER_THAN'

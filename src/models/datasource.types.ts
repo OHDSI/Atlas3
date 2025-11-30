@@ -117,12 +117,6 @@ export interface DataDensityReport {
   conceptsPerPerson: BarChartData
 }
 
-export interface DataDensityReport {
-  totalRecords: MultiLineChartData
-  recordsPerPerson: MultiLineChartData
-  conceptsPerPerson: BarChartData
-}
-
 export interface PersonReport {
   yearOfBirth: BarChartData
   gender: PieChartData[]

@@ -59,8 +59,8 @@ describe('ErrorBoundary', () => {
     setActivePinia(createPinia())
   })
 
-  let wrapper: VueWrapper<any>
-  let consoleErrorSpy: any
+  let wrapper: VueWrapper
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
     // Suppress console.error for these tests

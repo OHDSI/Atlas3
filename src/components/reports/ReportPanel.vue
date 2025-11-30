@@ -163,7 +163,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, defineAsyncComponent, onUnmounted } from 'vue'
+import { ref, computed, watch, defineAsyncComponent, onUnmounted, type Component } from 'vue'
 import { useReports } from '@/composables/useReports'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
@@ -194,7 +194,7 @@ const props = defineProps<{
 /**
  * Emits
  */
-const emit = defineEmits<{
+defineEmits<{
   close: []
 }>()
 
@@ -238,7 +238,7 @@ const isPolling = ref(false)
  * Component cache for loaded reports
  * Prevents re-importing already loaded components
  */
-const componentCache = new Map<ReportType, any>()
+const componentCache = new Map<ReportType, ReturnType<typeof defineAsyncComponent>>()
 
 /**
  * Dynamic report component loading
@@ -253,7 +253,7 @@ const currentReportComponent = computed(() => {
   }
 
   // Map report types to components (lazy loaded)
-  const componentMap: Record<string, () => Promise<any>> = {
+  const componentMap: Record<string, () => Promise<{ default: Component }>> = {
     'person': () => import('./report-types/PersonReport.vue'),
     'condition-eras': () => import('./report-types/ConditionErasReport.vue'),
     'condition': () => import('./report-types/ConditionReport.vue'),
@@ -363,7 +363,7 @@ function startJobPolling(jobType: string) {
       }
 
       // Find the most recent job for this source
-      const relevantJob = info.find((job: any) => job.sourceId === props.sourceKey || job.sourceKey === props.sourceKey)
+      const relevantJob = info.find(job => String(job.id.sourceId) === props.sourceKey)
 
       if (relevantJob && relevantJob.status === 'COMPLETE') {
         stopJobPolling()

@@ -14,6 +14,7 @@ const props = withDefaults(defineProps<{
   index?: number
   section?: string
 }>(), {
+  index: 0,
   section: 'criteriaGroup' // Default section context
 })
 

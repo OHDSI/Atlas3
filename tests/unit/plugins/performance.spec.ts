@@ -41,7 +41,7 @@ describe('Plugin Performance Tests', () => {
           })),
         };
 
-        registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as any);
+        registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as unknown);
       }
 
       // Measure menu generation time
@@ -74,7 +74,7 @@ describe('Plugin Performance Tests', () => {
           })),
         };
 
-        registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as any);
+        registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as unknown);
       }
 
       // Measure menu generation time
@@ -110,7 +110,7 @@ describe('Plugin Performance Tests', () => {
         };
 
         const startTime = performance.now();
-        registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as any);
+        registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as unknown);
         const endTime = performance.now();
 
         const registrationTime = endTime - startTime;
@@ -129,7 +129,7 @@ describe('Plugin Performance Tests', () => {
           menuItems: [],
         };
 
-        registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as any);
+        registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as unknown);
       }
 
       // Measure lookup time
@@ -156,7 +156,7 @@ describe('Plugin Performance Tests', () => {
         menuItems: [],
       };
 
-      const instance = registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as any);
+      const _instance = registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as unknown);
 
       // Simulate load time tracking
       const loadTime = 150; // ms
@@ -175,7 +175,7 @@ describe('Plugin Performance Tests', () => {
         menuItems: [],
       };
 
-      registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as any);
+      registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as unknown);
 
       // Simulate mount time tracking
       const mountTime = 50; // ms
@@ -188,7 +188,7 @@ describe('Plugin Performance Tests', () => {
 
   describe('Memory Performance', () => {
     it('should efficiently manage plugin state', () => {
-      const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
+      const initialMemory = (performance as unknown).memory?.usedJSHeapSize || 0;
 
       // Register 100 plugins
       for (let i = 0; i < 100; i++) {
@@ -200,10 +200,10 @@ describe('Plugin Performance Tests', () => {
           menuItems: [],
         };
 
-        registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as any);
+        registry.registerPlugin(plugin, mockAuthContext, mockMessageBus as unknown);
       }
 
-      const finalMemory = (performance as any).memory?.usedJSHeapSize || 0;
+      const finalMemory = (performance as unknown).memory?.usedJSHeapSize || 0;
       const memoryIncrease = finalMemory - initialMemory;
 
       // Each plugin should use less than 10KB on average
