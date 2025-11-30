@@ -153,7 +153,7 @@ async function handleGenerate() {
   }
 }
 
-// T048: Emit tile-click event when card is clicked (for viewing reports)
+// Emit tile-click event when card is clicked (for viewing reports)
 function handleTileClick() {
   // Only emit if cohort has been generated (complete status)
   if (tileStatus.value === 'complete') {

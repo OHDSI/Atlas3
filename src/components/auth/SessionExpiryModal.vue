@@ -71,7 +71,7 @@ const emit = defineEmits<{
 const localRemainingSeconds = ref(props.remainingSeconds);
 let countdownInterval: NodeJS.Timeout | null = null;
 
-// Update remaining time every second (T032)
+// Update remaining time every second
 watch(() => props.modelValue, (isVisible) => {
   if (isVisible) {
     // Start countdown
@@ -80,7 +80,7 @@ watch(() => props.modelValue, (isVisible) => {
       const remaining = Math.max(0, Math.floor((props.expiresAt.getTime() - now) / 1000));
       localRemainingSeconds.value = remaining;
 
-      // Emit expired event when time runs out (T035)
+      // Emit expired event when time runs out
       if (remaining === 0) {
         if (countdownInterval) {
           clearInterval(countdownInterval);
@@ -121,7 +121,7 @@ const countdownColorClass = computed(() => {
   return localRemainingSeconds.value < 60 ? 'text-error' : 'text-warning';
 });
 
-// Handle dismiss (X button or ESC key) (T034)
+// Handle dismiss (X button or ESC key)
 function handleDismiss(value: boolean) {
   emit('update:model-value', value);
   emit('dismiss');

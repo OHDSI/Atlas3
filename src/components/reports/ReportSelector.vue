@@ -1,9 +1,5 @@
 <!--
-  ReportSelector Component
-  Feature: 005-cohort-reports
-  Tasks: T035-T037
-
-  Dropdown selector for report types with metadata
+  ReportSelector Component - Dropdown selector for report types
 -->
 <template>
   <div class="report-selector">

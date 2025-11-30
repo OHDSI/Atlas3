@@ -1,7 +1,6 @@
 <!--
   ProceduresByIndexReport Component
-  Feature: 005-cohort-reports
-  Task: T086
+  
 
   Displays procedures relative to cohort start index
 -->

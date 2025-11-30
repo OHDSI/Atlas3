@@ -793,7 +793,7 @@ const loadedSnapshot = ref<string | null>(null)
 // Component refs
 const additionalCriteriaRef = ref<InstanceType<typeof CriteriaGroupEditor> | null>(null)
 
-// Generation state (T119, T120)
+// Generation state
 const selectedSourceKey = ref<string | null>(null)
 const generationError = ref<string | null>(null)
 
@@ -986,7 +986,7 @@ onMounted(async () => {
   if (props.id) {
     loadCohort(props.id)
   } else {
-    // T123: Try to restore draft from SessionStorage
+    // Try to restore draft from SessionStorage
     const restored = cohortStore.restoreFromDraft()
     if (!restored) {
       // Initialize new cohort if no draft found
@@ -998,7 +998,7 @@ onMounted(async () => {
   Promise.all([
     // Load all concept sets from the API so user can select any system concept set
     conceptSetsStore.fetchAll(),
-    // Load CDM sources for generation (T116)
+    // Load CDM sources for generation
     webapiStore.fetchSources().then(() => {
       // Auto-select first source if available
       if (webapiStore.sourcesList.length > 0 && !selectedSourceKey.value) {
@@ -1734,7 +1734,7 @@ function _handleExportAtlas() {
   }
 }
 
-// Generation functions (T117, T119, T120)
+// Generation functions
 // @ts-expect-error - Planned feature, not yet implemented in UI
 async function _handleGenerate() {
   if (!cohortId.value || !selectedSourceKey.value) {
@@ -1745,7 +1745,7 @@ async function _handleGenerate() {
   try {
     generationError.value = null
 
-    // Start generation (T117)
+    // Start generation
     const job = await webapiStore.generateCohort(cohortId.value, selectedSourceKey.value)
 
     if (!job) {

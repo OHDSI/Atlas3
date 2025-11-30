@@ -42,7 +42,7 @@ async function handleLocaleChange(newLocale: string) {
   }
 }
 
-// T042: Manual cache clear with shift+click
+// Manual cache clear with shift+click
 function handleShiftClick(event: MouseEvent) {
   if (event.shiftKey) {
     event.preventDefault()

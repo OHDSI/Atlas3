@@ -137,7 +137,6 @@ export const OPERATOR_TO_ATLAS: Record<string, string> = {
 
   // Text operators
   CONTAINS: 'contains',
-  EQUALS: 'eq',
   STARTS_WITH: 'startsWith',
   ENDS_WITH: 'endsWith',
 }

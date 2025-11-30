@@ -96,7 +96,7 @@
         </div>
       </template>
 
-      <!-- Actions Column - Add/Remove Button (T091) -->
+      <!-- Actions Column - Add/Remove Button -->
       <template
         v-if="showAddButton"
         #item.actions="{ item }"
@@ -198,7 +198,7 @@ interface Props {
   totalItems: number
   page?: number
   itemsPerPage?: number
-  showAddButton?: boolean  // T091: Show add/remove button
+  showAddButton?: boolean
   conceptsInSet?: Set<number>  // Track which concepts are already in set
 }
 

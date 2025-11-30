@@ -278,7 +278,7 @@ export interface ValidationResult {
 }
 
 // ============================================================================
-// Configuration Panel Types (Feature: 013-config-panel)
+// Configuration Panel Types
 // ============================================================================
 
 /**

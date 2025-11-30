@@ -3,6 +3,8 @@
  *
  * This file contains operator definitions for various attribute types
  * used in the cohort builder's AttributesEditor component.
+ *
+ * Values use internal format (UPPERCASE) which maps to Atlas format via atlas.types.ts
  */
 
 /**
@@ -10,10 +12,10 @@
  * Used for string-based attribute filtering (e.g., stopReason, valueAsString)
  */
 export const TEXT_OPERATORS = [
-  { value: 'eq', label: 'Equals' },
-  { value: 'contains', label: 'Contains' },
-  { value: 'startsWith', label: 'Starts with' },
-  { value: 'endsWith', label: 'Ends with' },
+  { value: 'EQUALS', label: 'Equals' },
+  { value: 'CONTAINS', label: 'Contains' },
+  { value: 'STARTS_WITH', label: 'Starts with' },
+  { value: 'ENDS_WITH', label: 'Ends with' },
 ] as const
 
 export type TextOperator = typeof TEXT_OPERATORS[number]['value']
@@ -23,14 +25,14 @@ export type TextOperator = typeof TEXT_OPERATORS[number]['value']
  * Used for numeric attribute filtering (e.g., age, quantity)
  */
 export const NUMERIC_OPERATORS = [
-  { value: 'gt', label: 'Greater than (>)' },
-  { value: 'gte', label: 'Greater than or equal (>=)' },
-  { value: 'lt', label: 'Less than (<)' },
-  { value: 'lte', label: 'Less than or equal (<=)' },
-  { value: 'eq', label: 'Equal (=)' },
-  { value: 'ne', label: 'Not equal (!=)' },
-  { value: 'bt', label: 'Between' },
-  { value: 'nbt', label: 'Not between' },
+  { value: 'GREATER_THAN', label: 'Greater Than (>)' },
+  { value: 'GREATER_THAN_OR_EQUAL', label: 'Greater Than or Equal (>=)' },
+  { value: 'LESS_THAN', label: 'Less Than (<)' },
+  { value: 'LESS_THAN_OR_EQUAL', label: 'Less Than or Equal (<=)' },
+  { value: 'EQUAL', label: 'Equal (=)' },
+  { value: 'NOT_EQUAL', label: 'Not Equal (!=)' },
+  { value: 'BETWEEN', label: 'Between' },
+  { value: 'NOT_BETWEEN', label: 'Not Between' },
 ] as const
 
 export type NumericOperator = typeof NUMERIC_OPERATORS[number]['value']
@@ -40,9 +42,9 @@ export type NumericOperator = typeof NUMERIC_OPERATORS[number]['value']
  * Used for date attribute filtering (e.g., startDate, endDate)
  */
 export const DATE_OPERATORS = [
-  { value: 'bt', label: 'Between' },
-  { value: 'before', label: 'Before' },
-  { value: 'after', label: 'After' },
+  { value: 'BETWEEN', label: 'Between' },
+  { value: 'BEFORE', label: 'Before' },
+  { value: 'AFTER', label: 'After' },
 ] as const
 
 export type DateOperator = typeof DATE_OPERATORS[number]['value']
@@ -53,11 +55,11 @@ export type DateOperator = typeof DATE_OPERATORS[number]['value']
 export function getDefaultOperator(attributeType: string): string | null {
   switch (attributeType) {
     case 'text':
-      return 'eq'
+      return 'CONTAINS'
     case 'numericRange':
-      return 'gte'
+      return 'GREATER_THAN_OR_EQUAL'
     case 'dateRange':
-      return 'bt'
+      return 'BETWEEN'
     case 'boolean':
     case 'concept':
     case 'conceptSet':
@@ -67,7 +69,6 @@ export function getDefaultOperator(attributeType: string): string | null {
     case 'nested':
       return null
     default:
-      console.warn(`Unknown attribute type: ${attributeType}. Using null as default operator.`)
       return null
   }
 }

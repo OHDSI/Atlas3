@@ -1,10 +1,5 @@
 <!--
-  TableExport Component
-  Feature: 005-cohort-reports
-  Tasks: T121-T124
-
-  Provides export functionality for data tables
-  Supports CSV export and clipboard copy with toast notifications
+  TableExport Component - Export functionality for data tables (CSV export and clipboard copy)
 -->
 <template>
   <div class="table-export-controls">
@@ -32,7 +27,7 @@
       </v-btn>
     </v-btn-group>
 
-    <!-- T124: Toast notifications -->
+    <!-- Toast notifications -->
     <v-snackbar
       v-model="showToast"
       :timeout="toastTimeout"
@@ -73,7 +68,7 @@ const copying = ref(false)
 const exporting = ref(false)
 
 /**
- * T124: Toast notification state
+ * Toast notification state
  */
 const showToast = ref(false)
 const toastMessage = ref('')
@@ -91,8 +86,7 @@ function showToastNotification(message: string, color: 'success' | 'error' | 'in
 }
 
 /**
- * T123: Copy table data to clipboard
- * Uses Clipboard API with fallback
+ * Copy table data to clipboard
  */
 async function handleCopy() {
   if (!props.data || props.data.length === 0) return
@@ -151,8 +145,7 @@ async function handleCopy() {
 }
 
 /**
- * T122: Export table data as CSV
- * Uses papaparse for robust CSV generation
+ * Export table data as CSV
  */
 async function handleExportCSV() {
   if (!props.data || props.data.length === 0) return

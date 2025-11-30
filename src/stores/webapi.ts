@@ -76,7 +76,6 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
   /**
    * Fetch available CDM data sources
-   * T116: Implement fetchSources action
    */
   async function fetchSources(): Promise<void> {
     try {
@@ -93,7 +92,6 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
   /**
    * Generate cohort for a specific data source
-   * T117: Implement generateCohort action
    */
   async function generateCohort(cohortId: number, sourceKey: string): Promise<GenerationJob | null> {
     try {
@@ -136,7 +134,6 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
   /**
    * Poll generation status every 2 seconds until complete or failed
-   * T118: Implement pollGenerationStatus action
    */
   const POLL_INTERVAL_MS = 2000 // 2 seconds
   const POLL_TIMEOUT_MS = 300000 // 5 minutes max

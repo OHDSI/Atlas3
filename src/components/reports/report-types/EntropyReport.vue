@@ -1,7 +1,6 @@
 <!--
   EntropyReport Component
-  Feature: 005-cohort-reports
-  Task: T088
+  
 
   Displays entropy analysis charts
 -->

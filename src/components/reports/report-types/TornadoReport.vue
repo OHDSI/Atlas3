@@ -1,7 +1,6 @@
 <!--
   TornadoReport Component
-  Feature: 005-cohort-reports
-  Task: T089
+  
 
   Displays tornado diagram visualization
 -->

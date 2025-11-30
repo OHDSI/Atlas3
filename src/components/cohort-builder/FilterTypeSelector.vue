@@ -43,13 +43,6 @@
  *
  * Dynamic filter type dropdown that displays available filters based on section context.
  * Integrates with configuration-driven filter system and i18n for localized display.
- *
- * Features (T023-T027):
- * - Dynamic filter list from configuration (T023, T024)
- * - Section-aware filtering (hides group-only in initial/censoring) (T027)
- * - Context-specific descriptions based on section (T026)
- * - Filter selection handler with validation (T025)
- * - Visual indicators for special filter types
  */
 
 import { computed, ref } from 'vue'

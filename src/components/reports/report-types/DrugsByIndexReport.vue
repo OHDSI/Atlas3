@@ -1,7 +1,6 @@
 <!--
   DrugsByIndexReport Component
-  Feature: 005-cohort-reports
-  Task: T083
+  
 
   Displays drug exposures relative to cohort start index
 -->

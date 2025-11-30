@@ -1,7 +1,6 @@
 <!--
   DrugUtilizationCohortReport Component
-  Feature: 005-cohort-reports
-  Task: T099
+  
 
   Displays cohort drug utilization data in a table format
 -->

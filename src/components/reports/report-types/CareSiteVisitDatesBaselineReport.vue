@@ -1,7 +1,6 @@
 <!--
   CareSiteVisitDatesBaselineReport Component
-  Feature: 005-cohort-reports
-  Task: T094
+  
 
   Displays baseline care site visit dates data in a table format
 -->

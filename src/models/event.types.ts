@@ -148,7 +148,7 @@ export interface UserDefinedPeriodAttribute {
   period: UserDefinedPeriod
 }
 
-// Attribute keys per FR-007
+// Attribute keys
 export type NumericAttributeKey =
   | 'age'
   | 'valueAsNumber'

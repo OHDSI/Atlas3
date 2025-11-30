@@ -46,12 +46,12 @@ class SessionSyncService {
   }
 
   /**
-   * Handle storage events from other tabs (T050-T051)
+   * Handle storage events from other tabs
    * 
    * @param event - StorageEvent from browser
    */
   private handleStorageEvent(event: StorageEvent): void {
-    // Only handle auth token changes from localStorage (T051)
+    // Only handle auth token changes from localStorage
     if (event.key !== this.config.storageKey || event.storageArea !== localStorage) {
       return;
     }
@@ -69,7 +69,7 @@ class SessionSyncService {
   }
 
   /**
-   * Derive event type from old/new values (T052)
+   * Derive event type from old/new values
    * 
    * @param oldValue - Previous token value
    * @param newValue - New token value
@@ -83,7 +83,7 @@ class SessionSyncService {
   }
 
   /**
-   * Process sync event and update auth store (T053-T056)
+   * Process sync event and update auth store
    * 
    * @param event - Parsed storage sync event
    */
@@ -95,10 +95,10 @@ class SessionSyncService {
     switch (event.eventType) {
       case 'login':
         if (this.config.syncLogin && event.newValue) {
-          console.log('[SessionSync] Syncing login from another tab (T054)');
+          console.log('[SessionSync] Syncing login from another tab');
           authStore.setToken(event.newValue);
           
-          // Fetch user info for the new token (T054)
+          // Fetch user info for the new token
           try {
             const { authService } = await import('@/services/auth/authService');
             const userInfo = await authService.fetchUserInfo();
@@ -111,7 +111,7 @@ class SessionSyncService {
 
       case 'logout':
         if (this.config.syncLogout) {
-          console.log('[SessionSync] Syncing logout from another tab (T055)');
+          console.log('[SessionSync] Syncing logout from another tab');
           authStore.clearAuth();
           authStore.openLoginModal();
         }
@@ -119,7 +119,7 @@ class SessionSyncService {
 
       case 'refresh':
         if (this.config.syncRefresh && event.newValue) {
-          console.log('[SessionSync] Syncing token refresh from another tab (T056)');
+          console.log('[SessionSync] Syncing token refresh from another tab');
           authStore.setToken(event.newValue);
         }
         break;

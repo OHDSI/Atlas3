@@ -481,7 +481,6 @@ export function parseUserDefinedPeriodAttribute(attributeKey: string, startDate:
 function convertAttributeToAtlas(attr: EventAttribute): any {
   // Handle null/undefined attributes gracefully
   if (!attr || typeof attr !== 'object' || !attr.type) {
-    console.warn('[atlas-converter] Skipping invalid attribute:', attr)
     return {}
   }
 

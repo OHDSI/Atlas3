@@ -1,7 +1,6 @@
 <!--
   VisitDatesCohortReport Component
-  Feature: 005-cohort-reports
-  Task: T096
+  
 
   Displays cohort visit dates analysis in a table format
 -->

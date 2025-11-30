@@ -135,7 +135,7 @@ export const useCohortStore = defineStore('cohort', () => {
     isDirty.value = true
   }
 
-  // T122: SessionStorage auto-save
+  // SessionStorage auto-save
   function saveToDraft() {
     if (!currentCohort.value || !isDirty.value) return
 
@@ -152,7 +152,7 @@ export const useCohortStore = defineStore('cohort', () => {
     }
   }
 
-  // T123: SessionStorage restore
+  // SessionStorage restore
   function restoreFromDraft(): boolean {
     try {
       const draftJson = sessionStorage.getItem(STORAGE_KEY)

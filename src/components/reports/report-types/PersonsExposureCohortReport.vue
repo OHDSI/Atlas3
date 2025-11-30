@@ -1,7 +1,6 @@
 <!--
   PersonsExposureCohortReport Component
-  Feature: 005-cohort-reports
-  Task: T091
+  
 
   Displays cohort period persons/exposure analysis data in a table format
 -->

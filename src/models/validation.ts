@@ -151,7 +151,7 @@ const ConceptSetAttributeSchema = AttributeBaseSchema.extend({
  */
 const ConceptAttributeSchema = AttributeBaseSchema.extend({
   type: z.literal('concept'),
-  concept: ConceptSchema.nullable(),
+  concepts: z.array(ConceptSchema),
 })
 
 /**

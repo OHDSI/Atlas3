@@ -25,7 +25,7 @@ class PermissionService {
    * @returns true if user has permission, false otherwise
    */
   hasPermission(requiredPermission: string, userPermissions: string[]): boolean {
-    // Check cache first (T073)
+    // Check cache first
     const cached = this.getCachedResult(requiredPermission);
     if (cached !== null) {
       this.cache.totalHits++;
@@ -34,19 +34,19 @@ class PermissionService {
 
     this.cache.totalMisses++;
 
-    // Check for exact match optimization (T073)
+    // Check for exact match
     if (userPermissions.includes(requiredPermission)) {
       this.cacheResult(requiredPermission, true);
       return true;
     }
 
-    // Check for global wildcard (T074)
+    // Check for global wildcard
     if (userPermissions.includes('*')) {
       this.cacheResult(requiredPermission, true);
       return true;
     }
 
-    // Check each user permission for wildcard match (T075)
+    // Check each user permission for wildcard match
     const result = userPermissions.some(userPerm =>
       this.checkWildcardMatch(userPerm, requiredPermission)
     );
@@ -76,7 +76,7 @@ class PermissionService {
     const userLevels = userPerm.split(':');
     const requiredLevels = requiredPerm.split(':');
 
-    // Compare each level (T075)
+    // Compare each level
     for (let i = 0; i < Math.max(userLevels.length, requiredLevels.length); i++) {
       const userLevel = userLevels[i] || '';
       const requiredLevel = requiredLevels[i] || '';
@@ -95,7 +95,7 @@ class PermissionService {
   }
 
   /**
-   * Parse permission string into rule object (T071)
+   * Parse permission string into rule object
    * 
    * @param permission - Permission string (e.g., "cohort:123:get")
    * @returns Parsed permission rule
@@ -122,7 +122,7 @@ class PermissionService {
   }
 
   /**
-   * Get cached permission check result (T076-T077)
+   * Get cached permission check result
    * 
    * @param permission - Permission string
    * @returns Cached result or null if not found/expired
@@ -131,7 +131,7 @@ class PermissionService {
     const entry = this.cache.entries.get(permission);
     if (!entry) return null;
 
-    // Check TTL (T077)
+    // Check TTL
     const now = Date.now();
     if (now >= entry.expiresAt.getTime()) {
       this.cache.entries.delete(permission);
@@ -143,13 +143,13 @@ class PermissionService {
   }
 
   /**
-   * Cache permission check result (T076-T078)
+   * Cache permission check result
    * 
    * @param permission - Permission string
    * @param result - Check result to cache
    */
   private cacheResult(permission: string, result: boolean): void {
-    // LRU eviction if at capacity (T078)
+    // LRU eviction if at capacity
     if (this.cache.entries.size >= this.cache.maxSize) {
       const firstKey = this.cache.entries.keys().next().value as string;
       if (firstKey) {
@@ -169,7 +169,7 @@ class PermissionService {
   }
 
   /**
-   * Clear permission cache (T079)
+   * Clear permission cache
    * 
    * Should be called on login, logout, or token refresh
    */
@@ -181,7 +181,7 @@ class PermissionService {
   }
 
   /**
-   * Get cache statistics (T080)
+   * Get cache statistics
    * 
    * @returns Cache hit rate and size metrics
    */

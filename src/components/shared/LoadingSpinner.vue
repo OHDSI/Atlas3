@@ -18,7 +18,6 @@
 <script setup lang="ts">
 /**
  * LoadingSpinner - Vuetify v-progress-circular wrapper
- * Uses Vuetify default Material Design styling per FR-024
  */
 defineProps<{
   size?: number | string

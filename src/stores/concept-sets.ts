@@ -245,7 +245,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
   /**
    * Add a concept to the current concept set
-   * T085: Prevent duplicates
    */
   function addConceptToSet(concept: Concept) {
     if (!currentSet.value) {
@@ -253,7 +252,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    // Check for duplicates (T107)
+    // Check for duplicates
     const exists = currentSet.value.items.some(
       (item) => item.conceptId === concept.conceptId
     )
@@ -273,7 +272,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
   /**
    * Remove a concept from the current concept set
-   * T086
    */
   function removeConceptFromSet(conceptId: number) {
     if (!currentSet.value) {
@@ -288,7 +286,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
   /**
    * Toggle concept flags (descendants, mapped, exclude)
-   * T087: Optimistic updates
    */
   function toggleConceptFlag(
     conceptId: number,

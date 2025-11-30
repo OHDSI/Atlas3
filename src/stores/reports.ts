@@ -1,7 +1,5 @@
 /**
  * Reports Pinia Store
- * Feature: 005-cohort-reports
- * Tasks: T019-T021
  *
  * Manages cohort report data fetching, caching, and state
  */
@@ -69,9 +67,6 @@ import {
   mapTornadoReport
 } from '@/services/report-mapper'
 
-/**
- * T019: Store State
- */
 export const useReportsStore = defineStore('reports', () => {
   // Current report selection
   const currentReportType = ref<ReportType | null>(null)
@@ -97,7 +92,7 @@ export const useReportsStore = defineStore('reports', () => {
   }
 
   /**
-   * T020: Actions - Fetch report data from WebAPI
+   * Fetch report data from WebAPI
    */
   async function fetchReport(
     cohortId: number,
@@ -314,14 +309,14 @@ export const useReportsStore = defineStore('reports', () => {
   }
 
   /**
-   * T020: Actions - Set current report type
+   * Set current report type
    */
   function setReportType(reportType: ReportType): void {
     currentReportType.value = reportType
   }
 
   /**
-   * T020: Actions - Clear specific report from cache
+   * Clear specific report from cache
    */
   function clearReport(cohortId: number, sourceKey: string, reportType: ReportType): void {
     const cacheKey = getCacheKey(cohortId, sourceKey, reportType)
@@ -330,7 +325,7 @@ export const useReportsStore = defineStore('reports', () => {
   }
 
   /**
-   * T020: Actions - Set current report context
+   * Set current report context
    */
   function setCurrentReport(cohortId: number, sourceKey: string, reportType: ReportType): void {
     currentCohortId.value = cohortId
@@ -339,7 +334,7 @@ export const useReportsStore = defineStore('reports', () => {
   }
 
   /**
-   * T020: Actions - Clear all cached reports
+   * Clear all cached reports
    */
   function clearAllReports(): void {
     reportData.value.clear()
@@ -347,7 +342,7 @@ export const useReportsStore = defineStore('reports', () => {
   }
 
   /**
-   * T020: Actions - Clear current selection
+   * Clear current selection
    */
   function clearCurrentReport(): void {
     currentReportType.value = null
@@ -357,7 +352,7 @@ export const useReportsStore = defineStore('reports', () => {
   }
 
   /**
-   * T021: Getters - Get formatted current report data
+   * Get formatted current report data
    */
   const currentReport = computed<ReportData | null>(() => {
     if (!currentCohortId.value || !currentSourceKey.value || !currentReportType.value) {
@@ -374,7 +369,7 @@ export const useReportsStore = defineStore('reports', () => {
   })
 
   /**
-   * T021: Getters - Get formatted report data for specific parameters
+   * Get formatted report data for specific parameters
    */
   function getReport(
     cohortId: number,
@@ -386,22 +381,22 @@ export const useReportsStore = defineStore('reports', () => {
   }
 
   /**
-   * T021: Getters - Check if currently loading
+   * Check if currently loading
    */
   const isLoading = computed(() => loading.value)
 
   /**
-   * T021: Getters - Check if has error
+   * Check if has error
    */
   const hasError = computed(() => error.value !== null)
 
   /**
-   * T021: Getters - Get current error message
+   * Get current error message
    */
   const errorMessage = computed(() => error.value)
 
   /**
-   * T021: Getters - Check if specific report is cached
+   * Check if specific report is cached
    */
   function isReportCached(cohortId: number, sourceKey: string, reportType: ReportType): boolean {
     const cacheKey = getCacheKey(cohortId, sourceKey, reportType)
@@ -409,7 +404,7 @@ export const useReportsStore = defineStore('reports', () => {
   }
 
   /**
-   * T021: Getters - Get cache statistics
+   * Get cache statistics
    */
   const cacheStats = computed(() => ({
     totalCached: reportData.value.size,

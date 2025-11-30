@@ -1,6 +1,5 @@
 /**
  * Internationalization (i18n) Type Definitions
- * Feature: 008-translation-support
  */
 
 import type { ComputedRef } from 'vue'

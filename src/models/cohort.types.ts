@@ -107,7 +107,7 @@ export interface ConceptSetReference {
   items?: any[] // Full concept set items to embed in cohort definition
 }
 
-// 12 OHDSI criteria types per spec.md FR-002
+// OHDSI criteria types
 export type CriteriaType =
   | 'ConditionOccurrence'
   | 'ConditionEra'

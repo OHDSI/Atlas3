@@ -1,7 +1,6 @@
 <!--
   CohortSpecificReport Component
-  Feature: 005-cohort-reports
-  Tasks: T071-T078
+  
 
   Cohort-specific analytics with multiple chart sections
 -->
@@ -239,7 +238,7 @@ const reportData = computed<CohortSpecificReport | null>(() => {
 })
 
 /**
- * Prevalence by month chart data (T072)
+ * Prevalence by month chart data
  */
 const prevalenceByMonthData = computed<LineChartData | null>(() => {
   if (!reportData.value?.prevalenceByMonth || reportData.value.prevalenceByMonth.length === 0) {
@@ -255,7 +254,7 @@ const prevalenceByMonthData = computed<LineChartData | null>(() => {
 })
 
 /**
- * Age distribution chart data (T074)
+ * Age distribution chart data
  */
 const ageDistributionData = computed<BarChartData | null>(() => {
   if (!reportData.value?.ageDistribution || reportData.value.ageDistribution.length === 0) {
@@ -271,7 +270,7 @@ const ageDistributionData = computed<BarChartData | null>(() => {
 })
 
 /**
- * Duration distribution chart data (T075)
+ * Duration distribution chart data
  */
 const durationDistributionData = computed<BarChartData | null>(() => {
   if (!reportData.value?.durationDistribution || reportData.value.durationDistribution.length === 0) {
@@ -334,7 +333,7 @@ async function retrySections() {
 }
 
 /**
- * Fetch report data (T076)
+ * Fetch report data
  */
 async function fetchData() {
   sectionsLoading.value.clear()

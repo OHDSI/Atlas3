@@ -1,7 +1,5 @@
 /**
  * ECharts Configuration Utilities
- * Feature: 005-cohort-reports
- * Task: T024
  *
  * Provides default configuration helpers for all chart types
  */
@@ -355,15 +353,12 @@ export function getExportConfig(backgroundColor = '#ffffff') {
 
 // ============================================================================
 // Dashboard-specific Chart Configurations
-// Feature: 006-datasources
-// Tasks: T023-T026
 // ============================================================================
 
 import type { BarChartData as DatasourceBarChartData, PieChartData as DatasourcePieChartData, LineChartData as DatasourceLineChartData, MultiLineChartData as DatasourceMultiLineChartData } from '@/models/datasource.types'
 
 /**
- * Dashboard Gender Pie Chart Configuration (T023)
- * Optimized for gender distribution display
+ * Dashboard Gender Pie Chart Configuration
  */
 export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChartsOption {
   return {
@@ -421,8 +416,7 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
 }
 
 /**
- * Dashboard Age Bar Chart Configuration (T024)
- * Optimized for age distribution display
+ * Dashboard Age Bar Chart Configuration
  */
 export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOption {
   return {
@@ -485,8 +479,7 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
 }
 
 /**
- * Dashboard Cumulative Observation Line Chart Configuration (T025)
- * Optimized for cumulative observation over time
+ * Dashboard Cumulative Observation Line Chart Configuration
  */
 export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): EChartsOption {
   return {
@@ -563,8 +556,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
 }
 
 /**
- * Dashboard Observation by Month Line Chart Configuration (T026)
- * Optimized for monthly observation count display
+ * Dashboard Observation by Month Line Chart Configuration
  */
 export function dashboardObservationMonthLineOptions(data: DatasourceLineChartData): EChartsOption {
   return {
@@ -643,8 +635,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
 }
 
 /**
- * Multi-Line Chart Configuration for Data Density Reports (T036)
- * Optimized for multiple time series with legend
+ * Multi-Line Chart Configuration for Data Density Reports
  */
 export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChartsOption {
   return {
@@ -707,8 +698,7 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
 }
 
 /**
- * Clinical Domain Treemap Configuration (T055-T056)
- * Enhanced treemap with zoom support and prevalence-based coloring
+ * Clinical Domain Treemap Configuration
  */
 export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOption {
   // Calculate prevalence range for color mapping

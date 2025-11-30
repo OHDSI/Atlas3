@@ -1,7 +1,6 @@
 <!--
   ProcedureReport Component
-  Feature: 005-cohort-reports
-  Task: T085
+  
 
   Displays procedure occurrence data table
 -->

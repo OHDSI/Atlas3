@@ -1,7 +1,6 @@
 <!--
   ConditionErasReport Component
-  Feature: 005-cohort-reports
-  Tasks: T059-T065
+  
 
   Condition prevalence report with table and treemap views
 -->
@@ -147,7 +146,7 @@ const reportData = computed<ConditionErasReport | null>(() => {
 })
 
 /**
- * Table headers (T061)
+ * Table headers
  */
 const tableHeaders: TableHeader[] = [
   {
@@ -195,7 +194,7 @@ const tableHeaders: TableHeader[] = [
 ]
 
 /**
- * Table data (T061)
+ * Table data
  */
 const tableData = computed<TableRow[]>(() => {
   if (!reportData.value?.prevalence) return []
@@ -212,7 +211,7 @@ const tableData = computed<TableRow[]>(() => {
 })
 
 /**
- * Fetch report data (T063)
+ * Fetch report data
  */
 async function fetchData() {
   loading.value = true

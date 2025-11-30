@@ -1,7 +1,5 @@
 <!--
   LineChart Component
-  Feature: 005-cohort-reports
-  Tasks: T027, T119
 
   ECharts line chart wrapper with loading states, responsive behavior, and export functionality
 -->
@@ -126,14 +124,14 @@ watch(
 )
 
 /**
- * T119: Handle export success
+ * Handle export success
  */
 function handleExportSuccess(format: 'png' | 'svg', filename: string) {
   emit('export-success', format, filename)
 }
 
 /**
- * T119: Handle export error
+ * Handle export error
  */
 function handleExportError(format: 'png' | 'svg', error: Error) {
   emit('export-error', format, error)

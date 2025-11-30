@@ -1,7 +1,5 @@
 <!--
   PersonReport Component
-  Feature: 005-cohort-reports
-  Tasks: T038-T045
 
   Demographics report with year of birth and demographic pie charts
 -->

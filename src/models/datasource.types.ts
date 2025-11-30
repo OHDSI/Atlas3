@@ -1,6 +1,5 @@
 /**
  * Data Source Type Definitions
- * Feature: 006-datasources
  */
 import { z } from 'zod'
 

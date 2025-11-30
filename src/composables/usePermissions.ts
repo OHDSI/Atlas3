@@ -26,7 +26,7 @@ export function usePermissions(): UsePermissionsReturn {
   const authStore = useAuthStore();
 
   /**
-   * Check if user has a specific permission (T083)
+   * Check if user has a specific permission
    * 
    * @param permission - Permission string to check (e.g., "cohort:123:get")
    * @returns true if user has permission
@@ -38,7 +38,7 @@ export function usePermissions(): UsePermissionsReturn {
   };
 
   /**
-   * Check if user has any of the given permissions (T084)
+   * Check if user has any of the given permissions
    * 
    * @param permissions - Array of permission strings
    * @returns true if user has at least one permission
@@ -48,7 +48,7 @@ export function usePermissions(): UsePermissionsReturn {
   };
 
   /**
-   * Check if user has all of the given permissions (T085)
+   * Check if user has all of the given permissions
    * 
    * @param permissions - Array of permission strings
    * @returns true if user has all permissions
@@ -58,7 +58,7 @@ export function usePermissions(): UsePermissionsReturn {
   };
 
   /**
-   * Get cache hit rate percentage (T086)
+   * Get cache hit rate percentage
    * 
    * @returns Reactive computed value of cache hit rate
    */
@@ -68,7 +68,7 @@ export function usePermissions(): UsePermissionsReturn {
   });
 
   /**
-   * Clear permission cache (T087)
+   * Clear permission cache
    * 
    * Useful when permissions might have changed
    */

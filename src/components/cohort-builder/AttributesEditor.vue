@@ -359,6 +359,11 @@ import { useI18n } from '@/composables/useI18n'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import TemporalWindowEditor from '@/components/cohort-builder/TemporalWindowEditor.vue'
 import DateAdjustmentEditor from '@/components/cohort-builder/DateAdjustmentEditor.vue'
+import {
+  TEXT_OPERATORS,
+  NUMERIC_OPERATORS,
+  DATE_OPERATORS,
+} from '@/constants/attribute-operators'
 import type {
   EventAttribute,
   TemporalWindow,
@@ -418,10 +423,9 @@ watch(() => props.modelValue, (newValue) => {
       continue
     }
 
-    // Validate and apply default operators if missing (FR-012)
+    // Validate and apply default operators if missing
     if (attr.type === 'numericRange') {
       if (!attr.operator) {
-        console.warn(`[AttributesEditor] Missing operator for numericRange attribute. Applying default.`)
         needsUpdate = true
         cleaned.push({ ...(attr as any), operator: 'GREATER_THAN_OR_EQUAL' } as EventAttribute)
       } else {
@@ -429,7 +433,6 @@ watch(() => props.modelValue, (newValue) => {
       }
     } else if (attr.type === 'dateRange') {
       if (!attr.operator) {
-        console.warn(`[AttributesEditor] Missing operator for dateRange attribute. Applying default.`)
         needsUpdate = true
         cleaned.push({ ...(attr as any), operator: 'BETWEEN' } as EventAttribute)
       } else {
@@ -437,7 +440,6 @@ watch(() => props.modelValue, (newValue) => {
       }
     } else if (attr.type === 'text') {
       if (!attr.operator) {
-        console.warn(`[AttributesEditor] Missing operator for text attribute. Applying default.`)
         needsUpdate = true
         cleaned.push({ ...(attr as any), operator: 'CONTAINS' } as EventAttribute)
       } else {
@@ -453,30 +455,10 @@ watch(() => props.modelValue, (newValue) => {
   }
 }, { immediate: true })
 
-// Operator lists
-const numericOperators = [
-  { value: 'GREATER_THAN', label: 'Greater Than (>)' },
-  { value: 'GREATER_THAN_OR_EQUAL', label: 'Greater Than or Equal (>=)' },
-  { value: 'LESS_THAN', label: 'Less Than (<)' },
-  { value: 'LESS_THAN_OR_EQUAL', label: 'Less Than or Equal (<=)' },
-  { value: 'EQUAL', label: 'Equal (=)' },
-  { value: 'NOT_EQUAL', label: 'Not Equal (!=)' },
-  { value: 'BETWEEN', label: 'Between' },
-  { value: 'NOT_BETWEEN', label: 'Not Between' },
-]
-
-const dateOperators = [
-  { value: 'BETWEEN', label: 'Between' },
-  { value: 'BEFORE', label: 'Before' },
-  { value: 'AFTER', label: 'After' },
-]
-
-const textOperators = [
-  { value: 'EQUALS', label: 'Equals' },
-  { value: 'CONTAINS', label: 'Contains' },
-  { value: 'STARTS_WITH', label: 'Starts with' },
-  { value: 'ENDS_WITH', label: 'Ends with' },
-]
+// Operator lists - imported from constants for consistency
+const numericOperators = NUMERIC_OPERATORS
+const dateOperators = DATE_OPERATORS
+const textOperators = TEXT_OPERATORS
 
 // Attribute errors tracking
 const attributeErrors = ref<Record<number, string | null>>({})

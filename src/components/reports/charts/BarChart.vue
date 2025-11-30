@@ -1,7 +1,5 @@
 <!--
   BarChart Component
-  Feature: 005-cohort-reports
-  Tasks: T025, T117
 
   ECharts bar chart wrapper with loading states, responsive behavior, and export functionality
 -->
@@ -124,14 +122,14 @@ watch(
 )
 
 /**
- * T117: Handle export success
+ * Handle export success
  */
 function handleExportSuccess(format: 'png' | 'svg', filename: string) {
   emit('export-success', format, filename)
 }
 
 /**
- * T117: Handle export error
+ * Handle export error
  */
 function handleExportError(format: 'png' | 'svg', error: Error) {
   emit('export-error', format, error)

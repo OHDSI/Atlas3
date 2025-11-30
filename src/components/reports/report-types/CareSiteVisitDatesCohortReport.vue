@@ -1,7 +1,6 @@
 <!--
   CareSiteVisitDatesCohortReport Component
-  Feature: 005-cohort-reports
-  Task: T097
+  
 
   Displays cohort care site visit dates data in a table format
 -->

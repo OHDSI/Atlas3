@@ -5,11 +5,11 @@
  * Used by UI components to query available filters and their metadata based on section context.
  *
  * Features:
- * - Section-aware filter queries (FR-009)
+ * - Section-aware filter queries
  * - i18n locale key resolution for filter names and descriptions
- * - Context-specific description display (FR-010)
+ * - Context-specific description display
  * - Filter metadata queries (requiresConceptSet, groupOnly flags)
- * - Validation result exposure (FR-016)
+ * - Validation result exposure
  */
 
 import { computed, ref, type Ref, type ComputedRef } from 'vue'
@@ -131,7 +131,7 @@ export function useFilterConfig(section: Ref<string>): UseFilterConfigReturn {
 
   /**
    * Get context-specific description for a filter type.
-   * Resolution order (FR-010):
+   * Resolution order:
    * 1. Section-specific key (e.g., "initial", "censoring", "group")
    * 2. "all" key (applies to all contexts)
    * 3. Filter type key as fallback
@@ -193,7 +193,7 @@ export function useFilterConfig(section: Ref<string>): UseFilterConfigReturn {
   }
 
   /**
-   * Check if filter requires concept set selector (FR-012).
+   * Check if filter requires concept set selector.
    *
    * @param filterType - Filter type key
    * @returns True if concept set selector should be shown
@@ -204,7 +204,7 @@ export function useFilterConfig(section: Ref<string>): UseFilterConfigReturn {
   }
 
   /**
-   * Check if filter is group-only (FR-011).
+   * Check if filter is group-only.
    *
    * @param filterType - Filter type key
    * @returns True if filter only available in criteria groups

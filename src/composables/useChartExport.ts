@@ -1,7 +1,5 @@
 /**
  * useChartExport Composable
- * Feature: 005-cohort-reports
- * Task: T023
  *
  * Provides chart and table export functionality (PNG, SVG, CSV)
  */

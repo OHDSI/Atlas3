@@ -195,12 +195,6 @@ async function performSearch() {
     return
   }
 
-  console.log('[ConceptSearchDialog] Performing search:', {
-    sourceKey: webapiStore.selectedSource,
-    query: searchQuery.value,
-    domain: selectedDomain.value
-  })
-
   hasSearched.value = true
   selectedConcepts.value = []
 
@@ -210,10 +204,8 @@ async function performSearch() {
       webapiStore.selectedSource,
       searchQuery.value
     )
-    console.log('[ConceptSearchDialog] Search completed. Results:', conceptSetsStore.searchResults)
   } catch (error) {
     console.error('[ConceptSearchDialog] Search failed:', error)
-    // Don't crash - just show no results
   }
 }
 

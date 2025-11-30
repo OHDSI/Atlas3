@@ -242,7 +242,7 @@ router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, 
 })
 
 /**
- * Configuration Panel Guard - Auto-close panel on navigation (Feature: 013-config-panel)
+ * Configuration Panel Guard - Auto-close panel on navigation
  */
 router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
   // Auto-close config panel when navigating to a different route

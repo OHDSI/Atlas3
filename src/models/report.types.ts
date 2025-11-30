@@ -1,8 +1,7 @@
 /**
  * Report Data Types and Interfaces
- * Feature: 005-cohort-reports
  *
- * This file defines all TypeScript interfaces for the cohort reporting feature,
+ * TypeScript interfaces for cohort reporting,
  * including report configurations, data structures, and WebAPI response formats.
  */
 
@@ -173,7 +172,7 @@ export const ConditionReportSchema = z.object({
 })
 
 // ============================================================================
-// Conditions by Index Report (T080)
+// Conditions by Index Report
 // ============================================================================
 
 export interface ConditionsByIndexReport {
@@ -187,7 +186,7 @@ export const ConditionsByIndexReportSchema = z.object({
 })
 
 // ============================================================================
-// Death Report (T081)
+// Death Report
 // ============================================================================
 
 export interface DeathReport {
@@ -201,7 +200,7 @@ export const DeathReportSchema = z.object({
 })
 
 // ============================================================================
-// Drug Exposure Report (T082)
+// Drug Exposure Report
 // ============================================================================
 
 export interface DrugExposureReport {
@@ -215,7 +214,7 @@ export const DrugExposureReportSchema = z.object({
 })
 
 // ============================================================================
-// Drugs by Index Report (T083)
+// Drugs by Index Report
 // ============================================================================
 
 export interface DrugsByIndexReport {
@@ -229,7 +228,7 @@ export const DrugsByIndexReportSchema = z.object({
 })
 
 // ============================================================================
-// Observation Periods Report (T084)
+// Observation Periods Report
 // ============================================================================
 
 export interface ObservationPeriodsReport {
@@ -243,7 +242,7 @@ export const ObservationPeriodsReportSchema = z.object({
 })
 
 // ============================================================================
-// Procedure Report (T085)
+// Procedure Report
 // ============================================================================
 
 export interface ProcedureReport {
@@ -257,7 +256,7 @@ export const ProcedureReportSchema = z.object({
 })
 
 // ============================================================================
-// Procedures by Index Report (T086)
+// Procedures by Index Report
 // ============================================================================
 
 export interface ProceduresByIndexReport {
@@ -271,7 +270,7 @@ export const ProceduresByIndexReportSchema = z.object({
 })
 
 // ============================================================================
-// Data Completeness Report (T087)
+// Data Completeness Report
 // ============================================================================
 
 export interface DataCompletenessReport {
@@ -285,7 +284,7 @@ export const DataCompletenessReportSchema = z.object({
 })
 
 // ============================================================================
-// Entropy Report (T088)
+// Entropy Report
 // ============================================================================
 
 export interface EntropyReport {
@@ -299,7 +298,7 @@ export const EntropyReportSchema = z.object({
 })
 
 // ============================================================================
-// Tornado Report (T089)
+// Tornado Report
 // ============================================================================
 
 export interface TornadoReport {

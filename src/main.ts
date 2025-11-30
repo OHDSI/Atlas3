@@ -112,7 +112,7 @@ initializeApp().then(async (app) => {
   // Mount app first, then initialize stores asynchronously
   // This ensures the app is interactive immediately
   await router.isReady().then(async () => {
-  // Load configuration early (eager loading - FR-001)
+  // Load configuration early
   console.log('[Config] Loading atlas-config.json...')
   try {
     const validationResult = await configLoaderService.loadConfiguration()
@@ -126,7 +126,7 @@ initializeApp().then(async (app) => {
       console.error('[Config] Configuration loading failed - no valid filters')
     }
 
-    // Make validation result available globally for UI components (FR-016)
+    // Make validation result available globally for UI components
     app.provide('configValidationResult', validationResult)
   } catch (error) {
     console.error('[Config] Critical error loading configuration:', error)
@@ -135,7 +135,7 @@ initializeApp().then(async (app) => {
   // Mount the app first so it's interactive
   app.mount('#app')
 
-  // Setup token expiry watcher (T038)
+  // Setup token expiry watcher
   watch(() => authStore.token, (newToken) => {
     if (newToken) {
       tokenExpiryService.setupExpiryWarning(newToken)

@@ -1,6 +1,6 @@
 <template>
   <div class="domain-prevalence-table">
-    <!-- Large dataset warning (T068) -->
+    <!-- Large dataset warning -->
     <v-alert
       v-if="needsVirtualization"
       type="info"
@@ -113,7 +113,7 @@
         {{ item.metric.toFixed(2) }}
       </template>
       
-      <!-- Table status text (T067) -->
+      <!-- Table status text -->
       <template #bottom>
         <div class="table-status-footer pa-3 d-flex justify-space-between align-center">
           <div class="text-caption text-medium-emphasis">
@@ -170,7 +170,7 @@ const visibleHeaders = computed(() => {
   return headers.value.filter(h => !h.hidden)
 })
 
-// Check if dataset needs virtualization (T068)
+// Check if dataset needs virtualization
 const needsVirtualization = computed(() => {
   return props.data.length > VIRTUALIZATION_THRESHOLD
 })
@@ -219,7 +219,7 @@ const endItem = computed(() => {
   return Math.min(end, totalItems.value)
 })
 
-// Table status text (T067)
+// Table status text
 const tableStatusText = computed(() => {
   if (totalItems.value === 0) {
     return 'No entries found'

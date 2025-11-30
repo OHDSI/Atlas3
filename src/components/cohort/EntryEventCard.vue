@@ -318,12 +318,14 @@ function addAttribute(attributeKey: string, attributeType: string) {
       },
     }
   } else if (attributeType === 'userDefinedPeriod') {
+    const today = new Date()
+    const tomorrow = new Date(today.getTime() + 86400000) // +1 day in milliseconds
     newAttribute = {
       type: 'userDefinedPeriod',
       attributeKey,
       period: {
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date().toISOString().split('T')[0]
+        startDate: today.toISOString().split('T')[0],
+        endDate: tomorrow.toISOString().split('T')[0]
       },
     }
   }

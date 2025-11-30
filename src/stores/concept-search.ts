@@ -151,7 +151,6 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
 
   /**
    * Debounced search (300ms delay)
-   * T034: Prevent excessive API calls
    */
   const debouncedSearch = debounce(search, 300)
 

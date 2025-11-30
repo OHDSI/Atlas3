@@ -59,11 +59,6 @@
  *
  * Displays validation errors from configuration loading.
  * Shows when invalid filter types are detected in atlas-config.json.
- *
- * Features (T051-T053):
- * - Warning alert display (T051)
- * - Expandable details section with invalid filter list (T052)
- * - Integrates with app layout when validation errors exist (T053)
  */
 
 import { ref, onMounted } from 'vue'

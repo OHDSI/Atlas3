@@ -25,9 +25,7 @@ import {
 // Override with VITE_WEBAPI_URL environment variable if needed
 const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
 
-console.log('[WebAPI] BASE_URL:', BASE_URL, '| VITE_WEBAPI_URL:', import.meta.env.VITE_WEBAPI_URL, '| DEV:', import.meta.env.DEV)
-
-// T132: Retry configuration
+// Retry configuration
 const MAX_RETRY_ATTEMPTS = 3
 const INITIAL_RETRY_DELAY_MS = 500
 
@@ -62,8 +60,8 @@ function isRetryableError(error: unknown, statusCode?: number): boolean {
 
 /**
  * Generic fetch wrapper with error handling and retry logic
- * T132: Exponential backoff with 3 attempts, 500ms initial delay
- * T028: Adds User-Language header for i18n support
+ * Exponential backoff with 3 attempts, 500ms initial delay
+ * Adds User-Language header for i18n support
  */
 async function fetchJSON<T>(
   endpoint: string,
@@ -74,7 +72,7 @@ async function fetchJSON<T>(
 
   for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
     try {
-      // T028: Get current locale from localStorage for User-Language header
+      // Get current locale from localStorage for User-Language header
       const locale = localStorage.getItem('locale') || 'en'
       
       const response = await fetch(url, {
@@ -155,15 +153,12 @@ export async function searchConcepts(
     endpoint += `&domain=${encodeURIComponent(domain)}`
   }
 
-  console.log('[WebAPI] searchConcepts:', { sourceKey, query, domain, endpoint })
-
   try {
     const data = await fetchJSON<unknown>(endpoint)
-    console.log('[WebAPI] searchConcepts response received, concept count:', Array.isArray(data) ? data.length : 'not an array')
     const parsed = ConceptSearchResponseSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('[WebAPI] Validation failed:', parsed.error)
+      console.error('[WebAPI] Concept search validation failed:', parsed.error)
     }
 
     return parsed.success ? parsed.data.map(c => ({
@@ -431,17 +426,12 @@ export async function validateCohortDefinition(
 }
 
 // ============================================================================
-// Report Endpoints (Feature: 005-cohort-reports)
+// Report Endpoints
 // ============================================================================
 
 /**
  * Get comprehensive cohort report data for a generated cohort
  * Endpoint: GET /cohortdefinition/{id}/report/{sourceKey}
- * T015: Primary report data endpoint
- *
- * @param cohortId Cohort definition ID
- * @param sourceKey Data source key (e.g., "SYNPUF5", "SYNPUF1K")
- * @returns Complete report data including person, condition eras, drug eras, cohort specific
  */
 export async function getCohortReport(
   cohortId: number,
@@ -476,7 +466,6 @@ export async function getCohortReport(
 /**
  * Get person demographics report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/person
- * T016: Individual report endpoint
  */
 export async function getPersonReport(
   cohortId: number,
@@ -495,7 +484,6 @@ export async function getPersonReport(
 /**
  * Get condition eras report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/conditionera
- * T016: Individual report endpoint
  */
 export async function getConditionErasReport(
   cohortId: number,
@@ -514,7 +502,6 @@ export async function getConditionErasReport(
 /**
  * Get condition occurrence report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/condition
- * T079: Condition occurrence report
  */
 export async function getConditionReport(
   cohortId: number,
@@ -533,7 +520,6 @@ export async function getConditionReport(
 /**
  * Get drug eras report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugera
- * T016: Individual report endpoint
  */
 export async function getDrugErasReport(
   cohortId: number,
@@ -552,7 +538,6 @@ export async function getDrugErasReport(
 /**
  * Get cohort-specific analytics report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/cohortspecific
- * T016: Individual report endpoint
  */
 export async function getCohortSpecificReport(
   cohortId: number,
@@ -571,7 +556,6 @@ export async function getCohortSpecificReport(
 /**
  * Trigger Full Analysis batch job
  * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/fullAnalysis
- * T104: Action button batch job trigger
  */
 export async function triggerFullAnalysis(
   cohortId: number,
@@ -591,7 +575,6 @@ export async function triggerFullAnalysis(
 /**
  * Trigger Quick Analysis batch job
  * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/quickAnalysis
- * T105: Action button batch job trigger
  */
 export async function triggerQuickAnalysis(
   cohortId: number,
@@ -611,7 +594,6 @@ export async function triggerQuickAnalysis(
 /**
  * Trigger Utilization batch job
  * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/utilization
- * T106: Action button batch job trigger
  */
 export async function triggerUtilization(
   cohortId: number,
@@ -631,7 +613,6 @@ export async function triggerUtilization(
 /**
  * Get persons exposure baseline report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/observationperiod
- * T090: Persons exposure baseline report
  */
 export async function getPersonsExposureBaselineReport(
   cohortId: number,
@@ -650,7 +631,6 @@ export async function getPersonsExposureBaselineReport(
 /**
  * Get persons exposure cohort report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/cohort
- * T091: Persons exposure cohort report
  */
 export async function getPersonsExposureCohortReport(
   cohortId: number,
@@ -669,7 +649,6 @@ export async function getPersonsExposureCohortReport(
 /**
  * Get visits baseline report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitsbaseline
- * T092: Visits baseline report
  */
 export async function getVisitsBaselineReport(
   cohortId: number,
@@ -688,7 +667,6 @@ export async function getVisitsBaselineReport(
 /**
  * Get visit dates baseline report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitdatesbaseline
- * T093: Visit dates baseline report
  */
 export async function getVisitDatesBaselineReport(
   cohortId: number,
@@ -707,7 +685,6 @@ export async function getVisitDatesBaselineReport(
 /**
  * Get care site visit dates baseline report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/caresitevisitdatesbaseline
- * T094: Care site visit dates baseline report
  */
 export async function getCareSiteVisitDatesBaselineReport(
   cohortId: number,
@@ -726,7 +703,6 @@ export async function getCareSiteVisitDatesBaselineReport(
 /**
  * Get visits cohort report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitscohort
- * T095: Visits cohort report
  */
 export async function getVisitsCohortReport(
   cohortId: number,
@@ -745,7 +721,6 @@ export async function getVisitsCohortReport(
 /**
  * Get visit dates cohort report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitdatescohort
- * T096: Visit dates cohort report
  */
 export async function getVisitDatesCohortReport(
   cohortId: number,
@@ -764,7 +739,6 @@ export async function getVisitDatesCohortReport(
 /**
  * Get care site visit dates cohort report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/caresitevisitdatescohort
- * T097: Care site visit dates cohort report
  */
 export async function getCareSiteVisitDatesCohortReport(
   cohortId: number,
@@ -783,7 +757,6 @@ export async function getCareSiteVisitDatesCohortReport(
 /**
  * Get drug utilization baseline report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugutilizationbaseline
- * T098: Drug utilization baseline report
  */
 export async function getDrugUtilizationBaselineReport(
   cohortId: number,
@@ -802,7 +775,6 @@ export async function getDrugUtilizationBaselineReport(
 /**
  * Get drug utilization cohort report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugutilizationcohort
- * T099: Drug utilization cohort report
  */
 export async function getDrugUtilizationCohortReport(
   cohortId: number,
@@ -821,7 +793,6 @@ export async function getDrugUtilizationCohortReport(
 /**
  * Get Heracles Heel report (data quality)
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/heraclesheel
- * T100: Heracles Heel report
  */
 export async function getHeraclesHeelReport(
   cohortId: number,
@@ -840,7 +811,6 @@ export async function getHeraclesHeelReport(
 /**
  * Get conditions by index report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/conditionsbyindex
- * T080: Conditions by index report
  */
 export async function getConditionsByIndexReport(
   cohortId: number,
@@ -859,7 +829,6 @@ export async function getConditionsByIndexReport(
 /**
  * Get death report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/death
- * T081: Death report
  */
 export async function getDeathReport(
   cohortId: number,
@@ -878,7 +847,6 @@ export async function getDeathReport(
 /**
  * Get drug exposure report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugexposure
- * T082: Drug exposure report
  */
 export async function getDrugExposureReport(
   cohortId: number,
@@ -897,7 +865,6 @@ export async function getDrugExposureReport(
 /**
  * Get drugs by index report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugsbyindex
- * T083: Drugs by index report
  */
 export async function getDrugsByIndexReport(
   cohortId: number,
@@ -916,7 +883,6 @@ export async function getDrugsByIndexReport(
 /**
  * Get observation periods report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/observationperiod
- * T084: Observation periods report
  */
 export async function getObservationPeriodsReport(
   cohortId: number,
@@ -935,7 +901,6 @@ export async function getObservationPeriodsReport(
 /**
  * Get procedure report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/procedure
- * T085: Procedure report
  */
 export async function getProcedureReport(
   cohortId: number,
@@ -954,7 +919,6 @@ export async function getProcedureReport(
 /**
  * Get procedures by index report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/proceduresbyindex
- * T086: Procedures by index report
  */
 export async function getProceduresByIndexReport(
   cohortId: number,
@@ -973,7 +937,6 @@ export async function getProceduresByIndexReport(
 /**
  * Get data completeness report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/datacompleteness
- * T087: Data completeness report
  */
 export async function getDataCompletenessReport(
   cohortId: number,
@@ -992,7 +955,6 @@ export async function getDataCompletenessReport(
 /**
  * Get entropy report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/entropy
- * T088: Entropy report
  */
 export async function getEntropyReport(
   cohortId: number,
@@ -1011,7 +973,6 @@ export async function getEntropyReport(
 /**
  * Get tornado report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/tornado
- * T089: Tornado report
  */
 export async function getTornadoReport(
   cohortId: number,

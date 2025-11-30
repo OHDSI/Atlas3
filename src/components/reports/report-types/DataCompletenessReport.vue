@@ -1,7 +1,6 @@
 <!--
   DataCompletenessReport Component
-  Feature: 005-cohort-reports
-  Task: T087
+  
 
   Displays data quality metrics charts
 -->
