@@ -9,6 +9,7 @@ import 'fake-indexeddb/auto'
 describe('Config Cache Service', () => {
   beforeEach(() => {
     // Clear all stores before each test
+    // eslint-disable-next-line no-global-assign
     indexedDB = new IDBFactory()
     localStorage.clear()
   })

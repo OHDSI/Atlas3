@@ -375,14 +375,14 @@ describe('AttributesEditor', () => {
     })
 
     it('should support all text operators', () => {
-      const operators = ['EQUALS', 'CONTAINS', 'STARTS_WITH', 'ENDS_WITH']
+      const operators = ['EQUALS', 'CONTAINS', 'STARTS_WITH', 'ENDS_WITH'] as const
 
       operators.forEach(operator => {
         const attributes: EventAttribute[] = [
           {
             type: 'text',
             attributeKey: 'valueAsString',
-            operator: operator as any,
+            operator: operator,
             value: 'test',
           },
         ]

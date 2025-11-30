@@ -214,7 +214,7 @@ export async function setupBasicMocks(page: Page) {
       results = mockDiabetesConcepts
     }
 
-    const response = createConceptSearchResponse(results, 20, 0)
+    const _response = createConceptSearchResponse(results, 20, 0)
 
     await route.fulfill({
       status: 200,

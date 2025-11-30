@@ -71,7 +71,7 @@ describe('Performance Tests - Typical Cohort Load', () => {
       const internal = convertAtlasToInternal(atlasJson)
 
       // Simulate save: Internal → Atlas
-      const backToAtlas = convertInternalToAtlas({
+      const _backToAtlas = convertInternalToAtlas({
         ...internal,
         name: atlasJson.name || 'Test Cohort',
         entryEvents: internal.entryEvents || [],
@@ -124,7 +124,7 @@ describe('Performance Tests - Typical Cohort Load', () => {
 
     // 3. Internal → Atlas conversion
     const toAtlasStart = performance.now()
-    const backToAtlas = convertInternalToAtlas({
+    const _backToAtlas = convertInternalToAtlas({
       ...internal,
       name: 'Test',
       entryEvents: [],
@@ -136,7 +136,7 @@ describe('Performance Tests - Typical Cohort Load', () => {
 
     // 4. JSON stringify
     const stringifyStart = performance.now()
-    JSON.stringify(backToAtlas)
+    JSON.stringify(_backToAtlas)
     metrics.jsonStringify = performance.now() - stringifyStart
 
     console.log(`\n[Performance] Operation breakdown:`)

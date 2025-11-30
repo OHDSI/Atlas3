@@ -39,7 +39,7 @@ const vuetify = createVuetify({
 })
 
 describe('DataTable', () => {
-  let wrapper: VueWrapper<any> | null = null
+  let wrapper: VueWrapper | null = null
 
   beforeEach(() => {
     // Reset Pinia instance for each test
@@ -84,7 +84,7 @@ describe('DataTable', () => {
     { conceptId: 5, conceptName: 'Obesity', personCount: 1000, prevalence: 10.4 },
   ]
 
-  const createWrapper = (props: any = {}) => {
+  const createWrapper = (props: Record<string, unknown> = {}) => {
     const pinia = createPinia()
     return mount(DataTable, {
       props: {
@@ -123,31 +123,31 @@ describe('DataTable', () => {
 
     it('should render table headers', () => {
       wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { visibleHeaders: unknown[] }
       expect(vm.visibleHeaders).toHaveLength(4)
     })
 
     it('should render table items', () => {
       wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { filteredItems: unknown[] }
       expect(vm.filteredItems).toHaveLength(5)
     })
 
     it('should have correct headers data', () => {
       wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { visibleHeaders: TableHeader[] }
       expect(vm.visibleHeaders).toEqual(mockHeaders)
     })
 
     it('should have correct items data', () => {
       wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { filteredItems: TableRow[] }
       expect(vm.filteredItems).toEqual(mockItems)
     })
 
     it('should use default items per page of 25', () => {
       wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { itemsPerPage: number }
       expect(vm.itemsPerPage).toBe(25)
     })
 
@@ -384,7 +384,7 @@ describe('DataTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VDataTable' })
       const options = dataTable.props('itemsPerPageOptions')
 
-      expect(options.some((opt: any) => opt.value === 10)).toBe(true)
+      expect(options.some((opt: { value: number; title: string }) => opt.value === 10)).toBe(true)
     })
 
     it('should support 50 items per page option', () => {
@@ -392,7 +392,7 @@ describe('DataTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VDataTable' })
       const options = dataTable.props('itemsPerPageOptions')
 
-      expect(options.some((opt: any) => opt.value === 50)).toBe(true)
+      expect(options.some((opt: { value: number; title: string }) => opt.value === 50)).toBe(true)
     })
 
     it('should support 100 items per page option', () => {
@@ -400,7 +400,7 @@ describe('DataTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VDataTable' })
       const options = dataTable.props('itemsPerPageOptions')
 
-      expect(options.some((opt: any) => opt.value === 100)).toBe(true)
+      expect(options.some((opt: { value: number; title: string }) => opt.value === 100)).toBe(true)
     })
 
     it('should support "All" items option (-1 value)', () => {
@@ -408,7 +408,7 @@ describe('DataTable', () => {
       const dataTable = wrapper.findComponent({ name: 'VDataTable' })
       const options = dataTable.props('itemsPerPageOptions')
 
-      const allOption = options.find((opt: any) => opt.title === 'All')
+      const allOption = options.find((opt: { value: number; title: string }) => opt.title === 'All')
       expect(allOption).toBeDefined()
       expect(allOption.value).toBe(-1)
     })
@@ -483,7 +483,7 @@ describe('DataTable', () => {
       const wrapper = createWrapper({ showColumnToggle: true })
 
       // Check that headers are available for the menu (verify data structure)
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[] }
       expect(vm.headers).toHaveLength(mockHeaders.length)
 
       // Verify the menu button exists
@@ -496,7 +496,7 @@ describe('DataTable', () => {
       const wrapper = createWrapper({ showColumnToggle: true })
 
       // Verify that each header can be toggled
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
       expect(vm.headers).toHaveLength(mockHeaders.length)
 
       // Verify all columns start visible (hiddenColumns is empty)
@@ -513,7 +513,7 @@ describe('DataTable', () => {
 
     it('should hide column when unchecked', async () => {
       const wrapper = createWrapper({ showColumnToggle: true })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       // Hide first column
       vm.toggleColumn('conceptId')
@@ -528,7 +528,7 @@ describe('DataTable', () => {
 
     it('should show column again when re-checked', async () => {
       const wrapper = createWrapper({ showColumnToggle: true })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       // Hide then show first column
       vm.toggleColumn('conceptId')
@@ -545,7 +545,7 @@ describe('DataTable', () => {
 
     it('should update export data when columns hidden', async () => {
       const wrapper = createWrapper({ showColumnToggle: true, showCopyButton: true })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       // Hide a column
       vm.toggleColumn('prevalence')
@@ -896,7 +896,7 @@ describe('DataTable', () => {
   describe('Cell Formatting', () => {
     it('should format numbers with thousands separator', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell(1200, { key: 'personCount', title: 'Count', sortable: true })
       expect(formatted).toBe('1,200')
@@ -904,7 +904,7 @@ describe('DataTable', () => {
 
     it('should format percentage fields with % symbol', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell(12.5, { key: 'prevalence', title: 'Prevalence', sortable: true })
       expect(formatted).toBe('12.5%')
@@ -912,7 +912,7 @@ describe('DataTable', () => {
 
     it('should format prevalence fields with % symbol', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell(8.3, { key: 'prevalence_rate', title: 'Rate', sortable: true })
       expect(formatted).toBe('8.3%')
@@ -920,7 +920,7 @@ describe('DataTable', () => {
 
     it('should display null values as dash', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell(null, { key: 'personCount', title: 'Count', sortable: true })
       expect(formatted).toBe('-')
@@ -928,7 +928,7 @@ describe('DataTable', () => {
 
     it('should display undefined values as dash', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell(undefined, { key: 'personCount', title: 'Count', sortable: true })
       expect(formatted).toBe('-')
@@ -936,7 +936,7 @@ describe('DataTable', () => {
 
     it('should not format ID columns with thousands separator', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell(1234, { key: 'conceptId', title: 'ID', sortable: true })
       expect(formatted).toBe(1234) // No formatting for IDs
@@ -944,7 +944,7 @@ describe('DataTable', () => {
 
     it('should not format ID columns even if large', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell(999999, { key: 'personId', title: 'Person ID', sortable: true })
       expect(formatted).toBe(999999)
@@ -952,7 +952,7 @@ describe('DataTable', () => {
 
     it('should format large numbers correctly', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell(1234567, { key: 'count', title: 'Count', sortable: true })
       expect(formatted).toBe('1,234,567')
@@ -960,7 +960,7 @@ describe('DataTable', () => {
 
     it('should format zero as number', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell(0, { key: 'count', title: 'Count', sortable: true })
       expect(formatted).toBe('0')
@@ -968,7 +968,7 @@ describe('DataTable', () => {
 
     it('should format decimal percentages correctly', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell(8.345, { key: 'percent_value', title: 'Percent', sortable: true })
       expect(formatted).toBe('8.3%')
@@ -976,7 +976,7 @@ describe('DataTable', () => {
 
     it('should return string values as-is', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formatted = vm.formatCell('Test String', { key: 'conceptName', title: 'Name', sortable: true })
       expect(formatted).toBe('Test String')
@@ -984,7 +984,7 @@ describe('DataTable', () => {
 
     it('should handle boolean values', () => {
       const wrapper = createWrapper()
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       const formattedTrue = vm.formatCell(true, { key: 'flag', title: 'Flag', sortable: true })
       const formattedFalse = vm.formatCell(false, { key: 'flag', title: 'Flag', sortable: true })
@@ -1029,7 +1029,7 @@ describe('DataTable', () => {
         showColumnToggle: true,
         showCopyButton: true
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       // Hide a column
       vm.toggleColumn('prevalence')
@@ -1053,7 +1053,7 @@ describe('DataTable', () => {
         showColumnToggle: true,
         showExportButton: true
       })
-      const vm = wrapper.vm as any
+      const vm = wrapper.vm as { headers: TableHeader[]; hiddenColumns: Set<string>; toggleColumn: (key: string) => void; formatCell: (value: unknown, header: TableHeader) => unknown }
 
       // Hide column
       vm.toggleColumn('conceptId')

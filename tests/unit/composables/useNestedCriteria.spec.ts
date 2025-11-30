@@ -35,7 +35,7 @@ describe('useNestedCriteria', () => {
     })
 
     it('hasEvents returns true when events array has items', () => {
-      const { nested, hasEvents, addEvent } = useNestedCriteria()
+      const { nested: _nested, hasEvents, addEvent } = useNestedCriteria()
       addEvent('DrugExposure')
       expect(hasEvents.value).toBe(true)
     })
@@ -54,11 +54,11 @@ describe('useNestedCriteria', () => {
 
   describe('addEvent', () => {
     it('adds event with specified criteria type', () => {
-      const { nested, addEvent } = useNestedCriteria()
+      const { nested: _nested, addEvent } = useNestedCriteria()
 
       const event = addEvent('DrugExposure')
 
-      expect(nested.value.events).toHaveLength(1)
+      expect(_nested.value.events).toHaveLength(1)
       expect(event.criteriaType).toBe('DrugExposure')
       expect(event.id).toBeTruthy()
       expect(event.attributes).toEqual([])
@@ -84,10 +84,10 @@ describe('useNestedCriteria', () => {
     it('generates unique IDs for multiple events', () => {
       const { addEvent } = useNestedCriteria()
 
-      const event1 = addEvent('DrugExposure')
+      const _event1 = addEvent('DrugExposure')
       const event2 = addEvent('ConditionOccurrence')
 
-      expect(event1.id).not.toBe(event2.id)
+      expect(_event1.id).not.toBe(event2.id)
     })
   })
 
@@ -117,13 +117,13 @@ describe('useNestedCriteria', () => {
 
       const event1 = addEvent('DrugExposure')
       const event2 = addEvent('ConditionOccurrence')
-      const event3 = addEvent('ProcedureOccurrence')
+      const _event3 = addEvent('ProcedureOccurrence')
 
       removeEvent(event2.id)
 
       expect(nested.value.events).toHaveLength(2)
       expect(nested.value.events[0].id).toBe(event1.id)
-      expect(nested.value.events[1].id).toBe(event3.id)
+      expect(nested.value.events[1].id).toBe(_event3.id)
     })
   })
 
@@ -355,13 +355,13 @@ describe('useNestedCriteria', () => {
     it('returns IDs of all events in flat structure', () => {
       const { addEvent, getAllEventIds } = useNestedCriteria()
 
-      const event1 = addEvent('DrugExposure')
+      const _event1 = addEvent('DrugExposure')
       const event2 = addEvent('ConditionOccurrence')
 
       const ids = getAllEventIds()
 
       expect(ids.size).toBe(2)
-      expect(ids.has(event1.id)).toBe(true)
+      expect(ids.has(_event1.id)).toBe(true)
       expect(ids.has(event2.id)).toBe(true)
     })
 
@@ -453,9 +453,9 @@ describe('useNestedCriteria', () => {
     it('updates options when events are removed', () => {
       const { addEvent, removeEvent, getAvailableCountOptions } = useNestedCriteria()
 
-      const event1 = addEvent('DrugExposure')
+      const _event1 = addEvent('DrugExposure')
       const event2 = addEvent('ConditionOccurrence')
-      const event3 = addEvent('ProcedureOccurrence')
+      const _event3 = addEvent('ProcedureOccurrence')
 
       expect(getAvailableCountOptions()).toEqual([1, 2, 3])
 

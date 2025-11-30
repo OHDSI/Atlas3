@@ -227,8 +227,8 @@ const groupTags = computed(() => {
 onMounted(async () => {
   try {
     await configStore.fetchTagGroups()
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to load tag groups'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to load tag groups'
     showErrorToast.value = true
   }
 })
@@ -283,8 +283,8 @@ async function handleSaveGroup(tagGroup: TagGroup) {
 
     showGroupDialog.value = false
     showToast.value = true
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to save tag group'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to save tag group'
     showErrorToast.value = true
   }
 }
@@ -311,8 +311,8 @@ async function handleDeleteGroup() {
     showDeleteGroupDialog.value = false
     toastMessage.value = `Tag group "${selectedTagGroup.value.name}" deleted`
     showToast.value = true
-  } catch (error: any) {
-    deleteError.value = error.message || 'Failed to delete tag group'
+  } catch (error: unknown) {
+    deleteError.value = error instanceof Error ? error.message : 'Failed to delete tag group'
   } finally {
     isDeleting.value = false
   }
@@ -360,8 +360,8 @@ async function handleSaveTag(tag: Tag) {
 
     showTagDialog.value = false
     showToast.value = true
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to save tag'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to save tag'
     showErrorToast.value = true
   }
 }
@@ -380,8 +380,8 @@ async function handleDeleteTag() {
     showDeleteTagDialog.value = false
     toastMessage.value = `Tag "${selectedTag.value.name}" deleted`
     showToast.value = true
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to delete tag'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to delete tag'
     showErrorToast.value = true
   } finally {
     isDeleting.value = false

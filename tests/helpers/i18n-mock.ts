@@ -13,7 +13,7 @@ import translations from '@/locales/en.json'
  */
 function getTranslation(key: string): string {
   const keys = key.split('.')
-  let value: any = translations
+  let value: unknown = translations
 
   for (const k of keys) {
     if (value && typeof value === 'object' && k in value) {

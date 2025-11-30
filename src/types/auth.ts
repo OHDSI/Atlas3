@@ -118,15 +118,15 @@ export interface ExpiryDetectionConfig {
 export interface JWTPayload {
   /** Subject (usually username) */
   sub?: string;
-  
+
   /** Expiration time (Unix timestamp in seconds) */
   exp?: number;
-  
+
   /** Issued at time (Unix timestamp in seconds) */
   iat?: number;
-  
+
   /** Additional custom claims */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // ============================================================================

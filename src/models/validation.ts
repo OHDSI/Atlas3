@@ -15,6 +15,7 @@ export const LogicTypeSchema = z.enum(['ALL', 'ANY', 'AT_LEAST', 'AT_MOST'])
  * Validation schema for NestedCriteria
  * Recursively validates nested event structures
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const NestedCriteriaSchema: z.ZodType<any> = z.lazy(() =>
   z.object({
     id: z.string().uuid('Invalid UUID format for nested criteria ID'),
@@ -315,6 +316,7 @@ const EventAttributeSchema = z.union([
  * Validation schema for CohortEvent
  * Supports recursive nested criteria within events
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const CohortEventSchema: z.ZodType<any> = z.lazy(() =>
   z.object({
     id: z.string().uuid('Invalid UUID format for event ID'),

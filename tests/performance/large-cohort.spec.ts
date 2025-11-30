@@ -14,7 +14,7 @@ const PERFORMANCE_TARGET_MS = 5000 // 5 seconds for large cohorts (more lenient)
  * Generate a large cohort for stress testing
  * Edge case: 50 concept sets, 100 criteria, 20 rules
  */
-function generateLargeCohort(): any {
+function generateLargeCohort(): Record<string, unknown> {
   // Generate 50 concept sets
   const conceptSets = Array.from({ length: 50 }, (_, i) => ({
     id: i,
@@ -210,7 +210,7 @@ describe('Performance Tests - Large Cohort (Edge Case)', () => {
     const largeCohort = generateLargeCohort()
 
     // Get initial memory if available
-    const initialMemory = (performance as any).memory?.usedJSHeapSize
+    const initialMemory = (performance as unknown).memory?.usedJSHeapSize
 
     // Convert multiple times to simulate repeated operations
     const iterations = 10
@@ -231,7 +231,7 @@ describe('Performance Tests - Large Cohort (Edge Case)', () => {
     const totalTime = performance.now() - startTime
     const avgTimePerIteration = totalTime / iterations
 
-    const finalMemory = (performance as any).memory?.usedJSHeapSize
+    const finalMemory = (performance as unknown).memory?.usedJSHeapSize
     const memoryIncrease = finalMemory && initialMemory ? finalMemory - initialMemory : null
 
     console.log(`\n[Performance] Memory and repeated operations:`)

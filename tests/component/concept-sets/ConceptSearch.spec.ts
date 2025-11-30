@@ -47,8 +47,8 @@ describe('ConceptSearch', () => {
 
   it('should render domain filter dropdown', () => {
     const wrapper = createWrapper()
-    const domainFilter = wrapper.find('[data-testid="domain-filter"]')
-    expect(domainFilter.exists()).toBe(true)
+    const _domainFilter = wrapper.find('[data-testid="domain-filter"]')
+    expect(_domainFilter.exists()).toBe(true)
   })
 
   it('should debounce search input by 300ms', async () => {
@@ -93,7 +93,7 @@ describe('ConceptSearch', () => {
 
     // Set isSearching state
     // Component should show loading indicator
-    const loading = wrapper.find('[data-testid="search-loading"]')
+    const _loading = wrapper.find('[data-testid="search-loading"]')
     // Will exist when search is in progress
   })
 
@@ -108,7 +108,7 @@ describe('ConceptSearch', () => {
 
   it('should filter by domain when domain filter changes', async () => {
     const wrapper = createWrapper()
-    const domainFilter = wrapper.find('[data-testid="domain-filter"]')
+    const _domainFilter = wrapper.find('[data-testid="domain-filter"]')
 
     // Find the select component and emit update
     const select = wrapper.findComponent({ name: 'VSelect' })
@@ -125,7 +125,7 @@ describe('ConceptSearch', () => {
     const wrapper = createWrapper()
 
     // With empty search results
-    const noResults = wrapper.find('[data-testid="no-results-message"]')
+    const _noResults = wrapper.find('[data-testid="no-results-message"]')
     // Should exist when searchResults is empty and not searching
   })
 

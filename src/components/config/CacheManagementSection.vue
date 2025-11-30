@@ -141,9 +141,10 @@ async function handleClearCache() {
     toastColor.value = 'success'
     showToast.value = true
     showConfirmDialog.value = false
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Error: show error toast
-    toastMessage.value = error.message || 'Failed to clear cache. Please try again.'
+    const errorMessage = error instanceof Error ? error.message : 'Failed to clear cache. Please try again.'
+    toastMessage.value = errorMessage
     toastColor.value = 'error'
     showToast.value = true
   } finally {

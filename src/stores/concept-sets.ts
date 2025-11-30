@@ -17,18 +17,18 @@ import { conceptToConceptSetItem } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
 
 // Debounce utility
-function debounce<T extends (...args: any[]) => any>(
+function debounce<T extends (...args: never[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null
-  
+
   return function executedFunction(...args: Parameters<T>) {
     const later = () => {
       timeout = null
       func(...args)
     }
-    
+
     if (timeout) {
       clearTimeout(timeout)
     }

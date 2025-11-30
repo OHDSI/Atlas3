@@ -503,6 +503,9 @@ import type {
   CriteriaGroup
 } from '@/models/cohort.types'
 import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
+import type { EventAttribute } from '@/models/event.types'
+import type { Concept } from '@/models/event.types'
+import type { ConceptSetItem } from '@/models/concept-set.types'
 import EntryEventsList from './EntryEventsList.vue'
 import ConceptSetSelectionDialog from './ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from './ConceptSearchDialog.vue'
@@ -713,13 +716,13 @@ const currentlySelectedConcepts = computed(() => {
   }
 
   const context = selectedCriteriaContext.value
-  let attribute: any = null
+  let attribute: EventAttribute | null = null
 
   // Handle entry events
   if (context.ruleIndex === -1 && context.eventId && context.attributeIndex !== undefined) {
     const event = entryEvents.value.find(e => e.id === context.eventId)
     if (event && event.attributes && event.attributes[context.attributeIndex]) {
-      attribute = event.attributes[context.attributeIndex]
+      attribute = event.attributes[context.attributeIndex] ?? null
     }
   }
   // Handle inclusion criteria
@@ -730,7 +733,7 @@ const currentlySelectedConcepts = computed(() => {
       if (group && group.events) {
         const event = group.events[context.eventIndex]
         if (event && event.attributes && event.attributes[context.attributeIndex]) {
-          attribute = event.attributes[context.attributeIndex]
+          attribute = event.attributes[context.attributeIndex] ?? null
         }
       }
     }
@@ -739,7 +742,7 @@ const currentlySelectedConcepts = computed(() => {
   else if (context.ruleIndex === -2 && additionalCriteria.value && context.eventIndex !== undefined && context.attributeIndex !== undefined) {
     const event = additionalCriteria.value.events[context.eventIndex]
     if (event && event.attributes && event.attributes[context.attributeIndex]) {
-      attribute = event.attributes[context.attributeIndex]
+      attribute = event.attributes[context.attributeIndex] ?? null
     }
   }
 
@@ -747,15 +750,15 @@ const currentlySelectedConcepts = computed(() => {
   if (attribute && attribute.type === 'concept') {
     const concepts = attribute.concepts || []
     // Convert UPPERCASE concepts to camelCase for the dialog
-    return concepts.map((c: any) => ({
+    return concepts.map((c: Concept) => ({
       conceptId: c.CONCEPT_ID,
       conceptName: c.CONCEPT_NAME,
-      conceptCode: c.CONCEPT_CODE,
-      domainId: c.DOMAIN_ID,
-      vocabularyId: c.VOCABULARY_ID,
-      conceptClassId: c.CONCEPT_CLASS_ID,
-      standardConcept: c.STANDARD_CONCEPT,
-      invalidReason: c.INVALID_REASON
+      conceptCode: c.CONCEPT_CODE ?? '',
+      domainId: c.DOMAIN_ID ?? '',
+      vocabularyId: c.VOCABULARY_ID ?? '',
+      conceptClassId: c.CONCEPT_CLASS_ID ?? '',
+      standardConcept: c.STANDARD_CONCEPT ?? null,
+      invalidReason: c.INVALID_REASON ?? null
     }))
   }
 
@@ -1124,7 +1127,7 @@ function handleSelectConceptForCriteria(context: { ruleIndex: number; groupIndex
   isConceptSearchDialogOpen.value = true
 }
 
-function handleConceptsSelected(concepts: any[]) {
+function handleConceptsSelected(concepts: Array<{ conceptId: number; conceptName: string; conceptCode: string; domainId: string; vocabularyId: string; conceptClassId: string; standardConcept: string | null; invalidReason: string | null }>) {
   if (concepts.length === 0 || !selectedCriteriaContext.value) {
     isConceptSearchDialogOpen.value = false
     return
@@ -1213,14 +1216,20 @@ function removeAdditionalCriteria() {
 /**
  * Called when user selects an existing concept set from the dialog
  */
-async function handleConceptSetSelected(conceptSet: any) {
+async function handleConceptSetSelected(conceptSet: { id: number | string; name: string; items?: unknown[] }) {
   if (!conceptSet || !selectedCriteriaContext.value) return
 
   // Fetch the full concept set with items if we only have a reference
-  let fullConceptSet = conceptSet
+  let fullConceptSet: { id: number | string; name: string; items?: unknown[] } = conceptSet
   if (conceptSet.id && (!conceptSet.items || conceptSet.items.length === 0)) {
     await conceptSetsStore.fetchOne(conceptSet.id)
-    fullConceptSet = conceptSetsStore.currentSet
+    if (conceptSetsStore.currentSet && conceptSetsStore.currentSet.id !== undefined) {
+      fullConceptSet = {
+        id: conceptSetsStore.currentSet.id,
+        name: conceptSetsStore.currentSet.name,
+        items: conceptSetsStore.currentSet.items
+      }
+    }
   }
 
   // Copy the entire concept set including items into the cohort definition
@@ -1237,15 +1246,16 @@ async function handleConceptSetSelected(conceptSet: any) {
 /**
  * Called when user clicks "Edit" on a concept set (from chip or dialog)
  */
-async function handleEditConceptSet(conceptSet: any) {
+async function handleEditConceptSet(conceptSet: { id: number | string; name: string; items?: unknown[] }) {
   // Close dialog if it's open
   isConceptSetDialogOpen.value = false
 
   // Use the embedded concept set items directly (don't fetch from API)
   // The concept set is embedded in the cohort definition with all its items
   conceptSetsStore.currentSet = {
-    ...conceptSet,
-    items: conceptSet.items || []
+    id: conceptSet.id,
+    name: conceptSet.name,
+    items: (conceptSet.items || []) as ConceptSetItem[]
   }
   conceptSetsStore.editorOpen = true
 }
@@ -1253,7 +1263,7 @@ async function handleEditConceptSet(conceptSet: any) {
 /**
  * Open concept set editor from the concept sets dialog
  */
-function handleViewConceptSet(conceptSet: any) {
+function handleViewConceptSet(conceptSet: { id: number | string; name: string; items?: unknown[] }) {
   // Close the concept sets dialog
   showConceptSetsDialog.value = false
 

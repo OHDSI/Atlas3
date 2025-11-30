@@ -80,7 +80,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
 
     // Check for unsaved changes indicator
     // Common patterns: disabled save button, no "Save" button being enabled, no dirty flag
-    const saveButton = page.getByRole('button', { name: /^save$/i })
+    const _saveButton = page.getByRole('button', { name: /^save$/i })
 
     // Wait a bit to ensure state has settled
     await page.waitForTimeout(500)
@@ -91,11 +91,11 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
 
     // Check the browser console for any errors
     const consoleErrors = await page.evaluate(() => {
-      return (window as any).__testErrors || []
+      return (window as { __testErrors?: Array<{ type: string }> }).__testErrors || []
     })
 
     // Verify no critical errors in console
-    expect(consoleErrors.filter((e: any) => e.type === 'error')).toHaveLength(0)
+    expect(consoleErrors.filter((e: { type: string }) => e.type === 'error')).toHaveLength(0)
 
     // Take a screenshot for manual verification
     await page.screenshot({
@@ -108,7 +108,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
     // This test verifies that loading a cohort and immediately saving it
     // results in the same data being sent back to the API
 
-    let savedCohortData: any = null
+    let savedCohortData: Record<string, unknown> | null = null
 
     // Mock the cohort load endpoint
     await page.route('**/WebAPI/cohortdefinition/1', async (route) => {
@@ -166,7 +166,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
       // Verify the saved data matches the original
       if (savedCohortData) {
         // Check that critical attributes are preserved
-        const savedExpression = savedCohortData.expression || {}
+        const savedExpression = (savedCohortData.expression as Record<string, unknown>) || {}
 
         expect(savedExpression.expressionType).toBe(sampleCohort.expressionType)
         expect(savedExpression.cdmVersionRange).toBe(sampleCohort.cdmVersionRange)

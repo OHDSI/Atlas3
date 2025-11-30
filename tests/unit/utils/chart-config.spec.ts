@@ -39,8 +39,8 @@ describe('chart-config', () => {
       expect(options.yAxis).toBeDefined()
       expect(options.series).toBeDefined()
       expect(Array.isArray(options.series)).toBe(true)
-      expect((options.series as any)[0].type).toBe('bar')
-      expect((options.series as any)[0].data).toEqual([100, 150, 200])
+      expect((options.series as unknown)[0].type).toBe('bar')
+      expect((options.series as unknown)[0].data).toEqual([100, 150, 200])
     })
 
     it('should handle categories without unit', () => {
@@ -51,7 +51,7 @@ describe('chart-config', () => {
 
       const options = defaultBarChartOptions(data)
 
-      expect((options.yAxis as any).name).toBe('Count')
+      expect((options.yAxis as unknown).name).toBe('Count')
     })
 
     it('should rotate labels for many categories', () => {
@@ -62,7 +62,7 @@ describe('chart-config', () => {
 
       const options = defaultBarChartOptions(data)
 
-      expect((options.xAxis as any).axisLabel.rotate).toBe(45)
+      expect((options.xAxis as unknown).axisLabel.rotate).toBe(45)
     })
   })
 
@@ -76,12 +76,12 @@ describe('chart-config', () => {
       const options = defaultPieChartOptions(data, 'Gender Distribution')
 
       expect(options.title).toBeDefined()
-      expect((options.title as any).text).toBe('Gender Distribution')
+      expect((options.title as unknown).text).toBe('Gender Distribution')
       expect(options.tooltip).toBeDefined()
       expect(options.legend).toBeDefined()
       expect(options.series).toBeDefined()
-      expect((options.series as any)[0].type).toBe('pie')
-      expect((options.series as any)[0].data).toHaveLength(2)
+      expect((options.series as unknown)[0].type).toBe('pie')
+      expect((options.series as unknown)[0].data).toHaveLength(2)
     })
 
     it('should work without title', () => {
@@ -102,7 +102,7 @@ describe('chart-config', () => {
       ]
 
       const options = defaultPieChartOptions(data)
-      const seriesData = (options.series as any)[0].data
+      const seriesData = (options.series as unknown)[0].data
 
       expect(seriesData[0].itemStyle.color).toBe(CHART_COLORS[0])
       expect(seriesData[1].itemStyle.color).toBe(CHART_COLORS[1])
@@ -121,15 +121,15 @@ describe('chart-config', () => {
       const options = defaultLineChartOptions(data, 'Monthly Trend')
 
       expect(options.title).toBeDefined()
-      expect((options.title as any).text).toBe('Monthly Trend')
+      expect((options.title as unknown).text).toBe('Monthly Trend')
       expect(options.tooltip).toBeDefined()
       expect(options.grid).toBeDefined()
       expect(options.xAxis).toBeDefined()
       expect(options.yAxis).toBeDefined()
       expect(options.series).toBeDefined()
-      expect((options.series as any)[0].type).toBe('line')
-      expect((options.series as any)[0].data).toEqual([10, 20, 15])
-      expect((options.series as any)[0].smooth).toBe(true)
+      expect((options.series as unknown)[0].type).toBe('line')
+      expect((options.series as unknown)[0].data).toEqual([10, 20, 15])
+      expect((options.series as unknown)[0].smooth).toBe(true)
     })
 
     it('should include area style', () => {
@@ -140,7 +140,7 @@ describe('chart-config', () => {
 
       const options = defaultLineChartOptions(data)
 
-      expect((options.series as any)[0].areaStyle).toBeDefined()
+      expect((options.series as unknown)[0].areaStyle).toBeDefined()
     })
 
     it('should rotate labels for many data points', () => {
@@ -151,7 +151,7 @@ describe('chart-config', () => {
 
       const options = defaultLineChartOptions(data)
 
-      expect((options.xAxis as any).axisLabel.rotate).toBe(45)
+      expect((options.xAxis as unknown).axisLabel.rotate).toBe(45)
     })
   })
 
@@ -165,10 +165,10 @@ describe('chart-config', () => {
       const options = defaultTreemapOptions(data, 'Distribution')
 
       expect(options.title).toBeDefined()
-      expect((options.title as any).text).toBe('Distribution')
+      expect((options.title as unknown).text).toBe('Distribution')
       expect(options.tooltip).toBeDefined()
       expect(options.series).toBeDefined()
-      expect((options.series as any)[0].type).toBe('treemap')
+      expect((options.series as unknown)[0].type).toBe('treemap')
     })
 
     it('should assign colors to treemap nodes', () => {
@@ -178,7 +178,7 @@ describe('chart-config', () => {
       ]
 
       const options = defaultTreemapOptions(data)
-      const seriesData = (options.series as any)[0].data
+      const seriesData = (options.series as unknown)[0].data
 
       expect(seriesData[0].itemStyle.color).toBe(CHART_COLORS[0])
       expect(seriesData[1].itemStyle.color).toBe(CHART_COLORS[1])
@@ -197,7 +197,7 @@ describe('chart-config', () => {
       ]
 
       const options = defaultTreemapOptions(data)
-      const seriesData = (options.series as any)[0].data
+      const seriesData = (options.series as unknown)[0].data
 
       expect(seriesData[0].children).toBeDefined()
       expect(seriesData[0].children).toHaveLength(2)

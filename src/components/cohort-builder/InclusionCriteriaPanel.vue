@@ -174,7 +174,7 @@ const emit = defineEmits<{
   'update:qualifyingLimit': [value: QualifyingLimit]
   'select-concept-set': [context: { ruleIndex: number; groupIndex: number; eventIndex: number }]
   'select-concept': [context: { ruleIndex: number; groupIndex: number; eventIndex: number; attributeIndex: number; domainFilter: string | undefined }]
-  'edit-concept-set': [conceptSet: any]
+  'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
 // Local state - single expanded panel index (undefined = all closed)

@@ -4,7 +4,7 @@ import { permissionService } from '@/services/auth/permissions';
 import { createPinia, setActivePinia } from 'pinia';
 
 // Mock auth store to return test data
-let mockUser: any = {
+let mockUser: unknown = {
   id: '1',
   login: 'testuser',
   permissionIdx: {
@@ -112,7 +112,7 @@ describe('usePermissions', () => {
   });
 
   describe('hasAnyPermission method', () => {
-    it('should return true if user has any of the permissions', () => {
+    it('should return true if user has unknown of the permissions', () => {
       // Using imported permissionService
       
       // Mock: has first permission, not others

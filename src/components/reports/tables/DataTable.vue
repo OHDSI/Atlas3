@@ -207,7 +207,7 @@ const filteredItems = computed(() => {
  */
 const exportData = computed(() => {
   return filteredItems.value.map(item => {
-    const row: Record<string, any> = {}
+    const row: Record<string, unknown> = {}
     visibleHeaders.value.forEach(header => {
       row[header.key] = item[header.key]
     })
@@ -218,12 +218,12 @@ const exportData = computed(() => {
 /**
  * Custom filter function for search
  */
-function customFilter(_value: any, query: string, item?: any) {
+function customFilter(_value: string, query: string, item?: { raw: TableRow }) {
   if (!query) return true
   const searchLower = query.toLowerCase()
 
   return visibleHeaders.value.some(header => {
-    const cellValue = item?.[header.key]
+    const cellValue = item?.raw?.[header.key]
     if (cellValue == null) return false
     return String(cellValue).toLowerCase().includes(searchLower)
   })
@@ -245,7 +245,7 @@ function toggleColumn(key: string) {
 /**
  * Format cell value
  */
-function formatCell(value: any, header: TableHeader) {
+function formatCell(value: unknown, header: TableHeader) {
   if (value == null) return '-'
 
   // Format numbers with thousands separator (but not IDs)

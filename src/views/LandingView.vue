@@ -8,6 +8,7 @@
           </h1>
 
           <div class="landing__description">
+            <!-- eslint-disable-next-line vue/no-v-html -- trusted i18n content -->
             <p v-html="tv('home.description', 'ATLAS is an open source application developed as a part of <a href=\'http://www.ohdsi.org\' target=\'_new\'>OHDSI</a> intended to provide a unified interface to patient level data and analytics.')" />
           </div>
 
@@ -15,6 +16,7 @@
             <h2 class="landing__section-title">
               {{ t('home.documentation.title', 'Documentation') }}
             </h2>
+            <!-- eslint-disable-next-line vue/no-v-html -- trusted i18n content -->
             <p v-html="tv('home.documentation.text', 'The ATLAS user guide can be found <a target=\'_new\' href=\'http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas\'>here</a>.')" />
           </div>
 

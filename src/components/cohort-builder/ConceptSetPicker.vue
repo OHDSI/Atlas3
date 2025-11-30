@@ -129,6 +129,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  modelValue: undefined,
   singleSelect: false,
   domain: undefined,
 })

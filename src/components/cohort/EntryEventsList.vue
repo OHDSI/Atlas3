@@ -12,9 +12,9 @@
       <!-- Add Filter Button and Observation Period -->
       <div class="add-filter-wrapper">
         <v-menu>
-          <template #activator="{ props }">
+          <template #activator="{ props: slotProps }">
             <v-btn
-              v-bind="props"
+              v-bind="slotProps"
               variant="outlined"
               prepend-icon="mdi-plus"
               size="small"
@@ -142,7 +142,7 @@ const emit = defineEmits<{
   'select-concept-set': [eventId: string]
   'select-concept-set-for-attribute': [eventId: string, attributeIndex: number]
   'select-concept-for-attribute': [eventId: string, attributeIndex: number, domainFilter: string | undefined]
-  'edit-concept-set': [conceptSet: any]
+  'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
 // Get available filters for initial events section

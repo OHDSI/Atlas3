@@ -47,18 +47,6 @@ test.describe('Configuration Panel', () => {
     return panel
   }
 
-  // Helper function to close config panel
-  async function ensurePanelClosed(page) {
-    const panel = page.locator('.v-navigation-drawer').filter({ hasText: /Configuration/ })
-    const isOpen = await panel.isVisible().catch(() => false)
-
-    if (isOpen) {
-      const closeButton = page.getByRole('button', { name: /close.*configuration/i })
-        .or(page.locator('[aria-label*="Close"]'))
-      await closeButton.first().click()
-      await page.waitForTimeout(500)
-    }
-  }
 
   test.describe('US1: Access Configuration Panel (T104)', () => {
     test('should open panel from navbar config icon', async ({ page }) => {

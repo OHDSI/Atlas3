@@ -75,13 +75,14 @@ const emit = defineEmits<{
 /**
  * Chart ref
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const chartRef = ref<any>(null)
 
 /**
  * Chart instance for export
  */
 const chartInstance = computed<EChartsType | null>(() => {
-  return chartRef.value?.chart || null
+  return chartRef.value?.chart as EChartsType | null
 })
 
 /**

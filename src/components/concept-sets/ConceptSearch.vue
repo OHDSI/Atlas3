@@ -89,7 +89,7 @@ import type { Concept } from '@/models/concept-set.types'
 
 const { t, tv } = useI18n()
 
-const emit = defineEmits<{
+defineEmits<{
   'select-concept': [concept: Concept]
 }>()
 

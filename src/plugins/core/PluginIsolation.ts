@@ -6,12 +6,15 @@ export function setupPluginIsolation(): void {
     logger.debug('PluginIsolation', 'Routing event', evt);
   });
 
-  window.addEventListener('single-spa:app-change', (evt: any) => {
+  window.addEventListener('single-spa:app-change', ((evt: CustomEvent<{
+    appsThatBecameActive?: string[];
+    appsThatBecameInactive?: string[];
+  }>) => {
     logger.debug('PluginIsolation', 'App change', {
       appsThatBecameActive: evt.detail?.appsThatBecameActive,
       appsThatBecameInactive: evt.detail?.appsThatBecameInactive,
     });
-  });
+  }) as EventListener);
 
   // Global error handler for uncaught plugin errors
   window.addEventListener('error', (event) => {

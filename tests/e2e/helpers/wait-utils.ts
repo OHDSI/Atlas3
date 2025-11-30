@@ -221,7 +221,7 @@ export async function waitForCohortGeneration(
       const data = await response.json().catch(() => null)
       if (data && Array.isArray(data)) {
         const generationInfo = data.find(
-          (g: any) => g.id.sourceId === sourceId && g.status === 'COMPLETE'
+          (g: { id: { sourceId: number }; status: string }) => g.id.sourceId === sourceId && g.status === 'COMPLETE'
         )
         if (generationInfo) return
       }
@@ -240,7 +240,7 @@ export async function waitForCohortGeneration(
 export async function waitForVueUpdate(page: Page): Promise<void> {
   await page.evaluate(() => {
     return new Promise<void>(resolve => {
-      if ((window as any).__vue_app__) {
+      if ((window as { __vue_app__?: unknown }).__vue_app__) {
         // Wait for Vue to flush pending updates
         requestAnimationFrame(() => {
           requestAnimationFrame(() => resolve())

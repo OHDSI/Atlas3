@@ -57,7 +57,7 @@ import { logger } from '@/utils/logger'
  * Props
  */
 const props = defineProps<{
-  data: any[]
+  data: Array<Record<string, unknown>>
   headers: Array<{ key: string; title: string }>
   filename?: string
 }>()
@@ -156,7 +156,7 @@ async function handleExportCSV() {
   try {
     // Prepare data for CSV export
     const csvData = props.data.map(row => {
-      const csvRow: Record<string, any> = {}
+      const csvRow: Record<string, unknown> = {}
       props.headers.forEach(header => {
         const value = row[header.key]
         // Use header title as column name in CSV
