@@ -68,7 +68,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useReports } from '@/composables/useReports'
-import type { TableData } from '@/models/report.types'
+import type { TableData, ConditionData } from '@/models/report.types'
+import { hasPrevalence } from '@/models/report.types'
 import DataTable from '@/components/reports/tables/DataTable.vue'
 
 /**
@@ -98,10 +99,10 @@ async function loadData() {
   await loadReport(props.cohortId, props.sourceKey, 'data-completeness')
 
   // Transform report data to table format
-  if (currentReport.value && 'prevalence' in currentReport.value) {
-    const data = currentReport.value.prevalence
+  if (currentReport.value && hasPrevalence(currentReport.value)) {
+    const data = currentReport.value.prevalence as ConditionData[]
 
-    const rows = (data as any[]).map((item: any) => ({
+    const rows = data.map((item) => ({
       conceptId: item.conceptId,
       conceptName: item.conceptName || 'Unknown',
       recordsPerPerson: item.recordsPerPerson?.toFixed(2) || 'N/A',

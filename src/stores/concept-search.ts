@@ -7,6 +7,7 @@ import { ref, computed } from 'vue'
 import { searchConcepts, getConceptRecordCounts } from '@/services/concept-search.service'
 import type { Concept } from '@/models/concept-set.types'
 import { getSourceKey } from '@/config/webapi'
+import { logger } from '@/utils/logger'
 
 // Debounce utility
 function debounce<T extends (...args: any[]) => any>(
@@ -142,7 +143,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
       loadingRecordCounts.value = false
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to search concepts'
-      console.error('Concept search error:', err)
+      logger.error('ConceptSearchStore', 'Concept search error', err)
       allConcepts.value = []
       loading.value = false
       loadingRecordCounts.value = false

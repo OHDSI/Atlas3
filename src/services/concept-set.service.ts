@@ -7,7 +7,14 @@ import {
   type ConceptSet,
   type ConceptSetListItem,
 } from '@/models/concept-set.types'
-import { mapConceptSetFromAPI, mapConceptSetToAPI } from '@/utils/api-mappers'
+import {
+  mapConceptSetFromAPI,
+  mapConceptSetToAPI,
+  type ConceptSetAPIMetadata,
+  type ConceptSetAPIExpression,
+  type ConceptSetAPIResponse,
+} from '@/utils/api-mappers'
+import { logger } from '@/utils/logger'
 
 const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
 
@@ -50,13 +57,13 @@ export async function getAllConceptSets(): Promise<ConceptSetListItem[]> {
     const parsed = ConceptSetListResponseSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Concept set list validation error:', parsed.error)
+      logger.error('ConceptSet', 'Concept set list validation error', parsed.error)
       return []
     }
 
     return parsed.data
   } catch (error) {
-    console.error('Failed to fetch concept sets:', error)
+    logger.error('ConceptSet', 'Failed to fetch concept sets', error)
     return []
   }
 }
@@ -72,20 +79,20 @@ export async function getConceptSetById(
   try {
     // Fetch metadata and expression separately
     const [metadata, expression] = await Promise.all([
-      fetchJSON<unknown>(`/conceptset/${id}`),
-      fetchJSON<unknown>(`/conceptset/${id}/expression`)
+      fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${id}`),
+      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${id}/expression`)
     ])
-    
+
     // Combine metadata and expression
-    const combined = {
-      ...(metadata as any),
+    const combined: ConceptSetAPIResponse = {
+      ...metadata,
       expression: expression
     }
-    
+
     // Map WebAPI format to our interface
     return mapConceptSetFromAPI(combined)
   } catch (error) {
-    console.error(`Failed to fetch concept set ${id}:`, error)
+    logger.error('ConceptSet', `Failed to fetch concept set ${id}`, error)
     return null
   }
 }
@@ -104,14 +111,14 @@ export async function createConceptSet(
       items: conceptSet.items || [],
     } as ConceptSet)
 
-    const data = await fetchJSON<unknown>('/conceptset', {
+    const data = await fetchJSON<ConceptSetAPIResponse>('/conceptset', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
 
-    return mapConceptSetFromAPI(data as any)
+    return mapConceptSetFromAPI(data)
   } catch (error) {
-    console.error('Failed to create concept set:', error)
+    logger.error('ConceptSet', 'Failed to create concept set', error)
     return null
   }
 }
@@ -131,14 +138,14 @@ export async function updateConceptSet(
   try {
     const payload = mapConceptSetToAPI(conceptSet)
 
-    const data = await fetchJSON<unknown>(`/conceptset/${conceptSet.id}`, {
+    const data = await fetchJSON<ConceptSetAPIResponse>(`/conceptset/${conceptSet.id}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
     })
 
-    return mapConceptSetFromAPI(data as any)
+    return mapConceptSetFromAPI(data)
   } catch (error) {
-    console.error(`Failed to update concept set ${conceptSet.id}:`, error)
+    logger.error('ConceptSet', `Failed to update concept set ${conceptSet.id}`, error)
     return null
   }
 }
@@ -157,7 +164,7 @@ export async function deleteConceptSet(
     })
     return true
   } catch (error) {
-    console.error(`Failed to delete concept set ${id}:`, error)
+    logger.error('ConceptSet', `Failed to delete concept set ${id}`, error)
     return false
   }
 }

@@ -14,6 +14,7 @@
 
 import atlasConfigJson from '@/config/atlas-config.json'
 import { validateAtlasConfig, formatValidationSummary } from '@/utils/config-validator'
+import { logger } from '@/utils/logger'
 import type {
   AtlasConfig,
   FilterTypeConfig,
@@ -105,7 +106,7 @@ export class ConfigLoaderService {
       }
 
       this.validationResult = errorResult
-      console.error('❌ Configuration loading failed:', error)
+      logger.error('ConfigLoader', 'Configuration loading failed', error)
 
       return errorResult
     }
@@ -119,16 +120,14 @@ export class ConfigLoaderService {
    */
   getFilterConfig(filterType: string): FilterTypeConfig | undefined {
     if (!this.config) {
-      console.warn('Configuration not loaded. Call loadConfiguration() first.')
+      logger.warn('ConfigLoader', 'Configuration not loaded. Call loadConfiguration() first.')
       return undefined
     }
 
     // Only return config if filter type is valid
     if (!this.validationResult?.validFilterTypes.includes(filterType)) {
       if (import.meta.env.DEV) {
-        console.warn(
-          `Filter type '${filterType}' is invalid or not in valid filters list`
-        )
+        logger.warn('ConfigLoader', `Filter type '${filterType}' is invalid or not in valid filters list`)
       }
       return undefined
     }
@@ -149,19 +148,19 @@ export class ConfigLoaderService {
    */
   getValidFilterTypesForSection(section: string): string[] {
     if (!this.config || !this.validationResult) {
-      console.warn('[ConfigLoader] Configuration not loaded')
+      logger.warn('ConfigLoader', 'Configuration not loaded')
       return []
     }
 
     if (import.meta.env.DEV) {
-      console.log('[ConfigLoader] Looking for section:', section)
-      console.log('[ConfigLoader] Available sections:', this.sections.map(s => s.id))
+      logger.debug('ConfigLoader', `Looking for section: ${section}`)
+      logger.debug('ConfigLoader', 'Available sections', this.sections.map(s => s.id))
     }
 
     const sectionConfig = this.getSectionConfig(section)
     if (!sectionConfig) {
-      console.warn(`[ConfigLoader] Section '${section}' not found in configuration`)
-      console.warn(`[ConfigLoader] Available sections:`, this.sections)
+      logger.warn('ConfigLoader', `Section '${section}' not found in configuration`)
+      logger.warn('ConfigLoader', 'Available sections', this.sections)
       return []
     }
 
@@ -169,8 +168,8 @@ export class ConfigLoaderService {
     const validTypes = this.validationResult.validFilterTypes
 
     if (import.meta.env.DEV) {
-      console.log(`[ConfigLoader] Valid filter types (${validTypes.length}):`, validTypes)
-      console.log(`[ConfigLoader] Section config:`, sectionConfig)
+      logger.debug('ConfigLoader', `Valid filter types (${validTypes.length})`, validTypes)
+      logger.debug('ConfigLoader', 'Section config', sectionConfig)
     }
 
     // Filter based on section rules
@@ -195,7 +194,7 @@ export class ConfigLoaderService {
     })
 
     if (import.meta.env.DEV) {
-      console.log(`[ConfigLoader] Filtered results for ${section} (${result.length}):`, result)
+      logger.debug('ConfigLoader', `Filtered results for ${section} (${result.length})`, result)
     }
 
     return result
@@ -216,14 +215,14 @@ export class ConfigLoaderService {
     section: string
   ): AttributeConfig[] {
     if (!this.config) {
-      console.warn('Configuration not loaded')
+      logger.warn('ConfigLoader', 'Configuration not loaded')
       return []
     }
 
     // Only return attributes if filter type is valid
     if (!this.validationResult?.validFilterTypes.includes(filterType)) {
       if (import.meta.env.DEV) {
-        console.warn(`Filter type '${filterType}' is not valid`)
+        logger.warn('ConfigLoader', `Filter type '${filterType}' is not valid`)
       }
       return []
     }
@@ -305,7 +304,7 @@ export class ConfigLoaderService {
    * @param newConfig - New configuration data (optional, defaults to re-importing)
    */
   async reload(newConfig?: unknown): Promise<ValidationResult> {
-    console.log('🔄 Reloading configuration...')
+    logger.info('ConfigLoader', 'Reloading configuration...')
 
     const configToValidate = newConfig ?? atlasConfigJson
 
@@ -331,9 +330,9 @@ export class ConfigLoaderService {
       // Notify subscribers
       this.notifyConfigurationChange()
 
-      console.log('✅ Configuration reloaded successfully')
+      logger.info('ConfigLoader', 'Configuration reloaded successfully')
     } else {
-      console.error('❌ Configuration reload failed - no valid filters')
+      logger.error('ConfigLoader', 'Configuration reload failed - no valid filters')
     }
 
     this.logValidationResults()
@@ -368,7 +367,7 @@ export class ConfigLoaderService {
         try {
           callback(this.config!)
         } catch (error) {
-          console.error('Error in configuration change callback:', error)
+          logger.error('ConfigLoader', 'Error in configuration change callback', error)
         }
       })
     }
@@ -384,27 +383,19 @@ export class ConfigLoaderService {
 
     if (import.meta.env.DEV) {
       // Detailed logging in development mode
-      console.log(formatValidationSummary(this.validationResult))
+      logger.info('ConfigLoader', formatValidationSummary(this.validationResult))
 
       if (this.validationResult.validFilterTypes.length > 0) {
-        console.log(
-          '✅ Valid filter types:',
-          this.validationResult.validFilterTypes.join(', ')
-        )
+        logger.info('ConfigLoader', `Valid filter types: ${this.validationResult.validFilterTypes.join(', ')}`)
       }
 
       if (this.validationResult.invalidFilterTypes.length > 0) {
-        console.warn(
-          '⚠️  Invalid filter types:',
-          this.validationResult.invalidFilterTypes.join(', ')
-        )
+        logger.warn('ConfigLoader', `Invalid filter types: ${this.validationResult.invalidFilterTypes.join(', ')}`)
       }
     } else {
       // Minimal logging in production
       if (!this.validationResult.valid) {
-        console.warn(
-          `Configuration validation: ${this.validationResult.errors.length} errors, ${this.validationResult.validFilterTypes.length} valid filters`
-        )
+        logger.warn('ConfigLoader', `Configuration validation: ${this.validationResult.errors.length} errors, ${this.validationResult.validFilterTypes.length} valid filters`)
       }
     }
   }
@@ -417,7 +408,7 @@ export const configLoaderService = new ConfigLoaderService()
 if (import.meta.hot) {
   import.meta.hot.accept('@/config/atlas-config.json', (newModule) => {
     if (newModule) {
-      console.log('🔥 Hot-reloading configuration...')
+      logger.info('ConfigLoader', 'Hot-reloading configuration...')
       configLoaderService.reload(newModule.default)
     }
   })

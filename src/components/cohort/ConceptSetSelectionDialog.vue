@@ -93,7 +93,7 @@
               {{ conceptSet.name }}
             </v-list-item-title>
             <v-list-item-subtitle>
-              {{ (conceptSetsStore.conceptSets.find((cs: any) => cs.id === conceptSet.id) as any)?.items?.length || 0 }} concept{{ ((conceptSetsStore.conceptSets.find((cs: any) => cs.id === conceptSet.id) as any)?.items?.length || 0) === 1 ? '' : 's' }}
+              {{ t('components.conceptSetBuilder.conceptSet', 'Concept Set') }}
             </v-list-item-subtitle>
 
             <template #append>

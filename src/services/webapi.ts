@@ -1,10 +1,11 @@
 /**
  * OHDSI WebAPI Client
  * HTTP client for Atlas WebAPI endpoints
- * 
+ *
  * In development: Uses Vite proxy (/WebAPI -> https://atlas-demo.ohdsi.org/WebAPI)
  * In production: Override with VITE_WEBAPI_URL environment variable
  */
+import { logger } from '@/utils/logger'
 import {
   CDMSourceListSchema,
   CohortGenerationInfoListSchema,
@@ -14,7 +15,11 @@ import {
   type GenerationStatus,
 } from '@/models/webapi.types'
 import { ConceptSearchResponseSchema, type Concept, type ConceptSet } from '@/models/concept-set.types'
-import type { AtlasCohortDefinition } from '@/models/atlas.types'
+import {
+  type AtlasCohortDefinition,
+  type AtlasCohortDefinitionInput,
+  isAtlasCohortDefinitionWrapper,
+} from '@/models/atlas.types'
 import type { ValidationResponse } from '@/models/cohort-validation.types'
 import {
   WebAPIReportResponseSchema,
@@ -90,7 +95,7 @@ async function fetchJSON<T>(
         // Check if we should retry
         if (isRetryableError(error, response.status) && attempt < MAX_RETRY_ATTEMPTS - 1) {
           const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-          console.warn(`[WebAPI] Request failed (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS}), retrying in ${delay}ms...`, error.message)
+          logger.warn('WebAPI', `Request failed (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS}), retrying in ${delay}ms...`, error.message)
           await sleep(delay)
           continue
         }
@@ -105,7 +110,7 @@ async function fetchJSON<T>(
       // Check if network error is retryable
       if (isRetryableError(error) && attempt < MAX_RETRY_ATTEMPTS - 1) {
         const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-        console.warn(`[WebAPI] Network error (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS}), retrying in ${delay}ms...`, lastError.message)
+        logger.warn('WebAPI', `Network error (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS}), retrying in ${delay}ms...`, lastError.message)
         await sleep(delay)
         continue
       }
@@ -131,7 +136,7 @@ export async function fetchCDMSources(): Promise<CDMSource[]> {
   const parsed = CDMSourceListSchema.safeParse(data)
 
   if (!parsed.success) {
-    console.error('CDM sources validation error:', parsed.error)
+    logger.error('WebAPI', 'CDM sources validation error', parsed.error)
     return []
   }
 
@@ -158,7 +163,7 @@ export async function searchConcepts(
     const parsed = ConceptSearchResponseSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('[WebAPI] Concept search validation failed:', parsed.error)
+      logger.error('WebAPI', 'Concept search validation failed', parsed.error)
     }
 
     return parsed.success ? parsed.data.map(c => ({
@@ -172,7 +177,7 @@ export async function searchConcepts(
       invalidReason: c.INVALID_REASON,
     })) : []
   } catch (error) {
-    console.error('[WebAPI] searchConcepts error:', error)
+    logger.error('WebAPI', 'searchConcepts error', error)
     throw error
   }
 }
@@ -186,7 +191,7 @@ export async function getCohortDefinition(id: number): Promise<AtlasCohortDefini
   try {
     return await fetchJSON<AtlasCohortDefinition>(`/cohortdefinition/${id}`)
   } catch (error) {
-    console.error(`Failed to fetch cohort definition ${id}:`, error)
+    logger.error('WebAPI', `Failed to fetch cohort definition ${id}`, error)
     return null
   }
 }
@@ -213,7 +218,7 @@ export async function saveCohortDefinition(
       })
     }
   } catch (error) {
-    console.error('Failed to save cohort definition:', error)
+    logger.error('WebAPI', 'Failed to save cohort definition', error)
     return null
   }
 }
@@ -229,7 +234,7 @@ export async function deleteCohortDefinition(id: number): Promise<boolean> {
     })
     return true
   } catch (error) {
-    console.error(`Failed to delete cohort definition ${id}:`, error)
+    logger.error('WebAPI', `Failed to delete cohort definition ${id}`, error)
     return false
   }
 }
@@ -278,7 +283,7 @@ export async function generateCohort(
 
     return job
   } catch (error) {
-    console.error('Failed to generate cohort:', error)
+    logger.error('WebAPI', 'Failed to generate cohort', error)
     return null
   }
 }
@@ -294,13 +299,13 @@ export async function getCohortGenerationInfo(cohortId: number): Promise<CohortG
     const parsed = CohortGenerationInfoListSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Cohort generation info validation error:', parsed.error)
+      logger.error('WebAPI', 'Cohort generation info validation error', parsed.error)
       return []
     }
 
     return parsed.data
   } catch (error) {
-    console.error(`Failed to fetch cohort generation info for ${cohortId}:`, error)
+    logger.error('WebAPI', `Failed to fetch cohort generation info for ${cohortId}`, error)
     return []
   }
 }
@@ -313,7 +318,7 @@ export async function getConceptSet(id: number | string): Promise<ConceptSet | n
   try {
     return await fetchJSON<ConceptSet>(`/conceptset/${id}`)
   } catch (error) {
-    console.error(`Failed to fetch concept set ${id}:`, error)
+    logger.error('WebAPI', `Failed to fetch concept set ${id}`, error)
     return null
   }
 }
@@ -326,7 +331,7 @@ export async function getAllConceptSets(): Promise<ConceptSet[]> {
   try {
     return await fetchJSON<ConceptSet[]>('/conceptset')
   } catch (error) {
-    console.error('Failed to fetch concept sets:', error)
+    logger.error('WebAPI', 'Failed to fetch concept sets', error)
     return []
   }
 }
@@ -342,7 +347,7 @@ export async function createConceptSet(conceptSet: ConceptSet): Promise<ConceptS
       body: JSON.stringify(conceptSet),
     })
   } catch (error) {
-    console.error('Failed to create concept set:', error)
+    logger.error('WebAPI', 'Failed to create concept set', error)
     return null
   }
 }
@@ -358,7 +363,7 @@ export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptS
       body: JSON.stringify(conceptSet),
     })
   } catch (error) {
-    console.error(`Failed to update concept set ${conceptSet.id}:`, error)
+    logger.error('WebAPI', `Failed to update concept set ${conceptSet.id}`, error)
     return null
   }
 }
@@ -374,7 +379,7 @@ export async function deleteConceptSet(id: number | string): Promise<boolean> {
     })
     return true
   } catch (error) {
-    console.error(`Failed to delete concept set ${id}:`, error)
+    logger.error('WebAPI', `Failed to delete concept set ${id}`, error)
     return false
   }
 }
@@ -419,7 +424,7 @@ export async function validateCohortDefinition(
     })
     return data
   } catch (error) {
-    console.error('Failed to validate cohort definition:', error)
+    logger.error('WebAPI', 'Failed to validate cohort definition', error)
     // Return empty warnings on error
     return { warnings: [] }
   }
@@ -446,19 +451,19 @@ export async function getCohortReport(
     const parsed = WebAPIReportResponseSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Cohort report validation error:', parsed.error)
+      logger.error('WebAPI', 'Cohort report validation error', parsed.error)
       return null
     }
 
     // Ensure summary is not undefined
     if (!parsed.data.summary) {
-      console.error('Cohort report missing summary')
+      logger.error('WebAPI', 'Cohort report missing summary')
       return null
     }
 
     return parsed.data as WebAPIReportResponse
   } catch (error) {
-    console.error(`Failed to fetch cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -476,7 +481,7 @@ export async function getPersonReport(
       `/cohortresults/${sourceKey}/${cohortId}/person`
     )
   } catch (error) {
-    console.error(`Failed to fetch person report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch person report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -494,7 +499,7 @@ export async function getConditionErasReport(
       `/cohortresults/${sourceKey}/${cohortId}/conditionera`
     )
   } catch (error) {
-    console.error(`Failed to fetch condition eras report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch condition eras report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -512,7 +517,7 @@ export async function getConditionReport(
       `/cohortresults/${sourceKey}/${cohortId}/condition`
     )
   } catch (error) {
-    console.error(`Failed to fetch condition report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch condition report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -530,7 +535,7 @@ export async function getDrugErasReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugera`
     )
   } catch (error) {
-    console.error(`Failed to fetch drug eras report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch drug eras report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -548,7 +553,7 @@ export async function getCohortSpecificReport(
       `/cohortresults/${sourceKey}/${cohortId}/cohortspecific`
     )
   } catch (error) {
-    console.error(`Failed to fetch cohort specific report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch cohort specific report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -613,7 +618,7 @@ async function triggerCohortAnalysis(
     })
     return true
   } catch (error) {
-    console.error(`Failed to trigger cohort analysis for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to trigger cohort analysis for ${cohortId}/${sourceKey}`, error)
     return false
   }
 }
@@ -664,7 +669,7 @@ export async function getPersonsExposureBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/observationperiod`
     )
   } catch (error) {
-    console.error(`Failed to fetch persons exposure baseline report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch persons exposure baseline report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -682,7 +687,7 @@ export async function getPersonsExposureCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/cohort`
     )
   } catch (error) {
-    console.error(`Failed to fetch persons exposure cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch persons exposure cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -700,7 +705,7 @@ export async function getVisitsBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitsbaseline`
     )
   } catch (error) {
-    console.error(`Failed to fetch visits baseline report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch visits baseline report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -718,7 +723,7 @@ export async function getVisitDatesBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitdatesbaseline`
     )
   } catch (error) {
-    console.error(`Failed to fetch visit dates baseline report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch visit dates baseline report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -736,7 +741,7 @@ export async function getCareSiteVisitDatesBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/caresitevisitdatesbaseline`
     )
   } catch (error) {
-    console.error(`Failed to fetch care site visit dates baseline report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch care site visit dates baseline report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -754,7 +759,7 @@ export async function getVisitsCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitscohort`
     )
   } catch (error) {
-    console.error(`Failed to fetch visits cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch visits cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -772,7 +777,7 @@ export async function getVisitDatesCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitdatescohort`
     )
   } catch (error) {
-    console.error(`Failed to fetch visit dates cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch visit dates cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -790,7 +795,7 @@ export async function getCareSiteVisitDatesCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/caresitevisitdatescohort`
     )
   } catch (error) {
-    console.error(`Failed to fetch care site visit dates cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch care site visit dates cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -808,7 +813,7 @@ export async function getDrugUtilizationBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugutilizationbaseline`
     )
   } catch (error) {
-    console.error(`Failed to fetch drug utilization baseline report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch drug utilization baseline report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -826,7 +831,7 @@ export async function getDrugUtilizationCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugutilizationcohort`
     )
   } catch (error) {
-    console.error(`Failed to fetch drug utilization cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch drug utilization cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -844,7 +849,7 @@ export async function getHeraclesHeelReport(
       `/cohortresults/${sourceKey}/${cohortId}/heraclesheel`
     )
   } catch (error) {
-    console.error(`Failed to fetch Heracles Heel report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch Heracles Heel report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -864,7 +869,7 @@ export async function getCompletedAnalyses(
     )
     return data || []
   } catch (error) {
-    console.error(`Failed to fetch completed analyses for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch completed analyses for ${cohortId}/${sourceKey}`, error)
     return []
   }
 }
@@ -882,7 +887,7 @@ export async function getConditionsByIndexReport(
       `/cohortresults/${sourceKey}/${cohortId}/conditionsbyindex`
     )
   } catch (error) {
-    console.error(`Failed to fetch conditions by index report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch conditions by index report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -900,7 +905,7 @@ export async function getDeathReport(
       `/cohortresults/${sourceKey}/${cohortId}/death`
     )
   } catch (error) {
-    console.error(`Failed to fetch death report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch death report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -918,7 +923,7 @@ export async function getDrugExposureReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugexposure`
     )
   } catch (error) {
-    console.error(`Failed to fetch drug exposure report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch drug exposure report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -936,7 +941,7 @@ export async function getDrugsByIndexReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugsbyindex`
     )
   } catch (error) {
-    console.error(`Failed to fetch drugs by index report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch drugs by index report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -954,7 +959,7 @@ export async function getObservationPeriodsReport(
       `/cohortresults/${sourceKey}/${cohortId}/observationperiod`
     )
   } catch (error) {
-    console.error(`Failed to fetch observation periods report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch observation periods report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -972,7 +977,7 @@ export async function getProcedureReport(
       `/cohortresults/${sourceKey}/${cohortId}/procedure`
     )
   } catch (error) {
-    console.error(`Failed to fetch procedure report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch procedure report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -990,7 +995,7 @@ export async function getProceduresByIndexReport(
       `/cohortresults/${sourceKey}/${cohortId}/proceduresbyindex`
     )
   } catch (error) {
-    console.error(`Failed to fetch procedures by index report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch procedures by index report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -1008,7 +1013,7 @@ export async function getDataCompletenessReport(
       `/cohortresults/${sourceKey}/${cohortId}/datacompleteness`
     )
   } catch (error) {
-    console.error(`Failed to fetch data completeness report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch data completeness report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -1026,7 +1031,7 @@ export async function getEntropyReport(
       `/cohortresults/${sourceKey}/${cohortId}/entropy`
     )
   } catch (error) {
-    console.error(`Failed to fetch entropy report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch entropy report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -1044,7 +1049,7 @@ export async function getTornadoReport(
       `/cohortresults/${sourceKey}/${cohortId}/tornado`
     )
   } catch (error) {
-    console.error(`Failed to fetch tornado report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch tornado report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -1055,7 +1060,7 @@ export async function getTornadoReport(
  * The endpoint expects just the expression object from the cohort definition
  */
 export async function getCohortPrintFriendly(
-  cohortDefinition: AtlasCohortDefinition
+  cohortDefinition: AtlasCohortDefinitionInput
 ): Promise<string | null> {
   try {
     const url = `${BASE_URL}/cohortdefinition/printfriendly/cohort?format=html`
@@ -1063,11 +1068,17 @@ export async function getCohortPrintFriendly(
 
     // The cohort definition from WebAPI has structure: { id, name, description, expression: {...} }
     // The printfriendly endpoint expects just the expression property
-    let payload = (cohortDefinition as any).expression || cohortDefinition
+    let payload: AtlasCohortDefinition | string
+
+    if (isAtlasCohortDefinitionWrapper(cohortDefinition)) {
+      payload = cohortDefinition.expression
+    } else {
+      payload = cohortDefinition
+    }
 
     // If expression is a string, parse it first
     if (typeof payload === 'string') {
-      payload = JSON.parse(payload)
+      payload = JSON.parse(payload) as AtlasCohortDefinition
     }
 
     const response = await fetch(url, {
@@ -1085,7 +1096,7 @@ export async function getCohortPrintFriendly(
 
     return await response.text()
   } catch (error) {
-    console.error('Failed to fetch print-friendly cohort:', error)
+    logger.error('WebAPI', 'Failed to fetch print-friendly cohort', error)
     return null
   }
 }

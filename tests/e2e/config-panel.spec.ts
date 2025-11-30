@@ -26,7 +26,7 @@ test.describe('Configuration Panel', () => {
     const panel = page.locator('.v-navigation-drawer').filter({ hasText: /Configuration/ })
 
     // Always try to check current state and open if needed
-    let isOpen = await panel.isVisible().catch(() => false)
+    const isOpen = await panel.isVisible().catch(() => false)
 
     if (!isOpen) {
       // Find config button - use the actual aria-label from the UI

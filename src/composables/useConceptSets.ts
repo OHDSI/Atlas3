@@ -6,6 +6,7 @@ import { ref, computed } from 'vue'
 import { useConceptSetsStore } from '@/stores/conceptSets'
 import type { Concept, ConceptSet } from '@/models/concept-set.types'
 import * as webapi from '@/services/webapi'
+import { logger } from '@/utils/logger'
 
 // Simple debounce implementation
 function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
@@ -49,7 +50,7 @@ export function useConceptSets() {
 
       store.setSearchResults(results)
     } catch (error) {
-      console.error('Concept search error:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Concept search error', error instanceof Error ? error.message : String(error))
       store.setSearchResults([])
       throw error
     } finally {
@@ -70,7 +71,7 @@ export function useConceptSets() {
 
       return created
     } catch (error) {
-      console.error('Failed to create concept set:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Failed to create concept set', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -86,7 +87,7 @@ export function useConceptSets() {
         store.updateConceptSet(updated.id, updated)
       }
     } catch (error) {
-      console.error('Failed to update concept set:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Failed to update concept set', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -102,7 +103,7 @@ export function useConceptSets() {
         store.removeConceptSet(id)
       }
     } catch (error) {
-      console.error('Failed to delete concept set:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Failed to delete concept set', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -127,7 +128,7 @@ export function useConceptSets() {
 
       return conceptSet
     } catch (error) {
-      console.error('Failed to get concept set:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Failed to get concept set', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -143,7 +144,7 @@ export function useConceptSets() {
         store.addConceptSet(cs)
       })
     } catch (error) {
-      console.error('Failed to load concept sets:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Failed to load concept sets', error instanceof Error ? error.message : String(error))
       throw error
     }
   }

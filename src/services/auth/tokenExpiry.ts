@@ -7,6 +7,7 @@
 
 import { getTokenExpiration } from '@/utils/jwt';
 import type { ExpiryTimer, ExpiryDetectionConfig } from '@/types/auth';
+import { logger } from '@/utils/logger';
 
 class TokenExpiryService {
   private timer: ExpiryTimer = {
@@ -37,7 +38,7 @@ class TokenExpiryService {
 
     const expiration = getTokenExpiration(token);
     if (!expiration) {
-      console.warn('[TokenExpiry] Cannot setup expiry warning: invalid token');
+      logger.warn('TokenExpiry', 'Cannot setup expiry warning: invalid token');
       return;
     }
 
@@ -49,14 +50,14 @@ class TokenExpiryService {
 
     // If already past warning time, show immediately
     if (warningTime <= now) {
-      console.log('[TokenExpiry] Token expires soon, showing warning immediately');
+      logger.info('TokenExpiry', 'Token expires soon, showing warning immediately');
       this.showExpiryWarning(expiration);
       return;
     }
 
     // Set timer for warning
     const delay = warningTime - now;
-    console.log(`[TokenExpiry] Expiry warning scheduled for ${new Date(warningTime).toLocaleTimeString()} (in ${(delay / 60000).toFixed(1)} minutes)`);
+    logger.debug('TokenExpiry', `Expiry warning scheduled for ${new Date(warningTime).toLocaleTimeString()} (in ${(delay / 60000).toFixed(1)} minutes)`);
 
     this.timer.timerId = setTimeout(() => {
       this.showExpiryWarning(expiration);
@@ -70,11 +71,11 @@ class TokenExpiryService {
    */
   showExpiryWarning(expiresAt: Date): void {
     if (this.timer.warningShown) {
-      console.log('[TokenExpiry] Expiry warning already shown, skipping');
+      logger.debug('TokenExpiry', 'Expiry warning already shown, skipping');
       return;
     }
 
-    console.log('[TokenExpiry] Showing session expiry warning');
+    logger.info('TokenExpiry', 'Showing session expiry warning');
     this.timer.warningShown = true;
     this.timer.modalOpen = true;
 

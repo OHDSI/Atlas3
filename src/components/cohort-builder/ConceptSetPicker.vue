@@ -118,11 +118,12 @@ import { useConceptSets } from '@/composables/useConceptSets'
 import ConceptSearch from '@/components/concept-sets/ConceptSearch.vue'
 import ConceptSetEditor from '@/components/concept-sets/ConceptSetEditor.vue'
 import type { ConceptSetReference, ConceptSet, Concept } from '@/models/concept-set.types'
+import type { Concept as EventConcept } from '@/models/event.types'
 
 const { t, tv } = useI18n()
 
 interface Props {
-  modelValue?: ConceptSetReference | Concept
+  modelValue?: ConceptSetReference | Concept | EventConcept
   singleSelect?: boolean
   domain?: string // Optional domain filter for single concept selection
 }
@@ -133,7 +134,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  'update:modelValue': [value: ConceptSetReference | Concept | undefined]
+  'update:modelValue': [value: ConceptSetReference | Concept | EventConcept | undefined]
 }>()
 
 const {
@@ -194,7 +195,7 @@ async function handleSelect(id: number | string | undefined) {
 function clearSelection() {
   selectedConceptSetId.value = undefined
   selectedConceptSet.value = null
-  emit('update:modelValue', undefined as any)
+  emit('update:modelValue', undefined)
 }
 
 function handleConceptSelect(concept: Concept) {
@@ -212,7 +213,7 @@ function handleConceptSelect(concept: Concept) {
       INVALID_REASON: concept.invalidReason || undefined,
     }
     selectedConcept.value = mappedConcept
-    emit('update:modelValue', mappedConcept as any)
+    emit('update:modelValue', mappedConcept)
     showSearch.value = false
   } else {
     // Concept set mode: add to selection for creating new set

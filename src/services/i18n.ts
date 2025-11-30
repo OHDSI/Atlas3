@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod'
+import { logger } from '@/utils/logger'
 import type { Locale, TranslationBundle, LocaleCode, Translations } from '@/types/i18n'
 import { WEBAPI_BASE_URL } from '@/config/webapi'
 
@@ -51,13 +52,13 @@ export async function fetchLocales(): Promise<Locale[]> {
     // Validate with Zod
     const parsed = LocaleArraySchema.safeParse(rawLocales)
     if (!parsed.success) {
-      console.error('Invalid locales response:', parsed.error)
+      logger.error('i18n', 'Invalid locales response', parsed.error)
       throw new Error('Invalid locales format from WebAPI')
     }
-    
+
     return parsed.data
   } catch (error) {
-    console.error('Error fetching locales:', error)
+    logger.error('i18n', 'Error fetching locales', error)
     return [
       { code: 'en', name: 'English' }
     ]
@@ -81,17 +82,17 @@ export async function fetchTranslations(locale: LocaleCode): Promise<Translation
     // Validate translations with Zod
     const translationsValidation = TranslationsSchema.safeParse(rawTranslations)
     if (!translationsValidation.success) {
-      console.error('Invalid translations response:', translationsValidation.error)
+      logger.error('i18n', 'Invalid translations response', translationsValidation.error)
       throw new Error(`Invalid translation format for ${locale}`)
     }
-    
+
     const translations: Translations = translationsValidation.data
-    
+
     // Validate format if present
     if (data.format) {
       const formatValidation = LocaleFormatSchema.safeParse(data.format)
       if (!formatValidation.success) {
-        console.warn('Invalid format data, skipping:', formatValidation.error)
+        logger.warn('i18n', 'Invalid format data, skipping', formatValidation.error)
       }
     }
     
@@ -102,7 +103,7 @@ export async function fetchTranslations(locale: LocaleCode): Promise<Translation
       fetchedAt: new Date()
     }
   } catch (error) {
-    console.error(`Error fetching translations for ${locale}:`, error)
+    logger.error('i18n', `Error fetching translations for ${locale}`, error)
     throw error
   }
 }

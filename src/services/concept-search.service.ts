@@ -4,6 +4,13 @@
  */
 import { ConceptSearchResponseSchema, type Concept } from '@/models/concept-set.types'
 import { mapConceptFromAPI } from '@/utils/api-mappers'
+import { logger } from '@/utils/logger'
+
+/**
+ * API response type for concept record counts
+ * Each entry maps concept ID (as string) to an array of [RC, DRC, PC, DPC]
+ */
+type ConceptRecordCountResponse = Array<Record<string, number[]>>
 
 const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
 
@@ -63,7 +70,7 @@ export async function searchConcepts(
   const parsed = ConceptSearchResponseSchema.safeParse(data)
 
   if (!parsed.success) {
-    console.error('Concept search validation error:', parsed.error)
+    logger.error('ConceptSearch', 'Concept search validation error', parsed.error)
     throw new Error('Invalid concept search response format')
   }
 
@@ -94,13 +101,13 @@ export async function getConceptById(
     const parsed = ConceptSearchResponseSchema.element.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Concept detail validation error:', parsed.error)
+      logger.error('ConceptSearch', 'Concept detail validation error', parsed.error)
       return null
     }
 
     return mapConceptFromAPI(parsed.data)
   } catch (error) {
-    console.error(`Failed to fetch concept ${conceptId}:`, error)
+    logger.error('ConceptSearch', `Failed to fetch concept ${conceptId}`, error)
     return null
   }
 }
@@ -138,7 +145,7 @@ export async function getConceptRecordCounts(
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    const data = await response.json() as any[]
+    const data: ConceptRecordCountResponse = await response.json()
 
     // The API returns an array of objects with concept IDs as keys
     // Example: [{ "192671": [13, 331, 12, 323], "313217": [3023, 3023, 579, 579] }]
@@ -159,7 +166,7 @@ export async function getConceptRecordCounts(
       }
     }
   } catch (error) {
-    console.error('Failed to fetch concept record counts:', error)
+    logger.error('ConceptSearch', 'Failed to fetch concept record counts', error)
     // Return empty map on error - don't fail the whole search
   }
 

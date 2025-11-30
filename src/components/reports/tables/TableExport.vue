@@ -51,6 +51,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import * as Papa from 'papaparse'
+import { logger } from '@/utils/logger'
 
 /**
  * Props
@@ -137,7 +138,7 @@ async function handleCopy() {
       }
     }
   } catch (error) {
-    console.error('[TableExport] Copy failed:', error)
+    logger.error('TableExport', 'Copy failed', error)
     showToastNotification('Failed to copy data to clipboard', 'error', 5000)
   } finally {
     copying.value = false
@@ -189,7 +190,7 @@ async function handleExportCSV() {
 
     showToastNotification(`Exported ${props.data.length} rows to ${filename}.csv`, 'success', 4000)
   } catch (error) {
-    console.error('[TableExport] CSV export failed:', error)
+    logger.error('TableExport', 'CSV export failed', error)
     showToastNotification('Failed to export CSV file', 'error', 5000)
   } finally {
     exporting.value = false

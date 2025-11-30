@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
 import { useLocaleStore } from '@/stores/locale'
+import { logger } from '@/utils/logger'
 
 const { locale: currentLocale, availableLocales, changeLocale, loading } = useI18n()
 const localeStore = useLocaleStore()
@@ -48,7 +49,7 @@ function handleShiftClick(event: MouseEvent) {
     event.preventDefault()
     event.stopPropagation()
     localeStore.clearCache()
-    console.log('[i18n] Translation cache cleared')
+    logger.info('i18n', 'Translation cache cleared')
   }
 }
 </script>

@@ -1,3 +1,5 @@
+import { logger } from '@/utils/logger'
+
 export class StorageManager {
   private readonly TOKEN_KEY = 'bearerToken'
   private readonly AUTH_CLIENT_KEY = 'auth-client'
@@ -7,7 +9,7 @@ export class StorageManager {
       localStorage.setItem(this.TOKEN_KEY, token)
       document.cookie = `${this.TOKEN_KEY}=${token}; path=/; SameSite=Lax`
     } catch (error) {
-      console.error('Failed to save token:', error)
+      logger.error('StorageManager', 'Failed to save token', error)
     }
   }
 
@@ -15,7 +17,7 @@ export class StorageManager {
     try {
       return localStorage.getItem(this.TOKEN_KEY)
     } catch (error) {
-      console.error('Failed to get token:', error)
+      logger.error('StorageManager', 'Failed to get token', error)
       return null
     }
   }
@@ -25,7 +27,7 @@ export class StorageManager {
       localStorage.removeItem(this.TOKEN_KEY)
       document.cookie = `${this.TOKEN_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
     } catch (error) {
-      console.error('Failed to clear token:', error)
+      logger.error('StorageManager', 'Failed to clear token', error)
     }
   }
 
@@ -33,7 +35,7 @@ export class StorageManager {
     try {
       localStorage.setItem(this.AUTH_CLIENT_KEY, authClient)
     } catch (error) {
-      console.error('Failed to save auth client:', error)
+      logger.error('StorageManager', 'Failed to save auth client', error)
     }
   }
 
@@ -41,7 +43,7 @@ export class StorageManager {
     try {
       return localStorage.getItem(this.AUTH_CLIENT_KEY)
     } catch (error) {
-      console.error('Failed to get auth client:', error)
+      logger.error('StorageManager', 'Failed to get auth client', error)
       return null
     }
   }
@@ -50,7 +52,7 @@ export class StorageManager {
     try {
       localStorage.removeItem(this.AUTH_CLIENT_KEY)
     } catch (error) {
-      console.error('Failed to clear auth client:', error)
+      logger.error('StorageManager', 'Failed to clear auth client', error)
     }
   }
 

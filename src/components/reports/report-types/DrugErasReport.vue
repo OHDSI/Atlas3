@@ -69,6 +69,7 @@ import { useReports } from '@/composables/useReports'
 import { useI18n } from '@/composables/useI18n'
 import type { DrugErasReport, TableHeader, TableRow } from '@/models/report.types'
 import DataTable from '../tables/DataTable.vue'
+import { logger } from '@/utils/logger'
 
 /**
  * Props
@@ -177,7 +178,7 @@ async function fetchData() {
     await loadReport(props.cohortId, props.sourceKey, 'drug-eras')
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load drug eras report'
-    console.error('[DrugErasReport] Error:', err)
+    logger.error('DrugErasReport', 'Failed to load report', err)
   } finally {
     loading.value = false
   }

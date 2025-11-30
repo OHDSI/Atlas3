@@ -69,7 +69,8 @@
 import { ref, onMounted, watch } from 'vue'
 import { useReports } from '@/composables/useReports'
 import { useI18n } from '@/composables/useI18n'
-import type { TableData } from '@/models/report.types'
+import type { TableData, CareSiteVisitDatesData } from '@/models/report.types'
+import { isCareSiteVisitDatesReportData } from '@/models/report.types'
 import DataTable from '@/components/reports/tables/DataTable.vue'
 
 /**
@@ -104,10 +105,10 @@ async function loadData() {
   await loadReport(props.cohortId, props.sourceKey, 'care-site-visit-dates-cohort')
 
   // Transform report data to table format
-  if (currentReport.value && 'data' in currentReport.value) {
-    const data = currentReport.value.data
+  if (currentReport.value && isCareSiteVisitDatesReportData(currentReport.value)) {
+    const data = currentReport.value.data as CareSiteVisitDatesData[]
 
-    const rows = (data as unknown as any[]).map((item: any) => ({
+    const rows = data.map((item) => ({
       careSiteId: item.careSiteId,
       careSiteName: item.careSiteName || 'Unknown',
       visitCount: item.visitCount,

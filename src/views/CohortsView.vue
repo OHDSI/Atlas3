@@ -244,6 +244,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
 import { deleteCohort, getCohortDefinition, getCohortPrintFriendly } from '@/services/webapi'
+import { logger } from '@/utils/logger'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import CohortFilters from '@/components/cohort/CohortFilters.vue'
@@ -365,7 +366,7 @@ async function confirmDelete() {
     showDeleteDialog.value = false
     selectedCohort.value = null
   } catch (err) {
-    console.error('Failed to delete cohort:', err)
+    logger.error('CohortsView', 'Failed to delete cohort', err)
     // Error handling could be enhanced with a snackbar notification
   } finally {
     deleting.value = false
@@ -390,7 +391,7 @@ async function handleShowInfo(cohort: CohortDefinitionSummary) {
       cohortInfoHtml.value = html
     }
   } catch (error) {
-    console.error('Failed to fetch cohort print-friendly view:', error)
+    logger.error('CohortsView', 'Failed to fetch cohort print-friendly view', error)
     cohortInfoHtml.value = null
   } finally {
     loadingCohortInfo.value = false

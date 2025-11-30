@@ -1,6 +1,7 @@
 import { registerApplication, start } from 'single-spa';
 import { PluginRegistry } from './PluginRegistry';
 import { PluginInstance } from '@/models/PluginModels';
+import { logger } from '@/utils/logger';
 
 export class PluginLoader {
   private registry: PluginRegistry;
@@ -17,7 +18,7 @@ export class PluginLoader {
     const { registration } = plugin;
     const pluginUrl = `${import.meta.env.BASE_URL}plugins/${registration.entryPoint}`;
 
-    console.log(`[PluginLoader] Loading plugin: ${registration.id} from ${pluginUrl}`);
+    logger.info('PluginLoader', `Loading plugin: ${registration.id} from ${pluginUrl}`);
 
     try {
       this.registry.updatePluginState(registration.id, 'loading');
@@ -38,19 +39,19 @@ export class PluginLoader {
 
       try {
         // Check if SystemJS is available
-        if (!(window as any).System) {
+        if (!window.System) {
           throw new Error('SystemJS is not available on window.System');
         }
 
-        console.log(`[PluginLoader] Starting System.import for ${pluginUrl}`);
+        logger.debug('PluginLoader', `Starting System.import for ${pluginUrl}`);
 
         // Use SystemJS import with additional error context
-        pluginModule = await (window as any).System.import(pluginUrl).catch((err: Error) => {
-          console.error(`[PluginLoader] System.import failed for ${pluginUrl}:`, err);
+        pluginModule = await window.System.import(pluginUrl).catch((err: Error) => {
+          logger.error('PluginLoader', `System.import failed for ${pluginUrl}`, err);
           throw new Error(`Failed to import plugin module: ${err.message}`);
         });
 
-        console.log(`[PluginLoader] System.import succeeded for ${registration.id}`, pluginModule);
+        logger.debug('PluginLoader', `System.import succeeded for ${registration.id}`, pluginModule);
 
         // Validate the module has required lifecycle methods
         if (!pluginModule.bootstrap || !pluginModule.mount || !pluginModule.unmount) {
@@ -66,11 +67,11 @@ export class PluginLoader {
         this.loadingTimeouts.delete(registration.id);
 
         this.registry.updatePluginState(registration.id, 'loaded');
-        console.log(`[PluginLoader] Plugin ${registration.id} loaded successfully in ${loadTime}ms`);
+        logger.info('PluginLoader', `Plugin ${registration.id} loaded successfully in ${loadTime}ms`);
       } catch (error) {
         clearTimeout(timeoutId);
         this.loadingTimeouts.delete(registration.id);
-        console.error(`[PluginLoader] Error loading plugin ${registration.id}:`, error);
+        logger.error('PluginLoader', `Error loading plugin ${registration.id}`, error);
         throw error;
       }
 
@@ -84,12 +85,12 @@ export class PluginLoader {
           const basePath = import.meta.env.BASE_URL;
           const pluginPath = `${basePath}plugins/${registration.id}/`.replace(/\/+/g, '/');
           const isActive = location.pathname.startsWith(pluginPath);
-          console.log(`[PluginLoader] activeWhen check for ${registration.id}: pathname=${location.pathname}, pluginPath=${pluginPath}, isActive=${isActive}`);
+          logger.debug('PluginLoader', `activeWhen check for ${registration.id}: pathname=${location.pathname}, pluginPath=${pluginPath}, isActive=${isActive}`);
           return isActive;
         },
         customProps: () => {
           const domElement = document.getElementById(`plugin-${registration.id}`);
-          console.log(`[PluginLoader] customProps for ${registration.id}: domElement=`, domElement);
+          logger.debug('PluginLoader', `customProps for ${registration.id}: domElement=`, domElement);
           return {
             name: registration.name,
             authContext: plugin.authContext,
@@ -103,7 +104,7 @@ export class PluginLoader {
       plugin.application = { name: registration.id };
 
     } catch (error) {
-      console.error(`[PluginLoader] Failed to load plugin ${registration.id}:`, error);
+      logger.error('PluginLoader', `Failed to load plugin ${registration.id}`, error);
       this.handleLoadError(registration.id, error as Error);
     }
   }
@@ -113,7 +114,7 @@ export class PluginLoader {
     
     if (attempts < this.MAX_RETRIES) {
       this.retryAttempts.set(pluginId, attempts + 1);
-      console.log(`[PluginLoader] Retry ${attempts + 1}/${this.MAX_RETRIES} for plugin ${pluginId}`);
+      logger.info('PluginLoader', `Retry ${attempts + 1}/${this.MAX_RETRIES} for plugin ${pluginId}`);
       
       setTimeout(() => {
         const plugin = this.registry.getPlugin(pluginId);
@@ -145,6 +146,6 @@ export class PluginLoader {
     start({
       urlRerouteOnly: true,
     });
-    console.log('[PluginLoader] Plugin framework started');
+    logger.info('PluginLoader', 'Plugin framework started');
   }
 }

@@ -261,6 +261,11 @@ export function toTreemapData(
 }
 
 /**
+ * Generic record type for treemap data items
+ */
+type TreemapDataItem = Record<string, unknown>
+
+/**
  * Group treemap data by category for hierarchical treemaps
  * @param data Source data array
  * @param categoryKey Key for grouping (e.g., 'soc', 'atc1')
@@ -268,26 +273,26 @@ export function toTreemapData(
  * @param valueKey Key for node values
  */
 export function toHierarchicalTreemapData(
-  data: any[],
+  data: TreemapDataItem[],
   categoryKey: string,
   nameKey: string,
   valueKey: string
 ): TreemapNode[] {
   // Group by category
-  const grouped = data.reduce((acc, item) => {
-    const category = item[categoryKey] || 'Other'
+  const grouped = data.reduce<Record<string, TreemapDataItem[]>>((acc, item) => {
+    const category = String(item[categoryKey] || 'Other')
     if (!acc[category]) {
       acc[category] = []
     }
     acc[category].push(item)
     return acc
-  }, {} as Record<string, any[]>)
+  }, {})
 
   // Convert to hierarchical structure
   return Object.entries(grouped).map(([category, items]) => ({
     name: category,
-    value: (items as any[]).reduce((sum: number, item: any) => sum + Number(item[valueKey]), 0),
-    children: (items as any[]).map((item: any) => ({
+    value: items.reduce((sum, item) => sum + Number(item[valueKey]), 0),
+    children: items.map((item) => ({
       name: String(item[nameKey]),
       value: Number(item[valueKey])
     }))

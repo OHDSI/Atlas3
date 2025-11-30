@@ -35,6 +35,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { EChartsType } from 'echarts/core'
+import { logger } from '@/utils/logger'
 
 /**
  * Props
@@ -82,7 +83,7 @@ async function handleExportPNG() {
 
     emit('export-success', 'png', `${filename}.png`)
   } catch (error) {
-    console.error('[ChartExport] PNG export failed:', error)
+    logger.error('ChartExport', 'PNG export failed', error)
     emit('export-error', 'png', error as Error)
   } finally {
     exporting.value = null
@@ -117,11 +118,11 @@ async function handleExportSVG() {
       emit('export-success', 'svg', `${filename}.svg`)
     } else {
       // Fallback: export as PNG if SVG renderer not available
-      console.warn('[ChartExport] SVG renderer not available, using PNG fallback')
+      logger.warn('ChartExport', 'SVG renderer not available, using PNG fallback')
       await handleExportPNG()
     }
   } catch (error) {
-    console.error('[ChartExport] SVG export failed:', error)
+    logger.error('ChartExport', 'SVG export failed', error)
     emit('export-error', 'svg', error as Error)
   } finally {
     exporting.value = null

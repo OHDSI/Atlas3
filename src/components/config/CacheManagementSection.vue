@@ -96,6 +96,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
+import { logger } from '@/utils/logger'
 
 const configStore = useConfigStore()
 
@@ -121,7 +122,7 @@ async function loadCacheStats() {
   try {
     cacheStats.value = await configStore.getCacheStats()
   } catch (error) {
-    console.error('Failed to load cache stats:', error)
+    logger.error('CacheManagement', 'Failed to load cache stats', error)
   }
 }
 

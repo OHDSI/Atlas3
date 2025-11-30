@@ -55,6 +55,86 @@ const ConceptSetReferenceSchema = z.object({
 }).optional()
 
 /**
+ * Cardinality type enumeration
+ */
+const CardinalityTypeSchema = z.enum(['AT_LEAST', 'EXACTLY', 'AT_MOST'])
+
+/**
+ * Counting method enumeration
+ */
+const CountingMethodSchema = z.enum([
+  'ALL',
+  'DISTINCT_CONCEPT',
+  'DISTINCT_START_DATE',
+  'DISTINCT_VISIT'
+])
+
+/**
+ * Cardinality schema - validates occurrence count constraints
+ */
+const CardinalitySchema = z.object({
+  type: CardinalityTypeSchema,
+  count: z.number().int().min(0, 'Count must be >= 0'),
+  countingMethod: CountingMethodSchema,
+  isDistinct: z.boolean().optional(),
+  countColumn: z.string().optional()
+}).refine(
+  (data) => {
+    // AT_LEAST requires count >= 1
+    if (data.type === 'AT_LEAST') {
+      return data.count >= 1
+    }
+    return true
+  },
+  {
+    message: 'AT_LEAST cardinality requires count >= 1',
+    path: ['count']
+  }
+)
+
+/**
+ * Window reference point enumeration
+ */
+const ReferencePointSchema = z.enum(['INDEX_START', 'INDEX_END', 'EVENT_START', 'EVENT_END'])
+
+/**
+ * Before/After enumeration
+ */
+const BeforeAfterSchema = z.enum(['BEFORE', 'AFTER'])
+
+/**
+ * Window schema - defines a temporal boundary
+ */
+const WindowSchema = z.object({
+  days: z.number().int().nullable(), // null means "all time"
+  beforeAfter: BeforeAfterSchema,
+  referencePoint: ReferencePointSchema
+})
+
+/**
+ * Temporal window schema - defines start and end temporal constraints
+ */
+const TemporalWindowSchema = z.object({
+  startWindow: WindowSchema.optional(),
+  endWindow: WindowSchema.optional()
+})
+
+/**
+ * Date field enumeration for date adjustments
+ */
+const DateFieldSchema = z.enum(['START_DATE', 'END_DATE'])
+
+/**
+ * Date adjustment schema - defines how criterion event dates are shifted
+ */
+const DateAdjustmentSchema = z.object({
+  startWith: DateFieldSchema,
+  startOffset: z.number().int(),
+  endWith: DateFieldSchema,
+  endOffset: z.number().int()
+})
+
+/**
  * Concept schema (for single concept attributes)
  */
 const ConceptSchema = z.object({
@@ -172,6 +252,50 @@ const BooleanAttributeSchema = AttributeBaseSchema.extend({
 })
 
 /**
+ * Temporal relationship attribute schema
+ * Defines temporal windows relative to another event
+ */
+const TemporalRelationshipAttributeSchema = AttributeBaseSchema.extend({
+  type: z.literal('temporalRelationship'),
+  temporalWindow: TemporalWindowSchema,
+})
+
+/**
+ * Date adjustment attribute schema
+ * Defines how criterion event dates are shifted
+ */
+const DateAdjustmentAttributeSchema = AttributeBaseSchema.extend({
+  type: z.literal('dateAdjustment'),
+  dateAdjustment: DateAdjustmentSchema,
+})
+
+/**
+ * User defined period schema
+ */
+const UserDefinedPeriodSchema = z.object({
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)'),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)'),
+}).refine(
+  (data) => {
+    // Ensure end date is after or equal to start date
+    return data.endDate >= data.startDate
+  },
+  {
+    message: 'End date must be after or equal to start date',
+    path: ['endDate']
+  }
+)
+
+/**
+ * User defined period attribute schema
+ * Defines a custom period with start and end dates
+ */
+const UserDefinedPeriodAttributeSchema = AttributeBaseSchema.extend({
+  type: z.literal('userDefinedPeriod'),
+  period: UserDefinedPeriodSchema,
+})
+
+/**
  * Complete event attribute schema (union)
  * Note: Using z.union instead of z.discriminatedUnion because some schemas use .refine()
  */
@@ -182,6 +306,9 @@ const EventAttributeSchema = z.union([
   ConceptAttributeSchema,
   TextAttributeSchema,
   BooleanAttributeSchema,
+  TemporalRelationshipAttributeSchema,
+  DateAdjustmentAttributeSchema,
+  UserDefinedPeriodAttributeSchema,
 ])
 
 /**
@@ -193,13 +320,13 @@ export const CohortEventSchema: z.ZodType<any> = z.lazy(() =>
     id: z.string().uuid('Invalid UUID format for event ID'),
     criteriaType: z.string().min(1, 'Criteria type is required'),
     conceptSet: ConceptSetReferenceSchema,
-    cardinality: z.any().optional(), // TODO: Add specific cardinality schema
-    temporalWindow: z.any().optional(), // TODO: Add specific temporal window schema
+    cardinality: CardinalitySchema.optional(),
+    temporalWindow: TemporalWindowSchema.optional(),
     attributes: z.array(EventAttributeSchema).default([]),
     nestedCriteria: NestedCriteriaSchema.optional(),
     restrictVisit: z.boolean().optional(),
     ignoreObservationPeriod: z.boolean().optional(),
-    dateAdjustment: z.any().optional() // TODO: Add specific date adjustment schema
+    dateAdjustment: DateAdjustmentSchema.optional()
   })
 )
 
@@ -215,6 +342,27 @@ export function validateNestedCriteria(data: unknown) {
  */
 export function validateCohortEvent(data: unknown) {
   return CohortEventSchema.safeParse(data)
+}
+
+/**
+ * Validate cardinality and return result
+ */
+export function validateCardinality(data: unknown) {
+  return CardinalitySchema.safeParse(data)
+}
+
+/**
+ * Validate temporal window and return result
+ */
+export function validateTemporalWindow(data: unknown) {
+  return TemporalWindowSchema.safeParse(data)
+}
+
+/**
+ * Validate date adjustment and return result
+ */
+export function validateDateAdjustment(data: unknown) {
+  return DateAdjustmentSchema.safeParse(data)
 }
 
 /**

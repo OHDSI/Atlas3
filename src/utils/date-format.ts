@@ -3,6 +3,8 @@
  * Format dates for display in UI
  */
 
+import { logger } from '@/utils/logger'
+
 /**
  * Format ISO 8601 date string or timestamp to MM/DD/YYYY format
  * @param isoDate ISO 8601 date string or Unix timestamp (milliseconds)
@@ -27,7 +29,7 @@ export function formatDate(isoDate: string | number | undefined | null): string 
 
     return `${month}/${day}/${year}`
   } catch (error) {
-    console.error('Date formatting error:', error)
+    logger.error('DateFormat', 'Date formatting error', error)
     return '—' // em dash for error cases
   }
 }
@@ -65,7 +67,7 @@ export function formatRelativeTime(isoDate: string | number | undefined | null):
       return `${years} year${years > 1 ? 's' : ''} ago`
     }
   } catch (error) {
-    console.error('Relative time formatting error:', error)
+    logger.error('DateFormat', 'Relative time formatting error', error)
     return 'Unknown'
   }
 }

@@ -109,9 +109,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useReports } from '@/composables/useReports'
 import { useI18n } from '@/composables/useI18n'
-import type { ConditionErasReport, TableHeader, TableRow } from '@/models/report.types'
+import type { ConditionErasReport, ConditionEraData, TableHeader, TableRow } from '@/models/report.types'
 import DataTable from '../tables/DataTable.vue'
 import TreemapChart from '../charts/TreemapChart.vue'
+import { logger } from '@/utils/logger'
 
 /**
  * Props
@@ -199,7 +200,7 @@ const tableHeaders: TableHeader[] = [
 const tableData = computed<TableRow[]>(() => {
   if (!reportData.value?.prevalence) return []
 
-  return (reportData.value.prevalence as any[]).map((item: any) => ({
+  return (reportData.value.prevalence as ConditionEraData[]).map((item) => ({
     conceptId: item.conceptId,
     soc: item.soc || '-',
     hlt: item.hlt || '-',
@@ -221,7 +222,7 @@ async function fetchData() {
     await loadReport(props.cohortId, props.sourceKey, 'condition-eras')
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load condition eras report'
-    console.error('[ConditionErasReport] Error:', err)
+    logger.error('ConditionErasReport', 'Failed to load report', err)
   } finally {
     loading.value = false
   }

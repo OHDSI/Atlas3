@@ -7,6 +7,7 @@ import { ref, computed, watch } from 'vue'
 import type { Ref } from 'vue'
 import { getCohorts } from '@/services/webapi'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
+import { logger } from '@/utils/logger'
 
 export interface DateRange {
   from?: Date
@@ -109,7 +110,7 @@ export function useCohorts() {
       })
     } catch (err) {
       error.value = err instanceof Error ? err : new Error('Failed to load cohorts')
-      console.error('Failed to fetch cohorts:', err)
+      logger.error('useCohorts', 'Failed to fetch cohorts', err)
     } finally {
       loading.value = false
     }

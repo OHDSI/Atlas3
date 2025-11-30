@@ -29,6 +29,7 @@
 <script setup lang="ts">
 import type { TreemapNode } from '@/models/datasource.types'
 import TreemapChart from '@/components/reports/charts/TreemapChart.vue'
+import { logger } from '@/utils/logger'
 
 interface Props {
   data: TreemapNode[]
@@ -38,7 +39,7 @@ defineProps<Props>()
 
 function handleNodeClick(_event: MouseEvent, node: TreemapNode) {
   // Zoom handled by TreemapChart component
-  console.log('[TreemapChart] Node clicked:', node.name)
+  logger.debug('DomainPrevalenceTreemap', `Node clicked: ${node.name}`)
 }
 </script>
 

@@ -136,6 +136,7 @@
 import { ref, computed } from 'vue'
 import type { PrevalenceTableRow } from '@/models/datasource.types'
 import { formatNumber, formatPercentage, exportTableToCSV } from '@/utils/datasource-formatters'
+import { logger } from '@/utils/logger'
 
 interface Props {
   data: PrevalenceTableRow[]
@@ -178,9 +179,9 @@ const needsVirtualization = computed(() => {
 // Aggregate data for very large datasets
 const aggregatedData = computed(() => {
   if (!needsVirtualization.value) return props.data
-  
+
   // For datasets > 10k rows, show top 1000 by prevalence
-  console.log('[Table] Large dataset detected, showing top 1000 entries by prevalence')
+  logger.info('DomainPrevalenceTable', 'Large dataset detected, showing top 1000 entries by prevalence')
   return [...props.data]
     .sort((a, b) => b.prevalence - a.prevalence)
     .slice(0, 1000)
@@ -247,7 +248,7 @@ function toggleColumn(key: string) {
 function copyToClipboard() {
   const csv = exportTableToCSV(filteredData.value, props.metricLabel)
   navigator.clipboard.writeText(csv).then(() => {
-    console.log('[Table] Copied to clipboard:', filteredData.value.length, 'rows')
+    logger.debug('DomainPrevalenceTable', `Copied to clipboard: ${filteredData.value.length} rows`)
   })
 }
 

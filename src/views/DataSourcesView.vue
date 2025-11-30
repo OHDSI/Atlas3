@@ -179,6 +179,7 @@ import { computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
+import { logger } from '@/utils/logger'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
 import DataSourceSelector from '@/components/datasources/DataSourceSelector.vue'
 import ReportTypeSelector from '@/components/datasources/ReportTypeSelector.vue'
@@ -210,7 +211,7 @@ const reportTypeLabel = computed(() => {
 
 const dashboardData = computed(() => {
   const report = store.currentReport
-  console.log('[View] dashboardData:', { reportType: report?.type, hasData: !!report })
+  logger.debug('DataSourcesView', 'dashboardData', { reportType: report?.type, hasData: !!report })
   if (report?.type === 'dashboard') {
     return report.data
   }
@@ -219,7 +220,7 @@ const dashboardData = computed(() => {
 
 const dataDensityData = computed(() => {
   const report = store.currentReport
-  console.log('[View] dataDensityData:', { reportType: report?.type, hasData: !!report })
+  logger.debug('DataSourcesView', 'dataDensityData', { reportType: report?.type, hasData: !!report })
   if (report?.type === 'datadensity') {
     return report.data
   }
@@ -228,7 +229,7 @@ const dataDensityData = computed(() => {
 
 const personData = computed(() => {
   const report = store.currentReport
-  console.log('[View] personData:', { reportType: report?.type, hasData: !!report })
+  logger.debug('DataSourcesView', 'personData', { reportType: report?.type, hasData: !!report })
   if (report?.type === 'person') {
     return report.data
   }

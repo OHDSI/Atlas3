@@ -11,8 +11,8 @@ test('debug concept sets loading', async ({ page }) => {
     console.log(`PAGE ERROR: ${error.message}`)
   })
 
-  // Navigate to concepts page
-  await page.goto('http://localhost:5173/concepts?tab=sets')
+  // Navigate to concepts page (use relative URL to use baseURL from config)
+  await page.goto('/concepts?tab=sets')
   await page.waitForTimeout(3000)
 
   // Check what's visible

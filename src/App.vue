@@ -63,6 +63,7 @@ import { useLocaleStore } from '@/stores/locale'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
 import { useLicenseAgreement } from '@/composables/useLicenseAgreement'
+import { logger } from '@/utils/logger'
 
 const localeStore = useLocaleStore()
 const authStore = useAuthStore()
@@ -95,7 +96,7 @@ async function handleExtendSession() {
     extensionError.value = null
     await authStore.extendSession()
   } catch (error) {
-    console.error('[App] Failed to extend session:', error)
+    logger.error('App', 'Failed to extend session', error)
     extensionError.value = 'Failed to extend session. Please try again.'
   }
 }

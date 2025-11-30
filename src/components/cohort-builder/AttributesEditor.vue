@@ -367,7 +367,12 @@ import {
 import type {
   EventAttribute,
   TemporalWindow,
-  DateAdjustment
+  DateAdjustment,
+  NumericRangeAttribute,
+  DateRangeAttribute,
+  TextAttribute,
+  NumericOperator,
+  DateOperator,
 } from '@/models/event.types'
 import type { CriteriaType } from '@/models/cohort.types'
 
@@ -427,21 +432,24 @@ watch(() => props.modelValue, (newValue) => {
     if (attr.type === 'numericRange') {
       if (!attr.operator) {
         needsUpdate = true
-        cleaned.push({ ...(attr as any), operator: 'GREATER_THAN_OR_EQUAL' } as EventAttribute)
+        const numAttr = attr as NumericRangeAttribute
+        cleaned.push({ ...numAttr, operator: 'GREATER_THAN_OR_EQUAL' })
       } else {
         cleaned.push(attr)
       }
     } else if (attr.type === 'dateRange') {
       if (!attr.operator) {
         needsUpdate = true
-        cleaned.push({ ...(attr as any), operator: 'BETWEEN' } as EventAttribute)
+        const dateAttr = attr as DateRangeAttribute
+        cleaned.push({ ...dateAttr, operator: 'BETWEEN' })
       } else {
         cleaned.push(attr)
       }
     } else if (attr.type === 'text') {
       if (!attr.operator) {
         needsUpdate = true
-        cleaned.push({ ...(attr as any), operator: 'CONTAINS' } as EventAttribute)
+        const textAttr = attr as TextAttribute
+        cleaned.push({ ...textAttr, operator: 'CONTAINS' })
       } else {
         cleaned.push(attr)
       }
@@ -469,20 +477,35 @@ function updateAttributeOperator(index: number, operator: string) {
   const attr = newAttributes[index]
   if (!attr) return
 
-  if (attr.type === 'numericRange' || attr.type === 'dateRange') {
+  if (attr.type === 'numericRange') {
     // Clear extent when switching from BETWEEN to single-value operators
     const isBetweenOperator = operator === 'BETWEEN' || operator === 'NOT_BETWEEN'
     const wasExtentSet = 'extent' in attr && attr.extent !== undefined
+    const numAttr = attr as NumericRangeAttribute
 
     if (wasExtentSet && !isBetweenOperator) {
       // Switching from BETWEEN to single-value operator - clear extent
-      const { extent, ...attrWithoutExtent } = attr
-      newAttributes[index] = { ...attrWithoutExtent, operator: operator as any }
+      const { extent, ...attrWithoutExtent } = numAttr
+      newAttributes[index] = { ...attrWithoutExtent, operator: operator as NumericOperator }
     } else {
-      newAttributes[index] = { ...attr, operator: operator as any }
+      newAttributes[index] = { ...numAttr, operator: operator as NumericOperator }
+    }
+  } else if (attr.type === 'dateRange') {
+    // Clear extent when switching from BETWEEN to single-value operators
+    const isBetweenOperator = operator === 'BETWEEN' || operator === 'NOT_BETWEEN'
+    const wasExtentSet = 'extent' in attr && attr.extent !== undefined
+    const dateAttr = attr as DateRangeAttribute
+
+    if (wasExtentSet && !isBetweenOperator) {
+      // Switching from BETWEEN to single-value operator - clear extent
+      const { extent, ...attrWithoutExtent } = dateAttr
+      newAttributes[index] = { ...attrWithoutExtent, operator: operator as DateOperator }
+    } else {
+      newAttributes[index] = { ...dateAttr, operator: operator as DateOperator }
     }
   } else if (attr.type === 'text') {
-    newAttributes[index] = { ...attr, operator: operator as any }
+    const textAttr = attr as TextAttribute
+    newAttributes[index] = { ...textAttr, operator: operator as TextAttribute['operator'] }
   }
 
   emit('update:modelValue', newAttributes)

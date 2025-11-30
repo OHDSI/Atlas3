@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { PluginLoader } from '@/plugins/core/PluginLoader';
 import { PluginRegistry } from '@/plugins/core/PluginRegistry';
 import { PluginInstance } from '@/models/PluginModels';
+import type { SystemJS } from '@/types/plugin';
 
 // Mock single-spa
 vi.mock('single-spa', () => ({
@@ -12,7 +13,7 @@ vi.mock('single-spa', () => ({
 describe('PluginLoader', () => {
   let loader: PluginLoader;
   let registry: PluginRegistry;
-  let mockSystemImport: any;
+  let mockSystemImport: Mock;
 
   const mockPlugin: PluginInstance = {
     registration: {
@@ -46,10 +47,10 @@ describe('PluginLoader', () => {
       mount: vi.fn(),
       unmount: vi.fn(),
     });
-    
-    (window as any).System = {
+
+    window.System = {
       import: mockSystemImport,
-    };
+    } as SystemJS;
   });
 
   describe('loadPlugin', () => {
@@ -95,7 +96,9 @@ describe('PluginLoader', () => {
 
   describe('error handling', () => {
     it.skip('should handle plugin load failures', async () => {
-      (window as any).System.import = vi.fn().mockRejectedValue(new Error('Load failed'));
+      window.System = {
+        import: vi.fn().mockRejectedValue(new Error('Load failed')),
+      } as SystemJS;
       
       const setErrorSpy = vi.spyOn(registry, 'setPluginError');
       

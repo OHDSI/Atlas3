@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
 import * as webapi from '@/services/webapi'
+import { logger } from '@/utils/logger'
 
 export const useConceptSetsStore = defineStore('conceptSets', () => {
   // State
@@ -65,7 +66,7 @@ export const useConceptSetsStore = defineStore('conceptSets', () => {
       const results = await webapi.searchConcepts(sourceKey, query, domain)
       setSearchResults(results)
     } catch (error) {
-      console.error('Error searching concepts:', error)
+      logger.error('ConceptSetsStore', 'Error searching concepts', error)
       setSearchResults([])
     } finally {
       setSearching(false)

@@ -166,6 +166,7 @@
 import { ref, computed, watch, defineAsyncComponent, onUnmounted } from 'vue'
 import { useReports } from '@/composables/useReports'
 import { useI18n } from '@/composables/useI18n'
+import { logger } from '@/utils/logger'
 import type { ReportType, ReportAction } from '@/models/report.types'
 import {
   triggerFullAnalysis,
@@ -285,7 +286,7 @@ const currentReportComponent = computed(() => {
 
   const loader = componentMap[currentReportType.value]
   if (!loader) {
-    console.warn(`[ReportPanel] Report type "${currentReportType.value}" not yet implemented`)
+    logger.warn('ReportPanel', `Report type "${currentReportType.value}" not yet implemented`)
     return null
   }
 
@@ -381,7 +382,7 @@ function startJobPolling(jobType: string) {
         showToastNotification(`${jobType} polling timeout - check job status manually`, 'info', 6000)
       }
     } catch (error) {
-      console.error('[ReportPanel] Job polling error:', error)
+      logger.error('ReportPanel', 'Job polling error', error)
       stopJobPolling()
     }
   }, 5000) // Poll every 5 seconds
@@ -408,14 +409,14 @@ async function handleFullAnalysis() {
   try {
     const success = await triggerFullAnalysis(props.cohortId, props.sourceKey)
     if (success) {
-      console.log('[ReportPanel] Full Analysis triggered successfully')
+      logger.info('ReportPanel', 'Full Analysis triggered successfully')
       showToastNotification('Full Analysis job started - this may take several minutes', 'info', 5000)
       startJobPolling('Full Analysis')
     } else {
       showToastNotification('Failed to start Full Analysis job', 'error')
     }
   } catch (error) {
-    console.error('[ReportPanel] Failed to trigger Full Analysis:', error)
+    logger.error('ReportPanel', 'Failed to trigger Full Analysis', error)
     showToastNotification('Error starting Full Analysis job', 'error')
   } finally {
     activeAction.value = null
@@ -429,14 +430,14 @@ async function handleQuickAnalysis() {
   try {
     const success = await triggerQuickAnalysis(props.cohortId, props.sourceKey)
     if (success) {
-      console.log('[ReportPanel] Quick Analysis triggered successfully')
+      logger.info('ReportPanel', 'Quick Analysis triggered successfully')
       showToastNotification('Quick Analysis job started - this should complete shortly', 'info', 5000)
       startJobPolling('Quick Analysis')
     } else {
       showToastNotification('Failed to start Quick Analysis job', 'error')
     }
   } catch (error) {
-    console.error('[ReportPanel] Failed to trigger Quick Analysis:', error)
+    logger.error('ReportPanel', 'Failed to trigger Quick Analysis', error)
     showToastNotification('Error starting Quick Analysis job', 'error')
   } finally {
     activeAction.value = null
@@ -450,14 +451,14 @@ async function handleUtilization() {
   try {
     const success = await triggerUtilization(props.cohortId, props.sourceKey)
     if (success) {
-      console.log('[ReportPanel] Utilization analysis triggered successfully')
+      logger.info('ReportPanel', 'Utilization analysis triggered successfully')
       showToastNotification('Utilization analysis job started', 'info', 5000)
       startJobPolling('Utilization Analysis')
     } else {
       showToastNotification('Failed to start Utilization analysis job', 'error')
     }
   } catch (error) {
-    console.error('[ReportPanel] Failed to trigger Utilization:', error)
+    logger.error('ReportPanel', 'Failed to trigger Utilization', error)
     showToastNotification('Error starting Utilization analysis job', 'error')
   } finally {
     activeAction.value = null
@@ -472,9 +473,9 @@ async function fetchCompletedAnalyses() {
 
   try {
     completedAnalyses.value = await getCompletedAnalyses(props.cohortId, props.sourceKey)
-    console.log('[ReportPanel] Completed analyses:', completedAnalyses.value.length)
+    logger.debug('ReportPanel', 'Completed analyses', completedAnalyses.value.length)
   } catch (error) {
-    console.error('[ReportPanel] Failed to fetch completed analyses:', error)
+    logger.error('ReportPanel', 'Failed to fetch completed analyses', error)
     completedAnalyses.value = []
   }
 }

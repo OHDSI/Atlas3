@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { logger } from '@/utils/logger'
 
 const iapFrame = ref<HTMLIFrameElement | null>(null)
 const refreshInterval = ref<number | null>(null)
@@ -23,7 +24,7 @@ const isIAPEnabled = computed(() => {
 })
 
 function handleIframeLoad() {
-  console.log('[IAP] Session refresher iframe loaded')
+  logger.debug('IAP', 'Session refresher iframe loaded')
 }
 
 function scheduleRefresh() {
@@ -31,7 +32,7 @@ function scheduleRefresh() {
   const refreshIntervalMs = 45 * 60 * 1000
   
   refreshInterval.value = window.setInterval(() => {
-    console.log('[IAP] Refreshing IAP session')
+    logger.debug('IAP', 'Refreshing IAP session')
     if (iapFrame.value) {
       // Force iframe reload to refresh IAP session
       const src = iapFrame.value.src

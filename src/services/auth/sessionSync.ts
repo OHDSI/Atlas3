@@ -1,11 +1,12 @@
 /**
  * Session Synchronization Service
- * 
+ *
  * Synchronizes authentication state across browser tabs using localStorage events.
  * Detects login, logout, and token refresh events in other tabs.
  */
 
 import type { StorageSyncEvent, AuthEventType, SessionSyncConfig } from '@/types/auth';
+import { logger } from '@/utils/logger';
 
 class SessionSyncService {
   private active = false;
@@ -25,13 +26,13 @@ class SessionSyncService {
    */
   initialize(): void {
     if (this.active) {
-      console.warn('[SessionSync] Already initialized');
+      logger.warn('SessionSync', 'Already initialized');
       return;
     }
 
     window.addEventListener('storage', this.handleStorageEvent.bind(this));
     this.active = true;
-    console.log('[SessionSync] Cross-tab session sync initialized');
+    logger.info('SessionSync', 'Cross-tab session sync initialized');
   }
 
   /**
@@ -42,7 +43,7 @@ class SessionSyncService {
   stop(): void {
     window.removeEventListener('storage', this.handleStorageEvent.bind(this));
     this.active = false;
-    console.log('[SessionSync] Cross-tab session sync stopped');
+    logger.info('SessionSync', 'Cross-tab session sync stopped');
   }
 
   /**
@@ -64,7 +65,7 @@ class SessionSyncService {
       key: event.key
     };
 
-    console.log('[SessionSync] Storage sync event detected:', syncEvent.eventType);
+    logger.debug('SessionSync', 'Storage sync event detected', syncEvent.eventType);
     this.processEvent(syncEvent);
   }
 
@@ -95,7 +96,7 @@ class SessionSyncService {
     switch (event.eventType) {
       case 'login':
         if (this.config.syncLogin && event.newValue) {
-          console.log('[SessionSync] Syncing login from another tab');
+          logger.info('SessionSync', 'Syncing login from another tab');
           authStore.setToken(event.newValue);
           
           // Fetch user info for the new token
@@ -104,14 +105,14 @@ class SessionSyncService {
             const userInfo = await authService.fetchUserInfo();
             authStore.setUser(userInfo);
           } catch (error) {
-            console.error('[SessionSync] Failed to fetch user info on login sync:', error);
+            logger.error('SessionSync', 'Failed to fetch user info on login sync', error);
           }
         }
         break;
 
       case 'logout':
         if (this.config.syncLogout) {
-          console.log('[SessionSync] Syncing logout from another tab');
+          logger.info('SessionSync', 'Syncing logout from another tab');
           authStore.clearAuth();
           authStore.openLoginModal();
         }
@@ -119,13 +120,13 @@ class SessionSyncService {
 
       case 'refresh':
         if (this.config.syncRefresh && event.newValue) {
-          console.log('[SessionSync] Syncing token refresh from another tab');
+          logger.info('SessionSync', 'Syncing token refresh from another tab');
           authStore.setToken(event.newValue);
         }
         break;
 
       default:
-        console.warn('[SessionSync] Unknown storage sync event type');
+        logger.warn('SessionSync', 'Unknown storage sync event type');
     }
   }
 

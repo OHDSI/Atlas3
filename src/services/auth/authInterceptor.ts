@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/stores/auth'
 import { getTokenExpiration } from '@/utils/jwt'
 import { tokenRefreshService } from './tokenRefresh'
+import { logger } from '@/utils/logger'
 
 export function setupAuthInterceptor() {
   const originalFetch = window.fetch
@@ -32,7 +33,7 @@ export function setupAuthInterceptor() {
 
               // Refresh if less than 5 minutes remaining
               if (minutesUntilExpiry < 5 && minutesUntilExpiry > 0) {
-                console.log(`[AuthInterceptor] Token expiring in ${minutesUntilExpiry.toFixed(1)} minutes, refreshing...`)
+                logger.debug('AuthInterceptor', `Token expiring in ${minutesUntilExpiry.toFixed(1)} minutes, refreshing...`)
                 await tokenRefreshService.refreshToken()
                 // Get updated token after refresh
                 const refreshedToken = authStore.token
@@ -56,7 +57,7 @@ export function setupAuthInterceptor() {
         }
       } catch (e) {
         // Store not ready yet, continue without token
-        console.debug('[Auth Interceptor] Store not ready, skipping token injection')
+        logger.debug('AuthInterceptor', 'Store not ready, skipping token injection')
       }
 
       // Make the actual fetch request
@@ -67,20 +68,20 @@ export function setupAuthInterceptor() {
         const authStore = useAuthStore()
         
         if (response.status === 401) {
-          console.warn('[Auth Interceptor] 401 Unauthorized - clearing auth')
+          logger.warn('AuthInterceptor', '401 Unauthorized - clearing auth')
           authStore.clearAuth()
           authStore.openLoginModal()
         } else if (response.status === 403) {
-          console.warn('[Auth Interceptor] 403 Forbidden - attempting token refresh')
+          logger.warn('AuthInterceptor', '403 Forbidden - attempting token refresh')
           await authStore.performTokenRefresh()
         }
       } catch (e) {
-        console.debug('[Auth Interceptor] Store not ready for error handling')
+        logger.debug('AuthInterceptor', 'Store not ready for error handling')
       }
 
       return response
     } catch (error) {
-      console.error('[Auth Interceptor] Fetch error:', error)
+      logger.error('AuthInterceptor', 'Fetch error', error)
       throw error
     }
   }
