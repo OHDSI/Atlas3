@@ -1,6 +1,5 @@
 /**
  * Data Source Formatters and Transformers
- * Feature: 006-datasources
  */
 import type {
   DashboardAPIResponse,
@@ -68,7 +67,6 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
 
 /**
  * Transform Clinical Domain API response to prevalence data
- * Includes aggregation for large datasets (T068)
  */
 export function transformClinicalDomainReport(
   raw: ClinicalDomainAPIResponse[],

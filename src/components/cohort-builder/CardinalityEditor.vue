@@ -93,8 +93,7 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
 //   return rules
 // })
 
-// NOTE: Initialization is now handled by parent component (EventCard.addCardinality)
-// This prevents race condition between watcher initialization and immediate user input
+// Initialization is handled by parent component to prevent race conditions
 </script>
 
 <template>

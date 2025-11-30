@@ -55,13 +55,134 @@ const ConceptSetReferenceSchema = z.object({
 }).optional()
 
 /**
- * Schema for event attributes (simplified for now)
+ * Concept schema (for single concept attributes)
  */
-const EventAttributeSchema = z.object({
-  attributeType: z.string(),
-  operator: z.string().optional(),
-  value: z.union([z.string(), z.number(), z.boolean()]).optional()
+const ConceptSchema = z.object({
+  CONCEPT_ID: z.number().int(),
+  CONCEPT_NAME: z.string(),
+  CONCEPT_CODE: z.string().optional(),
+  DOMAIN_ID: z.string().optional(),
+  VOCABULARY_ID: z.string().optional(),
+  CONCEPT_CLASS_ID: z.string().optional(),
+  STANDARD_CONCEPT: z.string().optional(),
+  INVALID_REASON: z.string().optional(),
 })
+
+/**
+ * Base attribute schema
+ */
+const AttributeBaseSchema = z.object({
+  attributeKey: z.string().min(1, 'Attribute key is required'),
+})
+
+/**
+ * Numeric range attribute schema
+ */
+const NumericRangeAttributeSchema = AttributeBaseSchema.extend({
+  type: z.literal('numericRange'),
+  operator: z.enum([
+    'GREATER_THAN',
+    'LESS_THAN',
+    'EQUAL',
+    'NOT_EQUAL',
+    'BETWEEN',
+    'NOT_BETWEEN',
+    'GREATER_THAN_OR_EQUAL',
+    'LESS_THAN_OR_EQUAL',
+  ]),
+  value: z.number(),
+  extent: z.number().optional(),
+}).refine(
+  (data) => {
+    // BETWEEN/NOT_BETWEEN requires extent
+    if (data.operator === 'BETWEEN' || data.operator === 'NOT_BETWEEN') {
+      return data.extent !== undefined
+    }
+    return true
+  },
+  {
+    message: 'extent is required for BETWEEN/NOT_BETWEEN operators',
+    path: ['extent'],
+  }
+)
+
+/**
+ * Date range attribute schema
+ */
+const DateRangeAttributeSchema = AttributeBaseSchema.extend({
+  type: z.literal('dateRange'),
+  operator: z.enum([
+    'GREATER_THAN',
+    'LESS_THAN',
+    'EQUAL',
+    'NOT_EQUAL',
+    'BETWEEN',
+    'NOT_BETWEEN',
+  ]),
+  value: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)'),
+  extent: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)').optional(),
+}).refine(
+  (data) => {
+    // BETWEEN requires both value and extent
+    if (data.operator === 'BETWEEN') {
+      return data.value && data.extent
+    }
+    return true
+  },
+  {
+    message: 'Both value and extent are required for BETWEEN operator',
+    path: ['extent'],
+  }
+)
+
+/**
+ * Concept set attribute schema
+ */
+const ConceptSetAttributeSchema = AttributeBaseSchema.extend({
+  type: z.literal('conceptSet'),
+  conceptSet: z.object({
+    id: z.union([z.number(), z.string()]),
+    name: z.string(),
+  }),
+})
+
+/**
+ * Single concept attribute schema
+ */
+const ConceptAttributeSchema = AttributeBaseSchema.extend({
+  type: z.literal('concept'),
+  concepts: z.array(ConceptSchema),
+})
+
+/**
+ * Text attribute schema
+ */
+const TextAttributeSchema = AttributeBaseSchema.extend({
+  type: z.literal('text'),
+  operator: z.enum(['CONTAINS', 'EQUALS', 'STARTS_WITH', 'ENDS_WITH']),
+  value: z.string().min(1, 'Text value cannot be empty'),
+})
+
+/**
+ * Boolean attribute schema
+ */
+const BooleanAttributeSchema = AttributeBaseSchema.extend({
+  type: z.literal('boolean'),
+  value: z.boolean(),
+})
+
+/**
+ * Complete event attribute schema (union)
+ * Note: Using z.union instead of z.discriminatedUnion because some schemas use .refine()
+ */
+const EventAttributeSchema = z.union([
+  NumericRangeAttributeSchema,
+  DateRangeAttributeSchema,
+  ConceptSetAttributeSchema,
+  ConceptAttributeSchema,
+  TextAttributeSchema,
+  BooleanAttributeSchema,
+])
 
 /**
  * Validation schema for CohortEvent

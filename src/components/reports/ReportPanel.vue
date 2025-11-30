@@ -1,9 +1,5 @@
 <!--
-  ReportPanel Component
-  Feature: 005-cohort-reports
-  Tasks: T029-T034
-
-  Main report container with action buttons, report selector, and dynamic report loading
+  ReportPanel Component - Main report container with action buttons and dynamic report loading
 -->
 <template>
   <v-card
@@ -146,7 +142,7 @@
       </v-alert>
     </v-card-text>
 
-    <!-- Toast notifications (T112) -->
+    <!-- Toast notifications -->
     <v-snackbar
       v-model="showToast"
       :timeout="toastTimeout"
@@ -219,12 +215,12 @@ const {
 const completedAnalyses = ref<number[]>([])
 
 /**
- * Active action state (T110)
+ * Active action state
  */
 const activeAction = ref<ReportAction | null>(null)
 
 /**
- * Toast notification state (T112)
+ * Toast notification state
  */
 const showToast = ref(false)
 const toastMessage = ref('')
@@ -232,25 +228,25 @@ const toastColor = ref<'success' | 'error' | 'info'>('info')
 const toastTimeout = ref(4000)
 
 /**
- * Job polling state (T111)
+ * Job polling state
  */
 const pollingInterval = ref<ReturnType<typeof setInterval> | null>(null)
 const isPolling = ref(false)
 
 /**
- * Component cache for loaded reports (T103)
+ * Component cache for loaded reports
  * Prevents re-importing already loaded components
  */
 const componentCache = new Map<ReportType, any>()
 
 /**
- * Dynamic report component loading (T102)
+ * Dynamic report component loading
  * Uses defineAsyncComponent for lazy loading and caches loaded components
  */
 const currentReportComponent = computed(() => {
   if (!currentReportType.value) return null
 
-  // Check cache first (T103)
+  // Check cache first
   if (componentCache.has(currentReportType.value)) {
     return componentCache.get(currentReportType.value)
   }
@@ -302,7 +298,7 @@ const currentReportComponent = computed(() => {
     timeout: 10000
   })
 
-  // Cache the component (T103)
+  // Cache the component
   componentCache.set(currentReportType.value, asyncComponent)
 
   return asyncComponent
@@ -334,7 +330,7 @@ function clearError() {
 }
 
 /**
- * Show toast notification (T112)
+ * Show toast notification
  */
 function showToastNotification(message: string, color: 'success' | 'error' | 'info' = 'info', timeout = 4000) {
   toastMessage.value = message
@@ -344,7 +340,7 @@ function showToastNotification(message: string, color: 'success' | 'error' | 'in
 }
 
 /**
- * Start job status polling (T111)
+ * Start job status polling
  */
 function startJobPolling(jobType: string) {
   if (isPolling.value || !props.cohortId) return
@@ -392,7 +388,7 @@ function startJobPolling(jobType: string) {
 }
 
 /**
- * Stop job status polling (T111)
+ * Stop job status polling
  */
 function stopJobPolling() {
   if (pollingInterval.value) {
@@ -403,7 +399,7 @@ function stopJobPolling() {
 }
 
 /**
- * Action button handlers (T107-T109 with T111-T112)
+ * Action button handlers
  */
 async function handleFullAnalysis() {
   if (!props.cohortId || !props.sourceKey) return
@@ -505,7 +501,7 @@ watch(
 )
 
 /**
- * Cleanup on unmount (T111)
+ * Cleanup on unmount
  */
 onUnmounted(() => {
   stopJobPolling()

@@ -1,7 +1,5 @@
 /**
  * useReports Composable
- * Feature: 005-cohort-reports
- * Task: T022
  *
  * Wraps the reports store with reactive state and convenience methods
  */

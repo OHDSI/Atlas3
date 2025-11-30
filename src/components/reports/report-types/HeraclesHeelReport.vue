@@ -1,7 +1,5 @@
 <!--
   HeraclesHeelReport Component
-  Feature: 005-cohort-reports
-  Task: T100
 
   Displays data quality Achilles Heel results in a table format
 -->

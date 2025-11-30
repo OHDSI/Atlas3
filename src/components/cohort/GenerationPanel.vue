@@ -122,7 +122,7 @@ const emit = defineEmits<{
 
 const webapiStore = useWebAPIStore()
 
-// Report view state (T046-T047)
+// Report view state
 const showReports = ref(false)
 const selectedSourceKey = ref<string | null>(null)
 
@@ -133,13 +133,13 @@ function close() {
   emit('update:modelValue', false)
 }
 
-// T048: Handle data source tile click to open reports
+// Handle data source tile click to open reports
 function handleDataSourceClick(sourceKey: string) {
   selectedSourceKey.value = sourceKey
   showReports.value = true
 }
 
-// T050: Handle close event from ReportPanel
+// Handle close event from ReportPanel
 function handleCloseReports() {
   showReports.value = false
   selectedSourceKey.value = null

@@ -1,6 +1,5 @@
 /**
  * useI18n Composable - Translation function for Vue components
- * Feature: 008-translation-support
  */
 
 import { computed } from 'vue'
@@ -29,7 +28,6 @@ function getNestedValue(obj: any, path: string): string | undefined {
 
 /**
  * Interpolate parameters into translation string
- * FR-012: Parameterized translations with lodash template syntax
  */
 function interpolate(template: string, params: TranslationParams): string {
   return template.replace(/\{(\w+)\}/g, (match, key) => {
@@ -61,26 +59,26 @@ function getTranslation(
 
   let translation = getNestedValue(localeStore.translations, key)
 
-  // FR-017: Fallback to English
+  // Fallback to English
   if (!translation) {
     const englishBundle = localeStore.translationCache.get('en')
     if (englishBundle) {
       translation = getNestedValue(englishBundle.bundle.translations, key)
     }
 
-    // T036: Log missing translation in dev mode
+    // Log missing translation in dev mode
     // Only warn if translations have been initialized to avoid noise during app startup
     if (isDev && !translation && localeStore.initialized) {
       console.warn(`[i18n] Missing translation for key: "${key}" in locale: ${localeStore.locale}`)
     }
   }
 
-  // FR-017: Fallback to default value or key itself
+  // Fallback to default value or key itself
   if (!translation) {
     translation = defaultValue || key
   }
 
-  // FR-012: Parameter interpolation
+  // Parameter interpolation
   if (translationParams) {
     translation = interpolate(translation, translationParams)
   }
@@ -96,9 +94,8 @@ export function useI18n(): UseI18nReturn {
 
   /**
    * Translation function with fallback chain (returns ComputedRef for reactivity)
-   * T035: FR-017: Fallback chain: current locale → English → default value → key
-   * T038: FR-012: Parameterized translations
-   * 
+   * Fallback chain: current locale → English → default value → key
+   *
    * Overloaded signatures:
    * - t(key)
    * - t(key, params)

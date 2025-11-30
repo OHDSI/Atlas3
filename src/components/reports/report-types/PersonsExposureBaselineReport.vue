@@ -1,7 +1,6 @@
 <!--
   PersonsExposureBaselineReport Component
-  Feature: 005-cohort-reports
-  Task: T090
+  
 
   Displays baseline period persons/exposure analysis data in a table format
 -->

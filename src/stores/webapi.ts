@@ -44,6 +44,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
     // Auto-select first source if none selected
     if (!selectedSource.value && sourcesList.length > 0) {
       selectedSource.value = sourcesList[0]?.sourceKey ?? null
+      console.log('[WebAPI Store] Auto-selected first source:', selectedSource.value, '| All sources:', sourcesList.map(s => s.sourceKey))
     }
   }
 
@@ -75,7 +76,6 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
   /**
    * Fetch available CDM data sources
-   * T116: Implement fetchSources action
    */
   async function fetchSources(): Promise<void> {
     try {
@@ -92,7 +92,6 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
   /**
    * Generate cohort for a specific data source
-   * T117: Implement generateCohort action
    */
   async function generateCohort(cohortId: number, sourceKey: string): Promise<GenerationJob | null> {
     try {
@@ -135,7 +134,6 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
   /**
    * Poll generation status every 2 seconds until complete or failed
-   * T118: Implement pollGenerationStatus action
    */
   const POLL_INTERVAL_MS = 2000 // 2 seconds
   const POLL_TIMEOUT_MS = 300000 // 5 minutes max

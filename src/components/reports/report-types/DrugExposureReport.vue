@@ -1,7 +1,6 @@
 <!--
   DrugExposureReport Component
-  Feature: 005-cohort-reports
-  Task: T082
+  
 
   Displays individual drug exposure events table
 -->

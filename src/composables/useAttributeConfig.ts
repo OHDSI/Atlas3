@@ -5,7 +5,7 @@
  * Integrates with ConfigLoaderService to fetch attributes and i18n for localization.
  *
  * Features:
- * - Filter-type-specific attribute queries (FR-005)
+ * - Filter-type-specific attribute queries
  * - i18n locale key resolution for labels and descriptions
  * - Section-aware attribute filtering (optional)
  * - Attribute metadata queries (type, operators, etc.)
@@ -62,7 +62,7 @@ export function useAttributeConfig(
 
   /**
    * Get available attributes for current filter type with translated metadata.
-   * Attributes are returned in the order defined in configuration's attributeMapping array (FR-005).
+   * Attributes are returned in the order defined in configuration's attributeMapping array.
    */
   const attributes = computed<AttributeInfo[]>(() => {
     const sectionValue = section?.value || 'criteriaGroup'

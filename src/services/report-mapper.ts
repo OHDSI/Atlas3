@@ -1,7 +1,5 @@
 /**
  * Report Data Mapper Service
- * Feature: 005-cohort-reports
- * Tasks: T017-T018
  *
  * Transforms WebAPI report responses to internal data models
  * and provides chart data conversion utilities
@@ -30,7 +28,7 @@ import type {
 } from '@/models/report.types'
 
 // ============================================================================
-// Report Mappers (T017)
+// Report Mappers
 // ============================================================================
 
 /**
@@ -103,7 +101,6 @@ export function mapConditionErasReport(data: WebAPIConditionEraRaw): ConditionEr
 /**
  * Map WebAPI condition data to internal ConditionReport format
  * Transforms raw OHDSI WebAPI array to our application types
- * T079: Condition occurrence report
  */
 export function mapConditionReport(data: WebAPIConditionRaw): ConditionReport {
   const prevalence: ConditionData[] = data.map(item => {
@@ -186,7 +183,7 @@ export function mapCohortSpecificReport(data: WebAPICohortSpecificRaw): CohortSp
 }
 
 // ============================================================================
-// Chart Data Converters (T018)
+// Chart Data Converters
 // ============================================================================
 
 /**
@@ -331,12 +328,11 @@ export function formatDuration(days: number): string {
 }
 
 // ============================================================================
-// Additional Report Mappers (T090-T100)
+// Additional Report Mappers
 // ============================================================================
 
 /**
  * Map WebAPI persons exposure data to internal PersonsExposureReport format
- * Used for both baseline (T090) and cohort (T091) reports
  */
 export function mapPersonsExposureReport(data: import('@/models/report.types').WebAPIPersonsExposureRaw): import('@/models/report.types').PersonsExposureReport {
   const prevalence: import('@/models/report.types').PersonsExposureData[] = data.map(item => {
@@ -357,7 +353,6 @@ export function mapPersonsExposureReport(data: import('@/models/report.types').W
 
 /**
  * Map WebAPI visits data to internal VisitsReport format
- * Used for both baseline (T092) and cohort (T095) reports
  */
 export function mapVisitsReport(data: import('@/models/report.types').WebAPIVisitsRaw): import('@/models/report.types').VisitsReport {
   const prevalence: import('@/models/report.types').VisitsData[] = data.map(item => {
@@ -378,7 +373,6 @@ export function mapVisitsReport(data: import('@/models/report.types').WebAPIVisi
 
 /**
  * Map WebAPI visit dates data to internal VisitDatesReport format
- * Used for both baseline (T093) and cohort (T096) reports
  */
 export function mapVisitDatesReport(data: import('@/models/report.types').WebAPIVisitDatesRaw): import('@/models/report.types').VisitDatesReport {
   const visitData: import('@/models/report.types').VisitDatesData[] = data.map(item => ({
@@ -392,7 +386,6 @@ export function mapVisitDatesReport(data: import('@/models/report.types').WebAPI
 
 /**
  * Map WebAPI care site visit dates data to internal CareSiteVisitDatesReport format
- * Used for both baseline (T094) and cohort (T097) reports
  */
 export function mapCareSiteVisitDatesReport(data: import('@/models/report.types').WebAPICareSiteVisitDatesRaw): import('@/models/report.types').CareSiteVisitDatesReport {
   const careSiteData: import('@/models/report.types').CareSiteVisitDatesData[] = data.map(item => {
@@ -412,7 +405,6 @@ export function mapCareSiteVisitDatesReport(data: import('@/models/report.types'
 
 /**
  * Map WebAPI drug utilization data to internal DrugUtilizationReport format
- * Used for both baseline (T098) and cohort (T099) reports
  */
 export function mapDrugUtilizationReport(data: import('@/models/report.types').WebAPIDrugUtilizationRaw): import('@/models/report.types').DrugUtilizationReport {
   const prevalence: import('@/models/report.types').DrugUtilizationData[] = data.map(item => {
@@ -433,7 +425,6 @@ export function mapDrugUtilizationReport(data: import('@/models/report.types').W
 
 /**
  * Map WebAPI Heracles Heel data to internal HeraclesHeelReport format
- * T100: Data quality report
  */
 export function mapHeraclesHeelReport(data: import('@/models/report.types').WebAPIHeraclesHeelRaw): import('@/models/report.types').HeraclesHeelReport {
   const results: import('@/models/report.types').HeraclesHeelData[] = data.map(item => {
@@ -458,12 +449,11 @@ export function mapHeraclesHeelReport(data: import('@/models/report.types').WebA
 }
 
 // ============================================================================
-// New Report Mappers (T080-T089)
+// New Report Mappers
 // ============================================================================
 
 /**
  * Map WebAPI conditions by index data to internal format
- * T080: Conditions by index report
  */
 export function mapConditionsByIndexReport(data: import('@/models/report.types').WebAPIConditionsByIndexRaw): import('@/models/report.types').ConditionsByIndexReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -484,7 +474,6 @@ export function mapConditionsByIndexReport(data: import('@/models/report.types')
 
 /**
  * Map WebAPI death data to internal format
- * T081: Death report
  */
 export function mapDeathReport(data: import('@/models/report.types').WebAPIDeathRaw): import('@/models/report.types').DeathReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -505,7 +494,6 @@ export function mapDeathReport(data: import('@/models/report.types').WebAPIDeath
 
 /**
  * Map WebAPI drug exposure data to internal format
- * T082: Drug exposure report
  */
 export function mapDrugExposureReport(data: import('@/models/report.types').WebAPIDrugExposureRaw): import('@/models/report.types').DrugExposureReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -526,7 +514,6 @@ export function mapDrugExposureReport(data: import('@/models/report.types').WebA
 
 /**
  * Map WebAPI drugs by index data to internal format
- * T083: Drugs by index report
  */
 export function mapDrugsByIndexReport(data: import('@/models/report.types').WebAPIDrugsByIndexRaw): import('@/models/report.types').DrugsByIndexReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -547,7 +534,6 @@ export function mapDrugsByIndexReport(data: import('@/models/report.types').WebA
 
 /**
  * Map WebAPI observation periods data to internal format
- * T084: Observation periods report
  */
 export function mapObservationPeriodsReport(data: import('@/models/report.types').WebAPIObservationPeriodsRaw): import('@/models/report.types').ObservationPeriodsReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -568,7 +554,6 @@ export function mapObservationPeriodsReport(data: import('@/models/report.types'
 
 /**
  * Map WebAPI procedure data to internal format
- * T085: Procedure report
  */
 export function mapProcedureReport(data: import('@/models/report.types').WebAPIProcedureRaw): import('@/models/report.types').ProcedureReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -589,7 +574,6 @@ export function mapProcedureReport(data: import('@/models/report.types').WebAPIP
 
 /**
  * Map WebAPI procedures by index data to internal format
- * T086: Procedures by index report
  */
 export function mapProceduresByIndexReport(data: import('@/models/report.types').WebAPIProceduresByIndexRaw): import('@/models/report.types').ProceduresByIndexReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -610,7 +594,6 @@ export function mapProceduresByIndexReport(data: import('@/models/report.types')
 
 /**
  * Map WebAPI data completeness data to internal format
- * T087: Data completeness report
  */
 export function mapDataCompletenessReport(data: import('@/models/report.types').WebAPIDataCompletenessRaw): import('@/models/report.types').DataCompletenessReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -631,7 +614,6 @@ export function mapDataCompletenessReport(data: import('@/models/report.types').
 
 /**
  * Map WebAPI entropy data to internal format
- * T088: Entropy report
  */
 export function mapEntropyReport(data: import('@/models/report.types').WebAPIEntropyRaw): import('@/models/report.types').EntropyReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -652,7 +634,6 @@ export function mapEntropyReport(data: import('@/models/report.types').WebAPIEnt
 
 /**
  * Map WebAPI tornado data to internal format
- * T089: Tornado report
  */
 export function mapTornadoReport(data: import('@/models/report.types').WebAPITornadoRaw): import('@/models/report.types').TornadoReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {

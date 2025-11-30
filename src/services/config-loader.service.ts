@@ -5,9 +5,9 @@
  * Implements singleton pattern for application-wide configuration access.
  *
  * Features:
- * - Eager loading at application startup (FR-001)
- * - Partial validation support - valid filters load even with errors (FR-021)
- * - Hot-reload in development mode (FR-018)
+ * - Eager loading at application startup
+ * - Partial validation support - valid filters load even with errors
+ * - Hot-reload in development mode
  * - i18n locale key resolution
  * - Context-aware filter and attribute queries
  */
@@ -48,13 +48,13 @@ export class ConfigLoaderService {
    */
   async loadConfiguration(): Promise<ValidationResult> {
     try {
-      // Performance mark for monitoring (FR-023)
+      // Performance mark for monitoring
       performance.mark('config-load-start')
 
       // Load configuration from JSON file
       const rawConfig = atlasConfigJson as unknown
 
-      // Validate with partial validation support (FR-021)
+      // Validate with partial validation support
       this.validationResult = validateAtlasConfig(rawConfig)
 
       // Store config even if invalid (for partial validation)
@@ -83,7 +83,7 @@ export class ConfigLoaderService {
         'config-load-end'
       )
 
-      // Log validation results (FR-023)
+      // Log validation results
       this.logValidationResults()
 
       return this.validationResult
@@ -233,7 +233,7 @@ export class ConfigLoaderService {
       return []
     }
 
-    // Filter attributes based on section exclusions (FR-008)
+    // Filter attributes based on section exclusions
     return attributes.filter((attr) => {
       if (!attr.excludeFromSections) {
         return true
@@ -375,7 +375,7 @@ export class ConfigLoaderService {
   }
 
   /**
-   * Log validation results to console (FR-023).
+   * Log validation results to console.
    */
   private logValidationResults(): void {
     if (!this.validationResult) {
@@ -413,7 +413,7 @@ export class ConfigLoaderService {
 // Export singleton instance
 export const configLoaderService = new ConfigLoaderService()
 
-// Hot-reload support (FR-018) - development mode only
+// Hot-reload support - development mode only
 if (import.meta.hot) {
   import.meta.hot.accept('@/config/atlas-config.json', (newModule) => {
     if (newModule) {

@@ -1,7 +1,6 @@
 <!--
   VisitsBaselineReport Component
-  Feature: 005-cohort-reports
-  Task: T092
+  
 
   Displays baseline period visits data in a table format
 -->

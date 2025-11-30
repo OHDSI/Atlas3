@@ -1,7 +1,6 @@
 <!--
   DrugErasReport Component
-  Feature: 005-cohort-reports
-  Tasks: T066-T070
+  
 
   Drug exposure prevalence report with table view
 -->
@@ -103,7 +102,7 @@ const reportData = computed<DrugErasReport | null>(() => {
 })
 
 /**
- * Table headers (T067)
+ * Table headers
  */
 const tableHeaders: TableHeader[] = [
   {
@@ -151,7 +150,7 @@ const tableHeaders: TableHeader[] = [
 ]
 
 /**
- * Table data (T067)
+ * Table data
  */
 const tableData = computed<TableRow[]>(() => {
   if (!reportData.value?.prevalence) return []
@@ -168,7 +167,7 @@ const tableData = computed<TableRow[]>(() => {
 })
 
 /**
- * Fetch report data (T068)
+ * Fetch report data
  */
 async function fetchData() {
   loading.value = true

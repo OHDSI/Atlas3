@@ -1,10 +1,5 @@
 <!--
-  DataTable Component
-  Feature: 005-cohort-reports
-  Tasks: T052-T058, T125, T160
-
-  Vuetify data table wrapper with pagination, sorting, search, export
-  Includes debounced search for performance optimization
+  DataTable Component - Vuetify data table wrapper with pagination, sorting, search, and export
 -->
 <template>
   <div class="data-table-container">
@@ -59,7 +54,7 @@
           </v-list>
         </v-menu>
 
-        <!-- T125: TableExport component integration -->
+        <!-- TableExport component -->
         <TableExport
           v-if="showCopyButton || showExportButton"
           :data="exportData"
@@ -154,13 +149,12 @@ const props = withDefaults(
  * State
  */
 const searchQuery = ref('')
-const debouncedSearchQuery = ref('') // T160: Debounced search
+const debouncedSearchQuery = ref('')
 const hiddenColumns = ref<Set<string>>(new Set())
 const itemsPerPage = ref(25)
 
 /**
- * T160: Debounce search input (300ms delay)
- * Reduces filtering operations while user is typing
+ * Debounce search input (300ms delay)
  */
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -175,7 +169,7 @@ watch(searchQuery, (newValue) => {
 })
 
 /**
- * Items per page options (T053)
+ * Items per page options
  */
 const itemsPerPageOptions = [
   { value: 10, title: '10' },
@@ -193,8 +187,7 @@ const visibleHeaders = computed(() => {
 })
 
 /**
- * Filtered items (T055, T160)
- * Uses debounced search query for performance
+ * Filtered items using debounced search query
  */
 const filteredItems = computed(() => {
   if (!debouncedSearchQuery.value) return props.items
@@ -210,7 +203,7 @@ const filteredItems = computed(() => {
 })
 
 /**
- * T125: Export data formatted for TableExport component
+ * Export data formatted for TableExport component
  */
 const exportData = computed(() => {
   return filteredItems.value.map(item => {
@@ -237,7 +230,7 @@ function customFilter(_value: any, query: string, item?: any) {
 }
 
 /**
- * Toggle column visibility (T056)
+ * Toggle column visibility
  */
 function toggleColumn(key: string) {
   if (hiddenColumns.value.has(key)) {

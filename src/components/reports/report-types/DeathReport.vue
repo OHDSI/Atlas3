@@ -1,7 +1,6 @@
 <!--
   DeathReport Component
-  Feature: 005-cohort-reports
-  Task: T081
+  
 
   Displays death data table with cause analysis
 -->

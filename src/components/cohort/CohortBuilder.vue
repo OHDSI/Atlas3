@@ -445,6 +445,7 @@
         @update:events="entryEvents = $event"
         @update:observation-period="observationPeriod = $event"
         @select-concept-set="handleSelectConceptSet"
+        @select-concept-for-attribute="handleSelectConceptForEntryEvent"
         @edit-concept-set="handleEditConceptSet"
       />
 
@@ -484,8 +485,10 @@
           </v-btn-toggle>
         </div>
         <criteria-group-editor
+          ref="additionalCriteriaRef"
           v-model="additionalCriteria"
           @select-concept-set="handleSelectConceptSetForAdditionalCriteria"
+          @select-concept="handleSelectConceptForAdditionalCriteria"
           @edit-concept-set="handleEditConceptSet"
           @remove="removeAdditionalCriteria"
         />
@@ -547,6 +550,7 @@
         :qualifying-limit="inclusionQualifyingLimit"
         @update:qualifying-limit="inclusionQualifyingLimit = $event"
         @select-concept-set="handleSelectConceptSetForCriteria"
+        @select-concept="handleSelectConceptForCriteria"
         @edit-concept-set="handleEditConceptSet"
       />
     </div>
@@ -627,6 +631,14 @@
       @concept-set-selected="handleConceptSetSelected"
       @edit-concept-set="handleEditConceptSet"
       @create-new="handleCreateNewConceptSet"
+    />
+
+    <!-- Concept Search Dialog (for single concept selection) -->
+    <concept-search-dialog
+      v-model="isConceptSearchDialogOpen"
+      :domain-filter="selectedConceptDomainFilter"
+      :pre-selected-concepts="currentlySelectedConcepts"
+      @concepts-selected="handleConceptsSelected"
     />
 
     <!-- Concept Set Editor Side Panel (for editing/creating concept sets) -->
@@ -712,6 +724,7 @@ import type {
 import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
 import EntryEventsList from './EntryEventsList.vue'
 import ConceptSetSelectionDialog from './ConceptSetSelectionDialog.vue'
+import ConceptSearchDialog from './ConceptSearchDialog.vue'
 import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import InclusionCriteriaPanel from '../cohort-builder/InclusionCriteriaPanel.vue'
 import ExitCriteriaPanel from '../cohort-builder/ExitCriteriaPanel.vue'
@@ -756,11 +769,14 @@ const isGenerationPanelOpen = ref(false)
 // If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
 const isLoadingCohort = ref(!!props.id)
 const isConceptSetDialogOpen = ref(false)
+const isConceptSearchDialogOpen = ref(false)
+const selectedConceptDomainFilter = ref<string | undefined>(undefined)
 const selectedCriteriaContext = ref<{
   eventId?: string | null
   ruleIndex: number
   groupIndex: number
   eventIndex: number
+  attributeIndex?: number
 } | null>(null)
 const showError = ref(false)
 const errorMessage = ref('')
@@ -774,7 +790,10 @@ const isConfirmingNavigation = ref(false) // Flag to prevent double confirmation
 // Snapshot of the loaded/saved state for change detection
 const loadedSnapshot = ref<string | null>(null)
 
-// Generation state (T119, T120)
+// Component refs
+const additionalCriteriaRef = ref<InstanceType<typeof CriteriaGroupEditor> | null>(null)
+
+// Generation state
 const selectedSourceKey = ref<string | null>(null)
 const generationError = ref<string | null>(null)
 
@@ -904,12 +923,70 @@ const usedConceptSets = computed(() => {
   return Array.from(conceptSetsMap.values())
 })
 
+/**
+ * Get the currently selected concepts for the attribute being edited
+ */
+const currentlySelectedConcepts = computed(() => {
+  if (!selectedCriteriaContext.value || selectedCriteriaContext.value.attributeIndex === undefined) {
+    return []
+  }
+
+  const context = selectedCriteriaContext.value
+  let attribute: any = null
+
+  // Handle entry events
+  if (context.ruleIndex === -1 && context.eventId && context.attributeIndex !== undefined) {
+    const event = entryEvents.value.find(e => e.id === context.eventId)
+    if (event && event.attributes && event.attributes[context.attributeIndex]) {
+      attribute = event.attributes[context.attributeIndex]
+    }
+  }
+  // Handle inclusion criteria
+  else if (context.ruleIndex >= 0 && context.groupIndex >= 0 && context.eventIndex !== undefined && context.attributeIndex !== undefined) {
+    const rule = inclusionRules.value[context.ruleIndex]
+    if (rule && rule.criteriaGroups) {
+      const group = rule.criteriaGroups[context.groupIndex]
+      if (group && group.events) {
+        const event = group.events[context.eventIndex]
+        if (event && event.attributes && event.attributes[context.attributeIndex]) {
+          attribute = event.attributes[context.attributeIndex]
+        }
+      }
+    }
+  }
+  // Handle additional criteria
+  else if (context.ruleIndex === -2 && additionalCriteria.value && context.eventIndex !== undefined && context.attributeIndex !== undefined) {
+    const event = additionalCriteria.value.events[context.eventIndex]
+    if (event && event.attributes && event.attributes[context.attributeIndex]) {
+      attribute = event.attributes[context.attributeIndex]
+    }
+  }
+
+  // Return concepts if this is a concept attribute
+  if (attribute && attribute.type === 'concept') {
+    const concepts = attribute.concepts || []
+    // Convert UPPERCASE concepts to camelCase for the dialog
+    return concepts.map((c: any) => ({
+      conceptId: c.CONCEPT_ID,
+      conceptName: c.CONCEPT_NAME,
+      conceptCode: c.CONCEPT_CODE,
+      domainId: c.DOMAIN_ID,
+      vocabularyId: c.VOCABULARY_ID,
+      conceptClassId: c.CONCEPT_CLASS_ID,
+      standardConcept: c.STANDARD_CONCEPT,
+      invalidReason: c.INVALID_REASON
+    }))
+  }
+
+  return []
+})
+
 onMounted(async () => {
   // Start loading cohort definition immediately (don't await)
   if (props.id) {
     loadCohort(props.id)
   } else {
-    // T123: Try to restore draft from SessionStorage
+    // Try to restore draft from SessionStorage
     const restored = cohortStore.restoreFromDraft()
     if (!restored) {
       // Initialize new cohort if no draft found
@@ -921,7 +998,7 @@ onMounted(async () => {
   Promise.all([
     // Load all concept sets from the API so user can select any system concept set
     conceptSetsStore.fetchAll(),
-    // Load CDM sources for generation (T116)
+    // Load CDM sources for generation
     webapiStore.fetchSources().then(() => {
       // Auto-select first source if available
       if (webapiStore.sourcesList.length > 0 && !selectedSourceKey.value) {
@@ -1243,6 +1320,108 @@ function handleSelectCensoringConceptSet() {
   isConceptSetDialogOpen.value = true
 }
 
+// Concept attribute selection handlers
+function handleSelectConceptForEntryEvent(eventId: string, attributeIndex: number, domainFilter: string | undefined) {
+  selectedCriteriaContext.value = {
+    eventId,
+    ruleIndex: -1, // Entry events
+    groupIndex: 0,
+    eventIndex: 0,
+    attributeIndex
+  }
+  selectedConceptDomainFilter.value = domainFilter
+  isConceptSearchDialogOpen.value = true
+}
+
+function handleSelectConceptForAdditionalCriteria(context: { eventIndex: number; domainFilter: string | undefined }) {
+  selectedCriteriaContext.value = {
+    eventId: null,
+    ruleIndex: -2,
+    groupIndex: 0,
+    eventIndex: context.eventIndex,
+    attributeIndex: -1 // Will be set by CriteriaGroupEditor
+  }
+  selectedConceptDomainFilter.value = context.domainFilter
+  isConceptSearchDialogOpen.value = true
+}
+
+function handleSelectConceptForCriteria(context: { ruleIndex: number; groupIndex: number; eventIndex: number; attributeIndex: number; domainFilter: string | undefined }) {
+  selectedCriteriaContext.value = {
+    ...context,
+    eventId: null
+  }
+  selectedConceptDomainFilter.value = context.domainFilter
+  isConceptSearchDialogOpen.value = true
+}
+
+function handleConceptsSelected(concepts: any[]) {
+  if (concepts.length === 0 || !selectedCriteriaContext.value) {
+    isConceptSearchDialogOpen.value = false
+    return
+  }
+
+  // Convert camelCase concepts to UPPERCASE Atlas format
+  const convertedConcepts = concepts.map(c => ({
+    CONCEPT_ID: c.conceptId,
+    CONCEPT_NAME: c.conceptName,
+    CONCEPT_CODE: c.conceptCode,
+    DOMAIN_ID: c.domainId,
+    VOCABULARY_ID: c.vocabularyId,
+    CONCEPT_CLASS_ID: c.conceptClassId,
+    STANDARD_CONCEPT: c.standardConcept,
+    INVALID_REASON: c.invalidReason
+  }))
+
+  const context = selectedCriteriaContext.value
+
+  // Handle entry events
+  if (context.ruleIndex === -1 && context.eventId && context.attributeIndex !== undefined) {
+    const event = entryEvents.value.find(e => e.id === context.eventId)
+    if (event && event.attributes && event.attributes[context.attributeIndex]) {
+      const attr = event.attributes[context.attributeIndex]
+      if (attr && attr.type === 'concept') {
+        // Add selected concepts to the existing array (support multi-select)
+        const existingConcepts = attr.concepts || []
+        const newConcepts = [...existingConcepts, ...convertedConcepts]
+        event.attributes[context.attributeIndex] = {
+          ...attr,
+          concepts: newConcepts
+        }
+      }
+    }
+  }
+  // Handle additional criteria
+  else if (context.ruleIndex === -2 && additionalCriteriaRef.value) {
+    // Update for multi-select
+    additionalCriteriaRef.value.updateConceptAttribute(context.eventIndex, convertedConcepts)
+  }
+  // Handle inclusion criteria
+  else if (context.ruleIndex >= 0 && context.groupIndex >= 0 && context.eventIndex !== undefined && context.attributeIndex !== undefined) {
+    // Update the inclusion criteria data directly
+    const rule = inclusionRules.value[context.ruleIndex]
+    if (rule && rule.criteriaGroups) {
+      const group = rule.criteriaGroups[context.groupIndex]
+      if (group && group.events) {
+        const event = group.events[context.eventIndex]
+        if (event && event.attributes && event.attributes[context.attributeIndex]) {
+          const attr = event.attributes[context.attributeIndex]
+          if (attr && attr.type === 'concept') {
+            // Add selected concepts to the existing array (support multi-select)
+            const existingConcepts = attr.concepts || []
+            const newConcepts = [...existingConcepts, ...convertedConcepts]
+            event.attributes[context.attributeIndex] = {
+              ...attr,
+              concepts: newConcepts
+            }
+          }
+        }
+      }
+    }
+  }
+
+  isConceptSearchDialogOpen.value = false
+}
+
 function handleCensorWindowValidation() {
   // Handle censor window validation errors
   // Currently just logging for now, could be used for aggregated validation display
@@ -1555,7 +1734,7 @@ function _handleExportAtlas() {
   }
 }
 
-// Generation functions (T117, T119, T120)
+// Generation functions
 // @ts-expect-error - Planned feature, not yet implemented in UI
 async function _handleGenerate() {
   if (!cohortId.value || !selectedSourceKey.value) {
@@ -1566,7 +1745,7 @@ async function _handleGenerate() {
   try {
     generationError.value = null
 
-    // Start generation (T117)
+    // Start generation
     const job = await webapiStore.generateCohort(cohortId.value, selectedSourceKey.value)
 
     if (!job) {

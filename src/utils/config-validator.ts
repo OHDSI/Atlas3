@@ -2,7 +2,7 @@
  * Configuration Validator Utility
  *
  * Provides validation functions for atlas-config.json with partial validation support.
- * Valid filters can be loaded even if some filters have errors (FR-021).
+ * Valid filters can be loaded even if some filters have errors.
  *
  * Design: Per-filter validation allows graceful degradation - application remains
  * functional with valid filters while clearly reporting invalid ones.

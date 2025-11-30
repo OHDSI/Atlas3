@@ -65,7 +65,7 @@ export const useAuthStore = defineStore('auth', {
       if (user) {
         this.permissions = user.permissionIdx || {}
         
-        // Clear permission cache when user changes (T088)
+        // Clear permission cache when user changes
         import('@/services/auth/permissions').then(({ permissionService }) => {
           permissionService.clearCache()
         })
@@ -104,7 +104,7 @@ export const useAuthStore = defineStore('auth', {
       storageManager.clearAll()
       this.cancelRefreshTimer()
       
-      // Clear permission cache on logout (T088)
+      // Clear permission cache on logout
       import('@/services/auth/permissions').then(({ permissionService }) => {
         permissionService.clearCache()
       })

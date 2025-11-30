@@ -1,14 +1,11 @@
 /**
  * Locale-aware formatting utilities
- * Feature: 008-translation-support
- * FR-014: Implements Intl.DateTimeFormat for locale-aware date formatting
  */
 
 import type { LocaleCode } from '@/types/i18n'
 
 /**
  * Format number according to locale
- * FR-013: Locale-aware number formatting
  */
 export function formatNumber(
   value: number,
@@ -25,7 +22,6 @@ export function formatNumber(
 
 /**
  * Format date according to locale
- * FR-014: Locale-aware date formatting using Intl.DateTimeFormat
  */
 export function formatDate(
   value: Date | string | number,

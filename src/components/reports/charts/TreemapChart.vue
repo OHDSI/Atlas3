@@ -1,7 +1,5 @@
 <!--
   TreemapChart Component
-  Feature: 005-cohort-reports
-  Tasks: T028, T120
 
   ECharts treemap wrapper with zoom interaction, loading states, and export functionality
 -->
@@ -137,14 +135,14 @@ watch(
 )
 
 /**
- * T120: Handle export success
+ * Handle export success
  */
 function handleExportSuccess(format: 'png' | 'svg', filename: string) {
   emit('export-success', format, filename)
 }
 
 /**
- * T120: Handle export error
+ * Handle export error
  */
 function handleExportError(format: 'png' | 'svg', error: Error) {
   emit('export-error', format, error)

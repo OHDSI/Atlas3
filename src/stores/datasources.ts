@@ -1,6 +1,5 @@
 /**
  * Data Sources Pinia Store
- * Feature: 006-datasources
  */
 import { defineStore } from 'pinia'
 import { ref, computed, triggerRef } from 'vue'

@@ -1,6 +1,5 @@
 /**
  * Locale Store - Pinia state management for i18n
- * Feature: 008-translation-support
  */
 
 import { defineStore } from 'pinia'
@@ -134,7 +133,7 @@ export const useLocaleStore = defineStore('locale', {
         console.error(`Failed to fetch translations for ${locale}:`, error)
         this.error = `Failed to load ${locale} translations. Falling back to English.`
         
-        // T030: Show error notification (snackbar/toast)
+        // Show error notification
         if (typeof window !== 'undefined' && window.dispatchEvent) {
           window.dispatchEvent(new CustomEvent('i18n-error', {
             detail: {
@@ -153,8 +152,7 @@ export const useLocaleStore = defineStore('locale', {
     },
 
     /**
-     * Change application locale
-     * T045: FR-022: Update page title and metadata on language change
+     * Change application locale and update page title
      */
     async changeLocale(locale: LocaleCode): Promise<void> {
       if (!this.isLocaleAvailable(locale)) {
@@ -166,7 +164,7 @@ export const useLocaleStore = defineStore('locale', {
       this.locale = locale
       localStorage.setItem('locale', locale)
       
-      // T045: Update page title with locale
+      // Update page title with locale
       if (typeof document !== 'undefined') {
         const currentTitle = document.title
         const baseTitle = currentTitle.split(' | ')[0] || 'Atlas'

@@ -69,7 +69,7 @@
 
           <v-divider class="my-4" />
 
-          <!-- Tabs for concept building (T088, T089, T090) -->
+          <!-- Tabs for concept building -->
           <v-tabs
             v-model="activeTab"
             bg-color="grey-lighten-3"
@@ -282,7 +282,7 @@ function onDelete() {
 }
 
 // ============================================================================
-// Phase 5: Concept Building Methods (T092)
+// Concept Building Methods
 // ============================================================================
 
 function onAddConcept(concept: Concept) {

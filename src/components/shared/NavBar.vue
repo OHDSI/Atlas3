@@ -114,7 +114,7 @@
         <!-- Language Selector -->
         <LanguageSelector />
 
-        <!-- Configuration Panel Icon (Feature: 013-config-panel) -->
+        <!-- Configuration Panel Icon -->
         <v-btn
           icon
           variant="text"

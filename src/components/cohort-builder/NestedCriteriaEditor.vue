@@ -487,9 +487,12 @@ function toggleAttributes(index: number, enabled: boolean) {
   const event = localNested.value.events[index]
   if (!event) return
   if (enabled) {
+    // Initialize with empty array to enable AttributesEditor
+    // Users can then add specific attributes via the "Add Attribute" button
     event.attributes = []
   } else {
-    event.attributes = []
+    // Disable attributes by setting to undefined
+    event.attributes = undefined
   }
   emitUpdate()
 }

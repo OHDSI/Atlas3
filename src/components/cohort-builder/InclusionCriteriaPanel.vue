@@ -96,6 +96,7 @@
                 @update:model-value="updateGroup(index, groupIndex, $event)"
                 @remove="removeGroup(index, groupIndex)"
                 @select-concept-set="handleSelectConceptSet(index, groupIndex, $event)"
+                @select-concept="handleSelectConcept(index, groupIndex, $event)"
                 @edit-concept-set="$emit('edit-concept-set', $event)"
               />
             </div>
@@ -172,6 +173,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: InclusionRule[]]
   'update:qualifyingLimit': [value: QualifyingLimit]
   'select-concept-set': [context: { ruleIndex: number; groupIndex: number; eventIndex: number }]
+  'select-concept': [context: { ruleIndex: number; groupIndex: number; eventIndex: number; attributeIndex: number; domainFilter: string | undefined }]
   'edit-concept-set': [conceptSet: any]
 }>()
 
@@ -276,6 +278,10 @@ function updateRuleDescription(index: number, event: Event) {
 function handleSelectConceptSet(ruleIndex: number, groupIndex: number, eventIndexOrContext: number | { eventIndex: number; eventId: string }) {
   const eventIndex = typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
   emit('select-concept-set', { ruleIndex, groupIndex, eventIndex })
+}
+
+function handleSelectConcept(ruleIndex: number, groupIndex: number, context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined }) {
+  emit('select-concept', { ruleIndex, groupIndex, ...context })
 }
 </script>
 

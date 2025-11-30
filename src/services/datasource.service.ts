@@ -1,6 +1,5 @@
 /**
  * Data Source API Service
- * Feature: 006-datasources
  */
 import {
   DataSourceSchema,

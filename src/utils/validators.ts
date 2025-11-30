@@ -12,7 +12,6 @@ export interface ValidationError {
 
 /**
  * Validate cohort definition before saving
- * Per FR-023: At least one entry event required
  */
 export function validateCohort(cohort: CohortDefinition): ValidationError[] {
   const errors: ValidationError[] = []

@@ -1,7 +1,6 @@
 <!--
   ConditionReport Component
-  Feature: 005-cohort-reports
-  Task: T079
+  
 
   Displays single condition occurrence data in a table format
 -->

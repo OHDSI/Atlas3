@@ -1,7 +1,6 @@
 <!--
   DrugUtilizationBaselineReport Component
-  Feature: 005-cohort-reports
-  Task: T098
+  
 
   Displays baseline drug utilization data in a table format
 -->

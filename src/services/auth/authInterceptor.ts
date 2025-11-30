@@ -19,7 +19,7 @@ export function setupAuthInterceptor() {
         const token = authStore.token
 
         if (token) {
-          // Check if token needs refresh before request (T015-T016)
+          // Check if token needs refresh before request
           const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
           const isRefreshEndpoint = url?.includes('/user/refresh')
           
@@ -30,7 +30,7 @@ export function setupAuthInterceptor() {
               const now = new Date()
               const minutesUntilExpiry = (expiration.getTime() - now.getTime()) / (60 * 1000)
 
-              // Refresh if less than 5 minutes remaining (T016)
+              // Refresh if less than 5 minutes remaining
               if (minutesUntilExpiry < 5 && minutesUntilExpiry > 0) {
                 console.log(`[AuthInterceptor] Token expiring in ${minutesUntilExpiry.toFixed(1)} minutes, refreshing...`)
                 await tokenRefreshService.refreshToken()
@@ -62,7 +62,7 @@ export function setupAuthInterceptor() {
       // Make the actual fetch request
       const response = await originalFetch(input, requestInit)
 
-      // Handle authentication errors (T018)
+      // Handle authentication errors
       try {
         const authStore = useAuthStore()
         

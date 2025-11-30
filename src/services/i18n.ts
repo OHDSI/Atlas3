@@ -1,6 +1,5 @@
 /**
  * i18n Service - WebAPI integration for translations
- * Feature: 008-translation-support
  */
 
 import { z } from 'zod'
@@ -9,7 +8,7 @@ import { WEBAPI_BASE_URL } from '@/config/webapi'
 
 const API_BASE_URL = WEBAPI_BASE_URL
 
-// T029: Zod schemas for runtime validation
+// Zod schemas for runtime validation
 const LocaleSchema = z.object({
   code: z.string().length(2).regex(/^[a-z]{2}$/),
   name: z.string().min(1)
@@ -49,7 +48,7 @@ export async function fetchLocales(): Promise<Locale[]> {
     const data = await response.json()
     const rawLocales = data.data || data
     
-    // T029: Validate with Zod
+    // Validate with Zod
     const parsed = LocaleArraySchema.safeParse(rawLocales)
     if (!parsed.success) {
       console.error('Invalid locales response:', parsed.error)
@@ -79,7 +78,7 @@ export async function fetchTranslations(locale: LocaleCode): Promise<Translation
     // WebAPI returns translations directly, not wrapped in { data: ... }
     const rawTranslations = data
     
-    // T029: Validate translations with Zod
+    // Validate translations with Zod
     const translationsValidation = TranslationsSchema.safeParse(rawTranslations)
     if (!translationsValidation.success) {
       console.error('Invalid translations response:', translationsValidation.error)

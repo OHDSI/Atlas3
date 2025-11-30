@@ -1,7 +1,6 @@
 <!--
   ObservationPeriodsReport Component
-  Feature: 005-cohort-reports
-  Task: T084
+  
 
   Displays observation period data table
 -->

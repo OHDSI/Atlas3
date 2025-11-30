@@ -1,7 +1,6 @@
 <!--
   ConditionsByIndexReport Component
-  Feature: 005-cohort-reports
-  Task: T080
+  
 
   Displays conditions relative to cohort start index in a table format
 -->
