@@ -273,6 +273,23 @@ export async function setupBasicMocks(page: Page) {
       })
     })
   })
+
+  // Mock tags endpoint (for tag groups)
+  await page.route('**/WebAPI/tag/**', async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([])
+    })
+  })
+
+  await page.route('**/WebAPI/tag', async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([])
+    })
+  })
 }
 
 /**

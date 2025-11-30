@@ -165,7 +165,7 @@ describe('Performance Tests - Large Cohort (Edge Case)', () => {
 
       // Full round-trip conversion
       const internal = convertAtlasToInternal(largeCohort)
-      const backToAtlas = convertInternalToAtlas({
+      convertInternalToAtlas({
         ...internal,
         name: `Large Cohort ${i}`,
         entryEvents: internal.entryEvents || [],

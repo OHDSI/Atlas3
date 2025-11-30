@@ -98,7 +98,7 @@ describe('ConceptSearch', () => {
   })
 
   it('should emit select event when concept is clicked', async () => {
-    const wrapper = createWrapper()
+    const _wrapper = createWrapper()
 
     // Simulate concept click (will need mock data)
     // await wrapper.find('[data-testid="concept-item-0"]').trigger('click')
@@ -130,7 +130,7 @@ describe('ConceptSearch', () => {
   })
 
   it('should display concept details (ID, name, domain, vocabulary)', () => {
-    const wrapper = createWrapper()
+    const _wrapper = createWrapper()
 
     // Mock data would show concept details
     // Check that concept items display all required fields

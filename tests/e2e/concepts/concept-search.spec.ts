@@ -4,6 +4,7 @@
  */
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
+import { waitForNetworkIdle } from '../helpers/wait-utils'
 
 test.describe('Concept Search', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,7 +13,7 @@ test.describe('Concept Search', () => {
     await page.goto('/Atlas/concepts')
 
     // Wait for page to load
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
     
     // Wait for the search input to be visible
     await page.waitForSelector('input[type="text"]', { timeout: 5000 })

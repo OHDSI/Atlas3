@@ -7,6 +7,7 @@
 
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
+import { waitForNetworkIdle } from './helpers/wait-utils'
 import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
@@ -41,7 +42,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
   test('T046: opening cohort does not trigger unsaved changes', async ({ page }) => {
     // Navigate to the cohorts list page
     await page.goto('/cohorts')
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
 
     // Mock the list of cohorts
     await page.route('**/WebAPI/cohortdefinition', async (route) => {
@@ -68,7 +69,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
     // Open an existing cohort by navigating directly
     // (In a real scenario, we'd click on a cohort in the list)
     await page.goto('/cohorts/1')
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
     await page.waitForTimeout(1000)
 
     // Verify the cohort details are loaded
@@ -142,7 +143,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
 
     // Navigate to the cohort
     await page.goto('/cohorts/1')
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
     await page.waitForTimeout(1000)
 
     // Verify cohort loaded

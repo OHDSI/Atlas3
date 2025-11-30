@@ -354,7 +354,7 @@ describe('BarChart', () => {
 
   describe('Responsive Behavior', () => {
     it('should register resize event listener on mount', async () => {
-      const wrapper = createWrapper()
+      const _wrapper = createWrapper()
       await nextTick()
 
       expect(window.addEventListener).toHaveBeenCalledWith('resize', expect.any(Function))

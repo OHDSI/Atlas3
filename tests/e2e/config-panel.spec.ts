@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
+import { waitForNetworkIdle } from './helpers/wait-utils'
 
 /**
  * E2E Tests for Configuration Side Panel (T104-T107)
@@ -18,7 +19,7 @@ test.describe('Configuration Panel', () => {
 
     // Navigate to home page
     await page.goto('/Atlas/')
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
   })
 
   // Helper function to ensure config panel is open
@@ -88,7 +89,7 @@ test.describe('Configuration Panel', () => {
     test('should navigate away from home page successfully', async ({ page }) => {
       // Try navigating to cohorts page
       await page.goto('/Atlas/cohorts')
-      await page.waitForLoadState('networkidle')
+      await waitForNetworkIdle(page)
 
       // Verify navigation worked
       await expect(page).toHaveURL(/\/cohorts/)

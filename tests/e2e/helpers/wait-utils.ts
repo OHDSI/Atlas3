@@ -9,8 +9,14 @@ import type { Page, Locator } from '@playwright/test'
  * Wait for network to be idle (no requests for 500ms)
  * Use this after navigation or actions that trigger API calls
  */
-export async function waitForNetworkIdle(page: Page, timeout: number = 5000) {
-  await page.waitForLoadState('networkidle', { timeout })
+export async function waitForNetworkIdle(page: Page, timeout: number = 15000) {
+  try {
+    await page.waitForLoadState('networkidle', { timeout })
+  } catch {
+    // If networkidle times out, just wait for domcontentloaded instead
+    // Some pages have continuous polling that prevents networkidle
+    await page.waitForLoadState('domcontentloaded')
+  }
 }
 
 /**

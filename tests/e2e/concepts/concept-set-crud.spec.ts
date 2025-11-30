@@ -4,6 +4,7 @@
  */
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
+import { waitForNetworkIdle } from '../helpers/wait-utils'
 
 test.describe('Concept Set CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
@@ -222,7 +223,7 @@ test.describe('Concept Set CRUD Operations', () => {
    */
   test('should load concept sets page', async ({ page }) => {
     // Just verify page loads
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
 
     // Page should be visible
     await expect(page.locator('body')).toBeVisible()
