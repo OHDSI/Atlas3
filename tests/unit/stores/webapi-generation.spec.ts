@@ -36,7 +36,7 @@ describe('WebAPI Store - Generation Polling', () => {
       ]
 
       const webapi = await import('@/services/webapi')
-      vi.mocked(webapi.fetchCDMSources).mockResolvedValue(mockSources)
+      vi.mocked(webapi.fetchCDMSources).mockResolvedValue({ success: true, data: mockSources })
 
       // Assume fetchSources action exists
       if ('fetchSources' in store) {
@@ -49,7 +49,7 @@ describe('WebAPI Store - Generation Polling', () => {
 
     it('should set loading state during fetch', async () => {
       const webapi = await import('@/services/webapi')
-      vi.mocked(webapi.fetchCDMSources).mockResolvedValue([])
+      vi.mocked(webapi.fetchCDMSources).mockResolvedValue({ success: true, data: [] })
 
       if ('fetchSources' in store) {
         const fetchPromise = (store as unknown).fetchSources()
@@ -129,9 +129,11 @@ describe('WebAPI Store - Generation Polling', () => {
 
       // Always return RUNNING (never complete)
       vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({
-        cohortDefinitionId: 123,
-        sourceKey: 'SYNPUF1K',
-        status: 'RUNNING',
+        success: true,
+        data: [{
+          id: { cohortDefinitionId: 123, sourceId: 1 },
+          status: 'RUNNING',
+        }]
       })
 
       if ('pollGenerationStatus' in store && 'POLL_TIMEOUT_MS' in store) {

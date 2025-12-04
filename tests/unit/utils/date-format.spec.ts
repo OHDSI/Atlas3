@@ -21,7 +21,8 @@ describe('date-format', () => {
     })
 
     it('formats timestamp to MM/DD/YYYY', () => {
-      const timestamp = new Date('2024-03-15').getTime()
+      // Use explicit UTC time to avoid timezone issues
+      const timestamp = new Date('2024-03-15T12:00:00Z').getTime()
       const result = formatDate(timestamp)
       expect(result).toMatch(/03\/15\/2024/)
     })

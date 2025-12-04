@@ -81,10 +81,15 @@ export const useWebAPIStore = defineStore('webapi', () => {
   async function fetchSources(): Promise<void> {
     try {
       setLoadingSources(true)
-      const fetchedSources = await webapi.fetchCDMSources()
-      setSources(fetchedSources)
+      const result = await webapi.fetchCDMSources()
+      if (result.success) {
+        setSources(result.data)
+      } else {
+        logger.error('WebAPIStore', 'Failed to fetch CDM sources', result.error)
+        setSources([])
+      }
     } catch (error) {
-      logger.error('WebAPIStore', 'Failed to fetch CDM sources', error)
+      logger.error('WebAPIStore', 'Unexpected error fetching CDM sources', error)
       setSources([])
     } finally {
       setLoadingSources(false)
@@ -151,13 +156,15 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
     const poll = async () => {
       try {
-        const infoList = await webapi.getCohortGenerationInfo(cohortId)
+        const result = await webapi.getCohortGenerationInfo(cohortId)
 
-        if (!infoList || infoList.length === 0) {
+        if (!result.success || result.data.length === 0) {
           // If we can't get info, stop polling
           stopPolling(cohortId)
           return
         }
+
+        const infoList = result.data
 
         // Find the latest job for this cohort
         const jobs = getJobsByCohortId(cohortId)
@@ -239,11 +246,13 @@ export const useWebAPIStore = defineStore('webapi', () => {
    */
   async function fetchCohortGenerationInfo(cohortId: number): Promise<void> {
     try {
-      const infoList = await webapi.getCohortGenerationInfo(cohortId)
+      const result = await webapi.getCohortGenerationInfo(cohortId)
 
-      if (!infoList || infoList.length === 0) {
+      if (!result.success || result.data.length === 0) {
         return
       }
+
+      const infoList = result.data
 
       // Convert each generation info to a GenerationJob
       // We need to map sourceId to sourceKey

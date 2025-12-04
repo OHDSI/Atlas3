@@ -58,11 +58,14 @@ describe('WebAPI Service', () => {
         expect.stringContaining('/source/sources'),
         expect.any(Object)
       )
-      expect(result).toHaveLength(1)
-      expect(result[0].sourceKey).toBe('test')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0].sourceKey).toBe('test')
+      }
     })
 
-    it('returns empty array on validation error', async () => {
+    it('returns error on validation error', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve([{ invalid: 'data' }]),
@@ -70,7 +73,7 @@ describe('WebAPI Service', () => {
 
       const result = await webapi.fetchCDMSources()
 
-      expect(result).toEqual([])
+      expect(result.success).toBe(false)
     })
   })
 
@@ -100,7 +103,10 @@ describe('WebAPI Service', () => {
         expect.stringContaining('/vocabulary/SYNPUF1K/search'),
         expect.any(Object)
       )
-      expect(result).toHaveLength(1)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+      }
     })
 
     it('includes domain filter when specified', async () => {
@@ -117,7 +123,7 @@ describe('WebAPI Service', () => {
       )
     })
 
-    it('returns empty array on validation error', async () => {
+    it('returns error on validation error', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve('invalid'),
@@ -125,7 +131,7 @@ describe('WebAPI Service', () => {
 
       const result = await webapi.searchConcepts('SYNPUF1K', 'test')
 
-      expect(result).toEqual([])
+      expect(result.success).toBe(false)
     })
   })
 
@@ -297,15 +303,18 @@ describe('WebAPI Service', () => {
         expect.stringContaining('/cohortdefinition/123/info'),
         expect.any(Object)
       )
-      expect(result).toHaveLength(1)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+      }
     })
 
-    it('returns empty array on error', async () => {
+    it('returns error on network error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
       const result = await webapi.getCohortGenerationInfo(123)
 
-      expect(result).toEqual([])
+      expect(result.success).toBe(false)
     })
   })
 
@@ -341,15 +350,18 @@ describe('WebAPI Service', () => {
 
       const result = await webapi.getAllConceptSets()
 
-      expect(result).toHaveLength(2)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(2)
+      }
     })
 
-    it('returns empty array on error', async () => {
+    it('returns error on network error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
       const result = await webapi.getAllConceptSets()
 
-      expect(result).toEqual([])
+      expect(result.success).toBe(false)
     })
   })
 
@@ -436,7 +448,10 @@ describe('WebAPI Service', () => {
 
       const result = await webapi.getCohorts()
 
-      expect(result).toHaveLength(2)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(2)
+      }
     })
   })
 
@@ -651,15 +666,21 @@ describe('WebAPI Service', () => {
 
       const result = await webapi.getCompletedAnalyses(123, 'SYNPUF1K')
 
-      expect(result).toEqual([1, 2, 3])
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toEqual([1, 2, 3])
+      }
     })
 
-    it('returns empty array for completed analyses on error', async () => {
+    it('returns error for completed analyses on error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
       const result = await webapi.getCompletedAnalyses(123, 'SYNPUF1K')
 
-      expect(result).toEqual([])
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toContain('Network error')
+      }
     })
 
     it('fetches death report', async () => {

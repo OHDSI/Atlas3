@@ -30,9 +30,16 @@ export function useConceptSets() {
       store.setSearchQuery(query)
 
       const sourceKey = import.meta.env.VITE_DEFAULT_SOURCE || 'SYNPUF1K'
-      const results = await webapi.searchConcepts(sourceKey, query, domain)
+      const result = await webapi.searchConcepts(sourceKey, query, domain)
 
-      store.setSearchResults(results)
+      if (result?.success) {
+        store.setSearchResults(result.data)
+      } else {
+        if (result?.error) {
+          logger.error('ConceptSets', 'Concept search error', result.error)
+        }
+        store.setSearchResults([])
+      }
     } catch (error) {
       logger.error('ConceptSets', 'Concept search error', error instanceof Error ? error.message : String(error))
       store.setSearchResults([])
@@ -122,11 +129,15 @@ export function useConceptSets() {
    */
   async function loadAllConceptSets(): Promise<void> {
     try {
-      const conceptSets = await webapi.getAllConceptSets()
+      const result = await webapi.getAllConceptSets()
 
-      conceptSets.forEach((cs) => {
-        store.addConceptSet(cs)
-      })
+      if (result.success) {
+        result.data.forEach((cs) => {
+          store.addConceptSet(cs)
+        })
+      } else {
+        logger.error('ConceptSets', 'Failed to load concept sets', result.error)
+      }
     } catch (error) {
       logger.error('ConceptSets', 'Failed to load concept sets', error instanceof Error ? error.message : String(error))
       throw error

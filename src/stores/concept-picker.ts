@@ -63,8 +63,13 @@ export const useConceptPickerStore = defineStore('concept-picker', () => {
     try {
       setSearching(true)
       setSearchQuery(query)
-      const results = await webapi.searchConcepts(sourceKey, query, domain)
-      setSearchResults(results)
+      const result = await webapi.searchConcepts(sourceKey, query, domain)
+      if (result.success) {
+        setSearchResults(result.data)
+      } else {
+        logger.error('ConceptPickerStore', 'Error searching concepts', result.error)
+        setSearchResults([])
+      }
     } catch (error) {
       logger.error('ConceptPickerStore', 'Error searching concepts', error)
       setSearchResults([])

@@ -92,14 +92,19 @@ export function useCohorts() {
     error.value = null
 
     try {
-      const response = await getCohorts()
-      
-      // Sort by modifiedDate descending (most recent first)
-      cohorts.value = response.sort((a, b) => {
-        const aDate = a.modifiedDate ? new Date(a.modifiedDate).getTime() : 0
-        const bDate = b.modifiedDate ? new Date(b.modifiedDate).getTime() : 0
-        return bDate - aDate
-      })
+      const result = await getCohorts()
+
+      if (result.success) {
+        // Sort by modifiedDate descending (most recent first)
+        cohorts.value = result.data.sort((a, b) => {
+          const aDate = a.modifiedDate ? new Date(a.modifiedDate).getTime() : 0
+          const bDate = b.modifiedDate ? new Date(b.modifiedDate).getTime() : 0
+          return bDate - aDate
+        })
+      } else {
+        error.value = new Error(result.error)
+        logger.error('useCohorts', 'Failed to fetch cohorts', result.error)
+      }
     } catch (err) {
       error.value = err instanceof Error ? err : new Error('Failed to load cohorts')
       logger.error('useCohorts', 'Failed to fetch cohorts', err)

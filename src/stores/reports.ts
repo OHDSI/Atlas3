@@ -7,6 +7,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { logger } from '@/utils/logger'
+import type { RequestController } from '@/types/api'
 import type {
   ReportType,
   ReportData,
@@ -77,6 +78,12 @@ export const useReportsStore = defineStore('reports', () => {
   // Report data cache (key: "{cohortId}-{sourceKey}-{reportType}")
   const reportData = ref<Map<string, ReportData>>(new Map())
 
+  // Request controller for cancellation
+  const currentRequest = ref<RequestController>({
+    controller: null,
+    requestId: null
+  })
+
   // Loading states
   const loading = ref(false)
   const loadingSection = ref<string | null>(null)
@@ -90,6 +97,17 @@ export const useReportsStore = defineStore('reports', () => {
    */
   function getCacheKey(cohortId: number, sourceKey: string, reportType: ReportType): string {
     return `${cohortId}-${sourceKey}-${reportType}`
+  }
+
+  /**
+   * Cancel any pending request
+   */
+  function cancelPendingRequest(): void {
+    if (currentRequest.value.controller) {
+      currentRequest.value.controller.abort()
+      logger.debug('ReportsStore', 'Cancelled pending request', currentRequest.value.requestId)
+    }
+    currentRequest.value = { controller: null, requestId: null }
   }
 
   /**
@@ -116,6 +134,14 @@ export const useReportsStore = defineStore('reports', () => {
         return
       }
     }
+
+    // Cancel any previous pending request to prevent stale data
+    cancelPendingRequest()
+
+    // Create new controller and unique request ID
+    const controller = new AbortController()
+    const requestId = `${cacheKey}-${Date.now()}`
+    currentRequest.value = { controller, requestId }
 
     loading.value = true
     error.value = null
@@ -285,6 +311,12 @@ export const useReportsStore = defineStore('reports', () => {
           throw new Error(`Unsupported report type: ${reportType}`)
       }
 
+      // Check if this request is still the current one (not cancelled)
+      if (currentRequest.value.requestId !== requestId) {
+        logger.debug('ReportsStore', 'Ignoring stale response for', cacheKey)
+        return
+      }
+
       // Cache the result
       reportData.value.set(cacheKey, {
         type: reportType,
@@ -299,13 +331,31 @@ export const useReportsStore = defineStore('reports', () => {
       currentSourceKey.value = sourceKey
       currentCohortId.value = cohortId
 
+      // Clear the request controller since we're done
+      currentRequest.value = { controller: null, requestId: null }
+
       logger.debug('ReportsStore', 'Fetched and cached report', cacheKey)
     } catch (err) {
+      // Ignore AbortError - request was cancelled intentionally
+      if (err instanceof Error && err.name === 'AbortError') {
+        logger.debug('ReportsStore', 'Request was cancelled', cacheKey)
+        return
+      }
+
+      // Check if this request is still current before setting error
+      if (currentRequest.value.requestId !== requestId) {
+        logger.debug('ReportsStore', 'Ignoring error from stale request', cacheKey)
+        return
+      }
+
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       error.value = `Failed to fetch ${reportType} report: ${errorMessage}`
       logger.error('ReportsStore', 'Error fetching report', err)
     } finally {
-      loading.value = false
+      // Only clear loading if this was the current request
+      if (currentRequest.value.requestId === requestId || currentRequest.value.requestId === null) {
+        loading.value = false
+      }
     }
   }
 
@@ -430,6 +480,7 @@ export const useReportsStore = defineStore('reports', () => {
     setCurrentReport,
     clearAllReports,
     clearCurrentReport,
+    cancelPendingRequest,
 
     // Getters
     currentReport,

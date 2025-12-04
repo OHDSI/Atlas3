@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useConceptSets } from '@/composables/useConceptSets'
-import { useConceptSetsStore } from '@/stores/conceptSets'
 import type { Concept, ConceptSet } from '@/models/concept-set.types'
 import * as webapi from '@/services/webapi'
 
@@ -81,7 +80,7 @@ describe.skip('useConceptSets', () => {
 
   describe('searchConcepts', () => {
     it('should debounce search requests by 300ms', async () => {
-      vi.mocked(webapi.searchConcepts).mockResolvedValue([mockConcept])
+      vi.mocked(webapi.searchConcepts).mockResolvedValue({ success: true, data: [mockConcept] })
       const { searchConcepts } = useConceptSets()
 
       // Call search multiple times rapidly
@@ -105,7 +104,7 @@ describe.skip('useConceptSets', () => {
 
     it('should search concepts successfully', async () => {
       const mockResults = [mockConcept, { ...mockConcept, conceptId: 201827 }]
-      vi.mocked(webapi.searchConcepts).mockResolvedValue(mockResults)
+      vi.mocked(webapi.searchConcepts).mockResolvedValue({ success: true, data: mockResults })
 
       const { searchConcepts, searchResults, isSearching } = useConceptSets()
 
@@ -118,7 +117,7 @@ describe.skip('useConceptSets', () => {
     })
 
     it('should filter search by domain if provided', async () => {
-      vi.mocked(webapi.searchConcepts).mockResolvedValue([mockConcept])
+      vi.mocked(webapi.searchConcepts).mockResolvedValue({ success: true, data: [mockConcept] })
 
       const { searchConcepts } = useConceptSets()
 
@@ -130,7 +129,7 @@ describe.skip('useConceptSets', () => {
     })
 
     it('should use default source key from environment', async () => {
-      vi.mocked(webapi.searchConcepts).mockResolvedValue([mockConcept])
+      vi.mocked(webapi.searchConcepts).mockResolvedValue({ success: true, data: [mockConcept] })
 
       const { searchConcepts } = useConceptSets()
 
@@ -205,7 +204,7 @@ describe.skip('useConceptSets', () => {
     })
 
     it('should set search query in store', async () => {
-      vi.mocked(webapi.searchConcepts).mockResolvedValue([mockConcept])
+      vi.mocked(webapi.searchConcepts).mockResolvedValue({ success: true, data: [mockConcept] })
       const store = useConceptSetsStore()
 
       const { searchConcepts } = useConceptSets()

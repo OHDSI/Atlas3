@@ -325,7 +325,7 @@ describe('WebAPI Store', () => {
           },
         ]
 
-        vi.mocked(webapi.fetchCDMSources).mockResolvedValue(mockSources)
+        vi.mocked(webapi.fetchCDMSources).mockResolvedValue({ success: true, data: mockSources })
 
         await store.fetchSources()
 
@@ -336,7 +336,7 @@ describe('WebAPI Store', () => {
       it('should set loading state during fetch', async () => {
         const store = useWebAPIStore()
         vi.mocked(webapi.fetchCDMSources).mockImplementation(
-          () => new Promise(resolve => setTimeout(() => resolve([]), 100))
+          () => new Promise(resolve => setTimeout(() => resolve({ success: true, data: [] }), 100))
         )
 
         const promise = store.fetchSources()
@@ -368,7 +368,7 @@ describe('WebAPI Store', () => {
         }
 
         vi.mocked(webapi.generateCohort).mockResolvedValue(mockJob)
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue([])
+        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
         const result = await store.generateCohort(123, 'SYNPUF1K')
 
@@ -394,7 +394,7 @@ describe('WebAPI Store', () => {
         }
 
         vi.mocked(webapi.generateCohort).mockResolvedValue(mockJob)
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue([])
+        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
         await store.generateCohort(123, 'SYNPUF1K')
 
@@ -456,7 +456,7 @@ describe('WebAPI Store', () => {
           },
         ]
 
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue(mockInfo)
+        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
         await store.fetchCohortGenerationInfo(123)
 
@@ -483,7 +483,7 @@ describe('WebAPI Store', () => {
           },
         ]
 
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue(mockInfo)
+        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
         await store.fetchCohortGenerationInfo(123)
 
@@ -501,7 +501,7 @@ describe('WebAPI Store', () => {
           },
         ]
 
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue(mockInfo)
+        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
         await store.fetchCohortGenerationInfo(123)
 
@@ -511,7 +511,7 @@ describe('WebAPI Store', () => {
 
       it('should handle empty info list', async () => {
         const store = useWebAPIStore()
-        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue([])
+        vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
         await store.fetchCohortGenerationInfo(123)
 
@@ -558,7 +558,7 @@ describe('WebAPI Store', () => {
             },
           ]
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue(mockInfo)
+          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -589,7 +589,7 @@ describe('WebAPI Store', () => {
             },
           ]
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue(mockInfo)
+          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -619,7 +619,7 @@ describe('WebAPI Store', () => {
             },
           ]
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue(mockInfo)
+          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: mockInfo })
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -640,7 +640,7 @@ describe('WebAPI Store', () => {
           }
           store.addGenerationJob(job)
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue([])
+          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -651,7 +651,7 @@ describe('WebAPI Store', () => {
         it('should stop polling when no jobs exist', async () => {
           const store = useWebAPIStore()
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue([])
+          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
@@ -749,7 +749,7 @@ describe('WebAPI Store', () => {
           store.addGenerationJob({ id: 1, cohortDefinitionId: 123, sourceKey: 'test', status: 'RUNNING' })
           store.addGenerationJob({ id: 2, cohortDefinitionId: 456, sourceKey: 'test', status: 'RUNNING' })
 
-          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue([])
+          vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({ success: true, data: [] })
 
           const poll1 = store.pollGenerationStatus(123)
           const poll2 = store.pollGenerationStatus(456)

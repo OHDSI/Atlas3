@@ -51,7 +51,8 @@ describe('format', () => {
 
   describe('formatDate', () => {
     it('formats Date object', () => {
-      const date = new Date('2024-03-15T00:00:00Z')
+      // Use midday UTC to avoid timezone issues with date display
+      const date = new Date('2024-03-15T12:00:00Z')
       const result = formatDate(date, 'en')
       expect(result).toMatch(/3\/15\/2024|Mar 15, 2024/)
     })
@@ -73,7 +74,8 @@ describe('format', () => {
     })
 
     it('formats with custom options', () => {
-      const date = new Date('2024-03-15')
+      // Use midday UTC to avoid timezone issues
+      const date = new Date('2024-03-15T12:00:00Z')
       const result = formatDate(date, 'en', { year: 'numeric', month: 'long', day: 'numeric' })
       expect(result).toMatch(/March 15, 2024/)
     })
