@@ -413,8 +413,9 @@ import { ref, watch, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
+import { useMatchType } from '@/composables/useMatchType'
 import NestedCriteriaEditor from './NestedCriteriaEditor.vue'
-import type { CriteriaGroup, CohortEvent, LogicType, CriteriaType, NestedCriteria } from '@/models/cohort.types'
+import type { CriteriaGroup, CohortEvent, CriteriaType, NestedCriteria } from '@/models/cohort.types'
 import type {
   EventAttribute,
   TemporalWindow,
@@ -459,14 +460,25 @@ const localGroup = ref<CriteriaGroup>(props.modelValue || {
 })
 
 const validationError = ref('')
-const showMatchTypeDialog = ref(false)
-const matchTypeTemp = ref('ALL')
-const matchTypeCount = ref(1)
+
+// Match type composable
+const {
+  showMatchTypeDialog,
+  matchTypeTemp,
+  matchTypeCount,
+  getMatchTypeDisplay,
+  onMenuOpen,
+  confirmMatchType,
+} = useMatchType({
+  group: localGroup,
+  onUpdate: emitUpdate,
+})
 
 // Watch for external changes
 watch(() => props.modelValue, (newVal) => {
   if (newVal) {
-    localGroup.value = { ...newVal }
+    // Deep clone to preserve nested reactivity
+    localGroup.value = JSON.parse(JSON.stringify(newVal))
   }
 }, { deep: true })
 
@@ -657,34 +669,6 @@ function updateEventConceptSet(index: number, conceptSet: { id: number; name: st
   }
 }
 
-// Display helpers
-function getMatchTypeDisplay(): string {
-  switch (localGroup.value.logicType) {
-    case 'ALL': return t('common.all', 'All').value
-    case 'ANY': return t('common.any', 'Any').value
-    case 'AT_LEAST': return `${t('common.atLeast', 'At least').value} ${localGroup.value.count || 1}`
-    case 'AT_MOST': return `${t('common.atMost', 'At most').value} ${localGroup.value.count || 1}`
-    default: return t('common.all', 'All').value
-  }
-}
-
-function onMenuOpen(isOpen: boolean) {
-  if (isOpen) {
-    matchTypeTemp.value = localGroup.value.logicType || 'ALL'
-    matchTypeCount.value = localGroup.value.count || 1
-  }
-}
-
-function confirmMatchType() {
-  localGroup.value.logicType = matchTypeTemp.value as LogicType
-  if (matchTypeTemp.value === 'AT_LEAST' || matchTypeTemp.value === 'AT_MOST') {
-    localGroup.value.count = matchTypeCount.value
-  } else {
-    delete localGroup.value.count
-  }
-  showMatchTypeDialog.value = false
-  emitUpdate()
-}
 
 function getCardinalityType(event: CohortEvent): string {
   if (!event.cardinality) return 'at_least'
@@ -727,11 +711,14 @@ function toCamelCase(str: string): string {
   return str.charAt(0).toLowerCase() + str.slice(1)
 }
 
+// Refs for getting available attributes (moved to component scope to avoid creating refs in functions)
+const attributeCriteriaTypeKey = ref('')
+const attributeSectionRef = ref('criteriaGroup')
+
 // Get available attributes for a specific event
 function getAvailableAttributesForEvent(event: CohortEvent) {
-  const criteriaTypeKey = ref(toCamelCase(event.criteriaType))
-  const sectionRef = ref('criteriaGroup')
-  const { attributes } = useAttributeConfig(criteriaTypeKey, sectionRef)
+  attributeCriteriaTypeKey.value = toCamelCase(event.criteriaType)
+  const { attributes } = useAttributeConfig(attributeCriteriaTypeKey, attributeSectionRef)
   return attributes.value
 }
 

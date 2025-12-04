@@ -37,11 +37,14 @@ describe('WebAPI Service - Network Retry Logic', () => {
         json: async () => mockResponse,
       })
 
-      const sources = await webapi.fetchCDMSources()
+      const result = await webapi.fetchCDMSources()
 
       expect(mockFetch).toHaveBeenCalledTimes(1)
-      expect(sources).toHaveLength(1)
-      expect(sources[0]?.sourceKey).toBe('SYNPUF1K')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+      }
     })
   })
 
@@ -73,11 +76,14 @@ describe('WebAPI Service - Network Retry Logic', () => {
       // Advance timers for second retry (1000ms)
       await vi.advanceTimersByTimeAsync(1000)
 
-      const sources = await promise
+      const result = await promise
 
       expect(mockFetch).toHaveBeenCalledTimes(3)
-      expect(sources).toHaveLength(1)
-      expect(sources[0]?.sourceKey).toBe('SYNPUF1K')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+      }
     })
 
     it('should use exponential backoff delays (500ms, 1000ms, 2000ms)', async () => {
@@ -118,16 +124,17 @@ describe('WebAPI Service - Network Retry Logic', () => {
     it('should fail after 3 attempts', async () => {
       mockFetch.mockRejectedValue(new TypeError('Network request failed'))
 
-      // Start the promise and catch it to prevent unhandled rejection
-      const promise = webapi.fetchCDMSources().catch(err => err)
+      const promise = webapi.fetchCDMSources()
 
       // Advance through all retry attempts
       await vi.advanceTimersByTimeAsync(500)  // First retry
       await vi.advanceTimersByTimeAsync(1000) // Second retry
 
       const result = await promise
-      expect(result).toBeInstanceOf(Error)
-      expect(result.message).toContain('Network error')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toContain('Network')
+      }
       expect(mockFetch).toHaveBeenCalledTimes(3)
     })
   })
@@ -160,11 +167,14 @@ describe('WebAPI Service - Network Retry Logic', () => {
       // Advance timer for first retry
       await vi.advanceTimersByTimeAsync(500)
 
-      const sources = await promise
+      const result = await promise
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
-      expect(sources).toHaveLength(1)
-      expect(sources[0]?.sourceKey).toBe('SYNPUF1K')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+      }
     })
 
     it('should retry on 502 Bad Gateway', async () => {
@@ -191,11 +201,14 @@ describe('WebAPI Service - Network Retry Logic', () => {
       const promise = webapi.fetchCDMSources()
       await vi.advanceTimersByTimeAsync(500)
 
-      const sources = await promise
+      const result = await promise
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
-      expect(sources).toHaveLength(1)
-      expect(sources[0]?.sourceKey).toBe('SYNPUF1K')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+      }
     })
 
     it('should retry on 503 Service Unavailable', async () => {
@@ -222,11 +235,14 @@ describe('WebAPI Service - Network Retry Logic', () => {
       const promise = webapi.fetchCDMSources()
       await vi.advanceTimersByTimeAsync(500)
 
-      const sources = await promise
+      const result = await promise
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
-      expect(sources).toHaveLength(1)
-      expect(sources[0]?.sourceKey).toBe('SYNPUF1K')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+      }
     })
 
     it('should retry on 504 Gateway Timeout', async () => {
@@ -253,11 +269,14 @@ describe('WebAPI Service - Network Retry Logic', () => {
       const promise = webapi.fetchCDMSources()
       await vi.advanceTimersByTimeAsync(500)
 
-      const sources = await promise
+      const result = await promise
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
-      expect(sources).toHaveLength(1)
-      expect(sources[0]?.sourceKey).toBe('SYNPUF1K')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+      }
     })
   })
 
@@ -286,11 +305,14 @@ describe('WebAPI Service - Network Retry Logic', () => {
       const promise = webapi.fetchCDMSources()
       await vi.advanceTimersByTimeAsync(500)
 
-      const sources = await promise
+      const result = await promise
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
-      expect(sources).toHaveLength(1)
-      expect(sources[0]?.sourceKey).toBe('SYNPUF1K')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+      }
     })
   })
 
@@ -302,9 +324,12 @@ describe('WebAPI Service - Network Retry Logic', () => {
         statusText: 'Bad Request',
       })
 
-      const promise = webapi.fetchCDMSources()
+      const result = await webapi.fetchCDMSources()
 
-      await expect(promise).rejects.toThrow('HTTP 400: Bad Request')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toContain('400')
+      }
       expect(mockFetch).toHaveBeenCalledTimes(1)
     })
 
@@ -315,9 +340,12 @@ describe('WebAPI Service - Network Retry Logic', () => {
         statusText: 'Unauthorized',
       })
 
-      const promise = webapi.fetchCDMSources()
+      const result = await webapi.fetchCDMSources()
 
-      await expect(promise).rejects.toThrow('HTTP 401: Unauthorized')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toContain('401')
+      }
       expect(mockFetch).toHaveBeenCalledTimes(1)
     })
 
@@ -328,9 +356,12 @@ describe('WebAPI Service - Network Retry Logic', () => {
         statusText: 'Not Found',
       })
 
-      const promise = webapi.fetchCDMSources()
+      const result = await webapi.fetchCDMSources()
 
-      await expect(promise).rejects.toThrow('HTTP 404: Not Found')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toContain('404')
+      }
       expect(mockFetch).toHaveBeenCalledTimes(1)
     })
 
@@ -341,9 +372,12 @@ describe('WebAPI Service - Network Retry Logic', () => {
         statusText: 'Unprocessable Entity',
       })
 
-      const promise = webapi.fetchCDMSources()
+      const result = await webapi.fetchCDMSources()
 
-      await expect(promise).rejects.toThrow('HTTP 422: Unprocessable Entity')
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toContain('422')
+      }
       expect(mockFetch).toHaveBeenCalledTimes(1)
     })
   })
@@ -377,11 +411,14 @@ describe('WebAPI Service - Network Retry Logic', () => {
       await vi.advanceTimersByTimeAsync(500)  // First retry
       await vi.advanceTimersByTimeAsync(1000) // Second retry
 
-      const sources = await promise
+      const result = await promise
 
       expect(mockFetch).toHaveBeenCalledTimes(3)
-      expect(sources).toHaveLength(1)
-      expect(sources[0]?.sourceKey).toBe('SYNPUF1K')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0]?.sourceKey).toBe('SYNPUF1K')
+      }
     })
 
     it('should exhaust retries with different error types', async () => {
@@ -399,14 +436,16 @@ describe('WebAPI Service - Network Retry Logic', () => {
           statusText: 'Internal Server Error',
         })
 
-      // Catch the promise to prevent unhandled rejection
-      const promise = webapi.fetchCDMSources().catch(err => err)
+      const promise = webapi.fetchCDMSources()
 
       await vi.advanceTimersByTimeAsync(500)  // First retry
       await vi.advanceTimersByTimeAsync(1000) // Second retry
 
       const result = await promise
-      expect(result).toBeInstanceOf(Error)
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toContain('500')
+      }
       expect(mockFetch).toHaveBeenCalledTimes(3)
     })
   })
@@ -439,11 +478,14 @@ describe('WebAPI Service - Network Retry Logic', () => {
 
       await vi.advanceTimersByTimeAsync(500)
 
-      const results = await promise
+      const result = await promise
 
       expect(mockFetch).toHaveBeenCalledTimes(2)
-      expect(results).toHaveLength(1)
-      expect(results[0]?.conceptName).toContain('diabetes')
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toHaveLength(1)
+        expect(result.data[0]?.conceptName).toContain('diabetes')
+      }
     })
 
     it('should apply retry logic to cohort generation', async () => {

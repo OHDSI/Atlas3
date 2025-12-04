@@ -39,10 +39,18 @@ export function useEventPersistence(initialCriteria?: ExitCriteria) {
    */
   function initializeState(criteria?: ExitCriteria): EventPersistenceState {
     if (!criteria) {
-      return { ...DEFAULT_STATE }
+      return {
+        ...DEFAULT_STATE,
+        // Create new Map instance to avoid sharing across instances
+        validationErrors: new Map()
+      }
     }
 
-    const newState = { ...DEFAULT_STATE }
+    const newState = {
+      ...DEFAULT_STATE,
+      // Create new Map instance to avoid sharing across instances
+      validationErrors: new Map()
+    }
     newState.strategy = criteria.strategy
 
     if (criteria.strategy === 'FIXED_DURATION') {

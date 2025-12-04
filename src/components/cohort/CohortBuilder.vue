@@ -20,145 +20,18 @@
         />
 
         <!-- Concept Sets Dialog -->
-        <v-dialog
+        <concept-sets-list-dialog
           v-model="showConceptSetsDialog"
-          max-width="900"
-        >
-          <v-card>
-            <v-card-title class="d-flex align-center">
-              <v-icon
-                color="primary"
-                class="mr-2"
-              >
-                mdi-shape
-              </v-icon>
-              {{ t('navigation.conceptsets', 'Concept Sets') }}
-            </v-card-title>
-            <v-card-text>
-              <v-table>
-                <thead>
-                  <tr>
-                    <th class="text-left">
-                      {{ t('columns.id', 'ID') }}
-                    </th>
-                    <th class="text-left">
-                      {{ t('columns.name', 'Name') }}
-                    </th>
-                    <th class="text-left">
-                      {{ t('common.concepts', 'Concepts') }}
-                    </th>
-                    <th class="text-left">
-                      {{ t('common.actions', 'Actions') }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="conceptSet in usedConceptSets"
-                    :key="conceptSet.id"
-                  >
-                    <td>{{ conceptSet.id }}</td>
-                    <td>{{ conceptSet.name }}</td>
-                    <td>{{ conceptSet.items?.length || 0 }}</td>
-                    <td>
-                      <v-btn
-                        icon
-                        size="small"
-                        variant="text"
-                        @click="handleViewConceptSet(conceptSet)"
-                      >
-                        <v-icon size="small">
-                          mdi-eye
-                        </v-icon>
-                      </v-btn>
-                    </td>
-                  </tr>
-                </tbody>
-              </v-table>
-              <div
-                v-if="usedConceptSets.length === 0"
-                class="text-center py-8 text-grey"
-              >
-                {{ t('common.noConceptSets', 'No concept sets in this cohort') }}
-              </div>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn
-                color="primary"
-                @click="showConceptSetsDialog = false"
-              >
-                {{ t('common.close') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+          :concept-sets="usedConceptSets"
+          @view="handleViewConceptSet"
+        />
 
         <!-- Validation Messages Dialog -->
-        <v-dialog
+        <validation-messages-dialog
           v-model="showValidationDialog"
-          max-width="800"
-        >
-          <v-card>
-            <v-card-title class="d-flex align-center">
-              <v-icon
-                :color="highestSeverityColor"
-                class="mr-2"
-              >
-                mdi-message-text
-              </v-icon>
-              {{ t('cc.viewEdit.tabs.messages') }}
-            </v-card-title>
-            <v-card-text>
-              <v-table>
-                <thead>
-                  <tr>
-                    <th
-                      class="text-left"
-                      style="width: 120px"
-                    >
-                      {{ t('common.severity', 'Severity') }}
-                    </th>
-                    <th class="text-left">
-                      {{ t('common.message', 'Message') }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(warning, idx) in validationWarnings"
-                    :key="idx"
-                    :class="{
-                      'bg-error-lighten-4': warning.severity === 'CRITICAL',
-                      'bg-warning-lighten-4': warning.severity === 'WARNING',
-                      'bg-info-lighten-4': warning.severity === 'INFO'
-                    }"
-                  >
-                    <td>
-                      <v-chip
-                        :color="warning.severity === 'CRITICAL' ? 'error' : warning.severity === 'WARNING' ? 'warning' : 'info'"
-                        size="small"
-                        label
-                      >
-                        {{ warning.severity }}
-                      </v-chip>
-                    </td>
-                    <td>{{ warning.message }}</td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn
-                color="primary"
-                @click="showValidationDialog = false"
-              >
-                {{ t('common.close') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+          :warnings="validationWarnings"
+          :severity-color="highestSeverityColor"
+        />
       </div>
 
       <div class="cohort-builder__toolbar-center">
@@ -488,8 +361,9 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import { useAtlasConverter } from '@/composables/useAtlasConverter'
 import { useI18n } from '@/composables/useI18n'
-import { getCohortDefinition, validateCohortDefinition } from '@/services/webapi'
-import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas-converter'
+import { useCohortValidation } from '@/composables/useCohortValidation'
+import { getCohortDefinition } from '@/services/webapi'
+import { convertAtlasToInternal } from '@/services/atlas-converter'
 import { isAtlasCohortDefinitionWrapper } from '@/models/atlas.types'
 import type {
   CohortEvent,
@@ -502,7 +376,7 @@ import type {
   CohortDefinition,
   CriteriaGroup
 } from '@/models/cohort.types'
-import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
+// ValidationSeverity type is provided by useCohortValidation composable
 import type { EventAttribute } from '@/models/event.types'
 import type { Concept } from '@/models/event.types'
 import type { ConceptSetItem } from '@/models/concept-set.types'
@@ -518,6 +392,8 @@ import GenerationPanel from './GenerationPanel.vue'
 import CohortBreadcrumb from './CohortBreadcrumb.vue'
 import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
+import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
+import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 
 interface Props {
   id?: string
@@ -581,16 +457,29 @@ const additionalCriteriaRef = ref<InstanceType<typeof CriteriaGroupEditor> | nul
 const selectedSourceKey = ref<string | null>(null)
 const generationError = ref<string | null>(null)
 
-// Validation state
-const validationWarnings = ref<ValidationWarning[]>([])
-const _isValidatingInternal = ref(false) // Internal ref for template display
-let validationDebounceTimer: ReturnType<typeof setTimeout> | null = null
-let _isValidatingFlag = false // Plain JS variable to prevent watcher loops
-
-// Computed wrapper to access validation state without triggering watcher
-const isValidating = computed(() => _isValidatingInternal.value)
-
 const cohortId = computed(() => props.id ? Number(props.id) : null)
+
+// Validation composable - handles validation state, warnings, and auto-validation
+const {
+  validationWarnings,
+  isValidating,
+  highestSeverityColor,
+  usedConceptSets,
+  triggerValidation,
+  cancelValidation,
+} = useCohortValidation({
+  cohortName,
+  cohortDescription,
+  cohortId,
+  entryEvents,
+  additionalCriteria,
+  inclusionRules,
+  exitCriteria,
+  censoringCriteria,
+  observationPeriod,
+  qualifyingLimit,
+  inclusionQualifyingLimit,
+})
 
 const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && entryEvents.value.length > 0
@@ -628,83 +517,6 @@ const hasUnsavedChanges = computed(() => {
   // Compare current state with loaded snapshot
   const currentSnapshot = createStateSnapshot()
   return currentSnapshot !== loadedSnapshot.value
-})
-
-// Validation computed properties
-const groupedWarningsBySeverity = computed(() => {
-  const grouped: Record<ValidationSeverity, ValidationWarning[]> = {
-    CRITICAL: [],
-    WARNING: [],
-    INFO: [],
-  }
-
-  validationWarnings.value.forEach(warning => {
-    grouped[warning.severity].push(warning)
-  })
-
-  return grouped
-})
-
-const highestSeverity = computed((): ValidationSeverity | null => {
-  if (validationWarnings.value.length === 0) return null
-  if (groupedWarningsBySeverity.value.CRITICAL.length > 0) return 'CRITICAL'
-  if (groupedWarningsBySeverity.value.WARNING.length > 0) return 'WARNING'
-  return 'INFO'
-})
-
-const highestSeverityColor = computed(() => {
-  const severity = highestSeverity.value
-  if (severity === 'CRITICAL') return 'error'
-  if (severity === 'WARNING') return 'warning'
-  return 'info'
-})
-
-/**
- * Gather all unique concept sets used in this cohort
- */
-const usedConceptSets = computed(() => {
-  const conceptSetsMap = new Map<string, ConceptSetReference>()
-
-  // Extract from entry events
-  entryEvents.value.forEach(event => {
-    if (event.conceptSet) {
-      conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
-    }
-  })
-
-  // Extract from additional criteria
-  if (additionalCriteria.value?.events) {
-    additionalCriteria.value.events.forEach(event => {
-      if (event.conceptSet) {
-        conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
-      }
-    })
-  }
-
-  // Extract from inclusion rules
-  inclusionRules.value.forEach(rule => {
-    rule.criteriaGroups.forEach(group => {
-      group.events.forEach(event => {
-        if (event.conceptSet) {
-          conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
-        }
-      })
-    })
-  })
-
-  // Extract from exit criteria (drug exposure)
-  if (exitCriteria.value?.conceptSet) {
-    conceptSetsMap.set(exitCriteria.value.conceptSet.name, exitCriteria.value.conceptSet)
-  }
-
-  // Extract from censoring criteria
-  censoringCriteria.value.forEach(event => {
-    if (event.conceptSet) {
-      conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
-    }
-  })
-
-  return Array.from(conceptSetsMap.values())
 })
 
 /**
@@ -899,10 +711,8 @@ async function loadCohort(id: string) {
     cohortStore.setCohort(cohortDef)
     cohortStore.markClean()
 
-    // Stop watcher during state updates
-    if (validationWatcherStop) {
-      validationWatcherStop()
-    }
+    // Cancel any pending validation during batch state update
+    cancelValidation()
 
     // Update local state
     cohortName.value = cohortDef.name
@@ -920,147 +730,16 @@ async function loadCohort(id: string) {
     // Save snapshot of loaded state for change detection
     loadedSnapshot.value = createStateSnapshot()
 
-    // Restart watcher
-    validationWatcherStop = watch(
-      [cohortName, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
-      () => {
-        // Skip if validating - use internal ref directly to avoid creating reactive dependency
-        if (_isValidatingInternal.value) {
-          return
-        }
-        triggerValidation()
-      },
-      { deep: true }
-    )
-
     // Hide loading overlay immediately - cohort is now visible
     isLoadingCohort.value = false
 
-    // Validate cohort in the background (don't await)
-    validateCohort()
+    // Trigger validation in the background (composable handles debouncing)
+    triggerValidation()
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
     isLoadingCohort.value = false
-    // Restart watcher in case of error
-    if (!validationWatcherStop) {
-      validationWatcherStop = watch(
-        [cohortName, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
-        () => {
-          // Skip if validating - use internal ref directly to avoid creating reactive dependency
-          if (_isValidatingInternal.value) {
-            return
-          }
-          triggerValidation()
-        },
-        { deep: true }
-      )
-    }
   }
 }
-
-/**
- * Validate the current cohort definition
- */
-async function validateCohort() {
-  if (!cohortName.value || entryEvents.value.length === 0) {
-    validationWarnings.value = []
-    return
-  }
-
-  try {
-    _isValidatingFlag = true
-    _isValidatingInternal.value = true
-
-    // Extract all unique concept sets from events and inclusion rules
-    const conceptSetsMap = new Map<string, ConceptSetReference>()
-
-    // Extract from entry events
-    entryEvents.value.forEach(event => {
-      if (event.conceptSet) {
-        conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
-      }
-    })
-
-    // Extract from additional criteria
-    if (additionalCriteria.value?.events) {
-      additionalCriteria.value.events.forEach(event => {
-        if (event.conceptSet) {
-          conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
-        }
-      })
-    }
-
-    // Extract from inclusion rules
-    inclusionRules.value.forEach(rule => {
-      rule.criteriaGroups.forEach(group => {
-        group.events.forEach(event => {
-          if (event.conceptSet) {
-            conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
-          }
-        })
-      })
-    })
-
-    // Build cohort definition
-    const cohortDef: CohortDefinition = {
-      id: cohortId.value ?? undefined,
-      name: cohortName.value,
-      description: cohortDescription.value,
-      entryEvents: entryEvents.value,
-      additionalCriteria: additionalCriteria.value,
-      inclusionRules: inclusionRules.value,
-      exitCriteria: exitCriteria.value,
-      observationPeriod: observationPeriod.value,
-      qualifyingLimit: qualifyingLimit.value,
-      inclusionQualifyingLimit: inclusionQualifyingLimit.value,
-      conceptSets: Array.from(conceptSetsMap.values()),
-    }
-
-    // Convert to Atlas format for validation
-    const atlasExpression = convertInternalToAtlas(cohortDef)
-
-    // Call validation endpoint
-    const result = await validateCohortDefinition(cohortName.value, atlasExpression)
-    validationWarnings.value = result.warnings || []
-  } catch (error) {
-    logger.error('CohortBuilder', 'Failed to validate cohort', error)
-    validationWarnings.value = []
-  } finally {
-    _isValidatingFlag = false
-    _isValidatingInternal.value = false
-  }
-}
-
-/**
- * Debounced validation trigger
- */
-function triggerValidation() {
-  // Skip if already validating - use plain variable to avoid creating reactive dependency
-  if (_isValidatingFlag) {
-    return
-  }
-
-  if (validationDebounceTimer) {
-    clearTimeout(validationDebounceTimer)
-  }
-
-  validationDebounceTimer = setTimeout(() => {
-    validateCohort()
-  }, 2000) // 2 second debounce
-}
-
-// Watcher stop handle
-let validationWatcherStop: (() => void) | null = null
-
-// Watch for changes to cohort definition and trigger validation
-validationWatcherStop = watch(
-  [cohortName, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
-  () => {
-    triggerValidation()
-  },
-  { deep: true }
-)
-
 
 function handleSelectConceptSet(eventId: string) {
   selectedCriteriaContext.value = { eventId, ruleIndex: -1, groupIndex: -1, eventIndex: -1 }
@@ -1445,10 +1124,8 @@ async function _handleFileImport(event: Event) {
   }
 
   if (importedCohort) {
-    // Stop watcher during state updates
-    if (validationWatcherStop) {
-      validationWatcherStop()
-    }
+    // Cancel any pending validation during batch state update
+    cancelValidation()
 
     // Load imported data into state
     cohortName.value = importedCohort.name || ''
@@ -1461,18 +1138,8 @@ async function _handleFileImport(event: Event) {
     qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
     inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
 
-    // Restart watcher
-    validationWatcherStop = watch(
-      [cohortName, entryEvents, additionalCriteria, inclusionRules, exitCriteria, observationPeriod, qualifyingLimit, inclusionQualifyingLimit],
-      () => {
-        // Skip if validating - use internal ref directly to avoid creating reactive dependency
-        if (_isValidatingInternal.value) {
-          return
-        }
-        triggerValidation()
-      },
-      { deep: true }
-    )
+    // Trigger validation (composable handles debouncing)
+    triggerValidation()
 
     successMessage.value = 'Atlas JSON imported successfully'
     showSuccess.value = true

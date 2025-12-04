@@ -157,9 +157,9 @@ const AttributeBaseSchema = z.object({
 })
 
 /**
- * Numeric range attribute schema
+ * Numeric range attribute schema (base - no refinements for discriminatedUnion)
  */
-const NumericRangeAttributeSchema = AttributeBaseSchema.extend({
+const NumericRangeAttributeBaseSchema = AttributeBaseSchema.extend({
   type: z.literal('numericRange'),
   operator: z.enum([
     'GREATER_THAN',
@@ -173,7 +173,12 @@ const NumericRangeAttributeSchema = AttributeBaseSchema.extend({
   ]),
   value: z.number(),
   extent: z.number().optional(),
-}).refine(
+})
+
+/**
+ * Numeric range attribute schema with refinements
+ */
+const NumericRangeAttributeSchema = NumericRangeAttributeBaseSchema.refine(
   (data) => {
     // BETWEEN/NOT_BETWEEN requires extent
     if (data.operator === 'BETWEEN' || data.operator === 'NOT_BETWEEN') {
@@ -188,9 +193,9 @@ const NumericRangeAttributeSchema = AttributeBaseSchema.extend({
 )
 
 /**
- * Date range attribute schema
+ * Date range attribute schema (base - no refinements for discriminatedUnion)
  */
-const DateRangeAttributeSchema = AttributeBaseSchema.extend({
+const DateRangeAttributeBaseSchema = AttributeBaseSchema.extend({
   type: z.literal('dateRange'),
   operator: z.enum([
     'GREATER_THAN',
@@ -202,7 +207,12 @@ const DateRangeAttributeSchema = AttributeBaseSchema.extend({
   ]),
   value: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)'),
   extent: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)').optional(),
-}).refine(
+})
+
+/**
+ * Date range attribute schema with refinements
+ */
+const DateRangeAttributeSchema = DateRangeAttributeBaseSchema.refine(
   (data) => {
     // BETWEEN requires both value and extent
     if (data.operator === 'BETWEEN') {
@@ -271,12 +281,17 @@ const DateAdjustmentAttributeSchema = AttributeBaseSchema.extend({
 })
 
 /**
- * User defined period schema
+ * User defined period schema (base - no refinements for discriminatedUnion)
  */
-const UserDefinedPeriodSchema = z.object({
+const UserDefinedPeriodBaseSchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)'),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)'),
-}).refine(
+})
+
+/**
+ * User defined period schema with refinements
+ */
+const UserDefinedPeriodSchema = UserDefinedPeriodBaseSchema.refine(
   (data) => {
     // Ensure end date is after or equal to start date
     return data.endDate >= data.startDate
@@ -288,8 +303,16 @@ const UserDefinedPeriodSchema = z.object({
 )
 
 /**
- * User defined period attribute schema
+ * User defined period attribute schema (base - no refinements for discriminatedUnion)
  * Defines a custom period with start and end dates
+ */
+const UserDefinedPeriodAttributeBaseSchema = AttributeBaseSchema.extend({
+  type: z.literal('userDefinedPeriod'),
+  period: UserDefinedPeriodBaseSchema,
+})
+
+/**
+ * User defined period attribute schema with refinements
  */
 const UserDefinedPeriodAttributeSchema = AttributeBaseSchema.extend({
   type: z.literal('userDefinedPeriod'),
@@ -297,10 +320,25 @@ const UserDefinedPeriodAttributeSchema = AttributeBaseSchema.extend({
 })
 
 /**
- * Complete event attribute schema (union)
- * Note: Using z.union instead of z.discriminatedUnion because some schemas use .refine()
+ * Complete event attribute schema (discriminated union for better type inference)
+ * Uses base schemas without refinements for discriminatedUnion compatibility
  */
-const EventAttributeSchema = z.union([
+const EventAttributeSchema = z.discriminatedUnion('type', [
+  NumericRangeAttributeBaseSchema,
+  DateRangeAttributeBaseSchema,
+  ConceptSetAttributeSchema,
+  ConceptAttributeSchema,
+  TextAttributeSchema,
+  BooleanAttributeSchema,
+  TemporalRelationshipAttributeSchema,
+  DateAdjustmentAttributeSchema,
+  UserDefinedPeriodAttributeBaseSchema,
+])
+
+/**
+ * Event attribute schema with all refinements (for strict validation)
+ */
+export const EventAttributeSchemaWithRefinements = z.union([
   NumericRangeAttributeSchema,
   DateRangeAttributeSchema,
   ConceptSetAttributeSchema,

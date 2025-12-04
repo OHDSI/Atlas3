@@ -15,26 +15,7 @@ import type { ConceptSet, ConceptSetListItem, ConceptSetItem } from '@/models/co
 import type { Concept } from '@/models/concept-set.types'
 import { conceptToConceptSetItem } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
-
-// Debounce utility
-function debounce<T extends (...args: never[]) => unknown>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-
-  return function executedFunction(...args: Parameters<T>) {
-    const later = () => {
-      timeout = null
-      func(...args)
-    }
-
-    if (timeout) {
-      clearTimeout(timeout)
-    }
-    timeout = setTimeout(later, wait)
-  }
-}
+import { debounce } from '@/utils/debounce'
 
 export const useConceptSetsStore = defineStore('concept-sets', () => {
   // ============================================================================

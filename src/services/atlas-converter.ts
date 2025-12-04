@@ -545,8 +545,11 @@ function convertAttributeToAtlas(attr: EventAttribute): Record<string, unknown> 
       }
     }
     // Only add Extent if it exists
-    if (attr.extent !== undefined && result[attributeName]) {
-      result[attributeName]!.Extent = attr.extent
+    if (attr.extent !== undefined) {
+      const attrValue = result[attributeName]
+      if (attrValue && typeof attrValue === 'object') {
+        attrValue.Extent = attr.extent
+      }
     }
     return result
   } else if (attr.type === 'conceptSet') {
@@ -625,7 +628,10 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
 
         // Add to existing group or create a new one
         if (criteriaGroups.length > 0) {
-          criteriaGroups[0]!.events.push(...demographicEvents)
+          const firstGroup = criteriaGroups[0]
+          if (firstGroup) {
+            firstGroup.events.push(...demographicEvents)
+          }
         } else {
           criteriaGroups.push({
             id: generateId(),
@@ -734,16 +740,32 @@ function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConce
       name: conceptSetName,
       items: [],
     },
-    cardinality: (atlasEvent as { Occurrence?: { Type?: number; Count?: number; CountMethod?: string; IsDistinct?: boolean; CountColumn?: string } }).Occurrence ? {
-      type: (atlasEvent as { Occurrence: { Type?: number } }).Occurrence.Type === 0 ? 'EXACTLY' :
-            (atlasEvent as { Occurrence: { Type?: number } }).Occurrence.Type === 1 ? 'AT_MOST' :
-            (atlasEvent as { Occurrence: { Type?: number } }).Occurrence.Type === 2 ? 'AT_LEAST' : 'EXACTLY',
-      count: (atlasEvent as { Occurrence: { Count?: number } }).Occurrence.Count ?? 1, // CRITICAL: ?? preserves 0
-      countingMethod: ((atlasEvent as { Occurrence: { CountMethod?: string } }).Occurrence.CountMethod as import('@/models/event.types').CountingMethod) || 'ALL',
-      // US4: Extended cardinality attributes
-      isDistinct: (atlasEvent as { Occurrence: { IsDistinct?: boolean } }).Occurrence.IsDistinct,
-      countColumn: (atlasEvent as { Occurrence: { CountColumn?: string } }).Occurrence.CountColumn,
-    } : undefined,
+    cardinality: (() => {
+      interface AtlasEventWithOccurrence {
+        Occurrence?: {
+          Type?: number
+          Count?: number
+          CountMethod?: string
+          IsDistinct?: boolean
+          CountColumn?: string
+        }
+      }
+      const eventWithOccurrence = atlasEvent as AtlasEventWithOccurrence
+      if (!eventWithOccurrence.Occurrence) {
+        return undefined
+      }
+      const occurrence = eventWithOccurrence.Occurrence
+      return {
+        type: occurrence.Type === 0 ? 'EXACTLY' :
+              occurrence.Type === 1 ? 'AT_MOST' :
+              occurrence.Type === 2 ? 'AT_LEAST' : 'EXACTLY',
+        count: occurrence.Count ?? 1, // CRITICAL: ?? preserves 0
+        countingMethod: (occurrence.CountMethod as import('@/models/event.types').CountingMethod) || 'ALL',
+        // US4: Extended cardinality attributes
+        isDistinct: occurrence.IsDistinct,
+        countColumn: occurrence.CountColumn,
+      }
+    })(),
     attributes: [], // Will be populated below
   }
 
@@ -752,7 +774,16 @@ function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConce
 
   // Add temporal window if present
   // NOTE: Atlas format has StartWindow with nested Start/End, not separate StartWindow/EndWindow
-  const startWindow = (atlasEvent as { StartWindow?: { Start?: { Days?: number; Coeff?: number }; End?: { Days?: number; Coeff?: number }; UseIndexEnd?: boolean; UseEventEnd?: boolean } }).StartWindow
+  interface AtlasEventWithStartWindow {
+    StartWindow?: {
+      Start?: { Days?: number; Coeff?: number }
+      End?: { Days?: number; Coeff?: number }
+      UseIndexEnd?: boolean
+      UseEventEnd?: boolean
+    }
+  }
+  const eventWithStartWindow = atlasEvent as AtlasEventWithStartWindow
+  const startWindow = eventWithStartWindow.StartWindow
   if (startWindow) {
     event.temporalWindow = {
       startWindow: startWindow.Start ? {
@@ -773,17 +804,29 @@ function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConce
   }
 
   // Add optional flags
-  const restrictVisit = (atlasEvent as { RestrictVisit?: boolean }).RestrictVisit
-  if (restrictVisit !== undefined) {
-    event.restrictVisit = restrictVisit
+  interface AtlasEventWithFlags {
+    RestrictVisit?: boolean
+    IgnoreObservationPeriod?: boolean
   }
-  const ignoreObservationPeriod = (atlasEvent as { IgnoreObservationPeriod?: boolean }).IgnoreObservationPeriod
-  if (ignoreObservationPeriod !== undefined) {
-    event.ignoreObservationPeriod = ignoreObservationPeriod
+  const eventWithFlags = atlasEvent as AtlasEventWithFlags
+  if (eventWithFlags.RestrictVisit !== undefined) {
+    event.restrictVisit = eventWithFlags.RestrictVisit
+  }
+  if (eventWithFlags.IgnoreObservationPeriod !== undefined) {
+    event.ignoreObservationPeriod = eventWithFlags.IgnoreObservationPeriod
   }
 
   // US4: Extract DateAdjustment
-  const dateAdjustment = (atlasEvent as { DateAdjustment?: { StartWith: string; StartOffset: number; EndWith: string; EndOffset: number } }).DateAdjustment
+  interface AtlasEventWithDateAdjustment {
+    DateAdjustment?: {
+      StartWith: string
+      StartOffset: number
+      EndWith: string
+      EndOffset: number
+    }
+  }
+  const eventWithDateAdjustment = atlasEvent as AtlasEventWithDateAdjustment
+  const dateAdjustment = eventWithDateAdjustment.DateAdjustment
   if (dateAdjustment) {
     event.dateAdjustment = {
       startWith: dateAdjustment.StartWith as 'START_DATE' | 'END_DATE',
@@ -794,7 +837,15 @@ function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConce
   }
 
   // Convert Atlas CorrelatedCriteria to nested criteria
-  const correlatedCriteria = (atlasEvent as { CorrelatedCriteria?: { Type?: string; Count?: number; CriteriaList?: AtlasCriteria[] } }).CorrelatedCriteria
+  interface AtlasEventWithCorrelatedCriteria {
+    CorrelatedCriteria?: {
+      Type?: string
+      Count?: number
+      CriteriaList?: AtlasCriteria[]
+    }
+  }
+  const eventWithCorrelatedCriteria = atlasEvent as AtlasEventWithCorrelatedCriteria
+  const correlatedCriteria = eventWithCorrelatedCriteria.CorrelatedCriteria
   if (correlatedCriteria) {
     event.nestedCriteria = {
       id: generateId(),

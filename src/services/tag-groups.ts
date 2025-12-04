@@ -5,6 +5,7 @@
  * In Atlas, tag groups are tags with empty groups array.
  */
 
+import { logger } from '@/utils/logger'
 import type { Tag, TagGroup } from '@/models/config.types'
 
 const API_BASE = '/WebAPI'
@@ -23,7 +24,12 @@ export async function loadAvailableTags(): Promise<Tag[]> {
     throw new Error(`Failed to fetch tags: ${response.statusText}`)
   }
 
-  return response.json()
+  try {
+    return await response.json()
+  } catch (parseError) {
+    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
+    throw new Error('Invalid response format from tags API')
+  }
 }
 
 /**
@@ -62,7 +68,12 @@ export async function createTagGroup(tag: Omit<TagGroup, 'id'>): Promise<TagGrou
     throw new Error(`Failed to create tag group: ${error}`)
   }
 
-  return response.json()
+  try {
+    return await response.json()
+  } catch (parseError) {
+    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
+    throw new Error('Invalid response format from create tag group API')
+  }
 }
 
 /**
@@ -93,7 +104,12 @@ export async function updateTagGroup(tag: TagGroup): Promise<TagGroup> {
     throw new Error(`Failed to update tag group: ${error}`)
   }
 
-  return response.json()
+  try {
+    return await response.json()
+  } catch (parseError) {
+    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
+    throw new Error('Invalid response format from update tag group API')
+  }
 }
 
 /**
@@ -144,7 +160,12 @@ export async function searchTags(namePart: string): Promise<Tag[]> {
     throw new Error(`Failed to search tags: ${response.statusText}`)
   }
 
-  return response.json()
+  try {
+    return await response.json()
+  } catch (parseError) {
+    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
+    throw new Error('Invalid response format from search tags API')
+  }
 }
 
 /**
@@ -168,7 +189,12 @@ export async function createTag(tag: Omit<Tag, 'id'>): Promise<Tag> {
     throw new Error(`Failed to create tag: ${error}`)
   }
 
-  return response.json()
+  try {
+    return await response.json()
+  } catch (parseError) {
+    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
+    throw new Error('Invalid response format from create tag API')
+  }
 }
 
 /**
@@ -196,7 +222,12 @@ export async function updateTag(tag: Tag): Promise<Tag> {
     throw new Error(`Failed to update tag: ${error}`)
   }
 
-  return response.json()
+  try {
+    return await response.json()
+  } catch (parseError) {
+    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
+    throw new Error('Invalid response format from update tag API')
+  }
 }
 
 /**

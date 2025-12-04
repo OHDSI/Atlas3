@@ -194,3 +194,8 @@ initializeApp().then(async (app) => {
 }).catch((error) => {
   logger.error('App', 'Application initialization failed:', error)
 })
+
+// Global unhandled promise rejection handler
+window.addEventListener('unhandledrejection', (event) => {
+  logger.error('Unhandled', 'Promise rejection', event.reason)
+})

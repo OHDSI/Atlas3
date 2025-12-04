@@ -7,7 +7,7 @@
     >
       <div
         v-for="(attribute, index) in modelValue"
-        :key="index"
+        :key="`${attribute.type}-${attribute.attributeKey}-${index}`"
         class="attribute-container mb-2"
       >
         <template v-if="attribute">

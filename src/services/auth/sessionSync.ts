@@ -10,7 +10,8 @@ import { logger } from '@/utils/logger';
 
 class SessionSyncService {
   private active = false;
-  
+  private boundHandler: ((e: StorageEvent) => void) | null = null;
+
   private config: SessionSyncConfig = {
     storageKey: 'bearerToken', // Match existing localStorage key
     syncLogin: true,
@@ -21,7 +22,7 @@ class SessionSyncService {
 
   /**
    * Initialize cross-tab session sync
-   * 
+   *
    * Sets up storage event listener to detect auth changes in other tabs
    */
   initialize(): void {
@@ -30,18 +31,22 @@ class SessionSyncService {
       return;
     }
 
-    window.addEventListener('storage', this.handleStorageEvent.bind(this));
+    this.boundHandler = this.handleStorageEvent.bind(this);
+    window.addEventListener('storage', this.boundHandler);
     this.active = true;
     logger.info('SessionSync', 'Cross-tab session sync initialized');
   }
 
   /**
    * Stop session sync
-   * 
+   *
    * Removes storage event listener
    */
   stop(): void {
-    window.removeEventListener('storage', this.handleStorageEvent.bind(this));
+    if (this.boundHandler) {
+      window.removeEventListener('storage', this.boundHandler);
+      this.boundHandler = null;
+    }
     this.active = false;
     logger.info('SessionSync', 'Cross-tab session sync stopped');
   }

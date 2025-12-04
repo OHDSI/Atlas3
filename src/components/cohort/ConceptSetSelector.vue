@@ -114,18 +114,18 @@ import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
-import { useConceptSetsStore } from '@/stores/conceptSets'
+import { useConceptPickerStore } from '@/stores/concept-picker'
 import ConceptSearchDialog from './ConceptSearchDialog.vue'
 
 const { t, tv } = useI18n()
 
-const conceptSetsStore = useConceptSetsStore()
+const conceptPickerStore = useConceptPickerStore()
 
 const isSearchDialogOpen = ref(false)
 const currentConceptSetId = ref<number | string | null>(null)
 
 const conceptSetsList = computed(() => {
-  return Array.from(conceptSetsStore.conceptSets.values())
+  return Array.from(conceptPickerStore.conceptSets.values())
 })
 
 function createNewConceptSet() {
@@ -135,33 +135,33 @@ function createNewConceptSet() {
     items: [],
   }
 
-  conceptSetsStore.addConceptSet(newConceptSet)
+  conceptPickerStore.addConceptSet(newConceptSet)
 }
 
 function updateConceptSetName(id: number | string, newName: string) {
-  const conceptSet = conceptSetsStore.conceptSets.get(id)
+  const conceptSet = conceptPickerStore.conceptSets.get(id)
   if (!conceptSet) return
 
-  conceptSetsStore.addConceptSet({
+  conceptPickerStore.addConceptSet({
     ...conceptSet,
     name: newName,
   })
 }
 
 function removeConcept(conceptSetId: number | string, conceptId: number) {
-  const conceptSet = conceptSetsStore.conceptSets.get(conceptSetId)
+  const conceptSet = conceptPickerStore.conceptSets.get(conceptSetId)
   if (!conceptSet) return
 
   const updatedItems = conceptSet.items.filter(item => item.conceptId !== conceptId)
 
-  conceptSetsStore.addConceptSet({
+  conceptPickerStore.addConceptSet({
     ...conceptSet,
     items: updatedItems,
   })
 }
 
 function deleteConceptSet(id: number | string) {
-  conceptSetsStore.removeConceptSet(id)
+  conceptPickerStore.removeConceptSet(id)
 }
 
 function openSearchDialog(conceptSetId: number | string) {
@@ -172,7 +172,7 @@ function openSearchDialog(conceptSetId: number | string) {
 function handleConceptsSelected(concepts: Concept[]) {
   if (!currentConceptSetId.value) return
 
-  const conceptSet = conceptSetsStore.conceptSets.get(currentConceptSetId.value)
+  const conceptSet = conceptPickerStore.conceptSets.get(currentConceptSetId.value)
   if (!conceptSet) return
 
   // Add new concepts as items, avoiding duplicates
@@ -193,7 +193,7 @@ function handleConceptsSelected(concepts: Concept[]) {
       includeMapped: false,
     }))
 
-  conceptSetsStore.addConceptSet({
+  conceptPickerStore.addConceptSet({
     ...conceptSet,
     items: [...conceptSet.items, ...newItems],
   })
