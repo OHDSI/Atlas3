@@ -103,7 +103,13 @@ async function fetchJSON<T>(
         throw error
       }
 
-      return await response.json() as T
+      // Parse JSON response with error handling
+      try {
+        return await response.json() as T
+      } catch (parseError) {
+        logger.error('WebAPI', 'Failed to parse JSON response', parseError)
+        throw new Error('Invalid response format')
+      }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error))
 
@@ -397,8 +403,12 @@ export async function deleteConceptSet(id: number | string): Promise<boolean> {
 export async function getCohorts(): Promise<import('@/models/webapi.types').CohortDefinitionSummary[]> {
   const response = await fetchJSON<unknown[]>('/cohortdefinition')
   const { CohortDefinitionListSchema } = await import('@/models/webapi.types')
-  const validated = CohortDefinitionListSchema.parse(response)
-  return validated
+  const result = CohortDefinitionListSchema.safeParse(response)
+  if (!result.success) {
+    logger.error('WebAPI', 'Cohort list validation failed', result.error)
+    return []
+  }
+  return result.data
 }
 
 /**
@@ -1099,7 +1109,12 @@ export async function getCohortPrintFriendly(
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    return await response.text()
+    try {
+      return await response.text()
+    } catch (parseError) {
+      logger.error('WebAPI', 'Failed to parse text response', parseError)
+      throw new Error('Invalid response format')
+    }
   } catch (error) {
     logger.error('WebAPI', 'Failed to fetch print-friendly cohort', error)
     return null

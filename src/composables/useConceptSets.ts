@@ -3,30 +3,14 @@
  * Provides reactive state and operations for concept set management
  */
 import { ref, computed } from 'vue'
-import { useConceptSetsStore } from '@/stores/conceptSets'
+import { useConceptPickerStore } from '@/stores/concept-picker'
 import type { Concept, ConceptSet } from '@/models/concept-set.types'
 import * as webapi from '@/services/webapi'
 import { logger } from '@/utils/logger'
-
-// Simple debounce implementation
-function debounce<T extends (...args: never[]) => unknown>(func: T, wait: number): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-
-  return function executedFunction(...args: Parameters<T>) {
-    const later = () => {
-      timeout = null
-      func(...args)
-    }
-
-    if (timeout) {
-      clearTimeout(timeout)
-    }
-    timeout = setTimeout(later, wait)
-  }
-}
+import { debounce } from '@/utils/debounce'
 
 export function useConceptSets() {
-  const store = useConceptSetsStore()
+  const store = useConceptPickerStore()
 
   // Local state for selected concepts (for creating/editing concept sets)
   const selectedConcepts = ref<Concept[]>([])

@@ -6,6 +6,9 @@ import { refreshManager } from '@/services/auth/refreshManager'
 import { authConfig } from '@/config/auth.config'
 import { logger } from '@/utils/logger'
 
+// Storage handler reference for cleanup
+let storageHandler: ((e: StorageEvent) => void) | null = null
+
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState & { refreshTimeoutId: number | null; isRunningAs: boolean; originalUser: UserInfo | null; sessionExpiryModalOpen: boolean; sessionExpiresAt: Date | null } => ({
     token: null,
@@ -228,11 +231,11 @@ export const useAuthStore = defineStore('auth', {
     },
 
     setupCrossTabSync() {
-      window.addEventListener('storage', async (event) => {
+      storageHandler = async (event) => {
         if (event.key === 'bearerToken' && event.storageArea === localStorage) {
           if (event.newValue) {
             this.setToken(event.newValue)
-            
+
             // Fetch user info for the new token
             if (!this.tokenExpired && this.isTokenValid) {
               try {
@@ -247,7 +250,8 @@ export const useAuthStore = defineStore('auth', {
             this.clearAuth()
           }
         }
-      })
+      }
+      window.addEventListener('storage', storageHandler)
     },
 
     showSessionExpiryModal(expiresAt: Date) {
@@ -267,6 +271,13 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         logger.error('Auth', 'Failed to extend session', error)
         throw error
+      }
+    },
+
+    dispose() {
+      if (storageHandler) {
+        window.removeEventListener('storage', storageHandler)
+        storageHandler = null
       }
     },
   },

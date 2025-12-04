@@ -418,6 +418,61 @@ describe('useAtlasConverter', () => {
       expect(conversionError.value).toBe('')
     })
 
+    it('should reject files exceeding 10MB size limit', async () => {
+      const largeContent = 'x'.repeat(11 * 1024 * 1024) // 11MB
+      const mockFile = new File([largeContent], 'large.json', { type: 'application/json' })
+
+      const { importFromFile, conversionError } = useAtlasConverter()
+
+      const result = await importFromFile(mockFile)
+
+      expect(result).toBeNull()
+      expect(conversionError.value).toBe('File exceeds 10MB limit')
+    })
+
+    it('should reject files without .json extension', async () => {
+      const fileContent = JSON.stringify(mockAtlasJSON)
+      const mockFile = new File([fileContent], 'cohort.txt', { type: 'text/plain' })
+
+      const { importFromFile, conversionError } = useAtlasConverter()
+
+      const result = await importFromFile(mockFile)
+
+      expect(result).toBeNull()
+      expect(conversionError.value).toBe('File must be JSON format (.json)')
+    })
+
+    it('should accept .JSON extension (case-insensitive)', async () => {
+      const mockCohortData = { name: 'File Cohort', entryEvents: [] }
+      vi.mocked(atlasConverter.convertAtlasToInternal).mockReturnValue(mockCohortData)
+
+      const fileContent = JSON.stringify(mockAtlasJSON)
+      const mockFile = new File([fileContent], 'cohort.JSON', { type: 'application/json' })
+
+      const { importFromFile, conversionError } = useAtlasConverter()
+
+      const result = await importFromFile(mockFile)
+
+      expect(result).toEqual(mockCohortData)
+      expect(conversionError.value).toBe('')
+    })
+
+    it('should validate file before reading it', async () => {
+      const mockFile = new File(['content'], 'cohort.xml', { type: 'application/xml' })
+
+      const readAsTextSpy = vi.spyOn(FileReader.prototype, 'readAsText')
+
+      const { importFromFile, conversionError } = useAtlasConverter()
+
+      await importFromFile(mockFile)
+
+      // FileReader should not be called if validation fails
+      expect(readAsTextSpy).not.toHaveBeenCalled()
+      expect(conversionError.value).toBe('File must be JSON format (.json)')
+
+      readAsTextSpy.mockRestore()
+    })
+
     it('should use FileReader to read file', async () => {
       vi.mocked(atlasConverter.convertAtlasToInternal).mockReturnValue({ entryEvents: [] })
 

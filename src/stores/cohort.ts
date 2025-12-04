@@ -3,7 +3,7 @@
  * Manages current cohort definition state
  */
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, type WatchStopHandle } from 'vue'
 import type { CohortDefinition, CohortEvent } from '@/models/cohort.types'
 import {
   saveCohortToCache,
@@ -55,6 +55,7 @@ export const useCohortStore = defineStore('cohort', () => {
   // Auto-save timer
   let autoSaveTimer: ReturnType<typeof setInterval> | null = null
   let retryTimer: ReturnType<typeof setTimeout> | null = null
+  let watchHandle: WatchStopHandle | null = null
 
   // Getters
   const hasEntryEvents = computed(() => {
@@ -197,7 +198,7 @@ export const useCohortStore = defineStore('cohort', () => {
   }
 
   // Watch for changes and trigger auto-save timer
-  watch(isDirty, (dirty) => {
+  watchHandle = watch(isDirty, (dirty) => {
     if (dirty) {
       startAutoSave()
     }
@@ -421,6 +422,16 @@ export const useCohortStore = defineStore('cohort', () => {
     }
   }
 
+  // Cleanup function
+  function dispose() {
+    if (watchHandle) {
+      watchHandle()
+      watchHandle = null
+    }
+    stopAutoSave()
+    cancelRetry()
+  }
+
   return {
     // State
     currentCohort,
@@ -458,5 +469,7 @@ export const useCohortStore = defineStore('cohort', () => {
     saveCohort,
     cancelRetry,
     deleteCachedCohort,
+    // Cleanup
+    dispose,
   }
 })

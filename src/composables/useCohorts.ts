@@ -8,6 +8,7 @@ import type { Ref } from 'vue'
 import { getCohorts } from '@/services/webapi'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import { logger } from '@/utils/logger'
+import { debounce } from '@/utils/debounce'
 
 export interface DateRange {
   from?: Date
@@ -43,44 +44,35 @@ export function useCohorts() {
 
   // Debounced search query
   const debouncedSearchQuery = ref('')
-  let searchDebounceTimer: number | null = null
+
+  // Debounced function to update search query
+  const updateDebouncedSearchQuery = debounce((query: string) => {
+    debouncedSearchQuery.value = query
+  }, 300)
 
   // Watch for search changes and debounce
   watch(() => filters.value.searchQuery, (newQuery) => {
-    if (searchDebounceTimer) {
-      clearTimeout(searchDebounceTimer)
-    }
-    searchDebounceTimer = window.setTimeout(() => {
-      debouncedSearchQuery.value = newQuery
-    }, 300)
+    updateDebouncedSearchQuery(newQuery)
   })
 
   // Also watch the old searchQuery for backwards compatibility
   watch(searchQuery, (newQuery) => {
-    if (searchDebounceTimer) {
-      clearTimeout(searchDebounceTimer)
-    }
-    searchDebounceTimer = window.setTimeout(() => {
-      debouncedSearchQuery.value = newQuery
-    }, 300)
+    updateDebouncedSearchQuery(newQuery)
   })
-
-  // Debounce filter changes to prevent excessive filtering
-  let filterDebounceTimer: number | null = null
 
   // Trigger async filtering when debounced search changes
   watch(debouncedSearchQuery, () => {
     filterCohortsAsync()
   })
 
+  // Debounced function for filter changes
+  const debouncedFilterCohortsAsync = debounce(() => {
+    filterCohortsAsync()
+  }, 400)
+
   // Debounce filter changes (tags, author, date ranges)
   watch(() => filters.value, () => {
-    if (filterDebounceTimer) {
-      clearTimeout(filterDebounceTimer)
-    }
-    filterDebounceTimer = window.setTimeout(() => {
-      filterCohortsAsync()
-    }, 400) // Debounce filter controls to allow UI to settle
+    debouncedFilterCohortsAsync()
   }, { deep: true })
 
   // Initialize cached results with all cohorts

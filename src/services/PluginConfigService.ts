@@ -25,10 +25,21 @@ export class PluginConfigService {
         throw new Error(`Failed to load plugins.json: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      let data: unknown
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        logger.error('PluginConfig', 'Failed to parse JSON response', parseError)
+        throw new Error('Invalid JSON in plugins.json')
+      }
 
-      // Validate with Zod schema
-      const validated = PluginManifestSchema.parse(data);
+      // Validate with Zod schema using safeParse
+      const result = PluginManifestSchema.safeParse(data)
+      if (!result.success) {
+        logger.error('PluginConfig', 'Plugin manifest validation failed', result.error)
+        throw new Error('Invalid plugin manifest format')
+      }
+      const validated = result.data
 
       // Apply defaults
       this.manifest = {

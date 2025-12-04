@@ -140,7 +140,7 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
-import { useConceptSetsStore } from '@/stores/conceptSets'
+import { useConceptPickerStore } from '@/stores/concept-picker'
 import { useWebAPIStore } from '@/stores/webapi'
 import LoadingSpinner from '@/components/shared/LoadingSpinner.vue'
 import { logger } from '@/utils/logger'
@@ -159,7 +159,7 @@ const emit = defineEmits<{
   'concepts-selected': [concepts: Concept[]]
 }>()
 
-const conceptSetsStore = useConceptSetsStore()
+const conceptPickerStore = useConceptPickerStore()
 const webapiStore = useWebAPIStore()
 
 const searchQuery = ref('')
@@ -177,9 +177,9 @@ const domainOptions = [
   'Device',
 ]
 
-const isSearching = computed(() => conceptSetsStore.isSearching)
+const isSearching = computed(() => conceptPickerStore.isSearching)
 const searchResults = computed(() => {
-  const results = conceptSetsStore.searchResults || []
+  const results = conceptPickerStore.searchResults || []
 
   // Client-side domain filtering
   if (selectedDomain.value && results.length > 0) {
@@ -201,7 +201,7 @@ async function performSearch() {
 
   try {
     // Don't pass domain to API - we filter client-side instead
-    await conceptSetsStore.searchConcepts(
+    await conceptPickerStore.searchConcepts(
       webapiStore.selectedSource,
       searchQuery.value
     )

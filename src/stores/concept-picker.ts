@@ -1,6 +1,6 @@
 /**
- * Concept Sets Store
- * Manages concept set definitions and search results
+ * Concept Picker Store
+ * UI state for concept selection dialogs and search results
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
@@ -8,7 +8,7 @@ import type { ConceptSet, Concept } from '@/models/concept-set.types'
 import * as webapi from '@/services/webapi'
 import { logger } from '@/utils/logger'
 
-export const useConceptSetsStore = defineStore('conceptSets', () => {
+export const useConceptPickerStore = defineStore('concept-picker', () => {
   // State
   const conceptSets = ref<Map<number | string, ConceptSet>>(new Map())
   const searchResults = ref<Concept[]>([])
@@ -66,7 +66,7 @@ export const useConceptSetsStore = defineStore('conceptSets', () => {
       const results = await webapi.searchConcepts(sourceKey, query, domain)
       setSearchResults(results)
     } catch (error) {
-      logger.error('ConceptSetsStore', 'Error searching concepts', error)
+      logger.error('ConceptPickerStore', 'Error searching concepts', error)
       setSearchResults([])
     } finally {
       setSearching(false)

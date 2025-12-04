@@ -73,20 +73,26 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
       if (!response.ok) {
         const status = response.status
         const errorText = await response.text().catch(() => 'Unknown error')
-        
+
         if (isRetryableError(status) && attempt < MAX_RETRY_ATTEMPTS - 1) {
           const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
           logger.warn('DataSource', `Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`)
           await sleep(delayMs)
           continue
         }
-        
+
         throw new Error(`HTTP ${status}: ${errorText}`)
       }
 
-      const data = await response.json()
-      activeRequests.delete(endpoint)
-      return data
+      // Parse JSON response with error handling
+      try {
+        const data = await response.json()
+        activeRequests.delete(endpoint)
+        return data
+      } catch (parseError) {
+        logger.error('DataSource', 'Failed to parse JSON response', parseError)
+        throw new Error('Invalid response format')
+      }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         logger.debug('DataSource', 'Request cancelled', endpoint)
@@ -115,10 +121,23 @@ export async function listDataSources(): Promise<DataSource[]> {
   try {
     logger.debug('DataSource', 'Fetching sources from /source/sources')
     const response = await fetchJSON<DataSource[]>('/source/sources')
-    
-    const validated = response.map(source => DataSourceSchema.parse(source))
+
+    const validated: DataSource[] = []
+    for (const source of response) {
+      const result = DataSourceSchema.safeParse(source)
+      if (result.success) {
+        validated.push(result.data)
+      } else {
+        logger.error('DataSource', 'Data source validation failed', result.error)
+      }
+    }
+
+    // If no sources passed validation, throw error to maintain backward compatibility
+    if (response.length > 0 && validated.length === 0) {
+      throw new Error('All data sources failed validation')
+    }
+
     logger.debug('DataSource', `Successfully fetched ${validated.length} sources`)
-    
     return validated
   } catch (error) {
     logger.error('DataSource', 'Failed to fetch sources', error)
@@ -133,12 +152,17 @@ export async function getDashboardReport(sourceKey: string): Promise<DashboardRe
   try {
     logger.debug('DataSource', `Fetching dashboard report for ${sourceKey}`)
     const response = await fetchJSON<DashboardAPIResponse>(`/cdmresults/${sourceKey}/dashboard`)
-    
+
     const transformed = transformDashboardReport(response)
-    const validated = DashboardReportSchema.parse(transformed)
-    
+    const result = DashboardReportSchema.safeParse(transformed)
+
+    if (!result.success) {
+      logger.error('DataSource', 'Dashboard report validation failed', result.error)
+      throw new Error('Invalid dashboard report format')
+    }
+
     logger.debug('DataSource', `Successfully fetched dashboard report for ${sourceKey}`)
-    return validated
+    return result.data
   } catch (error) {
     logger.error('DataSource', 'Failed to fetch dashboard report', { sourceKey, error })
     throw new Error('Unable to load Dashboard report. Please try again.')

@@ -277,6 +277,11 @@ export const useWebAPIStore = defineStore('webapi', () => {
     }
   }
 
+  // Cleanup function
+  function dispose() {
+    stopAllPolling()
+  }
+
   return {
     // State
     sources,
@@ -304,6 +309,8 @@ export const useWebAPIStore = defineStore('webapi', () => {
     pollGenerationStatus,
     stopPolling,
     stopAllPolling,
+    // Cleanup
+    dispose,
     // Constants (for testing)
     POLL_INTERVAL_MS,
     POLL_TIMEOUT_MS,

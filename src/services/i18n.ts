@@ -46,8 +46,16 @@ export async function fetchLocales(): Promise<Locale[]> {
     if (!response.ok) {
       throw new Error(`Failed to fetch locales: ${response.statusText}`)
     }
-    const data = await response.json()
-    const rawLocales = data.data || data
+
+    let data: unknown
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      logger.error('i18n', 'Failed to parse JSON response', parseError)
+      throw new Error('Invalid response format from locales API')
+    }
+
+    const rawLocales = (data as { data?: unknown }).data || data
     
     // Validate with Zod
     const parsed = LocaleArraySchema.safeParse(rawLocales)
@@ -74,8 +82,15 @@ export async function fetchTranslations(locale: LocaleCode): Promise<Translation
     if (!response.ok) {
       throw new Error(`Failed to fetch translations for ${locale}: ${response.statusText}`)
     }
-    const data = await response.json()
-    
+
+    let data: unknown
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      logger.error('i18n', 'Failed to parse JSON response', parseError)
+      throw new Error(`Invalid response format from translations API for ${locale}`)
+    }
+
     // WebAPI returns translations directly, not wrapped in { data: ... }
     const rawTranslations = data
     
@@ -88,18 +103,25 @@ export async function fetchTranslations(locale: LocaleCode): Promise<Translation
 
     const translations: Translations = translationsValidation.data
 
+    // Check if data has format property (type-safe access)
+    const dataObj = data as Record<string, unknown>
+    const rawFormat = dataObj?.format
+
     // Validate format if present
-    if (data.format) {
-      const formatValidation = LocaleFormatSchema.safeParse(data.format)
-      if (!formatValidation.success) {
+    let validatedFormat: z.infer<typeof LocaleFormatSchema> = undefined
+    if (rawFormat) {
+      const formatValidation = LocaleFormatSchema.safeParse(rawFormat)
+      if (formatValidation.success) {
+        validatedFormat = formatValidation.data
+      } else {
         logger.warn('i18n', 'Invalid format data, skipping', formatValidation.error)
       }
     }
-    
+
     return {
       locale,
       translations,
-      format: data.format,
+      format: validatedFormat,
       fetchedAt: new Date()
     }
   } catch (error) {

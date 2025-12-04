@@ -18,7 +18,7 @@ vi.mock('@/utils/logger', () => ({
 // Mock PluginModels
 vi.mock('@/models/PluginModels', () => ({
   PluginManifestSchema: {
-    parse: vi.fn((data) => data),
+    safeParse: vi.fn((data) => ({ success: true, data })),
   },
   DEFAULT_MANIFEST_SETTINGS: {
     enableHotReload: false,

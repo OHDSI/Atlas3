@@ -30,7 +30,12 @@ async function fetchJSON<T>(endpoint: string): Promise<T> {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   }
 
-  return await response.json() as T
+  try {
+    return await response.json() as T
+  } catch (parseError) {
+    logger.error('ConceptSearch', 'Failed to parse JSON response', parseError)
+    throw new Error('Invalid response format')
+  }
 }
 
 /**
@@ -145,7 +150,13 @@ export async function getConceptRecordCounts(
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    const data: ConceptRecordCountResponse = await response.json()
+    let data: ConceptRecordCountResponse
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      logger.error('ConceptSearch', 'Failed to parse JSON response', parseError)
+      throw new Error('Invalid response format')
+    }
 
     // The API returns an array of objects with concept IDs as keys
     // Example: [{ "192671": [13, 331, 12, 323], "313217": [3023, 3023, 579, 579] }]

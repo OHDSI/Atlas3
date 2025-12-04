@@ -466,7 +466,8 @@ const matchTypeCount = ref(1)
 // Watch for external changes
 watch(() => props.modelValue, (newVal) => {
   if (newVal) {
-    localGroup.value = { ...newVal }
+    // Deep clone to preserve nested reactivity
+    localGroup.value = JSON.parse(JSON.stringify(newVal))
   }
 }, { deep: true })
 
@@ -727,11 +728,14 @@ function toCamelCase(str: string): string {
   return str.charAt(0).toLowerCase() + str.slice(1)
 }
 
+// Refs for getting available attributes (moved to component scope to avoid creating refs in functions)
+const attributeCriteriaTypeKey = ref('')
+const attributeSectionRef = ref('criteriaGroup')
+
 // Get available attributes for a specific event
 function getAvailableAttributesForEvent(event: CohortEvent) {
-  const criteriaTypeKey = ref(toCamelCase(event.criteriaType))
-  const sectionRef = ref('criteriaGroup')
-  const { attributes } = useAttributeConfig(criteriaTypeKey, sectionRef)
+  attributeCriteriaTypeKey.value = toCamelCase(event.criteriaType)
+  const { attributes } = useAttributeConfig(attributeCriteriaTypeKey, attributeSectionRef)
   return attributes.value
 }
 
