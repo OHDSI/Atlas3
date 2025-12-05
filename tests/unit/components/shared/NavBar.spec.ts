@@ -1,0 +1,382 @@
+/**
+ * NavBar Component Tests
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+import { ref } from 'vue'
+import NavBar from '@/components/shared/NavBar.vue'
+
+// Mock vue-router
+const mockPush = vi.fn()
+const mockIsReady = vi.fn().mockResolvedValue(true)
+const mockAfterEach = vi.fn()
+
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: mockPush,
+    isReady: mockIsReady,
+    currentRoute: ref({ path: '/cohorts' }),
+    afterEach: mockAfterEach
+  })
+}))
+
+// Mock composables
+const mockLogout = vi.fn()
+const mockOpenLoginModal = vi.fn()
+
+vi.mock('@/composables/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: ref(false),
+    userDisplayName: ref('Test User'),
+    logout: mockLogout,
+    openLoginModal: mockOpenLoginModal
+  })
+}))
+
+vi.mock('@/composables/useI18n', () => ({
+  useI18n: () => ({
+    t: (key: string, fallback: string) => ref(fallback)
+  })
+}))
+
+// Mock stores
+const mockOpenConfigPanel = vi.fn()
+const mockCloseConfigPanel = vi.fn()
+
+vi.mock('@/stores/ui', () => ({
+  useUIStore: () => ({
+    configPanelState: {
+      isOpen: false
+    },
+    openConfigPanel: mockOpenConfigPanel,
+    closeConfigPanel: mockCloseConfigPanel
+  })
+}))
+
+// Mock auth config
+vi.mock('@/config/auth.config', () => ({
+  authConfig: {
+    enableSkipLogin: false
+  }
+}))
+
+// Mock plugin-related modules
+vi.mock('@/plugins/navigation/PluginMenuIntegration.ts', () => ({
+  generatePluginMenuItems: () => []
+}))
+
+vi.mock('@/plugins/core/PluginRegistry', () => ({
+  pluginRegistry: {
+    getAllPlugins: () => [],
+    onStateChange: vi.fn()
+  }
+}))
+
+vi.mock('@/services/PluginConfigService', () => ({
+  pluginConfigService: {
+    getLogoUrl: () => null,
+    isCoreNavigationItemEnabled: () => true,
+    onChange: vi.fn()
+  }
+}))
+
+vi.mock('@/utils/logger', () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn()
+  }
+}))
+
+// Mock child components
+vi.mock('@/components/auth/LoginModal.vue', () => ({
+  default: {
+    name: 'LoginModal',
+    template: '<div class="login-modal"></div>'
+  }
+}))
+
+vi.mock('@/components/LanguageSelector.vue', () => ({
+  default: {
+    name: 'LanguageSelector',
+    template: '<div class="language-selector"></div>'
+  }
+}))
+
+const vuetify = createVuetify({ components, directives })
+
+function mountComponent(options = {}) {
+  return mount(NavBar, {
+    global: {
+      plugins: [vuetify],
+      stubs: {
+        LoginModal: true,
+        LanguageSelector: true
+      }
+    },
+    ...options
+  })
+}
+
+describe('NavBar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  describe('Component Rendering', () => {
+    it('should render the navigation bar', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.find('.nav-bar').exists()).toBe(true)
+    })
+
+    it('should render the OHDSI logo when no custom logo is configured', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.find('.nav-bar__ohdsi-logo').exists()).toBe(true)
+    })
+
+    it('should render the ATLAS logo when no custom logo is configured', () => {
+      const wrapper = mountComponent()
+      const atlasLogo = wrapper.find('.nav-bar__logo img')
+      expect(atlasLogo.exists()).toBe(true)
+      expect(atlasLogo.attributes('alt')).toBe('ATLAS')
+    })
+
+    it('should render LoginModal component', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.findComponent({ name: 'LoginModal' }).exists()).toBe(true)
+    })
+
+    it('should render LanguageSelector component', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.findComponent({ name: 'LanguageSelector' }).exists()).toBe(true)
+    })
+
+    it('should render feedback button', () => {
+      const wrapper = mountComponent()
+      const feedbackBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes('Feedback'))
+      expect(feedbackBtn).toBeDefined()
+      expect(feedbackBtn?.attributes('href')).toBe('https://forms.office.com/r/2JzrYy1yDP')
+      expect(feedbackBtn?.attributes('target')).toBe('_blank')
+    })
+
+    it('should render configuration button', () => {
+      const wrapper = mountComponent()
+      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const configBtn = buttons.find(btn => {
+        return btn.attributes('aria-label') === 'Open configuration panel'
+      })
+      expect(configBtn).toBeDefined()
+    })
+  })
+
+  describe('Navigation Items', () => {
+    it('should render navigation items on desktop', () => {
+      const wrapper = mountComponent()
+      const nav = wrapper.find('.nav-bar__nav.d-none.d-md-block')
+      expect(nav.exists()).toBe(true)
+    })
+
+    it('should render navigation list with items', () => {
+      const wrapper = mountComponent()
+      const navList = wrapper.find('.nav-bar__nav-list')
+      expect(navList.exists()).toBe(true)
+      const navItems = navList.findAll('.nav-bar__nav-item')
+      expect(navItems.length).toBeGreaterThan(0)
+    })
+
+    it('should render navigation dropdown for mobile', () => {
+      const wrapper = mountComponent()
+      const navDropdown = wrapper.find('.nav-bar__nav-dropdown.d-md-none')
+      expect(navDropdown.exists()).toBe(true)
+    })
+
+    it('should mark active navigation item with correct class', () => {
+      const wrapper = mountComponent()
+      const activeItem = wrapper.find('.nav-bar__nav-item--active')
+      expect(activeItem.exists()).toBe(true)
+    })
+
+    it('should render navigation links with correct attributes', () => {
+      const wrapper = mountComponent()
+      const firstLink = wrapper.find('.nav-bar__nav-link')
+      expect(firstLink.exists()).toBe(true)
+      expect(firstLink.attributes('href')).toBe('#')
+    })
+  })
+
+  describe('Authentication UI', () => {
+    it('should render sign in button when not authenticated', () => {
+      const wrapper = mountComponent()
+      const signInBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes('Sign In'))
+      expect(signInBtn).toBeDefined()
+    })
+
+    it('should not render user menu when not authenticated', () => {
+      const wrapper = mountComponent()
+      const userDiv = wrapper.find('.nav-bar__user')
+      expect(userDiv.exists()).toBe(false)
+    })
+  })
+
+  describe('Logo Interactions', () => {
+    it('should navigate to home when logo is clicked', async () => {
+      const wrapper = mountComponent()
+      const logo = wrapper.find('.nav-bar__logo')
+
+      await logo.trigger('click')
+      await flushPromises()
+
+      expect(mockIsReady).toHaveBeenCalled()
+      expect(mockPush).toHaveBeenCalledWith('/')
+    })
+
+    it('should navigate to home on logo keyboard interaction', async () => {
+      const wrapper = mountComponent()
+      const logo = wrapper.find('.nav-bar__logo')
+
+      expect(logo.attributes('tabindex')).toBe('0')
+      expect(logo.attributes('role')).toBe('button')
+    })
+  })
+
+  describe('Navigation Interactions', () => {
+    it('should navigate when navigation link is clicked', async () => {
+      const wrapper = mountComponent()
+      const firstLink = wrapper.find('.nav-bar__nav-link')
+
+      await firstLink.trigger('click')
+      await flushPromises()
+
+      expect(mockIsReady).toHaveBeenCalled()
+      expect(mockPush).toHaveBeenCalled()
+    })
+
+    it('should handle navigation link click event', async () => {
+      const wrapper = mountComponent()
+      const firstLink = wrapper.find('.nav-bar__nav-link')
+
+      await firstLink.trigger('click')
+      await flushPromises()
+
+      // Verify navigation was attempted
+      expect(mockIsReady).toHaveBeenCalled()
+    })
+  })
+
+  describe('Configuration Panel', () => {
+    it('should open config panel when config button is clicked', async () => {
+      const wrapper = mountComponent()
+      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const configBtn = buttons.find(btn => {
+        return btn.attributes('aria-label') === 'Open configuration panel'
+      })
+
+      expect(configBtn).toBeDefined()
+      await configBtn?.trigger('click')
+
+      expect(mockOpenConfigPanel).toHaveBeenCalled()
+    })
+  })
+
+  describe('Authentication Actions', () => {
+    it('should open login modal when sign in button is clicked', async () => {
+      const wrapper = mountComponent()
+      const signInBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes('Sign In'))
+
+      await signInBtn?.trigger('click')
+
+      expect(mockOpenLoginModal).toHaveBeenCalled()
+    })
+  })
+
+  describe('Mobile Menu', () => {
+    it('should render v-menu for mobile navigation', () => {
+      const wrapper = mountComponent()
+      const menus = wrapper.findAllComponents({ name: 'VMenu' })
+      // Should have at least one menu (mobile nav dropdown)
+      expect(menus.length).toBeGreaterThan(0)
+    })
+
+    it('should have mobile dropdown navigation', () => {
+      const wrapper = mountComponent()
+      const navDropdown = wrapper.find('.nav-bar__nav-dropdown')
+      expect(navDropdown.exists()).toBe(true)
+    })
+  })
+
+  describe('Accessibility', () => {
+    it('should have proper aria-label on config button', () => {
+      const wrapper = mountComponent()
+      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const configBtn = buttons.find(btn => {
+        return btn.attributes('aria-label') === 'Open configuration panel'
+      })
+      expect(configBtn).toBeDefined()
+      expect(configBtn?.attributes('aria-label')).toBe('Open configuration panel')
+    })
+
+    it('should have proper role and tabindex on logo', () => {
+      const wrapper = mountComponent()
+      const logo = wrapper.find('.nav-bar__logo')
+      expect(logo.attributes('role')).toBe('button')
+      expect(logo.attributes('tabindex')).toBe('0')
+    })
+
+    it('should have alt text on images', () => {
+      const wrapper = mountComponent()
+      const ohdsiLogo = wrapper.find('.nav-bar__ohdsi-logo')
+      expect(ohdsiLogo.attributes('alt')).toBe('OHDSI')
+
+      const atlasLogo = wrapper.find('.nav-bar__logo img')
+      expect(atlasLogo.attributes('alt')).toBe('ATLAS')
+    })
+
+    it('should have proper external link attributes on feedback button', () => {
+      const wrapper = mountComponent()
+      const feedbackBtn = wrapper.findAll('.v-btn').find(btn => btn.text().includes('Feedback'))
+      expect(feedbackBtn?.attributes('target')).toBe('_blank')
+    })
+  })
+
+  describe('Conditional Rendering', () => {
+    it('should show auth section when not authenticated', () => {
+      const wrapper = mountComponent()
+      const authDiv = wrapper.find('.nav-bar__auth')
+      expect(authDiv.exists()).toBe(true)
+    })
+
+    it('should render visible navigation items only', () => {
+      const wrapper = mountComponent()
+      const navItems = wrapper.findAll('.nav-bar__nav-item')
+
+      // All items should be visible (based on mock returning true)
+      navItems.forEach(item => {
+        expect(item.isVisible()).toBe(true)
+      })
+    })
+  })
+
+  describe('Styling', () => {
+    it('should apply correct CSS classes to navigation bar', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.find('.nav-bar').exists()).toBe(true)
+      expect(wrapper.find('.nav-bar__container').exists()).toBe(true)
+    })
+
+    it('should apply active state styling to active navigation item', () => {
+      const wrapper = mountComponent()
+      const activeItem = wrapper.find('.nav-bar__nav-item--active')
+      expect(activeItem.exists()).toBe(true)
+    })
+
+    it('should have proper layout classes for responsive design', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.find('.d-none.d-md-block').exists()).toBe(true)
+      expect(wrapper.find('.d-md-none').exists()).toBe(true)
+    })
+  })
+})

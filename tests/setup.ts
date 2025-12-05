@@ -4,6 +4,12 @@
  */
 import { vi } from 'vitest'
 
+// Mock navigator.userAgent (required for Vuetify display composable)
+Object.defineProperty(window.navigator, 'userAgent', {
+  writable: true,
+  value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+})
+
 // Mock SystemJS for plugin framework (prevent errors during test initialization)
 if (!window.System) {
   window.System = {

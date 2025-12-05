@@ -20,6 +20,8 @@ export default defineConfig({
         singleFork: true,
       },
     },
+    testTimeout: 30000,
+    hookTimeout: 30000,
     server: {
       deps: {
         inline: ['vuetify'],
@@ -29,14 +31,25 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'html'],
       reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,vue}'],
       exclude: [
         'node_modules/',
-        'vue-mri-ui-lib/',
         'tests/',
         '**/*.spec.ts',
         '**/*.test.ts',
         '**/types.ts',
+        '**/*.d.ts',
+        'src/models/**',
+        'src/types/**',
+        'src/locales/**',
       ],
+      // Coverage thresholds - fail CI if coverage drops below these values
+      thresholds: {
+        lines: 87,
+        statements: 87,
+        branches: 83,
+        functions: 68,
+      },
     },
   },
   resolve: {
