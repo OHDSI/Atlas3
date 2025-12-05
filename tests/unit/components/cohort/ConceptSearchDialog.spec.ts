@@ -9,7 +9,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
-import { useConceptSetsStore } from '@/stores/conceptSets'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import { createMockConcept } from '../../../helpers/mock-factories'
 

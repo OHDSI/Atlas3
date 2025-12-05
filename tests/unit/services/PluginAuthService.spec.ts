@@ -13,6 +13,14 @@ vi.mock('@/services/auth/permissions', () => ({
   },
 }))
 
+// Mock auth config to enable authentication
+vi.mock('@/config/auth.config', () => ({
+  authConfig: {
+    userAuthenticationEnabled: true,
+    refreshTokenThreshold: 1000 * 60 * 60 * 4,
+  },
+}))
+
 import { PluginAuthService, pluginAuthService } from '@/services/PluginAuthService'
 import { useAuthStore } from '@/stores/auth'
 import { permissionService } from '@/services/auth/permissions'

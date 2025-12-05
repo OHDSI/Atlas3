@@ -9,7 +9,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
 import ConceptSetSelector from '@/components/cohort/ConceptSetSelector.vue'
-import { useConceptSetsStore } from '@/stores/conceptSets'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 import { createMockConcept, createMockConceptSet } from '../../../helpers/mock-factories'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
 

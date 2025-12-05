@@ -7,7 +7,7 @@ import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 // Mock webapi
 vi.mock('@/services/webapi', () => ({
-  getCohorts: vi.fn(),
+  getCohorts: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 
 // Mock logger
@@ -85,7 +85,7 @@ describe('useCohorts', () => {
 
   describe('fetchCohorts', () => {
     it('should fetch and sort cohorts by modifiedDate', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, cohorts, loading } = useCohorts()
 
@@ -125,7 +125,7 @@ describe('useCohorts', () => {
 
   describe('availableTags', () => {
     it('should compute unique tags from cohorts', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, availableTags } = useCohorts()
 
@@ -147,7 +147,7 @@ describe('useCohorts', () => {
 
   describe('availableAuthors', () => {
     it('should compute unique authors from cohorts', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, availableAuthors } = useCohorts()
 
@@ -161,7 +161,7 @@ describe('useCohorts', () => {
 
   describe('activeFilterCount', () => {
     it('should count active filters', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, filters, activeFilterCount } = useCohorts()
 
@@ -182,7 +182,7 @@ describe('useCohorts', () => {
 
   describe('filtering', () => {
     it('should filter by search query', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, filters, filteredCohorts } = useCohorts()
 
@@ -200,7 +200,7 @@ describe('useCohorts', () => {
     })
 
     it('should filter by description', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, filters, filteredCohorts } = useCohorts()
 
@@ -214,7 +214,7 @@ describe('useCohorts', () => {
     })
 
     it('should return all cohorts when no filters', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, filteredCohorts } = useCohorts()
 
@@ -227,7 +227,7 @@ describe('useCohorts', () => {
 
   describe('clearFilters', () => {
     it('should clear all filters', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, filters, searchQuery, clearFilters } = useCohorts()
 
@@ -249,7 +249,7 @@ describe('useCohorts', () => {
 
   describe('refreshCohorts', () => {
     it('should refetch cohorts', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, refreshCohorts } = useCohorts()
 
@@ -262,7 +262,7 @@ describe('useCohorts', () => {
 
   describe('filtering state', () => {
     it('should indicate filtering in progress', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, filtering: _filtering, filters } = useCohorts()
 
@@ -279,7 +279,7 @@ describe('useCohorts', () => {
 
   describe('date range filtering', () => {
     it('should filter by created date range', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, filters, filteredCohorts } = useCohorts()
 
@@ -301,7 +301,7 @@ describe('useCohorts', () => {
 
   describe('tag filtering', () => {
     it('should filter by selected tags', async () => {
-      vi.mocked(getCohorts).mockResolvedValue([...mockCohorts])
+      vi.mocked(getCohorts).mockResolvedValue({ success: true, data: [...mockCohorts] })
 
       const { fetchCohorts, filters, filteredCohorts } = useCohorts()
 
