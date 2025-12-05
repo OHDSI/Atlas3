@@ -355,12 +355,14 @@ function startJobPolling(jobType: string) {
       pollCount++
 
       // Check job status via generation info endpoint
-      const info = await getCohortGenerationInfo(props.cohortId!)
-      if (!info || info.length === 0) {
+      const result = await getCohortGenerationInfo(props.cohortId!)
+      if (!result.success || result.data.length === 0) {
         stopJobPolling()
         showToastNotification(`${jobType} job status unknown`, 'info')
         return
       }
+
+      const info = result.data
 
       // Find the most recent job for this source
       const relevantJob = info.find(job => String(job.id.sourceId) === props.sourceKey)
@@ -472,8 +474,14 @@ async function fetchCompletedAnalyses() {
   if (!props.cohortId || !props.sourceKey) return
 
   try {
-    completedAnalyses.value = await getCompletedAnalyses(props.cohortId, props.sourceKey)
-    logger.debug('ReportPanel', 'Completed analyses', completedAnalyses.value.length)
+    const result = await getCompletedAnalyses(props.cohortId, props.sourceKey)
+    if (result.success) {
+      completedAnalyses.value = result.data
+      logger.debug('ReportPanel', 'Completed analyses', completedAnalyses.value.length)
+    } else {
+      logger.error('ReportPanel', 'Failed to fetch completed analyses', result.error)
+      completedAnalyses.value = []
+    }
   } catch (error) {
     logger.error('ReportPanel', 'Failed to fetch completed analyses', error)
     completedAnalyses.value = []

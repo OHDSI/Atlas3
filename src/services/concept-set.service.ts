@@ -44,7 +44,12 @@ async function fetchJSON<T>(
     return null as T
   }
 
-  return await response.json() as T
+  try {
+    return await response.json() as T
+  } catch (parseError) {
+    logger.error('ConceptSet', 'Failed to parse JSON response', parseError)
+    throw new Error('Invalid response format')
+  }
 }
 
 /**

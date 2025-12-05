@@ -434,7 +434,7 @@ describe('Tag Groups API Service', () => {
         }
       })
 
-      await expect(tagGroupsAPI.loadAvailableTags()).rejects.toThrow('Invalid JSON')
+      await expect(tagGroupsAPI.loadAvailableTags()).rejects.toThrow('Invalid response format from tags API')
     })
 
     it('should handle network timeout', async () => {

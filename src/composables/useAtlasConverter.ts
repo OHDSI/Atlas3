@@ -7,9 +7,41 @@ import { ref } from 'vue'
 import type { CohortDefinition } from '@/models/cohort.types'
 import { convertInternalToAtlas, convertAtlasToInternal } from '@/services/atlas-converter'
 
+// File validation constants
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const ALLOWED_EXTENSIONS = ['.json']
+
+interface FileValidationResult {
+  valid: boolean
+  error?: string
+}
+
 export function useAtlasConverter() {
   const isConverting = ref(false)
   const conversionError = ref<string>('')
+
+  /**
+   * Validate file before processing
+   */
+  function validateFile(file: File): FileValidationResult {
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      return {
+        valid: false,
+        error: `File exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`,
+      }
+    }
+
+    // Check file extension
+    const hasValidExtension = ALLOWED_EXTENSIONS.some((ext) =>
+      file.name.toLowerCase().endsWith(ext)
+    )
+    if (!hasValidExtension) {
+      return { valid: false, error: 'File must be JSON format (.json)' }
+    }
+
+    return { valid: true }
+  }
 
   /**
    * Import cohort from Atlas JSON file
@@ -68,6 +100,13 @@ export function useAtlasConverter() {
    * Read file and import
    */
   async function importFromFile(file: File): Promise<Partial<CohortDefinition> | null> {
+    // Validate file before processing
+    const validation = validateFile(file)
+    if (!validation.valid) {
+      conversionError.value = validation.error || 'Invalid file'
+      return null
+    }
+
     return new Promise((resolve) => {
       const reader = new FileReader()
       reader.onload = async (e) => {

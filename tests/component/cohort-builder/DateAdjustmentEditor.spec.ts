@@ -12,6 +12,13 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
+// Mock webapi service to prevent actual API calls
+vi.mock('@/services/webapi', () => ({
+  fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  searchConcepts: vi.fn().mockResolvedValue({ success: true, data: [] }),
+}))
+
 import DateAdjustmentEditor from '@/components/cohort-builder/DateAdjustmentEditor.vue'
 
 const vuetify = createVuetify({

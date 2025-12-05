@@ -8,6 +8,45 @@
  * Root Atlas cohort definition structure
  * Note: Atlas uses PascalCase for field names
  */
+/**
+ * Atlas additional criteria structure
+ */
+export interface AtlasAdditionalCriteria {
+  Type: 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
+  CriteriaList: AtlasCriteria[]
+  DemographicCriteriaList: Record<string, unknown>[]
+  Groups: AtlasCriteria[]
+}
+
+/**
+ * Atlas expression limit
+ */
+export interface AtlasExpressionLimit {
+  Type: string
+}
+
+/**
+ * Atlas collapse settings
+ */
+export interface AtlasCollapseSettings {
+  CollapseType: string
+  EraPad: number
+}
+
+/**
+ * Atlas censor window (period structure)
+ */
+export interface AtlasCensorWindow {
+  StartDate?: {
+    DateField: string
+    Offset: number
+  }
+  EndDate?: {
+    DateField: string
+    Offset: number
+  }
+}
+
 export interface AtlasCohortDefinition {
   id?: number
   name: string
@@ -18,14 +57,14 @@ export interface AtlasCohortDefinition {
   modifiedDate?: number
   ConceptSets: AtlasConceptSet[]
   PrimaryCriteria: AtlasPrimaryCriteria
-  AdditionalCriteria?: unknown
+  AdditionalCriteria?: AtlasAdditionalCriteria
   QualifiedLimit?: AtlasQualifiedLimit
-  ExpressionLimit?: unknown
+  ExpressionLimit?: AtlasExpressionLimit
   InclusionRules?: AtlasInclusionRule[]
   CensoringCriteria?: AtlasCensoringCriteria[]
   EndStrategy?: AtlasEndStrategy
-  CollapseSettings?: unknown
-  CensorWindow?: unknown
+  CollapseSettings?: AtlasCollapseSettings
+  CensorWindow?: AtlasCensorWindow
   cdmVersionRange?: string
 }
 
