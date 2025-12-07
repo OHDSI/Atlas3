@@ -330,13 +330,20 @@ describe('DataSourcesView', () => {
       wrapper = mountComponent()
       await flushPromises()
 
+      // Set source and fetch report
       store.selectedSourceId = mockSource.sourceId
       await store.selectReportType('dashboard')
-      await flushPromises()
-      await wrapper.vm.$nextTick()
 
-      const dashboardReport = wrapper.findComponent({ name: 'DashboardReport' })
-      expect(dashboardReport.exists()).toBe(true)
+      // Wait for component to update with retry logic for CI stability
+      await vi.waitFor(
+        async () => {
+          await flushPromises()
+          await wrapper.vm.$nextTick()
+          const dashboardReport = wrapper.findComponent({ name: 'DashboardReport' })
+          expect(dashboardReport.exists()).toBe(true)
+        },
+        { timeout: 5000, interval: 100 }
+      )
     })
   })
 
