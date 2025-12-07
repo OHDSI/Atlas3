@@ -9,7 +9,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
 import ConceptSetSelector from '@/components/cohort/ConceptSetSelector.vue'
-import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useConceptPickerStore } from '@/stores/concept-picker'
 import { createMockConcept, createMockConceptSet } from '../../../helpers/mock-factories'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
 
@@ -76,7 +76,7 @@ describe('ConceptSetSelector', () => {
 
   describe('Empty State', () => {
     it('should show no concept sets message when empty', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.conceptSets = new Map()
 
       const wrapper = mountComponent()
@@ -86,7 +86,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should not render expansion panels when empty', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.conceptSets = new Map()
 
       const wrapper = mountComponent()
@@ -99,7 +99,7 @@ describe('ConceptSetSelector', () => {
 
   describe('Concept Sets Display', () => {
     it('should render expansion panels when concept sets exist', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, name: 'Diabetes Concepts' })
       store.conceptSets = new Map([[1, conceptSet]])
 
@@ -111,7 +111,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should display concept set name', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, name: 'Type 2 Diabetes' })
       store.conceptSets = new Map([[1, conceptSet]])
 
@@ -122,7 +122,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should display concept count chip', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({
         id: 1,
         items: [
@@ -149,7 +149,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should display multiple concept sets', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const set1 = createMockConceptSet({ id: 1, name: 'Diabetes' })
       const set2 = createMockConceptSet({ id: 2, name: 'Hypertension' })
       store.conceptSets = new Map([[1, set1], [2, set2]])
@@ -164,7 +164,7 @@ describe('ConceptSetSelector', () => {
 
   describe('Concept Set Management', () => {
     it('should create new concept set with default name', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const addSpy = vi.spyOn(store, 'addConceptSet')
 
       const wrapper = mountComponent()
@@ -181,7 +181,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should have delete functionality available', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, name: 'Test Set' })
       store.conceptSets = new Map([[1, conceptSet]])
 
@@ -194,7 +194,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should have update name functionality available', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, name: 'Original Name' })
       store.conceptSets = new Map([[1, conceptSet]])
 
@@ -209,7 +209,7 @@ describe('ConceptSetSelector', () => {
 
   describe('Concept Management', () => {
     it('should have concept sets with items', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({
         id: 1,
         items: [
@@ -232,7 +232,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should have remove concept functionality', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({
         id: 1,
         items: [
@@ -254,7 +254,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should have search dialog functionality', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, name: 'Test Set' })
       store.conceptSets = new Map([[1, conceptSet]])
 
@@ -269,7 +269,7 @@ describe('ConceptSetSelector', () => {
 
   describe('Concept Search Integration', () => {
     it('should add selected concepts to concept set', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, items: [] })
       store.conceptSets = new Map([[1, conceptSet]])
       const updateSpy = vi.spyOn(store, 'addConceptSet')
@@ -297,7 +297,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should not add duplicate concepts', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const existingConcept = {
         ...createMockConcept({ conceptId: 1, conceptName: 'Existing Concept' }),
         isExcluded: false,
@@ -331,7 +331,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should set concept item flags correctly', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, items: [] })
       store.conceptSets = new Map([[1, conceptSet]])
       const updateSpy = vi.spyOn(store, 'addConceptSet')
@@ -356,7 +356,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should reset currentConceptSetId after adding concepts', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, items: [] })
       store.conceptSets = new Map([[1, conceptSet]])
 
@@ -378,7 +378,7 @@ describe('ConceptSetSelector', () => {
 
   describe('Component Internals', () => {
     it('should have concept set data available', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, name: 'Test Set' })
       store.conceptSets = new Map([[1, conceptSet]])
 
@@ -391,7 +391,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should have concepts available when items exist', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({
         id: 1,
         items: [
@@ -414,7 +414,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should render expansion panels component', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: 1, name: 'Test Set' })
       store.conceptSets = new Map([[1, conceptSet]])
 
@@ -428,7 +428,7 @@ describe('ConceptSetSelector', () => {
 
   describe('Edge Cases', () => {
     it('should handle concept set without id gracefully', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet = createMockConceptSet({ id: undefined, name: 'No ID Set' })
       store.conceptSets = new Map([['temp-id', conceptSet]])
 
@@ -455,7 +455,7 @@ describe('ConceptSetSelector', () => {
     })
 
     it('should handle non-existent concept set gracefully', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.conceptSets = new Map()
 
       const wrapper = mountComponent()
@@ -476,7 +476,7 @@ describe('ConceptSetSelector', () => {
 
   describe('Component List Computed Property', () => {
     it('should convert Map to array for rendering', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const set1 = createMockConceptSet({ id: 1, name: 'Set 1' })
       const set2 = createMockConceptSet({ id: 2, name: 'Set 2' })
       store.conceptSets = new Map([[1, set1], [2, set2]])

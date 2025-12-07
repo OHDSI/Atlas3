@@ -9,7 +9,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
-import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useConceptPickerStore } from '@/stores/concept-picker'
 import { useWebAPIStore } from '@/stores/webapi'
 import { createMockConcept } from '../../../helpers/mock-factories'
 
@@ -152,7 +152,7 @@ describe('ConceptSearchDialog', () => {
 
     it('should not search when no CDM source selected', async () => {
       const wrapper = mountComponent()
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const webapiStore = useWebAPIStore()
       webapiStore.selectedSource = null
 
@@ -174,7 +174,7 @@ describe('ConceptSearchDialog', () => {
   describe('Search Results', () => {
     it('should handle loading state', async () => {
       const wrapper = mountComponent()
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.isSearching = true
 
       await nextTick()
@@ -185,7 +185,7 @@ describe('ConceptSearchDialog', () => {
 
     it('should store search results', async () => {
       const _wrapper = mountComponent()
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       const mockConcepts = [
         createMockConcept({ conceptId: 1, conceptName: 'Diabetes mellitus' }),
@@ -203,7 +203,7 @@ describe('ConceptSearchDialog', () => {
 
     it('should handle empty search results', async () => {
       const wrapper = mountComponent()
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       store.searchResults = []
       store.isSearching = false
@@ -216,7 +216,7 @@ describe('ConceptSearchDialog', () => {
 
     it('should track search results count', async () => {
       const _wrapper = mountComponent()
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       const mockConcepts = [
         createMockConcept({ conceptId: 1 }),
@@ -242,7 +242,7 @@ describe('ConceptSearchDialog', () => {
 
     it('should filter results by selected domain', async () => {
       const wrapper = mountComponent()
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       const mockConcepts = [
         createMockConcept({ conceptId: 1, domainId: 'Condition' }),
@@ -263,7 +263,7 @@ describe('ConceptSearchDialog', () => {
 
     it('should show all results when domain filter is cleared', async () => {
       const wrapper = mountComponent({ domainFilter: 'Drug' })
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       const mockConcepts = [
         createMockConcept({ conceptId: 1, domainId: 'Condition' }),
@@ -307,7 +307,7 @@ describe('ConceptSearchDialog', () => {
 
     it('should toggle concept selection on click', async () => {
       const wrapper = mountComponent()
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       const mockConcept = createMockConcept({ conceptId: 1, conceptName: 'Test' })
       store.searchResults = [mockConcept]
@@ -332,7 +332,7 @@ describe('ConceptSearchDialog', () => {
 
     it('should show checkbox for selected concepts', async () => {
       const wrapper = mountComponent()
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const vm = wrapper.vm as any
 
       const mockConcept = createMockConcept({ conceptId: 1 })
@@ -399,7 +399,7 @@ describe('ConceptSearchDialog', () => {
     it('should reset state when closed', async () => {
       const wrapper = mountComponent()
       const vm = wrapper.vm as any
-      const _store = useConceptSetsStore()
+      const _store = useConceptPickerStore()
 
       // Set some state
       const searchInput = wrapper.findAllComponents({ name: 'VTextField' })[0]
@@ -459,7 +459,7 @@ describe('ConceptSearchDialog', () => {
   describe('Virtual Scrolling', () => {
     it('should render virtual scroll for large result sets', async () => {
       const wrapper = mountComponent()
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       const mockConcepts = Array.from({ length: 100 }, (_, i) =>
         createMockConcept({ conceptId: i + 1 })
@@ -479,7 +479,7 @@ describe('ConceptSearchDialog', () => {
   describe('Error Handling', () => {
     it('should handle search errors gracefully', async () => {
       const wrapper = mountComponent()
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       vi.spyOn(store, 'searchConcepts').mockRejectedValue(new Error('Search failed'))
 
