@@ -1,163 +1,240 @@
 /**
- * Unit Tests: StorageManager Service
- * Tests for src/services/auth/storageManager.ts
+ * Storage Manager Service Tests
+ * Tests for token and auth client storage operations
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { StorageManager, storageManager } from '@/services/auth/storageManager'
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
-    error: vi.fn(),
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
+    error: vi.fn(),
   },
 }))
 
+import { logger } from '@/utils/logger'
+
 describe('StorageManager', () => {
+  let localStorageMock: { [key: string]: string }
   let manager: StorageManager
 
   beforeEach(() => {
-    manager = new StorageManager()
-    localStorage.clear()
-    // Clear cookies
-    document.cookie = 'bearerToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-  })
+    // Mock localStorage
+    localStorageMock = {}
+    Object.defineProperty(global, 'localStorage', {
+      value: {
+        getItem: vi.fn((key: string) => localStorageMock[key] || null),
+        setItem: vi.fn((key: string, value: string) => {
+          localStorageMock[key] = value
+        }),
+        removeItem: vi.fn((key: string) => {
+          delete localStorageMock[key]
+        }),
+        clear: vi.fn(() => {
+          localStorageMock = {}
+        }),
+      },
+      configurable: true,
+    })
 
-  afterEach(() => {
+    // Mock document.cookie
+    let cookieValue = ''
+    Object.defineProperty(document, 'cookie', {
+      get: () => cookieValue,
+      set: (v) => { cookieValue = v },
+      configurable: true,
+    })
+
+    manager = new StorageManager()
     vi.clearAllMocks()
   })
 
-  describe('Token Operations', () => {
-    describe('saveToken', () => {
-      it('saves token to localStorage', () => {
-        manager.saveToken('test-token')
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
-        expect(localStorage.getItem('bearerToken')).toBe('test-token')
+  describe('Token Management', () => {
+    describe('saveToken', () => {
+      it('should save token to localStorage', () => {
+        manager.saveToken('test-token')
+        expect(localStorage.setItem).toHaveBeenCalledWith('bearerToken', 'test-token')
       })
 
-      it('saves token to cookie', () => {
+      it('should save token to cookie', () => {
         manager.saveToken('test-token')
-
         expect(document.cookie).toContain('bearerToken=test-token')
       })
 
-      // Note: Error handling tests are skipped as jsdom localStorage mocking is complex
-      it.skip('handles localStorage error gracefully', async () => {
-        // This test is skipped because jsdom's localStorage doesn't easily allow
-        // simulating storage errors. The error handling is verified through
-        // code review and manual testing.
+      it('should handle localStorage error', () => {
+        vi.mocked(localStorage.setItem).mockImplementationOnce(() => {
+          throw new Error('Storage error')
+        })
+
+        manager.saveToken('test-token')
+
+        expect(logger.error).toHaveBeenCalledWith(
+          'StorageManager',
+          'Failed to save token',
+          expect.any(Error)
+        )
       })
     })
 
     describe('getToken', () => {
-      it('returns token from localStorage', () => {
-        localStorage.setItem('bearerToken', 'stored-token')
+      it('should retrieve token from localStorage', () => {
+        localStorageMock['bearerToken'] = 'stored-token'
 
-        const result = manager.getToken()
+        const token = manager.getToken()
 
-        expect(result).toBe('stored-token')
+        expect(token).toBe('stored-token')
       })
 
-      it('returns null when no token exists', () => {
-        const result = manager.getToken()
-
-        expect(result).toBeNull()
+      it('should return null if no token', () => {
+        const token = manager.getToken()
+        expect(token).toBeNull()
       })
 
-      it.skip('returns null on localStorage error', async () => {
-        // Skipped: jsdom localStorage error mocking is complex
+      it('should handle localStorage error', () => {
+        vi.mocked(localStorage.getItem).mockImplementationOnce(() => {
+          throw new Error('Storage error')
+        })
+
+        const token = manager.getToken()
+
+        expect(token).toBeNull()
+        expect(logger.error).toHaveBeenCalledWith(
+          'StorageManager',
+          'Failed to get token',
+          expect.any(Error)
+        )
       })
     })
 
     describe('clearToken', () => {
-      it('removes token from localStorage', () => {
-        localStorage.setItem('bearerToken', 'test-token')
+      it('should remove token from localStorage', () => {
+        localStorageMock['bearerToken'] = 'stored-token'
 
         manager.clearToken()
 
-        expect(localStorage.getItem('bearerToken')).toBeNull()
+        expect(localStorage.removeItem).toHaveBeenCalledWith('bearerToken')
       })
 
-      it('clears token cookie', () => {
-        document.cookie = 'bearerToken=test-token; path=/'
+      it('should clear token cookie by setting expired date', () => {
+        manager.clearToken()
+        expect(document.cookie).toContain('bearerToken=')
+        expect(document.cookie).toContain('expires=Thu, 01 Jan 1970')
+      })
+
+      it('should handle localStorage error', () => {
+        vi.mocked(localStorage.removeItem).mockImplementationOnce(() => {
+          throw new Error('Storage error')
+        })
 
         manager.clearToken()
 
-        // Cookie should be expired (value effectively removed)
-        expect(document.cookie).not.toContain('bearerToken=test-token')
-      })
-
-      it.skip('handles localStorage error gracefully', async () => {
-        // Skipped: jsdom localStorage error mocking is complex
+        expect(logger.error).toHaveBeenCalledWith(
+          'StorageManager',
+          'Failed to clear token',
+          expect.any(Error)
+        )
       })
     })
   })
 
-  describe('AuthClient Operations', () => {
+  describe('Auth Client Management', () => {
     describe('saveAuthClient', () => {
-      it('saves auth client to localStorage', () => {
-        manager.saveAuthClient('db')
-
-        expect(localStorage.getItem('auth-client')).toBe('db')
+      it('should save auth client to localStorage', () => {
+        manager.saveAuthClient('oauth-client')
+        expect(localStorage.setItem).toHaveBeenCalledWith('auth-client', 'oauth-client')
       })
 
-      it.skip('handles localStorage error gracefully', async () => {
-        // Skipped: jsdom localStorage error mocking is complex
+      it('should handle localStorage error', () => {
+        vi.mocked(localStorage.setItem).mockImplementationOnce(() => {
+          throw new Error('Storage error')
+        })
+
+        manager.saveAuthClient('oauth-client')
+
+        expect(logger.error).toHaveBeenCalledWith(
+          'StorageManager',
+          'Failed to save auth client',
+          expect.any(Error)
+        )
       })
     })
 
     describe('getAuthClient', () => {
-      it('returns auth client from localStorage', () => {
-        localStorage.setItem('auth-client', 'windows')
+      it('should retrieve auth client from localStorage', () => {
+        localStorageMock['auth-client'] = 'stored-client'
 
-        const result = manager.getAuthClient()
+        const client = manager.getAuthClient()
 
-        expect(result).toBe('windows')
+        expect(client).toBe('stored-client')
       })
 
-      it('returns null when no auth client exists', () => {
-        const result = manager.getAuthClient()
-
-        expect(result).toBeNull()
+      it('should return null if no auth client', () => {
+        const client = manager.getAuthClient()
+        expect(client).toBeNull()
       })
 
-      it.skip('returns null on localStorage error', async () => {
-        // Skipped: jsdom localStorage error mocking is complex
+      it('should handle localStorage error', () => {
+        vi.mocked(localStorage.getItem).mockImplementationOnce(() => {
+          throw new Error('Storage error')
+        })
+
+        const client = manager.getAuthClient()
+
+        expect(client).toBeNull()
+        expect(logger.error).toHaveBeenCalledWith(
+          'StorageManager',
+          'Failed to get auth client',
+          expect.any(Error)
+        )
       })
     })
 
     describe('clearAuthClient', () => {
-      it('removes auth client from localStorage', () => {
-        localStorage.setItem('auth-client', 'db')
+      it('should remove auth client from localStorage', () => {
+        localStorageMock['auth-client'] = 'stored-client'
 
         manager.clearAuthClient()
 
-        expect(localStorage.getItem('auth-client')).toBeNull()
+        expect(localStorage.removeItem).toHaveBeenCalledWith('auth-client')
       })
 
-      it.skip('handles localStorage error gracefully', async () => {
-        // Skipped: jsdom localStorage error mocking is complex
+      it('should handle localStorage error', () => {
+        vi.mocked(localStorage.removeItem).mockImplementationOnce(() => {
+          throw new Error('Storage error')
+        })
+
+        manager.clearAuthClient()
+
+        expect(logger.error).toHaveBeenCalledWith(
+          'StorageManager',
+          'Failed to clear auth client',
+          expect.any(Error)
+        )
       })
     })
   })
 
   describe('clearAll', () => {
-    it('clears both token and auth client', () => {
-      localStorage.setItem('bearerToken', 'test-token')
-      localStorage.setItem('auth-client', 'db')
+    it('should clear both token and auth client', () => {
+      localStorageMock['bearerToken'] = 'token'
+      localStorageMock['auth-client'] = 'client'
 
       manager.clearAll()
 
-      expect(localStorage.getItem('bearerToken')).toBeNull()
-      expect(localStorage.getItem('auth-client')).toBeNull()
+      expect(localStorage.removeItem).toHaveBeenCalledWith('bearerToken')
+      expect(localStorage.removeItem).toHaveBeenCalledWith('auth-client')
     })
   })
 
-  describe('Singleton Export', () => {
-    it('exports singleton instance', () => {
+  describe('Singleton Instance', () => {
+    it('should export a singleton instance', () => {
       expect(storageManager).toBeInstanceOf(StorageManager)
     })
   })

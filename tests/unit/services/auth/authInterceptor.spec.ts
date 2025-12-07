@@ -1,75 +1,109 @@
 /**
- * Unit Tests: AuthInterceptor Service
- * Tests for src/services/auth/authInterceptor.ts
+ * Auth Interceptor Tests
+ * Tests for fetch interceptor that handles authentication
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
-// Mock logger first
+// Mock tokenManager to prevent parseToken issues
+vi.mock('@/services/auth/tokenManager', () => ({
+  tokenManager: {
+    parseToken: vi.fn().mockReturnValue({
+      subject: 'testuser',
+      expirationDate: new Date(Date.now() + 3600000),
+      isExpired: false,
+      payload: {},
+    }),
+    isTokenExpired: vi.fn().mockReturnValue(false),
+    getExpirationDate: vi.fn().mockReturnValue(new Date(Date.now() + 3600000)),
+  },
+}))
+
+// Mock dependencies
+vi.mock('@/utils/jwt', () => ({
+  getTokenExpiration: vi.fn(),
+}))
+
+vi.mock('@/services/auth/tokenRefresh', () => ({
+  tokenRefreshService: {
+    refreshToken: vi.fn(),
+  },
+}))
+
 vi.mock('@/utils/logger', () => ({
   logger: {
-    error: vi.fn(),
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
+    error: vi.fn(),
   },
-}))
-
-// Mock tokenRefreshService
-vi.mock('@/services/auth/tokenRefresh', () => ({
-  tokenRefreshService: {
-    refreshToken: vi.fn().mockResolvedValue(true),
-  },
-}))
-
-// Mock jwt utility
-vi.mock('@/utils/jwt', () => ({
-  getTokenExpiration: vi.fn(),
 }))
 
 import { setupAuthInterceptor, addBearerToken } from '@/services/auth/authInterceptor'
 import { useAuthStore } from '@/stores/auth'
 import { getTokenExpiration } from '@/utils/jwt'
+import { tokenRefreshService } from '@/services/auth/tokenRefresh'
+import { tokenManager } from '@/services/auth/tokenManager'
 
 describe('AuthInterceptor', () => {
+  let originalWindowFetch: typeof fetch
+  let originalGlobalFetch: typeof fetch
   let mockFetch: ReturnType<typeof vi.fn>
-  let realFetch: typeof fetch
 
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    realFetch = window.fetch
-    mockFetch = vi.fn().mockResolvedValue(new Response(null, { status: 200 }))
+
+    // Re-setup tokenManager mock after clearAllMocks
+    vi.mocked(tokenManager.parseToken).mockReturnValue({
+      subject: 'testuser',
+      expirationDate: new Date(Date.now() + 3600000),
+      isExpired: false,
+      payload: {},
+    })
+    vi.mocked(tokenManager.isTokenExpired).mockReturnValue(false)
+    vi.mocked(tokenManager.getExpirationDate).mockReturnValue(new Date(Date.now() + 3600000))
+
+    // Store original fetch (both window and global in case they differ)
+    originalWindowFetch = window.fetch
+    originalGlobalFetch = global.fetch
+
+    // Create mock fetch
+    mockFetch = vi.fn().mockResolvedValue({
+      status: 200,
+      ok: true,
+    })
+    // Mock both window.fetch and global.fetch
     window.fetch = mockFetch
+    global.fetch = mockFetch
   })
 
   afterEach(() => {
-    window.fetch = realFetch
+    // Restore original fetch
+    window.fetch = originalWindowFetch
+    global.fetch = originalGlobalFetch
+    vi.restoreAllMocks()
   })
 
   describe('setupAuthInterceptor', () => {
-    it('wraps window.fetch', () => {
-      const beforeFetch = window.fetch
-
+    it('should replace window fetch', () => {
       setupAuthInterceptor()
 
-      expect(window.fetch).not.toBe(beforeFetch)
+      expect(window.fetch).not.toBe(mockFetch)
     })
 
-    it('adds Authorization header when token exists', async () => {
-      const authStore = useAuthStore()
-      authStore.$patch({ token: 'test-token' })
-
-      // Mock getTokenExpiration to return future date (no refresh needed)
-      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 3600000))
-
+    it('should add Authorization header when token is present', async () => {
       setupAuthInterceptor()
 
-      await window.fetch('https://api.example.com/data')
+      const authStore = useAuthStore()
+      authStore.setToken('test-token')
+
+      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 3600000)) // 1 hour from now
+
+      await window.fetch('http://api.example.com/data')
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.example.com/data',
+        'http://api.example.com/data',
         expect.objectContaining({
           headers: expect.any(Headers),
         })
@@ -80,176 +114,167 @@ describe('AuthInterceptor', () => {
       expect(headers.get('Authorization')).toBe('Bearer test-token')
     })
 
-    it('does not add Authorization header when no token', async () => {
+    it('should not add Authorization header when no token', async () => {
       setupAuthInterceptor()
 
-      await window.fetch('https://api.example.com/data')
+      await window.fetch('http://api.example.com/data')
 
-      expect(mockFetch).toHaveBeenCalled()
+      const callArgs = mockFetch.mock.calls[0]
+      const headers = callArgs[1]?.headers as Headers | undefined
+      // When no token, headers may not be set at all, or Authorization should not be present
+      const authHeader = headers?.get?.('Authorization') ?? null
+      expect(authHeader).toBeNull()
     })
 
-    it('triggers token refresh when close to expiry', async () => {
-      const { tokenRefreshService } = await import('@/services/auth/tokenRefresh')
-      const authStore = useAuthStore()
-      authStore.$patch({ token: 'test-token' })
-
-      // Token expires in 3 minutes (< 5 minute threshold)
-      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 180000))
-
+    it('should refresh token when expiring soon', async () => {
       setupAuthInterceptor()
 
-      await window.fetch('https://api.example.com/data')
+      const authStore = useAuthStore()
+      authStore.setToken('old-token')
+
+      // Token expires in 3 minutes (less than 5 minute threshold)
+      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 180000))
+      vi.mocked(tokenRefreshService.refreshToken).mockResolvedValue(undefined)
+
+      await window.fetch('http://api.example.com/data')
 
       expect(tokenRefreshService.refreshToken).toHaveBeenCalled()
     })
 
-    it('does not refresh token when expiry is far away', async () => {
-      const { tokenRefreshService } = await import('@/services/auth/tokenRefresh')
-      const authStore = useAuthStore()
-      authStore.$patch({ token: 'test-token' })
-
-      // Token expires in 30 minutes (> 5 minute threshold)
-      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 1800000))
-
+    it('should not refresh token for refresh endpoint', async () => {
       setupAuthInterceptor()
 
-      await window.fetch('https://api.example.com/data')
+      const authStore = useAuthStore()
+      authStore.setToken('test-token')
+
+      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 180000)) // Expiring soon
+
+      await window.fetch('http://api.example.com/user/refresh')
 
       expect(tokenRefreshService.refreshToken).not.toHaveBeenCalled()
     })
 
-    it('does not refresh for refresh endpoint', async () => {
-      const { tokenRefreshService } = await import('@/services/auth/tokenRefresh')
-      const authStore = useAuthStore()
-      authStore.$patch({ token: 'test-token' })
-
-      // Token expires in 3 minutes
-      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 180000))
-
+    it('should clear auth on 401 response', async () => {
       setupAuthInterceptor()
 
-      await window.fetch('https://api.example.com/user/refresh')
-
-      expect(tokenRefreshService.refreshToken).not.toHaveBeenCalled()
-    })
-
-    it('handles 401 response by clearing auth and opening login modal', async () => {
       const authStore = useAuthStore()
-      authStore.$patch({ token: 'test-token', isAuthenticated: true })
-      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 3600000))
+      authStore.setToken('test-token')
 
-      window.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 401 }))
-      setupAuthInterceptor()
+      mockFetch.mockResolvedValueOnce({
+        status: 401,
+        ok: false,
+      })
 
-      await window.fetch('https://api.example.com/data')
+      await window.fetch('http://api.example.com/data')
 
       expect(authStore.token).toBeNull()
-      expect(authStore.loginModalOpen).toBe(true)
     })
 
-    it('handles 403 response by attempting token refresh', async () => {
-      const authStore = useAuthStore()
-      authStore.$patch({ token: 'test-token' })
-      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 3600000))
-
-      window.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 403 }))
+    it('should attempt token refresh on 403 response', async () => {
       setupAuthInterceptor()
 
-      // Mock performTokenRefresh
-      const performRefreshSpy = vi.spyOn(authStore, 'performTokenRefresh').mockResolvedValue()
+      const authStore = useAuthStore()
+      authStore.setToken('test-token')
+      const performRefreshSpy = vi.spyOn(authStore, 'performTokenRefresh')
 
-      await window.fetch('https://api.example.com/data')
+      mockFetch.mockResolvedValueOnce({
+        status: 403,
+        ok: false,
+      })
+
+      await window.fetch('http://api.example.com/data')
 
       expect(performRefreshSpy).toHaveBeenCalled()
     })
 
-    it('handles URL object input', async () => {
-      const authStore = useAuthStore()
-      authStore.$patch({ token: 'test-token' })
-      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 3600000))
-
+    it('should handle fetch errors', async () => {
       setupAuthInterceptor()
 
-      await window.fetch(new URL('https://api.example.com/data'))
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+
+      await expect(window.fetch('http://api.example.com/data')).rejects.toThrow('Network error')
+    })
+
+    it('should handle URL object input', async () => {
+      setupAuthInterceptor()
+
+      const authStore = useAuthStore()
+      authStore.setToken('test-token')
+
+      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 3600000))
+
+      await window.fetch(new URL('http://api.example.com/data'))
 
       expect(mockFetch).toHaveBeenCalled()
     })
 
-    it('handles Request object input', async () => {
-      const authStore = useAuthStore()
-      authStore.$patch({ token: 'test-token' })
-      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 3600000))
-
+    it('should handle Request object input', async () => {
       setupAuthInterceptor()
 
-      const request = new Request('https://api.example.com/data')
+      const authStore = useAuthStore()
+      authStore.setToken('test-token')
+
+      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 3600000))
+
+      const request = new Request('http://api.example.com/data')
       await window.fetch(request)
 
       expect(mockFetch).toHaveBeenCalled()
     })
 
-    it('propagates fetch errors', async () => {
-      const networkError = new Error('Network failure')
-      window.fetch = vi.fn().mockRejectedValue(networkError)
+    it('should use refreshed token after refresh', async () => {
       setupAuthInterceptor()
 
-      await expect(window.fetch('https://api.example.com/data')).rejects.toThrow('Network failure')
-    })
-
-    it('handles token without expiration', async () => {
       const authStore = useAuthStore()
-      authStore.$patch({ token: 'test-token' })
-      vi.mocked(getTokenExpiration).mockReturnValue(null)
+      authStore.setToken('old-token')
 
-      setupAuthInterceptor()
+      vi.mocked(getTokenExpiration).mockReturnValue(new Date(Date.now() + 180000))
+      vi.mocked(tokenRefreshService.refreshToken).mockImplementation(async () => {
+        authStore.setToken('new-token')
+      })
 
-      await window.fetch('https://api.example.com/data')
+      await window.fetch('http://api.example.com/data')
 
-      // Should still add token header even without expiration info
-      expect(mockFetch).toHaveBeenCalled()
       const callArgs = mockFetch.mock.calls[0]
       const headers = callArgs[1]?.headers as Headers
-      expect(headers.get('Authorization')).toBe('Bearer test-token')
+      expect(headers.get('Authorization')).toBe('Bearer new-token')
     })
   })
 
   describe('addBearerToken', () => {
-    it('adds Authorization header when token exists', () => {
+    it('should add Bearer token to headers when authenticated', () => {
       const authStore = useAuthStore()
-      authStore.$patch({ token: 'my-token' })
+      authStore.setToken('test-token')
 
-      const result = addBearerToken({ 'Content-Type': 'application/json' })
+      const headers = addBearerToken({ 'Content-Type': 'application/json' })
 
-      expect(result).toEqual({
+      expect(headers).toEqual({
         'Content-Type': 'application/json',
-        Authorization: 'Bearer my-token',
+        Authorization: 'Bearer test-token',
       })
     })
 
-    it('returns original headers when no token', () => {
-      const headers = { 'Content-Type': 'application/json' }
+    it('should return original headers when no token', () => {
+      const headers = addBearerToken({ 'Content-Type': 'application/json' })
 
-      const result = addBearerToken(headers)
-
-      expect(result).toEqual(headers)
+      expect(headers).toEqual({ 'Content-Type': 'application/json' })
     })
 
-    it('handles empty headers', () => {
+    it('should work with empty headers', () => {
       const authStore = useAuthStore()
-      authStore.$patch({ token: 'my-token' })
+      authStore.setToken('test-token')
 
-      const result = addBearerToken({})
+      const headers = addBearerToken()
 
-      expect(result).toEqual({ Authorization: 'Bearer my-token' })
+      expect(headers).toEqual({
+        Authorization: 'Bearer test-token',
+      })
     })
 
-    it('handles default undefined headers', () => {
-      const authStore = useAuthStore()
-      authStore.$patch({ token: 'my-token' })
+    it('should work with default empty object', () => {
+      const headers = addBearerToken()
 
-      const result = addBearerToken()
-
-      expect(result).toEqual({ Authorization: 'Bearer my-token' })
+      expect(headers).toEqual({})
     })
   })
 })

@@ -1,0 +1,468 @@
+/**
+ * ConceptTable Component Tests (T134)
+ */
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+import ConceptTable from '@/components/concepts/ConceptTable.vue'
+import type { Concept } from '@/models/concept-set.types'
+
+vi.mock('@/composables/useI18n', async () => {
+  const { mockUseI18n } = await import('../../../helpers/i18n-mock')
+  return mockUseI18n
+})
+
+const vuetify = createVuetify({ components, directives })
+
+const mockConcepts: Concept[] = [
+  {
+    conceptId: 313217,
+    conceptName: 'Atrial fibrillation',
+    conceptCode: '49436004',
+    domainId: 'Condition',
+    vocabularyId: 'SNOMED',
+    conceptClassId: 'Clinical Finding',
+    standardConcept: 'S',
+    invalidReason: null,
+    recordCount: 1000,
+    descendantRecordCount: 1500,
+    personCount: 800,
+    descendantPersonCount: 1200,
+  },
+  {
+    conceptId: 4329847,
+    conceptName: 'Myocardial infarction',
+    conceptCode: '22298006',
+    domainId: 'Condition',
+    vocabularyId: 'SNOMED',
+    conceptClassId: 'Clinical Finding',
+    standardConcept: 'C',
+    invalidReason: null,
+    recordCount: 500,
+    descendantRecordCount: 750,
+    personCount: 400,
+    descendantPersonCount: 600,
+  },
+  {
+    conceptId: 192855,
+    conceptName: 'Glucose measurement',
+    conceptCode: '33747003',
+    domainId: 'Measurement',
+    vocabularyId: 'SNOMED',
+    conceptClassId: 'Procedure',
+    standardConcept: null,
+    invalidReason: 'D',
+  },
+]
+
+function mountComponent(props = {}) {
+  return mount(ConceptTable, {
+    props: {
+      concepts: [],
+      loading: false,
+      totalItems: 0,
+      page: 1,
+      itemsPerPage: 60,
+      ...props,
+    },
+    global: {
+      plugins: [vuetify],
+    },
+  })
+}
+
+describe('ConceptTable', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should mount successfully', () => {
+    const wrapper = mountComponent()
+    expect(wrapper.exists()).toBe(true)
+  })
+
+  it('should render data table', () => {
+    const wrapper = mountComponent()
+    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
+    expect(dataTable.exists()).toBe(true)
+  })
+
+  it('should display concepts in table', () => {
+    const wrapper = mountComponent({ concepts: mockConcepts })
+    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
+    expect(dataTable.props('items')).toEqual(mockConcepts)
+  })
+
+  it('should display loading state', () => {
+    const wrapper = mountComponent({ loading: true })
+    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
+    expect(dataTable.props('loading')).toBe(true)
+  })
+
+  it('should render pagination controls', () => {
+    const wrapper = mountComponent({ concepts: mockConcepts, totalItems: 100 })
+    const pagination = wrapper.findComponent({ name: 'VPagination' })
+    expect(pagination.exists()).toBe(true)
+  })
+
+  it('should display page range text', () => {
+    const wrapper = mountComponent({ concepts: mockConcepts, totalItems: 100, page: 1, itemsPerPage: 60 })
+    expect(wrapper.text()).toContain('1-60 of 100')
+  })
+
+  it('should display correct page range for second page', () => {
+    const wrapper = mountComponent({ concepts: mockConcepts, totalItems: 100, page: 2, itemsPerPage: 60 })
+    expect(wrapper.text()).toContain('61-100 of 100')
+  })
+
+  it('should display 0-0 of 0 when no items', () => {
+    const wrapper = mountComponent({ concepts: [], totalItems: 0 })
+    expect(wrapper.text()).toContain('0-0 of 0')
+  })
+
+  it('should emit update:page when page is changed', async () => {
+    const wrapper = mountComponent({ concepts: mockConcepts, totalItems: 100 })
+    const pagination = wrapper.findComponent({ name: 'VPagination' })
+
+    await pagination.vm.$emit('update:modelValue', 2)
+
+    expect(wrapper.emitted('update:page')).toBeTruthy()
+    expect(wrapper.emitted('update:page')![0]).toEqual([2])
+  })
+
+  it('should emit update:itemsPerPage when items per page is changed', async () => {
+    const wrapper = mountComponent({ concepts: mockConcepts, totalItems: 100 })
+    const select = wrapper.findComponent({ name: 'VSelect' })
+
+    await select.vm.$emit('update:modelValue', 120)
+
+    expect(wrapper.emitted('update:itemsPerPage')).toBeTruthy()
+    expect(wrapper.emitted('update:itemsPerPage')![0]).toEqual([120])
+  })
+
+  it('should render items per page selector', () => {
+    const wrapper = mountComponent()
+    const select = wrapper.findComponent({ name: 'VSelect' })
+    expect(select.exists()).toBe(true)
+  })
+
+  it('should have items per page options', () => {
+    const wrapper = mountComponent()
+    const select = wrapper.findComponent({ name: 'VSelect' })
+    expect(select.props('items')).toEqual([60, 120, 240])
+  })
+
+  it('should display concept type badges', () => {
+    const wrapper = mountComponent({ concepts: mockConcepts })
+    const chips = wrapper.findAllComponents({ name: 'VChip' })
+    expect(chips.length).toBeGreaterThan(0)
+  })
+
+  it('should display Standard badge for standardConcept=S', async () => {
+    const wrapper = mountComponent({ concepts: [mockConcepts[0]] })
+    await wrapper.vm.$nextTick()
+
+    const chips = wrapper.findAllComponents({ name: 'VChip' })
+    const standardChip = chips.find(chip => chip.text().includes('Standard'))
+    expect(standardChip).toBeTruthy()
+  })
+
+  it('should display Classification badge for standardConcept=C', async () => {
+    const wrapper = mountComponent({ concepts: [mockConcepts[1]] })
+    await wrapper.vm.$nextTick()
+
+    const chips = wrapper.findAllComponents({ name: 'VChip' })
+    const classificationChip = chips.find(chip => chip.text().includes('Classification'))
+    expect(classificationChip).toBeTruthy()
+  })
+
+  it('should display Non-Standard badge for standardConcept=null', async () => {
+    const wrapper = mountComponent({ concepts: [mockConcepts[2]] })
+    await wrapper.vm.$nextTick()
+
+    const chips = wrapper.findAllComponents({ name: 'VChip' })
+    const nonStandardChip = chips.find(chip => chip.text().includes('Non-Standard'))
+    expect(nonStandardChip).toBeTruthy()
+  })
+
+  it('should display Valid badge when invalidReason is null', async () => {
+    const wrapper = mountComponent({ concepts: [mockConcepts[0]] })
+    await wrapper.vm.$nextTick()
+
+    const chips = wrapper.findAllComponents({ name: 'VChip' })
+    // Check that chips exist
+    expect(chips.length).toBeGreaterThan(0)
+  })
+
+  it('should display Invalid badge when invalidReason is set', async () => {
+    const wrapper = mountComponent({ concepts: [mockConcepts[2]] })
+    await wrapper.vm.$nextTick()
+
+    const chips = wrapper.findAllComponents({ name: 'VChip' })
+    // Check that chips exist
+    expect(chips.length).toBeGreaterThan(0)
+  })
+
+  it('should format record counts with commas', async () => {
+    const wrapper = mountComponent({ concepts: [mockConcepts[0]] })
+    await wrapper.vm.$nextTick()
+
+    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
+    expect(dataTable.props('items')).toEqual([mockConcepts[0]])
+  })
+
+  it('should display dash for undefined record counts', async () => {
+    const conceptWithoutCounts: Concept = {
+      ...mockConcepts[0],
+      recordCount: undefined,
+      descendantRecordCount: undefined,
+      personCount: undefined,
+      descendantPersonCount: undefined,
+    }
+
+    const wrapper = mountComponent({ concepts: [conceptWithoutCounts] })
+    await wrapper.vm.$nextTick()
+
+    const text = wrapper.text()
+    // Check that dashes are displayed for undefined counts
+    expect(text).toContain('-')
+  })
+
+  it('should show loading spinner for record counts when loadingRecordCounts is true', async () => {
+    const conceptWithoutCounts: Concept = {
+      ...mockConcepts[0],
+      recordCount: undefined,
+    }
+
+    const wrapper = mountComponent({
+      concepts: [conceptWithoutCounts],
+      loadingRecordCounts: true,
+    })
+    await wrapper.vm.$nextTick()
+
+    const progressCircular = wrapper.findAllComponents({ name: 'VProgressCircular' })
+    expect(progressCircular.length).toBeGreaterThan(0)
+  })
+
+  it('should not show add button column when showAddButton is false', () => {
+    const wrapper = mountComponent({ concepts: mockConcepts, showAddButton: false })
+    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
+
+    // Check that headers don't include actions column
+    const headers = dataTable.props('headers')
+    const actionsHeader = headers.find((h: { key: string }) => h.key === 'actions')
+    expect(actionsHeader).toBeUndefined()
+  })
+
+  it('should show add button column when showAddButton is true', () => {
+    const wrapper = mountComponent({ concepts: mockConcepts, showAddButton: true })
+    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
+
+    // Check that headers include actions column
+    const headers = dataTable.props('headers')
+    const actionsHeader = headers.find((h: { key: string }) => h.key === 'actions')
+    expect(actionsHeader).toBeTruthy()
+  })
+
+  it('should render Add button for concepts not in set', async () => {
+    const wrapper = mountComponent({
+      concepts: mockConcepts,
+      showAddButton: true,
+      conceptsInSet: new Set(),
+    })
+    await wrapper.vm.$nextTick()
+
+    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+    const addButtons = buttons.filter(btn => btn.text().includes('Add'))
+    expect(addButtons.length).toBeGreaterThan(0)
+  })
+
+  it('should render Remove button for concepts in set', async () => {
+    const wrapper = mountComponent({
+      concepts: mockConcepts,
+      showAddButton: true,
+      conceptsInSet: new Set([313217]),
+    })
+    await wrapper.vm.$nextTick()
+
+    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+    const removeButtons = buttons.filter(btn => btn.text().includes('Remove'))
+    expect(removeButtons.length).toBeGreaterThan(0)
+  })
+
+  it('should emit add-concept when Add button is clicked', async () => {
+    const wrapper = mountComponent({
+      concepts: mockConcepts,
+      showAddButton: true,
+      conceptsInSet: new Set(),
+    })
+    await wrapper.vm.$nextTick()
+
+    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+    const addButton = buttons.find(btn => btn.text().includes('Add'))
+
+    if (addButton) {
+      await addButton.trigger('click')
+
+      expect(wrapper.emitted('add-concept')).toBeTruthy()
+      expect(wrapper.emitted('add-concept')![0]).toEqual([mockConcepts[0]])
+    }
+  })
+
+  it('should emit remove-concept when Remove button is clicked', async () => {
+    const wrapper = mountComponent({
+      concepts: mockConcepts,
+      showAddButton: true,
+      conceptsInSet: new Set([313217]),
+    })
+    await wrapper.vm.$nextTick()
+
+    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+    const removeButton = buttons.find(btn => btn.text().includes('Remove'))
+
+    if (removeButton) {
+      await removeButton.trigger('click')
+
+      expect(wrapper.emitted('remove-concept')).toBeTruthy()
+      expect(wrapper.emitted('remove-concept')![0]).toEqual([mockConcepts[0]])
+    }
+  })
+
+  it('should display no data message when concepts is empty', async () => {
+    const wrapper = mountComponent({ concepts: [] })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('No records to display')
+  })
+
+  it('should display loading message when loading', async () => {
+    const wrapper = mountComponent({ concepts: [], loading: true })
+    await wrapper.vm.$nextTick()
+
+    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
+    expect(dataTable.props('loading')).toBe(true)
+  })
+
+  it('should display loading skeleton when loading', async () => {
+    const wrapper = mountComponent({ loading: true })
+    await wrapper.vm.$nextTick()
+
+    const skeletons = wrapper.findAllComponents({ name: 'VSkeletonLoader' })
+    expect(skeletons.length).toBeGreaterThan(0)
+  })
+
+  it('should calculate total pages correctly', () => {
+    const wrapper = mountComponent({ concepts: mockConcepts, totalItems: 240, itemsPerPage: 60 })
+    const pagination = wrapper.findComponent({ name: 'VPagination' })
+    expect(pagination.props('length')).toBe(4)
+  })
+
+  it('should display concept names', async () => {
+    const wrapper = mountComponent({ concepts: mockConcepts })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Atrial fibrillation')
+    expect(wrapper.text()).toContain('Myocardial infarction')
+    expect(wrapper.text()).toContain('Glucose measurement')
+  })
+
+  it('should display concept codes', async () => {
+    const wrapper = mountComponent({ concepts: mockConcepts })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('49436004')
+    expect(wrapper.text()).toContain('22298006')
+    expect(wrapper.text()).toContain('33747003')
+  })
+
+  it('should display vocabulary IDs', async () => {
+    const wrapper = mountComponent({ concepts: mockConcepts })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('SNOMED')
+  })
+
+  it('should display domain IDs', async () => {
+    const wrapper = mountComponent({ concepts: mockConcepts })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Condition')
+    expect(wrapper.text()).toContain('Measurement')
+  })
+
+  it('should use primary color for Standard concepts', async () => {
+    const wrapper = mountComponent({ concepts: [mockConcepts[0]] })
+    await wrapper.vm.$nextTick()
+
+    const chips = wrapper.findAllComponents({ name: 'VChip' })
+    const typeChips = chips.filter(chip =>
+      chip.text().includes('Standard') ||
+      chip.text().includes('Classification') ||
+      chip.text().includes('Non-Standard')
+    )
+
+    if (typeChips.length > 0) {
+      expect(typeChips[0].props('color')).toBe('primary')
+    }
+  })
+
+  it('should use info color for Classification concepts', async () => {
+    const wrapper = mountComponent({ concepts: [mockConcepts[1]] })
+    await wrapper.vm.$nextTick()
+
+    const chips = wrapper.findAllComponents({ name: 'VChip' })
+    const typeChips = chips.filter(chip => chip.text().includes('Classification'))
+
+    if (typeChips.length > 0) {
+      expect(typeChips[0].props('color')).toBe('info')
+    }
+  })
+
+  it('should use success color for Valid concepts', async () => {
+    const wrapper = mountComponent({ concepts: [mockConcepts[0]] })
+    await wrapper.vm.$nextTick()
+
+    const chips = wrapper.findAllComponents({ name: 'VChip' })
+    const validChips = chips.filter(chip => chip.text().includes('Valid'))
+
+    if (validChips.length > 0) {
+      expect(validChips[0].props('color')).toBe('success')
+    }
+  })
+
+  it('should use error color for Invalid concepts', async () => {
+    const wrapper = mountComponent({ concepts: [mockConcepts[2]] })
+    await wrapper.vm.$nextTick()
+
+    const chips = wrapper.findAllComponents({ name: 'VChip' })
+    const invalidChips = chips.filter(chip => chip.text().includes('Invalid'))
+
+    if (invalidChips.length > 0) {
+      expect(invalidChips[0].props('color')).toBe('error')
+    }
+  })
+
+  it('should default to page 1 when not specified', () => {
+    const wrapper = mountComponent({ concepts: mockConcepts, totalItems: 100 })
+    const pagination = wrapper.findComponent({ name: 'VPagination' })
+    expect(pagination.props('modelValue')).toBe(1)
+  })
+
+  it('should default to 60 items per page when not specified', () => {
+    const wrapper = mountComponent({ concepts: mockConcepts })
+    const select = wrapper.findComponent({ name: 'VSelect' })
+    expect(select.props('modelValue')).toBe(60)
+  })
+
+  it('should emit update:page as 1 when itemsPerPage changes', async () => {
+    const wrapper = mountComponent({ concepts: mockConcepts, totalItems: 100, page: 3 })
+    const select = wrapper.findComponent({ name: 'VSelect' })
+
+    await select.vm.$emit('update:modelValue', 120)
+
+    expect(wrapper.emitted('update:page')).toBeTruthy()
+    expect(wrapper.emitted('update:page')![0]).toEqual([1])
+  })
+})

@@ -50,6 +50,8 @@ module.exports = {
       files: ['tests/**/*', 'scripts/**/*', 'plugins-dev/**/*'],
       rules: {
         'no-console': 'off',
+        // Allow any in tests for mocking purposes
+        '@typescript-eslint/no-explicit-any': 'off',
       },
     },
   ],

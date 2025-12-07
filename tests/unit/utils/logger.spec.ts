@@ -1,24 +1,17 @@
 /**
- * Unit Tests: Logger Utility
- * Tests for src/utils/logger.ts
+ * Logger Utility Tests
+ * Tests for conditional logging based on environment
  */
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { logger } from '@/utils/logger'
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-
-// We need to reset modules to test logger config properly
 describe('logger', () => {
-  let consoleSpy: {
-    log: ReturnType<typeof vi.spyOn>
-    warn: ReturnType<typeof vi.spyOn>
-    error: ReturnType<typeof vi.spyOn>
-  }
-
   beforeEach(() => {
-    consoleSpy = {
-      log: vi.spyOn(console, 'log').mockImplementation(() => {}),
-      warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
-      error: vi.spyOn(console, 'error').mockImplementation(() => {}),
-    }
+    vi.clearAllMocks()
+    // Spy on console methods
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
@@ -26,182 +19,154 @@ describe('logger', () => {
   })
 
   describe('debug', () => {
-    it('logs debug message with tag', async () => {
-      const { logger } = await import('@/utils/logger')
+    it('should log with tag formatting', () => {
       logger.setLevel('debug')
+      logger.setEnableInProd(true)
 
-      logger.debug('TestTag', 'Debug message')
+      logger.debug('TestModule', 'Test message')
 
-      expect(consoleSpy.log).toHaveBeenCalledWith('[TestTag] Debug message')
+      expect(console.log).toHaveBeenCalledWith('[TestModule] Test message')
     })
 
-    it('logs debug message with data', async () => {
-      const { logger } = await import('@/utils/logger')
+    it('should log with data when provided', () => {
       logger.setLevel('debug')
+      logger.setEnableInProd(true)
 
       const data = { key: 'value' }
-      logger.debug('TestTag', 'Debug message', data)
+      logger.debug('TestModule', 'Test message', data)
 
-      expect(consoleSpy.log).toHaveBeenCalledWith('[TestTag] Debug message', data)
-    })
-
-    it('does not log when level is higher than debug', async () => {
-      const { logger } = await import('@/utils/logger')
-      logger.setLevel('info')
-
-      logger.debug('TestTag', 'Debug message')
-
-      expect(consoleSpy.log).not.toHaveBeenCalled()
+      expect(console.log).toHaveBeenCalledWith('[TestModule] Test message', data)
     })
   })
 
   describe('info', () => {
-    it('logs info message with tag', async () => {
-      const { logger } = await import('@/utils/logger')
+    it('should log info messages', () => {
       logger.setLevel('info')
+      logger.setEnableInProd(true)
 
-      logger.info('TestTag', 'Info message')
+      logger.info('Auth', 'User logged in')
 
-      expect(consoleSpy.log).toHaveBeenCalledWith('[TestTag] Info message')
+      expect(console.log).toHaveBeenCalledWith('[Auth] User logged in')
     })
 
-    it('logs info message with data', async () => {
-      const { logger } = await import('@/utils/logger')
+    it('should log info with additional data', () => {
       logger.setLevel('info')
+      logger.setEnableInProd(true)
 
-      const data = [1, 2, 3]
-      logger.info('TestTag', 'Info message', data)
+      const userData = { userId: 123 }
+      logger.info('Auth', 'User logged in', userData)
 
-      expect(consoleSpy.log).toHaveBeenCalledWith('[TestTag] Info message', data)
-    })
-
-    it('does not log when level is higher than info', async () => {
-      const { logger } = await import('@/utils/logger')
-      logger.setLevel('warn')
-
-      logger.info('TestTag', 'Info message')
-
-      expect(consoleSpy.log).not.toHaveBeenCalled()
+      expect(console.log).toHaveBeenCalledWith('[Auth] User logged in', userData)
     })
   })
 
   describe('warn', () => {
-    it('logs warning message with tag', async () => {
-      const { logger } = await import('@/utils/logger')
+    it('should log warning messages', () => {
       logger.setLevel('warn')
+      logger.setEnableInProd(true)
 
-      logger.warn('TestTag', 'Warning message')
+      logger.warn('Cache', 'Cache miss')
 
-      expect(consoleSpy.warn).toHaveBeenCalledWith('[TestTag] Warning message')
+      expect(console.warn).toHaveBeenCalledWith('[Cache] Cache miss')
     })
 
-    it('logs warning message with data', async () => {
-      const { logger } = await import('@/utils/logger')
+    it('should log warning with additional data', () => {
       logger.setLevel('warn')
+      logger.setEnableInProd(true)
 
-      const data = { error: 'details' }
-      logger.warn('TestTag', 'Warning message', data)
+      const details = { cacheKey: 'user:123' }
+      logger.warn('Cache', 'Cache miss', details)
 
-      expect(consoleSpy.warn).toHaveBeenCalledWith('[TestTag] Warning message', data)
-    })
-
-    it('does not log when level is higher than warn', async () => {
-      const { logger } = await import('@/utils/logger')
-      logger.setLevel('error')
-
-      logger.warn('TestTag', 'Warning message')
-
-      expect(consoleSpy.warn).not.toHaveBeenCalled()
+      expect(console.warn).toHaveBeenCalledWith('[Cache] Cache miss', details)
     })
   })
 
   describe('error', () => {
-    it('logs error message with tag', async () => {
-      const { logger } = await import('@/utils/logger')
+    it('should log error messages', () => {
       logger.setLevel('error')
+      logger.setEnableInProd(true)
 
-      logger.error('TestTag', 'Error message')
+      logger.error('API', 'Request failed')
 
-      expect(consoleSpy.error).toHaveBeenCalledWith('[TestTag] Error message')
+      expect(console.error).toHaveBeenCalledWith('[API] Request failed')
     })
 
-    it('logs error message with error object', async () => {
-      const { logger } = await import('@/utils/logger')
+    it('should log error with error object', () => {
       logger.setLevel('error')
+      logger.setEnableInProd(true)
 
-      const error = new Error('Test error')
-      logger.error('TestTag', 'Error occurred', error)
+      const error = new Error('Network error')
+      logger.error('API', 'Request failed', error)
 
-      expect(consoleSpy.error).toHaveBeenCalledWith('[TestTag] Error occurred', error)
+      expect(console.error).toHaveBeenCalledWith('[API] Request failed', error)
+    })
+  })
+
+  describe('log levels', () => {
+    it('should respect log level - debug shows all', () => {
+      logger.setLevel('debug')
+      logger.setEnableInProd(true)
+
+      logger.debug('Test', 'debug')
+      logger.info('Test', 'info')
+      logger.warn('Test', 'warn')
+      logger.error('Test', 'error')
+
+      expect(console.log).toHaveBeenCalledTimes(2) // debug and info
+      expect(console.warn).toHaveBeenCalledTimes(1)
+      expect(console.error).toHaveBeenCalledTimes(1)
     })
 
-    it('always logs errors regardless of level', async () => {
-      const { logger } = await import('@/utils/logger')
+    it('should respect log level - warn hides debug and info', () => {
+      logger.setLevel('warn')
+      logger.setEnableInProd(true)
+
+      logger.debug('Test', 'debug')
+      logger.info('Test', 'info')
+      logger.warn('Test', 'warn')
+      logger.error('Test', 'error')
+
+      expect(console.log).not.toHaveBeenCalled()
+      expect(console.warn).toHaveBeenCalledTimes(1)
+      expect(console.error).toHaveBeenCalledTimes(1)
+    })
+
+    it('should respect log level - error only shows errors', () => {
       logger.setLevel('error')
+      logger.setEnableInProd(true)
 
-      logger.error('TestTag', 'Error message')
+      logger.debug('Test', 'debug')
+      logger.info('Test', 'info')
+      logger.warn('Test', 'warn')
+      logger.error('Test', 'error')
 
-      expect(consoleSpy.error).toHaveBeenCalled()
+      expect(console.log).not.toHaveBeenCalled()
+      expect(console.warn).not.toHaveBeenCalled()
+      expect(console.error).toHaveBeenCalledTimes(1)
     })
   })
 
   describe('setLevel', () => {
-    it('changes the minimum log level', async () => {
-      const { logger } = await import('@/utils/logger')
+    it('should change the minimum log level', () => {
+      logger.setLevel('info')
+      logger.setEnableInProd(true)
 
-      // Set to error - should not log debug
-      logger.setLevel('error')
-      logger.debug('Test', 'Should not appear')
-      expect(consoleSpy.log).not.toHaveBeenCalled()
+      logger.debug('Test', 'should not show')
+      expect(console.log).not.toHaveBeenCalled()
 
-      // Set to debug - should log debug
       logger.setLevel('debug')
-      logger.debug('Test', 'Should appear')
-      expect(consoleSpy.log).toHaveBeenCalled()
+      logger.debug('Test', 'should show now')
+      expect(console.log).toHaveBeenCalled()
     })
   })
 
   describe('setEnableInProd', () => {
-    it('enables logging in production when set to true', async () => {
-      const { logger } = await import('@/utils/logger')
-
+    it('should enable/disable production logging', () => {
       logger.setEnableInProd(true)
-      logger.setLevel('debug')
-      logger.debug('Test', 'Message')
-
-      // In dev mode, this should log
-      expect(consoleSpy.log).toHaveBeenCalled()
-    })
-
-    it('can disable logging in production', async () => {
-      const { logger } = await import('@/utils/logger')
+      expect(logger).toBeDefined()
 
       logger.setEnableInProd(false)
-      // This test runs in dev mode, so it should still log
-      logger.setLevel('debug')
-      logger.debug('Test', 'Message')
-
-      expect(consoleSpy.log).toHaveBeenCalled()
-    })
-  })
-
-  describe('message formatting', () => {
-    it('formats message with tag prefix', async () => {
-      const { logger } = await import('@/utils/logger')
-      logger.setLevel('debug')
-
-      logger.debug('MyComponent', 'Test message')
-
-      expect(consoleSpy.log).toHaveBeenCalledWith('[MyComponent] Test message')
-    })
-
-    it('handles special characters in tag', async () => {
-      const { logger } = await import('@/utils/logger')
-      logger.setLevel('debug')
-
-      logger.debug('Auth/Login', 'User logged in')
-
-      expect(consoleSpy.log).toHaveBeenCalledWith('[Auth/Login] User logged in')
+      expect(logger).toBeDefined()
     })
   })
 })

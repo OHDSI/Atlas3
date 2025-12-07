@@ -1,36 +1,38 @@
 /**
- * Unit Tests: TokenManager Service
- * Tests for src/services/auth/tokenManager.ts
+ * Token Manager Service Tests
+ * Tests for JWT token parsing and validation
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { TokenManager, tokenManager } from '@/services/auth/tokenManager'
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
-    error: vi.fn(),
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
+    error: vi.fn(),
   },
 }))
 
-// Helper to create a valid JWT token
-function createTestJwt(payload: Record<string, unknown>, expiresInSeconds = 3600): string {
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-  const exp = Math.floor(Date.now() / 1000) + expiresInSeconds
-  const body = btoa(JSON.stringify({ ...payload, exp }))
-  const signature = btoa('test-signature')
-  return `${header}.${body}.${signature}`
-}
+import { logger } from '@/utils/logger'
 
-function createExpiredJwt(payload: Record<string, unknown> = {}): string {
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-  const exp = Math.floor(Date.now() / 1000) - 3600 // Expired 1 hour ago
-  const body = btoa(JSON.stringify({ ...payload, exp }))
-  const signature = btoa('test-signature')
-  return `${header}.${body}.${signature}`
+// Helper to create a valid JWT token structure (not cryptographically signed)
+function createTestJWT(payload: Record<string, unknown>, expiresInSeconds = 3600): string {
+  const header = { alg: 'HS256', typ: 'JWT' }
+  const now = Math.floor(Date.now() / 1000)
+  const fullPayload = {
+    sub: 'testuser',
+    iat: now,
+    exp: now + expiresInSeconds,
+    ...payload,
+  }
+
+  const base64Header = btoa(JSON.stringify(header))
+  const base64Payload = btoa(JSON.stringify(fullPayload))
+  const signature = 'test_signature'
+
+  return `${base64Header}.${base64Payload}.${signature}`
 }
 
 describe('TokenManager', () => {
@@ -38,208 +40,177 @@ describe('TokenManager', () => {
 
   beforeEach(() => {
     manager = new TokenManager()
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2025-01-15T12:00:00Z'))
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
     vi.clearAllMocks()
   })
 
-  describe('isValidJWT', () => {
-    it('returns true for valid JWT format', () => {
-      const token = createTestJwt({ sub: 'user1' })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
+  describe('isValidJWT', () => {
+    it('should return true for valid JWT structure', () => {
+      const token = createTestJWT({})
       expect(manager.isValidJWT(token)).toBe(true)
     })
 
-    it('returns false for token with wrong number of parts', () => {
-      expect(manager.isValidJWT('part1.part2')).toBe(false)
-      expect(manager.isValidJWT('part1')).toBe(false)
-      expect(manager.isValidJWT('part1.part2.part3.part4')).toBe(false)
+    it('should return true for standard 3-part token', () => {
+      expect(manager.isValidJWT('header.payload.signature')).toBe(true)
     })
 
-    it('returns false for token with empty parts', () => {
-      expect(manager.isValidJWT('..')).toBe(false)
-      expect(manager.isValidJWT('header..signature')).toBe(false)
-      expect(manager.isValidJWT('.body.signature')).toBe(false)
+    it('should return false for 2-part token', () => {
+      expect(manager.isValidJWT('header.payload')).toBe(false)
     })
 
-    it('returns false for empty string', () => {
+    it('should return false for single-part token', () => {
+      expect(manager.isValidJWT('onlyonepart')).toBe(false)
+    })
+
+    it('should return false for empty string', () => {
       expect(manager.isValidJWT('')).toBe(false)
+    })
+
+    it('should return false for token with empty parts', () => {
+      expect(manager.isValidJWT('..signature')).toBe(false)
     })
   })
 
   describe('parseToken', () => {
-    it('parses valid token correctly', () => {
-      const token = createTestJwt({ sub: 'user123', name: 'Test User' })
-
+    it('should parse a valid token', () => {
+      const token = createTestJWT({ sub: 'user123' })
       const result = manager.parseToken(token)
 
       expect(result).not.toBeNull()
-      expect(result!.token).toBe(token)
-      expect(result!.payload.sub).toBe('user123')
-      expect(result!.payload.name).toBe('Test User')
-      expect(result!.isExpired).toBe(false)
-      expect(result!.expirationDate).toBeInstanceOf(Date)
+      expect(result?.token).toBe(token)
+      expect(result?.payload.sub).toBe('user123')
+      expect(result?.expirationDate).toBeInstanceOf(Date)
     })
 
-    it('returns null for invalid JWT format', () => {
+    it('should return null for invalid token structure', () => {
       const result = manager.parseToken('invalid-token')
-
       expect(result).toBeNull()
     })
 
-    it('correctly identifies expired tokens', () => {
-      const token = createExpiredJwt({ sub: 'user1' })
-
+    it('should correctly detect expired tokens', () => {
+      const token = createTestJWT({}, -3600) // Expired 1 hour ago
       const result = manager.parseToken(token)
 
       expect(result).not.toBeNull()
-      expect(result!.isExpired).toBe(true)
+      expect(result?.isExpired).toBe(true)
     })
 
-    it('handles token without exp claim', () => {
-      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-      const body = btoa(JSON.stringify({ sub: 'user1' })) // No exp
-      const signature = btoa('test-signature')
-      const token = `${header}.${body}.${signature}`
-
+    it('should correctly detect valid tokens', () => {
+      const token = createTestJWT({}, 3600) // Expires in 1 hour
       const result = manager.parseToken(token)
 
       expect(result).not.toBeNull()
-      // Without exp, expiration date defaults to epoch
-      expect(result!.expirationDate.getTime()).toBe(0)
+      expect(result?.isExpired).toBe(false)
     })
 
-    it('logs error and returns null on parse failure', async () => {
-      const { logger } = await import('@/utils/logger')
-
-      // Create token with invalid base64 in body
-      const result = manager.parseToken('valid.!!!invalid!!!.sig')
+    it('should handle parsing error', () => {
+      // Create a token with invalid base64 in payload
+      const result = manager.parseToken('eyJhbGciOiJIUzI1NiJ9.!!!invalid!!!.signature')
 
       expect(result).toBeNull()
-      expect(logger.error).toHaveBeenCalledWith(
-        'TokenManager',
-        'Failed to parse token',
-        expect.any(Error)
-      )
+      expect(logger.error).toHaveBeenCalled()
     })
   })
 
   describe('isTokenExpired', () => {
-    it('returns false for valid non-expired token', () => {
-      const token = createTestJwt({ sub: 'user1' }, 3600)
-
+    it('should return false for non-expired token', () => {
+      const token = createTestJWT({}, 3600) // Expires in 1 hour
       expect(manager.isTokenExpired(token)).toBe(false)
     })
 
-    it('returns true for expired token', () => {
-      const token = createExpiredJwt()
+    it('should return true for expired token', () => {
+      const token = createTestJWT({}, -3600) // Expired 1 hour ago
+      expect(manager.isTokenExpired(token)).toBe(true)
+    })
+
+    it('should return true for token without exp claim', () => {
+      // Create token with no exp
+      const header = { alg: 'HS256', typ: 'JWT' }
+      const payload = { sub: 'testuser' } // No exp
+      const token = `${btoa(JSON.stringify(header))}.${btoa(JSON.stringify(payload))}.signature`
 
       expect(manager.isTokenExpired(token)).toBe(true)
     })
 
-    it('returns true for token without exp claim', () => {
-      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-      const body = btoa(JSON.stringify({ sub: 'user1' }))
-      const signature = btoa('test')
-      const token = `${header}.${body}.${signature}`
-
-      expect(manager.isTokenExpired(token)).toBe(true)
-    })
-
-    it('returns true for invalid token', () => {
+    it('should return true for invalid token', () => {
       expect(manager.isTokenExpired('invalid')).toBe(true)
     })
   })
 
   describe('getExpirationDate', () => {
-    it('returns correct expiration date', () => {
-      vi.useRealTimers()
-      const now = Date.now()
-      const expiresIn = 3600
-      const token = createTestJwt({}, expiresIn)
-
+    it('should return expiration date for valid token', () => {
+      const token = createTestJWT({}, 3600)
       const result = manager.getExpirationDate(token)
 
       expect(result).toBeInstanceOf(Date)
       // Should be approximately 1 hour from now
-      expect(result!.getTime()).toBeGreaterThan(now + 3500000)
-      expect(result!.getTime()).toBeLessThan(now + 3700000)
+      const expectedTime = Date.now() + 3600 * 1000
+      expect(Math.abs(result!.getTime() - expectedTime)).toBeLessThan(1000)
     })
 
-    it('returns null for token without exp', () => {
-      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-      const body = btoa(JSON.stringify({ sub: 'user1' }))
-      const signature = btoa('test')
-      const token = `${header}.${body}.${signature}`
+    it('should return null for token without exp', () => {
+      const header = { alg: 'HS256', typ: 'JWT' }
+      const payload = { sub: 'testuser' }
+      const token = `${btoa(JSON.stringify(header))}.${btoa(JSON.stringify(payload))}.signature`
 
       expect(manager.getExpirationDate(token)).toBeNull()
     })
 
-    it('returns null for invalid token', () => {
+    it('should return null for invalid token', () => {
       expect(manager.getExpirationDate('invalid')).toBeNull()
     })
   })
 
   describe('getTimeUntilExpiration', () => {
-    it('returns positive time for non-expired token', () => {
-      vi.useRealTimers()
-      const token = createTestJwt({}, 3600)
-
+    it('should return positive value for non-expired token', () => {
+      const token = createTestJWT({}, 3600) // Expires in 1 hour
       const result = manager.getTimeUntilExpiration(token)
 
-      // Should be close to 1 hour in milliseconds
-      expect(result).toBeGreaterThan(3500000)
-      expect(result).toBeLessThanOrEqual(3600000)
+      // Should be approximately 1 hour (3600 seconds) in milliseconds
+      expect(result).toBeGreaterThan(3590 * 1000) // Allow some tolerance
+      expect(result).toBeLessThanOrEqual(3600 * 1000)
     })
 
-    it('returns 0 for expired token', () => {
-      vi.useRealTimers()
-      const token = createExpiredJwt()
-
+    it('should return 0 for expired token', () => {
+      const token = createTestJWT({}, -3600) // Expired
       expect(manager.getTimeUntilExpiration(token)).toBe(0)
     })
 
-    it('returns 0 for invalid token', () => {
+    it('should return 0 for invalid token', () => {
       expect(manager.getTimeUntilExpiration('invalid')).toBe(0)
     })
   })
 
   describe('shouldRefresh', () => {
-    it('returns true when token expires within threshold', () => {
-      vi.useRealTimers()
-      const token = createTestJwt({}, 300) // Expires in 5 minutes
-      const threshold = 10 * 60 * 1000 // 10 minute threshold
-
-      expect(manager.shouldRefresh(token, threshold)).toBe(true)
+    it('should return true when within threshold', () => {
+      // Token expires in 5 minutes
+      const token = createTestJWT({}, 300)
+      // Should refresh if within 10 minutes of expiration
+      expect(manager.shouldRefresh(token, 600 * 1000)).toBe(true)
     })
 
-    it('returns false when token expires beyond threshold', () => {
-      vi.useRealTimers()
-      const token = createTestJwt({}, 3600) // Expires in 1 hour
-      const threshold = 10 * 60 * 1000 // 10 minute threshold
-
-      expect(manager.shouldRefresh(token, threshold)).toBe(false)
+    it('should return false when not within threshold', () => {
+      // Token expires in 1 hour
+      const token = createTestJWT({}, 3600)
+      // Should not refresh if only checking 5 minute threshold
+      expect(manager.shouldRefresh(token, 300 * 1000)).toBe(false)
     })
 
-    it('returns false for already expired token', () => {
-      vi.useRealTimers()
-      const token = createExpiredJwt()
-      const threshold = 10 * 60 * 1000
-
-      expect(manager.shouldRefresh(token, threshold)).toBe(false)
+    it('should return false for expired token', () => {
+      const token = createTestJWT({}, -3600)
+      expect(manager.shouldRefresh(token, 600 * 1000)).toBe(false)
     })
 
-    it('returns false for invalid token', () => {
-      expect(manager.shouldRefresh('invalid', 10000)).toBe(false)
+    it('should return false for invalid token', () => {
+      expect(manager.shouldRefresh('invalid', 600 * 1000)).toBe(false)
     })
   })
 
-  describe('Singleton Export', () => {
-    it('exports singleton instance', () => {
+  describe('Singleton Instance', () => {
+    it('should export a singleton instance', () => {
       expect(tokenManager).toBeInstanceOf(TokenManager)
     })
   })

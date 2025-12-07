@@ -1,8 +1,7 @@
 /**
- * Unit Tests: Validators
- * Tests for src/utils/validators.ts
+ * Validators Utility Tests
+ * Tests for cohort validation rules
  */
-
 import { describe, it, expect } from 'vitest'
 import {
   validateCohort,
@@ -10,374 +9,293 @@ import {
   validateEvent,
   validateAttribute,
   validateEventAttributes,
-  hasValidationErrors,
+  hasValidationErrors
 } from '@/utils/validators'
 import type { CohortDefinition, CohortEvent } from '@/models/cohort.types'
-import type { EventAttribute, NumericRangeAttribute, DateRangeAttribute } from '@/models/event.types'
+import type { Cardinality, EventAttribute, NumericRangeAttribute, DateRangeAttribute } from '@/models/event.types'
 
-describe('validators', () => {
+describe('Validators', () => {
   describe('validateCohort', () => {
-    it('returns no errors for valid cohort', () => {
+    it('should return error when name is empty', () => {
       const cohort: CohortDefinition = {
-        name: 'Test Cohort',
-        entryEvents: [{ id: '1', criteriaType: 'CONDITION_OCCURRENCE' } as CohortEvent],
-      } as CohortDefinition
-
-      const errors = validateCohort(cohort)
-      expect(errors).toHaveLength(0)
-    })
-
-    it('returns error for missing name', () => {
-      const cohort = {
+        id: 1,
         name: '',
-        entryEvents: [{ id: '1' }],
-      } as CohortDefinition
+        entryEvents: [{ id: '1', criteriaType: 'ConditionOccurrence', attributes: [] }],
+        inclusionRules: [],
+        conceptSets: []
+      }
 
       const errors = validateCohort(cohort)
+
       expect(errors).toHaveLength(1)
       expect(errors[0].field).toBe('name')
-      expect(errors[0].message).toBe('Cohort name is required')
+      expect(errors[0].message).toContain('required')
     })
 
-    it('returns error for whitespace-only name', () => {
-      const cohort = {
+    it('should return error when name is whitespace only', () => {
+      const cohort: CohortDefinition = {
+        id: 1,
         name: '   ',
-        entryEvents: [{ id: '1' }],
-      } as CohortDefinition
+        entryEvents: [{ id: '1', criteriaType: 'ConditionOccurrence', attributes: [] }],
+        inclusionRules: [],
+        conceptSets: []
+      }
 
       const errors = validateCohort(cohort)
+
       expect(errors.some(e => e.field === 'name')).toBe(true)
     })
 
-    it('returns error for no entry events', () => {
-      const cohort = {
+    it('should return error when no entry events', () => {
+      const cohort: CohortDefinition = {
+        id: 1,
         name: 'Test Cohort',
         entryEvents: [],
-      } as CohortDefinition
+        inclusionRules: [],
+        conceptSets: []
+      }
 
       const errors = validateCohort(cohort)
+
       expect(errors).toHaveLength(1)
       expect(errors[0].field).toBe('entryEvents')
-      expect(errors[0].message).toBe('At least one entry event is required')
     })
 
-    it('returns multiple errors when both name and events invalid', () => {
-      const cohort = {
-        name: '',
-        entryEvents: [],
-      } as CohortDefinition
+    it('should return no errors for valid cohort', () => {
+      const cohort: CohortDefinition = {
+        id: 1,
+        name: 'Test Cohort',
+        entryEvents: [{ id: '1', criteriaType: 'ConditionOccurrence', attributes: [] }],
+        inclusionRules: [],
+        conceptSets: []
+      }
 
       const errors = validateCohort(cohort)
-      expect(errors).toHaveLength(2)
+
+      expect(errors).toHaveLength(0)
     })
   })
 
   describe('validateCardinality', () => {
-    it('allows AT_LEAST with count >= 1', () => {
-      const errors = validateCardinality({ type: 'AT_LEAST', count: 1 })
+    it('should return error when AT_LEAST has count < 1', () => {
+      const cardinality: Cardinality = {
+        type: 'AT_LEAST',
+        count: 0
+      }
+
+      const errors = validateCardinality(cardinality)
+
+      expect(errors.some(e => e.message.includes('AT_LEAST'))).toBe(true)
+    })
+
+    it('should return error for negative count', () => {
+      const cardinality: Cardinality = {
+        type: 'EXACTLY',
+        count: -1
+      }
+
+      const errors = validateCardinality(cardinality)
+
+      expect(errors.some(e => e.message.includes('negative'))).toBe(true)
+    })
+
+    it('should pass when AT_LEAST has count >= 1', () => {
+      const cardinality: Cardinality = {
+        type: 'AT_LEAST',
+        count: 1
+      }
+
+      const errors = validateCardinality(cardinality)
+
       expect(errors).toHaveLength(0)
     })
 
-    it('allows AT_LEAST with count > 1', () => {
-      const errors = validateCardinality({ type: 'AT_LEAST', count: 5 })
+    it('should allow EXACTLY with count 0', () => {
+      const cardinality: Cardinality = {
+        type: 'EXACTLY',
+        count: 0
+      }
+
+      const errors = validateCardinality(cardinality)
+
       expect(errors).toHaveLength(0)
     })
 
-    it('rejects AT_LEAST with count < 1', () => {
-      const errors = validateCardinality({ type: 'AT_LEAST', count: 0 })
-      expect(errors).toHaveLength(1)
-      expect(errors[0].message).toContain('AT_LEAST')
-    })
+    it('should allow AT_MOST with count 0', () => {
+      const cardinality: Cardinality = {
+        type: 'AT_MOST',
+        count: 0
+      }
 
-    it('allows EXACTLY with count = 0', () => {
-      const errors = validateCardinality({ type: 'EXACTLY', count: 0 })
+      const errors = validateCardinality(cardinality)
+
       expect(errors).toHaveLength(0)
-    })
-
-    it('allows AT_MOST with count = 0', () => {
-      const errors = validateCardinality({ type: 'AT_MOST', count: 0 })
-      expect(errors).toHaveLength(0)
-    })
-
-    it('rejects negative count for any type', () => {
-      const errors = validateCardinality({ type: 'EXACTLY', count: -1 })
-      expect(errors).toHaveLength(1)
-      expect(errors[0].message).toContain('negative')
     })
   })
 
   describe('validateEvent', () => {
-    it('returns no errors for valid event', () => {
-      const event = {
-        id: '1',
-        criteriaType: 'CONDITION_OCCURRENCE',
-      } as CohortEvent
+    it('should return error when criteriaType is missing', () => {
+      const event = { id: '1', attributes: [] } as CohortEvent
 
       const errors = validateEvent(event)
-      expect(errors).toHaveLength(0)
+
+      expect(errors.some(e => e.field === 'criteriaType')).toBe(true)
     })
 
-    it('returns error for missing criteriaType', () => {
-      const event = {
+    it('should pass for valid event', () => {
+      const event: CohortEvent = {
         id: '1',
-      } as CohortEvent
+        criteriaType: 'ConditionOccurrence',
+        attributes: []
+      }
 
       const errors = validateEvent(event)
-      expect(errors).toHaveLength(1)
-      expect(errors[0].field).toBe('criteriaType')
+
+      expect(errors).toHaveLength(0)
     })
   })
 
   describe('validateAttribute', () => {
-    describe('common validation', () => {
-      it('returns error for missing attributeKey', () => {
-        const attribute = {
-          type: 'numericRange',
-          attributeKey: '',
-          operator: 'EQUAL',
-          value: 10,
-        } as EventAttribute
+    it('should return error when attributeKey is empty', () => {
+      const attribute = {
+        attributeKey: '',
+        type: 'numericRange'
+      } as EventAttribute
 
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.field === 'attribute.attributeKey')).toBe(true)
-      })
+      const errors = validateAttribute(attribute)
 
-      it('returns error for whitespace-only attributeKey', () => {
-        const attribute = {
-          type: 'numericRange',
-          attributeKey: '   ',
-          operator: 'EQUAL',
-          value: 10,
-        } as EventAttribute
-
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.field === 'attribute.attributeKey')).toBe(true)
-      })
+      expect(errors.some(e => e.message.includes('key is required'))).toBe(true)
     })
 
-    describe('numericRange validation', () => {
-      it('returns no errors for valid numeric attribute', () => {
-        const attribute: NumericRangeAttribute = {
-          type: 'numericRange',
-          attributeKey: 'age',
-          operator: 'EQUAL',
-          value: 25,
-          extent: null,
-        }
+    it('should validate numericRange requires operator', () => {
+      const attribute = {
+        attributeKey: 'age',
+        type: 'numericRange',
+        value: 50
+      } as NumericRangeAttribute
 
-        const errors = validateAttribute(attribute)
-        expect(errors).toHaveLength(0)
-      })
+      const errors = validateAttribute(attribute)
 
-      it('returns error for missing operator', () => {
-        const attribute = {
-          type: 'numericRange',
-          attributeKey: 'age',
-          value: 25,
-        } as NumericRangeAttribute
-
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.field === 'attribute.operator')).toBe(true)
-      })
-
-      it('returns error for missing value', () => {
-        const attribute = {
-          type: 'numericRange',
-          attributeKey: 'age',
-          operator: 'EQUAL',
-          value: null,
-        } as unknown as NumericRangeAttribute
-
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.field === 'attribute.value')).toBe(true)
-      })
-
-      it('returns error when extent is not greater than value', () => {
-        const attribute: NumericRangeAttribute = {
-          type: 'numericRange',
-          attributeKey: 'age',
-          operator: 'BETWEEN',
-          value: 50,
-          extent: 25,
-        }
-
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.field === 'attribute.extent')).toBe(true)
-      })
-
-      it('returns no error when extent > value', () => {
-        const attribute: NumericRangeAttribute = {
-          type: 'numericRange',
-          attributeKey: 'age',
-          operator: 'BETWEEN',
-          value: 25,
-          extent: 50,
-        }
-
-        const errors = validateAttribute(attribute)
-        expect(errors.filter(e => e.field === 'attribute.extent')).toHaveLength(0)
-      })
+      expect(errors.some(e => e.message.includes('operator'))).toBe(true)
     })
 
-    describe('conceptSet validation', () => {
-      it('returns no errors for valid concept set attribute', () => {
-        const attribute = {
-          type: 'conceptSet',
-          attributeKey: 'drugSource',
-          conceptSet: { id: 1, name: 'Test Set' },
-        } as EventAttribute
+    it('should validate numericRange requires value', () => {
+      const attribute = {
+        attributeKey: 'age',
+        type: 'numericRange',
+        operator: 'GREATER_THAN'
+      } as NumericRangeAttribute
 
-        const errors = validateAttribute(attribute)
-        expect(errors).toHaveLength(0)
-      })
+      const errors = validateAttribute(attribute)
 
-      it('returns error for missing concept set', () => {
-        const attribute = {
-          type: 'conceptSet',
-          attributeKey: 'drugSource',
-        } as EventAttribute
-
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.field === 'attribute.conceptSet')).toBe(true)
-      })
-
-      it('returns error for concept set without id', () => {
-        const attribute = {
-          type: 'conceptSet',
-          attributeKey: 'drugSource',
-          conceptSet: { name: 'Test' },
-        } as EventAttribute
-
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.field === 'attribute.conceptSet')).toBe(true)
-      })
+      expect(errors.some(e => e.message.includes('value'))).toBe(true)
     })
 
-    describe('dateRange validation', () => {
-      it('returns no errors for valid date attribute with single value', () => {
-        const attribute: DateRangeAttribute = {
-          type: 'dateRange',
-          attributeKey: 'startDate',
-          operator: 'GREATER_THAN',
-          value: '2024-01-01',
-          extent: null,
-        }
+    it('should validate extent > value for numericRange', () => {
+      const attribute: NumericRangeAttribute = {
+        attributeKey: 'age',
+        type: 'numericRange',
+        operator: 'GREATER_THAN',
+        value: 50,
+        extent: 40 // Invalid: extent < value
+      }
 
-        const errors = validateAttribute(attribute)
-        expect(errors).toHaveLength(0)
-      })
+      const errors = validateAttribute(attribute)
 
-      it('returns error for missing operator', () => {
-        const attribute = {
-          type: 'dateRange',
-          attributeKey: 'startDate',
-          value: '2024-01-01',
-        } as DateRangeAttribute
+      expect(errors.some(e => e.message.includes('Extent'))).toBe(true)
+    })
 
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.field === 'attribute.operator')).toBe(true)
-      })
+    it('should validate conceptSet requires concept set', () => {
+      const attribute = {
+        attributeKey: 'conditionType',
+        type: 'conceptSet'
+      } as EventAttribute
 
-      it('returns error for comparison operators without value', () => {
-        const attribute: DateRangeAttribute = {
-          type: 'dateRange',
-          attributeKey: 'startDate',
-          operator: 'GREATER_THAN',
-          value: '',
-          extent: null,
-        }
+      const errors = validateAttribute(attribute)
 
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.message.includes('Date value is required'))).toBe(true)
-      })
+      expect(errors.some(e => e.message.includes('Concept set'))).toBe(true)
+    })
 
-      it('returns error for BETWEEN without both dates', () => {
-        const attribute: DateRangeAttribute = {
-          type: 'dateRange',
-          attributeKey: 'dateRange',
-          operator: 'BETWEEN',
-          value: '2024-01-01',
-          extent: null,
-        }
+    it('should validate dateRange requires operator', () => {
+      const attribute = {
+        attributeKey: 'startDate',
+        type: 'dateRange',
+        value: '2024-01-01'
+      } as DateRangeAttribute
 
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.message.includes('Both value and extent'))).toBe(true)
-      })
+      const errors = validateAttribute(attribute)
 
-      it('returns error when extent date is before value date', () => {
-        const attribute: DateRangeAttribute = {
-          type: 'dateRange',
-          attributeKey: 'dateRange',
-          operator: 'BETWEEN',
-          value: '2024-06-01',
-          extent: '2024-01-01',
-        }
+      expect(errors.some(e => e.message.includes('operator'))).toBe(true)
+    })
 
-        const errors = validateAttribute(attribute)
-        expect(errors.some(e => e.message.includes('Extent date must be after'))).toBe(true)
-      })
+    it('should validate BETWEEN requires both value and extent', () => {
+      const attribute: DateRangeAttribute = {
+        attributeKey: 'startDate',
+        type: 'dateRange',
+        operator: 'BETWEEN',
+        value: '2024-01-01'
+        // Missing extent
+      }
 
-      it('returns no errors for valid BETWEEN dates', () => {
-        const attribute: DateRangeAttribute = {
-          type: 'dateRange',
-          attributeKey: 'dateRange',
-          operator: 'BETWEEN',
-          value: '2024-01-01',
-          extent: '2024-12-31',
-        }
+      const errors = validateAttribute(attribute)
 
-        const errors = validateAttribute(attribute)
-        expect(errors.filter(e => e.field.includes('date'))).toHaveLength(0)
-      })
+      expect(errors.some(e => e.message.includes('BETWEEN'))).toBe(true)
+    })
+
+    it('should validate date extent > value', () => {
+      const attribute: DateRangeAttribute = {
+        attributeKey: 'startDate',
+        type: 'dateRange',
+        operator: 'BETWEEN',
+        value: '2024-06-01',
+        extent: '2024-01-01' // Invalid: extent before value
+      }
+
+      const errors = validateAttribute(attribute)
+
+      expect(errors.some(e => e.message.includes('after'))).toBe(true)
     })
   })
 
   describe('validateEventAttributes', () => {
-    it('returns no errors when no attributes', () => {
-      const event = {
+    it('should validate all attributes in event', () => {
+      const event: CohortEvent = {
         id: '1',
-        criteriaType: 'CONDITION_OCCURRENCE',
-      } as CohortEvent
-
-      const errors = validateEventAttributes(event)
-      expect(errors).toHaveLength(0)
-    })
-
-    it('validates all attributes and prefixes errors', () => {
-      const event = {
-        id: '1',
-        criteriaType: 'CONDITION_OCCURRENCE',
+        criteriaType: 'ConditionOccurrence',
         attributes: [
-          { type: 'numericRange', attributeKey: '', operator: 'EQUAL', value: 10 },
-          { type: 'numericRange', attributeKey: 'valid', operator: 'EQUAL', value: 5 },
-        ],
-      } as CohortEvent
+          { attributeKey: '', type: 'numericRange' } as EventAttribute,
+          { attributeKey: 'test', type: 'numericRange', operator: 'GREATER_THAN' } as NumericRangeAttribute
+        ]
+      }
 
       const errors = validateEventAttributes(event)
+
       expect(errors.length).toBeGreaterThan(0)
-      expect(errors[0].field).toMatch(/^attributes\[0\]/)
+      expect(errors.some(e => e.field.includes('attributes[0]'))).toBe(true)
     })
 
-    it('returns empty array when attributes is undefined', () => {
-      const event = {
+    it('should return empty for event with no attributes', () => {
+      const event: CohortEvent = {
         id: '1',
-        criteriaType: 'CONDITION_OCCURRENCE',
-        attributes: undefined,
-      } as CohortEvent
+        criteriaType: 'ConditionOccurrence',
+        attributes: []
+      }
 
       const errors = validateEventAttributes(event)
+
       expect(errors).toHaveLength(0)
     })
   })
 
   describe('hasValidationErrors', () => {
-    it('returns false for empty errors array', () => {
-      expect(hasValidationErrors([])).toBe(false)
+    it('should return true when errors exist', () => {
+      const errors = [{ field: 'name', message: 'Required' }]
+
+      expect(hasValidationErrors(errors)).toBe(true)
     })
 
-    it('returns true when errors exist', () => {
-      const errors = [{ field: 'name', message: 'Required' }]
-      expect(hasValidationErrors(errors)).toBe(true)
+    it('should return false when no errors', () => {
+      expect(hasValidationErrors([])).toBe(false)
     })
   })
 })

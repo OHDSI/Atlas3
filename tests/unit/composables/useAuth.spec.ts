@@ -1,14 +1,11 @@
 /**
- * Unit Tests: useAuth Composable
- * Tests for src/composables/useAuth.ts
+ * useAuth Composable Tests
+ * Tests for authentication wrapper composable
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useAuth } from '@/composables/useAuth'
-import { useAuthStore } from '@/stores/auth'
 
-// Mock auth service
+// Mock authService
 vi.mock('@/services/auth/authService', () => ({
   authService: {
     login: vi.fn(),
@@ -19,22 +16,19 @@ vi.mock('@/services/auth/authService', () => ({
   },
 }))
 
-// Mock permission checker
+// Mock permissionChecker
 vi.mock('@/services/auth/permissionChecker', () => ({
   permissionChecker: {
-    hasPermission: vi.fn((permission: string, permissions: string[]) => ({
-      granted: permissions.includes(permission),
-    })),
-    hasAnyPermission: vi.fn((required: string[], available: string[]) =>
-      required.some((p) => available.includes(p))
-    ),
-    hasAllPermissions: vi.fn((required: string[], available: string[]) =>
-      required.every((p) => available.includes(p))
-    ),
+    hasPermission: vi.fn(),
+    hasAnyPermission: vi.fn(),
+    hasAllPermissions: vi.fn(),
   },
 }))
 
+import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/auth/authService'
+import { permissionChecker } from '@/services/auth/permissionChecker'
 
 describe('useAuth', () => {
   beforeEach(() => {
@@ -42,251 +36,250 @@ describe('useAuth', () => {
     vi.clearAllMocks()
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
+  describe('computed state', () => {
+    it('should return isAuthenticated from store', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ isAuthenticated: true })
 
-  describe('computed properties', () => {
-    it('exposes isAuthenticated from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+      const { isAuthenticated } = useAuth()
 
-      expect(auth.isAuthenticated.value).toBe(false)
-
-      // isAuthenticated is a state property, not derived from user
-      store.$patch({ isAuthenticated: true, user: { login: 'testuser' } })
-      expect(auth.isAuthenticated.value).toBe(true)
+      expect(isAuthenticated.value).toBe(true)
     })
 
-    it('exposes user from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should return user from store', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ user: { login: 'testuser', name: 'Test User' } })
 
-      expect(auth.user.value).toBeNull()
+      const { user } = useAuth()
 
-      const testUser = { login: 'testuser', name: 'Test User' }
-      store.$patch({ user: testUser })
-      expect(auth.user.value).toEqual(testUser)
+      expect(user.value?.login).toBe('testuser')
     })
 
-    it('exposes userDisplayName from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should return userDisplayName from store', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ user: { login: 'testuser', displayName: 'Test User' } })
 
-      // userDisplayName uses displayName field, falls back to login
-      store.$patch({ user: { login: 'testuser', displayName: 'Test User' } })
-      expect(auth.userDisplayName.value).toBe('Test User')
+      const { userDisplayName } = useAuth()
+
+      expect(userDisplayName.value).toBe('Test User')
     })
 
-    it('exposes tokenExpiration from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
-      const expDate = new Date('2025-01-01')
+    it('should return tokenExpiration from store', () => {
+      const authStore = useAuthStore()
+      const expirationDate = new Date()
+      authStore.$patch({ tokenExpirationDate: expirationDate })
 
-      store.$patch({ tokenExpirationDate: expDate })
-      expect(auth.tokenExpiration.value).toEqual(expDate)
+      const { tokenExpiration } = useAuth()
+
+      expect(tokenExpiration.value).toEqual(expirationDate)
     })
 
-    it('exposes isAuthenticating from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should return isAuthenticating from store', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ isAuthenticating: true })
 
-      expect(auth.isAuthenticating.value).toBe(false)
+      const { isAuthenticating } = useAuth()
 
-      store.$patch({ isAuthenticating: true })
-      expect(auth.isAuthenticating.value).toBe(true)
+      expect(isAuthenticating.value).toBe(true)
     })
 
-    it('exposes isRefreshing from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should return isRefreshing from store', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ isRefreshing: true })
 
-      expect(auth.isRefreshing.value).toBe(false)
+      const { isRefreshing } = useAuth()
 
-      store.$patch({ isRefreshing: true })
-      expect(auth.isRefreshing.value).toBe(true)
+      expect(isRefreshing.value).toBe(true)
     })
 
-    it('exposes errorMessage from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should return errorMessage from store', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ errorMessage: 'Login failed' })
 
-      expect(auth.errorMessage.value).toBeNull()
+      const { errorMessage } = useAuth()
 
-      store.$patch({ errorMessage: 'Login failed' })
-      expect(auth.errorMessage.value).toBe('Login failed')
+      expect(errorMessage.value).toBe('Login failed')
     })
 
-    it('exposes loginModalOpen from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should return loginModalOpen from store', () => {
+      const authStore = useAuthStore()
+      authStore.openLoginModal()
 
-      expect(auth.loginModalOpen.value).toBe(false)
+      const { loginModalOpen } = useAuth()
 
-      store.$patch({ loginModalOpen: true })
-      expect(auth.loginModalOpen.value).toBe(true)
+      expect(loginModalOpen.value).toBe(true)
     })
 
-    it('exposes permissions from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should return permissions from store', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ permissions: ['cohort:*:get', 'cohort:*:put'] })
 
-      store.$patch({ permissions: ['cohort:read', 'cohort:write'] })
-      expect(auth.permissions.value).toEqual(['cohort:read', 'cohort:write'])
+      const { permissions } = useAuth()
+
+      expect(permissions.value).toEqual(['cohort:*:get', 'cohort:*:put'])
     })
 
-    it('exposes isRunningAs from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should return isRunningAs from store', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ isRunningAs: true })
 
-      expect(auth.isRunningAs.value).toBe(false)
+      const { isRunningAs } = useAuth()
 
-      store.$patch({ isRunningAs: true })
-      expect(auth.isRunningAs.value).toBe(true)
+      expect(isRunningAs.value).toBe(true)
     })
 
-    it('exposes originalUser from store', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should return originalUser from store', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ originalUser: { login: 'admin', name: 'Admin User' } })
 
-      const originalUser = { login: 'admin' }
-      store.$patch({ originalUser })
-      expect(auth.originalUser.value).toEqual(originalUser)
+      const { originalUser } = useAuth()
+
+      expect(originalUser.value?.login).toBe('admin')
     })
   })
 
-  describe('auth actions', () => {
-    it('calls authService.login with provider and credentials', async () => {
-      const auth = useAuth()
-      const credentials = { username: 'test', password: 'pass123' }
+  describe('login', () => {
+    it('should call authService.login', async () => {
+      vi.mocked(authService.login).mockResolvedValue()
 
-      await auth.login('db', credentials)
+      const { login } = useAuth()
 
-      expect(authService.login).toHaveBeenCalledWith('db', credentials)
+      await login('db', { username: 'test', password: 'pass' })
+
+      expect(authService.login).toHaveBeenCalledWith('db', { username: 'test', password: 'pass' })
     })
+  })
 
-    it('calls authService.login with just provider', async () => {
-      const auth = useAuth()
+  describe('logout', () => {
+    it('should call authService.logout', async () => {
+      vi.mocked(authService.logout).mockResolvedValue()
 
-      await auth.login('windows')
+      const { logout } = useAuth()
 
-      expect(authService.login).toHaveBeenCalledWith('windows', undefined)
-    })
-
-    it('calls authService.logout', async () => {
-      const auth = useAuth()
-
-      await auth.logout()
+      await logout()
 
       expect(authService.logout).toHaveBeenCalled()
     })
+  })
 
-    it('calls authService.refreshToken', async () => {
+  describe('refreshToken', () => {
+    it('should call authService.refreshToken', async () => {
       vi.mocked(authService.refreshToken).mockResolvedValue(true)
-      const auth = useAuth()
 
-      const result = await auth.refreshToken()
+      const { refreshToken } = useAuth()
+
+      const result = await refreshToken()
 
       expect(authService.refreshToken).toHaveBeenCalled()
       expect(result).toBe(true)
     })
+  })
 
-    it('calls authService.runAs with target username', async () => {
-      const auth = useAuth()
+  describe('runAs', () => {
+    it('should call authService.runAs', async () => {
+      vi.mocked(authService.runAs).mockResolvedValue()
 
-      await auth.runAs('otheruser')
+      const { runAs } = useAuth()
 
-      expect(authService.runAs).toHaveBeenCalledWith('otheruser')
+      await runAs('targetuser')
+
+      expect(authService.runAs).toHaveBeenCalledWith('targetuser')
     })
+  })
 
-    it('calls authService.exitRunAs', async () => {
-      const auth = useAuth()
+  describe('exitRunAs', () => {
+    it('should call authService.exitRunAs', async () => {
+      vi.mocked(authService.exitRunAs).mockResolvedValue()
 
-      await auth.exitRunAs()
+      const { exitRunAs } = useAuth()
+
+      await exitRunAs()
 
       expect(authService.exitRunAs).toHaveBeenCalled()
     })
   })
 
-  describe('permission methods', () => {
-    it('hasPermission returns true when permission granted', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+  describe('hasPermission', () => {
+    it('should check permission using permissionChecker', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ permissions: ['cohort:*:get'] })
+      vi.mocked(permissionChecker.hasPermission).mockReturnValue({ granted: true })
 
-      store.$patch({ permissions: ['cohort:read', 'cohort:write'] })
-      const result = auth.hasPermission('cohort:read')
+      const { hasPermission } = useAuth()
 
-      expect(result).toBe(true)
-    })
-
-    it('hasPermission returns false when permission not granted', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
-
-      store.$patch({ permissions: ['cohort:read'] })
-      const result = auth.hasPermission('cohort:delete')
-
-      expect(result).toBe(false)
-    })
-
-    it('hasAnyPermission returns true when at least one permission matches', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
-
-      store.$patch({ permissions: ['cohort:read'] })
-      const result = auth.hasAnyPermission(['cohort:read', 'cohort:delete'])
+      const result = hasPermission('cohort:*:get')
 
       expect(result).toBe(true)
+      expect(permissionChecker.hasPermission).toHaveBeenCalledWith('cohort:*:get', ['cohort:*:get'])
     })
 
-    it('hasAnyPermission returns false when no permissions match', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should return false when permission not granted', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ permissions: [] })
+      vi.mocked(permissionChecker.hasPermission).mockReturnValue({ granted: false })
 
-      store.$patch({ permissions: ['cohort:read'] })
-      const result = auth.hasAnyPermission(['cohort:write', 'cohort:delete'])
+      const { hasPermission } = useAuth()
 
-      expect(result).toBe(false)
-    })
-
-    it('hasAllPermissions returns true when all permissions match', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
-
-      store.$patch({ permissions: ['cohort:read', 'cohort:write', 'cohort:delete'] })
-      const result = auth.hasAllPermissions(['cohort:read', 'cohort:write'])
-
-      expect(result).toBe(true)
-    })
-
-    it('hasAllPermissions returns false when not all permissions match', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
-
-      store.$patch({ permissions: ['cohort:read'] })
-      const result = auth.hasAllPermissions(['cohort:read', 'cohort:write'])
+      const result = hasPermission('admin:*:*')
 
       expect(result).toBe(false)
     })
   })
 
-  describe('modal methods', () => {
-    it('openLoginModal opens the login modal', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+  describe('hasAnyPermission', () => {
+    it('should check any permission using permissionChecker', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ permissions: ['cohort:*:get'] })
+      vi.mocked(permissionChecker.hasAnyPermission).mockReturnValue(true)
 
-      expect(store.loginModalOpen).toBe(false)
-      auth.openLoginModal()
-      expect(store.loginModalOpen).toBe(true)
+      const { hasAnyPermission } = useAuth()
+
+      const result = hasAnyPermission(['cohort:*:get', 'admin:*:*'])
+
+      expect(result).toBe(true)
+      expect(permissionChecker.hasAnyPermission).toHaveBeenCalledWith(
+        ['cohort:*:get', 'admin:*:*'],
+        ['cohort:*:get']
+      )
+    })
+  })
+
+  describe('hasAllPermissions', () => {
+    it('should check all permissions using permissionChecker', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ permissions: ['cohort:*:get', 'cohort:*:put'] })
+      vi.mocked(permissionChecker.hasAllPermissions).mockReturnValue(true)
+
+      const { hasAllPermissions } = useAuth()
+
+      const result = hasAllPermissions(['cohort:*:get', 'cohort:*:put'])
+
+      expect(result).toBe(true)
+      expect(permissionChecker.hasAllPermissions).toHaveBeenCalledWith(
+        ['cohort:*:get', 'cohort:*:put'],
+        ['cohort:*:get', 'cohort:*:put']
+      )
+    })
+  })
+
+  describe('login modal', () => {
+    it('should open login modal', () => {
+      const authStore = useAuthStore()
+      const { openLoginModal } = useAuth()
+
+      openLoginModal()
+
+      expect(authStore.loginModalOpen).toBe(true)
     })
 
-    it('closeLoginModal closes the login modal', () => {
-      const auth = useAuth()
-      const store = useAuthStore()
+    it('should close login modal', () => {
+      const authStore = useAuthStore()
+      authStore.openLoginModal()
 
-      store.$patch({ loginModalOpen: true })
-      auth.closeLoginModal()
-      expect(store.loginModalOpen).toBe(false)
+      const { closeLoginModal } = useAuth()
+      closeLoginModal()
+
+      expect(authStore.loginModalOpen).toBe(false)
     })
   })
 })

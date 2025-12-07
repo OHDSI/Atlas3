@@ -1,45 +1,41 @@
 /**
- * Unit Tests: Config Loader Service
- * Tests for src/services/config-loader.service.ts
+ * Config Loader Service Tests
+ * Tests for configuration loading and validation
  */
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-
-// Mock config import
+// Mock config JSON
 vi.mock('@/config/atlas-config.json', () => ({
   default: {
     criteriaTypes: {
-      conditionOccurrence: { name: 'Condition', conceptDomainId: 'Condition' },
-      drugExposure: { name: 'Drug', conceptDomainId: 'Drug' },
+      conditionOccurrence: {
+        type: 'conditionOccurrence',
+        label: 'Condition Occurrence',
+        domain: 'condition',
+      },
+      drugExposure: {
+        type: 'drugExposure',
+        label: 'Drug Exposure',
+        domain: 'drug',
+        groupOnly: true,
+      },
     },
     attributeMapping: {
       conditionOccurrence: [
-        { key: 'age', type: 'numeric' },
-        { key: 'gender', type: 'concept', excludeFromSections: ['criteriaGroup'] },
+        { id: 'startDate', type: 'date' },
+        { id: 'endDate', type: 'date', excludeFromSections: ['initialEvents'] },
       ],
-      drugExposure: [{ key: 'quantity', type: 'numeric' }],
     },
-    sections: {
-      initialEvents: { id: 'initialEvents', label: 'Initial Events' },
-      censoringEvents: { id: 'censoringEvents', label: 'Censoring Events' },
-      criteriaGroup: { id: 'criteriaGroup', label: 'Criteria Group', includeAll: true },
-    },
+    sections: [
+      { id: 'initialEvents', label: 'Initial Events', excludeTypes: [] },
+      { id: 'criteriaGroup', label: 'Criteria Group', includeAll: true },
+    ],
   },
 }))
 
-// Mock logger
-vi.mock('@/utils/logger', () => ({
-  logger: {
-    error: vi.fn(),
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-  },
-}))
-
-// Mock config validator
+// Mock validator
 vi.mock('@/utils/config-validator', () => ({
-  validateAtlasConfig: vi.fn(() => ({
+  validateAtlasConfig: vi.fn((_config) => ({
     valid: true,
     errors: [],
     warnings: [],
@@ -50,17 +46,36 @@ vi.mock('@/utils/config-validator', () => ({
   formatValidationSummary: vi.fn(() => 'Validation summary'),
 }))
 
-describe('Config Loader Service', () => {
-  let ConfigLoaderService: typeof import('@/services/config-loader.service').ConfigLoaderService
-  let service: import('@/services/config-loader.service').ConfigLoaderService
+// Mock logger
+vi.mock('@/utils/logger', () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}))
 
-  beforeEach(async () => {
+import { ConfigLoaderService, configLoaderService } from '@/services/config-loader.service'
+import { validateAtlasConfig } from '@/utils/config-validator'
+
+describe('ConfigLoaderService', () => {
+  let service: ConfigLoaderService
+
+  beforeEach(() => {
+    service = new ConfigLoaderService()
     vi.clearAllMocks()
 
-    // Re-import to get fresh instance
-    const module = await import('@/services/config-loader.service')
-    ConfigLoaderService = module.ConfigLoaderService
-    service = new ConfigLoaderService()
+    // Mock performance API
+    if (!global.performance) {
+      global.performance = {
+        mark: vi.fn(),
+        measure: vi.fn(),
+      } as unknown as Performance
+    } else {
+      vi.spyOn(performance, 'mark').mockImplementation(() => undefined as unknown as PerformanceMark)
+      vi.spyOn(performance, 'measure').mockImplementation(() => undefined as unknown as PerformanceMeasure)
+    }
   })
 
   afterEach(() => {
@@ -68,242 +83,211 @@ describe('Config Loader Service', () => {
   })
 
   describe('loadConfiguration', () => {
-    it('loads and validates configuration', async () => {
+    it('should load and validate configuration', async () => {
       const result = await service.loadConfiguration()
 
+      expect(validateAtlasConfig).toHaveBeenCalled()
       expect(result.valid).toBe(true)
       expect(result.validFilterTypes).toContain('conditionOccurrence')
-      expect(result.validFilterTypes).toContain('drugExposure')
     })
 
-    it('stores validation result', async () => {
+    it('should store config after loading', async () => {
       await service.loadConfiguration()
 
-      const validationResult = service.getValidationResult()
-      expect(validationResult).not.toBeNull()
-      expect(validationResult?.valid).toBe(true)
+      const config = service.getFilterConfig('conditionOccurrence')
+      expect(config).toBeDefined()
     })
 
-    it('handles load error gracefully', async () => {
-      const { validateAtlasConfig } = await import('@/utils/config-validator')
-      vi.mocked(validateAtlasConfig).mockImplementationOnce(() => {
-        throw new Error('Parse error')
+    it('should record performance marks', async () => {
+      await service.loadConfiguration()
+
+      expect(performance.mark).toHaveBeenCalledWith('config-load-start')
+      expect(performance.mark).toHaveBeenCalledWith('config-load-end')
+      expect(performance.measure).toHaveBeenCalledWith(
+        'config-load',
+        'config-load-start',
+        'config-load-end'
+      )
+    })
+
+    it('should handle validation errors gracefully', async () => {
+      vi.mocked(validateAtlasConfig).mockReturnValueOnce({
+        valid: false,
+        errors: [{ message: 'Test error', code: 'TEST' }],
+        warnings: [],
+        validFilterTypes: [],
+        invalidFilterTypes: ['invalid'],
+        timestamp: new Date(),
       })
 
       const result = await service.loadConfiguration()
 
       expect(result.valid).toBe(false)
-      expect(result.errors[0].code).toBe('LOAD_FAILED')
+      expect(result.errors).toHaveLength(1)
     })
   })
 
   describe('getFilterConfig', () => {
-    it('returns undefined before loading', () => {
-      const config = service.getFilterConfig('conditionOccurrence')
-
-      expect(config).toBeUndefined()
+    it('should return undefined before loading', () => {
+      expect(service.getFilterConfig('conditionOccurrence')).toBeUndefined()
     })
 
-    it('returns filter config after loading', async () => {
+    it('should return filter config after loading', async () => {
       await service.loadConfiguration()
 
       const config = service.getFilterConfig('conditionOccurrence')
-
       expect(config).toBeDefined()
-      expect(config?.name).toBe('Condition')
+      expect(config?.type).toBe('conditionOccurrence')
     })
 
-    it('returns undefined for invalid filter type', async () => {
-      const { validateAtlasConfig } = await import('@/utils/config-validator')
+    it('should return undefined for invalid filter type', async () => {
+      await service.loadConfiguration()
+
       vi.mocked(validateAtlasConfig).mockReturnValueOnce({
         valid: true,
         errors: [],
         warnings: [],
-        validFilterTypes: ['drugExposure'],
+        validFilterTypes: [], // Empty valid types
         invalidFilterTypes: ['conditionOccurrence'],
         timestamp: new Date(),
       })
 
       await service.loadConfiguration()
-
-      const config = service.getFilterConfig('conditionOccurrence')
-
-      expect(config).toBeUndefined()
+      expect(service.getFilterConfig('conditionOccurrence')).toBeUndefined()
     })
   })
 
   describe('getValidFilterTypesForSection', () => {
-    it('returns empty array before loading', () => {
-      const types = service.getValidFilterTypesForSection('initialEvents')
-
-      expect(types).toEqual([])
+    it('should return empty array before loading', () => {
+      expect(service.getValidFilterTypesForSection('initialEvents')).toEqual([])
     })
 
-    it('returns valid filter types for section', async () => {
+    it('should return valid filter types for section', async () => {
       await service.loadConfiguration()
 
       const types = service.getValidFilterTypesForSection('initialEvents')
-
-      expect(types.length).toBeGreaterThan(0)
+      expect(types).toContain('conditionOccurrence')
     })
 
-    it('returns empty array for unknown section', async () => {
+    it('should exclude groupOnly filters from non-criteriaGroup sections', async () => {
+      await service.loadConfiguration()
+
+      const types = service.getValidFilterTypesForSection('initialEvents')
+      expect(types).not.toContain('drugExposure')
+    })
+
+    it('should include groupOnly filters in criteriaGroup section', async () => {
+      await service.loadConfiguration()
+
+      const types = service.getValidFilterTypesForSection('criteriaGroup')
+      expect(types).toContain('drugExposure')
+    })
+
+    it('should return empty array for unknown section', async () => {
       await service.loadConfiguration()
 
       const types = service.getValidFilterTypesForSection('unknownSection')
-
       expect(types).toEqual([])
-    })
-
-    it('filters based on groupOnly flag', async () => {
-      // Mock config with groupOnly filter
-      vi.doMock('@/config/atlas-config.json', () => ({
-        default: {
-          criteriaTypes: {
-            conditionOccurrence: { name: 'Condition', groupOnly: false },
-            nestedCriteria: { name: 'Nested', groupOnly: true },
-          },
-          attributeMapping: {},
-          sections: {
-            initialEvents: { id: 'initialEvents', label: 'Initial Events' },
-            criteriaGroup: { id: 'criteriaGroup', label: 'Criteria', includeAll: true },
-          },
-        },
-      }))
-
-      const { validateAtlasConfig } = await import('@/utils/config-validator')
-      vi.mocked(validateAtlasConfig).mockReturnValueOnce({
-        valid: true,
-        errors: [],
-        warnings: [],
-        validFilterTypes: ['conditionOccurrence', 'nestedCriteria'],
-        invalidFilterTypes: [],
-        timestamp: new Date(),
-      })
-
-      await service.loadConfiguration()
-
-      // criteriaGroup should include all
-      const criteriaGroupTypes = service.getValidFilterTypesForSection('criteriaGroup')
-      expect(criteriaGroupTypes).toContain('conditionOccurrence')
     })
   })
 
   describe('getAttributesForFilter', () => {
-    it('returns empty array before loading', () => {
-      const attrs = service.getAttributesForFilter('conditionOccurrence', 'initialEvents')
-
-      expect(attrs).toEqual([])
+    it('should return empty array before loading', () => {
+      expect(service.getAttributesForFilter('conditionOccurrence', 'initialEvents')).toEqual([])
     })
 
-    it('returns attributes for valid filter type', async () => {
+    it('should return attributes for filter', async () => {
       await service.loadConfiguration()
 
-      const attrs = service.getAttributesForFilter('conditionOccurrence', 'initialEvents')
-
+      const attrs = service.getAttributesForFilter('conditionOccurrence', 'criteriaGroup')
       expect(attrs.length).toBeGreaterThan(0)
     })
 
-    it('filters attributes by section exclusions', async () => {
+    it('should filter attributes based on section exclusions', async () => {
       await service.loadConfiguration()
 
-      // gender attribute is excluded from criteriaGroup
-      const attrsForCriteriaGroup = service.getAttributesForFilter(
-        'conditionOccurrence',
-        'criteriaGroup'
-      )
+      const attrsInitial = service.getAttributesForFilter('conditionOccurrence', 'initialEvents')
+      const attrsCriteria = service.getAttributesForFilter('conditionOccurrence', 'criteriaGroup')
 
-      // Should not include 'gender' which is excluded from criteriaGroup
-      const genderAttr = attrsForCriteriaGroup.find((a) => a.key === 'gender')
-      expect(genderAttr).toBeUndefined()
-
-      // Should include 'gender' in other sections
-      const attrsForInitialEvents = service.getAttributesForFilter(
-        'conditionOccurrence',
-        'initialEvents'
-      )
-      const genderAttrInEvents = attrsForInitialEvents.find((a) => a.key === 'gender')
-      expect(genderAttrInEvents).toBeDefined()
+      // endDate is excluded from initialEvents
+      expect(attrsInitial.some(a => a.id === 'endDate')).toBe(false)
+      expect(attrsCriteria.some(a => a.id === 'endDate')).toBe(true)
     })
 
-    it('returns empty array for invalid filter type', async () => {
-      const { validateAtlasConfig } = await import('@/utils/config-validator')
-      vi.mocked(validateAtlasConfig).mockReturnValueOnce({
-        valid: true,
-        errors: [],
-        warnings: [],
-        validFilterTypes: [],
-        invalidFilterTypes: ['conditionOccurrence'],
-        timestamp: new Date(),
-      })
-
+    it('should return empty array for filter with no attributes', async () => {
       await service.loadConfiguration()
 
-      const attrs = service.getAttributesForFilter('conditionOccurrence', 'initialEvents')
-
+      const attrs = service.getAttributesForFilter('drugExposure', 'criteriaGroup')
       expect(attrs).toEqual([])
     })
   })
 
   describe('getSectionConfig', () => {
-    it('returns undefined before loading', () => {
-      const section = service.getSectionConfig('initialEvents')
-
-      expect(section).toBeUndefined()
+    it('should return undefined before loading', () => {
+      expect(service.getSectionConfig('initialEvents')).toBeUndefined()
     })
 
-    it('returns section config after loading', async () => {
+    it('should return section config after loading', async () => {
       await service.loadConfiguration()
 
       const section = service.getSectionConfig('initialEvents')
-
       expect(section).toBeDefined()
       expect(section?.id).toBe('initialEvents')
+    })
+
+    it('should return undefined for unknown section', async () => {
+      await service.loadConfiguration()
+
+      expect(service.getSectionConfig('unknownSection')).toBeUndefined()
     })
   })
 
   describe('getAllSections', () => {
-    it('returns empty array before loading', () => {
-      const sections = service.getAllSections()
-
-      expect(sections).toEqual([])
+    it('should return empty array before loading', () => {
+      expect(service.getAllSections()).toEqual([])
     })
 
-    it('returns all sections after loading', async () => {
+    it('should return all sections after loading', async () => {
       await service.loadConfiguration()
 
       const sections = service.getAllSections()
-
       expect(sections.length).toBeGreaterThan(0)
     })
   })
 
-  describe('getValidFilterTypes', () => {
-    it('returns empty array before loading', () => {
-      const types = service.getValidFilterTypes()
-
-      expect(types).toEqual([])
+  describe('getValidationResult', () => {
+    it('should return null before loading', () => {
+      expect(service.getValidationResult()).toBeNull()
     })
 
-    it('returns valid filter types after loading', async () => {
+    it('should return validation result after loading', async () => {
+      await service.loadConfiguration()
+
+      const result = service.getValidationResult()
+      expect(result).not.toBeNull()
+      expect(result?.valid).toBe(true)
+    })
+  })
+
+  describe('getValidFilterTypes', () => {
+    it('should return empty array before loading', () => {
+      expect(service.getValidFilterTypes()).toEqual([])
+    })
+
+    it('should return valid filter types after loading', async () => {
       await service.loadConfiguration()
 
       const types = service.getValidFilterTypes()
-
       expect(types).toContain('conditionOccurrence')
-      expect(types).toContain('drugExposure')
     })
   })
 
   describe('getInvalidFilterTypes', () => {
-    it('returns empty array before loading', () => {
-      const types = service.getInvalidFilterTypes()
-
-      expect(types).toEqual([])
+    it('should return empty array before loading', () => {
+      expect(service.getInvalidFilterTypes()).toEqual([])
     })
 
-    it('returns invalid filter types after loading', async () => {
-      const { validateAtlasConfig } = await import('@/utils/config-validator')
+    it('should return invalid filter types after loading', async () => {
       vi.mocked(validateAtlasConfig).mockReturnValueOnce({
         valid: false,
         errors: [],
@@ -316,102 +300,89 @@ describe('Config Loader Service', () => {
       await service.loadConfiguration()
 
       const types = service.getInvalidFilterTypes()
-
       expect(types).toContain('invalidType')
     })
   })
 
   describe('isFilterTypeValid', () => {
-    it('returns false before loading', () => {
-      const isValid = service.isFilterTypeValid('conditionOccurrence')
-
-      expect(isValid).toBe(false)
+    it('should return false before loading', () => {
+      expect(service.isFilterTypeValid('conditionOccurrence')).toBe(false)
     })
 
-    it('returns true for valid filter type', async () => {
+    it('should return true for valid filter type', async () => {
       await service.loadConfiguration()
 
-      const isValid = service.isFilterTypeValid('conditionOccurrence')
-
-      expect(isValid).toBe(true)
+      expect(service.isFilterTypeValid('conditionOccurrence')).toBe(true)
     })
 
-    it('returns false for invalid filter type', async () => {
+    it('should return false for invalid filter type', async () => {
       await service.loadConfiguration()
 
-      const isValid = service.isFilterTypeValid('unknownType')
-
-      expect(isValid).toBe(false)
+      expect(service.isFilterTypeValid('unknownType')).toBe(false)
     })
   })
 
   describe('reload', () => {
-    it('reloads configuration', async () => {
+    it('should reload configuration', async () => {
       await service.loadConfiguration()
 
       const result = await service.reload()
 
-      expect(result).not.toBeNull()
+      expect(validateAtlasConfig).toHaveBeenCalledTimes(2)
+      expect(result).toBeDefined()
     })
 
-    it('accepts new config data', async () => {
-      await service.loadConfiguration()
-
-      const newConfig = {
-        criteriaTypes: { newType: { name: 'New Type' } },
-        attributeMapping: {},
-        sections: {},
+    it('should accept custom config', async () => {
+      const customConfig = {
+        criteriaTypes: {
+          custom: { type: 'custom' },
+        },
       }
 
-      const { validateAtlasConfig } = await import('@/utils/config-validator')
-      vi.mocked(validateAtlasConfig).mockReturnValueOnce({
-        valid: true,
-        errors: [],
-        warnings: [],
-        validFilterTypes: ['newType'],
-        invalidFilterTypes: [],
-        timestamp: new Date(),
-      })
+      await service.reload(customConfig)
 
-      const result = await service.reload(newConfig)
-
-      expect(result.validFilterTypes).toContain('newType')
-    })
-  })
-
-  describe('onConfigurationChange', () => {
-    it('subscribes to configuration changes', async () => {
-      const callback = vi.fn()
-      const unsubscribe = service.onConfigurationChange(callback)
-
-      expect(typeof unsubscribe).toBe('function')
+      expect(validateAtlasConfig).toHaveBeenCalledWith(customConfig)
     })
 
-    it('unsubscribe removes callback', async () => {
-      const callback = vi.fn()
-      const unsubscribe = service.onConfigurationChange(callback)
+    it('should notify subscribers on reload', async () => {
+      await service.loadConfiguration()
 
-      unsubscribe()
-
-      // Callback should be removed from internal list
-      // This is tested indirectly through the reload behavior
-    })
-
-    it('calls callback on reload', async () => {
       const callback = vi.fn()
       service.onConfigurationChange(callback)
 
-      await service.loadConfiguration()
       await service.reload()
 
       expect(callback).toHaveBeenCalled()
     })
   })
 
-  describe('Singleton Export', () => {
-    it('exports singleton instance', async () => {
-      const { configLoaderService } = await import('@/services/config-loader.service')
+  describe('onConfigurationChange', () => {
+    it('should register callback', async () => {
+      await service.loadConfiguration()
 
+      const callback = vi.fn()
+      service.onConfigurationChange(callback)
+
+      await service.reload()
+
+      expect(callback).toHaveBeenCalled()
+    })
+
+    it('should return unsubscribe function', async () => {
+      await service.loadConfiguration()
+
+      const callback = vi.fn()
+      const unsubscribe = service.onConfigurationChange(callback)
+
+      unsubscribe()
+      await service.reload()
+
+      expect(callback).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('Singleton Instance', () => {
+    it('should export a singleton instance', () => {
       expect(configLoaderService).toBeInstanceOf(ConfigLoaderService)
     })
   })

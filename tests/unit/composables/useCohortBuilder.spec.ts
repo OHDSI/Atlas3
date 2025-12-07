@@ -1,288 +1,353 @@
 /**
- * Unit Tests: useCohortBuilder Composable
- * Tests for src/composables/useCohortBuilder.ts
+ * useCohortBuilder Composable Tests
+ * Tests for cohort building functionality
  */
-
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
 
 // Mock vue-router
-const mockPush = vi.fn()
 vi.mock('vue-router', () => ({
-  useRouter: () => ({
-    push: mockPush,
-  }),
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+  })),
 }))
 
-// Mock cohort store
-const mockCohortStore = {
-  currentCohort: null as Record<string, unknown> | null,
-  isDirty: false,
-  entryEventCount: 0,
-  createNewCohort: vi.fn(),
-  addEntryEvent: vi.fn(),
-  removeEntryEvent: vi.fn(),
-  updateEntryEvent: vi.fn(),
-  setCohort: vi.fn(),
-  markClean: vi.fn(),
-  markDirty: vi.fn(),
-  clearCohort: vi.fn(),
-}
-
-vi.mock('@/stores/cohort', () => ({
-  useCohortStore: () => mockCohortStore,
+// Mock uuid
+vi.mock('uuid', () => ({
+  v4: vi.fn(() => 'test-uuid-12345'),
 }))
 
-// Import after mocks
 import { useCohortBuilder } from '@/composables/useCohortBuilder'
+import { useCohortStore } from '@/stores/cohort'
+import { useRouter } from 'vue-router'
 
 describe('useCohortBuilder', () => {
+  let mockRouterPush: ReturnType<typeof vi.fn>
+
   beforeEach(() => {
+    setActivePinia(createPinia())
+
+    mockRouterPush = vi.fn()
+    vi.mocked(useRouter).mockReturnValue({
+      push: mockRouterPush,
+    } as any)
+
     vi.clearAllMocks()
-    mockCohortStore.currentCohort = null
-    mockCohortStore.isDirty = false
-    mockCohortStore.entryEventCount = 0
   })
 
-  describe('computed properties', () => {
-    it('returns currentCohort from store', () => {
-      mockCohortStore.currentCohort = { name: 'Test Cohort', entryEvents: [] }
+  describe('computed state', () => {
+    it('should return currentCohort from store', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+
       const { currentCohort } = useCohortBuilder()
-      expect(currentCohort.value).toEqual({ name: 'Test Cohort', entryEvents: [] })
+
+      expect(currentCohort.value).not.toBeNull()
+      expect(currentCohort.value?.name).toBe('New Cohort')
     })
 
-    it('returns isDirty from store', () => {
-      mockCohortStore.isDirty = true
+    it('should return isDirty from store', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.markDirty()
+
       const { isDirty } = useCohortBuilder()
+
       expect(isDirty.value).toBe(true)
     })
 
-    it('canSave returns false when no cohort', () => {
-      mockCohortStore.currentCohort = null
+    it('should return canSave as false when no cohort', () => {
       const { canSave } = useCohortBuilder()
+
       expect(canSave.value).toBe(false)
     })
 
-    it('canSave returns false when name is empty', () => {
-      mockCohortStore.currentCohort = { name: '  ', entryEvents: [] }
-      mockCohortStore.entryEventCount = 1
+    it('should return canSave as false when name is empty', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.setCohort({
+        ...cohortStore.currentCohort!,
+        name: '',
+        entryEvents: [{ id: '1', criteriaType: 'ConditionOccurrence', attributes: [] }]
+      })
+
       const { canSave } = useCohortBuilder()
+
       expect(canSave.value).toBe(false)
     })
 
-    it('canSave returns false when no entry events', () => {
-      mockCohortStore.currentCohort = { name: 'Test', entryEvents: [] }
-      mockCohortStore.entryEventCount = 0
+    it('should return canSave as false when no entry events', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.setCohort({
+        ...cohortStore.currentCohort!,
+        name: 'Test Cohort',
+        entryEvents: []
+      })
+
       const { canSave } = useCohortBuilder()
+
       expect(canSave.value).toBe(false)
     })
 
-    it('canSave returns true when has name and events', () => {
-      mockCohortStore.currentCohort = { name: 'Test', entryEvents: [{}] }
-      mockCohortStore.entryEventCount = 1
+    it('should return canSave as true when has name and entry events', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.setCohort({
+        ...cohortStore.currentCohort!,
+        name: 'Test Cohort',
+        entryEvents: [{ id: '1', criteriaType: 'ConditionOccurrence', attributes: [] }]
+      })
+
       const { canSave } = useCohortBuilder()
+
       expect(canSave.value).toBe(true)
     })
   })
 
   describe('createNewCohort', () => {
-    it('calls store createNewCohort', () => {
-      const { createNewCohort } = useCohortBuilder()
+    it('should create a new cohort via store', () => {
+      const cohortStore = useCohortStore()
+      const { createNewCohort, currentCohort } = useCohortBuilder()
+
       createNewCohort()
-      expect(mockCohortStore.createNewCohort).toHaveBeenCalled()
+
+      expect(currentCohort.value).not.toBeNull()
+      expect(cohortStore.currentCohort).not.toBeNull()
     })
   })
 
   describe('loadCohort', () => {
-    it('creates new cohort if none exists', () => {
-      mockCohortStore.currentCohort = null
-      const { loadCohort } = useCohortBuilder()
-      loadCohort(1)
-      expect(mockCohortStore.createNewCohort).toHaveBeenCalled()
+    it('should create cohort if none exists', () => {
+      const { loadCohort, currentCohort } = useCohortBuilder()
+
+      loadCohort(123)
+
+      expect(currentCohort.value).not.toBeNull()
     })
 
-    it('does not create cohort if one exists', () => {
-      mockCohortStore.currentCohort = { name: 'Existing' }
-      const { loadCohort } = useCohortBuilder()
-      loadCohort(1)
-      expect(mockCohortStore.createNewCohort).not.toHaveBeenCalled()
+    it('should not create cohort if one already exists', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.setCohort({ ...cohortStore.currentCohort!, name: 'Existing' })
+
+      const { loadCohort, currentCohort } = useCohortBuilder()
+
+      loadCohort(123)
+
+      expect(currentCohort.value?.name).toBe('Existing')
     })
   })
 
   describe('addEntryEvent', () => {
-    it('adds entry event with default criteria type', () => {
+    it('should add entry event with default type', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+
       const { addEntryEvent } = useCohortBuilder()
+
       const eventId = addEntryEvent()
 
-      expect(mockCohortStore.addEntryEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: expect.any(String),
-          criteriaType: 'ConditionOccurrence',
-          attributes: [],
-        })
-      )
-      expect(eventId).toBeDefined()
+      expect(eventId).toBe('test-uuid-12345')
+      expect(cohortStore.currentCohort?.entryEvents).toHaveLength(1)
+      expect(cohortStore.currentCohort?.entryEvents[0].criteriaType).toBe('ConditionOccurrence')
     })
 
-    it('adds entry event with specified criteria type', () => {
+    it('should add entry event with specified type', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+
       const { addEntryEvent } = useCohortBuilder()
+
       addEntryEvent('DrugExposure')
 
-      expect(mockCohortStore.addEntryEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          criteriaType: 'DrugExposure',
-        })
-      )
-    })
-
-    it('returns the event id', () => {
-      const { addEntryEvent } = useCohortBuilder()
-      const eventId = addEntryEvent()
-      expect(typeof eventId).toBe('string')
-      expect(eventId.length).toBeGreaterThan(0)
+      expect(cohortStore.currentCohort?.entryEvents[0].criteriaType).toBe('DrugExposure')
     })
   })
 
   describe('removeEntryEvent', () => {
-    it('calls store removeEntryEvent', () => {
+    it('should remove entry event', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.addEntryEvent({ id: 'event-1', criteriaType: 'ConditionOccurrence', attributes: [] })
+
       const { removeEntryEvent } = useCohortBuilder()
-      removeEntryEvent('event-123')
-      expect(mockCohortStore.removeEntryEvent).toHaveBeenCalledWith('event-123')
+
+      removeEntryEvent('event-1')
+
+      expect(cohortStore.currentCohort?.entryEvents).toHaveLength(0)
     })
   })
 
   describe('updateEntryEvent', () => {
-    it('calls store updateEntryEvent', () => {
+    it('should update entry event', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.addEntryEvent({ id: 'event-1', criteriaType: 'ConditionOccurrence', attributes: [] })
+
       const { updateEntryEvent } = useCohortBuilder()
-      const updatedEvent = { id: 'event-123', criteriaType: 'DrugExposure', attributes: [] }
-      updateEntryEvent('event-123', updatedEvent as unknown as Parameters<typeof updateEntryEvent>[1])
-      expect(mockCohortStore.updateEntryEvent).toHaveBeenCalledWith('event-123', updatedEvent)
+
+      updateEntryEvent('event-1', {
+        id: 'event-1',
+        criteriaType: 'DrugExposure',
+        attributes: []
+      })
+
+      expect(cohortStore.currentCohort?.entryEvents[0].criteriaType).toBe('DrugExposure')
     })
   })
 
   describe('saveCohort', () => {
-    it('throws error when canSave is false', () => {
-      mockCohortStore.currentCohort = null
-      const { saveCohort } = useCohortBuilder()
-      expect(() => saveCohort('Test')).toThrow('Cannot save')
-    })
-
-    it('throws error when no current cohort', () => {
-      mockCohortStore.currentCohort = { name: 'Test' }
-      mockCohortStore.entryEventCount = 1
-      // Now set it to null to simulate edge case
-      mockCohortStore.currentCohort = null
-      const { saveCohort } = useCohortBuilder()
-      expect(() => saveCohort('Test')).toThrow()
-    })
-
-    it('saves cohort with name and description', () => {
-      mockCohortStore.currentCohort = {
-        name: 'Old Name',
-        entryEvents: [{ id: '1', conceptSet: { id: 1, name: 'CS1' } }],
-      }
-      mockCohortStore.entryEventCount = 1
+    it('should throw error when cannot save', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
 
       const { saveCohort } = useCohortBuilder()
-      const result = saveCohort('New Name', 'Description')
 
-      expect(mockCohortStore.setCohort).toHaveBeenCalled()
-      expect(mockCohortStore.markClean).toHaveBeenCalled()
-      expect(result.name).toBe('New Name')
-      expect(result.description).toBe('Description')
+      expect(() => saveCohort('Test', 'Description')).toThrow('Cannot save')
     })
 
-    it('gathers concept sets from events', () => {
-      mockCohortStore.currentCohort = {
+    it('should throw error when no cohort exists', () => {
+      const { saveCohort } = useCohortBuilder()
+
+      expect(() => saveCohort('Test', 'Description')).toThrow()
+    })
+
+    it('should save cohort with name and description', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.setCohort({
+        ...cohortStore.currentCohort!,
+        name: 'Test',
+        entryEvents: [{ id: '1', criteriaType: 'ConditionOccurrence', attributes: [] }]
+      })
+
+      const { saveCohort } = useCohortBuilder()
+
+      const result = saveCohort('Saved Cohort', 'My description')
+
+      expect(result.name).toBe('Saved Cohort')
+      expect(result.description).toBe('My description')
+      expect(cohortStore.isDirty).toBe(false)
+    })
+
+    it('should collect concept sets from events', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.setCohort({
+        ...cohortStore.currentCohort!,
         name: 'Test',
         entryEvents: [
-          { id: '1', conceptSet: { id: 1, name: 'CS1' } },
-          { id: '2', conceptSet: { id: 2, name: 'CS2' } },
-          { id: '3' }, // No concept set
-        ],
-      }
-      mockCohortStore.entryEventCount = 3
+          {
+            id: '1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [],
+            conceptSet: { id: 100, name: 'Concept Set 1' }
+          },
+          {
+            id: '2',
+            criteriaType: 'DrugExposure',
+            attributes: [],
+            conceptSet: { id: 200, name: 'Concept Set 2' }
+          }
+        ]
+      })
 
       const { saveCohort } = useCohortBuilder()
-      const result = saveCohort('Test', 'Desc')
+
+      const result = saveCohort('Test', '')
 
       expect(result.conceptSets).toHaveLength(2)
     })
   })
 
   describe('cancelEditing', () => {
-    it('clears cohort and navigates when not dirty', () => {
-      mockCohortStore.isDirty = false
+    it('should navigate to cohorts list when clean', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+
       const { cancelEditing } = useCohortBuilder()
+
       const result = cancelEditing()
 
-      expect(mockCohortStore.clearCohort).toHaveBeenCalled()
-      expect(mockPush).toHaveBeenCalledWith('/cohorts')
       expect(result).toBe(true)
+      expect(mockRouterPush).toHaveBeenCalledWith('/cohorts')
     })
 
-    it('prompts confirmation when dirty and confirmed', () => {
-      mockCohortStore.isDirty = true
-      vi.spyOn(window, 'confirm').mockReturnValue(true)
+    it('should show confirm dialog when dirty', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.markDirty()
+
+      vi.stubGlobal('confirm', vi.fn(() => false))
 
       const { cancelEditing } = useCohortBuilder()
+
       const result = cancelEditing()
 
-      expect(window.confirm).toHaveBeenCalled()
-      expect(mockCohortStore.clearCohort).toHaveBeenCalled()
-      expect(result).toBe(true)
-    })
-
-    it('returns false when dirty and not confirmed', () => {
-      mockCohortStore.isDirty = true
-      vi.spyOn(window, 'confirm').mockReturnValue(false)
-
-      const { cancelEditing } = useCohortBuilder()
-      const result = cancelEditing()
-
-      expect(mockCohortStore.clearCohort).not.toHaveBeenCalled()
       expect(result).toBe(false)
+      expect(confirm).toHaveBeenCalled()
+
+      vi.unstubAllGlobals()
+    })
+
+    it('should navigate when confirmed', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
+      cohortStore.markDirty()
+
+      vi.stubGlobal('confirm', vi.fn(() => true))
+
+      const { cancelEditing } = useCohortBuilder()
+
+      const result = cancelEditing()
+
+      expect(result).toBe(true)
+      expect(mockRouterPush).toHaveBeenCalledWith('/cohorts')
+
+      vi.unstubAllGlobals()
     })
   })
 
   describe('updateCohortName', () => {
-    it('updates name when cohort exists', () => {
-      mockCohortStore.currentCohort = { name: 'Old', entryEvents: [] }
-      const { updateCohortName } = useCohortBuilder()
-      updateCohortName('New Name')
+    it('should update cohort name', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
 
-      expect(mockCohortStore.setCohort).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'New Name' })
-      )
-      expect(mockCohortStore.markDirty).toHaveBeenCalled()
+      const { updateCohortName, currentCohort } = useCohortBuilder()
+
+      updateCohortName('Updated Name')
+
+      expect(currentCohort.value?.name).toBe('Updated Name')
+      expect(cohortStore.isDirty).toBe(true)
     })
 
-    it('does nothing when no cohort', () => {
-      mockCohortStore.currentCohort = null
+    it('should do nothing if no cohort', () => {
       const { updateCohortName } = useCohortBuilder()
-      updateCohortName('New Name')
 
-      expect(mockCohortStore.setCohort).not.toHaveBeenCalled()
+      // Should not throw
+      expect(() => updateCohortName('Test')).not.toThrow()
     })
   })
 
   describe('updateCohortDescription', () => {
-    it('updates description when cohort exists', () => {
-      mockCohortStore.currentCohort = { name: 'Test', description: 'Old', entryEvents: [] }
-      const { updateCohortDescription } = useCohortBuilder()
-      updateCohortDescription('New Description')
+    it('should update cohort description', () => {
+      const cohortStore = useCohortStore()
+      cohortStore.createNewCohort()
 
-      expect(mockCohortStore.setCohort).toHaveBeenCalledWith(
-        expect.objectContaining({ description: 'New Description' })
-      )
-      expect(mockCohortStore.markDirty).toHaveBeenCalled()
+      const { updateCohortDescription, currentCohort } = useCohortBuilder()
+
+      updateCohortDescription('Updated description')
+
+      expect(currentCohort.value?.description).toBe('Updated description')
+      expect(cohortStore.isDirty).toBe(true)
     })
 
-    it('does nothing when no cohort', () => {
-      mockCohortStore.currentCohort = null
+    it('should do nothing if no cohort', () => {
       const { updateCohortDescription } = useCohortBuilder()
-      updateCohortDescription('New Description')
 
-      expect(mockCohortStore.setCohort).not.toHaveBeenCalled()
+      // Should not throw
+      expect(() => updateCohortDescription('Test')).not.toThrow()
     })
   })
 })

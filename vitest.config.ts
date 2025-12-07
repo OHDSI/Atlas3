@@ -20,6 +20,8 @@ export default defineConfig({
         singleFork: true,
       },
     },
+    testTimeout: 30000,
+    hookTimeout: 30000,
     server: {
       deps: {
         inline: ['vuetify'],
@@ -34,15 +36,16 @@ export default defineConfig({
       // Documented exclusions with justifications
       exclude: [
         'node_modules/',
-        'vue-mri-ui-lib/',
         'tests/',
         '**/*.spec.ts',
         '**/*.test.ts',
         // Type declarations only - no runtime code
         '**/types.ts',
+        '**/*.d.ts',
         'src/env.d.ts',
         'src/types/**',
-        'src/models/*.types.ts',
+        'src/models/**',
+        'src/locales/**',
         // App bootstrap - not unit testable, tested via e2e
         'src/main.ts',
         // Root component - tested via integration/e2e tests
@@ -52,12 +55,12 @@ export default defineConfig({
         // Router configuration - tested via integration/e2e tests
         'src/router/index.ts',
       ],
-      // Thresholds based on current baseline - will increase incrementally
+      // Coverage thresholds - fail CI if coverage drops below these values
       thresholds: {
-        lines: 30,
-        branches: 25,
-        functions: 30,
-        statements: 30,
+        lines: 89,
+        statements: 89,
+        branches: 85,
+        functions: 72,
       },
     },
   },

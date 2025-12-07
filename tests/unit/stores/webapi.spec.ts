@@ -334,16 +334,22 @@ describe('WebAPI Store', () => {
       })
 
       it('should set loading state during fetch', async () => {
-        const store = useWebAPIStore()
-        vi.mocked(webapi.fetchCDMSources).mockImplementation(
-          () => new Promise(resolve => setTimeout(() => resolve({ success: true, data: [] }), 100))
-        )
+        vi.useFakeTimers()
+        try {
+          const store = useWebAPIStore()
+          vi.mocked(webapi.fetchCDMSources).mockImplementation(
+            () => new Promise(resolve => setTimeout(() => resolve({ success: true, data: [] }), 100))
+          )
 
-        const promise = store.fetchSources()
-        expect(store.isLoadingSources).toBe(true)
+          const promise = store.fetchSources()
+          expect(store.isLoadingSources).toBe(true)
 
-        await promise
-        expect(store.isLoadingSources).toBe(false)
+          await vi.advanceTimersByTimeAsync(100)
+          await promise
+          expect(store.isLoadingSources).toBe(false)
+        } finally {
+          vi.useRealTimers()
+        }
       })
 
       it('should handle fetch error', async () => {

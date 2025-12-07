@@ -1,46 +1,44 @@
 /**
- * Unit Tests: Concept Search Service
- * Tests for src/services/concept-search.service.ts
+ * Concept Search Service Tests
+ * Tests for concept search and retrieval operations
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import {
-  searchConcepts,
-  getConceptById,
-  getConceptRecordCounts,
-} from '@/services/concept-search.service'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
-    error: vi.fn(),
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
+    error: vi.fn(),
   },
 }))
 
 // Mock api-mappers
 vi.mock('@/utils/api-mappers', () => ({
-  mapConceptFromAPI: vi.fn((c) => ({
-    conceptId: c.CONCEPT_ID,
-    conceptName: c.CONCEPT_NAME,
-    conceptCode: c.CONCEPT_CODE,
-    domainId: c.DOMAIN_ID,
-    vocabularyId: c.VOCABULARY_ID,
-    conceptClassId: c.CONCEPT_CLASS_ID,
-    standardConcept: c.STANDARD_CONCEPT,
-    invalidReason: c.INVALID_REASON,
+  mapConceptFromAPI: vi.fn((data) => ({
+    conceptId: data.CONCEPT_ID,
+    conceptName: data.CONCEPT_NAME,
+    domainId: data.DOMAIN_ID,
+    vocabularyId: data.VOCABULARY_ID,
+    conceptClassId: data.CONCEPT_CLASS_ID,
+    standardConcept: data.STANDARD_CONCEPT,
+    conceptCode: data.CONCEPT_CODE,
+    invalidReason: data.INVALID_REASON,
   })),
 }))
 
-describe('Concept Search Service', () => {
+import { searchConcepts, getConceptById, getConceptRecordCounts } from '@/services/concept-search.service'
+import { mapConceptFromAPI } from '@/utils/api-mappers'
+
+describe('ConceptSearchService', () => {
   let mockFetch: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
+    vi.clearAllMocks()
+
     mockFetch = vi.fn()
     global.fetch = mockFetch
-    vi.clearAllMocks()
   })
 
   afterEach(() => {
@@ -48,23 +46,16 @@ describe('Concept Search Service', () => {
   })
 
   describe('searchConcepts', () => {
-    it('returns empty result for empty query', async () => {
-      const result = await searchConcepts('SYNPUF1K', '')
-
-      expect(result).toEqual({ concepts: [], total: 0 })
-      expect(mockFetch).not.toHaveBeenCalled()
-    })
-
-    it('searches concepts with valid query', async () => {
+    it('should search for concepts and return mapped results', async () => {
       const mockResponse = [
         {
-          CONCEPT_ID: 1,
+          CONCEPT_ID: 123,
           CONCEPT_NAME: 'Test Concept',
-          CONCEPT_CODE: 'TEST001',
           DOMAIN_ID: 'Condition',
           VOCABULARY_ID: 'SNOMED',
           CONCEPT_CLASS_ID: 'Clinical Finding',
           STANDARD_CONCEPT: 'S',
+          CONCEPT_CODE: '12345',
           INVALID_REASON: null,
         },
       ]
@@ -74,23 +65,33 @@ describe('Concept Search Service', () => {
         json: () => Promise.resolve(mockResponse),
       })
 
-      const result = await searchConcepts('SYNPUF1K', 'diabetes')
+      const result = await searchConcepts('TEST', 'diabetes')
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/vocabulary/SYNPUF1K/search?query=diabetes'),
+        expect.stringContaining('/vocabulary/TEST/search?query=diabetes'),
         expect.any(Object)
       )
       expect(result.concepts).toHaveLength(1)
       expect(result.total).toBe(1)
+      // .map() calls the function with (item, index, array)
+      expect(mapConceptFromAPI).toHaveBeenCalledWith(mockResponse[0], 0, mockResponse)
     })
 
-    it('includes domain filter when specified', async () => {
+    it('should return empty results for empty query', async () => {
+      const result = await searchConcepts('TEST', '')
+
+      expect(result.concepts).toEqual([])
+      expect(result.total).toBe(0)
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('should include domain filter when specified', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve([]),
       })
 
-      await searchConcepts('SYNPUF1K', 'test', { domain: 'Condition' })
+      await searchConcepts('TEST', 'diabetes', { domain: 'Condition' })
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('domain=Condition'),
@@ -98,13 +99,13 @@ describe('Concept Search Service', () => {
       )
     })
 
-    it('trims whitespace from query', async () => {
+    it('should trim query whitespace', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve([]),
       })
 
-      await searchConcepts('SYNPUF1K', '  diabetes  ')
+      await searchConcepts('TEST', '  diabetes  ')
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('query=diabetes'),
@@ -112,38 +113,38 @@ describe('Concept Search Service', () => {
       )
     })
 
-    it('throws error on validation failure', async () => {
+    it('should throw error for invalid response format', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([{ invalid: 'data' }]),
+        json: () => Promise.resolve({ invalid: 'response' }),
       })
 
-      await expect(searchConcepts('SYNPUF1K', 'test')).rejects.toThrow(
+      await expect(searchConcepts('TEST', 'test')).rejects.toThrow(
         'Invalid concept search response format'
       )
     })
 
-    it('throws error on HTTP failure', async () => {
+    it('should throw error on fetch failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
       })
 
-      await expect(searchConcepts('SYNPUF1K', 'test')).rejects.toThrow()
+      await expect(searchConcepts('TEST', 'test')).rejects.toThrow('HTTP 500')
     })
   })
 
   describe('getConceptById', () => {
-    it('fetches concept by ID successfully', async () => {
+    it('should fetch single concept by ID', async () => {
       const mockConcept = {
-        CONCEPT_ID: 12345,
-        CONCEPT_NAME: 'Type 2 diabetes mellitus',
-        CONCEPT_CODE: 'E11',
+        CONCEPT_ID: 123,
+        CONCEPT_NAME: 'Test Concept',
         DOMAIN_ID: 'Condition',
-        VOCABULARY_ID: 'ICD10CM',
+        VOCABULARY_ID: 'SNOMED',
         CONCEPT_CLASS_ID: 'Clinical Finding',
         STANDARD_CONCEPT: 'S',
+        CONCEPT_CODE: '12345',
         INVALID_REASON: null,
       }
 
@@ -152,61 +153,54 @@ describe('Concept Search Service', () => {
         json: () => Promise.resolve(mockConcept),
       })
 
-      const result = await getConceptById('SYNPUF1K', 12345)
+      const result = await getConceptById('TEST', 123)
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/vocabulary/SYNPUF1K/concept/12345'),
+        expect.stringContaining('/vocabulary/TEST/concept/123'),
         expect.any(Object)
       )
       expect(result).not.toBeNull()
-      expect(result?.conceptId).toBe(12345)
+      expect(mapConceptFromAPI).toHaveBeenCalledWith(mockConcept)
     })
 
-    it('returns null on validation error', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ invalid: 'data' }),
-      })
-
-      const result = await getConceptById('SYNPUF1K', 12345)
-
-      expect(result).toBeNull()
-    })
-
-    it('returns null on fetch error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      const result = await getConceptById('SYNPUF1K', 12345)
-
-      expect(result).toBeNull()
-    })
-
-    it('returns null on HTTP error', async () => {
+    it('should return null on fetch failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
         statusText: 'Not Found',
       })
 
-      const result = await getConceptById('SYNPUF1K', 99999)
+      const result = await getConceptById('TEST', 999)
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null for invalid response format', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ invalid: 'response' }),
+      })
+
+      const result = await getConceptById('TEST', 123)
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null on network error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+
+      const result = await getConceptById('TEST', 123)
 
       expect(result).toBeNull()
     })
   })
 
   describe('getConceptRecordCounts', () => {
-    it('returns empty map for empty concept IDs', async () => {
-      const result = await getConceptRecordCounts('SYNPUF1K', [])
-
-      expect(result.size).toBe(0)
-      expect(mockFetch).not.toHaveBeenCalled()
-    })
-
-    it('fetches record counts successfully', async () => {
+    it('should fetch record counts for multiple concepts', async () => {
       const mockResponse = [
         {
-          '192671': [13, 331, 12, 323],
-          '313217': [3023, 3023, 579, 579],
+          '123': [100, 150, 50, 75],
+          '456': [200, 300, 100, 150],
         },
       ]
 
@@ -215,70 +209,62 @@ describe('Concept Search Service', () => {
         json: () => Promise.resolve(mockResponse),
       })
 
-      const result = await getConceptRecordCounts('SYNPUF1K', [192671, 313217])
+      const result = await getConceptRecordCounts('TEST', [123, 456])
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/cdmresults/SYNPUF1K/conceptRecordCount'),
+        expect.stringContaining('/cdmresults/TEST/conceptRecordCount'),
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify([192671, 313217]),
+          body: JSON.stringify([123, 456]),
         })
       )
 
       expect(result.size).toBe(2)
-      expect(result.get(192671)).toEqual({
-        recordCount: 13,
-        descendantRecordCount: 331,
-        personCount: 12,
-        descendantPersonCount: 323,
+      expect(result.get(123)).toEqual({
+        recordCount: 100,
+        descendantRecordCount: 150,
+        personCount: 50,
+        descendantPersonCount: 75,
       })
-      expect(result.get(313217)).toEqual({
-        recordCount: 3023,
-        descendantRecordCount: 3023,
-        personCount: 579,
-        descendantPersonCount: 579,
+      expect(result.get(456)).toEqual({
+        recordCount: 200,
+        descendantRecordCount: 300,
+        personCount: 100,
+        descendantPersonCount: 150,
       })
     })
 
-    it('handles multiple entries in response', async () => {
-      const mockResponse = [{ '1': [10, 20, 30, 40] }, { '2': [50, 60, 70, 80] }]
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      })
-
-      const result = await getConceptRecordCounts('SYNPUF1K', [1, 2])
-
-      expect(result.size).toBe(2)
-    })
-
-    it('returns empty map on error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      const result = await getConceptRecordCounts('SYNPUF1K', [12345])
+    it('should return empty map for empty concept IDs', async () => {
+      const result = await getConceptRecordCounts('TEST', [])
 
       expect(result.size).toBe(0)
+      expect(mockFetch).not.toHaveBeenCalled()
     })
 
-    it('returns empty map on HTTP error', async () => {
+    it('should return empty map on fetch failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
         statusText: 'Server Error',
       })
 
-      const result = await getConceptRecordCounts('SYNPUF1K', [12345])
+      const result = await getConceptRecordCounts('TEST', [123])
 
       expect(result.size).toBe(0)
     })
 
-    it('skips entries with invalid count arrays', async () => {
+    it('should return empty map on network error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+
+      const result = await getConceptRecordCounts('TEST', [123])
+
+      expect(result.size).toBe(0)
+    })
+
+    it('should handle malformed response data', async () => {
       const mockResponse = [
         {
-          '1': [10, 20, 30, 40], // valid
-          '2': [10], // invalid - not 4 elements
-          '3': 'invalid', // invalid - not an array
+          '123': [100], // Missing values
         },
       ]
 
@@ -287,12 +273,28 @@ describe('Concept Search Service', () => {
         json: () => Promise.resolve(mockResponse),
       })
 
-      const result = await getConceptRecordCounts('SYNPUF1K', [1, 2, 3])
+      const result = await getConceptRecordCounts('TEST', [123])
 
-      expect(result.size).toBe(1)
-      expect(result.has(1)).toBe(true)
-      expect(result.has(2)).toBe(false)
-      expect(result.has(3)).toBe(false)
+      // Should not include malformed data
+      expect(result.has(123)).toBe(false)
+    })
+
+    it('should handle multiple response objects', async () => {
+      const mockResponse = [
+        { '123': [100, 150, 50, 75] },
+        { '456': [200, 300, 100, 150] },
+      ]
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      })
+
+      const result = await getConceptRecordCounts('TEST', [123, 456])
+
+      expect(result.size).toBe(2)
+      expect(result.has(123)).toBe(true)
+      expect(result.has(456)).toBe(true)
     })
   })
 })

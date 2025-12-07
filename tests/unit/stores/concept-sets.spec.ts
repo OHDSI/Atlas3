@@ -1,11 +1,11 @@
 /**
- * Unit Tests: Concept Sets Store
- * Tests for src/stores/concept-sets.ts
+ * Concept Sets Store Tests
+ * Tests for concept set CRUD operations and building actions
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import type { ConceptSet, ConceptSetListItem, Concept, ConceptSetItem } from '@/models/concept-set.types'
 
 // Mock dependencies
 vi.mock('@/services/concept-set.service', () => ({
@@ -17,17 +17,18 @@ vi.mock('@/services/concept-set.service', () => ({
 }))
 
 vi.mock('@/utils/api-mappers', () => ({
-  conceptToConceptSetItem: vi.fn((concept) => ({
+  conceptToConceptSetItem: vi.fn((concept: Concept): ConceptSetItem => ({
     conceptId: concept.conceptId,
     conceptName: concept.conceptName,
+    conceptCode: concept.conceptCode,
     domainId: concept.domainId,
     vocabularyId: concept.vocabularyId,
     conceptClassId: concept.conceptClassId,
     standardConcept: concept.standardConcept,
-    conceptCode: concept.conceptCode,
+    invalidReason: concept.invalidReason,
+    isExcluded: false,
     includeDescendants: false,
     includeMapped: false,
-    isExcluded: false,
   })),
 }))
 
@@ -40,517 +41,583 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-describe('useConceptSetsStore', () => {
+import {
+  getAllConceptSets,
+  getConceptSetById,
+  createConceptSet,
+  updateConceptSet,
+  deleteConceptSet,
+} from '@/services/concept-set.service'
+
+const mockConceptSetList: ConceptSetListItem[] = [
+  { id: 1, name: 'Diabetes Conditions' },
+  { id: 2, name: 'Heart Medications' },
+  { id: 3, name: 'Lab Tests' },
+]
+
+const mockConceptSet: ConceptSet = {
+  id: 1,
+  name: 'Diabetes Conditions',
+  items: [
+    {
+      conceptId: 201826,
+      conceptName: 'Type 2 diabetes mellitus',
+      conceptCode: '44054006',
+      domainId: 'Condition',
+      vocabularyId: 'SNOMED',
+      conceptClassId: 'Clinical Finding',
+      standardConcept: 'S',
+      invalidReason: null,
+      isExcluded: false,
+      includeDescendants: true,
+      includeMapped: false,
+    },
+  ],
+}
+
+const mockConcept: Concept = {
+  conceptId: 12345,
+  conceptName: 'Test Concept',
+  conceptCode: '12345',
+  domainId: 'Condition',
+  vocabularyId: 'SNOMED',
+  conceptClassId: 'Clinical Finding',
+  standardConcept: 'S',
+  invalidReason: null,
+}
+
+describe('Concept Sets Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    vi.useFakeTimers()
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
-    vi.useRealTimers()
   })
 
-  describe('initial state', () => {
-    it('starts with empty concept sets', () => {
+  describe('Initial State', () => {
+    it('should have empty concept sets initially', () => {
       const store = useConceptSetsStore()
       expect(store.conceptSets).toEqual([])
     })
 
-    it('starts with no current set', () => {
+    it('should have null current set initially', () => {
       const store = useConceptSetsStore()
       expect(store.currentSet).toBeNull()
     })
 
-    it('starts not loading', () => {
+    it('should not be loading initially', () => {
       const store = useConceptSetsStore()
       expect(store.loading).toBe(false)
     })
 
-    it('starts without errors', () => {
+    it('should have no error initially', () => {
       const store = useConceptSetsStore()
       expect(store.error).toBeNull()
     })
 
-    it('starts with empty filter', () => {
+    it('should have empty filter term initially', () => {
       const store = useConceptSetsStore()
       expect(store.filterTerm).toBe('')
     })
 
-    it('starts with editor closed', () => {
+    it('should not have editor open initially', () => {
       const store = useConceptSetsStore()
       expect(store.editorOpen).toBe(false)
     })
   })
 
-  describe('getters', () => {
-    describe('filteredSets', () => {
-      it('returns all sets when no filter', () => {
-        const store = useConceptSetsStore()
-        store.conceptSets = [
-          { id: 1, name: 'Set One' },
-          { id: 2, name: 'Set Two' },
-        ] as never[]
-
-        expect(store.filteredSets).toHaveLength(2)
-      })
-
-      it('filters sets by name', () => {
-        const store = useConceptSetsStore()
-        store.conceptSets = [
-          { id: 1, name: 'Diabetes Conditions' },
-          { id: 2, name: 'Cancer Types' },
-          { id: 3, name: 'Diabetes Medications' },
-        ] as never[]
-        store.filterTerm = 'diabetes'
-
-        expect(store.filteredSets).toHaveLength(2)
-        expect(store.filteredSets.map(s => s.id)).toEqual([1, 3])
-      })
-
-      it('filters case-insensitively', () => {
-        const store = useConceptSetsStore()
-        store.conceptSets = [
-          { id: 1, name: 'TEST Set' },
-          { id: 2, name: 'Other' },
-        ] as never[]
-        store.filterTerm = 'test'
-
-        expect(store.filteredSets).toHaveLength(1)
-      })
+  describe('Getters', () => {
+    it('filteredSets should return all sets when no filter', () => {
+      const store = useConceptSetsStore()
+      store.conceptSets = mockConceptSetList
+      expect(store.filteredSets).toEqual(mockConceptSetList)
     })
 
-    describe('isEmpty', () => {
-      it('returns true when no concept sets', () => {
-        const store = useConceptSetsStore()
-        expect(store.isEmpty).toBe(true)
-      })
+    it('filteredSets should filter by name', () => {
+      const store = useConceptSetsStore()
+      store.conceptSets = mockConceptSetList
+      store.filterTerm = 'diabetes'
+      expect(store.filteredSets).toEqual([mockConceptSetList[0]])
+    })
 
-      it('returns false when concept sets exist', () => {
-        const store = useConceptSetsStore()
-        store.conceptSets = [{ id: 1, name: 'Test' }] as never[]
-        expect(store.isEmpty).toBe(false)
-      })
+    it('filteredSets should be case-insensitive', () => {
+      const store = useConceptSetsStore()
+      store.conceptSets = mockConceptSetList
+      store.filterTerm = 'DIABETES'
+      expect(store.filteredSets).toEqual([mockConceptSetList[0]])
+    })
+
+    it('isEmpty should return true when no concept sets', () => {
+      const store = useConceptSetsStore()
+      expect(store.isEmpty).toBe(true)
+    })
+
+    it('isEmpty should return false when concept sets exist', () => {
+      const store = useConceptSetsStore()
+      store.conceptSets = mockConceptSetList
+      expect(store.isEmpty).toBe(false)
     })
   })
 
-  describe('actions', () => {
-    describe('fetchAll', () => {
-      it('fetches and stores concept sets', async () => {
-        const { getAllConceptSets } = await import('@/services/concept-set.service')
-        const mockSets = [
-          { id: 1, name: 'Set 1' },
-          { id: 2, name: 'Set 2' },
-        ]
-        vi.mocked(getAllConceptSets).mockResolvedValue(mockSets as never)
+  describe('fetchAll Action', () => {
+    it('should fetch and store concept sets', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(getAllConceptSets).mockResolvedValue(mockConceptSetList)
 
-        const store = useConceptSetsStore()
-        await store.fetchAll()
+      await store.fetchAll()
 
-        expect(store.conceptSets).toEqual(mockSets)
-        expect(store.loading).toBe(false)
-        expect(store.error).toBeNull()
-      })
-
-      it('handles fetch errors', async () => {
-        const { getAllConceptSets } = await import('@/services/concept-set.service')
-        vi.mocked(getAllConceptSets).mockRejectedValue(new Error('Network error'))
-
-        const store = useConceptSetsStore()
-        await store.fetchAll()
-
-        expect(store.conceptSets).toEqual([])
-        expect(store.error).toBe('Network error')
-      })
-
-      it('prevents concurrent fetches', async () => {
-        const { getAllConceptSets } = await import('@/services/concept-set.service')
-        let resolvePromise: (value: never[]) => void
-        vi.mocked(getAllConceptSets).mockImplementation(
-          () => new Promise<never[]>(resolve => {
-            resolvePromise = resolve
-          })
-        )
-
-        const store = useConceptSetsStore()
-        const fetch1 = store.fetchAll()
-        const fetch2 = store.fetchAll() // Should be ignored since loading is true
-
-        // Resolve the first fetch
-        resolvePromise!([] as never[])
-        await Promise.all([fetch1, fetch2])
-
-        expect(getAllConceptSets).toHaveBeenCalledTimes(1)
-      })
+      expect(store.conceptSets).toEqual(mockConceptSetList)
+      expect(store.loading).toBe(false)
     })
 
-    describe('fetchOne', () => {
-      it('fetches and stores a single concept set', async () => {
-        const { getConceptSetById } = await import('@/services/concept-set.service')
-        const mockSet = { id: 1, name: 'Test Set', items: [] }
-        vi.mocked(getConceptSetById).mockResolvedValue(mockSet as never)
+    it('should set loading state while fetching', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(getAllConceptSets).mockImplementation(() => new Promise(() => {}))
 
-        const store = useConceptSetsStore()
-        await store.fetchOne(1)
-
-        expect(store.currentSet).toEqual(mockSet)
-        expect(getConceptSetById).toHaveBeenCalledWith(1)
-      })
-
-      it('sets error when set not found', async () => {
-        const { getConceptSetById } = await import('@/services/concept-set.service')
-        vi.mocked(getConceptSetById).mockResolvedValue(null)
-
-        const store = useConceptSetsStore()
-        await store.fetchOne(999)
-
-        expect(store.error).toBe('Concept set not found')
-        expect(store.currentSet).toBeNull()
-      })
-
-      it('handles fetch errors', async () => {
-        const { getConceptSetById } = await import('@/services/concept-set.service')
-        vi.mocked(getConceptSetById).mockRejectedValue(new Error('Fetch failed'))
-
-        const store = useConceptSetsStore()
-        await store.fetchOne(1)
-
-        expect(store.error).toBe('Fetch failed')
-        expect(store.currentSet).toBeNull()
-      })
+      const _promise = store.fetchAll()
+      expect(store.loading).toBe(true)
     })
 
-    describe('create', () => {
-      it('creates a new concept set', async () => {
-        const { createConceptSet, getAllConceptSets } = await import('@/services/concept-set.service')
-        const newSet = { name: 'New Set', items: [] }
-        const createdSet = { id: 1, ...newSet }
-        vi.mocked(createConceptSet).mockResolvedValue(createdSet as never)
-        vi.mocked(getAllConceptSets).mockResolvedValue([createdSet] as never)
+    it('should handle fetch error', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(getAllConceptSets).mockRejectedValue(new Error('Network error'))
 
-        const store = useConceptSetsStore()
-        const result = await store.create(newSet as never)
+      await store.fetchAll()
 
-        expect(result).toEqual(createdSet)
-        expect(store.currentSet).toEqual(createdSet)
-        expect(createConceptSet).toHaveBeenCalledWith(newSet)
-      })
-
-      it('returns null on create failure', async () => {
-        const { createConceptSet } = await import('@/services/concept-set.service')
-        vi.mocked(createConceptSet).mockResolvedValue(null)
-
-        const store = useConceptSetsStore()
-        const result = await store.create({ name: 'Test', items: [] } as never)
-
-        expect(result).toBeNull()
-        expect(store.error).toBe('Failed to create concept set')
-      })
-
-      it('handles create errors', async () => {
-        const { createConceptSet } = await import('@/services/concept-set.service')
-        vi.mocked(createConceptSet).mockRejectedValue(new Error('Create failed'))
-
-        const store = useConceptSetsStore()
-        const result = await store.create({ name: 'Test', items: [] } as never)
-
-        expect(result).toBeNull()
-        expect(store.error).toBe('Create failed')
-      })
+      expect(store.error).toBe('Network error')
+      expect(store.conceptSets).toEqual([])
+      expect(store.loading).toBe(false)
     })
 
-    describe('update', () => {
-      it('updates an existing concept set', async () => {
-        const { updateConceptSet, getAllConceptSets } = await import('@/services/concept-set.service')
-        const updatedSet = { id: 1, name: 'Updated Set', items: [] }
-        vi.mocked(updateConceptSet).mockResolvedValue(updatedSet as never)
-        vi.mocked(getAllConceptSets).mockResolvedValue([updatedSet] as never)
+    it('should not fetch if already loading', async () => {
+      const store = useConceptSetsStore()
+      store.loading = true
 
-        const store = useConceptSetsStore()
-        const result = await store.update(updatedSet as never)
+      await store.fetchAll()
 
-        expect(result).toEqual(updatedSet)
-        expect(store.currentSet).toEqual(updatedSet)
-      })
+      expect(getAllConceptSets).not.toHaveBeenCalled()
+    })
+  })
 
-      it('returns null on update failure', async () => {
-        const { updateConceptSet } = await import('@/services/concept-set.service')
-        vi.mocked(updateConceptSet).mockResolvedValue(null)
+  describe('fetchOne Action', () => {
+    it('should fetch and store a single concept set', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(getConceptSetById).mockResolvedValue(mockConceptSet)
 
-        const store = useConceptSetsStore()
-        const result = await store.update({ id: 1, name: 'Test' } as never)
+      await store.fetchOne(1)
 
-        expect(result).toBeNull()
-        expect(store.error).toBe('Failed to update concept set')
-      })
+      expect(store.currentSet).toEqual(mockConceptSet)
+      expect(store.loading).toBe(false)
     })
 
-    describe('remove', () => {
-      it('deletes a concept set', async () => {
-        const { deleteConceptSet } = await import('@/services/concept-set.service')
-        vi.mocked(deleteConceptSet).mockResolvedValue(true)
+    it('should handle not found', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(getConceptSetById).mockResolvedValue(null)
 
-        const store = useConceptSetsStore()
-        store.conceptSets = [
-          { id: 1, name: 'Set 1' },
-          { id: 2, name: 'Set 2' },
-        ] as never[]
+      await store.fetchOne(999)
 
-        const result = await store.remove(1)
-
-        expect(result).toBe(true)
-        expect(store.conceptSets).toHaveLength(1)
-        expect(store.conceptSets[0].id).toBe(2)
-      })
-
-      it('clears currentSet if deleted', async () => {
-        const { deleteConceptSet } = await import('@/services/concept-set.service')
-        vi.mocked(deleteConceptSet).mockResolvedValue(true)
-
-        const store = useConceptSetsStore()
-        store.conceptSets = [{ id: 1, name: 'Set 1' }] as never[]
-        store.currentSet = { id: 1, name: 'Set 1', items: [] } as never
-
-        await store.remove(1)
-
-        expect(store.currentSet).toBeNull()
-      })
-
-      it('returns false on delete failure', async () => {
-        const { deleteConceptSet } = await import('@/services/concept-set.service')
-        vi.mocked(deleteConceptSet).mockResolvedValue(false)
-
-        const store = useConceptSetsStore()
-        const result = await store.remove(1)
-
-        expect(result).toBe(false)
-        expect(store.error).toBe('Failed to delete concept set')
-      })
+      expect(store.error).toBe('Concept set not found')
     })
 
-    describe('setFilter', () => {
-      it('sets filter term with debounce', async () => {
-        const store = useConceptSetsStore()
+    it('should handle fetch error', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(getConceptSetById).mockRejectedValue(new Error('Network error'))
 
-        store.setFilter('test')
+      await store.fetchOne(1)
 
-        // Filter shouldn't be set immediately
-        expect(store.filterTerm).toBe('')
+      expect(store.error).toBe('Network error')
+      expect(store.currentSet).toBeNull()
+    })
+  })
 
-        // Advance timers
-        vi.advanceTimersByTime(300)
+  describe('create Action', () => {
+    it('should create a concept set', async () => {
+      const store = useConceptSetsStore()
+      const newSet = { name: 'New Set', items: [] }
+      vi.mocked(createConceptSet).mockResolvedValue({ ...newSet, id: 4 } as ConceptSet)
+      vi.mocked(getAllConceptSets).mockResolvedValue([...mockConceptSetList, { id: 4, name: 'New Set' }])
 
-        expect(store.filterTerm).toBe('test')
-      })
+      const result = await store.create(newSet)
 
-      it('debounces multiple rapid calls', () => {
-        const store = useConceptSetsStore()
-
-        store.setFilter('a')
-        vi.advanceTimersByTime(100)
-        store.setFilter('ab')
-        vi.advanceTimersByTime(100)
-        store.setFilter('abc')
-        vi.advanceTimersByTime(300)
-
-        expect(store.filterTerm).toBe('abc')
-      })
+      expect(result).toEqual({ ...newSet, id: 4 })
+      expect(store.currentSet).toEqual({ ...newSet, id: 4 })
     })
 
-    describe('openCreateEditor', () => {
-      it('opens editor with empty concept set', () => {
-        const store = useConceptSetsStore()
-        store.openCreateEditor()
+    it('should handle create failure', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(createConceptSet).mockResolvedValue(null)
 
-        expect(store.editorOpen).toBe(true)
-        expect(store.currentSet).toEqual({ name: '', items: [] })
-      })
+      const result = await store.create({ name: 'New Set', items: [] })
+
+      expect(result).toBeNull()
+      expect(store.error).toBe('Failed to create concept set')
     })
 
-    describe('openEditEditor', () => {
-      it('fetches concept set and opens editor', async () => {
-        const { getConceptSetById } = await import('@/services/concept-set.service')
-        const mockSet = { id: 1, name: 'Test', items: [] }
-        vi.mocked(getConceptSetById).mockResolvedValue(mockSet as never)
+    it('should handle create error', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(createConceptSet).mockRejectedValue(new Error('Server error'))
 
-        const store = useConceptSetsStore()
-        await store.openEditEditor(1)
+      const result = await store.create({ name: 'New Set', items: [] })
 
-        expect(store.currentSet).toEqual(mockSet)
-        expect(store.editorOpen).toBe(true)
-      })
+      expect(result).toBeNull()
+      expect(store.error).toBe('Server error')
+    })
+  })
+
+  describe('update Action', () => {
+    it('should update a concept set', async () => {
+      const store = useConceptSetsStore()
+      const updatedSet = { ...mockConceptSet, name: 'Updated Name' }
+      vi.mocked(updateConceptSet).mockResolvedValue(updatedSet)
+      vi.mocked(getAllConceptSets).mockResolvedValue(mockConceptSetList)
+
+      const result = await store.update(updatedSet)
+
+      expect(result).toEqual(updatedSet)
+      expect(store.currentSet).toEqual(updatedSet)
     })
 
-    describe('closeEditor', () => {
-      it('closes editor and clears state', () => {
-        const store = useConceptSetsStore()
-        store.editorOpen = true
-        store.currentSet = { id: 1, name: 'Test', items: [] } as never
-        store.error = 'Some error'
+    it('should handle update failure', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(updateConceptSet).mockResolvedValue(null)
 
-        store.closeEditor()
+      const result = await store.update(mockConceptSet)
 
-        expect(store.editorOpen).toBe(false)
-        expect(store.currentSet).toBeNull()
-        expect(store.error).toBeNull()
-      })
+      expect(result).toBeNull()
+      expect(store.error).toBe('Failed to update concept set')
     })
 
-    describe('clearError', () => {
-      it('clears error message', () => {
-        const store = useConceptSetsStore()
-        store.error = 'Some error'
+    it('should handle update error', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(updateConceptSet).mockRejectedValue(new Error('Server error'))
 
-        store.clearError()
+      const result = await store.update(mockConceptSet)
 
-        expect(store.error).toBeNull()
-      })
+      expect(result).toBeNull()
+      expect(store.error).toBe('Server error')
+    })
+  })
+
+  describe('remove Action', () => {
+    it('should delete a concept set', async () => {
+      const store = useConceptSetsStore()
+      store.conceptSets = [...mockConceptSetList]
+      vi.mocked(deleteConceptSet).mockResolvedValue(true)
+
+      const result = await store.remove(1)
+
+      expect(result).toBe(true)
+      expect(store.conceptSets.find(s => s.id === 1)).toBeUndefined()
     })
 
+    it('should clear current set if deleted', async () => {
+      const store = useConceptSetsStore()
+      store.conceptSets = [...mockConceptSetList]
+      store.currentSet = { ...mockConceptSet }
+      vi.mocked(deleteConceptSet).mockResolvedValue(true)
+
+      await store.remove(1)
+
+      expect(store.currentSet).toBeNull()
+    })
+
+    it('should handle delete failure', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(deleteConceptSet).mockResolvedValue(false)
+
+      const result = await store.remove(1)
+
+      expect(result).toBe(false)
+      expect(store.error).toBe('Failed to delete concept set')
+    })
+
+    it('should handle delete error', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(deleteConceptSet).mockRejectedValue(new Error('Server error'))
+
+      const result = await store.remove(1)
+
+      expect(result).toBe(false)
+      expect(store.error).toBe('Server error')
+    })
+  })
+
+  describe('setFilter Action', () => {
+    it('should update filter term after debounce', async () => {
+      vi.useFakeTimers()
+      const store = useConceptSetsStore()
+
+      store.setFilter('test')
+      expect(store.filterTerm).toBe('') // Not yet updated due to debounce
+
+      vi.advanceTimersByTime(300)
+      expect(store.filterTerm).toBe('test')
+
+      vi.useRealTimers()
+    })
+  })
+
+  describe('Editor Actions', () => {
+    it('openCreateEditor should set up new concept set', () => {
+      const store = useConceptSetsStore()
+      store.openCreateEditor()
+
+      expect(store.currentSet).toEqual({ name: '', items: [] })
+      expect(store.editorOpen).toBe(true)
+    })
+
+    it('openEditEditor should fetch and open editor', async () => {
+      const store = useConceptSetsStore()
+      vi.mocked(getConceptSetById).mockResolvedValue(mockConceptSet)
+
+      await store.openEditEditor(1)
+
+      expect(store.currentSet).toEqual(mockConceptSet)
+      expect(store.editorOpen).toBe(true)
+    })
+
+    it('closeEditor should clear state', () => {
+      const store = useConceptSetsStore()
+      store.currentSet = mockConceptSet
+      store.editorOpen = true
+      store.error = 'Some error'
+
+      store.closeEditor()
+
+      expect(store.editorOpen).toBe(false)
+      expect(store.currentSet).toBeNull()
+      expect(store.error).toBeNull()
+    })
+  })
+
+  describe('clearError Action', () => {
+    it('should clear error', () => {
+      const store = useConceptSetsStore()
+      store.error = 'Some error'
+
+      store.clearError()
+
+      expect(store.error).toBeNull()
+    })
+  })
+
+  describe('Concept Set Building Actions', () => {
     describe('addConceptToSet', () => {
-      it('adds concept to current set', () => {
+      it('should add concept to current set', () => {
         const store = useConceptSetsStore()
-        store.currentSet = { id: 1, name: 'Test', items: [] } as never
+        store.currentSet = { name: 'Test', items: [] }
 
-        const concept = {
-          conceptId: 123,
-          conceptName: 'Test Concept',
-          domainId: 'Condition',
-          vocabularyId: 'SNOMED',
-          conceptClassId: 'Clinical Finding',
-          standardConcept: 'S',
-          conceptCode: '12345',
-        }
+        store.addConceptToSet(mockConcept)
 
-        store.addConceptToSet(concept as never)
-
-        expect(store.currentSet!.items).toHaveLength(1)
-        expect(store.currentSet!.items[0].conceptId).toBe(123)
+        expect(store.currentSet.items).toHaveLength(1)
+        expect(store.currentSet.items[0].conceptId).toBe(mockConcept.conceptId)
       })
 
-      it('prevents duplicate concepts', () => {
+      it('should set error if no current set', () => {
+        const store = useConceptSetsStore()
+
+        store.addConceptToSet(mockConcept)
+
+        expect(store.error).toBe('No concept set selected')
+      })
+
+      it('should set error if concept already exists', () => {
         const store = useConceptSetsStore()
         store.currentSet = {
-          id: 1,
           name: 'Test',
-          items: [{ conceptId: 123, conceptName: 'Existing' }],
-        } as never
+          items: [{
+            conceptId: mockConcept.conceptId,
+            conceptName: mockConcept.conceptName,
+            conceptCode: mockConcept.conceptCode,
+            domainId: mockConcept.domainId,
+            vocabularyId: mockConcept.vocabularyId,
+            conceptClassId: mockConcept.conceptClassId,
+            standardConcept: mockConcept.standardConcept,
+            invalidReason: mockConcept.invalidReason,
+            isExcluded: false,
+            includeDescendants: false,
+            includeMapped: false,
+          }],
+        }
 
-        store.addConceptToSet({ conceptId: 123 } as never)
+        store.addConceptToSet(mockConcept)
 
-        expect(store.currentSet!.items).toHaveLength(1)
         expect(store.error).toBe('Concept already exists in this set')
       })
 
-      it('sets error when no current set', () => {
+      it('should clear error on successful add', () => {
         const store = useConceptSetsStore()
-        store.addConceptToSet({ conceptId: 123 } as never)
+        store.currentSet = { name: 'Test', items: [] }
+        store.error = 'Previous error'
 
-        expect(store.error).toBe('No concept set selected')
+        store.addConceptToSet(mockConcept)
+
+        expect(store.error).toBeNull()
       })
     })
 
     describe('removeConceptFromSet', () => {
-      it('removes concept from current set', () => {
+      it('should remove concept from current set', () => {
         const store = useConceptSetsStore()
         store.currentSet = {
-          id: 1,
           name: 'Test',
-          items: [
-            { conceptId: 123 },
-            { conceptId: 456 },
-          ],
-        } as never
+          items: [{
+            conceptId: 12345,
+            conceptName: 'Test',
+            conceptCode: '12345',
+            domainId: 'Condition',
+            vocabularyId: 'SNOMED',
+            conceptClassId: 'Clinical Finding',
+            standardConcept: 'S',
+            invalidReason: null,
+            isExcluded: false,
+            includeDescendants: false,
+            includeMapped: false,
+          }],
+        }
 
-        store.removeConceptFromSet(123)
+        store.removeConceptFromSet(12345)
 
-        expect(store.currentSet!.items).toHaveLength(1)
-        expect(store.currentSet!.items[0].conceptId).toBe(456)
+        expect(store.currentSet.items).toHaveLength(0)
       })
 
-      it('sets error when no current set', () => {
+      it('should set error if no current set', () => {
         const store = useConceptSetsStore()
-        store.removeConceptFromSet(123)
+
+        store.removeConceptFromSet(12345)
 
         expect(store.error).toBe('No concept set selected')
       })
     })
 
     describe('toggleConceptFlag', () => {
-      it('toggles includeDescendants flag', () => {
+      it('should toggle includeDescendants flag', () => {
         const store = useConceptSetsStore()
         store.currentSet = {
-          id: 1,
           name: 'Test',
-          items: [{ conceptId: 123, includeDescendants: false }],
-        } as never
+          items: [{
+            conceptId: 12345,
+            conceptName: 'Test',
+            conceptCode: '12345',
+            domainId: 'Condition',
+            vocabularyId: 'SNOMED',
+            conceptClassId: 'Clinical Finding',
+            standardConcept: 'S',
+            invalidReason: null,
+            isExcluded: false,
+            includeDescendants: false,
+            includeMapped: false,
+          }],
+        }
 
-        store.toggleConceptFlag(123, 'includeDescendants')
+        store.toggleConceptFlag(12345, 'includeDescendants')
 
-        expect(store.currentSet!.items[0].includeDescendants).toBe(true)
+        expect(store.currentSet.items[0].includeDescendants).toBe(true)
       })
 
-      it('toggles includeMapped flag', () => {
+      it('should toggle includeMapped flag', () => {
         const store = useConceptSetsStore()
         store.currentSet = {
-          id: 1,
           name: 'Test',
-          items: [{ conceptId: 123, includeMapped: false }],
-        } as never
+          items: [{
+            conceptId: 12345,
+            conceptName: 'Test',
+            conceptCode: '12345',
+            domainId: 'Condition',
+            vocabularyId: 'SNOMED',
+            conceptClassId: 'Clinical Finding',
+            standardConcept: 'S',
+            invalidReason: null,
+            isExcluded: false,
+            includeDescendants: false,
+            includeMapped: false,
+          }],
+        }
 
-        store.toggleConceptFlag(123, 'includeMapped')
+        store.toggleConceptFlag(12345, 'includeMapped')
 
-        expect(store.currentSet!.items[0].includeMapped).toBe(true)
+        expect(store.currentSet.items[0].includeMapped).toBe(true)
       })
 
-      it('toggles isExcluded flag', () => {
+      it('should toggle isExcluded flag', () => {
         const store = useConceptSetsStore()
         store.currentSet = {
-          id: 1,
           name: 'Test',
-          items: [{ conceptId: 123, isExcluded: false }],
-        } as never
+          items: [{
+            conceptId: 12345,
+            conceptName: 'Test',
+            conceptCode: '12345',
+            domainId: 'Condition',
+            vocabularyId: 'SNOMED',
+            conceptClassId: 'Clinical Finding',
+            standardConcept: 'S',
+            invalidReason: null,
+            isExcluded: false,
+            includeDescendants: false,
+            includeMapped: false,
+          }],
+        }
 
-        store.toggleConceptFlag(123, 'isExcluded')
+        store.toggleConceptFlag(12345, 'isExcluded')
 
-        expect(store.currentSet!.items[0].isExcluded).toBe(true)
+        expect(store.currentSet.items[0].isExcluded).toBe(true)
       })
 
-      it('sets error when no current set', () => {
+      it('should set error if no current set', () => {
         const store = useConceptSetsStore()
-        store.toggleConceptFlag(123, 'includeDescendants')
+
+        store.toggleConceptFlag(12345, 'includeDescendants')
 
         expect(store.error).toBe('No concept set selected')
+      })
+
+      it('should do nothing if concept not found', () => {
+        const store = useConceptSetsStore()
+        store.currentSet = { name: 'Test', items: [] }
+
+        store.toggleConceptFlag(99999, 'includeDescendants')
+
+        // No error, no change
+        expect(store.currentSet.items).toHaveLength(0)
       })
     })
 
     describe('isConceptInSet', () => {
-      it('returns true when concept is in set', () => {
+      it('should return true if concept is in set', () => {
         const store = useConceptSetsStore()
         store.currentSet = {
-          id: 1,
           name: 'Test',
-          items: [{ conceptId: 123 }],
-        } as never
+          items: [{
+            conceptId: 12345,
+            conceptName: 'Test',
+            conceptCode: '12345',
+            domainId: 'Condition',
+            vocabularyId: 'SNOMED',
+            conceptClassId: 'Clinical Finding',
+            standardConcept: 'S',
+            invalidReason: null,
+            isExcluded: false,
+            includeDescendants: false,
+            includeMapped: false,
+          }],
+        }
 
-        expect(store.isConceptInSet(123)).toBe(true)
+        expect(store.isConceptInSet(12345)).toBe(true)
       })
 
-      it('returns false when concept is not in set', () => {
+      it('should return false if concept is not in set', () => {
         const store = useConceptSetsStore()
-        store.currentSet = {
-          id: 1,
-          name: 'Test',
-          items: [{ conceptId: 123 }],
-        } as never
+        store.currentSet = { name: 'Test', items: [] }
 
-        expect(store.isConceptInSet(456)).toBe(false)
+        expect(store.isConceptInSet(12345)).toBe(false)
       })
 
-      it('returns false when no current set', () => {
+      it('should return false if no current set', () => {
         const store = useConceptSetsStore()
-        expect(store.isConceptInSet(123)).toBe(false)
+
+        expect(store.isConceptInSet(12345)).toBe(false)
       })
     })
   })

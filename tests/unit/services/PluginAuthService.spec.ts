@@ -1,229 +1,219 @@
 /**
- * Unit Tests: PluginAuthService
- * Tests for src/services/PluginAuthService.ts
+ * Plugin Auth Service Tests
+ * Tests for plugin authentication context creation
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
-// Mock dependencies
-vi.mock('@/stores/auth', () => ({
-  useAuthStore: vi.fn(() => ({
-    user: null,
-    token: null,
-    isAuthenticated: false,
-    $subscribe: vi.fn(() => vi.fn()),
-  })),
-}))
-
+// Mock permission service
 vi.mock('@/services/auth/permissions', () => ({
   permissionService: {
-    hasPermission: vi.fn((permission: string, userPermissions: string[]) => {
-      return userPermissions.includes(permission) || userPermissions.includes('*')
-    }),
+    hasPermission: vi.fn(),
+    clearCache: vi.fn(),
   },
 }))
 
-describe('PluginAuthService', () => {
-  let PluginAuthService: typeof import('@/services/PluginAuthService').PluginAuthService
-  let pluginAuthService: import('@/services/PluginAuthService').PluginAuthService
+// Mock auth config to enable authentication
+vi.mock('@/config/auth.config', () => ({
+  authConfig: {
+    userAuthenticationEnabled: true,
+    refreshTokenThreshold: 1000 * 60 * 60 * 4,
+  },
+}))
 
-  beforeEach(async () => {
+import { PluginAuthService, pluginAuthService } from '@/services/PluginAuthService'
+import { useAuthStore } from '@/stores/auth'
+import { permissionService } from '@/services/auth/permissions'
+
+// Helper to create a valid JWT token for testing
+function createTestJWT(expiresInSeconds = 3600): string {
+  const header = { alg: 'HS256', typ: 'JWT' }
+  const now = Math.floor(Date.now() / 1000)
+  const payload = { sub: 'testuser', iat: now, exp: now + expiresInSeconds }
+  const base64Header = btoa(JSON.stringify(header))
+  const base64Payload = btoa(JSON.stringify(payload))
+  return `${base64Header}.${base64Payload}.test_signature`
+}
+
+describe('PluginAuthService', () => {
+  let service: PluginAuthService
+
+  beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-
-    // Re-import to get fresh instance
-    const module = await import('@/services/PluginAuthService')
-    PluginAuthService = module.PluginAuthService
-    pluginAuthService = new PluginAuthService()
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
+    service = new PluginAuthService()
   })
 
   describe('createAuthContext', () => {
-    it('returns null user when not authenticated', async () => {
-      const { useAuthStore } = await import('@/stores/auth')
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        $subscribe: vi.fn(),
-      } as ReturnType<typeof useAuthStore>)
-
-      const context = pluginAuthService.createAuthContext()
-
-      expect(context.user).toBeNull()
-      expect(context.token).toBeNull()
-      expect(context.isAuthenticated).toBe(false)
-    })
-
-    it('returns user context when authenticated', async () => {
-      const { useAuthStore } = await import('@/stores/auth')
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: {
-          login: 'testuser',
-          displayName: 'Test User',
-          email: 'test@example.com',
-          permissionIdx: {
-            admin: ['read', 'write'],
-            cohort: ['execute'],
-          },
+    it('should create auth context for authenticated user', () => {
+      const authStore = useAuthStore()
+      const testToken = createTestJWT()
+      authStore.setToken(testToken)
+      authStore.setUser({
+        login: 'testuser',
+        displayName: 'Test User',
+        email: 'test@example.com',
+        permissionIdx: {
+          cohort: ['cohort:read', 'cohort:write'],
+          conceptset: ['conceptset:read'],
         },
-        token: 'test-token',
-        isAuthenticated: true,
-        $subscribe: vi.fn(),
-      } as ReturnType<typeof useAuthStore>)
+      })
 
-      const context = pluginAuthService.createAuthContext()
+      const context = service.createAuthContext()
 
+      expect(context.isAuthenticated).toBe(true)
+      expect(context.token).toBe(testToken)
       expect(context.user).not.toBeNull()
       expect(context.user?.id).toBe('testuser')
       expect(context.user?.username).toBe('Test User')
       expect(context.user?.email).toBe('test@example.com')
-      expect(context.token).toBe('test-token')
-      expect(context.isAuthenticated).toBe(true)
+      expect(context.user?.permissions).toContain('cohort:read')
+      expect(context.user?.permissions).toContain('cohort:write')
+      expect(context.user?.permissions).toContain('conceptset:read')
     })
 
-    it('extracts flat permissions from permissionIdx', async () => {
-      const { useAuthStore } = await import('@/stores/auth')
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: {
-          login: 'testuser',
-          displayName: 'Test User',
-          permissionIdx: {
-            admin: ['read', 'write'],
-            cohort: ['execute'],
-          },
-        },
-        token: 'test-token',
-        isAuthenticated: true,
-        $subscribe: vi.fn(),
-      } as ReturnType<typeof useAuthStore>)
+    it('should create auth context for unauthenticated user', () => {
+      const context = service.createAuthContext()
 
-      const context = pluginAuthService.createAuthContext()
-
-      expect(context.user?.permissions).toContain('read')
-      expect(context.user?.permissions).toContain('write')
-      expect(context.user?.permissions).toContain('execute')
+      expect(context.isAuthenticated).toBe(false)
+      expect(context.token).toBeNull()
+      expect(context.user).toBeNull()
     })
 
-    it('uses login as fallback for displayName', async () => {
-      const { useAuthStore } = await import('@/stores/auth')
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: {
-          login: 'testuser',
-          displayName: '',
-          permissionIdx: {},
-        },
-        token: 'test-token',
-        isAuthenticated: true,
-        $subscribe: vi.fn(),
-      } as ReturnType<typeof useAuthStore>)
+    it('should use login as username when displayName is not available', () => {
+      const authStore = useAuthStore()
+      authStore.setToken(createTestJWT())
+      authStore.setUser({
+        login: 'testuser',
+        displayName: '',
+        permissionIdx: {},
+      })
 
-      const context = pluginAuthService.createAuthContext()
+      const context = service.createAuthContext()
 
       expect(context.user?.username).toBe('testuser')
     })
 
-    it('handles undefined permissionIdx', async () => {
-      const { useAuthStore } = await import('@/stores/auth')
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: {
-          login: 'testuser',
-          displayName: 'Test',
-          permissionIdx: undefined,
-        },
-        token: 'test-token',
-        isAuthenticated: true,
-        $subscribe: vi.fn(),
-      } as ReturnType<typeof useAuthStore>)
+    it('should handle user with no permissions', () => {
+      const authStore = useAuthStore()
+      authStore.setToken(createTestJWT())
+      authStore.setUser({
+        login: 'testuser',
+        displayName: 'Test User',
+        permissionIdx: undefined as unknown as Record<string, string[]>,
+      })
 
-      const context = pluginAuthService.createAuthContext()
+      const context = service.createAuthContext()
 
       expect(context.user?.permissions).toEqual([])
     })
-  })
 
-  describe('hasPermission', () => {
-    it('returns false when user is null', async () => {
-      const { useAuthStore } = await import('@/stores/auth')
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        $subscribe: vi.fn(),
-      } as ReturnType<typeof useAuthStore>)
-
-      const context = pluginAuthService.createAuthContext()
-
-      expect(context.hasPermission('admin:read')).toBe(false)
-    })
-
-    it('checks permission via permissionService', async () => {
-      const { useAuthStore } = await import('@/stores/auth')
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: {
+    describe('hasPermission', () => {
+      it('should check permission using permission service', () => {
+        const authStore = useAuthStore()
+        authStore.setToken(createTestJWT())
+        authStore.setUser({
           login: 'testuser',
-          displayName: 'Test',
+          displayName: 'Test User',
           permissionIdx: {
-            admin: ['read', 'write'],
+            cohort: ['cohort:read'],
           },
-        },
-        token: 'test-token',
-        isAuthenticated: true,
-        $subscribe: vi.fn(),
-      } as ReturnType<typeof useAuthStore>)
+        })
 
-      const context = pluginAuthService.createAuthContext()
+        vi.mocked(permissionService.hasPermission).mockReturnValue(true)
 
-      expect(context.hasPermission('read')).toBe(true)
-      expect(context.hasPermission('delete')).toBe(false)
+        const context = service.createAuthContext()
+        const result = context.hasPermission('cohort:read')
+
+        expect(result).toBe(true)
+        expect(permissionService.hasPermission).toHaveBeenCalledWith(
+          'cohort:read',
+          ['cohort:read']
+        )
+      })
+
+      it('should return false when user is not authenticated', () => {
+        const context = service.createAuthContext()
+        const result = context.hasPermission('cohort:read')
+
+        expect(result).toBe(false)
+        expect(permissionService.hasPermission).not.toHaveBeenCalled()
+      })
     })
   })
 
   describe('watchAuthChanges', () => {
-    it('subscribes to auth store changes', async () => {
-      const mockUnsubscribe = vi.fn()
-      const { useAuthStore } = await import('@/stores/auth')
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        $subscribe: vi.fn(() => mockUnsubscribe),
-      } as ReturnType<typeof useAuthStore>)
-
+    it('should call callback on auth state changes', async () => {
       const callback = vi.fn()
-      const unsubscribe = pluginAuthService.watchAuthChanges(callback)
+
+      service.watchAuthChanges(callback)
 
       const authStore = useAuthStore()
-      expect(authStore.$subscribe).toHaveBeenCalled()
+      const testToken = createTestJWT()
+      authStore.setToken(testToken)
+
+      // Wait for subscription to fire
+      await vi.waitFor(() => {
+        expect(callback).toHaveBeenCalled()
+      })
+    })
+
+    it('should return unsubscribe function', () => {
+      const callback = vi.fn()
+
+      const unsubscribe = service.watchAuthChanges(callback)
+
       expect(typeof unsubscribe).toBe('function')
     })
 
-    it('returns unsubscribe function', async () => {
-      const mockUnsubscribe = vi.fn()
-      const { useAuthStore } = await import('@/stores/auth')
-      vi.mocked(useAuthStore).mockReturnValue({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        $subscribe: vi.fn(() => mockUnsubscribe),
-      } as ReturnType<typeof useAuthStore>)
+    it('should not call callback after unsubscribe', async () => {
+      const callback = vi.fn()
 
-      const unsubscribe = pluginAuthService.watchAuthChanges(vi.fn())
+      const unsubscribe = service.watchAuthChanges(callback)
       unsubscribe()
 
-      expect(mockUnsubscribe).toHaveBeenCalled()
+      callback.mockClear()
+
+      const authStore = useAuthStore()
+      authStore.setToken(createTestJWT())
+
+      // Give some time for potential callback to fire
+      await new Promise(r => setTimeout(r, 10))
+
+      expect(callback).not.toHaveBeenCalled()
+    })
+
+    it('should pass updated auth context to callback', async () => {
+      const callback = vi.fn()
+
+      service.watchAuthChanges(callback)
+
+      const authStore = useAuthStore()
+      const testToken = createTestJWT()
+      authStore.setToken(testToken)
+      authStore.setUser({
+        login: 'newuser',
+        displayName: 'New User',
+        permissionIdx: {},
+      })
+
+      // Wait for callback to be called
+      await vi.waitFor(() => {
+        expect(callback.mock.calls.length).toBeGreaterThan(0)
+      })
+
+      // Get the last call's argument
+      const lastCall = callback.mock.calls[callback.mock.calls.length - 1]
+      const context = lastCall[0]
+
+      expect(context.isAuthenticated).toBe(true)
+      expect(context.token).toBe(testToken)
     })
   })
 
-  describe('Singleton Export', () => {
-    it('exports singleton instance', async () => {
-      const { pluginAuthService: singleton } = await import('@/services/PluginAuthService')
-
-      expect(singleton).toBeInstanceOf(PluginAuthService)
+  describe('Singleton Instance', () => {
+    it('should export a singleton instance', () => {
+      expect(pluginAuthService).toBeInstanceOf(PluginAuthService)
     })
   })
 })

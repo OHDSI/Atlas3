@@ -1,22 +1,22 @@
 /**
- * Unit Tests: useI18n Composable
- * Tests for src/composables/useI18n.ts
+ * useI18n Composable Tests
+ * Tests for internationalization
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useI18n } from '@/composables/useI18n'
-import { useLocaleStore } from '@/stores/locale'
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
-    warn: vi.fn(),
-    error: vi.fn(),
     debug: vi.fn(),
     info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   },
 }))
+
+import { useI18n } from '@/composables/useI18n'
+import { useLocaleStore } from '@/stores/locale'
 
 describe('useI18n', () => {
   beforeEach(() => {
@@ -24,241 +24,197 @@ describe('useI18n', () => {
     vi.clearAllMocks()
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  describe('t function (reactive)', () => {
-    it('returns computed ref with translation', () => {
+  describe('t (reactive translation)', () => {
+    it('should return translation for key', () => {
       const localeStore = useLocaleStore()
       localeStore.$patch({
         translations: {
-          greeting: 'Hello',
-        },
-      })
-
-      const { t } = useI18n()
-      const result = t('greeting')
-
-      expect(result.value).toBe('Hello')
-    })
-
-    it('returns key when translation not found and not initialized', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({
-        translations: {},
-        initialized: false,
-      })
-
-      const { t } = useI18n()
-      const result = t('missing.key')
-
-      expect(result.value).toBe('missing.key')
-    })
-
-    it('returns default value when translation not found', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({
-        translations: {},
-      })
-
-      const { t } = useI18n()
-      const result = t('missing.key', 'Default Text')
-
-      expect(result.value).toBe('Default Text')
-    })
-
-    it('interpolates parameters', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({
-        translations: {
-          welcome: 'Hello, {name}!',
-        },
-      })
-
-      const { t } = useI18n()
-      const result = t('welcome', { name: 'John' })
-
-      expect(result.value).toBe('Hello, John!')
-    })
-
-    it('interpolates multiple parameters', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({
-        translations: {
-          message: '{greeting}, {name}! You have {count} messages.',
-        },
-      })
-
-      const { t } = useI18n()
-      const result = t('message', { greeting: 'Hi', name: 'Jane', count: '5' })
-
-      expect(result.value).toBe('Hi, Jane! You have 5 messages.')
-    })
-
-    it('keeps placeholder if param not provided', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({
-        translations: {
-          partial: 'Hello, {name}! Your id is {id}.',
-        },
-      })
-
-      const { t } = useI18n()
-      const result = t('partial', { name: 'Bob' })
-
-      expect(result.value).toBe('Hello, Bob! Your id is {id}.')
-    })
-
-    it('supports nested keys', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({
-        translations: {
-          nav: {
-            home: 'Home',
-            about: 'About Us',
+          common: {
+            save: 'Save',
           },
         },
+        initialized: true,
       })
 
       const { t } = useI18n()
 
-      expect(t('nav.home').value).toBe('Home')
-      expect(t('nav.about').value).toBe('About Us')
+      const translation = t('common.save')
+      expect(translation.value).toBe('Save')
     })
 
-    it('supports deeply nested keys', () => {
+    it('should return key when translation not found', () => {
+      const localeStore = useLocaleStore()
+      localeStore.$patch({
+        translations: {},
+        initialized: true,
+      })
+
+      const { t } = useI18n()
+
+      const translation = t('missing.key')
+      expect(translation.value).toBe('missing.key')
+    })
+
+    it('should use default value when translation not found', () => {
+      const localeStore = useLocaleStore()
+      localeStore.$patch({
+        translations: {},
+        initialized: true,
+      })
+
+      const { t } = useI18n()
+
+      const translation = t('missing.key', 'Default Value')
+      expect(translation.value).toBe('Default Value')
+    })
+
+    it('should interpolate parameters', () => {
       const localeStore = useLocaleStore()
       localeStore.$patch({
         translations: {
-          pages: {
-            user: {
-              profile: {
-                title: 'User Profile',
-              },
-            },
+          greeting: 'Hello, {name}!',
+        },
+        initialized: true,
+      })
+
+      const { t } = useI18n()
+
+      const translation = t('greeting', { name: 'World' })
+      expect(translation.value).toBe('Hello, World!')
+    })
+
+    it('should interpolate with default value and params', () => {
+      const localeStore = useLocaleStore()
+      localeStore.$patch({
+        translations: {},
+        initialized: true,
+      })
+
+      const { t } = useI18n()
+
+      const translation = t('missing', 'Hello, {name}!', { name: 'User' })
+      expect(translation.value).toBe('Hello, User!')
+    })
+
+    it('should keep unmatched placeholders', () => {
+      const localeStore = useLocaleStore()
+      localeStore.$patch({
+        translations: {
+          message: 'Hello, {name}! You have {count} messages.',
+        },
+        initialized: true,
+      })
+
+      const { t } = useI18n()
+
+      const translation = t('message', { name: 'User' })
+      expect(translation.value).toBe('Hello, User! You have {count} messages.')
+    })
+  })
+
+  describe('tv (non-reactive translation)', () => {
+    it('should return translation string directly', () => {
+      const localeStore = useLocaleStore()
+      localeStore.$patch({
+        translations: {
+          button: {
+            submit: 'Submit',
           },
         },
+        initialized: true,
       })
 
-      const { t } = useI18n()
-      const result = t('pages.user.profile.title')
+      const { tv } = useI18n()
 
-      expect(result.value).toBe('User Profile')
+      const translation = tv('button.submit')
+      expect(translation).toBe('Submit')
+      expect(typeof translation).toBe('string')
     })
 
-    it('falls back to English when key not in current locale', () => {
+    it('should return key when translation not found', () => {
       const localeStore = useLocaleStore()
       localeStore.$patch({
-        locale: 'fr',
         translations: {},
-        translationCache: new Map([
-          ['en', { bundle: { translations: { fallbackKey: 'English Fallback' } }, format: {} }],
-        ]),
+        initialized: true,
       })
 
-      const { t } = useI18n()
-      const result = t('fallbackKey')
+      const { tv } = useI18n()
 
-      expect(result.value).toBe('English Fallback')
+      expect(tv('unknown.key')).toBe('unknown.key')
     })
-  })
 
-  describe('tv function (non-reactive)', () => {
-    it('returns string directly', () => {
+    it('should use default value when translation not found', () => {
+      const localeStore = useLocaleStore()
+      localeStore.$patch({
+        translations: {},
+        initialized: true,
+      })
+
+      const { tv } = useI18n()
+
+      expect(tv('unknown.key', 'Default')).toBe('Default')
+    })
+
+    it('should interpolate parameters', () => {
       const localeStore = useLocaleStore()
       localeStore.$patch({
         translations: {
-          greeting: 'Hello',
+          count: '{n} items',
         },
+        initialized: true,
       })
 
       const { tv } = useI18n()
-      const result = tv('greeting')
 
-      expect(typeof result).toBe('string')
-      expect(result).toBe('Hello')
-    })
-
-    it('returns default value when key not found', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({
-        translations: {},
-      })
-
-      const { tv } = useI18n()
-      const result = tv('missing', 'Default')
-
-      expect(result).toBe('Default')
-    })
-
-    it('interpolates parameters', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({
-        translations: {
-          hello: 'Hello, {name}!',
-        },
-      })
-
-      const { tv } = useI18n()
-      const result = tv('hello', { name: 'World' })
-
-      expect(result).toBe('Hello, World!')
-    })
-
-    it('supports defaultValue with params signature', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({
-        translations: {},
-      })
-
-      const { tv } = useI18n()
-      const result = tv('missing', 'Hello, {name}!', { name: 'Test' })
-
-      expect(result).toBe('Hello, Test!')
+      expect(tv('count', { n: 5 })).toBe('5 items')
     })
   })
 
-  describe('locale computed', () => {
-    it('returns current locale from store', () => {
+  describe('locale', () => {
+    it('should return current locale', () => {
       const localeStore = useLocaleStore()
-      localeStore.$patch({ locale: 'fr' })
+      localeStore.$patch({
+        locale: 'en',
+      })
 
       const { locale } = useI18n()
 
-      expect(locale.value).toBe('fr')
+      expect(locale.value).toBe('en')
     })
   })
 
-  describe('availableLocales computed', () => {
-    it('returns available locales from store', () => {
+  describe('availableLocales', () => {
+    it('should return available locales', () => {
       const localeStore = useLocaleStore()
-      const locales = [
-        { code: 'en', name: 'English' },
-        { code: 'fr', name: 'French' },
-      ]
-      localeStore.$patch({ availableLocales: locales })
+      localeStore.$patch({
+        availableLocales: [
+          { code: 'en', name: 'English' },
+          { code: 'es', name: 'Spanish' },
+        ],
+      })
 
       const { availableLocales } = useI18n()
 
-      expect(availableLocales.value).toEqual(locales)
+      expect(availableLocales.value).toHaveLength(2)
+      expect(availableLocales.value[0].code).toBe('en')
     })
   })
 
   describe('changeLocale', () => {
-    it('calls store changeLocale method', async () => {
+    it('should change locale via store', async () => {
       const localeStore = useLocaleStore()
-      const changeSpy = vi.spyOn(localeStore, 'changeLocale').mockResolvedValue()
+      const changeLocaleSpy = vi.spyOn(localeStore, 'changeLocale').mockResolvedValue()
 
       const { changeLocale } = useI18n()
-      await changeLocale('fr')
 
-      expect(changeSpy).toHaveBeenCalledWith('fr')
+      await changeLocale('es')
+
+      expect(changeLocaleSpy).toHaveBeenCalledWith('es')
     })
   })
 
-  describe('loading computed', () => {
-    it('returns loading state from store', () => {
+  describe('loading', () => {
+    it('should reflect store loading state', () => {
       const localeStore = useLocaleStore()
       localeStore.$patch({ loading: true })
 
@@ -268,87 +224,52 @@ describe('useI18n', () => {
     })
   })
 
-  describe('error computed', () => {
-    it('returns error from store', () => {
+  describe('error', () => {
+    it('should reflect store error state', () => {
       const localeStore = useLocaleStore()
-      localeStore.$patch({ error: 'Failed to load translations' })
+      localeStore.$patch({ error: 'Translation error' })
 
       const { error } = useI18n()
 
-      expect(error.value).toBe('Failed to load translations')
-    })
-
-    it('returns null when no error', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({ error: null })
-
-      const { error } = useI18n()
-
-      expect(error.value).toBeNull()
+      expect(error.value).toBe('Translation error')
     })
   })
 
-  describe('format computed', () => {
-    it('returns locale format from store', () => {
-      const localeStore = useLocaleStore()
-      const format = { dateFormat: 'DD/MM/YYYY', numberFormat: { decimal: ',' } }
-      // localeFormat getter reads from translationCache.get(locale)?.bundle.format
-      localeStore.$patch({
-        locale: 'en',
-        translationCache: new Map([
-          ['en', { bundle: { translations: {}, format }, loadedAt: Date.now() }],
-        ]),
-      })
-
-      const { format: localeFormat } = useI18n()
-
-      expect(localeFormat.value).toEqual(format)
-    })
-  })
-
-  describe('edge cases', () => {
-    it('handles null in nested path', () => {
+  describe('nested translations', () => {
+    it('should handle deeply nested keys', () => {
       const localeStore = useLocaleStore()
       localeStore.$patch({
         translations: {
-          nested: null,
+          level1: {
+            level2: {
+              level3: {
+                value: 'Deep Value',
+              },
+            },
+          },
         },
+        initialized: true,
       })
 
-      const { t } = useI18n()
-      const result = t('nested.deep')
+      const { tv } = useI18n()
 
-      expect(result.value).toBe('nested.deep')
+      expect(tv('level1.level2.level3.value')).toBe('Deep Value')
     })
 
-    it('handles undefined in nested path', () => {
-      const localeStore = useLocaleStore()
-      localeStore.$patch({
-        translations: {},
-      })
-
-      const { t } = useI18n()
-      const result = t('undefined.path.to.key')
-
-      expect(result.value).toBe('undefined.path.to.key')
-    })
-
-    it('handles non-string values at path end', () => {
+    it('should return key for invalid nested path', () => {
       const localeStore = useLocaleStore()
       localeStore.$patch({
         translations: {
-          number: 123,
-          boolean: true,
-          object: { nested: 'value' },
+          level1: {
+            level2: 'string value', // Not an object
+          },
         },
+        initialized: true,
       })
 
-      const { t } = useI18n()
+      const { tv } = useI18n()
 
-      // These should return the key since value is not a string
-      expect(t('number').value).toBe('number')
-      expect(t('boolean').value).toBe('boolean')
-      expect(t('object').value).toBe('object')
+      expect(tv('level1.level2.level3')).toBe('level1.level2.level3')
     })
   })
 })

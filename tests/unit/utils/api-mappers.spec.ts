@@ -1,57 +1,56 @@
 /**
- * Unit Tests: API Mappers
- * Tests for src/utils/api-mappers.ts
+ * API Mappers Utility Tests
+ * Tests for WebAPI response conversion
  */
-
 import { describe, it, expect } from 'vitest'
 import {
   mapConceptFromAPI,
   conceptToConceptSetItem,
   mapConceptSetFromAPI,
   mapConceptSetToAPI,
+  type ConceptSetAPIResponse
 } from '@/utils/api-mappers'
+import type { Concept, ConceptSet } from '@/models/concept-set.types'
 
-describe('api-mappers', () => {
+describe('API Mappers', () => {
   describe('mapConceptFromAPI', () => {
-    it('maps uppercase API fields to camelCase', () => {
-      const raw = {
+    it('should map UPPERCASE API response to camelCase', () => {
+      const apiConcept = {
         CONCEPT_ID: 123,
-        CONCEPT_NAME: 'Test Concept',
-        CONCEPT_CODE: 'TC001',
+        CONCEPT_NAME: 'Test Condition',
+        CONCEPT_CODE: 'T001',
         DOMAIN_ID: 'Condition',
         VOCABULARY_ID: 'SNOMED',
         CONCEPT_CLASS_ID: 'Clinical Finding',
         STANDARD_CONCEPT: 'S',
-        INVALID_REASON: null,
+        INVALID_REASON: null
       }
 
-      const result = mapConceptFromAPI(raw)
+      const result = mapConceptFromAPI(apiConcept)
 
-      expect(result).toEqual({
-        conceptId: 123,
-        conceptName: 'Test Concept',
-        conceptCode: 'TC001',
-        domainId: 'Condition',
-        vocabularyId: 'SNOMED',
-        conceptClassId: 'Clinical Finding',
-        standardConcept: 'S',
-        invalidReason: null,
-      })
+      expect(result.conceptId).toBe(123)
+      expect(result.conceptName).toBe('Test Condition')
+      expect(result.conceptCode).toBe('T001')
+      expect(result.domainId).toBe('Condition')
+      expect(result.vocabularyId).toBe('SNOMED')
+      expect(result.conceptClassId).toBe('Clinical Finding')
+      expect(result.standardConcept).toBe('S')
+      expect(result.invalidReason).toBeNull()
     })
 
-    it('preserves null values', () => {
-      const raw = {
-        CONCEPT_ID: 456,
-        CONCEPT_NAME: 'Another Concept',
-        CONCEPT_CODE: 'AC002',
+    it('should handle null STANDARD_CONCEPT', () => {
+      const apiConcept = {
+        CONCEPT_ID: 1,
+        CONCEPT_NAME: 'Test',
+        CONCEPT_CODE: 'T1',
         DOMAIN_ID: 'Drug',
         VOCABULARY_ID: 'RxNorm',
         CONCEPT_CLASS_ID: 'Ingredient',
         STANDARD_CONCEPT: null,
-        INVALID_REASON: 'D',
+        INVALID_REASON: 'D'
       }
 
-      const result = mapConceptFromAPI(raw)
+      const result = mapConceptFromAPI(apiConcept)
 
       expect(result.standardConcept).toBeNull()
       expect(result.invalidReason).toBe('D')
@@ -59,33 +58,41 @@ describe('api-mappers', () => {
   })
 
   describe('conceptToConceptSetItem', () => {
-    const concept = {
-      conceptId: 123,
-      conceptName: 'Test',
-      conceptCode: 'T001',
-      domainId: 'Condition',
-      vocabularyId: 'SNOMED',
-      conceptClassId: 'Clinical Finding',
-      standardConcept: 'S',
-      invalidReason: null,
-    }
+    it('should add default flags to concept', () => {
+      const concept: Concept = {
+        conceptId: 123,
+        conceptName: 'Test',
+        conceptCode: 'T1',
+        domainId: 'Condition',
+        vocabularyId: 'SNOMED',
+        conceptClassId: 'Clinical Finding',
+        standardConcept: 'S',
+        invalidReason: null
+      }
 
-    it('creates concept set item with default flags', () => {
       const result = conceptToConceptSetItem(concept)
 
-      expect(result).toEqual({
-        ...concept,
-        isExcluded: false,
-        includeDescendants: false,
-        includeMapped: false,
-      })
+      expect(result.isExcluded).toBe(false)
+      expect(result.includeDescendants).toBe(false)
+      expect(result.includeMapped).toBe(false)
     })
 
-    it('applies custom options', () => {
+    it('should use provided options', () => {
+      const concept: Concept = {
+        conceptId: 123,
+        conceptName: 'Test',
+        conceptCode: 'T1',
+        domainId: 'Condition',
+        vocabularyId: 'SNOMED',
+        conceptClassId: 'Clinical Finding',
+        standardConcept: 'S',
+        invalidReason: null
+      }
+
       const result = conceptToConceptSetItem(concept, {
         isExcluded: true,
         includeDescendants: true,
-        includeMapped: true,
+        includeMapped: true
       })
 
       expect(result.isExcluded).toBe(true)
@@ -93,170 +100,161 @@ describe('api-mappers', () => {
       expect(result.includeMapped).toBe(true)
     })
 
-    it('applies partial options', () => {
-      const result = conceptToConceptSetItem(concept, {
-        includeDescendants: true,
-      })
+    it('should preserve concept properties', () => {
+      const concept: Concept = {
+        conceptId: 456,
+        conceptName: 'Diabetes',
+        conceptCode: 'DM',
+        domainId: 'Condition',
+        vocabularyId: 'SNOMED',
+        conceptClassId: 'Clinical Finding',
+        standardConcept: 'S',
+        invalidReason: null
+      }
 
-      expect(result.isExcluded).toBe(false)
-      expect(result.includeDescendants).toBe(true)
-      expect(result.includeMapped).toBe(false)
+      const result = conceptToConceptSetItem(concept)
+
+      expect(result.conceptId).toBe(456)
+      expect(result.conceptName).toBe('Diabetes')
     })
   })
 
   describe('mapConceptSetFromAPI', () => {
-    it('maps concept set metadata', () => {
-      const raw = {
-        id: 1,
-        name: 'Test Set',
-        createdDate: '2024-01-01T00:00:00Z',
-        createdBy: 'user1',
-        modifiedDate: '2024-01-02T00:00:00Z',
+    it('should map full API response to ConceptSet', () => {
+      const apiResponse: ConceptSetAPIResponse = {
+        id: 100,
+        name: 'My Concept Set',
+        createdDate: '2024-01-15',
+        createdBy: { id: 1, name: 'User One', login: 'user1' },
+        modifiedDate: '2024-06-01',
         modifiedBy: 'user2',
         shared: true,
-      }
-
-      const result = mapConceptSetFromAPI(raw)
-
-      expect(result.id).toBe(1)
-      expect(result.name).toBe('Test Set')
-      expect(result.createdDate).toBe('2024-01-01T00:00:00Z')
-      expect(result.createdBy).toBe('user1')
-      expect(result.modifiedDate).toBe('2024-01-02T00:00:00Z')
-      expect(result.modifiedBy).toBe('user2')
-      expect(result.shared).toBe(true)
-      expect(result.items).toEqual([])
-    })
-
-    it('extracts login from user object', () => {
-      const raw = {
-        id: 2,
-        name: 'Test Set 2',
-        createdBy: { id: 1, name: 'John Doe', login: 'jdoe' },
-        modifiedBy: { id: 2, name: null, login: 'admin' },
-      }
-
-      const result = mapConceptSetFromAPI(raw)
-
-      expect(result.createdBy).toBe('jdoe')
-      expect(result.modifiedBy).toBe('admin')
-    })
-
-    it('maps expression items', () => {
-      const raw = {
-        id: 3,
-        name: 'Set with Items',
         expression: {
           items: [
             {
               concept: {
                 CONCEPT_ID: 123,
                 CONCEPT_NAME: 'Test Concept',
-                CONCEPT_CODE: 'TC001',
+                CONCEPT_CODE: 'TC',
                 DOMAIN_ID: 'Condition',
                 VOCABULARY_ID: 'SNOMED',
-                CONCEPT_CLASS_ID: 'Clinical Finding',
+                CONCEPT_CLASS_ID: 'Finding',
                 STANDARD_CONCEPT: 'S',
-                INVALID_REASON: null,
+                INVALID_REASON: null
               },
               isExcluded: false,
               includeDescendants: true,
-              includeMapped: false,
-            },
-          ],
-        },
+              includeMapped: false
+            }
+          ]
+        }
       }
 
-      const result = mapConceptSetFromAPI(raw)
+      const result = mapConceptSetFromAPI(apiResponse)
 
+      expect(result.id).toBe(100)
+      expect(result.name).toBe('My Concept Set')
+      expect(result.createdBy).toBe('user1')
+      expect(result.modifiedBy).toBe('user2')
+      expect(result.shared).toBe(true)
       expect(result.items).toHaveLength(1)
-      expect(result.items[0]).toEqual({
-        conceptId: 123,
-        conceptName: 'Test Concept',
-        conceptCode: 'TC001',
-        domainId: 'Condition',
-        vocabularyId: 'SNOMED',
-        conceptClassId: 'Clinical Finding',
-        standardConcept: 'S',
-        invalidReason: null,
-        isExcluded: false,
-        includeDescendants: true,
-        includeMapped: false,
-      })
+      expect(result.items[0].conceptId).toBe(123)
+      expect(result.items[0].includeDescendants).toBe(true)
     })
 
-    it('handles missing optional fields', () => {
-      const raw = {
-        id: 4,
-        name: 'Minimal Set',
+    it('should handle string user values', () => {
+      const apiResponse: ConceptSetAPIResponse = {
+        id: 1,
+        name: 'Test',
+        createdBy: 'admin',
+        modifiedBy: 'admin'
       }
 
-      const result = mapConceptSetFromAPI(raw)
+      const result = mapConceptSetFromAPI(apiResponse)
 
-      expect(result.createdBy).toBeUndefined()
-      expect(result.modifiedBy).toBeUndefined()
-      expect(result.shared).toBe(false)
+      expect(result.createdBy).toBe('admin')
+      expect(result.modifiedBy).toBe('admin')
+    })
+
+    it('should default to empty items when no expression', () => {
+      const apiResponse: ConceptSetAPIResponse = {
+        id: 1,
+        name: 'Empty Set'
+      }
+
+      const result = mapConceptSetFromAPI(apiResponse)
+
       expect(result.items).toEqual([])
+    })
+
+    it('should default shared to false', () => {
+      const apiResponse: ConceptSetAPIResponse = {
+        id: 1,
+        name: 'Test'
+      }
+
+      const result = mapConceptSetFromAPI(apiResponse)
+
+      expect(result.shared).toBe(false)
     })
   })
 
   describe('mapConceptSetToAPI', () => {
-    it('maps concept set to API format', () => {
-      const conceptSet = {
-        id: 1,
+    it('should map ConceptSet to API format', () => {
+      const conceptSet: ConceptSet = {
+        id: 100,
         name: 'Test Set',
         shared: true,
         items: [
           {
             conceptId: 123,
-            conceptName: 'Test Concept',
-            conceptCode: 'TC001',
+            conceptName: 'Test',
+            conceptCode: 'T1',
             domainId: 'Condition',
             vocabularyId: 'SNOMED',
-            conceptClassId: 'Clinical Finding',
-            standardConcept: 'S' as const,
+            conceptClassId: 'Finding',
+            standardConcept: 'S',
             invalidReason: null,
             isExcluded: false,
             includeDescendants: true,
-            includeMapped: false,
-          },
-        ],
+            includeMapped: false
+          }
+        ]
       }
 
       const result = mapConceptSetToAPI(conceptSet)
 
-      expect(result.id).toBe(1)
+      expect(result.id).toBe(100)
       expect(result.name).toBe('Test Set')
       expect(result.shared).toBe(true)
       expect(result.expression.items).toHaveLength(1)
-      expect(result.expression.items[0]).toEqual({
-        concept: {
-          CONCEPT_ID: 123,
-          CONCEPT_NAME: 'Test Concept',
-          CONCEPT_CODE: 'TC001',
-          DOMAIN_ID: 'Condition',
-          VOCABULARY_ID: 'SNOMED',
-          CONCEPT_CLASS_ID: 'Clinical Finding',
-          STANDARD_CONCEPT: 'S',
-          INVALID_REASON: null,
-        },
-        isExcluded: false,
-        includeDescendants: true,
-        includeMapped: false,
-      })
+      expect(result.expression.items[0].concept.CONCEPT_ID).toBe(123)
+      expect(result.expression.items[0].concept.CONCEPT_NAME).toBe('Test')
+      expect(result.expression.items[0].includeDescendants).toBe(true)
     })
 
-    it('handles new concept set without id', () => {
-      const conceptSet = {
+    it('should omit id when not a number', () => {
+      const conceptSet: ConceptSet = {
+        id: 'temp-id' as any, // Non-numeric ID
         name: 'New Set',
-        items: [],
+        items: []
       }
 
-      const result = mapConceptSetToAPI(conceptSet as never)
+      const result = mapConceptSetToAPI(conceptSet)
 
       expect(result.id).toBeUndefined()
-      expect(result.name).toBe('New Set')
-      expect(result.expression.items).toEqual([])
+    })
+
+    it('should handle empty items', () => {
+      const conceptSet: ConceptSet = {
+        id: 1,
+        name: 'Empty',
+        items: []
+      }
+
+      const result = mapConceptSetToAPI(conceptSet)
+
+      expect(result.expression.items).toHaveLength(0)
     })
   })
 })

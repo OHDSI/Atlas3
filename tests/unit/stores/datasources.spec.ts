@@ -1,11 +1,11 @@
 /**
- * Unit Tests: Data Sources Store
- * Tests for src/stores/datasources.ts
+ * DataSources Store Tests
+ * Tests for data sources state management
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useDataSourcesStore } from '@/stores/datasources'
+import type { DataSource } from '@/models/datasource.types'
 
 // Mock dependencies
 vi.mock('@/services/datasource.service', () => ({
@@ -27,7 +27,28 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-describe('useDataSourcesStore', () => {
+import {
+  listDataSources,
+  getDashboardReport,
+  getClinicalDomainReport
+} from '@/services/datasource.service'
+
+const mockDataSources: DataSource[] = [
+  {
+    sourceId: 1,
+    sourceName: 'Test Source 1',
+    sourceDialect: 'postgresql',
+    sourceKey: 'TEST_CDM_1',
+  } as DataSource,
+  {
+    sourceId: 2,
+    sourceName: 'Test Source 2',
+    sourceDialect: 'postgresql',
+    sourceKey: 'TEST_CDM_2',
+  } as DataSource,
+]
+
+describe('DataSources Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
@@ -37,372 +58,388 @@ describe('useDataSourcesStore', () => {
     vi.restoreAllMocks()
   })
 
-  describe('initial state', () => {
-    it('starts with empty sources', () => {
+  describe('Initial State', () => {
+    it('should have empty sources initially', () => {
       const store = useDataSourcesStore()
       expect(store.sources).toEqual([])
     })
 
-    it('starts with no selection', () => {
+    it('should have null selected source initially', () => {
       const store = useDataSourcesStore()
       expect(store.selectedSourceId).toBeNull()
+    })
+
+    it('should have null selected report type initially', () => {
+      const store = useDataSourcesStore()
       expect(store.selectedReportType).toBeNull()
     })
 
-    it('starts with empty cache', () => {
+    it('should have empty report cache initially', () => {
       const store = useDataSourcesStore()
       expect(store.reportCache.size).toBe(0)
     })
 
-    it('starts with loading states false', () => {
+    it('should not be loading initially', () => {
       const store = useDataSourcesStore()
       expect(store.loading.sources).toBe(false)
       expect(store.loading.report).toBe(false)
     })
 
-    it('starts without errors', () => {
+    it('should have no errors initially', () => {
       const store = useDataSourcesStore()
       expect(store.error.sources).toBeNull()
       expect(store.error.report).toBeNull()
     })
   })
 
-  describe('getters', () => {
-    describe('selectedSource', () => {
-      it('returns null when no source selected', () => {
-        const store = useDataSourcesStore()
-        expect(store.selectedSource).toBeNull()
-      })
-
-      it('returns selected source when available', () => {
-        const store = useDataSourcesStore()
-        const testSource = { sourceId: 1, sourceKey: 'TEST', sourceName: 'Test Source' }
-        store.sources = [testSource as never]
-        store.selectedSourceId = 1
-        expect(store.selectedSource).toEqual(testSource)
-      })
-
-      it('returns null when selected source not found', () => {
-        const store = useDataSourcesStore()
-        store.sources = [{ sourceId: 1, sourceKey: 'TEST' } as never]
-        store.selectedSourceId = 999
-        expect(store.selectedSource).toBeNull()
-      })
+  describe('Getters', () => {
+    it('selectedSource should return null when no source selected', () => {
+      const store = useDataSourcesStore()
+      expect(store.selectedSource).toBeNull()
     })
 
-    describe('currentReport', () => {
-      it('returns null when no source selected', () => {
-        const store = useDataSourcesStore()
-        store.selectedReportType = 'dashboard'
-        expect(store.currentReport).toBeNull()
-      })
-
-      it('returns null when no report type selected', () => {
-        const store = useDataSourcesStore()
-        store.selectedSourceId = 1
-        expect(store.currentReport).toBeNull()
-      })
-
-      it('returns cached report when available', () => {
-        const store = useDataSourcesStore()
-        const reportData = { type: 'dashboard', data: { summary: {} } }
-        store.selectedSourceId = 1
-        store.selectedReportType = 'dashboard'
-        store.reportCache.set('1-dashboard', reportData as never)
-        expect(store.currentReport).toEqual(reportData)
-      })
-
-      it('returns null when report not cached', () => {
-        const store = useDataSourcesStore()
-        store.selectedSourceId = 1
-        store.selectedReportType = 'dashboard'
-        expect(store.currentReport).toBeNull()
-      })
+    it('selectedSource should return the selected source', () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      expect(store.selectedSource).toEqual(mockDataSources[0])
     })
 
-    describe('isLoading', () => {
-      it('returns false when nothing loading', () => {
-        const store = useDataSourcesStore()
-        expect(store.isLoading).toBe(false)
-      })
+    it('selectedSource should return null for invalid source id', () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 999
+      expect(store.selectedSource).toBeNull()
+    })
 
-      it('returns true when sources loading', () => {
-        const store = useDataSourcesStore()
-        store.loading.sources = true
-        expect(store.isLoading).toBe(true)
-      })
+    it('currentReport should return null when no source selected', () => {
+      const store = useDataSourcesStore()
+      expect(store.currentReport).toBeNull()
+    })
 
-      it('returns true when report loading', () => {
-        const store = useDataSourcesStore()
-        store.loading.report = true
-        expect(store.isLoading).toBe(true)
-      })
+    it('currentReport should return null when no report type selected', () => {
+      const store = useDataSourcesStore()
+      store.selectedSourceId = 1
+      expect(store.currentReport).toBeNull()
+    })
+
+    it('currentReport should return cached report', () => {
+      const store = useDataSourcesStore()
+      store.selectedSourceId = 1
+      store.selectedReportType = 'dashboard'
+      const reportData = { type: 'dashboard', data: { summary: {} } }
+      store.reportCache.set('1-dashboard', reportData as any)
+      expect(store.currentReport).toEqual(reportData)
+    })
+
+    it('isLoading should return true when loading sources', () => {
+      const store = useDataSourcesStore()
+      store.loading.sources = true
+      expect(store.isLoading).toBe(true)
+    })
+
+    it('isLoading should return true when loading report', () => {
+      const store = useDataSourcesStore()
+      store.loading.report = true
+      expect(store.isLoading).toBe(true)
+    })
+
+    it('isLoading should return false when not loading', () => {
+      const store = useDataSourcesStore()
+      expect(store.isLoading).toBe(false)
     })
   })
 
-  describe('actions', () => {
-    describe('fetchDataSources', () => {
-      it('fetches and stores data sources', async () => {
-        const { listDataSources } = await import('@/services/datasource.service')
-        const mockSources = [
-          { sourceId: 1, sourceKey: 'TEST1', sourceName: 'Test Source 1' },
-          { sourceId: 2, sourceKey: 'TEST2', sourceName: 'Test Source 2' },
-        ]
-        vi.mocked(listDataSources).mockResolvedValue(mockSources as never)
+  describe('fetchDataSources Action', () => {
+    it('should set loading state while fetching', async () => {
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockImplementation(() => new Promise(() => {}))
 
-        const store = useDataSourcesStore()
-        await store.fetchDataSources()
+      const _promise = store.fetchDataSources()
+      expect(store.loading.sources).toBe(true)
 
-        expect(store.sources).toEqual(mockSources)
-        expect(store.loading.sources).toBe(false)
-        expect(store.error.sources).toBeNull()
-      })
-
-      it('auto-selects first source when none selected', async () => {
-        const { listDataSources } = await import('@/services/datasource.service')
-        const mockSources = [{ sourceId: 1, sourceKey: 'TEST1' }]
-        vi.mocked(listDataSources).mockResolvedValue(mockSources as never)
-
-        const store = useDataSourcesStore()
-        await store.fetchDataSources()
-
-        expect(store.selectedSourceId).toBe(1)
-      })
-
-      it('does not change selection when already selected', async () => {
-        const { listDataSources } = await import('@/services/datasource.service')
-        const mockSources = [
-          { sourceId: 1, sourceKey: 'TEST1' },
-          { sourceId: 2, sourceKey: 'TEST2' },
-        ]
-        vi.mocked(listDataSources).mockResolvedValue(mockSources as never)
-
-        const store = useDataSourcesStore()
-        store.selectedSourceId = 2
-        await store.fetchDataSources()
-
-        expect(store.selectedSourceId).toBe(2)
-      })
-
-      it('handles fetch errors', async () => {
-        const { listDataSources } = await import('@/services/datasource.service')
-        vi.mocked(listDataSources).mockRejectedValue(new Error('Network error'))
-
-        const store = useDataSourcesStore()
-        await store.fetchDataSources()
-
-        expect(store.sources).toEqual([])
-        expect(store.error.sources).toBe('Network error')
-        expect(store.loading.sources).toBe(false)
-      })
-
-      it('sets loading state during fetch', async () => {
-        const { listDataSources } = await import('@/services/datasource.service')
-        let resolvePromise: (value: never[]) => void
-        const promise = new Promise<never[]>((resolve) => {
-          resolvePromise = resolve
-        })
-        vi.mocked(listDataSources).mockReturnValue(promise)
-
-        const store = useDataSourcesStore()
-        const fetchPromise = store.fetchDataSources()
-
-        expect(store.loading.sources).toBe(true)
-
-        resolvePromise!([])
-        await fetchPromise
-
-        expect(store.loading.sources).toBe(false)
-      })
+      // Clean up
+      vi.mocked(listDataSources).mockResolvedValue([])
     })
 
-    describe('selectDataSource', () => {
-      it('selects the data source', async () => {
-        const store = useDataSourcesStore()
-        await store.selectDataSource(5)
-        expect(store.selectedSourceId).toBe(5)
-      })
+    it('should fetch and store data sources', async () => {
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockResolvedValue(mockDataSources)
 
-      it('fetches report if report type already selected', async () => {
-        const store = useDataSourcesStore()
-        store.sources = [{ sourceId: 5, sourceKey: 'TEST' } as never]
-        store.selectedReportType = 'dashboard'
+      await store.fetchDataSources()
 
-        const { getDashboardReport } = await import('@/services/datasource.service')
-        vi.mocked(getDashboardReport).mockResolvedValue({ summary: {} } as never)
-
-        await store.selectDataSource(5)
-
-        expect(getDashboardReport).toHaveBeenCalledWith('TEST')
-      })
+      expect(store.sources).toEqual(mockDataSources)
+      expect(store.loading.sources).toBe(false)
     })
 
-    describe('selectReportType', () => {
-      it('selects the report type', async () => {
-        const store = useDataSourcesStore()
-        await store.selectReportType('dashboard')
-        expect(store.selectedReportType).toBe('dashboard')
-      })
+    it('should auto-select first source if none selected', async () => {
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockResolvedValue(mockDataSources)
 
-      it('fetches report if source already selected', async () => {
-        const store = useDataSourcesStore()
-        store.sources = [{ sourceId: 1, sourceKey: 'TEST' } as never]
-        store.selectedSourceId = 1
+      await store.fetchDataSources()
 
-        const { getDashboardReport } = await import('@/services/datasource.service')
-        vi.mocked(getDashboardReport).mockResolvedValue({ summary: {} } as never)
-
-        await store.selectReportType('dashboard')
-
-        expect(getDashboardReport).toHaveBeenCalledWith('TEST')
-      })
+      expect(store.selectedSourceId).toBe(1)
     })
 
-    describe('fetchReport', () => {
-      beforeEach(() => {
-        const store = useDataSourcesStore()
-        store.sources = [{ sourceId: 1, sourceKey: 'TEST' } as never]
-        store.selectedSourceId = 1
-      })
+    it('should not change selection if already selected', async () => {
+      const store = useDataSourcesStore()
+      store.selectedSourceId = 2
+      vi.mocked(listDataSources).mockResolvedValue(mockDataSources)
 
-      it('does not fetch if no source selected', async () => {
-        const store = useDataSourcesStore()
-        store.selectedSourceId = null
+      await store.fetchDataSources()
 
-        const { getDashboardReport } = await import('@/services/datasource.service')
-        await store.fetchReport('dashboard')
-
-        expect(getDashboardReport).not.toHaveBeenCalled()
-      })
-
-      it('uses cached report if available', async () => {
-        const store = useDataSourcesStore()
-        const cachedData = { type: 'dashboard', data: { cached: true } }
-        store.reportCache.set('1-dashboard', cachedData as never)
-
-        const { getDashboardReport } = await import('@/services/datasource.service')
-        await store.fetchReport('dashboard')
-
-        expect(getDashboardReport).not.toHaveBeenCalled()
-      })
-
-      it('fetches dashboard report', async () => {
-        const store = useDataSourcesStore()
-        const { getDashboardReport } = await import('@/services/datasource.service')
-        const mockData = { summary: { personCount: 100 } }
-        vi.mocked(getDashboardReport).mockResolvedValue(mockData as never)
-
-        await store.fetchReport('dashboard')
-
-        expect(getDashboardReport).toHaveBeenCalledWith('TEST')
-        expect(store.reportCache.has('1-dashboard')).toBe(true)
-      })
-
-      it('fetches clinical domain reports', async () => {
-        const store = useDataSourcesStore()
-        const { getClinicalDomainReport } = await import('@/services/datasource.service')
-        const mockData = [{ conceptName: 'Test' }]
-        vi.mocked(getClinicalDomainReport).mockResolvedValue(mockData as never)
-
-        await store.fetchReport('conditionOccurrence')
-
-        expect(getClinicalDomainReport).toHaveBeenCalledWith('TEST', 'conditionOccurrence')
-        expect(store.reportCache.has('1-conditionOccurrence')).toBe(true)
-      })
-
-      it('handles fetch errors', async () => {
-        const store = useDataSourcesStore()
-        const { getDashboardReport } = await import('@/services/datasource.service')
-        vi.mocked(getDashboardReport).mockRejectedValue(new Error('Report error'))
-
-        await store.fetchReport('dashboard')
-
-        expect(store.error.report).toBe('Report error')
-        expect(store.loading.report).toBe(false)
-      })
-
-      it('ignores abort errors', async () => {
-        const store = useDataSourcesStore()
-        const { getDashboardReport } = await import('@/services/datasource.service')
-        const abortError = new Error('Aborted')
-        abortError.name = 'AbortError'
-        vi.mocked(getDashboardReport).mockRejectedValue(abortError)
-
-        await store.fetchReport('dashboard')
-
-        expect(store.error.report).toBeNull()
-      })
-
-      it('does not start new fetch if already loading', async () => {
-        const store = useDataSourcesStore()
-        store.loading.report = true
-
-        const { getDashboardReport } = await import('@/services/datasource.service')
-        await store.fetchReport('dashboard')
-
-        expect(getDashboardReport).not.toHaveBeenCalled()
-      })
+      expect(store.selectedSourceId).toBe(2)
     })
 
-    describe('cacheReport', () => {
-      it('caches report data', () => {
-        const store = useDataSourcesStore()
-        const reportData = { type: 'dashboard', data: { summary: {} } }
+    it('should handle fetch error', async () => {
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockRejectedValue(new Error('Network error'))
 
-        store.cacheReport('test-key', reportData as never)
+      await store.fetchDataSources()
 
-        expect(store.reportCache.get('test-key')).toEqual(reportData)
-      })
+      expect(store.error.sources).toBe('Network error')
+      expect(store.loading.sources).toBe(false)
     })
 
-    describe('clearCache', () => {
-      it('clears all cached reports', () => {
-        const store = useDataSourcesStore()
-        store.reportCache.set('key1', { type: 'dashboard' } as never)
-        store.reportCache.set('key2', { type: 'person' } as never)
+    it('should handle non-Error rejection', async () => {
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockRejectedValue('String error')
 
-        store.clearCache()
+      await store.fetchDataSources()
 
-        expect(store.reportCache.size).toBe(0)
-      })
+      expect(store.error.sources).toBe('Failed to load data sources')
+    })
+  })
+
+  describe('selectDataSource Action', () => {
+    it('should update selected source id', async () => {
+      const store = useDataSourcesStore()
+      await store.selectDataSource(5)
+      expect(store.selectedSourceId).toBe(5)
     })
 
-    describe('retryFetchSources', () => {
-      it('retries fetching data sources', async () => {
-        const { listDataSources } = await import('@/services/datasource.service')
-        vi.mocked(listDataSources).mockResolvedValue([])
+    it('should fetch report if report type is selected', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedReportType = 'dashboard'
+      vi.mocked(getDashboardReport).mockResolvedValue({ summary: {} })
 
-        const store = useDataSourcesStore()
-        await store.retryFetchSources()
+      await store.selectDataSource(1)
 
-        expect(listDataSources).toHaveBeenCalled()
-      })
+      expect(getDashboardReport).toHaveBeenCalledWith('TEST_CDM_1')
+    })
+  })
+
+  describe('selectReportType Action', () => {
+    it('should update selected report type', async () => {
+      const store = useDataSourcesStore()
+      await store.selectReportType('dashboard')
+      expect(store.selectedReportType).toBe('dashboard')
     })
 
-    describe('retryFetchReport', () => {
-      it('retries fetching report if type selected', async () => {
-        const store = useDataSourcesStore()
-        store.sources = [{ sourceId: 1, sourceKey: 'TEST' } as never]
-        store.selectedSourceId = 1
-        store.selectedReportType = 'dashboard'
+    it('should fetch report if source is selected', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      vi.mocked(getDashboardReport).mockResolvedValue({ summary: {} })
 
-        const { getDashboardReport } = await import('@/services/datasource.service')
-        vi.mocked(getDashboardReport).mockResolvedValue({ summary: {} } as never)
+      await store.selectReportType('dashboard')
 
-        await store.retryFetchReport()
+      expect(getDashboardReport).toHaveBeenCalledWith('TEST_CDM_1')
+    })
+  })
 
-        expect(getDashboardReport).toHaveBeenCalled()
-      })
+  describe('fetchReport Action', () => {
+    beforeEach(() => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+    })
 
-      it('does nothing if no report type selected', async () => {
-        const store = useDataSourcesStore()
-        store.selectedReportType = null
+    it('should do nothing if no source selected', async () => {
+      const store = useDataSourcesStore()
+      store.selectedSourceId = null
+      await store.fetchReport('dashboard')
+      expect(getDashboardReport).not.toHaveBeenCalled()
+    })
 
-        const { getDashboardReport } = await import('@/services/datasource.service')
-        await store.retryFetchReport()
+    it('should do nothing if source not found', async () => {
+      const store = useDataSourcesStore()
+      store.selectedSourceId = 999
+      await store.fetchReport('dashboard')
+      expect(getDashboardReport).not.toHaveBeenCalled()
+    })
 
-        expect(getDashboardReport).not.toHaveBeenCalled()
-      })
+    it('should use cached report if available', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      store.reportCache.set('1-dashboard', { type: 'dashboard', data: {} } as any)
+
+      await store.fetchReport('dashboard')
+
+      expect(getDashboardReport).not.toHaveBeenCalled()
+    })
+
+    it('should fetch dashboard report', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      vi.mocked(getDashboardReport).mockResolvedValue({ summary: {} })
+
+      await store.fetchReport('dashboard')
+
+      expect(getDashboardReport).toHaveBeenCalledWith('TEST_CDM_1')
+      expect(store.reportCache.has('1-dashboard')).toBe(true)
+    })
+
+    it('should fetch clinical domain report', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      vi.mocked(getClinicalDomainReport).mockResolvedValue([])
+
+      await store.fetchReport('conditionOccurrence')
+
+      expect(getClinicalDomainReport).toHaveBeenCalledWith('TEST_CDM_1', 'conditionOccurrence')
+      expect(store.reportCache.has('1-conditionOccurrence')).toBe(true)
+    })
+
+    it('should handle fetch error', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      vi.mocked(getDashboardReport).mockRejectedValue(new Error('API error'))
+
+      await store.fetchReport('dashboard')
+
+      expect(store.error.report).toBe('API error')
+      expect(store.loading.report).toBe(false)
+    })
+
+    it('should ignore abort errors', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      const abortError = new Error('Aborted')
+      abortError.name = 'AbortError'
+      vi.mocked(getDashboardReport).mockRejectedValue(abortError)
+
+      await store.fetchReport('dashboard')
+
+      expect(store.error.report).toBeNull()
+    })
+
+    it('should not start new fetch if already loading', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      store.loading.report = true
+
+      await store.fetchReport('dashboard')
+
+      expect(getDashboardReport).not.toHaveBeenCalled()
+    })
+
+    it('should handle visit report type', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      vi.mocked(getClinicalDomainReport).mockResolvedValue([])
+
+      await store.fetchReport('visit')
+
+      expect(getClinicalDomainReport).toHaveBeenCalledWith('TEST_CDM_1', 'visit')
+    })
+
+    it('should handle procedure report type', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      vi.mocked(getClinicalDomainReport).mockResolvedValue([])
+
+      await store.fetchReport('procedure')
+
+      expect(getClinicalDomainReport).toHaveBeenCalledWith('TEST_CDM_1', 'procedure')
+    })
+
+    it('should handle drugExposure report type', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      vi.mocked(getClinicalDomainReport).mockResolvedValue([])
+
+      await store.fetchReport('drugExposure')
+
+      expect(getClinicalDomainReport).toHaveBeenCalledWith('TEST_CDM_1', 'drugExposure')
+    })
+
+    it('should handle measurement report type', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      vi.mocked(getClinicalDomainReport).mockResolvedValue([])
+
+      await store.fetchReport('measurement')
+
+      expect(getClinicalDomainReport).toHaveBeenCalledWith('TEST_CDM_1', 'measurement')
+    })
+  })
+
+  describe('cacheReport Action', () => {
+    it('should add report to cache', () => {
+      const store = useDataSourcesStore()
+      const reportData = { type: 'dashboard', data: {} }
+
+      store.cacheReport('test-key', reportData as any)
+
+      expect(store.reportCache.get('test-key')).toEqual(reportData)
+    })
+  })
+
+  describe('clearCache Action', () => {
+    it('should clear the report cache', () => {
+      const store = useDataSourcesStore()
+      store.reportCache.set('key1', { type: 'dashboard', data: {} } as any)
+      store.reportCache.set('key2', { type: 'dashboard', data: {} } as any)
+
+      store.clearCache()
+
+      expect(store.reportCache.size).toBe(0)
+    })
+  })
+
+  describe('retryFetchSources Action', () => {
+    it('should call fetchDataSources', async () => {
+      const store = useDataSourcesStore()
+      vi.mocked(listDataSources).mockResolvedValue([])
+
+      await store.retryFetchSources()
+
+      expect(listDataSources).toHaveBeenCalled()
+    })
+  })
+
+  describe('retryFetchReport Action', () => {
+    it('should call fetchReport with selected report type', async () => {
+      const store = useDataSourcesStore()
+      store.sources = mockDataSources
+      store.selectedSourceId = 1
+      store.selectedReportType = 'dashboard'
+      vi.mocked(getDashboardReport).mockResolvedValue({ summary: {} })
+
+      await store.retryFetchReport()
+
+      expect(getDashboardReport).toHaveBeenCalled()
+    })
+
+    it('should do nothing if no report type selected', async () => {
+      const store = useDataSourcesStore()
+      store.selectedReportType = null
+
+      await store.retryFetchReport()
+
+      expect(getDashboardReport).not.toHaveBeenCalled()
     })
   })
 })

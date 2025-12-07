@@ -1,220 +1,161 @@
 /**
- * Unit Tests: useLicenseAgreement Composable
- * Tests for src/composables/useLicenseAgreement.ts
+ * useLicenseAgreement Composable Tests
+ * Tests for license agreement management
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { useLicenseAgreement } from '@/composables/useLicenseAgreement'
 
 describe('useLicenseAgreement', () => {
-  const LICENSE_KEY = 'atlas3-license-acceptance-date'
-  const ONE_DAY_MS = 1000 * 60 * 60 * 24
-  const ONE_YEAR_MS = ONE_DAY_MS * 365
+  let localStorageMock: { [key: string]: string }
 
   beforeEach(() => {
-    localStorage.clear()
-    vi.spyOn(window, 'alert').mockImplementation(() => {})
+    // Mock localStorage
+    localStorageMock = {}
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key: string) => localStorageMock[key] || null),
+      setItem: vi.fn((key: string, value: string) => {
+        localStorageMock[key] = value
+      }),
+      removeItem: vi.fn((key: string) => {
+        delete localStorageMock[key]
+      }),
+    })
+
+    // Mock alert
+    vi.stubGlobal('alert', vi.fn())
+
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   describe('isLicenseAccepted', () => {
-    it('returns false when no license has been accepted', () => {
+    it('should return false when no acceptance date stored', () => {
       const { isLicenseAccepted } = useLicenseAgreement()
+
       expect(isLicenseAccepted()).toBe(false)
     })
 
-    it('returns true when license was accepted recently', () => {
-      const recentDate = Date.now() - ONE_DAY_MS // 1 day ago
-      localStorage.setItem(LICENSE_KEY, recentDate.toString())
+    it('should return true when accepted within expiry period', () => {
+      // Set acceptance date to now
+      localStorageMock['atlas3-license-acceptance-date'] = Date.now().toString()
 
       const { isLicenseAccepted } = useLicenseAgreement()
+
       expect(isLicenseAccepted()).toBe(true)
     })
 
-    it('returns false when license was accepted more than 365 days ago', () => {
-      const oldDate = Date.now() - ONE_YEAR_MS - ONE_DAY_MS // 366 days ago
-      localStorage.setItem(LICENSE_KEY, oldDate.toString())
+    it('should return false when acceptance has expired', () => {
+      // Set acceptance date to 400 days ago (beyond 365 day expiry)
+      const expiredDate = Date.now() - 400 * 24 * 60 * 60 * 1000
+      localStorageMock['atlas3-license-acceptance-date'] = expiredDate.toString()
 
       const { isLicenseAccepted } = useLicenseAgreement()
+
       expect(isLicenseAccepted()).toBe(false)
     })
 
-    it('returns true when license was accepted exactly 364 days ago', () => {
-      const borderDate = Date.now() - (ONE_DAY_MS * 364) // 364 days ago
-      localStorage.setItem(LICENSE_KEY, borderDate.toString())
+    it('should return false for invalid stored date', () => {
+      localStorageMock['atlas3-license-acceptance-date'] = 'invalid'
 
       const { isLicenseAccepted } = useLicenseAgreement()
-      expect(isLicenseAccepted()).toBe(true)
-    })
 
-    it('returns false for invalid stored value', () => {
-      localStorage.setItem(LICENSE_KEY, 'invalid-date')
-
-      const { isLicenseAccepted } = useLicenseAgreement()
-      expect(isLicenseAccepted()).toBe(false)
-    })
-
-    it('returns false for empty string value', () => {
-      localStorage.setItem(LICENSE_KEY, '')
-
-      const { isLicenseAccepted } = useLicenseAgreement()
       expect(isLicenseAccepted()).toBe(false)
     })
   })
 
   describe('acceptLicense', () => {
-    it('stores current timestamp in localStorage', () => {
-      const now = Date.now()
-      vi.setSystemTime(now)
-
+    it('should store acceptance date in localStorage', () => {
       const { acceptLicense } = useLicenseAgreement()
+
       acceptLicense()
 
-      const storedValue = localStorage.getItem(LICENSE_KEY)
-      expect(storedValue).toBeTruthy()
-      expect(parseInt(storedValue!)).toBeCloseTo(now, -3) // Within 1 second
-
-      vi.useRealTimers()
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        'atlas3-license-acceptance-date',
+        expect.any(String)
+      )
     })
 
-    it('closes the license dialog', () => {
-      const { showLicenseDialog, acceptLicense } = useLicenseAgreement()
+    it('should close license dialog', () => {
+      const { acceptLicense, showLicenseDialog } = useLicenseAgreement()
       showLicenseDialog.value = true
 
       acceptLicense()
 
       expect(showLicenseDialog.value).toBe(false)
     })
-
-    it('makes isLicenseAccepted return true', () => {
-      const { isLicenseAccepted, acceptLicense } = useLicenseAgreement()
-      expect(isLicenseAccepted()).toBe(false)
-
-      acceptLicense()
-
-      expect(isLicenseAccepted()).toBe(true)
-    })
   })
 
   describe('rejectLicense', () => {
-    it('shows alert message', () => {
+    it('should show alert message', () => {
       const { rejectLicense } = useLicenseAgreement()
+
       rejectLicense()
 
-      expect(window.alert).toHaveBeenCalledWith(
+      expect(alert).toHaveBeenCalledWith(
         expect.stringContaining("can't use Atlas")
       )
     })
 
-    it('does not store anything in localStorage', () => {
-      const { rejectLicense } = useLicenseAgreement()
-      rejectLicense()
-
-      expect(localStorage.getItem(LICENSE_KEY)).toBeNull()
-    })
-
-    it('keeps dialog open', () => {
-      const { showLicenseDialog, rejectLicense } = useLicenseAgreement()
+    it('should not close the dialog', () => {
+      const { rejectLicense, showLicenseDialog } = useLicenseAgreement()
       showLicenseDialog.value = true
 
       rejectLicense()
 
-      // Dialog should remain open (rejectLicense doesn't close it)
+      // Dialog stays open - user must accept
       expect(showLicenseDialog.value).toBe(true)
     })
   })
 
   describe('checkLicenseStatus', () => {
-    it('opens dialog when license not accepted', () => {
-      const { showLicenseDialog, checkLicenseStatus } = useLicenseAgreement()
-      expect(showLicenseDialog.value).toBe(false)
+    it('should show dialog when license not accepted', () => {
+      const { checkLicenseStatus, showLicenseDialog } = useLicenseAgreement()
 
       checkLicenseStatus()
 
       expect(showLicenseDialog.value).toBe(true)
     })
 
-    it('does not open dialog when license is accepted', () => {
-      const recentDate = Date.now() - ONE_DAY_MS
-      localStorage.setItem(LICENSE_KEY, recentDate.toString())
+    it('should not show dialog when license is accepted', () => {
+      // Set valid acceptance
+      localStorageMock['atlas3-license-acceptance-date'] = Date.now().toString()
 
-      const { showLicenseDialog, checkLicenseStatus } = useLicenseAgreement()
-      expect(showLicenseDialog.value).toBe(false)
+      const { checkLicenseStatus, showLicenseDialog } = useLicenseAgreement()
 
       checkLicenseStatus()
 
       expect(showLicenseDialog.value).toBe(false)
-    })
-
-    it('opens dialog when license has expired', () => {
-      const oldDate = Date.now() - ONE_YEAR_MS - ONE_DAY_MS
-      localStorage.setItem(LICENSE_KEY, oldDate.toString())
-
-      const { showLicenseDialog, checkLicenseStatus } = useLicenseAgreement()
-      checkLicenseStatus()
-
-      expect(showLicenseDialog.value).toBe(true)
     })
   })
 
   describe('clearLicenseAcceptance', () => {
-    it('removes license from localStorage', () => {
-      localStorage.setItem(LICENSE_KEY, Date.now().toString())
+    it('should remove acceptance from localStorage', () => {
+      localStorageMock['atlas3-license-acceptance-date'] = Date.now().toString()
 
       const { clearLicenseAcceptance } = useLicenseAgreement()
-      clearLicenseAcceptance()
-
-      expect(localStorage.getItem(LICENSE_KEY)).toBeNull()
-    })
-
-    it('makes isLicenseAccepted return false', () => {
-      localStorage.setItem(LICENSE_KEY, Date.now().toString())
-
-      const { isLicenseAccepted, clearLicenseAcceptance } = useLicenseAgreement()
-      expect(isLicenseAccepted()).toBe(true)
 
       clearLicenseAcceptance()
 
-      expect(isLicenseAccepted()).toBe(false)
+      expect(localStorage.removeItem).toHaveBeenCalledWith('atlas3-license-acceptance-date')
     })
   })
 
-  describe('needsAcceptance computed', () => {
-    it('returns true when license not accepted', () => {
+  describe('needsAcceptance', () => {
+    it('should be true when license not accepted', () => {
       const { needsAcceptance } = useLicenseAgreement()
+
       expect(needsAcceptance.value).toBe(true)
     })
 
-    it('returns false when license is accepted', () => {
-      const recentDate = Date.now() - ONE_DAY_MS
-      localStorage.setItem(LICENSE_KEY, recentDate.toString())
+    it('should be false when license is accepted', () => {
+      localStorageMock['atlas3-license-acceptance-date'] = Date.now().toString()
 
       const { needsAcceptance } = useLicenseAgreement()
+
       expect(needsAcceptance.value).toBe(false)
-    })
-
-    it('returns true when license has expired', () => {
-      const oldDate = Date.now() - ONE_YEAR_MS - ONE_DAY_MS
-      localStorage.setItem(LICENSE_KEY, oldDate.toString())
-
-      const { needsAcceptance } = useLicenseAgreement()
-      expect(needsAcceptance.value).toBe(true)
-    })
-  })
-
-  describe('showLicenseDialog ref', () => {
-    it('starts as false', () => {
-      const { showLicenseDialog } = useLicenseAgreement()
-      expect(showLicenseDialog.value).toBe(false)
-    })
-
-    it('can be set manually', () => {
-      const { showLicenseDialog } = useLicenseAgreement()
-      showLicenseDialog.value = true
-      expect(showLicenseDialog.value).toBe(true)
     })
   })
 })

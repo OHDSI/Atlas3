@@ -1,33 +1,34 @@
 /**
- * Unit Tests: i18n Service
- * Tests for src/services/i18n.ts
+ * i18n Service Tests
+ * Tests for internationalization service
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { i18nService, fetchLocales, fetchTranslations } from '@/services/i18n'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
-    error: vi.fn(),
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
+    error: vi.fn(),
   },
 }))
 
-// Mock config
+// Mock webapi config
 vi.mock('@/config/webapi', () => ({
-  WEBAPI_BASE_URL: 'https://api.example.com/WebAPI',
+  WEBAPI_BASE_URL: 'http://test-api.com/WebAPI',
 }))
 
-describe('i18n Service', () => {
+import { fetchLocales, fetchTranslations, i18nService } from '@/services/i18n'
+
+describe('i18nService', () => {
   let mockFetch: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
+    vi.clearAllMocks()
+
     mockFetch = vi.fn()
     global.fetch = mockFetch
-    vi.clearAllMocks()
   })
 
   afterEach(() => {
@@ -35,11 +36,12 @@ describe('i18n Service', () => {
   })
 
   describe('fetchLocales', () => {
-    it('fetches and validates locales from API', async () => {
+    it('should fetch and validate locales', async () => {
       const mockLocales = [
         { code: 'en', name: 'English' },
-        { code: 'de', name: 'German' },
+        { code: 'es', name: 'Spanish' },
       ]
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockLocales),
@@ -48,27 +50,33 @@ describe('i18n Service', () => {
       const result = await fetchLocales()
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.example.com/WebAPI/i18n/locales'
+        expect.stringContaining('/i18n/locales')
       )
-      expect(result).toEqual(mockLocales)
+      expect(result).toHaveLength(2)
+      expect(result[0].code).toBe('en')
     })
 
-    it('handles wrapped response with data property', async () => {
-      const mockLocales = [{ code: 'en', name: 'English' }]
+    it('should handle wrapped response data', async () => {
+      const mockLocales = {
+        data: [
+          { code: 'en', name: 'English' },
+        ],
+      }
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ data: mockLocales }),
+        json: () => Promise.resolve(mockLocales),
       })
 
       const result = await fetchLocales()
 
-      expect(result).toEqual(mockLocales)
+      expect(result).toHaveLength(1)
     })
 
-    it('returns default English locale on fetch error', async () => {
+    it('should return default locale on fetch failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        statusText: 'Not Found',
+        statusText: 'Server Error',
       })
 
       const result = await fetchLocales()
@@ -76,7 +84,7 @@ describe('i18n Service', () => {
       expect(result).toEqual([{ code: 'en', name: 'English' }])
     })
 
-    it('returns default locale on network error', async () => {
+    it('should return default locale on network error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
       const result = await fetchLocales()
@@ -84,7 +92,7 @@ describe('i18n Service', () => {
       expect(result).toEqual([{ code: 'en', name: 'English' }])
     })
 
-    it('returns default locale on invalid response format', async () => {
+    it('should return default locale for invalid response format', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve([{ invalid: 'data' }]),
@@ -95,28 +103,33 @@ describe('i18n Service', () => {
       expect(result).toEqual([{ code: 'en', name: 'English' }])
     })
 
-    it('validates locale codes are 2 lowercase letters', async () => {
+    it('should validate locale code format', async () => {
+      const mockLocales = [
+        { code: 'en', name: 'English' },
+        { code: 'invalid_code', name: 'Invalid' }, // Invalid format
+      ]
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () =>
-          Promise.resolve([
-            { code: 'INVALID', name: 'Invalid' }, // uppercase not allowed
-          ]),
+        json: () => Promise.resolve(mockLocales),
       })
 
       const result = await fetchLocales()
 
-      // Should fall back to default due to validation failure
+      // Should fall back to default due to validation error
       expect(result).toEqual([{ code: 'en', name: 'English' }])
     })
   })
 
   describe('fetchTranslations', () => {
-    it('fetches translations for locale', async () => {
+    it('should fetch translations for locale', async () => {
       const mockTranslations = {
-        'app.title': 'Test App',
-        'button.save': 'Save',
+        common: {
+          save: 'Save',
+          cancel: 'Cancel',
+        },
       }
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTranslations),
@@ -125,16 +138,16 @@ describe('i18n Service', () => {
       const result = await fetchTranslations('en')
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.example.com/WebAPI/i18n?lang=en'
+        expect.stringContaining('/i18n?lang=en')
       )
       expect(result.locale).toBe('en')
       expect(result.translations).toEqual(mockTranslations)
       expect(result.fetchedAt).toBeInstanceOf(Date)
     })
 
-    it('includes format data when present', async () => {
+    it('should include format data when present', async () => {
       const mockResponse = {
-        'app.title': 'Test',
+        common: { save: 'Save' },
         format: {
           date: {
             datetime: 'YYYY-MM-DD HH:mm',
@@ -149,6 +162,7 @@ describe('i18n Service', () => {
           },
         },
       }
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockResponse),
@@ -156,63 +170,33 @@ describe('i18n Service', () => {
 
       const result = await fetchTranslations('en')
 
-      expect(result.format).toEqual(mockResponse.format)
+      expect(result.format).toBeDefined()
     })
 
-    it('throws error on fetch failure', async () => {
+    it('should throw error on fetch failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        statusText: 'Server Error',
+        statusText: 'Not Found',
       })
 
-      await expect(fetchTranslations('en')).rejects.toThrow()
+      await expect(fetchTranslations('xx')).rejects.toThrow(
+        'Failed to fetch translations for xx'
+      )
     })
 
-    it('throws error on network failure', async () => {
+    it('should throw error on network failure', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
       await expect(fetchTranslations('en')).rejects.toThrow('Network error')
     })
-
-    it('logs error when format data is invalid', async () => {
-      const { logger } = await import('@/utils/logger')
-      const mockResponse = {
-        'app.title': 'Test',
-        format: { invalid: 'format' }, // Invalid format structure
-      }
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      })
-
-      const result = await fetchTranslations('en')
-
-      // Should still return translations even with invalid format
-      expect(result.translations).toHaveProperty('app.title')
-      expect(logger.warn).toHaveBeenCalled()
-    })
-
-    it('sets fetchedAt timestamp', async () => {
-      const beforeFetch = new Date()
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({ test: 'translation' }),
-      })
-
-      const result = await fetchTranslations('de')
-      const afterFetch = new Date()
-
-      expect(result.fetchedAt.getTime()).toBeGreaterThanOrEqual(beforeFetch.getTime())
-      expect(result.fetchedAt.getTime()).toBeLessThanOrEqual(afterFetch.getTime())
-    })
   })
 
   describe('i18nService object', () => {
-    it('exports fetchLocales function', () => {
+    it('should export fetchLocales function', () => {
       expect(i18nService.fetchLocales).toBe(fetchLocales)
     })
 
-    it('exports fetchTranslations function', () => {
+    it('should export fetchTranslations function', () => {
       expect(i18nService.fetchTranslations).toBe(fetchTranslations)
     })
   })

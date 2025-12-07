@@ -1,24 +1,16 @@
 /**
- * Unit Tests: Concept Set Service
- * Tests for src/services/concept-set.service.ts
+ * Concept Set Service Tests
+ * Tests for concept set CRUD operations
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import {
-  getAllConceptSets,
-  getConceptSetById,
-  createConceptSet,
-  updateConceptSet,
-  deleteConceptSet,
-} from '@/services/concept-set.service'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
-    error: vi.fn(),
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
+    error: vi.fn(),
   },
 }))
 
@@ -38,13 +30,23 @@ vi.mock('@/utils/api-mappers', () => ({
   })),
 }))
 
-describe('Concept Set Service', () => {
+import {
+  getAllConceptSets,
+  getConceptSetById,
+  createConceptSet,
+  updateConceptSet,
+  deleteConceptSet,
+} from '@/services/concept-set.service'
+import { mapConceptSetFromAPI, mapConceptSetToAPI } from '@/utils/api-mappers'
+
+describe('ConceptSetService', () => {
   let mockFetch: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
+    vi.clearAllMocks()
+
     mockFetch = vi.fn()
     global.fetch = mockFetch
-    vi.clearAllMocks()
   })
 
   afterEach(() => {
@@ -52,7 +54,7 @@ describe('Concept Set Service', () => {
   })
 
   describe('getAllConceptSets', () => {
-    it('fetches all concept sets successfully', async () => {
+    it('should fetch and return concept set list', async () => {
       const mockResponse = [
         { id: 1, name: 'Concept Set 1' },
         { id: 2, name: 'Concept Set 2' },
@@ -72,26 +74,7 @@ describe('Concept Set Service', () => {
       expect(result).toHaveLength(2)
     })
 
-    it('returns empty array on validation error', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve('invalid'),
-      })
-
-      const result = await getAllConceptSets()
-
-      expect(result).toEqual([])
-    })
-
-    it('returns empty array on fetch error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      const result = await getAllConceptSets()
-
-      expect(result).toEqual([])
-    })
-
-    it('returns empty array on HTTP error', async () => {
+    it('should return empty array on fetch failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
@@ -102,18 +85,31 @@ describe('Concept Set Service', () => {
 
       expect(result).toEqual([])
     })
+
+    it('should return empty array for invalid response format', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ invalid: 'response' }),
+      })
+
+      const result = await getAllConceptSets()
+
+      expect(result).toEqual([])
+    })
+
+    it('should return empty array on network error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+
+      const result = await getAllConceptSets()
+
+      expect(result).toEqual([])
+    })
   })
 
   describe('getConceptSetById', () => {
-    it('fetches concept set with metadata and expression', async () => {
-      const mockMetadata = {
-        id: 1,
-        name: 'Test Concept Set',
-        description: 'Test Description',
-      }
-      const mockExpression = {
-        items: [{ concept: { conceptId: 12345 } }],
-      }
+    it('should fetch concept set by ID', async () => {
+      const mockMetadata = { id: 1, name: 'Test Concept Set', description: 'Test description' }
+      const mockExpression = { items: [{ concept: { conceptId: 123 } }] }
 
       mockFetch
         .mockResolvedValueOnce({
@@ -137,9 +133,10 @@ describe('Concept Set Service', () => {
         expect.any(Object)
       )
       expect(result).not.toBeNull()
+      expect(mapConceptSetFromAPI).toHaveBeenCalled()
     })
 
-    it('accepts string ID', async () => {
+    it('should accept string ID', async () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
@@ -158,39 +155,40 @@ describe('Concept Set Service', () => {
       )
     })
 
-    it('returns null on fetch error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      const result = await getConceptSetById(1)
-
-      expect(result).toBeNull()
-    })
-
-    it('returns null on metadata fetch error', async () => {
+    it('should return null on fetch failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
         statusText: 'Not Found',
       })
 
-      const result = await getConceptSetById(99999)
+      const result = await getConceptSetById(999)
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null on network error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+
+      const result = await getConceptSetById(1)
 
       expect(result).toBeNull()
     })
   })
 
   describe('createConceptSet', () => {
-    it('creates concept set successfully', async () => {
+    it('should create concept set', async () => {
       const newConceptSet = {
         name: 'New Concept Set',
-        description: 'Test description',
+        description: 'New description',
         items: [],
       }
 
       const mockResponse = {
-        id: 123,
+        id: 1,
         name: 'New Concept Set',
-        description: 'Test description',
+        description: 'New description',
+        expression: { items: [] },
       }
 
       mockFetch.mockResolvedValueOnce({
@@ -204,42 +202,36 @@ describe('Concept Set Service', () => {
         expect.stringContaining('/conceptset'),
         expect.objectContaining({
           method: 'POST',
+          body: expect.any(String),
         })
       )
+      expect(mapConceptSetToAPI).toHaveBeenCalled()
       expect(result).not.toBeNull()
     })
 
-    it('returns null on creation error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      const result = await createConceptSet({
-        name: 'Test',
-        description: '',
-        items: [],
-      })
-
-      expect(result).toBeNull()
-    })
-
-    it('returns null on HTTP error', async () => {
+    it('should return null on create failure', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
         statusText: 'Bad Request',
       })
 
-      const result = await createConceptSet({
-        name: '',
-        description: '',
-        items: [],
-      })
+      const result = await createConceptSet({ name: 'Test', items: [] })
+
+      expect(result).toBeNull()
+    })
+
+    it('should return null on network error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+
+      const result = await createConceptSet({ name: 'Test', items: [] })
 
       expect(result).toBeNull()
     })
   })
 
   describe('updateConceptSet', () => {
-    it('updates concept set successfully', async () => {
+    it('should update concept set', async () => {
       const conceptSet = {
         id: 1,
         name: 'Updated Concept Set',
@@ -251,6 +243,7 @@ describe('Concept Set Service', () => {
         id: 1,
         name: 'Updated Concept Set',
         description: 'Updated description',
+        expression: { items: [] },
       }
 
       mockFetch.mockResolvedValueOnce({
@@ -264,60 +257,49 @@ describe('Concept Set Service', () => {
         expect.stringContaining('/conceptset/1'),
         expect.objectContaining({
           method: 'PUT',
+          body: expect.any(String),
         })
       )
       expect(result).not.toBeNull()
     })
 
-    it('throws error when ID is missing', async () => {
+    it('should throw error when ID is missing', async () => {
       const conceptSet = {
-        name: 'No ID Concept Set',
-        description: '',
+        name: 'No ID',
         items: [],
       }
 
-      await expect(updateConceptSet(conceptSet as never)).rejects.toThrow(
+      await expect(updateConceptSet(conceptSet as any)).rejects.toThrow(
         'Concept set ID is required for update'
       )
     })
 
-    it('returns null on update error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      const result = await updateConceptSet({
-        id: 1,
-        name: 'Test',
-        description: '',
-        items: [],
+    it('should return null on update failure', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
       })
+
+      const result = await updateConceptSet({ id: 1, name: 'Test', items: [] })
 
       expect(result).toBeNull()
     })
 
-    it('returns null on HTTP error', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: 'Server Error',
-      })
+    it('should return null on network error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      const result = await updateConceptSet({
-        id: 1,
-        name: 'Test',
-        description: '',
-        items: [],
-      })
+      const result = await updateConceptSet({ id: 1, name: 'Test', items: [] })
 
       expect(result).toBeNull()
     })
   })
 
   describe('deleteConceptSet', () => {
-    it('deletes concept set successfully', async () => {
+    it('should delete concept set', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 204,
-        json: () => Promise.resolve(null),
       })
 
       const result = await deleteConceptSet(1)
@@ -331,36 +313,31 @@ describe('Concept Set Service', () => {
       expect(result).toBe(true)
     })
 
-    it('accepts string ID', async () => {
+    it('should accept string ID', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 204,
-        json: () => Promise.resolve(null),
       })
 
-      const result = await deleteConceptSet('123')
+      const result = await deleteConceptSet('1')
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/conceptset/123'),
-        expect.any(Object)
-      )
       expect(result).toBe(true)
     })
 
-    it('returns false on delete error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+    it('should return false on delete failure', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+      })
 
-      const result = await deleteConceptSet(1)
+      const result = await deleteConceptSet(999)
 
       expect(result).toBe(false)
     })
 
-    it('returns false on HTTP error', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 403,
-        statusText: 'Forbidden',
-      })
+    it('should return false on network error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
       const result = await deleteConceptSet(1)
 

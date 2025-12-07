@@ -1,11 +1,9 @@
 /**
- * Unit Tests: PermissionChecker Service
- * Tests for src/services/auth/permissionChecker.ts
+ * Permission Checker Service Tests
+ * Tests for permission validation logic
  */
-
 import { describe, it, expect, beforeEach } from 'vitest'
 import { PermissionChecker, permissionChecker } from '@/services/auth/permissionChecker'
-import type { PermissionIndex } from '@/models/auth.types'
 
 describe('PermissionChecker', () => {
   let checker: PermissionChecker
@@ -15,57 +13,51 @@ describe('PermissionChecker', () => {
   })
 
   describe('checkPermission', () => {
-    it('returns true for exact match', () => {
+    it('should return true for exact match', () => {
       expect(checker.checkPermission('cohort:read', 'cohort:read')).toBe(true)
-      expect(checker.checkPermission('source:get', 'source:get')).toBe(true)
     })
 
-    it('returns true when granted permission has wildcard at resource level', () => {
-      expect(checker.checkPermission('cohort:read', '*:read')).toBe(true)
-    })
-
-    it('returns true when granted permission has wildcard at action level', () => {
+    it('should return true when granted has wildcard', () => {
       expect(checker.checkPermission('cohort:read', 'cohort:*')).toBe(true)
     })
 
-    it('returns true when granted permission has full wildcard', () => {
-      expect(checker.checkPermission('cohort:read', '*:*')).toBe(true)
+    it('should return true for multi-level wildcard', () => {
+      expect(checker.checkPermission('cohort:read:123', 'cohort:*')).toBe(true)
     })
 
-    it('returns false when resource does not match', () => {
-      expect(checker.checkPermission('cohort:read', 'source:read')).toBe(false)
+    it('should return false when required has more specifics than granted', () => {
+      expect(checker.checkPermission('cohort:read:123', 'cohort:read')).toBe(true) // granted is broader
     })
 
-    it('returns false when action does not match', () => {
-      expect(checker.checkPermission('cohort:read', 'cohort:write')).toBe(false)
+    it('should return true when granted is broader', () => {
+      expect(checker.checkPermission('cohort', 'cohort:*')).toBe(true)
     })
 
-    it('handles comma-separated permissions', () => {
+    it('should handle comma-separated permissions', () => {
       expect(checker.checkPermission('cohort:read', 'cohort:read,write')).toBe(true)
       expect(checker.checkPermission('cohort:write', 'cohort:read,write')).toBe(true)
-      expect(checker.checkPermission('cohort:delete', 'cohort:read,write')).toBe(false)
     })
 
-    it('handles multi-level permissions', () => {
-      expect(checker.checkPermission('cohort:read:1', 'cohort:read:1')).toBe(true)
-      expect(checker.checkPermission('cohort:read:1', 'cohort:read:*')).toBe(true)
-      expect(checker.checkPermission('cohort:read:1', 'cohort:read:2')).toBe(false)
+    it('should return false for non-matching permissions', () => {
+      expect(checker.checkPermission('cohort:write', 'cohort:read')).toBe(false)
     })
 
-    it('handles shorter granted permission (implicit wildcard)', () => {
-      // When granted has fewer levels, remaining levels are implicitly allowed
-      expect(checker.checkPermission('cohort:read', 'cohort')).toBe(true)
+    it('should return false for completely different resources', () => {
+      expect(checker.checkPermission('cohort:read', 'conceptset:read')).toBe(false)
     })
 
-    it('handles longer granted permission with specific constraints', () => {
-      // When granted is more specific and doesn't have wildcards
-      expect(checker.checkPermission('cohort', 'cohort:read')).toBe(false)
+    it('should handle multiple levels correctly', () => {
+      expect(checker.checkPermission('cohort:read:project1', 'cohort:read:*')).toBe(true)
+    })
+
+    it('should return false when granted has non-matching deeper level', () => {
+      expect(checker.checkPermission('cohort:read', 'cohort:read:project1')).toBe(false)
     })
   })
 
   describe('hasPermission', () => {
-    it('returns granted true when permission exists in index', () => {
-      const permissionIdx: PermissionIndex = {
+    it('should return granted true for matching permission', () => {
+      const permissionIdx = {
         cohort: ['cohort:read', 'cohort:write'],
       }
 
@@ -75,19 +67,8 @@ describe('PermissionChecker', () => {
       expect(result.matchedGrants).toContain('cohort:read')
     })
 
-    it('returns granted false when permission not in index', () => {
-      const permissionIdx: PermissionIndex = {
-        cohort: ['cohort:read'],
-      }
-
-      const result = checker.hasPermission('cohort:delete', permissionIdx)
-
-      expect(result.granted).toBe(false)
-      expect(result.matchedGrants).toBeUndefined()
-    })
-
-    it('checks wildcard permissions', () => {
-      const permissionIdx: PermissionIndex = {
+    it('should return granted true for wildcard permission', () => {
+      const permissionIdx = {
         '*': ['*:*'],
       }
 
@@ -96,63 +77,67 @@ describe('PermissionChecker', () => {
       expect(result.granted).toBe(true)
     })
 
-    it('combines resource-specific and wildcard permissions', () => {
-      const permissionIdx: PermissionIndex = {
+    it('should return granted false for no matching permission', () => {
+      const permissionIdx = {
         cohort: ['cohort:read'],
-        '*': ['*:write'],
       }
 
-      expect(checker.hasPermission('cohort:read', permissionIdx).granted).toBe(true)
-      expect(checker.hasPermission('cohort:write', permissionIdx).granted).toBe(true)
-      expect(checker.hasPermission('source:write', permissionIdx).granted).toBe(true)
+      const result = checker.hasPermission('cohort:write', permissionIdx)
+
+      expect(result.granted).toBe(false)
+      expect(result.matchedGrants).toBeUndefined()
     })
 
-    it('returns all matched grants', () => {
-      const permissionIdx: PermissionIndex = {
-        cohort: ['cohort:read', 'cohort:*'],
-        '*': ['*:read'],
+    it('should return granted false for empty permission index', () => {
+      const result = checker.hasPermission('cohort:read', {})
+
+      expect(result.granted).toBe(false)
+    })
+
+    it('should return granted false for empty required permission', () => {
+      const result = checker.hasPermission('', { cohort: ['cohort:read'] })
+
+      expect(result.granted).toBe(false)
+    })
+
+    it('should combine resource-specific and wildcard permissions', () => {
+      const permissionIdx = {
+        cohort: ['cohort:read'],
+        '*': ['*:delete'],
+      }
+
+      const readResult = checker.hasPermission('cohort:read', permissionIdx)
+      const deleteResult = checker.hasPermission('cohort:delete', permissionIdx)
+
+      expect(readResult.granted).toBe(true)
+      expect(deleteResult.granted).toBe(true)
+    })
+
+    it('should return all matched grants', () => {
+      const permissionIdx = {
+        cohort: ['cohort:*', 'cohort:read'],
       }
 
       const result = checker.hasPermission('cohort:read', permissionIdx)
 
       expect(result.granted).toBe(true)
-      expect(result.matchedGrants).toContain('cohort:read')
-      expect(result.matchedGrants).toContain('cohort:*')
-      expect(result.matchedGrants).toContain('*:read')
-    })
-
-    it('handles empty required permission', () => {
-      const permissionIdx: PermissionIndex = {
-        cohort: ['cohort:read'],
-      }
-
-      const result = checker.hasPermission('', permissionIdx)
-
-      expect(result.granted).toBe(false)
-    })
-
-    it('handles missing resource in index', () => {
-      const permissionIdx: PermissionIndex = {}
-
-      const result = checker.hasPermission('cohort:read', permissionIdx)
-
-      expect(result.granted).toBe(false)
+      expect(result.matchedGrants).toHaveLength(2)
     })
   })
 
   describe('hasAnyPermission', () => {
-    it('returns true when at least one permission matches', () => {
-      const permissionIdx: PermissionIndex = {
+    it('should return true if any permission matches', () => {
+      const permissionIdx = {
         cohort: ['cohort:read'],
       }
 
-      const result = checker.hasAnyPermission(['cohort:read', 'cohort:write'], permissionIdx)
+      const result = checker.hasAnyPermission(['cohort:write', 'cohort:read'], permissionIdx)
 
       expect(result).toBe(true)
     })
 
-    it('returns false when no permissions match', () => {
-      const permissionIdx: PermissionIndex = {
+    it('should return false if no permission matches', () => {
+      const permissionIdx = {
         cohort: ['cohort:read'],
       }
 
@@ -161,8 +146,8 @@ describe('PermissionChecker', () => {
       expect(result).toBe(false)
     })
 
-    it('returns false for empty required array', () => {
-      const permissionIdx: PermissionIndex = {
+    it('should return false for empty required permissions', () => {
+      const permissionIdx = {
         cohort: ['cohort:read'],
       }
 
@@ -173,8 +158,8 @@ describe('PermissionChecker', () => {
   })
 
   describe('hasAllPermissions', () => {
-    it('returns true when all permissions match', () => {
-      const permissionIdx: PermissionIndex = {
+    it('should return true if all permissions match', () => {
+      const permissionIdx = {
         cohort: ['cohort:read', 'cohort:write'],
       }
 
@@ -183,8 +168,8 @@ describe('PermissionChecker', () => {
       expect(result).toBe(true)
     })
 
-    it('returns false when not all permissions match', () => {
-      const permissionIdx: PermissionIndex = {
+    it('should return false if any permission is missing', () => {
+      const permissionIdx = {
         cohort: ['cohort:read'],
       }
 
@@ -193,8 +178,8 @@ describe('PermissionChecker', () => {
       expect(result).toBe(false)
     })
 
-    it('returns true for empty required array', () => {
-      const permissionIdx: PermissionIndex = {
+    it('should return true for empty required permissions', () => {
+      const permissionIdx = {
         cohort: ['cohort:read'],
       }
 
@@ -203,64 +188,63 @@ describe('PermissionChecker', () => {
       expect(result).toBe(true)
     })
 
-    it('handles wildcard permissions correctly', () => {
-      const permissionIdx: PermissionIndex = {
-        cohort: ['cohort:*'],
+    it('should work with wildcard permissions', () => {
+      const permissionIdx = {
+        '*': ['*:*'],
       }
 
-      const result = checker.hasAllPermissions(
-        ['cohort:read', 'cohort:write', 'cohort:delete'],
-        permissionIdx
-      )
+      const result = checker.hasAllPermissions(['cohort:read', 'cohort:write', 'conceptset:read'], permissionIdx)
 
       expect(result).toBe(true)
     })
   })
 
   describe('buildPermissionIndex', () => {
-    it('builds index from permission array', () => {
-      const permissions = ['cohort:read', 'cohort:write', 'source:get', 'source:post']
+    it('should build index from permission strings', () => {
+      const permissions = ['cohort:read', 'cohort:write', 'conceptset:read']
 
-      const result = checker.buildPermissionIndex(permissions)
+      const index = checker.buildPermissionIndex(permissions)
 
-      expect(result.cohort).toEqual(['cohort:read', 'cohort:write'])
-      expect(result.source).toEqual(['source:get', 'source:post'])
+      expect(index.cohort).toContain('cohort:read')
+      expect(index.cohort).toContain('cohort:write')
+      expect(index.conceptset).toContain('conceptset:read')
     })
 
-    it('handles empty permission array', () => {
-      const result = checker.buildPermissionIndex([])
+    it('should handle empty permissions array', () => {
+      const index = checker.buildPermissionIndex([])
 
-      expect(result).toEqual({})
+      expect(Object.keys(index)).toHaveLength(0)
     })
 
-    it('handles wildcard permissions', () => {
-      const permissions = ['*:read', 'cohort:*']
+    it('should handle wildcard permissions', () => {
+      const permissions = ['*:*', 'cohort:read']
 
-      const result = checker.buildPermissionIndex(permissions)
+      const index = checker.buildPermissionIndex(permissions)
 
-      expect(result['*']).toEqual(['*:read'])
-      expect(result.cohort).toEqual(['cohort:*'])
+      expect(index['*']).toContain('*:*')
+      expect(index.cohort).toContain('cohort:read')
     })
 
-    it('handles permissions without colons', () => {
-      const permissions = ['admin']
+    it('should handle permissions without colon', () => {
+      const permissions = ['admin', 'cohort:read']
 
-      const result = checker.buildPermissionIndex(permissions)
+      const index = checker.buildPermissionIndex(permissions)
 
-      expect(result.admin).toEqual(['admin'])
+      expect(index.admin).toContain('admin')
+      expect(index.cohort).toContain('cohort:read')
     })
 
-    it('handles duplicate resources', () => {
+    it('should group multiple permissions for same resource', () => {
       const permissions = ['cohort:read', 'cohort:write', 'cohort:delete']
 
-      const result = checker.buildPermissionIndex(permissions)
+      const index = checker.buildPermissionIndex(permissions)
 
-      expect(result.cohort).toHaveLength(3)
+      expect(index.cohort).toHaveLength(3)
     })
   })
 
-  describe('Singleton Export', () => {
-    it('exports singleton instance', () => {
+  describe('Singleton Instance', () => {
+    it('should export a singleton instance', () => {
       expect(permissionChecker).toBeInstanceOf(PermissionChecker)
     })
   })

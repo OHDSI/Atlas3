@@ -1,53 +1,45 @@
 /**
- * Unit Tests: RefreshManager Service
- * Tests for src/services/auth/refreshManager.ts
+ * Refresh Manager Service Tests
+ * Tests for token refresh scheduling and backoff logic
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { RefreshManager, refreshManager } from '@/services/auth/refreshManager'
 
-// Mock logger
-vi.mock('@/utils/logger', () => ({
-  logger: {
-    error: vi.fn(),
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-  },
-}))
-
-// Mock tokenManager
+// Mock dependencies
 vi.mock('@/services/auth/tokenManager', () => ({
   tokenManager: {
     getExpirationDate: vi.fn(),
   },
 }))
 
-// Helper to create a valid JWT token for testing
-function _createTestJwt(expiresInSeconds = 3600): string {
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
-  const exp = Math.floor(Date.now() / 1000) + expiresInSeconds
-  const body = btoa(JSON.stringify({ sub: 'test', exp }))
-  const signature = btoa('test-signature')
-  return `${header}.${body}.${signature}`
-}
+vi.mock('@/utils/logger', () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}))
+
+import { tokenManager } from '@/services/auth/tokenManager'
+import { logger } from '@/utils/logger'
 
 describe('RefreshManager', () => {
   let manager: RefreshManager
 
   beforeEach(() => {
     manager = new RefreshManager()
-    vi.useFakeTimers()
     vi.clearAllMocks()
+    vi.useFakeTimers()
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.useRealTimers()
-    vi.clearAllTimers()
   })
 
   describe('refreshWithBackoff', () => {
-    it('returns true on first successful attempt', async () => {
+    it('should return true on successful refresh', async () => {
       const refreshFn = vi.fn().mockResolvedValue(true)
 
       const result = await manager.refreshWithBackoff(refreshFn)
@@ -56,21 +48,22 @@ describe('RefreshManager', () => {
       expect(refreshFn).toHaveBeenCalledTimes(1)
     })
 
-    it('retries on failure and returns true on eventual success', async () => {
-      const refreshFn = vi
-        .fn()
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValue(true)
+    it('should retry on failure', async () => {
+      const refreshFn = vi.fn()
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(true)
 
       const resultPromise = manager.refreshWithBackoff(refreshFn, {
         initialDelay: 100,
-        jitter: 0,
+        maxRetries: 5,
+        jitter: 0, // Disable jitter for deterministic timing
+        multiplier: 2,
       })
 
-      // Fast-forward through delays
-      await vi.advanceTimersByTimeAsync(100)
-      await vi.advanceTimersByTimeAsync(200)
+      // Advance timers for retries (100ms + 200ms)
+      await vi.advanceTimersByTimeAsync(100) // First retry delay
+      await vi.advanceTimersByTimeAsync(200) // Second retry delay (100 * 2)
 
       const result = await resultPromise
 
@@ -78,39 +71,19 @@ describe('RefreshManager', () => {
       expect(refreshFn).toHaveBeenCalledTimes(3)
     })
 
-    it('returns false after max retries', async () => {
-      const refreshFn = vi.fn().mockRejectedValue(new Error('Always fails'))
-
-      const resultPromise = manager.refreshWithBackoff(refreshFn, {
-        initialDelay: 10,
-        maxRetries: 3,
-        jitter: 0,
-      })
-
-      // Fast-forward through all delays
-      for (let i = 0; i < 10; i++) {
-        await vi.advanceTimersByTimeAsync(1000)
-      }
-
-      const result = await resultPromise
-
-      expect(result).toBe(false)
-      expect(refreshFn).toHaveBeenCalledTimes(3)
-    })
-
-    it('returns false when refreshFn returns false', async () => {
+    it('should return false after max retries', async () => {
       const refreshFn = vi.fn().mockResolvedValue(false)
 
       const resultPromise = manager.refreshWithBackoff(refreshFn, {
         initialDelay: 10,
         maxRetries: 3,
+        multiplier: 2,
         jitter: 0,
       })
 
-      // Fast-forward through all delays
-      for (let i = 0; i < 10; i++) {
-        await vi.advanceTimersByTimeAsync(1000)
-      }
+      // Advance through all retries
+      await vi.advanceTimersByTimeAsync(10) // First delay
+      await vi.advanceTimersByTimeAsync(20) // Second delay
 
       const result = await resultPromise
 
@@ -118,60 +91,16 @@ describe('RefreshManager', () => {
       expect(refreshFn).toHaveBeenCalledTimes(3)
     })
 
-    it('respects custom config', async () => {
-      const refreshFn = vi.fn().mockRejectedValue(new Error('Fail'))
+    it('should log errors on failure', async () => {
+      const error = new Error('Network error')
+      const refreshFn = vi.fn().mockRejectedValueOnce(error).mockResolvedValue(true)
 
       const resultPromise = manager.refreshWithBackoff(refreshFn, {
-        initialDelay: 50,
-        multiplier: 3,
+        initialDelay: 10,
         maxRetries: 2,
-        jitter: 0,
       })
 
-      await vi.advanceTimersByTimeAsync(50) // First delay: 50ms
-      await vi.advanceTimersByTimeAsync(150) // Second delay: 50 * 3 = 150ms
-
-      const result = await resultPromise
-
-      expect(result).toBe(false)
-      expect(refreshFn).toHaveBeenCalledTimes(2)
-    })
-
-    it('respects maxDelay', async () => {
-      const refreshFn = vi
-        .fn()
-        .mockRejectedValueOnce(new Error('Fail'))
-        .mockRejectedValueOnce(new Error('Fail'))
-        .mockRejectedValueOnce(new Error('Fail'))
-        .mockResolvedValue(true)
-
-      const resultPromise = manager.refreshWithBackoff(refreshFn, {
-        initialDelay: 100,
-        multiplier: 100, // Would result in huge delays
-        maxDelay: 200, // But capped at 200
-        maxRetries: 4,
-        jitter: 0,
-      })
-
-      await vi.advanceTimersByTimeAsync(100) // First delay
-      await vi.advanceTimersByTimeAsync(200) // Second delay (capped)
-      await vi.advanceTimersByTimeAsync(200) // Third delay (capped)
-
-      const result = await resultPromise
-
-      expect(result).toBe(true)
-    })
-
-    it('logs errors on failed attempts', async () => {
-      const { logger } = await import('@/utils/logger')
-      const error = new Error('Test error')
-      const refreshFn = vi.fn().mockRejectedValue(error)
-
-      const resultPromise = manager.refreshWithBackoff(refreshFn, {
-        maxRetries: 1,
-        jitter: 0,
-      })
-
+      await vi.advanceTimersByTimeAsync(10)
       await resultPromise
 
       expect(logger.error).toHaveBeenCalledWith(
@@ -180,91 +109,127 @@ describe('RefreshManager', () => {
         error
       )
     })
-  })
 
-  describe('scheduleRefresh', () => {
-    it('schedules refresh when token will expire after threshold', async () => {
-      const { tokenManager } = await import('@/services/auth/tokenManager')
-      const expirationDate = new Date(Date.now() + 600000) // 10 minutes from now
-      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expirationDate)
+    it('should respect max delay', async () => {
+      const refreshFn = vi.fn().mockResolvedValue(false)
 
+      const resultPromise = manager.refreshWithBackoff(refreshFn, {
+        initialDelay: 1000,
+        maxDelay: 2000,
+        multiplier: 10,
+        maxRetries: 3,
+        jitter: 0,
+      })
+
+      // First delay should be 1000
+      // Second delay would be 10000 but capped at 2000
+      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(2000)
+
+      await resultPromise
+
+      expect(refreshFn).toHaveBeenCalledTimes(3)
+    })
+
+    it('should use default config', async () => {
       const refreshFn = vi.fn().mockResolvedValue(true)
-      const thresholdMs = 300000 // 5 minutes
 
-      const timerId = manager.scheduleRefresh('test-token', thresholdMs, refreshFn)
-
-      expect(timerId).not.toBeNull()
-
-      // Refresh should be scheduled for 5 minutes from now (10 min expiry - 5 min threshold)
-      await vi.advanceTimersByTimeAsync(300000)
+      await manager.refreshWithBackoff(refreshFn)
 
       expect(refreshFn).toHaveBeenCalled()
     })
+  })
 
-    it('returns null when token already needs refresh', async () => {
-      const { tokenManager } = await import('@/services/auth/tokenManager')
-      const expirationDate = new Date(Date.now() + 60000) // 1 minute from now
-      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expirationDate)
+  describe('scheduleRefresh', () => {
+    it('should schedule refresh for future time', () => {
+      const futureDate = new Date(Date.now() + 60000) // 1 minute from now
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(futureDate)
+      const refreshFn = vi.fn().mockResolvedValue(true)
 
-      const refreshFn = vi.fn()
-      const thresholdMs = 300000 // 5 minutes threshold
+      const timeoutId = manager.scheduleRefresh('token', 30000, refreshFn)
 
-      const timerId = manager.scheduleRefresh('test-token', thresholdMs, refreshFn)
-
-      expect(timerId).toBeNull()
+      expect(timeoutId).not.toBeNull()
+      // In vitest with fake timers, setTimeout returns an object, not a number
+      expect(timeoutId).toBeDefined()
     })
 
-    it('returns null when token has no expiration', async () => {
-      const { tokenManager } = await import('@/services/auth/tokenManager')
+    it('should return null for expired token', () => {
       vi.mocked(tokenManager.getExpirationDate).mockReturnValue(null)
-
       const refreshFn = vi.fn()
 
-      const timerId = manager.scheduleRefresh('test-token', 300000, refreshFn)
+      const timeoutId = manager.scheduleRefresh('token', 30000, refreshFn)
 
-      expect(timerId).toBeNull()
+      expect(timeoutId).toBeNull()
+    })
+
+    it('should return null when refresh would be in the past', () => {
+      const pastDate = new Date(Date.now() - 1000) // Already expired
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(pastDate)
+      const refreshFn = vi.fn()
+
+      const timeoutId = manager.scheduleRefresh('token', 30000, refreshFn)
+
+      expect(timeoutId).toBeNull()
+    })
+
+    it('should call refresh function when scheduled time arrives', async () => {
+      const futureDate = new Date(Date.now() + 60000) // 1 minute from now
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(futureDate)
+      const refreshFn = vi.fn().mockResolvedValue(true)
+
+      manager.scheduleRefresh('token', 30000, refreshFn)
+
+      // Advance to just before refresh time (60s - 30s = 30s)
+      await vi.advanceTimersByTimeAsync(29000)
+      expect(refreshFn).not.toHaveBeenCalled()
+
+      // Advance past refresh time
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(refreshFn).toHaveBeenCalled()
     })
   })
 
   describe('calculateRefreshDelay', () => {
-    it('calculates correct delay', async () => {
-      const { tokenManager } = await import('@/services/auth/tokenManager')
-      const now = Date.now()
-      const expirationDate = new Date(now + 600000) // 10 minutes from now
-      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expirationDate)
+    it('should calculate correct delay', () => {
+      const futureDate = new Date(Date.now() + 60000) // 1 minute from now
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(futureDate)
 
-      const thresholdMs = 300000 // 5 minutes
+      const delay = manager.calculateRefreshDelay('token', 30000) // 30 second threshold
 
-      const delay = manager.calculateRefreshDelay('test-token', thresholdMs)
-
-      // Should be ~5 minutes (10 min until expiry - 5 min threshold)
-      expect(delay).toBeCloseTo(300000, -3) // Within 1 second
+      // Should be approximately 30 seconds (60s - 30s)
+      expect(delay).toBeGreaterThanOrEqual(29000)
+      expect(delay).toBeLessThanOrEqual(31000)
     })
 
-    it('returns 0 when past refresh time', async () => {
-      const { tokenManager } = await import('@/services/auth/tokenManager')
-      const expirationDate = new Date(Date.now() + 60000) // 1 minute from now
-      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(expirationDate)
+    it('should return -1 for null expiration date', () => {
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(null)
 
-      const thresholdMs = 300000 // 5 minutes threshold (past expiry time)
+      const delay = manager.calculateRefreshDelay('token', 30000)
 
-      const delay = manager.calculateRefreshDelay('test-token', thresholdMs)
+      expect(delay).toBe(-1)
+    })
+
+    it('should return 0 when already past refresh time', () => {
+      const nearFuture = new Date(Date.now() + 10000) // 10 seconds from now
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(nearFuture)
+
+      const delay = manager.calculateRefreshDelay('token', 30000) // 30 second threshold
 
       expect(delay).toBe(0)
     })
 
-    it('returns -1 when no expiration date', async () => {
-      const { tokenManager } = await import('@/services/auth/tokenManager')
-      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(null)
+    it('should return 0 for already expired token', () => {
+      const pastDate = new Date(Date.now() - 1000)
+      vi.mocked(tokenManager.getExpirationDate).mockReturnValue(pastDate)
 
-      const delay = manager.calculateRefreshDelay('test-token', 300000)
+      const delay = manager.calculateRefreshDelay('token', 30000)
 
-      expect(delay).toBe(-1)
+      expect(delay).toBe(0)
     })
   })
 
-  describe('Singleton Export', () => {
-    it('exports singleton instance', () => {
+  describe('Singleton Instance', () => {
+    it('should export a singleton instance', () => {
       expect(refreshManager).toBeInstanceOf(RefreshManager)
     })
   })

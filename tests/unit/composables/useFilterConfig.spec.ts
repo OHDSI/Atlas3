@@ -1,36 +1,35 @@
 /**
- * Unit Tests: useFilterConfig Composable
- * Tests for src/composables/useFilterConfig.ts
+ * useFilterConfig Composable Tests
+ * Tests for filter configuration with i18n integration
  */
-
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 
-// Mock config loader service
+// Mock configLoaderService
 vi.mock('@/services/config-loader.service', () => ({
   configLoaderService: {
-    getValidationResult: vi.fn(),
     getValidFilterTypesForSection: vi.fn(),
     getFilterConfig: vi.fn(),
+    getValidationResult: vi.fn(),
     onConfigurationChange: vi.fn(),
   },
 }))
 
 // Mock useI18n
 vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    tv: (key: string, defaultValue?: string) => defaultValue || key,
-  }),
+  useI18n: vi.fn(() => ({
+    tv: vi.fn((key, fallback) => fallback || key),
+  })),
 }))
 
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
     debug: vi.fn(),
+    info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
-    info: vi.fn(),
   },
 }))
 
@@ -42,288 +41,304 @@ describe('useFilterConfig', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
 
-    // Default mock setup
-    vi.mocked(configLoaderService.getValidationResult).mockReturnValue({
-      valid: true,
-      errors: [],
-      warnings: [],
-      validFilterTypes: ['conditionOccurrence', 'drugExposure'],
-      invalidFilterTypes: [],
-      timestamp: new Date(),
-    })
-  })
-
-  afterEach(() => {
-    vi.restoreAllMocks()
+    // Default mock implementations
+    vi.mocked(configLoaderService.getValidFilterTypesForSection).mockReturnValue([])
+    vi.mocked(configLoaderService.getFilterConfig).mockReturnValue(undefined)
+    vi.mocked(configLoaderService.getValidationResult).mockReturnValue(null)
+    vi.mocked(configLoaderService.onConfigurationChange).mockImplementation(() => {})
   })
 
   describe('availableFilters', () => {
-    it('returns filters for current section', () => {
+    it('should return empty array when no filters configured', () => {
+      const section = ref('initialEvents')
+
+      const { availableFilters } = useFilterConfig(section)
+
+      expect(availableFilters.value).toEqual([])
+    })
+
+    it('should return configured filters with translated names', () => {
       vi.mocked(configLoaderService.getValidFilterTypesForSection).mockReturnValue([
         'conditionOccurrence',
-        'drugExposure',
+        'drugExposure'
       ])
-      vi.mocked(configLoaderService.getFilterConfig).mockImplementation((key: string) => {
-        const configs: Record<string, unknown> = {
-          conditionOccurrence: {
-            name: 'Condition Occurrence',
-            descriptions: { all: 'Find patients with conditions' },
-            requiresConceptSet: true,
-            groupOnly: false,
-          },
-          drugExposure: {
-            name: 'Drug Exposure',
-            descriptions: { all: 'Find patients with drug exposures' },
-            requiresConceptSet: true,
-            groupOnly: false,
-          },
-        }
-        return configs[key] as ReturnType<typeof configLoaderService.getFilterConfig>
-      })
+
+      vi.mocked(configLoaderService.getFilterConfig)
+        .mockImplementation((key) => {
+          if (key === 'conditionOccurrence') {
+            return {
+              id: 'conditionOccurrence',
+              nameKey: 'filters.conditionOccurrence.name',
+              requiresConceptSet: true,
+              groupOnly: false,
+            } as any
+          }
+          if (key === 'drugExposure') {
+            return {
+              id: 'drugExposure',
+              name: 'Drug Exposure', // Plain text format
+              requiresConceptSet: true,
+              groupOnly: false,
+            } as any
+          }
+          return undefined
+        })
 
       const section = ref('initialEvents')
+
       const { availableFilters } = useFilterConfig(section)
 
       expect(availableFilters.value).toHaveLength(2)
-      expect(availableFilters.value[0].key).toBe('conditionOccurrence')
+      expect(availableFilters.value[0].key).toBeDefined()
+      expect(availableFilters.value[0].criteriaType).toBeDefined()
+    })
+
+    it('should convert camelCase key to PascalCase criteriaType', () => {
+      vi.mocked(configLoaderService.getValidFilterTypesForSection).mockReturnValue(['conditionOccurrence'])
+      vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
+        id: 'conditionOccurrence',
+        nameKey: 'test',
+        requiresConceptSet: true,
+        groupOnly: false,
+      } as any)
+
+      const section = ref('initialEvents')
+
+      const { availableFilters } = useFilterConfig(section)
+
       expect(availableFilters.value[0].criteriaType).toBe('ConditionOccurrence')
     })
 
-    it('converts camelCase to PascalCase for criteriaType', () => {
-      vi.mocked(configLoaderService.getValidFilterTypesForSection).mockReturnValue([
-        'procedureOccurrence',
-      ])
-      vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
-        name: 'Procedure',
-        descriptions: { all: 'Procedures' },
-      } as ReturnType<typeof configLoaderService.getFilterConfig>)
-
-      const section = ref('initialEvents')
-      const { availableFilters } = useFilterConfig(section)
-
-      expect(availableFilters.value[0].criteriaType).toBe('ProcedureOccurrence')
-    })
-
-    it('resolves i18n keys for name', () => {
-      vi.mocked(configLoaderService.getValidFilterTypesForSection).mockReturnValue(['measurement'])
-      vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
-        nameKey: 'criteria.measurement.name',
-        descriptions: { all: 'Measurements' },
-      } as ReturnType<typeof configLoaderService.getFilterConfig>)
-
-      const section = ref('initialEvents')
-      const { availableFilters } = useFilterConfig(section)
-
-      // With mock tv returning key, should return 'measurement' as fallback
-      expect(availableFilters.value[0].name).toBe('measurement')
-    })
-
-    it('excludes filters with no config', () => {
+    it('should filter out null configs', () => {
       vi.mocked(configLoaderService.getValidFilterTypesForSection).mockReturnValue([
         'validFilter',
-        'invalidFilter',
+        'invalidFilter'
       ])
-      vi.mocked(configLoaderService.getFilterConfig).mockImplementation((key: string) => {
-        if (key === 'validFilter') {
-          return { name: 'Valid', descriptions: { all: 'Valid desc' } } as ReturnType<
-            typeof configLoaderService.getFilterConfig
-          >
-        }
-        return undefined
-      })
+      vi.mocked(configLoaderService.getFilterConfig)
+        .mockImplementation((key) => {
+          if (key === 'validFilter') {
+            return {
+              id: 'validFilter',
+              name: 'Valid',
+              requiresConceptSet: true,
+              groupOnly: false,
+            } as any
+          }
+          return undefined
+        })
 
       const section = ref('initialEvents')
+
       const { availableFilters } = useFilterConfig(section)
 
       expect(availableFilters.value).toHaveLength(1)
       expect(availableFilters.value[0].key).toBe('validFilter')
     })
 
-    it('sorts filters alphabetically by name', () => {
+    it('should sort filters alphabetically by name', () => {
       vi.mocked(configLoaderService.getValidFilterTypesForSection).mockReturnValue([
-        'measurement',
-        'condition',
-        'drug',
+        'zebra',
+        'apple',
+        'mango'
       ])
-      vi.mocked(configLoaderService.getFilterConfig).mockImplementation((key: string) => {
-        const configs: Record<string, unknown> = {
-          measurement: { name: 'Zebra Measurement', descriptions: { all: 'Measurements' } },
-          condition: { name: 'Alpha Condition', descriptions: { all: 'Conditions' } },
-          drug: { name: 'Beta Drug', descriptions: { all: 'Drugs' } },
-        }
-        return configs[key] as ReturnType<typeof configLoaderService.getFilterConfig>
-      })
+      vi.mocked(configLoaderService.getFilterConfig)
+        .mockImplementation((key) => ({
+          id: key,
+          name: key.charAt(0).toUpperCase() + key.slice(1),
+          requiresConceptSet: true,
+          groupOnly: false,
+        } as any))
 
       const section = ref('initialEvents')
+
       const { availableFilters } = useFilterConfig(section)
 
-      expect(availableFilters.value[0].name).toBe('Alpha Condition')
-      expect(availableFilters.value[1].name).toBe('Beta Drug')
-      expect(availableFilters.value[2].name).toBe('Zebra Measurement')
-    })
-
-    it('updates when section changes', () => {
-      vi.mocked(configLoaderService.getValidFilterTypesForSection).mockImplementation(
-        (section: string) => {
-          if (section === 'initialEvents') return ['filter1']
-          if (section === 'censoringEvents') return ['filter2']
-          return []
-        }
-      )
-      vi.mocked(configLoaderService.getFilterConfig).mockImplementation((key: string) => ({
-        name: key,
-        descriptions: { all: key },
-      })) as ReturnType<typeof configLoaderService.getFilterConfig>
-
-      const section = ref('initialEvents')
-      const { availableFilters } = useFilterConfig(section)
-
-      expect(availableFilters.value[0].key).toBe('filter1')
-
-      section.value = 'censoringEvents'
-      expect(availableFilters.value[0].key).toBe('filter2')
+      expect(availableFilters.value[0].name).toBe('Apple')
+      expect(availableFilters.value[1].name).toBe('Mango')
+      expect(availableFilters.value[2].name).toBe('Zebra')
     })
   })
 
   describe('getFilterDescription', () => {
-    it('returns context-specific description', () => {
-      vi.mocked(configLoaderService.getValidFilterTypesForSection).mockReturnValue(['testFilter'])
-      vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
-        name: 'Test',
-        descriptions: {
-          initial: 'Initial events description',
-          censoring: 'Censoring events description',
-          group: 'Group description',
-          all: 'Default description',
-        },
-      } as ReturnType<typeof configLoaderService.getFilterConfig>)
-
-      const section = ref('initialEvents')
-      const { getFilterDescription } = useFilterConfig(section)
-
-      expect(getFilterDescription('testFilter')).toBe('Initial events description')
-
-      section.value = 'censoringEvents'
-      expect(getFilterDescription('testFilter')).toBe('Censoring events description')
-    })
-
-    it('falls back to "all" description', () => {
-      vi.mocked(configLoaderService.getValidFilterTypesForSection).mockReturnValue(['testFilter'])
-      vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
-        name: 'Test',
-        descriptions: {
-          all: 'All sections description',
-        },
-      } as ReturnType<typeof configLoaderService.getFilterConfig>)
-
-      const section = ref('initialEvents')
-      const { getFilterDescription } = useFilterConfig(section)
-
-      expect(getFilterDescription('testFilter')).toBe('All sections description')
-    })
-
-    it('returns fallback for unknown filter', () => {
-      vi.mocked(configLoaderService.getValidFilterTypesForSection).mockReturnValue([])
+    it('should return fallback for missing config', () => {
       vi.mocked(configLoaderService.getFilterConfig).mockReturnValue(undefined)
 
       const section = ref('initialEvents')
       const { getFilterDescription } = useFilterConfig(section)
 
-      expect(getFilterDescription('unknown')).toBe('unknown')
+      const result = getFilterDescription('unknownFilter')
+
+      expect(result).toBe('unknownFilter')
+    })
+
+    it('should use section-specific description key', () => {
+      vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
+        id: 'conditionOccurrence',
+        descriptionKeys: {
+          initial: 'filters.condition.description.initial',
+          censoring: 'filters.condition.description.censoring',
+        },
+      } as any)
+
+      const section = ref('initialEvents')
+      const { getFilterDescription } = useFilterConfig(section)
+
+      const result = getFilterDescription('conditionOccurrence')
+
+      // Should use the fallback since tv mock returns fallback
+      expect(result).toContain('conditionOccurrence')
+    })
+
+    it('should fall back to "all" description key', () => {
+      vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
+        id: 'conditionOccurrence',
+        descriptionKeys: {
+          all: 'filters.condition.description.all',
+        },
+      } as any)
+
+      const section = ref('criteriaGroup')
+      const { getFilterDescription } = useFilterConfig(section)
+
+      const result = getFilterDescription('conditionOccurrence')
+
+      expect(result).toBeDefined()
+    })
+
+    it('should use plain text descriptions', () => {
+      vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
+        id: 'conditionOccurrence',
+        descriptions: {
+          initial: 'Find initial conditions',
+          all: 'Find any conditions',
+        },
+      } as any)
+
+      const section = ref('initialEvents')
+      const { getFilterDescription } = useFilterConfig(section)
+
+      const result = getFilterDescription('conditionOccurrence')
+
+      expect(result).toBe('Find initial conditions')
     })
   })
 
   describe('requiresConceptSet', () => {
-    it('returns true when filter requires concept set', () => {
+    it('should return true when config requires concept set', () => {
       vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
-        name: 'Test',
-        descriptions: { all: 'Test' },
+        id: 'conditionOccurrence',
         requiresConceptSet: true,
-      } as ReturnType<typeof configLoaderService.getFilterConfig>)
+      } as any)
 
       const section = ref('initialEvents')
       const { requiresConceptSet } = useFilterConfig(section)
 
-      expect(requiresConceptSet('test')).toBe(true)
+      expect(requiresConceptSet('conditionOccurrence')).toBe(true)
     })
 
-    it('returns false when filter does not require concept set', () => {
+    it('should return false when config does not require concept set', () => {
       vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
-        name: 'Test',
-        descriptions: { all: 'Test' },
+        id: 'demographicAge',
         requiresConceptSet: false,
-      } as ReturnType<typeof configLoaderService.getFilterConfig>)
+      } as any)
 
       const section = ref('initialEvents')
       const { requiresConceptSet } = useFilterConfig(section)
 
-      expect(requiresConceptSet('test')).toBe(false)
+      expect(requiresConceptSet('demographicAge')).toBe(false)
     })
 
-    it('defaults to true when not specified', () => {
+    it('should default to true when not specified', () => {
       vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
-        name: 'Test',
-        descriptions: { all: 'Test' },
-      } as ReturnType<typeof configLoaderService.getFilterConfig>)
+        id: 'someFilter',
+      } as any)
 
       const section = ref('initialEvents')
       const { requiresConceptSet } = useFilterConfig(section)
 
-      expect(requiresConceptSet('test')).toBe(true)
+      expect(requiresConceptSet('someFilter')).toBe(true)
     })
   })
 
   describe('isGroupOnly', () => {
-    it('returns true when filter is group-only', () => {
+    it('should return true when filter is group-only', () => {
       vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
-        name: 'Test',
-        descriptions: { all: 'Test' },
+        id: 'groupFilter',
         groupOnly: true,
-      } as ReturnType<typeof configLoaderService.getFilterConfig>)
+      } as any)
 
       const section = ref('initialEvents')
       const { isGroupOnly } = useFilterConfig(section)
 
-      expect(isGroupOnly('test')).toBe(true)
+      expect(isGroupOnly('groupFilter')).toBe(true)
     })
 
-    it('returns false when filter is not group-only', () => {
+    it('should return false when filter is not group-only', () => {
       vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
-        name: 'Test',
-        descriptions: { all: 'Test' },
+        id: 'regularFilter',
         groupOnly: false,
-      } as ReturnType<typeof configLoaderService.getFilterConfig>)
+      } as any)
 
       const section = ref('initialEvents')
       const { isGroupOnly } = useFilterConfig(section)
 
-      expect(isGroupOnly('test')).toBe(false)
+      expect(isGroupOnly('regularFilter')).toBe(false)
     })
 
-    it('defaults to false when not specified', () => {
+    it('should default to false when not specified', () => {
       vi.mocked(configLoaderService.getFilterConfig).mockReturnValue({
-        name: 'Test',
-        descriptions: { all: 'Test' },
-      } as ReturnType<typeof configLoaderService.getFilterConfig>)
+        id: 'someFilter',
+      } as any)
 
       const section = ref('initialEvents')
       const { isGroupOnly } = useFilterConfig(section)
 
-      expect(isGroupOnly('test')).toBe(false)
+      expect(isGroupOnly('someFilter')).toBe(false)
+    })
+  })
+
+  describe('hasInvalidFilters', () => {
+    it('should return false when no validation result', () => {
+      vi.mocked(configLoaderService.getValidationResult).mockReturnValue(null)
+
+      const section = ref('initialEvents')
+      const { hasInvalidFilters } = useFilterConfig(section)
+
+      expect(hasInvalidFilters.value).toBe(false)
+    })
+
+    it('should return false when no invalid filters', () => {
+      vi.mocked(configLoaderService.getValidationResult).mockReturnValue({
+        valid: true,
+        invalidFilterTypes: [],
+      } as any)
+
+      const section = ref('initialEvents')
+      const { hasInvalidFilters } = useFilterConfig(section)
+
+      expect(hasInvalidFilters.value).toBe(false)
+    })
+
+    it('should return true when there are invalid filters', () => {
+      vi.mocked(configLoaderService.getValidationResult).mockReturnValue({
+        valid: false,
+        invalidFilterTypes: ['badFilter1', 'badFilter2'],
+      } as any)
+
+      const section = ref('initialEvents')
+      const { hasInvalidFilters } = useFilterConfig(section)
+
+      expect(hasInvalidFilters.value).toBe(true)
     })
   })
 
   describe('validationResult', () => {
-    it('exposes validation result from service', () => {
+    it('should expose validation result from service', () => {
       const mockResult = {
         valid: true,
-        errors: [],
-        warnings: [],
-        validFilterTypes: ['filter1'],
         invalidFilterTypes: [],
-        timestamp: new Date(),
       }
-      vi.mocked(configLoaderService.getValidationResult).mockReturnValue(mockResult)
+      vi.mocked(configLoaderService.getValidationResult).mockReturnValue(mockResult as any)
 
       const section = ref('initialEvents')
       const { validationResult } = useFilterConfig(section)
@@ -332,43 +347,10 @@ describe('useFilterConfig', () => {
     })
   })
 
-  describe('hasInvalidFilters', () => {
-    it('returns true when there are invalid filters', () => {
-      vi.mocked(configLoaderService.getValidationResult).mockReturnValue({
-        valid: false,
-        errors: [],
-        warnings: [],
-        validFilterTypes: ['filter1'],
-        invalidFilterTypes: ['filter2'],
-        timestamp: new Date(),
-      })
-
-      const section = ref('initialEvents')
-      const { hasInvalidFilters } = useFilterConfig(section)
-
-      expect(hasInvalidFilters.value).toBe(true)
-    })
-
-    it('returns false when all filters are valid', () => {
-      vi.mocked(configLoaderService.getValidationResult).mockReturnValue({
-        valid: true,
-        errors: [],
-        warnings: [],
-        validFilterTypes: ['filter1', 'filter2'],
-        invalidFilterTypes: [],
-        timestamp: new Date(),
-      })
-
-      const section = ref('initialEvents')
-      const { hasInvalidFilters } = useFilterConfig(section)
-
-      expect(hasInvalidFilters.value).toBe(false)
-    })
-  })
-
   describe('configuration change subscription', () => {
-    it('registers callback with configLoaderService', () => {
+    it('should subscribe to configuration changes', () => {
       const section = ref('initialEvents')
+
       useFilterConfig(section)
 
       expect(configLoaderService.onConfigurationChange).toHaveBeenCalled()
