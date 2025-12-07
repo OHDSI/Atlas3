@@ -474,6 +474,8 @@ describe('Cohort Store', () => {
     })
 
     it('should retry on failure with exponential backoff', async () => {
+      vi.useFakeTimers()
+
       const store = useCohortStore()
       const cohort: CohortDefinition = {
         id: 222,
@@ -505,12 +507,21 @@ describe('Cohort Store', () => {
         }
       })
 
-      const result = await store.saveCohort()
+      // Start save (don't await yet)
+      const savePromise = store.saveCohort()
+
+      // Advance timers for retry delays (1s + 2s = 3s total)
+      await vi.advanceTimersByTimeAsync(1000) // First retry delay
+      await vi.advanceTimersByTimeAsync(2000) // Second retry delay
+
+      const result = await savePromise
 
       expect(result).toBe(true)
       expect(attempts).toBe(3)
       expect(store.retryState.attempt).toBe(0) // Reset after success
-    }, 15000) // Increase timeout for retry delays
+
+      vi.useRealTimers()
+    })
 
     it.skip('should fail after max retry attempts', async () => {
       const store = useCohortStore()
