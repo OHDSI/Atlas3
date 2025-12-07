@@ -8,17 +8,44 @@ import { useCohortStore } from '@/stores/cohort'
 import type { CohortEvent, CohortDefinition } from '@/models/cohort.types'
 import * as cohortCache from '@/utils/cohort-cache'
 
-// Mock IndexedDB for testing
-import 'fake-indexeddb/auto'
+// Mock the cohort-cache module to avoid IndexedDB timing issues in CI
+vi.mock('@/utils/cohort-cache', () => {
+  const mockCache = new Map<number | string, CohortDefinition>()
+
+  return {
+    saveCohortToCache: vi.fn(async (cohort: CohortDefinition) => {
+      if (cohort.id) {
+        mockCache.set(cohort.id, { ...cohort })
+      }
+    }),
+    getCohortFromCache: vi.fn(async (id: number | string) => {
+      return mockCache.get(id) || null
+    }),
+    deleteCohortFromCache: vi.fn(async (id: number | string) => {
+      mockCache.delete(id)
+    }),
+    clearCache: vi.fn(async () => {
+      mockCache.clear()
+    }),
+    // Export for test access
+    _mockCache: mockCache,
+  }
+})
 
 describe('Cohort Store', () => {
+  // Get access to the internal mock cache
+  const getMockCache = () => (cohortCache as any)._mockCache as Map<number | string, CohortDefinition>
+
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    // Clear the mock cache
+    getMockCache().clear()
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
+    getMockCache().clear()
   })
 
   describe('Initial State', () => {
@@ -467,14 +494,15 @@ describe('Cohort Store', () => {
 
       // Mock saveCohortToCache to fail twice, then succeed
       let attempts = 0
-      const originalSave = cohortCache.saveCohortToCache
-      vi.spyOn(cohortCache, 'saveCohortToCache').mockImplementation(async (coh, src) => {
+      vi.mocked(cohortCache.saveCohortToCache).mockImplementation(async (coh) => {
         attempts++
         if (attempts < 3) {
           throw new Error('Network error')
         }
-        // Succeed on third attempt
-        return originalSave(coh, src || 'local')
+        // Succeed on third attempt - store in mock cache
+        if (coh.id) {
+          getMockCache().set(coh.id, { ...coh })
+        }
       })
 
       const result = await store.saveCohort()
@@ -505,7 +533,7 @@ describe('Cohort Store', () => {
 
       // Mock saveCohortToCache to always fail
       let attempts = 0
-      vi.spyOn(cohortCache, 'saveCohortToCache').mockImplementation(async () => {
+      vi.mocked(cohortCache.saveCohortToCache).mockImplementation(async () => {
         attempts++
         throw new Error('Persistent network error')
       })
@@ -547,7 +575,7 @@ describe('Cohort Store', () => {
       store.setCohort(cohort)
 
       // Mock to always fail
-      vi.spyOn(cohortCache, 'saveCohortToCache').mockRejectedValue(new Error('Network error'))
+      vi.mocked(cohortCache.saveCohortToCache).mockRejectedValue(new Error('Network error'))
 
       // Start save (will retry)
       const savePromise = store.saveCohort()
@@ -843,7 +871,7 @@ describe('Cohort Store', () => {
 
       // Mock getCohortFromCache to fail first time
       let callCount = 0
-      vi.spyOn(cohortCache, 'getCohortFromCache').mockImplementation(async (_id) => {
+      vi.mocked(cohortCache.getCohortFromCache).mockImplementation(async (_id) => {
         callCount++
         if (callCount === 1) {
           throw new Error('Cache error')
@@ -863,7 +891,7 @@ describe('Cohort Store', () => {
       const store = useCohortStore()
 
       // Mock to throw error
-      vi.spyOn(cohortCache, 'getCohortFromCache').mockRejectedValue(new Error('Cache error'))
+      vi.mocked(cohortCache.getCohortFromCache).mockRejectedValue(new Error('Cache error'))
 
       const result = await store.getCachedCohort(999)
 
@@ -902,7 +930,7 @@ describe('Cohort Store', () => {
       const store = useCohortStore()
 
       // Mock to throw error
-      vi.spyOn(cohortCache, 'deleteCohortFromCache').mockRejectedValue(
+      vi.mocked(cohortCache.deleteCohortFromCache).mockRejectedValue(
         new Error('Delete failed')
       )
 
