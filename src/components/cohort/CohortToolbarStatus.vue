@@ -84,34 +84,25 @@
 
     <!-- Validation Notification Icon -->
     <v-tooltip
-      v-if="isValidating"
-      :text="t('common.loadingWithDots', 'Loading...').value"
-      location="bottom"
-    >
-      <template #activator="{ props: tooltipProps }">
-        <v-progress-circular
-          v-bind="tooltipProps"
-          indeterminate
-          size="20"
-          width="2"
-          color="primary"
-          class="cohort-toolbar-status__badge"
-        />
-      </template>
-    </v-tooltip>
-    <v-tooltip
-      v-else-if="validationCount > 0"
-      :text="t('cc.viewEdit.tabs.messages', 'View validation messages').value"
+      :text="isValidating ? t('common.loadingWithDots', 'Loading...').value : t('cc.viewEdit.tabs.messages', 'View validation messages').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
         <v-badge
           v-bind="tooltipProps"
           :content="validationCount"
-          :color="validationColor"
+          :color="validationCount > 0 ? validationColor : 'success'"
           class="cohort-toolbar-status__badge"
         >
           <v-icon
+            v-if="isValidating"
+            color="primary"
+            icon="mdi-loading mdi-spin"
+            size="small"
+            data-testid="validation-icon-loading"
+          />
+          <v-icon
+            v-else
             color="primary"
             icon="mdi-message-text"
             size="small"

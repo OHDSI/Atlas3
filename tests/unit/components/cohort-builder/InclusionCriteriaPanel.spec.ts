@@ -198,7 +198,7 @@ describe('InclusionCriteriaPanel', () => {
       expect(vm.expandedPanel).toBe(0)
     })
 
-    it('should create rule with empty criteria groups', async () => {
+    it('should create rule with a default criteria group', async () => {
       const wrapper = mountComponent()
       const vm = wrapper.vm as any
 
@@ -207,7 +207,9 @@ describe('InclusionCriteriaPanel', () => {
 
       const emitted = wrapper.emitted('update:modelValue') as any[]
       const rules = emitted[emitted.length - 1][0] as InclusionRule[]
-      expect(rules[0].criteriaGroups).toEqual([])
+      expect(rules[0].criteriaGroups).toHaveLength(1)
+      expect(rules[0].criteriaGroups[0].logicType).toBe('ALL')
+      expect(rules[0].criteriaGroups[0].events).toEqual([])
     })
   })
 

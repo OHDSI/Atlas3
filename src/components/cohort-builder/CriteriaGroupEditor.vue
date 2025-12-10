@@ -299,23 +299,11 @@
                             location="end"
                           >
                             <template #activator="{ props: menuProps }">
-                              <v-chip
-                                size="small"
-                                color="secondary"
-                                variant="tonal"
+                              <TemporalFilterChip
                                 v-bind="menuProps"
-                                style="cursor: pointer;"
-                                closable
-                                @click:close="removeTemporalWindow(index)"
-                              >
-                                <v-icon
-                                  start
-                                  size="small"
-                                >
-                                  mdi-calendar-range
-                                </v-icon>
-                                {{ formatTemporalWindowDisplay(event.temporalWindow) }}
-                              </v-chip>
+                                :label="formatTemporalWindowDisplay(event.temporalWindow)"
+                                @close="removeTemporalWindow(index)"
+                              />
                             </template>
                             <v-card
                               class="temporal-window-menu"
@@ -433,6 +421,7 @@ import { useTemporalWindows } from '@/composables/useTemporalWindows'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
+import TemporalFilterChip from './TemporalFilterChip.vue'
 
 const { t } = useI18n()
 

@@ -155,7 +155,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { t, tv } = useI18n()
+const { t } = useI18n()
 
 const emit = defineEmits<{
   'update': [event: CohortEvent]
@@ -187,13 +187,13 @@ const cardinalityType = computed(() => {
 })
 
 const cardinalityDisplay = computed(() => {
-  if (!props.event.cardinality) return `${t('options.atLeast', 'At least')} 1`
+  if (!props.event.cardinality) return `${t('options.atLeast', 'At least').value} 1`
   const typeMap: Record<string, string> = {
-    'AT_LEAST': tv('options.atLeast', 'At least'),
-    'EXACTLY': tv('options.exactly', 'Exactly'),
-    'AT_MOST': tv('options.atMost', 'At most')
+    'AT_LEAST': t('options.atLeast', 'At least').value,
+    'EXACTLY': t('options.exactly', 'Exactly').value,
+    'AT_MOST': t('options.atMost', 'At most').value
   }
-  const type = typeMap[props.event.cardinality.type] || t('options.atLeast', 'At least')
+  const type = typeMap[props.event.cardinality.type] || t('options.atLeast', 'At least').value
   return `${type} ${props.event.cardinality.count ?? 1}`
 })
 

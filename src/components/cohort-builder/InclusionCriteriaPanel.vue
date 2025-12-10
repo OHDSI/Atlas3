@@ -224,11 +224,18 @@ function removeRule(index: number) {
 }
 
 function addNewRule() {
+  // Create a default criteria group automatically
+  const defaultGroup: CriteriaGroup = {
+    id: uuidv4(),
+    logicType: 'ALL',
+    events: [],
+  }
+
   const newRule: InclusionRule = {
     id: uuidv4(),
     name: `New Inclusion Rule ${ruleCounter.value}`,
     description: undefined,
-    criteriaGroups: [],
+    criteriaGroups: [defaultGroup],
   }
 
   ruleCounter.value++

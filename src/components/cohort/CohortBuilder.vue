@@ -588,6 +588,8 @@ onMounted(async () => {
       // Initialize new cohort if no draft found
       cohortStore.createNewCohort()
     }
+    // Trigger validation for new/restored cohorts
+    triggerValidation()
   }
 
   // Load resources in parallel in the background (don't block rendering)
@@ -1054,7 +1056,7 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
   selectedCriteriaContext.value = null
 }
 
-function handleSave() {
+async function handleSave() {
   if (!canSave.value) return
 
   const cohortDefinition: CohortDefinition = {
@@ -1071,20 +1073,48 @@ function handleSave() {
     observationPeriod: observationPeriod.value,
   }
 
-  cohortStore.setCohort(cohortDefinition)
-  cohortStore.markClean()
-  cohortStore.clearDraft() // Clear draft after successful save
+  // Convert to Atlas format and save to WebAPI
+  const { convertInternalToAtlas } = await import('@/services/atlas-converter')
+  const { saveCohortDefinition } = await import('@/services/webapi')
 
-  // Update snapshot after save to reflect new saved state
-  loadedSnapshot.value = createStateSnapshot()
+  const atlasExpression = convertInternalToAtlas(cohortDefinition)
+  const atlasDefinition = {
+    id: cohortDefinition.id,
+    name: cohortDefinition.name,
+    description: cohortDefinition.description,
+    expressionType: 'SIMPLE_EXPRESSION',
+    expression: atlasExpression, // Send as object, not stringified
+  }
 
-  successMessage.value = 'Cohort saved successfully'
-  showSuccess.value = true
+  try {
+    const savedCohort = await saveCohortDefinition(atlasDefinition)
 
-  // Navigate to cohorts list after brief delay
-  setTimeout(() => {
-    router.push('/cohorts')
-  }, 1000)
+    if (!savedCohort) {
+      errorMessage.value = 'Failed to save cohort to server'
+      showError.value = true
+      return
+    }
+
+    // Update local store
+    cohortStore.setCohort(cohortDefinition)
+    cohortStore.markClean()
+    cohortStore.clearDraft()
+
+    // Update snapshot after save to reflect new saved state
+    loadedSnapshot.value = createStateSnapshot()
+
+    successMessage.value = 'Cohort saved successfully'
+    showSuccess.value = true
+
+    // Navigate to cohorts list after brief delay
+    setTimeout(() => {
+      router.push('/cohorts')
+    }, 1000)
+  } catch (error) {
+    logger.error('CohortBuilder', 'Failed to save cohort', error)
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to save cohort'
+    showError.value = true
+  }
 }
 
 function handleCancel() {

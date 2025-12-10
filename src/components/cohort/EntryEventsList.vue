@@ -37,6 +37,7 @@
         <!-- Observation Period Chip -->
         <v-chip
           class="obs-period-chip"
+          color="orange"
           variant="outlined"
           size="small"
           @click="showObsPeriodDialog = true"
@@ -45,7 +46,7 @@
             start
             size="small"
           >
-            mdi-calendar-range
+            mdi-clock-outline
           </v-icon>
           <!-- Short version for small screens -->
           <span class="d-md-none">
@@ -225,7 +226,7 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   color: #1f425a;
   user-select: none;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  padding-left: 2px;
+  padding-left: 8px;
   position: relative;
   z-index: 1;
 }

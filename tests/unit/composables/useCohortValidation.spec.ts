@@ -372,7 +372,8 @@ describe('useCohortValidation', () => {
       expect(webapi.validateCohortDefinition).toHaveBeenCalledTimes(1)
     })
 
-    it('should not validate when cohort name is empty', async () => {
+    it('should validate with placeholder name when cohort name is empty', async () => {
+      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings: [] })
       const options = createTestOptions({
         cohortName: ref(''),
       })
@@ -382,10 +383,15 @@ describe('useCohortValidation', () => {
       vi.advanceTimersByTime(100)
       await vi.runAllTimersAsync()
 
-      expect(webapi.validateCohortDefinition).not.toHaveBeenCalled()
+      // Now validates with 'Untitled Cohort' placeholder name
+      expect(webapi.validateCohortDefinition).toHaveBeenCalledWith(
+        'Untitled Cohort',
+        expect.any(Object)
+      )
     })
 
-    it('should not validate when no entry events', async () => {
+    it('should validate even when no entry events', async () => {
+      vi.mocked(webapi.validateCohortDefinition).mockResolvedValue({ warnings: [] })
       const options = createTestOptions({
         entryEvents: ref([]),
       })
@@ -395,7 +401,8 @@ describe('useCohortValidation', () => {
       vi.advanceTimersByTime(100)
       await vi.runAllTimersAsync()
 
-      expect(webapi.validateCohortDefinition).not.toHaveBeenCalled()
+      // Now always validates so server can return warnings about missing events
+      expect(webapi.validateCohortDefinition).toHaveBeenCalled()
     })
 
     it('should set validation warnings from API response', async () => {
