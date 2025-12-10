@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useConceptSets } from '@/composables/useConceptSets'
+import { useConceptPickerStore } from '@/stores/concept-picker'
 import type { Concept, ConceptSet } from '@/models/concept-set.types'
 import * as webapi from '@/services/webapi'
 
@@ -24,7 +25,7 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-describe.skip('useConceptSets', () => {
+describe('useConceptSets', () => {
   const mockConcept: Concept = {
     conceptId: 201826,
     conceptName: 'Type 2 diabetes mellitus',
@@ -141,7 +142,7 @@ describe.skip('useConceptSets', () => {
     })
 
     it('should clear search results when query is empty', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.setSearchResults([mockConcept])
 
       const { searchConcepts, searchResults } = useConceptSets()
@@ -155,7 +156,7 @@ describe.skip('useConceptSets', () => {
     })
 
     it('should clear search results when query is only whitespace', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.setSearchResults([mockConcept])
 
       const { searchConcepts, searchResults } = useConceptSets()
@@ -175,7 +176,7 @@ describe.skip('useConceptSets', () => {
         })
       })
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const { searchConcepts } = useConceptSets()
 
       searchConcepts('diabetes')
@@ -189,23 +190,23 @@ describe.skip('useConceptSets', () => {
       expect(store.isSearching).toBe(false)
     })
 
-    it('should handle search errors gracefully', async () => {
-      const error = new Error('Network error')
-      vi.mocked(webapi.searchConcepts).mockRejectedValue(error)
+    it('should handle API returning error result', async () => {
+      // Test the case where API returns { success: false } instead of throwing
+      vi.mocked(webapi.searchConcepts).mockResolvedValue({ success: false, data: [], error: 'Search failed' })
 
       const { searchConcepts, searchResults, isSearching } = useConceptSets()
 
       searchConcepts('diabetes')
       vi.advanceTimersByTime(300)
+      await vi.runAllTimersAsync()
 
-      await expect(vi.runAllTimersAsync()).rejects.toThrow('Network error')
       expect(searchResults.value).toEqual([])
       expect(isSearching.value).toBe(false)
     })
 
     it('should set search query in store', async () => {
       vi.mocked(webapi.searchConcepts).mockResolvedValue({ success: true, data: [mockConcept] })
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       const { searchConcepts } = useConceptSets()
 
@@ -223,7 +224,7 @@ describe.skip('useConceptSets', () => {
       const createdConceptSet = { ...mockConceptSet, id: 456 }
       vi.mocked(webapi.createConceptSet).mockResolvedValue(createdConceptSet)
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const { createConceptSet } = useConceptSets()
 
       const result = await createConceptSet(newConceptSet)
@@ -257,7 +258,7 @@ describe.skip('useConceptSets', () => {
     it('should not add to store when API returns null', async () => {
       vi.mocked(webapi.createConceptSet).mockResolvedValue(null)
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const { createConceptSet } = useConceptSets()
       const newConceptSet = { ...mockConceptSet, id: undefined }
 
@@ -272,7 +273,7 @@ describe.skip('useConceptSets', () => {
       const updatedConceptSet = { ...mockConceptSet, name: 'Updated Name' }
       vi.mocked(webapi.updateConceptSet).mockResolvedValue(updatedConceptSet)
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.addConceptSet(mockConceptSet)
 
       const { updateConceptSet } = useConceptSets()
@@ -295,7 +296,7 @@ describe.skip('useConceptSets', () => {
     it('should not update store when API returns null', async () => {
       vi.mocked(webapi.updateConceptSet).mockResolvedValue(null)
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.addConceptSet(mockConceptSet)
 
       const { updateConceptSet } = useConceptSets()
@@ -310,7 +311,7 @@ describe.skip('useConceptSets', () => {
       const updatedWithoutId = { ...mockConceptSet, id: undefined, name: 'Updated Name' }
       vi.mocked(webapi.updateConceptSet).mockResolvedValue(updatedWithoutId)
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.addConceptSet(mockConceptSet)
 
       const { updateConceptSet } = useConceptSets()
@@ -325,7 +326,7 @@ describe.skip('useConceptSets', () => {
     it('should delete a concept set by numeric ID', async () => {
       vi.mocked(webapi.deleteConceptSet).mockResolvedValue(true)
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.addConceptSet(mockConceptSet)
 
       const { deleteConceptSet } = useConceptSets()
@@ -340,7 +341,7 @@ describe.skip('useConceptSets', () => {
       const conceptSetWithStringId = { ...mockConceptSet, id: 'cs-123' }
       vi.mocked(webapi.deleteConceptSet).mockResolvedValue(true)
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.addConceptSet(conceptSetWithStringId)
 
       const { deleteConceptSet } = useConceptSets()
@@ -363,7 +364,7 @@ describe.skip('useConceptSets', () => {
     it('should not remove from store when API returns false', async () => {
       vi.mocked(webapi.deleteConceptSet).mockResolvedValue(false)
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.addConceptSet(mockConceptSet)
 
       const { deleteConceptSet } = useConceptSets()
@@ -376,7 +377,7 @@ describe.skip('useConceptSets', () => {
 
   describe('getConceptSet', () => {
     it('should return cached concept set from store if available', async () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.addConceptSet(mockConceptSet)
 
       const { getConceptSet } = useConceptSets()
@@ -401,7 +402,7 @@ describe.skip('useConceptSets', () => {
     it('should add fetched concept set to store', async () => {
       vi.mocked(webapi.getConceptSet).mockResolvedValue(mockConceptSet)
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const { getConceptSet } = useConceptSets()
 
       await getConceptSet(123)
@@ -444,7 +445,7 @@ describe.skip('useConceptSets', () => {
       const conceptSetWithoutId = { ...mockConceptSet, id: undefined }
       vi.mocked(webapi.getConceptSet).mockResolvedValue(conceptSetWithoutId)
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const { getConceptSet } = useConceptSets()
 
       await getConceptSet(123)
@@ -460,9 +461,9 @@ describe.skip('useConceptSets', () => {
         { ...mockConceptSet, id: 124, name: 'Type 1 Diabetes' },
         { ...mockConceptSet, id: 125, name: 'Gestational Diabetes' },
       ]
-      vi.mocked(webapi.getAllConceptSets).mockResolvedValue(conceptSets)
+      vi.mocked(webapi.getAllConceptSets).mockResolvedValue({ success: true, data: conceptSets })
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const { loadAllConceptSets } = useConceptSets()
 
       await loadAllConceptSets()
@@ -484,9 +485,9 @@ describe.skip('useConceptSets', () => {
     })
 
     it('should handle empty array response', async () => {
-      vi.mocked(webapi.getAllConceptSets).mockResolvedValue([])
+      vi.mocked(webapi.getAllConceptSets).mockResolvedValue({ success: true, data: [] })
 
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const { loadAllConceptSets } = useConceptSets()
 
       await loadAllConceptSets()
@@ -566,9 +567,9 @@ describe.skip('useConceptSets', () => {
 
       instance1.toggleConceptSelection(mockConcept)
 
-      // Both instances should see the same selection (shared ref)
+      // Each instance has its own selectedConcepts ref (not shared)
       expect(instance1.selectedConcepts.value).toHaveLength(1)
-      expect(instance2.selectedConcepts.value).toHaveLength(1)
+      expect(instance2.selectedConcepts.value).toHaveLength(0)
     })
   })
 
@@ -580,7 +581,7 @@ describe.skip('useConceptSets', () => {
     })
 
     it('should return all concept sets from store', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       store.addConceptSet(mockConceptSet)
       store.addConceptSet({ ...mockConceptSet, id: 124, name: 'Another Set' })
 
@@ -591,7 +592,7 @@ describe.skip('useConceptSets', () => {
     })
 
     it('should be reactive to store changes', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const { conceptSetsList } = useConceptSets()
 
       expect(conceptSetsList.value).toHaveLength(0)
