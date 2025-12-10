@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import * as configCache from '@/services/config-cache'
 import 'fake-indexeddb/auto'
 
-describe.skip('Config Cache Service', () => {
+describe('Config Cache Service', () => {
   beforeEach(() => {
     // Clear all stores before each test
     // eslint-disable-next-line no-global-assign
@@ -154,9 +154,8 @@ describe.skip('Config Cache Service', () => {
       })
 
       it('should return default "public" on localStorage error', () => {
-        // Mock localStorage.getItem to throw
-        const originalGetItem = localStorage.getItem
-        localStorage.getItem = vi.fn(() => {
+        // Mock localStorage.getItem to throw using spyOn
+        const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
           throw new Error('localStorage error')
         })
 
@@ -165,7 +164,7 @@ describe.skip('Config Cache Service', () => {
         expect(schema).toBe('public')
 
         // Restore
-        localStorage.getItem = originalGetItem
+        getItemSpy.mockRestore()
       })
     })
 
@@ -187,9 +186,8 @@ describe.skip('Config Cache Service', () => {
       })
 
       it('should throw error on localStorage failure', () => {
-        // Mock localStorage.setItem to throw
-        const originalSetItem = localStorage.setItem
-        localStorage.setItem = vi.fn(() => {
+        // Mock localStorage.setItem to throw using spyOn
+        const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
           throw new Error('localStorage quota exceeded')
         })
 
@@ -198,7 +196,7 @@ describe.skip('Config Cache Service', () => {
         )
 
         // Restore
-        localStorage.setItem = originalSetItem
+        setItemSpy.mockRestore()
       })
     })
   })

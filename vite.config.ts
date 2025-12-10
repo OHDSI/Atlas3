@@ -35,9 +35,9 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      // Proxy WebAPI requests to localhost:41100
+      // Proxy WebAPI requests to local WebAPI instance
       '/WebAPI': {
-        target: 'https://localhost:41100',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,
