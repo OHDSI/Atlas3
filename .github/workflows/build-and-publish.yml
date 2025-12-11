@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: '24.x'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@p-hoffmann'
+          scope: '@ohdsi'
           cache: 'npm'
 
       - name: Install dependencies
@@ -44,10 +44,10 @@ jobs:
           
           if [ "${{ github.ref }}" = "refs/heads/develop" ]; then
             # For develop branch: append timestamp and commit ID
-            cat package.json | jq --arg ts "$TIMESTAMP" --arg commit "$COMMIT_ID" 'del(.private) | .name = "@p-hoffmann/atlas" | .version = .version + "-" + $ts + "-" + $commit | .publishConfig = {"registry": "https://npm.pkg.github.com"} | .repository = {"type": "git", "url": "git+https://github.com/p-hoffmann/Atlas.git"} | .files = ["dist"]' > package.json.tmp
+            cat package.json | jq --arg ts "$TIMESTAMP" --arg commit "$COMMIT_ID" 'del(.private) | .name = "@ohdsi/atlas3" | .version = .version + "-" + $ts + "-" + $commit | .publishConfig = {"registry": "https://npm.pkg.github.com"} | .repository = {"type": "git", "url": "git+https://github.com/ohdsi/Atlas3.git"} | .files = ["dist"]' > package.json.tmp
           else
             # For main branch or tags: use version as-is
-            cat package.json | jq 'del(.private) | .name = "@p-hoffmann/atlas" | .publishConfig = {"registry": "https://npm.pkg.github.com"} | .repository = {"type": "git", "url": "git+https://github.com/p-hoffmann/Atlas.git"} | .files = ["dist"]' > package.json.tmp
+            cat package.json | jq 'del(.private) | .name = "@ohdsi/atlas3" | .publishConfig = {"registry": "https://npm.pkg.github.com"} | .repository = {"type": "git", "url": "git+https://github.com/ohdsi/Atlas3.git"} | .files = ["dist"]' > package.json.tmp
           fi
           
           mv package.json.tmp package.json
