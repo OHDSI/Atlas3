@@ -588,6 +588,10 @@ onMounted(async () => {
       // Initialize new cohort if no draft found
       cohortStore.createNewCohort()
     }
+    // Set name from query param if provided (from New Cohort dialog)
+    if (route.query.name && typeof route.query.name === 'string') {
+      cohortName.value = route.query.name
+    }
     // Trigger validation for new/restored cohorts
     triggerValidation()
   }

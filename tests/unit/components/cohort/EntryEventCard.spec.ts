@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import { createPinia, setActivePinia } from 'pinia'
@@ -201,7 +201,7 @@ describe('EntryEventCard', () => {
   describe('updateCardinality', () => {
     it('should emit update with new cardinality', async () => {
       const wrapper = mountComponent()
-      const attributesEditor = wrapper.find('.attributes-editor-stub')
+      const _attributesEditor = wrapper.find('.attributes-editor-stub')
 
       const newCardinality = { type: 'EXACTLY' as const, count: 3 }
       await wrapper.vm.updateCardinality(newCardinality)

@@ -5,7 +5,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/Atlas/',
+  base: '/',
   plugins: [
     vue(),
     // Vuetify plugin for auto-importing components and tree-shaking
