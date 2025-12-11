@@ -272,13 +272,21 @@ describe('CohortsView.vue', () => {
       expect(importButton).toBeDefined()
     })
 
-    it('should navigate to /cohorts/new when "New Cohort" clicked', async () => {
+    it('should open new cohort dialog when "New Cohort" clicked', async () => {
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       const newCohortButton = buttons.find(btn => btn.text().includes('New Cohort'))
 
       await newCohortButton?.trigger('click')
+      await wrapper.vm.$nextTick()
 
-      expect(mockPush).toHaveBeenCalledWith('/cohorts/new')
+      expect(wrapper.vm.showNewCohortDialog).toBe(true)
+    })
+
+    it('should navigate to /cohorts/new with name when dialog confirmed', async () => {
+      wrapper.vm.newCohortName = 'Test Cohort'
+      wrapper.vm.confirmCreateCohort()
+
+      expect(mockPush).toHaveBeenCalledWith({ path: '/cohorts/new', query: { name: 'Test Cohort' } })
     })
 
     it('should open import dialog when "Import" clicked', async () => {
@@ -789,7 +797,7 @@ describe('CohortsView.vue', () => {
       const grid = wrapper.findComponent({ name: 'CohortGrid' })
       await grid.vm.$emit('create-cohort')
 
-      expect(mockPush).toHaveBeenCalledWith('/cohorts/new')
+      expect(wrapper.vm.showNewCohortDialog).toBe(true)
     })
 
     it('should handle generate action from grid', async () => {
