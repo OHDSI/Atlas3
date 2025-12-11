@@ -10,7 +10,7 @@ test.describe('Concept Search', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to concepts page
     await setupBasicMocks(page)
-    await page.goto('/Atlas/concepts')
+    await page.goto('/concepts')
 
     // Wait for page to load
     await waitForNetworkIdle(page)

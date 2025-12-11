@@ -171,6 +171,44 @@
           </v-card>
         </v-dialog>
 
+        <!-- New Cohort Dialog -->
+        <v-dialog
+          v-model="showNewCohortDialog"
+          max-width="500px"
+        >
+          <v-card>
+            <v-card-title class="text-h5">
+              {{ t('cohortDefinitions.newDefinitionTitle', 'Create New Cohort') }}
+            </v-card-title>
+            <v-card-text>
+              <v-text-field
+                v-model="newCohortName"
+                :label="t('cohortDefinitions.name', 'Cohort Name').value"
+                autofocus
+                @keyup.enter="confirmCreateCohort"
+              />
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                color="grey"
+                variant="text"
+                @click="showNewCohortDialog = false"
+              >
+                {{ t('common.cancel', 'Cancel') }}
+              </v-btn>
+              <v-btn
+                color="primary"
+                variant="elevated"
+                :disabled="!newCohortName.trim()"
+                @click="confirmCreateCohort"
+              >
+                {{ t('common.create', 'Create') }}
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <!-- Generation Panel -->
         <generation-panel
           v-model="showGenerationPanel"
@@ -257,6 +295,8 @@ const { t } = useI18n()
 const showImportDialog = ref(false)
 const showDeleteDialog = ref(false)
 const showGenerationPanel = ref(false)
+const showNewCohortDialog = ref(false)
+const newCohortName = ref('')
 const selectedCohort = ref<CohortDefinitionSummary | null>(null)
 const deleting = ref(false)
 
@@ -306,10 +346,22 @@ const paginatedCohorts = computed(() => {
 })
 
 /**
- * Navigate to create new cohort page
+ * Open new cohort dialog
  */
 function handleCreateCohort() {
-  router.push('/cohorts/new')
+  newCohortName.value = ''
+  showNewCohortDialog.value = true
+}
+
+/**
+ * Confirm and navigate to create new cohort page
+ */
+function confirmCreateCohort() {
+  const name = newCohortName.value.trim()
+  if (name) {
+    router.push({ path: '/cohorts/new', query: { name } })
+  }
+  showNewCohortDialog.value = false
 }
 
 /**

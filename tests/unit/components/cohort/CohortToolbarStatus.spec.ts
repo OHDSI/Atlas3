@@ -175,15 +175,14 @@ describe('CohortToolbarStatus', () => {
   })
 
   describe('Validation Status', () => {
-    it('should show loading spinner when validating', () => {
+    it('should show loading icon when validating', () => {
       const wrapper = mountComponent({ isValidating: true })
 
-      const spinner = wrapper.findComponent({ name: 'VProgressCircular' })
-      expect(spinner.exists()).toBe(true)
-      expect(spinner.props('indeterminate')).toBe(true)
+      const loadingIcon = wrapper.find('[data-testid="validation-icon-loading"]')
+      expect(loadingIcon.exists()).toBe(true)
     })
 
-    it('should not show validation badge when validating', () => {
+    it('should not show validation icon when validating', () => {
       const wrapper = mountComponent({
         isValidating: true,
         validationCount: 5
@@ -193,14 +192,14 @@ describe('CohortToolbarStatus', () => {
       expect(validationIcon.exists()).toBe(false)
     })
 
-    it('should not show validation badge when count is 0', () => {
+    it('should show validation icon even when count is 0', () => {
       const wrapper = mountComponent({
         validationCount: 0,
         isValidating: false
       })
 
       const validationIcon = wrapper.find('[data-testid="validation-icon"]')
-      expect(validationIcon.exists()).toBe(false)
+      expect(validationIcon.exists()).toBe(true)
     })
 
     it('should show validation badge when count > 0 and not validating', () => {
@@ -282,7 +281,7 @@ describe('CohortToolbarStatus', () => {
       expect(validationIcon.exists()).toBe(true)
     })
 
-    it('should show concept sets and spinner when validating', () => {
+    it('should show concept sets and loading icon when validating', () => {
       const wrapper = mountComponent({
         conceptSetCount: 3,
         validationCount: 0,
@@ -290,13 +289,13 @@ describe('CohortToolbarStatus', () => {
       })
 
       const conceptIcon = wrapper.find('[data-testid="concept-sets-icon"]')
-      const spinner = wrapper.findComponent({ name: 'VProgressCircular' })
+      const loadingIcon = wrapper.find('[data-testid="validation-icon-loading"]')
 
       expect(conceptIcon.exists()).toBe(true)
-      expect(spinner.exists()).toBe(true)
+      expect(loadingIcon.exists()).toBe(true)
     })
 
-    it('should handle all zero counts', () => {
+    it('should handle all zero counts - validation icon still shows', () => {
       const wrapper = mountComponent({
         conceptSetCount: 0,
         validationCount: 0,
@@ -305,11 +304,11 @@ describe('CohortToolbarStatus', () => {
 
       const conceptIcon = wrapper.find('[data-testid="concept-sets-icon"]')
       const validationIcon = wrapper.find('[data-testid="validation-icon"]')
-      const spinner = wrapper.findComponent({ name: 'VProgressCircular' })
+      const loadingIcon = wrapper.find('[data-testid="validation-icon-loading"]')
 
       expect(conceptIcon.exists()).toBe(false)
-      expect(validationIcon.exists()).toBe(false)
-      expect(spinner.exists()).toBe(false)
+      expect(validationIcon.exists()).toBe(true) // Always shows now
+      expect(loadingIcon.exists()).toBe(false)
     })
   })
 

@@ -116,7 +116,7 @@ export function useCohorts() {
   /**
    * Helper: Check if date is within range
    */
-  function isDateInRange(date: number | undefined, range: DateRange): boolean {
+  function isDateInRange(date: number | string | undefined, range: DateRange): boolean {
     if (!date) return !range.from && !range.to // If no date, only pass if no range set
     const dateObj = new Date(date)
     if (range.from && dateObj < range.from) return false

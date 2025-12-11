@@ -181,4 +181,49 @@ describe('GenerationPanel', () => {
       expect(content.exists()).toBe(true)
     })
   })
+
+  describe('close function', () => {
+    it('should emit update:modelValue with false when close is called', () => {
+      const wrapper = mountComponent()
+
+      wrapper.vm.close()
+
+      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+      expect(wrapper.emitted('update:modelValue')![0]).toEqual([false])
+    })
+  })
+
+  describe('handleDataSourceClick function', () => {
+    it('should set selectedSourceKey and show reports', async () => {
+      const store = useWebAPIStore()
+      store.sourcesList = [mockSource1]
+
+      const wrapper = mountComponent()
+
+      wrapper.vm.handleDataSourceClick('cdm-1')
+
+      expect(wrapper.vm.selectedSourceKey).toBe('cdm-1')
+      expect(wrapper.vm.showReports).toBe(true)
+    })
+  })
+
+  describe('handleCloseReports function', () => {
+    it('should hide reports and clear selected source', async () => {
+      const store = useWebAPIStore()
+      store.sourcesList = [mockSource1]
+
+      const wrapper = mountComponent()
+
+      // First open reports
+      wrapper.vm.handleDataSourceClick('cdm-1')
+      expect(wrapper.vm.showReports).toBe(true)
+      expect(wrapper.vm.selectedSourceKey).toBe('cdm-1')
+
+      // Then close them
+      wrapper.vm.handleCloseReports()
+
+      expect(wrapper.vm.showReports).toBe(false)
+      expect(wrapper.vm.selectedSourceKey).toBeNull()
+    })
+  })
 })

@@ -491,12 +491,15 @@ describe('WebAPI Service', () => {
       expect(result.warnings).toHaveLength(1)
     })
 
-    it('returns empty warnings on error', async () => {
+    it('returns error as warning on failure', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
       const result = await webapi.validateCohortDefinition('Test', {})
 
-      expect(result.warnings).toEqual([])
+      expect(result.warnings).toHaveLength(1)
+      expect(result.warnings[0].type).toBe('DefaultWarning')
+      expect(result.warnings[0].severity).toBe('WARNING')
+      expect(result.warnings[0].message).toContain('Network error')
     })
   })
 

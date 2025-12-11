@@ -188,11 +188,6 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
    * Validate the current cohort definition
    */
   async function validateCohort() {
-    if (!cohortName.value || entryEvents.value.length === 0) {
-      validationWarnings.value = []
-      return
-    }
-
     try {
       _isValidatingFlag = true
       _isValidatingInternal.value = true
@@ -215,8 +210,9 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       // Convert to Atlas format for validation
       const atlasExpression = convertInternalToAtlas(cohortDef)
 
-      // Call validation endpoint
-      const result = await validateCohortDefinition(cohortName.value, atlasExpression)
+      // Use placeholder name if empty
+      const nameForValidation = cohortName.value || 'Untitled Cohort'
+      const result = await validateCohortDefinition(nameForValidation, atlasExpression)
       validationWarnings.value = result.warnings || []
     } catch (error) {
       logger.error('CohortValidation', 'Failed to validate cohort', error)
@@ -270,6 +266,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       additionalCriteria,
       inclusionRules,
       exitCriteria,
+      censoringCriteria,
       observationPeriod,
       qualifyingLimit,
       inclusionQualifyingLimit,

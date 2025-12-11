@@ -8,6 +8,7 @@ import { useTemporalWindows } from '@/composables/useTemporalWindows'
 import CardinalityEditor from './CardinalityEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
+import TemporalFilterChip from './TemporalFilterChip.vue'
 
 const props = withDefaults(defineProps<{
   event: CohortEvent
@@ -187,20 +188,11 @@ const removeEvent = () => {
           </v-icon>
           {{ cardinalityDisplay }}
         </v-chip>
-        <v-chip
+        <TemporalFilterChip
           v-if="hasTemporalWindows"
-          size="small"
-          color="secondary"
-          variant="tonal"
-        >
-          <v-icon
-            start
-            size="small"
-          >
-            mdi-calendar-range
-          </v-icon>
-          {{ temporalWindowDisplay }}
-        </v-chip>
+          :label="temporalWindowDisplay ?? ''"
+          :closable="false"
+        />
         <v-chip
           v-if="hasAttributes"
           size="small"

@@ -135,6 +135,103 @@ describe('CohortFilters', () => {
       // The component should support clear functionality
       expect(wrapper.vm).toBeDefined()
     })
+
+    it('should emit clear event when handleClearAll is called', () => {
+      const wrapper = mountComponent({ activeFilterCount: 3 })
+
+      wrapper.vm.handleClearAll()
+
+      expect(wrapper.emitted('clear')).toBeTruthy()
+      expect(wrapper.emitted('clear')!.length).toBe(1)
+    })
+  })
+
+  describe('formatDateForDisplay', () => {
+    it('should return empty string for undefined date', () => {
+      const wrapper = mountComponent()
+      const result = wrapper.vm.formatDateForDisplay(undefined)
+      expect(result).toBe('')
+    })
+
+    it('should format date correctly', () => {
+      const wrapper = mountComponent()
+      const date = new Date('2024-03-15')
+      const result = wrapper.vm.formatDateForDisplay(date)
+      expect(result).toBeTruthy()
+      expect(result.length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('Date Change Handlers', () => {
+    it('should update created from date and close picker', () => {
+      const wrapper = mountComponent()
+      const testDate = new Date('2024-01-15')
+
+      wrapper.vm.showCreatedFromPicker = true
+      wrapper.vm.handleCreatedFromChange(testDate)
+
+      expect(wrapper.vm.localFilters.createdDateRange.from).toEqual(testDate)
+      expect(wrapper.vm.showCreatedFromPicker).toBe(false)
+    })
+
+    it('should update created to date and close picker', () => {
+      const wrapper = mountComponent()
+      const testDate = new Date('2024-02-20')
+
+      wrapper.vm.showCreatedToPicker = true
+      wrapper.vm.handleCreatedToChange(testDate)
+
+      expect(wrapper.vm.localFilters.createdDateRange.to).toEqual(testDate)
+      expect(wrapper.vm.showCreatedToPicker).toBe(false)
+    })
+
+    it('should update modified from date and close picker', () => {
+      const wrapper = mountComponent()
+      const testDate = new Date('2024-03-10')
+
+      wrapper.vm.showModifiedFromPicker = true
+      wrapper.vm.handleModifiedFromChange(testDate)
+
+      expect(wrapper.vm.localFilters.modifiedDateRange.from).toEqual(testDate)
+      expect(wrapper.vm.showModifiedFromPicker).toBe(false)
+    })
+
+    it('should update modified to date and close picker', () => {
+      const wrapper = mountComponent()
+      const testDate = new Date('2024-04-25')
+
+      wrapper.vm.showModifiedToPicker = true
+      wrapper.vm.handleModifiedToChange(testDate)
+
+      expect(wrapper.vm.localFilters.modifiedDateRange.to).toEqual(testDate)
+      expect(wrapper.vm.showModifiedToPicker).toBe(false)
+    })
+  })
+
+  describe('removeTag', () => {
+    it('should remove tag from selectedTags', () => {
+      const filtersWithTags: FilterState = {
+        ...defaultFilters,
+        selectedTags: ['tag1', 'tag2', 'tag3']
+      }
+      const wrapper = mountComponent({ filters: filtersWithTags })
+
+      wrapper.vm.removeTag('tag2')
+
+      expect(wrapper.vm.localFilters.selectedTags).toEqual(['tag1', 'tag3'])
+    })
+
+    it('should do nothing if tag not found', () => {
+      const filtersWithTags: FilterState = {
+        ...defaultFilters,
+        selectedTags: ['tag1', 'tag2']
+      }
+      const wrapper = mountComponent({ filters: filtersWithTags })
+
+      wrapper.vm.removeTag('nonexistent')
+
+      expect(wrapper.vm.localFilters.selectedTags).toEqual(['tag1', 'tag2'])
+    })
   })
 
   describe('Filter State', () => {

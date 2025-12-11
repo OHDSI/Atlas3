@@ -17,7 +17,7 @@ test.describe('DataSources - Report Type Selector', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await setupDatasourcesMocks(page)
-    await page.goto('/Atlas/datasources')
+    await page.goto('/datasources')
     await waitForNetworkIdle(page)
   })
 
@@ -40,7 +40,7 @@ test.describe('DataSources - Report Type Selector', () => {
 
   test('should be disabled when no datasource is selected', async ({ page }) => {
     // Navigate without selecting a source
-    await page.goto('/Atlas/datasources')
+    await page.goto('/datasources')
     await waitForNetworkIdle(page)
 
     const reportSelector = page.getByTestId('report-type-selector')
@@ -59,7 +59,7 @@ test.describe('DataSources - Report Type Selector', () => {
 test.describe('Concept Search - Advanced Features', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/Atlas/concepts')
+    await page.goto('/concepts')
     await waitForNetworkIdle(page)
   })
 
@@ -122,7 +122,7 @@ test.describe('Concept Search - Advanced Features', () => {
 test.describe('Cohort List - UI Interactions', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/Atlas/cohorts')
+    await page.goto('/cohorts')
     await waitForNetworkIdle(page)
   })
 
@@ -130,7 +130,7 @@ test.describe('Cohort List - UI Interactions', () => {
     await setupBasicMocks(page)
 
     // Navigate to trigger loading
-    await page.goto('/Atlas/cohorts', { waitUntil: 'domcontentloaded' })
+    await page.goto('/cohorts', { waitUntil: 'domcontentloaded' })
 
     // Check for loading skeleton or spinner
     const skeleton = page.locator('.v-skeleton-loader, .v-progress-circular')
@@ -170,12 +170,12 @@ test.describe('Browser Navigation', () => {
     await setupBasicMocks(page)
 
     // Navigate to cohorts list
-    await page.goto('/Atlas/cohorts')
+    await page.goto('/cohorts')
     await waitForNetworkIdle(page)
     await page.waitForTimeout(1000)
 
     // Navigate to a cohort
-    await page.goto('/Atlas/cohorts/1')
+    await page.goto('/cohorts/1')
     await waitForNetworkIdle(page)
     await page.waitForTimeout(1000)
 
@@ -193,8 +193,8 @@ test.describe('Browser Navigation', () => {
     await setupBasicMocks(page)
 
     // Navigate through pages
-    await page.goto('/Atlas/')
-    await page.goto('/Atlas/cohorts')
+    await page.goto('/')
+    await page.goto('/cohorts')
     await waitForNetworkIdle(page)
 
     // Go back
@@ -226,7 +226,7 @@ test.describe('UI Loading States', () => {
       })
     })
 
-    await page.goto('/Atlas/cohorts', { waitUntil: 'domcontentloaded' })
+    await page.goto('/cohorts', { waitUntil: 'domcontentloaded' })
 
     // Check for loading state
     const loadingIndicator = page.locator('.v-skeleton-loader, .v-progress-circular, .loading')
@@ -250,7 +250,7 @@ test.describe('Concept Sets - Tab Integration', () => {
       })
     })
 
-    await page.goto('/Atlas/concepts?tab=sets')
+    await page.goto('/concepts?tab=sets')
     await waitForNetworkIdle(page)
     await page.waitForTimeout(1000)
 

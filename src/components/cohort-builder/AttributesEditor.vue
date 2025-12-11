@@ -220,23 +220,13 @@
 
             <!-- Temporal Relationship Attributes -->
             <template v-else-if="attribute.type === 'temporalRelationship'">
-              <v-chip
+              <TemporalFilterChip
                 v-if="attribute.temporalWindow && (attribute.temporalWindow.startWindow || attribute.temporalWindow.endWindow)"
-                color="primary"
-                variant="outlined"
-                size="small"
+                :label="getTemporalWindowSummary(attribute.temporalWindow)"
+                :closable="false"
                 data-testid="attribute-temporal-chip"
-                style="cursor: pointer;"
                 @click="openTemporalEditor(index)"
-              >
-                <v-icon
-                  start
-                  size="small"
-                >
-                  mdi-clock-outline
-                </v-icon>
-                {{ getTemporalWindowSummary(attribute.temporalWindow) }}
-              </v-chip>
+              />
               <v-btn
                 v-else
                 color="primary"
@@ -359,6 +349,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import TemporalWindowEditor from '@/components/cohort-builder/TemporalWindowEditor.vue'
 import DateAdjustmentEditor from '@/components/cohort-builder/DateAdjustmentEditor.vue'
+import TemporalFilterChip from '@/components/cohort-builder/TemporalFilterChip.vue'
 import {
   TEXT_OPERATORS,
   NUMERIC_OPERATORS,

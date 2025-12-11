@@ -57,10 +57,10 @@ export default defineConfig({
       ],
       // Coverage thresholds - fail CI if coverage drops below these values
       thresholds: {
-        lines: 89,
-        statements: 89,
-        branches: 85,
-        functions: 72,
+        lines: 90,
+        statements: 90,
+        branches: 86,
+        functions: 74,
       },
     },
   },

@@ -663,4 +663,405 @@ describe('AttributesEditor', () => {
       expect(wrapper.vm).toBeDefined()
     })
   })
+
+  describe('Validation Functions', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('validateTextAttribute should set error for empty text', async () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'text',
+          attributeKey: 'valueAsString',
+          operator: 'CONTAINS',
+          value: '',
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.validateTextAttribute(0)
+
+      expect(wrapper.vm.attributeErrors[0]).toBe('Please enter a text value')
+    })
+
+    it('validateTextAttribute should clear error for valid text', async () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'text',
+          attributeKey: 'valueAsString',
+          operator: 'CONTAINS',
+          value: 'some value',
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.validateTextAttribute(0)
+
+      expect(wrapper.vm.attributeErrors[0]).toBeNull()
+    })
+
+    it('validateNumericAttribute should set error for missing value', async () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'numericRange',
+          attributeKey: 'age',
+          operator: 'GREATER_THAN_OR_EQUAL',
+          value: undefined as unknown as number,
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.validateNumericAttribute(0)
+
+      expect(wrapper.vm.attributeErrors[0]).toBe('Please enter a numeric value')
+    })
+
+    it('validateNumericAttribute should set error for BETWEEN without extent', async () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'numericRange',
+          attributeKey: 'age',
+          operator: 'BETWEEN',
+          value: 18,
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.validateNumericAttribute(0)
+
+      expect(wrapper.vm.attributeErrors[0]).toBe('BETWEEN operator requires both values')
+    })
+
+    it('validatePeriodDates should set error when dates are missing', async () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'userDefinedPeriod',
+          attributeKey: 'userDefinedPeriod',
+          period: {
+            startDate: '',
+            endDate: '2020-12-31',
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.validatePeriodDates(0)
+
+      expect(wrapper.vm.attributeErrors[0]).toBe('Both start and end dates are required')
+    })
+
+    it('validatePeriodDates should set error when end is before start', async () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'userDefinedPeriod',
+          attributeKey: 'userDefinedPeriod',
+          period: {
+            startDate: '2020-12-31',
+            endDate: '2020-01-01',
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.validatePeriodDates(0)
+
+      expect(wrapper.vm.attributeErrors[0]).toBe('End date must be after start date')
+    })
+  })
+
+  describe('Temporal Window Functions', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('getTemporalWindowSummary should return "Not configured" for undefined', () => {
+      const wrapper = createWrapper([])
+      const summary = wrapper.vm.getTemporalWindowSummary(undefined)
+      expect(summary).toBe('Not configured')
+    })
+
+    it('getTemporalWindowSummary should return "Not configured" for empty window', () => {
+      const wrapper = createWrapper([])
+      const summary = wrapper.vm.getTemporalWindowSummary({})
+      expect(summary).toBe('Not configured')
+    })
+
+    it('getTemporalWindowSummary should format start window correctly', () => {
+      const wrapper = createWrapper([])
+      const summary = wrapper.vm.getTemporalWindowSummary({
+        startWindow: {
+          days: 30,
+          beforeAfter: 'AFTER',
+        },
+      })
+      expect(summary).toContain('Start')
+      expect(summary).toContain('30 days')
+      expect(summary).toContain('after')
+    })
+
+    it('getTemporalWindowSummary should format end window correctly', () => {
+      const wrapper = createWrapper([])
+      const summary = wrapper.vm.getTemporalWindowSummary({
+        endWindow: {
+          days: 90,
+          beforeAfter: 'BEFORE',
+        },
+      })
+      expect(summary).toContain('End')
+      expect(summary).toContain('90 days')
+      expect(summary).toContain('before')
+    })
+
+    it('getTemporalWindowSummary should show "all time" for null days', () => {
+      const wrapper = createWrapper([])
+      const summary = wrapper.vm.getTemporalWindowSummary({
+        startWindow: {
+          days: null,
+          beforeAfter: 'AFTER',
+        },
+      })
+      expect(summary).toContain('all time')
+    })
+
+    it('openTemporalEditor should set selected index and open dialog', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'temporalRelationship',
+          attributeKey: 'temporalRelationship',
+          temporalWindow: {},
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.openTemporalEditor(0)
+
+      expect(wrapper.vm.selectedTemporalIndex).toBe(0)
+      expect(wrapper.vm.temporalEditorOpen).toBe(true)
+    })
+
+    it('updateTemporalWindow should update attribute and close dialog', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'temporalRelationship',
+          attributeKey: 'temporalRelationship',
+          temporalWindow: {},
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.selectedTemporalIndex = 0
+      wrapper.vm.temporalEditorOpen = true
+
+      const newWindow = { startWindow: { days: 30, beforeAfter: 'AFTER' as const } }
+      wrapper.vm.updateTemporalWindow(newWindow)
+
+      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+      expect(wrapper.vm.temporalEditorOpen).toBe(false)
+      expect(wrapper.vm.selectedTemporalIndex).toBe(-1)
+    })
+  })
+
+  describe('Date Adjustment Functions', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('getDateAdjustmentSummary should return "Not configured" for undefined', () => {
+      const wrapper = createWrapper([])
+      const summary = wrapper.vm.getDateAdjustmentSummary(undefined)
+      expect(summary).toBe('Not configured')
+    })
+
+    it('getDateAdjustmentSummary should format adjustment correctly', () => {
+      const wrapper = createWrapper([])
+      const summary = wrapper.vm.getDateAdjustmentSummary({
+        startWith: 'START_DATE',
+        startOffset: 30,
+        endWith: 'END_DATE',
+        endOffset: 0,
+      })
+      expect(summary).toContain('Start')
+      expect(summary).toContain('End')
+      expect(summary).toContain('30d')
+    })
+
+    it('openDateAdjustmentEditor should set selected index and open dialog', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'dateAdjustment',
+          attributeKey: 'dateAdjustment',
+          dateAdjustment: {
+            startWith: 'START_DATE',
+            startOffset: 0,
+            endWith: 'END_DATE',
+            endOffset: 0,
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.openDateAdjustmentEditor(0)
+
+      expect(wrapper.vm.selectedDateAdjustmentIndex).toBe(0)
+      expect(wrapper.vm.dateAdjustmentEditorOpen).toBe(true)
+    })
+
+    it('updateDateAdjustment should update attribute and close dialog', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'dateAdjustment',
+          attributeKey: 'dateAdjustment',
+          dateAdjustment: {
+            startWith: 'START_DATE',
+            startOffset: 0,
+            endWith: 'END_DATE',
+            endOffset: 0,
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.selectedDateAdjustmentIndex = 0
+      wrapper.vm.dateAdjustmentEditorOpen = true
+
+      const newAdjustment = {
+        startWith: 'START_DATE' as const,
+        startOffset: 30,
+        endWith: 'END_DATE' as const,
+        endOffset: 60,
+      }
+      wrapper.vm.updateDateAdjustment(newAdjustment)
+
+      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+      expect(wrapper.vm.dateAdjustmentEditorOpen).toBe(false)
+      expect(wrapper.vm.selectedDateAdjustmentIndex).toBe(-1)
+    })
+  })
+
+  describe('Concept Functions', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('openConceptPickerForAttribute should emit select-concept-for-attribute', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'concept',
+          attributeKey: 'gender',
+          concepts: [],
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.openConceptPickerForAttribute(0)
+
+      expect(wrapper.emitted('select-concept-for-attribute')).toBeTruthy()
+      expect(wrapper.emitted('select-concept-for-attribute')![0][0]).toBe(0)
+    })
+
+    it('removeConceptFromAttribute should remove concept and emit update', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'concept',
+          attributeKey: 'gender',
+          concepts: [
+            { CONCEPT_ID: 1, CONCEPT_NAME: 'Male', CONCEPT_CODE: 'M', DOMAIN_ID: 'Gender', VOCABULARY_ID: 'Gender' },
+            { CONCEPT_ID: 2, CONCEPT_NAME: 'Female', CONCEPT_CODE: 'F', DOMAIN_ID: 'Gender', VOCABULARY_ID: 'Gender' },
+          ],
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.removeConceptFromAttribute(0, 0)
+
+      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+      const emitted = wrapper.emitted('update:modelValue') as Array<[EventAttribute[]]>
+      const updatedAttr = emitted[0][0][0] as { concepts: unknown[] }
+      expect(updatedAttr.concepts).toHaveLength(1)
+    })
+
+    it('openConceptSetPickerForAttribute should emit select-concept-set-for-attribute', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'conceptSet',
+          attributeKey: 'gender',
+          conceptSet: { id: '', name: '' },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.openConceptSetPickerForAttribute(0)
+
+      expect(wrapper.emitted('select-concept-set-for-attribute')).toBeTruthy()
+      expect(wrapper.emitted('select-concept-set-for-attribute')![0]).toEqual([0])
+    })
+
+    it('clearConceptSetAttribute should clear concept set and emit update', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'conceptSet',
+          attributeKey: 'gender',
+          conceptSet: { id: 123, name: 'Male' },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.clearConceptSetAttribute(0)
+
+      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+      const emitted = wrapper.emitted('update:modelValue') as Array<[EventAttribute[]]>
+      const updatedAttr = emitted[0][0][0] as { conceptSet: { id: string; name: string } }
+      expect(updatedAttr.conceptSet.id).toBe('')
+      expect(updatedAttr.conceptSet.name).toBe('')
+    })
+  })
+
+  describe('Period Date Functions', () => {
+    beforeEach(() => {
+      setActivePinia(createPinia())
+    })
+
+    it('updatePeriodStartDate should update start date and emit', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'userDefinedPeriod',
+          attributeKey: 'userDefinedPeriod',
+          period: {
+            startDate: '2020-01-01',
+            endDate: '2020-12-31',
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.updatePeriodStartDate(0, '2021-06-15')
+
+      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+      const emitted = wrapper.emitted('update:modelValue') as Array<[EventAttribute[]]>
+      const updatedAttr = emitted[0][0][0] as { period: { startDate: string } }
+      expect(updatedAttr.period.startDate).toBe('2021-06-15')
+    })
+
+    it('updatePeriodEndDate should update end date and emit', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'userDefinedPeriod',
+          attributeKey: 'userDefinedPeriod',
+          period: {
+            startDate: '2020-01-01',
+            endDate: '2020-12-31',
+          },
+        },
+      ]
+
+      const wrapper = createWrapper(attributes)
+      wrapper.vm.updatePeriodEndDate(0, '2021-12-31')
+
+      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+      const emitted = wrapper.emitted('update:modelValue') as Array<[EventAttribute[]]>
+      const updatedAttr = emitted[0][0][0] as { period: { endDate: string } }
+      expect(updatedAttr.period.endDate).toBe('2021-12-31')
+    })
+  })
 })

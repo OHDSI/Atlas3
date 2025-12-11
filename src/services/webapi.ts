@@ -212,22 +212,34 @@ export async function getCohortDefinition(id: number): Promise<AtlasCohortDefini
 }
 
 /**
+ * WebAPI save payload format
+ */
+interface CohortSavePayload {
+  id?: number
+  name: string
+  description?: string
+  expressionType?: string
+  expression: object // Must be object, not stringified JSON
+}
+
+/**
  * Save cohort definition (create or update)
  * Endpoint: POST /cohortdefinition (create) or PUT /cohortdefinition/{id} (update)
  */
 export async function saveCohortDefinition(
-  cohort: AtlasCohortDefinition
-): Promise<AtlasCohortDefinition | null> {
+  cohort: CohortSavePayload
+): Promise<CohortSavePayload | null> {
   try {
+    logger.debug('WebAPI', 'Saving cohort definition', { id: cohort.id, name: cohort.name })
     if (cohort.id) {
       // Update existing
-      return await fetchJSON<AtlasCohortDefinition>(`/cohortdefinition/${cohort.id}`, {
+      return await fetchJSON<CohortSavePayload>(`/cohortdefinition/${cohort.id}`, {
         method: 'PUT',
         body: JSON.stringify(cohort),
       })
     } else {
       // Create new
-      return await fetchJSON<AtlasCohortDefinition>('/cohortdefinition', {
+      return await fetchJSON<CohortSavePayload>('/cohortdefinition', {
         method: 'POST',
         body: JSON.stringify(cohort),
       })
@@ -451,15 +463,24 @@ export async function validateCohortDefinition(
   expression: object
 ): Promise<ValidationResponse> {
   try {
+    logger.debug('WebAPI', 'Calling checkV2', { name })
     const data = await fetchJSON<ValidationResponse>('/cohortdefinition/checkV2', {
       method: 'POST',
       body: JSON.stringify({ name, expression }),
     })
+    logger.debug('WebAPI', 'checkV2 response', { warningCount: data.warnings?.length ?? 0 })
     return data
   } catch (error) {
     logger.error('WebAPI', 'Failed to validate cohort definition', error)
-    // Return empty warnings on error
-    return { warnings: [] }
+    // Return error as a warning so user sees it
+    const errorMessage = error instanceof Error ? error.message : 'Validation request failed'
+    return {
+      warnings: [{
+        type: 'DefaultWarning',
+        severity: 'WARNING',
+        message: `Validation error: ${errorMessage}`
+      }]
+    }
   }
 }
 
