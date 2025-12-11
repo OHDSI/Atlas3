@@ -18,7 +18,7 @@ import { setupBasicMocks, setupDatasourcesMocks } from './helpers/api-mocks'
 test.describe('Landing Page Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/Atlas/')
+    await page.goto('/')
     await page.waitForTimeout(1000)
   })
 
@@ -60,7 +60,7 @@ test.describe('Landing Page Navigation', () => {
     // Verify navigation attempt (may redirect to auth or cohort builder)
     const url = page.url()
     // Accept either staying on landing page (auth required) or navigating to cohorts/new
-    expect(url.includes('/cohorts/new') || url.includes('/Atlas/')).toBeTruthy()
+    expect(url.includes('/cohorts/new') || url.includes('/')).toBeTruthy()
   })
 })
 
@@ -68,7 +68,7 @@ test.describe('DataSources Page - Basic Functionality', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await setupDatasourcesMocks(page)
-    await page.goto('/Atlas/datasources')
+    await page.goto('/datasources')
     await page.waitForTimeout(1500)
   })
 
@@ -100,7 +100,7 @@ test.describe('DataSources Page - Report Type Switching', () => {
 
   test('should navigate to datasources with report type parameter', async ({ page }) => {
     // Navigate directly to datasources with a report type
-    await page.goto('/Atlas/datasources/MY_CDM/Dashboard')
+    await page.goto('/datasources/MY_CDM/Dashboard')
     await page.waitForTimeout(1500)
 
     // Verify page loaded
@@ -114,11 +114,11 @@ test.describe('DataSources Page - Report Type Switching', () => {
 
   test('should handle report type changes via URL', async ({ page }) => {
     // First navigate to Dashboard
-    await page.goto('/Atlas/datasources/MY_CDM/Dashboard')
+    await page.goto('/datasources/MY_CDM/Dashboard')
     await page.waitForTimeout(1000)
 
     // Then navigate to Person report
-    await page.goto('/Atlas/datasources/MY_CDM/Person')
+    await page.goto('/datasources/MY_CDM/Person')
     await page.waitForTimeout(1000)
 
     // Verify URL updated
@@ -134,11 +134,11 @@ test.describe('Page Navigation and Routing', () => {
 
   test('should navigate from landing to cohorts list', async ({ page }) => {
     // Start at landing page
-    await page.goto('/Atlas/')
+    await page.goto('/')
     await page.waitForTimeout(500)
 
     // Navigate to cohorts list
-    await page.goto('/Atlas/cohorts')
+    await page.goto('/cohorts')
     await page.waitForTimeout(1000)
 
     // Verify navigation
@@ -152,11 +152,11 @@ test.describe('Page Navigation and Routing', () => {
 
   test('should navigate from concepts to datasources', async ({ page }) => {
     // Start at concepts page
-    await page.goto('/Atlas/concepts')
+    await page.goto('/concepts')
     await page.waitForTimeout(1000)
 
     // Navigate to datasources
-    await page.goto('/Atlas/datasources')
+    await page.goto('/datasources')
     await page.waitForTimeout(1500)
 
     // Verify navigation
