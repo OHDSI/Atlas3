@@ -1,0 +1,93 @@
+volumes:
+  atlasdb-postgres-data:
+    name: atlasdb-postgres-data
+
+services:
+  traefik:
+    image: docker.io/library/traefik:v2.11.2
+    container_name: traefik
+    restart: unless-stopped
+    ipc: none
+    read_only: true
+    environment:
+      BROADSEA_HOST: ${BROADSEA_HOST:-localhost}
+      HTTP_TYPE: ${HTTP_TYPE:-http}
+    labels:
+      - "traefik.enable=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/routers.yml:/etc/traefik/dynamic/routers.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  broadsea-atlasdb:
+    image: ohdsi/broadsea-atlasdb:2.1.0-secret
+    container_name: broadsea-atlasdb
+    platform: linux/amd64
+    restart: unless-stopped
+    cpus: 2
+    mem_limit: "2G"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - atlasdb-postgres-data:/var/lib/postgresql/data
+      - ./atlasdb/100_populate_source_source_daimon.sql:/docker-entrypoint-initdb.d/100_populate_source_source_daimon.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ohdsi-webapi:
+    image: ohdsi-webapi-local:latest
+    build:
+      context: ./webapi-build
+      dockerfile: Dockerfile
+    container_name: ohdsi-webapi
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      DATASOURCE_URL: jdbc:postgresql://broadsea-atlasdb:5432/postgres?currentSchema=webapi
+      DATASOURCE_USERNAME: postgres
+      DATASOURCE_PASSWORD: mypass
+      DATASOURCE_OHDSI_SCHEMA: webapi
+      SPRING_BATCH_REPOSITORY_TABLEPREFIX: webapi.batch_
+      SPRING_FLYWAY_URL: jdbc:postgresql://broadsea-atlasdb:5432/postgres?currentSchema=webapi
+      SPRING_FLYWAY_USER: postgres
+      SPRING_FLYWAY_PASSWORD: mypass
+      SECURITY_PROVIDER: DisabledSecurity
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration
+      # TrexSQL cache configuration
+      TREXSQL_ENABLED: "true"
+      TREXSQL_CACHEPATH: /data/cache
+      JAVA_OPTS: "-Dtrexsql.cache-path=/data/cache"
+      HOME: /data
+    volumes:
+      - ./data:/data
+    depends_on:
+      broadsea-atlasdb:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+
+  ohdsi-atlas:
+    image: ghcr.io/ohdsi/atlas3:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ohdsi-atlas
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      WEBAPI_URL: ${WEBAPI_URL:-http://localhost:8080/WebAPI}
+    labels:
+      - "traefik.enable=true"
+    depends_on:
+      - ohdsi-webapi
