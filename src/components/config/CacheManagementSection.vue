@@ -90,6 +90,9 @@
         </v-btn>
       </template>
     </v-snackbar>
+
+    <!-- TrexSQL Cache Section -->
+    <TrexSQLCacheSection />
   </div>
 </template>
 
@@ -97,6 +100,7 @@
 import { ref, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { logger } from '@/utils/logger'
+import TrexSQLCacheSection from './TrexSQLCacheSection.vue'
 
 const configStore = useConfigStore()
 

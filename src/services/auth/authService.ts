@@ -273,6 +273,7 @@ class AuthService implements IAuthService {
       displayName: data.name || data.login,
       email: data.email,
       permissionIdx: data.permissions || {},
+      trexsqlCacheEnabled: data.trexsqlCacheEnabled ?? false,
     }
   }
 

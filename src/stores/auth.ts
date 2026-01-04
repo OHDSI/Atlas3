@@ -38,6 +38,8 @@ export const useAuthStore = defineStore('auth', {
       if (!state.token) return false
       return !tokenManager.isTokenExpired(state.token)
     },
+    /** Whether TrexSQL cache feature is enabled on the server */
+    trexsqlCacheEnabled: (state) => state.user?.trexsqlCacheEnabled ?? false,
   },
 
   actions: {

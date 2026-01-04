@@ -6,6 +6,12 @@
       @navigate-back="router.push('/cohorts')"
     />
 
+    <!-- Patient Count Bar (TrexSQL) -->
+    <patient-count-bar
+      :expression="cohortExpression"
+      @retry="triggerValidation"
+    />
+
     <!-- Top Toolbar -->
     <div class="cohort-builder__toolbar">
       <div class="cohort-builder__toolbar-left">
@@ -394,6 +400,7 @@ import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
+import PatientCountBar from '../cohort-builder/PatientCountBar.vue'
 
 interface Props {
   id?: string
@@ -483,6 +490,41 @@ const {
 
 const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && entryEvents.value.length > 0
+})
+
+/**
+ * Cohort expression for patient count API
+ * Constructed from current cohort state in Atlas format
+ */
+const cohortExpression = computed(() => {
+  // Only create expression if we have entry events
+  if (entryEvents.value.length === 0) {
+    return {}
+  }
+
+  // Build a simplified expression for patient counting
+  // The full Atlas conversion happens in handleSave
+  return {
+    PrimaryCriteria: {
+      CriteriaList: entryEvents.value.map(event => ({
+        criteriaType: event.criteriaType,
+        conceptSetId: event.conceptSet?.id,
+        attributes: event.attributes
+      })),
+      ObservationWindow: observationPeriod.value,
+      PrimaryCriteriaLimit: { Type: qualifyingLimit.value }
+    },
+    AdditionalCriteria: additionalCriteria.value ? {
+      Type: additionalCriteria.value.logicType,
+      CriteriaList: additionalCriteria.value.events
+    } : undefined,
+    InclusionRules: inclusionRules.value.map(rule => ({
+      name: rule.name,
+      expression: rule.criteriaGroups
+    })),
+    CensoringCriteria: censoringCriteria.value,
+    EndStrategy: exitCriteria.value
+  }
 })
 
 /**
