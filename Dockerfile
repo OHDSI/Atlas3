@@ -7,6 +7,8 @@ RUN npm ci
 
 COPY . .
 ENV VITE_BASE_PATH=/atlas
+ENV VITE_AUTH_ENABLED=false
+ENV VITE_AUTH_SKIP_LOGIN=true
 RUN npm run build
 
 # Production stage

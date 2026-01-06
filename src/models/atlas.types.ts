@@ -110,7 +110,9 @@ export interface AtlasConceptSetItem {
     VOCABULARY_ID?: string
     CONCEPT_CLASS_ID?: string
     STANDARD_CONCEPT?: string
-    INVALID_REASON?: string
+    STANDARD_CONCEPT_CAPTION?: string
+    INVALID_REASON?: string | null
+    INVALID_REASON_CAPTION?: string
   }
   isExcluded?: boolean
   includeDescendants?: boolean
@@ -286,7 +288,9 @@ export interface AtlasConcept {
   VOCABULARY_ID?: string
   CONCEPT_CLASS_ID?: string
   STANDARD_CONCEPT?: string
-  INVALID_REASON?: string
+  STANDARD_CONCEPT_CAPTION?: string
+  INVALID_REASON?: string | null
+  INVALID_REASON_CAPTION?: string
 }
 
 /**

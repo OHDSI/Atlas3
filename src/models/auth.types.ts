@@ -35,6 +35,8 @@ export interface UserInfo {
   displayName: string
   email?: string
   permissionIdx: PermissionIndex
+  /** Whether TrexSQL cache feature is enabled on the server */
+  trexsqlCacheEnabled?: boolean
 }
 
 export interface AuthState {

@@ -6,6 +6,12 @@
       @navigate-back="router.push('/cohorts')"
     />
 
+    <!-- Patient Count Bar (TrexSQL) -->
+    <patient-count-bar
+      :expression="cohortExpression"
+      @retry="triggerValidation"
+    />
+
     <!-- Top Toolbar -->
     <div class="cohort-builder__toolbar">
       <div class="cohort-builder__toolbar-left">
@@ -363,9 +369,11 @@ import { useAtlasConverter } from '@/composables/useAtlasConverter'
 import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
 import { getCohortDefinition } from '@/services/webapi'
-import { convertAtlasToInternal } from '@/services/atlas-converter'
+import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas-converter'
+import { getConceptSetById } from '@/services/concept-set.service'
 import { isAtlasCohortDefinitionWrapper } from '@/models/atlas.types'
 import type {
+  CohortDefinition,
   CohortEvent,
   ConceptSetReference,
   InclusionRule,
@@ -373,7 +381,6 @@ import type {
   Period,
   ObservationPeriod,
   QualifyingLimit,
-  CohortDefinition,
   CriteriaGroup
 } from '@/models/cohort.types'
 // ValidationSeverity type is provided by useCohortValidation composable
@@ -394,6 +401,7 @@ import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
+import PatientCountBar from '../cohort-builder/PatientCountBar.vue'
 
 interface Props {
   id?: string
@@ -484,6 +492,72 @@ const {
 const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && entryEvents.value.length > 0
 })
+
+/**
+ * Cohort expression for patient count API
+ * Holds the current Atlas format expression with concept set items populated
+ */
+const cohortExpression = ref<ReturnType<typeof convertInternalToAtlas> | Record<string, never>>({})
+
+/**
+ * Build cohort expression with full concept set items fetched from API
+ * Called whenever cohort state changes
+ */
+async function buildCohortExpression() {
+  // Only create expression if we have entry events
+  if (entryEvents.value.length === 0) {
+    cohortExpression.value = {}
+    return
+  }
+
+  try {
+    // Fetch full concept set items for all used concept sets
+    const conceptSetsWithItems: ConceptSetReference[] = await Promise.all(
+      usedConceptSets.value.map(async (ref) => {
+        // Skip if items are already populated
+        if (ref.items && ref.items.length > 0) {
+          return ref
+        }
+
+        // Fetch full concept set from API
+        if (ref.id) {
+          const fullConceptSet = await getConceptSetById(ref.id)
+          if (fullConceptSet && fullConceptSet.items) {
+            return {
+              ...ref,
+              items: fullConceptSet.items as ConceptSetItem[]
+            }
+          }
+        }
+
+        // Return reference as-is if fetching failed
+        return ref
+      })
+    )
+
+    // Build cohort definition with all fields (same as validation)
+    const cohortDef: CohortDefinition = {
+      name: cohortName.value || 'Untitled Cohort',
+      description: cohortDescription.value,
+      entryEvents: entryEvents.value,
+      additionalCriteria: additionalCriteria.value,
+      inclusionRules: inclusionRules.value,
+      exitCriteria: exitCriteria.value,
+      censorWindow: censorWindow.value || undefined,
+      censoringCriteria: censoringCriteria.value,
+      observationPeriod: observationPeriod.value,
+      qualifyingLimit: qualifyingLimit.value,
+      inclusionQualifyingLimit: inclusionQualifyingLimit.value,
+      conceptSets: conceptSetsWithItems, // Use concept sets with items populated
+    }
+
+    // Convert to Atlas format (same as checkV2 validation)
+    cohortExpression.value = convertInternalToAtlas(cohortDef)
+  } catch (error) {
+    logger.error('CohortBuilder', 'Failed to build cohort expression', error)
+    cohortExpression.value = {}
+  }
+}
 
 /**
  * Create a snapshot of the current cohort state for change detection
@@ -594,6 +668,8 @@ onMounted(async () => {
     }
     // Trigger validation for new/restored cohorts
     triggerValidation()
+    // Build cohort expression with concept set items for patient count
+    buildCohortExpression()
   }
 
   // Load resources in parallel in the background (don't block rendering)
@@ -673,6 +749,24 @@ watch(
   }
 )
 
+// Watch for changes to cohort definition and rebuild expression with concept set items
+watch(
+  [
+    entryEvents,
+    additionalCriteria,
+    inclusionRules,
+    exitCriteria,
+    censoringCriteria,
+    observationPeriod,
+    qualifyingLimit,
+    inclusionQualifyingLimit,
+  ],
+  () => {
+    buildCohortExpression()
+  },
+  { deep: true }
+)
+
 async function loadCohort(id: string) {
   isLoadingCohort.value = true
   try {
@@ -741,6 +835,9 @@ async function loadCohort(id: string) {
 
     // Trigger validation in the background (composable handles debouncing)
     triggerValidation()
+
+    // Build cohort expression with concept set items for patient count
+    buildCohortExpression()
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
     isLoadingCohort.value = false
