@@ -23,7 +23,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   broadsea-atlasdb:
-    image: ohdsi/broadsea-atlasdb:2.1.0-secret
+    image: ohdsi/broadsea-atlasdb:2.3.0
     container_name: broadsea-atlasdb
     platform: linux/amd64
     restart: unless-stopped
@@ -43,10 +43,7 @@ services:
       retries: 10
 
   ohdsi-webapi:
-    image: ohdsi-webapi-local:latest
-    build:
-      context: ./webapi-build
-      dockerfile: Dockerfile
+    image: ghcr.io/ohdsi/webapi:3.0-dev
     container_name: ohdsi-webapi
     platform: linux/amd64
     restart: unless-stopped
@@ -58,6 +55,7 @@ services:
       DATASOURCE_USERNAME: postgres
       DATASOURCE_PASSWORD: mypass
       DATASOURCE_OHDSI_SCHEMA: webapi
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: webapi
       SPRING_BATCH_REPOSITORY_TABLEPREFIX: webapi.batch_
       SPRING_FLYWAY_URL: jdbc:postgresql://broadsea-atlasdb:5432/postgres?currentSchema=webapi
       SPRING_FLYWAY_USER: postgres
@@ -66,8 +64,8 @@ services:
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration
       # TrexSQL cache configuration
       TREXSQL_ENABLED: "true"
-      TREXSQL_CACHEPATH: /data/cache
-      JAVA_OPTS: "-Dtrexsql.cache-path=/data/cache"
+      TREXSQL_CACHE_PATH: /data/cache
+      JAVA_OPTS: "-Dtrexsql.enabled=true -Dtrexsql.cache-path=/data/cache -Dtrexsql.sources.EUNOMIA.enabled=true -Dtrexsql.sources.EUNOMIA.database-code=EUNOMIA -Dorg.duckdb.lib_path=/data/trexsql-lib/libtrexsql_java.so"
       HOME: /data
     volumes:
       - ./data:/data
@@ -86,7 +84,7 @@ services:
     platform: linux/amd64
     restart: unless-stopped
     environment:
-      WEBAPI_URL: ${WEBAPI_URL:-http://localhost:8080/WebAPI}
+      WEBAPI_URL: ${WEBAPI_URL:-http://localhost/WebAPI}
     labels:
       - "traefik.enable=true"
     depends_on:

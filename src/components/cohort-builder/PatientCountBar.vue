@@ -50,17 +50,24 @@
         <!-- Loading State -->
         <div
           v-if="isCountLoading"
-          class="patient-count-bar__loading"
+          class="patient-count-bar__bar-layout"
         >
-          <v-progress-circular
-            indeterminate
-            size="20"
-            width="2"
-            color="primary"
-          />
-          <span class="patient-count-bar__loading-text">
-            {{ isCountSlow ? t('trexsql.countingInProgress', 'Counting patients...') : t('trexsql.counting', 'Counting...') }}
-          </span>
+          <span class="patient-count-bar__percentage">{{ previousPercentage }}%</span>
+          <div class="patient-count-bar__bar-container">
+            <v-progress-linear
+              :model-value="previousPercentage"
+              :color="getProgressColor(previousPercentage)"
+              height="8"
+              rounded
+              class="patient-count-bar__progress pulsing"
+            />
+          </div>
+          <div class="patient-count-bar__count-display">
+            <span class="patient-count-bar__cohort-count">{{ previousCohortCount }}</span>
+            <span class="patient-count-bar__separator">/</span>
+            <span class="patient-count-bar__total-count">{{ previousTotalCount }}</span>
+            <span class="patient-count-bar__label">{{ t('trexsql.patients', 'patients') }}</span>
+          </div>
         </div>
 
         <!-- Error State -->
@@ -113,69 +120,76 @@
           <span>{{ cacheStatusMessage }}</span>
         </div>
 
-        <!-- Zero Patients (special case before general patient count) -->
+        <!-- Zero Patients -->
         <div
           v-else-if="patientCount && patientCount.cohortPatientCount === 0"
-          class="patient-count-bar__zero"
+          class="patient-count-bar__bar-layout"
         >
-          <v-icon
-            size="small"
-            color="grey"
-          >
-            mdi-account-off
-          </v-icon>
-          <span>{{ t('trexsql.noPatients', 'No patients match this criteria') }}</span>
+          <span class="patient-count-bar__percentage">0%</span>
+          <div class="patient-count-bar__bar-container">
+            <v-progress-linear
+              :model-value="0"
+              color="grey"
+              height="8"
+              rounded
+              class="patient-count-bar__progress"
+            />
+          </div>
+          <div class="patient-count-bar__count-display">
+            <span class="patient-count-bar__cohort-count">0</span>
+            <span class="patient-count-bar__separator">/</span>
+            <span class="patient-count-bar__total-count">{{ totalPatientCountFormatted }}</span>
+            <span class="patient-count-bar__label">{{ t('trexsql.patients', 'patients') }}</span>
+          </div>
         </div>
 
         <!-- Patient Count Result -->
         <div
           v-else-if="patientCount"
-          class="patient-count-bar__result"
+          class="patient-count-bar__bar-layout"
         >
-          <div class="patient-count-bar__numbers">
-            <span class="patient-count-bar__cohort-count">{{ cohortPatientCountFormatted }}</span>
-            <span class="patient-count-bar__separator">/</span>
-            <span class="patient-count-bar__total-count">{{ totalPatientCountFormatted }}</span>
-            <span class="patient-count-bar__label">{{ t('trexsql.patients', 'patients') }}</span>
-          </div>
-
-          <!-- Progress Bar -->
-          <div class="patient-count-bar__progress-wrapper">
+          <span class="patient-count-bar__percentage">{{ cohortPercentage }}%</span>
+          <div class="patient-count-bar__bar-container">
             <v-progress-linear
               :model-value="cohortPercentage"
               :color="getProgressColor(cohortPercentage)"
               height="8"
               rounded
-              class="patient-count-bar__progress"
+              class="patient-count-bar__progress animated"
             />
-            <span class="patient-count-bar__percentage">{{ cohortPercentage }}%</span>
           </div>
-
-          <!-- Stale Cache Warning Tooltip -->
-          <v-tooltip
-            v-if="selectedCacheStatus?.status === 'stale'"
-            location="bottom"
-          >
-            <template #activator="{ props: tooltipProps }">
-              <v-icon
-                v-bind="tooltipProps"
-                size="small"
-                color="warning"
-                class="patient-count-bar__stale-icon"
-              >
-                mdi-clock-alert
-              </v-icon>
-            </template>
-            <div class="patient-count-bar__tooltip">
-              <div class="font-weight-medium">{{ t('trexsql.staleCacheWarning', 'Cache may be stale') }}</div>
-              <div
-                v-if="selectedCacheStatus?.lastBuiltAt"
-                class="text-caption"
-              >
-                {{ t('trexsql.lastBuilt', 'Last built') }}: {{ formatDate(selectedCacheStatus.lastBuiltAt) }}
+          <div class="patient-count-bar__count-display">
+            <span class="patient-count-bar__cohort-count">{{ cohortPatientCountFormatted }}</span>
+            <span class="patient-count-bar__separator">/</span>
+            <span class="patient-count-bar__total-count">{{ totalPatientCountFormatted }}</span>
+            <span class="patient-count-bar__label">{{ t('trexsql.patients', 'patients') }}</span>
+            <v-tooltip
+              v-if="selectedCacheStatus?.status === 'stale'"
+              location="bottom"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <v-icon
+                  v-bind="tooltipProps"
+                  size="small"
+                  color="warning"
+                  class="patient-count-bar__stale-icon"
+                >
+                  mdi-clock-alert
+                </v-icon>
+              </template>
+              <div class="patient-count-bar__tooltip">
+                <div class="font-weight-medium">
+                  {{ t('trexsql.staleCacheWarning', 'Cache may be stale') }}
+                </div>
+                <div
+                  v-if="selectedCacheStatus?.lastBuiltAt"
+                  class="text-caption"
+                >
+                  {{ t('trexsql.lastBuilt', 'Last built') }}: {{ formatDate(selectedCacheStatus.lastBuiltAt) }}
+                </div>
               </div>
-            </div>
-          </v-tooltip>
+            </v-tooltip>
+          </div>
         </div>
 
         <!-- Waiting for Expression -->
@@ -191,38 +205,21 @@
 </template>
 
 <script setup lang="ts">
-/**
- * PatientCountBar Component
- *
- * Displays TrexSQL patient count with:
- * - Dataset selector dropdown
- * - Patient count display (cohort / total)
- * - Progress bar showing percentage
- * - Loading, error, and cache status states
- *
- * Positioned above the cohort builder toolbar.
- */
-
-import { computed, watch, onMounted } from 'vue'
+import { computed, watch, onMounted, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import type { CacheStatusType } from '@/models/trexsql.types'
 
-// Props
 interface Props {
-  /** Cohort expression in Atlas format - used for patient count queries */
   expression?: Record<string, unknown>
 }
 
 const props = defineProps<Props>()
 
-// Emits
 const emit = defineEmits<{
-  /** Emitted when user requests retry after error */
   (e: 'retry'): void
 }>()
 
-// Composables
 const { t } = useI18n()
 const {
   isTrexSQLEnabled,
@@ -230,7 +227,6 @@ const {
   dataSources,
   isLoadingDataSources,
   isCountLoading,
-  isCountSlow,
   countError,
   patientCount,
   cohortPatientCountFormatted,
@@ -245,21 +241,27 @@ const {
   clearCount
 } = useTrexSQLCache()
 
-// ============================================================================
-// Computed
-// ============================================================================
+const previousPercentage = ref(0)
+const previousCohortCount = ref('0')
+const previousTotalCount = ref('0')
 
-/**
- * Selected source for v-model binding
- */
+watch(
+  () => patientCount.value,
+  (newCount) => {
+    if (newCount && !isCountLoading.value) {
+      previousPercentage.value = cohortPercentage.value
+      previousCohortCount.value = cohortPatientCountFormatted.value
+      previousTotalCount.value = totalPatientCountFormatted.value
+    }
+  }
+)
+
 const selectedSource = computed({
   get: () => selectedSourceKey.value,
   set: (value: string | null) => {
     if (value) {
       selectDataSource(value)
-      // Clear count when switching sources
       clearCount()
-      // Request new count if we have an expression
       if (props.expression && Object.keys(props.expression).length > 0) {
         getPatientCount(props.expression)
       }
@@ -267,9 +269,6 @@ const selectedSource = computed({
   }
 })
 
-/**
- * Data source items for v-select
- */
 const dataSourceItems = computed(() => {
   return dataSources.value.map(source => ({
     text: source.sourceName,
@@ -278,13 +277,6 @@ const dataSourceItems = computed(() => {
   }))
 })
 
-// ============================================================================
-// Methods
-// ============================================================================
-
-/**
- * Get color for cache status chip
- */
 function getCacheStatusColor(status: CacheStatusType | undefined): string {
   switch (status) {
     case 'ready':
@@ -301,9 +293,6 @@ function getCacheStatusColor(status: CacheStatusType | undefined): string {
   }
 }
 
-/**
- * Get label for cache status chip
- */
 function getCacheStatusLabel(status: CacheStatusType | undefined): string {
   switch (status) {
     case 'ready':
@@ -320,20 +309,14 @@ function getCacheStatusLabel(status: CacheStatusType | undefined): string {
   }
 }
 
-/**
- * Get progress bar color based on percentage
- */
 function getProgressColor(percentage: number): string {
   if (percentage === 0) return 'grey'
   if (percentage < 25) return 'info'
   if (percentage < 50) return 'primary'
   if (percentage < 75) return 'success'
-  return 'warning' // High percentage might indicate overly broad criteria
+  return 'warning'
 }
 
-/**
- * Format date for display
- */
 function formatDate(dateString: string): string {
   try {
     const date = new Date(dateString)
@@ -349,9 +332,6 @@ function formatDate(dateString: string): string {
   }
 }
 
-/**
- * Handle retry button click
- */
 function handleRetry(): void {
   emit('retry')
   if (props.expression) {
@@ -359,13 +339,6 @@ function handleRetry(): void {
   }
 }
 
-// ============================================================================
-// Watchers
-// ============================================================================
-
-/**
- * Watch expression changes and trigger count update
- */
 watch(
   () => props.expression,
   (newExpression) => {
@@ -376,9 +349,14 @@ watch(
   { deep: true }
 )
 
-// ============================================================================
-// Lifecycle
-// ============================================================================
+watch(
+  () => isCacheReady.value,
+  (isReady) => {
+    if (isReady && props.expression && Object.keys(props.expression).length > 0) {
+      getPatientCount(props.expression)
+    }
+  }
+)
 
 onMounted(async () => {
   await initialize()
@@ -415,21 +393,15 @@ onMounted(async () => {
   min-height: 36px;
 }
 
-.patient-count-bar__loading,
 .patient-count-bar__error,
 .patient-count-bar__prompt,
 .patient-count-bar__cache-warning,
-.patient-count-bar__zero,
 .patient-count-bar__waiting {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   color: #666;
-}
-
-.patient-count-bar__loading-text {
-  color: #1976d2;
 }
 
 .patient-count-bar__error {
@@ -443,18 +415,57 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-.patient-count-bar__result {
+.patient-count-bar__bar-layout {
   display: flex;
   align-items: center;
   gap: 16px;
   flex: 1;
 }
 
-.patient-count-bar__numbers {
+.patient-count-bar__percentage {
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  min-width: 42px;
+  text-align: right;
+}
+
+.patient-count-bar__bar-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.patient-count-bar__progress {
+  width: 100%;
+}
+
+.patient-count-bar__progress.animated :deep(.v-progress-linear__determinate) {
+  transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.patient-count-bar__progress.pulsing :deep(.v-progress-linear__determinate) {
+  animation: colorPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes colorPulse {
+  0%, 100% {
+    opacity: 0.6;
+    filter: brightness(0.8);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.2);
+  }
+}
+
+.patient-count-bar__count-display {
   display: flex;
   align-items: baseline;
   gap: 4px;
   white-space: nowrap;
+  min-width: 180px;
+  justify-content: flex-end;
 }
 
 .patient-count-bar__cohort-count {
@@ -479,26 +490,6 @@ onMounted(async () => {
   font-size: 12px;
   color: #999;
   margin-left: 4px;
-}
-
-.patient-count-bar__progress-wrapper {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  max-width: 400px;
-}
-
-.patient-count-bar__progress {
-  flex: 1;
-}
-
-.patient-count-bar__percentage {
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  min-width: 40px;
-  text-align: right;
 }
 
 .patient-count-bar__stale-icon {

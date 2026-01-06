@@ -369,9 +369,11 @@ import { useAtlasConverter } from '@/composables/useAtlasConverter'
 import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
 import { getCohortDefinition } from '@/services/webapi'
-import { convertAtlasToInternal } from '@/services/atlas-converter'
+import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas-converter'
+import { getConceptSetById } from '@/services/concept-set.service'
 import { isAtlasCohortDefinitionWrapper } from '@/models/atlas.types'
 import type {
+  CohortDefinition,
   CohortEvent,
   ConceptSetReference,
   InclusionRule,
@@ -379,7 +381,6 @@ import type {
   Period,
   ObservationPeriod,
   QualifyingLimit,
-  CohortDefinition,
   CriteriaGroup
 } from '@/models/cohort.types'
 // ValidationSeverity type is provided by useCohortValidation composable
@@ -494,38 +495,69 @@ const canSave = computed(() => {
 
 /**
  * Cohort expression for patient count API
- * Constructed from current cohort state in Atlas format
+ * Holds the current Atlas format expression with concept set items populated
  */
-const cohortExpression = computed(() => {
+const cohortExpression = ref<ReturnType<typeof convertInternalToAtlas> | Record<string, never>>({})
+
+/**
+ * Build cohort expression with full concept set items fetched from API
+ * Called whenever cohort state changes
+ */
+async function buildCohortExpression() {
   // Only create expression if we have entry events
   if (entryEvents.value.length === 0) {
-    return {}
+    cohortExpression.value = {}
+    return
   }
 
-  // Build a simplified expression for patient counting
-  // The full Atlas conversion happens in handleSave
-  return {
-    PrimaryCriteria: {
-      CriteriaList: entryEvents.value.map(event => ({
-        criteriaType: event.criteriaType,
-        conceptSetId: event.conceptSet?.id,
-        attributes: event.attributes
-      })),
-      ObservationWindow: observationPeriod.value,
-      PrimaryCriteriaLimit: { Type: qualifyingLimit.value }
-    },
-    AdditionalCriteria: additionalCriteria.value ? {
-      Type: additionalCriteria.value.logicType,
-      CriteriaList: additionalCriteria.value.events
-    } : undefined,
-    InclusionRules: inclusionRules.value.map(rule => ({
-      name: rule.name,
-      expression: rule.criteriaGroups
-    })),
-    CensoringCriteria: censoringCriteria.value,
-    EndStrategy: exitCriteria.value
+  try {
+    // Fetch full concept set items for all used concept sets
+    const conceptSetsWithItems: ConceptSetReference[] = await Promise.all(
+      usedConceptSets.value.map(async (ref) => {
+        // Skip if items are already populated
+        if (ref.items && ref.items.length > 0) {
+          return ref
+        }
+
+        // Fetch full concept set from API
+        if (ref.id) {
+          const fullConceptSet = await getConceptSetById(ref.id)
+          if (fullConceptSet && fullConceptSet.items) {
+            return {
+              ...ref,
+              items: fullConceptSet.items as ConceptSetItem[]
+            }
+          }
+        }
+
+        // Return reference as-is if fetching failed
+        return ref
+      })
+    )
+
+    // Build cohort definition with all fields (same as validation)
+    const cohortDef: CohortDefinition = {
+      name: cohortName.value || 'Untitled Cohort',
+      description: cohortDescription.value,
+      entryEvents: entryEvents.value,
+      additionalCriteria: additionalCriteria.value,
+      inclusionRules: inclusionRules.value,
+      exitCriteria: exitCriteria.value,
+      censorWindow: censorWindow.value || undefined,
+      censoringCriteria: censoringCriteria.value,
+      observationPeriod: observationPeriod.value,
+      qualifyingLimit: qualifyingLimit.value,
+      inclusionQualifyingLimit: inclusionQualifyingLimit.value,
+      conceptSets: conceptSetsWithItems, // Use concept sets with items populated
+    }
+
+    // Convert to Atlas format (same as checkV2 validation)
+    cohortExpression.value = convertInternalToAtlas(cohortDef)
+  } catch (error) {
+    logger.error('CohortBuilder', 'Failed to build cohort expression', error)
+    cohortExpression.value = {}
   }
-})
+}
 
 /**
  * Create a snapshot of the current cohort state for change detection
@@ -636,6 +668,8 @@ onMounted(async () => {
     }
     // Trigger validation for new/restored cohorts
     triggerValidation()
+    // Build cohort expression with concept set items for patient count
+    buildCohortExpression()
   }
 
   // Load resources in parallel in the background (don't block rendering)
@@ -715,6 +749,24 @@ watch(
   }
 )
 
+// Watch for changes to cohort definition and rebuild expression with concept set items
+watch(
+  [
+    entryEvents,
+    additionalCriteria,
+    inclusionRules,
+    exitCriteria,
+    censoringCriteria,
+    observationPeriod,
+    qualifyingLimit,
+    inclusionQualifyingLimit,
+  ],
+  () => {
+    buildCohortExpression()
+  },
+  { deep: true }
+)
+
 async function loadCohort(id: string) {
   isLoadingCohort.value = true
   try {
@@ -783,6 +835,9 @@ async function loadCohort(id: string) {
 
     // Trigger validation in the background (composable handles debouncing)
     triggerValidation()
+
+    // Build cohort expression with concept set items for patient count
+    buildCohortExpression()
   } catch (error) {
     logger.error('CohortBuilder', `Error loading cohort ${id}`, error)
     isLoadingCohort.value = false

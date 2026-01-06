@@ -1,12 +1,10 @@
-/**
- * Composable for cohort definition validation
- * Extracts validation logic from CohortBuilder.vue for better maintainability
- */
 import { ref, computed, watch, type Ref, type ComputedRef, onUnmounted } from 'vue'
 import type { CohortDefinition, CohortEvent, InclusionRule, CriteriaGroup, ExitCriteria, ConceptSetReference, QualifyingLimit } from '@/models/cohort.types'
 import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
+import type { ConceptSetItem } from '@/models/concept-set.types'
 import { validateCohortDefinition } from '@/services/webapi'
 import { convertInternalToAtlas } from '@/services/atlas-converter'
+import { getConceptSetById } from '@/services/concept-set.service'
 import { logger } from '@/utils/logger'
 
 export interface CohortValidationOptions {
@@ -32,34 +30,21 @@ export interface CohortValidationOptions {
   qualifyingLimit: Ref<QualifyingLimit>
   /** Inclusion qualifying limit ref */
   inclusionQualifyingLimit: Ref<QualifyingLimit>
-  /** Debounce delay in milliseconds (default: 2000) */
   debounceDelay?: number
 }
 
 export interface CohortValidationReturn {
-  /** Validation warnings from the API */
   validationWarnings: Ref<ValidationWarning[]>
-  /** Whether validation is in progress */
   isValidating: ComputedRef<boolean>
-  /** Warnings grouped by severity */
   groupedWarningsBySeverity: ComputedRef<Record<ValidationSeverity, ValidationWarning[]>>
-  /** Highest severity level of current warnings */
   highestSeverity: ComputedRef<ValidationSeverity | null>
-  /** Vuetify color for highest severity */
   highestSeverityColor: ComputedRef<string>
-  /** All unique concept sets used in the cohort */
   usedConceptSets: ComputedRef<ConceptSetReference[]>
-  /** Manually trigger validation */
   triggerValidation: () => void
-  /** Cancel any pending validation */
   cancelValidation: () => void
-  /** Clear all validation warnings */
   clearWarnings: () => void
 }
 
-/**
- * Extract all unique concept sets from cohort components
- */
 function extractConceptSets(
   entryEvents: CohortEvent[],
   additionalCriteria: CriteriaGroup | undefined,
@@ -111,9 +96,6 @@ function extractConceptSets(
   return Array.from(conceptSetsMap.values())
 }
 
-/**
- * Composable for cohort validation with debounced auto-validation
- */
 export function useCohortValidation(options: CohortValidationOptions): CohortValidationReturn {
   const {
     cohortName,
@@ -130,16 +112,13 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     debounceDelay = 2000,
   } = options
 
-  // Validation state
   const validationWarnings = ref<ValidationWarning[]>([])
   const _isValidatingInternal = ref(false)
-  let _isValidatingFlag = false // Plain JS variable to prevent watcher loops
+  let _isValidatingFlag = false
   let validationDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
-  // Computed wrapper to access validation state without triggering watcher
   const isValidating = computed(() => _isValidatingInternal.value)
 
-  // Computed: group warnings by severity
   const groupedWarningsBySeverity = computed(() => {
     const grouped: Record<ValidationSeverity, ValidationWarning[]> = {
       CRITICAL: [],
@@ -157,7 +136,6 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     return grouped
   })
 
-  // Computed: highest severity level
   const highestSeverity = computed((): ValidationSeverity | null => {
     if (validationWarnings.value.length === 0) return null
     if ((groupedWarningsBySeverity.value.CRITICAL?.length ?? 0) > 0) return 'CRITICAL'
@@ -165,7 +143,6 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     return 'INFO'
   })
 
-  // Computed: Vuetify color for severity
   const highestSeverityColor = computed(() => {
     const severity = highestSeverity.value
     if (severity === 'CRITICAL') return 'error'
@@ -173,7 +150,6 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     return 'info'
   })
 
-  // Computed: all used concept sets
   const usedConceptSets = computed(() => {
     return extractConceptSets(
       entryEvents.value,
@@ -184,15 +160,31 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     )
   })
 
-  /**
-   * Validate the current cohort definition
-   */
   async function validateCohort() {
     try {
       _isValidatingFlag = true
       _isValidatingInternal.value = true
 
-      // Build cohort definition for validation
+      const conceptSetsWithItems: ConceptSetReference[] = await Promise.all(
+        usedConceptSets.value.map(async (ref) => {
+          if (ref.items && ref.items.length > 0) {
+            return ref
+          }
+
+          if (ref.id) {
+            const fullConceptSet = await getConceptSetById(ref.id)
+            if (fullConceptSet && fullConceptSet.items) {
+              return {
+                ...ref,
+                items: fullConceptSet.items as ConceptSetItem[]
+              }
+            }
+          }
+
+          return ref
+        })
+      )
+
       const cohortDef: CohortDefinition = {
         id: cohortId.value ?? undefined,
         name: cohortName.value,
@@ -204,13 +196,11 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
         observationPeriod: observationPeriod.value,
         qualifyingLimit: qualifyingLimit.value,
         inclusionQualifyingLimit: inclusionQualifyingLimit.value,
-        conceptSets: usedConceptSets.value,
+        conceptSets: conceptSetsWithItems,
       }
 
-      // Convert to Atlas format for validation
       const atlasExpression = convertInternalToAtlas(cohortDef)
 
-      // Use placeholder name if empty
       const nameForValidation = cohortName.value || 'Untitled Cohort'
       const result = await validateCohortDefinition(nameForValidation, atlasExpression)
       validationWarnings.value = result.warnings || []
@@ -223,11 +213,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     }
   }
 
-  /**
-   * Debounced validation trigger
-   */
   function triggerValidation() {
-    // Skip if already validating
     if (_isValidatingFlag) {
       return
     }
@@ -241,9 +227,6 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     }, debounceDelay)
   }
 
-  /**
-   * Cancel any pending validation
-   */
   function cancelValidation() {
     if (validationDebounceTimer) {
       clearTimeout(validationDebounceTimer)
@@ -251,14 +234,10 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     }
   }
 
-  /**
-   * Clear all validation warnings
-   */
   function clearWarnings() {
     validationWarnings.value = []
   }
 
-  // Watch for changes to cohort definition and trigger validation
   const stopWatch = watch(
     [
       cohortName,
@@ -277,7 +256,6 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     { deep: true }
   )
 
-  // Cleanup on unmount
   onUnmounted(() => {
     cancelValidation()
     stopWatch()

@@ -172,54 +172,26 @@
 </template>
 
 <script setup lang="ts">
-/**
- * TrexSQLCacheSection Component
- *
- * Displays TrexSQL cache status for all data sources and allows
- * building/rebuilding caches. Shows in Settings > Cache section.
- */
-
-import { ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { ref, onMounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import { logger } from '@/utils/logger'
 import { listDataSources } from '@/services/datasource.service'
 import { getCacheStatus, buildCache } from '@/services/trexsql.service'
 import type { CacheStatusType, DataSourceWithCacheStatus } from '@/models/trexsql.types'
+import type { DataSource } from '@/models/datasource.types'
 
-// Composables
 const { t } = useI18n()
-const authStore = useAuthStore()
-
-// ============================================================================
-// State
-// ============================================================================
+const { isTrexSQLEnabled, initialize: initTrexSQL } = useTrexSQLCache()
 
 const isLoading = ref(false)
 const dataSourcesWithStatus = ref<DataSourceWithCacheStatus[]>([])
+const dataSourcesInfo = ref<Map<string, DataSource>>(new Map())
 const buildingSource = ref<string | null>(null)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastColor = ref<'success' | 'error' | 'info'>('success')
 
-// ============================================================================
-// Computed
-// ============================================================================
-
-/**
- * Whether TrexSQL cache feature is enabled
- */
-const isTrexSQLEnabled = computed(() => {
-  return authStore.trexsqlCacheEnabled
-})
-
-// ============================================================================
-// Methods
-// ============================================================================
-
-/**
- * Load data sources with their cache status
- */
 async function loadDataSources(): Promise<void> {
   if (!isTrexSQLEnabled.value) return
 
@@ -227,6 +199,10 @@ async function loadDataSources(): Promise<void> {
 
   try {
     const sources = await listDataSources()
+
+    const infoMap = new Map<string, DataSource>()
+    sources.forEach(source => infoMap.set(source.sourceKey, source))
+    dataSourcesInfo.value = infoMap
 
     const sourcesWithStatus = await Promise.all(
       sources.map(async (source): Promise<DataSourceWithCacheStatus> => {
@@ -257,16 +233,20 @@ async function loadDataSources(): Promise<void> {
   }
 }
 
-/**
- * Handle build cache button click
- */
+function getCdmSchemaName(sourceKey: string): string | undefined {
+  const source = dataSourcesInfo.value.get(sourceKey)
+  if (!source) return undefined
+  const cdmDaimon = source.daimons.find(d => d.daimonType === 'CDM')
+  return cdmDaimon?.tableQualifier
+}
+
 async function handleBuildCache(sourceKey: string): Promise<void> {
   buildingSource.value = sourceKey
 
   try {
-    const response = await buildCache(sourceKey)
+    const schemaName = getCdmSchemaName(sourceKey)
+    const response = await buildCache(sourceKey, schemaName)
 
-    // Update local status to 'building'
     const source = dataSourcesWithStatus.value.find(s => s.sourceKey === sourceKey)
     if (source) {
       source.cacheStatus = {
@@ -281,7 +261,6 @@ async function handleBuildCache(sourceKey: string): Promise<void> {
 
     showNotification(response.message || 'Cache build started', 'success')
 
-    // Start polling for status updates
     pollCacheStatus(sourceKey)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to start cache build'
@@ -290,9 +269,6 @@ async function handleBuildCache(sourceKey: string): Promise<void> {
   }
 }
 
-/**
- * Poll cache status while building
- */
 async function pollCacheStatus(sourceKey: string): Promise<void> {
   const maxPolls = 120 // 10 minutes max (5 second intervals)
   let pollCount = 0
@@ -301,16 +277,14 @@ async function pollCacheStatus(sourceKey: string): Promise<void> {
     try {
       const status = await getCacheStatus(sourceKey)
 
-      // Update local status
       const source = dataSourcesWithStatus.value.find(s => s.sourceKey === sourceKey)
       if (source) {
         source.cacheStatus = status
       }
 
-      // Check if still building
       if (status.status === 'building' && pollCount < maxPolls) {
         pollCount++
-        setTimeout(poll, 5000) // Poll every 5 seconds
+        setTimeout(poll, 5000)
       } else {
         buildingSource.value = null
 
@@ -326,22 +300,15 @@ async function pollCacheStatus(sourceKey: string): Promise<void> {
     }
   }
 
-  // Start polling after initial delay
   setTimeout(poll, 2000)
 }
 
-/**
- * Show toast notification
- */
 function showNotification(message: string, color: 'success' | 'error' | 'info'): void {
   toastMessage.value = message
   toastColor.value = color
   showToast.value = true
 }
 
-/**
- * Get color for cache status
- */
 function getStatusColor(status: CacheStatusType | undefined): string {
   switch (status) {
     case 'ready':
@@ -358,9 +325,6 @@ function getStatusColor(status: CacheStatusType | undefined): string {
   }
 }
 
-/**
- * Get icon for cache status
- */
 function getStatusIcon(status: CacheStatusType | undefined): string {
   switch (status) {
     case 'ready':
@@ -377,9 +341,6 @@ function getStatusIcon(status: CacheStatusType | undefined): string {
   }
 }
 
-/**
- * Get label for cache status
- */
 function getStatusLabel(status: CacheStatusType | undefined): string {
   switch (status) {
     case 'ready':
@@ -396,16 +357,10 @@ function getStatusLabel(status: CacheStatusType | undefined): string {
   }
 }
 
-/**
- * Format number with locale
- */
 function formatNumber(num: number): string {
   return num.toLocaleString()
 }
 
-/**
- * Format bytes to human-readable size
- */
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B'
 
@@ -416,9 +371,6 @@ function formatBytes(bytes: number): string {
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`
 }
 
-/**
- * Format date for display
- */
 function formatDate(dateString: string): string {
   try {
     const date = new Date(dateString)
@@ -434,11 +386,8 @@ function formatDate(dateString: string): string {
   }
 }
 
-// ============================================================================
-// Lifecycle
-// ============================================================================
-
-onMounted(() => {
+onMounted(async () => {
+  await initTrexSQL()
   loadDataSources()
 })
 </script>

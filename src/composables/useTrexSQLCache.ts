@@ -1,16 +1,3 @@
-/**
- * useTrexSQLCache Composable
- *
- * Manages TrexSQL cache state, patient counting, and dataset selection.
- * Provides reactive state for UI components with:
- * - LocalStorage persistence for selected data source
- * - Debounced patient count requests (500ms)
- * - Request cancellation for rapid filter changes
- * - Graceful error handling
- *
- * @packageDocumentation
- */
-
 import { ref, computed, watch, onUnmounted } from 'vue'
 import type { Ref, ComputedRef } from 'vue'
 import { useAuthStore } from '@/stores/auth'
@@ -31,31 +18,15 @@ import {
 } from '@/services/trexsql.service'
 import { listDataSources } from '@/services/datasource.service'
 
-/**
- * Debounce delay for patient count requests (500ms per spec)
- */
 const COUNT_DEBOUNCE_MS = 500
 
-/**
- * Composable for TrexSQL cache operations
- */
 export function useTrexSQLCache() {
   const authStore = useAuthStore()
 
-  // ============================================================================
-  // State
-  // ============================================================================
-
-  /** Currently selected data source key */
   const selectedSourceKey: Ref<string | null> = ref(null)
-
-  /** All available data sources with their cache status */
   const dataSources: Ref<DataSourceWithCacheStatus[]> = ref([])
-
-  /** Whether data sources are loading */
   const isLoadingDataSources = ref(false)
 
-  /** Patient count state */
   const countState: Ref<PatientCountState> = ref({
     selectedSourceKey: null,
     result: null,
@@ -64,81 +35,52 @@ export function useTrexSQLCache() {
     cacheStatus: null
   })
 
-  /** Error message for count operations */
   const countError: Ref<string | null> = ref(null)
-
-  /** Whether a count request is in progress */
   const isCountLoading = ref(false)
-
-  /** Whether count request has been running for a long time (>5s) */
   const isCountSlow = ref(false)
 
-  /** Timer ID for slow count detection */
   let slowCountTimerId: ReturnType<typeof setTimeout> | null = null
 
-  // ============================================================================
-  // Computed Properties
-  // ============================================================================
+  const trexSQLDetected = ref<boolean | null>(null)
 
-  /**
-   * Whether TrexSQL cache feature is enabled on the server
-   * Check from auth store user info
-   */
   const isTrexSQLEnabled: ComputedRef<boolean> = computed(() => {
-    return authStore.user?.trexsqlCacheEnabled ?? false
+    // If auth store has explicit value, use it
+    if (authStore.user?.trexsqlCacheEnabled !== undefined) {
+      return authStore.user.trexsqlCacheEnabled
+    }
+    return trexSQLDetected.value ?? false
   })
 
-  /**
-   * Current patient count result
-   */
   const patientCount: ComputedRef<PatientCountResult | null> = computed(() => {
     return countState.value.result
   })
 
-  /**
-   * Cohort patient count as formatted string
-   */
   const cohortPatientCountFormatted: ComputedRef<string> = computed(() => {
     if (!countState.value.result) return '—'
     return countState.value.result.cohortPatientCount.toLocaleString()
   })
 
-  /**
-   * Total patient count as formatted string
-   */
   const totalPatientCountFormatted: ComputedRef<string> = computed(() => {
     if (!countState.value.result) return '—'
     return countState.value.result.totalPatientCount.toLocaleString()
   })
 
-  /**
-   * Cohort percentage of total dataset (0-100)
-   */
   const cohortPercentage: ComputedRef<number> = computed(() => {
     const result = countState.value.result
     if (!result || result.totalPatientCount === 0) return 0
     return Math.round((result.cohortPatientCount / result.totalPatientCount) * 100)
   })
 
-  /**
-   * Cache status for selected data source
-   */
   const selectedCacheStatus: ComputedRef<TrexSQLCacheStatus | null> = computed(() => {
     if (!selectedSourceKey.value) return null
     const source = dataSources.value.find(s => s.sourceKey === selectedSourceKey.value)
     return source?.cacheStatus ?? null
   })
 
-  /**
-   * Whether the selected data source has a ready cache
-   */
   const isCacheReady: ComputedRef<boolean> = computed(() => {
     return selectedCacheStatus.value?.status === 'ready'
   })
 
-  /**
-   * Human-readable cache status message
-   */
   const cacheStatusMessage: ComputedRef<string> = computed(() => {
     const status = selectedCacheStatus.value?.status
     if (!status) return 'No data source selected'
@@ -159,28 +101,17 @@ export function useTrexSQLCache() {
     }
   })
 
-  // ============================================================================
-  // LocalStorage Persistence
-  // ============================================================================
-
-  /**
-   * Load selected source from localStorage
-   */
   function loadSelectedSource(): void {
     try {
       const stored = localStorage.getItem(TREXSQL_SELECTED_SOURCE_KEY)
       if (stored) {
         selectedSourceKey.value = stored
-        logger.debug('TrexSQLCache', `Loaded selected source from localStorage: ${stored}`)
       }
     } catch (error) {
       logger.warn('TrexSQLCache', 'Failed to load selected source from localStorage', error)
     }
   }
 
-  /**
-   * Save selected source to localStorage
-   */
   function saveSelectedSource(sourceKey: string | null): void {
     try {
       if (sourceKey) {
@@ -193,19 +124,11 @@ export function useTrexSQLCache() {
     }
   }
 
-  // Watch for source changes and persist
   watch(selectedSourceKey, (newKey) => {
     saveSelectedSource(newKey)
     countState.value.selectedSourceKey = newKey
   })
 
-  // ============================================================================
-  // Data Source Operations
-  // ============================================================================
-
-  /**
-   * Fetch data sources with their cache status
-   */
   async function fetchDataSourcesWithCacheStatus(): Promise<void> {
     if (!isTrexSQLEnabled.value) {
       dataSources.value = []
@@ -241,9 +164,7 @@ export function useTrexSQLCache() {
       )
 
       dataSources.value = sourcesWithStatus
-      logger.debug('TrexSQLCache', `Fetched ${sourcesWithStatus.length} data sources`)
 
-      // Auto-select first source with ready cache if none selected
       if (!selectedSourceKey.value) {
         const readySource = sourcesWithStatus.find(s => s.cacheStatus?.status === 'ready')
         if (readySource) {
@@ -260,15 +181,10 @@ export function useTrexSQLCache() {
     }
   }
 
-  /**
-   * Select a data source
-   */
   function selectDataSource(sourceKey: string): void {
     if (selectedSourceKey.value !== sourceKey) {
-      // Cancel any pending count request
       cancelCountRequest(selectedSourceKey.value || '')
 
-      // Clear previous count state
       countState.value = {
         selectedSourceKey: sourceKey,
         result: null,
@@ -278,17 +194,9 @@ export function useTrexSQLCache() {
       }
 
       selectedSourceKey.value = sourceKey
-      logger.debug('TrexSQLCache', `Selected data source: ${sourceKey}`)
     }
   }
 
-  // ============================================================================
-  // Patient Count Operations
-  // ============================================================================
-
-  /**
-   * Clear slow count timer
-   */
   function clearSlowCountTimer(): void {
     if (slowCountTimerId) {
       clearTimeout(slowCountTimerId)
@@ -297,9 +205,6 @@ export function useTrexSQLCache() {
     isCountSlow.value = false
   }
 
-  /**
-   * Start slow count timer (shows "counting in progress" after 5 seconds)
-   */
   function startSlowCountTimer(): void {
     clearSlowCountTimer()
     slowCountTimerId = setTimeout(() => {
@@ -309,9 +214,6 @@ export function useTrexSQLCache() {
     }, 5000)
   }
 
-  /**
-   * Internal function to execute patient count request
-   */
   async function executePatientCount(
     sourceKey: string,
     expression: Record<string, unknown>
@@ -333,18 +235,12 @@ export function useTrexSQLCache() {
     startSlowCountTimer()
 
     try {
-      logger.debug('TrexSQLCache', `Getting patient count for ${sourceKey}`)
-
       const result = await fetchPatientCount(sourceKey, expression)
 
       countState.value.result = result
       countState.value.isLoading = false
-
-      logger.debug('TrexSQLCache', `Patient count: ${result.cohortPatientCount}/${result.totalPatientCount} in ${result.executionTimeMs}ms`)
     } catch (error) {
-      // Don't report aborted requests as errors
       if (error instanceof Error && error.name === 'AbortError') {
-        logger.debug('TrexSQLCache', 'Patient count request was cancelled')
         return
       }
 
@@ -359,9 +255,6 @@ export function useTrexSQLCache() {
     }
   }
 
-  /**
-   * Debounced patient count function (500ms delay per spec)
-   */
   const debouncedGetPatientCount = debounce(
     (sourceKey: string, expression: Record<string, unknown>) => {
       executePatientCount(sourceKey, expression)
@@ -369,12 +262,6 @@ export function useTrexSQLCache() {
     COUNT_DEBOUNCE_MS
   )
 
-  /**
-   * Get patient count for a cohort expression
-   * Automatically debounced to prevent excessive API calls
-   *
-   * @param expression - Cohort expression in Atlas format
-   */
   function getPatientCount(expression: Record<string, unknown>): void {
     if (!selectedSourceKey.value) {
       countError.value = 'Please select a data source'
@@ -384,12 +271,6 @@ export function useTrexSQLCache() {
     debouncedGetPatientCount(selectedSourceKey.value, expression)
   }
 
-  /**
-   * Get patient count immediately (bypasses debounce)
-   * Use sparingly - prefer getPatientCount for most cases
-   *
-   * @param expression - Cohort expression in Atlas format
-   */
   async function getPatientCountImmediate(expression: Record<string, unknown>): Promise<void> {
     if (!selectedSourceKey.value) {
       countError.value = 'Please select a data source'
@@ -400,9 +281,6 @@ export function useTrexSQLCache() {
     await executePatientCount(selectedSourceKey.value, expression)
   }
 
-  /**
-   * Cancel pending count request
-   */
   function cancelCount(): void {
     debouncedGetPatientCount.cancel()
     if (selectedSourceKey.value) {
@@ -413,42 +291,49 @@ export function useTrexSQLCache() {
     countState.value.isLoading = false
   }
 
-  /**
-   * Clear patient count state
-   */
   function clearCount(): void {
     cancelCount()
     countState.value.result = null
     countError.value = null
   }
 
-  /**
-   * Retry last failed count request
-   */
   function retryCount(expression: Record<string, unknown>): void {
     countError.value = null
     getPatientCount(expression)
   }
 
-  // ============================================================================
-  // Initialization
-  // ============================================================================
-
-  /**
-   * Initialize the composable
-   * Load persisted state and fetch data sources
-   */
   async function initialize(): Promise<void> {
     loadSelectedSource()
+
+    if (authStore.user?.trexsqlCacheEnabled === undefined) {
+      await detectTrexSQLAvailability()
+    }
 
     if (isTrexSQLEnabled.value) {
       await fetchDataSourcesWithCacheStatus()
     }
   }
 
-  // ============================================================================
-  // Cleanup
-  // ============================================================================
+  async function detectTrexSQLAvailability(): Promise<void> {
+    try {
+      const sources = await listDataSources()
+      const firstSource = sources[0]
+      if (firstSource) {
+        try {
+          await getCacheStatus(firstSource.sourceKey)
+          trexSQLDetected.value = true
+        } catch {
+          trexSQLDetected.value = false
+        }
+      } else {
+        trexSQLDetected.value = false
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      logger.warn('useTrexSQLCache', `Failed to detect TrexSQL availability: ${errorMessage}`)
+      trexSQLDetected.value = false
+    }
+  }
 
   onUnmounted(() => {
     cancelAllCountRequests()
@@ -456,12 +341,7 @@ export function useTrexSQLCache() {
     clearSlowCountTimer()
   })
 
-  // ============================================================================
-  // Return
-  // ============================================================================
-
   return {
-    // State
     selectedSourceKey,
     dataSources,
     isLoadingDataSources,
@@ -469,8 +349,6 @@ export function useTrexSQLCache() {
     countError,
     isCountLoading,
     isCountSlow,
-
-    // Computed
     isTrexSQLEnabled,
     patientCount,
     cohortPatientCountFormatted,
@@ -479,8 +357,6 @@ export function useTrexSQLCache() {
     selectedCacheStatus,
     isCacheReady,
     cacheStatusMessage,
-
-    // Actions
     initialize,
     fetchDataSourcesWithCacheStatus,
     selectDataSource,
@@ -492,7 +368,4 @@ export function useTrexSQLCache() {
   }
 }
 
-/**
- * Export type for composable return value
- */
 export type UseTrexSQLCacheReturn = ReturnType<typeof useTrexSQLCache>
