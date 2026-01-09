@@ -86,7 +86,7 @@ services:
     volumes:
       - ./ssl:/etc/nginx/ssl:ro
     environment:
-      WEBAPI_URL: ${WEBAPI_URL:-http://localhost/WebAPI}
+      WEBAPI_URL: ${WEBAPI_URL:-https://localhost/WebAPI}
     depends_on:
       ssl-init:
         condition: service_completed_successfully
