@@ -13,11 +13,7 @@ services:
       if [ ! -f /ssl/cert.pem ] || [ ! -f /ssl/key.pem ]; then
         echo "Generating self-signed SSL certificates...";
         apk add --no-cache openssl;
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048
-          -keyout /ssl/key.pem
-          -out /ssl/cert.pem
-          -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
-          -addext "subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1";
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /ssl/key.pem -out /ssl/cert.pem -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost" -addext "subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1";
         echo "✓ SSL certificates generated";
       else
         echo "✓ SSL certificates already exist";
@@ -58,13 +54,17 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: webapi
       SPRING_BATCH_REPOSITORY_TABLEPREFIX: webapi.batch_
       SPRING_FLYWAY_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
+      SPRING_FLYWAY_SCHEMAS: webapi
       SPRING_FLYWAY_USER: postgres
       SPRING_FLYWAY_PASSWORD: mypass
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_BASELINE_VERSION: "2.2.5.20180212152023"
+      SPRING_FLYWAY_PLACEHOLDERS_OHDSISCHEMA: webapi
       SECURITY_PROVIDER: DisabledSecurity
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration
       TREXSQL_ENABLED: "true"
       TREXSQL_CACHE_PATH: /data/cache
-      JAVA_OPTS: "-Dtrexsql.enabled=true -Dtrexsql.cache-path=/data/cache -Dtrexsql.sources.EUNOMIA.enabled=true -Dtrexsql.sources.EUNOMIA.database-code=EUNOMIA -Dorg.duckdb.lib_path=/data/trexsql-lib/libtrexsql_java.so"
+      JAVA_OPTS: "-Dtrexsql.enabled=true -Dtrexsql.cache-path=/data/cache -Dtrexsql.sources.EUNOMIA.enabled=true -Dtrexsql.sources.EUNOMIA.database-code=EUNOMIA -Dorg.duckdb.lib_path=/data/trexsql-lib/libtrexsql_java.so -Dspring.flyway.placeholders.ohdsiSchema=webapi"
       HOME: /data
     volumes:
       - ./data:/data
