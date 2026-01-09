@@ -1,30 +1,32 @@
 volumes:
-  atlasdb-postgres-data:
-    name: atlasdb-postgres-data
+  atlas3-postgres-data:
+    name: atlas3-postgres-data
 
 services:
-  traefik:
-    image: docker.io/library/traefik:v2.11.2
-    container_name: traefik
-    restart: unless-stopped
-    ipc: none
-    read_only: true
-    environment:
-      BROADSEA_HOST: ${BROADSEA_HOST:-localhost}
-      HTTP_TYPE: ${HTTP_TYPE:-http}
-    labels:
-      - "traefik.enable=true"
-    ports:
-      - "80:80"
-      - "443:443"
+  ssl-init:
+    image: alpine:latest
+    container_name: ssl-init
     volumes:
-      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./traefik/routers.yml:/etc/traefik/dynamic/routers.yml:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./ssl:/ssl
+    command: >
+      sh -c '
+      if [ ! -f /ssl/cert.pem ] || [ ! -f /ssl/key.pem ]; then
+        echo "Generating self-signed SSL certificates...";
+        apk add --no-cache openssl;
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048
+          -keyout /ssl/key.pem
+          -out /ssl/cert.pem
+          -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+          -addext "subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1";
+        echo "✓ SSL certificates generated";
+      else
+        echo "✓ SSL certificates already exist";
+      fi
+      '
 
-  broadsea-atlasdb:
+  atlas3-postgres:
     image: ohdsi/broadsea-atlasdb:2.3.0
-    container_name: broadsea-atlasdb
+    container_name: atlas3-postgres
     platform: linux/amd64
     restart: unless-stopped
     cpus: 2
@@ -34,7 +36,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - atlasdb-postgres-data:/var/lib/postgresql/data
+      - atlas3-postgres-data:/var/lib/postgresql/data
       - ./atlasdb/100_populate_source_source_daimon.sql:/docker-entrypoint-initdb.d/100_populate_source_source_daimon.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -42,27 +44,24 @@ services:
       timeout: 5s
       retries: 10
 
-  ohdsi-webapi:
+  atlas3-webapi:
     image: ghcr.io/ohdsi/webapi:3.0-dev
-    container_name: ohdsi-webapi
+    container_name: atlas3-webapi
     platform: linux/amd64
     restart: unless-stopped
-    ports:
-      - "8080:8080"
     environment:
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
-      DATASOURCE_URL: jdbc:postgresql://broadsea-atlasdb:5432/postgres?currentSchema=webapi
+      DATASOURCE_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
       DATASOURCE_USERNAME: postgres
       DATASOURCE_PASSWORD: mypass
       DATASOURCE_OHDSI_SCHEMA: webapi
       SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: webapi
       SPRING_BATCH_REPOSITORY_TABLEPREFIX: webapi.batch_
-      SPRING_FLYWAY_URL: jdbc:postgresql://broadsea-atlasdb:5432/postgres?currentSchema=webapi
+      SPRING_FLYWAY_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
       SPRING_FLYWAY_USER: postgres
       SPRING_FLYWAY_PASSWORD: mypass
       SECURITY_PROVIDER: DisabledSecurity
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration
-      # TrexSQL cache configuration
       TREXSQL_ENABLED: "true"
       TREXSQL_CACHE_PATH: /data/cache
       JAVA_OPTS: "-Dtrexsql.enabled=true -Dtrexsql.cache-path=/data/cache -Dtrexsql.sources.EUNOMIA.enabled=true -Dtrexsql.sources.EUNOMIA.database-code=EUNOMIA -Dorg.duckdb.lib_path=/data/trexsql-lib/libtrexsql_java.so"
@@ -70,22 +69,26 @@ services:
     volumes:
       - ./data:/data
     depends_on:
-      broadsea-atlasdb:
+      atlas3-postgres:
         condition: service_healthy
-    labels:
-      - "traefik.enable=true"
 
-  ohdsi-atlas:
+  atlas3-frontend:
     image: ghcr.io/ohdsi/atlas3:dev
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ohdsi-atlas
+    container_name: atlas3-frontend
     platform: linux/amd64
     restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
     environment:
       WEBAPI_URL: ${WEBAPI_URL:-http://localhost/WebAPI}
-    labels:
-      - "traefik.enable=true"
     depends_on:
-      - ohdsi-webapi
+      ssl-init:
+        condition: service_completed_successfully
+      atlas3-webapi:
+        condition: service_started

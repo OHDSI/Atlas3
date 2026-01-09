@@ -1,4 +1,3 @@
-# Build stage
 FROM node:20-alpine AS build
 WORKDIR /app
 
@@ -11,9 +10,8 @@ ENV VITE_AUTH_ENABLED=false
 ENV VITE_AUTH_SKIP_LOGIN=true
 RUN npm run build
 
-# Production stage
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html/atlas
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 8080
+EXPOSE 80 443
 CMD ["nginx", "-g", "daemon off;"]
