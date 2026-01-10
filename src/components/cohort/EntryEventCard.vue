@@ -368,19 +368,19 @@ function addAttribute(attributeKey: string, attributeType: string) {
   justify-content: center;
   position: relative;
   cursor: pointer;
-  border-right: 1px solid #1f425a;
+  border-right: 1px solid #616161;
 }
 
 .cardinality-at_least {
-  background: linear-gradient(to right, #1f425a 30%, #ebf2fa 30%);
+  background: linear-gradient(to right, #616161 30%, #f5f5f5 30%);
 }
 
 .cardinality-exactly {
-  background: linear-gradient(to right, #2e7d32 30%, #e8f5e9 30%);
+  background: linear-gradient(to right, #616161 30%, #f5f5f5 30%);
 }
 
 .cardinality-at_most {
-  background: linear-gradient(to right, #c62828 30%, #ffebee 30%);
+  background: linear-gradient(to right, #616161 30%, #f5f5f5 30%);
 }
 
 .cardinality-label {
@@ -388,7 +388,7 @@ function addAttribute(attributeKey: string, attributeType: string) {
   text-orientation: sideways;
   font-size: 13px;
   font-weight: 600;
-  color: #1f425a;
+  color: #616161;
   position: relative;
   z-index: 1;
   white-space: nowrap;
@@ -396,11 +396,11 @@ function addAttribute(attributeKey: string, attributeType: string) {
 }
 
 .cardinality-exactly .cardinality-label {
-  color: #2e7d32;
+  color: #616161;
 }
 
 .cardinality-at_most .cardinality-label {
-  color: #c62828;
+  color: #616161;
 }
 
 .event-content {
