@@ -52,13 +52,13 @@
           v-if="isCountLoading"
           class="patient-count-bar__bar-layout"
         >
-          <span class="patient-count-bar__percentage">{{ previousPercentage }}%</span>
           <div class="patient-count-bar__bar-container">
             <v-progress-linear
               :model-value="previousPercentage"
               :color="getProgressColor(previousPercentage)"
               height="8"
               rounded
+              reverse
               class="patient-count-bar__progress pulsing"
             />
           </div>
@@ -125,13 +125,13 @@
           v-else-if="patientCount && patientCount.cohortPatientCount === 0"
           class="patient-count-bar__bar-layout"
         >
-          <span class="patient-count-bar__percentage">0%</span>
           <div class="patient-count-bar__bar-container">
             <v-progress-linear
               :model-value="0"
               color="grey"
               height="8"
               rounded
+              reverse
               class="patient-count-bar__progress"
             />
           </div>
@@ -148,13 +148,13 @@
           v-else-if="patientCount"
           class="patient-count-bar__bar-layout"
         >
-          <span class="patient-count-bar__percentage">{{ cohortPercentage }}%</span>
           <div class="patient-count-bar__bar-container">
             <v-progress-linear
               :model-value="cohortPercentage"
               :color="getProgressColor(cohortPercentage)"
               height="8"
               rounded
+              reverse
               class="patient-count-bar__progress animated"
             />
           </div>
@@ -420,14 +420,6 @@ onMounted(async () => {
   align-items: center;
   gap: 16px;
   flex: 1;
-}
-
-.patient-count-bar__percentage {
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  min-width: 42px;
-  text-align: right;
 }
 
 .patient-count-bar__bar-container {

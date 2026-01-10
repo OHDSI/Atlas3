@@ -96,15 +96,16 @@ describe('DeathReport', () => {
     expect(wrapper.find('.death-report').exists()).toBe(true)
   })
 
-  it('should render age at death table', () => {
-    const table = wrapper.findComponent({ name: 'VTable' })
-    expect(table.exists()).toBe(true)
+  it('should render age at death box plot chart', () => {
+    const boxPlotChart = wrapper.findComponent({ name: 'BoxPlotChart' })
+    expect(boxPlotChart.exists()).toBe(true)
   })
 
   it('should display age at death statistics for each gender', () => {
-    const table = wrapper.findComponent({ name: 'VTable' })
-    const rows = table.findAll('tbody tr')
-    expect(rows.length).toBe(2)
+    const boxPlotChart = wrapper.findComponent({ name: 'BoxPlotChart' })
+    expect(boxPlotChart.exists()).toBe(true)
+    // BoxPlotChart receives transformed data with 2 categories (Male and Female)
+    expect(boxPlotChart.props('data')).toHaveLength(2)
   })
 
   it('should render death by type pie chart', () => {
@@ -138,8 +139,8 @@ describe('DeathReport', () => {
   it('should not render age at death section when data is empty', () => {
     const emptyData = { ...mockData, ageAtDeath: [] }
     const wrapper2 = mountComponent({ data: emptyData })
-    const table = wrapper2.findComponent({ name: 'VTable' })
-    expect(table.exists()).toBe(false)
+    const boxPlotChart = wrapper2.findComponent({ name: 'BoxPlotChart' })
+    expect(boxPlotChart.exists()).toBe(false)
   })
 
   it('should not render death by type section when data is empty', () => {
@@ -156,10 +157,12 @@ describe('DeathReport', () => {
     expect(charts.length).toBe(1)
   })
 
-  it('should highlight median value in statistics table', () => {
-    const table = wrapper.findComponent({ name: 'VTable' })
-    const strongElements = table.findAll('strong')
-    expect(strongElements.length).toBeGreaterThan(0)
+  it('should include median values in box plot data', () => {
+    const boxPlotChart = wrapper.findComponent({ name: 'BoxPlotChart' })
+    expect(boxPlotChart.exists()).toBe(true)
+    const data = boxPlotChart.props('data')
+    expect(data[0].median).toBeDefined()
+    expect(data[1].median).toBeDefined()
   })
 
   it('should use responsive grid layout', () => {

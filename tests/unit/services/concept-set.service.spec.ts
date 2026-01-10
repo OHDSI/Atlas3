@@ -37,7 +37,7 @@ import {
   updateConceptSet,
   deleteConceptSet,
 } from '@/services/concept-set.service'
-import { mapConceptSetFromAPI, mapConceptSetToAPI } from '@/utils/api-mappers'
+import { mapConceptSetFromAPI } from '@/utils/api-mappers'
 
 describe('ConceptSetService', () => {
   let mockFetch: ReturnType<typeof vi.fn>

@@ -1,42 +1,15 @@
 <template>
   <div class="death-report">
     <!-- Age at Death by Gender -->
-    <v-row v-if="data.ageAtDeath && data.ageAtDeath.length > 0">
+    <v-row v-if="ageAtDeathBoxPlot && ageAtDeathBoxPlot.length > 0">
       <v-col cols="12">
-        <v-card>
-          <v-card-title>{{ t('dataSources.deathReport.ageAtDeath', 'Age at Death') }}</v-card-title>
-          <v-card-text>
-            <v-table>
-              <thead>
-                <tr>
-                  <th>{{ t('dataSources.deathReport.gender', 'Gender') }}</th>
-                  <th>{{ t('common.min', 'Min') }}</th>
-                  <th>{{ t('common.p10', 'P10') }}</th>
-                  <th>{{ t('common.p25', 'P25') }}</th>
-                  <th>{{ t('common.median', 'Median') }}</th>
-                  <th>{{ t('common.p75', 'P75') }}</th>
-                  <th>{{ t('common.p90', 'P90') }}</th>
-                  <th>{{ t('common.max', 'Max') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="stat in data.ageAtDeath"
-                  :key="stat.category"
-                >
-                  <td>{{ stat.category }}</td>
-                  <td>{{ stat.minValue }}</td>
-                  <td>{{ stat.p10Value }}</td>
-                  <td>{{ stat.p25Value }}</td>
-                  <td><strong>{{ stat.medianValue }}</strong></td>
-                  <td>{{ stat.p75Value }}</td>
-                  <td>{{ stat.p90Value }}</td>
-                  <td>{{ stat.maxValue }}</td>
-                </tr>
-              </tbody>
-            </v-table>
-          </v-card-text>
-        </v-card>
+        <ChartSection :title="t('dataSources.deathReport.ageAtDeath', 'Age at Death').value">
+          <BoxPlotChart
+            :data="ageAtDeathBoxPlot"
+            :title="t('dataSources.deathReport.ageAtDeath', 'Age at Death Distribution by Gender').value"
+            :height="400"
+          />
+        </ChartSection>
       </v-col>
     </v-row>
 
@@ -83,18 +56,35 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { computed, defineProps } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { DeathReport } from '@/models/datasource.types'
+import type { BoxPlotData } from '@/models/report.types'
 import ChartSection from './shared/ChartSection.vue'
 import PieChart from '@/components/reports/charts/PieChart.vue'
+import BoxPlotChart from '@/components/reports/charts/BoxPlotChart.vue'
 import MultiLineChart from './charts/MultiLineChart.vue'
 
 const { t } = useI18n()
 
-defineProps<{
+const props = defineProps<{
   data: DeathReport
 }>()
+
+const ageAtDeathBoxPlot = computed<BoxPlotData[]>(() => {
+  if (!props.data.ageAtDeath) return []
+
+  return props.data.ageAtDeath.map(stat => ({
+    category: stat.category,
+    min: stat.minValue,
+    p10: stat.p10Value,
+    p25: stat.p25Value,
+    median: stat.medianValue,
+    p75: stat.p75Value,
+    p90: stat.p90Value,
+    max: stat.maxValue
+  }))
+})
 </script>
 
 <style scoped>

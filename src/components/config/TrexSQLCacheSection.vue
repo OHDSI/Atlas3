@@ -11,12 +11,12 @@
         >
           mdi-lightning-bolt
         </v-icon>
-        {{ t('trexsql.cacheTitle', 'TrexSQL Patient Cache') }}
+        {{ t('trexsql.cacheTitle', 'Patient Cache') }}
       </v-card-title>
 
       <v-card-text>
         <p class="text-body-1 mb-4">
-          {{ t('trexsql.cacheDescription', 'Build and manage TrexSQL patient caches for fast cohort counting. Each data source can have its own cache.') }}
+          {{ t('trexsql.cacheDescription', 'Build and manage patient caches for fast cohort counting. Each data source can have its own cache.') }}
         </p>
 
         <!-- Loading State -->

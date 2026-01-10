@@ -244,9 +244,20 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
     tooltip: {
       trigger: 'item',
       formatter: (params: unknown) => {
-        const p = params as { name: string; value: number }
+        const p = params as { name: string; value: number; data?: { conceptPath?: string } }
         const value = p.value.toLocaleString()
-        return `${p.name}<br/><strong>${value}</strong>`
+
+        // Format the concept path with newlines and tabs
+        let displayName = p.name
+        if (p.data?.conceptPath) {
+          const parts = p.data.conceptPath.split('||')
+          displayName = parts.map((part, index) => {
+            const tabs = '\u00A0\u00A0\u00A0\u00A0'.repeat(index) // 4 non-breaking spaces per level
+            return tabs + part.trim()
+          }).join('<br/>')
+        }
+
+        return `${displayName}<br/><strong>${value}</strong>`
       }
     },
     series: [
@@ -257,7 +268,7 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
         left: '5%',
         right: '5%',
         roam: false,
-        nodeClick: 'zoomToNode',
+        nodeClick: false,
         breadcrumb: {
           show: true,
           emptyItemWidth: 25,
@@ -335,7 +346,7 @@ export function createResizeHandler(chart: { isDisposed: () => boolean; resize: 
     }
 
     resizeTimer = setTimeout(() => {
-      if (chart && !chart.isDisposed()) {
+      if (chart && typeof chart.isDisposed === 'function' && !chart.isDisposed()) {
         chart.resize()
       }
     }, debounceMs)
@@ -810,15 +821,359 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
 // Helper function to extract all values for color mapping
 function extractAllValues(nodes: TreemapNode[]): number[] {
   const values: number[] = []
-  
+
   function traverse(node: TreemapNode) {
     values.push(node.value)
     if (node.children) {
       node.children.forEach(traverse)
     }
   }
-  
+
   nodes.forEach(traverse)
   return values.length > 0 ? values : [0]
+}
+
+/**
+ * Trellis Chart Options
+ * Creates small multiple line charts stratified by demographics
+ * Based on OHDSI portal implementation
+ */
+export function trellisChartOptions(
+  data: import('@/models/report.types').TrellisChartData,
+  title?: string,
+  maxPlotsPerRow: number = 5
+): EChartsOption {
+  const categories = data.categories.sort()
+  const totalPlots = categories.length
+  const plotsPerRow = Math.min(maxPlotsPerRow, totalPlots)
+  const numRows = Math.ceil(totalPlots / plotsPerRow)
+
+  // Grid dimensions
+  const GRID_WIDTH = 90 / plotsPerRow
+  const GRID_GAP = 5 / plotsPerRow
+  const GRID_LEFT_MARGIN = 5
+  const GRID_HEIGHT = 60 / numRows
+  const GRID_TOP_MARGIN = title ? 15 : 8  // More space if there's a main title
+  const GRID_VERTICAL_GAP = 30 / numRows
+
+  // Calculate global Y-axis range for consistent scale across all plots
+  const allYValues = data.series.flatMap(s => s.data.map(d => d.y))
+  const globalYMin = Math.floor(Math.min(...allYValues))
+  const globalYMax = Math.ceil(Math.max(...allYValues))
+
+  // Create grid configuration for small multiples
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const grid: any[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const xAxis: any[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const yAxis: any[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const series: any[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gridTitles: any[] = []
+
+  categories.forEach((category, index) => {
+    const rowIndex = Math.floor(index / plotsPerRow)
+    const colIndex = index % plotsPerRow
+
+    const rowTop = rowIndex * (GRID_HEIGHT + GRID_VERTICAL_GAP) + GRID_TOP_MARGIN
+
+    // Add row labels (only once per row, when colIndex === 0)
+    if (colIndex === 0) {
+      // Top label for this row (positioned above the demographic names)
+      gridTitles.push({
+        text: 'Age Group / Gender',
+        top: `${rowTop - 4.5}%`,
+        left: 'center',
+        textStyle: {
+          fontSize: 13,
+          color: '#6b6b6b'
+        }
+      })
+      // Bottom label for this row (positioned below x-axis)
+      gridTitles.push({
+        text: 'Year',
+        top: `${rowTop + GRID_HEIGHT + 3}%`,
+        left: 'center',
+        textStyle: {
+          fontSize: 13,
+          color: '#6b6b6b'
+        }
+      })
+    }
+
+    // Grid positioning
+    grid.push({
+      show: true,
+      width: `${GRID_WIDTH}%`,
+      height: `${GRID_HEIGHT}%`,
+      left: `${colIndex * (GRID_WIDTH + GRID_GAP) + GRID_LEFT_MARGIN}%`,
+      top: `${rowTop}%`,
+      borderColor: 'black',
+      borderWidth: 1,
+      containLabel: true
+    })
+
+    // Grid title (demographic group name) - positioned above the grid
+    gridTitles.push({
+      textAlign: 'center',
+      text: category,
+      top: `${rowTop - 3}%`,
+      left: `${colIndex * (GRID_WIDTH + GRID_GAP) + GRID_WIDTH / 2 + GRID_LEFT_MARGIN}%`,
+      textStyle: {
+        fontWeight: 'normal',
+        fontSize: 12
+      }
+    })
+
+    // Get series for this category and sort by year
+    const categorySeries = data.series.filter(s => s.category === category)
+    const allYears = new Set<number>()
+    categorySeries.forEach(s => {
+      s.data.forEach(d => allYears.add(typeof d.x === 'number' ? d.x : Number(d.x)))
+    })
+    const xAxisData = Array.from(allYears).sort((a, b) => a - b)
+
+    // X axis
+    xAxis.push({
+      gridIndex: index,
+      type: 'category',
+      data: xAxisData,
+      boundaryGap: false,
+      axisTick: {
+        show: false
+      },
+      splitLine: {
+        show: true
+      },
+      axisLabel: {
+        show: true,
+        fontSize: 10
+      },
+      position: 'bottom'
+    })
+
+    // Y axis
+    yAxis.push({
+      gridIndex: index,
+      type: 'value',
+      min: globalYMin,
+      max: globalYMax,
+      axisTick: {
+        show: false
+      },
+      splitLine: {
+        show: true
+      },
+      // Only show y axis label for leftmost chart in each row
+      axisLabel: {
+        show: colIndex === 0,
+        fontSize: 10
+      },
+      // Only show y axis name for leftmost chart in each row
+      ...(colIndex === 0 && {
+        name: 'Prevalence Per 1000 People',
+        nameLocation: 'middle',
+        nameGap: 50,
+        position: 'left',
+        nameTextStyle: {
+          fontSize: 14,
+          fontWeight: 'bold'
+        }
+      })
+    })
+
+    // Series for this grid
+    categorySeries.forEach(s => {
+      // Sort data by year
+      const sortedData = s.data.sort((a, b) => {
+        const xA = typeof a.x === 'number' ? a.x : Number(a.x)
+        const xB = typeof b.x === 'number' ? b.x : Number(b.x)
+        return xA - xB
+      })
+      // Map to just y values in order of xAxisData
+      const seriesData = xAxisData.map(year => {
+        const point = sortedData.find(d => {
+          const pointX = typeof d.x === 'number' ? d.x : Number(d.x)
+          return pointX === year
+        })
+        return point ? Number(point.y.toFixed(2)) : null
+      })
+
+      series.push({
+        name: s.name,
+        type: 'line',
+        xAxisIndex: index,
+        yAxisIndex: index,
+        data: seriesData,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 4,
+        lineStyle: {
+          width: 2
+        },
+        emphasis: {
+          focus: 'series'
+        },
+        label: {
+          show: false,
+          position: 'top'
+        }
+      })
+    })
+  })
+
+  return {
+    title: title ? [
+      {
+        text: title,
+        left: 'center',
+        top: '1%',
+        textStyle: {
+          fontSize: 16,
+          fontWeight: 'bold'
+        }
+      },
+      ...gridTitles
+    ] : gridTitles,
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'line'
+      }
+    },
+    grid,
+    xAxis,
+    yAxis,
+    series,
+    legend: {
+      top: 'bottom',
+      data: Array.from(new Set(data.series.map(s => s.name)))
+    }
+  }
+}
+
+/**
+ * Box Plot Chart Options
+ * Creates box and whisker plots for statistical distributions
+ */
+export function boxPlotChartOptions(
+  data: import('@/models/report.types').BoxPlotData[],
+  title?: string
+): EChartsOption {
+  const categories = data.map(d => d.category)
+
+  // Convert data to ECharts boxplot format: [min, Q1, median, Q3, max]
+  const boxData = data.map(d => [
+    d.min,
+    d.p25,
+    d.median,
+    d.p75,
+    d.max
+  ])
+
+  // Outliers (p10 and p90 as whisker extensions)
+  const outlierData: [number, number][] = []
+  data.forEach((d, index) => {
+    if (d.p10 < d.min) {
+      outlierData.push([index, d.p10])
+    }
+    if (d.p90 > d.max) {
+      outlierData.push([index, d.p90])
+    }
+  })
+
+  return {
+    title: title ? {
+      text: title,
+      left: 'center',
+      textStyle: {
+        fontSize: 16,
+        fontWeight: 'bold'
+      }
+    } : undefined,
+    tooltip: {
+      trigger: 'item',
+      axisPointer: {
+        type: 'shadow'
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      formatter: (params: any) => {
+        if (params.seriesType === 'boxplot') {
+          const value = params.value
+          const dataPoint = data[params.dataIndex]
+          return `${params.name}<br/>
+            Max: ${value[5]}<br/>
+            P90: ${dataPoint?.p90 ?? 'N/A'}<br/>
+            P75: ${value[4]}<br/>
+            Median: ${value[3]}<br/>
+            P25: ${value[2]}<br/>
+            P10: ${dataPoint?.p10 ?? 'N/A'}<br/>
+            Min: ${value[1]}`
+        }
+        return params.name
+      }
+    },
+    grid: {
+      left: '10%',
+      right: '10%',
+      bottom: '15%',
+      top: title ? '15%' : '10%'
+    },
+    xAxis: {
+      type: 'category',
+      data: categories,
+      boundaryGap: true,
+      nameGap: 30,
+      splitArea: {
+        show: false
+      },
+      axisLabel: {
+        formatter: '{value}',
+        rotate: categories.length > 5 ? 45 : 0
+      },
+      splitLine: {
+        show: false
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Value',
+      splitArea: {
+        show: true
+      }
+    },
+    series: [
+      {
+        name: 'boxplot',
+        type: 'boxplot',
+        data: boxData,
+        itemStyle: {
+          color: CHART_COLORS[0],
+          borderColor: '#333'
+        },
+        tooltip: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          formatter: (param: any) => {
+            return `${param.name}<br/>
+              Max: ${param.value[5]}<br/>
+              P75: ${param.value[4]}<br/>
+              Median: ${param.value[3]}<br/>
+              P25: ${param.value[2]}<br/>
+              Min: ${param.value[1]}`
+          }
+        }
+      },
+      {
+        name: 'outlier',
+        type: 'scatter',
+        data: outlierData,
+        itemStyle: {
+          color: 'rgba(255, 0, 0, 0.5)'
+        }
+      }
+    ]
+  }
 }
 

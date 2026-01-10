@@ -91,6 +91,8 @@ export interface MultiLineChartData {
 export interface TreemapNode {
   name: string
   value: number
+  conceptId?: number
+  conceptPath?: string
   itemStyle?: {
     color?: string
     colorAlpha?: number

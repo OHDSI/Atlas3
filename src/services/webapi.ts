@@ -1109,6 +1109,166 @@ export async function getTornadoReport(
   }
 }
 
+// ============================================================================
+// Drill-Down Reports - Data Sources (CDM Results)
+// ============================================================================
+
+/**
+ * Get drill-down details for any domain in data sources
+ * GET /cdmresults/{sourceKey}/{domain}/{conceptId}
+ */
+export async function getCDMDrilldown(
+  sourceKey: string,
+  domain: string,
+  conceptId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cdmresults/${sourceKey}/${domain}/${conceptId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch CDM drill-down for ${sourceKey}/${domain}/${conceptId}`, error)
+    return null
+  }
+}
+
+// ============================================================================
+// Drill-Down Reports - Cohort Results
+// ============================================================================
+
+/**
+ * Get condition drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/condition/{conditionId}
+ */
+export async function getConditionDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  conditionId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/condition/${conditionId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch condition drill-down for ${cohortId}/${sourceKey}/${conditionId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get condition era drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/conditionera/{conditionId}
+ */
+export async function getConditionEraDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  conditionId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/conditionera/${conditionId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch condition era drill-down for ${cohortId}/${sourceKey}/${conditionId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get drug drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/drug/{drugId}
+ */
+export async function getDrugDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  drugId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/drug/${drugId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch drug drill-down for ${cohortId}/${sourceKey}/${drugId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get drug era drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/drugera/{drugId}
+ */
+export async function getDrugEraDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  drugId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/drugera/${drugId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch drug era drill-down for ${cohortId}/${sourceKey}/${drugId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get measurement drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/measurement/{conceptId}
+ */
+export async function getMeasurementDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  conceptId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/measurement/${conceptId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch measurement drill-down for ${cohortId}/${sourceKey}/${conceptId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get observation drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/observation/{conceptId}
+ */
+export async function getObservationDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  conceptId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/observation/${conceptId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch observation drill-down for ${cohortId}/${sourceKey}/${conceptId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get procedure drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/procedure/{procedureId}
+ */
+export async function getProcedureDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  procedureId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/procedure/${procedureId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch procedure drill-down for ${cohortId}/${sourceKey}/${procedureId}`, error)
+    return null
+  }
+}
+
 /**
  * Get printfriendly HTML representation of cohort definition
  * POST /cohortdefinition/printfriendly/cohort?format=html

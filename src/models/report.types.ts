@@ -410,10 +410,100 @@ export interface LineChartData {
 export interface TreemapNode {
   name: string
   value: number
+  conceptId?: number
+  conceptPath?: string
   children?: TreemapNode[]
   itemStyle?: {
     color?: string
   }
+}
+
+export interface DrilldownReport {
+  conceptId: number
+  conceptName: string
+  conceptPath: string
+  ageAtFirstOccurrence?: BoxPlotData[]
+  lengthOfEra?: BoxPlotData[]
+  prevalenceByGenderAgeYear?: TrellisChartData
+  prevalenceByMonth?: TimeSeriesData[]
+  byType?: PieChartData[]
+}
+
+export interface BoxPlotData {
+  category: string
+  min: number
+  p10: number
+  p25: number
+  median: number
+  p75: number
+  p90: number
+  max: number
+}
+
+export interface TrellisChartData {
+  series: TrellisSeriesData[]
+  categories: string[]
+}
+
+export interface TrellisSeriesData {
+  name: string
+  category: string
+  data: { x: number | string; y: number }[]
+}
+
+export interface TimeSeriesData {
+  date: string
+  value: number
+  label?: string
+}
+
+export interface WebAPIDrilldownRaw {
+  ageAtFirstDiagnosis?: WebAPIBoxPlotRaw[]
+  ageAtFirstExposure?: WebAPIBoxPlotRaw[]
+  ageAtFirstOccurrence?: WebAPIBoxPlotRaw[]
+  lengthOfEra?: WebAPIBoxPlotRaw[]
+  conditionsByType?: WebAPIConceptCount[]
+  drugsByType?: WebAPIConceptCount[]
+  observationsByType?: WebAPIConceptCount[]
+  measurementsByType?: WebAPIConceptCount[]
+  proceduresByType?: WebAPIConceptCount[]
+  prevalenceByGenderAgeYear?: WebAPIPrevalenceByDemographic[]
+  prevalenceByMonth?: WebAPIPrevalenceByMonth[]
+}
+
+export interface WebAPIBoxPlotRaw {
+  category?: string
+  intervalIndex?: number
+  min?: number
+  p10Value?: number
+  p25Value?: number
+  medianValue?: number
+  p75Value?: number
+  p90Value?: number
+  max?: number
+  avgValue?: number
+}
+
+export interface WebAPIConceptCount {
+  conceptId: number
+  conceptName?: string
+  conceptPath?: string
+  countValue: number
+  percentValue?: number
+}
+
+export interface WebAPIPrevalenceByDemographic {
+  conceptId?: number
+  conceptPath?: string
+  trellisName?: string
+  seriesName?: string
+  xCalendarYear?: number
+  yPrevalence1000Pp?: number
+}
+
+export interface WebAPIPrevalenceByMonth {
+  xCalendarMonth: number
+  yPrevalence1000Pp: number
 }
 
 // ============================================================================
