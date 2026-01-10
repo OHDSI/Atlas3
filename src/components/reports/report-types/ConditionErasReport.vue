@@ -82,6 +82,7 @@
               :data="reportData.treemapData"
               title="Condition Era Prevalence by Person Count"
               :height="600"
+              @node-click="handleNodeClick"
             />
             <v-alert
               v-else
@@ -90,6 +91,16 @@
             >
               {{ t('common.noData') }}
             </v-alert>
+
+            <!-- Drill-down details -->
+            <DrilldownDetails
+              v-if="drilldownData"
+              :data="drilldownData"
+              :loading="drilldownLoading"
+              :concept-name="selectedConceptName"
+              :concept-path="selectedConceptPath"
+              @close="clearDrilldown"
+            />
           </v-window-item>
         </v-window>
 
@@ -109,9 +120,12 @@
 import { computed, onMounted, ref } from 'vue'
 import { useReports } from '@/composables/useReports'
 import { useI18n } from '@/composables/useI18n'
-import type { ConditionErasReport, ConditionEraData, TableHeader, TableRow } from '@/models/report.types'
+import type { ConditionErasReport, ConditionEraData, TableHeader, TableRow, DrilldownReport } from '@/models/report.types'
+import { getConditionEraDrilldown } from '@/services/webapi'
+import { mapDrilldownReport } from '@/services/report-mapper'
 import DataTable from '../tables/DataTable.vue'
 import TreemapChart from '../charts/TreemapChart.vue'
+import DrilldownDetails from '../DrilldownDetails.vue'
 import { logger } from '@/utils/logger'
 
 /**
@@ -139,16 +153,15 @@ const activeTab = ref('table')
 const loading = ref(false)
 const error = ref<string | null>(null)
 
-/**
- * Computed report data
- */
+const drilldownData = ref<DrilldownReport | null>(null)
+const drilldownLoading = ref(false)
+const selectedConceptName = ref('')
+const selectedConceptPath = ref('')
+
 const reportData = computed<ConditionErasReport | null>(() => {
   return currentReportData.value as ConditionErasReport | null
 })
 
-/**
- * Table headers
- */
 const tableHeaders: TableHeader[] = [
   {
     key: 'conceptId',
@@ -228,9 +241,37 @@ async function fetchData() {
   }
 }
 
-/**
- * Load data on mount
- */
+async function handleNodeClick(conceptId: number, conceptName: string, conceptPath: string) {
+  selectedConceptName.value = conceptName
+  selectedConceptPath.value = conceptPath
+  drilldownLoading.value = true
+  drilldownData.value = null
+
+  try {
+    const rawData = await getConditionEraDrilldown(props.sourceKey, props.cohortId, conceptId)
+
+    if (rawData) {
+      drilldownData.value = mapDrilldownReport(
+        rawData,
+        conceptId,
+        conceptName,
+        conceptPath,
+        'conditionera'
+      )
+    }
+  } catch (err) {
+    logger.error('ConditionErasReport', 'Failed to fetch drill-down data', err)
+  } finally {
+    drilldownLoading.value = false
+  }
+}
+
+function clearDrilldown() {
+  drilldownData.value = null
+  selectedConceptName.value = ''
+  selectedConceptPath.value = ''
+}
+
 onMounted(() => {
   fetchData()
 })

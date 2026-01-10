@@ -1,10 +1,10 @@
 <!--
-  TreemapChart Component
+  BoxPlotChart Component
 
-  ECharts treemap wrapper with zoom interaction, loading states, and export functionality
+  ECharts box-and-whisker plot for statistical distributions
 -->
 <template>
-  <div class="treemap-chart-container">
+  <div class="boxplot-chart-container">
     <!-- Export controls -->
     <div
       v-if="!loading && showExport"
@@ -29,17 +29,15 @@
       :option="chartOption"
       :style="{ height: `${height}px`, width: '100%' }"
       autoresize
-      @click="handleChartClick"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import type { TreemapNode } from '@/models/report.types'
+import type { BoxPlotData } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'
-import type { TreemapSeriesOption } from 'echarts/charts'
-import { defaultTreemapOptions, createResizeHandler } from '@/utils/chart-config'
+import { boxPlotChartOptions, createResizeHandler } from '@/utils/chart-config'
 import ChartExport from './ChartExport.vue'
 
 /**
@@ -47,21 +45,19 @@ import ChartExport from './ChartExport.vue'
  */
 const props = withDefaults(
   defineProps<{
-    data: TreemapNode[]
+    data: BoxPlotData[]
     title?: string
     loading?: boolean
     height?: number
-    enableZoom?: boolean
     showExport?: boolean
     exportFilename?: string
   }>(),
   {
     title: undefined,
     loading: false,
-    height: 500,
-    enableZoom: true,
+    height: 400,
     showExport: true,
-    exportFilename: 'treemap-chart'
+    exportFilename: 'boxplot-chart'
   }
 )
 
@@ -69,7 +65,6 @@ const props = withDefaults(
  * Emits
  */
 const emit = defineEmits<{
-  'node-click': [conceptId: number, conceptName: string, conceptPath: string]
   'export-success': [format: 'png' | 'svg', filename: string]
   'export-error': [format: 'png' | 'svg', error: Error]
 }>()
@@ -95,15 +90,7 @@ const chartOption = computed(() => {
     return {}
   }
 
-  const baseOption = defaultTreemapOptions(props.data, props.title)
-
-  // Override roam setting if zoom is disabled
-  if (!props.enableZoom && baseOption.series && Array.isArray(baseOption.series) && baseOption.series[0]) {
-    const seriesItem = baseOption.series[0] as TreemapSeriesOption
-    seriesItem.roam = false
-  }
-
-  return baseOption
+  return boxPlotChartOptions(props.data, props.title)
 })
 
 /**
@@ -151,23 +138,10 @@ function handleExportSuccess(format: 'png' | 'svg', filename: string) {
 function handleExportError(format: 'png' | 'svg', error: Error) {
   emit('export-error', format, error)
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function handleChartClick(params: any) {
-  // Only emit if node has conceptId
-  if (params.data && params.data.conceptId !== undefined) {
-    emit(
-      'node-click',
-      params.data.conceptId,
-      params.data.name || '',
-      params.data.conceptPath || ''
-    )
-  }
-}
 </script>
 
 <style scoped>
-.treemap-chart-container {
+.boxplot-chart-container {
   width: 100%;
   position: relative;
 }

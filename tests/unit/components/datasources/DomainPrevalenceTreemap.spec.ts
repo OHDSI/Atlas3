@@ -95,11 +95,11 @@ describe('DomainPrevalenceTreemap', () => {
     expect(alert.props('type')).toBe('info')
   })
 
-  it('should show zoom instructions in alert', () => {
+  it('should show click instructions in alert', () => {
     const alert = wrapper.findComponent({ name: 'VAlert' })
     const alertText = alert.text()
-    expect(alertText).toContain('Ctrl+Click')
-    expect(alertText).toContain('Alt+Click')
+    expect(alertText).toContain('Click')
+    expect(alertText).toContain('detailed analytics')
   })
 
   it('should render information icon in alert', () => {
@@ -146,8 +146,8 @@ describe('DomainPrevalenceTreemap', () => {
     expect(alert.props('density')).toBe('compact')
   })
 
-  it('should have instructions with max width for better layout', () => {
-    const instructions = wrapper.find('.treemap-instructions')
-    expect(instructions.exists()).toBe(true)
+  it('should have controls section for better layout', () => {
+    const controls = wrapper.find('.treemap-controls')
+    expect(controls.exists()).toBe(true)
   })
 })

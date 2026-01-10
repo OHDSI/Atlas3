@@ -24,7 +24,20 @@
       <v-card-text class="pa-6">
         <v-window v-model="activeTab">
           <v-window-item value="treemap">
-            <DomainPrevalenceTreemap :data="data.prevalenceData.treemapNodes" />
+            <DomainPrevalenceTreemap
+              :data="data.prevalenceData.treemapNodes"
+              @node-click="handleNodeClick"
+            />
+
+            <!-- Drill-down details -->
+            <DrilldownDetails
+              v-if="drilldownData"
+              :data="drilldownData"
+              :loading="drilldownLoading"
+              :concept-name="selectedConceptName"
+              :concept-path="selectedConceptPath"
+              @close="clearDrilldown"
+            />
           </v-window-item>
 
           <v-window-item value="table">
@@ -42,12 +55,19 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { useDataSourcesStore } from '@/stores/datasources'
 import type { ClinicalDomainReport as ClinicalDomainReportData, ReportType } from '@/models/datasource.types'
+import type { DrilldownReport } from '@/models/report.types'
 import { getMetricLabel } from '@/utils/datasource-formatters'
+import { getCDMDrilldown } from '@/services/webapi'
+import { mapDrilldownReport } from '@/services/report-mapper'
+import { logger } from '@/utils/logger'
 import DomainPrevalenceTreemap from '@/components/datasources/DomainPrevalenceTreemap.vue'
 import DomainPrevalenceTable from '@/components/datasources/DomainPrevalenceTable.vue'
+import DrilldownDetails from '@/components/reports/DrilldownDetails.vue'
 
 const { t } = useI18n()
+const store = useDataSourcesStore()
 
 interface Props {
   data: ClinicalDomainReportData
@@ -59,6 +79,63 @@ const props = defineProps<Props>()
 const activeTab = ref('treemap')
 
 const metricLabel = computed(() => getMetricLabel(props.reportType))
+
+const drilldownData = ref<DrilldownReport | null>(null)
+const drilldownLoading = ref(false)
+const selectedConceptName = ref('')
+const selectedConceptPath = ref('')
+
+function getDomainFromReportType(reportType: ReportType): string {
+  const domainMap: Record<string, string> = {
+    visit: 'visit',
+    conditionOccurrence: 'condition',
+    conditionEra: 'conditionera',
+    procedure: 'procedure',
+    drugExposure: 'drug',
+    drugEra: 'drugera',
+    measurement: 'measurement',
+    observation: 'observation'
+  }
+  return domainMap[reportType] || reportType
+}
+
+async function handleNodeClick(conceptId: number, conceptName: string, conceptPath: string) {
+  const selectedSource = store.selectedSource
+  if (!selectedSource) {
+    logger.warn('ClinicalDomainReport', 'No source selected for drill-down')
+    return
+  }
+
+  selectedConceptName.value = conceptName
+  selectedConceptPath.value = conceptPath
+  drilldownLoading.value = true
+  drilldownData.value = null
+
+  try {
+    const domain = getDomainFromReportType(props.reportType)
+    const rawData = await getCDMDrilldown(selectedSource.sourceKey, domain, conceptId)
+
+    if (rawData) {
+      drilldownData.value = mapDrilldownReport(
+        rawData,
+        conceptId,
+        conceptName,
+        conceptPath,
+        domain
+      )
+    }
+  } catch (error) {
+    logger.error('ClinicalDomainReport', 'Failed to fetch drill-down data', error)
+  } finally {
+    drilldownLoading.value = false
+  }
+}
+
+function clearDrilldown() {
+  drilldownData.value = null
+  selectedConceptName.value = ''
+  selectedConceptPath.value = ''
+}
 </script>
 
 <style scoped>

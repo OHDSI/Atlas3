@@ -109,8 +109,10 @@ export function transformClinicalDomainReport(
   }))
 
   const treemapNodes: TreemapNode[] = processedRaw.map(item => ({
-    name: item.conceptPath,
+    name: extractConceptDisplayName(item.conceptPath),
     value: item.numPersons,
+    conceptId: item.conceptId,
+    conceptPath: item.conceptPath,
     itemStyle: {
       colorAlpha: Math.min(1, item.percentPersons / 100)
     }
@@ -121,6 +123,17 @@ export function transformClinicalDomainReport(
     tableRows,
     totalCount: raw.length  // Original count before aggregation
   }
+}
+
+/**
+ * Extract display name from concept path
+ * Concept paths are in format "Level1||Level2||Name"
+ * Returns only the last element for display
+ */
+function extractConceptDisplayName(conceptPath: string): string {
+  if (!conceptPath) return ''
+  const parts = conceptPath.split('||')
+  return parts[parts.length - 1]?.trim() || ''
 }
 
 /**

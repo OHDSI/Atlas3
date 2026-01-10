@@ -1206,11 +1206,6 @@ async function handleSave() {
 
     successMessage.value = 'Cohort saved successfully'
     showSuccess.value = true
-
-    // Navigate to cohorts list after brief delay
-    setTimeout(() => {
-      router.push('/cohorts')
-    }, 1000)
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to save cohort', error)
     errorMessage.value = error instanceof Error ? error.message : 'Failed to save cohort'

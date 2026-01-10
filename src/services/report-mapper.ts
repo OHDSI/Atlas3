@@ -243,6 +243,12 @@ export function toLineChartData<T extends object>(
   }
 }
 
+function extractConceptDisplayName(conceptPath: string): string {
+  if (!conceptPath) return ''
+  const parts = conceptPath.split('||')
+  return parts[parts.length - 1]?.trim() || ''
+}
+
 /**
  * Convert array data to ECharts treemap format
  * @param data Source data array
@@ -254,10 +260,15 @@ export function toTreemapData<T extends object>(
   nameKey: keyof T,
   valueKey: keyof T
 ): TreemapNode[] {
-  return data.map(item => ({
-    name: String(item[nameKey]),
-    value: Number(item[valueKey])
-  }))
+  return data.map(item => {
+    const fullName = String(item[nameKey])
+    return {
+      name: extractConceptDisplayName(fullName),
+      value: Number(item[valueKey]),
+      conceptId: 'conceptId' in item ? Number(item.conceptId) : undefined,
+      conceptPath: 'conceptPath' in item ? String(item.conceptPath) : undefined
+    }
+  })
 }
 
 /**
@@ -292,10 +303,15 @@ export function toHierarchicalTreemapData(
   return Object.entries(grouped).map(([category, items]) => ({
     name: category,
     value: items.reduce((sum, item) => sum + Number(item[valueKey]), 0),
-    children: items.map((item) => ({
-      name: String(item[nameKey]),
-      value: Number(item[valueKey])
-    }))
+    children: items.map((item) => {
+      const fullName = String(item[nameKey])
+      return {
+        name: extractConceptDisplayName(fullName),
+        value: Number(item[valueKey]),
+        conceptId: item.conceptId ? Number(item.conceptId) : undefined,
+        conceptPath: item.conceptPath ? String(item.conceptPath) : undefined
+      }
+    })
   }))
 }
 
@@ -655,4 +671,116 @@ export function mapTornadoReport(data: import('@/models/report.types').WebAPITor
   })
 
   return { prevalence }
+}
+
+export function mapBoxPlotData(raw: import('@/models/report.types').WebAPIBoxPlotRaw[]): import('@/models/report.types').BoxPlotData[] {
+  return raw.map(item => ({
+    category: item.category || `Interval ${item.intervalIndex || 0}`,
+    min: item.min || 0,
+    p10: item.p10Value || 0,
+    p25: item.p25Value || 0,
+    median: item.medianValue || item.avgValue || 0,
+    p75: item.p75Value || 0,
+    p90: item.p90Value || 0,
+    max: item.max || 0
+  }))
+}
+
+export function mapTrellisData(raw: import('@/models/report.types').WebAPIPrevalenceByDemographic[]): import('@/models/report.types').TrellisChartData {
+  const groupedData = new Map<string, Map<string, { x: number; y: number }[]>>()
+  const categories = new Set<string>()
+
+  raw.forEach(item => {
+    const trellisName = item.trellisName || 'Overall'
+    const seriesName = item.seriesName || 'Total'
+    const year = item.xCalendarYear || 0
+    const prevalence = item.yPrevalence1000Pp || 0
+
+    categories.add(trellisName)
+
+    if (!groupedData.has(trellisName)) {
+      groupedData.set(trellisName, new Map())
+    }
+
+    const trellisGroup = groupedData.get(trellisName)!
+    if (!trellisGroup.has(seriesName)) {
+      trellisGroup.set(seriesName, [])
+    }
+
+    trellisGroup.get(seriesName)!.push({ x: year, y: prevalence })
+  })
+
+  const series: import('@/models/report.types').TrellisSeriesData[] = []
+  groupedData.forEach((seriesMap, category) => {
+    seriesMap.forEach((data, name) => {
+      series.push({
+        name,
+        category,
+        data: data.sort((a, b) => Number(a.x) - Number(b.x))
+      })
+    })
+  })
+
+  return {
+    series,
+    categories: Array.from(categories)
+  }
+}
+
+export function mapTimeSeriesData(raw: import('@/models/report.types').WebAPIPrevalenceByMonth[]): import('@/models/report.types').TimeSeriesData[] {
+  return raw.map(item => {
+    // Convert YYYYMM to MM/YYYY format
+    const monthStr = item.xCalendarMonth.toString()
+    const month = monthStr.slice(-2)
+    const year = monthStr.slice(0, 4)
+    const dateString = `${month}/${year}`
+
+    return {
+      date: dateString,
+      value: item.yPrevalence1000Pp
+    }
+  })
+}
+
+export function mapDrilldownReport(
+  raw: import('@/models/report.types').WebAPIDrilldownRaw,
+  conceptId: number,
+  conceptName: string,
+  conceptPath: string,
+  _domain: string
+): import('@/models/report.types').DrilldownReport {
+  const report: import('@/models/report.types').DrilldownReport = {
+    conceptId,
+    conceptName,
+    conceptPath
+  }
+
+  const ageData = raw.ageAtFirstDiagnosis || raw.ageAtFirstExposure || raw.ageAtFirstOccurrence
+  if (ageData && ageData.length > 0) {
+    report.ageAtFirstOccurrence = mapBoxPlotData(ageData)
+  }
+
+  if (raw.lengthOfEra && raw.lengthOfEra.length > 0) {
+    report.lengthOfEra = mapBoxPlotData(raw.lengthOfEra)
+  }
+
+  if (raw.prevalenceByGenderAgeYear && raw.prevalenceByGenderAgeYear.length > 0) {
+    report.prevalenceByGenderAgeYear = mapTrellisData(raw.prevalenceByGenderAgeYear)
+  }
+
+  if (raw.prevalenceByMonth && raw.prevalenceByMonth.length > 0) {
+    report.prevalenceByMonth = mapTimeSeriesData(raw.prevalenceByMonth)
+  }
+
+  // Map by type (conditionsByType, drugsByType, etc.)
+  const byTypeData = raw.conditionsByType || raw.drugsByType || raw.observationsByType ||
+                      raw.measurementsByType || raw.proceduresByType
+  if (byTypeData && byTypeData.length > 0) {
+    report.byType = byTypeData.map(item => ({
+      name: item.conceptName || `Concept ${item.conceptId}`,
+      value: item.countValue
+    }))
+  }
+
+  return report
 }
