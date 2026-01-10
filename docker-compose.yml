@@ -1,13 +1,17 @@
 volumes:
   atlas3-postgres-data:
     name: atlas3-postgres-data
+  atlas3-ssl-data:
+    name: atlas3-ssl-data
+  atlas3-webapi-data:
+    name: atlas3-webapi-data
 
 services:
   ssl-init:
     image: alpine:latest
     container_name: ssl-init
     volumes:
-      - ./ssl:/ssl
+      - atlas3-ssl-data:/ssl
     command: >
       sh -c '
       if [ ! -f /ssl/cert.pem ] || [ ! -f /ssl/key.pem ]; then
@@ -23,6 +27,7 @@ services:
   atlas3-postgres:
     image: ohdsi/broadsea-atlasdb:2.3.0
     container_name: atlas3-postgres
+    hostname: broadsea-atlasdb
     platform: linux/amd64
     restart: unless-stopped
     cpus: 2
@@ -30,7 +35,7 @@ services:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypass}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - atlas3-postgres-data:/var/lib/postgresql/data
       - ./atlasdb/100_populate_source_source_daimon.sql:/docker-entrypoint-initdb.d/100_populate_source_source_daimon.sql:ro
@@ -67,7 +72,7 @@ services:
       JAVA_OPTS: "-Dtrexsql.enabled=true -Dtrexsql.cache-path=/data/cache -Dtrexsql.sources.EUNOMIA.enabled=true -Dtrexsql.sources.EUNOMIA.database-code=EUNOMIA -Dorg.duckdb.lib_path=/data/trexsql-lib/libtrexsql_java.so -Dspring.flyway.placeholders.ohdsiSchema=webapi"
       HOME: /data
     volumes:
-      - ./data:/data
+      - atlas3-webapi-data:/data
     depends_on:
       atlas3-postgres:
         condition: service_healthy
@@ -84,7 +89,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./ssl:/etc/nginx/ssl:ro
+      - atlas3-ssl-data:/etc/nginx/ssl:ro
     environment:
       WEBAPI_URL: ${WEBAPI_URL:-https://localhost/WebAPI}
     depends_on:
