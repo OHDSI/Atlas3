@@ -192,8 +192,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   function openCreateEditor() {
     currentSet.value = {
       name: '',
-      items: [],
-    }
+      items: [] as ConceptSetItem[],
+    } as ConceptSet
     editorOpen.value = true
   }
 
@@ -234,7 +234,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    // Check for duplicates
     const exists = currentSet.value.items.some(
       (item) => item.conceptId === concept.conceptId
     )
@@ -244,11 +243,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    // Convert Concept to ConceptSetItem with default flags
     const item: ConceptSetItem = conceptToConceptSetItem(concept)
     currentSet.value.items.push(item)
-    
-    // Clear any previous errors
     error.value = null
   }
 

@@ -46,6 +46,7 @@
     <!-- Concept Sets Table -->
     <v-card>
       <v-data-table
+        v-model:sort-by="sortBy"
         :headers="headers"
         :items="store.filteredSets"
         :loading="store.loading"
@@ -187,6 +188,7 @@ const store = useConceptSetsStore()
 const itemsPerPage = ref(25)
 const deleteDialog = ref(false)
 const deleteTarget = ref<ConceptSetListItem | null>(null)
+const sortBy = ref([{ key: 'modifiedDate', order: 'desc' as const }])
 
 // ============================================================================
 // Table Configuration

@@ -126,10 +126,8 @@ function onSearchInput(value: string | null) {
     return
   }
 
-  // Use debounced search for automatic search as user types
-  if (value.trim().length >= 3) {
-    store.debouncedSearch(value.trim())
-  }
+  // Search is only triggered by clicking the search button or pressing Enter
+  // No auto-search on typing to avoid blocking user flow
 }
 
 function onSearch() {

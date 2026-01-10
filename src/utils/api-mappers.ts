@@ -138,7 +138,7 @@ export function mapConceptSetToAPI(conceptSet: ConceptSet): {
     name: conceptSet.name,
     shared: conceptSet.shared,
     expression: {
-      items: conceptSet.items.map((item) => ({
+      items: (conceptSet.items || []).map((item) => ({
         concept: {
           CONCEPT_ID: item.conceptId,
           CONCEPT_NAME: item.conceptName,
