@@ -489,7 +489,7 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
-/* Disable Vuetify's default transitions for consistent JavaScript animation */
+/* Override Vuetify transitions for JS animation control */
 .patient-count-bar__progress :deep(.v-progress-linear__determinate),
 .patient-count-bar__progress :deep(.v-progress-linear__background) {
   transition: none !important;
