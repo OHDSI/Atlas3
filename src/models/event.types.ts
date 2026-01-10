@@ -156,7 +156,7 @@ export type NumericAttributeKey =
   | 'eraLength'
   | 'quantity'
 
-export type ConceptAttributeKey = 'gender' | 'race' | 'visitType' | 'providerSpecialty'
+export type ConceptAttributeKey = 'gender' | 'race' | 'ethnicity' | 'visitType' | 'providerSpecialty'
 
 export type DateAttributeKey =
   | 'occurrenceStartDate'

@@ -150,16 +150,16 @@
         >
           <div class="patient-count-bar__bar-container">
             <v-progress-linear
-              :model-value="cohortPercentage"
-              :color="getProgressColor(cohortPercentage)"
+              :model-value="animatedPercentage"
+              :color="getProgressColor(animatedPercentage)"
               height="8"
               rounded
               reverse
-              class="patient-count-bar__progress animated"
+              class="patient-count-bar__progress"
             />
           </div>
           <div class="patient-count-bar__count-display">
-            <span class="patient-count-bar__cohort-count">{{ cohortPatientCountFormatted }}</span>
+            <span class="patient-count-bar__cohort-count">{{ animatedCohortCount.toLocaleString() }}</span>
             <span class="patient-count-bar__separator">/</span>
             <span class="patient-count-bar__total-count">{{ totalPatientCountFormatted }}</span>
             <span class="patient-count-bar__label">{{ t('trexsql.patients', 'patients') }}</span>
@@ -205,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onMounted, ref } from 'vue'
+import { computed, watch, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import type { CacheStatusType } from '@/models/trexsql.types'
@@ -244,6 +244,37 @@ const {
 const previousPercentage = ref(0)
 const previousCohortCount = ref('0')
 const previousTotalCount = ref('0')
+const animatedPercentage = ref(0)
+const animatedCohortCount = ref(0)
+let animationFrameId: number | null = null
+
+function animateToValue(targetPercentage: number, targetCount: number) {
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId)
+  }
+
+  const startPercentage = animatedPercentage.value
+  const startCount = animatedCohortCount.value
+  const startTime = performance.now()
+  const duration = 100
+
+  function animate(currentTime: number) {
+    const elapsed = currentTime - startTime
+    const progress = Math.min(elapsed / duration, 1)
+
+    // Linear interpolation for consistent speed
+    animatedPercentage.value = startPercentage + (targetPercentage - startPercentage) * progress
+    animatedCohortCount.value = Math.round(startCount + (targetCount - startCount) * progress)
+
+    if (progress < 1) {
+      animationFrameId = requestAnimationFrame(animate)
+    } else {
+      animationFrameId = null
+    }
+  }
+
+  animationFrameId = requestAnimationFrame(animate)
+}
 
 watch(
   () => patientCount.value,
@@ -252,8 +283,31 @@ watch(
       previousPercentage.value = cohortPercentage.value
       previousCohortCount.value = cohortPatientCountFormatted.value
       previousTotalCount.value = totalPatientCountFormatted.value
+
+      // Animate to new values
+      animateToValue(cohortPercentage.value, newCount.cohortPatientCount)
+    } else if (!newCount) {
+      // Reset animated values when count is cleared
+      animatedPercentage.value = 0
+      animatedCohortCount.value = 0
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId)
+        animationFrameId = null
+      }
     }
   }
+)
+
+// Initialize animated values on mount
+watch(
+  () => cohortPercentage.value,
+  (newPercentage) => {
+    if (animatedPercentage.value === 0 && newPercentage > 0 && !isCountLoading.value) {
+      animatedPercentage.value = newPercentage
+      animatedCohortCount.value = patientCount.value?.cohortPatientCount || 0
+    }
+  },
+  { immediate: true }
 )
 
 const selectedSource = computed({
@@ -311,10 +365,7 @@ function getCacheStatusLabel(status: CacheStatusType | undefined): string {
 
 function getProgressColor(percentage: number): string {
   if (percentage === 0) return 'grey'
-  if (percentage < 25) return 'info'
-  if (percentage < 50) return 'primary'
-  if (percentage < 75) return 'success'
-  return 'warning'
+  return 'primary'
 }
 
 function formatDate(dateString: string): string {
@@ -360,6 +411,12 @@ watch(
 
 onMounted(async () => {
   await initialize()
+})
+
+onBeforeUnmount(() => {
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId)
+  }
 })
 </script>
 
@@ -432,8 +489,10 @@ onMounted(async () => {
   width: 100%;
 }
 
-.patient-count-bar__progress.animated :deep(.v-progress-linear__determinate) {
-  transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+/* Disable Vuetify's default transitions for consistent JavaScript animation */
+.patient-count-bar__progress :deep(.v-progress-linear__determinate),
+.patient-count-bar__progress :deep(.v-progress-linear__background) {
+  transition: none !important;
 }
 
 .patient-count-bar__progress.pulsing :deep(.v-progress-linear__determinate) {

@@ -204,7 +204,7 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   display: flex;
   align-items: center;
   width: 30px;
-  border: 1px solid #1f425a;
+  border: 1px solid #616161;
   position: relative;
 }
 
@@ -215,7 +215,7 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   top: 0;
   bottom: 0;
   width: 30%;
-  background: #1f425a;
+  background: #616161;
 }
 
 .vertical-label {
@@ -223,7 +223,7 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   text-orientation: sideways;
   font-size: 14px;
   font-weight: 700;
-  color: #1f425a;
+  color: #616161;
   user-select: none;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   padding-left: 8px;
@@ -238,7 +238,7 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
 
 .add-filter-wrapper {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 16px;
   gap: 16px;

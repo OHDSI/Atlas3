@@ -267,6 +267,37 @@ export async function deleteCohortDefinition(id: number): Promise<boolean> {
 }
 
 /**
+ * Assign tag to cohort definition
+ */
+export async function assignTagToCohort(cohortId: number, tagId: number): Promise<boolean> {
+  try {
+    await fetchJSON(`/cohortdefinition/${cohortId}/tag/`, {
+      method: 'POST',
+      body: JSON.stringify(tagId),
+    })
+    return true
+  } catch (error) {
+    logger.error('WebAPI', `Failed to assign tag ${tagId} to cohort ${cohortId}`, error)
+    return false
+  }
+}
+
+/**
+ * Unassign tag from cohort definition
+ */
+export async function unassignTagFromCohort(cohortId: number, tagId: number): Promise<boolean> {
+  try {
+    await fetchJSON(`/cohortdefinition/${cohortId}/tag/${tagId}`, {
+      method: 'DELETE',
+    })
+    return true
+  } catch (error) {
+    logger.error('WebAPI', `Failed to unassign tag ${tagId} from cohort ${cohortId}`, error)
+    return false
+  }
+}
+
+/**
  * Generate cohort for a specific data source
  * Endpoint: GET /cohortdefinition/{id}/generate/{sourceKey}
  * Returns job execution info that needs to be converted to GenerationJob format

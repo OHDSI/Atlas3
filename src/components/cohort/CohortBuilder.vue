@@ -50,11 +50,13 @@
           :validation-color="highestSeverityColor"
           :is-validating="isValidating"
           :version-count="versionCount"
+          :tag-count="tagCount"
           :cohort-id="cohortId"
           :is-previewing-version="isPreviewingVersion"
           @show-concept-sets="showConceptSetsDialog = true"
           @show-validation="showValidationDialog = true"
           @show-versions="showVersionsDialog = true"
+          @show-tags="showTagsDialog = true"
         />
 
         <!-- Concept Sets Dialog -->
@@ -184,16 +186,19 @@
           @remove="removeAdditionalCriteria"
         />
       </div>
-      <v-btn
+      <div
         v-else
-        class="mt-4"
-        variant="outlined"
-        prepend-icon="mdi-filter-plus"
-        size="small"
-        @click="addAdditionalCriteria"
+        class="mt-4 mb-6 d-flex justify-center"
       >
-        {{ t('components.cohortExpressionEditor.newInclusionCriteria') }}
-      </v-btn>
+        <v-btn
+          variant="outlined"
+          prepend-icon="mdi-filter-plus"
+          size="small"
+          @click="addAdditionalCriteria"
+        >
+          {{ t('components.cohortExpressionEditor.newInclusionCriteria') }}
+        </v-btn>
+      </div>
     </div>
 
     <!-- Inclusion Criteria -->
@@ -414,6 +419,13 @@
       </v-card>
     </v-dialog>
 
+    <!-- Tags Dialog -->
+    <tag-selection-dialog
+      v-model="showTagsDialog"
+      :selected-tags="cohortTags"
+      @update:selected-tags="handleTagsUpdate"
+    />
+
     <!-- Generation Panel -->
     <generation-panel
       v-model="isGenerationPanelOpen"
@@ -470,6 +482,8 @@ import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 import PatientCountBar from '../cohort-builder/PatientCountBar.vue'
+import TagSelectionDialog from './TagSelectionDialog.vue'
+import type { Tag } from '@/models/cohort.types'
 
 interface Props {
   id?: string
@@ -502,6 +516,7 @@ const inclusionQualifyingLimit = ref<QualifyingLimit>('ALL') // For inclusion cr
 const showValidationDialog = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
+const showTagsDialog = ref(false)
 const isGenerationPanelOpen = ref(false)
 
 // UI state
@@ -624,6 +639,7 @@ async function buildCohortExpression() {
     const cohortDef: CohortDefinition = {
       name: cohortName.value || 'Untitled Cohort',
       description: cohortDescription.value,
+      tags: cohortTags.value,
       entryEvents: entryEvents.value,
       additionalCriteria: additionalCriteria.value,
       inclusionRules: inclusionRules.value,
@@ -651,6 +667,7 @@ function createStateSnapshot(): string {
   return JSON.stringify({
     name: cohortName.value,
     description: cohortDescription.value,
+    tags: cohortTags.value,
     entryEvents: entryEvents.value,
     additionalCriteria: additionalCriteria.value,
     inclusionRules: inclusionRules.value,
@@ -805,17 +822,28 @@ watch(cohortId, async (id) => {
   }
 }, { immediate: true })
 
+// Tags
+const cohortTags = computed(() => cohortStore.currentCohort?.tags || [])
+const tagCount = computed(() => cohortTags.value.length)
+const loadedTags = ref<Tag[]>([])
+
+function handleTagsUpdate(newTags: Tag[]) {
+  if (cohortStore.currentCohort) {
+    cohortStore.currentCohort.tags = newTags
+    cohortStore.markDirty()
+  }
+}
+
 onMounted(async () => {
   // Start loading cohort definition immediately (don't await)
   if (props.id) {
     loadCohort(props.id)
   } else {
-    // Try to restore draft from SessionStorage
     const restored = cohortStore.restoreFromDraft()
     if (!restored) {
-      // Initialize new cohort if no draft found
       cohortStore.createNewCohort()
     }
+    loadedTags.value = []
     // Set name from query param if provided (from New Cohort dialog)
     if (route.query.name && typeof route.query.name === 'string') {
       cohortName.value = route.query.name
@@ -951,6 +979,7 @@ async function loadCohort(id: string) {
       id: atlasCohort.id,
       name: atlasCohort.name,
       description: atlasCohort.description || '',
+      tags: atlasCohort.tags || [],
       entryEvents: converted.entryEvents || [],
       inclusionRules: converted.inclusionRules || [],
       exitCriteria: converted.exitCriteria || { strategy: 'CONTINUOUS_OBSERVATION' },
@@ -981,7 +1010,7 @@ async function loadCohort(id: string) {
     qualifyingLimit.value = cohortDef.qualifyingLimit
     inclusionQualifyingLimit.value = cohortDef.inclusionQualifyingLimit ?? 'ALL'
 
-    // Save snapshot of loaded state for change detection
+    loadedTags.value = [...(cohortDef.tags || [])]
     loadedSnapshot.value = createStateSnapshot()
 
     // Hide loading overlay immediately - cohort is now visible
@@ -1318,6 +1347,7 @@ async function handleSave() {
     id: props.id ? Number(props.id) : undefined,
     name: cohortName.value,
     description: cohortDescription.value || undefined,
+    tags: cohortTags.value,
     entryEvents: entryEvents.value,
     qualifyingLimit: qualifyingLimit.value,
     inclusionQualifyingLimit: inclusionQualifyingLimit.value,
@@ -1330,7 +1360,7 @@ async function handleSave() {
 
   // Convert to Atlas format and save to WebAPI
   const { convertInternalToAtlas } = await import('@/services/atlas-converter')
-  const { saveCohortDefinition } = await import('@/services/webapi')
+  const { saveCohortDefinition, assignTagToCohort, unassignTagFromCohort } = await import('@/services/webapi')
 
   const atlasExpression = convertInternalToAtlas(cohortDefinition)
   const atlasDefinition = {
@@ -1338,24 +1368,53 @@ async function handleSave() {
     name: cohortDefinition.name,
     description: cohortDefinition.description,
     expressionType: 'SIMPLE_EXPRESSION',
-    expression: atlasExpression, // Send as object, not stringified
+    expression: atlasExpression,
   }
 
   try {
     const savedCohort = await saveCohortDefinition(atlasDefinition)
 
-    if (!savedCohort) {
+    if (!savedCohort || !savedCohort.id) {
       errorMessage.value = 'Failed to save cohort to server'
       showError.value = true
       return
     }
 
-    // Update local store
+    // Sync tags via separate API calls
+    const cohortId = savedCohort.id
+    const currentTags = cohortTags.value
+    const previousTags = loadedTags.value
+
+    const tagsToAdd = currentTags.filter(
+      current => !previousTags.some(prev => prev.id === current.id)
+    )
+    const tagsToRemove = previousTags.filter(
+      prev => !currentTags.some(current => current.id === prev.id)
+    )
+
+    for (const tag of tagsToAdd) {
+      if (tag.id) {
+        const success = await assignTagToCohort(cohortId, tag.id)
+        if (!success) {
+          logger.warn('CohortBuilder', `Failed to assign tag ${tag.id}`)
+        }
+      }
+    }
+
+    for (const tag of tagsToRemove) {
+      if (tag.id) {
+        const success = await unassignTagFromCohort(cohortId, tag.id)
+        if (!success) {
+          logger.warn('CohortBuilder', `Failed to unassign tag ${tag.id}`)
+        }
+      }
+    }
+
+    loadedTags.value = [...currentTags]
+
     cohortStore.setCohort(cohortDefinition)
     cohortStore.markClean()
     cohortStore.clearDraft()
-
-    // Update snapshot after save to reflect new saved state
     loadedSnapshot.value = createStateSnapshot()
 
     successMessage.value = 'Cohort saved successfully'

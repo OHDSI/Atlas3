@@ -135,7 +135,7 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
 // CRITICAL: Uses ?? for zero-count preservation
 function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false): AtlasCriteria {
   const criteriaTypeObj: AtlasCriteriaTypeObject = {
-    CodesetId: event.conceptSet && typeof event.conceptSet.id === 'number' ? event.conceptSet.id : 0,
+    CodesetId: event.conceptSet && typeof event.conceptSet.id === 'number' ? event.conceptSet.id : null,
   }
 
   switch (event.criteriaType) {
@@ -298,7 +298,7 @@ function convertConceptAttribute(attributeKey: string, concepts: unknown[]): Rec
 export function parseConceptAttribute(attributeKey: string, concepts: unknown[]): EventAttribute {
   return {
     type: 'concept',
-    attributeKey: attributeKey as 'gender',
+    attributeKey: attributeKey as import('@/models/event.types').ConceptAttributeKey,
     concepts: (concepts as import('@/models/event.types').Concept[]) || [],
   }
 }
@@ -585,9 +585,10 @@ function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConce
     criteriaObj = ((atlasEvent as Record<string, unknown>)[criteriaType] as Record<string, unknown>) || {}
   }
 
-  const codesetId = (criteriaObj.CodesetId as number | undefined) ?? 0
-  const conceptSet = conceptSets?.find(cs => cs.id === codesetId)
-  const conceptSetName = conceptSet?.name || `Concept Set ${codesetId}`
+  const codesetId = criteriaObj.CodesetId as number | null | undefined
+  const conceptSet = (typeof codesetId === 'number' && conceptSets)
+    ? conceptSets.find(cs => cs.id === codesetId)
+    : undefined
 
   const event: CohortEvent = {
     id: generateId(),
@@ -608,11 +609,7 @@ function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConce
         isExcluded: item.isExcluded ?? false,
         includeMapped: item.includeMapped ?? false,
       })) || [],
-    } : {
-      id: codesetId,
-      name: conceptSetName,
-      items: [],
-    },
+    } : undefined,
     cardinality: (() => {
       interface AtlasEventWithOccurrence {
         Occurrence?: {
@@ -761,40 +758,19 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     })
   }
 
-  // Gender - ConceptSet
+  // Gender - Concept array
   if (criteriaObj.Gender && Array.isArray(criteriaObj.Gender) && criteriaObj.Gender.length > 0) {
-    attributes.push({
-      type: 'conceptSet',
-      attributeKey: 'gender',
-      conceptSet: {
-        id: 'gender-concepts',
-        name: criteriaObj.Gender.map((c: { CONCEPT_NAME?: string }) => c.CONCEPT_NAME || 'Unknown').join(', '),
-      },
-    })
+    attributes.push(parseConceptAttribute('gender', criteriaObj.Gender))
   }
 
-  // Race - ConceptSet
+  // Race - Concept array
   if (criteriaObj.Race && Array.isArray(criteriaObj.Race) && criteriaObj.Race.length > 0) {
-    attributes.push({
-      type: 'conceptSet',
-      attributeKey: 'race',
-      conceptSet: {
-        id: 'race-concepts',
-        name: criteriaObj.Race.map((c: { CONCEPT_NAME?: string }) => c.CONCEPT_NAME || 'Unknown').join(', '),
-      },
-    })
+    attributes.push(parseConceptAttribute('race', criteriaObj.Race))
   }
 
-  // Ethnicity - ConceptSet
+  // Ethnicity - Concept array
   if (criteriaObj.Ethnicity && Array.isArray(criteriaObj.Ethnicity) && criteriaObj.Ethnicity.length > 0) {
-    attributes.push({
-      type: 'conceptSet',
-      attributeKey: 'race', // Map to race for now
-      conceptSet: {
-        id: 'ethnicity-concepts',
-        name: criteriaObj.Ethnicity.map((c: { CONCEPT_NAME?: string }) => c.CONCEPT_NAME || 'Unknown').join(', '),
-      },
-    })
+    attributes.push(parseConceptAttribute('ethnicity', criteriaObj.Ethnicity))
   }
 
   // ValueAsNumber - NumericRange
@@ -903,28 +879,14 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     })
   }
 
-  // VisitType - ConceptSet
+  // VisitType - Concept array
   if (criteriaObj.VisitType && Array.isArray(criteriaObj.VisitType) && criteriaObj.VisitType.length > 0) {
-    attributes.push({
-      type: 'conceptSet',
-      attributeKey: 'visitType',
-      conceptSet: {
-        id: 'visit-type-concepts',
-        name: criteriaObj.VisitType.map((c: { CONCEPT_NAME?: string }) => c.CONCEPT_NAME || 'Unknown').join(', '),
-      },
-    })
+    attributes.push(parseConceptAttribute('visitType', criteriaObj.VisitType))
   }
 
-  // ProviderSpecialty - ConceptSet
+  // ProviderSpecialty - Concept array
   if (criteriaObj.ProviderSpecialty && Array.isArray(criteriaObj.ProviderSpecialty) && criteriaObj.ProviderSpecialty.length > 0) {
-    attributes.push({
-      type: 'conceptSet',
-      attributeKey: 'providerSpecialty',
-      conceptSet: {
-        id: 'provider-specialty-concepts',
-        name: criteriaObj.ProviderSpecialty.map((c: { CONCEPT_NAME?: string }) => c.CONCEPT_NAME || 'Unknown').join(', '),
-      },
-    })
+    attributes.push(parseConceptAttribute('providerSpecialty', criteriaObj.ProviderSpecialty))
   }
 
   // First - Boolean

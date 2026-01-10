@@ -2142,12 +2142,12 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       const converted = convertAtlasToInternal(atlasJSON)
 
       expect(converted.entryEvents?.[0]?.attributes?.[0]).toEqual({
-        type: 'conceptSet',
+        type: 'concept',
         attributeKey: 'gender',
-        conceptSet: {
-          id: 'gender-concepts',
-          name: 'Female, Male',
-        },
+        concepts: [
+          { CONCEPT_ID: 8532, CONCEPT_NAME: 'Female' },
+          { CONCEPT_ID: 8507, CONCEPT_NAME: 'Male' },
+        ],
       })
     })
 
@@ -2538,12 +2538,12 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       const converted = convertAtlasToInternal(atlasJSON)
 
       expect(converted.entryEvents?.[0]?.attributes?.[0]).toEqual({
-        type: 'conceptSet',
+        type: 'concept',
         attributeKey: 'race',
-        conceptSet: {
-          id: 'race-concepts',
-          name: 'Black, White',
-        },
+        concepts: [
+          { CONCEPT_ID: 8516, CONCEPT_NAME: 'Black' },
+          { CONCEPT_ID: 8527, CONCEPT_NAME: 'White' },
+        ],
       })
     })
 
@@ -2582,12 +2582,11 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       const converted = convertAtlasToInternal(atlasJSON)
 
       expect(converted.entryEvents?.[0]?.attributes?.[0]).toEqual({
-        type: 'conceptSet',
-        attributeKey: 'race', // Maps to race internally
-        conceptSet: {
-          id: 'ethnicity-concepts',
-          name: 'Hispanic',
-        },
+        type: 'concept',
+        attributeKey: 'ethnicity',
+        concepts: [
+          { CONCEPT_ID: 38003563, CONCEPT_NAME: 'Hispanic' },
+        ],
       })
     })
 
@@ -2626,12 +2625,11 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       const converted = convertAtlasToInternal(atlasJSON)
 
       expect(converted.entryEvents?.[0]?.attributes?.[0]).toEqual({
-        type: 'conceptSet',
+        type: 'concept',
         attributeKey: 'visitType',
-        conceptSet: {
-          id: 'visit-type-concepts',
-          name: 'Inpatient Visit',
-        },
+        concepts: [
+          { CONCEPT_ID: 9201, CONCEPT_NAME: 'Inpatient Visit' },
+        ],
       })
     })
 
@@ -2670,12 +2668,11 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       const converted = convertAtlasToInternal(atlasJSON)
 
       expect(converted.entryEvents?.[0]?.attributes?.[0]).toEqual({
-        type: 'conceptSet',
+        type: 'concept',
         attributeKey: 'providerSpecialty',
-        conceptSet: {
-          id: 'provider-specialty-concepts',
-          name: 'Cardiology',
-        },
+        concepts: [
+          { CONCEPT_ID: 38004446, CONCEPT_NAME: 'Cardiology' },
+        ],
       })
     })
 
@@ -3702,8 +3699,9 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
 
       const converted = convertAtlasToInternal(atlasJSON)
 
-      expect(converted.entryEvents?.[0]?.conceptSet.id).toBe(0)
-      expect(converted.entryEvents?.[0]?.conceptSet.name).toBe('Concept Set 0')
+      // Death criteria doesn't require a concept set
+      expect(converted.entryEvents?.[0]?.criteriaType).toBe('Death')
+      expect(converted.entryEvents?.[0]?.conceptSet).toBeUndefined()
     })
 
     it('handles unknown criteria type gracefully', () => {

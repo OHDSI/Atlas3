@@ -107,6 +107,31 @@
       </template>
     </v-tooltip>
 
+    <!-- Tags Icon -->
+    <v-tooltip
+      v-if="!isPreviewingVersion"
+      :text="t('tags.manage', 'Manage Tags').value"
+      location="bottom"
+    >
+      <template #activator="{ props: tooltipProps }">
+        <v-badge
+          v-bind="tooltipProps"
+          :content="tagCount || 0"
+          :color="tagCount && tagCount > 0 ? 'primary' : 'grey'"
+          class="cohort-toolbar-status__badge"
+        >
+          <v-icon
+            color="primary"
+            icon="mdi-tag-multiple"
+            size="small"
+            data-testid="tags-icon"
+            style="cursor: pointer"
+            @click="$emit('show-tags')"
+          />
+        </v-badge>
+      </template>
+    </v-tooltip>
+
     <!-- Validation Notification Icon -->
     <v-tooltip
       :text="isValidating ? t('common.loadingWithDots', 'Loading...').value : t('cc.viewEdit.tabs.messages', 'View validation messages').value"
@@ -152,6 +177,7 @@ interface Props {
   validationColor: string
   isValidating: boolean
   versionCount?: number
+  tagCount?: number
   cohortId?: string | number | null
   isPreviewingVersion?: boolean
 }
@@ -163,6 +189,7 @@ defineEmits<{
   (e: 'show-concept-sets'): void
   (e: 'show-validation'): void
   (e: 'show-versions'): void
+  (e: 'show-tags'): void
 }>()
 
 const { t } = useI18n()

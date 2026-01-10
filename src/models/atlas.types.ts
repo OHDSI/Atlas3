@@ -55,6 +55,7 @@ export interface AtlasCohortDefinition {
   createdDate?: number
   modifiedBy?: unknown
   modifiedDate?: number
+  tags?: Array<{ id?: number; name: string; color?: string }>
   ConceptSets: AtlasConceptSet[]
   PrimaryCriteria: AtlasPrimaryCriteria
   AdditionalCriteria?: AtlasAdditionalCriteria
@@ -76,6 +77,7 @@ export interface AtlasCohortDefinitionWrapper {
   id?: number
   name?: string
   description?: string
+  tags?: Array<{ id?: number; name: string; color?: string }>
   expression: AtlasCohortDefinition | string
 }
 
@@ -357,7 +359,7 @@ export interface ConceptSetItem {
  * Atlas criteria type object (the criteria-specific part)
  */
 export interface AtlasCriteriaTypeObject {
-  CodesetId?: number
+  CodesetId?: number | null
   First?: boolean
   OccurrenceStartDate?: AtlasRange
   OccurrenceEndDate?: AtlasRange
