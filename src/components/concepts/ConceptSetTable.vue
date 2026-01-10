@@ -5,6 +5,7 @@
       :items="items"
       :loading="loading"
       :items-per-page="50"
+      v-model:sort-by="sortBy"
       class="elevation-1"
     >
       <!-- Descendants Toggle -->
@@ -103,10 +104,17 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 
 const { t } = useI18n()
+
+// ============================================================================
+// Local State
+// ============================================================================
+
+const sortBy = ref([{ key: 'conceptId', order: 'asc' }])
 
 // ============================================================================
 // Props & Emits

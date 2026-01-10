@@ -238,16 +238,15 @@ async function onSave() {
     let result
 
     if (isEditMode.value && props.conceptSet?.id) {
-      // Update existing concept set
       result = await store.update({
         ...props.conceptSet,
         name: form.value.name,
+        items: store.currentSet?.items || [],
       })
     } else {
-      // Create new concept set
       result = await store.create({
         name: form.value.name,
-        items: [],
+        items: store.currentSet?.items || [],
       })
     }
 

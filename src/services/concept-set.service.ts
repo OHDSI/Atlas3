@@ -111,15 +111,39 @@ export async function createConceptSet(
   conceptSet: Omit<ConceptSet, 'id' | 'createdDate' | 'createdBy' | 'modifiedDate' | 'modifiedBy'>
 ): Promise<ConceptSet | null> {
   try {
-    const payload = mapConceptSetToAPI({
-      ...conceptSet,
-      items: conceptSet.items || [],
-    } as ConceptSet)
+    const metadataPayload = {
+      name: conceptSet.name,
+      description: conceptSet.description
+    }
 
     const data = await fetchJSON<ConceptSetAPIResponse>('/conceptset', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(metadataPayload),
     })
+
+    if ((conceptSet.items?.length || 0) > 0 && data.id) {
+      const itemsPayload = (conceptSet.items || []).map(item => ({
+        conceptId: item.conceptId,
+        isExcluded: item.isExcluded ? 1 : 0,
+        includeDescendants: item.includeDescendants ? 1 : 0,
+        includeMapped: item.includeMapped ? 1 : 0,
+      }))
+
+      await fetchJSON(`/conceptset/${data.id}/items`, {
+        method: 'PUT',
+        body: JSON.stringify(itemsPayload),
+      })
+
+      const [updatedMetadata, updatedExpression] = await Promise.all([
+        fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${data.id}`),
+        fetchJSON<ConceptSetAPIExpression>(`/conceptset/${data.id}/expression`)
+      ])
+
+      return mapConceptSetFromAPI({
+        ...updatedMetadata,
+        expression: updatedExpression
+      })
+    }
 
     return mapConceptSetFromAPI(data)
   } catch (error) {
@@ -141,14 +165,38 @@ export async function updateConceptSet(
   }
 
   try {
-    const payload = mapConceptSetToAPI(conceptSet)
+    const metadataPayload = {
+      id: conceptSet.id,
+      name: conceptSet.name,
+      description: conceptSet.description
+    }
 
-    const data = await fetchJSON<ConceptSetAPIResponse>(`/conceptset/${conceptSet.id}`, {
+    await fetchJSON<ConceptSetAPIResponse>(`/conceptset/${conceptSet.id}`, {
       method: 'PUT',
-      body: JSON.stringify(payload),
+      body: JSON.stringify(metadataPayload),
     })
 
-    return mapConceptSetFromAPI(data)
+    const itemsPayload = (conceptSet.items || []).map(item => ({
+      conceptId: item.conceptId,
+      isExcluded: item.isExcluded ? 1 : 0,
+      includeDescendants: item.includeDescendants ? 1 : 0,
+      includeMapped: item.includeMapped ? 1 : 0,
+    }))
+
+    await fetchJSON(`/conceptset/${conceptSet.id}/items`, {
+      method: 'PUT',
+      body: JSON.stringify(itemsPayload),
+    })
+
+    const [updatedMetadata, updatedExpression] = await Promise.all([
+      fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${conceptSet.id}`),
+      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${conceptSet.id}/expression`)
+    ])
+
+    return mapConceptSetFromAPI({
+      ...updatedMetadata,
+      expression: updatedExpression
+    })
   } catch (error) {
     logger.error('ConceptSet', `Failed to update concept set ${conceptSet.id}`, error)
     return null

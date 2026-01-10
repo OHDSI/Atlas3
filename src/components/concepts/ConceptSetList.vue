@@ -51,6 +51,7 @@
         :loading="store.loading"
         :items-per-page="itemsPerPage"
         :items-per-page-text="t('datatable.language.lengthMenu', 'Rows per page:').value"
+        v-model:sort-by="sortBy"
         class="elevation-1"
       >
         <!-- Name -->
@@ -187,6 +188,7 @@ const store = useConceptSetsStore()
 const itemsPerPage = ref(25)
 const deleteDialog = ref(false)
 const deleteTarget = ref<ConceptSetListItem | null>(null)
+const sortBy = ref([{ key: 'modifiedDate', order: 'desc' }])
 
 // ============================================================================
 // Table Configuration
