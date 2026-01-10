@@ -21,6 +21,29 @@
         <span class="text-h6">{{ isEditMode ? t('common.edit', 'Edit').value : t('common.create', 'New').value }} {{ t('common.conceptSet', 'Concept Set').value }}</span>
         <v-spacer />
 
+        <!-- Versions Icon with Badge (only in edit mode) -->
+        <v-tooltip
+          v-if="isEditMode && props.conceptSet?.id"
+          :text="t('versions.tab', 'Versions').value"
+          location="bottom"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <v-badge
+              v-bind="tooltipProps"
+              :content="versionCount"
+              color="primary"
+              class="mr-4"
+            >
+              <v-icon
+                color="primary"
+                icon="mdi-history"
+                size="small"
+                @click="showVersionsDialog = true"
+              />
+            </v-badge>
+          </template>
+        </v-tooltip>
+
         <!-- Action Buttons -->
         <v-btn
           v-if="isEditMode"
@@ -116,16 +139,45 @@
         </v-form>
       </v-card-text>
     </v-card>
+
+    <!-- Versions Dialog -->
+    <v-dialog
+      v-model="showVersionsDialog"
+      max-width="1200px"
+      scrollable
+    >
+      <v-card>
+        <v-card-title class="d-flex justify-space-between align-center">
+          <span>{{ t('versions.tab', 'Versions').value }}</span>
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            size="small"
+            @click="showVersionsDialog = false"
+          />
+        </v-card-title>
+        <v-card-text class="pa-0">
+          <VersionsTabContent
+            v-if="showVersionsDialog && props.conceptSet?.id"
+            :config="versionsConfig"
+          />
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-navigation-drawer>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { logger } from '@/utils/logger'
+import { ref, computed, watch, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
+import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
+import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
+import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 
 const { t } = useI18n()
 
@@ -170,6 +222,10 @@ const form = ref<FormData>({
   name: '',
 })
 
+// Version management state
+const showVersionsDialog = ref(false)
+const versionCount = ref(0)
+
 // ============================================================================
 // Computed
 // ============================================================================
@@ -188,6 +244,64 @@ const drawerWidth = computed(() => {
   // This prevents v-window from causing layout shifts
   return Math.min(window.innerWidth * 0.85, 1400)
 })
+
+// Versions configuration
+const versionsConfig = computed<VersionsConfig>(() => {
+  const conceptSetId = props.conceptSet?.id
+  const assetId = typeof conceptSetId === 'number' ? conceptSetId : 0
+
+  return {
+    assetType: 'conceptset',
+    assetId,
+    currentVersion: () => getCurrentVersionRow(),
+    previewVersion: toRef(store, 'previewVersion'),
+    canEdit: computed(() => !store.previewVersion),
+    isDirty: toRef(() => hasUnsavedChanges.value),
+    clearPreview: () => store.clearPreviewVersion(),
+  }
+})
+
+// Get current version row for versions table
+function getCurrentVersionRow(): VersionsTableItem {
+  const conceptSet = props.conceptSet
+  if (!conceptSet) {
+    return {
+      version: 0,
+      assetId: 0,
+      createdBy: { id: 0, name: 'Unknown' },
+      createdDate: new Date().toISOString(),
+      comment: null,
+      archived: false,
+      displayVersion: 'Current',
+      isCurrent: true,
+      isPreviewing: false,
+      formattedDate: 'Current',
+    }
+  }
+
+  // ConceptSet has createdBy/modifiedBy as strings (username), not User objects
+  const username = conceptSet.modifiedBy || conceptSet.createdBy || 'Unknown'
+  const createdBy: User = { id: 0, name: username }
+
+  // Handle createdDate/modifiedDate which can be string or number
+  const dateValue = conceptSet.modifiedDate || conceptSet.createdDate
+  const createdDate = typeof dateValue === 'number'
+    ? new Date(dateValue).toISOString()
+    : (dateValue || new Date().toISOString())
+
+  return {
+    version: 0,
+    assetId: typeof conceptSet.id === 'number' ? conceptSet.id : 0,
+    createdBy,
+    createdDate,
+    comment: null,
+    archived: false,
+    displayVersion: 'Current',
+    isCurrent: true,
+    isPreviewing: false,
+    formattedDate: 'Current',
+  }
+}
 
 // ============================================================================
 // Validation Rules
@@ -224,6 +338,21 @@ watch(form, () => {
     hasUnsavedChanges.value = true
   }
 }, { deep: true })
+
+// Load version count when concept set changes
+watch(() => props.conceptSet?.id, async (id) => {
+  if (id && typeof id === 'number') {
+    try {
+      const versions = await getConceptSetVersions(id)
+      versionCount.value = versions.length
+    } catch (err) {
+      logger.error('ConceptSetEditor', 'Failed to load version count', err)
+      versionCount.value = 0
+    }
+  } else {
+    versionCount.value = 0
+  }
+}, { immediate: true })
 
 // ============================================================================
 // Methods

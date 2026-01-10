@@ -38,6 +38,65 @@ const router = createRouter({
       props: true,
       meta: { requiresAuth: true },
     },
+    // Version preview routes (T036, T037)
+    {
+      path: '/cohortdefinition/:id/version/:version',
+      name: 'cohort-version-preview',
+      component: () => import('@/views/CohortBuilderView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+      beforeEnter: async (to, _from, next) => {
+        const { useCohortStore } = await import('@/stores/cohort')
+        const cohortStore = useCohortStore()
+        const versionParam = to.params.version as string
+
+        if (versionParam === 'current') {
+          // Clear preview mode (T037)
+          await cohortStore.clearPreviewVersion()
+        } else {
+          // Load version for preview (T037)
+          const versionNumber = parseInt(versionParam)
+          if (!isNaN(versionNumber)) {
+            try {
+              await cohortStore.loadVersionPreview(versionNumber)
+            } catch (error) {
+              logger.error('Router', 'Failed to load version preview', error)
+              // Continue navigation anyway - let the view handle the error
+            }
+          }
+        }
+        next()
+      },
+    },
+    {
+      path: '/conceptset/:id/version/:version',
+      name: 'conceptset-version-preview',
+      component: () => import('@/views/ConceptsView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+      beforeEnter: async (to, _from, next) => {
+        const { useConceptSetsStore } = await import('@/stores/concept-sets')
+        const conceptSetsStore = useConceptSetsStore()
+        const versionParam = to.params.version as string
+
+        if (versionParam === 'current') {
+          // Clear preview mode (T037)
+          await conceptSetsStore.clearPreviewVersion()
+        } else {
+          // Load version for preview (T037)
+          const versionNumber = parseInt(versionParam)
+          if (!isNaN(versionNumber)) {
+            try {
+              await conceptSetsStore.loadVersionPreview(versionNumber)
+            } catch (error) {
+              logger.error('Router', 'Failed to load version preview', error)
+              // Continue navigation anyway - let the view handle the error
+            }
+          }
+        }
+        next()
+      },
+    },
     {
       path: '/concepts',
       name: 'concepts',

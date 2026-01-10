@@ -5,11 +5,15 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch, type WatchStopHandle } from 'vue'
 import type { CohortDefinition, CohortEvent } from '@/models/cohort.types'
+import type { Version, VersionedAsset } from '@/components/versions/types'
 import {
   saveCohortToCache,
   getCohortFromCache,
   deleteCohortFromCache,
 } from '@/utils/cohort-cache'
+import {
+  getVersion as getVersionAPI,
+} from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
 
 const STORAGE_KEY = 'atlas3_cohort_draft'
@@ -40,6 +44,9 @@ export const useCohortStore = defineStore('cohort', () => {
   const currentCohort = ref<CohortDefinition | null>(null)
   const isDirty = ref(false)
   const lastAutoSave = ref<Date | null>(null)
+
+  // Version preview state (T013)
+  const previewVersion = ref<Version | null>(null)
 
   // Validation state
   const validationErrors = ref<ValidationError[]>([])
@@ -422,6 +429,89 @@ export const useCohortStore = defineStore('cohort', () => {
     }
   }
 
+  // Version preview actions (T014-T016)
+
+  /**
+   * Load a specific version for preview
+   * Fetches the historical version data and sets it as current with preview flag
+   * @param versionNumber - The version number to load
+   */
+  async function loadVersionPreview(versionNumber: number): Promise<void> {
+    if (!currentCohort.value?.id) {
+      logger.error('CohortStore', 'Cannot load version preview: no current cohort ID')
+      throw new Error('No current cohort ID')
+    }
+
+    try {
+      const cohortId = currentCohort.value.id
+      const versionedAsset: VersionedAsset<CohortDefinition> = await getVersionAPI(cohortId, versionNumber)
+
+      // Set preview version metadata
+      previewVersion.value = versionedAsset.versionDTO
+
+      // Replace current cohort with historical data
+      currentCohort.value = versionedAsset.entityDTO
+
+      // Mark as clean (read-only mode, no editing)
+      isDirty.value = false
+
+      logger.debug('CohortStore', `Loaded version ${versionNumber} for preview`)
+    } catch (error) {
+      logger.error('CohortStore', `Failed to load version ${versionNumber}`, error)
+      throw error
+    }
+  }
+
+  /**
+   * Clear preview state and reload current version
+   * Returns to normal editing mode
+   */
+  async function clearPreviewVersion(): Promise<void> {
+    const wasPreviewingId = currentCohort.value?.id
+
+    // Clear preview state
+    previewVersion.value = null
+
+    // Reload current version if we were previewing
+    if (wasPreviewingId) {
+      await loadCohort(wasPreviewingId)
+    }
+
+    logger.debug('CohortStore', 'Preview cleared, returned to current version')
+  }
+
+  /**
+   * Save the currently previewed version as the new current version
+   * Creates a new version with the historical data
+   */
+  async function savePreviewAsCurrent(): Promise<boolean> {
+    if (!previewVersion.value) {
+      logger.error('CohortStore', 'Cannot save preview: not in preview mode')
+      return false
+    }
+
+    if (!currentCohort.value) {
+      logger.error('CohortStore', 'Cannot save preview: no cohort data')
+      return false
+    }
+
+    try {
+      // Save the current (historical) data as new version
+      const success = await saveCohort()
+
+      if (success) {
+        // Clear preview state after successful save
+        previewVersion.value = null
+        logger.debug('CohortStore', 'Preview saved as current version')
+      }
+
+      return success
+    } catch (error) {
+      logger.error('CohortStore', 'Failed to save preview as current', error)
+      return false
+    }
+  }
+
   // Cleanup function
   function dispose() {
     if (watchHandle) {
@@ -437,6 +527,7 @@ export const useCohortStore = defineStore('cohort', () => {
     currentCohort,
     isDirty,
     lastAutoSave,
+    previewVersion,
     validationErrors,
     isReadOnly,
     retryState,
@@ -469,6 +560,10 @@ export const useCohortStore = defineStore('cohort', () => {
     saveCohort,
     cancelRetry,
     deleteCachedCohort,
+    // Version preview (T014-T016)
+    loadVersionPreview,
+    clearPreviewVersion,
+    savePreviewAsCurrent,
     // Cleanup
     dispose,
   }

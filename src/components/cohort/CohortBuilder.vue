@@ -3,8 +3,35 @@
     <!-- Breadcrumb Navigation -->
     <cohort-breadcrumb
       v-model="cohortName"
+      :is-previewing-version="isPreviewingVersion"
+      :preview-version="cohortStore.previewVersion?.version"
       @navigate-back="router.push('/cohorts')"
     />
+
+    <!-- Back to Current Version Button -->
+    <div
+      v-if="isPreviewingVersion"
+      class="cohort-builder__preview-banner"
+    >
+      <v-alert
+        type="info"
+        variant="tonal"
+        density="compact"
+        class="mb-4"
+      >
+        <div class="d-flex align-center justify-space-between">
+          <span>{{ t('versions.previewingVersion', { version: cohortStore.previewVersion?.version || '' }) }}</span>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            prepend-icon="mdi-arrow-left"
+            @click="handleBackToCurrent"
+          >
+            {{ t('versions.backToCurrent', 'Back to Current') }}
+          </v-btn>
+        </div>
+      </v-alert>
+    </div>
 
     <!-- Patient Count Bar (TrexSQL) -->
     <patient-count-bar
@@ -12,6 +39,7 @@
       @retry="triggerValidation"
     />
 
+    <!-- Definition Content -->
     <!-- Top Toolbar -->
     <div class="cohort-builder__toolbar">
       <div class="cohort-builder__toolbar-left">
@@ -21,8 +49,12 @@
           :validation-count="validationWarnings.length"
           :validation-color="highestSeverityColor"
           :is-validating="isValidating"
+          :version-count="versionCount"
+          :cohort-id="cohortId"
+          :is-previewing-version="isPreviewingVersion"
           @show-concept-sets="showConceptSetsDialog = true"
           @show-validation="showValidationDialog = true"
+          @show-versions="showVersionsDialog = true"
         />
 
         <!-- Concept Sets Dialog -->
@@ -49,6 +81,7 @@
           :can-save="canSave"
           :has-unsaved-changes="hasUnsavedChanges"
           :show-generate="!!cohortId"
+          :is-previewing-version="isPreviewingVersion"
           @cancel="handleCancel"
           @save="handleSave"
           @generate="openGenerationPanel"
@@ -350,6 +383,37 @@
       </div>
     </v-overlay>
 
+    <!-- Versions Dialog -->
+    <v-dialog
+      v-model="showVersionsDialog"
+      max-width="1200px"
+      scrollable
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon
+            color="primary"
+            class="mr-2"
+          >
+            mdi-history
+          </v-icon>
+          {{ t('versions.tab', 'Versions') }}
+          <v-spacer />
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            @click="showVersionsDialog = false"
+          />
+        </v-card-title>
+        <v-card-text class="pa-0">
+          <versions-tab-content
+            v-if="cohortId"
+            :config="versionsConfig"
+          />
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <!-- Generation Panel -->
     <generation-panel
       v-model="isGenerationPanelOpen"
@@ -359,7 +423,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
 import { useCohortStore } from '@/stores/cohort'
@@ -396,6 +460,10 @@ import ExitCriteriaPanel from '../cohort-builder/ExitCriteriaPanel.vue'
 import CensorWindowEditor from '../cohort-builder/CensorWindowEditor.vue'
 import CriteriaGroupEditor from '../cohort-builder/CriteriaGroupEditor.vue'
 import GenerationPanel from './GenerationPanel.vue'
+import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
+import type { VersionsConfig, User } from '@/components/versions/types'
+import { format, parseISO } from 'date-fns'
+import * as cohortDefinitionVersionsService from '@/services/cohort-definition-versions.service'
 import CohortBreadcrumb from './CohortBreadcrumb.vue'
 import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
@@ -433,6 +501,7 @@ const inclusionQualifyingLimit = ref<QualifyingLimit>('ALL') // For inclusion cr
 // UI state
 const showValidationDialog = ref(false)
 const showConceptSetsDialog = ref(false)
+const showVersionsDialog = ref(false)
 const isGenerationPanelOpen = ref(false)
 
 // UI state
@@ -492,6 +561,22 @@ const {
 const canSave = computed(() => {
   return cohortName.value.trim().length > 0 && entryEvents.value.length > 0
 })
+
+// Preview mode state
+const isPreviewingVersion = computed(() => {
+  return !!cohortStore.previewVersion
+})
+
+/**
+ * Navigate back to the current version from a preview
+ */
+async function handleBackToCurrent(): Promise<void> {
+  if (!cohortId.value) return
+
+  await router.push({
+    path: `/cohortdefinition/${cohortId.value}/version/current`,
+  })
+}
 
 /**
  * Cohort expression for patient count API
@@ -650,6 +735,75 @@ const currentlySelectedConcepts = computed(() => {
 
   return []
 })
+
+// Versions configuration
+const versionsConfig = computed<VersionsConfig>(() => {
+  return {
+    assetType: 'cohortdefinition',
+    assetId: cohortId.value ?? 0,
+    currentVersion: () => {
+    const cohort = cohortStore.currentCohort
+    if (!cohort) {
+      return {
+        version: -1,
+        displayVersion: 'Current',
+        assetId: 0,
+        createdBy: { id: 0, name: 'Unknown' },
+        createdDate: new Date().toISOString(),
+        comment: null,
+        archived: false,
+        isCurrent: true,
+        isPreviewing: false,
+        formattedDate: '',
+      }
+    }
+
+    const dateStr = cohort.modifiedDate || cohort.createdDate
+    // Handle createdBy/modifiedBy which may be null or have different structure
+    const userInfo = cohort.modifiedBy || cohort.createdBy
+    const createdBy: User = userInfo && typeof userInfo === 'object' && 'name' in userInfo
+      ? userInfo as User
+      : { id: 0, name: 'Unknown' }
+
+    return {
+      version: -1,
+      displayVersion: 'Current',
+      assetId: cohort.id ?? 0,
+      createdBy,
+      createdDate: typeof dateStr === 'number' ? new Date(dateStr).toISOString() : (dateStr || new Date().toISOString()),
+      comment: null,
+      archived: false,
+      isCurrent: true,
+      isPreviewing: false,
+      formattedDate: dateStr ? format(typeof dateStr === 'number' ? new Date(dateStr) : parseISO(dateStr), 'PPpp') : '',
+    }
+  },
+  previewVersion: toRef(cohortStore, 'previewVersion'),
+  canEdit: computed(() => true), // TODO: Add actual permission check
+  isDirty: toRef(cohortStore, 'isDirty'),
+  clearPreview: () => cohortStore.clearPreviewVersion(),
+}})
+
+// Version count for badge display
+const versionCount = ref(0)
+
+// Load version count when cohort is loaded
+watch(cohortId, async (id) => {
+  if (id) {
+    try {
+      logger.debug('CohortBuilder', 'Fetching versions for cohort ID', id)
+      const versions = await cohortDefinitionVersionsService.getVersions(id)
+      logger.debug('CohortBuilder', 'Retrieved versions', versions)
+      versionCount.value = versions.length
+      logger.debug('CohortBuilder', 'Version count set to', versionCount.value)
+    } catch (err) {
+      logger.error('CohortBuilder', 'Failed to load version count', err)
+      versionCount.value = 0
+    }
+  } else {
+    versionCount.value = 0
+  }
+}, { immediate: true })
 
 onMounted(async () => {
   // Start loading cohort definition immediately (don't await)
@@ -1712,5 +1866,27 @@ function _getStatusText(status: string): string {
   color: #333;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Tabs */
+.cohort-builder__tabs {
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.cohort-builder__tabs-window {
+  margin-top: 0;
+}
+
+/* Preview mode indicators */
+.cohort-builder__preview-indicator {
+  color: rgb(var(--v-theme-warning));
+  font-weight: normal;
+  font-size: 0.9em;
+  margin-left: 4px;
+}
+
+.cohort-builder__preview-banner {
+  margin-bottom: 16px;
 }
 </style>
