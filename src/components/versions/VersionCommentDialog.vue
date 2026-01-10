@@ -70,6 +70,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { logger } from '@/utils/logger'
 import type { Version, CommentUpdatePayload } from './types'
 import { updateVersion as updateCohortVersion } from '@/services/cohort-definition-versions.service'
 import { updateVersion as updateConceptSetVersion } from '@/services/concept-set-versions.service'
@@ -87,8 +88,6 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'saved', version: Version): void
 }>()
-
-import { logger } from '@/utils/logger'
 
 // Composables
 const { t, tv } = useI18n()
