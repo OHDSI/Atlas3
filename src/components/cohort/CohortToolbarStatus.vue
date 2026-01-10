@@ -82,6 +82,31 @@
       </template>
     </v-tooltip>
 
+    <!-- Versions Icon -->
+    <v-tooltip
+      v-if="cohortId && !isPreviewingVersion"
+      :text="t('versions.tab', 'Versions').value"
+      location="bottom"
+    >
+      <template #activator="{ props: tooltipProps }">
+        <v-badge
+          v-bind="tooltipProps"
+          :content="versionCount"
+          color="primary"
+          class="cohort-toolbar-status__badge"
+        >
+          <v-icon
+            color="primary"
+            icon="mdi-history"
+            size="small"
+            data-testid="versions-icon"
+            style="cursor: pointer"
+            @click="$emit('show-versions')"
+          />
+        </v-badge>
+      </template>
+    </v-tooltip>
+
     <!-- Validation Notification Icon -->
     <v-tooltip
       :text="isValidating ? t('common.loadingWithDots', 'Loading...').value : t('cc.viewEdit.tabs.messages', 'View validation messages').value"
@@ -126,6 +151,9 @@ interface Props {
   validationCount: number
   validationColor: string
   isValidating: boolean
+  versionCount?: number
+  cohortId?: string | number
+  isPreviewingVersion?: boolean
 }
 
 defineProps<Props>()
@@ -134,6 +162,7 @@ defineEmits<{
   (e: 'update:description', value: string): void
   (e: 'show-concept-sets'): void
   (e: 'show-validation'): void
+  (e: 'show-versions'): void
 }>()
 
 const { t } = useI18n()

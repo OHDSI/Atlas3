@@ -15,7 +15,7 @@
     <v-btn
       color="primary"
       variant="flat"
-      :disabled="!canSave"
+      :disabled="!canSave || isPreviewingVersion"
       @click="$emit('save')"
     >
       <v-icon
@@ -63,6 +63,7 @@ interface Props {
   canSave: boolean
   hasUnsavedChanges: boolean
   showGenerate: boolean
+  isPreviewingVersion?: boolean
 }
 
 defineProps<Props>()
