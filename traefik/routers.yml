@@ -1,0 +1,58 @@
+http:
+  routers:
+
+    traefik-dashboard:
+      entryPoints: http
+      service: api@internal
+      rule: 'PathPrefix(`/api`) || PathPrefix(`/dashboard`)'
+
+    ohdsi-atlas:
+      entryPoints: http
+      service: "ohdsi-atlas"
+      rule: 'PathPrefix(`/atlas`)'
+      priority: 10
+
+    ohdsi-webapi:
+      entryPoints: http
+      service: "ohdsi-webapi"
+      rule: 'PathPrefix(`/WebAPI`)'
+      priority: 10
+
+    broadsea-hades:
+      entryPoints: http
+      service: "broadsea-hades"
+      rule: 'PathPrefix(`/hades`)'
+      priority: 10
+      middlewares:
+        - "broadsea-hades-root-path-header"
+        - "broadsea-hades-path-strip"
+
+  middlewares:
+
+    broadsea-hades-path-strip:
+      stripPrefix:
+        prefixes:
+          - "/hades"
+        forceSlash: false
+
+    broadsea-hades-root-path-header:
+      headers:
+        customRequestHeaders:
+          X-RStudio-Root-Path: "/hades"
+
+  services:
+
+    ohdsi-atlas:
+      loadBalancer:
+        servers:
+          - url: http://ohdsi-atlas:8080
+
+    ohdsi-webapi:
+      loadBalancer:
+        servers:
+          - url: http://ohdsi-webapi:8080
+
+    broadsea-hades:
+      loadBalancer:
+        servers:
+          - url: http://broadsea-hades:8787

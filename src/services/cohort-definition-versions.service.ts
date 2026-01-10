@@ -11,6 +11,7 @@ import {
   commentUpdateSchema,
 } from '@/components/versions/schemas'
 import { z } from 'zod'
+import { logger } from '@/utils/logger'
 
 // Use pass-through validation for cohort definition data
 const cohortDefinitionSchema = z.any()
@@ -82,13 +83,13 @@ export async function getVersions(cohortDefinitionId: number): Promise<Version[]
     const parsed = versionArraySchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Version list validation error:', parsed.error)
+      logger.error('CohortDefinitionVersionsService', 'Version list validation error', parsed.error)
       throw new Error('Failed to validate version data')
     }
 
     return parsed.data
   } catch (error) {
-    console.error(`Failed to fetch versions for cohort definition ${cohortDefinitionId}:`, error)
+    logger.error('CohortDefinitionVersionsService', `Failed to fetch versions for cohort definition ${cohortDefinitionId}`, error)
     throw error
   }
 }
@@ -111,14 +112,15 @@ export async function getVersion(
     const parsed = versionedAssetSchema(cohortDefinitionSchema).safeParse(data)
 
     if (!parsed.success) {
-      console.error('Versioned asset validation error:', parsed.error)
+      logger.error('CohortDefinitionVersionsService', 'Versioned asset validation error', parsed.error)
       throw new Error('Failed to validate version data')
     }
 
     return parsed.data as VersionedAsset<CohortDefinition>
   } catch (error) {
-    console.error(
-      `Failed to fetch version ${versionNumber} for cohort definition ${cohortDefinitionId}:`,
+    logger.error(
+      'CohortDefinitionVersionsService',
+      `Failed to fetch version ${versionNumber} for cohort definition ${cohortDefinitionId}`,
       error
     )
     throw error
@@ -152,14 +154,15 @@ export async function updateVersion(
     const parsed = versionSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Version validation error:', parsed.error)
+      logger.error('CohortDefinitionVersionsService', 'Version validation error', parsed.error)
       throw new Error('Failed to validate updated version data')
     }
 
     return parsed.data
   } catch (error) {
-    console.error(
-      `Failed to update version ${versionNumber} for cohort definition ${cohortDefinitionId}:`,
+    logger.error(
+      'CohortDefinitionVersionsService',
+      `Failed to update version ${versionNumber} for cohort definition ${cohortDefinitionId}`,
       error
     )
     throw error
@@ -187,14 +190,15 @@ export async function copyVersion(
     const parsed = cohortDefinitionSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Cohort definition validation error:', parsed.error)
+      logger.error('CohortDefinitionVersionsService', 'Cohort definition validation error', parsed.error)
       throw new Error('Failed to validate created cohort definition')
     }
 
     return parsed.data
   } catch (error) {
-    console.error(
-      `Failed to copy version ${versionNumber} for cohort definition ${cohortDefinitionId}:`,
+    logger.error(
+      'CohortDefinitionVersionsService',
+      `Failed to copy version ${versionNumber} for cohort definition ${cohortDefinitionId}`,
       error
     )
     throw error

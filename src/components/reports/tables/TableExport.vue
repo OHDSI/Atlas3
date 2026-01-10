@@ -1,10 +1,5 @@
 <!--
-  TableExport Component
-  Feature: 005-cohort-reports
-  Tasks: T121-T124
-
-  Provides export functionality for data tables
-  Supports CSV export and clipboard copy with toast notifications
+  TableExport Component - Export functionality for data tables (CSV export and clipboard copy)
 -->
 <template>
   <div class="table-export-controls">
@@ -32,7 +27,7 @@
       </v-btn>
     </v-btn-group>
 
-    <!-- T124: Toast notifications -->
+    <!-- Toast notifications -->
     <v-snackbar
       v-model="showToast"
       :timeout="toastTimeout"
@@ -56,12 +51,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import * as Papa from 'papaparse'
+import { logger } from '@/utils/logger'
 
 /**
  * Props
  */
 const props = defineProps<{
-  data: any[]
+  data: Array<Record<string, unknown>>
   headers: Array<{ key: string; title: string }>
   filename?: string
 }>()
@@ -73,7 +69,7 @@ const copying = ref(false)
 const exporting = ref(false)
 
 /**
- * T124: Toast notification state
+ * Toast notification state
  */
 const showToast = ref(false)
 const toastMessage = ref('')
@@ -91,8 +87,7 @@ function showToastNotification(message: string, color: 'success' | 'error' | 'in
 }
 
 /**
- * T123: Copy table data to clipboard
- * Uses Clipboard API with fallback
+ * Copy table data to clipboard
  */
 async function handleCopy() {
   if (!props.data || props.data.length === 0) return
@@ -143,7 +138,7 @@ async function handleCopy() {
       }
     }
   } catch (error) {
-    console.error('[TableExport] Copy failed:', error)
+    logger.error('TableExport', 'Copy failed', error)
     showToastNotification('Failed to copy data to clipboard', 'error', 5000)
   } finally {
     copying.value = false
@@ -151,8 +146,7 @@ async function handleCopy() {
 }
 
 /**
- * T122: Export table data as CSV
- * Uses papaparse for robust CSV generation
+ * Export table data as CSV
  */
 async function handleExportCSV() {
   if (!props.data || props.data.length === 0) return
@@ -162,7 +156,7 @@ async function handleExportCSV() {
   try {
     // Prepare data for CSV export
     const csvData = props.data.map(row => {
-      const csvRow: Record<string, any> = {}
+      const csvRow: Record<string, unknown> = {}
       props.headers.forEach(header => {
         const value = row[header.key]
         // Use header title as column name in CSV
@@ -196,7 +190,7 @@ async function handleExportCSV() {
 
     showToastNotification(`Exported ${props.data.length} rows to ${filename}.csv`, 'success', 4000)
   } catch (error) {
-    console.error('[TableExport] CSV export failed:', error)
+    logger.error('TableExport', 'CSV export failed', error)
     showToastNotification('Failed to export CSV file', 'error', 5000)
   } finally {
     exporting.value = false

@@ -19,50 +19,40 @@ module.exports = {
   },
   plugins: ['vue', '@typescript-eslint', 'unused-imports'],
   rules: {
-    // Override all errors from extends to be warnings or off
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': 'off', // Handled by unused-imports
+    // Vue-specific adjustments
+    'vue/valid-v-slot': ['error', { allowModifiers: true }],
+
+    // Catch stray console/debugger (logger.ts has eslint-disable)
+    'no-console': 'warn',
+    'no-debugger': 'warn',
+
+    // Unused imports plugin (better handling than default no-unused-vars)
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-imports': 'warn',
     'unused-imports/no-unused-vars': [
       'warn',
       { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' },
     ],
-    '@typescript-eslint/ban-types': 'warn',
+
+    // TypeScript handles these better
+    'no-undef': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-var-requires': 'warn',
-    '@typescript-eslint/no-this-alias': 'warn',
-    'vue/multi-word-component-names': 'warn',
+
+    // Allow flexibility in Vue component organization
     'vue/component-api-style': 'off',
-    'vue/valid-v-slot': 'warn',
-    'vue/no-v-html': 'warn',
     'vue/one-component-per-file': 'off',
-    'no-func-assign': 'warn',
-    'no-redeclare': 'warn',
-    'no-undef': 'off',
-    'no-unused-vars': 'warn',
-    'no-prototype-builtins': 'warn',
-    'no-case-declarations': 'warn',
-    'no-useless-escape': 'warn',
-    'no-constant-condition': 'warn',
-    'no-mixed-spaces-and-tabs': 'warn',
-    'no-async-promise-executor': 'warn',
-    'no-empty': 'warn',
-    'no-self-assign': 'warn',
-    'no-cond-assign': 'warn',
-    'no-fallthrough': 'warn',
-    'no-control-regex': 'warn',
-    'no-dupe-class-members': 'warn',
-    'no-dupe-keys': 'warn',
-    'no-duplicate-case': 'warn',
-    'no-global-assign': 'warn',
-    'no-misleading-character-class': 'warn',
-    'no-setter-return': 'warn',
-    'no-shadow-restricted-names': 'warn',
-    'no-sparse-arrays': 'warn',
-    'no-unreachable': 'warn',
-    'no-unsafe-finally': 'warn',
-    'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
   },
+  overrides: [
+    {
+      // Allow console in tests, scripts, and dev plugins
+      files: ['tests/**/*', 'scripts/**/*', 'plugins-dev/**/*'],
+      rules: {
+        'no-console': 'off',
+        // Allow any in tests for mocking purposes
+        '@typescript-eslint/no-explicit-any': 'off',
+      },
+    },
+  ],
 }

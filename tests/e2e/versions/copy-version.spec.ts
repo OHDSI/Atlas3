@@ -26,7 +26,7 @@ test.describe('Create Copy from Historical Version', () => {
 
     // Note the version number being copied
     const versionRow = page.locator('tbody tr').nth(1)
-    const versionNumber = await versionRow.locator('td').first().textContent()
+    const _versionNumber = await versionRow.locator('td').first().textContent()
 
     // Create copy
     await versionRow.locator('button:has-text("Create a copy")').click()

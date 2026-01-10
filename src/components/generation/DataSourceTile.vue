@@ -4,21 +4,32 @@
     :class="`data-source-tile--${tileStatus}`"
     @click="handleTileClick"
   >
-    <v-card-title class="data-source-tile__title">
-      {{ source.sourceName }}
-    </v-card-title>
+    <v-card-text class="data-source-tile__content pa-3">
+      <!-- Source name and key -->
+      <div class="tile-header mb-2">
+        <div class="tile-header__name">
+          {{ source.sourceName }}
+        </div>
+        <div class="tile-header__key">
+          {{ source.sourceKey }}
+        </div>
+      </div>
 
-    <v-card-subtitle class="data-source-tile__subtitle">
-      {{ source.sourceKey }}
-    </v-card-subtitle>
-
-    <v-card-text class="data-source-tile__content">
       <!-- Status display -->
       <div
         v-if="tileStatus === 'idle'"
         class="tile-status"
       >
-        {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
+        <v-btn
+          color="primary"
+          variant="flat"
+          size="small"
+          :disabled="!cohortId"
+          block
+          @click.stop="handleGenerate"
+        >
+          {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
+        </v-btn>
       </div>
 
       <div
@@ -27,11 +38,11 @@
       >
         <v-progress-circular
           indeterminate
-          size="24"
+          size="20"
           width="2"
           color="primary"
         />
-        <span class="ml-2">{{ statusText }}</span>
+        <span class="ml-2 text-body-2">{{ statusText }}</span>
       </div>
 
       <div
@@ -39,47 +50,45 @@
         class="tile-status tile-status--complete"
       >
         <div class="patient-count">
-          <div class="patient-count__number">
-            {{ patientCount?.toLocaleString() || '0' }}
-          </div>
-          <div class="patient-count__label">
-            {{ t('common.patients', 'Patients') }}
-          </div>
+          <span class="patient-count__number">{{ patientCount?.toLocaleString() || '0' }}</span>
+          <span class="patient-count__label ml-1">{{ t('common.patients', 'Patients') }}</span>
         </div>
-        <v-chip
-          size="small"
+        <v-btn
           color="primary"
-          variant="outlined"
-          class="mt-2"
+          variant="text"
+          size="small"
+          :disabled="!cohortId"
+          block
+          @click.stop="handleGenerate"
         >
-          {{ t('common.clickToViewReports', 'Click to view reports') }}
-        </v-chip>
+          {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
+        </v-btn>
       </div>
 
       <div
         v-else-if="tileStatus === 'failed'"
         class="tile-status tile-status--failed"
       >
-        <v-icon color="error">
+        <v-icon
+          color="error"
+          size="small"
+        >
           mdi-alert-circle
         </v-icon>
-        <span class="ml-2 text-error">{{ failMessage || t('common.failed', 'Failed').value }}</span>
+        <span class="ml-2 text-error text-caption">{{ failMessage || t('common.failed', 'Failed').value }}</span>
+        <v-btn
+          color="primary"
+          variant="text"
+          size="small"
+          :disabled="!cohortId"
+          block
+          class="mt-2"
+          @click.stop="handleGenerate"
+        >
+          {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
+        </v-btn>
       </div>
     </v-card-text>
-
-    <v-card-actions>
-      <v-spacer />
-      <v-btn
-        v-if="canGenerate"
-        color="primary"
-        variant="flat"
-        :disabled="!cohortId"
-        :loading="tileStatus === 'generating'"
-        @click.stop="handleGenerate"
-      >
-        {{ t('components.analysisExecution.buttons.generate', 'Generate').value }}
-      </v-btn>
-    </v-card-actions>
   </v-card>
 </template>
 
@@ -88,6 +97,7 @@ import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
 import type { CDMSource, TileStatus } from '@/models/webapi.types'
+import { logger } from '@/utils/logger'
 
 const { t } = useI18n()
 
@@ -136,24 +146,18 @@ const statusText = computed(() => {
 
 const failMessage = computed(() => job.value?.failMessage)
 
-const canGenerate = computed(() => {
-  return tileStatus.value === 'idle' ||
-         tileStatus.value === 'complete' ||
-         tileStatus.value === 'failed'
-})
-
 async function handleGenerate() {
   if (!props.cohortId) return
 
   try {
     await webapiStore.generateCohort(props.cohortId, props.source.sourceKey)
   } catch (error) {
-    console.error('Generation error:', error)
+    logger.error('DataSourceTile', 'Generation error', error)
     // Error will be displayed by the store or parent component
   }
 }
 
-// T048: Emit tile-click event when card is clicked (for viewing reports)
+// Emit tile-click event when card is clicked (for viewing reports)
 function handleTileClick() {
   // Only emit if cohort has been generated (complete status)
   if (tileStatus.value === 'complete') {
@@ -163,68 +167,85 @@ function handleTileClick() {
 </script>
 
 <style scoped>
-/* Reuse CohortCard styles for consistency */
 .data-source-tile {
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   border-radius: 4px;
   transition: all 0.2s ease-in-out;
   height: 100%;
-  min-height: 180px;
 }
 
 .data-source-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.18);
+  border-color: #1976d2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .data-source-tile--complete {
   cursor: pointer;
+  border-color: #4caf50;
 }
 
-.data-source-tile__title {
-  font-size: 0.9375rem;
-  font-weight: 400;
-  color: #1f425a;
-}
-
-.data-source-tile__subtitle {
-  font-size: 0.8125rem;
-  color: #666;
+.data-source-tile--complete:hover {
+  background-color: #f1f8e9;
 }
 
 .data-source-tile__content {
-  flex-grow: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+}
+
+.tile-header {
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+.tile-header__name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f425a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tile-header__key {
+  font-size: 0.75rem;
+  color: #666;
 }
 
 .tile-status {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.tile-status--complete {
   flex-direction: column;
 }
 
+.tile-status--generating,
+.tile-status--failed {
+  flex-direction: row;
+  justify-content: center;
+}
+
+.tile-status--complete {
+  gap: 4px;
+}
+
 .patient-count {
-  text-align: center;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  padding: 4px 0;
 }
 
 .patient-count__number {
-  font-size: 2rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #1f425a;
   line-height: 1;
 }
 
 .patient-count__label {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: #666;
-  margin-top: 4px;
 }
 </style>

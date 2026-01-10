@@ -1,6 +1,7 @@
 <template>
   <div class="concept-table">
     <v-data-table
+      v-model:sort-by="sortBy"
       :headers="headers"
       :items="concepts"
       :loading="loading"
@@ -96,7 +97,7 @@
         </div>
       </template>
 
-      <!-- Actions Column - Add/Remove Button (T091) -->
+      <!-- Actions Column - Add/Remove Button -->
       <template
         v-if="showAddButton"
         #item.actions="{ item }"
@@ -181,11 +182,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
 
 const { t } = useI18n()
+
+// ============================================================================
+// Local State
+// ============================================================================
+
+const sortBy = ref([{ key: 'conceptId', order: 'asc' as const }])
 
 // ============================================================================
 // Props & Emits
@@ -198,7 +205,7 @@ interface Props {
   totalItems: number
   page?: number
   itemsPerPage?: number
-  showAddButton?: boolean  // T091: Show add/remove button
+  showAddButton?: boolean
   conceptsInSet?: Set<number>  // Track which concepts are already in set
 }
 
@@ -242,7 +249,7 @@ const headers = computed(() => {
   ]
 
   if (props.showAddButton) {
-    return [...baseHeaders, { title: '', key: 'actions', sortable: false, width: '100px' }]
+    return [{ title: '', key: 'actions', sortable: false, width: '100px' }, ...baseHeaders]
   }
 
   return baseHeaders

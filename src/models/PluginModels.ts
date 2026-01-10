@@ -41,7 +41,7 @@ export interface PluginRegistration {
   version: string;
   entryPoint: string;
   menuItems: MenuItemConfiguration[];
-  activationConditions?: Record<string, any>;
+  activationConditions?: Record<string, unknown>;
   metadata?: {
     author?: string;
     description?: string;
@@ -82,12 +82,12 @@ export interface AuthContext {
 }
 
 export interface PluginMessageBus {
-  send<T = any>(type: string, payload: T): void;
-  request<TRequest = any, TResponse = any>(
+  send<T = unknown>(type: string, payload: T): void;
+  request<TRequest = unknown, TResponse = unknown>(
     type: string,
     payload: TRequest
   ): Promise<TResponse>;
-  subscribe<T = any>(
+  subscribe<T = unknown>(
     type: string,
     callback: (payload: T) => void
   ): () => void;
@@ -95,8 +95,8 @@ export interface PluginMessageBus {
 
 export interface PluginProps {
   name: string;
-  mountParcel: any;
-  singleSpa: any;
+  mountParcel: unknown;
+  singleSpa: unknown;
   authContext: AuthContext;
   messageBus: PluginMessageBus;
 }
@@ -111,7 +111,7 @@ export interface PluginLifecycleExports {
 export interface PluginInstance {
   registration: PluginRegistration;
   state: PluginLifecycleState;
-  application?: any;
+  application?: unknown;
   container?: HTMLElement;
   messageBus: PluginMessageBus;
   authContext: AuthContext;
@@ -129,7 +129,7 @@ export interface PluginInstance {
   };
 }
 
-export interface HostMessage<T = any> {
+export interface HostMessage<T = unknown> {
   type: HostMessageType | string;
   sourcePluginId: string;
   payload: T;
@@ -151,12 +151,12 @@ export interface NotificationPayload {
 
 export interface DataRequestPayload {
   resource: string;
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
 }
 
 export interface ErrorReportPayload {
   error: Error;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 // Zod Validation Schemas
@@ -180,7 +180,7 @@ export const PluginRegistrationSchema = z.object({
   version: z.string(),
   entryPoint: z.string(),
   menuItems: z.array(MenuItemConfigurationSchema),
-  activationConditions: z.record(z.any()).optional(),
+  activationConditions: z.record(z.unknown()).optional(),
   metadata: z.object({
     author: z.string().optional(),
     description: z.string().optional(),

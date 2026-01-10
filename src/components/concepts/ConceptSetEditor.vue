@@ -92,7 +92,7 @@
 
           <v-divider class="my-4" />
 
-          <!-- Tabs for concept building (T088, T089, T090) -->
+          <!-- Tabs for concept building -->
           <v-tabs
             v-model="activeTab"
             bg-color="grey-lighten-3"
@@ -168,6 +168,7 @@
 </template>
 
 <script setup lang="ts">
+import { logger } from '@/utils/logger'
 import { ref, computed, watch, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -344,7 +345,7 @@ watch(() => props.conceptSet?.id, async (id) => {
       const versions = await getConceptSetVersions(id)
       versionCount.value = versions.length
     } catch (err) {
-      console.error('Failed to load version count:', err)
+      logger.error('ConceptSetEditor', 'Failed to load version count', err)
       versionCount.value = 0
     }
   } else {
@@ -365,16 +366,15 @@ async function onSave() {
     let result
 
     if (isEditMode.value && props.conceptSet?.id) {
-      // Update existing concept set
       result = await store.update({
         ...props.conceptSet,
         name: form.value.name,
+        items: store.currentSet?.items || [],
       })
     } else {
-      // Create new concept set
       result = await store.create({
         name: form.value.name,
-        items: [],
+        items: store.currentSet?.items || [],
       })
     }
 
@@ -409,7 +409,7 @@ function onDelete() {
 }
 
 // ============================================================================
-// Phase 5: Concept Building Methods (T092)
+// Concept Building Methods
 // ============================================================================
 
 function onAddConcept(concept: Concept) {

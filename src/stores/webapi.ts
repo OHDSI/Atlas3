@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { CDMSource, GenerationJob } from '@/models/webapi.types'
 import * as webapi from '@/services/webapi'
+import { logger } from '@/utils/logger'
 
 export const useWebAPIStore = defineStore('webapi', () => {
   // State
@@ -44,6 +45,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
     // Auto-select first source if none selected
     if (!selectedSource.value && sourcesList.length > 0) {
       selectedSource.value = sourcesList[0]?.sourceKey ?? null
+      logger.debug('WebAPIStore', 'Auto-selected first source', { selected: selectedSource.value, sources: sourcesList.map(s => s.sourceKey) })
     }
   }
 
@@ -75,15 +77,19 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
   /**
    * Fetch available CDM data sources
-   * T116: Implement fetchSources action
    */
   async function fetchSources(): Promise<void> {
     try {
       setLoadingSources(true)
-      const fetchedSources = await webapi.fetchCDMSources()
-      setSources(fetchedSources)
+      const result = await webapi.fetchCDMSources()
+      if (result.success) {
+        setSources(result.data)
+      } else {
+        logger.error('WebAPIStore', 'Failed to fetch CDM sources', result.error)
+        setSources([])
+      }
     } catch (error) {
-      console.error('Failed to fetch CDM sources:', error)
+      logger.error('WebAPIStore', 'Unexpected error fetching CDM sources', error)
       setSources([])
     } finally {
       setLoadingSources(false)
@@ -92,7 +98,6 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
   /**
    * Generate cohort for a specific data source
-   * T117: Implement generateCohort action
    */
   async function generateCohort(cohortId: number, sourceKey: string): Promise<GenerationJob | null> {
     try {
@@ -128,14 +133,13 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
       return job
     } catch (error) {
-      console.error('Failed to generate cohort:', error)
+      logger.error('WebAPIStore', 'Failed to generate cohort', error)
       return null
     }
   }
 
   /**
    * Poll generation status every 2 seconds until complete or failed
-   * T118: Implement pollGenerationStatus action
    */
   const POLL_INTERVAL_MS = 2000 // 2 seconds
   const POLL_TIMEOUT_MS = 300000 // 5 minutes max
@@ -152,13 +156,15 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
     const poll = async () => {
       try {
-        const infoList = await webapi.getCohortGenerationInfo(cohortId)
+        const result = await webapi.getCohortGenerationInfo(cohortId)
 
-        if (!infoList || infoList.length === 0) {
+        if (!result.success || result.data.length === 0) {
           // If we can't get info, stop polling
           stopPolling(cohortId)
           return
         }
+
+        const infoList = result.data
 
         // Find the latest job for this cohort
         const jobs = getJobsByCohortId(cohortId)
@@ -198,11 +204,11 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
         // Check for timeout
         if (Date.now() - startTime > POLL_TIMEOUT_MS) {
-          console.warn(`Generation polling timeout for cohort ${cohortId}`)
+          logger.warn('WebAPIStore', `Generation polling timeout for cohort ${cohortId}`)
           stopPolling(cohortId)
         }
       } catch (error) {
-        console.error('Error polling generation status:', error)
+        logger.error('WebAPIStore', 'Error polling generation status', error)
         stopPolling(cohortId)
       }
     }
@@ -240,11 +246,13 @@ export const useWebAPIStore = defineStore('webapi', () => {
    */
   async function fetchCohortGenerationInfo(cohortId: number): Promise<void> {
     try {
-      const infoList = await webapi.getCohortGenerationInfo(cohortId)
+      const result = await webapi.getCohortGenerationInfo(cohortId)
 
-      if (!infoList || infoList.length === 0) {
+      if (!result.success || result.data.length === 0) {
         return
       }
+
+      const infoList = result.data
 
       // Convert each generation info to a GenerationJob
       // We need to map sourceId to sourceKey
@@ -252,7 +260,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
         // Find the source that matches this sourceId
         const source = sources.value.find(s => s.sourceId === info.id.sourceId)
         if (!source) {
-          console.warn(`Could not find source with ID ${info.id.sourceId}`)
+          logger.warn('WebAPIStore', `Could not find source with ID ${info.id.sourceId}`)
           continue
         }
 
@@ -274,8 +282,13 @@ export const useWebAPIStore = defineStore('webapi', () => {
         addGenerationJob(job)
       }
     } catch (error) {
-      console.error('Failed to fetch cohort generation info:', error)
+      logger.error('WebAPIStore', 'Failed to fetch cohort generation info', error)
     }
+  }
+
+  // Cleanup function
+  function dispose() {
+    stopAllPolling()
   }
 
   return {
@@ -305,6 +318,8 @@ export const useWebAPIStore = defineStore('webapi', () => {
     pollGenerationStatus,
     stopPolling,
     stopAllPolling,
+    // Cleanup
+    dispose,
     // Constants (for testing)
     POLL_INTERVAL_MS,
     POLL_TIMEOUT_MS,

@@ -1,6 +1,5 @@
 /**
  * Data Sources Pinia Store
- * Feature: 006-datasources
  */
 import { defineStore } from 'pinia'
 import { ref, computed, triggerRef } from 'vue'
@@ -10,6 +9,7 @@ import type {
   ReportData
 } from '@/models/datasource.types'
 import { listDataSources, getDashboardReport, getClinicalDomainReport } from '@/services/datasource.service'
+import { logger } from '@/utils/logger'
 
 export const useDataSourcesStore = defineStore('datasources', () => {
   // State
@@ -38,7 +38,7 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     if (!selectedSourceId.value || !selectedReportType.value) return null
     const cacheKey = `${selectedSourceId.value}-${selectedReportType.value}`
     const report = reportCache.value.get(cacheKey) || null
-    console.log('[DataSourcesStore] currentReport computed:', { cacheKey, hasReport: !!report, reportType: report?.type })
+    logger.debug('DataSourcesStore', 'currentReport computed', { cacheKey, hasReport: !!report, reportType: report?.type })
     return report
   })
 
@@ -58,7 +58,7 @@ export const useDataSourcesStore = defineStore('datasources', () => {
       }
     } catch (err) {
       error.value.sources = err instanceof Error ? err.message : 'Failed to load data sources'
-      console.error('[DataSourcesStore] Error fetching sources:', err)
+      logger.error('DataSourcesStore', 'Error fetching sources', err)
     } finally {
       loading.value.sources = false
     }
@@ -92,13 +92,13 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     
     // Return cached if available
     if (reportCache.value.has(cacheKey)) {
-      console.log('[DataSourcesStore] Using cached report:', cacheKey)
+      logger.debug('DataSourcesStore', 'Using cached report', cacheKey)
       return
     }
-    
+
     // Don't start a new fetch if already loading
     if (loading.value.report) {
-      console.log('[DataSourcesStore] Already loading a report, skipping:', cacheKey)
+      logger.debug('DataSourcesStore', 'Already loading a report, skipping', cacheKey)
       return
     }
     
@@ -143,12 +143,12 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     } catch (err) {
       // Ignore abort errors - user switched reports before this one loaded
       if (err instanceof Error && err.name === 'AbortError') {
-        console.log('[DataSourcesStore] Report fetch aborted:', cacheKey)
+        logger.debug('DataSourcesStore', 'Report fetch aborted', cacheKey)
         return
       }
-      
+
       error.value.report = err instanceof Error ? err.message : 'Failed to load report'
-      console.error('[DataSourcesStore] Error fetching report:', { reportType, sourceKey: source.sourceKey, error: err })
+      logger.error('DataSourcesStore', 'Error fetching report', { reportType, sourceKey: source.sourceKey, error: err })
     } finally {
       loading.value.report = false
     }

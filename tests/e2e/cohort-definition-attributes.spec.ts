@@ -7,6 +7,7 @@
 
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
+import { waitForNetworkIdle } from './helpers/wait-utils'
 import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
@@ -41,7 +42,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
   test('T046: opening cohort does not trigger unsaved changes', async ({ page }) => {
     // Navigate to the cohorts list page
     await page.goto('/cohorts')
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
 
     // Mock the list of cohorts
     await page.route('**/WebAPI/cohortdefinition', async (route) => {
@@ -68,7 +69,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
     // Open an existing cohort by navigating directly
     // (In a real scenario, we'd click on a cohort in the list)
     await page.goto('/cohorts/1')
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
     await page.waitForTimeout(1000)
 
     // Verify the cohort details are loaded
@@ -80,7 +81,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
 
     // Check for unsaved changes indicator
     // Common patterns: disabled save button, no "Save" button being enabled, no dirty flag
-    const saveButton = page.getByRole('button', { name: /^save$/i })
+    const _saveButton = page.getByRole('button', { name: /^save$/i })
 
     // Wait a bit to ensure state has settled
     await page.waitForTimeout(500)
@@ -91,11 +92,11 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
 
     // Check the browser console for any errors
     const consoleErrors = await page.evaluate(() => {
-      return (window as any).__testErrors || []
+      return (window as { __testErrors?: Array<{ type: string }> }).__testErrors || []
     })
 
     // Verify no critical errors in console
-    expect(consoleErrors.filter((e: any) => e.type === 'error')).toHaveLength(0)
+    expect(consoleErrors.filter((e: { type: string }) => e.type === 'error')).toHaveLength(0)
 
     // Take a screenshot for manual verification
     await page.screenshot({
@@ -108,7 +109,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
     // This test verifies that loading a cohort and immediately saving it
     // results in the same data being sent back to the API
 
-    let savedCohortData: any = null
+    let savedCohortData: Record<string, unknown> | null = null
 
     // Mock the cohort load endpoint
     await page.route('**/WebAPI/cohortdefinition/1', async (route) => {
@@ -142,7 +143,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
 
     // Navigate to the cohort
     await page.goto('/cohorts/1')
-    await page.waitForLoadState('networkidle')
+    await waitForNetworkIdle(page)
     await page.waitForTimeout(1000)
 
     // Verify cohort loaded
@@ -166,7 +167,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
       // Verify the saved data matches the original
       if (savedCohortData) {
         // Check that critical attributes are preserved
-        const savedExpression = savedCohortData.expression || {}
+        const savedExpression = (savedCohortData.expression as Record<string, unknown>) || {}
 
         expect(savedExpression.expressionType).toBe(sampleCohort.expressionType)
         expect(savedExpression.cdmVersionRange).toBe(sampleCohort.cdmVersionRange)
@@ -181,70 +182,6 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
     // Take a screenshot
     await page.screenshot({
       path: 'tests/e2e/.test-results/cohort-round-trip-save.png',
-      fullPage: true
-    })
-  })
-
-  test.skip('T047-extended: verify converter preserves all Phase 1 attributes', async ({ page }) => {
-    // This test ensures the converter properly handles all the new attributes
-    // when converting between internal and Atlas formats
-
-    // Navigate to create a new cohort
-    await page.goto('/cohorts/new')
-    await page.waitForLoadState('networkidle')
-
-    // Wait for page to load
-    await page.waitForTimeout(500)
-
-    // Verify the cohort builder is rendered
-    const nameInput = page.getByTestId('cohort-name-input')
-    await expect(nameInput).toBeVisible()
-
-    // The converter should be working in the background
-    // This is more of an integration check that the page loads without errors
-
-    // Check for any JavaScript errors
-    const pageErrors: string[] = []
-    page.on('pageerror', (error) => {
-      pageErrors.push(error.message)
-    })
-
-    // Create a simple cohort to test the converter
-    await nameInput.fill('Converter Test Cohort')
-
-    // Add a concept set
-    await page.getByRole('button', { name: 'New Concept Set' }).click()
-    await page.waitForTimeout(300)
-
-    // Add an entry event
-    const addEntryButton = page.getByTestId('add-entry-event')
-    if (await addEntryButton.isVisible()) {
-      await addEntryButton.click()
-      await page.waitForTimeout(300)
-
-      // Expand the event card if needed
-      const expandButton = page.locator('button:has(.mdi-chevron-down)').first()
-      if (await expandButton.isVisible()) {
-        await expandButton.click()
-        await page.waitForTimeout(500)
-      }
-
-      // Select event type
-      const eventTypeSelector = page.getByTestId('event-type-selector')
-      if (await eventTypeSelector.isVisible()) {
-        await eventTypeSelector.click()
-        await page.waitForTimeout(200)
-        await page.click('text=Condition Occurrence')
-        await page.waitForTimeout(200)
-      }
-    }
-
-    // Verify no errors occurred during converter operations
-    expect(pageErrors).toHaveLength(0)
-
-    // Take a screenshot
-    await page.screenshot({
-      path: 'tests/e2e/.test-results/cohort-converter-test.png',
       fullPage: true
     })
   })

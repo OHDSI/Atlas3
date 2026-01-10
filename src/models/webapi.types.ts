@@ -125,11 +125,11 @@ export type CohortInfo = z.infer<typeof CohortInfoSchema>
 export const CohortDefinitionSummarySchema = z.object({
   id: z.number().int().positive(),
   name: z.string(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   createdBy: z.unknown().optional(), // May be string, object, or missing
-  createdDate: z.number().optional(), // Unix timestamp in milliseconds
+  createdDate: z.union([z.number(), z.string()]).optional(), // Can be timestamp or ISO string
   modifiedBy: z.unknown().optional(), // May be string, object, or missing
-  modifiedDate: z.number().optional(), // Unix timestamp in milliseconds
+  modifiedDate: z.union([z.number(), z.string()]).optional(), // Can be timestamp or ISO string
   hasWriteAccess: z.boolean().optional(),
   hasReadAccess: z.boolean().optional(),
   tags: z.array(TagSchema).optional(),

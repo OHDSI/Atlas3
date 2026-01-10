@@ -39,6 +39,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
+import { logger } from '@/utils/logger'
 
 const { t } = useI18n()
 
@@ -97,7 +98,7 @@ async function handleRefresh() {
     await auth.refreshToken()
     dismissed.value = false // Show success message
   } catch (error) {
-    console.error('Manual token refresh failed:', error)
+    logger.error('AuthStatusDisplay', 'Manual token refresh failed', error)
   }
 }
 

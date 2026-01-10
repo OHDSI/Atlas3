@@ -1,7 +1,5 @@
 <!--
   ChartExport Component
-  Feature: 005-cohort-reports
-  Tasks: T113-T116
 
   Provides export functionality for ECharts visualizations
   Supports PNG and SVG export formats
@@ -37,6 +35,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { EChartsType } from 'echarts/core'
+import { logger } from '@/utils/logger'
 
 /**
  * Props
@@ -61,7 +60,7 @@ const emit = defineEmits<{
 const exporting = ref<'png' | 'svg' | null>(null)
 
 /**
- * T114: Export chart as PNG
+ * Export chart as PNG
  * Uses ECharts getDataURL to generate PNG data URL
  */
 async function handleExportPNG() {
@@ -78,13 +77,13 @@ async function handleExportPNG() {
       backgroundColor: '#ffffff'
     })
 
-    // T116: Trigger download
+    // Trigger download
     const filename = props.filename || `chart-${Date.now()}`
     downloadDataURL(dataURL, `${filename}.png`)
 
     emit('export-success', 'png', `${filename}.png`)
   } catch (error) {
-    console.error('[ChartExport] PNG export failed:', error)
+    logger.error('ChartExport', 'PNG export failed', error)
     emit('export-error', 'png', error as Error)
   } finally {
     exporting.value = null
@@ -92,7 +91,7 @@ async function handleExportPNG() {
 }
 
 /**
- * T115: Export chart as SVG
+ * Export chart as SVG
  * Uses ECharts SVG renderer to generate SVG string
  */
 async function handleExportSVG() {
@@ -119,11 +118,11 @@ async function handleExportSVG() {
       emit('export-success', 'svg', `${filename}.svg`)
     } else {
       // Fallback: export as PNG if SVG renderer not available
-      console.warn('[ChartExport] SVG renderer not available, using PNG fallback')
+      logger.warn('ChartExport', 'SVG renderer not available, using PNG fallback')
       await handleExportPNG()
     }
   } catch (error) {
-    console.error('[ChartExport] SVG export failed:', error)
+    logger.error('ChartExport', 'SVG export failed', error)
     emit('export-error', 'svg', error as Error)
   } finally {
     exporting.value = null
@@ -131,7 +130,7 @@ async function handleExportSVG() {
 }
 
 /**
- * T116: Download data URL as file
+ * Download data URL as file
  * Creates temporary anchor element to trigger download
  */
 function downloadDataURL(dataURL: string, filename: string) {
@@ -146,7 +145,7 @@ function downloadDataURL(dataURL: string, filename: string) {
 }
 
 /**
- * T116: Download URL as file
+ * Download URL as file
  * Creates temporary anchor element to trigger download
  */
 function downloadURL(url: string, filename: string) {

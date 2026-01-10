@@ -5,7 +5,7 @@ export interface JWTPayload extends JoseJWTPayload {
   exp?: number
   iat?: number
   iss?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export interface AuthToken {
@@ -35,6 +35,8 @@ export interface UserInfo {
   displayName: string
   email?: string
   permissionIdx: PermissionIndex
+  /** Whether TrexSQL cache feature is enabled on the server */
+  trexsqlCacheEnabled?: boolean
 }
 
 export interface AuthState {

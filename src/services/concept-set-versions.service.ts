@@ -11,6 +11,7 @@ import {
   commentUpdateSchema,
 } from '@/components/versions/schemas'
 import { z } from 'zod'
+import { logger } from '@/utils/logger'
 
 // Use pass-through validation for concept set data
 const conceptSetSchema = z.any()
@@ -82,13 +83,13 @@ export async function getVersions(conceptSetId: number): Promise<Version[]> {
     const parsed = versionArraySchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Version list validation error:', parsed.error)
+      logger.error('ConceptSetVersionsService', 'Version list validation error', parsed.error)
       throw new Error('Failed to validate version data')
     }
 
     return parsed.data
   } catch (error) {
-    console.error(`Failed to fetch versions for concept set ${conceptSetId}:`, error)
+    logger.error('ConceptSetVersionsService', `Failed to fetch versions for concept set ${conceptSetId}`, error)
     throw error
   }
 }
@@ -111,13 +112,14 @@ export async function getVersion(
     const parsed = versionedAssetSchema(conceptSetSchema).safeParse(data)
 
     if (!parsed.success) {
-      console.error('Versioned asset validation error:', parsed.error)
+      logger.error('ConceptSetVersionsService', 'Versioned asset validation error', parsed.error)
       throw new Error('Failed to validate version data')
     }
 
     return parsed.data as VersionedAsset<ConceptSet>
   } catch (error) {
-    console.error(
+    logger.error(
+      'ConceptSetVersionsService',
       `Failed to fetch version ${versionNumber} for concept set ${conceptSetId}:`,
       error
     )
@@ -142,7 +144,8 @@ export async function getVersionExpression(
     )
     return data
   } catch (error) {
-    console.error(
+    logger.error(
+      'ConceptSetVersionsService',
       `Failed to fetch expression for version ${versionNumber} of concept set ${conceptSetId}:`,
       error
     )
@@ -177,13 +180,14 @@ export async function updateVersion(
     const parsed = versionSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Version validation error:', parsed.error)
+      logger.error('ConceptSetVersionsService', 'Version validation error', parsed.error)
       throw new Error('Failed to validate updated version data')
     }
 
     return parsed.data
   } catch (error) {
-    console.error(
+    logger.error(
+      'ConceptSetVersionsService',
       `Failed to update version ${versionNumber} for concept set ${conceptSetId}:`,
       error
     )
@@ -212,13 +216,14 @@ export async function copyVersion(
     const parsed = conceptSetSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Concept set validation error:', parsed.error)
+      logger.error('ConceptSetVersionsService', 'Concept set validation error', parsed.error)
       throw new Error('Failed to validate created concept set')
     }
 
     return parsed.data
   } catch (error) {
-    console.error(
+    logger.error(
+      'ConceptSetVersionsService',
       `Failed to copy version ${versionNumber} for concept set ${conceptSetId}:`,
       error
     )

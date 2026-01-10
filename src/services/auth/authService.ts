@@ -2,6 +2,7 @@ import type { LoginCredentials, UserInfo, AuthProvider } from '@/models/auth.typ
 import { useAuthStore } from '@/stores/auth'
 import { authConfig } from '@/config/auth.config'
 import { storageManager } from './storageManager'
+import { logger } from '@/utils/logger'
 
 export interface IAuthService {
   login(provider: string, credentials?: LoginCredentials): Promise<void>
@@ -77,7 +78,7 @@ class AuthService implements IAuthService {
     authStore.setError(null)
 
     try {
-      console.log('[Auth] Login attempt:', { provider, webAPIRoot: this.webAPIRoot })
+      logger.debug('Auth', 'Login attempt', { provider, webAPIRoot: this.webAPIRoot })
       let response: Response
 
       if (credentials) {
@@ -88,8 +89,8 @@ class AuthService implements IAuthService {
         // Ensure proper URL formatting with slash
         const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
         const url = `${baseUrl}${provider}`
-        console.log('[Auth] POST to:', url)
-        console.log('[Auth] Credentials:', { username: credentials.username, password: '***' })
+        logger.debug('Auth', 'POST to', url)
+        logger.debug('Auth', 'Credentials', { username: credentials.username, password: '***' })
 
         response = await fetch(url, {
           method: 'POST',
@@ -99,8 +100,8 @@ class AuthService implements IAuthService {
           body: formData.toString(),
         })
 
-        console.log('[Auth] Response status:', response.status)
-        console.log('[Auth] Response headers:', Object.fromEntries(response.headers.entries()))
+        logger.debug('Auth', 'Response status', response.status)
+        logger.debug('Auth', 'Response headers', Object.fromEntries(response.headers.entries()))
       } else {
         // OAuth/redirect provider - ensure proper URL with slash
         const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
@@ -117,16 +118,16 @@ class AuthService implements IAuthService {
       if (!response.ok) {
         const errorHeader = response.headers.get('x-auth-error')
         const errorBody = await response.text()
-        console.error('[Auth] Login failed:', { 
-          status: response.status, 
-          errorHeader, 
-          errorBody 
+        logger.error('Auth', 'Login failed', {
+          status: response.status,
+          errorHeader,
+          errorBody
         })
         throw new Error(errorHeader || errorBody || 'Authentication failed')
       }
 
       const token = response.headers.get('Bearer')
-      console.log('[Auth] Token received:', token ? 'YES' : 'NO')
+      logger.debug('Auth', 'Token received', token ? 'YES' : 'NO')
       
       if (!token) {
         throw new Error('No token received from server')
@@ -152,35 +153,58 @@ class AuthService implements IAuthService {
 
     try {
       const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-      
+
       // Get auth client to determine logout method
       const authClient = storageManager.getAuthClient()
-      
+
       if (authClient === 'IAP') {
         // Google IAP logout - redirect to IAP logout URL
-        console.log('[Auth] Performing Google IAP logout')
+        logger.info('Auth', 'Performing Google IAP logout')
         window.location.href = '/_gcp_iap/clear_login_cookie'
         return
       } else if (authClient === 'SAML') {
         // SAML Single Logout
-        console.log('[Auth] Performing SAML Single Logout')
-        await fetch(`${baseUrl}user/logout/saml`, {
+        logger.info('Auth', 'Performing SAML Single Logout')
+        const response = await fetch(`${baseUrl}user/logout/saml`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${authStore.token}`,
           },
         })
+
+        // Check if the response contains a redirect URL (auth-proxy OIDC logout)
+        if (response.ok) {
+          const data = await response.json().catch(() => null)
+          if (data?.redirect) {
+            logger.info('Auth', 'Redirecting to OIDC logout endpoint', data.redirect)
+            authStore.clearAuth()
+            window.location.href = data.redirect
+            return
+          }
+        }
       } else {
         // Standard logout for other providers
-        await fetch(`${baseUrl}user/logout`, {
+        logger.info('Auth', 'Performing standard logout')
+        const response = await fetch(`${baseUrl}user/logout`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${authStore.token}`,
           },
         })
+
+        // Check if the response contains a redirect URL (auth-proxy OIDC logout)
+        if (response.ok) {
+          const data = await response.json().catch(() => null)
+          if (data?.redirect) {
+            logger.info('Auth', 'Redirecting to OIDC logout endpoint', data.redirect)
+            authStore.clearAuth()
+            window.location.href = data.redirect
+            return
+          }
+        }
       }
     } catch (error) {
-      console.error('Logout API call failed:', error)
+      logger.error('Auth', 'Logout API call failed', error)
     } finally {
       authStore.clearAuth()
     }
@@ -219,7 +243,7 @@ class AuthService implements IAuthService {
       authStore.setToken(newToken)
       return true
     } catch (error) {
-      console.error('Token refresh failed:', error)
+      logger.error('Auth', 'Token refresh failed', error)
       return false
     } finally {
       authStore.setRefreshing(false)
@@ -249,6 +273,7 @@ class AuthService implements IAuthService {
       displayName: data.name || data.login,
       email: data.email,
       permissionIdx: data.permissions || {},
+      trexsqlCacheEnabled: data.trexsqlCacheEnabled ?? false,
     }
   }
 
@@ -311,24 +336,24 @@ class AuthService implements IAuthService {
     try {
       const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
       const url = `${baseUrl}user/oauth/providers`
-      console.log('[Auth] Fetching OAuth providers from:', url)
+      logger.debug('Auth', 'Fetching OAuth providers from', url)
 
       const response = await fetch(url, {
         method: 'GET',
       })
 
-      console.log('[Auth] OAuth providers response status:', response.status)
+      logger.debug('Auth', 'OAuth providers response status', response.status)
 
       if (!response.ok) {
-        console.warn('[Auth] Failed to fetch OAuth providers from WebAPI - status:', response.status)
+        logger.warn('Auth', 'Failed to fetch OAuth providers from WebAPI - status', response.status)
         return []
       }
 
       const providers = await response.json()
-      console.log('[Auth] OAuth providers from WebAPI:', providers)
+      logger.debug('Auth', 'OAuth providers from WebAPI', providers)
       return Array.isArray(providers) ? providers : []
     } catch (error) {
-      console.error('[Auth] Error fetching OAuth providers:', error)
+      logger.error('Auth', 'Error fetching OAuth providers', error)
       return []
     }
   }

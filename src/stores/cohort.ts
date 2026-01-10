@@ -3,7 +3,7 @@
  * Manages current cohort definition state
  */
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, type WatchStopHandle } from 'vue'
 import type { CohortDefinition, CohortEvent } from '@/models/cohort.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
 import {
@@ -14,6 +14,7 @@ import {
 import {
   getVersion as getVersionAPI,
 } from '@/services/cohort-definition-versions.service'
+import { logger } from '@/utils/logger'
 
 const STORAGE_KEY = 'atlas3_cohort_draft'
 const AUTO_SAVE_INTERVAL_MS = 30000 // 30 seconds
@@ -61,6 +62,7 @@ export const useCohortStore = defineStore('cohort', () => {
   // Auto-save timer
   let autoSaveTimer: ReturnType<typeof setInterval> | null = null
   let retryTimer: ReturnType<typeof setTimeout> | null = null
+  let watchHandle: WatchStopHandle | null = null
 
   // Getters
   const hasEntryEvents = computed(() => {
@@ -142,7 +144,7 @@ export const useCohortStore = defineStore('cohort', () => {
     isDirty.value = true
   }
 
-  // T122: SessionStorage auto-save
+  // SessionStorage auto-save
   function saveToDraft() {
     if (!currentCohort.value || !isDirty.value) return
 
@@ -153,13 +155,13 @@ export const useCohortStore = defineStore('cohort', () => {
       }
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draftData))
       lastAutoSave.value = new Date()
-      console.log('[CohortStore] Draft auto-saved at', lastAutoSave.value)
+      logger.debug('CohortStore', 'Draft auto-saved at', lastAutoSave.value)
     } catch (error) {
-      console.error('[CohortStore] Failed to save draft:', error)
+      logger.error('CohortStore', 'Failed to save draft:', error)
     }
   }
 
-  // T123: SessionStorage restore
+  // SessionStorage restore
   function restoreFromDraft(): boolean {
     try {
       const draftJson = sessionStorage.getItem(STORAGE_KEY)
@@ -169,11 +171,11 @@ export const useCohortStore = defineStore('cohort', () => {
       if (draftData.cohort) {
         currentCohort.value = draftData.cohort
         isDirty.value = true // Mark as dirty since it's a draft
-        console.log('[CohortStore] Draft restored from', draftData.timestamp)
+        logger.debug('CohortStore', 'Draft restored from', draftData.timestamp)
         return true
       }
     } catch (error) {
-      console.error('[CohortStore] Failed to restore draft:', error)
+      logger.error('CohortStore', 'Failed to restore draft:', error)
       sessionStorage.removeItem(STORAGE_KEY)
     }
     return false
@@ -191,19 +193,19 @@ export const useCohortStore = defineStore('cohort', () => {
       saveToDraft()
     }, AUTO_SAVE_INTERVAL_MS)
 
-    console.log('[CohortStore] Auto-save started (every 30s)')
+    logger.debug('CohortStore', 'Auto-save started (every 30s)')
   }
 
   function stopAutoSave() {
     if (autoSaveTimer) {
       clearInterval(autoSaveTimer)
       autoSaveTimer = null
-      console.log('[CohortStore] Auto-save stopped')
+      logger.debug('CohortStore', 'Auto-save stopped')
     }
   }
 
   // Watch for changes and trigger auto-save timer
-  watch(isDirty, (dirty) => {
+  watchHandle = watch(isDirty, (dirty) => {
     if (dirty) {
       startAutoSave()
     }
@@ -289,15 +291,15 @@ export const useCohortStore = defineStore('cohort', () => {
 
       if (cachedCohort) {
         setCohort(cachedCohort)
-        console.log(`[CohortStore] Loaded cohort ${cohortId} from cache`)
+        logger.debug('CohortStore', `Loaded cohort ${cohortId} from cache`)
         return cachedCohort
       }
 
       // If not in cache, would normally fetch from WebAPI here
-      console.warn(`[CohortStore] Cohort ${cohortId} not found in cache and WebAPI not implemented`)
+      logger.warn('CohortStore', `Cohort ${cohortId} not found in cache and WebAPI not implemented`)
       return null
     } catch (error) {
-      console.error('[CohortStore] Failed to load cohort:', error)
+      logger.error('CohortStore', 'Failed to load cohort:', error)
 
       // Try to get from cache as fallback
       return await getCachedCohort(cohortId)
@@ -310,14 +312,14 @@ export const useCohortStore = defineStore('cohort', () => {
       const cachedCohort = await getCohortFromCache(cohortId)
 
       if (cachedCohort) {
-        console.log(`[CohortStore] Loaded cohort ${cohortId} from cache (fallback mode)`)
+        logger.debug('CohortStore', `Loaded cohort ${cohortId} from cache (fallback mode)`)
         setCohort(cachedCohort)
         return cachedCohort
       }
 
       return null
     } catch (error) {
-      console.error('[CohortStore] Failed to retrieve cached cohort:', error)
+      logger.error('CohortStore', 'Failed to retrieve cached cohort:', error)
       return null
     }
   }
@@ -325,12 +327,12 @@ export const useCohortStore = defineStore('cohort', () => {
   // Save cohort with retry logic
   async function saveCohort(): Promise<boolean> {
     if (!currentCohort.value) {
-      console.warn('[CohortStore] No cohort to save')
+      logger.warn('CohortStore', 'No cohort to save')
       return false
     }
 
     if (!canSave.value) {
-      console.warn('[CohortStore] Cannot save cohort: validation errors exist or read-only mode')
+      logger.warn('CohortStore', 'Cannot save cohort: validation errors exist or read-only mode')
       return false
     }
 
@@ -357,7 +359,7 @@ export const useCohortStore = defineStore('cohort', () => {
       const plainCohort = JSON.parse(JSON.stringify(currentCohort.value))
       await saveCohortToCache(plainCohort, 'local')
 
-      console.log(`[CohortStore] Cohort saved successfully`)
+      logger.info('CohortStore', 'Cohort saved successfully')
       markClean()
       retryState.value.isRetrying = false
       retryState.value.attempt = 0
@@ -365,7 +367,7 @@ export const useCohortStore = defineStore('cohort', () => {
 
       return true
     } catch (error) {
-      console.error(`[CohortStore] Save attempt ${retryState.value.attempt + 1} failed:`, error)
+      logger.error('CohortStore', `Save attempt ${retryState.value.attempt + 1} failed:`, error)
 
       // Check if we should retry
       if (retryState.value.attempt < RETRY_CONFIG.maxAttempts) {
@@ -374,8 +376,9 @@ export const useCohortStore = defineStore('cohort', () => {
         const delay = calculateBackoffDelay(retryState.value.attempt - 1)
         retryState.value.nextRetryAt = new Date(Date.now() + delay)
 
-        console.log(
-          `[CohortStore] Retrying in ${delay / 1000} seconds (attempt ${retryState.value.attempt}/${RETRY_CONFIG.maxAttempts})`
+        logger.info(
+          'CohortStore',
+          `Retrying in ${delay / 1000} seconds (attempt ${retryState.value.attempt}/${RETRY_CONFIG.maxAttempts})`
         )
 
         // Schedule retry
@@ -390,8 +393,9 @@ export const useCohortStore = defineStore('cohort', () => {
           }, delay)
         })
       } else {
-        console.error(
-          `[CohortStore] Max retry attempts (${RETRY_CONFIG.maxAttempts}) reached. Save failed.`
+        logger.error(
+          'CohortStore',
+          `Max retry attempts (${RETRY_CONFIG.maxAttempts}) reached. Save failed.`
         )
         retryState.value.isRetrying = false
         return false
@@ -412,16 +416,16 @@ export const useCohortStore = defineStore('cohort', () => {
       isRetrying: false,
     }
 
-    console.log('[CohortStore] Retry cancelled')
+    logger.debug('CohortStore', 'Retry cancelled')
   }
 
   // Delete cohort from cache
   async function deleteCachedCohort(cohortId: number | string): Promise<void> {
     try {
       await deleteCohortFromCache(cohortId)
-      console.log(`[CohortStore] Cohort ${cohortId} deleted from cache`)
+      logger.debug('CohortStore', `Cohort ${cohortId} deleted from cache`)
     } catch (error) {
-      console.error('[CohortStore] Failed to delete cached cohort:', error)
+      logger.error('CohortStore', 'Failed to delete cached cohort:', error)
     }
   }
 
@@ -434,7 +438,7 @@ export const useCohortStore = defineStore('cohort', () => {
    */
   async function loadVersionPreview(versionNumber: number): Promise<void> {
     if (!currentCohort.value?.id) {
-      console.error('[CohortStore] Cannot load version preview: no current cohort ID')
+      logger.error('CohortStore', 'Cannot load version preview: no current cohort ID')
       throw new Error('No current cohort ID')
     }
 
@@ -451,9 +455,9 @@ export const useCohortStore = defineStore('cohort', () => {
       // Mark as clean (read-only mode, no editing)
       isDirty.value = false
 
-      console.log(`[CohortStore] Loaded version ${versionNumber} for preview`)
+      logger.debug('CohortStore', `Loaded version ${versionNumber} for preview`)
     } catch (error) {
-      console.error(`[CohortStore] Failed to load version ${versionNumber}:`, error)
+      logger.error('CohortStore', `Failed to load version ${versionNumber}`, error)
       throw error
     }
   }
@@ -473,7 +477,7 @@ export const useCohortStore = defineStore('cohort', () => {
       await loadCohort(wasPreviewingId)
     }
 
-    console.log('[CohortStore] Preview cleared, returned to current version')
+    logger.debug('CohortStore', 'Preview cleared, returned to current version')
   }
 
   /**
@@ -482,12 +486,12 @@ export const useCohortStore = defineStore('cohort', () => {
    */
   async function savePreviewAsCurrent(): Promise<boolean> {
     if (!previewVersion.value) {
-      console.error('[CohortStore] Cannot save preview: not in preview mode')
+      logger.error('CohortStore', 'Cannot save preview: not in preview mode')
       return false
     }
 
     if (!currentCohort.value) {
-      console.error('[CohortStore] Cannot save preview: no cohort data')
+      logger.error('CohortStore', 'Cannot save preview: no cohort data')
       return false
     }
 
@@ -498,14 +502,24 @@ export const useCohortStore = defineStore('cohort', () => {
       if (success) {
         // Clear preview state after successful save
         previewVersion.value = null
-        console.log('[CohortStore] Preview saved as current version')
+        logger.debug('CohortStore', 'Preview saved as current version')
       }
 
       return success
     } catch (error) {
-      console.error('[CohortStore] Failed to save preview as current:', error)
+      logger.error('CohortStore', 'Failed to save preview as current', error)
       return false
     }
+  }
+
+  // Cleanup function
+  function dispose() {
+    if (watchHandle) {
+      watchHandle()
+      watchHandle = null
+    }
+    stopAutoSave()
+    cancelRetry()
   }
 
   return {
@@ -550,5 +564,7 @@ export const useCohortStore = defineStore('cohort', () => {
     loadVersionPreview,
     clearPreviewVersion,
     savePreviewAsCurrent,
+    // Cleanup
+    dispose,
   }
 })

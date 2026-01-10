@@ -1,6 +1,6 @@
 <template>
   <div class="domain-prevalence-table">
-    <!-- Large dataset warning (T068) -->
+    <!-- Large dataset warning -->
     <v-alert
       v-if="needsVirtualization"
       type="info"
@@ -113,7 +113,7 @@
         {{ item.metric.toFixed(2) }}
       </template>
       
-      <!-- Table status text (T067) -->
+      <!-- Table status text -->
       <template #bottom>
         <div class="table-status-footer pa-3 d-flex justify-space-between align-center">
           <div class="text-caption text-medium-emphasis">
@@ -136,6 +136,7 @@
 import { ref, computed } from 'vue'
 import type { PrevalenceTableRow } from '@/models/datasource.types'
 import { formatNumber, formatPercentage, exportTableToCSV } from '@/utils/datasource-formatters'
+import { logger } from '@/utils/logger'
 
 interface Props {
   data: PrevalenceTableRow[]
@@ -170,7 +171,7 @@ const visibleHeaders = computed(() => {
   return headers.value.filter(h => !h.hidden)
 })
 
-// Check if dataset needs virtualization (T068)
+// Check if dataset needs virtualization
 const needsVirtualization = computed(() => {
   return props.data.length > VIRTUALIZATION_THRESHOLD
 })
@@ -178,9 +179,9 @@ const needsVirtualization = computed(() => {
 // Aggregate data for very large datasets
 const aggregatedData = computed(() => {
   if (!needsVirtualization.value) return props.data
-  
+
   // For datasets > 10k rows, show top 1000 by prevalence
-  console.log('[Table] Large dataset detected, showing top 1000 entries by prevalence')
+  logger.info('DomainPrevalenceTable', 'Large dataset detected, showing top 1000 entries by prevalence')
   return [...props.data]
     .sort((a, b) => b.prevalence - a.prevalence)
     .slice(0, 1000)
@@ -219,7 +220,7 @@ const endItem = computed(() => {
   return Math.min(end, totalItems.value)
 })
 
-// Table status text (T067)
+// Table status text
 const tableStatusText = computed(() => {
   if (totalItems.value === 0) {
     return 'No entries found'
@@ -247,7 +248,7 @@ function toggleColumn(key: string) {
 function copyToClipboard() {
   const csv = exportTableToCSV(filteredData.value, props.metricLabel)
   navigator.clipboard.writeText(csv).then(() => {
-    console.log('[Table] Copied to clipboard:', filteredData.value.length, 'rows')
+    logger.debug('DomainPrevalenceTable', `Copied to clipboard: ${filteredData.value.length} rows`)
   })
 }
 

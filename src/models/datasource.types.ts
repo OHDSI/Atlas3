@@ -1,6 +1,5 @@
 /**
  * Data Source Type Definitions
- * Feature: 006-datasources
  */
 import { z } from 'zod'
 
@@ -92,6 +91,8 @@ export interface MultiLineChartData {
 export interface TreemapNode {
   name: string
   value: number
+  conceptId?: number
+  conceptPath?: string
   itemStyle?: {
     color?: string
     colorAlpha?: number
@@ -110,12 +111,6 @@ export interface DashboardReport {
   ageDistribution: BarChartData
   cumulativeObservation: LineChartData
   observationByMonth: LineChartData
-}
-
-export interface DataDensityReport {
-  totalRecords: MultiLineChartData
-  recordsPerPerson: MultiLineChartData
-  conceptsPerPerson: BarChartData
 }
 
 export interface DataDensityReport {

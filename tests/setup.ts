@@ -4,12 +4,18 @@
  */
 import { vi } from 'vitest'
 
+// Mock navigator.userAgent (required for Vuetify display composable)
+Object.defineProperty(window.navigator, 'userAgent', {
+  writable: true,
+  value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+})
+
 // Mock SystemJS for plugin framework (prevent errors during test initialization)
 if (!window.System) {
   window.System = {
     import: vi.fn().mockResolvedValue({}),
     register: vi.fn(),
-  } as any
+  } as unknown as typeof window.System
 }
 
 // Mock window.matchMedia (required for Vuetify components)
@@ -42,7 +48,7 @@ global.IntersectionObserver = class IntersectionObserver {
     return []
   }
   unobserve() {}
-} as any
+} as unknown as typeof IntersectionObserver
 
 // Mock ResizeObserver (required for Vuetify data tables)
 global.ResizeObserver = class ResizeObserver {
@@ -50,7 +56,7 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
   observe() {}
   unobserve() {}
-} as any
+} as unknown as typeof ResizeObserver
 
 // Mock visualViewport (required for Vuetify modals/overlays)
 Object.defineProperty(window, 'visualViewport', {

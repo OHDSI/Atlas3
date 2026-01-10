@@ -1,8 +1,9 @@
-import { 
-  PluginManifest, 
-  PluginManifestSchema, 
-  DEFAULT_MANIFEST_SETTINGS 
+import {
+  PluginManifest,
+  PluginManifestSchema,
+  DEFAULT_MANIFEST_SETTINGS
 } from '@/models/PluginModels';
+import { logger } from '@/utils/logger';
 
 export class PluginConfigService {
   private manifest: PluginManifest | null = null;
@@ -15,7 +16,7 @@ export class PluginConfigService {
 
       // If plugins.json doesn't exist (404), return empty manifest with defaults
       if (response.status === 404) {
-        console.warn('[PluginConfigService] plugins.json not found, using default configuration');
+        logger.warn('PluginConfig', 'plugins.json not found, using default configuration');
         this.manifest = this.createDefaultManifest();
         return this.manifest;
       }
@@ -24,10 +25,21 @@ export class PluginConfigService {
         throw new Error(`Failed to load plugins.json: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      let data: unknown
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        logger.error('PluginConfig', 'Failed to parse JSON response', parseError)
+        throw new Error('Invalid JSON in plugins.json')
+      }
 
-      // Validate with Zod schema
-      const validated = PluginManifestSchema.parse(data);
+      // Validate with Zod schema using safeParse
+      const result = PluginManifestSchema.safeParse(data)
+      if (!result.success) {
+        logger.error('PluginConfig', 'Plugin manifest validation failed', result.error)
+        throw new Error('Invalid plugin manifest format')
+      }
+      const validated = result.data
 
       // Apply defaults
       this.manifest = {
@@ -70,11 +82,11 @@ export class PluginConfigService {
 
       return this.manifest;
     } catch (error) {
-      console.error('[PluginConfigService] Failed to load config:', error);
+      logger.error('PluginConfig', 'Failed to load config', error);
 
       // If parsing/validation failed, use default manifest as fallback
       if (error instanceof Error && !error.message.includes('Failed to load plugins.json')) {
-        console.warn('[PluginConfigService] Using default configuration due to validation error');
+        logger.warn('PluginConfig', 'Using default configuration due to validation error');
         this.manifest = this.createDefaultManifest();
         return this.manifest;
       }
@@ -107,7 +119,7 @@ export class PluginConfigService {
 
   getLogoUrl(): string | null {
     const logoUrl = this.manifest?.settings?.theme?.logoUrl || null;
-    console.log('[PluginConfigService] getLogoUrl called, returning:', logoUrl);
+    logger.debug('PluginConfig', 'getLogoUrl called, returning', logoUrl);
     return logoUrl;
   }
 
@@ -159,9 +171,9 @@ export class PluginConfigService {
           }
           
           this.notifyListeners();
-          console.log('[PluginConfigService] Hot reload: Config updated');
+          logger.info('PluginConfig', 'Hot reload: Config updated');
         } catch (error) {
-          console.error('[PluginConfigService] Hot reload failed:', error);
+          logger.error('PluginConfig', 'Hot reload failed', error);
         }
       });
     }
@@ -174,13 +186,13 @@ export class PluginConfigService {
     // Detect added plugins
     const added = newManifest.plugins.filter(p => !oldIds.has(p.id));
     if (added.length > 0) {
-      console.log('[PluginConfigService] Added plugins:', added.map(p => p.id));
+      logger.info('PluginConfig', 'Added plugins', added.map(p => p.id));
     }
 
     // Detect removed plugins
     const removed = oldManifest.plugins.filter(p => !newIds.has(p.id));
     if (removed.length > 0) {
-      console.log('[PluginConfigService] Removed plugins:', removed.map(p => p.id));
+      logger.info('PluginConfig', 'Removed plugins', removed.map(p => p.id));
     }
 
     // Detect updated plugins (warn only, don't reload)
@@ -189,7 +201,7 @@ export class PluginConfigService {
       return oldPlugin && JSON.stringify(oldPlugin) !== JSON.stringify(p);
     });
     if (updated.length > 0) {
-      console.warn('[PluginConfigService] Updated plugins (reload required):', updated.map(p => p.id));
+      logger.warn('PluginConfig', 'Updated plugins (reload required)', updated.map(p => p.id));
     }
   }
 }

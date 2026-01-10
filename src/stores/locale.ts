@@ -1,6 +1,5 @@
 /**
  * Locale Store - Pinia state management for i18n
- * Feature: 008-translation-support
  */
 
 import { defineStore } from 'pinia'
@@ -12,6 +11,7 @@ import type {
   Translations
 } from '@/types/i18n'
 import { i18nService } from '@/services/i18n'
+import { logger } from '@/utils/logger'
 
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -68,7 +68,7 @@ export const useLocaleStore = defineStore('locale', {
         // Mark as initialized after initial translations are loaded
         this.initialized = true
       } catch (error) {
-        console.error('Failed to initialize locale store:', error)
+        logger.error('LocaleStore', 'Failed to initialize locale store', error)
         this.error = 'Failed to initialize translations'
         // English fallback is already loaded
         this.initialized = true
@@ -83,7 +83,7 @@ export const useLocaleStore = defineStore('locale', {
         const locales = await i18nService.fetchLocales()
         this.availableLocales = locales
       } catch (error) {
-        console.error('Failed to fetch available locales:', error)
+        logger.error('LocaleStore', 'Failed to fetch available locales', error)
         this.availableLocales = [
           { code: 'en', name: 'English' }
         ]
@@ -112,7 +112,7 @@ export const useLocaleStore = defineStore('locale', {
             return
           }
         } catch (error) {
-          console.error('Failed to parse cached translations:', error)
+          logger.error('LocaleStore', 'Failed to parse cached translations', error)
         }
       }
 
@@ -131,10 +131,10 @@ export const useLocaleStore = defineStore('locale', {
         localStorage.setItem(localStorageKey, JSON.stringify(cache))
         this.translations = bundle.translations
       } catch (error) {
-        console.error(`Failed to fetch translations for ${locale}:`, error)
+        logger.error('LocaleStore', `Failed to fetch translations for ${locale}`, error)
         this.error = `Failed to load ${locale} translations. Falling back to English.`
         
-        // T030: Show error notification (snackbar/toast)
+        // Show error notification
         if (typeof window !== 'undefined' && window.dispatchEvent) {
           window.dispatchEvent(new CustomEvent('i18n-error', {
             detail: {
@@ -153,12 +153,11 @@ export const useLocaleStore = defineStore('locale', {
     },
 
     /**
-     * Change application locale
-     * T045: FR-022: Update page title and metadata on language change
+     * Change application locale and update page title
      */
     async changeLocale(locale: LocaleCode): Promise<void> {
       if (!this.isLocaleAvailable(locale)) {
-        console.warn(`Locale ${locale} not available, falling back to English`)
+        logger.warn('LocaleStore', `Locale ${locale} not available, falling back to English`)
         locale = 'en'
       }
 
@@ -166,7 +165,7 @@ export const useLocaleStore = defineStore('locale', {
       this.locale = locale
       localStorage.setItem('locale', locale)
       
-      // T045: Update page title with locale
+      // Update page title with locale
       if (typeof document !== 'undefined') {
         const currentTitle = document.title
         const baseTitle = currentTitle.split(' | ')[0] || 'Atlas'
@@ -208,7 +207,7 @@ export const useLocaleStore = defineStore('locale', {
         // TypeScript with resolveJsonModule provides JSON directly, not as .default
         this.translations = englishTranslations as Translations
       } catch (error) {
-        console.error('Failed to load fallback translations:', error)
+        logger.error('LocaleStore', 'Failed to load fallback translations', error)
         // Provide minimal fallback translations
         this.translations = {
           common: {

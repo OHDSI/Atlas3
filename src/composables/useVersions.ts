@@ -41,6 +41,7 @@ import { format, parseISO, isWithinInterval } from 'date-fns'
 import type { VersionsTableItem, VersionsConfig } from '@/components/versions/types'
 import { getVersions as getCohortVersions } from '@/services/cohort-definition-versions.service'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
+import { logger } from '@/utils/logger'
 
 export interface VersionFilters {
   author: string | null
@@ -103,7 +104,7 @@ export function useVersions(config: VersionsConfig) {
       versions.value = [currentRow, ...tableItems]
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to load version history'
-      console.error('Failed to load versions:', err)
+      logger.error('useVersions', 'Failed to load versions', err)
       versions.value = []
     } finally {
       loading.value = false

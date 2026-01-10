@@ -1,7 +1,5 @@
 /**
  * Report Data Mapper Service
- * Feature: 005-cohort-reports
- * Tasks: T017-T018
  *
  * Transforms WebAPI report responses to internal data models
  * and provides chart data conversion utilities
@@ -30,7 +28,7 @@ import type {
 } from '@/models/report.types'
 
 // ============================================================================
-// Report Mappers (T017)
+// Report Mappers
 // ============================================================================
 
 /**
@@ -96,14 +94,13 @@ export function mapConditionErasReport(data: WebAPIConditionEraRaw): ConditionEr
 
   return {
     prevalence,
-    treemapData: prevalence.length > 0 ? toTreemapData(prevalence, 'conceptName', 'personCount') : undefined
+    treemapData: prevalence.length > 0 ? toTreemapData(prevalence as unknown as Record<string, unknown>[], 'conceptName', 'personCount') : undefined
   }
 }
 
 /**
  * Map WebAPI condition data to internal ConditionReport format
  * Transforms raw OHDSI WebAPI array to our application types
- * T079: Condition occurrence report
  */
 export function mapConditionReport(data: WebAPIConditionRaw): ConditionReport {
   const prevalence: ConditionData[] = data.map(item => {
@@ -151,7 +148,7 @@ export function mapDrugErasReport(data: WebAPIDrugEraRaw): DrugErasReport {
 
   return {
     prevalence,
-    treemapData: prevalence.length > 0 ? toTreemapData(prevalence, 'conceptName', 'personCount') : undefined
+    treemapData: prevalence.length > 0 ? toTreemapData(prevalence as unknown as Record<string, unknown>[], 'conceptName', 'personCount') : undefined
   }
 }
 
@@ -186,7 +183,7 @@ export function mapCohortSpecificReport(data: WebAPICohortSpecificRaw): CohortSp
 }
 
 // ============================================================================
-// Chart Data Converters (T018)
+// Chart Data Converters
 // ============================================================================
 
 /**
@@ -196,10 +193,10 @@ export function mapCohortSpecificReport(data: WebAPICohortSpecificRaw): CohortSp
  * @param valueKey Key for Y-axis values (e.g., 'count', 'personCount')
  * @param unit Optional unit label (e.g., 'People', 'Count')
  */
-export function toBarChartData(
-  data: any[],
-  categoryKey: string,
-  valueKey: string,
+export function toBarChartData<T extends object>(
+  data: T[],
+  categoryKey: keyof T,
+  valueKey: keyof T,
   unit?: string
 ): BarChartData {
   return {
@@ -215,10 +212,10 @@ export function toBarChartData(
  * @param nameKey Key for slice names (e.g., 'conceptName', 'gender')
  * @param valueKey Key for slice values (e.g., 'count', 'percentage')
  */
-export function toPieChartData(
-  data: any[],
-  nameKey: string,
-  valueKey: string
+export function toPieChartData<T extends object>(
+  data: T[],
+  nameKey: keyof T,
+  valueKey: keyof T
 ): PieChartData[] {
   return data.map(item => ({
     name: String(item[nameKey]),
@@ -233,10 +230,10 @@ export function toPieChartData(
  * @param yKey Key for Y-axis data (e.g., 'prevalence', 'count')
  * @param seriesName Optional series name for legend
  */
-export function toLineChartData(
-  data: any[],
-  xKey: string,
-  yKey: string,
+export function toLineChartData<T extends object>(
+  data: T[],
+  xKey: keyof T,
+  yKey: keyof T,
   seriesName?: string
 ): LineChartData {
   return {
@@ -246,22 +243,38 @@ export function toLineChartData(
   }
 }
 
+function extractConceptDisplayName(conceptPath: string): string {
+  if (!conceptPath) return ''
+  const parts = conceptPath.split('||')
+  return parts[parts.length - 1]?.trim() || ''
+}
+
 /**
  * Convert array data to ECharts treemap format
  * @param data Source data array
  * @param nameKey Key for node names (e.g., 'conceptName')
  * @param valueKey Key for node values (e.g., 'personCount', 'prevalence')
  */
-export function toTreemapData(
-  data: any[],
-  nameKey: string,
-  valueKey: string
+export function toTreemapData<T extends object>(
+  data: T[],
+  nameKey: keyof T,
+  valueKey: keyof T
 ): TreemapNode[] {
-  return data.map(item => ({
-    name: String(item[nameKey]),
-    value: Number(item[valueKey])
-  }))
+  return data.map(item => {
+    const fullName = String(item[nameKey])
+    return {
+      name: extractConceptDisplayName(fullName),
+      value: Number(item[valueKey]),
+      conceptId: 'conceptId' in item ? Number(item.conceptId) : undefined,
+      conceptPath: 'conceptPath' in item ? String(item.conceptPath) : undefined
+    }
+  })
 }
+
+/**
+ * Generic record type for treemap data items
+ */
+type TreemapDataItem = Record<string, unknown>
 
 /**
  * Group treemap data by category for hierarchical treemaps
@@ -271,29 +284,34 @@ export function toTreemapData(
  * @param valueKey Key for node values
  */
 export function toHierarchicalTreemapData(
-  data: any[],
+  data: TreemapDataItem[],
   categoryKey: string,
   nameKey: string,
   valueKey: string
 ): TreemapNode[] {
   // Group by category
-  const grouped = data.reduce((acc, item) => {
-    const category = item[categoryKey] || 'Other'
+  const grouped = data.reduce<Record<string, TreemapDataItem[]>>((acc, item) => {
+    const category = String(item[categoryKey] || 'Other')
     if (!acc[category]) {
       acc[category] = []
     }
     acc[category].push(item)
     return acc
-  }, {} as Record<string, any[]>)
+  }, {})
 
   // Convert to hierarchical structure
   return Object.entries(grouped).map(([category, items]) => ({
     name: category,
-    value: (items as any[]).reduce((sum: number, item: any) => sum + Number(item[valueKey]), 0),
-    children: (items as any[]).map((item: any) => ({
-      name: String(item[nameKey]),
-      value: Number(item[valueKey])
-    }))
+    value: items.reduce((sum, item) => sum + Number(item[valueKey]), 0),
+    children: items.map((item) => {
+      const fullName = String(item[nameKey])
+      return {
+        name: extractConceptDisplayName(fullName),
+        value: Number(item[valueKey]),
+        conceptId: item.conceptId ? Number(item.conceptId) : undefined,
+        conceptPath: item.conceptPath ? String(item.conceptPath) : undefined
+      }
+    })
   }))
 }
 
@@ -331,12 +349,11 @@ export function formatDuration(days: number): string {
 }
 
 // ============================================================================
-// Additional Report Mappers (T090-T100)
+// Additional Report Mappers
 // ============================================================================
 
 /**
  * Map WebAPI persons exposure data to internal PersonsExposureReport format
- * Used for both baseline (T090) and cohort (T091) reports
  */
 export function mapPersonsExposureReport(data: import('@/models/report.types').WebAPIPersonsExposureRaw): import('@/models/report.types').PersonsExposureReport {
   const prevalence: import('@/models/report.types').PersonsExposureData[] = data.map(item => {
@@ -357,7 +374,6 @@ export function mapPersonsExposureReport(data: import('@/models/report.types').W
 
 /**
  * Map WebAPI visits data to internal VisitsReport format
- * Used for both baseline (T092) and cohort (T095) reports
  */
 export function mapVisitsReport(data: import('@/models/report.types').WebAPIVisitsRaw): import('@/models/report.types').VisitsReport {
   const prevalence: import('@/models/report.types').VisitsData[] = data.map(item => {
@@ -378,7 +394,6 @@ export function mapVisitsReport(data: import('@/models/report.types').WebAPIVisi
 
 /**
  * Map WebAPI visit dates data to internal VisitDatesReport format
- * Used for both baseline (T093) and cohort (T096) reports
  */
 export function mapVisitDatesReport(data: import('@/models/report.types').WebAPIVisitDatesRaw): import('@/models/report.types').VisitDatesReport {
   const visitData: import('@/models/report.types').VisitDatesData[] = data.map(item => ({
@@ -392,7 +407,6 @@ export function mapVisitDatesReport(data: import('@/models/report.types').WebAPI
 
 /**
  * Map WebAPI care site visit dates data to internal CareSiteVisitDatesReport format
- * Used for both baseline (T094) and cohort (T097) reports
  */
 export function mapCareSiteVisitDatesReport(data: import('@/models/report.types').WebAPICareSiteVisitDatesRaw): import('@/models/report.types').CareSiteVisitDatesReport {
   const careSiteData: import('@/models/report.types').CareSiteVisitDatesData[] = data.map(item => {
@@ -412,7 +426,6 @@ export function mapCareSiteVisitDatesReport(data: import('@/models/report.types'
 
 /**
  * Map WebAPI drug utilization data to internal DrugUtilizationReport format
- * Used for both baseline (T098) and cohort (T099) reports
  */
 export function mapDrugUtilizationReport(data: import('@/models/report.types').WebAPIDrugUtilizationRaw): import('@/models/report.types').DrugUtilizationReport {
   const prevalence: import('@/models/report.types').DrugUtilizationData[] = data.map(item => {
@@ -433,7 +446,6 @@ export function mapDrugUtilizationReport(data: import('@/models/report.types').W
 
 /**
  * Map WebAPI Heracles Heel data to internal HeraclesHeelReport format
- * T100: Data quality report
  */
 export function mapHeraclesHeelReport(data: import('@/models/report.types').WebAPIHeraclesHeelRaw): import('@/models/report.types').HeraclesHeelReport {
   const results: import('@/models/report.types').HeraclesHeelData[] = data.map(item => {
@@ -458,12 +470,11 @@ export function mapHeraclesHeelReport(data: import('@/models/report.types').WebA
 }
 
 // ============================================================================
-// New Report Mappers (T080-T089)
+// New Report Mappers
 // ============================================================================
 
 /**
  * Map WebAPI conditions by index data to internal format
- * T080: Conditions by index report
  */
 export function mapConditionsByIndexReport(data: import('@/models/report.types').WebAPIConditionsByIndexRaw): import('@/models/report.types').ConditionsByIndexReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -484,7 +495,6 @@ export function mapConditionsByIndexReport(data: import('@/models/report.types')
 
 /**
  * Map WebAPI death data to internal format
- * T081: Death report
  */
 export function mapDeathReport(data: import('@/models/report.types').WebAPIDeathRaw): import('@/models/report.types').DeathReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -505,7 +515,6 @@ export function mapDeathReport(data: import('@/models/report.types').WebAPIDeath
 
 /**
  * Map WebAPI drug exposure data to internal format
- * T082: Drug exposure report
  */
 export function mapDrugExposureReport(data: import('@/models/report.types').WebAPIDrugExposureRaw): import('@/models/report.types').DrugExposureReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -526,7 +535,6 @@ export function mapDrugExposureReport(data: import('@/models/report.types').WebA
 
 /**
  * Map WebAPI drugs by index data to internal format
- * T083: Drugs by index report
  */
 export function mapDrugsByIndexReport(data: import('@/models/report.types').WebAPIDrugsByIndexRaw): import('@/models/report.types').DrugsByIndexReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -547,7 +555,6 @@ export function mapDrugsByIndexReport(data: import('@/models/report.types').WebA
 
 /**
  * Map WebAPI observation periods data to internal format
- * T084: Observation periods report
  */
 export function mapObservationPeriodsReport(data: import('@/models/report.types').WebAPIObservationPeriodsRaw): import('@/models/report.types').ObservationPeriodsReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -568,7 +575,6 @@ export function mapObservationPeriodsReport(data: import('@/models/report.types'
 
 /**
  * Map WebAPI procedure data to internal format
- * T085: Procedure report
  */
 export function mapProcedureReport(data: import('@/models/report.types').WebAPIProcedureRaw): import('@/models/report.types').ProcedureReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -589,7 +595,6 @@ export function mapProcedureReport(data: import('@/models/report.types').WebAPIP
 
 /**
  * Map WebAPI procedures by index data to internal format
- * T086: Procedures by index report
  */
 export function mapProceduresByIndexReport(data: import('@/models/report.types').WebAPIProceduresByIndexRaw): import('@/models/report.types').ProceduresByIndexReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -610,7 +615,6 @@ export function mapProceduresByIndexReport(data: import('@/models/report.types')
 
 /**
  * Map WebAPI data completeness data to internal format
- * T087: Data completeness report
  */
 export function mapDataCompletenessReport(data: import('@/models/report.types').WebAPIDataCompletenessRaw): import('@/models/report.types').DataCompletenessReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -631,7 +635,6 @@ export function mapDataCompletenessReport(data: import('@/models/report.types').
 
 /**
  * Map WebAPI entropy data to internal format
- * T088: Entropy report
  */
 export function mapEntropyReport(data: import('@/models/report.types').WebAPIEntropyRaw): import('@/models/report.types').EntropyReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -652,7 +655,6 @@ export function mapEntropyReport(data: import('@/models/report.types').WebAPIEnt
 
 /**
  * Map WebAPI tornado data to internal format
- * T089: Tornado report
  */
 export function mapTornadoReport(data: import('@/models/report.types').WebAPITornadoRaw): import('@/models/report.types').TornadoReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
@@ -669,4 +671,116 @@ export function mapTornadoReport(data: import('@/models/report.types').WebAPITor
   })
 
   return { prevalence }
+}
+
+export function mapBoxPlotData(raw: import('@/models/report.types').WebAPIBoxPlotRaw[]): import('@/models/report.types').BoxPlotData[] {
+  return raw.map(item => ({
+    category: item.category || `Interval ${item.intervalIndex || 0}`,
+    min: item.min || 0,
+    p10: item.p10Value || 0,
+    p25: item.p25Value || 0,
+    median: item.medianValue || item.avgValue || 0,
+    p75: item.p75Value || 0,
+    p90: item.p90Value || 0,
+    max: item.max || 0
+  }))
+}
+
+export function mapTrellisData(raw: import('@/models/report.types').WebAPIPrevalenceByDemographic[]): import('@/models/report.types').TrellisChartData {
+  const groupedData = new Map<string, Map<string, { x: number; y: number }[]>>()
+  const categories = new Set<string>()
+
+  raw.forEach(item => {
+    const trellisName = item.trellisName || 'Overall'
+    const seriesName = item.seriesName || 'Total'
+    const year = item.xCalendarYear || 0
+    const prevalence = item.yPrevalence1000Pp || 0
+
+    categories.add(trellisName)
+
+    if (!groupedData.has(trellisName)) {
+      groupedData.set(trellisName, new Map())
+    }
+
+    const trellisGroup = groupedData.get(trellisName)!
+    if (!trellisGroup.has(seriesName)) {
+      trellisGroup.set(seriesName, [])
+    }
+
+    trellisGroup.get(seriesName)!.push({ x: year, y: prevalence })
+  })
+
+  const series: import('@/models/report.types').TrellisSeriesData[] = []
+  groupedData.forEach((seriesMap, category) => {
+    seriesMap.forEach((data, name) => {
+      series.push({
+        name,
+        category,
+        data: data.sort((a, b) => Number(a.x) - Number(b.x))
+      })
+    })
+  })
+
+  return {
+    series,
+    categories: Array.from(categories)
+  }
+}
+
+export function mapTimeSeriesData(raw: import('@/models/report.types').WebAPIPrevalenceByMonth[]): import('@/models/report.types').TimeSeriesData[] {
+  return raw.map(item => {
+    // Convert YYYYMM to MM/YYYY format
+    const monthStr = item.xCalendarMonth.toString()
+    const month = monthStr.slice(-2)
+    const year = monthStr.slice(0, 4)
+    const dateString = `${month}/${year}`
+
+    return {
+      date: dateString,
+      value: item.yPrevalence1000Pp
+    }
+  })
+}
+
+export function mapDrilldownReport(
+  raw: import('@/models/report.types').WebAPIDrilldownRaw,
+  conceptId: number,
+  conceptName: string,
+  conceptPath: string,
+  _domain: string
+): import('@/models/report.types').DrilldownReport {
+  const report: import('@/models/report.types').DrilldownReport = {
+    conceptId,
+    conceptName,
+    conceptPath
+  }
+
+  const ageData = raw.ageAtFirstDiagnosis || raw.ageAtFirstExposure || raw.ageAtFirstOccurrence
+  if (ageData && ageData.length > 0) {
+    report.ageAtFirstOccurrence = mapBoxPlotData(ageData)
+  }
+
+  if (raw.lengthOfEra && raw.lengthOfEra.length > 0) {
+    report.lengthOfEra = mapBoxPlotData(raw.lengthOfEra)
+  }
+
+  if (raw.prevalenceByGenderAgeYear && raw.prevalenceByGenderAgeYear.length > 0) {
+    report.prevalenceByGenderAgeYear = mapTrellisData(raw.prevalenceByGenderAgeYear)
+  }
+
+  if (raw.prevalenceByMonth && raw.prevalenceByMonth.length > 0) {
+    report.prevalenceByMonth = mapTimeSeriesData(raw.prevalenceByMonth)
+  }
+
+  // Map by type (conditionsByType, drugsByType, etc.)
+  const byTypeData = raw.conditionsByType || raw.drugsByType || raw.observationsByType ||
+                      raw.measurementsByType || raw.proceduresByType
+  if (byTypeData && byTypeData.length > 0) {
+    report.byType = byTypeData.map(item => ({
+      name: item.conceptName || `Concept ${item.conceptId}`,
+      value: item.countValue
+    }))
+  }
+
+  return report
 }

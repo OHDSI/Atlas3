@@ -91,6 +91,7 @@ export const ConceptSetItemSchema = z.object({
 export interface ConceptSet {
   id?: number | string          // Optional for creation, required after save
   name: string
+  description?: string          // Optional description
   createdDate?: string | number // ISO 8601 datetime or Unix timestamp
   createdBy?: string            // Username
   modifiedDate?: string | number // ISO 8601 datetime or Unix timestamp
@@ -102,6 +103,7 @@ export interface ConceptSet {
 export const ConceptSetSchema = z.object({
   id: z.union([z.number(), z.string()]).optional(),
   name: z.string().min(1).max(255),
+  description: z.string().optional(),
   createdDate: z.union([z.string(), z.number()]).optional(),
   createdBy: z.string().optional(),
   modifiedDate: z.union([z.string(), z.number()]).optional(),

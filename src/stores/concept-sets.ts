@@ -18,26 +18,8 @@ import { conceptToConceptSetItem } from '@/utils/api-mappers'
 import {
   getVersion as getVersionAPI,
 } from '@/services/concept-set-versions.service'
-
-// Debounce utility
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-  
-  return function executedFunction(...args: Parameters<T>) {
-    const later = () => {
-      timeout = null
-      func(...args)
-    }
-    
-    if (timeout) {
-      clearTimeout(timeout)
-    }
-    timeout = setTimeout(later, wait)
-  }
-}
+import { logger } from '@/utils/logger'
+import { debounce } from '@/utils/debounce'
 
 export const useConceptSetsStore = defineStore('concept-sets', () => {
   // ============================================================================
@@ -92,7 +74,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       conceptSets.value = await getAllConceptSets()
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch concept sets'
-      console.error('Fetch concept sets error:', err)
+      logger.error('ConceptSetsStore', 'Fetch concept sets error', err)
       conceptSets.value = []
     } finally {
       loading.value = false
@@ -115,7 +97,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch concept set'
-      console.error('Fetch concept set error:', err)
+      logger.error('ConceptSetsStore', 'Fetch concept set error', err)
       currentSet.value = null
     } finally {
       loading.value = false
@@ -142,7 +124,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to create concept set'
-      console.error('Create concept set error:', err)
+      logger.error('ConceptSetsStore', 'Create concept set error', err)
       return null
     } finally {
       loading.value = false
@@ -169,7 +151,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to update concept set'
-      console.error('Update concept set error:', err)
+      logger.error('ConceptSetsStore', 'Update concept set error', err)
       return null
     } finally {
       loading.value = false
@@ -198,7 +180,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to delete concept set'
-      console.error('Delete concept set error:', err)
+      logger.error('ConceptSetsStore', 'Delete concept set error', err)
       return false
     } finally {
       loading.value = false
@@ -218,8 +200,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   function openCreateEditor() {
     currentSet.value = {
       name: '',
-      items: [],
-    }
+      items: [] as ConceptSetItem[],
+    } as ConceptSet
     editorOpen.value = true
   }
 
@@ -253,7 +235,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
   /**
    * Add a concept to the current concept set
-   * T085: Prevent duplicates
    */
   function addConceptToSet(concept: Concept) {
     if (!currentSet.value) {
@@ -261,7 +242,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    // Check for duplicates (T107)
     const exists = currentSet.value.items.some(
       (item) => item.conceptId === concept.conceptId
     )
@@ -271,17 +251,13 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    // Convert Concept to ConceptSetItem with default flags
     const item: ConceptSetItem = conceptToConceptSetItem(concept)
     currentSet.value.items.push(item)
-    
-    // Clear any previous errors
     error.value = null
   }
 
   /**
    * Remove a concept from the current concept set
-   * T086
    */
   function removeConceptFromSet(conceptId: number) {
     if (!currentSet.value) {
@@ -296,7 +272,6 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
   /**
    * Toggle concept flags (descendants, mapped, exclude)
-   * T087: Optimistic updates
    */
   function toggleConceptFlag(
     conceptId: number,
@@ -338,13 +313,13 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    */
   async function loadVersionPreview(versionNumber: number): Promise<void> {
     if (!currentSet.value?.id) {
-      console.error('[ConceptSetsStore] Cannot load version preview: no current concept set ID')
+      logger.error('ConceptSetsStore', 'Cannot load version preview: no current concept set ID')
       throw new Error('No current concept set ID')
     }
 
     const conceptSetId = currentSet.value.id
     if (typeof conceptSetId !== 'number') {
-      console.error('[ConceptSetsStore] Concept set ID must be a number for version preview')
+      logger.error('ConceptSetsStore', 'Concept set ID must be a number for version preview')
       throw new Error('Concept set ID must be a number')
     }
 
@@ -361,10 +336,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       // Mark as clean (read-only mode, no editing)
       isDirty.value = false
 
-      console.log(`[ConceptSetsStore] Loaded version ${versionNumber} for preview`)
+      logger.debug('ConceptSetsStore', `Loaded version ${versionNumber} for preview`)
     } catch (err) {
       error.value = err instanceof Error ? err.message : `Failed to load version ${versionNumber}`
-      console.error(`[ConceptSetsStore] Failed to load version ${versionNumber}:`, err)
+      logger.error('ConceptSetsStore', `Failed to load version ${versionNumber}`, err)
       throw err
     } finally {
       loading.value = false
@@ -386,7 +361,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       await fetchOne(wasPreviewingId)
     }
 
-    console.log('[ConceptSetsStore] Preview cleared, returned to current version')
+    logger.debug('ConceptSetsStore', 'Preview cleared, returned to current version')
   }
 
   /**
@@ -395,12 +370,12 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    */
   async function savePreviewAsCurrent(): Promise<boolean> {
     if (!previewVersion.value) {
-      console.error('[ConceptSetsStore] Cannot save preview: not in preview mode')
+      logger.error('ConceptSetsStore', 'Cannot save preview: not in preview mode')
       return false
     }
 
     if (!currentSet.value) {
-      console.error('[ConceptSetsStore] Cannot save preview: no concept set data')
+      logger.error('ConceptSetsStore', 'Cannot save preview: no concept set data')
       return false
     }
 
@@ -412,14 +387,14 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
         // Clear preview state after successful save
         previewVersion.value = null
         isDirty.value = false
-        console.log('[ConceptSetsStore] Preview saved as current version')
+        logger.debug('ConceptSetsStore', 'Preview saved as current version')
         return true
       }
 
       return false
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to save preview as current'
-      console.error('[ConceptSetsStore] Failed to save preview as current:', err)
+      logger.error('ConceptSetsStore', 'Failed to save preview as current', err)
       return false
     }
   }

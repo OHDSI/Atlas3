@@ -1,34 +1,22 @@
 <!--
-  ReportPanel Component
-  Feature: 005-cohort-reports
-  Tasks: T029-T034
-
-  Main report container with action buttons, report selector, and dynamic report loading
+  ReportPanel Component - Main report container with action buttons and dynamic report loading
 -->
 <template>
   <v-card
     class="report-panel"
     elevation="0"
   >
-    <!-- Header with close button -->
-    <v-card-title class="d-flex align-center justify-space-between pa-4 border-b">
-      <div class="d-flex align-center gap-2">
-        <v-icon>mdi-chart-box</v-icon>
-        <span class="text-h6">{{ t('common.cohortReports') }}</span>
-        <v-chip
-          v-if="sourceKey"
-          size="small"
-          variant="outlined"
-        >
-          {{ sourceKey }}
-        </v-chip>
-      </div>
-      <v-btn
-        icon="mdi-close"
-        variant="text"
+    <!-- Header -->
+    <v-card-title class="d-flex align-center gap-2 pa-4 border-b">
+      <v-icon>mdi-chart-box</v-icon>
+      <span class="text-h6">{{ t('ir.results.reports') }}</span>
+      <v-chip
+        v-if="sourceKey"
         size="small"
-        @click="handleClose"
-      />
+        variant="outlined"
+      >
+        {{ sourceKey }}
+      </v-chip>
     </v-card-title>
 
     <v-divider />
@@ -37,7 +25,7 @@
     <v-card-text class="pa-4">
       <div class="action-buttons-section mb-4">
         <div class="text-subtitle-2 mb-2">
-          {{ t('cohortDefinitions.cohortDefinitionManager.panels.reportSelections', 'Report Selections') }}
+          {{ t('components.analysisExecution.buttons.generating') }}
         </div>
         <v-btn-group
           variant="outlined"
@@ -49,7 +37,7 @@
             prepend-icon="mdi-chart-multiple"
             @click="handleFullAnalysis"
           >
-            {{ t('common.fullAnalysis') }}
+            Full Analysis
           </v-btn>
           <v-btn
             :disabled="loading || !cohortId || !sourceKey"
@@ -57,7 +45,7 @@
             prepend-icon="mdi-chart-timeline-variant"
             @click="handleQuickAnalysis"
           >
-            {{ t('common.quickAnalysis') }}
+            Quick Analysis
           </v-btn>
           <v-btn
             :disabled="loading || !cohortId || !sourceKey"
@@ -65,7 +53,7 @@
             prepend-icon="mdi-chart-bar"
             @click="handleUtilization"
           >
-            {{ t('common.utilization') }}
+            Utilization
           </v-btn>
         </v-btn-group>
       </div>
@@ -77,6 +65,7 @@
         <ReportSelector
           :model-value="currentReportType"
           :disabled="loading || !cohortId || !sourceKey"
+          :completed-analyses="completedAnalyses"
           @update:model-value="handleReportTypeChange"
         />
       </div>
@@ -88,6 +77,9 @@
         v-if="loading"
         class="report-loading"
       >
+        <div class="text-center pa-4">
+          {{ t('dataSources.loadingReport') }}
+        </div>
         <v-skeleton-loader type="article, article" />
       </div>
 
@@ -99,14 +91,15 @@
         closable
         @click:close="clearError"
       >
-        <div class="d-flex align-center justify-space-between">
-          <span>{{ error }}</span>
+        <div class="d-flex flex-column gap-2">
+          <span>{{ t('dataSources.errorLoadingReport') }}</span>
+          <span class="text-body-2">{{ error }}</span>
           <v-btn
             variant="text"
             size="small"
             @click="handleRetry"
           >
-            {{ t('common.retry') }}
+            {{ t('common.refresh') }}
           </v-btn>
         </div>
       </v-alert>
@@ -131,10 +124,10 @@
         icon="mdi-alert-circle-outline"
       >
         <div class="text-subtitle-2 mb-1">
-          {{ t('common.reportNotImplemented') }}
+          Report Not Yet Implemented
         </div>
         <div class="text-body-2">
-          {{ t('common.reportNotImplementedMessage', { reportType: currentReportType }) }}
+          This report is in the roadmap but not yet available.
         </div>
       </v-alert>
 
@@ -145,11 +138,11 @@
         variant="tonal"
         icon="mdi-information"
       >
-        {{ t('common.selectReportType') }}
+        Select a report type to view
       </v-alert>
     </v-card-text>
 
-    <!-- Toast notifications (T112) -->
+    <!-- Toast notifications -->
     <v-snackbar
       v-model="showToast"
       :timeout="toastTimeout"
@@ -170,15 +163,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, defineAsyncComponent, onUnmounted } from 'vue'
+import { ref, computed, watch, defineAsyncComponent, onUnmounted, type Component } from 'vue'
 import { useReports } from '@/composables/useReports'
 import { useI18n } from '@/composables/useI18n'
+import { logger } from '@/utils/logger'
 import type { ReportType, ReportAction } from '@/models/report.types'
 import {
   triggerFullAnalysis,
   triggerQuickAnalysis,
   triggerUtilization,
-  getCohortGenerationInfo
+  getCohortGenerationInfo,
+  getCompletedAnalyses
 } from '@/services/webapi'
 import ReportSelector from './ReportSelector.vue'
 
@@ -199,7 +194,7 @@ const props = defineProps<{
 /**
  * Emits
  */
-const emit = defineEmits<{
+defineEmits<{
   close: []
 }>()
 
@@ -216,12 +211,17 @@ const {
 } = useReports()
 
 /**
- * Active action state (T110)
+ * Completed analyses state
+ */
+const completedAnalyses = ref<number[]>([])
+
+/**
+ * Active action state
  */
 const activeAction = ref<ReportAction | null>(null)
 
 /**
- * Toast notification state (T112)
+ * Toast notification state
  */
 const showToast = ref(false)
 const toastMessage = ref('')
@@ -229,31 +229,31 @@ const toastColor = ref<'success' | 'error' | 'info'>('info')
 const toastTimeout = ref(4000)
 
 /**
- * Job polling state (T111)
+ * Job polling state
  */
 const pollingInterval = ref<ReturnType<typeof setInterval> | null>(null)
 const isPolling = ref(false)
 
 /**
- * Component cache for loaded reports (T103)
+ * Component cache for loaded reports
  * Prevents re-importing already loaded components
  */
-const componentCache = new Map<ReportType, any>()
+const componentCache = new Map<ReportType, ReturnType<typeof defineAsyncComponent>>()
 
 /**
- * Dynamic report component loading (T102)
+ * Dynamic report component loading
  * Uses defineAsyncComponent for lazy loading and caches loaded components
  */
 const currentReportComponent = computed(() => {
   if (!currentReportType.value) return null
 
-  // Check cache first (T103)
+  // Check cache first
   if (componentCache.has(currentReportType.value)) {
     return componentCache.get(currentReportType.value)
   }
 
   // Map report types to components (lazy loaded)
-  const componentMap: Record<string, () => Promise<any>> = {
+  const componentMap: Record<string, () => Promise<{ default: Component }>> = {
     'person': () => import('./report-types/PersonReport.vue'),
     'condition-eras': () => import('./report-types/ConditionErasReport.vue'),
     'condition': () => import('./report-types/ConditionReport.vue'),
@@ -286,7 +286,7 @@ const currentReportComponent = computed(() => {
 
   const loader = componentMap[currentReportType.value]
   if (!loader) {
-    console.warn(`[ReportPanel] Report type "${currentReportType.value}" not yet implemented`)
+    logger.warn('ReportPanel', `Report type "${currentReportType.value}" not yet implemented`)
     return null
   }
 
@@ -299,19 +299,11 @@ const currentReportComponent = computed(() => {
     timeout: 10000
   })
 
-  // Cache the component (T103)
+  // Cache the component
   componentCache.set(currentReportType.value, asyncComponent)
 
   return asyncComponent
 })
-
-/**
- * Handle close button
- */
-function handleClose() {
-  clearCurrent()
-  emit('close')
-}
 
 /**
  * Handle report type change
@@ -339,7 +331,7 @@ function clearError() {
 }
 
 /**
- * Show toast notification (T112)
+ * Show toast notification
  */
 function showToastNotification(message: string, color: 'success' | 'error' | 'info' = 'info', timeout = 4000) {
   toastMessage.value = message
@@ -349,7 +341,7 @@ function showToastNotification(message: string, color: 'success' | 'error' | 'in
 }
 
 /**
- * Start job status polling (T111)
+ * Start job status polling
  */
 function startJobPolling(jobType: string) {
   if (isPolling.value || !props.cohortId) return
@@ -363,21 +355,24 @@ function startJobPolling(jobType: string) {
       pollCount++
 
       // Check job status via generation info endpoint
-      const info = await getCohortGenerationInfo(props.cohortId!)
-      if (!info || info.length === 0) {
+      const result = await getCohortGenerationInfo(props.cohortId!)
+      if (!result.success || result.data.length === 0) {
         stopJobPolling()
         showToastNotification(`${jobType} job status unknown`, 'info')
         return
       }
 
+      const info = result.data
+
       // Find the most recent job for this source
-      const relevantJob = info.find((job: any) => job.sourceId === props.sourceKey || job.sourceKey === props.sourceKey)
+      const relevantJob = info.find(job => String(job.id.sourceId) === props.sourceKey)
 
       if (relevantJob && relevantJob.status === 'COMPLETE') {
         stopJobPolling()
         showToastNotification(`${jobType} completed successfully!`, 'success', 5000)
 
-        // Refresh the current report if one is loaded
+        // Refresh completed analyses and current report
+        await fetchCompletedAnalyses()
         if (currentReportType.value && props.cohortId && props.sourceKey) {
           await loadReport(props.cohortId, props.sourceKey, currentReportType.value)
         }
@@ -389,14 +384,14 @@ function startJobPolling(jobType: string) {
         showToastNotification(`${jobType} polling timeout - check job status manually`, 'info', 6000)
       }
     } catch (error) {
-      console.error('[ReportPanel] Job polling error:', error)
+      logger.error('ReportPanel', 'Job polling error', error)
       stopJobPolling()
     }
   }, 5000) // Poll every 5 seconds
 }
 
 /**
- * Stop job status polling (T111)
+ * Stop job status polling
  */
 function stopJobPolling() {
   if (pollingInterval.value) {
@@ -407,7 +402,7 @@ function stopJobPolling() {
 }
 
 /**
- * Action button handlers (T107-T109 with T111-T112)
+ * Action button handlers
  */
 async function handleFullAnalysis() {
   if (!props.cohortId || !props.sourceKey) return
@@ -416,14 +411,14 @@ async function handleFullAnalysis() {
   try {
     const success = await triggerFullAnalysis(props.cohortId, props.sourceKey)
     if (success) {
-      console.log('[ReportPanel] Full Analysis triggered successfully')
+      logger.info('ReportPanel', 'Full Analysis triggered successfully')
       showToastNotification('Full Analysis job started - this may take several minutes', 'info', 5000)
       startJobPolling('Full Analysis')
     } else {
       showToastNotification('Failed to start Full Analysis job', 'error')
     }
   } catch (error) {
-    console.error('[ReportPanel] Failed to trigger Full Analysis:', error)
+    logger.error('ReportPanel', 'Failed to trigger Full Analysis', error)
     showToastNotification('Error starting Full Analysis job', 'error')
   } finally {
     activeAction.value = null
@@ -437,14 +432,14 @@ async function handleQuickAnalysis() {
   try {
     const success = await triggerQuickAnalysis(props.cohortId, props.sourceKey)
     if (success) {
-      console.log('[ReportPanel] Quick Analysis triggered successfully')
+      logger.info('ReportPanel', 'Quick Analysis triggered successfully')
       showToastNotification('Quick Analysis job started - this should complete shortly', 'info', 5000)
       startJobPolling('Quick Analysis')
     } else {
       showToastNotification('Failed to start Quick Analysis job', 'error')
     }
   } catch (error) {
-    console.error('[ReportPanel] Failed to trigger Quick Analysis:', error)
+    logger.error('ReportPanel', 'Failed to trigger Quick Analysis', error)
     showToastNotification('Error starting Quick Analysis job', 'error')
   } finally {
     activeAction.value = null
@@ -458,17 +453,38 @@ async function handleUtilization() {
   try {
     const success = await triggerUtilization(props.cohortId, props.sourceKey)
     if (success) {
-      console.log('[ReportPanel] Utilization analysis triggered successfully')
+      logger.info('ReportPanel', 'Utilization analysis triggered successfully')
       showToastNotification('Utilization analysis job started', 'info', 5000)
       startJobPolling('Utilization Analysis')
     } else {
       showToastNotification('Failed to start Utilization analysis job', 'error')
     }
   } catch (error) {
-    console.error('[ReportPanel] Failed to trigger Utilization:', error)
+    logger.error('ReportPanel', 'Failed to trigger Utilization', error)
     showToastNotification('Error starting Utilization analysis job', 'error')
   } finally {
     activeAction.value = null
+  }
+}
+
+/**
+ * Fetch completed analyses
+ */
+async function fetchCompletedAnalyses() {
+  if (!props.cohortId || !props.sourceKey) return
+
+  try {
+    const result = await getCompletedAnalyses(props.cohortId, props.sourceKey)
+    if (result.success) {
+      completedAnalyses.value = result.data
+      logger.debug('ReportPanel', 'Completed analyses', completedAnalyses.value.length)
+    } else {
+      logger.error('ReportPanel', 'Failed to fetch completed analyses', result.error)
+      completedAnalyses.value = []
+    }
+  } catch (error) {
+    logger.error('ReportPanel', 'Failed to fetch completed analyses', error)
+    completedAnalyses.value = []
   }
 }
 
@@ -477,21 +493,24 @@ async function handleUtilization() {
  */
 watch(
   () => props.isOpen,
-  (isOpen) => {
+  async (isOpen) => {
     if (isOpen && props.cohortId && props.sourceKey) {
       // Set initial context
       setContext(props.cohortId, props.sourceKey, 'person')
+      // Fetch completed analyses to filter available reports
+      await fetchCompletedAnalyses()
     } else if (!isOpen) {
       // Clear context and stop polling on close
       clearCurrent()
       stopJobPolling()
+      completedAnalyses.value = []
     }
   },
   { immediate: true }
 )
 
 /**
- * Cleanup on unmount (T111)
+ * Cleanup on unmount
  */
 onUnmounted(() => {
   stopJobPolling()

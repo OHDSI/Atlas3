@@ -1,7 +1,5 @@
 <!--
   PieChart Component
-  Feature: 005-cohort-reports
-  Tasks: T026, T118
 
   ECharts pie chart wrapper with loading states, responsive behavior, and export functionality
 -->
@@ -74,13 +72,14 @@ const emit = defineEmits<{
 /**
  * Chart ref
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const chartRef = ref<any>(null)
 
 /**
  * Chart instance for export
  */
 const chartInstance = computed<EChartsType | null>(() => {
-  return chartRef.value?.chart || null
+  return chartRef.value?.chart as EChartsType | null
 })
 
 /**
@@ -126,14 +125,14 @@ watch(
 )
 
 /**
- * T118: Handle export success
+ * Handle export success
  */
 function handleExportSuccess(format: 'png' | 'svg', filename: string) {
   emit('export-success', format, filename)
 }
 
 /**
- * T118: Handle export error
+ * Handle export error
  */
 function handleExportError(format: 'png' | 'svg', error: Error) {
   emit('export-error', format, error)

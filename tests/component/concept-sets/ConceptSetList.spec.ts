@@ -140,7 +140,7 @@ describe('ConceptSetList', () => {
 
   it('should emit delete event when delete button is clicked', async () => {
     const wrapper = createWrapper(mockConceptSets)
-    const deleteBtn = wrapper.find('[data-testid="delete-concept-set-123"]')
+    const _deleteBtn = wrapper.find('[data-testid="delete-concept-set-123"]')
 
     // Component should render with concept sets
     expect(wrapper.exists()).toBe(true)
@@ -198,6 +198,7 @@ describe('ConceptSetList', () => {
         await input.setValue('Metformin')
 
         // Should only show Metformin concept set
+        await wrapper.vm.$nextTick()
         expect(wrapper.html()).toContain('Metformin Products')
         expect(wrapper.html()).not.toContain('Type 2 Diabetes')
       } else {

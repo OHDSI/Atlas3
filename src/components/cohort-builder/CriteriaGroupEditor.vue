@@ -100,9 +100,9 @@
         <!-- Header with Add Filter and Delete buttons -->
         <div class="group-header">
           <v-menu>
-            <template #activator="{ props }">
+            <template #activator="{ props: slotProps }">
               <v-btn
-                v-bind="props"
+                v-bind="slotProps"
                 variant="outlined"
                 prepend-icon="mdi-plus"
                 size="small"
@@ -299,23 +299,11 @@
                             location="end"
                           >
                             <template #activator="{ props: menuProps }">
-                              <v-chip
-                                size="small"
-                                color="secondary"
-                                variant="tonal"
+                              <TemporalFilterChip
                                 v-bind="menuProps"
-                                style="cursor: pointer;"
-                                closable
-                                @click:close="removeTemporalWindow(index)"
-                              >
-                                <v-icon
-                                  start
-                                  size="small"
-                                >
-                                  mdi-calendar-range
-                                </v-icon>
-                                {{ formatTemporalWindowDisplay(event.temporalWindow) }}
-                              </v-chip>
+                                :label="formatTemporalWindowDisplay(event.temporalWindow)"
+                                @close="removeTemporalWindow(index)"
+                              />
                             </template>
                             <v-card
                               class="temporal-window-menu"
@@ -349,6 +337,8 @@
                           :has-nested-criteria="!!event.nestedCriteria"
                           @update:model-value="updateEventAttributes(index, $event)"
                           @add-nested-criteria="addNestedCriteria(index)"
+                          @select-concept-set-for-attribute="selectConceptSetForAttribute(index, $event)"
+                          @select-concept-for-attribute="(attributeIndex, domainFilter) => selectConceptForAttribute(index, attributeIndex, domainFilter)"
                         />
                       </div>
 
@@ -411,13 +401,27 @@ import { ref, watch, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
+import { useMatchType } from '@/composables/useMatchType'
 import NestedCriteriaEditor from './NestedCriteriaEditor.vue'
-import type { CriteriaGroup, CohortEvent, LogicType, CriteriaType, NestedCriteria } from '@/models/cohort.types'
-import type { EventAttribute, TemporalWindow } from '@/models/event.types'
+import type { CriteriaGroup, CohortEvent, CriteriaType, NestedCriteria } from '@/models/cohort.types'
+import type {
+  EventAttribute,
+  TemporalWindow,
+  NumericAttributeKey,
+  ConceptAttributeKey,
+  DateAttributeKey,
+  TextAttributeKey,
+  BooleanAttributeKey,
+  TemporalAttributeKey,
+  DateAdjustmentAttributeKey,
+  UserDefinedPeriodAttributeKey,
+  Concept,
+} from '@/models/event.types'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
+import TemporalFilterChip from './TemporalFilterChip.vue'
 
 const { t } = useI18n()
 
@@ -430,7 +434,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: CriteriaGroup]
   'remove': []
   'select-concept-set': [context: { eventIndex: number; eventId: string } | number]
-  'edit-concept-set': [conceptSet: any]
+  'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
+  'select-concept': [context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined }]
 }>()
 
 // Composables
@@ -444,14 +449,25 @@ const localGroup = ref<CriteriaGroup>(props.modelValue || {
 })
 
 const validationError = ref('')
-const showMatchTypeDialog = ref(false)
-const matchTypeTemp = ref('ALL')
-const matchTypeCount = ref(1)
+
+// Match type composable
+const {
+  showMatchTypeDialog,
+  matchTypeTemp,
+  matchTypeCount,
+  getMatchTypeDisplay,
+  onMenuOpen,
+  confirmMatchType,
+} = useMatchType({
+  group: localGroup,
+  onUpdate: emitUpdate,
+})
 
 // Watch for external changes
 watch(() => props.modelValue, (newVal) => {
   if (newVal) {
-    localGroup.value = { ...newVal }
+    // Deep clone to preserve nested reactivity
+    localGroup.value = JSON.parse(JSON.stringify(newVal))
   }
 }, { deep: true })
 
@@ -467,6 +483,8 @@ const criteriaTypes = computed(() => {
 })
 
 const selectedEventIndex = ref<number | null>(null)
+const selectedAttributeIndex = ref<number>(-1)
+const selectedConceptDomainFilter = ref<string | undefined>(undefined)
 
 // Methods
 
@@ -590,7 +608,22 @@ function emitUpdate() {
 
 function selectConceptSetForEvent(index: number) {
   selectedEventIndex.value = index
+  selectedAttributeIndex.value = -1 // Reset attribute index
   emit('select-concept-set', index)
+}
+
+function selectConceptSetForAttribute(eventIndex: number, attributeIndex: number) {
+  selectedEventIndex.value = eventIndex
+  selectedAttributeIndex.value = attributeIndex
+  selectedConceptDomainFilter.value = undefined
+  emit('select-concept-set', eventIndex)
+}
+
+function selectConceptForAttribute(eventIndex: number, attributeIndex: number, domainFilter: string | undefined) {
+  selectedEventIndex.value = eventIndex
+  selectedAttributeIndex.value = attributeIndex
+  selectedConceptDomainFilter.value = domainFilter
+  emit('select-concept', { eventIndex, attributeIndex, domainFilter })
 }
 
 function clearConceptSet(index: number) {
@@ -603,39 +636,28 @@ function clearConceptSet(index: number) {
 // Method to update event's concept set (called by parent)
 function updateEventConceptSet(index: number, conceptSet: { id: number; name: string }) {
   if (localGroup.value.events[index]) {
-    localGroup.value.events[index].conceptSet = conceptSet
+    // Check if we're updating an attribute's concept set or the event's concept set
+    if (selectedAttributeIndex.value >= 0) {
+      // Update attribute's concept set
+      const event = localGroup.value.events[index]
+      if (event && event.attributes && event.attributes[selectedAttributeIndex.value]) {
+        const attr = event.attributes[selectedAttributeIndex.value]
+        if (attr && attr.type === 'conceptSet') {
+          event.attributes[selectedAttributeIndex.value] = {
+            ...attr,
+            conceptSet: conceptSet
+          }
+        }
+      }
+      selectedAttributeIndex.value = -1 // Reset after update
+    } else {
+      // Update event's concept set
+      localGroup.value.events[index].conceptSet = conceptSet
+    }
     emitUpdate()
   }
 }
 
-// Display helpers
-function getMatchTypeDisplay(): string {
-  switch (localGroup.value.logicType) {
-    case 'ALL': return t('common.all', 'All').value
-    case 'ANY': return t('common.any', 'Any').value
-    case 'AT_LEAST': return `${t('common.atLeast', 'At least').value} ${localGroup.value.count || 1}`
-    case 'AT_MOST': return `${t('common.atMost', 'At most').value} ${localGroup.value.count || 1}`
-    default: return t('common.all', 'All').value
-  }
-}
-
-function onMenuOpen(isOpen: boolean) {
-  if (isOpen) {
-    matchTypeTemp.value = localGroup.value.logicType || 'ALL'
-    matchTypeCount.value = localGroup.value.count || 1
-  }
-}
-
-function confirmMatchType() {
-  localGroup.value.logicType = matchTypeTemp.value as LogicType
-  if (matchTypeTemp.value === 'AT_LEAST' || matchTypeTemp.value === 'AT_MOST') {
-    localGroup.value.count = matchTypeCount.value
-  } else {
-    delete localGroup.value.count
-  }
-  showMatchTypeDialog.value = false
-  emitUpdate()
-}
 
 function getCardinalityType(event: CohortEvent): string {
   if (!event.cardinality) return 'at_least'
@@ -678,11 +700,14 @@ function toCamelCase(str: string): string {
   return str.charAt(0).toLowerCase() + str.slice(1)
 }
 
+// Refs for getting available attributes (moved to component scope to avoid creating refs in functions)
+const attributeCriteriaTypeKey = ref('')
+const attributeSectionRef = ref('criteriaGroup')
+
 // Get available attributes for a specific event
 function getAvailableAttributesForEvent(event: CohortEvent) {
-  const criteriaTypeKey = ref(toCamelCase(event.criteriaType))
-  const sectionRef = ref('criteriaGroup')
-  const { attributes } = useAttributeConfig(criteriaTypeKey, sectionRef)
+  attributeCriteriaTypeKey.value = toCamelCase(event.criteriaType)
+  const { attributes } = useAttributeConfig(attributeCriteriaTypeKey, attributeSectionRef)
   return attributes.value
 }
 
@@ -698,37 +723,84 @@ function addAttributeToEvent(eventIndex: number, attributeKey: string, attribute
   }
 
   // Create a default attribute based on the type
-  let newAttribute: any
+  let newAttribute: EventAttribute | null = null
   if (attributeType === 'numericRange') {
     newAttribute = {
       type: 'numericRange',
-      attributeKey,
+      attributeKey: attributeKey as NumericAttributeKey,
       operator: 'GREATER_THAN_OR_EQUAL',
       value: 0,
     }
   } else if (attributeType === 'conceptSet') {
     newAttribute = {
       type: 'conceptSet',
-      attributeKey,
+      attributeKey: attributeKey as ConceptAttributeKey,
       conceptSet: { id: '', name: '' },
+    }
+  } else if (attributeType === 'concept') {
+    newAttribute = {
+      type: 'concept',
+      attributeKey: attributeKey as ConceptAttributeKey,
+      concepts: [] as Concept[],
     }
   } else if (attributeType === 'dateRange') {
     newAttribute = {
       type: 'dateRange',
-      attributeKey,
+      attributeKey: attributeKey as DateAttributeKey,
       operator: 'AFTER',
-      value: new Date().toISOString().split('T')[0],
+      value: new Date().toISOString().split('T')[0] ?? '',
     }
   } else if (attributeType === 'text') {
     newAttribute = {
       type: 'text',
-      attributeKey,
+      attributeKey: attributeKey as TextAttributeKey,
       operator: 'CONTAINS',
       value: '',
+    }
+  } else if (attributeType === 'boolean') {
+    newAttribute = {
+      type: 'boolean',
+      attributeKey: attributeKey as BooleanAttributeKey,
+      value: true,
+    }
+  } else if (attributeType === 'temporalRelationship') {
+    newAttribute = {
+      type: 'temporalRelationship',
+      attributeKey: attributeKey as TemporalAttributeKey,
+      temporalWindow: {
+        startWindow: {
+          days: 0,
+          beforeAfter: 'AFTER',
+          referencePoint: 'INDEX_START',
+        },
+      },
+    }
+  } else if (attributeType === 'dateAdjustment') {
+    newAttribute = {
+      type: 'dateAdjustment',
+      attributeKey: attributeKey as DateAdjustmentAttributeKey,
+      dateAdjustment: {
+        startWith: 'START_DATE',
+        startOffset: 0,
+        endWith: 'END_DATE',
+        endOffset: 0,
+      },
+    }
+  } else if (attributeType === 'userDefinedPeriod') {
+    const today = new Date()
+    const tomorrow = new Date(today.getTime() + 86400000) // +1 day in milliseconds
+    newAttribute = {
+      type: 'userDefinedPeriod',
+      attributeKey: attributeKey as UserDefinedPeriodAttributeKey,
+      period: {
+        startDate: today.toISOString().split('T')[0] || '',
+        endDate: tomorrow.toISOString().split('T')[0] || '',
+      },
     }
   }
 
   // Add the new attribute to the event
+  if (!newAttribute) return
   if (!event.attributes) {
     event.attributes = []
   }
@@ -736,9 +808,32 @@ function addAttributeToEvent(eventIndex: number, attributeKey: string, attribute
   emitUpdate()
 }
 
-// Expose method for parent to call
+// Method to update concept attribute (called by parent)
+function updateConceptAttribute(index: number, concepts: Concept[]) {
+  if (localGroup.value.events[index]) {
+    const event = localGroup.value.events[index]
+    if (event && event.attributes && selectedAttributeIndex.value >= 0) {
+      const attr = event.attributes[selectedAttributeIndex.value]
+      if (attr && attr.type === 'concept') {
+        // Add selected concepts to the existing array (support multi-select)
+        const existingConcepts = attr.concepts || []
+        const newConcepts = [...existingConcepts, ...concepts]
+        event.attributes[selectedAttributeIndex.value] = {
+          ...attr,
+          concepts: newConcepts
+        }
+      }
+      selectedAttributeIndex.value = -1 // Reset after update
+      selectedConceptDomainFilter.value = undefined
+      emitUpdate()
+    }
+  }
+}
+
+// Expose methods for parent to call
 defineExpose({
   updateEventConceptSet,
+  updateConceptAttribute,
 })
 </script>
 

@@ -1,6 +1,5 @@
 /**
  * CDM Version Validation Utility
- * US5: T073-T082
  *
  * Validates CDM version constraints using semantic versioning
  */

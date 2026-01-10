@@ -36,11 +36,11 @@ describe('WebAPI Store - Generation Polling', () => {
       ]
 
       const webapi = await import('@/services/webapi')
-      vi.mocked(webapi.fetchCDMSources).mockResolvedValue(mockSources)
+      vi.mocked(webapi.fetchCDMSources).mockResolvedValue({ success: true, data: mockSources })
 
       // Assume fetchSources action exists
       if ('fetchSources' in store) {
-        await (store as any).fetchSources()
+        await (store as unknown).fetchSources()
 
         expect(store.sources).toEqual(mockSources)
         expect(store.selectedSource).toBe('SYNPUF1K') // Auto-selected first
@@ -49,10 +49,10 @@ describe('WebAPI Store - Generation Polling', () => {
 
     it('should set loading state during fetch', async () => {
       const webapi = await import('@/services/webapi')
-      vi.mocked(webapi.fetchCDMSources).mockResolvedValue([])
+      vi.mocked(webapi.fetchCDMSources).mockResolvedValue({ success: true, data: [] })
 
       if ('fetchSources' in store) {
-        const fetchPromise = (store as any).fetchSources()
+        const fetchPromise = (store as unknown).fetchSources()
         expect(store.isLoadingSources).toBe(true)
 
         await fetchPromise
@@ -74,7 +74,7 @@ describe('WebAPI Store - Generation Polling', () => {
       vi.mocked(webapi.generateCohort).mockResolvedValue(mockJob)
 
       if ('generateCohort' in store) {
-        await (store as any).generateCohort(123, 'SYNPUF1K')
+        await (store as unknown).generateCohort(123, 'SYNPUF1K')
 
         const job = store.getJobById(1)
         expect(job).toEqual(mockJob)
@@ -87,7 +87,7 @@ describe('WebAPI Store - Generation Polling', () => {
       vi.mocked(webapi.generateCohort).mockResolvedValue(null)
 
       if ('generateCohort' in store) {
-        const result = await (store as any).generateCohort(123, 'SYNPUF1K')
+        const result = await (store as unknown).generateCohort(123, 'SYNPUF1K')
         expect(result).toBeNull()
       }
     })
@@ -129,16 +129,18 @@ describe('WebAPI Store - Generation Polling', () => {
 
       // Always return RUNNING (never complete)
       vi.mocked(webapi.getCohortGenerationInfo).mockResolvedValue({
-        cohortDefinitionId: 123,
-        sourceKey: 'SYNPUF1K',
-        status: 'RUNNING',
+        success: true,
+        data: [{
+          id: { cohortDefinitionId: 123, sourceId: 1 },
+          status: 'RUNNING',
+        }]
       })
 
       if ('pollGenerationStatus' in store && 'POLL_TIMEOUT_MS' in store) {
         // Assume there's a timeout mechanism (e.g., 60 seconds max)
-        const timeoutMs = (store as any).POLL_TIMEOUT_MS || 60000
+        const timeoutMs = (store as unknown).POLL_TIMEOUT_MS || 60000
 
-        const pollPromise = (store as any).pollGenerationStatus(123)
+        const pollPromise = (store as unknown).pollGenerationStatus(123)
 
         // Fast-forward to timeout
         await vi.advanceTimersByTimeAsync(timeoutMs + 1000)

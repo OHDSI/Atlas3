@@ -37,9 +37,13 @@ export interface Window {
 export type EventAttribute =
   | NumericRangeAttribute
   | ConceptSetAttribute
+  | ConceptAttribute
   | DateRangeAttribute
   | TextAttribute
   | BooleanAttribute
+  | TemporalRelationshipAttribute
+  | DateAdjustmentAttribute
+  | UserDefinedPeriodAttribute
 
 export interface NumericRangeAttribute {
   type: 'numericRange'
@@ -53,6 +57,32 @@ export interface ConceptSetAttribute {
   type: 'conceptSet'
   attributeKey: ConceptAttributeKey
   conceptSet: { id: number | string; name: string }
+}
+
+/**
+ * Concept structure for Atlas compatibility
+ */
+export interface Concept {
+  CONCEPT_ID: number
+  CONCEPT_NAME: string
+  CONCEPT_CODE?: string
+  DOMAIN_ID?: string
+  VOCABULARY_ID?: string
+  CONCEPT_CLASS_ID?: string
+  STANDARD_CONCEPT?: string | null
+  INVALID_REASON?: string | null
+}
+
+/**
+ * Concept attribute (different from ConceptSetAttribute)
+ * Used for Gender, VisitType, ProviderSpecialty, etc.
+ * Supports multiple concept selection
+ * Atlas format: Array of concepts
+ */
+export interface ConceptAttribute {
+  type: 'concept'
+  attributeKey: ConceptAttributeKey
+  concepts: Concept[] // Changed from single concept to array
 }
 
 export interface DateRangeAttribute {
@@ -76,7 +106,49 @@ export interface BooleanAttribute {
   value: boolean
 }
 
-// Attribute keys per FR-007
+/**
+ * Temporal relationship attribute
+ * Defines temporal windows relative to another event
+ * Uses the same TemporalWindow structure as event-level temporal windows
+ */
+export interface TemporalRelationshipAttribute {
+  type: 'temporalRelationship'
+  attributeKey: TemporalAttributeKey
+  temporalWindow: TemporalWindow
+}
+
+/**
+ * Date adjustment attribute
+ * Defines how criterion event dates are shifted (e.g., "30 days after start date")
+ * Uses the same DateAdjustment structure as event-level date adjustments
+ */
+export interface DateAdjustmentAttribute {
+  type: 'dateAdjustment'
+  attributeKey: DateAdjustmentAttributeKey
+  dateAdjustment: DateAdjustment
+}
+
+/**
+ * User defined period type
+ * Represents a custom date range with start and end dates
+ */
+export interface UserDefinedPeriod {
+  startDate: string // ISO 8601 date string (YYYY-MM-DD)
+  endDate: string // ISO 8601 date string (YYYY-MM-DD)
+}
+
+/**
+ * User defined period attribute
+ * Defines a custom period with start and end dates
+ * Used primarily for observation period criteria
+ */
+export interface UserDefinedPeriodAttribute {
+  type: 'userDefinedPeriod'
+  attributeKey: UserDefinedPeriodAttributeKey
+  period: UserDefinedPeriod
+}
+
+// Attribute keys
 export type NumericAttributeKey =
   | 'age'
   | 'valueAsNumber'
@@ -98,6 +170,12 @@ export type TextAttributeKey = 'valueAsString' | 'sourceCode'
 
 export type BooleanAttributeKey = 'first' | 'primary'
 
+export type TemporalAttributeKey = 'temporalRelationship'
+
+export type DateAdjustmentAttributeKey = 'dateAdjustment'
+
+export type UserDefinedPeriodAttributeKey = 'userDefinedPeriod'
+
 export type NumericOperator =
   | 'GREATER_THAN'
   | 'LESS_THAN'
@@ -114,6 +192,8 @@ export type DateOperator =
   | 'NOT_EQUAL'
   | 'BETWEEN'
   | 'NOT_BETWEEN'
+  | 'BEFORE'
+  | 'AFTER'
 
 /**
  * DateAdjustment - Defines how criterion event dates are shifted

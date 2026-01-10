@@ -2,20 +2,21 @@ import { h, createApp } from 'vue';
 import singleSpaVue from 'single-spa-vue';
 import App from './App.vue';
 
-interface PluginProps {
+// Plugin props interface - exported for type checking in other files
+export interface PluginProps {
   name: string;
-  mountParcel: any;
-  singleSpa: any;
+  mountParcel: unknown;
+  singleSpa: unknown;
   authContext: {
-    user: any;
+    user: unknown;
     token: string | null;
     isAuthenticated: boolean;
     hasPermission: (permission: string) => boolean;
   };
   messageBus: {
-    send: (type: string, payload: any) => void;
-    request: <T>(type: string, payload: any) => Promise<T>;
-    subscribe: (type: string, callback: (data: any) => void) => () => void;
+    send: (type: string, payload: unknown) => void;
+    request: <T>(type: string, payload: unknown) => Promise<T>;
+    subscribe: (type: string, callback: (data: unknown) => void) => () => void;
   };
 }
 
@@ -24,9 +25,9 @@ const vueLifecycles = singleSpaVue({
   appOptions: {
     render() {
       return h(App, {
-        name: (this as any).name,
-        authContext: (this as any).authContext,
-        messageBus: (this as any).messageBus,
+        name: (this as PluginProps).name,
+        authContext: (this as PluginProps).authContext,
+        messageBus: (this as PluginProps).messageBus,
       });
     },
   },

@@ -5,6 +5,47 @@
 import type { Concept, ConceptSetItem, ConceptSet, ConceptSetExpression } from '@/models/concept-set.types'
 
 /**
+ * WebAPI concept set metadata response format
+ */
+export interface ConceptSetAPIMetadata {
+  id: number
+  name: string
+  createdDate?: string | number
+  createdBy?: string | { id: number; name: string | null; login: string }
+  modifiedDate?: string | number
+  modifiedBy?: string | { id: number; name: string | null; login: string }
+  shared?: boolean
+}
+
+/**
+ * WebAPI concept set expression response format
+ */
+export interface ConceptSetAPIExpression {
+  items?: Array<{
+    concept: {
+      CONCEPT_ID: number
+      CONCEPT_NAME: string
+      CONCEPT_CODE: string
+      DOMAIN_ID: string
+      VOCABULARY_ID: string
+      CONCEPT_CLASS_ID: string
+      STANDARD_CONCEPT: string | null
+      INVALID_REASON: string | null
+    }
+    isExcluded: boolean
+    includeDescendants: boolean
+    includeMapped: boolean
+  }>
+}
+
+/**
+ * Combined WebAPI concept set response (metadata + expression)
+ */
+export interface ConceptSetAPIResponse extends ConceptSetAPIMetadata {
+  expression?: ConceptSetAPIExpression
+}
+
+/**
  * Map WebAPI concept response (UPPERCASE) to Concept interface (camelCase)
  */
 export function mapConceptFromAPI(raw: {
@@ -51,32 +92,7 @@ export function conceptToConceptSetItem(
 /**
  * Map WebAPI concept set response to ConceptSet interface
  */
-export function mapConceptSetFromAPI(raw: {
-  id: number
-  name: string
-  createdDate?: string | number
-  createdBy?: string | { id: number; name: string | null; login: string }
-  modifiedDate?: string | number
-  modifiedBy?: string | { id: number; name: string | null; login: string }
-  shared?: boolean
-  expression?: {
-    items?: Array<{
-      concept: {
-        CONCEPT_ID: number
-        CONCEPT_NAME: string
-        CONCEPT_CODE: string
-        DOMAIN_ID: string
-        VOCABULARY_ID: string
-        CONCEPT_CLASS_ID: string
-        STANDARD_CONCEPT: string | null
-        INVALID_REASON: string | null
-      }
-      isExcluded: boolean
-      includeDescendants: boolean
-      includeMapped: boolean
-    }>
-  }
-}): ConceptSet {
+export function mapConceptSetFromAPI(raw: ConceptSetAPIResponse): ConceptSet {
   // Extract user login from user object if present
   const getLogin = (userOrString: string | { login: string } | undefined) => {
     if (!userOrString) return undefined
@@ -122,7 +138,7 @@ export function mapConceptSetToAPI(conceptSet: ConceptSet): {
     name: conceptSet.name,
     shared: conceptSet.shared,
     expression: {
-      items: conceptSet.items.map((item) => ({
+      items: (conceptSet.items || []).map((item) => ({
         concept: {
           CONCEPT_ID: item.conceptId,
           CONCEPT_NAME: item.conceptName,

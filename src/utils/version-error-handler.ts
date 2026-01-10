@@ -2,6 +2,7 @@
  * Version Management Error Handler
  * T068: Centralized error handling for all version operations
  */
+import { logger } from '@/utils/logger'
 
 export interface VersionError {
   code: string
@@ -137,9 +138,8 @@ export function handleVersionError(error: unknown, context?: string): VersionErr
   }
 
   // Log error for debugging
-  console.error('[VersionError]', {
+  logger.error('VersionError', versionError.message, {
     code: versionError.code,
-    message: versionError.message,
     context,
     originalError: error,
   })
@@ -174,7 +174,7 @@ export function getErrorMessage(error: VersionError, t?: (key: string) => string
  * T069: Handle missing version edge case
  */
 export function handleMissingVersion(versionNumber: number, assetId: number): VersionError {
-  console.warn(`[VersionError] Version ${versionNumber} not found for asset ${assetId}`)
+  logger.warn('VersionError', `Version ${versionNumber} not found for asset ${assetId}`)
 
   return {
     code: 'VERSION_NOT_FOUND',

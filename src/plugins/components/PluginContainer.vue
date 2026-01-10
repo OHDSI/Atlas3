@@ -28,6 +28,7 @@
 import { ref, computed, onMounted, onUnmounted, onErrorCaptured } from 'vue';
 import { useRoute } from 'vue-router';
 import { pluginRegistry } from '@/plugins/index';
+import { logger } from '@/utils/logger';
 import PluginErrorUI from './PluginErrorUI.vue';
 import PluginLoadingState from './PluginLoadingState.vue';
 
@@ -36,7 +37,12 @@ const pluginId = computed(() => route.params.pluginId as string);
 const pluginContainerId = computed(() => `plugin-${pluginId.value}`);
 
 const hasError = ref(false);
-const error = ref<any>(null);
+const error = ref<{
+  message: string;
+  stack?: string;
+  timestamp: Date;
+  recoverable: boolean;
+} | null>(null);
 const isLoading = ref(true);
 
 let stateUnsubscribe: (() => void) | null = null;
@@ -44,26 +50,26 @@ let stateUnsubscribe: (() => void) | null = null;
 onMounted(() => {
   const plugin = pluginRegistry.getPlugin(pluginId.value);
   if (plugin) {
-    console.log(`[PluginContainer] Mounting container for plugin ${pluginId.value}, state:`, plugin.state);
+    logger.debug('PluginContainer', `Mounting container for plugin ${pluginId.value}`, plugin.state);
 
     hasError.value = plugin.state === 'error';
-    error.value = plugin.error;
+    error.value = plugin.error ?? null;
     isLoading.value = plugin.state === 'loading' || plugin.state === 'not-loaded';
 
     // Subscribe to state changes
     stateUnsubscribe = pluginRegistry.onStateChange(pluginId.value, (state) => {
-      console.log(`[PluginContainer] Plugin ${pluginId.value} state changed to:`, state);
+      logger.debug('PluginContainer', `Plugin ${pluginId.value} state changed to`, state);
 
       hasError.value = state === 'error';
       isLoading.value = state === 'loading' || state === 'not-loaded';
 
       if (state === 'error') {
         const p = pluginRegistry.getPlugin(pluginId.value);
-        error.value = p?.error;
+        error.value = p?.error ?? null;
       }
     });
   } else {
-    console.error(`[PluginContainer] Plugin ${pluginId.value} not found in registry`);
+    logger.error('PluginContainer', `Plugin ${pluginId.value} not found in registry`);
     hasError.value = true;
     isLoading.value = false;
     error.value = {
@@ -81,7 +87,7 @@ onUnmounted(() => {
 });
 
 onErrorCaptured((err) => {
-  console.error(`[PluginContainer] Error captured for plugin ${pluginId.value}:`, err);
+  logger.error('PluginContainer', `Error captured for plugin ${pluginId.value}`, err);
   hasError.value = true;
   error.value = {
     message: err.message,
@@ -95,10 +101,9 @@ onErrorCaptured((err) => {
 function handleRetry() {
   hasError.value = false;
   error.value = null;
-  
-  const loader = (window as any).__pluginLoader;
-  if (loader) {
-    loader.retryPlugin(pluginId.value);
+
+  if (window.__pluginLoader) {
+    window.__pluginLoader.retryPlugin(pluginId.value);
   }
 }
 </script>

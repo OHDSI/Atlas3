@@ -180,7 +180,7 @@ describe('Tag Groups API Service', () => {
     })
 
     it('should throw error when ID is missing', async () => {
-      const invalidGroup = { ...mockTagGroup, id: undefined } as any
+      const invalidGroup = { ...mockTagGroup, id: undefined } as unknown
 
       await expect(tagGroupsAPI.updateTagGroup(invalidGroup)).rejects.toThrow('Tag ID is required for update')
     })
@@ -195,7 +195,7 @@ describe('Tag Groups API Service', () => {
     })
 
     it('should ensure groups array exists when updating', async () => {
-      const groupWithoutGroupsArray = { ...mockTagGroup, groups: undefined } as any
+      const groupWithoutGroupsArray = { ...mockTagGroup, groups: undefined } as unknown
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -386,7 +386,7 @@ describe('Tag Groups API Service', () => {
       })
 
       it('should throw error when ID is missing', async () => {
-        const invalidTag = { ...mockTag, id: undefined } as any
+        const invalidTag = { ...mockTag, id: undefined } as unknown
 
         await expect(tagGroupsAPI.updateTag(invalidTag)).rejects.toThrow('Tag ID is required for update')
       })
@@ -434,7 +434,7 @@ describe('Tag Groups API Service', () => {
         }
       })
 
-      await expect(tagGroupsAPI.loadAvailableTags()).rejects.toThrow('Invalid JSON')
+      await expect(tagGroupsAPI.loadAvailableTags()).rejects.toThrow('Invalid response format from tags API')
     })
 
     it('should handle network timeout', async () => {

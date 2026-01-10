@@ -114,7 +114,7 @@
         <!-- Language Selector -->
         <LanguageSelector />
 
-        <!-- Configuration Panel Icon (Feature: 013-config-panel) -->
+        <!-- Configuration Panel Icon -->
         <v-btn
           icon
           variant="text"
@@ -182,6 +182,7 @@ import { authConfig } from '@/config/auth.config'
 import { generatePluginMenuItems, type PluginMenuItem } from '@/plugins/navigation/PluginMenuIntegration.ts'
 import { pluginRegistry } from '@/plugins/core/PluginRegistry'
 import { pluginConfigService } from '@/services/PluginConfigService'
+import { logger } from '@/utils/logger'
 import LoginModal from '@/components/auth/LoginModal.vue'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
@@ -243,9 +244,9 @@ function loadPluginMenuItems() {
       }
     })
 
-    console.log('[NavBar] Loaded plugin menu items:', pluginMenuItems.length)
+    logger.debug('NavBar', 'Loaded plugin menu items', pluginMenuItems.length)
   } catch (error) {
-    console.error('[NavBar] Failed to load plugin menu items:', error)
+    logger.error('NavBar', 'Failed to load plugin menu items', error)
   }
 }
 
@@ -268,11 +269,11 @@ const handleLogoClick = async () => {
 }
 
 const handleLogoError = (event: Event) => {
-  console.error('[NavBar] Custom logo failed to load:', customLogoUrl.value, event)
+  logger.error('NavBar', 'Custom logo failed to load', { url: customLogoUrl.value, event })
 }
 
 const handleLogoLoad = () => {
-  console.log('[NavBar] Custom logo loaded successfully:', customLogoUrl.value)
+  logger.debug('NavBar', 'Custom logo loaded successfully', customLogoUrl.value)
 }
 
 const handleNavClick = async (item: NavigationItem) => {
@@ -287,7 +288,7 @@ async function handleLogout() {
   try {
     await auth.logout()
   } catch (error) {
-    console.error('Logout failed:', error)
+    logger.error('NavBar', 'Logout failed', error)
   }
 }
 
@@ -311,13 +312,12 @@ const updateActiveNavFromRoute = () => {
 onMounted(() => {
   // Load custom logo if configured
   customLogoUrl.value = pluginConfigService.getLogoUrl()
-  console.log('[NavBar] Custom logo URL:', customLogoUrl.value)
-  console.log('[NavBar] customLogoUrl is truthy?', !!customLogoUrl.value)
+  logger.debug('NavBar', 'Custom logo URL', { url: customLogoUrl.value, isTruthy: !!customLogoUrl.value })
 
   // Watch for plugin config changes and update logo
   pluginConfigService.onChange(() => {
     customLogoUrl.value = pluginConfigService.getLogoUrl()
-    console.log('[NavBar] Logo updated from config change:', customLogoUrl.value)
+    logger.debug('NavBar', 'Logo updated from config change', customLogoUrl.value)
   })
 
   // Load plugin menu items initially (will be empty if plugins haven't loaded yet)
@@ -333,7 +333,7 @@ onMounted(() => {
         watchedPlugins.add(plugin.registration.id)
         pluginRegistry.onStateChange(plugin.registration.id, (state) => {
           if (state === 'loaded') {
-            console.log(`[NavBar] Plugin ${plugin.registration.id} loaded, reloading menu items`)
+            logger.debug('NavBar', `Plugin ${plugin.registration.id} loaded, reloading menu items`)
             loadPluginMenuItems()
           }
         })
@@ -352,7 +352,7 @@ onMounted(() => {
     checkCount++
     if (checkCount >= maxChecks) {
       clearInterval(intervalId)
-      console.log('[NavBar] Stopped checking for new plugins')
+      logger.debug('NavBar', 'Stopped checking for new plugins')
     }
   }, 500)
 

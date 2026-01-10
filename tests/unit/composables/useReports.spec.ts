@@ -15,7 +15,7 @@ vi.mock('@/services/webapi')
 vi.mock('@/services/report-mapper')
 
 describe('useReports Composable', () => {
-  let consoleWarnSpy: any
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
     // Create a fresh pinia instance for each test

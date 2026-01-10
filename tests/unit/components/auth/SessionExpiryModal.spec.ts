@@ -12,7 +12,7 @@ import SessionExpiryModal from '@/components/auth/SessionExpiryModal.vue';
 const vuetify = createVuetify();
 
 describe('SessionExpiryModal.vue', () => {
-  let wrapper: VueWrapper<any>;
+  let wrapper: VueWrapper;
 
   beforeEach(() => {
     vi.useFakeTimers();

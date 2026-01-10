@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useConceptSetsStore } from '@/stores/conceptSets'
+import { useConceptPickerStore } from '@/stores/concept-picker'
 import type { ConceptSet } from '@/models/concept-set.types'
 
 describe('Concept Sets Store', () => {
@@ -13,14 +13,14 @@ describe('Concept Sets Store', () => {
 
   describe('Initial State', () => {
     it('should have empty concept sets map initially', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       expect(store.conceptSets.size).toBe(0)
       expect(store.conceptSetsList).toEqual([])
       expect(store.conceptSetsCount).toBe(0)
     })
 
     it('should have empty search results initially', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       expect(store.searchResults).toEqual([])
       expect(store.isSearching).toBe(false)
       expect(store.searchQuery).toBe('')
@@ -29,7 +29,7 @@ describe('Concept Sets Store', () => {
 
   describe('Concept Set Management', () => {
     it('should add concept set', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet: ConceptSet = {
         id: 1,
         name: 'Test Concept Set',
@@ -45,7 +45,7 @@ describe('Concept Sets Store', () => {
     })
 
     it('should update concept set', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet: ConceptSet = {
         id: 1,
         name: 'Original Name',
@@ -66,7 +66,7 @@ describe('Concept Sets Store', () => {
     })
 
     it('should not update non-existent concept set', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet: ConceptSet = {
         id: 999,
         name: 'Test',
@@ -79,7 +79,7 @@ describe('Concept Sets Store', () => {
     })
 
     it('should remove concept set', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet: ConceptSet = {
         id: 1,
         name: 'Test',
@@ -94,7 +94,7 @@ describe('Concept Sets Store', () => {
     })
 
     it('should get concept set by ID', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const conceptSet: ConceptSet = {
         id: 1,
         name: 'Test',
@@ -110,7 +110,7 @@ describe('Concept Sets Store', () => {
 
   describe('Search Management', () => {
     it('should set search results', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
       const results = [
         {
           conceptId: 1,
@@ -129,7 +129,7 @@ describe('Concept Sets Store', () => {
     })
 
     it('should set searching state', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       store.setSearching(true)
       expect(store.isSearching).toBe(true)
@@ -139,14 +139,14 @@ describe('Concept Sets Store', () => {
     })
 
     it('should set search query', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       store.setSearchQuery('diabetes')
       expect(store.searchQuery).toBe('diabetes')
     })
 
     it('should clear search', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       store.setSearchQuery('test')
       store.setSearching(true)
@@ -170,7 +170,7 @@ describe('Concept Sets Store', () => {
 
   describe('Clear All', () => {
     it('should clear all concept sets and search state', () => {
-      const store = useConceptSetsStore()
+      const store = useConceptPickerStore()
 
       store.addConceptSet({ id: 1, name: 'Test', concepts: [] })
       store.setSearchQuery('test')

@@ -40,7 +40,12 @@
 import { ref } from 'vue';
 
 defineProps<{
-  error: any;
+  error: {
+    message: string;
+    stack?: string;
+    timestamp?: Date;
+    recoverable?: boolean;
+  } | null;
   pluginId: string;
 }>();
 

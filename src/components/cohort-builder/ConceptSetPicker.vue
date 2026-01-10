@@ -1,47 +1,89 @@
 <template>
   <v-card variant="outlined">
     <v-card-title class="text-subtitle-1">
-      {{ t('cs.manager.selectConceptSet', 'Select Concept Set') }}
+      {{ singleSelect ? t('components.conceptPicker.selectConcept', 'Select Concept') : t('components.conceptAddBox.selectConceptSet', 'Select Concept Set') }}
     </v-card-title>
     <v-card-text>
-      <!-- Existing Concept Set Selector -->
-      <v-select
-        v-model="selectedConceptSetId"
-        :items="conceptSetItems"
-        item-title="label"
-        item-value="value"
-        :label="tv('cs.manager.chooseConceptSet', 'Choose Concept Set')"
-        clearable
-        data-testid="concept-set-selector"
-        @update:model-value="handleSelect"
-      >
-        <template #prepend-item>
-          <v-list-item @click="showSearch = true">
-            <template #prepend>
-              <v-icon>mdi-magnify</v-icon>
-            </template>
-            <v-list-item-title>{{ t('search.searchConcepts', 'Search for concepts...') }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item @click="showCreateNew = true">
-            <template #prepend>
-              <v-icon>mdi-plus</v-icon>
-            </template>
-            <v-list-item-title>{{ t('cs.manager.createNew', 'Create new concept set...') }}</v-list-item-title>
-          </v-list-item>
-          <v-divider class="my-2" />
-        </template>
-      </v-select>
+      <!-- Single Concept Selection Mode -->
+      <template v-if="singleSelect">
+        <v-text-field
+          :model-value="selectedConcept?.CONCEPT_NAME || ''"
+          readonly
+          :label="tv('components.conceptPicker.selectConcept', 'Selected Concept')"
+          :placeholder="tv('search.placeholder', 'Click search to select...')"
+          variant="outlined"
+          density="compact"
+          data-testid="single-concept-display"
+        >
+          <template #append>
+            <v-btn
+              icon="mdi-magnify"
+              size="small"
+              variant="text"
+              @click="showSearch = true"
+            />
+            <v-btn
+              v-if="selectedConcept"
+              icon="mdi-close"
+              size="small"
+              variant="text"
+              @click="clearSingleConceptSelection"
+            />
+          </template>
+        </v-text-field>
 
-      <!-- Selected Concept Set Display -->
-      <v-chip
-        v-if="selectedConceptSet"
-        closable
-        color="primary"
-        class="mt-2"
-        @click:close="clearSelection"
-      >
-        {{ selectedConceptSet.name }} ({{ getConceptCount(selectedConceptSet) }} concepts)
-      </v-chip>
+        <!-- Selected Concept Chip -->
+        <v-chip
+          v-if="selectedConcept"
+          closable
+          color="primary"
+          class="mt-2"
+          @click:close="clearSingleConceptSelection"
+        >
+          {{ selectedConcept?.CONCEPT_NAME }} (ID: {{ selectedConcept?.CONCEPT_ID }})
+        </v-chip>
+      </template>
+
+      <!-- Concept Set Selection Mode (Default) -->
+      <template v-else>
+        <v-select
+          v-model="selectedConceptSetId"
+          :items="conceptSetItems"
+          item-title="label"
+          item-value="value"
+          :label="tv('components.conceptAddBox.selectConceptSet', 'Choose Concept Set')"
+          clearable
+          data-testid="concept-set-selector"
+          @update:model-value="handleSelect"
+        >
+          <template #prepend-item>
+            <v-list-item @click="showSearch = true">
+              <template #prepend>
+                <v-icon>mdi-magnify</v-icon>
+              </template>
+              <v-list-item-title>{{ t('search.searchConcepts', 'Search for concepts...') }}</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="showCreateNew = true">
+              <template #prepend>
+                <v-icon>mdi-plus</v-icon>
+              </template>
+              <v-list-item-title>{{ t('common.create', 'Create new concept set...') }}</v-list-item-title>
+            </v-list-item>
+            <v-divider class="my-2" />
+          </template>
+        </v-select>
+
+        <!-- Selected Concept Set Display -->
+        <v-chip
+          v-if="selectedConceptSet"
+          closable
+          color="primary"
+          class="mt-2"
+          @click:close="clearSelection"
+        >
+          {{ selectedConceptSet.name }} ({{ getConceptCount(selectedConceptSet) }} concepts)
+        </v-chip>
+      </template>
     </v-card-text>
 
     <!-- Concept Search Dialog -->
@@ -76,17 +118,24 @@ import { useConceptSets } from '@/composables/useConceptSets'
 import ConceptSearch from '@/components/concept-sets/ConceptSearch.vue'
 import ConceptSetEditor from '@/components/concept-sets/ConceptSetEditor.vue'
 import type { ConceptSetReference, ConceptSet, Concept } from '@/models/concept-set.types'
+import type { Concept as EventConcept } from '@/models/event.types'
 
 const { t, tv } = useI18n()
 
 interface Props {
-  modelValue?: ConceptSetReference
+  modelValue?: ConceptSetReference | Concept | EventConcept
+  singleSelect?: boolean
+  domain?: string // Optional domain filter for single concept selection
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: undefined,
+  singleSelect: false,
+  domain: undefined,
+})
 
 const emit = defineEmits<{
-  'update:modelValue': [value: ConceptSetReference]
+  'update:modelValue': [value: ConceptSetReference | Concept | EventConcept | undefined]
 }>()
 
 const {
@@ -99,8 +148,19 @@ const {
   clearSelectedConcepts,
 } = useConceptSets()
 
-const selectedConceptSetId = ref<number | string | undefined>(props.modelValue?.id)
+// State for concept set mode
+const selectedConceptSetId = ref<number | string | undefined>(
+  !props.singleSelect && props.modelValue && 'id' in props.modelValue ? props.modelValue.id : undefined
+)
 const selectedConceptSet = ref<ConceptSet | null>(null)
+
+// State for single concept mode (using event.types.ts Concept format)
+const selectedConcept = ref<import('@/models/event.types').Concept | null>(
+  props.singleSelect && props.modelValue && 'CONCEPT_ID' in props.modelValue
+    ? (props.modelValue as unknown as import('@/models/event.types').Concept)
+    : null
+)
+
 const showSearch = ref(false)
 const showCreateNew = ref(false)
 const newConceptSet = ref<ConceptSet>({
@@ -136,11 +196,35 @@ async function handleSelect(id: number | string | undefined) {
 function clearSelection() {
   selectedConceptSetId.value = undefined
   selectedConceptSet.value = null
-  emit('update:modelValue', undefined as any)
+  emit('update:modelValue', undefined)
 }
 
 function handleConceptSelect(concept: Concept) {
-  toggleConceptSelection(concept)
+  if (props.singleSelect) {
+    // Single concept mode: select and emit the concept directly
+    // Map from internal Concept type to event.types.ts Concept format
+    const mappedConcept: import('@/models/event.types').Concept = {
+      CONCEPT_ID: concept.conceptId,
+      CONCEPT_NAME: concept.conceptName,
+      CONCEPT_CODE: concept.conceptCode,
+      DOMAIN_ID: concept.domainId,
+      VOCABULARY_ID: concept.vocabularyId,
+      CONCEPT_CLASS_ID: concept.conceptClassId,
+      STANDARD_CONCEPT: concept.standardConcept || undefined,
+      INVALID_REASON: concept.invalidReason || undefined,
+    }
+    selectedConcept.value = mappedConcept
+    emit('update:modelValue', mappedConcept)
+    showSearch.value = false
+  } else {
+    // Concept set mode: add to selection for creating new set
+    toggleConceptSelection(concept)
+  }
+}
+
+function clearSingleConceptSelection() {
+  selectedConcept.value = null
+  emit('update:modelValue', undefined)
 }
 
 function openSearchFromEditor() {
@@ -195,8 +279,8 @@ function getConceptCount(conceptSet: ConceptSet): number {
 onMounted(async () => {
   await loadAllConceptSets()
 
-  // If modelValue is provided, load that concept set
-  if (props.modelValue?.id) {
+  // If modelValue is provided and is a ConceptSetReference, load that concept set
+  if (props.modelValue && 'id' in props.modelValue && props.modelValue.id) {
     await handleSelect(props.modelValue.id)
   }
 })
@@ -205,10 +289,20 @@ onMounted(async () => {
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (newValue && newValue.id !== selectedConceptSetId.value) {
-      handleSelect(newValue.id)
-    } else if (!newValue) {
-      clearSelection()
+    if (props.singleSelect) {
+      // Handle single concept mode
+      if (newValue && 'CONCEPT_ID' in newValue) {
+        selectedConcept.value = newValue as unknown as import('@/models/event.types').Concept
+      } else {
+        selectedConcept.value = null
+      }
+    } else {
+      // Handle concept set mode
+      if (newValue && 'id' in newValue && newValue.id !== selectedConceptSetId.value) {
+        handleSelect(newValue.id)
+      } else if (!newValue) {
+        clearSelection()
+      }
     }
   }
 )

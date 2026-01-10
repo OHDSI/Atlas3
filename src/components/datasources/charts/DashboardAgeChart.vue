@@ -31,6 +31,7 @@ const props = withDefaults(defineProps<Props>(), {
   height: 300
 })
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const chartRef = ref<any>(null)
 
 const chartOption = computed(() => {

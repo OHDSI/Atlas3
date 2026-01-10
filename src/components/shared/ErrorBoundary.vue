@@ -73,6 +73,7 @@
 import { ref, onErrorCaptured } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { logger } from '@/utils/logger'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -91,8 +92,8 @@ onErrorCaptured((err: Error, instance, info) => {
     err.stack ? `\nStack Trace:\n${err.stack}` : '',
   ].join('\n')
 
-  // Log to console for debugging
-  console.error('[ErrorBoundary] Captured error:', {
+  // Log error for debugging
+  logger.error('ErrorBoundary', 'Captured error', {
     error: err,
     component: instance,
     info,

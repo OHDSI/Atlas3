@@ -88,6 +88,8 @@ const emit = defineEmits<{
   (e: 'saved', version: Version): void
 }>()
 
+import { logger } from '@/utils/logger'
+
 // Composables
 const { t, tv } = useI18n()
 
@@ -96,7 +98,7 @@ const commentText = ref('')
 const originalComment = ref('')
 const saving = ref(false)
 const error = ref<string | null>(null)
-const formRef = ref<any>(null)
+const formRef = ref<HTMLFormElement | null>(null)
 
 // Computed
 const isOpen = computed({
@@ -163,7 +165,7 @@ async function handleSave(): Promise<void> {
     handleClose()
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to save comment'
-    console.error('Failed to save comment:', err)
+    logger.error('VersionCommentDialog', 'Failed to save comment', err)
   } finally {
     saving.value = false
   }

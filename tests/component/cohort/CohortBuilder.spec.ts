@@ -17,8 +17,8 @@ vi.mock('@/composables/useI18n', async () => {
 
 // Mock webapi service to prevent actual API calls
 vi.mock('@/services/webapi', () => ({
-  fetchCDMSources: vi.fn().mockResolvedValue([]),
-  getAllConceptSets: vi.fn().mockResolvedValue([]),
+  fetchCDMSources: vi.fn().mockResolvedValue({ success: true, data: [] }),
+  getAllConceptSets: vi.fn().mockResolvedValue({ success: true, data: [] }),
   getCohortDefinition: vi.fn().mockResolvedValue(null),
 }))
 

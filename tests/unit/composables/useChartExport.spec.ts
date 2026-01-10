@@ -12,7 +12,7 @@ import type { CSVExportData } from '@/models/report.types'
 
 // Mock papaparse
 vi.mock('papaparse', () => ({
-  unparse: vi.fn((data: unknown, options?: unknown) => {
+  unparse: vi.fn((data: unknown, _options?: unknown) => {
     // Simple CSV conversion for testing
     const rows = data as string[][]
     return rows.map(row => row.join(',')).join('\n')
@@ -203,7 +203,7 @@ describe('useChartExport', () => {
       await expect(exportToPNG(mockChart)).rejects.toThrow('Failed to generate PNG')
       expect(exportError.value).toBe('Failed to generate PNG')
       expect(exporting.value).toBe(false)
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[useChartExport] PNG export error:', error)
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[ChartExport] PNG export error', error)
     })
 
     it('should handle non-Error objects thrown during PNG export', async () => {
@@ -223,7 +223,7 @@ describe('useChartExport', () => {
       await exportToPNG(mockChart, { filename: 'test-chart.png' })
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[useChartExport] Exported chart to PNG:',
+        '[ChartExport] Exported chart to PNG',
         'test-chart.png'
       )
     })
@@ -320,7 +320,7 @@ describe('useChartExport', () => {
       await expect(exportToSVG(mockChart)).rejects.toThrow('Failed to generate SVG')
       expect(exportError.value).toBe('Failed to generate SVG')
       expect(exporting.value).toBe(false)
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[useChartExport] SVG export error:', error)
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[ChartExport] SVG export error', error)
     })
 
     it('should handle non-Error objects thrown during SVG export', async () => {
@@ -340,7 +340,7 @@ describe('useChartExport', () => {
       await exportToSVG(mockChart, { filename: 'test-chart.svg' })
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[useChartExport] Exported chart to SVG:',
+        '[ChartExport] Exported chart to SVG',
         'test-chart.svg'
       )
     })
@@ -428,7 +428,7 @@ describe('useChartExport', () => {
       await expect(exportToCSV(mockCSVData)).rejects.toThrow('CSV generation failed')
       expect(exportError.value).toBe('CSV generation failed')
       expect(exporting.value).toBe(false)
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[useChartExport] CSV export error:', error)
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[ChartExport] CSV export error', error)
     })
 
     it('should handle non-Error objects thrown during CSV export', async () => {
@@ -472,7 +472,7 @@ describe('useChartExport', () => {
       await exportToCSV(mockCSVData)
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[useChartExport] Exported data to CSV:',
+        '[ChartExport] Exported data to CSV',
         'test-data.csv'
       )
     })
@@ -555,7 +555,7 @@ describe('useChartExport', () => {
         await expect(copyToClipboard(mockClipboardData)).rejects.toThrow('Clipboard write failed')
         expect(exportError.value).toBe('Clipboard write failed')
         expect(consoleErrorSpy).toHaveBeenCalledWith(
-          '[useChartExport] Clipboard copy error:',
+          '[ChartExport] Clipboard copy error',
           error
         )
       })
@@ -565,7 +565,7 @@ describe('useChartExport', () => {
 
         await copyToClipboard(mockClipboardData)
 
-        expect(consoleLogSpy).toHaveBeenCalledWith('[useChartExport] Copied data to clipboard')
+        expect(consoleLogSpy).toHaveBeenCalledWith('[ChartExport] Copied data to clipboard')
       })
     })
 

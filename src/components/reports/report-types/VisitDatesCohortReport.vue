@@ -1,7 +1,6 @@
 <!--
   VisitDatesCohortReport Component
-  Feature: 005-cohort-reports
-  Task: T096
+  
 
   Displays cohort visit dates analysis in a table format
 -->
@@ -70,7 +69,8 @@
 import { ref, onMounted, watch } from 'vue'
 import { useReports } from '@/composables/useReports'
 import { useI18n } from '@/composables/useI18n'
-import type { TableData } from '@/models/report.types'
+import type { TableData, VisitDatesData } from '@/models/report.types'
+import { isVisitDatesReportData } from '@/models/report.types'
 import DataTable from '@/components/reports/tables/DataTable.vue'
 
 /**
@@ -105,10 +105,10 @@ async function loadData() {
   await loadReport(props.cohortId, props.sourceKey, 'visit-dates-cohort')
 
   // Transform report data to table format
-  if (currentReport.value && 'data' in currentReport.value) {
-    const data = currentReport.value.data
+  if (currentReport.value && isVisitDatesReportData(currentReport.value)) {
+    const data = currentReport.value.data as VisitDatesData[]
 
-    const rows = (data as unknown as any[]).map((item: any) => ({
+    const rows = data.map((item) => ({
       date: item.date,
       visitCount: item.visitCount,
       personCount: item.personCount

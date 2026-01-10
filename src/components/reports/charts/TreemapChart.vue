@@ -1,7 +1,5 @@
 <!--
   TreemapChart Component
-  Feature: 005-cohort-reports
-  Tasks: T028, T120
 
   ECharts treemap wrapper with zoom interaction, loading states, and export functionality
 -->
@@ -31,6 +29,7 @@
       :option="chartOption"
       :style="{ height: `${height}px`, width: '100%' }"
       autoresize
+      @click="handleChartClick"
     />
   </div>
 </template>
@@ -39,6 +38,7 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import type { TreemapNode } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'
+import type { TreemapSeriesOption } from 'echarts/charts'
 import { defaultTreemapOptions, createResizeHandler } from '@/utils/chart-config'
 import ChartExport from './ChartExport.vue'
 
@@ -69,6 +69,7 @@ const props = withDefaults(
  * Emits
  */
 const emit = defineEmits<{
+  'node-click': [conceptId: number, conceptName: string, conceptPath: string]
   'export-success': [format: 'png' | 'svg', filename: string]
   'export-error': [format: 'png' | 'svg', error: Error]
 }>()
@@ -76,13 +77,14 @@ const emit = defineEmits<{
 /**
  * Chart ref
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const chartRef = ref<any>(null)
 
 /**
  * Chart instance for export
  */
 const chartInstance = computed<EChartsType | null>(() => {
-  return chartRef.value?.chart || null
+  return chartRef.value?.chart as EChartsType | null
 })
 
 /**
@@ -97,7 +99,7 @@ const chartOption = computed(() => {
 
   // Override roam setting if zoom is disabled
   if (!props.enableZoom && baseOption.series && Array.isArray(baseOption.series) && baseOption.series[0]) {
-    const seriesItem = baseOption.series[0] as any
+    const seriesItem = baseOption.series[0] as TreemapSeriesOption
     seriesItem.roam = false
   }
 
@@ -137,17 +139,30 @@ watch(
 )
 
 /**
- * T120: Handle export success
+ * Handle export success
  */
 function handleExportSuccess(format: 'png' | 'svg', filename: string) {
   emit('export-success', format, filename)
 }
 
 /**
- * T120: Handle export error
+ * Handle export error
  */
 function handleExportError(format: 'png' | 'svg', error: Error) {
   emit('export-error', format, error)
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChartClick(params: any) {
+  // Only emit if node has conceptId
+  if (params.data && params.data.conceptId !== undefined) {
+    emit(
+      'node-click',
+      params.data.conceptId,
+      params.data.name || '',
+      params.data.conceptPath || ''
+    )
+  }
 }
 </script>
 

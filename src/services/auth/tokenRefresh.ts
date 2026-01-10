@@ -6,6 +6,7 @@
  */
 
 import type { TokenRefreshState, TokenRefreshConfig } from '@/types/auth';
+import { logger } from '@/utils/logger';
 
 class TokenRefreshService {
   private state: TokenRefreshState = {
@@ -37,7 +38,7 @@ class TokenRefreshService {
   async refreshToken(retryCount = 0): Promise<boolean> {
     // Return existing promise if refresh already in progress
     if (this.state.refreshPromise) {
-      console.log('[TokenRefresh] Refresh already in progress, returning existing promise');
+      logger.debug('TokenRefresh', 'Refresh already in progress, returning existing promise');
       return this.state.refreshPromise;
     }
 
@@ -62,7 +63,7 @@ class TokenRefreshService {
    */
   private async executeRefresh(retryCount: number): Promise<boolean> {
     try {
-      console.log(`[TokenRefresh] Attempting token refresh (attempt ${retryCount + 1}/${this.config.maxRetries + 1})`);
+      logger.debug('TokenRefresh', `Attempting token refresh (attempt ${retryCount + 1}/${this.config.maxRetries + 1})`);
       
       // Import authService to call refresh endpoint
       const { authService } = await import('@/services/auth/authService');
@@ -72,7 +73,7 @@ class TokenRefreshService {
         this.state.lastRefreshTime = new Date();
         this.state.lastError = null;
         this.state.retryCount = 0;
-        console.log('[TokenRefresh] Token refreshed successfully');
+        logger.info('TokenRefresh', 'Token refreshed successfully');
         return true;
       }
 
@@ -84,13 +85,13 @@ class TokenRefreshService {
       // Retry with exponential backoff
       if (retryCount < this.config.maxRetries) {
         const delayMs = this.config.baseDelayMs * Math.pow(2, retryCount);
-        console.log(`[TokenRefresh] Refresh failed, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${this.config.maxRetries})`);
+        logger.warn('TokenRefresh', `Refresh failed, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${this.config.maxRetries})`);
         
         await new Promise(resolve => setTimeout(resolve, delayMs));
         return this.refreshToken(retryCount + 1);
       }
 
-      console.error('[TokenRefresh] Token refresh failed after max retries:', error);
+      logger.error('TokenRefresh', 'Token refresh failed after max retries', error);
       
       // Force logout on final failure
       const { useAuthStore } = await import('@/stores/auth');

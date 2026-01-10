@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
 import { authConfig } from '@/config/auth.config'
 import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
+import { logger } from '@/utils/logger'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -59,7 +60,7 @@ const router = createRouter({
             try {
               await cohortStore.loadVersionPreview(versionNumber)
             } catch (error) {
-              console.error('Failed to load version preview:', error)
+              logger.error('Router', 'Failed to load version preview', error)
               // Continue navigation anyway - let the view handle the error
             }
           }
@@ -88,7 +89,7 @@ const router = createRouter({
             try {
               await conceptSetsStore.loadVersionPreview(versionNumber)
             } catch (error) {
-              console.error('Failed to load version preview:', error)
+              logger.error('Router', 'Failed to load version preview', error)
               // Continue navigation anyway - let the view handle the error
             }
           }
@@ -175,9 +176,8 @@ router.beforeEach(async (to, _from, next) => {
       const redirectUrlFromPath = to.params.redirectUrl as string
 
       if (tokenFromPath) {
-        console.log('[OAuth] Token received in URL path (WebAPI pattern)')
-        console.log('[OAuth] Client:', clientFromPath)
-        console.log('[OAuth] Redirect URL:', redirectUrlFromPath)
+        logger.info('Router', 'Token received in URL path (WebAPI pattern)')
+        logger.debug('Router', 'OAuth details', { client: clientFromPath, redirectUrl: redirectUrlFromPath })
 
         authStore.setToken(tokenFromPath)
 
@@ -208,7 +208,7 @@ router.beforeEach(async (to, _from, next) => {
       const token = to.query.token as string
 
       if (token) {
-        console.log('[OAuth] Token received in URL query')
+        logger.info('Router', 'Token received in URL query')
         authStore.setToken(token)
 
         // Fetch user info
@@ -227,7 +227,7 @@ router.beforeEach(async (to, _from, next) => {
       // Check for token in cookies (WebAPI might set it there)
       const cookieToken = getCookieToken()
       if (cookieToken) {
-        console.log('[OAuth] Token found in cookie')
+        logger.info('Router', 'Token found in cookie')
         authStore.setToken(cookieToken)
         
         // Fetch user info
@@ -247,12 +247,12 @@ router.beforeEach(async (to, _from, next) => {
       }
       
       // No token found - OAuth failed
-      console.error('[OAuth] No token received from OAuth provider')
+      logger.error('Router', 'No token received from OAuth provider')
       authStore.setError('Authentication failed - no token received')
       next('/')
       return
     } catch (error) {
-      console.error('[OAuth] Callback error:', error)
+      logger.error('Router', 'OAuth callback error', error)
       authStore.setError(error instanceof Error ? error.message : 'Authentication failed')
       next('/')
       return
@@ -287,7 +287,7 @@ router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, 
     // If not authenticated, show login modal and stay on current page
     // BUT only if authentication is actually enabled
     if (!authStore.isAuthenticated && authConfig.userAuthenticationEnabled) {
-      console.log('[Router] Route requires auth, opening login modal')
+      logger.debug('Router', 'Route requires auth, opening login modal')
       authStore.openLoginModal()
 
       // Allow navigation anyway - login modal will overlay
@@ -301,7 +301,7 @@ router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, 
 })
 
 /**
- * Configuration Panel Guard - Auto-close panel on navigation (Feature: 013-config-panel)
+ * Configuration Panel Guard - Auto-close panel on navigation
  */
 router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
   // Auto-close config panel when navigating to a different route

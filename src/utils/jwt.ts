@@ -7,6 +7,7 @@
 
 import { decodeJwt } from 'jose';
 import type { JWTPayload } from '@/types/auth';
+import { logger } from '@/utils/logger';
 
 /**
  * Extract expiration date from JWT token
@@ -22,7 +23,7 @@ export function getTokenExpiration(token: string): Date | null {
     }
     return null;
   } catch (error) {
-    console.error('Failed to parse JWT:', error);
+    logger.error('JWT', 'Failed to parse JWT', error);
     return null;
   }
 }
@@ -49,7 +50,7 @@ export function getTokenPayload(token: string): JWTPayload | null {
   try {
     return decodeJwt(token) as JWTPayload;
   } catch (error) {
-    console.error('Failed to parse JWT:', error);
+    logger.error('JWT', 'Failed to parse JWT', error);
     return null;
   }
 }

@@ -88,6 +88,7 @@ import { watchDebounced } from '@vueuse/core'
 import { useConfigStore } from '@/stores/config'
 import { useConfigUndo } from '@/composables/useConfigUndo'
 import { validateSchemaName } from '@/models/config.types'
+import { logger } from '@/utils/logger'
 
 const configStore = useConfigStore()
 const { undoStack, isSaving, pushUndo, performUndo } = useConfigUndo<string>()
@@ -130,7 +131,7 @@ onMounted(async () => {
     localSchema.value = configStore.vocabularySchema
     previousSchema.value = configStore.vocabularySchema
   } catch (error) {
-    console.error('Failed to load vocabulary schema:', error)
+    logger.error('VocabularySchema', 'Failed to load vocabulary schema', error)
   }
 })
 
@@ -178,12 +179,12 @@ watchDebounced(
       // Show success toast
       toastMessage.value = `Vocabulary schema updated to "${newValue}"`
       showToast.value = true
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Rollback on error
       localSchema.value = previousSchema.value
       configStore.vocabularySchema = previousSchema.value
 
-      errorMessage.value = error.message || 'Failed to update schema. Please try again.'
+      errorMessage.value = error instanceof Error ? error.message : 'Failed to update schema. Please try again.'
       showErrorToast.value = true
     } finally {
       isSaving.value = false
@@ -214,8 +215,8 @@ async function handleUndo() {
       toastMessage.value = `Reverted to "${previousValue}"`
       showToast.value = true
     })
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to undo. Please try again.'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to undo. Please try again.'
     showErrorToast.value = true
   }
 }

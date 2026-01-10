@@ -90,12 +90,17 @@
         </v-btn>
       </template>
     </v-snackbar>
+
+    <!-- TrexSQL Cache Section -->
+    <TrexSQLCacheSection />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
+import { logger } from '@/utils/logger'
+import TrexSQLCacheSection from './TrexSQLCacheSection.vue'
 
 const configStore = useConfigStore()
 
@@ -121,7 +126,7 @@ async function loadCacheStats() {
   try {
     cacheStats.value = await configStore.getCacheStats()
   } catch (error) {
-    console.error('Failed to load cache stats:', error)
+    logger.error('CacheManagement', 'Failed to load cache stats', error)
   }
 }
 
@@ -140,9 +145,10 @@ async function handleClearCache() {
     toastColor.value = 'success'
     showToast.value = true
     showConfirmDialog.value = false
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Error: show error toast
-    toastMessage.value = error.message || 'Failed to clear cache. Please try again.'
+    const errorMessage = error instanceof Error ? error.message : 'Failed to clear cache. Please try again.'
+    toastMessage.value = errorMessage
     toastColor.value = 'error'
     showToast.value = true
   } finally {

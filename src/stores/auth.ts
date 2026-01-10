@@ -4,6 +4,10 @@ import { storageManager } from '@/services/auth/storageManager'
 import { tokenManager } from '@/services/auth/tokenManager'
 import { refreshManager } from '@/services/auth/refreshManager'
 import { authConfig } from '@/config/auth.config'
+import { logger } from '@/utils/logger'
+
+// Storage handler reference for cleanup
+let storageHandler: ((e: StorageEvent) => void) | null = null
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState & { refreshTimeoutId: number | null; isRunningAs: boolean; originalUser: UserInfo | null; sessionExpiryModalOpen: boolean; sessionExpiresAt: Date | null } => ({
@@ -34,6 +38,8 @@ export const useAuthStore = defineStore('auth', {
       if (!state.token) return false
       return !tokenManager.isTokenExpired(state.token)
     },
+    /** Whether TrexSQL cache feature is enabled on the server */
+    trexsqlCacheEnabled: (state) => state.user?.trexsqlCacheEnabled ?? false,
   },
 
   actions: {
@@ -45,7 +51,7 @@ export const useAuthStore = defineStore('auth', {
 
       const parsedToken = tokenManager.parseToken(token)
       if (!parsedToken) {
-        console.error('Invalid token format')
+        logger.error('Auth', 'Invalid token format')
         this.clearAuth()
         return
       }
@@ -65,7 +71,7 @@ export const useAuthStore = defineStore('auth', {
       if (user) {
         this.permissions = user.permissionIdx || {}
         
-        // Clear permission cache when user changes (T088)
+        // Clear permission cache when user changes
         import('@/services/auth/permissions').then(({ permissionService }) => {
           permissionService.clearCache()
         })
@@ -104,7 +110,7 @@ export const useAuthStore = defineStore('auth', {
       storageManager.clearAll()
       this.cancelRefreshTimer()
       
-      // Clear permission cache on logout (T088)
+      // Clear permission cache on logout
       import('@/services/auth/permissions').then(({ permissionService }) => {
         permissionService.clearCache()
       })
@@ -165,17 +171,17 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async performTokenRefresh(): Promise<boolean> {
-      console.log('[Auth] Performing token refresh...')
+      logger.debug('Auth', 'Performing token refresh...')
       try {
         const { authService } = await import('@/services/auth/authService')
         const success = await authService.refreshToken()
         
         if (success) {
-          console.log('[Auth] Token refreshed successfully')
+          logger.info('Auth', 'Token refreshed successfully')
           // Token is already updated in the store by authService.refreshToken()
           return true
         } else {
-          console.warn('[Auth] Token refresh failed')
+          logger.warn('Auth', 'Token refresh failed')
           // If refresh fails, clear auth and show login modal
           this.clearAuth()
           this.openLoginModal()
@@ -183,7 +189,7 @@ export const useAuthStore = defineStore('auth', {
           return false
         }
       } catch (error) {
-        console.error('[Auth] Token refresh error:', error)
+        logger.error('Auth', 'Token refresh error', error)
         this.clearAuth()
         this.openLoginModal()
         this.setError('Your session has expired. Please sign in again.')
@@ -212,7 +218,7 @@ export const useAuthStore = defineStore('auth', {
             const userInfo = await authService.fetchUserInfo()
             this.setUser(userInfo)
           } catch (error) {
-            console.error('[Auth] Failed to fetch user info on init:', error)
+            logger.error('Auth', 'Failed to fetch user info on init', error)
             // Token might be invalid, clear auth
             this.clearAuth()
           }
@@ -227,11 +233,11 @@ export const useAuthStore = defineStore('auth', {
     },
 
     setupCrossTabSync() {
-      window.addEventListener('storage', async (event) => {
+      storageHandler = async (event) => {
         if (event.key === 'bearerToken' && event.storageArea === localStorage) {
           if (event.newValue) {
             this.setToken(event.newValue)
-            
+
             // Fetch user info for the new token
             if (!this.tokenExpired && this.isTokenValid) {
               try {
@@ -239,14 +245,15 @@ export const useAuthStore = defineStore('auth', {
                 const userInfo = await authService.fetchUserInfo()
                 this.setUser(userInfo)
               } catch (error) {
-                console.error('[Auth] Failed to fetch user info on tab sync:', error)
+                logger.error('Auth', 'Failed to fetch user info on tab sync', error)
               }
             }
           } else {
             this.clearAuth()
           }
         }
-      })
+      }
+      window.addEventListener('storage', storageHandler)
     },
 
     showSessionExpiryModal(expiresAt: Date) {
@@ -264,8 +271,15 @@ export const useAuthStore = defineStore('auth', {
         await tokenRefreshService.refreshToken()
         this.hideSessionExpiryModal()
       } catch (error) {
-        console.error('Failed to extend session:', error)
+        logger.error('Auth', 'Failed to extend session', error)
         throw error
+      }
+    },
+
+    dispose() {
+      if (storageHandler) {
+        window.removeEventListener('storage', storageHandler)
+        storageHandler = null
       }
     },
   },

@@ -105,6 +105,8 @@
             @update:cardinality="updateCardinality"
             @update:temporal-window="updateTemporalWindows"
             @add-nested-criteria="addNestedCriteria"
+            @select-concept-set-for-attribute="(attributeIndex) => $emit('select-concept-set-for-attribute', attributeIndex)"
+            @select-concept-for-attribute="(attributeIndex, domainFilter) => $emit('select-concept-for-attribute', attributeIndex, domainFilter)"
           />
         </div>
 
@@ -133,7 +135,18 @@ import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import type { CohortEvent, CriteriaType, NestedCriteria } from '@/models/cohort.types'
-import type { EventAttribute } from '@/models/event.types'
+import type {
+  EventAttribute,
+  NumericAttributeKey,
+  ConceptAttributeKey,
+  DateAttributeKey,
+  TextAttributeKey,
+  BooleanAttributeKey,
+  TemporalAttributeKey,
+  DateAdjustmentAttributeKey,
+  UserDefinedPeriodAttributeKey,
+  Concept,
+} from '@/models/event.types'
 import AttributesEditor from '@/components/cohort-builder/AttributesEditor.vue'
 import NestedCriteriaEditor from '@/components/cohort-builder/NestedCriteriaEditor.vue'
 
@@ -142,13 +155,15 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { t, tv } = useI18n()
+const { t } = useI18n()
 
 const emit = defineEmits<{
   'update': [event: CohortEvent]
   'remove': []
   'select-concept-set': []
-  'edit-concept-set': [conceptSet: any]
+  'select-concept-set-for-attribute': [attributeIndex: number]
+  'select-concept-for-attribute': [attributeIndex: number, domainFilter: string | undefined]
+  'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
 // Use configuration-driven filter list (supports all 16 filter types)
@@ -172,13 +187,13 @@ const cardinalityType = computed(() => {
 })
 
 const cardinalityDisplay = computed(() => {
-  if (!props.event.cardinality) return `${t('options.atLeast', 'At least')} 1`
+  if (!props.event.cardinality) return `${t('options.atLeast', 'At least').value} 1`
   const typeMap: Record<string, string> = {
-    'AT_LEAST': tv('options.atLeast', 'At least'),
-    'EXACTLY': tv('options.exactly', 'Exactly'),
-    'AT_MOST': tv('options.atMost', 'At most')
+    'AT_LEAST': t('options.atLeast', 'At least').value,
+    'EXACTLY': t('options.exactly', 'Exactly').value,
+    'AT_MOST': t('options.atMost', 'At most').value
   }
-  const type = typeMap[props.event.cardinality.type] || t('options.atLeast', 'At least')
+  const type = typeMap[props.event.cardinality.type] || t('options.atLeast', 'At least').value
   return `${type} ${props.event.cardinality.count ?? 1}`
 })
 
@@ -253,37 +268,81 @@ function addAttribute(attributeKey: string, attributeType: string) {
   }
 
   // Create a default attribute based on the type
-  let newAttribute: any
+  let newAttribute: EventAttribute | null = null
   if (attributeType === 'numericRange') {
     newAttribute = {
       type: 'numericRange',
-      attributeKey,
+      attributeKey: attributeKey as NumericAttributeKey,
       operator: 'GREATER_THAN_OR_EQUAL',
       value: 0,
     }
   } else if (attributeType === 'conceptSet') {
     newAttribute = {
       type: 'conceptSet',
-      attributeKey,
+      attributeKey: attributeKey as ConceptAttributeKey,
       conceptSet: { id: '', name: '' },
     }
   } else if (attributeType === 'dateRange') {
     newAttribute = {
       type: 'dateRange',
-      attributeKey,
+      attributeKey: attributeKey as DateAttributeKey,
       operator: 'AFTER',
-      value: new Date().toISOString().split('T')[0],
+      value: new Date().toISOString().split('T')[0] || '',
     }
   } else if (attributeType === 'text') {
     newAttribute = {
       type: 'text',
-      attributeKey,
+      attributeKey: attributeKey as TextAttributeKey,
       operator: 'CONTAINS',
       value: '',
+    }
+  } else if (attributeType === 'boolean') {
+    newAttribute = {
+      type: 'boolean',
+      attributeKey: attributeKey as BooleanAttributeKey,
+      value: true,
+    }
+  } else if (attributeType === 'concept') {
+    newAttribute = {
+      type: 'concept',
+      attributeKey: attributeKey as ConceptAttributeKey,
+      concepts: [] as Concept[],
+    }
+  } else if (attributeType === 'temporalRelationship') {
+    newAttribute = {
+      type: 'temporalRelationship',
+      attributeKey: attributeKey as TemporalAttributeKey,
+      temporalWindow: {
+        startWindow: undefined,
+        endWindow: undefined
+      },
+    }
+  } else if (attributeType === 'dateAdjustment') {
+    newAttribute = {
+      type: 'dateAdjustment',
+      attributeKey: attributeKey as DateAdjustmentAttributeKey,
+      dateAdjustment: {
+        startWith: 'START_DATE',
+        startOffset: 0,
+        endWith: 'END_DATE',
+        endOffset: 0
+      },
+    }
+  } else if (attributeType === 'userDefinedPeriod') {
+    const today = new Date()
+    const tomorrow = new Date(today.getTime() + 86400000) // +1 day in milliseconds
+    newAttribute = {
+      type: 'userDefinedPeriod',
+      attributeKey: attributeKey as UserDefinedPeriodAttributeKey,
+      period: {
+        startDate: today.toISOString().split('T')[0] || '',
+        endDate: tomorrow.toISOString().split('T')[0] || '',
+      },
     }
   }
 
   // Add the new attribute to the event
+  if (!newAttribute) return
   const currentAttributes = props.event.attributes || []
   emit('update', {
     ...props.event,

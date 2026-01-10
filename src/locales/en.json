@@ -242,6 +242,33 @@
       "careSiteVisitDatesDuringCohortPeriod": "Care-site-visit-dates during cohort period",
       "drugUtilizationDuringBaselinePeriod": "Drug Utilization during baseline period",
       "drugUtilizationDuringCohortPeriod": "Drug Utilization during cohort period"
+    },
+    "trexsql": {
+      "selectDataset": "Select dataset",
+      "selectDatasetPrompt": "Select a dataset to view patient count",
+      "counting": "Counting...",
+      "countingInProgress": "Counting patients...",
+      "patients": "patients",
+      "addCriteria": "Add criteria to see patient count",
+      "noPatients": "No patients match this criteria",
+      "cacheReady": "Ready",
+      "cacheBuilding": "Building",
+      "cacheStale": "Stale",
+      "cacheError": "Error",
+      "cacheNotBuilt": "Not Built",
+      "staleCacheWarning": "Cache may be stale",
+      "lastBuilt": "Last built",
+      "cacheTitle": "Patient Cache",
+      "cacheDescription": "Build and manage patient caches for fast cohort counting. Each data source can have its own cache.",
+      "statusReady": "Ready",
+      "statusBuilding": "Building",
+      "statusStale": "Stale",
+      "statusError": "Error",
+      "statusNotBuilt": "Not Built",
+      "build": "Build Cache",
+      "rebuild": "Rebuild",
+      "building": "Building...",
+      "noDataSources": "No data sources available"
     }
   },
   "components": {

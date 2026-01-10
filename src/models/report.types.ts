@@ -1,8 +1,7 @@
 /**
  * Report Data Types and Interfaces
- * Feature: 005-cohort-reports
  *
- * This file defines all TypeScript interfaces for the cohort reporting feature,
+ * TypeScript interfaces for cohort reporting,
  * including report configurations, data structures, and WebAPI response formats.
  */
 
@@ -173,7 +172,7 @@ export const ConditionReportSchema = z.object({
 })
 
 // ============================================================================
-// Conditions by Index Report (T080)
+// Conditions by Index Report
 // ============================================================================
 
 export interface ConditionsByIndexReport {
@@ -187,7 +186,7 @@ export const ConditionsByIndexReportSchema = z.object({
 })
 
 // ============================================================================
-// Death Report (T081)
+// Death Report
 // ============================================================================
 
 export interface DeathReport {
@@ -201,7 +200,7 @@ export const DeathReportSchema = z.object({
 })
 
 // ============================================================================
-// Drug Exposure Report (T082)
+// Drug Exposure Report
 // ============================================================================
 
 export interface DrugExposureReport {
@@ -215,7 +214,7 @@ export const DrugExposureReportSchema = z.object({
 })
 
 // ============================================================================
-// Drugs by Index Report (T083)
+// Drugs by Index Report
 // ============================================================================
 
 export interface DrugsByIndexReport {
@@ -229,7 +228,7 @@ export const DrugsByIndexReportSchema = z.object({
 })
 
 // ============================================================================
-// Observation Periods Report (T084)
+// Observation Periods Report
 // ============================================================================
 
 export interface ObservationPeriodsReport {
@@ -243,7 +242,7 @@ export const ObservationPeriodsReportSchema = z.object({
 })
 
 // ============================================================================
-// Procedure Report (T085)
+// Procedure Report
 // ============================================================================
 
 export interface ProcedureReport {
@@ -257,7 +256,7 @@ export const ProcedureReportSchema = z.object({
 })
 
 // ============================================================================
-// Procedures by Index Report (T086)
+// Procedures by Index Report
 // ============================================================================
 
 export interface ProceduresByIndexReport {
@@ -271,7 +270,7 @@ export const ProceduresByIndexReportSchema = z.object({
 })
 
 // ============================================================================
-// Data Completeness Report (T087)
+// Data Completeness Report
 // ============================================================================
 
 export interface DataCompletenessReport {
@@ -285,7 +284,7 @@ export const DataCompletenessReportSchema = z.object({
 })
 
 // ============================================================================
-// Entropy Report (T088)
+// Entropy Report
 // ============================================================================
 
 export interface EntropyReport {
@@ -299,7 +298,7 @@ export const EntropyReportSchema = z.object({
 })
 
 // ============================================================================
-// Tornado Report (T089)
+// Tornado Report
 // ============================================================================
 
 export interface TornadoReport {
@@ -411,10 +410,100 @@ export interface LineChartData {
 export interface TreemapNode {
   name: string
   value: number
+  conceptId?: number
+  conceptPath?: string
   children?: TreemapNode[]
   itemStyle?: {
     color?: string
   }
+}
+
+export interface DrilldownReport {
+  conceptId: number
+  conceptName: string
+  conceptPath: string
+  ageAtFirstOccurrence?: BoxPlotData[]
+  lengthOfEra?: BoxPlotData[]
+  prevalenceByGenderAgeYear?: TrellisChartData
+  prevalenceByMonth?: TimeSeriesData[]
+  byType?: PieChartData[]
+}
+
+export interface BoxPlotData {
+  category: string
+  min: number
+  p10: number
+  p25: number
+  median: number
+  p75: number
+  p90: number
+  max: number
+}
+
+export interface TrellisChartData {
+  series: TrellisSeriesData[]
+  categories: string[]
+}
+
+export interface TrellisSeriesData {
+  name: string
+  category: string
+  data: { x: number | string; y: number }[]
+}
+
+export interface TimeSeriesData {
+  date: string
+  value: number
+  label?: string
+}
+
+export interface WebAPIDrilldownRaw {
+  ageAtFirstDiagnosis?: WebAPIBoxPlotRaw[]
+  ageAtFirstExposure?: WebAPIBoxPlotRaw[]
+  ageAtFirstOccurrence?: WebAPIBoxPlotRaw[]
+  lengthOfEra?: WebAPIBoxPlotRaw[]
+  conditionsByType?: WebAPIConceptCount[]
+  drugsByType?: WebAPIConceptCount[]
+  observationsByType?: WebAPIConceptCount[]
+  measurementsByType?: WebAPIConceptCount[]
+  proceduresByType?: WebAPIConceptCount[]
+  prevalenceByGenderAgeYear?: WebAPIPrevalenceByDemographic[]
+  prevalenceByMonth?: WebAPIPrevalenceByMonth[]
+}
+
+export interface WebAPIBoxPlotRaw {
+  category?: string
+  intervalIndex?: number
+  min?: number
+  p10Value?: number
+  p25Value?: number
+  medianValue?: number
+  p75Value?: number
+  p90Value?: number
+  max?: number
+  avgValue?: number
+}
+
+export interface WebAPIConceptCount {
+  conceptId: number
+  conceptName?: string
+  conceptPath?: string
+  countValue: number
+  percentValue?: number
+}
+
+export interface WebAPIPrevalenceByDemographic {
+  conceptId?: number
+  conceptPath?: string
+  trellisName?: string
+  seriesName?: string
+  xCalendarYear?: number
+  yPrevalence1000Pp?: number
+}
+
+export interface WebAPIPrevalenceByMonth {
+  xCalendarMonth: number
+  yPrevalence1000Pp: number
 }
 
 // ============================================================================
@@ -921,4 +1010,95 @@ export interface ReportData {
   sourceKey: string
   fetchedAt: Date
   data: PersonReport | ConditionErasReport | ConditionReport | DrugErasReport | CohortSpecificReport | PersonsExposureReport | VisitsReport | VisitDatesReport | CareSiteVisitDatesReport | DrugUtilizationReport | HeraclesHeelReport | ConditionsByIndexReport | DeathReport | DrugExposureReport | DrugsByIndexReport | ObservationPeriodsReport | ProcedureReport | ProceduresByIndexReport | DataCompletenessReport | EntropyReport | TornadoReport
+}
+
+// ============================================================================
+// Type Guards for Report Data
+// ============================================================================
+
+/**
+ * Reports that have a 'prevalence' array with ConditionData items.
+ * This covers most standard prevalence-based reports.
+ */
+export type PrevalenceReport =
+  | ConditionReport
+  | ConditionsByIndexReport
+  | DeathReport
+  | DrugExposureReport
+  | DrugsByIndexReport
+  | ObservationPeriodsReport
+  | ProcedureReport
+  | ProceduresByIndexReport
+  | DataCompletenessReport
+  | EntropyReport
+  | TornadoReport
+  | PersonsExposureReport
+  | VisitsReport
+  | DrugUtilizationReport
+
+/**
+ * Type guard: check if report data has a 'prevalence' property
+ */
+export function hasPrevalence(data: unknown): data is PrevalenceReport {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    'prevalence' in data &&
+    Array.isArray((data as Record<string, unknown>).prevalence)
+  )
+}
+
+/**
+ * Type guard: check if report is a ConditionEras report
+ */
+export function isConditionErasReportData(data: unknown): data is ConditionErasReport {
+  return hasPrevalence(data) && (data as ConditionErasReport).prevalence?.every?.(
+    (item) => 'averageDuration' in item && ('soc' in item || 'hlt' in item || true)
+  )
+}
+
+/**
+ * Type guard: check if report is a DrugEras report
+ */
+export function isDrugErasReportData(data: unknown): data is DrugErasReport {
+  return hasPrevalence(data) && (data as DrugErasReport).prevalence?.every?.(
+    (item) => 'ingredient' in item
+  )
+}
+
+/**
+ * Type guard: check if report is a HeraclesHeel report
+ */
+export function isHeraclesHeelReportData(data: unknown): data is HeraclesHeelReport {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    'results' in data &&
+    Array.isArray((data as HeraclesHeelReport).results)
+  )
+}
+
+/**
+ * Type guard: check if report is a VisitDates report
+ */
+export function isVisitDatesReportData(data: unknown): data is VisitDatesReport {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    'data' in data &&
+    Array.isArray((data as VisitDatesReport).data)
+  )
+}
+
+/**
+ * Type guard: check if report is a CareSiteVisitDates report
+ */
+export function isCareSiteVisitDatesReportData(data: unknown): data is CareSiteVisitDatesReport {
+  return (
+    data !== null &&
+    typeof data === 'object' &&
+    'data' in data &&
+    Array.isArray((data as CareSiteVisitDatesReport).data) &&
+    (data as CareSiteVisitDatesReport).data?.every?.((item) => 'careSiteId' in item)
+  )
 }

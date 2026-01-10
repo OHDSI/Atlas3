@@ -3,29 +3,14 @@
  * Provides reactive state and operations for concept set management
  */
 import { ref, computed } from 'vue'
-import { useConceptSetsStore } from '@/stores/conceptSets'
+import { useConceptPickerStore } from '@/stores/concept-picker'
 import type { Concept, ConceptSet } from '@/models/concept-set.types'
 import * as webapi from '@/services/webapi'
-
-// Simple debounce implementation
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null
-  
-  return function executedFunction(...args: Parameters<T>) {
-    const later = () => {
-      timeout = null
-      func(...args)
-    }
-    
-    if (timeout) {
-      clearTimeout(timeout)
-    }
-    timeout = setTimeout(later, wait)
-  }
-}
+import { logger } from '@/utils/logger'
+import { debounce } from '@/utils/debounce'
 
 export function useConceptSets() {
-  const store = useConceptSetsStore()
+  const store = useConceptPickerStore()
 
   // Local state for selected concepts (for creating/editing concept sets)
   const selectedConcepts = ref<Concept[]>([])
@@ -45,11 +30,18 @@ export function useConceptSets() {
       store.setSearchQuery(query)
 
       const sourceKey = import.meta.env.VITE_DEFAULT_SOURCE || 'SYNPUF1K'
-      const results = await webapi.searchConcepts(sourceKey, query, domain)
+      const result = await webapi.searchConcepts(sourceKey, query, domain)
 
-      store.setSearchResults(results)
+      if (result?.success) {
+        store.setSearchResults(result.data)
+      } else {
+        if (result?.error) {
+          logger.error('ConceptSets', 'Concept search error', result.error)
+        }
+        store.setSearchResults([])
+      }
     } catch (error) {
-      console.error('Concept search error:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Concept search error', error instanceof Error ? error.message : String(error))
       store.setSearchResults([])
       throw error
     } finally {
@@ -70,7 +62,7 @@ export function useConceptSets() {
 
       return created
     } catch (error) {
-      console.error('Failed to create concept set:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Failed to create concept set', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -86,7 +78,7 @@ export function useConceptSets() {
         store.updateConceptSet(updated.id, updated)
       }
     } catch (error) {
-      console.error('Failed to update concept set:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Failed to update concept set', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -102,7 +94,7 @@ export function useConceptSets() {
         store.removeConceptSet(id)
       }
     } catch (error) {
-      console.error('Failed to delete concept set:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Failed to delete concept set', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -127,7 +119,7 @@ export function useConceptSets() {
 
       return conceptSet
     } catch (error) {
-      console.error('Failed to get concept set:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Failed to get concept set', error instanceof Error ? error.message : String(error))
       throw error
     }
   }
@@ -137,13 +129,17 @@ export function useConceptSets() {
    */
   async function loadAllConceptSets(): Promise<void> {
     try {
-      const conceptSets = await webapi.getAllConceptSets()
+      const result = await webapi.getAllConceptSets()
 
-      conceptSets.forEach((cs) => {
-        store.addConceptSet(cs)
-      })
+      if (result.success) {
+        result.data.forEach((cs) => {
+          store.addConceptSet(cs)
+        })
+      } else {
+        logger.error('ConceptSets', 'Failed to load concept sets', result.error)
+      }
     } catch (error) {
-      console.error('Failed to load concept sets:', error instanceof Error ? error.message : String(error))
+      logger.error('ConceptSets', 'Failed to load concept sets', error instanceof Error ? error.message : String(error))
       throw error
     }
   }

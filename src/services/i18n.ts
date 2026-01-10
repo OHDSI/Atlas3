@@ -1,15 +1,15 @@
 /**
  * i18n Service - WebAPI integration for translations
- * Feature: 008-translation-support
  */
 
 import { z } from 'zod'
+import { logger } from '@/utils/logger'
 import type { Locale, TranslationBundle, LocaleCode, Translations } from '@/types/i18n'
 import { WEBAPI_BASE_URL } from '@/config/webapi'
 
 const API_BASE_URL = WEBAPI_BASE_URL
 
-// T029: Zod schemas for runtime validation
+// Zod schemas for runtime validation
 const LocaleSchema = z.object({
   code: z.string().length(2).regex(/^[a-z]{2}$/),
   name: z.string().min(1)
@@ -46,19 +46,27 @@ export async function fetchLocales(): Promise<Locale[]> {
     if (!response.ok) {
       throw new Error(`Failed to fetch locales: ${response.statusText}`)
     }
-    const data = await response.json()
-    const rawLocales = data.data || data
+
+    let data: unknown
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      logger.error('i18n', 'Failed to parse JSON response', parseError)
+      throw new Error('Invalid response format from locales API')
+    }
+
+    const rawLocales = (data as { data?: unknown }).data || data
     
-    // T029: Validate with Zod
+    // Validate with Zod
     const parsed = LocaleArraySchema.safeParse(rawLocales)
     if (!parsed.success) {
-      console.error('Invalid locales response:', parsed.error)
+      logger.error('i18n', 'Invalid locales response', parsed.error)
       throw new Error('Invalid locales format from WebAPI')
     }
-    
+
     return parsed.data
   } catch (error) {
-    console.error('Error fetching locales:', error)
+    logger.error('i18n', 'Error fetching locales', error)
     return [
       { code: 'en', name: 'English' }
     ]
@@ -74,36 +82,50 @@ export async function fetchTranslations(locale: LocaleCode): Promise<Translation
     if (!response.ok) {
       throw new Error(`Failed to fetch translations for ${locale}: ${response.statusText}`)
     }
-    const data = await response.json()
-    
+
+    let data: unknown
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      logger.error('i18n', 'Failed to parse JSON response', parseError)
+      throw new Error(`Invalid response format from translations API for ${locale}`)
+    }
+
     // WebAPI returns translations directly, not wrapped in { data: ... }
     const rawTranslations = data
     
-    // T029: Validate translations with Zod
+    // Validate translations with Zod
     const translationsValidation = TranslationsSchema.safeParse(rawTranslations)
     if (!translationsValidation.success) {
-      console.error('Invalid translations response:', translationsValidation.error)
+      logger.error('i18n', 'Invalid translations response', translationsValidation.error)
       throw new Error(`Invalid translation format for ${locale}`)
     }
-    
+
     const translations: Translations = translationsValidation.data
-    
+
+    // Check if data has format property (type-safe access)
+    const dataObj = data as Record<string, unknown>
+    const rawFormat = dataObj?.format
+
     // Validate format if present
-    if (data.format) {
-      const formatValidation = LocaleFormatSchema.safeParse(data.format)
-      if (!formatValidation.success) {
-        console.warn('Invalid format data, skipping:', formatValidation.error)
+    let validatedFormat: z.infer<typeof LocaleFormatSchema> = undefined
+    if (rawFormat) {
+      const formatValidation = LocaleFormatSchema.safeParse(rawFormat)
+      if (formatValidation.success) {
+        validatedFormat = formatValidation.data
+      } else {
+        logger.warn('i18n', 'Invalid format data, skipping', formatValidation.error)
       }
     }
-    
+
     return {
       locale,
       translations,
-      format: data.format,
+      format: validatedFormat,
       fetchedAt: new Date()
     }
   } catch (error) {
-    console.error(`Error fetching translations for ${locale}:`, error)
+    logger.error('i18n', `Error fetching translations for ${locale}`, error)
     throw error
   }
 }

@@ -1,7 +1,5 @@
 <!--
   HeraclesHeelReport Component
-  Feature: 005-cohort-reports
-  Task: T100
 
   Displays data quality Achilles Heel results in a table format
 -->
@@ -70,7 +68,8 @@
 import { ref, onMounted, watch } from 'vue'
 import { useReports } from '@/composables/useReports'
 import { useI18n } from '@/composables/useI18n'
-import type { TableData } from '@/models/report.types'
+import type { TableData, HeraclesHeelData } from '@/models/report.types'
+import { isHeraclesHeelReportData } from '@/models/report.types'
 import DataTable from '@/components/reports/tables/DataTable.vue'
 
 /**
@@ -105,10 +104,10 @@ async function loadData() {
   await loadReport(props.cohortId, props.sourceKey, 'heracles-heel')
 
   // Transform report data to table format
-  if (currentReport.value && 'results' in currentReport.value) {
-    const data = currentReport.value.results
+  if (currentReport.value && isHeraclesHeelReportData(currentReport.value)) {
+    const data = currentReport.value.results as HeraclesHeelData[]
 
-    const rows = (data as any[]).map((item: any) => ({
+    const rows = data.map((item) => ({
       analysisId: item.analysisId,
       analysisName: item.analysisName,
       heelRule: item.heelRule,

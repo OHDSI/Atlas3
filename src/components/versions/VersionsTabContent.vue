@@ -61,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import { logger } from '@/utils/logger'
 import { onMounted, ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
@@ -183,7 +184,7 @@ async function handleCopy(versionNumber: number): Promise<void> {
       })
     }, 1000)
   } catch (error) {
-    console.error('Failed to copy version:', error)
+    logger.error('VersionsTabContent', 'Failed to copy version', error)
     showSnackbar(t('versions.copyError').value, 'error')
   }
 }
@@ -215,7 +216,7 @@ async function handleSavePreviewAsCurrent(): Promise<void> {
       showSnackbar(t('versions.saveError').value, 'error')
     }
   } catch (error) {
-    console.error('Failed to save preview as current:', error)
+    logger.error('VersionsTabContent', 'Failed to save preview as current', error)
     showSnackbar(t('versions.saveError').value, 'error')
   } finally {
     savingPreview.value = false
@@ -225,15 +226,15 @@ async function handleSavePreviewAsCurrent(): Promise<void> {
 /**
  * Get the appropriate save function based on asset type
  */
-function savePreviewAsCurrent(): Promise<boolean> {
-  // Import the appropriate store based on asset type
+async function savePreviewAsCurrent(): Promise<boolean> {
+  // Use dynamic imports to avoid circular dependencies
   if (props.config.assetType === 'cohortdefinition') {
-    const { useCohortStore } = require('@/stores/cohort')
+    const { useCohortStore } = await import('@/stores/cohort')
     const cohortStore = useCohortStore()
     return cohortStore.savePreviewAsCurrent()
   } else {
-    const { useConceptSetStore } = require('@/stores/concept-sets')
-    const conceptSetStore = useConceptSetStore()
+    const { useConceptSetsStore } = await import('@/stores/concept-sets')
+    const conceptSetStore = useConceptSetsStore()
     return conceptSetStore.savePreviewAsCurrent()
   }
 }

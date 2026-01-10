@@ -1,7 +1,5 @@
 /**
  * useReports Composable
- * Feature: 005-cohort-reports
- * Task: T022
  *
  * Wraps the reports store with reactive state and convenience methods
  */
@@ -9,6 +7,7 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useReportsStore } from '@/stores/reports'
+import { logger } from '@/utils/logger'
 import type { ReportType } from '@/models/report.types'
 
 export function useReports() {
@@ -46,7 +45,7 @@ export function useReports() {
    */
   async function switchReportType(reportType: ReportType): Promise<void> {
     if (!currentCohortId.value || !currentSourceKey.value) {
-      console.warn('[useReports] Cannot switch report type without cohort/source context')
+      logger.warn('useReports', 'Cannot switch report type without cohort/source context')
       return
     }
 
@@ -58,7 +57,7 @@ export function useReports() {
    */
   async function refreshReport(): Promise<void> {
     if (!currentCohortId.value || !currentSourceKey.value || !currentReportType.value) {
-      console.warn('[useReports] Cannot refresh without current report context')
+      logger.warn('useReports', 'Cannot refresh without current report context')
       return
     }
 

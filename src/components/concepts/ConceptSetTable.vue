@@ -1,6 +1,7 @@
 <template>
   <div class="concept-set-table">
     <v-data-table
+      v-model:sort-by="sortBy"
       :headers="headers"
       :items="items"
       :loading="loading"
@@ -103,10 +104,17 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 
 const { t } = useI18n()
+
+// ============================================================================
+// Local State
+// ============================================================================
+
+const sortBy = ref([{ key: 'conceptId', order: 'asc' as const }])
 
 // ============================================================================
 // Props & Emits

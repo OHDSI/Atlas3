@@ -21,7 +21,7 @@
     <NavBar />
 
     <v-main>
-      <!-- Configuration validation warnings (FR-016) -->
+      <!-- Configuration validation warnings -->
       <ConfigurationWarningBanner />
 
       <router-view />
@@ -34,7 +34,7 @@
       @reject="handleRejectLicense"
     />
 
-    <!-- Session Expiry Modal (T036-T037) -->
+    <!-- Session Expiry Modal -->
     <SessionExpiryModal
       :model-value="authStore.sessionExpiryModalOpen"
       :expires-at="authStore.sessionExpiresAt || new Date()"
@@ -47,7 +47,7 @@
       @expired="handleExpired"
     />
 
-    <!-- Configuration Panel (Feature: 013-config-panel) -->
+    <!-- Configuration Panel -->
     <ConfigPanel />
   </v-app>
 </template>
@@ -63,6 +63,7 @@ import { useLocaleStore } from '@/stores/locale'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
 import { useLicenseAgreement } from '@/composables/useLicenseAgreement'
+import { logger } from '@/utils/logger'
 
 const localeStore = useLocaleStore()
 const authStore = useAuthStore()
@@ -89,30 +90,30 @@ const remainingSeconds = computed(() => {
   return remaining
 })
 
-// Handle "Extend Session" button (T037)
+// Handle "Extend Session" button
 async function handleExtendSession() {
   try {
     extensionError.value = null
     await authStore.extendSession()
   } catch (error) {
-    console.error('[App] Failed to extend session:', error)
+    logger.error('App', 'Failed to extend session', error)
     extensionError.value = 'Failed to extend session. Please try again.'
   }
 }
 
-// Handle "Logout" button (T037)
+// Handle "Logout" button
 function handleLogout() {
   authStore.clearAuth()
   authStore.openLoginModal()
 }
 
-// Handle modal dismissal (T037)
+// Handle modal dismissal
 async function handleDismissModal() {
   // Treat dismissal as implicit "Extend Session"
   await handleExtendSession()
 }
 
-// Handle session expired (T037)
+// Handle session expired
 function handleExpired() {
   authStore.clearAuth()
   authStore.openLoginModal()

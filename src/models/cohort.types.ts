@@ -52,7 +52,7 @@ export interface CohortEvent {
   conceptSet?: ConceptSetReference
   cardinality?: Cardinality
   temporalWindow?: TemporalWindow
-  attributes: EventAttribute[]
+  attributes?: EventAttribute[]
   nestedCriteria?: NestedCriteria
   restrictVisit?: boolean // Event must occur in same visit as index
   ignoreObservationPeriod?: boolean // Event can occur outside observation period
@@ -104,10 +104,10 @@ export interface ConceptSetReference {
   id: number | string // Number from WebAPI, string (UUID) for client-side
   name: string
   conceptCount?: number
-  items?: any[] // Full concept set items to embed in cohort definition
+  items?: unknown[] // Full concept set items to embed in cohort definition
 }
 
-// 12 OHDSI criteria types per spec.md FR-002
+// OHDSI criteria types
 export type CriteriaType =
   | 'ConditionOccurrence'
   | 'ConditionEra'

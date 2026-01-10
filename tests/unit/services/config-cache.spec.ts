@@ -9,6 +9,7 @@ import 'fake-indexeddb/auto'
 describe('Config Cache Service', () => {
   beforeEach(() => {
     // Clear all stores before each test
+    // eslint-disable-next-line no-global-assign
     indexedDB = new IDBFactory()
     localStorage.clear()
   })
@@ -153,9 +154,8 @@ describe('Config Cache Service', () => {
       })
 
       it('should return default "public" on localStorage error', () => {
-        // Mock localStorage.getItem to throw
-        const originalGetItem = localStorage.getItem
-        localStorage.getItem = vi.fn(() => {
+        // Mock localStorage.getItem to throw using spyOn
+        const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
           throw new Error('localStorage error')
         })
 
@@ -164,7 +164,7 @@ describe('Config Cache Service', () => {
         expect(schema).toBe('public')
 
         // Restore
-        localStorage.getItem = originalGetItem
+        getItemSpy.mockRestore()
       })
     })
 
@@ -186,15 +186,127 @@ describe('Config Cache Service', () => {
       })
 
       it('should throw error on localStorage failure', () => {
-        // Mock localStorage.setItem to throw
+        // Mock localStorage.setItem to throw using spyOn
         const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-          throw new Error('localStorage full')
+          throw new Error('localStorage quota exceeded')
         })
 
-        expect(() => configCache.setVocabularySchema('schema')).toThrow('Failed to save vocabulary schema')
+        expect(() => configCache.setVocabularySchema('new_schema')).toThrow(
+          'Failed to save vocabulary schema'
+        )
 
         // Restore
         setItemSpy.mockRestore()
+      })
+    })
+  })
+
+  describe('Error Scenarios', () => {
+    describe('clearConfigCache transaction errors', () => {
+      it('should handle errors when clear operation fails during transaction', async () => {
+        // Create a database first
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+          const request = indexedDB.open('atlas3_config_cache', 1)
+          request.onerror = () => reject(request.error)
+          request.onsuccess = () => resolve(request.result)
+          request.onupgradeneeded = (event) => {
+            const db = (event.target as IDBOpenDBRequest).result
+            if (!db.objectStoreNames.contains('config')) {
+              db.createObjectStore('config')
+            }
+          }
+        })
+        db.close()
+
+        // Now mock the transaction to fail
+        const originalTransaction = IDBDatabase.prototype.transaction
+        IDBDatabase.prototype.transaction = vi.fn(function (
+          this: IDBDatabase,
+          ...args: unknown[]
+        ) {
+          const tx = originalTransaction.apply(this, args as never)
+          const originalObjectStore = tx.objectStore.bind(tx)
+          tx.objectStore = vi.fn((name: string) => {
+            const store = originalObjectStore(name)
+            const _originalClear = store.clear.bind(store)
+            store.clear = vi.fn(() => {
+              const request = {} as IDBRequest
+              setTimeout(() => {
+                if (request.onerror) {
+                  request.onerror({} as Event)
+                }
+              }, 0)
+              Object.defineProperty(request, 'error', {
+                value: new Error('Clear operation failed'),
+                writable: false
+              })
+              return request
+            })
+            return store
+          })
+          return tx
+        }) as never
+
+        await expect(configCache.clearConfigCache()).rejects.toThrow(
+          'Clear operation failed'
+        )
+
+        // Restore
+        IDBDatabase.prototype.transaction = originalTransaction
+      })
+    })
+
+    describe('getCacheStats request errors', () => {
+      it('should handle errors when getAllKeys operation fails', async () => {
+        // Create a database first
+        const db = await new Promise<IDBDatabase>((resolve, reject) => {
+          const request = indexedDB.open('atlas3_config_cache', 1)
+          request.onerror = () => reject(request.error)
+          request.onsuccess = () => resolve(request.result)
+          request.onupgradeneeded = (event) => {
+            const db = (event.target as IDBOpenDBRequest).result
+            if (!db.objectStoreNames.contains('config')) {
+              db.createObjectStore('config')
+            }
+          }
+        })
+        db.close()
+
+        // Mock the transaction to make getAllKeys fail
+        const originalTransaction = IDBDatabase.prototype.transaction
+        IDBDatabase.prototype.transaction = vi.fn(function (
+          this: IDBDatabase,
+          ...args: unknown[]
+        ) {
+          const tx = originalTransaction.apply(this, args as never)
+          const originalObjectStore = tx.objectStore.bind(tx)
+          tx.objectStore = vi.fn((name: string) => {
+            const store = originalObjectStore(name)
+            const _originalGetAllKeys = store.getAllKeys.bind(store)
+            store.getAllKeys = vi.fn(() => {
+              const request = {} as IDBRequest
+              setTimeout(() => {
+                if (request.onerror) {
+                  request.onerror({} as Event)
+                }
+              }, 0)
+              Object.defineProperty(request, 'error', {
+                value: new Error('getAllKeys operation failed'),
+                writable: false
+              })
+              return request
+            })
+            return store
+          })
+          return tx
+        }) as never
+
+        await expect(configCache.getCacheStats()).rejects.toThrow(
+          'getAllKeys operation failed'
+        )
+
+        // Restore
+        IDBDatabase.prototype.transaction = originalTransaction
       })
     })
   })

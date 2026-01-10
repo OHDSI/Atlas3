@@ -8,6 +8,45 @@
  * Root Atlas cohort definition structure
  * Note: Atlas uses PascalCase for field names
  */
+/**
+ * Atlas additional criteria structure
+ */
+export interface AtlasAdditionalCriteria {
+  Type: 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
+  CriteriaList: AtlasCriteria[]
+  DemographicCriteriaList: Record<string, unknown>[]
+  Groups: AtlasCriteria[]
+}
+
+/**
+ * Atlas expression limit
+ */
+export interface AtlasExpressionLimit {
+  Type: string
+}
+
+/**
+ * Atlas collapse settings
+ */
+export interface AtlasCollapseSettings {
+  CollapseType: string
+  EraPad: number
+}
+
+/**
+ * Atlas censor window (period structure)
+ */
+export interface AtlasCensorWindow {
+  StartDate?: {
+    DateField: string
+    Offset: number
+  }
+  EndDate?: {
+    DateField: string
+    Offset: number
+  }
+}
+
 export interface AtlasCohortDefinition {
   id?: number
   name: string
@@ -18,15 +57,40 @@ export interface AtlasCohortDefinition {
   modifiedDate?: number
   ConceptSets: AtlasConceptSet[]
   PrimaryCriteria: AtlasPrimaryCriteria
-  AdditionalCriteria?: unknown
+  AdditionalCriteria?: AtlasAdditionalCriteria
   QualifiedLimit?: AtlasQualifiedLimit
-  ExpressionLimit?: unknown
+  ExpressionLimit?: AtlasExpressionLimit
   InclusionRules?: AtlasInclusionRule[]
   CensoringCriteria?: AtlasCensoringCriteria[]
   EndStrategy?: AtlasEndStrategy
-  CollapseSettings?: unknown
-  CensorWindow?: unknown
+  CollapseSettings?: AtlasCollapseSettings
+  CensorWindow?: AtlasCensorWindow
   cdmVersionRange?: string
+}
+
+/**
+ * WebAPI cohort definition wrapper format
+ * The API may return either the expression directly or wrapped in an object
+ */
+export interface AtlasCohortDefinitionWrapper {
+  id?: number
+  name?: string
+  description?: string
+  expression: AtlasCohortDefinition | string
+}
+
+/**
+ * Type that can accept both direct expression or wrapped format
+ */
+export type AtlasCohortDefinitionInput = AtlasCohortDefinition | AtlasCohortDefinitionWrapper
+
+/**
+ * Type guard to check if input is a wrapper with expression property
+ */
+export function isAtlasCohortDefinitionWrapper(
+  input: AtlasCohortDefinitionInput
+): input is AtlasCohortDefinitionWrapper {
+  return 'expression' in input && (typeof input.expression === 'object' || typeof input.expression === 'string')
 }
 
 export interface AtlasConceptSet {
@@ -41,11 +105,14 @@ export interface AtlasConceptSetItem {
   concept: {
     CONCEPT_ID: number
     CONCEPT_NAME: string
-    CONCEPT_CODE: string
-    DOMAIN_ID: string
-    VOCABULARY_ID: string
-    CONCEPT_CLASS_ID: string
+    CONCEPT_CODE?: string
+    DOMAIN_ID?: string
+    VOCABULARY_ID?: string
+    CONCEPT_CLASS_ID?: string
     STANDARD_CONCEPT?: string
+    STANDARD_CONCEPT_CAPTION?: string
+    INVALID_REASON?: string | null
+    INVALID_REASON_CAPTION?: string
   }
   isExcluded?: boolean
   includeDescendants?: boolean
@@ -70,15 +137,18 @@ export interface AtlasCriteria {
 }
 
 export interface AtlasOccurrence {
-  Type: 0 | 1 | 2 // 0=AT_LEAST, 1=AT_MOST, 2=EXACTLY
+  Type: 0 | 1 | 2 // 0=EXACTLY, 1=AT_MOST, 2=AT_LEAST
   Count: number
+  CountMethod?: string
   IsDistinct?: boolean
+  CountColumn?: string
 }
 
 export interface AtlasCorrelatedCriteria {
   Type: 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
   Count?: number
   CriteriaList: AtlasCriteria[]
+  DemographicCriteriaList?: Record<string, unknown>[]
   Groups?: AtlasGroup[]
 }
 
@@ -125,21 +195,179 @@ export interface AtlasEndStrategy {
  * Per contracts/atlas-json-schema.md
  */
 export const OPERATOR_TO_ATLAS: Record<string, string> = {
+  // Numeric and date operators
   GREATER_THAN: 'gt',
   LESS_THAN: 'lt',
   EQUAL: 'eq',
   NOT_EQUAL: '!eq',
   BETWEEN: 'bt',
+  NOT_BETWEEN: '!bt',
   GREATER_THAN_OR_EQUAL: 'gte',
   LESS_THAN_OR_EQUAL: 'lte',
+
+  // Text operators
+  CONTAINS: 'contains',
+  STARTS_WITH: 'startsWith',
+  ENDS_WITH: 'endsWith',
 }
 
 export const ATLAS_TO_OPERATOR: Record<string, string> = {
+  // Numeric and date operators
   gt: 'GREATER_THAN',
   lt: 'LESS_THAN',
   eq: 'EQUAL',
   '!eq': 'NOT_EQUAL',
   bt: 'BETWEEN',
+  '!bt': 'NOT_BETWEEN',
   gte: 'GREATER_THAN_OR_EQUAL',
   lte: 'LESS_THAN_OR_EQUAL',
+
+  // Text operators
+  contains: 'CONTAINS',
+  startsWith: 'STARTS_WITH',
+  endsWith: 'ENDS_WITH',
+}
+
+/**
+ * Atlas attribute field name mappings (PascalCase)
+ * Maps internal attributeKey to Atlas JSON field name
+ */
+export const ATTRIBUTE_KEY_TO_ATLAS: Record<string, string> = {
+  // Numeric attributes
+  age: 'Age',
+  ageAtStart: 'AgeAtStart',
+  valueAsNumber: 'ValueAsNumber',
+  visitLength: 'VisitLength',
+  eraLength: 'EraLength',
+  quantity: 'Quantity',
+
+  // Concept attributes
+  gender: 'Gender',
+  race: 'Race',
+  ethnicity: 'Ethnicity',
+  visitType: 'VisitType',
+  providerSpecialty: 'ProviderSpecialty',
+
+  // Date attributes
+  occurrenceStartDate: 'OccurrenceStartDate',
+  occurrenceEndDate: 'OccurrenceEndDate',
+  visitStartDate: 'VisitStartDate',
+  visitEndDate: 'VisitEndDate',
+  eraStartDate: 'EraStartDate',
+  eraEndDate: 'EraEndDate',
+
+  // Text attributes
+  valueAsString: 'ValueAsString',
+  sourceCode: 'SourceCode',
+  stopReason: 'StopReason',
+  sig: 'Sig',
+  lotNumber: 'LotNumber',
+  deviceId: 'UniqueDeviceId',
+
+  // Boolean attributes
+  first: 'First',
+  primary: 'Primary',
+  abnormal: 'Abnormal',
+}
+
+/**
+ * Reverse mapping: Atlas field name to internal attributeKey
+ */
+export const ATLAS_TO_ATTRIBUTE_KEY: Record<string, string> = Object.fromEntries(
+  Object.entries(ATTRIBUTE_KEY_TO_ATLAS).map(([k, v]) => [v, k])
+)
+
+/**
+ * Atlas concept structure (PascalCase)
+ */
+export interface AtlasConcept {
+  CONCEPT_ID: number
+  CONCEPT_NAME: string
+  CONCEPT_CODE?: string
+  DOMAIN_ID?: string
+  VOCABULARY_ID?: string
+  CONCEPT_CLASS_ID?: string
+  STANDARD_CONCEPT?: string
+  STANDARD_CONCEPT_CAPTION?: string
+  INVALID_REASON?: string | null
+  INVALID_REASON_CAPTION?: string
+}
+
+/**
+ * Atlas range (for numeric/date ranges)
+ */
+export interface AtlasRange {
+  Value: number | string
+  Extent?: number | string
+  Op: string
+}
+
+/**
+ * Atlas temporal window
+ */
+export interface AtlasWindow {
+  Start?: {
+    Days: number | null
+    Coeff: number
+  }
+  End?: {
+    Days: number | null
+    Coeff: number
+  }
+  UseEventEnd?: boolean
+  UseIndexEnd?: boolean
+}
+
+/**
+ * Atlas date adjustment
+ */
+export interface AtlasDateAdjustment {
+  StartWith: 'START_DATE' | 'END_DATE'
+  StartOffset: number
+  EndWith: 'START_DATE' | 'END_DATE'
+  EndOffset: number
+}
+
+/**
+ * Atlas user defined period
+ */
+export interface AtlasUserDefinedPeriod {
+  PeriodStartDate: string
+  PeriodEndDate: string
+}
+
+/**
+ * Type for concept set items used in internal format
+ */
+export interface ConceptSetItem {
+  conceptId: number
+  conceptName: string
+  domainId: string
+  vocabularyId: string
+  conceptClassId: string
+  conceptCode?: string
+  standardConcept?: string
+  invalidReason?: string
+  isExcluded?: boolean
+  includeDescendants?: boolean
+  includeMapped?: boolean
+}
+
+/**
+ * Atlas criteria type object (the criteria-specific part)
+ */
+export interface AtlasCriteriaTypeObject {
+  CodesetId?: number
+  First?: boolean
+  OccurrenceStartDate?: AtlasRange
+  OccurrenceEndDate?: AtlasRange
+  Age?: AtlasRange
+  Gender?: AtlasConcept[]
+  Race?: AtlasConcept[]
+  Ethnicity?: AtlasConcept[]
+  VisitType?: AtlasConcept[]
+  ProviderSpecialty?: AtlasConcept[]
+  ValueAsNumber?: AtlasRange
+  ValueAsString?: { Text: string; Op: string }
+  [key: string]: unknown
 }

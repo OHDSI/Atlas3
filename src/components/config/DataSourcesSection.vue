@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 
 interface DataSource {
   sourceKey: string
@@ -205,6 +205,25 @@ const showErrorToast = ref(false)
 const toastMessage = ref('')
 const errorMessage = ref('')
 
+// Watch for changes in selectedVocabulary and persist to localStorage
+watch(selectedVocabulary, (newValue) => {
+  if (newValue) {
+    localStorage.setItem('selectedVocabulary', newValue)
+  }
+})
+
+watch(selectedEvidence, (newValue) => {
+  if (newValue) {
+    localStorage.setItem('selectedEvidence', newValue)
+  }
+})
+
+watch(selectedResults, (newValue) => {
+  if (newValue) {
+    localStorage.setItem('selectedResults', newValue)
+  }
+})
+
 /**
  * Load data sources on mount
  */
@@ -223,12 +242,18 @@ async function loadDataSources() {
       throw new Error('Failed to load data sources')
     }
 
-    const sources = await response.json()
+    const sources = await response.json() as Array<{
+      sourceKey: string
+      sourceName: string
+      sourceDialect: string
+      version?: string
+      daimons?: Array<{ daimonType: string }>
+    }>
 
     // Load each source and fetch vocabulary version if it has vocabulary
     const sourcesWithVersions = await Promise.all(
-      sources.map(async (s: any) => {
-        const hasVocab = s.daimons?.some((d: any) => d.daimonType === 'Vocabulary') ?? false
+      sources.map(async (s) => {
+        const hasVocab = s.daimons?.some((d) => d.daimonType === 'Vocabulary') ?? false
         let vocabularyVersion = s.version
 
         // If source has vocabulary, try to fetch the vocabulary info
@@ -236,7 +261,7 @@ async function loadDataSources() {
           try {
             const vocabResponse = await fetch(`/WebAPI/vocabulary/${s.sourceKey}/info`)
             if (vocabResponse.ok) {
-              const vocabData = await vocabResponse.json()
+              const vocabData = await vocabResponse.json() as { version?: string }
               vocabularyVersion = vocabData.version || s.version
             }
           } catch {
@@ -253,8 +278,8 @@ async function loadDataSources() {
           vocabularyVersion,
           initialized: true,
           hasVocabulary: hasVocab,
-          hasEvidence: s.daimons?.some((d: any) => d.daimonType === 'CEM') ?? false,
-          hasResults: s.daimons?.some((d: any) => d.daimonType === 'Results') ?? false
+          hasEvidence: s.daimons?.some((d) => d.daimonType === 'CEM') ?? false,
+          hasResults: s.daimons?.some((d) => d.daimonType === 'Results') ?? false
         }
       })
     )
@@ -269,8 +294,8 @@ async function loadDataSources() {
     selectedVocabulary.value = savedVocab || dataSources.value.find(s => s.hasVocabulary)?.sourceKey || ''
     selectedEvidence.value = savedEvidence || dataSources.value.find(s => s.hasEvidence)?.sourceKey || ''
     selectedResults.value = savedResults || dataSources.value.find(s => s.hasResults)?.sourceKey || ''
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to load data sources'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to load data sources'
     showErrorToast.value = true
   }
 }
@@ -288,7 +313,7 @@ async function checkConnection(source: DataSource) {
 
     toastMessage.value = `Connection to ${source.sourceName} successful`
     showToast.value = true
-  } catch (error: any) {
+  } catch (error: unknown) {
     errorMessage.value = `Failed to connect to ${source.sourceName}`
     showErrorToast.value = true
   }
@@ -309,7 +334,7 @@ async function refreshCache(source: DataSource) {
 
     toastMessage.value = `Cache refresh started for ${source.sourceName}`
     showToast.value = true
-  } catch (error: any) {
+  } catch (error: unknown) {
     errorMessage.value = `Failed to refresh cache for ${source.sourceName}`
     showErrorToast.value = true
   }
@@ -343,8 +368,8 @@ async function clearServerCache() {
 
     toastMessage.value = 'Server cache cleared successfully'
     showToast.value = true
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Failed to clear server cache'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Failed to clear server cache'
     showErrorToast.value = true
   }
 }

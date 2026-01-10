@@ -6,6 +6,7 @@
  */
 
 import { ref, type Ref } from 'vue'
+import { logger } from '@/utils/logger'
 
 const UNDO_TTL = 30000 // 30 seconds
 const MAX_UNDO_OPERATIONS = 5
@@ -13,7 +14,7 @@ const MAX_UNDO_OPERATIONS = 5
 /**
  * Represents a single undoable operation
  */
-export interface UndoOperation<T = any> {
+export interface UndoOperation<T = unknown> {
   id: string
   timestamp: number
   previousValue: T
@@ -27,7 +28,7 @@ export interface UndoOperation<T = any> {
  * @template T - The type of value being managed
  * @returns Undo management functions and state
  */
-export function useConfigUndo<T = any>() {
+export function useConfigUndo<T = unknown>() {
   const undoStack: Ref<UndoOperation<T>[]> = ref([])
   const isSaving = ref(false)
 
@@ -81,7 +82,7 @@ export function useConfigUndo<T = any>() {
   async function performUndo(id: string, revertFn: (value: T) => Promise<void>): Promise<void> {
     const operation = undoStack.value.find(op => op.id === id)
     if (!operation) {
-      console.warn('[useConfigUndo] Operation not found or expired:', id)
+      logger.warn('ConfigUndo', 'Operation not found or expired', id)
       return
     }
 
@@ -89,7 +90,7 @@ export function useConfigUndo<T = any>() {
       await revertFn(operation.previousValue)
       removeOperation(id)
     } catch (error) {
-      console.error('[useConfigUndo] Undo failed:', error)
+      logger.error('ConfigUndo', 'Undo failed', error)
       // Error toast should be shown by revertFn
       throw error
     }

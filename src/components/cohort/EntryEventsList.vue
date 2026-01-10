@@ -12,9 +12,9 @@
       <!-- Add Filter Button and Observation Period -->
       <div class="add-filter-wrapper">
         <v-menu>
-          <template #activator="{ props }">
+          <template #activator="{ props: slotProps }">
             <v-btn
-              v-bind="props"
+              v-bind="slotProps"
               variant="outlined"
               prepend-icon="mdi-plus"
               size="small"
@@ -37,6 +37,7 @@
         <!-- Observation Period Chip -->
         <v-chip
           class="obs-period-chip"
+          color="orange"
           variant="outlined"
           size="small"
           @click="showObsPeriodDialog = true"
@@ -45,7 +46,7 @@
             start
             size="small"
           >
-            mdi-calendar-range
+            mdi-clock-outline
           </v-icon>
           <!-- Short version for small screens -->
           <span class="d-md-none">
@@ -112,6 +113,8 @@
         @update="updateEvent"
         @remove="removeEvent(event.id)"
         @select-concept-set="selectConceptSetForEvent(event.id)"
+        @select-concept-set-for-attribute="(attributeIndex) => $emit('select-concept-set-for-attribute', event.id, attributeIndex)"
+        @select-concept-for-attribute="(attributeIndex, domainFilter) => $emit('select-concept-for-attribute', event.id, attributeIndex, domainFilter)"
         @edit-concept-set="$emit('edit-concept-set', $event)"
       />
     </div>
@@ -138,7 +141,9 @@ const emit = defineEmits<{
   'update:events': [events: CohortEvent[]]
   'update:observation-period': [period: ObservationPeriod]
   'select-concept-set': [eventId: string]
-  'edit-concept-set': [conceptSet: any]
+  'select-concept-set-for-attribute': [eventId: string, attributeIndex: number]
+  'select-concept-for-attribute': [eventId: string, attributeIndex: number, domainFilter: string | undefined]
+  'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
 // Get available filters for initial events section
@@ -221,7 +226,7 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   color: #1f425a;
   user-select: none;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  padding-left: 2px;
+  padding-left: 8px;
   position: relative;
   z-index: 1;
 }

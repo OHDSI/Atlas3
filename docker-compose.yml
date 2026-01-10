@@ -1,0 +1,111 @@
+volumes:
+  atlas3-postgres-data:
+    name: atlas3-postgres-data
+  atlas3-ssl-data:
+    name: atlas3-ssl-data
+  atlas3-webapi-data:
+    name: atlas3-webapi-data
+
+
+services:
+  atlas3-init:
+    image: alpine:latest
+    container_name: atlas3-init
+    volumes:
+      - atlas3-ssl-data:/ssl
+      - atlas3-webapi-data:/data
+
+    command: >
+      sh -c '
+      if [ ! -f /ssl/cert.pem ] || [ ! -f /ssl/key.pem ]; then
+        echo "Generating self-signed SSL certificates...";
+        apk add --no-cache openssl;
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /ssl/key.pem -out /ssl/cert.pem -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost" -addext "subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1";
+        echo "✓ SSL certificates generated";
+      else
+        echo "✓ SSL certificates already exist";
+      fi;
+      echo "Setting up WebAPI data directory permissions...";
+      mkdir -p /data/cache /data/trexsql-lib;
+      chown -R 101:101 /data;
+      chmod -R 755 /data;
+      echo "✓ WebAPI data directory configured";
+      '
+
+  atlas3-postgres:
+    image: ohdsi/broadsea-atlasdb:2.3.0
+    container_name: atlas3-postgres
+    hostname: broadsea-atlasdb
+    platform: linux/amd64
+    restart: unless-stopped
+    cpus: 2
+    mem_limit: "2G"
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypass}
+    ports:
+      - "5433:5432"
+    volumes:
+      - atlas3-postgres-data:/var/lib/postgresql/data
+      - ./atlasdb/100_populate_source_source_daimon.sql:/docker-entrypoint-initdb.d/100_populate_source_source_daimon.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  atlas3-webapi:
+    image: ghcr.io/ohdsi/webapi:3.0-dev
+    container_name: atlas3-webapi
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      DATASOURCE_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
+      DATASOURCE_USERNAME: postgres
+      DATASOURCE_PASSWORD: mypass
+      DATASOURCE_OHDSI_SCHEMA: webapi
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: webapi
+      SPRING_BATCH_REPOSITORY_TABLEPREFIX: webapi.batch_
+      SPRING_FLYWAY_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
+      SPRING_FLYWAY_SCHEMAS: webapi
+      SPRING_FLYWAY_USER: postgres
+      SPRING_FLYWAY_PASSWORD: mypass
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_BASELINE_VERSION: "2.2.5.20180212152023"
+      SPRING_FLYWAY_PLACEHOLDERS_OHDSISCHEMA: webapi
+      SECURITY_PROVIDER: DisabledSecurity
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration
+      TREXSQL_ENABLED: "true"
+      TREXSQL_CACHE_PATH: /data/cache
+      JAVA_OPTS: "-Dtrexsql.enabled=true -Dtrexsql.cache-path=/data/cache -Dtrexsql.sources.EUNOMIA.enabled=true -Dtrexsql.sources.EUNOMIA.database-code=EUNOMIA -Dorg.duckdb.lib_path=/data/trexsql-lib/libtrexsql_java.so -Dspring.flyway.placeholders.ohdsiSchema=webapi"
+      HOME: /data
+    volumes:
+      - atlas3-webapi-data:/data
+    depends_on:
+      atlas3-init:
+        condition: service_completed_successfully
+      atlas3-postgres:
+        condition: service_healthy
+
+  atlas3-frontend:
+    image: ghcr.io/ohdsi/atlas3:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: atlas3-frontend
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - atlas3-ssl-data:/etc/nginx/ssl:ro
+    environment:
+      WEBAPI_URL: ${WEBAPI_URL:-https://localhost/WebAPI}
+    depends_on:
+      atlas3-init:
+        condition: service_completed_successfully
+      atlas3-webapi:
+        condition: service_started

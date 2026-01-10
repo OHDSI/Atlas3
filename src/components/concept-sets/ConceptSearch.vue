@@ -1,12 +1,12 @@
 <template>
   <v-card>
-    <v-card-title>{{ t('conceptSearch.title') }}</v-card-title>
+    <v-card-title>{{ t('components.conceptPicker.selectConcept') }}</v-card-title>
     <v-card-text>
       <!-- Search Input -->
       <v-text-field
         v-model="searchQuery"
-        :label="tv('conceptSearch.searchLabel')"
-        :placeholder="tv('conceptSearch.searchPlaceholder')"
+        :label="tv('components.conceptPicker.search')"
+        :placeholder="tv('search.placeholder')"
         prepend-inner-icon="mdi-magnify"
         clearable
         data-testid="concept-search-input"
@@ -18,7 +18,7 @@
       <v-select
         v-model="selectedDomain"
         :items="domains"
-        :label="tv('conceptSearch.filterByDomain')"
+        :label="tv('search.domains')"
         clearable
         data-testid="domain-filter"
         @update:model-value="handleDomainChange"
@@ -49,17 +49,10 @@
               {{ item.conceptName }}
             </v-list-item-title>
             <v-list-item-subtitle>
-              {{ t('conceptSearch.conceptInfo', { 
-                id: item.conceptId, 
-                domain: item.domainId, 
-                vocabulary: item.vocabularyId 
-              }) }}
+              ID: {{ item.conceptId }} | Domain: {{ item.domainId }} | Vocabulary: {{ item.vocabularyId }}
             </v-list-item-subtitle>
             <v-list-item-subtitle>
-              {{ t('conceptSearch.conceptDetails', { 
-                code: item.conceptCode, 
-                class: item.conceptClassId 
-              }) }}
+              Code: {{ item.conceptCode }} | Class: {{ item.conceptClassId }}
             </v-list-item-subtitle>
           </v-list-item>
           <v-divider />
@@ -73,7 +66,7 @@
         variant="tonal"
         data-testid="no-results-message"
       >
-        {{ t('conceptSearch.noResults', { query: searchQuery }) }}
+        {{ t('search.noResultsFoundFor') }} "{{ searchQuery }}"
       </v-alert>
 
       <!-- Instructions -->
@@ -82,7 +75,7 @@
         type="info"
         variant="text"
       >
-        {{ t('conceptSearch.instructions') }}
+        Enter a search term to find concepts
       </v-alert>
     </v-card-text>
   </v-card>
@@ -96,7 +89,7 @@ import type { Concept } from '@/models/concept-set.types'
 
 const { t, tv } = useI18n()
 
-const emit = defineEmits<{
+defineEmits<{
   'select-concept': [concept: Concept]
 }>()
 
@@ -108,12 +101,14 @@ const selectedDomain = ref<string | undefined>(undefined)
 const domains = [
   'Condition',
   'Drug',
-  'Procedure',
+  'Gender',
   'Measurement',
   'Observation',
   'Device',
-  'Visit',
+  'Procedure',
+  'Race',
   'Specimen',
+  'Visit',
 ]
 
 function handleSearch(query: string | null) {

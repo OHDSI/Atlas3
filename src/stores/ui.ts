@@ -12,7 +12,7 @@ export const useUIStore = defineStore('ui', () => {
   const openModals = ref<Set<string>>(new Set())
   const expandedEventCards = ref<Set<string>>(new Set())
 
-  // Configuration Panel State (Feature: 013-config-panel)
+  // Configuration Panel State
   const configPanelState = ref<ConfigPanelState>({
     isOpen: false,
     activeSection: 'cache',
@@ -70,7 +70,7 @@ export const useUIStore = defineStore('ui', () => {
     expandedEventCards.value.clear()
   }
 
-  // Configuration Panel Actions (Feature: 013-config-panel)
+  // Configuration Panel Actions
   function openConfigPanel() {
     configPanelState.value.isOpen = true
   }

@@ -15,9 +15,10 @@ import { initializePluginFramework } from './plugins/index.ts'
 import { setupGlobalMessageHandler } from './plugins/messaging/HostMessageBus.ts'
 import { tokenExpiryService } from './services/auth/tokenExpiry'
 import { configLoaderService } from './services/config-loader.service'
+import { logger } from './utils/logger'
 
 // SystemJS is loaded from index.html with import map for 'vue'
-console.log('[Main] SystemJS available:', !!window.System);
+logger.debug('Main', 'SystemJS available:', !!window.System)
 
 // ECharts imports for tree-shaking
 import ECharts from 'vue-echarts'
@@ -71,10 +72,10 @@ async function initializeApp() {
     await pluginConfigService.loadConfig()
     primaryColor = pluginConfigService.getPrimaryColor()
     if (primaryColor) {
-      console.log('[Main] Using custom primary color from plugins.json:', primaryColor)
+      logger.info('Main', 'Using custom primary color from plugins.json:', primaryColor)
     }
   } catch (error) {
-    console.warn('[Main] Failed to load plugin config for theme, using defaults:', error)
+    logger.warn('Main', 'Failed to load plugin config for theme, using defaults:', error)
   }
 
   // Create Vuetify instance with custom theme
@@ -112,30 +113,31 @@ initializeApp().then(async (app) => {
   // Mount app first, then initialize stores asynchronously
   // This ensures the app is interactive immediately
   await router.isReady().then(async () => {
-  // Load configuration early (eager loading - FR-001)
-  console.log('[Config] Loading atlas-config.json...')
+  // Load configuration early
+  logger.info('Config', 'Loading atlas-config.json...')
   try {
     const validationResult = await configLoaderService.loadConfiguration()
     if (validationResult.valid) {
-      console.log('[Config] Configuration loaded successfully')
+      logger.info('Config', 'Configuration loaded successfully')
     } else if (validationResult.validFilterTypes.length > 0) {
-      console.warn(
-        `[Config] Configuration loaded with errors (${validationResult.validFilterTypes.length} valid filters)`
+      logger.warn(
+        'Config',
+        `Configuration loaded with errors (${validationResult.validFilterTypes.length} valid filters)`
       )
     } else {
-      console.error('[Config] Configuration loading failed - no valid filters')
+      logger.error('Config', 'Configuration loading failed - no valid filters')
     }
 
-    // Make validation result available globally for UI components (FR-016)
+    // Make validation result available globally for UI components
     app.provide('configValidationResult', validationResult)
   } catch (error) {
-    console.error('[Config] Critical error loading configuration:', error)
+    logger.error('Config', 'Critical error loading configuration:', error)
   }
 
   // Mount the app first so it's interactive
   app.mount('#app')
 
-  // Setup token expiry watcher (T038)
+  // Setup token expiry watcher
   watch(() => authStore.token, (newToken) => {
     if (newToken) {
       tokenExpiryService.setupExpiryWarning(newToken)
@@ -147,41 +149,53 @@ initializeApp().then(async (app) => {
   // Initialize stores asynchronously after mount
   Promise.all([
     authStore.initializeFromStorage().catch((error) => {
-      console.error('[Auth] Initialization failed:', error)
+      logger.error('Auth', 'Initialization failed:', error)
     }),
     localeStore.initialize().catch((error) => {
-      console.error('[i18n] Initialization failed:', error)
+      logger.error('i18n', 'Initialization failed:', error)
     })
   ]).then(async () => {
     // Initialize plugin framework after auth is ready
     try {
+      // Import permission service for proper permission checking
+      const { permissionService } = await import('@/services/auth/permissions');
+
+      // Extract flat array of permissions from permissionIdx object
+      const userPermissions = authStore.user?.permissionIdx
+        ? Object.values(authStore.user.permissionIdx).flat()
+        : [];
+
       const authContext = {
         user: authStore.user ? {
           id: authStore.user.login || '',
           username: authStore.user.displayName || authStore.user.login || '',
           email: authStore.user.email,
-          permissions: [], // Convert permissionIdx to array if needed
+          permissions: userPermissions,
         } : null,
         token: authStore.token,
         isAuthenticated: authStore.isAuthenticated,
-        hasPermission(_permission: string): boolean {
+        hasPermission(permission: string): boolean {
           if (!this.user) return false;
-          // TODO: Implement proper permission checking with permissionIdx
-          return true;
+          return permissionService.hasPermission(permission, this.user.permissions);
         },
       };
 
       await initializePluginFramework(authContext);
-      console.log('[App] Plugin framework initialized');
+      logger.info('App', 'Plugin framework initialized')
     } catch (error) {
-      console.error('[App] Plugin framework initialization failed:', error);
+      logger.error('App', 'Plugin framework initialization failed:', error)
     }
   })
   }).catch((error) => {
-    console.error('[App] Router initialization failed:', error)
+    logger.error('App', 'Router initialization failed:', error)
     // Mount anyway
     app.mount('#app')
   })
 }).catch((error) => {
-  console.error('[App] Application initialization failed:', error)
+  logger.error('App', 'Application initialization failed:', error)
+})
+
+// Global unhandled promise rejection handler
+window.addEventListener('unhandledrejection', (event) => {
+  logger.error('Unhandled', 'Promise rejection', event.reason)
 })

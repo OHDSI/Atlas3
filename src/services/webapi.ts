@@ -1,10 +1,12 @@
 /**
  * OHDSI WebAPI Client
  * HTTP client for Atlas WebAPI endpoints
- * 
+ *
  * In development: Uses Vite proxy (/WebAPI -> https://atlas-demo.ohdsi.org/WebAPI)
  * In production: Override with VITE_WEBAPI_URL environment variable
  */
+import { logger } from '@/utils/logger'
+import { type ApiResult, success, failure } from '@/types/api'
 import {
   CDMSourceListSchema,
   CohortGenerationInfoListSchema,
@@ -14,7 +16,11 @@ import {
   type GenerationStatus,
 } from '@/models/webapi.types'
 import { ConceptSearchResponseSchema, type Concept, type ConceptSet } from '@/models/concept-set.types'
-import type { AtlasCohortDefinition } from '@/models/atlas.types'
+import {
+  type AtlasCohortDefinition,
+  type AtlasCohortDefinitionInput,
+  isAtlasCohortDefinitionWrapper,
+} from '@/models/atlas.types'
 import type { ValidationResponse } from '@/models/cohort-validation.types'
 import {
   WebAPIReportResponseSchema,
@@ -25,9 +31,7 @@ import {
 // Override with VITE_WEBAPI_URL environment variable if needed
 const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
 
-console.log('[WebAPI] BASE_URL:', BASE_URL, '| VITE_WEBAPI_URL:', import.meta.env.VITE_WEBAPI_URL, '| DEV:', import.meta.env.DEV)
-
-// T132: Retry configuration
+// Retry configuration
 const MAX_RETRY_ATTEMPTS = 3
 const INITIAL_RETRY_DELAY_MS = 500
 
@@ -62,8 +66,8 @@ function isRetryableError(error: unknown, statusCode?: number): boolean {
 
 /**
  * Generic fetch wrapper with error handling and retry logic
- * T132: Exponential backoff with 3 attempts, 500ms initial delay
- * T028: Adds User-Language header for i18n support
+ * Exponential backoff with 3 attempts, 500ms initial delay
+ * Adds User-Language header for i18n support
  */
 async function fetchJSON<T>(
   endpoint: string,
@@ -74,7 +78,7 @@ async function fetchJSON<T>(
 
   for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
     try {
-      // T028: Get current locale from localStorage for User-Language header
+      // Get current locale from localStorage for User-Language header
       const locale = localStorage.getItem('locale') || 'en'
       
       const response = await fetch(url, {
@@ -92,7 +96,7 @@ async function fetchJSON<T>(
         // Check if we should retry
         if (isRetryableError(error, response.status) && attempt < MAX_RETRY_ATTEMPTS - 1) {
           const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-          console.warn(`[WebAPI] Request failed (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS}), retrying in ${delay}ms...`, error.message)
+          logger.warn('WebAPI', `Request failed (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS}), retrying in ${delay}ms...`, error.message)
           await sleep(delay)
           continue
         }
@@ -100,14 +104,20 @@ async function fetchJSON<T>(
         throw error
       }
 
-      return await response.json() as T
+      // Parse JSON response with error handling
+      try {
+        return await response.json() as T
+      } catch (parseError) {
+        logger.error('WebAPI', 'Failed to parse JSON response', parseError)
+        throw new Error('Invalid response format')
+      }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error))
 
       // Check if network error is retryable
       if (isRetryableError(error) && attempt < MAX_RETRY_ATTEMPTS - 1) {
         const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-        console.warn(`[WebAPI] Network error (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS}), retrying in ${delay}ms...`, lastError.message)
+        logger.warn('WebAPI', `Network error (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS}), retrying in ${delay}ms...`, lastError.message)
         await sleep(delay)
         continue
       }
@@ -128,16 +138,22 @@ async function fetchJSON<T>(
  * Get list of available CDM data sources
  * Endpoint: GET /source/sources
  */
-export async function fetchCDMSources(): Promise<CDMSource[]> {
-  const data = await fetchJSON<unknown>('/source/sources')
-  const parsed = CDMSourceListSchema.safeParse(data)
+export async function fetchCDMSources(): Promise<ApiResult<CDMSource[]>> {
+  try {
+    const data = await fetchJSON<unknown>('/source/sources')
+    const parsed = CDMSourceListSchema.safeParse(data)
 
-  if (!parsed.success) {
-    console.error('CDM sources validation error:', parsed.error)
-    return []
+    if (!parsed.success) {
+      logger.error('WebAPI', 'CDM sources validation error', parsed.error)
+      return failure('Invalid CDM sources response format')
+    }
+
+    return success(parsed.data)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch CDM sources'
+    logger.error('WebAPI', 'Failed to fetch CDM sources', error)
+    return failure(message)
   }
-
-  return parsed.data
 }
 
 /**
@@ -148,33 +164,39 @@ export async function searchConcepts(
   sourceKey: string,
   query: string,
   domain?: string
-): Promise<Concept[]> {
+): Promise<ApiResult<Concept[]>> {
   let endpoint = `/vocabulary/${sourceKey}/search?query=${encodeURIComponent(query)}`
 
   if (domain) {
     endpoint += `&domain=${encodeURIComponent(domain)}`
   }
 
-  const data = await fetchJSON<unknown>(endpoint)
-  const parsed = ConceptSearchResponseSchema.safeParse(data)
+  try {
+    const data = await fetchJSON<unknown>(endpoint)
+    const parsed = ConceptSearchResponseSchema.safeParse(data)
 
-  if (!parsed.success) {
-    console.error('Concept search validation error:', parsed.error)
-    return []
+    if (!parsed.success) {
+      logger.error('WebAPI', 'Concept search validation failed', parsed.error)
+      return failure('Invalid concept search response format')
+    }
+
+    return success(parsed.data.map(c => ({
+      conceptId: c.CONCEPT_ID,
+      conceptName: c.CONCEPT_NAME,
+      conceptCode: c.CONCEPT_CODE,
+      domainId: c.DOMAIN_ID,
+      vocabularyId: c.VOCABULARY_ID,
+      conceptClassId: c.CONCEPT_CLASS_ID,
+      standardConcept: c.STANDARD_CONCEPT,
+      invalidReason: c.INVALID_REASON,
+    })))
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to search concepts'
+    logger.error('WebAPI', 'searchConcepts error', error)
+    return failure(message)
   }
-
-  // Map UPPERCASE API fields to camelCase
-  return parsed.data.map(c => ({
-    conceptId: c.CONCEPT_ID,
-    conceptName: c.CONCEPT_NAME,
-    conceptCode: c.CONCEPT_CODE,
-    domainId: c.DOMAIN_ID,
-    vocabularyId: c.VOCABULARY_ID,
-    conceptClassId: c.CONCEPT_CLASS_ID,
-    standardConcept: c.STANDARD_CONCEPT,
-    invalidReason: c.INVALID_REASON,
-  }))
 }
+
 
 /**
  * Get cohort definition by ID
@@ -184,9 +206,20 @@ export async function getCohortDefinition(id: number): Promise<AtlasCohortDefini
   try {
     return await fetchJSON<AtlasCohortDefinition>(`/cohortdefinition/${id}`)
   } catch (error) {
-    console.error(`Failed to fetch cohort definition ${id}:`, error)
+    logger.error('WebAPI', `Failed to fetch cohort definition ${id}`, error)
     return null
   }
+}
+
+/**
+ * WebAPI save payload format
+ */
+interface CohortSavePayload {
+  id?: number
+  name: string
+  description?: string
+  expressionType?: string
+  expression: object // Must be object, not stringified JSON
 }
 
 /**
@@ -194,24 +227,25 @@ export async function getCohortDefinition(id: number): Promise<AtlasCohortDefini
  * Endpoint: POST /cohortdefinition (create) or PUT /cohortdefinition/{id} (update)
  */
 export async function saveCohortDefinition(
-  cohort: AtlasCohortDefinition
-): Promise<AtlasCohortDefinition | null> {
+  cohort: CohortSavePayload
+): Promise<CohortSavePayload | null> {
   try {
+    logger.debug('WebAPI', 'Saving cohort definition', { id: cohort.id, name: cohort.name })
     if (cohort.id) {
       // Update existing
-      return await fetchJSON<AtlasCohortDefinition>(`/cohortdefinition/${cohort.id}`, {
+      return await fetchJSON<CohortSavePayload>(`/cohortdefinition/${cohort.id}`, {
         method: 'PUT',
         body: JSON.stringify(cohort),
       })
     } else {
       // Create new
-      return await fetchJSON<AtlasCohortDefinition>('/cohortdefinition', {
+      return await fetchJSON<CohortSavePayload>('/cohortdefinition', {
         method: 'POST',
         body: JSON.stringify(cohort),
       })
     }
   } catch (error) {
-    console.error('Failed to save cohort definition:', error)
+    logger.error('WebAPI', 'Failed to save cohort definition', error)
     return null
   }
 }
@@ -227,7 +261,7 @@ export async function deleteCohortDefinition(id: number): Promise<boolean> {
     })
     return true
   } catch (error) {
-    console.error(`Failed to delete cohort definition ${id}:`, error)
+    logger.error('WebAPI', `Failed to delete cohort definition ${id}`, error)
     return false
   }
 }
@@ -242,7 +276,12 @@ export async function generateCohort(
   sourceKey: string
 ): Promise<GenerationJob | null> {
   try {
-    const data = await fetchJSON<any>(
+    const data = await fetchJSON<{
+      status?: string
+      executionId?: number
+      startDate?: string
+      endDate?: string
+    }>(
       `/cohortdefinition/${cohortId}/generate/${sourceKey}`,
       {
         method: 'GET',
@@ -276,7 +315,7 @@ export async function generateCohort(
 
     return job
   } catch (error) {
-    console.error('Failed to generate cohort:', error)
+    logger.error('WebAPI', 'Failed to generate cohort', error)
     return null
   }
 }
@@ -286,20 +325,21 @@ export async function generateCohort(
  * Endpoint: GET /cohortdefinition/{id}/info
  * Returns array of generation info for all sources
  */
-export async function getCohortGenerationInfo(cohortId: number): Promise<CohortGenerationInfoList> {
+export async function getCohortGenerationInfo(cohortId: number): Promise<ApiResult<CohortGenerationInfoList>> {
   try {
     const data = await fetchJSON<unknown>(`/cohortdefinition/${cohortId}/info`)
     const parsed = CohortGenerationInfoListSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Cohort generation info validation error:', parsed.error)
-      return []
+      logger.error('WebAPI', 'Cohort generation info validation error', parsed.error)
+      return failure('Invalid cohort generation info response format')
     }
 
-    return parsed.data
+    return success(parsed.data)
   } catch (error) {
-    console.error(`Failed to fetch cohort generation info for ${cohortId}:`, error)
-    return []
+    const message = error instanceof Error ? error.message : `Failed to fetch cohort generation info for ${cohortId}`
+    logger.error('WebAPI', `Failed to fetch cohort generation info for ${cohortId}`, error)
+    return failure(message)
   }
 }
 
@@ -311,7 +351,7 @@ export async function getConceptSet(id: number | string): Promise<ConceptSet | n
   try {
     return await fetchJSON<ConceptSet>(`/conceptset/${id}`)
   } catch (error) {
-    console.error(`Failed to fetch concept set ${id}:`, error)
+    logger.error('WebAPI', `Failed to fetch concept set ${id}`, error)
     return null
   }
 }
@@ -320,12 +360,14 @@ export async function getConceptSet(id: number | string): Promise<ConceptSet | n
  * Get all concept sets
  * Endpoint: GET /conceptset
  */
-export async function getAllConceptSets(): Promise<ConceptSet[]> {
+export async function getAllConceptSets(): Promise<ApiResult<ConceptSet[]>> {
   try {
-    return await fetchJSON<ConceptSet[]>('/conceptset')
+    const data = await fetchJSON<ConceptSet[]>('/conceptset')
+    return success(data)
   } catch (error) {
-    console.error('Failed to fetch concept sets:', error)
-    return []
+    const message = error instanceof Error ? error.message : 'Failed to fetch concept sets'
+    logger.error('WebAPI', 'Failed to fetch concept sets', error)
+    return failure(message)
   }
 }
 
@@ -340,7 +382,7 @@ export async function createConceptSet(conceptSet: ConceptSet): Promise<ConceptS
       body: JSON.stringify(conceptSet),
     })
   } catch (error) {
-    console.error('Failed to create concept set:', error)
+    logger.error('WebAPI', 'Failed to create concept set', error)
     return null
   }
 }
@@ -356,7 +398,7 @@ export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptS
       body: JSON.stringify(conceptSet),
     })
   } catch (error) {
-    console.error(`Failed to update concept set ${conceptSet.id}:`, error)
+    logger.error('WebAPI', `Failed to update concept set ${conceptSet.id}`, error)
     return null
   }
 }
@@ -372,7 +414,7 @@ export async function deleteConceptSet(id: number | string): Promise<boolean> {
     })
     return true
   } catch (error) {
-    console.error(`Failed to delete concept set ${id}:`, error)
+    logger.error('WebAPI', `Failed to delete concept set ${id}`, error)
     return false
   }
 }
@@ -382,11 +424,21 @@ export async function deleteConceptSet(id: number | string): Promise<boolean> {
  * Endpoint: GET /cohortdefinition
  * Returns summary list of all cohorts
  */
-export async function getCohorts(): Promise<import('@/models/webapi.types').CohortDefinitionSummary[]> {
-  const response = await fetchJSON<unknown[]>('/cohortdefinition')
-  const { CohortDefinitionListSchema } = await import('@/models/webapi.types')
-  const validated = CohortDefinitionListSchema.parse(response)
-  return validated
+export async function getCohorts(): Promise<ApiResult<import('@/models/webapi.types').CohortDefinitionSummary[]>> {
+  try {
+    const response = await fetchJSON<unknown[]>('/cohortdefinition')
+    const { CohortDefinitionListSchema } = await import('@/models/webapi.types')
+    const result = CohortDefinitionListSchema.safeParse(response)
+    if (!result.success) {
+      logger.error('WebAPI', 'Cohort list validation failed', result.error)
+      return failure('Invalid cohort list response format')
+    }
+    return success(result.data)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch cohorts'
+    logger.error('WebAPI', 'Failed to fetch cohorts', error)
+    return failure(message)
+  }
 }
 
 /**
@@ -411,30 +463,34 @@ export async function validateCohortDefinition(
   expression: object
 ): Promise<ValidationResponse> {
   try {
+    logger.debug('WebAPI', 'Calling checkV2', { name })
     const data = await fetchJSON<ValidationResponse>('/cohortdefinition/checkV2', {
       method: 'POST',
       body: JSON.stringify({ name, expression }),
     })
+    logger.debug('WebAPI', 'checkV2 response', { warningCount: data.warnings?.length ?? 0 })
     return data
   } catch (error) {
-    console.error('Failed to validate cohort definition:', error)
-    // Return empty warnings on error
-    return { warnings: [] }
+    logger.error('WebAPI', 'Failed to validate cohort definition', error)
+    // Return error as a warning so user sees it
+    const errorMessage = error instanceof Error ? error.message : 'Validation request failed'
+    return {
+      warnings: [{
+        type: 'DefaultWarning',
+        severity: 'WARNING',
+        message: `Validation error: ${errorMessage}`
+      }]
+    }
   }
 }
 
 // ============================================================================
-// Report Endpoints (Feature: 005-cohort-reports)
+// Report Endpoints
 // ============================================================================
 
 /**
  * Get comprehensive cohort report data for a generated cohort
  * Endpoint: GET /cohortdefinition/{id}/report/{sourceKey}
- * T015: Primary report data endpoint
- *
- * @param cohortId Cohort definition ID
- * @param sourceKey Data source key (e.g., "SYNPUF5", "SYNPUF1K")
- * @returns Complete report data including person, condition eras, drug eras, cohort specific
  */
 export async function getCohortReport(
   cohortId: number,
@@ -449,19 +505,19 @@ export async function getCohortReport(
     const parsed = WebAPIReportResponseSchema.safeParse(data)
 
     if (!parsed.success) {
-      console.error('Cohort report validation error:', parsed.error)
+      logger.error('WebAPI', 'Cohort report validation error', parsed.error)
       return null
     }
 
     // Ensure summary is not undefined
     if (!parsed.data.summary) {
-      console.error('Cohort report missing summary')
+      logger.error('WebAPI', 'Cohort report missing summary')
       return null
     }
 
     return parsed.data as WebAPIReportResponse
   } catch (error) {
-    console.error(`Failed to fetch cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -469,7 +525,6 @@ export async function getCohortReport(
 /**
  * Get person demographics report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/person
- * T016: Individual report endpoint
  */
 export async function getPersonReport(
   cohortId: number,
@@ -480,7 +535,7 @@ export async function getPersonReport(
       `/cohortresults/${sourceKey}/${cohortId}/person`
     )
   } catch (error) {
-    console.error(`Failed to fetch person report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch person report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -488,7 +543,6 @@ export async function getPersonReport(
 /**
  * Get condition eras report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/conditionera
- * T016: Individual report endpoint
  */
 export async function getConditionErasReport(
   cohortId: number,
@@ -499,7 +553,7 @@ export async function getConditionErasReport(
       `/cohortresults/${sourceKey}/${cohortId}/conditionera`
     )
   } catch (error) {
-    console.error(`Failed to fetch condition eras report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch condition eras report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -507,7 +561,6 @@ export async function getConditionErasReport(
 /**
  * Get condition occurrence report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/condition
- * T079: Condition occurrence report
  */
 export async function getConditionReport(
   cohortId: number,
@@ -518,7 +571,7 @@ export async function getConditionReport(
       `/cohortresults/${sourceKey}/${cohortId}/condition`
     )
   } catch (error) {
-    console.error(`Failed to fetch condition report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch condition report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -526,7 +579,6 @@ export async function getConditionReport(
 /**
  * Get drug eras report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugera
- * T016: Individual report endpoint
  */
 export async function getDrugErasReport(
   cohortId: number,
@@ -537,7 +589,7 @@ export async function getDrugErasReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugera`
     )
   } catch (error) {
-    console.error(`Failed to fetch drug eras report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch drug eras report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -545,7 +597,6 @@ export async function getDrugErasReport(
 /**
  * Get cohort-specific analytics report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/cohortspecific
- * T016: Individual report endpoint
  */
 export async function getCohortSpecificReport(
   cohortId: number,
@@ -556,75 +607,112 @@ export async function getCohortSpecificReport(
       `/cohortresults/${sourceKey}/${cohortId}/cohortspecific`
     )
   } catch (error) {
-    console.error(`Failed to fetch cohort specific report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch cohort specific report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
 
 /**
+ * Analysis IDs for different report types
+ * Based on Atlas Heracles analysis identifiers
+ */
+const FULL_ANALYSIS_IDS = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+  101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115,
+  200, 201, 202, 203, 204, 206, 207, 208, 209, 210, 211, 212, 213, 220,
+  301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 320,
+  400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 420,
+  500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515,
+  600, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 620,
+  700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 720,
+  800, 801, 802, 803, 804, 805, 806, 807, 808, 809, 810, 811, 812, 813, 814, 815, 816, 820,
+  900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 920,
+  1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1020,
+  1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1808, 1809, 1810, 1811, 1812, 1813, 1814, 1815, 1816, 1820
+]
+
+const QUICK_ANALYSIS_IDS = [
+  0, 1, 2, 101, 200, 301, 400, 500, 600, 700, 800, 900, 1000, 1800
+]
+
+/**
+ * Trigger cohort analysis job (Heracles)
+ * Endpoint: POST /cohortanalysis
+ * Based on Atlas implementation
+ */
+async function triggerCohortAnalysis(
+  cohortId: number,
+  sourceKey: string,
+  analysisIds: number[],
+  runHeraclesHeel: boolean = true,
+  rollupUtilization: boolean = false
+): Promise<boolean> {
+  try {
+    const cohortJob = {
+      jobName: `HERACLES_COHORT_${cohortId}_${sourceKey}`,
+      sourceKey: sourceKey,
+      smallCellCount: 5,
+      cohortDefinitionIds: [cohortId],
+      analysisIds: analysisIds,
+      runHeraclesHeel: runHeraclesHeel,
+      cohortPeriodOnly: false,
+      conditionConceptIds: [],
+      drugConceptIds: [],
+      procedureConceptIds: [],
+      observationConceptIds: [],
+      measurementConceptIds: [],
+      periods: [],
+      rollupUtilizationVisit: rollupUtilization,
+      rollupUtilizationDrug: rollupUtilization
+    }
+
+    await fetchJSON('/cohortanalysis', {
+      method: 'POST',
+      body: JSON.stringify(cohortJob),
+    })
+    return true
+  } catch (error) {
+    logger.error('WebAPI', `Failed to trigger cohort analysis for ${cohortId}/${sourceKey}`, error)
+    return false
+  }
+}
+
+/**
  * Trigger Full Analysis batch job
- * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/fullAnalysis
- * T104: Action button batch job trigger
+ * Endpoint: POST /cohortanalysis
  */
 export async function triggerFullAnalysis(
   cohortId: number,
   sourceKey: string
 ): Promise<boolean> {
-  try {
-    await fetchJSON(`/cohortdefinition/${cohortId}/report/${sourceKey}/fullAnalysis`, {
-      method: 'POST',
-    })
-    return true
-  } catch (error) {
-    console.error(`Failed to trigger full analysis for ${cohortId}/${sourceKey}:`, error)
-    return false
-  }
+  return triggerCohortAnalysis(cohortId, sourceKey, FULL_ANALYSIS_IDS, true, true)
 }
 
 /**
  * Trigger Quick Analysis batch job
- * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/quickAnalysis
- * T105: Action button batch job trigger
+ * Endpoint: POST /cohortanalysis
  */
 export async function triggerQuickAnalysis(
   cohortId: number,
   sourceKey: string
 ): Promise<boolean> {
-  try {
-    await fetchJSON(`/cohortdefinition/${cohortId}/report/${sourceKey}/quickAnalysis`, {
-      method: 'POST',
-    })
-    return true
-  } catch (error) {
-    console.error(`Failed to trigger quick analysis for ${cohortId}/${sourceKey}:`, error)
-    return false
-  }
+  return triggerCohortAnalysis(cohortId, sourceKey, QUICK_ANALYSIS_IDS, true, false)
 }
 
 /**
  * Trigger Utilization batch job
- * Endpoint: POST /cohortdefinition/{id}/report/{sourceKey}/utilization
- * T106: Action button batch job trigger
+ * Endpoint: POST /cohortanalysis
  */
 export async function triggerUtilization(
   cohortId: number,
   sourceKey: string
 ): Promise<boolean> {
-  try {
-    await fetchJSON(`/cohortdefinition/${cohortId}/report/${sourceKey}/utilization`, {
-      method: 'POST',
-    })
-    return true
-  } catch (error) {
-    console.error(`Failed to trigger utilization analysis for ${cohortId}/${sourceKey}:`, error)
-    return false
-  }
+  return triggerCohortAnalysis(cohortId, sourceKey, FULL_ANALYSIS_IDS, false, true)
 }
 
 /**
  * Get persons exposure baseline report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/observationperiod
- * T090: Persons exposure baseline report
  */
 export async function getPersonsExposureBaselineReport(
   cohortId: number,
@@ -635,7 +723,7 @@ export async function getPersonsExposureBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/observationperiod`
     )
   } catch (error) {
-    console.error(`Failed to fetch persons exposure baseline report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch persons exposure baseline report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -643,7 +731,6 @@ export async function getPersonsExposureBaselineReport(
 /**
  * Get persons exposure cohort report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/cohort
- * T091: Persons exposure cohort report
  */
 export async function getPersonsExposureCohortReport(
   cohortId: number,
@@ -654,7 +741,7 @@ export async function getPersonsExposureCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/cohort`
     )
   } catch (error) {
-    console.error(`Failed to fetch persons exposure cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch persons exposure cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -662,7 +749,6 @@ export async function getPersonsExposureCohortReport(
 /**
  * Get visits baseline report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitsbaseline
- * T092: Visits baseline report
  */
 export async function getVisitsBaselineReport(
   cohortId: number,
@@ -673,7 +759,7 @@ export async function getVisitsBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitsbaseline`
     )
   } catch (error) {
-    console.error(`Failed to fetch visits baseline report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch visits baseline report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -681,7 +767,6 @@ export async function getVisitsBaselineReport(
 /**
  * Get visit dates baseline report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitdatesbaseline
- * T093: Visit dates baseline report
  */
 export async function getVisitDatesBaselineReport(
   cohortId: number,
@@ -692,7 +777,7 @@ export async function getVisitDatesBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitdatesbaseline`
     )
   } catch (error) {
-    console.error(`Failed to fetch visit dates baseline report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch visit dates baseline report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -700,7 +785,6 @@ export async function getVisitDatesBaselineReport(
 /**
  * Get care site visit dates baseline report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/caresitevisitdatesbaseline
- * T094: Care site visit dates baseline report
  */
 export async function getCareSiteVisitDatesBaselineReport(
   cohortId: number,
@@ -711,7 +795,7 @@ export async function getCareSiteVisitDatesBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/caresitevisitdatesbaseline`
     )
   } catch (error) {
-    console.error(`Failed to fetch care site visit dates baseline report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch care site visit dates baseline report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -719,7 +803,6 @@ export async function getCareSiteVisitDatesBaselineReport(
 /**
  * Get visits cohort report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitscohort
- * T095: Visits cohort report
  */
 export async function getVisitsCohortReport(
   cohortId: number,
@@ -730,7 +813,7 @@ export async function getVisitsCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitscohort`
     )
   } catch (error) {
-    console.error(`Failed to fetch visits cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch visits cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -738,7 +821,6 @@ export async function getVisitsCohortReport(
 /**
  * Get visit dates cohort report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/visitdatescohort
- * T096: Visit dates cohort report
  */
 export async function getVisitDatesCohortReport(
   cohortId: number,
@@ -749,7 +831,7 @@ export async function getVisitDatesCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitdatescohort`
     )
   } catch (error) {
-    console.error(`Failed to fetch visit dates cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch visit dates cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -757,7 +839,6 @@ export async function getVisitDatesCohortReport(
 /**
  * Get care site visit dates cohort report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/caresitevisitdatescohort
- * T097: Care site visit dates cohort report
  */
 export async function getCareSiteVisitDatesCohortReport(
   cohortId: number,
@@ -768,7 +849,7 @@ export async function getCareSiteVisitDatesCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/caresitevisitdatescohort`
     )
   } catch (error) {
-    console.error(`Failed to fetch care site visit dates cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch care site visit dates cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -776,7 +857,6 @@ export async function getCareSiteVisitDatesCohortReport(
 /**
  * Get drug utilization baseline report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugutilizationbaseline
- * T098: Drug utilization baseline report
  */
 export async function getDrugUtilizationBaselineReport(
   cohortId: number,
@@ -787,7 +867,7 @@ export async function getDrugUtilizationBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugutilizationbaseline`
     )
   } catch (error) {
-    console.error(`Failed to fetch drug utilization baseline report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch drug utilization baseline report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -795,7 +875,6 @@ export async function getDrugUtilizationBaselineReport(
 /**
  * Get drug utilization cohort report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugutilizationcohort
- * T099: Drug utilization cohort report
  */
 export async function getDrugUtilizationCohortReport(
   cohortId: number,
@@ -806,7 +885,7 @@ export async function getDrugUtilizationCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugutilizationcohort`
     )
   } catch (error) {
-    console.error(`Failed to fetch drug utilization cohort report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch drug utilization cohort report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -814,7 +893,6 @@ export async function getDrugUtilizationCohortReport(
 /**
  * Get Heracles Heel report (data quality)
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/heraclesheel
- * T100: Heracles Heel report
  */
 export async function getHeraclesHeelReport(
   cohortId: number,
@@ -825,15 +903,35 @@ export async function getHeraclesHeelReport(
       `/cohortresults/${sourceKey}/${cohortId}/heraclesheel`
     )
   } catch (error) {
-    console.error(`Failed to fetch Heracles Heel report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch Heracles Heel report for ${cohortId}/${sourceKey}`, error)
     return null
+  }
+}
+
+/**
+ * Get completed analyses for a cohort
+ * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/analyses
+ * Returns array of completed analysis IDs
+ */
+export async function getCompletedAnalyses(
+  cohortId: number,
+  sourceKey: string
+): Promise<ApiResult<number[]>> {
+  try {
+    const data = await fetchJSON<number[]>(
+      `/cohortresults/${sourceKey}/${cohortId}/analyses`
+    )
+    return success(data || [])
+  } catch (error) {
+    const message = error instanceof Error ? error.message : `Failed to fetch completed analyses for ${cohortId}/${sourceKey}`
+    logger.error('WebAPI', `Failed to fetch completed analyses for ${cohortId}/${sourceKey}`, error)
+    return failure(message)
   }
 }
 
 /**
  * Get conditions by index report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/conditionsbyindex
- * T080: Conditions by index report
  */
 export async function getConditionsByIndexReport(
   cohortId: number,
@@ -844,7 +942,7 @@ export async function getConditionsByIndexReport(
       `/cohortresults/${sourceKey}/${cohortId}/conditionsbyindex`
     )
   } catch (error) {
-    console.error(`Failed to fetch conditions by index report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch conditions by index report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -852,7 +950,6 @@ export async function getConditionsByIndexReport(
 /**
  * Get death report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/death
- * T081: Death report
  */
 export async function getDeathReport(
   cohortId: number,
@@ -863,7 +960,7 @@ export async function getDeathReport(
       `/cohortresults/${sourceKey}/${cohortId}/death`
     )
   } catch (error) {
-    console.error(`Failed to fetch death report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch death report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -871,7 +968,6 @@ export async function getDeathReport(
 /**
  * Get drug exposure report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugexposure
- * T082: Drug exposure report
  */
 export async function getDrugExposureReport(
   cohortId: number,
@@ -882,7 +978,7 @@ export async function getDrugExposureReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugexposure`
     )
   } catch (error) {
-    console.error(`Failed to fetch drug exposure report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch drug exposure report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -890,7 +986,6 @@ export async function getDrugExposureReport(
 /**
  * Get drugs by index report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/drugsbyindex
- * T083: Drugs by index report
  */
 export async function getDrugsByIndexReport(
   cohortId: number,
@@ -901,7 +996,7 @@ export async function getDrugsByIndexReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugsbyindex`
     )
   } catch (error) {
-    console.error(`Failed to fetch drugs by index report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch drugs by index report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -909,7 +1004,6 @@ export async function getDrugsByIndexReport(
 /**
  * Get observation periods report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/observationperiod
- * T084: Observation periods report
  */
 export async function getObservationPeriodsReport(
   cohortId: number,
@@ -920,7 +1014,7 @@ export async function getObservationPeriodsReport(
       `/cohortresults/${sourceKey}/${cohortId}/observationperiod`
     )
   } catch (error) {
-    console.error(`Failed to fetch observation periods report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch observation periods report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -928,7 +1022,6 @@ export async function getObservationPeriodsReport(
 /**
  * Get procedure report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/procedure
- * T085: Procedure report
  */
 export async function getProcedureReport(
   cohortId: number,
@@ -939,7 +1032,7 @@ export async function getProcedureReport(
       `/cohortresults/${sourceKey}/${cohortId}/procedure`
     )
   } catch (error) {
-    console.error(`Failed to fetch procedure report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch procedure report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -947,7 +1040,6 @@ export async function getProcedureReport(
 /**
  * Get procedures by index report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/proceduresbyindex
- * T086: Procedures by index report
  */
 export async function getProceduresByIndexReport(
   cohortId: number,
@@ -958,7 +1050,7 @@ export async function getProceduresByIndexReport(
       `/cohortresults/${sourceKey}/${cohortId}/proceduresbyindex`
     )
   } catch (error) {
-    console.error(`Failed to fetch procedures by index report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch procedures by index report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -966,7 +1058,6 @@ export async function getProceduresByIndexReport(
 /**
  * Get data completeness report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/datacompleteness
- * T087: Data completeness report
  */
 export async function getDataCompletenessReport(
   cohortId: number,
@@ -977,7 +1068,7 @@ export async function getDataCompletenessReport(
       `/cohortresults/${sourceKey}/${cohortId}/datacompleteness`
     )
   } catch (error) {
-    console.error(`Failed to fetch data completeness report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch data completeness report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -985,7 +1076,6 @@ export async function getDataCompletenessReport(
 /**
  * Get entropy report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/entropy
- * T088: Entropy report
  */
 export async function getEntropyReport(
   cohortId: number,
@@ -996,7 +1086,7 @@ export async function getEntropyReport(
       `/cohortresults/${sourceKey}/${cohortId}/entropy`
     )
   } catch (error) {
-    console.error(`Failed to fetch entropy report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch entropy report for ${cohortId}/${sourceKey}`, error)
     return null
   }
 }
@@ -1004,7 +1094,6 @@ export async function getEntropyReport(
 /**
  * Get tornado report
  * Endpoint: GET /cohortresults/{sourceKey}/{cohortId}/tornado
- * T089: Tornado report
  */
 export async function getTornadoReport(
   cohortId: number,
@@ -1015,7 +1104,167 @@ export async function getTornadoReport(
       `/cohortresults/${sourceKey}/${cohortId}/tornado`
     )
   } catch (error) {
-    console.error(`Failed to fetch tornado report for ${cohortId}/${sourceKey}:`, error)
+    logger.error('WebAPI', `Failed to fetch tornado report for ${cohortId}/${sourceKey}`, error)
+    return null
+  }
+}
+
+// ============================================================================
+// Drill-Down Reports - Data Sources (CDM Results)
+// ============================================================================
+
+/**
+ * Get drill-down details for any domain in data sources
+ * GET /cdmresults/{sourceKey}/{domain}/{conceptId}
+ */
+export async function getCDMDrilldown(
+  sourceKey: string,
+  domain: string,
+  conceptId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cdmresults/${sourceKey}/${domain}/${conceptId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch CDM drill-down for ${sourceKey}/${domain}/${conceptId}`, error)
+    return null
+  }
+}
+
+// ============================================================================
+// Drill-Down Reports - Cohort Results
+// ============================================================================
+
+/**
+ * Get condition drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/condition/{conditionId}
+ */
+export async function getConditionDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  conditionId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/condition/${conditionId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch condition drill-down for ${cohortId}/${sourceKey}/${conditionId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get condition era drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/conditionera/{conditionId}
+ */
+export async function getConditionEraDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  conditionId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/conditionera/${conditionId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch condition era drill-down for ${cohortId}/${sourceKey}/${conditionId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get drug drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/drug/{drugId}
+ */
+export async function getDrugDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  drugId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/drug/${drugId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch drug drill-down for ${cohortId}/${sourceKey}/${drugId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get drug era drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/drugera/{drugId}
+ */
+export async function getDrugEraDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  drugId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/drugera/${drugId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch drug era drill-down for ${cohortId}/${sourceKey}/${drugId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get measurement drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/measurement/{conceptId}
+ */
+export async function getMeasurementDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  conceptId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/measurement/${conceptId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch measurement drill-down for ${cohortId}/${sourceKey}/${conceptId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get observation drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/observation/{conceptId}
+ */
+export async function getObservationDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  conceptId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/observation/${conceptId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch observation drill-down for ${cohortId}/${sourceKey}/${conceptId}`, error)
+    return null
+  }
+}
+
+/**
+ * Get procedure drill-down details
+ * GET /cohortresults/{sourceKey}/{cohortId}/procedure/{procedureId}
+ */
+export async function getProcedureDrilldown(
+  sourceKey: string,
+  cohortId: number,
+  procedureId: number
+): Promise<import('@/models/report.types').WebAPIDrilldownRaw | null> {
+  try {
+    return await fetchJSON<import('@/models/report.types').WebAPIDrilldownRaw>(
+      `/cohortresults/${sourceKey}/${cohortId}/procedure/${procedureId}`
+    )
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch procedure drill-down for ${cohortId}/${sourceKey}/${procedureId}`, error)
     return null
   }
 }
@@ -1026,7 +1275,7 @@ export async function getTornadoReport(
  * The endpoint expects just the expression object from the cohort definition
  */
 export async function getCohortPrintFriendly(
-  cohortDefinition: AtlasCohortDefinition
+  cohortDefinition: AtlasCohortDefinitionInput
 ): Promise<string | null> {
   try {
     const url = `${BASE_URL}/cohortdefinition/printfriendly/cohort?format=html`
@@ -1034,11 +1283,17 @@ export async function getCohortPrintFriendly(
 
     // The cohort definition from WebAPI has structure: { id, name, description, expression: {...} }
     // The printfriendly endpoint expects just the expression property
-    let payload = (cohortDefinition as any).expression || cohortDefinition
+    let payload: AtlasCohortDefinition | string
+
+    if (isAtlasCohortDefinitionWrapper(cohortDefinition)) {
+      payload = cohortDefinition.expression
+    } else {
+      payload = cohortDefinition
+    }
 
     // If expression is a string, parse it first
     if (typeof payload === 'string') {
-      payload = JSON.parse(payload)
+      payload = JSON.parse(payload) as AtlasCohortDefinition
     }
 
     const response = await fetch(url, {
@@ -1054,9 +1309,14 @@ export async function getCohortPrintFriendly(
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
 
-    return await response.text()
+    try {
+      return await response.text()
+    } catch (parseError) {
+      logger.error('WebAPI', 'Failed to parse text response', parseError)
+      throw new Error('Invalid response format')
+    }
   } catch (error) {
-    console.error('Failed to fetch print-friendly cohort:', error)
+    logger.error('WebAPI', 'Failed to fetch print-friendly cohort', error)
     return null
   }
 }

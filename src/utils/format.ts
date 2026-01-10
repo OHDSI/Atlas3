@@ -1,14 +1,12 @@
 /**
  * Locale-aware formatting utilities
- * Feature: 008-translation-support
- * FR-014: Implements Intl.DateTimeFormat for locale-aware date formatting
  */
 
 import type { LocaleCode } from '@/types/i18n'
+import { logger } from '@/utils/logger'
 
 /**
  * Format number according to locale
- * FR-013: Locale-aware number formatting
  */
 export function formatNumber(
   value: number,
@@ -18,14 +16,13 @@ export function formatNumber(
   try {
     return new Intl.NumberFormat(locale, options).format(value)
   } catch (error) {
-    console.error('Error formatting number:', error)
+    logger.error('Format', 'Error formatting number', error)
     return String(value)
   }
 }
 
 /**
  * Format date according to locale
- * FR-014: Locale-aware date formatting using Intl.DateTimeFormat
  */
 export function formatDate(
   value: Date | string | number,
@@ -39,7 +36,7 @@ export function formatDate(
     }
     return new Intl.DateTimeFormat(locale, options).format(date)
   } catch (error) {
-    console.error('Error formatting date:', error)
+    logger.error('Format', 'Error formatting date', error)
     return String(value)
   }
 }
@@ -98,7 +95,7 @@ export function formatCurrency(
       currency
     }).format(value)
   } catch (error) {
-    console.error('Error formatting currency:', error)
+    logger.error('Format', 'Error formatting currency', error)
     return `${currency} ${value}`
   }
 }
@@ -118,7 +115,7 @@ export function formatPercent(
       maximumFractionDigits: decimals
     }).format(value)
   } catch (error) {
-    console.error('Error formatting percent:', error)
+    logger.error('Format', 'Error formatting percent', error)
     return `${(value * 100).toFixed(decimals)}%`
   }
 }

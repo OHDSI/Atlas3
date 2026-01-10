@@ -96,6 +96,7 @@
                 @update:model-value="updateGroup(index, groupIndex, $event)"
                 @remove="removeGroup(index, groupIndex)"
                 @select-concept-set="handleSelectConceptSet(index, groupIndex, $event)"
+                @select-concept="handleSelectConcept(index, groupIndex, $event)"
                 @edit-concept-set="$emit('edit-concept-set', $event)"
               />
             </div>
@@ -172,7 +173,8 @@ const emit = defineEmits<{
   'update:modelValue': [value: InclusionRule[]]
   'update:qualifyingLimit': [value: QualifyingLimit]
   'select-concept-set': [context: { ruleIndex: number; groupIndex: number; eventIndex: number }]
-  'edit-concept-set': [conceptSet: any]
+  'select-concept': [context: { ruleIndex: number; groupIndex: number; eventIndex: number; attributeIndex: number; domainFilter: string | undefined }]
+  'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
 // Local state - single expanded panel index (undefined = all closed)
@@ -222,11 +224,18 @@ function removeRule(index: number) {
 }
 
 function addNewRule() {
+  // Create a default criteria group automatically
+  const defaultGroup: CriteriaGroup = {
+    id: uuidv4(),
+    logicType: 'ALL',
+    events: [],
+  }
+
   const newRule: InclusionRule = {
     id: uuidv4(),
     name: `New Inclusion Rule ${ruleCounter.value}`,
     description: undefined,
-    criteriaGroups: [],
+    criteriaGroups: [defaultGroup],
   }
 
   ruleCounter.value++
@@ -276,6 +285,10 @@ function updateRuleDescription(index: number, event: Event) {
 function handleSelectConceptSet(ruleIndex: number, groupIndex: number, eventIndexOrContext: number | { eventIndex: number; eventId: string }) {
   const eventIndex = typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
   emit('select-concept-set', { ruleIndex, groupIndex, eventIndex })
+}
+
+function handleSelectConcept(ruleIndex: number, groupIndex: number, context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined }) {
+  emit('select-concept', { ruleIndex, groupIndex, ...context })
 }
 </script>
 

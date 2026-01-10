@@ -171,6 +171,44 @@
           </v-card>
         </v-dialog>
 
+        <!-- New Cohort Dialog -->
+        <v-dialog
+          v-model="showNewCohortDialog"
+          max-width="500px"
+        >
+          <v-card>
+            <v-card-title class="text-h5">
+              {{ t('cohortDefinitions.newDefinitionTitle', 'Create New Cohort') }}
+            </v-card-title>
+            <v-card-text>
+              <v-text-field
+                v-model="newCohortName"
+                :label="t('cohortDefinitions.name', 'Cohort Name').value"
+                autofocus
+                @keyup.enter="confirmCreateCohort"
+              />
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                color="grey"
+                variant="text"
+                @click="showNewCohortDialog = false"
+              >
+                {{ t('common.cancel', 'Cancel') }}
+              </v-btn>
+              <v-btn
+                color="primary"
+                variant="elevated"
+                :disabled="!newCohortName.trim()"
+                @click="confirmCreateCohort"
+              >
+                {{ t('common.create', 'Create') }}
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <!-- Generation Panel -->
         <generation-panel
           v-model="showGenerationPanel"
@@ -199,6 +237,7 @@
               style="max-height: 600px;"
               class="cohort-info-content"
             >
+              <!-- eslint-disable-next-line vue/no-v-html -- trusted server content -->
               <div v-html="cohortInfoHtml" />
             </v-card-text>
             <v-card-text
@@ -244,6 +283,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
 import { deleteCohort, getCohortDefinition, getCohortPrintFriendly } from '@/services/webapi'
+import { logger } from '@/utils/logger'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import CohortFilters from '@/components/cohort/CohortFilters.vue'
@@ -255,6 +295,8 @@ const { t } = useI18n()
 const showImportDialog = ref(false)
 const showDeleteDialog = ref(false)
 const showGenerationPanel = ref(false)
+const showNewCohortDialog = ref(false)
+const newCohortName = ref('')
 const selectedCohort = ref<CohortDefinitionSummary | null>(null)
 const deleting = ref(false)
 
@@ -304,10 +346,22 @@ const paginatedCohorts = computed(() => {
 })
 
 /**
- * Navigate to create new cohort page
+ * Open new cohort dialog
  */
 function handleCreateCohort() {
-  router.push('/cohorts/new')
+  newCohortName.value = ''
+  showNewCohortDialog.value = true
+}
+
+/**
+ * Confirm and navigate to create new cohort page
+ */
+function confirmCreateCohort() {
+  const name = newCohortName.value.trim()
+  if (name) {
+    router.push({ path: '/cohorts/new', query: { name } })
+  }
+  showNewCohortDialog.value = false
 }
 
 /**
@@ -365,7 +419,7 @@ async function confirmDelete() {
     showDeleteDialog.value = false
     selectedCohort.value = null
   } catch (err) {
-    console.error('Failed to delete cohort:', err)
+    logger.error('CohortsView', 'Failed to delete cohort', err)
     // Error handling could be enhanced with a snackbar notification
   } finally {
     deleting.value = false
@@ -390,7 +444,7 @@ async function handleShowInfo(cohort: CohortDefinitionSummary) {
       cohortInfoHtml.value = html
     }
   } catch (error) {
-    console.error('Failed to fetch cohort print-friendly view:', error)
+    logger.error('CohortsView', 'Failed to fetch cohort print-friendly view', error)
     cohortInfoHtml.value = null
   } finally {
     loadingCohortInfo.value = false

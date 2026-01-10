@@ -186,7 +186,7 @@ interface Props {
 
 defineProps<Props>()
 
-const emit = defineEmits<{
+defineEmits<{
   'edit': [tagGroup: TagGroup]
   'delete': [tagGroup: TagGroup]
   'showTags': [tagGroup: TagGroup]

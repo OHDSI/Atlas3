@@ -1,7 +1,5 @@
 /**
  * ECharts Configuration Utilities
- * Feature: 005-cohort-reports
- * Task: T024
  *
  * Provides default configuration helpers for all chart types
  */
@@ -37,8 +35,9 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
       axisPointer: {
         type: 'shadow'
       },
-      formatter: (params: any) => {
-        const param = Array.isArray(params) ? params[0] : params
+      formatter: (params: unknown) => {
+        const paramsArray = Array.isArray(params) ? params : [params]
+        const param = paramsArray[0] as { name: string; seriesName: string; value: number }
         const value = param.value.toLocaleString()
         const unit = data.unit ? ` ${data.unit}` : ''
         return `${param.name}<br/>${param.seriesName}: <strong>${value}${unit}</strong>`
@@ -102,10 +101,11 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
     } : undefined,
     tooltip: {
       trigger: 'item',
-      formatter: (params: any) => {
-        const value = params.value.toLocaleString()
-        const percent = params.percent.toFixed(1)
-        return `${params.name}<br/><strong>${value}</strong> (${percent}%)`
+      formatter: (params: unknown) => {
+        const p = params as { name: string; value: number; percent: number }
+        const value = p.value.toLocaleString()
+        const percent = p.percent.toFixed(1)
+        return `${p.name}<br/><strong>${value}</strong> (${percent}%)`
       }
     },
     legend: {
@@ -169,8 +169,9 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
     } : undefined,
     tooltip: {
       trigger: 'axis',
-      formatter: (params: any) => {
-        const param = Array.isArray(params) ? params[0] : params
+      formatter: (params: unknown) => {
+        const paramsArray = Array.isArray(params) ? params : [params]
+        const param = paramsArray[0] as { name: string; seriesName: string; value: number }
         const value = param.value.toLocaleString()
         return `${param.name}<br/>${param.seriesName}: <strong>${value}</strong>`
       }
@@ -242,9 +243,21 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
     } : undefined,
     tooltip: {
       trigger: 'item',
-      formatter: (params: any) => {
-        const value = params.value.toLocaleString()
-        return `${params.name}<br/><strong>${value}</strong>`
+      formatter: (params: unknown) => {
+        const p = params as { name: string; value: number; data?: { conceptPath?: string } }
+        const value = p.value.toLocaleString()
+
+        // Format the concept path with newlines and tabs
+        let displayName = p.name
+        if (p.data?.conceptPath) {
+          const parts = p.data.conceptPath.split('||')
+          displayName = parts.map((part, index) => {
+            const tabs = '\u00A0\u00A0\u00A0\u00A0'.repeat(index) // 4 non-breaking spaces per level
+            return tabs + part.trim()
+          }).join('<br/>')
+        }
+
+        return `${displayName}<br/><strong>${value}</strong>`
       }
     },
     series: [
@@ -255,7 +268,7 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
         left: '5%',
         right: '5%',
         roam: false,
-        nodeClick: 'zoomToNode',
+        nodeClick: false,
         breadcrumb: {
           show: true,
           emptyItemWidth: 25,
@@ -324,7 +337,7 @@ function assignTreemapColors(nodes: TreemapNode[], colorIndex = 0): TreemapNode[
 /**
  * Responsive chart resize handler
  */
-export function createResizeHandler(chart: any, debounceMs = 150) {
+export function createResizeHandler(chart: { isDisposed: () => boolean; resize: () => void }, debounceMs = 150) {
   let resizeTimer: ReturnType<typeof setTimeout> | null = null
 
   const handleResize = () => {
@@ -333,7 +346,7 @@ export function createResizeHandler(chart: any, debounceMs = 150) {
     }
 
     resizeTimer = setTimeout(() => {
-      if (chart && !chart.isDisposed()) {
+      if (chart && typeof chart.isDisposed === 'function' && !chart.isDisposed()) {
         chart.resize()
       }
     }, debounceMs)
@@ -355,24 +368,22 @@ export function getExportConfig(backgroundColor = '#ffffff') {
 
 // ============================================================================
 // Dashboard-specific Chart Configurations
-// Feature: 006-datasources
-// Tasks: T023-T026
 // ============================================================================
 
 import type { BarChartData as DatasourceBarChartData, PieChartData as DatasourcePieChartData, LineChartData as DatasourceLineChartData, MultiLineChartData as DatasourceMultiLineChartData } from '@/models/datasource.types'
 
 /**
- * Dashboard Gender Pie Chart Configuration (T023)
- * Optimized for gender distribution display
+ * Dashboard Gender Pie Chart Configuration
  */
 export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChartsOption {
   return {
     tooltip: {
       trigger: 'item',
-      formatter: (params: any) => {
-        const value = params.value.toLocaleString()
-        const percent = params.percent.toFixed(1)
-        return `<strong>${params.name}</strong><br/>Count: ${value}<br/>Percentage: ${percent}%`
+      formatter: (params: unknown) => {
+        const p = params as { name: string; value: number; percent: number }
+        const value = p.value.toLocaleString()
+        const percent = p.percent.toFixed(1)
+        return `<strong>${p.name}</strong><br/>Count: ${value}<br/>Percentage: ${percent}%`
       }
     },
     legend: {
@@ -421,8 +432,7 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
 }
 
 /**
- * Dashboard Age Bar Chart Configuration (T024)
- * Optimized for age distribution display
+ * Dashboard Age Bar Chart Configuration
  */
 export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOption {
   return {
@@ -431,8 +441,9 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
       axisPointer: {
         type: 'shadow'
       },
-      formatter: (params: any) => {
-        const param = Array.isArray(params) ? params[0] : params
+      formatter: (params: unknown) => {
+        const paramsArray = Array.isArray(params) ? params : [params]
+        const param = paramsArray[0] as { name: string; value: number }
         const value = param.value.toLocaleString()
         return `<strong>Age: ${param.name}</strong><br/>${data.unit || 'Count'}: ${value}`
       }
@@ -485,15 +496,15 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
 }
 
 /**
- * Dashboard Cumulative Observation Line Chart Configuration (T025)
- * Optimized for cumulative observation over time
+ * Dashboard Cumulative Observation Line Chart Configuration
  */
 export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): EChartsOption {
   return {
     tooltip: {
       trigger: 'axis',
-      formatter: (params: any) => {
-        const param = Array.isArray(params) ? params[0] : params
+      formatter: (params: unknown) => {
+        const paramsArray = Array.isArray(params) ? params : [params]
+        const param = paramsArray[0] as { name: string; value: number | string }
         const value = typeof param.value === 'number' ? param.value.toFixed(1) : param.value
         return `<strong>${data.xAxisLabel || 'Year'}: ${param.name}</strong><br/>${data.yAxisLabel || 'Percentage'}: ${value}%`
       }
@@ -563,15 +574,15 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
 }
 
 /**
- * Dashboard Observation by Month Line Chart Configuration (T026)
- * Optimized for monthly observation count display
+ * Dashboard Observation by Month Line Chart Configuration
  */
 export function dashboardObservationMonthLineOptions(data: DatasourceLineChartData): EChartsOption {
   return {
     tooltip: {
       trigger: 'axis',
-      formatter: (params: any) => {
-        const param = Array.isArray(params) ? params[0] : params
+      formatter: (params: unknown) => {
+        const paramsArray = Array.isArray(params) ? params : [params]
+        const param = paramsArray[0] as { name: string; value: number }
         const value = param.value.toLocaleString()
         return `<strong>${param.name}</strong><br/>${data.yAxisLabel || 'Observations'}: ${value}`
       }
@@ -643,8 +654,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
 }
 
 /**
- * Multi-Line Chart Configuration for Data Density Reports (T036)
- * Optimized for multiple time series with legend
+ * Multi-Line Chart Configuration for Data Density Reports
  */
 export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChartsOption {
   return {
@@ -707,8 +717,7 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
 }
 
 /**
- * Clinical Domain Treemap Configuration (T055-T056)
- * Enhanced treemap with zoom support and prevalence-based coloring
+ * Clinical Domain Treemap Configuration
  */
 export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOption {
   // Calculate prevalence range for color mapping
@@ -719,12 +728,17 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
   return {
     tooltip: {
       trigger: 'item',
-      formatter: (params: any) => {
-        const value = params.value.toLocaleString()
-        const name = params.name
-        const prevalence = params.data.prevalence
-        const metric = params.data.metric
-        
+      formatter: (params: unknown) => {
+        const p = params as {
+          name: string;
+          value: number;
+          data: { prevalence?: number; metric?: number }
+        }
+        const value = p.value.toLocaleString()
+        const name = p.name
+        const prevalence = p.data.prevalence
+        const metric = p.data.metric
+
         let tooltip = `<strong>${name}</strong><br/>`
         tooltip += `Value: ${value}<br/>`
         if (prevalence !== undefined) {
@@ -733,7 +747,7 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
         if (metric !== undefined) {
           tooltip += `Metric: ${metric.toFixed(2)}`
         }
-        
+
         return tooltip
       }
     },
@@ -807,15 +821,359 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
 // Helper function to extract all values for color mapping
 function extractAllValues(nodes: TreemapNode[]): number[] {
   const values: number[] = []
-  
+
   function traverse(node: TreemapNode) {
     values.push(node.value)
     if (node.children) {
       node.children.forEach(traverse)
     }
   }
-  
+
   nodes.forEach(traverse)
   return values.length > 0 ? values : [0]
+}
+
+/**
+ * Trellis Chart Options
+ * Creates small multiple line charts stratified by demographics
+ * Based on OHDSI portal implementation
+ */
+export function trellisChartOptions(
+  data: import('@/models/report.types').TrellisChartData,
+  title?: string,
+  maxPlotsPerRow: number = 5
+): EChartsOption {
+  const categories = data.categories.sort()
+  const totalPlots = categories.length
+  const plotsPerRow = Math.min(maxPlotsPerRow, totalPlots)
+  const numRows = Math.ceil(totalPlots / plotsPerRow)
+
+  // Grid dimensions
+  const GRID_WIDTH = 90 / plotsPerRow
+  const GRID_GAP = 5 / plotsPerRow
+  const GRID_LEFT_MARGIN = 5
+  const GRID_HEIGHT = 60 / numRows
+  const GRID_TOP_MARGIN = title ? 15 : 8  // More space if there's a main title
+  const GRID_VERTICAL_GAP = 30 / numRows
+
+  // Calculate global Y-axis range for consistent scale across all plots
+  const allYValues = data.series.flatMap(s => s.data.map(d => d.y))
+  const globalYMin = Math.floor(Math.min(...allYValues))
+  const globalYMax = Math.ceil(Math.max(...allYValues))
+
+  // Create grid configuration for small multiples
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const grid: any[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const xAxis: any[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const yAxis: any[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const series: any[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gridTitles: any[] = []
+
+  categories.forEach((category, index) => {
+    const rowIndex = Math.floor(index / plotsPerRow)
+    const colIndex = index % plotsPerRow
+
+    const rowTop = rowIndex * (GRID_HEIGHT + GRID_VERTICAL_GAP) + GRID_TOP_MARGIN
+
+    // Add row labels (only once per row, when colIndex === 0)
+    if (colIndex === 0) {
+      // Top label for this row (positioned above the demographic names)
+      gridTitles.push({
+        text: 'Age Group / Gender',
+        top: `${rowTop - 4.5}%`,
+        left: 'center',
+        textStyle: {
+          fontSize: 13,
+          color: '#6b6b6b'
+        }
+      })
+      // Bottom label for this row (positioned below x-axis)
+      gridTitles.push({
+        text: 'Year',
+        top: `${rowTop + GRID_HEIGHT + 3}%`,
+        left: 'center',
+        textStyle: {
+          fontSize: 13,
+          color: '#6b6b6b'
+        }
+      })
+    }
+
+    // Grid positioning
+    grid.push({
+      show: true,
+      width: `${GRID_WIDTH}%`,
+      height: `${GRID_HEIGHT}%`,
+      left: `${colIndex * (GRID_WIDTH + GRID_GAP) + GRID_LEFT_MARGIN}%`,
+      top: `${rowTop}%`,
+      borderColor: 'black',
+      borderWidth: 1,
+      containLabel: true
+    })
+
+    // Grid title (demographic group name) - positioned above the grid
+    gridTitles.push({
+      textAlign: 'center',
+      text: category,
+      top: `${rowTop - 3}%`,
+      left: `${colIndex * (GRID_WIDTH + GRID_GAP) + GRID_WIDTH / 2 + GRID_LEFT_MARGIN}%`,
+      textStyle: {
+        fontWeight: 'normal',
+        fontSize: 12
+      }
+    })
+
+    // Get series for this category and sort by year
+    const categorySeries = data.series.filter(s => s.category === category)
+    const allYears = new Set<number>()
+    categorySeries.forEach(s => {
+      s.data.forEach(d => allYears.add(typeof d.x === 'number' ? d.x : Number(d.x)))
+    })
+    const xAxisData = Array.from(allYears).sort((a, b) => a - b)
+
+    // X axis
+    xAxis.push({
+      gridIndex: index,
+      type: 'category',
+      data: xAxisData,
+      boundaryGap: false,
+      axisTick: {
+        show: false
+      },
+      splitLine: {
+        show: true
+      },
+      axisLabel: {
+        show: true,
+        fontSize: 10
+      },
+      position: 'bottom'
+    })
+
+    // Y axis
+    yAxis.push({
+      gridIndex: index,
+      type: 'value',
+      min: globalYMin,
+      max: globalYMax,
+      axisTick: {
+        show: false
+      },
+      splitLine: {
+        show: true
+      },
+      // Only show y axis label for leftmost chart in each row
+      axisLabel: {
+        show: colIndex === 0,
+        fontSize: 10
+      },
+      // Only show y axis name for leftmost chart in each row
+      ...(colIndex === 0 && {
+        name: 'Prevalence Per 1000 People',
+        nameLocation: 'middle',
+        nameGap: 50,
+        position: 'left',
+        nameTextStyle: {
+          fontSize: 14,
+          fontWeight: 'bold'
+        }
+      })
+    })
+
+    // Series for this grid
+    categorySeries.forEach(s => {
+      // Sort data by year
+      const sortedData = s.data.sort((a, b) => {
+        const xA = typeof a.x === 'number' ? a.x : Number(a.x)
+        const xB = typeof b.x === 'number' ? b.x : Number(b.x)
+        return xA - xB
+      })
+      // Map to just y values in order of xAxisData
+      const seriesData = xAxisData.map(year => {
+        const point = sortedData.find(d => {
+          const pointX = typeof d.x === 'number' ? d.x : Number(d.x)
+          return pointX === year
+        })
+        return point ? Number(point.y.toFixed(2)) : null
+      })
+
+      series.push({
+        name: s.name,
+        type: 'line',
+        xAxisIndex: index,
+        yAxisIndex: index,
+        data: seriesData,
+        smooth: false,
+        symbol: 'circle',
+        symbolSize: 4,
+        lineStyle: {
+          width: 2
+        },
+        emphasis: {
+          focus: 'series'
+        },
+        label: {
+          show: false,
+          position: 'top'
+        }
+      })
+    })
+  })
+
+  return {
+    title: title ? [
+      {
+        text: title,
+        left: 'center',
+        top: '1%',
+        textStyle: {
+          fontSize: 16,
+          fontWeight: 'bold'
+        }
+      },
+      ...gridTitles
+    ] : gridTitles,
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'line'
+      }
+    },
+    grid,
+    xAxis,
+    yAxis,
+    series,
+    legend: {
+      top: 'bottom',
+      data: Array.from(new Set(data.series.map(s => s.name)))
+    }
+  }
+}
+
+/**
+ * Box Plot Chart Options
+ * Creates box and whisker plots for statistical distributions
+ */
+export function boxPlotChartOptions(
+  data: import('@/models/report.types').BoxPlotData[],
+  title?: string
+): EChartsOption {
+  const categories = data.map(d => d.category)
+
+  // Convert data to ECharts boxplot format: [min, Q1, median, Q3, max]
+  const boxData = data.map(d => [
+    d.min,
+    d.p25,
+    d.median,
+    d.p75,
+    d.max
+  ])
+
+  // Outliers (p10 and p90 as whisker extensions)
+  const outlierData: [number, number][] = []
+  data.forEach((d, index) => {
+    if (d.p10 < d.min) {
+      outlierData.push([index, d.p10])
+    }
+    if (d.p90 > d.max) {
+      outlierData.push([index, d.p90])
+    }
+  })
+
+  return {
+    title: title ? {
+      text: title,
+      left: 'center',
+      textStyle: {
+        fontSize: 16,
+        fontWeight: 'bold'
+      }
+    } : undefined,
+    tooltip: {
+      trigger: 'item',
+      axisPointer: {
+        type: 'shadow'
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      formatter: (params: any) => {
+        if (params.seriesType === 'boxplot') {
+          const value = params.value
+          const dataPoint = data[params.dataIndex]
+          return `${params.name}<br/>
+            Max: ${value[5]}<br/>
+            P90: ${dataPoint?.p90 ?? 'N/A'}<br/>
+            P75: ${value[4]}<br/>
+            Median: ${value[3]}<br/>
+            P25: ${value[2]}<br/>
+            P10: ${dataPoint?.p10 ?? 'N/A'}<br/>
+            Min: ${value[1]}`
+        }
+        return params.name
+      }
+    },
+    grid: {
+      left: '10%',
+      right: '10%',
+      bottom: '15%',
+      top: title ? '15%' : '10%'
+    },
+    xAxis: {
+      type: 'category',
+      data: categories,
+      boundaryGap: true,
+      nameGap: 30,
+      splitArea: {
+        show: false
+      },
+      axisLabel: {
+        formatter: '{value}',
+        rotate: categories.length > 5 ? 45 : 0
+      },
+      splitLine: {
+        show: false
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Value',
+      splitArea: {
+        show: true
+      }
+    },
+    series: [
+      {
+        name: 'boxplot',
+        type: 'boxplot',
+        data: boxData,
+        itemStyle: {
+          color: CHART_COLORS[0],
+          borderColor: '#333'
+        },
+        tooltip: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          formatter: (param: any) => {
+            return `${param.name}<br/>
+              Max: ${param.value[5]}<br/>
+              P75: ${param.value[4]}<br/>
+              Median: ${param.value[3]}<br/>
+              P25: ${param.value[2]}<br/>
+              Min: ${param.value[1]}`
+          }
+        }
+      },
+      {
+        name: 'outlier',
+        type: 'scatter',
+        data: outlierData,
+        itemStyle: {
+          color: 'rgba(255, 0, 0, 0.5)'
+        }
+      }
+    ]
+  }
 }
 

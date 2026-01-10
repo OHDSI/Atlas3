@@ -1,7 +1,7 @@
 /**
  * Data Source API Service
- * Feature: 006-datasources
  */
+import { logger } from '@/utils/logger'
 import {
   DataSourceSchema,
   DashboardReportSchema,
@@ -73,23 +73,29 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
       if (!response.ok) {
         const status = response.status
         const errorText = await response.text().catch(() => 'Unknown error')
-        
+
         if (isRetryableError(status) && attempt < MAX_RETRY_ATTEMPTS - 1) {
           const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-          console.warn(`[DataSource] Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`)
+          logger.warn('DataSource', `Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`)
           await sleep(delayMs)
           continue
         }
-        
+
         throw new Error(`HTTP ${status}: ${errorText}`)
       }
 
-      const data = await response.json()
-      activeRequests.delete(endpoint)
-      return data
+      // Parse JSON response with error handling
+      try {
+        const data = await response.json()
+        activeRequests.delete(endpoint)
+        return data
+      } catch (parseError) {
+        logger.error('DataSource', 'Failed to parse JSON response', parseError)
+        throw new Error('Invalid response format')
+      }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log('[DataSource] Request cancelled:', endpoint)
+        logger.debug('DataSource', 'Request cancelled', endpoint)
         throw error
       }
       
@@ -97,7 +103,7 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
       
       if (attempt < MAX_RETRY_ATTEMPTS - 1) {
         const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-        console.warn(`[DataSource] Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`)
+        logger.warn('DataSource', `Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`)
         await sleep(delayMs)
         continue
       }
@@ -113,15 +119,28 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
  */
 export async function listDataSources(): Promise<DataSource[]> {
   try {
-    console.log('[DataSource] Fetching sources from /source/sources')
+    logger.debug('DataSource', 'Fetching sources from /source/sources')
     const response = await fetchJSON<DataSource[]>('/source/sources')
-    
-    const validated = response.map(source => DataSourceSchema.parse(source))
-    console.log('[DataSource] Successfully fetched', validated.length, 'sources')
-    
+
+    const validated: DataSource[] = []
+    for (const source of response) {
+      const result = DataSourceSchema.safeParse(source)
+      if (result.success) {
+        validated.push(result.data)
+      } else {
+        logger.error('DataSource', 'Data source validation failed', result.error)
+      }
+    }
+
+    // If no sources passed validation, throw error to maintain backward compatibility
+    if (response.length > 0 && validated.length === 0) {
+      throw new Error('All data sources failed validation')
+    }
+
+    logger.debug('DataSource', `Successfully fetched ${validated.length} sources`)
     return validated
   } catch (error) {
-    console.error('[DataSource] Failed to fetch sources:', error)
+    logger.error('DataSource', 'Failed to fetch sources', error)
     throw new Error('Unable to load data sources. Please try again.')
   }
 }
@@ -131,16 +150,21 @@ export async function listDataSources(): Promise<DataSource[]> {
  */
 export async function getDashboardReport(sourceKey: string): Promise<DashboardReport> {
   try {
-    console.log('[DataSource] Fetching dashboard report for', sourceKey)
+    logger.debug('DataSource', `Fetching dashboard report for ${sourceKey}`)
     const response = await fetchJSON<DashboardAPIResponse>(`/cdmresults/${sourceKey}/dashboard`)
-    
+
     const transformed = transformDashboardReport(response)
-    const validated = DashboardReportSchema.parse(transformed)
-    
-    console.log('[DataSource] Successfully fetched dashboard report for', sourceKey)
-    return validated
+    const result = DashboardReportSchema.safeParse(transformed)
+
+    if (!result.success) {
+      logger.error('DataSource', 'Dashboard report validation failed', result.error)
+      throw new Error('Invalid dashboard report format')
+    }
+
+    logger.debug('DataSource', `Successfully fetched dashboard report for ${sourceKey}`)
+    return result.data
   } catch (error) {
-    console.error('[DataSource] Failed to fetch dashboard report:', { sourceKey, error })
+    logger.error('DataSource', 'Failed to fetch dashboard report', { sourceKey, error })
     throw new Error('Unable to load Dashboard report. Please try again.')
   }
 }
@@ -150,15 +174,15 @@ export async function getDashboardReport(sourceKey: string): Promise<DashboardRe
  */
 export async function getDataDensityReport(sourceKey: string): Promise<DataDensityReport> {
   try {
-    console.log('[DataSource] Fetching data density report for', sourceKey)
-    const response = await fetchJSON<any>(`/cdmresults/${sourceKey}/datadensity`)
-    
-    const transformed = transformDataDensityReport(response)
-    
-    console.log('[DataSource] Successfully fetched data density report for', sourceKey)
+    logger.debug('DataSource', `Fetching data density report for ${sourceKey}`)
+    const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/datadensity`)
+
+    const transformed = transformDataDensityReport(response as Parameters<typeof transformDataDensityReport>[0])
+
+    logger.debug('DataSource', `Successfully fetched data density report for ${sourceKey}`)
     return transformed
   } catch (error) {
-    console.error('[DataSource] Failed to fetch data density report:', { sourceKey, error })
+    logger.error('DataSource', 'Failed to fetch data density report', { sourceKey, error })
     throw new Error('Unable to load Data Density report. Please try again.')
   }
 }
@@ -168,15 +192,15 @@ export async function getDataDensityReport(sourceKey: string): Promise<DataDensi
  */
 export async function getPersonReport(sourceKey: string): Promise<PersonReport> {
   try {
-    console.log('[DataSource] Fetching person report for', sourceKey)
-    const response = await fetchJSON<any>(`/cdmresults/${sourceKey}/person`)
-    
-    const transformed = transformPersonReport(response)
-    
-    console.log('[DataSource] Successfully fetched person report for', sourceKey)
+    logger.debug('DataSource', `Fetching person report for ${sourceKey}`)
+    const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/person`)
+
+    const transformed = transformPersonReport(response as Parameters<typeof transformPersonReport>[0])
+
+    logger.debug('DataSource', `Successfully fetched person report for ${sourceKey}`)
     return transformed
   } catch (error) {
-    console.error('[DataSource] Failed to fetch person report:', { sourceKey, error })
+    logger.error('DataSource', 'Failed to fetch person report', { sourceKey, error })
     throw new Error('Unable to load Person report. Please try again.')
   }
 }
@@ -190,15 +214,15 @@ export async function getClinicalDomainReport(
 ): Promise<PrevalenceData> {
   try {
     const endpoint = getReportEndpoint(reportType)
-    console.log('[DataSource] Fetching', reportType, 'report for', sourceKey)
+    logger.debug('DataSource', `Fetching ${reportType} report for ${sourceKey}`)
     
     const response = await fetchJSON<ClinicalDomainAPIResponse[]>(`/cdmresults/${sourceKey}/${endpoint}`)
     const transformed = transformClinicalDomainReport(response, reportType)
     
-    console.log('[DataSource] Successfully fetched', reportType, 'report for', sourceKey)
+    logger.debug('DataSource', `Successfully fetched ${reportType} report for ${sourceKey}`)
     return transformed
   } catch (error) {
-    console.error('[DataSource] Failed to fetch clinical domain report:', { sourceKey, reportType, error })
+    logger.error('DataSource', 'Failed to fetch clinical domain report', { sourceKey, reportType, error })
     throw new Error(`Unable to load ${reportType} report. Please try again.`)
   }
 }
@@ -209,16 +233,16 @@ export async function getClinicalDomainReport(
  */
 export async function getObservationPeriodReport(sourceKey: string): Promise<import('@/models/datasource.types').ObservationPeriodReport> {
   try {
-    console.log('[DataSource] Fetching observation period report for', sourceKey)
-    const response = await fetchJSON<any>(`/cdmresults/${sourceKey}/observationPeriod`)
-    
+    logger.debug('DataSource', `Fetching observation period report for ${sourceKey}`)
+    const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/observationPeriod`)
+
     const { transformObservationPeriodReport } = await import('@/utils/datasource-formatters')
-    const transformed = transformObservationPeriodReport(response)
-    
-    console.log('[DataSource] Successfully fetched observation period report for', sourceKey)
+    const transformed = transformObservationPeriodReport(response as Parameters<typeof transformObservationPeriodReport>[0])
+
+    logger.debug('DataSource', `Successfully fetched observation period report for ${sourceKey}`)
     return transformed
   } catch (error) {
-    console.error('[DataSource] Failed to fetch observation period report:', { sourceKey, error })
+    logger.error('DataSource', 'Failed to fetch observation period report', { sourceKey, error })
     throw new Error('Unable to load Observation Period report. Please try again.')
   }
 }
@@ -229,16 +253,16 @@ export async function getObservationPeriodReport(sourceKey: string): Promise<imp
  */
 export async function getDeathReport(sourceKey: string): Promise<import('@/models/datasource.types').DeathReport> {
   try {
-    console.log('[DataSource] Fetching death report for', sourceKey)
-    const response = await fetchJSON<any>(`/cdmresults/${sourceKey}/death`)
-    
+    logger.debug('DataSource', `Fetching death report for ${sourceKey}`)
+    const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/death`)
+
     const { transformDeathReport } = await import('@/utils/datasource-formatters')
-    const transformed = transformDeathReport(response)
-    
-    console.log('[DataSource] Successfully fetched death report for', sourceKey)
+    const transformed = transformDeathReport(response as Parameters<typeof transformDeathReport>[0])
+
+    logger.debug('DataSource', `Successfully fetched death report for ${sourceKey}`)
     return transformed
   } catch (error) {
-    console.error('[DataSource] Failed to fetch death report:', { sourceKey, error })
+    logger.error('DataSource', 'Failed to fetch death report', { sourceKey, error })
     throw new Error('Unable to load Death report. Please try again.')
   }
 }
