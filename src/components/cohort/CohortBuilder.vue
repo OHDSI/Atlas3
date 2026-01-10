@@ -781,6 +781,7 @@ const versionsConfig = computed<VersionsConfig>(() => {
   previewVersion: toRef(cohortStore, 'previewVersion'),
   canEdit: computed(() => true), // TODO: Add actual permission check
   isDirty: toRef(cohortStore, 'isDirty'),
+  clearPreview: () => cohortStore.clearPreviewVersion(),
 }})
 
 // Version count for badge display

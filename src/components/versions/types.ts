@@ -76,6 +76,8 @@ export interface VersionsConfig {
   canEdit: Ref<boolean>
   /** Whether asset has unsaved changes (affects navigation warnings) */
   isDirty: Ref<boolean>
+  /** Optional callback to clear preview state */
+  clearPreview?: () => void
 }
 
 /**

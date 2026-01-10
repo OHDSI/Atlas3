@@ -132,7 +132,10 @@ export function useVersions(config: VersionsConfig) {
 
     // Filter by author
     if (filters.value.author) {
-      result = result.filter(v => v.createdBy.name === filters.value.author)
+      result = result.filter(v => {
+        if (v.isCurrent) return true // Always show current
+        return v.createdBy.name === filters.value.author
+      })
     }
 
     // Filter by date range

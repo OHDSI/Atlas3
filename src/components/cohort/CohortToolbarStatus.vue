@@ -152,7 +152,7 @@ interface Props {
   validationColor: string
   isValidating: boolean
   versionCount?: number
-  cohortId?: string | number
+  cohortId?: string | number | null
   isPreviewingVersion?: boolean
 }
 

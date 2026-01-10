@@ -257,6 +257,7 @@ const versionsConfig = computed<VersionsConfig>(() => {
     previewVersion: toRef(store, 'previewVersion'),
     canEdit: computed(() => !store.previewVersion),
     isDirty: toRef(() => hasUnsavedChanges.value),
+    clearPreview: () => store.clearPreviewVersion(),
   }
 })
 

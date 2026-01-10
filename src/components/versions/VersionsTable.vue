@@ -141,7 +141,7 @@
             color="primary"
             @click="$emit('edit-comment', item)"
           >
-            {{ item.comment ? t('components.versions.editComment') : t('common.add') }}
+            {{ item.comment ? t('versions.editComment') : t('common.add') }}
           </v-btn>
 
           <!-- Copy Action (User Story 4) -->
@@ -152,7 +152,7 @@
             color="primary"
             @click="$emit('copy', item.version)"
           >
-            {{ t('components.versions.createACopy') }}
+            {{ t('versions.copy') }}
           </v-btn>
         </div>
       </template>

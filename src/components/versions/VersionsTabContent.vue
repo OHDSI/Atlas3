@@ -79,7 +79,7 @@ const props = defineProps<{
 
 // Composables
 const router = useRouter()
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const versionManager = useVersions(props.config)
 
 // Local state
@@ -112,7 +112,7 @@ onMounted(async () => {
 function handlePreview(versionNumber: number): void {
   // Check for unsaved changes (T044)
   if (props.config.isDirty.value) {
-    const confirmed = confirm(t('versions.unsavedChanges').value)
+    const confirmed = confirm(tv('versions.unsavedChanges'))
     if (!confirmed) return
   }
 
@@ -149,7 +149,7 @@ async function handleCommentSaved(updatedVersion: Version): Promise<void> {
   }
 
   // Show success message
-  showSnackbar(t('versions.commentSaved').value, 'success')
+  showSnackbar(tv('versions.commentSaved'), 'success')
 }
 
 /**
@@ -159,7 +159,7 @@ async function handleCommentSaved(updatedVersion: Version): Promise<void> {
 async function handleCopy(versionNumber: number): Promise<void> {
   // Check for unsaved changes (T060)
   if (props.config.isDirty.value) {
-    const confirmed = confirm(t('versions.unsavedChanges').value)
+    const confirmed = confirm(tv('versions.unsavedChanges'))
     if (!confirmed) return
   }
 
@@ -168,13 +168,18 @@ async function handleCopy(versionNumber: number): Promise<void> {
     const newAsset = await copyVersionAPI(props.config.assetId, versionNumber)
 
     // Show success message
-    showSnackbar(t('versions.copySuccess').value, 'success')
+    showSnackbar(tv('versions.copySuccess'), 'success')
 
     // T059: Clear preview state before navigation
     if (props.config.previewVersion.value) {
       // We're copying while in preview mode - clear the preview state
-      // eslint-disable-next-line vue/no-mutating-props
-      props.config.previewVersion.value = null
+      if (props.config.clearPreview) {
+        props.config.clearPreview()
+      } else {
+        // Fallback to direct mutation if callback not provided
+        // eslint-disable-next-line vue/no-mutating-props
+        props.config.previewVersion.value = null
+      }
     }
 
     // Navigate to new asset (T058)
@@ -185,7 +190,7 @@ async function handleCopy(versionNumber: number): Promise<void> {
     }, 1000)
   } catch (error) {
     logger.error('VersionsTabContent', 'Failed to copy version', error)
-    showSnackbar(t('versions.copyError').value, 'error')
+    showSnackbar(tv('versions.copyError'), 'error')
   }
 }
 
@@ -208,16 +213,16 @@ async function handleSavePreviewAsCurrent(): Promise<void> {
       props.config.previewVersion.value = null
 
       // Show success message
-      showSnackbar(t('versions.saveSuccess').value, 'success')
+      showSnackbar(tv('versions.saveSuccess'), 'success')
 
       // T067: Refresh the versions list to show the new version
       await versionManager.loadVersions()
     } else {
-      showSnackbar(t('versions.saveError').value, 'error')
+      showSnackbar(tv('versions.saveError'), 'error')
     }
   } catch (error) {
     logger.error('VersionsTabContent', 'Failed to save preview as current', error)
-    showSnackbar(t('versions.saveError').value, 'error')
+    showSnackbar(tv('versions.saveError'), 'error')
   } finally {
     savingPreview.value = false
   }
