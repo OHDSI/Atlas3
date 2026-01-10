@@ -1,0 +1,6 @@
+*.pem
+*.key
+*.crt
+*.csr
+!README.md
+!generate-self-signed.sh

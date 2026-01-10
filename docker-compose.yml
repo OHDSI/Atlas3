@@ -6,12 +6,14 @@ volumes:
   atlas3-webapi-data:
     name: atlas3-webapi-data
 
+
 services:
   ssl-init:
     image: alpine:latest
     container_name: ssl-init
     volumes:
       - atlas3-ssl-data:/ssl
+
     command: >
       sh -c '
       if [ ! -f /ssl/cert.pem ] || [ ! -f /ssl/key.pem ]; then
