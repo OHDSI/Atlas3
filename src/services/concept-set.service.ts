@@ -9,7 +9,6 @@ import {
 } from '@/models/concept-set.types'
 import {
   mapConceptSetFromAPI,
-  mapConceptSetToAPI,
   type ConceptSetAPIMetadata,
   type ConceptSetAPIExpression,
   type ConceptSetAPIResponse,

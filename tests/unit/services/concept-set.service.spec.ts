@@ -205,7 +205,6 @@ describe('ConceptSetService', () => {
           body: expect.any(String),
         })
       )
-      expect(mapConceptSetToAPI).toHaveBeenCalled()
       expect(result).not.toBeNull()
     })
 
@@ -239,17 +238,34 @@ describe('ConceptSetService', () => {
         items: [],
       }
 
-      const mockResponse = {
+      const mockMetadataResponse = {
         id: 1,
         name: 'Updated Concept Set',
         description: 'Updated description',
-        expression: { items: [] },
       }
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      })
+      const mockExpressionResponse = {
+        items: [],
+      }
+
+      // Mock the three fetch calls: PUT metadata, PUT items, GET metadata, GET expression
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockMetadataResponse),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 204,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockMetadataResponse),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockExpressionResponse),
+        })
 
       const result = await updateConceptSet(conceptSet)
 

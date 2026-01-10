@@ -110,11 +110,12 @@ describe('ConceptSetTable', () => {
     const checkboxes = wrapper.findAllComponents({ name: 'VCheckbox' })
 
     // Find the first descendants checkbox (there are multiple checkboxes per row)
+    // Note: Items are sorted by conceptId ascending, so first item is 192855
     if (checkboxes.length > 0) {
       await checkboxes[0].vm.$emit('update:modelValue', false)
 
       expect(wrapper.emitted('toggle:descendants')).toBeTruthy()
-      expect(wrapper.emitted('toggle:descendants')![0]).toEqual([313217])
+      expect(wrapper.emitted('toggle:descendants')![0]).toEqual([192855])
     }
   })
 
@@ -123,11 +124,12 @@ describe('ConceptSetTable', () => {
     const checkboxes = wrapper.findAllComponents({ name: 'VCheckbox' })
 
     // Find the mapped checkbox (second in each row)
+    // Note: Items are sorted by conceptId ascending, so first item is 192855
     if (checkboxes.length > 1) {
       await checkboxes[1].vm.$emit('update:modelValue', true)
 
       expect(wrapper.emitted('toggle:mapped')).toBeTruthy()
-      expect(wrapper.emitted('toggle:mapped')![0]).toEqual([313217])
+      expect(wrapper.emitted('toggle:mapped')![0]).toEqual([192855])
     }
   })
 
@@ -136,11 +138,12 @@ describe('ConceptSetTable', () => {
     const checkboxes = wrapper.findAllComponents({ name: 'VCheckbox' })
 
     // Find the exclude checkbox (third in each row)
+    // Note: Items are sorted by conceptId ascending, so first item is 192855
     if (checkboxes.length > 2) {
       await checkboxes[2].vm.$emit('update:modelValue', true)
 
       expect(wrapper.emitted('toggle:exclude')).toBeTruthy()
-      expect(wrapper.emitted('toggle:exclude')![0]).toEqual([313217])
+      expect(wrapper.emitted('toggle:exclude')![0]).toEqual([192855])
     }
   })
 
@@ -149,11 +152,12 @@ describe('ConceptSetTable', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const deleteButtons = buttons.filter(btn => btn.props('icon') === 'mdi-delete')
 
+    // Note: Items are sorted by conceptId ascending, so first item is 192855
     if (deleteButtons.length > 0) {
       await deleteButtons[0].trigger('click')
 
       expect(wrapper.emitted('remove')).toBeTruthy()
-      expect(wrapper.emitted('remove')![0]).toEqual([313217])
+      expect(wrapper.emitted('remove')![0]).toEqual([192855])
     }
   })
 

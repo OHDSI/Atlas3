@@ -1,11 +1,11 @@
 <template>
   <div class="concept-set-table">
     <v-data-table
+      v-model:sort-by="sortBy"
       :headers="headers"
       :items="items"
       :loading="loading"
       :items-per-page="50"
-      v-model:sort-by="sortBy"
       class="elevation-1"
     >
       <!-- Descendants Toggle -->
@@ -114,7 +114,7 @@ const { t } = useI18n()
 // Local State
 // ============================================================================
 
-const sortBy = ref([{ key: 'conceptId', order: 'asc' }])
+const sortBy = ref([{ key: 'conceptId', order: 'asc' as const }])
 
 // ============================================================================
 // Props & Emits

@@ -303,11 +303,12 @@ describe('ConceptTable', () => {
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const addButton = buttons.find(btn => btn.text().includes('Add'))
 
+    // Note: Items are sorted by conceptId ascending, so first item is mockConcepts[2] (192855)
     if (addButton) {
       await addButton.trigger('click')
 
       expect(wrapper.emitted('add-concept')).toBeTruthy()
-      expect(wrapper.emitted('add-concept')![0]).toEqual([mockConcepts[0]])
+      expect(wrapper.emitted('add-concept')![0]).toEqual([mockConcepts[2]])
     }
   })
 

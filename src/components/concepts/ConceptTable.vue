@@ -1,12 +1,12 @@
 <template>
   <div class="concept-table">
     <v-data-table
+      v-model:sort-by="sortBy"
       :headers="headers"
       :items="concepts"
       :loading="loading"
       :items-per-page="itemsPerPage"
       :page="page"
-      v-model:sort-by="sortBy"
       hide-default-footer
       class="elevation-1"
     >
@@ -192,7 +192,7 @@ const { t } = useI18n()
 // Local State
 // ============================================================================
 
-const sortBy = ref([{ key: 'conceptId', order: 'asc' }])
+const sortBy = ref([{ key: 'conceptId', order: 'asc' as const }])
 
 // ============================================================================
 // Props & Emits
