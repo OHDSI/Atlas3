@@ -172,8 +172,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { useAuth } from '@/composables/useAuth'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import { logger } from '@/utils/logger'
 import { listDataSources } from '@/services/datasource.service'
@@ -182,6 +183,7 @@ import type { CacheStatusType, DataSourceWithCacheStatus } from '@/models/trexsq
 import type { DataSource } from '@/models/datasource.types'
 
 const { t } = useI18n()
+const auth = useAuth()
 const { isTrexSQLEnabled, initialize: initTrexSQL } = useTrexSQLCache()
 
 const isLoading = ref(false)
@@ -389,6 +391,14 @@ function formatDate(dateString: string): string {
 onMounted(async () => {
   await initTrexSQL()
   loadDataSources()
+})
+
+// Re-initialize TrexSQL and reload data sources when user becomes authenticated
+watch(() => auth.isAuthenticated.value, async (isAuth, wasAuth) => {
+  if (isAuth && !wasAuth) {
+    await initTrexSQL()
+    loadDataSources()
+  }
 })
 </script>
 

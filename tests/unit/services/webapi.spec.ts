@@ -20,14 +20,18 @@ describe('WebAPI Service', () => {
   let webapi: typeof import('@/services/webapi')
 
   beforeEach(async () => {
-    mockFetch = vi.fn()
-    global.fetch = mockFetch
-    localStorage.clear()
-    localStorage.setItem('locale', 'en')
     vi.clearAllMocks()
-
     // Re-import to get fresh module
     vi.resetModules()
+
+    // Set up mock AFTER resetModules to ensure it's not affected by module resets
+    mockFetch = vi.fn()
+    // Mock both global.fetch and window.fetch to ensure consistent behavior
+    global.fetch = mockFetch
+    window.fetch = mockFetch
+    localStorage.clear()
+    localStorage.setItem('locale', 'en')
+
     webapi = await import('@/services/webapi')
   })
 
@@ -47,9 +51,11 @@ describe('WebAPI Service', () => {
         },
       ]
 
-      mockFetch.mockResolvedValueOnce({
+      // Use mockResolvedValue instead of mockResolvedValueOnce to handle retries
+      // webapi.ts uses response.text() then JSON.parse, so we need to provide text() method
+      mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockSources),
+        text: () => Promise.resolve(JSON.stringify(mockSources)),
       })
 
       const result = await webapi.fetchCDMSources()
@@ -68,7 +74,7 @@ describe('WebAPI Service', () => {
     it('returns error on validation error', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([{ invalid: 'data' }]),
+        text: () => Promise.resolve(JSON.stringify([{ invalid: 'data' }])),
       })
 
       const result = await webapi.fetchCDMSources()
@@ -94,7 +100,7 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockConcepts),
+        text: () => Promise.resolve(JSON.stringify(mockConcepts)),
       })
 
       const result = await webapi.searchConcepts('SYNPUF1K', 'diabetes')
@@ -112,7 +118,7 @@ describe('WebAPI Service', () => {
     it('includes domain filter when specified', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([]),
+        text: () => Promise.resolve(JSON.stringify([])),
       })
 
       await webapi.searchConcepts('SYNPUF1K', 'test', 'Condition')
@@ -126,7 +132,7 @@ describe('WebAPI Service', () => {
     it('returns error on validation error', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve('invalid'),
+        text: () => Promise.resolve(JSON.stringify('invalid')),
       })
 
       const result = await webapi.searchConcepts('SYNPUF1K', 'test')
@@ -145,7 +151,7 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockCohort),
+        text: () => Promise.resolve(JSON.stringify(mockCohort)),
       })
 
       const result = await webapi.getCohortDefinition(123)
@@ -175,7 +181,7 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ id: 1, ...newCohort }),
+        text: () => Promise.resolve(JSON.stringify({ id: 1, ...newCohort })),
       })
 
       const result = await webapi.saveCohortDefinition(newCohort as never)
@@ -196,7 +202,7 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(existingCohort),
+        text: () => Promise.resolve(JSON.stringify(existingCohort)),
       })
 
       await webapi.saveCohortDefinition(existingCohort as never)
@@ -220,7 +226,7 @@ describe('WebAPI Service', () => {
     it('deletes cohort definition', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.deleteCohortDefinition(123)
@@ -245,11 +251,11 @@ describe('WebAPI Service', () => {
     it('generates cohort for source', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () =>
-          Promise.resolve({
+        text: () =>
+          Promise.resolve(JSON.stringify({
             status: 'STARTING',
             executionId: 456,
-          }),
+          })),
       })
 
       const result = await webapi.generateCohort(123, 'SYNPUF1K')
@@ -265,7 +271,7 @@ describe('WebAPI Service', () => {
     it('maps status correctly', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ status: 'COMPLETED' }),
+        text: () => Promise.resolve(JSON.stringify({ status: 'COMPLETED' })),
       })
 
       const result = await webapi.generateCohort(123, 'SYNPUF1K')
@@ -294,7 +300,7 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockInfo),
+        text: () => Promise.resolve(JSON.stringify(mockInfo)),
       })
 
       const result = await webapi.getCohortGenerationInfo(123)
@@ -324,7 +330,7 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockSet),
+        text: () => Promise.resolve(JSON.stringify(mockSet)),
       })
 
       const result = await webapi.getConceptSet(1)
@@ -345,7 +351,7 @@ describe('WebAPI Service', () => {
     it('fetches all concept sets', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([{ id: 1 }, { id: 2 }]),
+        text: () => Promise.resolve(JSON.stringify([{ id: 1 }, { id: 2 }])),
       })
 
       const result = await webapi.getAllConceptSets()
@@ -369,7 +375,7 @@ describe('WebAPI Service', () => {
     it('creates concept set', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ id: 1, name: 'New Set' }),
+        text: () => Promise.resolve(JSON.stringify({ id: 1, name: 'New Set' })),
       })
 
       const result = await webapi.createConceptSet({ name: 'New Set' } as never)
@@ -394,7 +400,7 @@ describe('WebAPI Service', () => {
     it('updates concept set', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ id: 1, name: 'Updated' }),
+        text: () => Promise.resolve(JSON.stringify({ id: 1, name: 'Updated' })),
       })
 
       await webapi.updateConceptSet({ id: 1, name: 'Updated' } as never)
@@ -418,7 +424,7 @@ describe('WebAPI Service', () => {
     it('deletes concept set', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.deleteConceptSet(1)
@@ -439,11 +445,11 @@ describe('WebAPI Service', () => {
     it('fetches all cohorts', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () =>
-          Promise.resolve([
+        text: () =>
+          Promise.resolve(JSON.stringify([
             { id: 1, name: 'Cohort 1' },
             { id: 2, name: 'Cohort 2' },
-          ]),
+          ])),
       })
 
       const result = await webapi.getCohorts()
@@ -459,7 +465,7 @@ describe('WebAPI Service', () => {
     it('deletes cohort', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       await webapi.deleteCohort(123)
@@ -479,7 +485,7 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockResponse),
+        text: () => Promise.resolve(JSON.stringify(mockResponse)),
       })
 
       const result = await webapi.validateCohortDefinition('Test', {})
@@ -515,7 +521,7 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockReport),
+        text: () => Promise.resolve(JSON.stringify(mockReport)),
       })
 
       await webapi.getCohortReport(123, 'SYNPUF1K')
@@ -539,7 +545,7 @@ describe('WebAPI Service', () => {
     it('fetches person report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       await webapi.getPersonReport(123, 'SYNPUF1K')
@@ -553,7 +559,7 @@ describe('WebAPI Service', () => {
     it('fetches condition eras report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       await webapi.getConditionErasReport(123, 'SYNPUF1K')
@@ -567,7 +573,7 @@ describe('WebAPI Service', () => {
     it('fetches condition report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       await webapi.getConditionReport(123, 'SYNPUF1K')
@@ -581,7 +587,7 @@ describe('WebAPI Service', () => {
     it('fetches drug eras report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       await webapi.getDrugErasReport(123, 'SYNPUF1K')
@@ -595,7 +601,7 @@ describe('WebAPI Service', () => {
     it('fetches cohort specific report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       await webapi.getCohortSpecificReport(123, 'SYNPUF1K')
@@ -611,7 +617,7 @@ describe('WebAPI Service', () => {
     it('triggers full analysis', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.triggerFullAnalysis(123, 'SYNPUF1K')
@@ -626,7 +632,7 @@ describe('WebAPI Service', () => {
     it('triggers quick analysis', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.triggerQuickAnalysis(123, 'SYNPUF1K')
@@ -637,7 +643,7 @@ describe('WebAPI Service', () => {
     it('triggers utilization', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.triggerUtilization(123, 'SYNPUF1K')
@@ -650,7 +656,7 @@ describe('WebAPI Service', () => {
     it('fetches persons exposure baseline report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       await webapi.getPersonsExposureBaselineReport(123, 'SYNPUF1K')
@@ -664,7 +670,7 @@ describe('WebAPI Service', () => {
     it('fetches completed analyses', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([1, 2, 3]),
+        text: () => Promise.resolve(JSON.stringify([1, 2, 3])),
       })
 
       const result = await webapi.getCompletedAnalyses(123, 'SYNPUF1K')
@@ -689,7 +695,7 @@ describe('WebAPI Service', () => {
     it('fetches death report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       await webapi.getDeathReport(123, 'SYNPUF1K')
@@ -703,7 +709,7 @@ describe('WebAPI Service', () => {
     it('fetches heracles heel report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       await webapi.getHeraclesHeelReport(123, 'SYNPUF1K')
@@ -746,7 +752,7 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([]),
+        text: () => Promise.resolve(JSON.stringify([])),
       })
 
       await webapi.fetchCDMSources()
@@ -766,7 +772,7 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([]),
+        text: () => Promise.resolve(JSON.stringify([])),
       })
 
       await webapi.fetchCDMSources()
@@ -786,7 +792,7 @@ describe('WebAPI Service', () => {
     it('fetches persons exposure cohort report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getPersonsExposureCohortReport(123, 'SYNPUF1K')
@@ -811,7 +817,7 @@ describe('WebAPI Service', () => {
     it('fetches visits baseline report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getVisitsBaselineReport(123, 'SYNPUF1K')
@@ -836,7 +842,7 @@ describe('WebAPI Service', () => {
     it('fetches visit dates baseline report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getVisitDatesBaselineReport(123, 'SYNPUF1K')
@@ -861,7 +867,7 @@ describe('WebAPI Service', () => {
     it('fetches care site visit dates baseline report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getCareSiteVisitDatesBaselineReport(123, 'SYNPUF1K')
@@ -886,7 +892,7 @@ describe('WebAPI Service', () => {
     it('fetches visits cohort report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getVisitsCohortReport(123, 'SYNPUF1K')
@@ -911,7 +917,7 @@ describe('WebAPI Service', () => {
     it('fetches visit dates cohort report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getVisitDatesCohortReport(123, 'SYNPUF1K')
@@ -936,7 +942,7 @@ describe('WebAPI Service', () => {
     it('fetches care site visit dates cohort report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getCareSiteVisitDatesCohortReport(123, 'SYNPUF1K')
@@ -961,7 +967,7 @@ describe('WebAPI Service', () => {
     it('fetches drug utilization baseline report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getDrugUtilizationBaselineReport(123, 'SYNPUF1K')
@@ -986,7 +992,7 @@ describe('WebAPI Service', () => {
     it('fetches drug utilization cohort report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getDrugUtilizationCohortReport(123, 'SYNPUF1K')
@@ -1011,7 +1017,7 @@ describe('WebAPI Service', () => {
     it('fetches conditions by index report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getConditionsByIndexReport(123, 'SYNPUF1K')
@@ -1036,7 +1042,7 @@ describe('WebAPI Service', () => {
     it('fetches drug exposure report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getDrugExposureReport(123, 'SYNPUF1K')
@@ -1061,7 +1067,7 @@ describe('WebAPI Service', () => {
     it('fetches drugs by index report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getDrugsByIndexReport(123, 'SYNPUF1K')
@@ -1086,7 +1092,7 @@ describe('WebAPI Service', () => {
     it('fetches observation periods report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getObservationPeriodsReport(123, 'SYNPUF1K')
@@ -1111,7 +1117,7 @@ describe('WebAPI Service', () => {
     it('fetches procedure report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getProcedureReport(123, 'SYNPUF1K')
@@ -1136,7 +1142,7 @@ describe('WebAPI Service', () => {
     it('fetches procedures by index report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getProceduresByIndexReport(123, 'SYNPUF1K')
@@ -1161,7 +1167,7 @@ describe('WebAPI Service', () => {
     it('fetches data completeness report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getDataCompletenessReport(123, 'SYNPUF1K')
@@ -1186,7 +1192,7 @@ describe('WebAPI Service', () => {
     it('fetches entropy report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getEntropyReport(123, 'SYNPUF1K')
@@ -1211,7 +1217,7 @@ describe('WebAPI Service', () => {
     it('fetches tornado report', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getTornadoReport(123, 'SYNPUF1K')
@@ -1247,7 +1253,7 @@ describe('WebAPI Service', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve([]),
+          text: () => Promise.resolve(JSON.stringify([])),
         })
 
       const result = await webapi.fetchCDMSources()
@@ -1265,7 +1271,7 @@ describe('WebAPI Service', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve([]),
+          text: () => Promise.resolve(JSON.stringify([])),
         })
 
       const result = await webapi.fetchCDMSources()
@@ -1279,7 +1285,7 @@ describe('WebAPI Service', () => {
         .mockRejectedValueOnce(new TypeError('Network error'))
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve([]),
+          text: () => Promise.resolve(JSON.stringify([])),
         })
 
       const result = await webapi.fetchCDMSources()
@@ -1337,7 +1343,7 @@ describe('WebAPI Service', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve([]),
+          text: () => Promise.resolve(JSON.stringify([])),
         })
 
       await webapi.fetchCDMSources()
@@ -1385,7 +1391,7 @@ describe('WebAPI Service', () => {
     it('handles validation errors in getCohortReport', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ invalid: 'data' }),
+        text: () => Promise.resolve(JSON.stringify({ invalid: 'data' })),
       })
 
       const result = await webapi.getCohortReport(123, 'SYNPUF1K')
@@ -1396,7 +1402,7 @@ describe('WebAPI Service', () => {
     it('handles missing summary in getCohortReport', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(JSON.stringify({})),
       })
 
       const result = await webapi.getCohortReport(123, 'SYNPUF1K')
@@ -1407,7 +1413,7 @@ describe('WebAPI Service', () => {
     it('handles status mapping in generateCohort - STARTING', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ status: 'STARTING' }),
+        text: () => Promise.resolve(JSON.stringify({ status: 'STARTING' })),
       })
 
       const result = await webapi.generateCohort(123, 'SYNPUF1K')
@@ -1418,7 +1424,7 @@ describe('WebAPI Service', () => {
     it('handles status mapping in generateCohort - STARTED', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ status: 'STARTED' }),
+        text: () => Promise.resolve(JSON.stringify({ status: 'STARTED' })),
       })
 
       const result = await webapi.generateCohort(123, 'SYNPUF1K')
@@ -1429,7 +1435,7 @@ describe('WebAPI Service', () => {
     it('handles status mapping in generateCohort - RUNNING', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ status: 'RUNNING' }),
+        text: () => Promise.resolve(JSON.stringify({ status: 'RUNNING' })),
       })
 
       const result = await webapi.generateCohort(123, 'SYNPUF1K')
@@ -1440,7 +1446,7 @@ describe('WebAPI Service', () => {
     it('handles status mapping in generateCohort - COMPLETE', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ status: 'COMPLETE' }),
+        text: () => Promise.resolve(JSON.stringify({ status: 'COMPLETE' })),
       })
 
       const result = await webapi.generateCohort(123, 'SYNPUF1K')
@@ -1451,7 +1457,7 @@ describe('WebAPI Service', () => {
     it('handles status mapping in generateCohort - FAILED', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ status: 'FAILED' }),
+        text: () => Promise.resolve(JSON.stringify({ status: 'FAILED' })),
       })
 
       const result = await webapi.generateCohort(123, 'SYNPUF1K')
@@ -1462,7 +1468,7 @@ describe('WebAPI Service', () => {
     it('handles status mapping in generateCohort - unknown status defaults to PENDING', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ status: 'UNKNOWN' }),
+        text: () => Promise.resolve(JSON.stringify({ status: 'UNKNOWN' })),
       })
 
       const result = await webapi.generateCohort(123, 'SYNPUF1K')
@@ -1476,12 +1482,12 @@ describe('WebAPI Service', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
+        text: () => Promise.resolve(JSON.stringify({
           status: 'COMPLETED',
           executionId: 789,
           startDate,
           endDate,
-        }),
+        })),
       })
 
       const result = await webapi.generateCohort(123, 'SYNPUF1K')

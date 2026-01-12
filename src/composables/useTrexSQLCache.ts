@@ -305,8 +305,12 @@ export function useTrexSQLCache() {
   async function initialize(): Promise<void> {
     loadSelectedSource()
 
+    // Re-detect TrexSQL if not explicitly set by user or if previous detection failed
     if (authStore.user?.trexsqlCacheEnabled === undefined) {
-      await detectTrexSQLAvailability()
+      // Always re-detect if previous detection failed (trexSQLDetected is false or null)
+      if (trexSQLDetected.value !== true) {
+        await detectTrexSQLAvailability()
+      }
     }
 
     if (isTrexSQLEnabled.value) {

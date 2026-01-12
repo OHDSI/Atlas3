@@ -69,7 +69,7 @@ function isRetryableError(error: unknown, statusCode?: number): boolean {
  * Exponential backoff with 3 attempts, 500ms initial delay
  * Adds User-Language header for i18n support
  */
-async function fetchJSON<T>(
+export async function fetchJSON<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
@@ -104,9 +104,14 @@ async function fetchJSON<T>(
         throw error
       }
 
-      // Parse JSON response with error handling
+      // Handle empty responses (PUT/DELETE) or parse JSON
+      const text = await response.text()
+      if (!text || text.trim() === '') {
+        return undefined as T
+      }
+
       try {
-        return await response.json() as T
+        return JSON.parse(text) as T
       } catch (parseError) {
         logger.error('WebAPI', 'Failed to parse JSON response', parseError)
         throw new Error('Invalid response format')

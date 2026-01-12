@@ -79,7 +79,7 @@ export const useUIStore = defineStore('ui', () => {
     configPanelState.value.isOpen = false
   }
 
-  function setConfigPanelSection(section: 'cache' | 'vocabulary' | 'tags') {
+  function setConfigPanelSection(section: 'cache' | 'vocabulary' | 'tags' | 'permissions') {
     configPanelState.value.activeSection = section
   }
 

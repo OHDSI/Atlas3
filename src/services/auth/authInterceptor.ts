@@ -2,6 +2,7 @@ import { useAuthStore } from '@/stores/auth'
 import { getTokenExpiration } from '@/utils/jwt'
 import { tokenRefreshService } from './tokenRefresh'
 import { logger } from '@/utils/logger'
+import { authConfig } from '@/config/auth.config'
 
 export function setupAuthInterceptor() {
   const originalFetch = window.fetch
@@ -70,7 +71,10 @@ export function setupAuthInterceptor() {
         if (response.status === 401) {
           logger.warn('AuthInterceptor', '401 Unauthorized - clearing auth')
           authStore.clearAuth()
-          authStore.openLoginModal()
+          // Only show login modal if auth is enabled
+          if (authConfig.userAuthenticationEnabled) {
+            authStore.openLoginModal()
+          }
         } else if (response.status === 403) {
           logger.warn('AuthInterceptor', '403 Forbidden - attempting token refresh')
           await authStore.performTokenRefresh()
