@@ -134,6 +134,7 @@ services:
     command: sh -c 'for f in /scripts/*.sql; do psql -f "$$f"; done'
 
   atlas3-frontend:
+    image: ghcr.io/ohdsi/atlas3:dev
     build:
       context: .
       dockerfile: Dockerfile
@@ -141,7 +142,6 @@ services:
         VITE_AUTH_ENABLED: "true"
         VITE_AUTH_SKIP_LOGIN: "false"
         VITE_AUTH_PROVIDERS: '[{"name":"Database","url":"user/login/db","ajax":true,"icon":"mdi-database","isUseCredentialsForm":true}]'
-    image: atlas3-frontend:local
     container_name: atlas3-frontend
     platform: linux/amd64
     restart: unless-stopped
