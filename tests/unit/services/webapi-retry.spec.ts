@@ -34,7 +34,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse,
+        text: async () => JSON.stringify(mockResponse),
       })
 
       const result = await webapi.fetchCDMSources()
@@ -65,7 +65,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
         .mockRejectedValueOnce(new TypeError('Network request failed'))
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockResponse,
+          text: async () => JSON.stringify(mockResponse),
         })
 
       const promise = webapi.fetchCDMSources()
@@ -159,7 +159,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockResponse,
+          text: async () => JSON.stringify(mockResponse),
         })
 
       const promise = webapi.fetchCDMSources()
@@ -195,7 +195,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockResponse,
+          text: async () => JSON.stringify(mockResponse),
         })
 
       const promise = webapi.fetchCDMSources()
@@ -229,7 +229,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockResponse,
+          text: async () => JSON.stringify(mockResponse),
         })
 
       const promise = webapi.fetchCDMSources()
@@ -263,7 +263,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockResponse,
+          text: async () => JSON.stringify(mockResponse),
         })
 
       const promise = webapi.fetchCDMSources()
@@ -299,7 +299,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockResponse,
+          text: async () => JSON.stringify(mockResponse),
         })
 
       const promise = webapi.fetchCDMSources()
@@ -403,7 +403,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockResponse,
+          text: async () => JSON.stringify(mockResponse),
         })
 
       const promise = webapi.fetchCDMSources()
@@ -471,7 +471,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
         .mockRejectedValueOnce(new TypeError('Network error'))
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockConcepts,
+          text: async () => JSON.stringify(mockConcepts),
         })
 
       const promise = webapi.searchConcepts('SYNPUF1K', 'diabetes')
@@ -505,7 +505,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockJob,
+          text: async () => JSON.stringify(mockJob),
         })
 
       const promise = webapi.generateCohort(123, 'SYNPUF1K')
@@ -528,7 +528,7 @@ describe('WebAPI Service - Network Retry Logic', () => {
         .mockRejectedValueOnce(new TypeError('Network error'))
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ([]),
+          text: async () => JSON.stringify([]),
         })
 
       const promise = webapi.fetchCDMSources()

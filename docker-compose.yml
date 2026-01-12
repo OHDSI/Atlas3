@@ -46,7 +46,6 @@ services:
       - "5433:5432"
     volumes:
       - atlas3-postgres-data:/var/lib/postgresql/data
-      - ./atlasdb/100_populate_source_source_daimon.sql:/docker-entrypoint-initdb.d/100_populate_source_source_daimon.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -60,6 +59,12 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/WebAPI/info || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
     environment:
       DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       DATASOURCE_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
@@ -75,11 +80,35 @@ services:
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
       SPRING_FLYWAY_BASELINE_VERSION: "2.2.5.20180212152023"
       SPRING_FLYWAY_PLACEHOLDERS_OHDSISCHEMA: webapi
-      SECURITY_PROVIDER: DisabledSecurity
-      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration
+      SECURITY_PROVIDER: AtlasRegularSecurity
+      SECURITY_TOKEN_EXPIRATION: "43200"
+      SECURITY_CORS_ENABLED: "true"
+      SECURITY_ORIGIN: "*"
+      SECURITY_SSL_ENABLED: "false"
+      SECURITY_DEFAULTGLOBALREADPERMISSIONS: "true"
+      SECURITY_OAUTH_CALLBACK_UI: "http://localhost/atlas/#/welcome"
+      SECURITY_OAUTH_CALLBACK_API: "http://localhost:8080/WebAPI/user/oauth/callback"
+      SECURITY_OAUTH_CALLBACK_URLRESOLVER: "query"
+      SECURITY_AUTH_JDBC_ENABLED: "true"
+      SECURITY_AUTH_WINDOWS_ENABLED: "false"
+      SECURITY_AUTH_KERBEROS_ENABLED: "false"
+      SECURITY_AUTH_OPENID_ENABLED: "false"
+      SECURITY_AUTH_FACEBOOK_ENABLED: "false"
+      SECURITY_AUTH_GITHUB_ENABLED: "false"
+      SECURITY_AUTH_GOOGLE_ENABLED: "false"
+      SECURITY_AUTH_LDAP_ENABLED: "false"
+      SECURITY_AUTH_AD_ENABLED: "false"
+      SECURITY_AUTH_CAS_ENABLED: "false"
+      SECURITY_DB_DATASOURCE_SCHEMA: webapi_security
+      SECURITY_DB_DATASOURCE_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi_security
+      SECURITY_DB_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      SECURITY_DB_DATASOURCE_USERNAME: postgres
+      SECURITY_DB_DATASOURCE_PASSWORD: mypass
+      SECURITY_DB_DATASOURCE_AUTHENTICATIONQUERY: "SELECT password, email AS firstname, NULL AS middlename, email AS lastname FROM webapi_security.security WHERE email = ?"
       TREXSQL_ENABLED: "true"
       TREXSQL_CACHE_PATH: /data/cache
-      JAVA_OPTS: "-Dtrexsql.enabled=true -Dtrexsql.cache-path=/data/cache -Dtrexsql.sources.EUNOMIA.enabled=true -Dtrexsql.sources.EUNOMIA.database-code=EUNOMIA -Dorg.duckdb.lib_path=/data/trexsql-lib/libtrexsql_java.so -Dspring.flyway.placeholders.ohdsiSchema=webapi"
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration
+      JAVA_OPTS: "-Dtrexsql.enabled=true -Dtrexsql.cache-path=/data/cache -Dtrexsql.sources.EUNOMIA.enabled=true -Dtrexsql.sources.EUNOMIA.database-code=EUNOMIA -Dtrexsql.sources.EUNOMIA.cdm-schema=demo_cdm -Dtrexsql.security.enabled=false -Dorg.duckdb.lib_path=/data/trexsql-lib/libtrexsql_java.so -Dspring.flyway.placeholders.ohdsiSchema=webapi"
       HOME: /data
     volumes:
       - atlas3-webapi-data:/data
@@ -89,11 +118,30 @@ services:
       atlas3-postgres:
         condition: service_healthy
 
+  atlas3-db-init:
+    image: postgres:16-alpine
+    container_name: atlas3-db-init
+    volumes:
+      - ./atlasdb:/scripts:ro
+    environment:
+      PGHOST: atlas3-postgres
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD:-mypass}
+      PGDATABASE: postgres
+    depends_on:
+      atlas3-webapi:
+        condition: service_healthy
+    command: sh -c 'for f in /scripts/*.sql; do psql -f "$$f"; done'
+
   atlas3-frontend:
     image: ghcr.io/ohdsi/atlas3:dev
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_AUTH_ENABLED: "true"
+        VITE_AUTH_SKIP_LOGIN: "false"
+        VITE_AUTH_PROVIDERS: '[{"name":"Database","url":"user/login/db","ajax":true,"icon":"mdi-database","isUseCredentialsForm":true}]'
     container_name: atlas3-frontend
     platform: linux/amd64
     restart: unless-stopped
@@ -107,5 +155,5 @@ services:
     depends_on:
       atlas3-init:
         condition: service_completed_successfully
-      atlas3-webapi:
-        condition: service_started
+      atlas3-db-init:
+        condition: service_completed_successfully

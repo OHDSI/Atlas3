@@ -320,7 +320,7 @@ export interface VocabularySchemaConfig {
  */
 export interface ConfigPanelState {
   isOpen: boolean
-  activeSection: 'cache' | 'sources' | 'vocabulary' | 'tags'
+  activeSection: 'cache' | 'sources' | 'vocabulary' | 'tags' | 'permissions'
   scrollPosition: number
 }
 

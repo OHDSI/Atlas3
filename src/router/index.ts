@@ -110,6 +110,20 @@ const router = createRouter({
       props: true,
       meta: { requiresAuth: true },
     },
+    // Role and Permissions Management routes
+    {
+      path: '/config/roles',
+      name: 'role-management',
+      component: () => import('@/views/config/RoleManagementView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/config/roles/:id',
+      name: 'role-details',
+      component: () => import('@/views/config/RoleDetailsView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
     {
       path: '/oauth/callback',
       name: 'oauth-callback',

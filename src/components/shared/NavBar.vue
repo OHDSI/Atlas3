@@ -212,7 +212,7 @@ const signOutLabel = t('components.userBar.signout', 'Sign Out')
 const coreNavigationItems: NavigationItem[] = [
   { id: 'datasources', titleKey: 'navigation.datasources', route: '/datasources', visible: true, active: false },
   { id: 'concepts', titleKey: 'navigation.conceptsets', route: '/concepts', visible: true, active: false },
-  { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true }
+  { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true },
 ]
 
 const navigationItems = ref<NavigationItem[]>(getFilteredCoreNavigationItems())
@@ -254,7 +254,7 @@ function getNavTitle(key: string): string {
   const defaults: Record<string, string> = {
     'navigation.conceptsets': 'Concept Sets',
     'navigation.cohortdefinitions': 'Cohorts',
-    'navigation.datasources': 'Data Sources'
+    'navigation.datasources': 'Data Sources',
   }
   // If key starts with a capital letter, it's likely a direct title (from plugin)
   if (key && key.length > 0 && key[0] && key[0] === key[0].toUpperCase()) {
@@ -361,7 +361,7 @@ onMounted(() => {
     updateActiveNavFromRoute()
   })
 
-  if (authConfig.enableSkipLogin && !auth.isAuthenticated.value) {
+  if (authConfig.userAuthenticationEnabled && authConfig.enableSkipLogin && !auth.isAuthenticated.value) {
     auth.openLoginModal()
   }
 })

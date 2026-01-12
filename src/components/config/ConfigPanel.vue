@@ -37,7 +37,7 @@
             <v-icon start>
               mdi-database
             </v-icon>
-            Cache Management
+            Cache
           </v-tab>
           <v-tab value="sources">
             <v-icon start>
@@ -49,7 +49,13 @@
             <v-icon start>
               mdi-tag-multiple
             </v-icon>
-            Tag Management
+            Tags
+          </v-tab>
+          <v-tab value="permissions">
+            <v-icon start>
+              mdi-shield-account
+            </v-icon>
+            Permissions
           </v-tab>
         </v-tabs>
 
@@ -59,28 +65,36 @@
           class="config-panel__sections flex-grow-1 overflow-y-auto"
           @scroll="handleScroll"
         >
-          <!-- Cache Management Section -->
+          <!-- Cache Management Section (v-if ensures fresh data after login) -->
           <div
-            v-show="activeSection === 'cache'"
+            v-if="activeSection === 'cache'"
             class="config-section"
           >
             <CacheManagementSection />
           </div>
 
-          <!-- Data Sources Section -->
+          <!-- Data Sources Section (v-if ensures fresh data after login) -->
           <div
-            v-show="activeSection === 'sources'"
+            v-if="activeSection === 'sources'"
             class="config-section"
           >
             <DataSourcesSection />
           </div>
 
-          <!-- Tag Management Section -->
+          <!-- Tag Management Section (v-if ensures fresh data after login) -->
           <div
-            v-show="activeSection === 'tags'"
+            v-if="activeSection === 'tags'"
             class="config-section config-section--centered"
           >
             <TagManagementSection />
+          </div>
+
+          <!-- Permissions Section (v-if ensures fresh data after login) -->
+          <div
+            v-if="activeSection === 'permissions'"
+            class="config-section config-section--centered"
+          >
+            <PermissionsSection />
           </div>
         </v-card-text>
       </div>
@@ -94,6 +108,7 @@ import { useUIStore } from '@/stores/ui'
 import CacheManagementSection from './CacheManagementSection.vue'
 import DataSourcesSection from './DataSourcesSection.vue'
 import TagManagementSection from './TagManagementSection.vue'
+import PermissionsSection from './PermissionsSection.vue'
 
 const uiStore = useUIStore()
 
@@ -111,7 +126,7 @@ const isOpen = computed({
 
 const activeSection = computed({
   get: () => uiStore.configPanelState.activeSection === 'vocabulary' ? 'sources' : uiStore.configPanelState.activeSection,
-  set: (value: 'cache' | 'sources' | 'tags') => {
+  set: (value: 'cache' | 'sources' | 'tags' | 'permissions') => {
     // Map 'sources' to 'vocabulary' for the store
     const storeValue = value === 'sources' ? 'vocabulary' : value
     uiStore.setConfigPanelSection(storeValue)
