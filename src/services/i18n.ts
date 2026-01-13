@@ -42,7 +42,13 @@ const LocaleFormatSchema = z.object({
  */
 export async function fetchLocales(): Promise<Locale[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/i18n/locales`)
+    const headers: HeadersInit = {}
+    const token = localStorage.getItem('bearerToken')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const response = await fetch(`${API_BASE_URL}/i18n/locales`, { headers })
     if (!response.ok) {
       throw new Error(`Failed to fetch locales: ${response.statusText}`)
     }

@@ -50,7 +50,8 @@ describe('i18nService', () => {
       const result = await fetchLocales()
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/i18n/locales')
+        expect.stringContaining('/i18n/locales'),
+        expect.any(Object)
       )
       expect(result).toHaveLength(2)
       expect(result[0].code).toBe('en')
