@@ -757,14 +757,10 @@ describe('WebAPI Service', () => {
 
       await webapi.fetchCDMSources()
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            'User-Language': 'de',
-          }),
-        })
-      )
+      expect(mockFetch).toHaveBeenCalled()
+      const callArgs = mockFetch.mock.calls[0]
+      const headers = callArgs[1]?.headers as Headers
+      expect(headers.get('User-Language')).toBe('de')
     })
 
     it('defaults to en locale', async () => {
@@ -777,14 +773,10 @@ describe('WebAPI Service', () => {
 
       await webapi.fetchCDMSources()
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            'User-Language': 'en',
-          }),
-        })
-      )
+      expect(mockFetch).toHaveBeenCalled()
+      const callArgs = mockFetch.mock.calls[0]
+      const headers = callArgs[1]?.headers as Headers
+      expect(headers.get('User-Language')).toBe('en')
     })
   })
 
