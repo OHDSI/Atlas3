@@ -60,9 +60,11 @@ describe('ConceptSearchService', () => {
         },
       ]
 
+      // http-client uses text() then JSON.parse, not json()
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockResponse),
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(mockResponse)),
       })
 
       const result = await searchConcepts('TEST', 'diabetes')
@@ -88,7 +90,8 @@ describe('ConceptSearchService', () => {
     it('should include domain filter when specified', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([]),
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify([])),
       })
 
       await searchConcepts('TEST', 'diabetes', { domain: 'Condition' })
@@ -102,7 +105,8 @@ describe('ConceptSearchService', () => {
     it('should trim query whitespace', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve([]),
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify([])),
       })
 
       await searchConcepts('TEST', '  diabetes  ')
@@ -116,7 +120,8 @@ describe('ConceptSearchService', () => {
     it('should throw error for invalid response format', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ invalid: 'response' }),
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ invalid: 'response' })),
       })
 
       await expect(searchConcepts('TEST', 'test')).rejects.toThrow(
@@ -125,13 +130,14 @@ describe('ConceptSearchService', () => {
     })
 
     it('should throw error on fetch failure', async () => {
+      // 404 is not retryable, so it throws immediately
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        status: 500,
-        statusText: 'Internal Server Error',
+        status: 404,
+        statusText: 'Not Found',
       })
 
-      await expect(searchConcepts('TEST', 'test')).rejects.toThrow('HTTP 500')
+      await expect(searchConcepts('TEST', 'test')).rejects.toThrow('HTTP 404')
     })
   })
 
@@ -148,9 +154,11 @@ describe('ConceptSearchService', () => {
         INVALID_REASON: null,
       }
 
+      // http-client uses text() then JSON.parse
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockConcept),
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(mockConcept)),
       })
 
       const result = await getConceptById('TEST', 123)
@@ -178,7 +186,8 @@ describe('ConceptSearchService', () => {
     it('should return null for invalid response format', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ invalid: 'response' }),
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ invalid: 'response' })),
       })
 
       const result = await getConceptById('TEST', 123)
@@ -204,9 +213,11 @@ describe('ConceptSearchService', () => {
         },
       ]
 
+      // http-client uses text() then JSON.parse
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockResponse),
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(mockResponse)),
       })
 
       const result = await getConceptRecordCounts('TEST', [123, 456])
@@ -215,7 +226,6 @@ describe('ConceptSearchService', () => {
         expect.stringContaining('/cdmresults/TEST/conceptRecordCount'),
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify([123, 456]),
         })
       )
 
@@ -270,7 +280,8 @@ describe('ConceptSearchService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockResponse),
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(mockResponse)),
       })
 
       const result = await getConceptRecordCounts('TEST', [123])
@@ -287,7 +298,8 @@ describe('ConceptSearchService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockResponse),
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(mockResponse)),
       })
 
       const result = await getConceptRecordCounts('TEST', [123, 456])

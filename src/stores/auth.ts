@@ -9,6 +9,10 @@ import { logger } from '@/utils/logger'
 // Storage handler reference for cleanup
 let storageHandler: ((e: StorageEvent) => void) | null = null
 
+// Debounce timeout for cross-tab sync
+let syncDebounceTimer: ReturnType<typeof setTimeout> | null = null
+const SYNC_DEBOUNCE_MS = 100
+
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState & { refreshTimeoutId: number | null; isRunningAs: boolean; originalUser: UserInfo | null; sessionExpiryModalOpen: boolean; sessionExpiresAt: Date | null } => ({
     token: null,
@@ -239,24 +243,34 @@ export const useAuthStore = defineStore('auth', {
     },
 
     setupCrossTabSync() {
-      storageHandler = async (event) => {
+      storageHandler = (event) => {
         if (event.key === 'bearerToken' && event.storageArea === localStorage) {
-          if (event.newValue) {
-            this.setToken(event.newValue)
-
-            // Fetch user info for the new token
-            if (!this.tokenExpired && this.isTokenValid) {
-              try {
-                const { authService } = await import('@/services/auth/authService')
-                const userInfo = await authService.fetchUserInfo()
-                this.setUser(userInfo)
-              } catch (error) {
-                logger.error('Auth', 'Failed to fetch user info on tab sync', error)
-              }
-            }
-          } else {
-            this.clearAuth()
+          if (syncDebounceTimer) {
+            clearTimeout(syncDebounceTimer)
           }
+
+          const newValue = event.newValue
+
+          syncDebounceTimer = setTimeout(async () => {
+            syncDebounceTimer = null
+
+            if (newValue) {
+              if (newValue !== this.token) {
+                this.setToken(newValue)
+                if (!this.tokenExpired && this.isTokenValid) {
+                  try {
+                    const { authService } = await import('@/services/auth/authService')
+                    const userInfo = await authService.fetchUserInfo()
+                    this.setUser(userInfo)
+                  } catch (error) {
+                    logger.error('Auth', 'Failed to fetch user info on tab sync', error)
+                  }
+                }
+              }
+            } else if (this.token) {
+              this.clearAuth()
+            }
+          }, SYNC_DEBOUNCE_MS)
         }
       }
       window.addEventListener('storage', storageHandler)

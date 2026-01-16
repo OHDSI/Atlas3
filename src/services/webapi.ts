@@ -26,117 +26,25 @@ import {
   WebAPIReportResponseSchema,
   type WebAPIReportResponse
 } from '@/models/report.types'
-
-// Use relative path for proxy to avoid CORS in development
-// Override with VITE_WEBAPI_URL environment variable if needed
-const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
-
-// Retry configuration
-const MAX_RETRY_ATTEMPTS = 3
-const INITIAL_RETRY_DELAY_MS = 500
+import { httpClient, getBaseUrl, type HttpClientOptions } from '@/services/http-client'
 
 /**
- * Sleep utility for retry delays
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-/**
- * Check if error is retryable (network errors or 5xx server errors)
- */
-function isRetryableError(error: unknown, statusCode?: number): boolean {
-  // Retry on network errors
-  if (error instanceof TypeError) {
-    return true
-  }
-
-  // Retry on 5xx server errors
-  if (statusCode && statusCode >= 500 && statusCode < 600) {
-    return true
-  }
-
-  // Retry on 429 (Too Many Requests)
-  if (statusCode === 429) {
-    return true
-  }
-
-  return false
-}
-
-/**
- * Generic fetch wrapper with error handling and retry logic
- * Exponential backoff with 3 attempts, 500ms initial delay
- * Adds User-Language header for i18n support
+ * @deprecated Use httpClient from '@/services/http-client' for new code
  */
 export async function fetchJSON<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`
-  let lastError: Error | null = null
-
-  for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
-    try {
-      // Get current locale from localStorage for User-Language header
-      const locale = localStorage.getItem('locale') || 'en'
-      
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Language': locale,
-          ...options?.headers,
-        },
-      })
-
-      if (!response.ok) {
-        const error = new Error(`HTTP ${response.status}: ${response.statusText}`)
-
-        // Check if we should retry
-        if (isRetryableError(error, response.status) && attempt < MAX_RETRY_ATTEMPTS - 1) {
-          const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-          logger.warn('WebAPI', `Request failed (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS}), retrying in ${delay}ms...`, error.message)
-          await sleep(delay)
-          continue
-        }
-
-        throw error
-      }
-
-      // Handle empty responses (PUT/DELETE) or parse JSON
-      const text = await response.text()
-      if (!text || text.trim() === '') {
-        return undefined as T
-      }
-
-      try {
-        return JSON.parse(text) as T
-      } catch (parseError) {
-        logger.error('WebAPI', 'Failed to parse JSON response', parseError)
-        throw new Error('Invalid response format')
-      }
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error))
-
-      // Check if network error is retryable
-      if (isRetryableError(error) && attempt < MAX_RETRY_ATTEMPTS - 1) {
-        const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-        logger.warn('WebAPI', `Network error (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS}), retrying in ${delay}ms...`, lastError.message)
-        await sleep(delay)
-        continue
-      }
-
-      // Not retryable or max attempts reached
-      if (error instanceof TypeError) {
-        throw new Error(`Network error: ${error.message}`)
-      }
-      throw error
-    }
+  const clientOptions: HttpClientOptions = {
+    method: options?.method,
+    headers: options?.headers,
   }
 
-  // Should never reach here, but TypeScript needs it
-  throw lastError || new Error('Request failed after all retry attempts')
+  if (options?.body) {
+    clientOptions.body = options.body
+  }
+
+  return httpClient<T>(endpoint, clientOptions)
 }
 
 /**
@@ -1314,7 +1222,8 @@ export async function getCohortPrintFriendly(
   cohortDefinition: AtlasCohortDefinitionInput
 ): Promise<string | null> {
   try {
-    const url = `${BASE_URL}/cohortdefinition/printfriendly/cohort?format=html`
+    const baseUrl = getBaseUrl()
+    const url = `${baseUrl}/cohortdefinition/printfriendly/cohort?format=html`
     const locale = localStorage.getItem('locale') || 'en'
 
     // The cohort definition from WebAPI has structure: { id, name, description, expression: {...} }
@@ -1332,12 +1241,29 @@ export async function getCohortPrintFriendly(
       payload = JSON.parse(payload) as AtlasCohortDefinition
     }
 
+    // Get auth token for the request
+    let authHeader: string | undefined
+    try {
+      const { useAuthStore } = await import('@/stores/auth')
+      const authStore = useAuthStore()
+      if (authStore.token) {
+        authHeader = `Bearer ${authStore.token}`
+      }
+    } catch {
+      // Store not ready, continue without auth
+    }
+
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      'User-Language': locale,
+    }
+    if (authHeader) {
+      headers['Authorization'] = authHeader
+    }
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Language': locale,
-      },
+      headers,
       body: JSON.stringify(payload),
     })
 

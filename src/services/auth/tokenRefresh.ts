@@ -1,10 +1,7 @@
 /**
  * Token Refresh Service
- * 
- * Handles automatic token refresh with retry logic and prevents duplicate requests.
- * Implements exponential backoff retry pattern.
+ * Handles automatic token refresh with retry logic and single in-flight request pattern.
  */
-
 import type { TokenRefreshState, TokenRefreshConfig } from '@/types/auth';
 import { logger } from '@/utils/logger';
 
@@ -26,46 +23,42 @@ class TokenRefreshService {
     tokenHeader: 'bearer'
   };
 
-  /**
-   * Refresh authentication token
-   * 
-   * Implements single in-flight request pattern - if refresh is already in progress,
-   * returns the existing promise instead of creating a new request.
-   * 
-   * @param retryCount - Number of retry attempts (internal use)
-   * @returns Promise resolving to true if successful, false otherwise
-   */
+  private readonly MIN_REFRESH_INTERVAL_MS = 5000;
+
   async refreshToken(retryCount = 0): Promise<boolean> {
-    // Return existing promise if refresh already in progress
     if (this.state.refreshPromise) {
       logger.debug('TokenRefresh', 'Refresh already in progress, returning existing promise');
       return this.state.refreshPromise;
     }
 
+    if (this.state.lastRefreshTime && retryCount === 0) {
+      const timeSinceLastRefresh = Date.now() - this.state.lastRefreshTime.getTime();
+      if (timeSinceLastRefresh < this.MIN_REFRESH_INTERVAL_MS) {
+        logger.debug('TokenRefresh', `Skipping refresh, last refresh was ${timeSinceLastRefresh}ms ago`);
+        return true;
+      }
+    }
+
     this.state.isRefreshing = true;
     this.state.retryCount = retryCount;
-    this.state.refreshPromise = this.executeRefresh(retryCount);
+
+    const refreshPromise = this.executeRefresh(retryCount);
+    this.state.refreshPromise = refreshPromise;
 
     try {
-      const result = await this.state.refreshPromise;
-      return result;
+      return await refreshPromise;
     } finally {
-      this.state.isRefreshing = false;
-      this.state.refreshPromise = null;
+      if (this.state.refreshPromise === refreshPromise) {
+        this.state.isRefreshing = false;
+        this.state.refreshPromise = null;
+      }
     }
   }
 
-  /**
-   * Execute token refresh with exponential backoff retry
-   * 
-   * @param retryCount - Current retry attempt number
-   * @returns Promise resolving to true if successful, false otherwise
-   */
   private async executeRefresh(retryCount: number): Promise<boolean> {
     try {
       logger.debug('TokenRefresh', `Attempting token refresh (attempt ${retryCount + 1}/${this.config.maxRetries + 1})`);
-      
-      // Import authService to call refresh endpoint
+
       const { authService } = await import('@/services/auth/authService');
       const success = await authService.refreshToken();
 
@@ -82,39 +75,22 @@ class TokenRefreshService {
       this.state.lastFailureTime = new Date();
       this.state.lastError = error as Error;
 
-      // Retry with exponential backoff
       if (retryCount < this.config.maxRetries) {
         const delayMs = this.config.baseDelayMs * Math.pow(2, retryCount);
         logger.warn('TokenRefresh', `Refresh failed, retrying in ${delayMs}ms (attempt ${retryCount + 1}/${this.config.maxRetries})`);
-        
         await new Promise(resolve => setTimeout(resolve, delayMs));
         return this.refreshToken(retryCount + 1);
       }
 
       logger.error('TokenRefresh', 'Token refresh failed after max retries', error);
-      
-      // Force logout on final failure
-      const { useAuthStore } = await import('@/stores/auth');
-      const authStore = useAuthStore();
-      authStore.clearAuth();
-      authStore.openLoginModal();
-      
-      throw error;
+      return false;
     }
   }
 
-  /**
-   * Get current refresh state for debugging and monitoring
-   * 
-   * @returns Copy of current token refresh state
-   */
   getState(): TokenRefreshState {
     return { ...this.state };
   }
 
-  /**
-   * Reset service state (for testing)
-   */
   resetState(): void {
     this.state = {
       isRefreshing: false,

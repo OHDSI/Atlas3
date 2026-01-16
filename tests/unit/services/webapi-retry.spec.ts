@@ -536,8 +536,9 @@ describe('WebAPI Service - Network Retry Logic', () => {
 
       await promise
 
+      // Now uses centralized HttpClient which logs with [HttpClient] prefix
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[WebAPI] Network error (attempt 1/3), retrying in 500ms...'),
+        expect.stringContaining('[HttpClient] Network error (attempt 1/3), retrying in 500ms...'),
         expect.anything()
       )
 
