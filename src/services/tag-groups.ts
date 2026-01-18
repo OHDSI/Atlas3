@@ -5,10 +5,8 @@
  * In Atlas, tag groups are tags with empty groups array.
  */
 
-import { logger } from '@/utils/logger'
+import { httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
 import type { Tag, TagGroup } from '@/models/config.types'
-
-const API_BASE = '/WebAPI'
 
 /**
  * Lists all tags (both tags and tag groups)
@@ -18,18 +16,7 @@ const API_BASE = '/WebAPI'
  * @throws Error if API request fails
  */
 export async function loadAvailableTags(): Promise<Tag[]> {
-  const response = await fetch(`${API_BASE}/tag/`)
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch tags: ${response.statusText}`)
-  }
-
-  try {
-    return await response.json()
-  } catch (parseError) {
-    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
-    throw new Error('Invalid response format from tags API')
-  }
+  return httpGet<Tag[]>('/tag/')
 }
 
 /**
@@ -52,28 +39,10 @@ export async function listTagGroups(): Promise<TagGroup[]> {
  * @throws Error if API request fails or validation fails
  */
 export async function createTagGroup(tag: Omit<TagGroup, 'id'>): Promise<TagGroup> {
-  const response = await fetch(`${API_BASE}/tag/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      ...tag,
-      groups: [] // Tag groups have empty groups array
-    })
+  return httpPost<TagGroup>('/tag/', {
+    ...tag,
+    groups: [] // Tag groups have empty groups array
   })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Failed to create tag group: ${error}`)
-  }
-
-  try {
-    return await response.json()
-  } catch (parseError) {
-    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
-    throw new Error('Invalid response format from create tag group API')
-  }
 }
 
 /**
@@ -88,28 +57,10 @@ export async function updateTagGroup(tag: TagGroup): Promise<TagGroup> {
     throw new Error('Tag ID is required for update')
   }
 
-  const response = await fetch(`${API_BASE}/tag/${tag.id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      ...tag,
-      groups: tag.groups || [] // Ensure groups array exists
-    })
+  return httpPut<TagGroup>(`/tag/${tag.id}`, {
+    ...tag,
+    groups: tag.groups || [] // Ensure groups array exists
   })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Failed to update tag group: ${error}`)
-  }
-
-  try {
-    return await response.json()
-  } catch (parseError) {
-    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
-    throw new Error('Invalid response format from update tag group API')
-  }
 }
 
 /**
@@ -119,14 +70,7 @@ export async function updateTagGroup(tag: TagGroup): Promise<TagGroup> {
  * @throws Error if API request fails or tag group contains tags
  */
 export async function deleteTagGroup(id: number): Promise<void> {
-  const response = await fetch(`${API_BASE}/tag/${id}`, {
-    method: 'DELETE'
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Failed to delete tag: ${error}`)
-  }
+  await httpDelete(`/tag/${id}`)
 }
 
 /**
@@ -154,18 +98,7 @@ export async function getTagGroupTags(tagGroupId: number): Promise<Tag[]> {
  * @throws Error if API request fails
  */
 export async function searchTags(namePart: string): Promise<Tag[]> {
-  const response = await fetch(`${API_BASE}/tag/search?namePart=${encodeURIComponent(namePart)}`)
-
-  if (!response.ok) {
-    throw new Error(`Failed to search tags: ${response.statusText}`)
-  }
-
-  try {
-    return await response.json()
-  } catch (parseError) {
-    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
-    throw new Error('Invalid response format from search tags API')
-  }
+  return httpGet<Tag[]>(`/tag/search?namePart=${encodeURIComponent(namePart)}`)
 }
 
 /**
@@ -176,25 +109,7 @@ export async function searchTags(namePart: string): Promise<Tag[]> {
  * @throws Error if API request fails or validation fails
  */
 export async function createTag(tag: Omit<Tag, 'id'>): Promise<Tag> {
-  const response = await fetch(`${API_BASE}/tag/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(tag)
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Failed to create tag: ${error}`)
-  }
-
-  try {
-    return await response.json()
-  } catch (parseError) {
-    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
-    throw new Error('Invalid response format from create tag API')
-  }
+  return httpPost<Tag>('/tag/', tag)
 }
 
 /**
@@ -209,25 +124,7 @@ export async function updateTag(tag: Tag): Promise<Tag> {
     throw new Error('Tag ID is required for update')
   }
 
-  const response = await fetch(`${API_BASE}/tag/${tag.id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(tag)
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Failed to update tag: ${error}`)
-  }
-
-  try {
-    return await response.json()
-  } catch (parseError) {
-    logger.error('TagGroups', 'Failed to parse JSON response', parseError)
-    throw new Error('Invalid response format from update tag API')
-  }
+  return httpPut<Tag>(`/tag/${tag.id}`, tag)
 }
 
 /**
@@ -237,12 +134,5 @@ export async function updateTag(tag: Tag): Promise<Tag> {
  * @throws Error if API request fails
  */
 export async function deleteTag(id: number): Promise<void> {
-  const response = await fetch(`${API_BASE}/tag/${id}`, {
-    method: 'DELETE'
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Failed to delete tag: ${error}`)
-  }
+  await httpDelete(`/tag/${id}`)
 }

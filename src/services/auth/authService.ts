@@ -160,58 +160,61 @@ class AuthService implements IAuthService {
     try {
       const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
 
-      // Get auth client to determine logout method
+      // Get auth client and token before clearing - needed for provider-specific logout
       const authClient = storageManager.getAuthClient()
+      const logoutUrl = storageManager.getLogoutUrl()
+      const token = authStore.token
+
+      // First, invalidate the JWT on WebAPI
+      logger.info('Auth', 'Invalidating JWT on WebAPI')
+      await fetch(`${baseUrl}user/logout`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).catch((e) => logger.warn('Auth', 'WebAPI logout call failed', e))
 
       if (authClient === 'IAP') {
-        // Google IAP logout - redirect to IAP logout URL
+        // Google IAP logout - clear auth then redirect
         logger.info('Auth', 'Performing Google IAP logout')
+        authStore.clearAuth()
         window.location.href = '/_gcp_iap/clear_login_cookie'
         return
       } else if (authClient === 'SAML') {
-        // SAML Single Logout
+        // SAML Single Logout - needs token for session identification
         logger.info('Auth', 'Performing SAML Single Logout')
         const response = await fetch(`${baseUrl}user/logout/saml`, {
           method: 'GET',
           headers: {
-            Authorization: `Bearer ${authStore.token}`,
+            Authorization: `Bearer ${token}`,
           },
         })
 
-        // Check if the response contains a redirect URL (auth-proxy OIDC logout)
+        authStore.clearAuth()
+
         if (response.ok) {
           const data = await response.json().catch(() => null)
           if (data?.redirect) {
-            logger.info('Auth', 'Redirecting to OIDC logout endpoint', data.redirect)
-            authStore.clearAuth()
+            logger.info('Auth', 'Redirecting to SAML logout endpoint', data.redirect)
             window.location.href = data.redirect
             return
           }
         }
+      } else if (logoutUrl) {
+        // OIDC Single Logout - redirect to identity provider's end session endpoint
+        logger.info('Auth', 'Performing OIDC Single Logout', logoutUrl)
+        authStore.clearAuth()
+        const currentUrl = window.location.origin + window.location.pathname
+        const separator = logoutUrl.includes('?') ? '&' : '?'
+        const fullLogoutUrl = `${logoutUrl}${separator}post_logout_redirect_uri=${encodeURIComponent(currentUrl)}`
+        window.location.href = fullLogoutUrl
+        return
       } else {
-        // Standard logout for other providers
-        logger.info('Auth', 'Performing standard logout')
-        const response = await fetch(`${baseUrl}user/logout`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${authStore.token}`,
-          },
-        })
-
-        // Check if the response contains a redirect URL (auth-proxy OIDC logout)
-        if (response.ok) {
-          const data = await response.json().catch(() => null)
-          if (data?.redirect) {
-            logger.info('Auth', 'Redirecting to OIDC logout endpoint', data.redirect)
-            authStore.clearAuth()
-            window.location.href = data.redirect
-            return
-          }
-        }
+        // Standard logout - just clear local state
+        authStore.clearAuth()
       }
     } catch (error) {
-      logger.error('Auth', 'Logout API call failed', error)
-    } finally {
+      logger.error('Auth', 'Logout failed', error)
       authStore.clearAuth()
     }
   }
@@ -341,8 +344,8 @@ class AuthService implements IAuthService {
   async fetchOAuthProviders(): Promise<AuthProvider[]> {
     try {
       const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-      const url = `${baseUrl}user/oauth/providers`
-      logger.debug('Auth', 'Fetching OAuth providers from', url)
+      const url = `${baseUrl}auth/providers`
+      logger.debug('Auth', 'Fetching auth providers from', url)
 
       const response = await fetch(url, {
         method: 'GET',
@@ -355,9 +358,21 @@ class AuthService implements IAuthService {
         return []
       }
 
-      const providers = await response.json()
-      logger.debug('Auth', 'OAuth providers from WebAPI', providers)
-      return Array.isArray(providers) ? providers : []
+      const rawProviders = await response.json()
+      logger.debug('Auth', 'OAuth providers from WebAPI', rawProviders)
+      if (!Array.isArray(rawProviders)) {
+        return []
+      }
+      // Map WebAPI field names to frontend field names
+      // WebAPI returns 'useCredentialsForm', frontend expects 'isUseCredentialsForm'
+      return rawProviders.map((p) => ({
+        name: p.name as string,
+        url: p.url as string,
+        ajax: p.ajax as boolean,
+        icon: p.icon as string,
+        isUseCredentialsForm: (p.useCredentialsForm ?? p.isUseCredentialsForm ?? false) as boolean,
+        logoutUrl: p.logoutUrl as string | undefined,
+      }))
     } catch (error) {
       logger.error('Auth', 'Error fetching OAuth providers', error)
       return []

@@ -5,9 +5,13 @@ import { z } from 'zod'
 
 // Core Entities
 
+export type DaimonType = 'CDM' | 'Vocabulary' | 'Results' | 'Temp' | 'CEM' | 'CEMResults'
+
+export const DAIMON_TYPES: DaimonType[] = ['CDM', 'Vocabulary', 'Results', 'CEM', 'CEMResults', 'Temp']
+
 export interface Daimon {
   sourceDaimonId: number
-  daimonType: 'CDM' | 'Vocabulary' | 'Results' | 'Temp' | 'CEM' | 'CEMResults'
+  daimonType: DaimonType
   tableQualifier: string
   priority: number
 }
@@ -19,6 +23,55 @@ export interface DataSource {
   sourceDialect: string
   daimons: Daimon[]
 }
+
+// CRUD Request/Response Types
+
+export interface DaimonRequest {
+  daimonType: DaimonType
+  tableQualifier: string
+  priority?: number
+}
+
+export interface SourceRequest {
+  name: string
+  dialect: string
+  key: string
+  connectionString: string
+  username?: string
+  password?: string
+  daimons?: DaimonRequest[]
+  keyfileName?: string
+  krbAuthMethod?: 'PASSWORD' | 'KEYTAB' | 'DEFAULT'
+  krbAdminServer?: string
+  checkConnection?: boolean
+}
+
+export interface SourceDetails extends DataSource {
+  connectionString: string
+  username?: string
+  password?: string
+  keyfileName?: string
+  krbAuthMethod?: string
+  krbAdminServer?: string
+}
+
+// Supported Database Dialects
+export const SUPPORTED_DIALECTS = [
+  { value: 'POSTGRESQL', label: 'PostgreSQL' },
+  { value: 'SQL_SERVER', label: 'SQL Server' },
+  { value: 'ORACLE', label: 'Oracle' },
+  { value: 'REDSHIFT', label: 'Amazon Redshift' },
+  { value: 'BIGQUERY', label: 'Google BigQuery' },
+  { value: 'IMPALA', label: 'Impala' },
+  { value: 'PDW', label: 'Microsoft PDW' },
+  { value: 'NETEZZA', label: 'IBM Netezza' },
+  { value: 'HIVE', label: 'Hive LLAP' },
+  { value: 'SPARK', label: 'Spark' },
+  { value: 'SNOWFLAKE', label: 'Snowflake' },
+  { value: 'SYNAPSE', label: 'Azure Synapse' }
+] as const
+
+export type DialectValue = typeof SUPPORTED_DIALECTS[number]['value']
 
 // Report Types
 

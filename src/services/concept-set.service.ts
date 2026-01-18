@@ -17,6 +17,15 @@ import { logger } from '@/utils/logger'
 
 const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
 
+async function getAuthToken(): Promise<string | null> {
+  try {
+    const { useAuthStore } = await import('@/stores/auth')
+    return useAuthStore().token
+  } catch {
+    return null
+  }
+}
+
 /**
  * Internal fetch wrapper with error handling
  */
@@ -26,10 +35,18 @@ async function fetchJSON<T>(
 ): Promise<T> {
   const url = `${BASE_URL}${endpoint}`
 
+  // Get auth token
+  const token = await getAuthToken()
+  const authHeaders: Record<string, string> = {}
+  if (token) {
+    authHeaders['Authorization'] = `Bearer ${token}`
+  }
+
   const response = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options?.headers,
     },
   })

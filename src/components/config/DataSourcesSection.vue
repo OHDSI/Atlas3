@@ -4,7 +4,7 @@
     <v-card class="mb-4">
       <v-card-text>
         <div class="d-flex align-center justify-space-between">
-          <span class="text-subtitle-1">Change source priorities in:</span>
+          <span class="text-subtitle-1">{{ t('configuration.changeSourcePriorities') }}</span>
           <v-btn-toggle
             v-model="priorityScope"
             mandatory
@@ -12,10 +12,10 @@
             density="compact"
           >
             <v-btn value="session">
-              Current Session
+              {{ t('configuration.priorityOptions.session') }}
             </v-btn>
             <v-btn value="application">
-              Whole Application
+              {{ t('configuration.priorityOptions.application') }}
             </v-btn>
           </v-btn-toggle>
         </div>
@@ -24,17 +24,26 @@
 
     <!-- Data Sources Table -->
     <v-card>
-      <v-card-title>Data Sources</v-card-title>
+      <v-card-title class="d-flex align-center justify-space-between">
+        <span>{{ t('navigation.datasources') }}</span>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          @click="openCreateDialog"
+        >
+          {{ t('configuration.newSource') }}
+        </v-btn>
+      </v-card-title>
       <v-card-text>
         <v-table>
           <thead>
             <tr>
-              <th>Source Name</th>
-              <th>Dialect</th>
-              <th>Vocabulary</th>
-              <th>Evidence</th>
-              <th>Results</th>
-              <th>Actions</th>
+              <th>{{ t('columns.name') }}</th>
+              <th>{{ t('columns.dialect') }}</th>
+              <th>{{ t('columns.vocabulary') }}</th>
+              <th>{{ t('columns.evidence') }}</th>
+              <th>{{ t('columns.results') }}</th>
+              <th>{{ t('columns.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -89,17 +98,48 @@
                   <v-btn
                     size="small"
                     variant="tonal"
-                    @click="checkConnection(source)"
+                    icon
+                    :title="tv('configuration.tagManagement.edit')"
+                    @click="openEditDialog(source)"
                   >
-                    Check
+                    <v-icon size="small">
+                      mdi-pencil
+                    </v-icon>
                   </v-btn>
                   <v-btn
                     size="small"
                     variant="tonal"
+                    icon
+                    :title="tv('columns.checkConnection')"
+                    @click="checkConnection(source)"
+                  >
+                    <v-icon size="small">
+                      mdi-connection
+                    </v-icon>
+                  </v-btn>
+                  <v-btn
+                    size="small"
+                    variant="tonal"
+                    icon
                     :disabled="!source.hasResults"
+                    :title="tv('columns.refreshCache')"
                     @click="refreshCache(source)"
                   >
-                    Refresh
+                    <v-icon size="small">
+                      mdi-refresh
+                    </v-icon>
+                  </v-btn>
+                  <v-btn
+                    size="small"
+                    variant="tonal"
+                    icon
+                    color="error"
+                    :title="tv('common.delete')"
+                    @click="confirmDeleteSource(source)"
+                  >
+                    <v-icon size="small">
+                      mdi-delete
+                    </v-icon>
                   </v-btn>
                 </div>
               </td>
@@ -113,14 +153,14 @@
           variant="tonal"
           class="mt-4"
         >
-          No data sources configured. Contact your administrator to add data sources.
+          <span v-html="tv('commonErrors.noSources')" />
         </v-alert>
       </v-card-text>
     </v-card>
 
     <!-- Action Buttons -->
     <v-card class="mt-4">
-      <v-card-title>Configuration Actions</v-card-title>
+      <v-card-title>{{ t('configuration.title') }}</v-card-title>
       <v-card-text>
         <div class="d-flex flex-wrap gap-2">
           <v-btn
@@ -128,14 +168,14 @@
             prepend-icon="mdi-delete-sweep"
             @click="clearLocalCache"
           >
-            Clear Local Cache
+            {{ t('configuration.buttons.clearConfigurationCache') }}
           </v-btn>
           <v-btn
             color="primary"
             prepend-icon="mdi-server"
             @click="clearServerCache"
           >
-            Clear Server Cache
+            {{ t('configuration.buttons.clearServerCache') }}
           </v-btn>
         </div>
       </v-card-text>
@@ -172,17 +212,62 @@
           variant="text"
           @click="showErrorToast = false"
         >
-          Close
+          {{ t('common.close') }}
         </v-btn>
       </template>
     </v-snackbar>
+
+    <!-- Data Source Dialog -->
+    <DataSourceDialog
+      v-model="showDialog"
+      :source-id="editingSourceId"
+      @saved="handleDialogSaved"
+      @deleted="handleDialogDeleted"
+      @error="handleDialogError"
+    />
+
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog
+      v-model="showDeleteConfirm"
+      max-width="400"
+    >
+      <v-card>
+        <v-card-title>{{ t('common.delete') }}</v-card-title>
+        <v-card-text>{{ t('configuration.viewEdit.source.confirms.delete') }}</v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            variant="text"
+            @click="showDeleteConfirm = false"
+          >
+            {{ t('common.cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="elevated"
+            :loading="isDeleting"
+            @click="executeDelete"
+          >
+            {{ t('common.delete') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
+import { deleteSource } from '@/services/source.service'
+import { listDataSources } from '@/services/datasource.service'
+import { httpGet, httpPost } from '@/services/http-client'
+import DataSourceDialog from './DataSourceDialog.vue'
 
-interface DataSource {
+const { t, tv } = useI18n()
+
+interface DataSourceDisplay {
+  sourceId: number
   sourceKey: string
   sourceName: string
   sourceDialect: string
@@ -196,7 +281,7 @@ interface DataSource {
 
 // State
 const priorityScope = ref<'session' | 'application'>('session')
-const dataSources = ref<DataSource[]>([])
+const dataSources = ref<DataSourceDisplay[]>([])
 const selectedVocabulary = ref<string>('')
 const selectedEvidence = ref<string>('')
 const selectedResults = ref<string>('')
@@ -204,6 +289,15 @@ const showToast = ref(false)
 const showErrorToast = ref(false)
 const toastMessage = ref('')
 const errorMessage = ref('')
+
+// Dialog state
+const showDialog = ref(false)
+const editingSourceId = ref<number | null>(null)
+
+// Delete confirmation state
+const showDeleteConfirm = ref(false)
+const deletingSource = ref<DataSourceDisplay | null>(null)
+const isDeleting = ref(false)
 
 // Watch for changes in selectedVocabulary and persist to localStorage
 watch(selectedVocabulary, (newValue) => {
@@ -236,45 +330,31 @@ onMounted(async () => {
  */
 async function loadDataSources() {
   try {
-    const response = await fetch('/WebAPI/source/sources')
-
-    if (!response.ok) {
-      throw new Error('Failed to load data sources')
-    }
-
-    const sources = await response.json() as Array<{
-      sourceKey: string
-      sourceName: string
-      sourceDialect: string
-      version?: string
-      daimons?: Array<{ daimonType: string }>
-    }>
+    const sources = await listDataSources()
 
     // Load each source and fetch vocabulary version if it has vocabulary
     const sourcesWithVersions = await Promise.all(
       sources.map(async (s) => {
         const hasVocab = s.daimons?.some((d) => d.daimonType === 'Vocabulary') ?? false
-        let vocabularyVersion = s.version
+        let vocabularyVersion: string | undefined
 
         // If source has vocabulary, try to fetch the vocabulary info
         if (hasVocab && s.sourceKey) {
           try {
-            const vocabResponse = await fetch(`/WebAPI/vocabulary/${s.sourceKey}/info`)
-            if (vocabResponse.ok) {
-              const vocabData = await vocabResponse.json() as { version?: string }
-              vocabularyVersion = vocabData.version || s.version
-            }
+            const vocabData = await httpGet<{ version?: string }>(`/vocabulary/${s.sourceKey}/info`)
+            vocabularyVersion = vocabData.version
           } catch {
-            // Fallback to source version if vocabulary info fetch fails
-            vocabularyVersion = s.version
+            // Fallback if vocabulary info fetch fails
+            vocabularyVersion = undefined
           }
         }
 
         return {
+          sourceId: s.sourceId,
           sourceKey: s.sourceKey,
           sourceName: s.sourceName,
           sourceDialect: s.sourceDialect,
-          version: s.version,
+          version: undefined,
           vocabularyVersion,
           initialized: true,
           hasVocabulary: hasVocab,
@@ -303,39 +383,29 @@ async function loadDataSources() {
 /**
  * Check source connection
  */
-async function checkConnection(source: DataSource) {
+async function checkConnection(source: DataSourceDisplay) {
   try {
-    const response = await fetch(`/WebAPI/source/${source.sourceKey}/connectionCheck`)
-
-    if (!response.ok) {
-      throw new Error('Connection check failed')
-    }
-
-    toastMessage.value = `Connection to ${source.sourceName} successful`
+    await httpGet(`/source/connection/${source.sourceKey}`)
+    toastMessage.value = `${source.sourceName}: ${tv('executionStatus.values.COMPLETED')}`
     showToast.value = true
-  } catch (error: unknown) {
-    errorMessage.value = `Failed to connect to ${source.sourceName}`
+  } catch {
+    errorMessage.value = tv('configuration.userImport.wizard.provider.connection.failed')
     showErrorToast.value = true
   }
 }
 
 /**
- * Refresh source cache
+ * Refresh source cache (clear then refresh, matching Atlas 2.x behavior)
  */
-async function refreshCache(source: DataSource) {
+async function refreshCache(source: DataSourceDisplay) {
   try {
-    const response = await fetch(`/WebAPI/source/${source.sourceKey}/refreshSourceCache`, {
-      method: 'POST'
-    })
-
-    if (!response.ok) {
-      throw new Error('Cache refresh failed')
-    }
-
-    toastMessage.value = `Cache refresh started for ${source.sourceName}`
+    // First clear the cache, then refresh (matching Atlas 2.x)
+    await httpPost(`/cdmresults/${source.sourceKey}/clearCache`)
+    await httpGet(`/cdmresults/${source.sourceKey}/refreshCache`)
+    toastMessage.value = `${source.sourceName}: ${tv('executionStatus.values.STARTED')}`
     showToast.value = true
-  } catch (error: unknown) {
-    errorMessage.value = `Failed to refresh cache for ${source.sourceName}`
+  } catch {
+    errorMessage.value = `${source.sourceName}: ${tv('executionStatus.values.FAILED')}`
     showErrorToast.value = true
   }
 }
@@ -345,7 +415,7 @@ async function refreshCache(source: DataSource) {
  */
 function clearLocalCache() {
   localStorage.clear()
-  toastMessage.value = 'Local cache cleared. Please refresh the page to reload configuration.'
+  toastMessage.value = tv('configuration.alerts.clearLocalCache')
   showToast.value = true
 }
 
@@ -353,24 +423,91 @@ function clearLocalCache() {
  * Clear server cache
  */
 async function clearServerCache() {
-  if (!confirm('Are you sure you want to clear the server cache?')) {
+  if (!confirm(tv('configuration.confirms.clearServerCache'))) {
     return
   }
 
   try {
-    const response = await fetch('/WebAPI/cache/clear', {
-      method: 'POST'
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to clear server cache')
-    }
-
-    toastMessage.value = 'Server cache cleared successfully'
+    await httpPost('/cache/clear')
+    toastMessage.value = tv('configuration.alerts.clearServerCache')
     showToast.value = true
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to clear server cache'
+    errorMessage.value = error instanceof Error ? error.message : tv('executionStatus.values.FAILED')
     showErrorToast.value = true
+  }
+}
+
+/**
+ * Open dialog to create a new data source
+ */
+function openCreateDialog() {
+  editingSourceId.value = null
+  showDialog.value = true
+}
+
+/**
+ * Open dialog to edit an existing data source
+ */
+function openEditDialog(source: DataSourceDisplay) {
+  editingSourceId.value = source.sourceId
+  showDialog.value = true
+}
+
+/**
+ * Handle dialog saved event
+ */
+async function handleDialogSaved() {
+  toastMessage.value = tv('executionStatus.values.COMPLETED')
+  showToast.value = true
+  await loadDataSources()
+}
+
+/**
+ * Handle dialog deleted event
+ */
+async function handleDialogDeleted() {
+  toastMessage.value = tv('executionStatus.values.COMPLETED')
+  showToast.value = true
+  await loadDataSources()
+}
+
+/**
+ * Handle dialog error event
+ */
+function handleDialogError(message: string) {
+  errorMessage.value = message
+  showErrorToast.value = true
+}
+
+/**
+ * Confirm deletion of a data source
+ */
+function confirmDeleteSource(source: DataSourceDisplay) {
+  deletingSource.value = source
+  showDeleteConfirm.value = true
+}
+
+/**
+ * Execute the deletion of the selected source
+ */
+async function executeDelete() {
+  if (!deletingSource.value) return
+
+  isDeleting.value = true
+
+  try {
+    await deleteSource(deletingSource.value.sourceId)
+    toastMessage.value = tv('executionStatus.values.COMPLETED')
+    showToast.value = true
+    showDeleteConfirm.value = false
+    deletingSource.value = null
+    await loadDataSources()
+  } catch (error) {
+    const message = error instanceof Error ? error.message : tv('executionStatus.values.FAILED')
+    errorMessage.value = message
+    showErrorToast.value = true
+  } finally {
+    isDeleting.value = false
   }
 }
 </script>

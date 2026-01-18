@@ -47,17 +47,33 @@ function isRetryableError(statusCode?: number): boolean {
   return false
 }
 
+async function getAuthToken(): Promise<string | null> {
+  try {
+    const { useAuthStore } = await import('@/stores/auth')
+    return useAuthStore().token
+  } catch {
+    return null
+  }
+}
+
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${BASE_URL}${endpoint}`
   let lastError: Error | null = null
 
   // Cancel previous request to the same endpoint
   cancelRequest(endpoint)
-  
+
   // Create new abort controller for this endpoint
   const abortController = new AbortController()
   activeRequests.set(endpoint, abortController)
   const signal = abortController.signal
+
+  // Get auth token
+  const token = await getAuthToken()
+  const authHeaders: Record<string, string> = {}
+  if (token) {
+    authHeaders['Authorization'] = `Bearer ${token}`
+  }
 
   for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
     try {
@@ -65,6 +81,7 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
         ...options,
         headers: {
           'Content-Type': 'application/json',
+          ...authHeaders,
           ...options?.headers
         },
         signal

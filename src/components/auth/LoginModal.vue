@@ -165,6 +165,11 @@ watch(
 function selectProvider(provider: AuthProvider) {
   selectedProvider.value = provider
 
+  // Store the logout URL if this provider has one (needed for OIDC single logout)
+  if (provider.logoutUrl) {
+    auth.saveLogoutUrl(provider.logoutUrl)
+  }
+
   // For OAuth/redirect providers (non-AJAX), trigger redirect via authService
   if (!provider.isUseCredentialsForm && !provider.ajax) {
     auth.login(provider.url)

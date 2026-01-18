@@ -33,12 +33,24 @@ function getLocale(): string {
 }
 
 async function handleAuthError(status: number): Promise<void> {
-  if (status !== 401) return
+  // Only handle 401 (Unauthorized) - 403 (Forbidden) means user is authenticated but lacks permission
+  if (status !== 401) {
+    if (status === 403) {
+      logger.warn('HttpClient', '403 Forbidden - user lacks permission for this resource')
+    }
+    return
+  }
 
   try {
     const { useAuthStore } = await import('@/stores/auth')
     const { authConfig } = await import('@/config/auth.config')
     const authStore = useAuthStore()
+
+    // Don't clear auth if we're currently authenticating (race condition protection)
+    if (authStore.isAuthenticating) {
+      logger.debug('HttpClient', '401 during authentication - ignoring')
+      return
+    }
 
     logger.warn('HttpClient', '401 Unauthorized - clearing auth')
     authStore.clearAuth()

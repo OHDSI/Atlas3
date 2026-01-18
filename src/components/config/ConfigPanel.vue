@@ -57,6 +57,12 @@
             </v-icon>
             Permissions
           </v-tab>
+          <v-tab value="jobs">
+            <v-icon start>
+              mdi-run
+            </v-icon>
+            Jobs
+          </v-tab>
         </v-tabs>
 
         <!-- Scrollable Content -->
@@ -96,6 +102,14 @@
           >
             <PermissionsSection />
           </div>
+
+          <!-- Jobs Section (v-if ensures fresh data after login) -->
+          <div
+            v-if="activeSection === 'jobs'"
+            class="config-section"
+          >
+            <JobsSection />
+          </div>
         </v-card-text>
       </div>
     </v-card>
@@ -109,6 +123,7 @@ import CacheManagementSection from './CacheManagementSection.vue'
 import DataSourcesSection from './DataSourcesSection.vue'
 import TagManagementSection from './TagManagementSection.vue'
 import PermissionsSection from './PermissionsSection.vue'
+import JobsSection from './JobsSection.vue'
 
 const uiStore = useUIStore()
 
@@ -126,7 +141,7 @@ const isOpen = computed({
 
 const activeSection = computed({
   get: () => uiStore.configPanelState.activeSection === 'vocabulary' ? 'sources' : uiStore.configPanelState.activeSection,
-  set: (value: 'cache' | 'sources' | 'tags' | 'permissions') => {
+  set: (value: 'cache' | 'sources' | 'tags' | 'permissions' | 'jobs') => {
     // Map 'sources' to 'vocabulary' for the store
     const storeValue = value === 'sources' ? 'vocabulary' : value
     uiStore.setConfigPanelSection(storeValue)

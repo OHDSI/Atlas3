@@ -53,6 +53,9 @@ services:
       retries: 10
 
   atlas3-webapi:
+    build:
+      context: ../WebAPI
+      dockerfile: Dockerfile
     image: ghcr.io/ohdsi/webapi:3.0-dev
     container_name: atlas3-webapi
     platform: linux/amd64
@@ -66,18 +69,50 @@ services:
       retries: 30
       start_period: 60s
     environment:
-      # Database (only URL and password needed - rest uses defaults)
+      # Database configuration
+      DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
       DATASOURCE_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
+      DATASOURCE_USERNAME: postgres
       DATASOURCE_PASSWORD: mypass
-      # Flyway baseline for existing databases
-      FLYWAY_BASELINE_VERSION: "2.2.5.20180212152023"
-      # Security
+      DATASOURCE_OHDSI_SCHEMA: webapi
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: webapi
+      SPRING_BATCH_REPOSITORY_TABLEPREFIX: webapi.batch_
+      # Flyway migration settings
+      FLYWAY_DATASOURCE_USERNAME: postgres
+      FLYWAY_DATASOURCE_PASSWORD: mypass
+      SPRING_FLYWAY_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
+      SPRING_FLYWAY_USER: postgres
+      SPRING_FLYWAY_PASSWORD: mypass
+      SPRING_FLYWAY_SCHEMAS: webapi
+      SPRING_FLYWAY_TABLE: flyway_schema_history
+      SPRING_FLYWAY_BASELINE_VERSION: "3.0.0"
+      SPRING_FLYWAY_PLACEHOLDERS_OHDSISCHEMA: webapi
+      FLYWAY_BASELINE_VERSION: "3.0.0"
+      # Security configuration
       SECURITY_PROVIDER: AtlasRegularSecurity
+      SECURITY_ORIGIN: "*"
+      SECURITY_SSL_ENABLED: "false"
+      # Auth providers (disable all except JDBC)
       SECURITY_AUTH_JDBC_ENABLED: "true"
+      SECURITY_AUTH_WINDOWS_ENABLED: "false"
+      SECURITY_AUTH_KERBEROS_ENABLED: "false"
+      SECURITY_AUTH_OPENID_ENABLED: "false"
+      SECURITY_AUTH_FACEBOOK_ENABLED: "false"
+      SECURITY_AUTH_GITHUB_ENABLED: "false"
+      SECURITY_AUTH_GOOGLE_ENABLED: "false"
+      SECURITY_AUTH_LDAP_ENABLED: "false"
+      SECURITY_AUTH_AD_ENABLED: "false"
+      SECURITY_AUTH_CAS_ENABLED: "false"
+      # OAuth callbacks
       SECURITY_OAUTH_CALLBACK_UI: "http://localhost/atlas/#/welcome"
       SECURITY_OAUTH_CALLBACK_API: "http://localhost:8080/WebAPI/user/oauth/callback"
+      SECURITY_DB_DATASOURCE_SCHEMA: webapi_security
+      SECURITY_DB_DATASOURCE_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi_security
+      SECURITY_DB_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      SECURITY_DB_DATASOURCE_USERNAME: postgres
+      SECURITY_DB_DATASOURCE_PASSWORD: mypass
       SECURITY_DB_DATASOURCE_AUTHENTICATIONQUERY: "SELECT password, email AS firstname, NULL AS middlename, email AS lastname FROM webapi_security.security WHERE email = ?"
-      # Trexsql (cache used if file exists)
+      # TrexSQL
       TREXSQL_ENABLED: "true"
       TREXSQL_CACHE_PATH: /data/cache
       HOME: /data
