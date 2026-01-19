@@ -12,7 +12,7 @@
 
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
-import { waitForNetworkIdle, waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
+import { waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
 
 test.describe('Language Selector', () => {
   test.beforeEach(async ({ page }) => {
