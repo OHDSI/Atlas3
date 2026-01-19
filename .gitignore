@@ -10,12 +10,13 @@ node_modules/
 sp*
 sp*
 .sp*
-playwright.config.ts
 .env*
+!.env.test
 *md
 .gitignore
 check-config.html
 /*.sh
+!docker-entrypoint.sh
 
 
 .mcp.json
