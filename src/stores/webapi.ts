@@ -100,20 +100,20 @@ export const useWebAPIStore = defineStore('webapi', () => {
    * Generate cohort for a specific data source
    */
   async function generateCohort(cohortId: number, sourceKey: string): Promise<GenerationJob | null> {
+    // Check if there's an existing job for this cohort/source combination
+    const existingJobs = getJobsByCohortId(cohortId)
+    const existingJob = existingJobs.find(j => j.sourceKey === sourceKey)
+
+    // Immediately update UI to show "Starting generation..." status
+    if (existingJob) {
+      // Update existing job to show it's starting
+      updateGenerationJob(existingJob.id, {
+        ...existingJob,
+        status: 'PENDING',
+      })
+    }
+
     try {
-      // Check if there's an existing job for this cohort/source combination
-      const existingJobs = getJobsByCohortId(cohortId)
-      const existingJob = existingJobs.find(j => j.sourceKey === sourceKey)
-
-      // Immediately update UI to show "Starting generation..." status
-      if (existingJob) {
-        // Update existing job to show it's starting
-        updateGenerationJob(existingJob.id, {
-          ...existingJob,
-          status: 'PENDING',
-        })
-      }
-
       const job = await webapi.generateCohort(cohortId, sourceKey)
 
       if (job) {
@@ -129,10 +129,30 @@ export const useWebAPIStore = defineStore('webapi', () => {
 
         // Start polling for status updates
         pollGenerationStatus(cohortId)
+        return job
       }
 
-      return job
+      // API call succeeded but returned null
+      return null
     } catch (error) {
+      // Revert UI state to show failure
+      if (existingJob) {
+        updateGenerationJob(existingJob.id, {
+          ...existingJob,
+          status: 'FAILED',
+          failMessage: error instanceof Error ? error.message : 'Generation failed',
+        })
+      } else {
+        // Create a failed job entry so the UI shows the failure
+        const failedJob: GenerationJob = {
+          id: Date.now(),
+          cohortDefinitionId: cohortId,
+          sourceKey: sourceKey,
+          status: 'FAILED',
+          failMessage: error instanceof Error ? error.message : 'Generation failed',
+        }
+        addGenerationJob(failedJob)
+      }
       logger.error('WebAPIStore', 'Failed to generate cohort', error)
       return null
     }

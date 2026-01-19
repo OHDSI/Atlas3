@@ -21,6 +21,7 @@ export interface AuthProvider {
   ajax: boolean
   icon: string
   isUseCredentialsForm?: boolean
+  logoutUrl?: string
   loginPlaceholder?: string
   passwordPlaceholder?: string
 }

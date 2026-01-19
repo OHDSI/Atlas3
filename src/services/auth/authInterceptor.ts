@@ -19,10 +19,15 @@ export function setupAuthInterceptor() {
       if (response.status === 401) {
         try {
           const authStore = useAuthStore()
-          logger.warn('AuthInterceptor', '401 Unauthorized - clearing auth')
-          authStore.clearAuth()
-          if (authConfig.userAuthenticationEnabled) {
-            authStore.openLoginModal()
+          // Don't clear auth if we're currently authenticating (race condition protection)
+          if (authStore.isAuthenticating) {
+            logger.debug('AuthInterceptor', '401 during authentication - ignoring')
+          } else {
+            logger.warn('AuthInterceptor', '401 Unauthorized - clearing auth')
+            authStore.clearAuth()
+            if (authConfig.userAuthenticationEnabled) {
+              authStore.openLoginModal()
+            }
           }
         } catch {
           logger.debug('AuthInterceptor', 'Store not ready for error handling')

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
-import { waitForNetworkIdle } from './helpers/wait-utils'
+import { waitForNetworkIdle, waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
 
 /**
  * E2E Tests for Configuration Side Panel (T104-T107)
@@ -19,12 +19,15 @@ test.describe('Configuration Panel', () => {
 
     // Navigate to home page
     await page.goto('/')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
   })
 
   // Helper function to ensure config panel is open
   async function ensurePanelOpen(page) {
     const panel = page.locator('.v-navigation-drawer').filter({ hasText: /Configuration/ })
+
+    // Ensure no overlays are blocking before checking panel state
+    await waitForOverlaysToClose(page)
 
     // Always try to check current state and open if needed
     const isOpen = await panel.isVisible().catch(() => false)

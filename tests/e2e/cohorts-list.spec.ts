@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
-import { waitForNetworkIdle } from './helpers/wait-utils'
+import { waitForNetworkIdle, waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
 
 /**
  * E2E tests for Cohorts List feature
@@ -22,8 +22,8 @@ test.describe('Cohorts List', () => {
     // Navigate to cohorts list page
     await page.goto('/cohorts')
 
-    // Wait for initial load
-    await waitForNetworkIdle(page)
+    // Wait for initial load and overlays to close
+    await waitForPageReady(page)
   })
 
   test('should have cohorts list view with layout', async ({ page }) => {
@@ -87,6 +87,9 @@ test.describe('Cohorts List', () => {
     // Wait for cards to load
     const firstCard = page.locator('.cohort-card').first()
     await expect(firstCard).toBeVisible({ timeout: 10000 })
+
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
 
     // Get the cohort ID from the card
     const idText = await firstCard.locator('.cohort-card__meta-value').first().textContent()
@@ -207,6 +210,9 @@ test.describe('Cohorts List', () => {
     // Wait for page content to load
     await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
 
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
+
     // Click Create Cohort button
     const createButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /create/i }).first()
     await createButton.click()
@@ -222,6 +228,9 @@ test.describe('Cohorts List', () => {
   test('should open import dialog', async ({ page }) => {
     // Wait for page content to load
     await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
 
     // Click Import Cohort button
     const importButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /import/i }).first()
@@ -248,6 +257,9 @@ test.describe('Cohorts List', () => {
     // Wait for cards to load
     const firstCard = page.locator('.cohort-card').first()
     await expect(firstCard).toBeVisible({ timeout: 10000 })
+
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
 
     // Click delete button using aria-label
     const deleteButton = firstCard.locator('button[aria-label*="Delete"]')

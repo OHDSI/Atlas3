@@ -40,7 +40,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    // Use --mode test to load .env.test with auth disabled for E2E tests
+    command: 'npm run dev -- --mode test',
     url: 'http://localhost:5173',
     reuseExistingServer: false,
   },

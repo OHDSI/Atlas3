@@ -3,6 +3,7 @@ import { logger } from '@/utils/logger'
 export class StorageManager {
   private readonly TOKEN_KEY = 'bearerToken'
   private readonly AUTH_CLIENT_KEY = 'auth-client'
+  private readonly LOGOUT_URL_KEY = 'auth-logout-url'
 
   saveToken(token: string): void {
     try {
@@ -56,9 +57,35 @@ export class StorageManager {
     }
   }
 
+  saveLogoutUrl(logoutUrl: string): void {
+    try {
+      localStorage.setItem(this.LOGOUT_URL_KEY, logoutUrl)
+    } catch (error) {
+      logger.error('StorageManager', 'Failed to save logout URL', error)
+    }
+  }
+
+  getLogoutUrl(): string | null {
+    try {
+      return localStorage.getItem(this.LOGOUT_URL_KEY)
+    } catch (error) {
+      logger.error('StorageManager', 'Failed to get logout URL', error)
+      return null
+    }
+  }
+
+  clearLogoutUrl(): void {
+    try {
+      localStorage.removeItem(this.LOGOUT_URL_KEY)
+    } catch (error) {
+      logger.error('StorageManager', 'Failed to clear logout URL', error)
+    }
+  }
+
   clearAll(): void {
     this.clearToken()
     this.clearAuthClient()
+    this.clearLogoutUrl()
   }
 }
 

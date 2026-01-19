@@ -242,6 +242,14 @@
         "domainFilter": "Provider"
       },
       {
+        "id": "conditionSourceConcept",
+        "name": "Condition Source Concept",
+        "description": "Filter by condition source concept",
+        "type": "concept",
+        "nameKey": "const.eventsList.addSourceConcept.title_conditionoccurrence",
+        "descriptionKey": "const.eventsList.addSourceConcept.desc_conditionoccurrence"
+      },
+      {
         "id": "nested",
         "name": "Nested Criteria",
         "description": "Add nested criteria group",
@@ -457,6 +465,14 @@
         "domainFilter": "Provider"
       },
       {
+        "id": "drugSourceConcept",
+        "name": "Drug Source Concept",
+        "description": "Filter by drug source concept",
+        "type": "concept",
+        "nameKey": "const.eventsList.addSourceConcept.title_drugexposure",
+        "descriptionKey": "const.eventsList.addSourceConcept.desc_drugexposure"
+      },
+      {
         "id": "nested",
         "name": "Nested Criteria",
         "description": "Add nested criteria group",
@@ -528,6 +544,12 @@
         "id": "eraLength",
         "name": "Era Length",
         "description": "Filter by era duration",
+        "type": "numericRange"
+      },
+      {
+        "id": "gapDays",
+        "name": "Gap Days",
+        "description": "Filter by gap days between drug exposures",
         "type": "numericRange"
       },
       {
@@ -1188,7 +1210,7 @@
         "id": "sourceId",
         "name": "Source ID",
         "description": "Filter by source ID",
-        "type": "concept",
+        "type": "text",
         "nameKey": "const.eventsList.addSourceId.title_specimen",
         "descriptionKey": "const.eventsList.addSourceId.desc_specimen"
       },
@@ -1289,6 +1311,14 @@
         "type": "concept",
         "nameKey": "const.eventsList.addPlaceService.title_visit",
         "descriptionKey": "const.eventsList.addPlaceService.desc_visit"
+      },
+      {
+        "id": "placeOfServiceLocation",
+        "name": "Place of Service Location",
+        "description": "Filter by place of service location",
+        "type": "concept",
+        "nameKey": "const.eventsList.addPlaceServiceLocation.title_visit",
+        "descriptionKey": "const.eventsList.addPlaceServiceLocation.desc_visit"
       },
       {
         "id": "nested",
@@ -1397,6 +1427,14 @@
         "type": "concept",
         "nameKey": "const.eventsList.addPlaceServiceLocation.title_visitDetail",
         "descriptionKey": "const.eventsList.addPlaceServiceLocation.desc_visitDetail"
+      },
+      {
+        "id": "placeOfServiceDistance",
+        "name": "Place of Service Distance",
+        "description": "Filter by distance to place of service",
+        "type": "numericRange",
+        "nameKey": "const.eventsList.addPlaceServiceDistance.title_visitDetail",
+        "descriptionKey": "const.eventsList.addPlaceServiceDistance.desc_visitDetail"
       },
       {
         "id": "nested",
@@ -1526,6 +1564,14 @@
         "name": "Age at End",
         "description": "Filter by age at period end",
         "type": "numericRange"
+      },
+      {
+        "id": "userDefinedPeriod",
+        "name": "User Defined Period",
+        "description": "Specify Start and End Dates",
+        "type": "userDefinedPeriod",
+        "nameKey": "const.eventsList.addUserDefined.title_payerplan",
+        "descriptionKey": "const.eventsList.addUserDefined.desc_payerplan"
       },
       {
         "id": "startDate",
@@ -1741,6 +1787,27 @@
         "domainFilter": "Ethnicity",
         "nameKey": "const.eventsList.addEthnicity.title_demographic",
         "descriptionKey": "const.eventsList.addEthnicity.desc_demographic"
+      }
+    ],
+    "locationRegion": [
+      {
+        "id": "default",
+        "name": "Location Region Concept Set",
+        "description": "Select location region concepts",
+        "type": "conceptSet",
+        "domainFilter": "Geography"
+      },
+      {
+        "id": "startDate",
+        "name": "Start Date",
+        "description": "Filter by start date",
+        "type": "dateRange"
+      },
+      {
+        "id": "endDate",
+        "name": "End Date",
+        "description": "Filter by end date",
+        "type": "dateRange"
       }
     ]
   },

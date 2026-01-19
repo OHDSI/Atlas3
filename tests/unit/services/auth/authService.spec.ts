@@ -22,6 +22,7 @@ vi.mock('@/services/auth/storageManager', () => ({
     clearAll: vi.fn(),
     saveToken: vi.fn(),
     getToken: vi.fn(),
+    getLogoutUrl: vi.fn(),
   },
 }))
 
@@ -269,14 +270,34 @@ describe('AuthService', () => {
     it('should redirect for IAP logout', async () => {
       vi.mocked(storageManager.getAuthClient).mockReturnValue('IAP')
 
+      // Mock fetch for the initial logout call
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({}),
+      })
+
+      // Create a location mock with setter tracking
+      let capturedHref = ''
+      const locationMock = {
+        get href() { return capturedHref },
+        set href(val: string) { capturedHref = val },
+        origin: 'http://localhost:3000',
+        pathname: '/',
+      }
+
+      // Store original and replace
       const originalLocation = window.location
-      delete (window as unknown as { location: unknown }).location
-      window.location = { href: '' } as Location
+      // @ts-expect-error - Replacing location for testing
+      delete window.location
+      // @ts-expect-error - Assigning mock location
+      window.location = locationMock
 
       await authService.logout()
 
-      expect(window.location.href).toBe('/_gcp_iap/clear_login_cookie')
+      expect(capturedHref).toBe('/_gcp_iap/clear_login_cookie')
 
+      // Restore original
+      // @ts-expect-error - Restoring original location
       window.location = originalLocation
     })
 
@@ -295,21 +316,39 @@ describe('AuthService', () => {
     })
 
     it('should handle OIDC redirect in logout response', async () => {
-      vi.mocked(storageManager.getAuthClient).mockReturnValue('DB')
+      vi.mocked(storageManager.getAuthClient).mockReturnValue('OIDC')
+      vi.mocked(storageManager.getLogoutUrl).mockReturnValue('https://oidc.example.com/logout')
 
-      const originalLocation = window.location
-      delete (window as unknown as { location: unknown }).location
-      window.location = { href: '' } as Location
-
+      // Mock fetch for the initial logout call
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({ redirect: 'https://oidc.example.com/logout' }),
+        json: () => Promise.resolve({}),
       })
+
+      // Create a location mock with setter tracking
+      let capturedHref = ''
+      const locationMock = {
+        get href() { return capturedHref },
+        set href(val: string) { capturedHref = val },
+        origin: 'http://localhost:3000',
+        pathname: '/',
+      }
+
+      // Store original and replace
+      const originalLocation = window.location
+      // @ts-expect-error - Replacing location for testing
+      delete window.location
+      // @ts-expect-error - Assigning mock location
+      window.location = locationMock
 
       await authService.logout()
 
-      expect(window.location.href).toBe('https://oidc.example.com/logout')
+      // The OIDC logout appends post_logout_redirect_uri parameter
+      expect(capturedHref).toContain('https://oidc.example.com/logout')
+      expect(capturedHref).toContain('post_logout_redirect_uri=')
 
+      // Restore original
+      // @ts-expect-error - Restoring original location
       window.location = originalLocation
     })
 
@@ -561,7 +600,12 @@ describe('AuthService', () => {
 
       const providers = await authService.fetchOAuthProviders()
 
-      expect(providers).toEqual(mockProviders)
+      // Check core properties, allowing for additional default fields
+      expect(providers).toHaveLength(2)
+      expect(providers[0].name).toBe('google')
+      expect(providers[0].url).toBe('/user/login/google')
+      expect(providers[1].name).toBe('github')
+      expect(providers[1].url).toBe('/user/login/github')
     })
 
     it('should return empty array on 404', async () => {

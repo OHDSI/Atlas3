@@ -4,7 +4,7 @@
  */
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
-import { waitForNetworkIdle } from '../helpers/wait-utils'
+import { waitForOverlaysToClose, waitForPageReady } from '../helpers/wait-utils'
 
 test.describe('Concept Search', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,8 +13,8 @@ test.describe('Concept Search', () => {
     await page.goto('/concepts')
 
     // Wait for page to load
-    await waitForNetworkIdle(page)
-    
+    await waitForPageReady(page)
+
     // Wait for the search input to be visible
     await page.waitForSelector('input[type="text"]', { timeout: 5000 })
   })
@@ -29,7 +29,11 @@ test.describe('Concept Search', () => {
 
     // Enter search term
     await searchInput.fill('diabetes')
-    
+
+    // Dismiss any dropdowns and wait for overlays to close
+    await page.keyboard.press('Escape')
+    await waitForOverlaysToClose(page)
+
     // Click the Search button to trigger search (exact match to avoid "Clear Search" button)
     const searchButton = page.getByRole('button', { name: 'Search', exact: true })
     await searchButton.click()
@@ -61,7 +65,11 @@ test.describe('Concept Search', () => {
     // Search for concepts first
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('diabetes')
-    
+
+    // Dismiss any dropdowns and wait for overlays to close
+    await page.keyboard.press('Escape')
+    await waitForOverlaysToClose(page)
+
     const searchButton = page.getByRole('button', { name: 'Search', exact: true })
     await searchButton.click()
     
@@ -100,7 +108,11 @@ test.describe('Concept Search', () => {
     // Search for a common term that returns many results
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('disorder') // Common medical term
-    
+
+    // Dismiss any dropdowns and wait for overlays to close
+    await page.keyboard.press('Escape')
+    await waitForOverlaysToClose(page)
+
     const searchButton = page.getByRole('button', { name: 'Search', exact: true })
     await searchButton.click()
     
@@ -171,7 +183,11 @@ test.describe('Concept Search', () => {
     // Search for nonsense that should return no results
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('xyzzyquuxnonexistent12345')
-    
+
+    // Dismiss any dropdowns and wait for overlays to close
+    await page.keyboard.press('Escape')
+    await waitForOverlaysToClose(page)
+
     const searchButton = page.getByRole('button', { name: 'Search', exact: true })
     await searchButton.click()
     
@@ -209,9 +225,13 @@ test.describe('Concept Search', () => {
   test('should complete search within 5 seconds', async ({ page }) => {
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('diabetes')
-    
+
+    // Dismiss any dropdowns and wait for overlays to close
+    await page.keyboard.press('Escape')
+    await waitForOverlaysToClose(page)
+
     const startTime = Date.now()
-    
+
     const searchButton = page.getByRole('button', { name: 'Search', exact: true })
     await searchButton.click()
     
@@ -258,6 +278,10 @@ test.describe('Concept Search', () => {
   test('should display concept type badges', async ({ page }) => {
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('diabetes')
+
+    // Dismiss any dropdowns and wait for overlays to close
+    await page.keyboard.press('Escape')
+    await waitForOverlaysToClose(page)
 
     // Trigger search
     const searchButton = page.getByRole('button', { name: 'Search', exact: true })

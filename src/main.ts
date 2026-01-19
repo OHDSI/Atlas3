@@ -104,11 +104,61 @@ setupAuthInterceptor()
 // Setup plugin message handler
 setupGlobalMessageHandler(router)
 
+// Handle OAuth token in hash URL (for hash-based routing compatibility)
+// Pattern: #/{client}/{token} e.g., #/OidcClient/eyJhbG...
+async function handleHashOAuthToken() {
+  const hash = window.location.hash
+  if (!hash) return false
+
+  // Match pattern: #/{client}/{token} where token looks like a JWT
+  const match = hash.match(/^#\/([^/]+)\/([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)$/)
+  if (!match) return false
+
+  const client = match[1]
+  const token = match[2]
+  logger.info('OAuth', 'Token detected in hash URL', { client })
+
+  try {
+    const authStore = useAuthStore()
+    authStore.setToken(token || null)
+
+    // Fetch user info
+    const { authService } = await import('@/services/auth/authService')
+    const userInfo = await authService.fetchUserInfo()
+    authStore.setUser(userInfo)
+    authStore.setAuthClient(client || null)
+
+    logger.info('OAuth', 'Token processed successfully, redirecting to home')
+
+    // Clear the hash and redirect to home
+    window.history.replaceState(null, '', window.location.pathname)
+    return true
+  } catch (error) {
+    logger.error('OAuth', 'Failed to process token from hash', error)
+    // Clear invalid token from hash
+    window.history.replaceState(null, '', window.location.pathname)
+    return false
+  }
+}
+
+// Listen for hash changes to handle OAuth callbacks that happen after page load
+window.addEventListener('hashchange', async () => {
+  const handled = await handleHashOAuthToken()
+  if (handled) {
+    // Force page reload to reset app state after successful auth
+    window.location.reload()
+  }
+})
+
 // Initialize and mount the app
 initializeApp().then(async (app) => {
   // Initialize stores
   const authStore = useAuthStore()
   const localeStore = useLocaleStore()
+
+  // Check for OAuth token in hash URL before router initialization
+  // No reload needed here - app state will be applied during initialization
+  await handleHashOAuthToken()
 
   // Mount app first, then initialize stores asynchronously
   // This ensures the app is interactive immediately

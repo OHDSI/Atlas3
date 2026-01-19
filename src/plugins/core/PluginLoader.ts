@@ -16,7 +16,7 @@ export class PluginLoader {
 
   async loadPlugin(plugin: PluginInstance): Promise<void> {
     const { registration } = plugin;
-    const pluginUrl = `${import.meta.env.BASE_URL}plugins/${registration.entryPoint}`;
+    const pluginUrl = `${import.meta.env.BASE_URL}/plugins/${registration.entryPoint}`.replace('//', '/');
 
     logger.info('PluginLoader', `Loading plugin: ${registration.id} from ${pluginUrl}`);
 
@@ -90,7 +90,7 @@ export class PluginLoader {
           // Match any route that starts with /plugins/{pluginId}/
           // Need to account for the base path
           const basePath = import.meta.env.BASE_URL;
-          const pluginPath = `${basePath}plugins/${registration.id}/`.replace(/\/+/g, '/');
+          const pluginPath = `${basePath}/plugins/${registration.id}/`.replace(/\/+/g, '/');
           const isActive = location.pathname.startsWith(pluginPath);
           logger.debug('PluginLoader', `activeWhen check for ${registration.id}: pathname=${location.pathname}, pluginPath=${pluginPath}, isActive=${isActive}`);
           return isActive;

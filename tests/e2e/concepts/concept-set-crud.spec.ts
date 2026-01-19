@@ -4,15 +4,19 @@
  */
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from '../helpers/api-mocks'
-import { waitForNetworkIdle } from '../helpers/wait-utils'
+import { waitForNetworkIdle, waitForOverlaysToClose, waitForPageReady } from '../helpers/wait-utils'
 
 test.describe('Concept Set CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to concepts page
     await setupBasicMocks(page)
     await page.goto('/concepts')
-    
+
+    // Wait for page to be ready
+    await waitForPageReady(page)
+
     // Click on "Concept Sets" tab
+    await waitForOverlaysToClose(page)
     const conceptSetsTab = page.getByRole('tab', { name: /concept sets/i })
     await conceptSetsTab.click()
     await page.waitForTimeout(1000) // Give time for tab to load

@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/auth/authService'
 import { permissionChecker } from '@/services/auth/permissionChecker'
+import { storageManager } from '@/services/auth/storageManager'
 import type { LoginCredentials } from '@/models/auth.types'
 
 export function useAuth() {
@@ -59,6 +60,10 @@ export function useAuth() {
 
     closeLoginModal(): void {
       authStore.closeLoginModal()
+    },
+
+    saveLogoutUrl(logoutUrl: string): void {
+      storageManager.saveLogoutUrl(logoutUrl)
     },
   }
 }

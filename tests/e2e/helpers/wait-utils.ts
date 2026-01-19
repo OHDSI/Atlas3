@@ -258,3 +258,91 @@ export async function waitForVueUpdate(page: Page): Promise<void> {
     })
   })
 }
+
+/**
+ * Wait for all Vuetify overlays (dialogs, menus, etc.) to close
+ * This is important because the overlay scrim can intercept pointer events
+ */
+export async function waitForOverlaysToClose(page: Page, timeout: number = 5000): Promise<void> {
+  // First check if there's an auth dialog and dismiss it
+  const authDialog = page.locator('.v-dialog').filter({ hasText: /authentication provider/i })
+  if (await authDialog.count() > 0 && await authDialog.isVisible().catch(() => false)) {
+    // Click the DB provider list item to authenticate (it's a v-list-item, not a button)
+    const dbListItem = page.locator('.v-dialog .v-list-item').filter({ hasText: 'DB' }).first()
+    if (await dbListItem.count() > 0) {
+      await dbListItem.click({ force: true }).catch(() => {})
+      // Wait for auth to complete and dialog to close
+      await page.waitForTimeout(1000)
+    } else {
+      // Try alternative selectors for the DB option
+      const dbOption = page.locator('.v-dialog [role="listitem"]:has-text("DB"), .v-dialog li:has-text("DB")').first()
+      if (await dbOption.count() > 0) {
+        await dbOption.click({ force: true }).catch(() => {})
+        await page.waitForTimeout(1000)
+      } else {
+        // Press Escape to try closing the dialog
+        await page.keyboard.press('Escape')
+        await page.waitForTimeout(300)
+      }
+    }
+  }
+
+  const overlayScrim = page.locator('.v-overlay__scrim')
+
+  try {
+    // Wait for overlay scrim to be hidden or not exist
+    await overlayScrim.first().waitFor({ state: 'hidden', timeout })
+  } catch {
+    // If timeout, check if any overlays actually exist and are blocking
+    const count = await overlayScrim.count()
+    if (count === 0) {
+      // No overlays, all good
+      return
+    }
+
+    // Check if overlays are interactive (pointer-events: none means they don't block)
+    const isBlocking = await page.evaluate(() => {
+      const scrims = document.querySelectorAll('.v-overlay__scrim')
+      for (const scrim of scrims) {
+        const style = window.getComputedStyle(scrim)
+        if (style.pointerEvents !== 'none' && style.display !== 'none' && style.visibility !== 'hidden') {
+          return true
+        }
+      }
+      return false
+    })
+
+    if (isBlocking) {
+      // Try pressing Escape to close any overlay
+      await page.keyboard.press('Escape')
+      await page.waitForTimeout(300)
+
+      // If still blocking, try clicking the scrim
+      const stillBlocking = await page.evaluate(() => {
+        const scrims = document.querySelectorAll('.v-overlay__scrim')
+        for (const scrim of scrims) {
+          const style = window.getComputedStyle(scrim)
+          if (style.pointerEvents !== 'none' && style.display !== 'none' && style.visibility !== 'hidden') {
+            return true
+          }
+        }
+        return false
+      })
+
+      if (stillBlocking) {
+        await overlayScrim.first().click({ force: true }).catch(() => {})
+        await page.waitForTimeout(300)
+      }
+    }
+  }
+}
+
+/**
+ * Wait for page to be ready for interactions
+ * Combines multiple wait conditions for reliable test setup
+ */
+export async function waitForPageReady(page: Page, timeout: number = 15000): Promise<void> {
+  await waitForNetworkIdle(page, timeout)
+  await waitForOverlaysToClose(page, 3000)
+  await waitForVueUpdate(page)
+}

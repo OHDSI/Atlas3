@@ -12,13 +12,13 @@
 
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
-import { waitForNetworkIdle } from './helpers/wait-utils'
+import { waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
 
 test.describe('Language Selector', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
   })
 
   test('should display language selector button', async ({ page }) => {
@@ -28,6 +28,9 @@ test.describe('Language Selector', () => {
   })
 
   test('should open language menu when clicked', async ({ page }) => {
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
+
     // Find and click language selector
     const languageSelector = page.getByTestId('language-selector')
     await expect(languageSelector).toBeVisible({ timeout: 5000 })
@@ -52,6 +55,9 @@ test.describe('Language Selector', () => {
       }
     })
 
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
+
     const languageSelector = page.getByTestId('language-selector')
     await expect(languageSelector).toBeVisible({ timeout: 5000 })
 
@@ -69,7 +75,7 @@ test.describe('Cohort Card Actions', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
   })
 
   test('should display action buttons on cohort card', async ({ page }) => {
@@ -101,6 +107,9 @@ test.describe('Cohort Card Actions', () => {
     // Wait for first card
     const firstCard = page.locator('.cohort-card').first()
     await expect(firstCard).toBeVisible({ timeout: 10000 })
+
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
 
     // Look for delete button (trash icon or delete text)
     const deleteButton = firstCard.locator('button[aria-label*="delete"], button:has(.mdi-delete)').first()
@@ -214,10 +223,13 @@ test.describe('Cohort Import', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
   })
 
   test('should open import dialog when clicking Import button', async ({ page }) => {
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
+
     // Wait for Import button to be visible
     const importButton = page.locator('button:has-text("Import")').first()
     const hasImportButton = await importButton.count() > 0
@@ -243,7 +255,7 @@ test.describe('URL State Persistence', () => {
   test('should persist search query in URL', async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
 
     // Look for the actual search input (has placeholder or aria-label for search)
     const searchInput = page.locator('input[placeholder*="earch"], input[aria-label*="earch"], .cohort-search input')

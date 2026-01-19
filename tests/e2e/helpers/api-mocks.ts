@@ -19,11 +19,49 @@ import {
  * This includes sources, translations, and common endpoints
  */
 export async function setupBasicMocks(page: Page) {
-  // Auto-accept license agreement to prevent dialog from blocking tests
+  // Auto-accept license agreement and set up auth bypass to prevent dialogs from blocking tests
   await page.addInitScript(() => {
     const LICENSE_ACCEPTANCE_KEY = 'atlas3-license-acceptance-date'
     // Set acceptance date to current time to bypass license dialog
     localStorage.setItem(LICENSE_ACCEPTANCE_KEY, Date.now().toString())
+
+    // Set auth token to bypass authentication dialog
+    // Token must be valid JWT format with exp claim far in the future
+    // This is a mock JWT: header.payload.signature
+    // Payload contains: {"sub":"test_user","name":"Test User","exp":9999999999,"iat":1516239022}
+    const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJuYW1lIjoiVGVzdCBVc2VyIiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+    localStorage.setItem('bearerToken', mockToken)
+    localStorage.setItem('auth-client', 'TestClient')
+
+    // Also set the cookie for bearerToken
+    document.cookie = `bearerToken=${mockToken}; path=/; SameSite=Lax`
+  })
+
+  // Mock user/me endpoint to return authenticated user
+  await page.route('**/user/me', async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        login: 'test_user',
+        name: 'Test User',
+        id: 1,
+        permissionIdx: {},
+        permissionsBySourceKey: {}
+      })
+    })
+  })
+
+  // Mock user/refresh endpoint
+  await page.route('**/user/refresh', async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0X3VzZXIiLCJuYW1lIjoiVGVzdCBVc2VyIiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE1MTYyMzkwMjJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+        refreshToken: 'mock-new-refresh-token'
+      })
+    })
   })
 
   // Mock CDM sources endpoint

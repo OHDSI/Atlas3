@@ -11,7 +11,7 @@ export class PluginConfigService {
 
   async loadConfig(): Promise<PluginManifest> {
     try {
-      const pluginsUrl = `${import.meta.env.BASE_URL}config/plugins.json`;
+      const pluginsUrl = `${import.meta.env.BASE_URL}/config/plugins.json`.replace('//', '/');
       const response = await fetch(pluginsUrl);
 
       // If plugins.json doesn't exist (404), return empty manifest with defaults
@@ -160,7 +160,7 @@ export class PluginConfigService {
 
   setupHotReload(): void {
     if (import.meta.hot && this.manifest?.settings?.enableHotReload) {
-      const pluginsUrl = `${import.meta.env.BASE_URL}config/plugins.json`;
+      const pluginsUrl = `${import.meta.env.BASE_URL}/config/plugins.json`.replace('//', '/');
       import.meta.hot.accept(pluginsUrl, async () => {
         try {
           const oldManifest = this.manifest;

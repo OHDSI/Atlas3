@@ -12,65 +12,10 @@ import {
 } from '@/components/versions/schemas'
 import { z } from 'zod'
 import { logger } from '@/utils/logger'
+import { httpGet, httpPut } from '@/services/http-client'
 
 // Use pass-through validation for cohort definition data
 const cohortDefinitionSchema = z.any()
-
-const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
-
-/**
- * Internal fetch wrapper with error handling and retry logic
- */
-async function fetchWithRetry<T>(
-  endpoint: string,
-  options?: RequestInit,
-  retries = 3,
-  delay = 500
-): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`
-
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers,
-        },
-      })
-
-      if (!response.ok) {
-        // Don't retry 4xx errors (client errors)
-        if (response.status >= 400 && response.status < 500) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-        }
-
-        // Retry 5xx errors (server errors)
-        if (attempt < retries) {
-          await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt)))
-          continue
-        }
-
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      // Handle 204 No Content
-      if (response.status === 204) {
-        return null as T
-      }
-
-      return await response.json() as T
-    } catch (error) {
-      if (attempt < retries && !(error instanceof Error && error.message.includes('HTTP 4'))) {
-        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt)))
-        continue
-      }
-      throw error
-    }
-  }
-
-  throw new Error('Max retries exceeded')
-}
 
 /**
  * Get all versions for a cohort definition
@@ -79,7 +24,7 @@ async function fetchWithRetry<T>(
  */
 export async function getVersions(cohortDefinitionId: number): Promise<Version[]> {
   try {
-    const data = await fetchWithRetry<unknown>(`/cohortdefinition/${cohortDefinitionId}/version/`)
+    const data = await httpGet<unknown>(`/cohortdefinition/${cohortDefinitionId}/version/`)
     const parsed = versionArraySchema.safeParse(data)
 
     if (!parsed.success) {
@@ -105,7 +50,7 @@ export async function getVersion(
   versionNumber: number
 ): Promise<VersionedAsset<CohortDefinition>> {
   try {
-    const data = await fetchWithRetry<unknown>(
+    const data = await httpGet<unknown>(
       `/cohortdefinition/${cohortDefinitionId}/version/${versionNumber}`
     )
 
@@ -143,12 +88,9 @@ export async function updateVersion(
     // Validate payload
     const validatedPayload = commentUpdateSchema.parse(payload)
 
-    const data = await fetchWithRetry<unknown>(
+    const data = await httpPut<unknown>(
       `/cohortdefinition/${cohortDefinitionId}/version/${versionNumber}`,
-      {
-        method: 'PUT',
-        body: JSON.stringify(validatedPayload),
-      }
+      validatedPayload
     )
 
     const parsed = versionSchema.safeParse(data)
@@ -180,11 +122,8 @@ export async function copyVersion(
   versionNumber: number
 ): Promise<CohortDefinition> {
   try {
-    const data = await fetchWithRetry<unknown>(
-      `/cohortdefinition/${cohortDefinitionId}/version/${versionNumber}/createAsset`,
-      {
-        method: 'PUT',
-      }
+    const data = await httpPut<unknown>(
+      `/cohortdefinition/${cohortDefinitionId}/version/${versionNumber}/createAsset`
     )
 
     const parsed = cohortDefinitionSchema.safeParse(data)
