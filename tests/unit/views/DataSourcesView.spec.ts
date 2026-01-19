@@ -301,14 +301,20 @@ describe('DataSourcesView', () => {
       wrapper = mountComponent()
       await flushPromises()
 
+      // Use store action to select source, then trigger report fetch
       store.selectedSourceId = mockSource.sourceId
-      store.selectReportType('dashboard')
       await wrapper.vm.$nextTick()
+
+      // Start the report fetch (don't await - we want to check loading state)
+      const fetchPromise = store.selectReportType('dashboard')
+      await wrapper.vm.$nextTick()
+      await flushPromises()
 
       const hasSkeleton = wrapper.findComponent({ name: 'VSkeletonLoader' }).exists()
       expect(hasSkeleton).toBe(true)
 
       resolveReport!({ summary: { sourceName: 'Test', personCount: 100 }, genderDistribution: [], ageDistribution: { categories: [], series: [] }, cumulativeObservation: { categories: [], series: [] }, observationByMonth: { categories: [], series: [] } })
+      await fetchPromise
       await flushPromises()
     })
   })

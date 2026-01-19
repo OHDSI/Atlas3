@@ -14,12 +14,13 @@
 
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks, setupDatasourcesMocks } from './helpers/api-mocks'
+import { waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
 
 test.describe('Landing Page Navigation', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/')
-    await page.waitForTimeout(1000)
+    await waitForPageReady(page)
   })
 
   test('should display landing page with ATLAS title', async ({ page }) => {
@@ -29,6 +30,9 @@ test.describe('Landing Page Navigation', () => {
   })
 
   test('should have Search Vocabulary button that navigates to concepts', async ({ page }) => {
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
+
     // Find and click the Search Vocabulary button
     const searchButton = page.locator('button:has-text("Search the Vocabulary")')
     await expect(searchButton).toBeVisible()
@@ -50,6 +54,9 @@ test.describe('Landing Page Navigation', () => {
   })
 
   test('should have New Cohort button that navigates to cohort builder', async ({ page }) => {
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
+
     // Find and click the Define New Cohort button
     const newCohortButton = page.locator('button:has-text("Define a New Cohort")')
     await expect(newCohortButton).toBeVisible()
@@ -69,7 +76,7 @@ test.describe('DataSources Page - Basic Functionality', () => {
     await setupBasicMocks(page)
     await setupDatasourcesMocks(page)
     await page.goto('/datasources')
-    await page.waitForTimeout(1500)
+    await waitForPageReady(page)
   })
 
   test('should load datasources page and display page title', async ({ page }) => {

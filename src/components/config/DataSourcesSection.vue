@@ -153,7 +153,7 @@
           variant="tonal"
           class="mt-4"
         >
-          <span v-html="tv('commonErrors.noSources')" />
+          {{ t('commonErrors.noSources') }}
         </v-alert>
       </v-card-text>
     </v-card>

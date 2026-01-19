@@ -10,13 +10,13 @@
 
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks } from './helpers/api-mocks'
-import { waitForNetworkIdle } from './helpers/wait-utils'
+import { waitForNetworkIdle, waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
 
 test.describe('Concepts View - Tab Switching', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/concepts')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
   })
 
   test('should display both Concept Search and Concept Sets tabs', async ({ page }) => {
@@ -32,6 +32,9 @@ test.describe('Concepts View - Tab Switching', () => {
   })
 
   test('should switch to Concept Sets tab when clicked', async ({ page }) => {
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
+
     // Find the Concept Sets tab
     const setsTab = page.locator('.v-tab').filter({ hasText: /concept sets|sets/i }).first()
     const hasTab = await setsTab.count() > 0
@@ -88,7 +91,7 @@ test.describe('Cohort Builder - Breadcrumb Navigation', () => {
 
   test('should display breadcrumb navigation on cohort builder page', async ({ page }) => {
     await page.goto('/cohorts/1')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
 
     // Check for breadcrumb (actual class is .cohort-breadcrumb from CohortBreadcrumb.vue)
     const breadcrumb = page.locator('.cohort-breadcrumb, .cohort-builder__breadcrumb, nav[class*="breadcrumb"]')
@@ -100,7 +103,10 @@ test.describe('Cohort Builder - Breadcrumb Navigation', () => {
 
   test('should navigate back to cohorts list when clicking breadcrumb', async ({ page }) => {
     await page.goto('/cohorts/1')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
+
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
 
     // Find and click the cohorts list breadcrumb item
     const breadcrumbLink = page.locator('.cohort-builder__breadcrumb-item--link').first()
@@ -122,7 +128,7 @@ test.describe('Cohort Builder - Name Editing', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts/1')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
   })
 
   test('should display edit name icon in breadcrumb', async ({ page }) => {
@@ -132,6 +138,9 @@ test.describe('Cohort Builder - Name Editing', () => {
   })
 
   test('should open edit name dialog when clicking edit icon', async ({ page }) => {
+    // Ensure no overlays are blocking
+    await waitForOverlaysToClose(page)
+
     // Find and click edit icon
     const editIcon = page.locator('.cohort-builder__breadcrumb-edit-icon, .mdi-pencil').first()
     await expect(editIcon).toBeVisible({ timeout: 5000 })
@@ -157,7 +166,7 @@ test.describe('Cohort Builder - Description Field', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts/1')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
   })
 
   test('should display and allow editing description field', async ({ page }) => {
@@ -187,7 +196,7 @@ test.describe('Cohort Builder - Action Buttons', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts/1')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
   })
 
   test('should display concept sets icon/button', async ({ page }) => {

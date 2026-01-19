@@ -11,14 +11,14 @@
 
 import { test, expect } from '@playwright/test'
 import { setupBasicMocks, setupDatasourcesMocks } from './helpers/api-mocks'
-import { waitForNetworkIdle } from './helpers/wait-utils'
+import { waitForNetworkIdle, waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
 
 test.describe('DataSources - Report Type Selector', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await setupDatasourcesMocks(page)
     await page.goto('/datasources')
-    await page.waitForTimeout(1500)
+    await waitForPageReady(page)
   })
 
   test('should display report type dropdown with options', async ({ page }) => {
@@ -57,7 +57,7 @@ test.describe('Concept Search - Advanced Features', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/concepts')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
   })
 
   test('should have domain filter dropdown', async ({ page }) => {
@@ -100,6 +100,10 @@ test.describe('Concept Search - Advanced Features', () => {
     const searchInput = page.locator('input[type="text"]').first()
     await searchInput.fill('xyzinvalidterm123456')
 
+    // Dismiss any dropdowns and wait for overlays to close
+    await page.keyboard.press('Escape')
+    await waitForOverlaysToClose(page)
+
     const searchButton = page.getByRole('button', { name: 'Search', exact: true })
     await searchButton.click()
     await page.waitForTimeout(2000)
@@ -120,7 +124,7 @@ test.describe('Cohort List - UI Interactions', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
   })
 
   test('should display loading state while fetching cohorts', async ({ page }) => {
@@ -168,13 +172,11 @@ test.describe('Browser Navigation', () => {
 
     // Navigate to cohorts list
     await page.goto('/cohorts')
-    await waitForNetworkIdle(page)
-    await page.waitForTimeout(1000)
+    await waitForPageReady(page)
 
     // Navigate to a cohort
     await page.goto('/cohorts/1')
-    await waitForNetworkIdle(page)
-    await page.waitForTimeout(1000)
+    await waitForPageReady(page)
 
     // Use browser back button
     await page.goBack()
@@ -192,7 +194,7 @@ test.describe('Browser Navigation', () => {
     // Navigate through pages
     await page.goto('/')
     await page.goto('/cohorts')
-    await waitForNetworkIdle(page)
+    await waitForPageReady(page)
 
     // Go back
     await page.goBack()
@@ -248,8 +250,7 @@ test.describe('Concept Sets - Tab Integration', () => {
     })
 
     await page.goto('/concepts?tab=sets')
-    await waitForNetworkIdle(page)
-    await page.waitForTimeout(1000)
+    await waitForPageReady(page)
 
     // Check for empty state, create button, or tab content
     const emptyState = page.getByTestId('empty-concept-sets')
