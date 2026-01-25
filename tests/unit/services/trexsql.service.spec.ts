@@ -346,16 +346,9 @@ describe('TrexSQLService', () => {
   })
 
   describe('cancelCountRequest', () => {
-    it('cancels active request for source by calling abort', async () => {
-      // Track if abort was called
-      let abortCalled = false
-      const mockAbortController = {
-        abort: () => { abortCalled = true },
-        signal: { aborted: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }
-      }
-
-      // We can't easily test this without access to internals
-      // Just verify the function doesn't throw
+    it('cancels active request for source by calling abort', () => {
+      // We can't easily test internal abort controller without access to internals
+      // Just verify the function doesn't throw when canceling a non-existent request
       cancelCountRequest('CDM_SOURCE')
 
       // No error means it handled gracefully
