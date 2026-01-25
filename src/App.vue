@@ -18,7 +18,7 @@
       </div>
     </v-overlay>
 
-    <NavBar />
+    <NavBar v-if="showNavBar" />
 
     <v-main>
       <!-- Configuration validation warnings -->
@@ -63,6 +63,7 @@ import { useLocaleStore } from '@/stores/locale'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
 import { useLicenseAgreement } from '@/composables/useLicenseAgreement'
+import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
 
 const localeStore = useLocaleStore()
@@ -79,6 +80,12 @@ const {
 const isInitializing = computed(() => {
   // Only show during initial load (when no translations are loaded yet)
   return localeStore.loading && Object.keys(localeStore.translations).length === 0
+})
+
+const showNavBar = ref(true)
+
+pluginConfigService.onChange(() => {
+  showNavBar.value = pluginConfigService.showNavBar()
 })
 
 // Session expiry modal state
@@ -128,9 +135,9 @@ function handleRejectLicense() {
   rejectLicense()
 }
 
-// Check license status on mount
 onMounted(() => {
   checkLicenseStatus()
+  showNavBar.value = pluginConfigService.showNavBar()
 })
 </script>
 

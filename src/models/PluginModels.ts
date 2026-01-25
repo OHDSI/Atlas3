@@ -68,9 +68,11 @@ export interface PluginManifest {
       logoNavigateTo?: string; // Route to navigate to when clicking the logo (default: '/')
     };
     header?: {
+      showNavBar?: boolean; // Show/hide the entire navigation bar (default: true)
       showFeedbackButton?: boolean; // Show/hide the feedback button (default: true)
       showLanguageSelector?: boolean; // Show/hide the language selector (default: true)
       showConfigButton?: boolean; // Show/hide the configuration panel button (default: true)
+      showUserMenu?: boolean; // Show/hide the user menu (default: true)
       feedbackUrl?: string; // Custom feedback URL (default: Microsoft Forms URL)
     };
   };
@@ -217,9 +219,11 @@ export const PluginManifestSchema = z.object({
       logoNavigateTo: z.string().optional(),
     }).optional(),
     header: z.object({
+      showNavBar: z.boolean().optional(),
       showFeedbackButton: z.boolean().optional(),
       showLanguageSelector: z.boolean().optional(),
       showConfigButton: z.boolean().optional(),
+      showUserMenu: z.boolean().optional(),
       feedbackUrl: z.string().url().optional(),
     }).optional(),
   }).optional(),

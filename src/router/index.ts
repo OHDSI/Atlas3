@@ -153,6 +153,52 @@ const router = createRouter({
   ],
 })
 
+// Deeplink guard - handles ?cohortId=X and ?route=/path on initial load
+let deeplinkProcessed = false
+
+router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  if (deeplinkProcessed) {
+    next()
+    return
+  }
+
+  // Skip on auth callbacks
+  if (to.meta.isOAuthCallback || to.meta.isSAMLCallback || to.meta.isOpenIDCallback) {
+    deeplinkProcessed = true
+    next()
+    return
+  }
+
+  const cohortId = to.query.cohortId as string
+  const routeParam = to.query.route as string
+
+  if (cohortId) {
+    deeplinkProcessed = true
+    logger.info('Router', `Deeplink: redirecting to cohort ${cohortId}`)
+    next({ path: `/cohorts/${cohortId}`, replace: true })
+    return
+  }
+
+  if (routeParam) {
+    deeplinkProcessed = true
+    const targetRoute = routeParam.startsWith('/') ? routeParam : `/${routeParam}`
+
+    // Validate route exists to prevent open redirect
+    const resolved = router.resolve(targetRoute)
+    if (resolved.matched.length === 0) {
+      logger.warn('Router', `Deeplink: invalid route ${targetRoute}, ignoring`)
+      next()
+      return
+    }
+
+    logger.info('Router', `Deeplink: redirecting to route ${targetRoute}`)
+    next({ path: targetRoute, replace: true })
+    return
+  }
+  deeplinkProcessed = true
+  next()
+})
+
 // Home redirect guard - must run before auth guard
 router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
   if (to.path === '/') {
