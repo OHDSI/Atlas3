@@ -265,6 +265,8 @@ describe('useAuth', () => {
   describe('login modal', () => {
     it('should open login modal', () => {
       const authStore = useAuthStore()
+      // Reset debounce timer first
+      authStore.closeLoginModal()
       const { openLoginModal } = useAuth()
 
       openLoginModal()
@@ -280,6 +282,27 @@ describe('useAuth', () => {
       closeLoginModal()
 
       expect(authStore.loginModalOpen).toBe(false)
+    })
+  })
+
+  describe('setError', () => {
+    it('should set error message in store', () => {
+      const authStore = useAuthStore()
+      const { setError } = useAuth()
+
+      setError('Test error message')
+
+      expect(authStore.errorMessage).toBe('Test error message')
+    })
+
+    it('should clear error message when null is passed', () => {
+      const authStore = useAuthStore()
+      authStore.$patch({ errorMessage: 'Existing error' })
+
+      const { setError } = useAuth()
+      setError(null)
+
+      expect(authStore.errorMessage).toBeNull()
     })
   })
 })

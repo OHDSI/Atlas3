@@ -569,4 +569,29 @@ describe.skip('PluginLoader', () => {
       expect(registry.getPlugin('test-plugin')?.state).toBe('loaded');
     });
   });
+
+  describe('dispose', () => {
+    it('should clear loading timeouts', async () => {
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+
+      // Start loading a plugin that will hang
+      mockSystemImport.mockImplementation(() => new Promise(() => {}));
+      const loadPromise = loader.loadPlugin(mockPlugin);
+
+      // Dispose before load completes
+      loader.dispose();
+
+      expect(clearTimeoutSpy).toHaveBeenCalled();
+
+      // Let promise settle
+      await loadPromise.catch(() => {});
+    });
+
+    it('should be safe to call multiple times', () => {
+      expect(() => {
+        loader.dispose();
+        loader.dispose();
+      }).not.toThrow();
+    });
+  });
 });

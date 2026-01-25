@@ -123,6 +123,10 @@ export class PluginConfigService {
     return logoUrl;
   }
 
+  getLogoNavigateTo(): string {
+    return this.manifest?.settings?.theme?.logoNavigateTo || '/';
+  }
+
   isCoreNavigationItemEnabled(itemId: string): boolean {
     const navSettings = this.getNavigationSettings();
 
@@ -143,6 +147,26 @@ export class PluginConfigService {
 
     // Otherwise, enabled
     return true;
+  }
+
+  getHeaderSettings(): { showFeedbackButton?: boolean; showLanguageSelector?: boolean; showConfigButton?: boolean; feedbackUrl?: string } {
+    return this.manifest?.settings?.header || {};
+  }
+
+  showFeedbackButton(): boolean {
+    return this.manifest?.settings?.header?.showFeedbackButton ?? true;
+  }
+
+  showLanguageSelector(): boolean {
+    return this.manifest?.settings?.header?.showLanguageSelector ?? true;
+  }
+
+  showConfigButton(): boolean {
+    return this.manifest?.settings?.header?.showConfigButton ?? true;
+  }
+
+  getFeedbackUrl(): string {
+    return this.manifest?.settings?.header?.feedbackUrl || 'https://forms.office.com/r/2JzrYy1yDP';
   }
 
   onChange(callback: (manifest: PluginManifest) => void): () => void {

@@ -13,6 +13,9 @@ let storageHandler: ((e: StorageEvent) => void) | null = null
 let syncDebounceTimer: ReturnType<typeof setTimeout> | null = null
 const SYNC_DEBOUNCE_MS = 100
 
+let lastModalOpenTime = 0
+const MODAL_DEBOUNCE_MS = 500
+
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState & { refreshTimeoutId: number | null; isRunningAs: boolean; originalUser: UserInfo | null; sessionExpiryModalOpen: boolean; sessionExpiresAt: Date | null } => ({
     token: null,
@@ -148,12 +151,18 @@ export const useAuthStore = defineStore('auth', {
     },
 
     openLoginModal() {
+      const now = Date.now()
+      if (now - lastModalOpenTime < MODAL_DEBOUNCE_MS || this.loginModalOpen) {
+        return
+      }
+      lastModalOpenTime = now
       this.loginModalOpen = true
     },
 
     closeLoginModal() {
       this.loginModalOpen = false
       this.errorMessage = null
+      lastModalOpenTime = 0
     },
 
     scheduleTokenRefresh() {

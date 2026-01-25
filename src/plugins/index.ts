@@ -32,15 +32,13 @@ export async function initializePluginFramework(authContext: AuthContext): Promi
       return;
     }
 
-    // Create plugin loader
     pluginLoader = new PluginLoader(pluginRegistry);
+    (window as unknown as { __pluginLoader: PluginLoader }).__pluginLoader = pluginLoader;
+    (window as unknown as { __pluginRegistry: PluginRegistry }).__pluginRegistry = pluginRegistry;
 
-    // Register and load all plugins
     for (const registration of manifest.plugins) {
-      // Create message bus for this plugin
       const messageBus = createHostMessageBus(registration.id);
 
-      // Register plugin
       const instance = pluginRegistry.registerPlugin(
         registration,
         authContext,

@@ -1,8 +1,13 @@
 <template>
   <div class="plugin-container">
     <div
+      :id="pluginContainerId"
+      class="plugin-mount-point"
+      :class="{ 'plugin-mount-point--hidden': hasError || isLoading }"
+    />
+    <div
       v-if="hasError"
-      class="plugin-error"
+      class="plugin-error plugin-overlay"
     >
       <PluginErrorUI
         :error="error"
@@ -12,15 +17,10 @@
     </div>
     <div
       v-else-if="isLoading"
-      class="plugin-loading"
+      class="plugin-loading plugin-overlay"
     >
       <PluginLoadingState />
     </div>
-    <div
-      v-else
-      :id="pluginContainerId"
-      class="plugin-mount-point"
-    />
   </div>
 </template>
 
@@ -47,19 +47,25 @@ const isLoading = ref(true);
 
 let stateUnsubscribe: (() => void) | null = null;
 
-onMounted(() => {
-  const plugin = pluginRegistry.getPlugin(pluginId.value);
-  if (plugin) {
-    logger.debug('PluginContainer', `Mounting container for plugin ${pluginId.value}`, plugin.state);
+onMounted(async () => {
+  const maxAttempts = 20;
+  const delayMs = 100;
+  let plugin = null;
 
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    plugin = pluginRegistry.getPlugin(pluginId.value);
+    if (plugin) {
+      break;
+    }
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+
+  if (plugin) {
     hasError.value = plugin.state === 'error';
     error.value = plugin.error ?? null;
     isLoading.value = plugin.state === 'loading' || plugin.state === 'not-loaded';
 
-    // Subscribe to state changes
     stateUnsubscribe = pluginRegistry.onStateChange(pluginId.value, (state) => {
-      logger.debug('PluginContainer', `Plugin ${pluginId.value} state changed to`, state);
-
       hasError.value = state === 'error';
       isLoading.value = state === 'loading' || state === 'not-loaded';
 
@@ -69,7 +75,7 @@ onMounted(() => {
       }
     });
   } else {
-    logger.error('PluginContainer', `Plugin ${pluginId.value} not found in registry`);
+    logger.error('PluginContainer', `Plugin ${pluginId.value} not found`);
     hasError.value = true;
     isLoading.value = false;
     error.value = {
@@ -115,16 +121,29 @@ function handleRetry() {
   position: relative;
 }
 
-.plugin-loading,
-.plugin-error {
+.plugin-mount-point {
+  width: 100%;
+  height: 100%;
+}
+
+.plugin-mount-point--hidden {
+  visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.plugin-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 400px;
-}
-
-.plugin-mount-point {
-  width: 100%;
-  height: 100%;
+  background: var(--background-color, #fff);
+  z-index: 10;
 }
 </style>

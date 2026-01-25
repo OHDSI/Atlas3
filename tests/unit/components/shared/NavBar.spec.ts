@@ -79,7 +79,12 @@ vi.mock('@/services/PluginConfigService', () => ({
   pluginConfigService: {
     getLogoUrl: () => null,
     isCoreNavigationItemEnabled: () => true,
-    onChange: vi.fn()
+    onChange: vi.fn(),
+    showFeedbackButton: () => true,
+    showLanguageSelector: () => true,
+    showConfigButton: () => true,
+    getFeedbackUrl: () => 'https://forms.office.com/r/2JzrYy1yDP',
+    getLogoNavigateTo: () => '/'
   }
 }))
 
