@@ -36,6 +36,8 @@ jobs:
 
       - name: Build production
         run: npm run build
+        env:
+          VITE_BASE_PATH: /atlas
 
       - name: Prepare package.json for publishing
         run: |
