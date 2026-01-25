@@ -19,7 +19,12 @@ export class PluginLoader {
 
   async loadPlugin(plugin: PluginInstance): Promise<void> {
     const { registration } = plugin;
-    const pluginUrl = `${import.meta.env.BASE_URL}/plugins/${registration.entryPoint}`.replace('//', '/');
+    // If entryPoint is absolute (starts with / or http), use it directly
+    // Otherwise, prepend BASE_URL/plugins/
+    const isAbsolutePath = registration.entryPoint.startsWith('/') || registration.entryPoint.startsWith('http');
+    const pluginUrl = isAbsolutePath
+      ? registration.entryPoint
+      : `${import.meta.env.BASE_URL}/plugins/${registration.entryPoint}`.replace('//', '/');
 
     logger.info('PluginLoader', `Loading plugin: ${registration.id} from ${pluginUrl}`);
 
