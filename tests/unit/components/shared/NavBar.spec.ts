@@ -83,6 +83,7 @@ vi.mock('@/services/PluginConfigService', () => ({
     showFeedbackButton: () => true,
     showLanguageSelector: () => true,
     showConfigButton: () => true,
+    showUserMenu: () => true,
     getFeedbackUrl: () => 'https://forms.office.com/r/2JzrYy1yDP',
     getLogoNavigateTo: () => '/'
   }
