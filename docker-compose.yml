@@ -1,37 +1,11 @@
 volumes:
   atlas3-postgres-data:
     name: atlas3-postgres-data
-  atlas3-ssl-data:
-    name: atlas3-ssl-data
   atlas3-webapi-data:
     name: atlas3-webapi-data
 
 
 services:
-  atlas3-init:
-    image: alpine:latest
-    container_name: atlas3-init
-    volumes:
-      - atlas3-ssl-data:/ssl
-      - atlas3-webapi-data:/data
-
-    command: >
-      sh -c '
-      if [ ! -f /ssl/cert.pem ] || [ ! -f /ssl/key.pem ]; then
-        echo "Generating self-signed SSL certificates...";
-        apk add --no-cache openssl;
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /ssl/key.pem -out /ssl/cert.pem -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost" -addext "subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1";
-        echo "✓ SSL certificates generated";
-      else
-        echo "✓ SSL certificates already exist";
-      fi;
-      echo "Setting up WebAPI data directory permissions...";
-      mkdir -p /data/cache /data/trexsql-lib;
-      chown -R 101:101 /data;
-      chmod -R 755 /data;
-      echo "✓ WebAPI data directory configured";
-      '
-
   atlas3-postgres:
     image: ohdsi/broadsea-atlasdb:2.3.0
     container_name: atlas3-postgres
@@ -119,8 +93,6 @@ services:
     volumes:
       - atlas3-webapi-data:/data
     depends_on:
-      atlas3-init:
-        condition: service_completed_successfully
       atlas3-postgres:
         condition: service_healthy
 
@@ -154,12 +126,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      - atlas3-ssl-data:/etc/nginx/ssl:ro
     environment:
       WEBAPI_URL: ${WEBAPI_URL:-https://localhost/WebAPI}
     depends_on:
-      atlas3-init:
-        condition: service_completed_successfully
       atlas3-db-init:
         condition: service_completed_successfully
