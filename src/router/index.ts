@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
 import { authConfig } from '@/config/auth.config'
 import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
+import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
 
 const router = createRouter({
@@ -150,6 +151,18 @@ const router = createRouter({
     },
     ...generatePluginRoutes(),
   ],
+})
+
+// Home redirect guard - must run before auth guard
+router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  if (to.path === '/') {
+    const logoNavigateTo = pluginConfigService.getLogoNavigateTo()
+    if (logoNavigateTo && logoNavigateTo !== '/') {
+      next(logoNavigateTo)
+      return
+    }
+  }
+  next()
 })
 
 // OAuth/SAML/OpenID callback handler

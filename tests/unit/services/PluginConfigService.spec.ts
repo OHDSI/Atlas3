@@ -406,4 +406,104 @@ describe('PluginConfigService', () => {
       expect(pluginConfigService).toBeInstanceOf(PluginConfigService)
     })
   })
+
+  describe('getLogoNavigateTo', () => {
+    it('should return "/" by default', () => {
+      expect(service.getLogoNavigateTo()).toBe('/')
+    })
+
+    it('should return configured logoNavigateTo', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: {
+              theme: {
+                logoNavigateTo: '/cohorts',
+              },
+            },
+          }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.getLogoNavigateTo()).toBe('/cohorts')
+    })
+  })
+
+  describe('Header Settings', () => {
+    it('showFeedbackButton should return true by default', () => {
+      expect(service.showFeedbackButton()).toBe(true)
+    })
+
+    it('showLanguageSelector should return true by default', () => {
+      expect(service.showLanguageSelector()).toBe(true)
+    })
+
+    it('showConfigButton should return true by default', () => {
+      expect(service.showConfigButton()).toBe(true)
+    })
+
+    it('getFeedbackUrl should return default URL', () => {
+      expect(service.getFeedbackUrl()).toBe('https://forms.office.com/r/2JzrYy1yDP')
+    })
+
+    it('should return configured header settings', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: {
+              header: {
+                showFeedbackButton: false,
+                showLanguageSelector: false,
+                showConfigButton: false,
+                feedbackUrl: 'https://example.com/feedback',
+              },
+            },
+          }),
+      })
+
+      await service.loadConfig()
+
+      expect(service.showFeedbackButton()).toBe(false)
+      expect(service.showLanguageSelector()).toBe(false)
+      expect(service.showConfigButton()).toBe(false)
+      expect(service.getFeedbackUrl()).toBe('https://example.com/feedback')
+    })
+
+    it('getHeaderSettings should return empty object before loading', () => {
+      expect(service.getHeaderSettings()).toEqual({})
+    })
+
+    it('getHeaderSettings should return header settings after loading', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            version: '1.0',
+            plugins: [],
+            settings: {
+              header: {
+                showFeedbackButton: false,
+                feedbackUrl: 'https://example.com/feedback',
+              },
+            },
+          }),
+      })
+
+      await service.loadConfig()
+
+      const headerSettings = service.getHeaderSettings()
+      expect(headerSettings.showFeedbackButton).toBe(false)
+      expect(headerSettings.feedbackUrl).toBe('https://example.com/feedback')
+    })
+  })
 })

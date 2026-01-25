@@ -100,11 +100,12 @@
       >
         <!-- Feedback Button -->
         <v-btn
+          v-if="showFeedbackButton"
           rounded
           color="orange"
           variant="flat"
           size="small"
-          href="https://forms.office.com/r/2JzrYy1yDP"
+          :href="feedbackUrl"
           target="_blank"
           class="mr-4"
         >
@@ -112,10 +113,11 @@
         </v-btn>
 
         <!-- Language Selector -->
-        <LanguageSelector />
+        <LanguageSelector v-if="showLanguageSelector" />
 
         <!-- Configuration Panel Icon -->
         <v-btn
+          v-if="showConfigButton"
           icon
           variant="text"
           aria-label="Open configuration panel"
@@ -205,6 +207,12 @@ const logoSrc = logoSvg
 const logoOhdsiOnlySrc = logoOhdsiOnlyPng
 const customLogoUrl = ref<string | null>(null)
 
+const showFeedbackButton = ref(true)
+const showLanguageSelector = ref(true)
+const showConfigButton = ref(true)
+const feedbackUrl = ref('https://forms.office.com/r/2JzrYy1yDP')
+const logoNavigateTo = ref('/')
+
 const signInLabel = t('components.userBar.signin', 'Sign In')
 const signOutLabel = t('components.userBar.signout', 'Sign Out')
 
@@ -265,7 +273,7 @@ function getNavTitle(key: string): string {
 
 const handleLogoClick = async () => {
   await router.isReady()
-  router.push('/')
+  router.push(logoNavigateTo.value)
 }
 
 const handleLogoError = (event: Event) => {
@@ -310,14 +318,20 @@ const updateActiveNavFromRoute = () => {
 }
 
 onMounted(() => {
-  // Load custom logo if configured
   customLogoUrl.value = pluginConfigService.getLogoUrl()
-  logger.debug('NavBar', 'Custom logo URL', { url: customLogoUrl.value, isTruthy: !!customLogoUrl.value })
+  showFeedbackButton.value = pluginConfigService.showFeedbackButton()
+  showLanguageSelector.value = pluginConfigService.showLanguageSelector()
+  showConfigButton.value = pluginConfigService.showConfigButton()
+  feedbackUrl.value = pluginConfigService.getFeedbackUrl()
+  logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
 
-  // Watch for plugin config changes and update logo
   pluginConfigService.onChange(() => {
     customLogoUrl.value = pluginConfigService.getLogoUrl()
-    logger.debug('NavBar', 'Logo updated from config change', customLogoUrl.value)
+    showFeedbackButton.value = pluginConfigService.showFeedbackButton()
+    showLanguageSelector.value = pluginConfigService.showLanguageSelector()
+    showConfigButton.value = pluginConfigService.showConfigButton()
+    feedbackUrl.value = pluginConfigService.getFeedbackUrl()
+    logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
   })
 
   // Load plugin menu items initially (will be empty if plugins haven't loaded yet)

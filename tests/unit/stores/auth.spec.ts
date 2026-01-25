@@ -380,6 +380,8 @@ describe('Auth Store', () => {
   describe('Login Modal Actions', () => {
     it('openLoginModal should set loginModalOpen to true', () => {
       const store = useAuthStore()
+      // Reset debounce timer by calling closeLoginModal first
+      store.closeLoginModal()
       store.openLoginModal()
       expect(store.loginModalOpen).toBe(true)
     })
@@ -393,6 +395,50 @@ describe('Auth Store', () => {
 
       expect(store.loginModalOpen).toBe(false)
       expect(store.errorMessage).toBeNull()
+    })
+
+    it('openLoginModal should not open if already open', () => {
+      const store = useAuthStore()
+      store.loginModalOpen = true
+
+      // Directly set loginModalOpen to true to simulate already open
+      store.openLoginModal()
+
+      expect(store.loginModalOpen).toBe(true)
+    })
+
+    it('openLoginModal should debounce rapid consecutive calls', async () => {
+      const store = useAuthStore()
+
+      // First call should succeed
+      store.openLoginModal()
+      expect(store.loginModalOpen).toBe(true)
+
+      // Close the modal
+      store.closeLoginModal()
+      expect(store.loginModalOpen).toBe(false)
+
+      // Immediate reopen should succeed because closeLoginModal resets debounce
+      store.openLoginModal()
+      expect(store.loginModalOpen).toBe(true)
+    })
+
+    it('openLoginModal debounce should prevent rapid reopens without close', async () => {
+      const store = useAuthStore()
+
+      // Reset debounce timer first
+      store.closeLoginModal()
+
+      // First call should succeed
+      store.openLoginModal()
+      expect(store.loginModalOpen).toBe(true)
+
+      // Manually set to false without calling closeLoginModal (simulating external close)
+      store.loginModalOpen = false
+
+      // Rapid reopen should be debounced (within 500ms)
+      store.openLoginModal()
+      expect(store.loginModalOpen).toBe(false)
     })
   })
 
@@ -426,6 +472,8 @@ describe('Auth Store', () => {
 
     it('performTokenRefresh should handle failed refresh', async () => {
       const store = useAuthStore()
+      // Reset debounce timer to ensure openLoginModal works
+      store.closeLoginModal()
       const { authService } = await import('@/services/auth/authService')
       vi.mocked(authService.refreshToken).mockResolvedValue(false)
 
@@ -437,6 +485,8 @@ describe('Auth Store', () => {
 
     it('performTokenRefresh should handle error', async () => {
       const store = useAuthStore()
+      // Reset debounce timer to ensure openLoginModal works
+      store.closeLoginModal()
       const { authService } = await import('@/services/auth/authService')
       vi.mocked(authService.refreshToken).mockRejectedValue(new Error('Network error'))
 

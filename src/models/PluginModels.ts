@@ -65,6 +65,13 @@ export interface PluginManifest {
     theme?: {
       primaryColor?: string; // Primary theme color override (hex color code, e.g., '#1f425a')
       logoUrl?: string; // Custom logo URL/path (replaces default OHDSI + ATLAS logos)
+      logoNavigateTo?: string; // Route to navigate to when clicking the logo (default: '/')
+    };
+    header?: {
+      showFeedbackButton?: boolean; // Show/hide the feedback button (default: true)
+      showLanguageSelector?: boolean; // Show/hide the language selector (default: true)
+      showConfigButton?: boolean; // Show/hide the configuration panel button (default: true)
+      feedbackUrl?: string; // Custom feedback URL (default: Microsoft Forms URL)
     };
   };
 }
@@ -207,6 +214,13 @@ export const PluginManifestSchema = z.object({
     theme: z.object({
       primaryColor: z.string().regex(hexColorRegex, 'Invalid hex color for primaryColor').optional(),
       logoUrl: z.string().optional(),
+      logoNavigateTo: z.string().optional(),
+    }).optional(),
+    header: z.object({
+      showFeedbackButton: z.boolean().optional(),
+      showLanguageSelector: z.boolean().optional(),
+      showConfigButton: z.boolean().optional(),
+      feedbackUrl: z.string().url().optional(),
     }).optional(),
   }).optional(),
 });

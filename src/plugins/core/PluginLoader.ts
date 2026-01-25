@@ -1,7 +1,9 @@
-import { registerApplication, start } from 'single-spa';
+import { registerApplication, start, triggerAppChange, getAppNames, getAppStatus } from 'single-spa';
 import { PluginRegistry } from './PluginRegistry';
 import { PluginInstance } from '@/models/PluginModels';
 import { logger } from '@/utils/logger';
+import { useWebAPIStore } from '@/stores/webapi';
+import { storageManager } from '@/services/auth/storageManager';
 
 export class PluginLoader {
   private registry: PluginRegistry;
@@ -9,6 +11,7 @@ export class PluginLoader {
   private retryAttempts: Map<string, number> = new Map();
   private readonly MAX_RETRIES = 3;
   private readonly LOADING_TIMEOUT = 30000;
+  private sourceWatcherUnsubscribe: (() => void) | null = null;
 
   constructor(registry: PluginRegistry) {
     this.registry = registry;
@@ -25,7 +28,6 @@ export class PluginLoader {
 
       const startTime = performance.now();
 
-      // Set loading timeout
       const timeoutId = setTimeout(() => {
         const error = new Error(`Plugin ${registration.id} loading timeout after ${this.LOADING_TIMEOUT}ms`);
         this.registry.setPluginError(registration.id, error, true);
@@ -33,8 +35,6 @@ export class PluginLoader {
 
       this.loadingTimeouts.set(registration.id, timeoutId);
 
-      // Load the plugin module immediately using SystemJS
-      // This happens BEFORE registering with single-spa so we can detect load failures early
       let pluginModule: {
         bootstrap: (props: unknown) => Promise<void>;
         mount: (props: unknown) => Promise<void>;
@@ -43,24 +43,16 @@ export class PluginLoader {
       };
 
       try {
-        // Check if SystemJS is available
         if (!window.System) {
-          throw new Error('SystemJS is not available on window.System');
+          throw new Error('SystemJS is not available');
         }
 
-        logger.debug('PluginLoader', `Starting System.import for ${pluginUrl}`);
-
-        // Use SystemJS import with additional error context
         const importedModule = await window.System.import(pluginUrl).catch((err: Error) => {
-          logger.error('PluginLoader', `System.import failed for ${pluginUrl}`, err);
           throw new Error(`Failed to import plugin module: ${err.message}`);
         });
 
         pluginModule = importedModule as typeof pluginModule;
 
-        logger.debug('PluginLoader', `System.import succeeded for ${registration.id}`, pluginModule);
-
-        // Validate the module has required lifecycle methods
         if (!pluginModule.bootstrap || !pluginModule.mount || !pluginModule.unmount) {
           throw new Error(
             `Plugin ${registration.id} is missing required lifecycle methods (bootstrap, mount, unmount)`
@@ -74,40 +66,51 @@ export class PluginLoader {
         this.loadingTimeouts.delete(registration.id);
 
         this.registry.updatePluginState(registration.id, 'loaded');
-        logger.info('PluginLoader', `Plugin ${registration.id} loaded successfully in ${loadTime}ms`);
+        logger.info('PluginLoader', `Plugin ${registration.id} loaded in ${loadTime.toFixed(0)}ms`);
       } catch (error) {
         clearTimeout(timeoutId);
         this.loadingTimeouts.delete(registration.id);
-        logger.error('PluginLoader', `Error loading plugin ${registration.id}`, error);
         throw error;
       }
 
-      // Now register with single-spa using the already-loaded module
       registerApplication({
         name: registration.id,
         app: () => Promise.resolve(pluginModule),
         activeWhen: (location) => {
-          // Match any route that starts with /plugins/{pluginId}/
-          // Need to account for the base path
-          const basePath = import.meta.env.BASE_URL;
-          const pluginPath = `${basePath}/plugins/${registration.id}/`.replace(/\/+/g, '/');
-          const isActive = location.pathname.startsWith(pluginPath);
-          logger.debug('PluginLoader', `activeWhen check for ${registration.id}: pathname=${location.pathname}, pluginPath=${pluginPath}, isActive=${isActive}`);
-          return isActive;
+          const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+          const pluginPath = `${basePath}/plugins/${registration.id}/`;
+          return location.pathname.startsWith(pluginPath);
         },
         customProps: () => {
-          const domElement = document.getElementById(`plugin-${registration.id}`);
-          logger.debug('PluginLoader', `customProps for ${registration.id}: domElement=`, domElement);
+          const containerId = `plugin-${registration.id}`;
+          const domElement = document.getElementById(containerId);
+          const urlParams = new URLSearchParams(window.location.search);
+          let datasetId = urlParams.get('datasetId') || undefined;
+
+          if (!datasetId) {
+            const webApiStore = useWebAPIStore();
+            datasetId = webApiStore.selectedSource || webApiStore.sources[0]?.sourceKey || undefined;
+          }
+
           return {
             name: registration.name,
             authContext: plugin.authContext,
             messageBus: plugin.messageBus,
             domElement: domElement,
+            containerId: containerId,
+            appId: registration.id,
+            getToken: async () => storageManager.getToken() || '',
+            username: plugin.authContext.user?.username,
+            idpUserId: plugin.authContext.user?.id,
+            datasetId: datasetId,
+            locale: document.documentElement.lang || 'en',
+            isAtlas: true,
+            autoMount: false,
+            uiFilesUrl: `${import.meta.env.BASE_URL}plugins/${registration.id}/`.replace('//', '/'),
           };
         },
       });
 
-      // Store application reference
       plugin.application = { name: registration.id };
 
     } catch (error) {
@@ -150,9 +153,71 @@ export class PluginLoader {
   }
 
   startPluginFramework(): void {
-    start({
-      urlRerouteOnly: true,
-    });
+    start({ urlRerouteOnly: true });
     logger.info('PluginLoader', 'Plugin framework started');
+
+    (window as unknown as { __singleSpa: { getAppNames: typeof getAppNames; getAppStatus: typeof getAppStatus; triggerAppChange: typeof triggerAppChange } }).__singleSpa = {
+      getAppNames,
+      getAppStatus,
+      triggerAppChange,
+    };
+
+    setTimeout(() => triggerAppChange(), 100);
+    this.watchSourceChanges();
+  }
+
+  private watchSourceChanges(): void {
+    if (this.sourceWatcherUnsubscribe) {
+      this.sourceWatcherUnsubscribe();
+      this.sourceWatcherUnsubscribe = null;
+    }
+
+    const webApiStore = useWebAPIStore();
+    let lastDatasetId: string | null = null;
+
+    const checkAndNotify = () => {
+      const datasetId = webApiStore.selectedSource || webApiStore.sources[0]?.sourceKey || null;
+      if (datasetId && datasetId !== lastDatasetId) {
+        lastDatasetId = datasetId;
+        this.notifyPluginsOfPropChange(datasetId);
+        return true;
+      }
+      return false;
+    };
+
+    if (checkAndNotify()) {
+      return;
+    }
+
+    this.sourceWatcherUnsubscribe = webApiStore.$subscribe((_mutation, state) => {
+      const datasetId = state.selectedSource || state.sources[0]?.sourceKey || null;
+      if (datasetId && datasetId !== lastDatasetId) {
+        lastDatasetId = datasetId;
+        this.notifyPluginsOfPropChange(datasetId);
+      }
+    });
+
+    webApiStore.fetchSources().catch((error) => {
+      logger.error('PluginLoader', 'Failed to fetch CDM sources', error);
+    });
+  }
+
+  dispose(): void {
+    if (this.sourceWatcherUnsubscribe) {
+      this.sourceWatcherUnsubscribe();
+      this.sourceWatcherUnsubscribe = null;
+    }
+
+    this.loadingTimeouts.forEach((timeout) => clearTimeout(timeout));
+    this.loadingTimeouts.clear();
+    this.retryAttempts.clear();
+  }
+
+  private notifyPluginsOfPropChange(datasetId: string): void {
+    getAppNames().forEach(appId => {
+      window.dispatchEvent(new CustomEvent('custom-props-changed', {
+        detail: { appId, datasetId },
+      }));
+    });
   }
 }

@@ -62,6 +62,10 @@ export function useAuth() {
       authStore.closeLoginModal()
     },
 
+    setError(message: string | null): void {
+      authStore.setError(message)
+    },
+
     saveLogoutUrl(logoutUrl: string): void {
       storageManager.saveLogoutUrl(logoutUrl)
     },

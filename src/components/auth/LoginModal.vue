@@ -133,9 +133,6 @@ async function fetchProviders() {
   }
 }
 
-// Don't fetch on mount - wait for modal to open to ensure fresh data
-
-// Watch for modal open/close and fetch providers when it opens
 watch(
   () => auth.loginModalOpen.value,
   async (newValue) => {
@@ -159,7 +156,8 @@ watch(
       // Reset state when modal closes
       selectedProvider.value = null
     }
-  }
+  },
+  { immediate: true }
 )
 
 function selectProvider(provider: AuthProvider) {
@@ -193,8 +191,7 @@ async function handleLogin(credentials: LoginCredentials) {
 }
 
 function clearError() {
-  auth.closeLoginModal()
-  auth.openLoginModal()
+  auth.setError(null)
 }
 
 function close() {
