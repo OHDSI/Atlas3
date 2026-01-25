@@ -140,7 +140,7 @@
           </v-btn>
         </div>
         <div
-          v-else
+          v-else-if="showUserMenu"
           class="nav-bar__user"
         >
           <v-menu>
@@ -210,6 +210,7 @@ const customLogoUrl = ref<string | null>(null)
 const showFeedbackButton = ref(true)
 const showLanguageSelector = ref(true)
 const showConfigButton = ref(true)
+const showUserMenu = ref(true)
 const feedbackUrl = ref('https://forms.office.com/r/2JzrYy1yDP')
 const logoNavigateTo = ref('/')
 
@@ -322,6 +323,7 @@ onMounted(() => {
   showFeedbackButton.value = pluginConfigService.showFeedbackButton()
   showLanguageSelector.value = pluginConfigService.showLanguageSelector()
   showConfigButton.value = pluginConfigService.showConfigButton()
+  showUserMenu.value = pluginConfigService.showUserMenu()
   feedbackUrl.value = pluginConfigService.getFeedbackUrl()
   logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
 
@@ -330,6 +332,7 @@ onMounted(() => {
     showFeedbackButton.value = pluginConfigService.showFeedbackButton()
     showLanguageSelector.value = pluginConfigService.showLanguageSelector()
     showConfigButton.value = pluginConfigService.showConfigButton()
+    showUserMenu.value = pluginConfigService.showUserMenu()
     feedbackUrl.value = pluginConfigService.getFeedbackUrl()
     logoNavigateTo.value = pluginConfigService.getLogoNavigateTo()
   })

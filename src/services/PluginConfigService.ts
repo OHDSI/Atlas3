@@ -153,6 +153,14 @@ export class PluginConfigService {
     return this.manifest?.settings?.header || {};
   }
 
+  showNavBar(): boolean {
+    return this.manifest?.settings?.header?.showNavBar ?? true;
+  }
+
+  showUserMenu(): boolean {
+    return this.manifest?.settings?.header?.showUserMenu ?? true;
+  }
+
   showFeedbackButton(): boolean {
     return this.manifest?.settings?.header?.showFeedbackButton ?? true;
   }

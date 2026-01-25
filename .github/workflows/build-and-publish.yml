@@ -38,6 +38,9 @@ jobs:
         run: npm run build
         env:
           VITE_BASE_PATH: /atlas
+          VITE_AUTH_ENABLED: true
+          VITE_AUTH_SKIP_LOGIN: false
+          VITE_AUTH_PROVIDERS: '[{"name":"DB","url":"user/login/db","ajax":true,"icon":"database","isUseCredentialsForm":true}]'
 
       - name: Prepare package.json for publishing
         run: |
