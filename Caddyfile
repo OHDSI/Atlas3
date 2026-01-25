@@ -1,0 +1,33 @@
+{
+	auto_https disable_redirects
+}
+
+:80 {
+	redir / /atlas permanent
+
+	handle /WebAPI/* {
+		reverse_proxy {$WEBAPI_HOST:atlas3-webapi}:{$WEBAPI_PORT:8080}
+	}
+
+	handle /atlas/* {
+		root * /srv
+		try_files {path} /atlas/index.html
+		file_server
+	}
+}
+
+:443 {
+	tls internal
+
+	redir / /atlas permanent
+
+	handle /WebAPI/* {
+		reverse_proxy {$WEBAPI_HOST:atlas3-webapi}:{$WEBAPI_PORT:8080}
+	}
+
+	handle /atlas/* {
+		root * /srv
+		try_files {path} /atlas/index.html
+		file_server
+	}
+}

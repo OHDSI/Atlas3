@@ -15,10 +15,7 @@ ENV VITE_AUTH_SKIP_LOGIN=${VITE_AUTH_SKIP_LOGIN}
 ENV VITE_AUTH_PROVIDERS=${VITE_AUTH_PROVIDERS}
 RUN npm run build
 
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html/atlas
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+FROM caddy:2-alpine
+COPY --from=build /app/dist /srv/atlas
+COPY Caddyfile /etc/caddy/Caddyfile
 EXPOSE 80 443
-ENTRYPOINT ["/docker-entrypoint.sh"]
