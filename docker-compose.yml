@@ -3,6 +3,8 @@ volumes:
     name: atlas3-postgres-data
   atlas3-webapi-data:
     name: atlas3-webapi-data
+  atlas3-caddy-data:
+    name: atlas3-caddy-data
 
 
 services:
@@ -126,8 +128,13 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - atlas3-caddy-data:/data
     environment:
       WEBAPI_URL: ${WEBAPI_URL:-https://localhost/WebAPI}
+      CADDY_HOSTNAME: ${CADDY_HOSTNAME:-localhost}
+      CADDY_TLS_DIRECTIVE: ${CADDY_TLS_DIRECTIVE:-tls internal}
     depends_on:
       atlas3-db-init:
         condition: service_completed_successfully
