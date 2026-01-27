@@ -1,8 +1,8 @@
 # Atlas3
 
-![Unit Tests](https://github.com/OHDSI/Atlas3/actions/workflows/unit-tests.yml/badge.svg?branch=develop)
-![E2E Tests](https://github.com/OHDSI/Atlas3/actions/workflows/e2e-tests.yml/badge.svg?branch=develop)
-![Lint & Type Check](https://github.com/OHDSI/Atlas3/actions/workflows/lint-typecheck.yml/badge.svg?branch=develop)
+[![Unit Tests](https://github.com/OHDSI/Atlas3/actions/workflows/unit-tests.yml/badge.svg?branch=develop)](https://github.com/OHDSI/Atlas3/actions/workflows/unit-tests.yml)
+[![E2E Tests](https://github.com/OHDSI/Atlas3/actions/workflows/e2e-tests.yml/badge.svg?branch=develop)](https://github.com/OHDSI/Atlas3/actions/workflows/e2e-tests.yml)
+[![Lint & Type Check](https://github.com/OHDSI/Atlas3/actions/workflows/lint-typecheck.yml/badge.svg?branch=develop)](https://github.com/OHDSI/Atlas3/actions/workflows/lint-typecheck.yml)
 
 > **⚠️ Development Version**: This is Atlas 3.0, a new version of OHDSI ATLAS currently under active development.
 >
