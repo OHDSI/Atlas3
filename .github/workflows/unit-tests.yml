@@ -26,6 +26,12 @@ jobs:
       - name: Run unit tests with coverage
         run: npm run test:coverage
 
+      - name: Generate test results summary
+        uses: test-summary/action@v2
+        if: always()
+        with:
+          paths: coverage/junit.xml
+
       - name: Extract coverage percentage
         id: coverage
         run: |
