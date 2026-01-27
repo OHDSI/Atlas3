@@ -32,6 +32,7 @@ jobs:
         with:
           paths: coverage/junit.xml
 
+
       - name: Extract coverage percentage
         id: coverage
         run: |
