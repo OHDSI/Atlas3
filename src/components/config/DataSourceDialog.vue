@@ -328,7 +328,7 @@ import {
 
 const props = defineProps<{
   modelValue: boolean
-  sourceId?: number | null
+  sourceKey?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -381,7 +381,7 @@ const daimonSchemas = reactive<Record<DaimonType, string>>({
 })
 
 // Computed properties
-const isEditing = computed(() => props.sourceId != null)
+const isEditing = computed(() => props.sourceKey != null)
 
 const dialectItems = computed(() =>
   SUPPORTED_DIALECTS.map(d => ({
@@ -409,8 +409,8 @@ const rules = {
 watch(() => props.modelValue, async (isOpen) => {
   if (isOpen) {
     resetForm()
-    if (props.sourceId) {
-      await loadSourceDetails(props.sourceId)
+    if (props.sourceKey) {
+      await loadSourceDetails(props.sourceKey)
     }
   }
 })
@@ -437,9 +437,9 @@ function resetForm() {
 }
 
 // Load existing source details for editing
-async function loadSourceDetails(sourceId: number) {
+async function loadSourceDetails(sourceKey: string) {
   try {
-    const details: SourceDetails = await getSourceDetails(sourceId)
+    const details: SourceDetails = await getSourceDetails(sourceKey)
 
     form.name = details.sourceName
     form.key = details.sourceKey
@@ -517,8 +517,8 @@ async function handleSave() {
         ? keytabFile.value[0]
         : undefined
 
-    if (isEditing.value && props.sourceId) {
-      await updateSource(props.sourceId, request, file)
+    if (isEditing.value && props.sourceKey) {
+      await updateSource(props.sourceKey, request, file)
     } else {
       await createSource(request, file)
     }
@@ -539,12 +539,12 @@ function handleDelete() {
 }
 
 async function confirmDelete() {
-  if (!props.sourceId) return
+  if (!props.sourceKey) return
 
   isDeleting.value = true
 
   try {
-    await deleteSource(props.sourceId)
+    await deleteSource(props.sourceKey)
     showDeleteConfirm.value = false
     emit('deleted')
     handleClose()

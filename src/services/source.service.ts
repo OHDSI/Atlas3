@@ -9,14 +9,14 @@ import type { DataSource, SourceRequest, SourceDetails, DaimonRequest } from '@/
 /**
  * Get detailed information about a source
  */
-export async function getSourceDetails(sourceId: number): Promise<SourceDetails> {
+export async function getSourceDetails(sourceKey: string): Promise<SourceDetails> {
   try {
-    logger.debug('SourceService', `Fetching source details for ID ${sourceId}`)
-    const response = await httpGet<SourceDetails>(`/source/${sourceId}`)
-    logger.debug('SourceService', `Successfully fetched source details for ID ${sourceId}`)
+    logger.debug('SourceService', `Fetching source details for key ${sourceKey}`)
+    const response = await httpGet<SourceDetails>(`/source/${sourceKey}`)
+    logger.debug('SourceService', `Successfully fetched source details for key ${sourceKey}`)
     return response
   } catch (error) {
-    logger.error('SourceService', 'Failed to fetch source details', { sourceId, error })
+    logger.error('SourceService', 'Failed to fetch source details', { sourceKey, error })
     throw new Error('Unable to load source details. Please try again.')
   }
 }
@@ -50,23 +50,23 @@ export async function createSource(request: SourceRequest, keyfile?: File): Prom
  * Update an existing data source
  * Uses multipart/form-data when a keyfile is provided
  */
-export async function updateSource(sourceId: number, request: SourceRequest, keyfile?: File): Promise<DataSource> {
+export async function updateSource(sourceKey: string, request: SourceRequest, keyfile?: File): Promise<DataSource> {
   try {
-    logger.debug('SourceService', `Updating source ID ${sourceId}`, { name: request.name })
+    logger.debug('SourceService', `Updating source key ${sourceKey}`, { name: request.name })
 
     let response: DataSource
 
     if (keyfile) {
       // Use multipart/form-data for keyfile upload
-      response = await uploadSourceWithKeyfile(`/source/${sourceId}`, 'PUT', request, keyfile)
+      response = await uploadSourceWithKeyfile(`/source/${sourceKey}`, 'PUT', request, keyfile)
     } else {
-      response = await httpPut<DataSource>(`/source/${sourceId}`, mapRequestToApiPayload(request))
+      response = await httpPut<DataSource>(`/source/${sourceKey}`, mapRequestToApiPayload(request))
     }
 
     logger.debug('SourceService', `Successfully updated source: ${response.sourceName}`)
     return response
   } catch (error) {
-    logger.error('SourceService', 'Failed to update source', { sourceId, name: request.name, error })
+    logger.error('SourceService', 'Failed to update source', { sourceKey, name: request.name, error })
     throw new Error('Unable to update data source. Please try again.')
   }
 }
@@ -74,13 +74,13 @@ export async function updateSource(sourceId: number, request: SourceRequest, key
 /**
  * Delete a data source
  */
-export async function deleteSource(sourceId: number): Promise<void> {
+export async function deleteSource(sourceKey: string): Promise<void> {
   try {
-    logger.debug('SourceService', `Deleting source ID ${sourceId}`)
-    await httpDelete(`/source/${sourceId}`)
-    logger.debug('SourceService', `Successfully deleted source ID ${sourceId}`)
+    logger.debug('SourceService', `Deleting source key ${sourceKey}`)
+    await httpDelete(`/source/${sourceKey}`)
+    logger.debug('SourceService', `Successfully deleted source key ${sourceKey}`)
   } catch (error) {
-    logger.error('SourceService', 'Failed to delete source', { sourceId, error })
+    logger.error('SourceService', 'Failed to delete source', { sourceKey, error })
     throw new Error('Unable to delete data source. Please try again.')
   }
 }

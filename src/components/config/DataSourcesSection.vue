@@ -220,7 +220,7 @@
     <!-- Data Source Dialog -->
     <DataSourceDialog
       v-model="showDialog"
-      :source-id="editingSourceId"
+      :source-key="editingSourceKey"
       @saved="handleDialogSaved"
       @deleted="handleDialogDeleted"
       @error="handleDialogError"
@@ -292,7 +292,7 @@ const errorMessage = ref('')
 
 // Dialog state
 const showDialog = ref(false)
-const editingSourceId = ref<number | null>(null)
+const editingSourceKey = ref<string | null>(null)
 
 // Delete confirmation state
 const showDeleteConfirm = ref(false)
@@ -441,7 +441,7 @@ async function clearServerCache() {
  * Open dialog to create a new data source
  */
 function openCreateDialog() {
-  editingSourceId.value = null
+  editingSourceKey.value = null
   showDialog.value = true
 }
 
@@ -449,7 +449,7 @@ function openCreateDialog() {
  * Open dialog to edit an existing data source
  */
 function openEditDialog(source: DataSourceDisplay) {
-  editingSourceId.value = source.sourceId
+  editingSourceKey.value = source.sourceKey
   showDialog.value = true
 }
 
@@ -496,7 +496,7 @@ async function executeDelete() {
   isDeleting.value = true
 
   try {
-    await deleteSource(deletingSource.value.sourceId)
+    await deleteSource(deletingSource.value.sourceKey)
     toastMessage.value = tv('executionStatus.values.COMPLETED')
     showToast.value = true
     showDeleteConfirm.value = false
