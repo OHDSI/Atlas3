@@ -8,6 +8,7 @@ import type { Concept, ConceptSet } from '@/models/concept-set.types'
 import * as webapi from '@/services/webapi'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
+import { getSourceKey } from '@/config/webapi'
 
 export function useConceptSets() {
   const store = useConceptPickerStore()
@@ -29,7 +30,7 @@ export function useConceptSets() {
       store.setSearching(true)
       store.setSearchQuery(query)
 
-      const sourceKey = import.meta.env.VITE_DEFAULT_SOURCE || 'SYNPUF1K'
+      const sourceKey = getSourceKey()
       const result = await webapi.searchConcepts(sourceKey, query, domain)
 
       if (result?.success) {
@@ -41,7 +42,13 @@ export function useConceptSets() {
         store.setSearchResults([])
       }
     } catch (error) {
-      logger.error('ConceptSets', 'Concept search error', error instanceof Error ? error.message : String(error))
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      // Log with more context for 403 errors
+      if (errorMessage.includes('403')) {
+        logger.error('ConceptSets', 'Concept search permission denied - user may not have access to vocabulary source', { sourceKey: getSourceKey(), error: errorMessage })
+      } else {
+        logger.error('ConceptSets', 'Concept search error', errorMessage)
+      }
       store.setSearchResults([])
       throw error
     } finally {

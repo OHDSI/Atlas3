@@ -123,7 +123,13 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
 
       loadingRecordCounts.value = false
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to search concepts'
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      // Provide more helpful error message for 403 errors
+      if (errorMessage.includes('403')) {
+        error.value = 'Access denied. You may not have permission to search concepts in the selected vocabulary source. Please check your source selection in Configuration.'
+      } else {
+        error.value = errorMessage || 'Failed to search concepts'
+      }
       logger.error('ConceptSearchStore', 'Concept search error', err)
       allConcepts.value = []
       loading.value = false

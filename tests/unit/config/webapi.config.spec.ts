@@ -248,13 +248,13 @@ describe('webapi.config', () => {
       expect(getSourceKey()).toBe('SYNPUF1K')
     })
 
-    it('handles whitespace-only vocabulary keys as empty', async () => {
+    it('handles whitespace-only vocabulary keys as invalid and returns default', async () => {
       localStorage.setItem('selectedVocabulary', '   ')
 
-      const { getSourceKey } = await import('@/config/webapi')
+      const { getSourceKey, DEFAULT_SOURCE_KEY } = await import('@/config/webapi')
 
-      // Whitespace-only string is truthy, so it will be returned
-      expect(getSourceKey()).toBe('   ')
+      // Whitespace-only string is now correctly rejected as invalid
+      expect(getSourceKey()).toBe(DEFAULT_SOURCE_KEY)
     })
 
     it('returns string type in all cases', async () => {

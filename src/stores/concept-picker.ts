@@ -67,11 +67,32 @@ export const useConceptPickerStore = defineStore('concept-picker', () => {
       if (result.success) {
         setSearchResults(result.data)
       } else {
-        logger.error('ConceptPickerStore', 'Error searching concepts', result.error)
+        // Check for permission error
+        const errorStr = result.error || ''
+        if (errorStr.includes('403')) {
+          logger.error('ConceptPickerStore', 'Permission denied for concept search', {
+            sourceKey,
+            query,
+            error: errorStr,
+            hint: 'User may lack vocabulary:*:get or source:*:access permission'
+          })
+        } else {
+          logger.error('ConceptPickerStore', 'Error searching concepts', result.error)
+        }
         setSearchResults([])
       }
     } catch (error) {
-      logger.error('ConceptPickerStore', 'Error searching concepts', error)
+      const errorStr = error instanceof Error ? error.message : String(error)
+      if (errorStr.includes('403')) {
+        logger.error('ConceptPickerStore', 'Permission denied for concept search', {
+          sourceKey,
+          query,
+          error: errorStr,
+          hint: 'User may lack vocabulary:*:get or source:*:access permission'
+        })
+      } else {
+        logger.error('ConceptPickerStore', 'Error searching concepts', error)
+      }
       setSearchResults([])
     } finally {
       setSearching(false)
