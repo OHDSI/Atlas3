@@ -32,11 +32,24 @@ function getLocale(): string {
   return localStorage.getItem('locale') || 'en'
 }
 
-async function handleAuthError(status: number): Promise<void> {
+async function handleAuthError(status: number, url: string): Promise<void> {
   // Only handle 401 (Unauthorized) - 403 (Forbidden) means user is authenticated but lacks permission
   if (status !== 401) {
     if (status === 403) {
-      logger.warn('HttpClient', '403 Forbidden - user lacks permission for this resource')
+      // Log detailed info to help diagnose permission issues
+      try {
+        const { useAuthStore } = await import('@/stores/auth')
+        const authStore = useAuthStore()
+        const userPermissions = authStore.user?.permissionIdx || {}
+        logger.warn('HttpClient', '403 Forbidden - user lacks permission for this resource', {
+          url,
+          userLogin: authStore.user?.login,
+          hasToken: !!authStore.token,
+          permissionCount: Object.values(userPermissions).flat().length,
+        })
+      } catch {
+        logger.warn('HttpClient', '403 Forbidden - user lacks permission for this resource', { url })
+      }
     }
     return
   }
@@ -46,13 +59,13 @@ async function handleAuthError(status: number): Promise<void> {
     const { authConfig } = await import('@/config/auth.config')
     const authStore = useAuthStore()
 
-    // Don't clear auth if we're currently authenticating (race condition protection)
-    if (authStore.isAuthenticating) {
-      logger.debug('HttpClient', '401 during authentication - ignoring')
+    // Don't clear auth if we're currently authenticating or refreshing (race condition protection)
+    if (authStore.isAuthenticating || authStore.isRefreshing) {
+      logger.debug('HttpClient', '401 during auth/refresh - ignoring')
       return
     }
 
-    logger.warn('HttpClient', '401 Unauthorized - clearing auth')
+    logger.warn('HttpClient', '401 Unauthorized - clearing auth', { url })
     authStore.clearAuth()
     if (authConfig.userAuthenticationEnabled) {
       authStore.openLoginModal()
@@ -87,9 +100,6 @@ export async function httpClient<T>(
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const headers = new Headers(options.headers)
-      if (!headers.has('Content-Type')) {
-        headers.set('Content-Type', 'application/json')
-      }
       headers.set('User-Language', getLocale())
 
       if (!options.skipAuth) {
@@ -102,14 +112,19 @@ export async function httpClient<T>(
       const { body: rawBody, skipAuth: _skipAuth, maxRetries: _, initialRetryDelay: __, ...restOptions } = options
       const requestInit: RequestInit = { ...restOptions, headers }
 
+      // Only set Content-Type when there's a body (POST, PUT, PATCH)
+      // GET requests should not have Content-Type header as they have no body
       if (rawBody !== undefined) {
+        if (!headers.has('Content-Type')) {
+          headers.set('Content-Type', 'application/json')
+        }
         requestInit.body = typeof rawBody === 'string' ? rawBody : JSON.stringify(rawBody)
       }
 
       const response = await fetch(url, requestInit)
 
       if (response.status === 401 || response.status === 403) {
-        await handleAuthError(response.status)
+        await handleAuthError(response.status, url)
       }
 
       if (!response.ok) {

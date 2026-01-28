@@ -21,5 +21,16 @@ export const WEBAPI_BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
  */
 export function getSourceKey(): string {
   const selectedVocabulary = localStorage.getItem('selectedVocabulary')
-  return selectedVocabulary || DEFAULT_SOURCE_KEY
+
+  // Validate the stored value - must be a non-empty string that's not "null" or "undefined"
+  if (
+    selectedVocabulary &&
+    selectedVocabulary.trim() !== '' &&
+    selectedVocabulary !== 'null' &&
+    selectedVocabulary !== 'undefined'
+  ) {
+    return selectedVocabulary
+  }
+
+  return DEFAULT_SOURCE_KEY
 }
