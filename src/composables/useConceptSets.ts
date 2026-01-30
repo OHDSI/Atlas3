@@ -16,9 +16,6 @@ export function useConceptSets() {
   // Local state for selected concepts (for creating/editing concept sets)
   const selectedConcepts = ref<Concept[]>([])
 
-  /**
-   * Search for concepts with 300ms debounce
-   */
   const searchConcepts = debounce(async (query: string, domain?: string) => {
     if (!query || query.trim().length === 0) {
       store.setSearchResults([])
@@ -36,19 +33,11 @@ export function useConceptSets() {
       if (result?.success) {
         store.setSearchResults(result.data)
       } else {
-        if (result?.error) {
-          logger.error('ConceptSets', 'Concept search error', result.error)
-        }
+        logger.error('ConceptSets', 'Search failed', result?.error)
         store.setSearchResults([])
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      // Log with more context for 403 errors
-      if (errorMessage.includes('403')) {
-        logger.error('ConceptSets', 'Concept search permission denied - user may not have access to vocabulary source', { sourceKey: getSourceKey(), error: errorMessage })
-      } else {
-        logger.error('ConceptSets', 'Concept search error', errorMessage)
-      }
+      logger.error('ConceptSets', 'Search failed', error)
       store.setSearchResults([])
       throw error
     } finally {

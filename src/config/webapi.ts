@@ -15,14 +15,10 @@ export const DEFAULT_SOURCE_KEY = 'SYNPUF1K'
  */
 export const WEBAPI_BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
 
-/**
- * Get source key from localStorage (selected vocabulary) or use default
- * The user selects the vocabulary source in the config panel, which is stored in localStorage
- */
+/** Get vocabulary source key from localStorage or default */
 export function getSourceKey(): string {
   const selectedVocabulary = localStorage.getItem('selectedVocabulary')
 
-  // Validate the stored value - must be a non-empty string that's not "null" or "undefined"
   if (
     selectedVocabulary &&
     selectedVocabulary.trim() !== '' &&

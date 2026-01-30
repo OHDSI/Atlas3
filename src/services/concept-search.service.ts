@@ -22,9 +22,7 @@ export async function searchConcepts(
     return { concepts: [], total: 0 }
   }
 
-  // Validate sourceKey to prevent requests with invalid source
   if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
-    logger.error('ConceptSearch', 'Invalid sourceKey provided', { sourceKey })
     throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
   }
 
@@ -34,7 +32,6 @@ export async function searchConcepts(
   }
 
   const endpoint = `/vocabulary/${sourceKey}/search?${params.toString()}`
-  logger.debug('ConceptSearch', 'Searching concepts', { sourceKey, query: query.trim(), endpoint })
   const data = await httpClient<unknown>(endpoint)
   const parsed = ConceptSearchResponseSchema.safeParse(data)
 
