@@ -7,6 +7,7 @@ import { ref, computed } from 'vue'
 import { searchConcepts, getConceptRecordCounts } from '@/services/concept-search.service'
 import type { Concept } from '@/models/concept-set.types'
 import { getSourceKey } from '@/config/webapi'
+import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 
@@ -83,11 +84,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
   // Actions
   // ============================================================================
 
-  /**
-   * Search for concepts
-   */
   async function search(term: string) {
-    // Validation: minimum 3 characters
     if (term.length < 3) {
       allConcepts.value = []
       error.value = null
@@ -99,20 +96,23 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     error.value = null
 
     try {
-      const sourceKey = getSourceKey()
+      const webapiStore = useWebAPIStore()
+      const sourceKey = webapiStore.getValidVocabularySource() || getSourceKey()
+
+      if (!sourceKey) {
+        throw new Error('No vocabulary source available.')
+      }
+
       const result = await searchConcepts(sourceKey, term)
 
-      // Show results immediately without record counts
       allConcepts.value = result.concepts
       loading.value = false
       page.value = 1
 
-      // Fetch record counts in the background
       loadingRecordCounts.value = true
       const conceptIds = result.concepts.map(c => c.conceptId)
       const recordCounts = await getConceptRecordCounts(sourceKey, conceptIds)
 
-      // Merge record counts into concepts
       allConcepts.value = result.concepts.map(concept => ({
         ...concept,
         recordCount: recordCounts.get(concept.conceptId)?.recordCount,
@@ -124,13 +124,10 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
       loadingRecordCounts.value = false
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err)
-      // Provide more helpful error message for 403 errors
-      if (errorMessage.includes('403')) {
-        error.value = 'Access denied. You may not have permission to search concepts in the selected vocabulary source. Please check your source selection in Configuration.'
-      } else {
-        error.value = errorMessage || 'Failed to search concepts'
-      }
-      logger.error('ConceptSearchStore', 'Concept search error', err)
+      error.value = errorMessage.includes('403')
+        ? 'Access denied. Please check your source selection in Configuration.'
+        : errorMessage || 'Failed to search concepts'
+      logger.error('ConceptSearchStore', 'Search failed', err)
       allConcepts.value = []
       loading.value = false
       loadingRecordCounts.value = false

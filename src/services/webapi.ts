@@ -78,9 +78,7 @@ export async function searchConcepts(
   query: string,
   domain?: string
 ): Promise<ApiResult<Concept[]>> {
-  // Validate sourceKey to prevent requests with invalid source
   if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
-    logger.error('WebAPI', 'Invalid sourceKey for concept search', { sourceKey })
     return failure('Invalid vocabulary source. Please select a valid source in Configuration.')
   }
 
@@ -89,8 +87,6 @@ export async function searchConcepts(
   if (domain) {
     endpoint += `&domain=${encodeURIComponent(domain)}`
   }
-
-  logger.debug('WebAPI', 'Searching concepts', { sourceKey, query, endpoint })
 
   try {
     const data = await fetchJSON<unknown>(endpoint)

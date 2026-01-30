@@ -191,8 +191,11 @@ const searchResults = computed(() => {
 
 async function performSearch() {
   if (!searchQuery.value || searchQuery.value.length < 2) return
-  if (!webapiStore.selectedSource) {
-    logger.error('ConceptSearchDialog', 'No CDM source selected')
+
+  // Use validated vocabulary source - this checks localStorage and validates against available sources
+  const vocabularySource = webapiStore.getValidVocabularySource()
+  if (!vocabularySource) {
+    logger.error('ConceptSearchDialog', 'No vocabulary source available')
     return
   }
 
@@ -202,7 +205,7 @@ async function performSearch() {
   try {
     // Don't pass domain to API - we filter client-side instead
     await conceptPickerStore.searchConcepts(
-      webapiStore.selectedSource,
+      vocabularySource,
       searchQuery.value
     )
   } catch (error) {

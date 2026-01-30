@@ -39,6 +39,30 @@ export const useWebAPIStore = defineStore('webapi', () => {
     )
   }
 
+  const vocabularySources = computed(() => {
+    return sources.value.filter(s => s.daimons?.some(d => d.daimonType === 'Vocabulary'))
+  })
+
+  /** Returns validated vocabulary source key, auto-correcting invalid localStorage values */
+  function getValidVocabularySource(): string | null {
+    const storedVocab = localStorage.getItem('selectedVocabulary')
+
+    if (storedVocab && storedVocab.trim() !== '' && storedVocab !== 'null' && storedVocab !== 'undefined') {
+      if (vocabularySources.value.some(s => s.sourceKey === storedVocab)) {
+        return storedVocab
+      }
+      logger.warn('WebAPIStore', 'Stored vocabulary source not found', { stored: storedVocab })
+    }
+
+    const firstVocabSource = vocabularySources.value[0]
+    if (firstVocabSource) {
+      localStorage.setItem('selectedVocabulary', firstVocabSource.sourceKey)
+      return firstVocabSource.sourceKey
+    }
+
+    return null
+  }
+
   // Actions
   function setSources(sourcesList: CDMSource[]) {
     sources.value = sourcesList
@@ -321,8 +345,10 @@ export const useWebAPIStore = defineStore('webapi', () => {
     sourcesList,
     currentSource,
     activeJobs,
+    vocabularySources,
     getJobById,
     getJobsByCohortId,
+    getValidVocabularySource,
     // Actions
     setSources,
     setSelectedSource,
