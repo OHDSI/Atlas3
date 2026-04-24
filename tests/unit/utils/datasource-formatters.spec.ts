@@ -422,4 +422,45 @@ describe('Data Source Formatters', () => {
       expect(result.deathByType).toEqual([])
     })
   })
+
+  describe('transformDeathReport — trellis and boxplot', () => {
+    it('maps ageAtDeath to BoxPlotData[]', () => {
+      const raw = {
+        ageAtDeath: [
+          { category: 'MALE',   minValue: 30, p10Value: 45, p25Value: 58, medianValue: 70, p75Value: 80, p90Value: 88, maxValue: 100 },
+          { category: 'FEMALE', minValue: 32, p10Value: 48, p25Value: 60, medianValue: 72, p75Value: 82, p90Value: 90, maxValue: 105 }
+        ]
+      }
+
+      const result = transformDeathReport(raw)
+
+      expect(result.ageAtDeath).toEqual([
+        { category: 'MALE',   min: 30, p10: 45, p25: 58, median: 70, p75: 80, p90: 88, max: 100 },
+        { category: 'FEMALE', min: 32, p10: 48, p25: 60, median: 72, p75: 82, p90: 90, max: 105 }
+      ])
+    })
+
+    it('maps prevalenceByGenderAgeYear to TrellisChartData grouped by decile and gender', () => {
+      const raw = {
+        prevalenceByGenderAgeYear: [
+          { trellisName: '60 - 69', seriesName: 'MALE',   xCalendarYear: 2010, yPrevalence1000Pp: 12 },
+          { trellisName: '60 - 69', seriesName: 'MALE',   xCalendarYear: 2011, yPrevalence1000Pp: 14 },
+          { trellisName: '60 - 69', seriesName: 'FEMALE', xCalendarYear: 2010, yPrevalence1000Pp: 10 },
+          { trellisName: '70 - 79', seriesName: 'MALE',   xCalendarYear: 2010, yPrevalence1000Pp: 25 }
+        ]
+      }
+
+      const result = transformDeathReport(raw)
+      expect(result.prevalenceByGenderAgeYear).toBeDefined()
+      const trellis = result.prevalenceByGenderAgeYear!
+      expect(trellis.categories).toEqual(expect.arrayContaining(['60 - 69', '70 - 79']))
+      const maleIn60s = trellis.series.find(s => s.category === '60 - 69' && s.name === 'MALE')
+      expect(maleIn60s?.data).toEqual([{ x: 2010, y: 12 }, { x: 2011, y: 14 }])
+    })
+
+    it('returns undefined prevalenceByGenderAgeYear when raw is missing', () => {
+      const result = transformDeathReport({})
+      expect(result.prevalenceByGenderAgeYear).toBeUndefined()
+    })
+  })
 })

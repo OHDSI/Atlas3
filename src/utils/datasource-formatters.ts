@@ -467,84 +467,67 @@ interface DeathRawPrevalenceByMonth {
 }
 
 interface DeathRawPrevalenceByGenderAgeYear {
-  xCalendarYear?: number;
-  trellisName?: string;
-  seriesName?: string;
-  yPrevalence1000Pp?: number;
+  xCalendarYear?: number
+  trellisName?: string
+  seriesName?: string
+  yPrevalence1000Pp?: number
+}
+
+interface DeathRawAgeAtDeath extends RawBoxPlotItem {
+  conceptId?: number
 }
 
 interface DeathRaw {
-  ageAtDeath?: import('@/models/datasource.types').AgeAtDeathStat[];
-  deathByType?: DeathRawDeathByType[];
-  prevalenceByMonth?: DeathRawPrevalenceByMonth[];
-  prevalenceByGenderAgeYear?: DeathRawPrevalenceByGenderAgeYear[];
+  ageAtDeath?: DeathRawAgeAtDeath[]
+  deathByType?: DeathRawDeathByType[]
+  prevalenceByMonth?: DeathRawPrevalenceByMonth[]
+  prevalenceByGenderAgeYear?: DeathRawPrevalenceByGenderAgeYear[]
 }
 
-/**
- * Transform Death Report
- * Specialized transformer for death data
- */
 export function transformDeathReport(raw: DeathRaw): import('@/models/datasource.types').DeathReport {
-  // Age at Death stats
-  const ageAtDeath: import('@/models/datasource.types').AgeAtDeathStat[] = raw.ageAtDeath || []
+  const ageAtDeath = mapBoxPlotArray(raw.ageAtDeath) || []
 
-  // Death by Type - convert to pie chart data
-  const deathByType: import('@/models/datasource.types').PieChartData[] = raw.deathByType?.map((item) => ({
-    name: item.conceptName || 'Unknown',
-    value: item.countValue || 0
-  })) || []
+  const deathByType: import('@/models/datasource.types').PieChartData[] =
+    raw.deathByType?.map((item) => ({
+      name: item.conceptName || 'Unknown',
+      value: item.countValue || 0
+    })) || []
 
-  // Prevalence by Month
-  const prevalenceByMonth: import('@/models/datasource.types').MultiLineChartData | undefined = raw.prevalenceByMonth ? {
-    categories: raw.prevalenceByMonth.map((item) => item.xCalendarMonth?.toString() || ''),
-    series: [{
-      name: 'Prevalence per 1000',
-      data: raw.prevalenceByMonth.map((item) => item.yPrevalence1000Pp || 0)
-    }]
-  } : undefined
+  const prevalenceByMonth: import('@/models/datasource.types').MultiLineChartData | undefined = raw.prevalenceByMonth
+    ? {
+        categories: raw.prevalenceByMonth.map((i) => i.xCalendarMonth?.toString() || ''),
+        series: [{ name: 'Prevalence per 1000', data: raw.prevalenceByMonth.map((i) => i.yPrevalence1000Pp || 0) }]
+      }
+    : undefined
 
-  // Prevalence by Gender, Age, Year - complex multi-series chart
-  let prevalenceByGenderAgeYear: import('@/models/datasource.types').MultiLineChartData | undefined
+  let prevalenceByGenderAgeYear: import('@/models/report.types').TrellisChartData | undefined
   if (raw.prevalenceByGenderAgeYear && raw.prevalenceByGenderAgeYear.length > 0) {
-    const grouped = new Map<string, Map<string, number>>()
-    const yearSet = new Set<string>()
-    raw.prevalenceByGenderAgeYear.forEach((item) => {
-      const year = item.xCalendarYear?.toString() || ''
-      yearSet.add(year)
-    })
-    const years: string[] = Array.from(yearSet).sort()
+    const groupedData = new Map<string, Map<string, { x: number; y: number }[]>>()
+    const categories = new Set<string>()
 
     raw.prevalenceByGenderAgeYear.forEach((item) => {
-      const ageGroup = item.trellisName || 'Unknown'
-      const gender = item.seriesName || 'Unknown'
-      const key = `${gender} (${ageGroup})`
+      const trellisName = item.trellisName || 'Unknown'
+      const seriesName = item.seriesName || 'Total'
+      const year = item.xCalendarYear || 0
+      const prevalence = item.yPrevalence1000Pp || 0
 
-      if (!grouped.has(key)) {
-        grouped.set(key, new Map<string, number>())
-      }
-
-      const yearData = grouped.get(key)!
-      const year = item.xCalendarYear?.toString() || ''
-
-      if (!yearData.has(year)) {
-        yearData.set(year, item.yPrevalence1000Pp || 0)
-      }
+      categories.add(trellisName)
+      if (!groupedData.has(trellisName)) groupedData.set(trellisName, new Map())
+      const trellisGroup = groupedData.get(trellisName)!
+      if (!trellisGroup.has(seriesName)) trellisGroup.set(seriesName, [])
+      trellisGroup.get(seriesName)!.push({ x: year, y: prevalence })
     })
 
-    prevalenceByGenderAgeYear = {
-      categories: years,
-      series: Array.from(grouped.entries()).map(([name, yearData]) => ({
-        name,
-        data: years.map(year => yearData.get(year) || 0)
-      }))
-    }
+    const series: import('@/models/report.types').TrellisSeriesData[] = []
+    groupedData.forEach((seriesMap, category) => {
+      seriesMap.forEach((data, name) => {
+        series.push({ name, category, data: data.sort((a, b) => a.x - b.x) })
+      })
+    })
+
+    prevalenceByGenderAgeYear = { series, categories: Array.from(categories) }
   }
 
-  return {
-    ageAtDeath,
-    deathByType,
-    prevalenceByMonth,
-    prevalenceByGenderAgeYear
-  }
+  return { ageAtDeath, deathByType, prevalenceByMonth, prevalenceByGenderAgeYear }
 }
 
