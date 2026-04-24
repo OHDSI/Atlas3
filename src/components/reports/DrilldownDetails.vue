@@ -18,24 +18,40 @@
       />
     </v-overlay>
 
-    <v-card class="detail-header mb-4" elevation="2">
+    <v-card
+      class="detail-header mb-4"
+      elevation="2"
+    >
       <v-card-title class="d-flex justify-space-between align-center">
         <div>
-          <h3 class="text-h5">{{ conceptName }}</h3>
-          <p class="text-caption text-grey mt-1">{{ conceptPath }}</p>
+          <h3 class="text-h5">
+            {{ conceptName }}
+          </h3>
+          <p class="text-caption text-grey mt-1">
+            {{ conceptPath }}
+          </p>
         </div>
-        <v-btn icon="mdi-close" variant="text" @click="$emit('close')" />
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          @click="$emit('close')"
+        />
       </v-card-title>
     </v-card>
 
     <v-row v-if="!loading && data">
-      <template v-for="field in fieldsForDomain" :key="field">
+      <template
+        v-for="field in fieldsForDomain"
+        :key="field"
+      >
         <v-col
           v-if="field === 'prevalenceByGenderAgeYear' && data.prevalenceByGenderAgeYear"
           cols="12"
         >
           <v-card elevation="2">
-            <v-card-title class="text-h6 pb-2">Prevalence by Gender, Age, and Year</v-card-title>
+            <v-card-title class="text-h6 pb-2">
+              Prevalence by Gender, Age, and Year
+            </v-card-title>
             <v-card-text>
               <TrellisChart
                 :data="data.prevalenceByGenderAgeYear"
@@ -52,7 +68,9 @@
           md="6"
         >
           <v-card elevation="2">
-            <v-card-title class="text-h6 pb-2">Prevalence by Month</v-card-title>
+            <v-card-title class="text-h6 pb-2">
+              Prevalence by Month
+            </v-card-title>
             <v-card-text>
               <LineChart
                 :data="formatTimeSeriesData(data.prevalenceByMonth)"
@@ -69,7 +87,9 @@
           md="6"
         >
           <v-card elevation="2">
-            <v-card-title class="text-h6 pb-2">Age at First Occurrence</v-card-title>
+            <v-card-title class="text-h6 pb-2">
+              Age at First Occurrence
+            </v-card-title>
             <v-card-text>
               <BoxPlotChart
                 :data="data.ageAtFirstOccurrence"
@@ -86,7 +106,9 @@
           md="6"
         >
           <v-card elevation="2">
-            <v-card-title class="text-h6 pb-2">Length of Era</v-card-title>
+            <v-card-title class="text-h6 pb-2">
+              Length of Era
+            </v-card-title>
             <v-card-text>
               <BoxPlotChart
                 :data="data.lengthOfEra"
@@ -103,9 +125,15 @@
           md="6"
         >
           <v-card elevation="2">
-            <v-card-title class="text-h6 pb-2">Distribution by Type</v-card-title>
+            <v-card-title class="text-h6 pb-2">
+              Distribution by Type
+            </v-card-title>
             <v-card-text>
-              <PieChart :data="data.byType" :height="400" data-testid="drilldown-byType" />
+              <PieChart
+                :data="data.byType"
+                :height="400"
+                data-testid="drilldown-byType"
+              />
             </v-card-text>
           </v-card>
         </v-col>
@@ -116,9 +144,15 @@
           md="6"
         >
           <v-card elevation="2">
-            <v-card-title class="text-h6 pb-2">Distribution by Unit</v-card-title>
+            <v-card-title class="text-h6 pb-2">
+              Distribution by Unit
+            </v-card-title>
             <v-card-text>
-              <PieChart :data="data.byUnit" :height="400" data-testid="drilldown-byUnit" />
+              <PieChart
+                :data="data.byUnit"
+                :height="400"
+                data-testid="drilldown-byUnit"
+              />
             </v-card-text>
           </v-card>
         </v-col>
@@ -129,9 +163,15 @@
           md="6"
         >
           <v-card elevation="2">
-            <v-card-title class="text-h6 pb-2">Distribution by Value</v-card-title>
+            <v-card-title class="text-h6 pb-2">
+              Distribution by Value
+            </v-card-title>
             <v-card-text>
-              <PieChart :data="data.byValueAsConcept" :height="400" data-testid="drilldown-byValueAsConcept" />
+              <PieChart
+                :data="data.byValueAsConcept"
+                :height="400"
+                data-testid="drilldown-byValueAsConcept"
+              />
             </v-card-text>
           </v-card>
         </v-col>
@@ -142,9 +182,15 @@
           md="6"
         >
           <v-card elevation="2">
-            <v-card-title class="text-h6 pb-2">Distribution by Operator</v-card-title>
+            <v-card-title class="text-h6 pb-2">
+              Distribution by Operator
+            </v-card-title>
             <v-card-text>
-              <PieChart :data="data.byOperator" :height="400" data-testid="drilldown-byOperator" />
+              <PieChart
+                :data="data.byOperator"
+                :height="400"
+                data-testid="drilldown-byOperator"
+              />
             </v-card-text>
           </v-card>
         </v-col>
@@ -155,9 +201,15 @@
           md="6"
         >
           <v-card elevation="2">
-            <v-card-title class="text-h6 pb-2">Distribution by Qualifier</v-card-title>
+            <v-card-title class="text-h6 pb-2">
+              Distribution by Qualifier
+            </v-card-title>
             <v-card-text>
-              <PieChart :data="data.byQualifier" :height="400" data-testid="drilldown-byQualifier" />
+              <PieChart
+                :data="data.byQualifier"
+                :height="400"
+                data-testid="drilldown-byQualifier"
+              />
             </v-card-text>
           </v-card>
         </v-col>
@@ -168,16 +220,28 @@
           md="6"
         >
           <v-card elevation="2">
-            <v-card-title class="text-h6 pb-2">Frequency Distribution</v-card-title>
+            <v-card-title class="text-h6 pb-2">
+              Frequency Distribution
+            </v-card-title>
             <v-card-text>
-              <BarChart :data="data.byFrequency" :height="400" data-testid="drilldown-byFrequency" />
+              <BarChart
+                :data="data.byFrequency"
+                :height="400"
+                data-testid="drilldown-byFrequency"
+              />
             </v-card-text>
           </v-card>
         </v-col>
       </template>
 
-      <v-col v-if="!hasAnyData" cols="12">
-        <v-alert type="info" variant="tonal">
+      <v-col
+        v-if="!hasAnyData"
+        cols="12"
+      >
+        <v-alert
+          type="info"
+          variant="tonal"
+        >
           No detailed data available for this concept.
         </v-alert>
       </v-col>
