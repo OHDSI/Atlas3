@@ -2,6 +2,7 @@
  * Data Source Type Definitions
  */
 import { z } from 'zod'
+import type { BoxPlotData, TrellisChartData } from '@/models/report.types'
 
 // Core Entities
 
@@ -169,7 +170,7 @@ export interface DashboardReport {
 export interface DataDensityReport {
   totalRecords: MultiLineChartData
   recordsPerPerson: MultiLineChartData
-  conceptsPerPerson: BarChartData
+  conceptsPerPerson: BoxPlotData[]
 }
 
 export interface PersonReport {
@@ -180,32 +181,23 @@ export interface PersonReport {
 }
 
 export interface ObservationPeriodReport {
-  ageAtFirst?: import('@/models/report.types').BarChartData
-  observationLength?: import('@/models/report.types').BarChartData
+  ageAtFirst?: { categories: string[]; values: number[] }
+  observationLength?: { categories: string[]; values: number[] }
   cumulativeObservation?: MultiLineChartData
   observedByMonth?: MultiLineChartData
-  ageByGender?: MultiLineChartData
-  durationByGender?: import('@/models/report.types').BarChartData
+  ageByGender?: BoxPlotData[]
+  durationByGender?: BoxPlotData[]
+  durationByAgeDecile?: BoxPlotData[]
+  personsWithContinuousObsByYear?: { categories: string[]; values: number[] }
+  observationPeriodsPerPerson?: PieChartData[]
   observationLengthStats?: Array<{ attributeName: string; attributeValue: string }>
 }
 
-export interface AgeAtDeathStat {
-  category: string
-  conceptId: number
-  p10Value: number
-  p25Value: number
-  p75Value: number
-  p90Value: number
-  minValue: number
-  medianValue: number
-  maxValue: number
-}
-
 export interface DeathReport {
-  ageAtDeath: AgeAtDeathStat[]
+  ageAtDeath: BoxPlotData[]
   deathByType: PieChartData[]
   prevalenceByMonth?: MultiLineChartData
-  prevalenceByGenderAgeYear?: MultiLineChartData
+  prevalenceByGenderAgeYear?: TrellisChartData
 }
 
 export interface PrevalenceTableRow {
@@ -381,10 +373,21 @@ export const DashboardReportSchema = z.object({
   observationByMonth: LineChartDataSchema
 })
 
+export const BoxPlotDataArraySchema = z.array(z.object({
+  category: z.string(),
+  min: z.number(),
+  p10: z.number(),
+  p25: z.number(),
+  median: z.number(),
+  p75: z.number(),
+  p90: z.number(),
+  max: z.number()
+}))
+
 export const DataDensityReportSchema = z.object({
   totalRecords: MultiLineChartDataSchema,
   recordsPerPerson: MultiLineChartDataSchema,
-  conceptsPerPerson: BarChartDataSchema
+  conceptsPerPerson: BoxPlotDataArraySchema
 })
 
 export const PersonReportSchema = z.object({
