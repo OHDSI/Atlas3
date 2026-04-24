@@ -1,13 +1,14 @@
 <template>
   <div class="death-report">
     <!-- Age at Death by Gender -->
-    <v-row v-if="ageAtDeathBoxPlot && ageAtDeathBoxPlot.length > 0">
+    <v-row v-if="data.ageAtDeath && data.ageAtDeath.length > 0">
       <v-col cols="12">
         <ChartSection :title="t('dataSources.deathReport.ageAtDeath', 'Age at Death').value">
           <BoxPlotChart
-            :data="ageAtDeathBoxPlot"
+            :data="data.ageAtDeath"
             :title="t('dataSources.deathReport.ageAtDeath', 'Age at Death Distribution by Gender').value"
             :height="400"
+            data-testid="age-at-death-chart"
           />
         </ChartSection>
       </v-col>
@@ -39,14 +40,13 @@
       </v-col>
     </v-row>
 
-    <!-- Prevalence by Gender, Age, Year -->
+    <!-- Prevalence by Gender, Age, Year (Trellis) -->
     <v-row v-if="data.prevalenceByGenderAgeYear && data.prevalenceByGenderAgeYear.series.length > 0">
       <v-col cols="12">
         <ChartSection :title="t('dataSources.deathReport.deathPrevalenceByAgeGenderYear', 'Death Prevalence by Age, Gender, Year').value">
-          <MultiLineChart
+          <TrellisChart
             :data="data.prevalenceByGenderAgeYear"
-            :x-axis-label="t('dataSources.deathReport.yearOfObservation', 'Year of Observation').value"
-            :y-axis-label="t('dataSources.deathReport.prevalencePer1000People', 'Prevalence Per 1000 People').value"
+            :height="600"
             data-testid="prevalence-by-gender-age-year-chart"
           />
         </ChartSection>
@@ -56,35 +56,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { DeathReport } from '@/models/datasource.types'
-import type { BoxPlotData } from '@/models/report.types'
 import ChartSection from './shared/ChartSection.vue'
 import PieChart from '@/components/reports/charts/PieChart.vue'
 import BoxPlotChart from '@/components/reports/charts/BoxPlotChart.vue'
+import TrellisChart from '@/components/reports/charts/TrellisChart.vue'
 import MultiLineChart from './charts/MultiLineChart.vue'
 
 const { t } = useI18n()
 
-const props = defineProps<{
+defineProps<{
   data: DeathReport
 }>()
-
-const ageAtDeathBoxPlot = computed<BoxPlotData[]>(() => {
-  if (!props.data.ageAtDeath) return []
-
-  return props.data.ageAtDeath.map(stat => ({
-    category: stat.category,
-    min: stat.minValue,
-    p10: stat.p10Value,
-    p25: stat.p25Value,
-    median: stat.medianValue,
-    p75: stat.p75Value,
-    p90: stat.p90Value,
-    max: stat.maxValue
-  }))
-})
 </script>
 
 <style scoped>
