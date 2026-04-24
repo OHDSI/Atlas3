@@ -203,7 +203,9 @@ describe('Data Source Formatters', () => {
 
       expect(result.totalRecords.categories).toHaveLength(1)
       expect(result.recordsPerPerson.series.length).toBeGreaterThanOrEqual(0)
-      expect(result.conceptsPerPerson.categories).toHaveLength(1)
+      expect(result.conceptsPerPerson).toHaveLength(1)
+      expect(result.conceptsPerPerson[0].category).toBe('Drug')
+      expect(result.conceptsPerPerson[0].median).toBe(10)
     })
   })
 
