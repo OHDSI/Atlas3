@@ -305,6 +305,93 @@ describe('Data Source Formatters', () => {
     })
   })
 
+  describe('transformObservationPeriodReport — boxplots and new fields', () => {
+    it('maps ageByGender to BoxPlotData[]', () => {
+      const raw = {
+        ageByGender: [
+          { category: 'MALE',   minValue: 0, p10Value: 5, p25Value: 15, medianValue: 35, p75Value: 55, p90Value: 70, maxValue: 90 },
+          { category: 'FEMALE', minValue: 0, p10Value: 6, p25Value: 16, medianValue: 38, p75Value: 58, p90Value: 72, maxValue: 92 }
+        ]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+
+      expect(result.ageByGender).toEqual([
+        { category: 'MALE',   min: 0, p10: 5, p25: 15, median: 35, p75: 55, p90: 70, max: 90 },
+        { category: 'FEMALE', min: 0, p10: 6, p25: 16, median: 38, p75: 58, p90: 72, max: 92 }
+      ])
+    })
+
+    it('maps durationByGender to BoxPlotData[]', () => {
+      const raw = {
+        durationByGender: [
+          { category: 'MALE',   minValue: 1, p10Value: 30, p25Value: 120, medianValue: 365, p75Value: 730, p90Value: 1095, maxValue: 3650 }
+        ]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.durationByGender).toEqual([
+        { category: 'MALE', min: 1, p10: 30, p25: 120, median: 365, p75: 730, p90: 1095, max: 3650 }
+      ])
+    })
+
+    it('maps durationByAgeDecile to BoxPlotData[]', () => {
+      const raw = {
+        durationByAgeDecile: [
+          { category: '0-9',   minValue: 1, p10Value: 30, p25Value: 100, medianValue: 365, p75Value: 730, p90Value: 1095, maxValue: 3650 },
+          { category: '10-19', minValue: 1, p10Value: 40, p25Value: 120, medianValue: 400, p75Value: 800, p90Value: 1200, maxValue: 3700 }
+        ]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.durationByAgeDecile).toHaveLength(2)
+      expect(result.durationByAgeDecile?.[0].category).toBe('0-9')
+      expect(result.durationByAgeDecile?.[0].median).toBe(365)
+    })
+
+    it('maps personsWithContinuousObservationsByYear to histogram', () => {
+      const raw = {
+        personsWithContinuousObservationsByYear: [
+          { intervalIndex: 2005, countValue: 1000 },
+          { intervalIndex: 2006, countValue: 1500 },
+          { intervalIndex: 2007, countValue: 2000 }
+        ]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.personsWithContinuousObsByYear).toEqual({
+        categories: ['2005', '2006', '2007'],
+        values: [1000, 1500, 2000]
+      })
+    })
+
+    it('maps observationPeriodsPerPerson to PieChartData[]', () => {
+      const raw = {
+        observationPeriodsPerPerson: [
+          { conceptName: '1', countValue: 900000 },
+          { conceptName: '2', countValue: 80000 },
+          { conceptName: '3', countValue: 15000 }
+        ]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.observationPeriodsPerPerson).toEqual([
+        { name: '1', value: 900000 },
+        { name: '2', value: 80000 },
+        { name: '3', value: 15000 }
+      ])
+    })
+
+    it('returns undefined for missing optional fields', () => {
+      const result = transformObservationPeriodReport({})
+      expect(result.ageByGender).toBeUndefined()
+      expect(result.durationByGender).toBeUndefined()
+      expect(result.durationByAgeDecile).toBeUndefined()
+      expect(result.personsWithContinuousObsByYear).toBeUndefined()
+      expect(result.observationPeriodsPerPerson).toBeUndefined()
+    })
+  })
+
   describe('transformDeathReport', () => {
     it('should transform death data', () => {
       const raw = {
