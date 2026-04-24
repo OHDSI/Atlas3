@@ -782,5 +782,41 @@ export function mapDrilldownReport(
     }))
   }
 
+  if (raw.measurementsByUnit && raw.measurementsByUnit.length > 0) {
+    report.byUnit = raw.measurementsByUnit.map(i => ({
+      name: i.conceptName || `Concept ${i.conceptId}`,
+      value: i.countValue
+    }))
+  }
+
+  const byValueAsConcept = raw.measurementsByValueAsConcept || raw.observationsByValueAsConcept
+  if (byValueAsConcept && byValueAsConcept.length > 0) {
+    report.byValueAsConcept = byValueAsConcept.map(i => ({
+      name: i.conceptName || `Concept ${i.conceptId}`,
+      value: i.countValue
+    }))
+  }
+
+  if (raw.measurementsByOperator && raw.measurementsByOperator.length > 0) {
+    report.byOperator = raw.measurementsByOperator.map(i => ({
+      name: i.conceptName || `Concept ${i.conceptId}`,
+      value: i.countValue
+    }))
+  }
+
+  if (raw.observationsByQualifier && raw.observationsByQualifier.length > 0) {
+    report.byQualifier = raw.observationsByQualifier.map(i => ({
+      name: i.conceptName || `Concept ${i.conceptId}`,
+      value: i.countValue
+    }))
+  }
+
+  if (raw.frequencyDistribution && raw.frequencyDistribution.length > 0) {
+    report.byFrequency = {
+      categories: raw.frequencyDistribution.map(i => i.intervalIndex.toString()),
+      values: raw.frequencyDistribution.map(i => i.countValue)
+    }
+  }
+
   return report
 }
