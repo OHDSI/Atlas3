@@ -36,6 +36,7 @@
               :loading="drilldownLoading"
               :concept-name="selectedConceptName"
               :concept-path="selectedConceptPath"
+              :domain="drilldownDomain"
               @close="clearDrilldown"
             />
           </v-window-item>
@@ -58,6 +59,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
 import type { ClinicalDomainReport as ClinicalDomainReportData, ReportType } from '@/models/datasource.types'
 import type { DrilldownReport } from '@/models/report.types'
+import type { Domain } from '@/config/drilldown-config'
 import { getMetricLabel } from '@/utils/datasource-formatters'
 import { getCDMDrilldown } from '@/services/webapi'
 import { mapDrilldownReport } from '@/services/report-mapper'
@@ -79,6 +81,20 @@ const props = defineProps<Props>()
 const activeTab = ref('treemap')
 
 const metricLabel = computed(() => getMetricLabel(props.reportType))
+
+const drilldownDomain = computed<Domain>(() => {
+  const map: Partial<Record<ReportType, Domain>> = {
+    conditionOccurrence: 'condition',
+    conditionEra: 'conditionEra',
+    drugExposure: 'drug',
+    drugEra: 'drugEra',
+    measurement: 'measurement',
+    observation: 'observation',
+    procedure: 'procedure',
+    visit: 'visit'
+  }
+  return map[props.reportType] ?? 'condition'
+})
 
 const drilldownData = ref<DrilldownReport | null>(null)
 const drilldownLoading = ref(false)
