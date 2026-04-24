@@ -183,11 +183,17 @@ export function formatPercentage(num: number, decimals = 2): string {
 }
 
 interface DataDensityRawItem {
-  xCalendarMonth?: number;
-  seriesName?: string;
-  yRecordCount?: number;
-  category?: string;
-  medianValue?: number;
+  xCalendarMonth?: number
+  seriesName?: string
+  yRecordCount?: number
+  category?: string
+  minValue?: number
+  p10Value?: number
+  p25Value?: number
+  medianValue?: number
+  p75Value?: number
+  p90Value?: number
+  maxValue?: number
 }
 
 interface DataDensityRaw {
@@ -246,16 +252,16 @@ export function transformDataDensityReport(raw: DataDensityRaw): import('@/model
     }))
   }
 
-  // Transform concepts per person - this is statistical data, not time series
-  const conceptsPerPerson: import('@/models/datasource.types').BarChartData = {
-    categories: raw.conceptsPerPerson?.map((item) => item.category || '') || [],
-    series: [
-      {
-        name: 'Median',
-        data: raw.conceptsPerPerson?.map((item) => item.medianValue || 0) || []
-      }
-    ]
-  }
+  const conceptsPerPerson = (raw.conceptsPerPerson || []).map((item) => ({
+    category: item.category || '',
+    min: item.minValue ?? 0,
+    p10: item.p10Value ?? 0,
+    p25: item.p25Value ?? 0,
+    median: item.medianValue ?? 0,
+    p75: item.p75Value ?? 0,
+    p90: item.p90Value ?? 0,
+    max: item.maxValue ?? 0
+  }))
 
   return {
     totalRecords,

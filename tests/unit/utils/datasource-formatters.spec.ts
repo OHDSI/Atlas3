@@ -207,6 +207,39 @@ describe('Data Source Formatters', () => {
     })
   })
 
+  describe('transformDataDensityReport — conceptsPerPerson boxplot', () => {
+    it('maps all 7 percentile fields per category', () => {
+      const raw = {
+        totalRecords: [],
+        recordsPerPerson: [],
+        conceptsPerPerson: [
+          {
+            category: 'condition_occurrence',
+            minValue: 1, p10Value: 2, p25Value: 5, medianValue: 10,
+            p75Value: 18, p90Value: 30, maxValue: 55
+          },
+          {
+            category: 'drug_exposure',
+            minValue: 0, p10Value: 1, p25Value: 3, medianValue: 7,
+            p75Value: 15, p90Value: 28, maxValue: 60
+          }
+        ]
+      }
+
+      const result = transformDataDensityReport(raw)
+
+      expect(result.conceptsPerPerson).toEqual([
+        { category: 'condition_occurrence', min: 1, p10: 2, p25: 5, median: 10, p75: 18, p90: 30, max: 55 },
+        { category: 'drug_exposure',        min: 0, p10: 1, p25: 3, median: 7,  p75: 15, p90: 28, max: 60 }
+      ])
+    })
+
+    it('returns empty array when conceptsPerPerson is missing', () => {
+      const result = transformDataDensityReport({ totalRecords: [], recordsPerPerson: [] })
+      expect(result.conceptsPerPerson).toEqual([])
+    })
+  })
+
   describe('transformPersonReport', () => {
     it('should transform person data', () => {
       const raw = {
