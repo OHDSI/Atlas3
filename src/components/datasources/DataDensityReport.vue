@@ -22,12 +22,13 @@
       </v-col>
     </v-row>
 
-    <v-row>
+    <v-row v-if="data.conceptsPerPerson && data.conceptsPerPerson.length > 0">
       <v-col cols="12">
         <ChartSection :title="t('dataSources.datadensityReport.conceptsPerPerson', 'Concepts per Person').value">
-          <BarChart
-            :data="conceptsBarChartData"
+          <BoxPlotChart
+            :data="data.conceptsPerPerson"
             :height="350"
+            data-testid="concepts-per-person-chart"
           />
         </ChartSection>
       </v-col>
@@ -36,27 +37,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { DataDensityReport as DataDensityReportData } from '@/models/datasource.types'
-import type { BarChartData } from '@/models/report.types'
 import ChartSection from '@/components/datasources/shared/ChartSection.vue'
 import MultiLineChart from '@/components/datasources/charts/MultiLineChart.vue'
-import BarChart from '@/components/reports/charts/BarChart.vue'
+import BoxPlotChart from '@/components/reports/charts/BoxPlotChart.vue'
 
 const { t } = useI18n()
 
-interface Props {
+defineProps<{
   data: DataDensityReportData
-}
-
-const props = defineProps<Props>()
-
-const conceptsBarChartData = computed<BarChartData>(() => ({
-  categories: props.data.conceptsPerPerson.categories,
-  values: props.data.conceptsPerPerson.series[0]?.data || [],
-  unit: props.data.conceptsPerPerson.unit || t('common.concepts', 'Concepts').value
-}))
+}>()
 </script>
 
 <style scoped>
