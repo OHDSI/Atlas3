@@ -10,12 +10,25 @@
       color="primary"
       class="inclusion-rule-report__tabs mb-3"
     >
-      <v-tab :value="1" data-testid="inclusion-mode-by-person">By Person</v-tab>
-      <v-tab :value="0" data-testid="inclusion-mode-by-event">By Event</v-tab>
+      <v-tab
+        :value="1"
+        data-testid="inclusion-mode-by-person"
+      >
+        By Person
+      </v-tab>
+      <v-tab
+        :value="0"
+        data-testid="inclusion-mode-by-event"
+      >
+        By Event
+      </v-tab>
     </v-tabs>
 
     <!-- Loading -->
-    <div v-if="loading" class="py-6">
+    <div
+      v-if="loading"
+      class="py-6"
+    >
       <v-skeleton-loader type="table-tbody" />
     </div>
 
@@ -66,13 +79,17 @@
 
       <!-- Attrition table -->
       <section class="mt-6">
-        <h3 class="text-subtitle-1 font-weight-medium mb-2">Attrition by inclusion rule</h3>
+        <h3 class="text-subtitle-1 font-weight-medium mb-2">
+          Attrition by inclusion rule
+        </h3>
         <InclusionRuleAttritionTable :rules="report.inclusionRuleStats" />
       </section>
 
       <!-- Treemap -->
       <section class="mt-6">
-        <h3 class="text-subtitle-1 font-weight-medium mb-2">Population breakdown</h3>
+        <h3 class="text-subtitle-1 font-weight-medium mb-2">
+          Population breakdown
+        </h3>
         <InclusionRuleTreemap
           :treemap="report.treemap"
           :rule-count="report.inclusionRuleStats.length"

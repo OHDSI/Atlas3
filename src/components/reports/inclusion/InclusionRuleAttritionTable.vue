@@ -7,11 +7,21 @@
     <table class="attrition-table__grid">
       <thead>
         <tr>
-          <th class="attrition-table__col-idx">#</th>
-          <th class="attrition-table__col-name">{{ t('cohortDefinitions.cohort.modals.cohortReport.includedIn', 'Inclusion rule').value }}</th>
-          <th class="attrition-table__col-num">{{ t('cohortDefinitions.cohort.modals.cohortReport.satisfying', 'Persons satisfying').value }}</th>
-          <th class="attrition-table__col-num">% remaining</th>
-          <th class="attrition-table__col-num">% excluded</th>
+          <th class="attrition-table__col-idx">
+            #
+          </th>
+          <th class="attrition-table__col-name">
+            {{ t('cohortDefinitions.cohort.modals.cohortReport.includedIn', 'Inclusion rule').value }}
+          </th>
+          <th class="attrition-table__col-num">
+            {{ t('cohortDefinitions.cohort.modals.cohortReport.satisfying', 'Persons satisfying').value }}
+          </th>
+          <th class="attrition-table__col-num">
+            % remaining
+          </th>
+          <th class="attrition-table__col-num">
+            % excluded
+          </th>
           <th class="attrition-table__col-bar" />
         </tr>
       </thead>
@@ -21,11 +31,21 @@
           :key="rule.id"
           data-testid="inclusion-attrition-row"
         >
-          <td class="attrition-table__col-idx">{{ idx + 1 }}</td>
-          <td class="attrition-table__col-name">{{ rule.name }}</td>
-          <td class="attrition-table__col-num">{{ formatCount(rule.countSatisfying) }}</td>
-          <td class="attrition-table__col-num">{{ formatPercent(rule.percentSatisfying) }}</td>
-          <td class="attrition-table__col-num">{{ formatPercent(rule.percentExcluded) }}</td>
+          <td class="attrition-table__col-idx">
+            {{ idx + 1 }}
+          </td>
+          <td class="attrition-table__col-name">
+            {{ rule.name }}
+          </td>
+          <td class="attrition-table__col-num">
+            {{ formatCount(rule.countSatisfying) }}
+          </td>
+          <td class="attrition-table__col-num">
+            {{ formatPercent(rule.percentSatisfying) }}
+          </td>
+          <td class="attrition-table__col-num">
+            {{ formatPercent(rule.percentExcluded) }}
+          </td>
           <td class="attrition-table__col-bar">
             <div class="attrition-table__bar-track">
               <div

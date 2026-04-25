@@ -1,7 +1,11 @@
 <template>
   <div class="summary-stat">
-    <div class="summary-stat__label">{{ label }}</div>
-    <div class="summary-stat__value">{{ value }}</div>
+    <div class="summary-stat__label">
+      {{ label }}
+    </div>
+    <div class="summary-stat__value">
+      {{ value }}
+    </div>
   </div>
 </template>
 
