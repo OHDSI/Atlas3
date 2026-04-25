@@ -82,16 +82,18 @@ function decorate(node: InclusionTreemapNode): Record<string, unknown> {
   }
 }
 
+function buildTooltip(info: { name: string; value: number }, ruleCount: number): string {
+  const failures = failuresFromName(info.name, ruleCount)
+  const passing = ruleCount - failures
+  return `<strong>${info.name || '(root)'}</strong><br/>Persons: ${info.value}<br/>Rules satisfied: ${passing} of ${ruleCount}`
+}
+
 const chartOption = computed(() => {
   const root = props.treemap
   if (!root) return {}
   return {
     tooltip: {
-      formatter: (info: { name: string; value: number }) => {
-        const failures = failuresFromName(info.name, props.ruleCount)
-        const passing = props.ruleCount - failures
-        return `<strong>${info.name || '(root)'}</strong><br/>Persons: ${info.value}<br/>Rules satisfied: ${passing} of ${props.ruleCount}`
-      },
+      formatter: (info: { name: string; value: number }) => buildTooltip(info, props.ruleCount),
     },
     series: [{
       type: 'treemap',
@@ -103,6 +105,8 @@ const chartOption = computed(() => {
     }],
   }
 })
+
+defineExpose({ buildTooltip })
 
 const legend = computed(() => {
   if (props.ruleCount === 0) {

@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { getInclusionRuleReport } from '@/services/webapi'
 import type { InclusionRuleReport, InclusionRuleReportMode } from '@/models/report.types'
 import InclusionRuleAttritionTable from './InclusionRuleAttritionTable.vue'
@@ -150,9 +150,8 @@ function formatPercent(s: string | null): string {
 // Re-export so ReportPanel's async-component loader gets the correct shape
 defineOptions({ name: 'InclusionRuleReport' })
 
-// Expose for tests
-const _debug = computed(() => ({ mode: mode.value, hasReport: !!report.value }))
-defineExpose({ _debug })
+// Expose internal refs so tests can drive the tab switch deterministically
+defineExpose({ mode, report, loading, error })
 </script>
 
 <style scoped>
