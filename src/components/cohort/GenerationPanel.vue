@@ -73,12 +73,40 @@
                 key="reports"
                 class="h-100"
               >
-                <report-panel
-                  :cohort-id="cohortId ?? 0"
-                  :source-key="selectedSourceKey"
-                  :is-open="showReports"
-                  @close="handleCloseReports"
-                />
+                <v-tabs
+                  v-model="activeTab"
+                  density="compact"
+                  color="primary"
+                  class="generation-layout__tabs"
+                >
+                  <v-tab value="reports" data-testid="generation-tab-reports">
+                    <v-icon class="mr-2">mdi-chart-box</v-icon>
+                    Reports
+                  </v-tab>
+                  <v-tab value="samples" data-testid="generation-tab-samples">
+                    <v-icon class="mr-2">mdi-shuffle-variant</v-icon>
+                    Samples
+                  </v-tab>
+                </v-tabs>
+                <v-window v-model="activeTab" class="mt-2">
+                  <v-window-item value="reports">
+                    <report-panel
+                      :cohort-id="cohortId ?? 0"
+                      :source-key="selectedSourceKey"
+                      :is-open="showReports"
+                      @close="handleCloseReports"
+                    />
+                  </v-window-item>
+                  <v-window-item value="samples">
+                    <v-card flat class="pa-4">
+                      <cohort-samples-panel
+                        v-if="cohortId"
+                        :cohort-id="cohortId"
+                        :source-key="selectedSourceKey"
+                      />
+                    </v-card>
+                  </v-window-item>
+                </v-window>
               </div>
 
               <div
@@ -107,8 +135,10 @@ import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
 import DataSourceTileGrid from '../generation/DataSourceTileGrid.vue'
 import ReportPanel from '../reports/ReportPanel.vue'
+import CohortSamplesPanel from '../cohort-samples/CohortSamplesPanel.vue'
 
 const { t } = useI18n()
+const activeTab = ref<'reports' | 'samples'>('reports')
 
 interface Props {
   modelValue: boolean
