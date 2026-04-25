@@ -77,3 +77,46 @@ describe('pathway store — basics', () => {
     expect(s.isDirty).toBe(false)
   })
 })
+
+describe('pathway store — auto-save', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    sessionStorage.clear()
+  })
+
+  it('saveToDraft writes the current pathway to sessionStorage', () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'Drafty' })
+    s.saveToDraft()
+    const raw = sessionStorage.getItem('atlas3_pathway_draft')
+    expect(raw).not.toBeNull()
+    const parsed = JSON.parse(raw!)
+    expect(parsed.pathway.name).toBe('Drafty')
+    expect(typeof parsed.timestamp).toBe('string')
+  })
+
+  it('restoreFromDraft loads the draft and marks dirty', () => {
+    sessionStorage.setItem('atlas3_pathway_draft', JSON.stringify({
+      pathway: {
+        name: 'From draft', tags: [],
+        design: {
+          targetCohorts: [], eventCohorts: [],
+          combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
+        },
+      },
+      timestamp: new Date().toISOString(),
+    }))
+    const s = usePathwayStore()
+    expect(s.restoreFromDraft()).toBe(true)
+    expect(s.currentPathway?.name).toBe('From draft')
+    expect(s.isDirty).toBe(true)
+  })
+
+  it('clearDraft removes sessionStorage entry', () => {
+    sessionStorage.setItem('atlas3_pathway_draft', '{"x":1}')
+    const s = usePathwayStore()
+    s.clearDraft()
+    expect(sessionStorage.getItem('atlas3_pathway_draft')).toBeNull()
+  })
+})

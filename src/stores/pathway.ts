@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Pathway, PathwayCohortRef, PathwayDesign } from '@/models/pathway.types'
-import { PATHWAY_DEFAULTS } from '@/models/pathway.types'
+import { PATHWAY_DEFAULTS, STORAGE_KEY_PATHWAY_DRAFT, PATHWAY_AUTO_SAVE_INTERVAL_MS } from '@/models/pathway.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
 import { getPathway } from '@/services/webapi'
 import { getPathwayVersion } from '@/services/pathway-versions.service'
@@ -135,6 +135,51 @@ export const usePathwayStore = defineStore('pathway', () => {
     previewVersion.value = null
   }
 
+  let autoSaveTimer: ReturnType<typeof setInterval> | null = null
+
+  function saveToDraft() {
+    if (!currentPathway.value) return
+    try {
+      sessionStorage.setItem(STORAGE_KEY_PATHWAY_DRAFT, JSON.stringify({
+        pathway: currentPathway.value,
+        timestamp: new Date().toISOString(),
+      }))
+      lastAutoSave.value = new Date()
+    } catch (err) {
+      logger.error('Pathway', 'saveToDraft failed', err)
+    }
+  }
+
+  function restoreFromDraft(): boolean {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY_PATHWAY_DRAFT)
+      if (!raw) return false
+      const { pathway } = JSON.parse(raw) as { pathway: Pathway; timestamp: string }
+      currentPathway.value = pathway
+      isDirty.value = true
+      return true
+    } catch (err) {
+      logger.error('Pathway', 'restoreFromDraft failed', err)
+      return false
+    }
+  }
+
+  function clearDraft() {
+    try { sessionStorage.removeItem(STORAGE_KEY_PATHWAY_DRAFT) }
+    catch (err) { logger.error('Pathway', 'clearDraft failed', err) }
+  }
+
+  function stopAutoSave() {
+    if (autoSaveTimer) { clearInterval(autoSaveTimer); autoSaveTimer = null }
+  }
+
+  function startAutoSave() {
+    stopAutoSave()
+    autoSaveTimer = setInterval(() => {
+      if (isDirty.value && currentPathway.value) saveToDraft()
+    }, PATHWAY_AUTO_SAVE_INTERVAL_MS)
+  }
+
   return {
     currentPathway, isDirty, lastAutoSave, previewVersion,
     validationErrors, isReadOnly,
@@ -144,5 +189,6 @@ export const usePathwayStore = defineStore('pathway', () => {
     addTargetCohort, removeTargetCohort, renameTargetCohort,
     addEventCohort, removeEventCohort, renameEventCohort,
     loadPathway, loadVersionPreview, clearPreviewVersion,
+    saveToDraft, restoreFromDraft, clearDraft, startAutoSave, stopAutoSave,
   }
 })
