@@ -99,6 +99,7 @@
               :loading="drilldownLoading"
               :concept-name="selectedConceptName"
               :concept-path="selectedConceptPath"
+              :domain="'drugEra'"
               @close="clearDrilldown"
             />
           </v-window-item>

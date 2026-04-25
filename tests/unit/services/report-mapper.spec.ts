@@ -25,6 +25,7 @@ import {
   mapDataCompletenessReport,
   mapEntropyReport,
   mapTornadoReport,
+  mapDrilldownReport,
   toBarChartData,
   toPieChartData,
   toLineChartData,
@@ -39,7 +40,8 @@ import type {
   WebAPIConditionEraRaw,
   WebAPIConditionRaw,
   WebAPIDrugEraRaw,
-  WebAPICohortSpecificRaw
+  WebAPICohortSpecificRaw,
+  WebAPIDrilldownRaw
 } from '@/models/report.types'
 
 describe('report-mapper', () => {
@@ -1275,6 +1277,59 @@ describe('report-mapper', () => {
         expect(formatDuration(547)).toBe('1.5 years')
         expect(formatDuration(548)).toBe('1.5 years')
       })
+    })
+  })
+
+  describe('mapDrilldownReport', () => {
+    const base = { conceptId: 123, conceptName: 'Test', conceptPath: 'Root||Test' }
+
+    it('maps byUnit, byValueAsConcept, byOperator for measurement domain', () => {
+      const raw: WebAPIDrilldownRaw = {
+        measurementsByUnit: [{ conceptId: 1, conceptName: 'mg/dL', countValue: 500 }],
+        measurementsByValueAsConcept: [{ conceptId: 2, conceptName: 'Positive', countValue: 100 }],
+        measurementsByOperator: [{ conceptId: 3, conceptName: '>', countValue: 50 }]
+      }
+
+      const result = mapDrilldownReport(raw, base.conceptId, base.conceptName, base.conceptPath, 'measurement')
+
+      expect(result.byUnit).toEqual([{ name: 'mg/dL', value: 500 }])
+      expect(result.byValueAsConcept).toEqual([{ name: 'Positive', value: 100 }])
+      expect(result.byOperator).toEqual([{ name: '>', value: 50 }])
+    })
+
+    it('maps byQualifier and byValueAsConcept for observation domain', () => {
+      const raw: WebAPIDrilldownRaw = {
+        observationsByQualifier: [{ conceptId: 1, conceptName: 'qualifier-1', countValue: 10 }],
+        observationsByValueAsConcept: [{ conceptId: 2, conceptName: 'value-1', countValue: 20 }]
+      }
+
+      const result = mapDrilldownReport(raw, base.conceptId, base.conceptName, base.conceptPath, 'observation')
+
+      expect(result.byQualifier).toEqual([{ name: 'qualifier-1', value: 10 }])
+      expect(result.byValueAsConcept).toEqual([{ name: 'value-1', value: 20 }])
+    })
+
+    it('maps byFrequency histogram to BarChartData', () => {
+      const raw: WebAPIDrilldownRaw = {
+        frequencyDistribution: [
+          { intervalIndex: 1, countValue: 100 },
+          { intervalIndex: 2, countValue: 50 }
+        ]
+      }
+
+      const result = mapDrilldownReport(raw, base.conceptId, base.conceptName, base.conceptPath, 'drug')
+
+      expect(result.byFrequency).toEqual({
+        categories: ['1', '2'],
+        values: [100, 50]
+      })
+    })
+
+    it('omits breakdowns that are absent', () => {
+      const result = mapDrilldownReport({}, base.conceptId, base.conceptName, base.conceptPath, 'visit')
+      expect(result.byUnit).toBeUndefined()
+      expect(result.byQualifier).toBeUndefined()
+      expect(result.byFrequency).toBeUndefined()
     })
   })
 })

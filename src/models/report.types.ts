@@ -427,6 +427,11 @@ export interface DrilldownReport {
   prevalenceByGenderAgeYear?: TrellisChartData
   prevalenceByMonth?: TimeSeriesData[]
   byType?: PieChartData[]
+  byUnit?: PieChartData[]
+  byValueAsConcept?: PieChartData[]
+  byOperator?: PieChartData[]
+  byQualifier?: PieChartData[]
+  byFrequency?: BarChartData
 }
 
 export interface BoxPlotData {
@@ -467,6 +472,12 @@ export interface WebAPIDrilldownRaw {
   observationsByType?: WebAPIConceptCount[]
   measurementsByType?: WebAPIConceptCount[]
   proceduresByType?: WebAPIConceptCount[]
+  measurementsByUnit?: WebAPIConceptCount[]
+  measurementsByValueAsConcept?: WebAPIConceptCount[]
+  observationsByValueAsConcept?: WebAPIConceptCount[]
+  measurementsByOperator?: WebAPIConceptCount[]
+  observationsByQualifier?: WebAPIConceptCount[]
+  frequencyDistribution?: Array<{ intervalIndex: number; countValue: number }>
   prevalenceByGenderAgeYear?: WebAPIPrevalenceByDemographic[]
   prevalenceByMonth?: WebAPIPrevalenceByMonth[]
 }

@@ -203,7 +203,42 @@ describe('Data Source Formatters', () => {
 
       expect(result.totalRecords.categories).toHaveLength(1)
       expect(result.recordsPerPerson.series.length).toBeGreaterThanOrEqual(0)
-      expect(result.conceptsPerPerson.categories).toHaveLength(1)
+      expect(result.conceptsPerPerson).toHaveLength(1)
+      expect(result.conceptsPerPerson[0].category).toBe('Drug')
+      expect(result.conceptsPerPerson[0].median).toBe(10)
+    })
+  })
+
+  describe('transformDataDensityReport — conceptsPerPerson boxplot', () => {
+    it('maps all 7 percentile fields per category', () => {
+      const raw = {
+        totalRecords: [],
+        recordsPerPerson: [],
+        conceptsPerPerson: [
+          {
+            category: 'condition_occurrence',
+            minValue: 1, p10Value: 2, p25Value: 5, medianValue: 10,
+            p75Value: 18, p90Value: 30, maxValue: 55
+          },
+          {
+            category: 'drug_exposure',
+            minValue: 0, p10Value: 1, p25Value: 3, medianValue: 7,
+            p75Value: 15, p90Value: 28, maxValue: 60
+          }
+        ]
+      }
+
+      const result = transformDataDensityReport(raw)
+
+      expect(result.conceptsPerPerson).toEqual([
+        { category: 'condition_occurrence', min: 1, p10: 2, p25: 5, median: 10, p75: 18, p90: 30, max: 55 },
+        { category: 'drug_exposure',        min: 0, p10: 1, p25: 3, median: 7,  p75: 15, p90: 28, max: 60 }
+      ])
+    })
+
+    it('returns empty array when conceptsPerPerson is missing', () => {
+      const result = transformDataDensityReport({ totalRecords: [], recordsPerPerson: [] })
+      expect(result.conceptsPerPerson).toEqual([])
     })
   })
 
@@ -270,6 +305,93 @@ describe('Data Source Formatters', () => {
     })
   })
 
+  describe('transformObservationPeriodReport — boxplots and new fields', () => {
+    it('maps ageByGender to BoxPlotData[]', () => {
+      const raw = {
+        ageByGender: [
+          { category: 'MALE',   minValue: 0, p10Value: 5, p25Value: 15, medianValue: 35, p75Value: 55, p90Value: 70, maxValue: 90 },
+          { category: 'FEMALE', minValue: 0, p10Value: 6, p25Value: 16, medianValue: 38, p75Value: 58, p90Value: 72, maxValue: 92 }
+        ]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+
+      expect(result.ageByGender).toEqual([
+        { category: 'MALE',   min: 0, p10: 5, p25: 15, median: 35, p75: 55, p90: 70, max: 90 },
+        { category: 'FEMALE', min: 0, p10: 6, p25: 16, median: 38, p75: 58, p90: 72, max: 92 }
+      ])
+    })
+
+    it('maps durationByGender to BoxPlotData[]', () => {
+      const raw = {
+        durationByGender: [
+          { category: 'MALE',   minValue: 1, p10Value: 30, p25Value: 120, medianValue: 365, p75Value: 730, p90Value: 1095, maxValue: 3650 }
+        ]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.durationByGender).toEqual([
+        { category: 'MALE', min: 1, p10: 30, p25: 120, median: 365, p75: 730, p90: 1095, max: 3650 }
+      ])
+    })
+
+    it('maps durationByAgeDecile to BoxPlotData[]', () => {
+      const raw = {
+        durationByAgeDecile: [
+          { category: '0-9',   minValue: 1, p10Value: 30, p25Value: 100, medianValue: 365, p75Value: 730, p90Value: 1095, maxValue: 3650 },
+          { category: '10-19', minValue: 1, p10Value: 40, p25Value: 120, medianValue: 400, p75Value: 800, p90Value: 1200, maxValue: 3700 }
+        ]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.durationByAgeDecile).toHaveLength(2)
+      expect(result.durationByAgeDecile?.[0].category).toBe('0-9')
+      expect(result.durationByAgeDecile?.[0].median).toBe(365)
+    })
+
+    it('maps personsWithContinuousObservationsByYear to histogram', () => {
+      const raw = {
+        personsWithContinuousObservationsByYear: [
+          { intervalIndex: 2005, countValue: 1000 },
+          { intervalIndex: 2006, countValue: 1500 },
+          { intervalIndex: 2007, countValue: 2000 }
+        ]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.personsWithContinuousObsByYear).toEqual({
+        categories: ['2005', '2006', '2007'],
+        values: [1000, 1500, 2000]
+      })
+    })
+
+    it('maps observationPeriodsPerPerson to PieChartData[]', () => {
+      const raw = {
+        observationPeriodsPerPerson: [
+          { conceptName: '1', countValue: 900000 },
+          { conceptName: '2', countValue: 80000 },
+          { conceptName: '3', countValue: 15000 }
+        ]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.observationPeriodsPerPerson).toEqual([
+        { name: '1', value: 900000 },
+        { name: '2', value: 80000 },
+        { name: '3', value: 15000 }
+      ])
+    })
+
+    it('returns undefined for missing optional fields', () => {
+      const result = transformObservationPeriodReport({})
+      expect(result.ageByGender).toBeUndefined()
+      expect(result.durationByGender).toBeUndefined()
+      expect(result.durationByAgeDecile).toBeUndefined()
+      expect(result.personsWithContinuousObsByYear).toBeUndefined()
+      expect(result.observationPeriodsPerPerson).toBeUndefined()
+    })
+  })
+
   describe('transformDeathReport', () => {
     it('should transform death data', () => {
       const raw = {
@@ -298,6 +420,47 @@ describe('Data Source Formatters', () => {
 
       expect(result.ageAtDeath).toEqual([])
       expect(result.deathByType).toEqual([])
+    })
+  })
+
+  describe('transformDeathReport — trellis and boxplot', () => {
+    it('maps ageAtDeath to BoxPlotData[]', () => {
+      const raw = {
+        ageAtDeath: [
+          { category: 'MALE',   minValue: 30, p10Value: 45, p25Value: 58, medianValue: 70, p75Value: 80, p90Value: 88, maxValue: 100 },
+          { category: 'FEMALE', minValue: 32, p10Value: 48, p25Value: 60, medianValue: 72, p75Value: 82, p90Value: 90, maxValue: 105 }
+        ]
+      }
+
+      const result = transformDeathReport(raw)
+
+      expect(result.ageAtDeath).toEqual([
+        { category: 'MALE',   min: 30, p10: 45, p25: 58, median: 70, p75: 80, p90: 88, max: 100 },
+        { category: 'FEMALE', min: 32, p10: 48, p25: 60, median: 72, p75: 82, p90: 90, max: 105 }
+      ])
+    })
+
+    it('maps prevalenceByGenderAgeYear to TrellisChartData grouped by decile and gender', () => {
+      const raw = {
+        prevalenceByGenderAgeYear: [
+          { trellisName: '60 - 69', seriesName: 'MALE',   xCalendarYear: 2010, yPrevalence1000Pp: 12 },
+          { trellisName: '60 - 69', seriesName: 'MALE',   xCalendarYear: 2011, yPrevalence1000Pp: 14 },
+          { trellisName: '60 - 69', seriesName: 'FEMALE', xCalendarYear: 2010, yPrevalence1000Pp: 10 },
+          { trellisName: '70 - 79', seriesName: 'MALE',   xCalendarYear: 2010, yPrevalence1000Pp: 25 }
+        ]
+      }
+
+      const result = transformDeathReport(raw)
+      expect(result.prevalenceByGenderAgeYear).toBeDefined()
+      const trellis = result.prevalenceByGenderAgeYear!
+      expect(trellis.categories).toEqual(expect.arrayContaining(['60 - 69', '70 - 79']))
+      const maleIn60s = trellis.series.find(s => s.category === '60 - 69' && s.name === 'MALE')
+      expect(maleIn60s?.data).toEqual([{ x: 2010, y: 12 }, { x: 2011, y: 14 }])
+    })
+
+    it('returns undefined prevalenceByGenderAgeYear when raw is missing', () => {
+      const result = transformDeathReport({})
+      expect(result.prevalenceByGenderAgeYear).toBeUndefined()
     })
   })
 })

@@ -35,9 +35,36 @@ export async function setupBasicMocks(page: Page) {
 
     // Also set the cookie for bearerToken
     document.cookie = `bearerToken=${mockToken}; path=/; SameSite=Lax`
+
+    // Work around a known race on the DataSources view: the page mounts
+    // both the store (which calls listDataSources) and the config panel's
+    // TrexSQLCacheSection (which also calls listDataSources via
+    // detectTrexSQLAvailability). Both invocations share a single
+    // AbortController in datasource.service — the second cancels the
+    // first, surfacing a bogus "Unable to load data sources" error even
+    // though the second succeeds. We dedupe concurrent fetches for
+    // /source/sources at the window.fetch layer so both callers share
+    // the same response promise and neither gets aborted.
+    const originalFetch = window.fetch.bind(window)
+    const inFlight = new Map<string, Promise<Response>>()
+    window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      const method = (init?.method || 'GET').toUpperCase()
+      if (method === 'GET' && url.includes('/source/sources')) {
+        const existing = inFlight.get(url)
+        if (existing) return existing.then((r) => r.clone())
+        // Strip the abort signal so one caller's cancel doesn't kill the shared fetch.
+        const safeInit = { ...(init || {}) }
+        delete safeInit.signal
+        const promise = originalFetch(input, safeInit).finally(() => inFlight.delete(url))
+        inFlight.set(url, promise)
+        return promise.then((r) => r.clone())
+      }
+      return originalFetch(input, init)
+    }
   })
 
-  // Mock user/me endpoint to return authenticated user
+  // Mock user/me endpoint to return authenticated user.
   await page.route('**/user/me', async (route: Route) => {
     await route.fulfill({
       status: 200,
@@ -47,7 +74,8 @@ export async function setupBasicMocks(page: Page) {
         name: 'Test User',
         id: 1,
         permissionIdx: {},
-        permissionsBySourceKey: {}
+        permissionsBySourceKey: {},
+        trexsqlCacheEnabled: false
       })
     })
   })
@@ -359,11 +387,25 @@ export async function setupDatasourcesMocks(page: Page) {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
-        SERIES_NAME: ['Condition', 'Drug', 'Procedure'],
-        X_CALENDAR_MONTH: ['2010-01', '2010-02', '2010-03', '2010-04'],
-        Y_RECORD_COUNT: [1000, 1200, 1500, 1800]
-      })
+      body: JSON.stringify(mockDataDensityReport)
+    })
+  })
+
+  // Mock observation period report
+  await page.route('**/WebAPI/cdmresults/*/observationPeriod', async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockObservationPeriodReport)
+    })
+  })
+
+  // Mock death report
+  await page.route('**/WebAPI/cdmresults/*/death', async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockDeathReport)
     })
   })
 
@@ -377,6 +419,271 @@ export async function setupDatasourcesMocks(page: Page) {
       })
     })
   })
+
+  // Mock TrexSQL cache status (returns 404 to indicate TrexSQL is unavailable).
+  // Without this, the /trexsql/*\/cache/status request falls through to the
+  // vite proxy and hits the real backend, which can trigger extra concurrent
+  // /source/sources fetches via useTrexSQLCache.detectTrexSQLAvailability.
+  await page.route('**/WebAPI/trexsql/*/cache/status', async (route: Route) => {
+    await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' })
+  })
+
+  // Mock i18n endpoints so the locale store doesn't hit the backend
+  await page.route('**/WebAPI/i18n/locales', async (route: Route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '["en"]' })
+  })
+  await page.route('**/WebAPI/i18n**', async (route: Route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+  })
+}
+
+/**
+ * Mock raw API response for /cdmresults/*\/datadensity
+ * Shape matches what transformDataDensityReport expects.
+ */
+export const mockDataDensityReport = {
+  totalRecords: [
+    { xCalendarMonth: 201001, seriesName: 'Condition', yRecordCount: 1000 },
+    { xCalendarMonth: 201002, seriesName: 'Condition', yRecordCount: 1200 },
+    { xCalendarMonth: 201003, seriesName: 'Condition', yRecordCount: 1500 },
+    { xCalendarMonth: 201001, seriesName: 'Drug', yRecordCount: 800 },
+    { xCalendarMonth: 201002, seriesName: 'Drug', yRecordCount: 950 },
+    { xCalendarMonth: 201003, seriesName: 'Drug', yRecordCount: 1100 }
+  ],
+  recordsPerPerson: [
+    { xCalendarMonth: 201001, seriesName: 'Condition', yRecordCount: 2 },
+    { xCalendarMonth: 201002, seriesName: 'Condition', yRecordCount: 3 },
+    { xCalendarMonth: 201003, seriesName: 'Condition', yRecordCount: 4 },
+    { xCalendarMonth: 201001, seriesName: 'Drug', yRecordCount: 1 },
+    { xCalendarMonth: 201002, seriesName: 'Drug', yRecordCount: 2 },
+    { xCalendarMonth: 201003, seriesName: 'Drug', yRecordCount: 2 }
+  ],
+  conceptsPerPerson: [
+    {
+      category: 'Condition',
+      minValue: 1,
+      p10Value: 3,
+      p25Value: 5,
+      medianValue: 8,
+      p75Value: 12,
+      p90Value: 18,
+      maxValue: 30
+    },
+    {
+      category: 'Drug',
+      minValue: 0,
+      p10Value: 2,
+      p25Value: 4,
+      medianValue: 7,
+      p75Value: 11,
+      p90Value: 16,
+      maxValue: 28
+    },
+    {
+      category: 'Procedure',
+      minValue: 0,
+      p10Value: 1,
+      p25Value: 2,
+      medianValue: 4,
+      p75Value: 7,
+      p90Value: 10,
+      maxValue: 20
+    }
+  ]
+}
+
+/**
+ * Mock raw API response for /cdmresults/*\/observationPeriod
+ * Shape matches what transformObservationPeriodReport expects.
+ */
+export const mockObservationPeriodReport = {
+  ageAtFirst: [
+    { intervalIndex: 0, countValue: 120 },
+    { intervalIndex: 10, countValue: 340 },
+    { intervalIndex: 20, countValue: 500 },
+    { intervalIndex: 30, countValue: 640 },
+    { intervalIndex: 40, countValue: 780 },
+    { intervalIndex: 50, countValue: 820 },
+    { intervalIndex: 60, countValue: 700 },
+    { intervalIndex: 70, countValue: 420 },
+    { intervalIndex: 80, countValue: 180 }
+  ],
+  observationLength: [
+    { intervalIndex: 0, countValue: 200 },
+    { intervalIndex: 365, countValue: 800 },
+    { intervalIndex: 730, countValue: 1200 },
+    { intervalIndex: 1095, countValue: 900 },
+    { intervalIndex: 1460, countValue: 500 },
+    { intervalIndex: 1825, countValue: 300 }
+  ],
+  cumulativeObservation: [
+    { xLengthOfObservation: 0, yPercentPersons: 100 },
+    { xLengthOfObservation: 365, yPercentPersons: 85 },
+    { xLengthOfObservation: 730, yPercentPersons: 65 },
+    { xLengthOfObservation: 1095, yPercentPersons: 40 },
+    { xLengthOfObservation: 1460, yPercentPersons: 20 },
+    { xLengthOfObservation: 1825, yPercentPersons: 8 }
+  ],
+  observedByMonth: [
+    { monthYear: 201001, countValue: 1200 },
+    { monthYear: 201002, countValue: 1350 },
+    { monthYear: 201003, countValue: 1480 },
+    { monthYear: 201004, countValue: 1520 },
+    { monthYear: 201005, countValue: 1610 }
+  ],
+  ageByGender: [
+    {
+      category: 'MALE',
+      minValue: 0,
+      p10Value: 10,
+      p25Value: 25,
+      medianValue: 45,
+      p75Value: 62,
+      p90Value: 75,
+      maxValue: 95
+    },
+    {
+      category: 'FEMALE',
+      minValue: 0,
+      p10Value: 12,
+      p25Value: 28,
+      medianValue: 48,
+      p75Value: 65,
+      p90Value: 78,
+      maxValue: 98
+    }
+  ],
+  durationByGender: [
+    {
+      category: 'MALE',
+      minValue: 30,
+      p10Value: 180,
+      p25Value: 365,
+      medianValue: 730,
+      p75Value: 1460,
+      p90Value: 2190,
+      maxValue: 3650
+    },
+    {
+      category: 'FEMALE',
+      minValue: 30,
+      p10Value: 200,
+      p25Value: 400,
+      medianValue: 800,
+      p75Value: 1600,
+      p90Value: 2400,
+      maxValue: 4000
+    }
+  ],
+  durationByAgeDecile: [
+    {
+      category: '0-9',
+      minValue: 10,
+      p10Value: 90,
+      p25Value: 180,
+      medianValue: 365,
+      p75Value: 730,
+      p90Value: 1095,
+      maxValue: 1825
+    },
+    {
+      category: '10-19',
+      minValue: 30,
+      p10Value: 180,
+      p25Value: 365,
+      medianValue: 730,
+      p75Value: 1460,
+      p90Value: 2190,
+      maxValue: 3285
+    },
+    {
+      category: '20-29',
+      minValue: 60,
+      p10Value: 200,
+      p25Value: 400,
+      medianValue: 800,
+      p75Value: 1600,
+      p90Value: 2400,
+      maxValue: 3650
+    }
+  ],
+  personsWithContinuousObservationsByYear: [
+    { intervalIndex: 2010, countValue: 1200 },
+    { intervalIndex: 2011, countValue: 1350 },
+    { intervalIndex: 2012, countValue: 1420 },
+    { intervalIndex: 2013, countValue: 1500 },
+    { intervalIndex: 2014, countValue: 1580 }
+  ],
+  observationPeriodsPerPerson: [
+    { conceptName: '1', countValue: 8500 },
+    { conceptName: '2', countValue: 1200 },
+    { conceptName: '3', countValue: 250 },
+    { conceptName: '4+', countValue: 50 }
+  ]
+}
+
+/**
+ * Mock raw API response for /cdmresults/*\/death
+ * Shape matches what transformDeathReport expects.
+ */
+export const mockDeathReport = {
+  ageAtDeath: [
+    {
+      category: 'MALE',
+      minValue: 20,
+      p10Value: 55,
+      p25Value: 65,
+      medianValue: 75,
+      p75Value: 82,
+      p90Value: 88,
+      maxValue: 100
+    },
+    {
+      category: 'FEMALE',
+      minValue: 25,
+      p10Value: 60,
+      p25Value: 70,
+      medianValue: 80,
+      p75Value: 86,
+      p90Value: 92,
+      maxValue: 105
+    }
+  ],
+  deathByType: [
+    { conceptName: 'EHR record patient status "Deceased"', countValue: 500 },
+    { conceptName: 'Death Certificate', countValue: 320 },
+    { conceptName: 'Other', countValue: 90 }
+  ],
+  prevalenceByMonth: [
+    { xCalendarMonth: 201001, yPrevalence1000Pp: 2.5 },
+    { xCalendarMonth: 201002, yPrevalence1000Pp: 2.8 },
+    { xCalendarMonth: 201003, yPrevalence1000Pp: 3.1 },
+    { xCalendarMonth: 201004, yPrevalence1000Pp: 2.9 },
+    { xCalendarMonth: 201005, yPrevalence1000Pp: 3.2 }
+  ],
+  prevalenceByGenderAgeYear: [
+    { trellisName: '0-9', seriesName: 'MALE', xCalendarYear: 2010, yPrevalence1000Pp: 0.5 },
+    { trellisName: '0-9', seriesName: 'MALE', xCalendarYear: 2011, yPrevalence1000Pp: 0.6 },
+    { trellisName: '0-9', seriesName: 'FEMALE', xCalendarYear: 2010, yPrevalence1000Pp: 0.4 },
+    { trellisName: '0-9', seriesName: 'FEMALE', xCalendarYear: 2011, yPrevalence1000Pp: 0.5 },
+    { trellisName: '50-59', seriesName: 'MALE', xCalendarYear: 2010, yPrevalence1000Pp: 5.5 },
+    { trellisName: '50-59', seriesName: 'MALE', xCalendarYear: 2011, yPrevalence1000Pp: 5.8 },
+    { trellisName: '50-59', seriesName: 'FEMALE', xCalendarYear: 2010, yPrevalence1000Pp: 4.1 },
+    { trellisName: '50-59', seriesName: 'FEMALE', xCalendarYear: 2011, yPrevalence1000Pp: 4.3 },
+    { trellisName: '80+', seriesName: 'MALE', xCalendarYear: 2010, yPrevalence1000Pp: 85.2 },
+    { trellisName: '80+', seriesName: 'MALE', xCalendarYear: 2011, yPrevalence1000Pp: 88.0 },
+    { trellisName: '80+', seriesName: 'FEMALE', xCalendarYear: 2010, yPrevalence1000Pp: 78.4 },
+    { trellisName: '80+', seriesName: 'FEMALE', xCalendarYear: 2011, yPrevalence1000Pp: 81.5 }
+  ]
+}
+
+/**
+ * Convenience helper — alias for setupDatasourcesMocks.
+ * setupDatasourcesMocks already mocks the three chart-parity endpoints
+ * (datadensity, observationPeriod, death) with realistic payloads.
+ */
+export async function setupChartParityMocks(page: Page) {
+  await setupDatasourcesMocks(page)
 }
 
 /**
