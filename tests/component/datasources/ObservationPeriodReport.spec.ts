@@ -51,4 +51,34 @@ describe('ObservationPeriodReport', () => {
     expect(wrapper.find('[data-testid=age-by-gender-chart]').exists()).toBe(false)
     expect(wrapper.find('[data-testid=duration-by-age-decile-chart]').exists()).toBe(false)
   })
+
+  it('renders empty state when every section is empty', () => {
+    const wrapper = mount(ObservationPeriodReport, {
+      global: { plugins: [vuetify, createPinia()] },
+      props: {
+        data: {
+          ageAtFirst: { categories: [], values: [] },
+          observationLength: { categories: [], values: [] },
+          cumulativeObservation: { categories: [], series: [] },
+          observedByMonth: { categories: [], series: [] },
+          ageByGender: [],
+          durationByGender: [],
+          durationByAgeDecile: [],
+          personsWithContinuousObsByYear: { categories: [], values: [] },
+          observationPeriodsPerPerson: []
+        }
+      }
+    })
+
+    expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(true)
+  })
+
+  it('does not render empty state when at least one section has data', () => {
+    const wrapper = mount(ObservationPeriodReport, {
+      global: { plugins: [vuetify, createPinia()] },
+      props: { data: makeData() }
+    })
+
+    expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(false)
+  })
 })

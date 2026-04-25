@@ -41,4 +41,30 @@ describe('DeathReport', () => {
 
     expect(wrapper.find('[data-testid=prevalence-by-gender-age-year-chart]').exists()).toBe(false)
   })
+
+  it('renders empty state when every section is empty', () => {
+    const wrapper = mount(DeathReport, {
+      global: { plugins: [vuetify, createPinia()] },
+      props: {
+        data: {
+          ageAtDeath: [],
+          deathByType: [],
+          prevalenceByMonth: { categories: [], series: [{ name: 'Prevalence per 1000', data: [] }] },
+          prevalenceByGenderAgeYear: undefined
+        }
+      }
+    })
+
+    expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid=prevalence-by-month-chart]').exists()).toBe(false)
+  })
+
+  it('does not render empty state when at least one section has data', () => {
+    const wrapper = mount(DeathReport, {
+      global: { plugins: [vuetify, createPinia()] },
+      props: { data: makeData() }
+    })
+
+    expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(false)
+  })
 })

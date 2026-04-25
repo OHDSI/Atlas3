@@ -1,5 +1,11 @@
 <template>
   <div class="observation-period-report">
+    <EmptyReportState
+      v-if="!hasData"
+      :title="t('dataSources.observationPeriodReport.noDataTitle', 'No observation period data available').value"
+      :subtitle="t('dataSources.observationPeriodReport.noDataSubtitle', 'This data source has no observation period records to report on.').value"
+    />
+
     <!-- Age at First Observation -->
     <ChartSection
       v-if="data.ageAtFirst"
@@ -115,9 +121,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ObservationPeriodReport } from '@/models/datasource.types'
 import ChartSection from './shared/ChartSection.vue'
+import EmptyReportState from './shared/EmptyReportState.vue'
 import BarChart from '@/components/reports/charts/BarChart.vue'
 import BoxPlotChart from '@/components/reports/charts/BoxPlotChart.vue'
 import PieChart from '@/components/reports/charts/PieChart.vue'
@@ -125,9 +133,24 @@ import MultiLineChart from './charts/MultiLineChart.vue'
 
 const { t } = useI18n()
 
-defineProps<{
+const props = defineProps<{
   data: ObservationPeriodReport
 }>()
+
+const hasData = computed(() => {
+  const d = props.data
+  return (
+    (d.ageAtFirst?.values?.length ?? 0) > 0 ||
+    (d.observationLength?.values?.length ?? 0) > 0 ||
+    (d.cumulativeObservation?.series?.length ?? 0) > 0 ||
+    (d.observedByMonth?.series?.length ?? 0) > 0 ||
+    (d.ageByGender?.length ?? 0) > 0 ||
+    (d.durationByGender?.length ?? 0) > 0 ||
+    (d.durationByAgeDecile?.length ?? 0) > 0 ||
+    (d.personsWithContinuousObsByYear?.values?.length ?? 0) > 0 ||
+    (d.observationPeriodsPerPerson?.length ?? 0) > 0
+  )
+})
 </script>
 
 <style scoped>

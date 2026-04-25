@@ -1,5 +1,11 @@
 <template>
   <div class="death-report">
+    <EmptyReportState
+      v-if="!hasData"
+      :title="t('dataSources.deathReport.noDataTitle', 'No death data available').value"
+      :subtitle="t('dataSources.deathReport.noDataSubtitle', 'This data source has no death records to report on.').value"
+    />
+
     <!-- Age at Death by Gender -->
     <v-row v-if="data.ageAtDeath && data.ageAtDeath.length > 0">
       <v-col cols="12">
@@ -27,7 +33,7 @@
     </v-row>
 
     <!-- Prevalence by Month -->
-    <v-row v-if="data.prevalenceByMonth">
+    <v-row v-if="data.prevalenceByMonth && data.prevalenceByMonth.categories.length > 0">
       <v-col cols="12">
         <ChartSection :title="t('dataSources.deathReport.deathPrevalenceByMonth', 'Death Prevalence by Month').value">
           <MultiLineChart
@@ -56,9 +62,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { DeathReport } from '@/models/datasource.types'
 import ChartSection from './shared/ChartSection.vue'
+import EmptyReportState from './shared/EmptyReportState.vue'
 import PieChart from '@/components/reports/charts/PieChart.vue'
 import BoxPlotChart from '@/components/reports/charts/BoxPlotChart.vue'
 import TrellisChart from '@/components/reports/charts/TrellisChart.vue'
@@ -66,9 +74,19 @@ import MultiLineChart from './charts/MultiLineChart.vue'
 
 const { t } = useI18n()
 
-defineProps<{
+const props = defineProps<{
   data: DeathReport
 }>()
+
+const hasData = computed(() => {
+  const d = props.data
+  return (
+    (d.ageAtDeath?.length ?? 0) > 0 ||
+    (d.deathByType?.length ?? 0) > 0 ||
+    (d.prevalenceByMonth?.categories?.length ?? 0) > 0 ||
+    (d.prevalenceByGenderAgeYear?.series?.length ?? 0) > 0
+  )
+})
 </script>
 
 <style scoped>
