@@ -2,6 +2,11 @@ import type { BackoffConfig } from '@/models/auth.types'
 import { tokenManager } from './tokenManager'
 import { logger } from '@/utils/logger'
 
+// setTimeout uses a 32-bit signed int for its delay; values above this
+// silently overflow and fire immediately. Skip scheduling refresh for tokens
+// that expire beyond this horizon (~24.8 days from now).
+const MAX_TIMEOUT_MS = 2_147_483_647
+
 export class RefreshManager {
   private readonly defaultConfig: BackoffConfig = {
     initialDelay: 1000,
@@ -47,6 +52,11 @@ export class RefreshManager {
     const timeUntilRefresh = this.calculateRefreshDelay(token, thresholdMs)
 
     if (timeUntilRefresh <= 0) {
+      return null
+    }
+
+    if (timeUntilRefresh > MAX_TIMEOUT_MS) {
+      logger.debug('RefreshManager', `Token refresh delay exceeds setTimeout limit (${(timeUntilRefresh / 86400000).toFixed(1)} days), skipping schedule`)
       return null
     }
 
