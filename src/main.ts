@@ -29,7 +29,8 @@ import {
   BarChart,
   PieChart,
   LineChart,
-  TreemapChart
+  TreemapChart,
+  SunburstChart
 } from 'echarts/charts'
 
 // Import ECharts components
@@ -52,6 +53,7 @@ use([
   PieChart,
   LineChart,
   TreemapChart,
+  SunburstChart,
   TitleComponent,
   TooltipComponent,
   GridComponent,
