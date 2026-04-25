@@ -29,6 +29,35 @@
               >
                 {{ t('common.import', 'Import') }}
               </v-btn>
+
+              <v-spacer />
+
+              <v-btn-toggle
+                v-model="viewMode"
+                mandatory
+                density="compact"
+                variant="outlined"
+                divided
+                class="cohorts-view__view-toggle"
+                data-testid="cohorts-view-toggle"
+              >
+                <v-btn
+                  value="tile"
+                  size="small"
+                  :aria-label="t('common.tileView', 'Tile view').value"
+                  data-testid="cohorts-view-toggle-tile"
+                >
+                  <v-icon>mdi-view-grid</v-icon>
+                </v-btn>
+                <v-btn
+                  value="table"
+                  size="small"
+                  :aria-label="t('common.tableView', 'Table view').value"
+                  data-testid="cohorts-view-toggle-table"
+                >
+                  <v-icon>mdi-view-list</v-icon>
+                </v-btn>
+              </v-btn-toggle>
             </div>
           </v-col>
         </v-row>
@@ -64,7 +93,22 @@
               </div>
             </div>
 
+            <cohort-table
+              v-if="viewMode === 'table'"
+              :cohorts="paginatedCohorts"
+              :loading="loading"
+              :error="error"
+              :search-query="searchQuery"
+              :selected-tags="filters.selectedTags"
+              @retry="fetchCohorts"
+              @create-cohort="handleCreateCohort"
+              @generate="handleGenerate"
+              @delete="handleDeleteClick"
+              @tag-click="handleTagClick"
+              @show-info="handleShowInfo"
+            />
             <cohort-grid
+              v-else
               :cohorts="paginatedCohorts"
               :loading="loading"
               :error="error"
@@ -277,7 +321,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
@@ -285,6 +329,7 @@ import { usePagination } from '@/composables/usePagination'
 import { deleteCohort, getCohortDefinition, getCohortPrintFriendly } from '@/services/webapi'
 import { logger } from '@/utils/logger'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
+import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import CohortFilters from '@/components/cohort/CohortFilters.vue'
 import GenerationPanel from '@/components/cohort/GenerationPanel.vue'
@@ -292,6 +337,19 @@ import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 const router = useRouter()
 const { t } = useI18n()
+
+// View mode (tile vs table) — persisted to localStorage so the choice
+// survives across navigations and reloads.
+const VIEW_MODE_KEY = 'cohorts-view-mode'
+type CohortsViewMode = 'tile' | 'table'
+const persistedViewMode = (typeof localStorage !== 'undefined'
+  ? localStorage.getItem(VIEW_MODE_KEY)
+  : null) as CohortsViewMode | null
+const viewMode = ref<CohortsViewMode>(persistedViewMode === 'table' ? 'table' : 'tile')
+watch(viewMode, (mode) => {
+  if (typeof localStorage !== 'undefined') localStorage.setItem(VIEW_MODE_KEY, mode)
+})
+
 const showImportDialog = ref(false)
 const showDeleteDialog = ref(false)
 const showGenerationPanel = ref(false)

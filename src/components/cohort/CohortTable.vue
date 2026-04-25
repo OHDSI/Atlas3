@@ -1,0 +1,291 @@
+<template>
+  <div class="cohort-table">
+    <!-- Loading -->
+    <div
+      v-if="loading"
+      class="cohort-table__loading"
+    >
+      <v-skeleton-loader type="table" />
+    </div>
+
+    <!-- Error -->
+    <v-alert
+      v-else-if="error"
+      type="error"
+      variant="tonal"
+      closable
+      class="cohort-table__alert"
+    >
+      <div class="cohort-table__error">
+        <div>{{ error.message || t('common.errorLoadingCohorts', 'Failed to load cohorts').value }}</div>
+        <v-btn
+          color="error"
+          variant="elevated"
+          class="mt-3"
+          @click="$emit('retry')"
+        >
+          <v-icon start>
+            mdi-refresh
+          </v-icon>
+          {{ t('common.refresh', 'Retry').value }}
+        </v-btn>
+      </div>
+    </v-alert>
+
+    <!-- Empty -->
+    <div
+      v-else-if="cohorts.length === 0"
+      class="cohort-table__empty"
+    >
+      <v-icon
+        size="80"
+        color="grey-lighten-1"
+      >
+        mdi-folder-open-outline
+      </v-icon>
+      <h2 class="cohort-table__empty-title">
+        {{ t('common.noData', 'No cohorts found').value }}
+      </h2>
+      <p
+        v-if="emptyMessage"
+        class="cohort-table__empty-subtitle"
+      >
+        {{ emptyMessage }}
+      </p>
+      <v-btn
+        color="primary"
+        variant="elevated"
+        size="large"
+        class="mt-4"
+        @click="$emit('create-cohort')"
+      >
+        <v-icon start>
+          mdi-plus
+        </v-icon>
+        {{ t('cohortDefinitions.newDefinition', 'New Cohort').value }}
+      </v-btn>
+    </div>
+
+    <!-- Table -->
+    <v-table
+      v-else
+      density="comfortable"
+      hover
+      class="cohort-table__grid"
+      data-testid="cohort-table"
+    >
+      <thead>
+        <tr>
+          <th class="cohort-table__col-id">{{ t('columns.id', 'ID').value }}</th>
+          <th class="cohort-table__col-name">{{ t('columns.name', 'Name').value }}</th>
+          <th class="cohort-table__col-tags">{{ t('common.tags', 'Tags').value }}</th>
+          <th class="cohort-table__col-author">{{ t('columns.author', 'Author').value }}</th>
+          <th class="cohort-table__col-date">{{ t('columns.created', 'Created').value }}</th>
+          <th class="cohort-table__col-date">{{ t('columns.modified', 'Modified').value }}</th>
+          <th class="cohort-table__col-actions" />
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="cohort in cohorts"
+          :key="cohort.id"
+          class="cohort-table__row"
+          data-testid="cohort-table-row"
+          @click="openCohort(cohort)"
+        >
+          <td class="cohort-table__col-id">{{ cohort.id }}</td>
+          <td class="cohort-table__col-name">
+            <div class="cohort-table__name">{{ cohort.name }}</div>
+            <div
+              v-if="cohort.description"
+              class="cohort-table__description"
+              :title="cohort.description"
+            >
+              {{ cohort.description }}
+            </div>
+          </td>
+          <td class="cohort-table__col-tags">
+            <div
+              v-if="cohort.tags && cohort.tags.length > 0"
+              class="cohort-table__tags"
+            >
+              <v-chip
+                v-for="tag in cohort.tags"
+                :key="tag.id || tag.name"
+                size="x-small"
+                :color="(selectedTags ?? []).includes(tag.name) ? 'primary' : 'default'"
+                :variant="(selectedTags ?? []).includes(tag.name) ? 'elevated' : 'tonal'"
+                @click.stop="$emit('tag-click', tag.name)"
+              >
+                {{ tag.name }}
+              </v-chip>
+            </div>
+          </td>
+          <td class="cohort-table__col-author">{{ formatUser(cohort.createdBy) }}</td>
+          <td class="cohort-table__col-date">{{ formatDate(cohort.createdDate) }}</td>
+          <td class="cohort-table__col-date">{{ formatDate(cohort.modifiedDate) }}</td>
+          <td class="cohort-table__col-actions">
+            <v-btn
+              icon="mdi-information-outline"
+              size="small"
+              variant="text"
+              :aria-label="t('common.cohortInformation', 'Cohort Information').value"
+              data-testid="cohort-table-info"
+              @click.stop="$emit('show-info', cohort)"
+            />
+            <v-btn
+              icon="mdi-account-multiple"
+              size="small"
+              variant="text"
+              :aria-label="t('components.analysisExecution.buttons.generate', 'Generate').value"
+              data-testid="cohort-table-generate"
+              @click.stop="$emit('generate', cohort)"
+            />
+            <v-btn
+              icon="mdi-delete-outline"
+              size="small"
+              variant="text"
+              :aria-label="t('common.delete', 'Delete').value"
+              data-testid="cohort-table-delete"
+              @click.stop="$emit('delete', cohort)"
+            />
+          </td>
+        </tr>
+      </tbody>
+    </v-table>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useI18n } from '@/composables/useI18n'
+import type { CohortDefinitionSummary } from '@/models/webapi.types'
+
+const { t, locale } = useI18n()
+const router = useRouter()
+
+interface Props {
+  cohorts: CohortDefinitionSummary[]
+  loading?: boolean
+  error?: Error | null
+  searchQuery?: string
+  selectedTags?: string[]
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  loading: false,
+  error: null,
+  searchQuery: '',
+  selectedTags: () => [],
+})
+
+defineEmits<{
+  retry: []
+  'create-cohort': []
+  generate: [cohort: CohortDefinitionSummary]
+  delete: [cohort: CohortDefinitionSummary]
+  'tag-click': [tagName: string]
+  'show-info': [cohort: CohortDefinitionSummary]
+}>()
+
+const emptyMessage = computed(() => {
+  if (props.searchQuery && props.selectedTags.length > 0) {
+    return `No cohorts match "${props.searchQuery}" with the selected tags.`
+  }
+  if (props.searchQuery) return `No cohorts match "${props.searchQuery}".`
+  if (props.selectedTags.length > 0) return 'No cohorts match the selected tags.'
+  return 'Get started by creating your first cohort.'
+})
+
+const unknownLabel = t('common.anonymous', 'Unknown')
+const naLabel = t('common.noData', 'N/A')
+
+function formatUser(userValue: unknown): string {
+  if (!userValue) return unknownLabel.value
+  if (typeof userValue === 'string') return userValue
+  if (typeof userValue === 'object' && userValue !== null) {
+    const u = userValue as Record<string, unknown>
+    return (u.name || u.login || u.id || unknownLabel.value) as string
+  }
+  return unknownLabel.value
+}
+
+function formatDate(dateValue: string | number | null | undefined): string {
+  if (!dateValue) return naLabel.value
+  const date = new Date(dateValue)
+  if (isNaN(date.getTime())) return naLabel.value
+  return date.toLocaleDateString(locale.value, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+function openCohort(cohort: CohortDefinitionSummary) {
+  router.push(`/cohorts/${cohort.id}`)
+}
+</script>
+
+<style scoped>
+.cohort-table__grid {
+  background: rgb(var(--v-theme-surface));
+}
+.cohort-table__row {
+  cursor: pointer;
+}
+.cohort-table__col-id {
+  width: 64px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(0, 0, 0, 0.54);
+}
+.cohort-table__col-name {
+  min-width: 240px;
+}
+.cohort-table__name {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+}
+.cohort-table__description {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 480px;
+}
+.cohort-table__col-tags {
+  min-width: 160px;
+  max-width: 280px;
+}
+.cohort-table__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.cohort-table__col-author { width: 120px; }
+.cohort-table__col-date { width: 120px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cohort-table__col-actions {
+  width: 140px;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.cohort-table__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 64px 24px;
+}
+.cohort-table__empty-title {
+  font-size: 1.25rem;
+  margin-top: 16px;
+  color: rgba(0, 0, 0, 0.74);
+}
+.cohort-table__empty-subtitle {
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 4px;
+}
+.cohort-table__error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+</style>

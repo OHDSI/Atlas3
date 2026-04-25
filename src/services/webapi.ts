@@ -437,6 +437,158 @@ export async function validateCohortDefinition(
 }
 
 // ============================================================================
+// Cohort Sample Endpoints (WebAPI 3.0 /cohortsample/...)
+// ============================================================================
+
+import {
+  CohortSampleSchema,
+  CohortSampleListSchema,
+  type CohortSample,
+  type CohortSampleList,
+  type SampleParameters,
+} from '@/models/cohort-sample.types'
+
+/**
+ * List samples for a (cohort, source) pair.
+ * Endpoint: GET /cohortsample/{cohortDefinitionId}/{sourceKey}
+ */
+export async function listCohortSamples(
+  cohortDefinitionId: number,
+  sourceKey: string
+): Promise<CohortSampleList | null> {
+  try {
+    const data = await fetchJSON<unknown>(`/cohortsample/${cohortDefinitionId}/${sourceKey}`)
+    const parsed = CohortSampleListSchema.safeParse(data)
+    if (!parsed.success) {
+      logger.error('WebAPI', 'listCohortSamples validation error', parsed.error)
+      return null
+    }
+    return parsed.data
+  } catch (error) {
+    logger.error('WebAPI', `Failed to list cohort samples for ${cohortDefinitionId}/${sourceKey}`, error)
+    return null
+  }
+}
+
+/**
+ * Whether the given cohort has any samples on any source.
+ * Endpoint: GET /cohortsample/has-samples/{cohortDefinitionId}
+ */
+export async function hasCohortSamples(cohortDefinitionId: number): Promise<boolean> {
+  try {
+    const data = await fetchJSON<unknown>(`/cohortsample/has-samples/${cohortDefinitionId}`)
+    return Boolean(data)
+  } catch (error) {
+    logger.error('WebAPI', `hasCohortSamples failed for ${cohortDefinitionId}`, error)
+    return false
+  }
+}
+
+/**
+ * Fetch a single sample including its person elements (via `?fields=elements`).
+ * Endpoint: GET /cohortsample/{cohortDefinitionId}/{sourceKey}/{sampleId}
+ */
+export async function getCohortSample(
+  cohortDefinitionId: number,
+  sourceKey: string,
+  sampleId: number,
+  options: { withElements?: boolean } = {}
+): Promise<CohortSample | null> {
+  try {
+    const url = options.withElements
+      ? `/cohortsample/${cohortDefinitionId}/${sourceKey}/${sampleId}?fields=elements`
+      : `/cohortsample/${cohortDefinitionId}/${sourceKey}/${sampleId}`
+    const data = await fetchJSON<unknown>(url)
+    const parsed = CohortSampleSchema.safeParse(data)
+    if (!parsed.success) {
+      logger.error('WebAPI', 'getCohortSample validation error', parsed.error)
+      return null
+    }
+    return parsed.data
+  } catch (error) {
+    logger.error('WebAPI', `getCohortSample failed for ${cohortDefinitionId}/${sourceKey}/${sampleId}`, error)
+    return null
+  }
+}
+
+/**
+ * Create a new sample.
+ * Endpoint: POST /cohortsample/{cohortDefinitionId}/{sourceKey}
+ */
+export async function createCohortSample(
+  cohortDefinitionId: number,
+  sourceKey: string,
+  parameters: SampleParameters
+): Promise<CohortSample | null> {
+  try {
+    const data = await fetchJSON<unknown>(
+      `/cohortsample/${cohortDefinitionId}/${sourceKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parameters),
+      }
+    )
+    const parsed = CohortSampleSchema.safeParse(data)
+    if (!parsed.success) {
+      logger.error('WebAPI', 'createCohortSample validation error', parsed.error)
+      return null
+    }
+    return parsed.data
+  } catch (error) {
+    logger.error('WebAPI', `createCohortSample failed for ${cohortDefinitionId}/${sourceKey}`, error)
+    throw error instanceof Error ? error : new Error('Failed to create cohort sample')
+  }
+}
+
+/**
+ * Refresh (regenerate persons in) an existing sample.
+ * Endpoint: POST /cohortsample/{cohortDefinitionId}/{sourceKey}/{sampleId}/refresh
+ */
+export async function refreshCohortSample(
+  cohortDefinitionId: number,
+  sourceKey: string,
+  sampleId: number
+): Promise<CohortSample | null> {
+  try {
+    const data = await fetchJSON<unknown>(
+      `/cohortsample/${cohortDefinitionId}/${sourceKey}/${sampleId}/refresh`,
+      { method: 'POST' }
+    )
+    const parsed = CohortSampleSchema.safeParse(data)
+    if (!parsed.success) {
+      logger.error('WebAPI', 'refreshCohortSample validation error', parsed.error)
+      return null
+    }
+    return parsed.data
+  } catch (error) {
+    logger.error('WebAPI', `refreshCohortSample failed for ${cohortDefinitionId}/${sourceKey}/${sampleId}`, error)
+    return null
+  }
+}
+
+/**
+ * Delete a single sample.
+ * Endpoint: DELETE /cohortsample/{cohortDefinitionId}/{sourceKey}/{sampleId}
+ */
+export async function deleteCohortSample(
+  cohortDefinitionId: number,
+  sourceKey: string,
+  sampleId: number
+): Promise<boolean> {
+  try {
+    await fetchJSON<unknown>(
+      `/cohortsample/${cohortDefinitionId}/${sourceKey}/${sampleId}`,
+      { method: 'DELETE' }
+    )
+    return true
+  } catch (error) {
+    logger.error('WebAPI', `deleteCohortSample failed for ${cohortDefinitionId}/${sourceKey}/${sampleId}`, error)
+    return false
+  }
+}
+
+// ============================================================================
 // Report Endpoints
 // ============================================================================
 
