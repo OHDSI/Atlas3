@@ -76,12 +76,24 @@
     >
       <thead>
         <tr>
-          <th class="cohort-table__col-id">{{ t('columns.id', 'ID').value }}</th>
-          <th class="cohort-table__col-name">{{ t('columns.name', 'Name').value }}</th>
-          <th class="cohort-table__col-tags">{{ t('common.tags', 'Tags').value }}</th>
-          <th class="cohort-table__col-author">{{ t('columns.author', 'Author').value }}</th>
-          <th class="cohort-table__col-date">{{ t('columns.created', 'Created').value }}</th>
-          <th class="cohort-table__col-date">{{ t('columns.modified', 'Modified').value }}</th>
+          <th class="cohort-table__col-id">
+            {{ t('columns.id', 'ID').value }}
+          </th>
+          <th class="cohort-table__col-name">
+            {{ t('columns.name', 'Name').value }}
+          </th>
+          <th class="cohort-table__col-tags">
+            {{ t('common.tags', 'Tags').value }}
+          </th>
+          <th class="cohort-table__col-author">
+            {{ t('columns.author', 'Author').value }}
+          </th>
+          <th class="cohort-table__col-date">
+            {{ t('columns.created', 'Created').value }}
+          </th>
+          <th class="cohort-table__col-date">
+            {{ t('columns.modified', 'Modified').value }}
+          </th>
           <th class="cohort-table__col-actions" />
         </tr>
       </thead>
@@ -93,9 +105,13 @@
           data-testid="cohort-table-row"
           @click="openCohort(cohort)"
         >
-          <td class="cohort-table__col-id">{{ cohort.id }}</td>
+          <td class="cohort-table__col-id">
+            {{ cohort.id }}
+          </td>
           <td class="cohort-table__col-name">
-            <div class="cohort-table__name">{{ cohort.name }}</div>
+            <div class="cohort-table__name">
+              {{ cohort.name }}
+            </div>
             <div
               v-if="cohort.description"
               class="cohort-table__description"
@@ -121,9 +137,15 @@
               </v-chip>
             </div>
           </td>
-          <td class="cohort-table__col-author">{{ formatUser(cohort.createdBy) }}</td>
-          <td class="cohort-table__col-date">{{ formatDate(cohort.createdDate) }}</td>
-          <td class="cohort-table__col-date">{{ formatDate(cohort.modifiedDate) }}</td>
+          <td class="cohort-table__col-author">
+            {{ formatUser(cohort.createdBy) }}
+          </td>
+          <td class="cohort-table__col-date">
+            {{ formatDate(cohort.createdDate) }}
+          </td>
+          <td class="cohort-table__col-date">
+            {{ formatDate(cohort.modifiedDate) }}
+          </td>
           <td class="cohort-table__col-actions">
             <v-btn
               icon="mdi-information-outline"

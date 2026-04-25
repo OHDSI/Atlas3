@@ -15,11 +15,15 @@
     <thead>
       <tr>
         <th>Name</th>
-        <th class="text-right">Persons</th>
+        <th class="text-right">
+          Persons
+        </th>
         <th>Selection criteria</th>
         <th>Author</th>
         <th>Created</th>
-        <th class="text-right">Actions</th>
+        <th class="text-right">
+          Actions
+        </th>
       </tr>
     </thead>
     <tbody>
@@ -40,8 +44,12 @@
             {{ sample.name }}
           </a>
         </td>
-        <td class="text-right">{{ formatCount(sample.size) }}</td>
-        <td class="cohort-samples-list__criteria">{{ summarizeCriteria(sample) }}</td>
+        <td class="text-right">
+          {{ formatCount(sample.size) }}
+        </td>
+        <td class="cohort-samples-list__criteria">
+          {{ summarizeCriteria(sample) }}
+        </td>
         <td>{{ formatUser(sample.createdBy) }}</td>
         <td>{{ formatDate(sample.createdDate) }}</td>
         <td class="text-right">

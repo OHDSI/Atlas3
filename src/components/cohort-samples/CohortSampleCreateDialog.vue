@@ -6,7 +6,9 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">mdi-shuffle-variant</v-icon>
+        <v-icon class="mr-2">
+          mdi-shuffle-variant
+        </v-icon>
         New cohort sample
       </v-card-title>
       <v-card-text>
@@ -32,7 +34,9 @@
           data-testid="sample-size"
         />
 
-        <div class="text-subtitle-2 mt-4 mb-1">Gender (optional)</div>
+        <div class="text-subtitle-2 mt-4 mb-1">
+          Gender (optional)
+        </div>
         <div class="d-flex flex-wrap ga-3">
           <v-checkbox
             v-model="genderMale"
@@ -57,7 +61,9 @@
           />
         </div>
 
-        <div class="text-subtitle-2 mt-4 mb-1">Age (optional)</div>
+        <div class="text-subtitle-2 mt-4 mb-1">
+          Age (optional)
+        </div>
         <div class="d-flex ga-2 align-start">
           <v-select
             v-model="ageMode"
@@ -118,8 +124,16 @@
           class="mt-3"
           data-testid="sample-form-errors"
         >
-          <ul class="ma-0 pa-0" style="list-style: none">
-            <li v-for="(err, i) in errors" :key="i">{{ err }}</li>
+          <ul
+            class="ma-0 pa-0"
+            style="list-style: none"
+          >
+            <li
+              v-for="(err, i) in errors"
+              :key="i"
+            >
+              {{ err }}
+            </li>
           </ul>
         </v-alert>
       </v-card-text>

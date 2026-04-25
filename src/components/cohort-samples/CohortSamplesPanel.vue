@@ -5,7 +5,9 @@
   >
     <div class="cohort-samples-panel__header">
       <div>
-        <div class="text-subtitle-1 font-weight-medium">Samples</div>
+        <div class="text-subtitle-1 font-weight-medium">
+          Samples
+        </div>
         <div class="text-caption text-grey-darken-1">
           Random selections of persons drawn from the generated cohort, optionally filtered by age and gender.
         </div>
