@@ -2,7 +2,9 @@
   <div class="cohort-sample-detail">
     <div class="cohort-sample-detail__header">
       <div>
-        <div class="text-subtitle-1 font-weight-medium">{{ sample.name }}</div>
+        <div class="text-subtitle-1 font-weight-medium">
+          {{ sample.name }}
+        </div>
         <div class="text-caption text-grey-darken-1">
           {{ formatCount(sample.size) }} persons · created {{ formatDate(sample.createdDate) }}
         </div>
@@ -24,7 +26,9 @@
         <tr>
           <th>Person ID</th>
           <th>Gender</th>
-          <th class="text-right">Age at index</th>
+          <th class="text-right">
+            Age at index
+          </th>
           <th
             v-if="anyRecordCount"
             class="text-right"
@@ -41,7 +45,9 @@
         >
           <td>{{ el.personId }}</td>
           <td>{{ formatGender(el.genderConceptId) }}</td>
-          <td class="text-right">{{ el.age }}</td>
+          <td class="text-right">
+            {{ el.age }}
+          </td>
           <td
             v-if="anyRecordCount"
             class="text-right"

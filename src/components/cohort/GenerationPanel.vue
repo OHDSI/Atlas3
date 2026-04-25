@@ -79,16 +79,29 @@
                   color="primary"
                   class="generation-layout__tabs"
                 >
-                  <v-tab value="reports" data-testid="generation-tab-reports">
-                    <v-icon class="mr-2">mdi-chart-box</v-icon>
+                  <v-tab
+                    value="reports"
+                    data-testid="generation-tab-reports"
+                  >
+                    <v-icon class="mr-2">
+                      mdi-chart-box
+                    </v-icon>
                     Reports
                   </v-tab>
-                  <v-tab value="samples" data-testid="generation-tab-samples">
-                    <v-icon class="mr-2">mdi-shuffle-variant</v-icon>
+                  <v-tab
+                    value="samples"
+                    data-testid="generation-tab-samples"
+                  >
+                    <v-icon class="mr-2">
+                      mdi-shuffle-variant
+                    </v-icon>
                     Samples
                   </v-tab>
                 </v-tabs>
-                <v-window v-model="activeTab" class="mt-2">
+                <v-window
+                  v-model="activeTab"
+                  class="mt-2"
+                >
                   <v-window-item value="reports">
                     <report-panel
                       :cohort-id="cohortId ?? 0"
@@ -98,7 +111,10 @@
                     />
                   </v-window-item>
                   <v-window-item value="samples">
-                    <v-card flat class="pa-4">
+                    <v-card
+                      flat
+                      class="pa-4"
+                    >
                       <cohort-samples-panel
                         v-if="cohortId"
                         :cohort-id="cohortId"
