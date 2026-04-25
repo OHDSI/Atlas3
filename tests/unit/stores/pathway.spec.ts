@@ -120,3 +120,53 @@ describe('pathway store — auto-save', () => {
     expect(sessionStorage.getItem('atlas3_pathway_draft')).toBeNull()
   })
 })
+
+describe('pathway store — validation', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('validatePathway flags empty name as error', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    await s.validatePathway()
+    expect(s.validationErrors.some(e => e.field === 'name' && e.severity === 'error'))
+      .toBe(true)
+  })
+
+  it('validatePathway flags missing target cohorts', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'Has name' })
+    await s.validatePathway()
+    expect(s.validationErrors.some(e => e.field === 'targetCohorts')).toBe(true)
+  })
+
+  it('validatePathway flags missing event cohorts', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'Has name' })
+    s.addTargetCohort({ id: 1, name: 'T' })
+    await s.validatePathway()
+    expect(s.validationErrors.some(e => e.field === 'eventCohorts')).toBe(true)
+  })
+
+  it('validatePathway passes for a complete design', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'Complete' })
+    s.addTargetCohort({ id: 1, name: 'T' })
+    s.addEventCohort({ id: 2, name: 'E' })
+    await s.validatePathway()
+    expect(s.hasErrors).toBe(false)
+  })
+
+  it('canSave is false when not dirty', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'X' })
+    s.addTargetCohort({ id: 1, name: 'T' })
+    s.addEventCohort({ id: 2, name: 'E' })
+    s.markClean()
+    await s.validatePathway()
+    expect(s.canSave).toBe(false)
+  })
+})

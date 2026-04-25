@@ -169,6 +169,60 @@ export const usePathwayStore = defineStore('pathway', () => {
     catch (err) { logger.error('Pathway', 'clearDraft failed', err) }
   }
 
+  async function validatePathway() {
+    const errors: PathwayValidationError[] = []
+    const p = currentPathway.value
+    if (!p) {
+      validationErrors.value = errors
+      return
+    }
+    if (!p.name || p.name.trim() === '') {
+      errors.push({ field: 'name', message: 'Name is required', severity: 'error' })
+    }
+    if (p.design.targetCohorts.length === 0) {
+      errors.push({
+        field: 'targetCohorts',
+        message: 'At least one target cohort is required',
+        severity: 'error',
+      })
+    }
+    if (p.design.eventCohorts.length === 0) {
+      errors.push({
+        field: 'eventCohorts',
+        message: 'At least one event cohort is required',
+        severity: 'error',
+      })
+    }
+    if (p.design.maxDepth < 1) {
+      errors.push({
+        field: 'maxDepth',
+        message: 'Max depth must be at least 1',
+        severity: 'error',
+      })
+    }
+    if (p.design.minCellCount < 1) {
+      errors.push({
+        field: 'minCellCount',
+        message: 'Min cell count must be at least 1',
+        severity: 'warning',
+      })
+    }
+    validationErrors.value = errors
+  }
+
+  const canSave = computed(() =>
+    isDirty.value &&
+    !hasErrors.value &&
+    !isPreviewMode.value
+  )
+
+  const canGenerate = computed(() =>
+    !isDirty.value &&
+    !hasErrors.value &&
+    currentPathway.value?.id !== undefined &&
+    !isPreviewMode.value
+  )
+
   function stopAutoSave() {
     if (autoSaveTimer) { clearInterval(autoSaveTimer); autoSaveTimer = null }
   }
@@ -190,5 +244,6 @@ export const usePathwayStore = defineStore('pathway', () => {
     addEventCohort, removeEventCohort, renameEventCohort,
     loadPathway, loadVersionPreview, clearPreviewVersion,
     saveToDraft, restoreFromDraft, clearDraft, startAutoSave, stopAutoSave,
+    validatePathway, canSave, canGenerate,
   }
 })
