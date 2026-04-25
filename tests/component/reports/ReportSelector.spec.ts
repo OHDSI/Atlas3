@@ -46,8 +46,9 @@ describe('ReportSelector', () => {
     })
   }
 
-  // All 26 report types available in the component
+  // All 27 report types available in the component
   const expectedReportTypes: ReportType[] = [
+    'inclusion-rule',
     'person',
     'condition-eras',
     'drug-eras',
@@ -77,6 +78,7 @@ describe('ReportSelector', () => {
   ]
 
   const reportMetadata = {
+    'inclusion-rule': { label: 'Inclusion-Rule Report', description: 'Per-rule attrition, summary stats and population breakdown for the generated cohort.', icon: 'mdi-filter-variant' },
     'person': { label: 'Person (Demographics)', description: 'Year of birth and demographic distributions', icon: 'mdi-account-group' },
     'condition-eras': { label: 'Condition Eras', description: 'Condition prevalence and duration analysis', icon: 'mdi-medical-bag' },
     'drug-eras': { label: 'Drug Eras', description: 'Drug exposure prevalence and duration', icon: 'mdi-pill' },
@@ -139,12 +141,12 @@ describe('ReportSelector', () => {
       expect(wrapper.html()).toContain('mdi-chart-box')
     })
 
-    it('should render all 26 report types in items', () => {
+    it('should render all 27 report types in items', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
 
-      expect(items).toHaveLength(26)
+      expect(items).toHaveLength(27)
 
       // Verify all expected report types are present
       const itemTypes = items.map((item: ReportItem) => item.type)

@@ -24,7 +24,11 @@ import {
 import type { ValidationResponse } from '@/models/cohort-validation.types'
 import {
   WebAPIReportResponseSchema,
-  type WebAPIReportResponse
+  type WebAPIReportResponse,
+  InclusionRuleReportSchema,
+  type InclusionRuleReport,
+  type InclusionRuleReportMode,
+  type InclusionTreemapNode,
 } from '@/models/report.types'
 import { httpClient, getBaseUrl, type HttpClientOptions } from '@/services/http-client'
 
@@ -466,6 +470,60 @@ export async function getCohortReport(
     return parsed.data as WebAPIReportResponse
   } catch (error) {
     logger.error('WebAPI', `Failed to fetch cohort report for ${cohortId}/${sourceKey}`, error)
+    return null
+  }
+}
+
+/**
+ * Get the inclusion-rule (generation) report for a generated cohort.
+ *
+ * Mirrors Atlas 2.15's "Inclusion Report" plugin. The server returns:
+ *   - `summary`            – baseCount / finalCount / lostCount / percentMatched
+ *   - `inclusionRuleStats` – per-rule attrition statistics
+ *   - `treemapData`        – JSON-stringified hierarchical population breakdown
+ *
+ * This wrapper validates the envelope and parses `treemapData` into a typed tree.
+ *
+ * Endpoint: GET /cohortdefinition/{id}/report/{sourceKey}?mode={0|1|2}
+ */
+export async function getInclusionRuleReport(
+  cohortId: number,
+  sourceKey: string,
+  mode: InclusionRuleReportMode = 0
+): Promise<InclusionRuleReport | null> {
+  try {
+    const data = await fetchJSON<unknown>(
+      `/cohortdefinition/${cohortId}/report/${sourceKey}?mode=${mode}`
+    )
+
+    const parsed = InclusionRuleReportSchema.safeParse(data)
+    if (!parsed.success) {
+      logger.error('WebAPI', 'Inclusion-rule report validation error', parsed.error)
+      return null
+    }
+
+    let treemap: InclusionTreemapNode | null = null
+    const raw = parsed.data.treemapData?.trim()
+    if (raw) {
+      try {
+        treemap = JSON.parse(raw) as InclusionTreemapNode
+      } catch (err) {
+        logger.warn('WebAPI', 'Inclusion-rule report: treemapData was not valid JSON', err)
+      }
+    }
+
+    return {
+      summary: parsed.data.summary,
+      inclusionRuleStats: parsed.data.inclusionRuleStats,
+      treemap,
+      prevalenceThreshold: parsed.data.prevalenceThreshold,
+    }
+  } catch (error) {
+    logger.error(
+      'WebAPI',
+      `Failed to fetch inclusion-rule report for ${cohortId}/${sourceKey} (mode=${mode})`,
+      error
+    )
     return null
   }
 }

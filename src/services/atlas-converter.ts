@@ -290,16 +290,40 @@ export function parseBooleanAttribute(attributeKey: string, value: boolean): Eve
   }
 }
 
-function convertConceptAttribute(attributeKey: string, concepts: unknown[]): Record<string, unknown[]> {
+function convertConceptAttribute(attributeKey: string, concepts: unknown[]): Record<string, unknown> {
   const attributeName = convertToPascalCase(attributeKey)
   return { [attributeName]: concepts }
 }
 
-export function parseConceptAttribute(attributeKey: string, concepts: unknown[]): EventAttribute {
+export function parseConceptAttribute(
+  attributeKey: string,
+  concepts: unknown[],
+  isExclusion?: boolean
+): EventAttribute {
   return {
     type: 'concept',
     attributeKey: attributeKey as import('@/models/event.types').ConceptAttributeKey,
     concepts: (concepts as import('@/models/event.types').Concept[]) || [],
+    ...(isExclusion ? { isExclusion: true } : {}),
+  }
+}
+
+/**
+ * Parse an Atlas 2.x `*CS` concept-set attribute (e.g. `VisitTypeCS: { CodesetId, IsExclusion }`)
+ * into a Atlas3 ConceptSetAttribute. Returns undefined if the field is missing or empty.
+ */
+export function parseConceptSetAttribute(
+  attributeKey: string,
+  raw: unknown
+): EventAttribute | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const obj = raw as { CodesetId?: number | string | null; IsExclusion?: boolean }
+  if (obj.CodesetId === undefined || obj.CodesetId === null) return undefined
+  return {
+    type: 'conceptSet',
+    attributeKey: attributeKey as import('@/models/event.types').ConceptAttributeKey,
+    conceptSet: { id: obj.CodesetId, name: '' },
+    ...(obj.IsExclusion ? { isExclusion: true } : {}),
   }
 }
 
@@ -444,10 +468,20 @@ function convertAttributeToAtlas(attr: EventAttribute): Record<string, unknown> 
     }
     return result
   } else if (attr.type === 'conceptSet') {
-    const attributeName = convertToPascalCase(attr.attributeKey)
-    return { [attributeName]: attr.conceptSet }
+    const attributeName = attributeKeyToAtlasField(attr.attributeKey)
+    const id = attr.conceptSet?.id
+    return {
+      [attributeName]: {
+        CodesetId: typeof id === 'number' ? id : null,
+        IsExclusion: attr.isExclusion ?? false,
+      },
+    }
   } else if (attr.type === 'concept') {
-    return convertConceptAttribute(attr.attributeKey, attr.concepts)
+    const out = convertConceptAttribute(attr.attributeKey, attr.concepts)
+    if (attr.isExclusion) {
+      out[convertToPascalCase(attr.attributeKey) + 'Exclude'] = true
+    }
+    return out
   } else if (attr.type === 'boolean') {
     return convertBooleanAttribute(attr.attributeKey, attr.value)
   } else if (attr.type === 'text') {
@@ -760,17 +794,47 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
 
   // Gender - Concept array
   if (criteriaObj.Gender && Array.isArray(criteriaObj.Gender) && criteriaObj.Gender.length > 0) {
-    attributes.push(parseConceptAttribute('gender', criteriaObj.Gender))
+    attributes.push(parseConceptAttribute('gender', criteriaObj.Gender, criteriaObj.GenderExclude as boolean | undefined))
+  }
+  {
+    const cs = parseConceptSetAttribute('genderCs', criteriaObj.GenderCS)
+    if (cs) attributes.push(cs)
   }
 
   // Race - Concept array
   if (criteriaObj.Race && Array.isArray(criteriaObj.Race) && criteriaObj.Race.length > 0) {
-    attributes.push(parseConceptAttribute('race', criteriaObj.Race))
+    attributes.push(parseConceptAttribute('race', criteriaObj.Race, criteriaObj.RaceExclude as boolean | undefined))
+  }
+  {
+    const cs = parseConceptSetAttribute('raceCs', criteriaObj.RaceCS)
+    if (cs) attributes.push(cs)
   }
 
   // Ethnicity - Concept array
   if (criteriaObj.Ethnicity && Array.isArray(criteriaObj.Ethnicity) && criteriaObj.Ethnicity.length > 0) {
-    attributes.push(parseConceptAttribute('ethnicity', criteriaObj.Ethnicity))
+    attributes.push(parseConceptAttribute('ethnicity', criteriaObj.Ethnicity, criteriaObj.EthnicityExclude as boolean | undefined))
+  }
+  {
+    const cs = parseConceptSetAttribute('ethnicityCs', criteriaObj.EthnicityCS)
+    if (cs) attributes.push(cs)
+  }
+
+  // ConditionType - Concept array with optional Exclude flag
+  if (criteriaObj.ConditionType && Array.isArray(criteriaObj.ConditionType) && criteriaObj.ConditionType.length > 0) {
+    attributes.push(parseConceptAttribute('conditionType', criteriaObj.ConditionType, criteriaObj.ConditionTypeExclude as boolean | undefined))
+  }
+  {
+    const cs = parseConceptSetAttribute('conditionTypeCs', criteriaObj.ConditionTypeCS)
+    if (cs) attributes.push(cs)
+  }
+
+  // ConditionStatus - Concept array with optional CS variant
+  if (criteriaObj.ConditionStatus && Array.isArray(criteriaObj.ConditionStatus) && criteriaObj.ConditionStatus.length > 0) {
+    attributes.push(parseConceptAttribute('conditionStatus', criteriaObj.ConditionStatus, criteriaObj.ConditionStatusExclude as boolean | undefined))
+  }
+  {
+    const cs = parseConceptSetAttribute('conditionStatusCs', criteriaObj.ConditionStatusCS)
+    if (cs) attributes.push(cs)
   }
 
   // ValueAsNumber - NumericRange
@@ -881,12 +945,20 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
 
   // VisitType - Concept array
   if (criteriaObj.VisitType && Array.isArray(criteriaObj.VisitType) && criteriaObj.VisitType.length > 0) {
-    attributes.push(parseConceptAttribute('visitType', criteriaObj.VisitType))
+    attributes.push(parseConceptAttribute('visitType', criteriaObj.VisitType, criteriaObj.VisitTypeExclude as boolean | undefined))
+  }
+  {
+    const cs = parseConceptSetAttribute('visitTypeCs', criteriaObj.VisitTypeCS)
+    if (cs) attributes.push(cs)
   }
 
   // ProviderSpecialty - Concept array
   if (criteriaObj.ProviderSpecialty && Array.isArray(criteriaObj.ProviderSpecialty) && criteriaObj.ProviderSpecialty.length > 0) {
-    attributes.push(parseConceptAttribute('providerSpecialty', criteriaObj.ProviderSpecialty))
+    attributes.push(parseConceptAttribute('providerSpecialty', criteriaObj.ProviderSpecialty, criteriaObj.ProviderSpecialtyExclude as boolean | undefined))
+  }
+  {
+    const cs = parseConceptSetAttribute('providerSpecialtyCs', criteriaObj.ProviderSpecialtyCS)
+    if (cs) attributes.push(cs)
   }
 
   // First - Boolean
@@ -996,6 +1068,13 @@ function convertDateFieldFromAtlas(atlasDateField: { DateField: string; Offset: 
 // Helpers
 function convertToPascalCase(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+// Atlas 2.15 uses uppercase "CS" for concept-set variant fields (e.g. VisitTypeCS),
+// but our internal keys camelCase the suffix as "Cs" (e.g. visitTypeCs).
+function attributeKeyToAtlasField(key: string): string {
+  const pascal = convertToPascalCase(key)
+  return pascal.endsWith('Cs') ? pascal.slice(0, -2) + 'CS' : pascal
 }
 
 /**

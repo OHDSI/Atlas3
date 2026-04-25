@@ -87,6 +87,15 @@
               >
                 {{ attribute.conceptSet.name }}
               </v-chip>
+              <v-checkbox
+                :model-value="attribute.isExclusion ?? false"
+                density="compact"
+                hide-details
+                label="Exclude"
+                class="ml-2"
+                data-testid="attribute-exclude-checkbox"
+                @update:model-value="updateAttributeExclude(index, $event)"
+              />
             </template>
 
             <!-- Date Range Attributes -->
@@ -215,6 +224,15 @@
                   </v-icon>
                   {{ attribute.concepts.length > 0 ? 'Edit' : 'Select Concept' }}
                 </v-btn>
+                <v-checkbox
+                  :model-value="attribute.isExclusion ?? false"
+                  density="compact"
+                  hide-details
+                  label="Exclude"
+                  class="ml-2"
+                  data-testid="attribute-exclude-checkbox"
+                  @update:model-value="updateAttributeExclude(index, $event)"
+                />
               </div>
             </template>
 
@@ -586,6 +604,15 @@ function clearConceptSetAttribute(index: number) {
   if (!attr || attr.type !== 'conceptSet') return
 
   newAttributes[index] = { ...attr, conceptSet: { id: '', name: '' } }
+  emit('update:modelValue', newAttributes)
+}
+
+function updateAttributeExclude(index: number, value: boolean | null) {
+  const newAttributes = [...props.modelValue]
+  const attr = newAttributes[index]
+  if (!attr || (attr.type !== 'concept' && attr.type !== 'conceptSet')) return
+
+  newAttributes[index] = { ...attr, isExclusion: !!value }
   emit('update:modelValue', newAttributes)
 }
 

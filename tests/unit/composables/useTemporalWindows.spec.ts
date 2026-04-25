@@ -280,36 +280,8 @@ describe('useTemporalWindows', () => {
       expect(presets.length).toBeGreaterThan(0)
     })
 
-    it('should have "Any time before index" preset', () => {
-      const presets = getTemporalWindowPresets()
-      const preset = presets.find(p => p.label === 'Any time before index')
-      expect(preset).toBeDefined()
-      expect(preset?.value.startWindow?.days).toBeNull()
-      expect(preset?.value.startWindow?.beforeAfter).toBe('BEFORE')
-      expect(preset?.value.startWindow?.referencePoint).toBe('INDEX_START')
-    })
-
-    it('should have "0 to 30 days after index" preset', () => {
-      const presets = getTemporalWindowPresets()
-      const preset = presets.find(p => p.label === '0 to 30 days after index')
-      expect(preset).toBeDefined()
-      expect(preset?.value.startWindow?.days).toBe(0)
-      expect(preset?.value.endWindow?.days).toBe(30)
-      expect(preset?.value.startWindow?.beforeAfter).toBe('AFTER')
-      expect(preset?.value.endWindow?.beforeAfter).toBe('AFTER')
-    })
-
-    it('should have "0 to 90 days after index" preset', () => {
-      const presets = getTemporalWindowPresets()
-      const preset = presets.find(p => p.label === '0 to 90 days after index')
-      expect(preset).toBeDefined()
-      expect(preset?.value.startWindow?.days).toBe(0)
-      expect(preset?.value.endWindow?.days).toBe(90)
-    })
-
-    it('should have "30 days before to 0 days after index" preset', () => {
-      const presets = getTemporalWindowPresets()
-      const preset = presets.find(p => p.label === '30 days before to 0 days after index')
+    it('exposes the OHDSI short-term baseline preset (-30 to 0)', () => {
+      const preset = getTemporalWindowPresets().find(p => p.label.startsWith('Short-term baseline'))
       expect(preset).toBeDefined()
       expect(preset?.value.startWindow?.days).toBe(30)
       expect(preset?.value.startWindow?.beforeAfter).toBe('BEFORE')
@@ -317,12 +289,56 @@ describe('useTemporalWindows', () => {
       expect(preset?.value.endWindow?.beforeAfter).toBe('AFTER')
     })
 
-    it('should have "0 to 365 days after index" preset', () => {
-      const presets = getTemporalWindowPresets()
-      const preset = presets.find(p => p.label === '0 to 365 days after index')
+    it('exposes the OHDSI medium-term baseline preset (-180 to 0)', () => {
+      const preset = getTemporalWindowPresets().find(p => p.label.startsWith('Medium-term baseline'))
+      expect(preset).toBeDefined()
+      expect(preset?.value.startWindow?.days).toBe(180)
+      expect(preset?.value.startWindow?.beforeAfter).toBe('BEFORE')
+      expect(preset?.value.endWindow?.days).toBe(0)
+    })
+
+    it('exposes the OHDSI long-term baseline preset (-365 to 0)', () => {
+      const preset = getTemporalWindowPresets().find(p => p.label.startsWith('Long-term baseline'))
+      expect(preset).toBeDefined()
+      expect(preset?.value.startWindow?.days).toBe(365)
+      expect(preset?.value.startWindow?.beforeAfter).toBe('BEFORE')
+      expect(preset?.value.endWindow?.days).toBe(0)
+    })
+
+    it('exposes "All time prior to index" with null start days', () => {
+      const preset = getTemporalWindowPresets().find(p => p.label === 'All time prior to index')
+      expect(preset).toBeDefined()
+      expect(preset?.value.startWindow?.days).toBeNull()
+      expect(preset?.value.startWindow?.beforeAfter).toBe('BEFORE')
+    })
+
+    it('exposes "On index date" preset (0 to 0)', () => {
+      const preset = getTemporalWindowPresets().find(p => p.label === 'On index date')
       expect(preset).toBeDefined()
       expect(preset?.value.startWindow?.days).toBe(0)
-      expect(preset?.value.endWindow?.days).toBe(365)
+      expect(preset?.value.endWindow?.days).toBe(0)
+    })
+
+    it('exposes acute / 90-day / 1-year follow-up presets', () => {
+      const presets = getTemporalWindowPresets()
+      const acute = presets.find(p => p.label.startsWith('Acute follow-up'))
+      const ninety = presets.find(p => p.label.startsWith('90-day follow-up'))
+      const oneYear = presets.find(p => p.label.startsWith('1-year follow-up'))
+      expect(acute?.value.endWindow?.days).toBe(30)
+      expect(ninety?.value.endWindow?.days).toBe(90)
+      expect(oneYear?.value.endWindow?.days).toBe(365)
+      for (const p of [acute, ninety, oneYear]) {
+        expect(p?.value.startWindow?.days).toBe(0)
+        expect(p?.value.startWindow?.beforeAfter).toBe('AFTER')
+        expect(p?.value.endWindow?.beforeAfter).toBe('AFTER')
+      }
+    })
+
+    it('exposes "All time after index" with null end days', () => {
+      const preset = getTemporalWindowPresets().find(p => p.label === 'All time after index')
+      expect(preset).toBeDefined()
+      expect(preset?.value.startWindow?.days).toBe(0)
+      expect(preset?.value.endWindow?.days).toBeNull()
     })
 
     it('should return valid temporal window structures', () => {

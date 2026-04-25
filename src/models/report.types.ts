@@ -11,6 +11,7 @@ import { z } from 'zod'
  * Report type identifier - matches OHDSI Atlas report types
  */
 export type ReportType =
+  | 'inclusion-rule'
   | 'person'
   | 'condition-eras'
   | 'drug-eras'
@@ -1113,3 +1114,70 @@ export function isCareSiteVisitDatesReportData(data: unknown): data is CareSiteV
     (data as CareSiteVisitDatesReport).data?.every?.((item) => 'careSiteId' in item)
   )
 }
+
+// ============================================================================
+// Inclusion-Rule (Generation) Report — WebAPI 3.0 /cohortdefinition/{id}/report/{sourceKey}
+// ============================================================================
+
+/**
+ * Mode passed to the inclusion-rule report endpoint.
+ * 0 = By Event   (every qualifying event for every person)
+ * 1 = By Person  (one event per person — the "best" event)
+ * 2 = Demographic (only when a cohort characterization exists)
+ */
+export type InclusionRuleReportMode = 0 | 1 | 2
+
+export interface InclusionRuleSummary {
+  baseCount: number
+  finalCount: number
+  lostCount: number
+  /** Server returns this as a percent string (e.g. "82.5"); empty/null when no data */
+  percentMatched: string | null
+}
+
+export interface InclusionRuleStatistic {
+  id: number
+  name: string
+  countSatisfying: number
+  /** Percent strings as the server returns them (server formats as "12.34") */
+  percentSatisfying: string
+  percentExcluded: string
+}
+
+/**
+ * Hierarchical node returned in the parsed treemapData payload.
+ * The server returns this as a JSON string; the client parses it into this shape.
+ */
+export interface InclusionTreemapNode {
+  name: string
+  size?: number
+  children?: InclusionTreemapNode[]
+}
+
+export interface InclusionRuleReport {
+  summary: InclusionRuleSummary
+  inclusionRuleStats: InclusionRuleStatistic[]
+  /** Parsed from the raw `treemapData` JSON string returned by the server */
+  treemap: InclusionTreemapNode | null
+  prevalenceThreshold?: number
+}
+
+export const InclusionRuleReportSchema = z.object({
+  summary: z.object({
+    baseCount: z.number(),
+    finalCount: z.number(),
+    lostCount: z.number(),
+    percentMatched: z.string().nullable(),
+  }),
+  inclusionRuleStats: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      countSatisfying: z.number(),
+      percentSatisfying: z.string(),
+      percentExcluded: z.string(),
+    })
+  ),
+  treemapData: z.string(),
+  prevalenceThreshold: z.number().optional(),
+})

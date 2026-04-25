@@ -63,33 +63,13 @@
       <div class="event-body">
         <!-- Event Concept Set -->
         <div class="concept-set-section">
-          <div
-            v-if="event.conceptSet"
-            class="concept-set-selected"
-          >
-            <v-chip
-              closable
-              color="primary"
-              style="cursor: pointer;"
-              @click="emit('edit-concept-set', event.conceptSet)"
-              @click:close="removeConceptSet"
-            >
-              {{ event.conceptSet.name }}
-            </v-chip>
-          </div>
-          <v-btn
-            v-else
-            color="primary"
-            variant="outlined"
-            size="small"
-            data-testid="concept-set-picker"
-            @click="emit('select-concept-set')"
-          >
-            <v-icon class="mr-2">
-              mdi-plus
-            </v-icon>
-            {{ t('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set') }}
-          </v-btn>
+          <EventConceptSetField
+            :concept-set="event.conceptSet"
+            :select-label="t('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set').value"
+            @select="emit('select-concept-set')"
+            @edit="emit('edit-concept-set', $event)"
+            @clear="removeConceptSet"
+          />
         </div>
 
         <!-- Attributes Section -->
@@ -148,6 +128,7 @@ import type {
   Concept,
 } from '@/models/event.types'
 import AttributesEditor from '@/components/cohort-builder/AttributesEditor.vue'
+import EventConceptSetField from '@/components/cohort-builder/EventConceptSetField.vue'
 import NestedCriteriaEditor from '@/components/cohort-builder/NestedCriteriaEditor.vue'
 
 interface Props {

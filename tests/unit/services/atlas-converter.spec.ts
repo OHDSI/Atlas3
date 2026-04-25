@@ -3135,7 +3135,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
   })
 
   describe('ConceptSet Attribute - Full conversion', () => {
-    it('converts conceptSet attribute to Atlas format', () => {
+    it('serializes a *Cs concept-set attribute to Atlas {CodesetId, IsExclusion} shape', () => {
       const cohort = createMinimalCohort({
         entryEvents: [
           {
@@ -3145,11 +3145,9 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
             attributes: [
               {
                 type: 'conceptSet',
-                attributeKey: 'gender',
-                conceptSet: {
-                  id: 'gender-1',
-                  name: 'Female',
-                },
+                attributeKey: 'genderCs',
+                conceptSet: { id: 7, name: 'Female concept set' },
+                isExclusion: true,
               },
             ],
           },
@@ -3158,9 +3156,9 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
 
       const atlasJSON = convertInternalToAtlas(cohort)
 
-      expect(atlasJSON.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence?.Gender).toEqual({
-        id: 'gender-1',
-        name: 'Female',
+      expect(atlasJSON.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence?.GenderCS).toEqual({
+        CodesetId: 7,
+        IsExclusion: true,
       })
     })
   })
@@ -3736,6 +3734,113 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
 
       // Should default to ConditionOccurrence
       expect(converted.entryEvents?.[0]?.criteriaType).toBe('ConditionOccurrence')
+    })
+  })
+
+  describe('isExclusion + Cs variants - round-trip parity (Phase 2)', () => {
+    it('writes ConditionTypeExclude=true when concept attribute has isExclusion', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [{
+          id: 'evt-1',
+          criteriaType: 'ConditionOccurrence',
+          conceptSet: { id: 0, name: 'Test' },
+          attributes: [{
+            type: 'concept',
+            attributeKey: 'conditionType',
+            concepts: [{ CONCEPT_ID: 32020, CONCEPT_NAME: 'EHR encounter' }],
+            isExclusion: true,
+          }],
+        }],
+      })
+
+      const atlas = convertInternalToAtlas(cohort)
+      const co = atlas.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence
+      expect(co?.ConditionType).toEqual([{ CONCEPT_ID: 32020, CONCEPT_NAME: 'EHR encounter' }])
+      expect(co?.ConditionTypeExclude).toBe(true)
+    })
+
+    it('reads ConditionTypeExclude back into isExclusion on the concept attribute', () => {
+      const atlasJson = {
+        name: 'X',
+        expressionType: 'SIMPLE_EXPRESSION',
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [{
+            ConditionOccurrence: {
+              CodesetId: null,
+              ConditionType: [{ CONCEPT_ID: 32020, CONCEPT_NAME: 'EHR encounter' }],
+              ConditionTypeExclude: true,
+            },
+          }],
+          ObservationWindow: { PriorDays: 0, PostDays: 0 },
+          PrimaryCriteriaLimit: { Type: 'First' },
+        },
+        QualifiedLimit: { Type: 'First' },
+        ExpressionLimit: { Type: 'First' },
+        InclusionRules: [],
+        EndStrategy: {},
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+
+      const internal = convertAtlasToInternal(atlasJson)
+      const conditionType = internal.entryEvents?.[0]?.attributes?.find(a => a.type === 'concept' && a.attributeKey === 'conditionType')
+      expect(conditionType).toBeDefined()
+      expect(conditionType?.type === 'concept' && conditionType.isExclusion).toBe(true)
+    })
+
+    it('serializes a *Cs concept-set attribute with IsExclusion to the matching CS field', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [{
+          id: 'evt-1',
+          criteriaType: 'ConditionOccurrence',
+          conceptSet: { id: 0, name: 'Test' },
+          attributes: [{
+            type: 'conceptSet',
+            attributeKey: 'visitTypeCs',
+            conceptSet: { id: 42, name: 'Inpatient set' },
+            isExclusion: true,
+          }],
+        }],
+      })
+
+      const atlas = convertInternalToAtlas(cohort)
+      const co = atlas.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence
+      expect(co?.VisitTypeCS).toEqual({ CodesetId: 42, IsExclusion: true })
+    })
+
+    it('parses VisitTypeCS back into a ConceptSetAttribute with attributeKey=visitTypeCs', () => {
+      const atlasJson = {
+        name: 'X',
+        expressionType: 'SIMPLE_EXPRESSION',
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [{
+            ConditionOccurrence: {
+              CodesetId: null,
+              VisitTypeCS: { CodesetId: 42, IsExclusion: true },
+            },
+          }],
+          ObservationWindow: { PriorDays: 0, PostDays: 0 },
+          PrimaryCriteriaLimit: { Type: 'First' },
+        },
+        QualifiedLimit: { Type: 'First' },
+        ExpressionLimit: { Type: 'First' },
+        InclusionRules: [],
+        EndStrategy: {},
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+
+      const internal = convertAtlasToInternal(atlasJson)
+      const cs = internal.entryEvents?.[0]?.attributes?.find(a => a.type === 'conceptSet' && a.attributeKey === 'visitTypeCs')
+      expect(cs).toBeDefined()
+      if (cs?.type === 'conceptSet') {
+        expect(cs.conceptSet.id).toBe(42)
+        expect(cs.isExclusion).toBe(true)
+      }
     })
   })
 })
