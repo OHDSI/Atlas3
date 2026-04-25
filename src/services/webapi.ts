@@ -31,7 +31,15 @@ import {
   type InclusionTreemapNode,
 } from '@/models/report.types'
 import { httpClient, getBaseUrl, type HttpClientOptions, httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
-import { PathwaySchema, type Pathway } from '@/models/pathway.types'
+import {
+  PathwayExecutionSchema,
+  PathwayExecutionListSchema,
+  PathwayResultsSchema,
+  type PathwayExecution,
+  type PathwayResults,
+  PathwaySchema,
+  type Pathway,
+} from '@/models/pathway.types'
 import { z } from 'zod'
 
 /**
@@ -1665,5 +1673,120 @@ export async function runPathwayDiagnostics(
   } catch (err) {
     logger.error('Pathway', 'runPathwayDiagnostics failed', err)
     return []
+  }
+}
+
+/**
+ * List all generations for a pathway analysis.
+ * GET /pathway-analysis/:id/generation
+ */
+export async function listPathwayExecutions(
+  id: number
+): Promise<ApiResult<PathwayExecution[]>> {
+  try {
+    const data = await httpGet<unknown>(`/pathway-analysis/${id}/generation`)
+    const parsed = PathwayExecutionListSchema.safeParse(data)
+    if (!parsed.success) return failure('Invalid execution list')
+    return success(parsed.data)
+  } catch (err) {
+    logger.error('Pathway', `listPathwayExecutions(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to list executions')
+  }
+}
+
+/**
+ * Get a single pathway generation execution.
+ * GET /pathway-analysis/generation/:generationId
+ */
+export async function getPathwayExecution(
+  generationId: number
+): Promise<ApiResult<PathwayExecution>> {
+  try {
+    const data = await httpGet<unknown>(`/pathway-analysis/generation/${generationId}`)
+    const parsed = PathwayExecutionSchema.safeParse(data)
+    if (!parsed.success) return failure('Invalid execution response')
+    return success(parsed.data)
+  } catch (err) {
+    logger.error('Pathway', `getPathwayExecution(${generationId}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch execution')
+  }
+}
+
+/**
+ * Get results for a pathway generation.
+ * GET /pathway-analysis/generation/:generationId/result
+ */
+export async function getPathwayResults(
+  generationId: number
+): Promise<ApiResult<PathwayResults>> {
+  try {
+    const data = await httpGet<unknown>(
+      `/pathway-analysis/generation/${generationId}/result`
+    )
+    const parsed = PathwayResultsSchema.safeParse(data)
+    if (!parsed.success) return failure('Invalid results response')
+    return success(parsed.data)
+  } catch (err) {
+    logger.error('Pathway', `getPathwayResults(${generationId}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch results')
+  }
+}
+
+/**
+ * Trigger pathway generation for a given source.
+ * POST /pathway-analysis/:id/generation/:sourceKey
+ */
+export async function generatePathway(
+  id: number,
+  sourceKey: string
+): Promise<ApiResult<PathwayExecution>> {
+  try {
+    const data = await httpPost<unknown>(
+      `/pathway-analysis/${id}/generation/${sourceKey}`,
+      undefined
+    )
+    const parsed = PathwayExecutionSchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid generate response')
+    return success(parsed.data as PathwayExecution)
+  } catch (err) {
+    logger.error('Pathway', `generatePathway(${id}, ${sourceKey}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to start generation')
+  }
+}
+
+/**
+ * Cancel an in-progress pathway generation.
+ * DELETE /pathway-analysis/:id/generation/:sourceKey
+ */
+export async function cancelPathwayGeneration(
+  id: number,
+  sourceKey: string
+): Promise<boolean> {
+  try {
+    await httpDelete(`/pathway-analysis/${id}/generation/${sourceKey}`)
+    return true
+  } catch (err) {
+    logger.error('Pathway', `cancelPathwayGeneration failed`, err)
+    return false
+  }
+}
+
+/**
+ * Get the pathway design snapshot stored with a generation.
+ * GET /pathway-analysis/generation/:generationId/design
+ */
+export async function getPathwayDesignByGeneration(
+  generationId: number
+): Promise<ApiResult<Pathway>> {
+  try {
+    const data = await httpGet<unknown>(
+      `/pathway-analysis/generation/${generationId}/design`
+    )
+    const parsed = PathwaySchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid design response')
+    return success(parsed.data as Pathway)
+  } catch (err) {
+    logger.error('Pathway', 'getPathwayDesignByGeneration failed', err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch design')
   }
 }

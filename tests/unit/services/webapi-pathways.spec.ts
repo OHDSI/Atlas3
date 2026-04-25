@@ -97,3 +97,68 @@ describe('webapi pathway tags + diagnostics', () => {
     expect(httpClient.httpPost).toHaveBeenCalledWith('/pathway-analysis/check', { design: {} })
   })
 })
+
+import {
+  listPathwayExecutions,
+  getPathwayExecution,
+  getPathwayResults,
+  generatePathway,
+  cancelPathwayGeneration,
+  getPathwayDesignByGeneration,
+} from '@/services/webapi'
+
+describe('webapi pathway executions', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('listPathwayExecutions GETs /pathway-analysis/:id/generation', async () => {
+    vi.mocked(httpClient.httpGet).mockResolvedValue([])
+    await listPathwayExecutions(1)
+    expect(httpClient.httpGet).toHaveBeenCalledWith('/pathway-analysis/1/generation')
+  })
+
+  it('getPathwayExecution GETs /pathway-analysis/generation/:gid', async () => {
+    vi.mocked(httpClient.httpGet).mockResolvedValue({
+      id: 99, status: 'COMPLETED', sourceKey: 'cdm',
+    })
+    const res = await getPathwayExecution(99)
+    expect(httpClient.httpGet).toHaveBeenCalledWith('/pathway-analysis/generation/99')
+    expect(res.success).toBe(true)
+  })
+
+  it('getPathwayResults GETs /pathway-analysis/generation/:gid/result', async () => {
+    vi.mocked(httpClient.httpGet).mockResolvedValue({
+      pathwayGroups: [], eventCodes: [],
+    })
+    const res = await getPathwayResults(99)
+    expect(httpClient.httpGet).toHaveBeenCalledWith('/pathway-analysis/generation/99/result')
+    expect(res.success).toBe(true)
+  })
+
+  it('generatePathway POSTs /pathway-analysis/:id/generation/:source', async () => {
+    vi.mocked(httpClient.httpPost).mockResolvedValue({
+      id: 99, status: 'STARTING', sourceKey: 'cdm',
+    })
+    await generatePathway(1, 'cdm')
+    expect(httpClient.httpPost).toHaveBeenCalledWith(
+      '/pathway-analysis/1/generation/cdm', undefined
+    )
+  })
+
+  it('cancelPathwayGeneration DELETEs the same path', async () => {
+    vi.mocked(httpClient.httpDelete).mockResolvedValue(undefined)
+    await cancelPathwayGeneration(1, 'cdm')
+    expect(httpClient.httpDelete).toHaveBeenCalledWith('/pathway-analysis/1/generation/cdm')
+  })
+
+  it('getPathwayDesignByGeneration GETs /generation/:gid/design', async () => {
+    vi.mocked(httpClient.httpGet).mockResolvedValue({
+      name: 'X',
+      design: {
+        targetCohorts: [], eventCohorts: [],
+        combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
+      },
+    })
+    await getPathwayDesignByGeneration(99)
+    expect(httpClient.httpGet).toHaveBeenCalledWith('/pathway-analysis/generation/99/design')
+  })
+})
