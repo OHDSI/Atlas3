@@ -7,6 +7,9 @@ import {
   deletePathway,
   copyPathway,
   existsPathway,
+  assignPathwayTag,
+  unassignPathwayTag,
+  runPathwayDiagnostics,
 } from '@/services/webapi'
 import * as httpClient from '@/services/http-client'
 
@@ -70,5 +73,27 @@ describe('webapi pathway CRUD', () => {
     expect(httpClient.httpGet).toHaveBeenCalledWith(
       '/pathway-analysis/0/exists?name=My%20Pathway'
     )
+  })
+})
+
+describe('webapi pathway tags + diagnostics', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('assignPathwayTag POSTs /pathway-analysis/:id/tag/:tagId', async () => {
+    vi.mocked(httpClient.httpPost).mockResolvedValue(undefined)
+    await assignPathwayTag(1, 7)
+    expect(httpClient.httpPost).toHaveBeenCalledWith('/pathway-analysis/1/tag/7', undefined)
+  })
+
+  it('unassignPathwayTag DELETEs /pathway-analysis/:id/tag/:tagId', async () => {
+    vi.mocked(httpClient.httpDelete).mockResolvedValue(undefined)
+    await unassignPathwayTag(1, 7)
+    expect(httpClient.httpDelete).toHaveBeenCalledWith('/pathway-analysis/1/tag/7')
+  })
+
+  it('runPathwayDiagnostics POSTs /pathway-analysis/check', async () => {
+    vi.mocked(httpClient.httpPost).mockResolvedValue([])
+    await runPathwayDiagnostics({ design: {} } as never)
+    expect(httpClient.httpPost).toHaveBeenCalledWith('/pathway-analysis/check', { design: {} })
   })
 })

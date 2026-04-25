@@ -1617,3 +1617,53 @@ export async function existsPathway(name: string, id = 0): Promise<number> {
     return 0
   }
 }
+
+/**
+ * Assign a tag to a pathway analysis.
+ * POST /pathway-analysis/:id/tag/:tagId
+ */
+export async function assignPathwayTag(id: number, tagId: number): Promise<boolean> {
+  try {
+    await httpPost(`/pathway-analysis/${id}/tag/${tagId}`, undefined)
+    return true
+  } catch (err) {
+    logger.error('Pathway', `assignPathwayTag failed`, err)
+    return false
+  }
+}
+
+/**
+ * Remove a tag from a pathway analysis.
+ * DELETE /pathway-analysis/:id/tag/:tagId
+ */
+export async function unassignPathwayTag(id: number, tagId: number): Promise<boolean> {
+  try {
+    await httpDelete(`/pathway-analysis/${id}/tag/${tagId}`)
+    return true
+  } catch (err) {
+    logger.error('Pathway', `unassignPathwayTag failed`, err)
+    return false
+  }
+}
+
+export interface PathwayDiagnosticMessage {
+  severity: 'INFO' | 'WARNING' | 'CRITICAL'
+  message: string
+}
+
+/**
+ * Run diagnostics on a pathway analysis design.
+ * POST /pathway-analysis/check
+ */
+export async function runPathwayDiagnostics(
+  pathway: Pathway
+): Promise<PathwayDiagnosticMessage[]> {
+  try {
+    const data = await httpPost<unknown>('/pathway-analysis/check', pathway)
+    if (Array.isArray(data)) return data as PathwayDiagnosticMessage[]
+    return []
+  } catch (err) {
+    logger.error('Pathway', 'runPathwayDiagnostics failed', err)
+    return []
+  }
+}
