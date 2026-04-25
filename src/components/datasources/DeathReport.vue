@@ -80,12 +80,13 @@ const props = defineProps<{
 
 const hasData = computed(() => {
   const d = props.data
-  return (
-    (d.ageAtDeath?.length ?? 0) > 0 ||
-    (d.deathByType?.length ?? 0) > 0 ||
-    (d.prevalenceByMonth?.categories?.length ?? 0) > 0 ||
-    (d.prevalenceByGenderAgeYear?.series?.length ?? 0) > 0
-  )
+  const sectionLengths = [
+    d.ageAtDeath?.length,
+    d.deathByType?.length,
+    d.prevalenceByMonth?.categories?.length,
+    d.prevalenceByGenderAgeYear?.series?.length
+  ]
+  return sectionLengths.some((n) => Boolean(n))
 })
 </script>
 

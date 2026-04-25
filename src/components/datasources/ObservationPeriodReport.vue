@@ -139,17 +139,18 @@ const props = defineProps<{
 
 const hasData = computed(() => {
   const d = props.data
-  return (
-    (d.ageAtFirst?.values?.length ?? 0) > 0 ||
-    (d.observationLength?.values?.length ?? 0) > 0 ||
-    (d.cumulativeObservation?.series?.length ?? 0) > 0 ||
-    (d.observedByMonth?.series?.length ?? 0) > 0 ||
-    (d.ageByGender?.length ?? 0) > 0 ||
-    (d.durationByGender?.length ?? 0) > 0 ||
-    (d.durationByAgeDecile?.length ?? 0) > 0 ||
-    (d.personsWithContinuousObsByYear?.values?.length ?? 0) > 0 ||
-    (d.observationPeriodsPerPerson?.length ?? 0) > 0
-  )
+  const sectionLengths = [
+    d.ageAtFirst?.values?.length,
+    d.observationLength?.values?.length,
+    d.cumulativeObservation?.series?.length,
+    d.observedByMonth?.series?.length,
+    d.ageByGender?.length,
+    d.durationByGender?.length,
+    d.durationByAgeDecile?.length,
+    d.personsWithContinuousObsByYear?.values?.length,
+    d.observationPeriodsPerPerson?.length
+  ]
+  return sectionLengths.some((n) => Boolean(n))
 })
 </script>
 

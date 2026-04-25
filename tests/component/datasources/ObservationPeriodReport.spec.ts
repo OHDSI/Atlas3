@@ -73,10 +73,66 @@ describe('ObservationPeriodReport', () => {
     expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(true)
   })
 
+  it('renders empty state when every section is undefined', () => {
+    const wrapper = mount(ObservationPeriodReport, {
+      global: { plugins: [vuetify, createPinia()] },
+      props: {
+        data: {
+          ageAtFirst: undefined,
+          observationLength: undefined,
+          cumulativeObservation: undefined,
+          observedByMonth: undefined,
+          ageByGender: undefined,
+          durationByGender: undefined,
+          durationByAgeDecile: undefined,
+          personsWithContinuousObsByYear: undefined,
+          observationPeriodsPerPerson: undefined
+        }
+      }
+    })
+
+    expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(true)
+  })
+
   it('does not render empty state when at least one section has data', () => {
     const wrapper = mount(ObservationPeriodReport, {
       global: { plugins: [vuetify, createPinia()] },
       props: { data: makeData() }
+    })
+
+    expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(false)
+  })
+
+  const sections: Array<keyof OPR> = [
+    'ageAtFirst',
+    'observationLength',
+    'cumulativeObservation',
+    'observedByMonth',
+    'ageByGender',
+    'durationByGender',
+    'durationByAgeDecile',
+    'personsWithContinuousObsByYear',
+    'observationPeriodsPerPerson'
+  ]
+
+  it.each(sections)('hides empty state when only %s is populated', (section) => {
+    const empty: OPR = {
+      ageAtFirst: undefined,
+      observationLength: undefined,
+      cumulativeObservation: undefined,
+      observedByMonth: undefined,
+      ageByGender: undefined,
+      durationByGender: undefined,
+      durationByAgeDecile: undefined,
+      personsWithContinuousObsByYear: undefined,
+      observationPeriodsPerPerson: undefined
+    }
+    const populated = makeData()
+    const data = { ...empty, [section]: populated[section] } as OPR
+
+    const wrapper = mount(ObservationPeriodReport, {
+      global: { plugins: [vuetify, createPinia()] },
+      props: { data }
     })
 
     expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(false)

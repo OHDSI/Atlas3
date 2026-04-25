@@ -59,10 +59,51 @@ describe('DeathReport', () => {
     expect(wrapper.find('[data-testid=prevalence-by-month-chart]').exists()).toBe(false)
   })
 
+  it('renders empty state when every section is undefined', () => {
+    const wrapper = mount(DeathReport, {
+      global: { plugins: [vuetify, createPinia()] },
+      props: {
+        data: {
+          ageAtDeath: undefined as unknown as DR['ageAtDeath'],
+          deathByType: undefined as unknown as DR['deathByType'],
+          prevalenceByMonth: undefined,
+          prevalenceByGenderAgeYear: undefined
+        }
+      }
+    })
+
+    expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(true)
+  })
+
   it('does not render empty state when at least one section has data', () => {
     const wrapper = mount(DeathReport, {
       global: { plugins: [vuetify, createPinia()] },
       props: { data: makeData() }
+    })
+
+    expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(false)
+  })
+
+  const sections: Array<keyof DR> = [
+    'ageAtDeath',
+    'deathByType',
+    'prevalenceByMonth',
+    'prevalenceByGenderAgeYear'
+  ]
+
+  it.each(sections)('hides empty state when only %s is populated', (section) => {
+    const empty: DR = {
+      ageAtDeath: [],
+      deathByType: [],
+      prevalenceByMonth: undefined,
+      prevalenceByGenderAgeYear: undefined
+    }
+    const populated = makeData()
+    const data = { ...empty, [section]: populated[section] } as DR
+
+    const wrapper = mount(DeathReport, {
+      global: { plugins: [vuetify, createPinia()] },
+      props: { data }
     })
 
     expect(wrapper.find('[data-testid=empty-report-state]').exists()).toBe(false)
