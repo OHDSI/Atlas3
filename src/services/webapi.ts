@@ -30,7 +30,9 @@ import {
   type InclusionRuleReportMode,
   type InclusionTreemapNode,
 } from '@/models/report.types'
-import { httpClient, getBaseUrl, type HttpClientOptions } from '@/services/http-client'
+import { httpClient, getBaseUrl, type HttpClientOptions, httpGet, httpPost, httpPut, httpDelete } from '@/services/http-client'
+import { PathwaySchema, type Pathway } from '@/models/pathway.types'
+import { z } from 'zod'
 
 /**
  * @deprecated Use httpClient from '@/services/http-client' for new code
@@ -1494,5 +1496,124 @@ export async function getCohortPrintFriendly(
   } catch (error) {
     logger.error('WebAPI', 'Failed to fetch print-friendly cohort', error)
     return null
+  }
+}
+
+// ─── Cohort Pathway CRUD ────────────────────────────────────────────────────
+
+/**
+ * List all pathway analyses.
+ * GET /pathway-analysis?size=10000
+ */
+export async function listPathways(): Promise<ApiResult<Pathway[]>> {
+  try {
+    const data = await httpGet<unknown>('/pathway-analysis?size=10000')
+    const parsed = z.array(PathwaySchema.passthrough()).safeParse(data)
+    if (!parsed.success) {
+      logger.error('Pathway', 'listPathways validation', parsed.error)
+      return failure('Invalid pathway list response')
+    }
+    return success(parsed.data as Pathway[])
+  } catch (err) {
+    logger.error('Pathway', 'listPathways failed', err)
+    return failure(err instanceof Error ? err.message : 'Failed to list pathways')
+  }
+}
+
+/**
+ * Fetch a single pathway analysis by id.
+ * GET /pathway-analysis/:id
+ */
+export async function getPathway(id: number): Promise<ApiResult<Pathway>> {
+  try {
+    const data = await httpGet<unknown>(`/pathway-analysis/${id}`)
+    const parsed = PathwaySchema.passthrough().safeParse(data)
+    if (!parsed.success) {
+      logger.error('Pathway', 'getPathway validation', parsed.error)
+      return failure('Invalid pathway response')
+    }
+    return success(parsed.data as Pathway)
+  } catch (err) {
+    logger.error('Pathway', `getPathway(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch pathway')
+  }
+}
+
+/**
+ * Create a new pathway analysis.
+ * POST /pathway-analysis
+ */
+export async function createPathway(pathway: Pathway): Promise<ApiResult<Pathway>> {
+  try {
+    const data = await httpPost<unknown>('/pathway-analysis', pathway)
+    const parsed = PathwaySchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid create response')
+    return success(parsed.data as Pathway)
+  } catch (err) {
+    logger.error('Pathway', 'createPathway failed', err)
+    return failure(err instanceof Error ? err.message : 'Failed to create pathway')
+  }
+}
+
+/**
+ * Update an existing pathway analysis.
+ * PUT /pathway-analysis/:id
+ */
+export async function savePathway(id: number, pathway: Pathway): Promise<ApiResult<Pathway>> {
+  try {
+    const data = await httpPut<unknown>(`/pathway-analysis/${id}`, pathway)
+    const parsed = PathwaySchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid save response')
+    return success(parsed.data as Pathway)
+  } catch (err) {
+    logger.error('Pathway', `savePathway(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to save pathway')
+  }
+}
+
+/**
+ * Copy a pathway analysis (creates a duplicate).
+ * POST /pathway-analysis/:id
+ */
+export async function copyPathway(id: number): Promise<ApiResult<Pathway>> {
+  try {
+    const data = await httpPost<unknown>(`/pathway-analysis/${id}`, undefined)
+    const parsed = PathwaySchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid copy response')
+    return success(parsed.data as Pathway)
+  } catch (err) {
+    logger.error('Pathway', `copyPathway(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to copy pathway')
+  }
+}
+
+/**
+ * Delete a pathway analysis.
+ * DELETE /pathway-analysis/:id
+ */
+export async function deletePathway(id: number): Promise<boolean> {
+  try {
+    await httpDelete(`/pathway-analysis/${id}`)
+    return true
+  } catch (err) {
+    logger.error('Pathway', `deletePathway(${id}) failed`, err)
+    return false
+  }
+}
+
+/**
+ * Check whether a pathway name already exists.
+ * GET /pathway-analysis/:id/exists?name=<encoded>
+ * Use id=0 (default) when checking for a new (unsaved) pathway.
+ */
+export async function existsPathway(name: string, id = 0): Promise<number> {
+  try {
+    const data = await httpGet<number>(
+      `/pathway-analysis/${id}/exists?name=${encodeURIComponent(name)}`
+    )
+    return typeof data === 'number' ? data : 0
+  } catch (err) {
+    logger.error('Pathway', 'existsPathway failed', err)
+    return 0
   }
 }
