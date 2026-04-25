@@ -207,49 +207,84 @@ export function useTemporalWindows() {
   }
 
   /**
-   * Create common temporal window presets
+   * Quick-pick temporal window presets aligned with OHDSI FeatureExtraction conventions:
+   *   short-term  = 30 days prior to index (inclusive)
+   *   medium-term = 180 days prior to index (inclusive)
+   *   long-term   = 365 days prior to index (inclusive)
+   * See https://ohdsi.github.io/FeatureExtraction/articles/UsingFeatureExtraction.html
+   * Symmetric follow-up windows and open-ended "any time" options cover the
+   * remaining common research patterns.
    */
   function getTemporalWindowPresets(): Array<{
     label: string
     value: TemporalWindow
   }> {
+    const indexStart = 'INDEX_START' as const
     return [
+      // Baseline / lookback (relative to cohort start)
       {
-        label: 'Any time before index',
+        label: 'Short-term baseline (−30 to 0 days)',
         value: {
-          startWindow: {
-            days: null,
-            beforeAfter: 'BEFORE',
-            referencePoint: 'INDEX_START',
-          },
+          startWindow: { days: 30, beforeAfter: 'BEFORE', referencePoint: indexStart },
+          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
         },
       },
       {
-        label: '0 to 30 days after index',
+        label: 'Medium-term baseline (−180 to 0 days)',
         value: {
-          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-          endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
+          startWindow: { days: 180, beforeAfter: 'BEFORE', referencePoint: indexStart },
+          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
         },
       },
       {
-        label: '0 to 90 days after index',
+        label: 'Long-term baseline (−365 to 0 days)',
         value: {
-          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-          endWindow: { days: 90, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
+          startWindow: { days: 365, beforeAfter: 'BEFORE', referencePoint: indexStart },
+          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
         },
       },
       {
-        label: '30 days before to 0 days after index',
+        label: 'All time prior to index',
         value: {
-          startWindow: { days: 30, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
-          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
+          startWindow: { days: null, beforeAfter: 'BEFORE', referencePoint: indexStart },
+          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+        },
+      },
+      // Concurrent
+      {
+        label: 'On index date',
+        value: {
+          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+          endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+        },
+      },
+      // Follow-up
+      {
+        label: 'Acute follow-up (0 to 30 days after)',
+        value: {
+          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+          endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: indexStart },
         },
       },
       {
-        label: '0 to 365 days after index',
+        label: '90-day follow-up (0 to 90 days after)',
         value: {
-          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-          endWindow: { days: 365, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
+          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+          endWindow: { days: 90, beforeAfter: 'AFTER', referencePoint: indexStart },
+        },
+      },
+      {
+        label: '1-year follow-up (0 to 365 days after)',
+        value: {
+          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+          endWindow: { days: 365, beforeAfter: 'AFTER', referencePoint: indexStart },
+        },
+      },
+      {
+        label: 'All time after index',
+        value: {
+          startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: indexStart },
+          endWindow: { days: null, beforeAfter: 'AFTER', referencePoint: indexStart },
         },
       },
     ]

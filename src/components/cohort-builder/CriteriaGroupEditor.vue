@@ -265,30 +265,12 @@
                       <div class="concept-temporal-row">
                         <!-- Concept Set Picker -->
                         <div class="concept-set-section">
-                          <v-btn
-                            v-if="!event.conceptSet || event.conceptSet.id === 0"
-                            color="primary"
-                            variant="outlined"
-                            size="small"
-                            data-testid="concept-set-picker"
-                            @click="selectConceptSetForEvent(index)"
-                          >
-                            <v-icon class="mr-2">
-                              mdi-plus
-                            </v-icon>
-                            Select Concept Set
-                          </v-btn>
-                          <v-chip
-                            v-else
-                            closable
-                            color="primary"
-                            data-testid="selected-concept-set"
-                            style="cursor: pointer;"
-                            @click="emit('edit-concept-set', event.conceptSet)"
-                            @click:close="clearConceptSet(index)"
-                          >
-                            {{ event.conceptSet.name }}
-                          </v-chip>
+                          <EventConceptSetField
+                            :concept-set="event.conceptSet && event.conceptSet.id !== 0 ? event.conceptSet : undefined"
+                            @select="selectConceptSetForEvent(index)"
+                            @edit="emit('edit-concept-set', $event)"
+                            @clear="clearConceptSet(index)"
+                          />
                         </div>
 
                         <!-- Temporal Window Display/Editor -->
@@ -420,6 +402,7 @@ import type {
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import AttributesEditor from './AttributesEditor.vue'
+import EventConceptSetField from './EventConceptSetField.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import TemporalFilterChip from './TemporalFilterChip.vue'
 

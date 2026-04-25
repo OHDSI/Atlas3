@@ -154,13 +154,6 @@
   "attributeMapping": {
     "conditionOccurrence": [
       {
-        "id": "default",
-        "name": "Condition Concept Set",
-        "description": "Select condition concepts",
-        "type": "conceptSet",
-        "domainFilter": "Condition"
-      },
-      {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
@@ -190,10 +183,24 @@
         "domainFilter": "Gender"
       },
       {
+        "id": "genderCs",
+        "name": "Gender Concept Set",
+        "description": "Filter gender by a concept set",
+        "type": "conceptSet",
+        "domainFilter": "Gender"
+      },
+      {
         "id": "conditionStatus",
         "name": "Condition Status",
         "description": "Filter by condition status",
         "type": "concept",
+        "domainFilter": "Condition Status"
+      },
+      {
+        "id": "conditionStatusCs",
+        "name": "Condition Status Concept Set",
+        "description": "Filter condition status by a concept set",
+        "type": "conceptSet",
         "domainFilter": "Condition Status"
       },
       {
@@ -222,10 +229,24 @@
         "domainFilter": "Type Concept"
       },
       {
+        "id": "conditionTypeCs",
+        "name": "Condition Type Concept Set",
+        "description": "Filter condition type by a concept set",
+        "type": "conceptSet",
+        "domainFilter": "Type Concept"
+      },
+      {
         "id": "visitType",
         "name": "Visit",
         "description": "Filter based on visit occurrence",
         "type": "concept",
+        "domainFilter": "Visit"
+      },
+      {
+        "id": "visitTypeCs",
+        "name": "Visit Type Concept Set",
+        "description": "Filter visit type by a concept set",
+        "type": "conceptSet",
         "domainFilter": "Visit"
       },
       {
@@ -239,6 +260,13 @@
         "name": "Provider Specialty",
         "description": "Filter by provider specialty",
         "type": "concept",
+        "domainFilter": "Provider"
+      },
+      {
+        "id": "providerSpecialtyCs",
+        "name": "Provider Specialty Concept Set",
+        "description": "Filter provider specialty by a concept set",
+        "type": "conceptSet",
         "domainFilter": "Provider"
       },
       {
@@ -257,13 +285,6 @@
       }
     ],
     "conditionEra": [
-      {
-        "id": "default",
-        "name": "Condition Concept Set",
-        "description": "Select condition concepts",
-        "type": "conceptSet",
-        "domainFilter": "Condition"
-      },
       {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
@@ -337,13 +358,6 @@
       }
     ],
     "drugExposure": [
-      {
-        "id": "default",
-        "name": "Drug Concept Set",
-        "description": "Select drug concepts",
-        "type": "conceptSet",
-        "domainFilter": "Drug"
-      },
       {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
@@ -481,13 +495,6 @@
     ],
     "drugEra": [
       {
-        "id": "default",
-        "name": "Drug Concept Set",
-        "description": "Select drug concepts",
-        "type": "conceptSet",
-        "domainFilter": "Drug"
-      },
-      {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
@@ -566,13 +573,6 @@
       }
     ],
     "doseEra": [
-      {
-        "id": "default",
-        "name": "Drug Concept Set",
-        "description": "Select drug concepts",
-        "type": "conceptSet",
-        "domainFilter": "Drug"
-      },
       {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
@@ -653,13 +653,6 @@
       }
     ],
     "deviceExposure": [
-      {
-        "id": "default",
-        "name": "Device Concept Set",
-        "description": "Select device concepts",
-        "type": "conceptSet",
-        "domainFilter": "Device"
-      },
       {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
@@ -760,13 +753,6 @@
       }
     ],
     "measurement": [
-      {
-        "id": "default",
-        "name": "Measurement Concept Set",
-        "description": "Select measurement concepts",
-        "type": "conceptSet",
-        "domainFilter": "Measurement"
-      },
       {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
@@ -900,13 +886,6 @@
     ],
     "observation": [
       {
-        "id": "default",
-        "name": "Observation Concept Set",
-        "description": "Select observation concepts",
-        "type": "conceptSet",
-        "domainFilter": "Observation"
-      },
-      {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
@@ -1018,15 +997,6 @@
     ],
     "procedureOccurrence": [
       {
-        "id": "default",
-        "name": "Procedure Concept Set",
-        "description": "Select procedure concepts",
-        "type": "conceptSet",
-        "domainFilter": "Procedure",
-        "nameKey": "const.eventsList.addSourceConcept.title_procedureoccurrence",
-        "descriptionKey": "const.eventsList.addSourceConcept.desc_procedureoccurrence"
-      },
-      {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
@@ -1120,13 +1090,6 @@
       }
     ],
     "specimen": [
-      {
-        "id": "default",
-        "name": "Specimen Concept Set",
-        "description": "Select specimen concepts",
-        "type": "conceptSet",
-        "domainFilter": "Specimen"
-      },
       {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
@@ -1222,13 +1185,6 @@
       }
     ],
     "visitOccurrence": [
-      {
-        "id": "default",
-        "name": "Visit Concept Set",
-        "description": "Select visit concepts",
-        "type": "conceptSet",
-        "domainFilter": "Visit"
-      },
       {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
@@ -1328,13 +1284,6 @@
       }
     ],
     "visitDetail": [
-      {
-        "id": "default",
-        "name": "Visit Detail Concept Set",
-        "description": "Select visit detail concepts",
-        "type": "conceptSet",
-        "domainFilter": "Visit"
-      },
       {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
@@ -1445,13 +1394,6 @@
     ],
     "observationPeriod": [
       {
-        "id": "default",
-        "name": "Observation Period Concept Set",
-        "description": "Select observation period concepts",
-        "type": "conceptSet",
-        "domainFilter": "Observation Period"
-      },
-      {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
@@ -1530,13 +1472,6 @@
       }
     ],
     "payerPlanPeriod": [
-      {
-        "id": "default",
-        "name": "Payer Plan Period Concept Set",
-        "description": "Select payer plan period concepts",
-        "type": "conceptSet",
-        "domainFilter": "Payer Plan Period"
-      },
       {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
@@ -1679,13 +1614,6 @@
     ],
     "death": [
       {
-        "id": "default",
-        "name": "Death Concept Set",
-        "description": "Select death concepts",
-        "type": "conceptSet",
-        "domainFilter": "Death"
-      },
-      {
         "id": "temporalRelationship",
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
@@ -1790,13 +1718,6 @@
       }
     ],
     "locationRegion": [
-      {
-        "id": "default",
-        "name": "Location Region Concept Set",
-        "description": "Select location region concepts",
-        "type": "conceptSet",
-        "domainFilter": "Geography"
-      },
       {
         "id": "startDate",
         "name": "Start Date",

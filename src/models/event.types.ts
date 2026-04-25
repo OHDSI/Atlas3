@@ -57,6 +57,7 @@ export interface ConceptSetAttribute {
   type: 'conceptSet'
   attributeKey: ConceptAttributeKey
   conceptSet: { id: number | string; name: string }
+  isExclusion?: boolean
 }
 
 /**
@@ -83,6 +84,7 @@ export interface ConceptAttribute {
   type: 'concept'
   attributeKey: ConceptAttributeKey
   concepts: Concept[] // Changed from single concept to array
+  isExclusion?: boolean
 }
 
 export interface DateRangeAttribute {
@@ -156,7 +158,13 @@ export type NumericAttributeKey =
   | 'eraLength'
   | 'quantity'
 
-export type ConceptAttributeKey = 'gender' | 'race' | 'ethnicity' | 'visitType' | 'providerSpecialty'
+/**
+ * Identifier for a concept-typed attribute. Always camelCase; the canonical list
+ * is in `src/config/atlas-config.json` under `attributeMapping`. The `*Cs` suffix
+ * (e.g. `visitTypeCs`) marks the concept-set variant of a domain attribute, mirroring
+ * Atlas 2.15's `VisitTypeCS` field.
+ */
+export type ConceptAttributeKey = string
 
 export type DateAttributeKey =
   | 'occurrenceStartDate'

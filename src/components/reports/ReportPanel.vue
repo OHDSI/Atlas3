@@ -254,6 +254,7 @@ const currentReportComponent = computed(() => {
 
   // Map report types to components (lazy loaded)
   const componentMap: Record<string, () => Promise<{ default: Component }>> = {
+    'inclusion-rule': () => import('./inclusion/InclusionRuleReport.vue'),
     'person': () => import('./report-types/PersonReport.vue'),
     'condition-eras': () => import('./report-types/ConditionErasReport.vue'),
     'condition': () => import('./report-types/ConditionReport.vue'),

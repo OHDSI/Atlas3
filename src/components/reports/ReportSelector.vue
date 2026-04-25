@@ -59,6 +59,12 @@ const emit = defineEmits<{
  */
 const allReportItems = [
   {
+    type: 'inclusion-rule' as ReportType,
+    label: tv('reports.types.inclusionRule.label', 'Inclusion-Rule Report'),
+    description: tv('reports.types.inclusionRule.description', 'Per-rule attrition, summary stats and population breakdown for the generated cohort.'),
+    icon: 'mdi-filter-variant'
+  },
+  {
     type: 'person' as ReportType,
     label: tv('reports.types.person.label'),
     description: tv('reports.types.person.description'),
