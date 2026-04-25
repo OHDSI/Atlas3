@@ -1,5 +1,6 @@
 # Dependencies
 .gitignore
+.worktrees/
 node_modules/
 .pnp/
 .pnp.js

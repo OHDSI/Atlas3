@@ -126,9 +126,21 @@ class AuthService implements IAuthService {
         throw new Error(errorHeader || errorBody || 'Authentication failed')
       }
 
-      const token = response.headers.get('Bearer')
+      // WebAPI 3.0 returns { login, jwt, roles, message } in the JSON body.
+      // Older WebAPI versions returned the token in a `Bearer` response header.
+      let token = response.headers.get('Bearer')
+      if (!token) {
+        try {
+          const body = await response.clone().json()
+          if (body && typeof body.jwt === 'string') {
+            token = body.jwt
+          }
+        } catch {
+          // response wasn't JSON — fall through to the no-token error
+        }
+      }
       logger.debug('Auth', 'Token received', token ? 'YES' : 'NO')
-      
+
       if (!token) {
         throw new Error('No token received from server')
       }

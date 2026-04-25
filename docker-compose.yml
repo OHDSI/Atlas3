@@ -65,29 +65,28 @@ services:
       SPRING_FLYWAY_PLACEHOLDERS_OHDSISCHEMA: webapi
       FLYWAY_BASELINE_VERSION: "3.0.0"
       # Security configuration
-      SECURITY_PROVIDER: AtlasRegularSecurity
-      SECURITY_ORIGIN: "*"
-      SECURITY_SSL_ENABLED: "false"
-      # Auth providers (disable all except JDBC)
-      SECURITY_AUTH_JDBC_ENABLED: "true"
+      SECURITY_CORS_ENABLED: "true"
+      SECURITY_CORS_ALLOWED_ORIGINS: "http://localhost,https://localhost"
+      # Auth providers (disable all except DB)
+      SECURITY_AUTH_DB_ENABLED: "true"
       SECURITY_AUTH_WINDOWS_ENABLED: "false"
       SECURITY_AUTH_KERBEROS_ENABLED: "false"
-      SECURITY_AUTH_OPENID_ENABLED: "false"
-      SECURITY_AUTH_FACEBOOK_ENABLED: "false"
-      SECURITY_AUTH_GITHUB_ENABLED: "false"
-      SECURITY_AUTH_GOOGLE_ENABLED: "false"
+      SECURITY_AUTH_OIDC_ENABLED: "false"
+      SECURITY_AUTH_OAUTH_FACEBOOK_ENABLED: "false"
+      SECURITY_AUTH_OAUTH_GITHUB_ENABLED: "false"
+      SECURITY_AUTH_OAUTH_GOOGLE_ENABLED: "false"
       SECURITY_AUTH_LDAP_ENABLED: "false"
       SECURITY_AUTH_AD_ENABLED: "false"
       SECURITY_AUTH_CAS_ENABLED: "false"
       # OAuth callbacks
-      SECURITY_OAUTH_CALLBACK_UI: "http://localhost/atlas/#/welcome"
-      SECURITY_OAUTH_CALLBACK_API: "http://localhost:8080/WebAPI/user/oauth/callback"
-      SECURITY_DB_DATASOURCE_SCHEMA: webapi_security
-      SECURITY_DB_DATASOURCE_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi_security
-      SECURITY_DB_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
-      SECURITY_DB_DATASOURCE_USERNAME: postgres
-      SECURITY_DB_DATASOURCE_PASSWORD: mypass
-      SECURITY_DB_DATASOURCE_AUTHENTICATIONQUERY: "SELECT password, email AS firstname, NULL AS middlename, email AS lastname FROM webapi_security.security WHERE email = ?"
+      SECURITY_AUTH_OAUTH_CALLBACK_UI: "http://localhost/atlas/#/welcome"
+      SECURITY_AUTH_OAUTH_CALLBACK_API: "http://localhost:8080/WebAPI/user/oauth/callback"
+      # DB-auth datasource (reads webapi.auth_user)
+      SECURITY_AUTH_DB_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SECURITY_AUTH_DB_DATASOURCE_URL: jdbc:postgresql://atlas3-postgres:5432/postgres?currentSchema=webapi
+      SECURITY_AUTH_DB_DATASOURCE_USERNAME: postgres
+      SECURITY_AUTH_DB_DATASOURCE_PASSWORD: mypass
+      SECURITY_AUTH_DB_DATASOURCE_SCHEMA: webapi
       # TrexSQL
       TREXSQL_ENABLED: "true"
       TREXSQL_CACHE_PATH: /data/cache

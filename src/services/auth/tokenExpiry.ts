@@ -9,6 +9,11 @@ import { getTokenExpiration } from '@/utils/jwt';
 import type { ExpiryTimer, ExpiryDetectionConfig } from '@/types/auth';
 import { logger } from '@/utils/logger';
 
+// setTimeout uses a 32-bit signed int for its delay; values above this
+// silently overflow and fire immediately. Skip scheduling for tokens that
+// expire beyond this horizon (~24.8 days from now).
+const MAX_TIMEOUT_MS = 2_147_483_647;
+
 class TokenExpiryService {
   private timer: ExpiryTimer = {
     timerId: null,
@@ -57,6 +62,12 @@ class TokenExpiryService {
 
     // Set timer for warning
     const delay = warningTime - now;
+
+    if (delay > MAX_TIMEOUT_MS) {
+      logger.debug('TokenExpiry', `Token expires too far in the future (${(delay / 86400000).toFixed(1)} days), skipping warning timer`);
+      return;
+    }
+
     logger.debug('TokenExpiry', `Expiry warning scheduled for ${new Date(warningTime).toLocaleTimeString()} (in ${(delay / 60000).toFixed(1)} minutes)`);
 
     this.timer.timerId = setTimeout(() => {
