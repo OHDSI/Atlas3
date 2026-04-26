@@ -1,5 +1,9 @@
 <template>
-  <v-toolbar density="compact" flat class="profile-toolbar">
+  <v-toolbar
+    density="compact"
+    flat
+    class="profile-toolbar"
+  >
     <v-toolbar-title>{{ tv('profiles.title', 'Profiles') }}</v-toolbar-title>
     <v-spacer />
     <v-btn

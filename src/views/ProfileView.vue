@@ -1,15 +1,25 @@
 <template>
-  <v-container fluid class="profile-view">
+  <v-container
+    fluid
+    class="profile-view"
+  >
     <ProfileToolbar />
     <ProfileInputBar data-test="profile-input-bar" />
     <ProfileDemographics
       v-if="store.person"
       data-test="profile-demographics"
     />
-    <div v-if="store.error" class="profile-error" data-test="profile-error">
+    <div
+      v-if="store.error"
+      class="profile-error"
+      data-test="profile-error"
+    >
       {{ store.error }}
     </div>
-    <div v-if="store.person" class="profile-body">
+    <div
+      v-if="store.person"
+      class="profile-body"
+    >
       <div class="profile-main">
         <ProfileObservationBand />
         <ProfileTimeline />

@@ -1,5 +1,9 @@
 <template>
-  <v-card class="profile-input-bar" flat data-test="profile-input-bar">
+  <v-card
+    class="profile-input-bar"
+    flat
+    data-test="profile-input-bar"
+  >
     <v-card-text class="d-flex align-center ga-3">
       <v-select
         v-model="selectedSource"
@@ -33,14 +37,18 @@
           color="primary"
           variant="tonal"
           data-test="profile-person-submit"
-        >Go</v-btn>
+        >
+          Go
+        </v-btn>
       </form>
       <v-chip
         v-if="cohortBadge"
         color="primary"
         variant="outlined"
         data-test="profile-cohort-badge"
-      >{{ cohortBadge }}</v-chip>
+      >
+        {{ cohortBadge }}
+      </v-chip>
     </v-card-text>
   </v-card>
 </template>

@@ -1,7 +1,15 @@
 <template>
-  <v-card flat class="profile-demographics" data-test="profile-demographics">
+  <v-card
+    flat
+    class="profile-demographics"
+    data-test="profile-demographics"
+  >
     <v-card-text class="d-flex align-center ga-4">
-      <v-icon :icon="genderIcon" size="32" data-test="profile-gender-icon" />
+      <v-icon
+        :icon="genderIcon"
+        size="32"
+        data-test="profile-gender-icon"
+      />
       <span data-test="profile-yob">{{ store.person?.yearOfBirth }}</span>
       <span data-test="profile-age">
         {{ ageLabel }}
