@@ -9,7 +9,9 @@
       size="small"
       data-test="profile-chip-active"
       @click:close="store.setDomainFilter(d, false)"
-    >{{ d }}</v-chip>
+    >
+      {{ d }}
+    </v-chip>
 
     <v-menu v-if="availableDomains.length > 0">
       <template #activator="{ props }">
@@ -19,7 +21,9 @@
           variant="text"
           prepend-icon="mdi-plus"
           data-test="profile-chip-add"
-        >Domain</v-btn>
+        >
+          Domain
+        </v-btn>
       </template>
       <v-list>
         <v-list-item
