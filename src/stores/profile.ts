@@ -3,10 +3,11 @@
  * Manages person profile state, route params, filters, and highlights.
  */
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { logger } from '@/utils/logger'
 import {
   type PersonProfile,
+  type PersonRecord,
   type HighlightColor,
   type CohortConceptSet,
 } from '@/models/profile.types'
@@ -121,6 +122,44 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
+  const filteredRecords = computed<PersonRecord[]>(() => {
+    const records = person.value?.records ?? []
+    const dom = domainFilter.value
+    const txt = textFilter.value.trim().toLowerCase()
+    const range = dateRange.value
+    return records.filter(r => {
+      if (dom.size > 0 && !dom.has(r.domain)) return false
+      if (txt && !r.conceptName.toLowerCase().includes(txt)) return false
+      if (range) {
+        const [from, to] = range
+        if (r.startDay < from || r.startDay > to) return false
+      }
+      return true
+    })
+  })
+
+  const domainCounts = computed<Record<string, number>>(() => {
+    const counts: Record<string, number> = {}
+    for (const r of person.value?.records ?? []) {
+      counts[r.domain] = (counts[r.domain] ?? 0) + 1
+    }
+    return counts
+  })
+
+  const observationBands = computed<Array<{ x1: number; x2: number }>>(() => {
+    return (person.value?.observationPeriods ?? []).map(p => ({ x1: p.startDays, x2: p.endDays }))
+  })
+
+  const indexDate = computed<number | null>(() => {
+    const cohort = person.value?.cohorts.find(c => c.cohortDefinitionId === cohortDefinitionId.value)
+    if (cohort) return cohort.startDate
+    const records = person.value?.records ?? []
+    if (records.length === 0) return null
+    return records.reduce((m, r) => Math.min(m, r.startDate), records[0]!.startDate)
+  })
+
+  const hasCohortContext = computed(() => cohortDefinitionId.value !== null)
+
   return {
     // state
     sourceKey,
@@ -143,5 +182,11 @@ export const useProfileStore = defineStore('profile', () => {
     applyHighlight,
     clearHighlights,
     loadPerson,
+    // getters
+    filteredRecords,
+    domainCounts,
+    observationBands,
+    indexDate,
+    hasCohortContext,
   }
 })

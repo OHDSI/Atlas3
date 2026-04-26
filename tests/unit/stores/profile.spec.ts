@@ -105,3 +105,64 @@ describe('Profile Store — loadPerson', () => {
     expect(s.cohortConceptSets).toEqual([{ id: 0, name: 'A' }])
   })
 })
+
+describe('Profile Store — getters', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  function seed(records: Array<Partial<{ conceptId: number; conceptName: string; domain: string; startDay: number; endDay: number | null }>>) {
+    const s = useProfileStore()
+    s.person = {
+      gender: 'MALE', yearOfBirth: 1970, monthOfBirth: null, dayOfBirth: null,
+      ageAtIndex: 50, recordCount: records.length,
+      records: records.map(r => ({
+        conceptId: r.conceptId ?? 1, conceptName: r.conceptName ?? 'X',
+        domain: r.domain ?? 'Drug',
+        startDate: 1, endDate: null,
+        startDay: r.startDay ?? 0, endDay: r.endDay ?? null,
+      })),
+      cohorts: [], observationPeriods: [
+        { startDate: 1, endDate: 2, startDays: -100, endDays: 100 },
+      ],
+    } as never
+    return s
+  }
+
+  it('domainCounts counts records per domain', () => {
+    const s = seed([{ domain: 'Drug' }, { domain: 'Drug' }, { domain: 'Condition' }])
+    expect(s.domainCounts).toEqual({ Drug: 2, Condition: 1 })
+  })
+
+  it('filteredRecords applies domainFilter when non-empty', () => {
+    const s = seed([{ domain: 'Drug' }, { domain: 'Condition' }])
+    s.setDomainFilter('Drug', true)
+    expect(s.filteredRecords).toHaveLength(1)
+    expect(s.filteredRecords[0]?.domain).toBe('Drug')
+  })
+
+  it('filteredRecords applies textFilter against conceptName (case-insensitive)', () => {
+    const s = seed([
+      { conceptId: 1, conceptName: 'Lisinopril' },
+      { conceptId: 2, conceptName: 'Aspirin' },
+    ])
+    s.setTextFilter('LISI')
+    expect(s.filteredRecords.map(r => r.conceptId)).toEqual([1])
+  })
+
+  it('filteredRecords applies dateRange against startDay', () => {
+    const s = seed([
+      { conceptId: 1, startDay: -100 },
+      { conceptId: 2, startDay: 0 },
+      { conceptId: 3, startDay: 200 },
+    ])
+    s.setDateRange([-50, 100])
+    expect(s.filteredRecords.map(r => r.conceptId)).toEqual([2])
+  })
+
+  it('observationBands derives from observationPeriods', () => {
+    const s = seed([])
+    expect(s.observationBands).toEqual([{ x1: -100, x2: 100 }])
+  })
+})
