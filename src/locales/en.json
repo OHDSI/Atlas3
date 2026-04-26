@@ -1446,6 +1446,51 @@
           "back": "Back to builder"
         }
       }
+    },
+    "results": {
+      "title": "Results",
+      "loading": "Loading results...",
+      "loadError": "Failed to load results.",
+      "back": "Back to builder",
+      "exportCsv": "Export CSV",
+      "header": {
+        "source": "Source",
+        "started": "Started",
+        "completed": "Completed",
+        "duration": "Duration",
+        "designHash": "Design Hash",
+        "resultCount": "Total rows",
+        "threshold": "Show covariates with prevalence ≥ {n}%"
+      },
+      "filter": {
+        "title": "Filters",
+        "domain": "Domain",
+        "analysis": "Analysis",
+        "cohort": "Cohort",
+        "all": "All"
+      },
+      "table": {
+        "covariate": "Covariate",
+        "conceptId": "Concept ID",
+        "count": "Count",
+        "pct": "%",
+        "stdDiff": "Std Diff",
+        "explore": "Explore",
+        "mean": "Mean",
+        "sd": "SD",
+        "min": "Min",
+        "p25": "P25",
+        "median": "Median",
+        "p75": "P75",
+        "max": "Max",
+        "empty": "No rows match the current filter."
+      },
+      "explore": {
+        "title": "Explore covariate: {name}",
+        "loading": "Loading...",
+        "empty": "No related concepts.",
+        "close": "Close"
+      }
     }
   },
   "featureAnalyses": {
