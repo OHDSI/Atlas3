@@ -222,6 +222,7 @@ const coreNavigationItems: NavigationItem[] = [
   { id: 'datasources', titleKey: 'navigation.datasources', route: '/datasources', visible: true, active: false },
   { id: 'concepts', titleKey: 'navigation.conceptsets', route: '/concepts', visible: true, active: false },
   { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true },
+  { id: 'pathways', titleKey: 'navigation.pathways', route: '/pathways', visible: true, active: false },
 ]
 
 const navigationItems = ref<NavigationItem[]>(getFilteredCoreNavigationItems())

@@ -41,6 +41,7 @@ import { format, parseISO, isWithinInterval } from 'date-fns'
 import type { VersionsTableItem, VersionsConfig } from '@/components/versions/types'
 import { getVersions as getCohortVersions } from '@/services/cohort-definition-versions.service'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
+import { getPathwayVersions } from '@/services/pathway-versions.service'
 import { logger } from '@/utils/logger'
 
 export interface VersionFilters {
@@ -59,9 +60,10 @@ export function useVersions(config: VersionsConfig) {
   })
 
   // Get API service based on asset type
-  const getVersionsAPI = config.assetType === 'cohortdefinition'
-    ? getCohortVersions
-    : getConceptSetVersions
+  const getVersionsAPI =
+    config.assetType === 'cohortdefinition' ? getCohortVersions :
+    config.assetType === 'pathway-analysis' ? getPathwayVersions :
+    getConceptSetVersions
 
   /**
    * Load versions from API and prepend current version row
