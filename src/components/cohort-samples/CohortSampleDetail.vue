@@ -43,7 +43,17 @@
           :key="el.personId + ':' + el.rank"
           data-testid="cohort-sample-detail-row"
         >
-          <td>{{ el.personId }}</td>
+          <td>
+            <router-link
+              v-if="profilePath(el.personId)"
+              :to="profilePath(el.personId)!"
+              class="profile-link"
+              data-test="cohort-sample-profile-link"
+            >
+              {{ el.personId }}
+            </router-link>
+            <span v-else>{{ el.personId }}</span>
+          </td>
           <td>{{ formatGender(el.genderConceptId) }}</td>
           <td class="text-right">
             {{ el.age }}
@@ -74,11 +84,22 @@ import {
   GENDER_MALE_CONCEPT_ID,
   type CohortSample,
 } from '@/models/cohort-sample.types'
+import { profileRouteFor } from '@/utils/profile-routes'
+import { useDataSourcesStore } from '@/stores/datasources'
 
 const props = defineProps<{
   sample: CohortSample
   loading?: boolean
 }>()
+
+const dsStore = useDataSourcesStore()
+
+function profilePath(personId: string): string | null {
+  const sourceKey = dsStore.selectedSource?.sourceKey
+  if (!sourceKey) return null
+  const cohortId = props.sample.cohortDefinitionId ?? undefined
+  return profileRouteFor(sourceKey, personId, cohortId)
+}
 
 function formatCount(n: number): string {
   return new Intl.NumberFormat().format(n)
