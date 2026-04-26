@@ -42,6 +42,7 @@ import type { VersionsTableItem, VersionsConfig } from '@/components/versions/ty
 import { getVersions as getCohortVersions } from '@/services/cohort-definition-versions.service'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getPathwayVersions } from '@/services/pathway-versions.service'
+import { getIncidenceRateVersions } from '@/services/incidence-rate-versions.service'
 import { logger } from '@/utils/logger'
 
 export interface VersionFilters {
@@ -63,6 +64,7 @@ export function useVersions(config: VersionsConfig) {
   const getVersionsAPI =
     config.assetType === 'cohortdefinition' ? getCohortVersions :
     config.assetType === 'pathway-analysis' ? getPathwayVersions :
+    config.assetType === 'ir' ? getIncidenceRateVersions :
     getConceptSetVersions
 
   /**
