@@ -66,6 +66,19 @@ import {
   PathwaySchema,
   type Pathway,
 } from '@/models/pathway.types'
+import {
+  IncidenceRateSchema,
+  IncidenceRateInfoBySourceSchema,
+  IncidenceRateInfoListSchema,
+  IncidenceRateExecutionInfoSchema,
+  IncidenceRateReportSchema,
+} from '@/models/incidence-rate.types'
+import type {
+  IncidenceRate,
+  IncidenceRateInfoBySource,
+  IncidenceRateExecutionInfo,
+  IncidenceRateReport,
+} from '@/models/incidence-rate.types'
 import { z } from 'zod'
 
 /**
@@ -2346,5 +2359,210 @@ export async function getPathwayDesignByGeneration(
   } catch (err) {
     logger.error('Pathway', 'getPathwayDesignByGeneration failed', err)
     return failure(err instanceof Error ? err.message : 'Failed to fetch design')
+  }
+}
+
+// ─── Incidence Rate CRUD ─────────────────────────────────────────────────────
+
+/** GET /ir/ — list of all incidence rate analyses. */
+export async function listIncidenceRates(): Promise<ApiResult<IncidenceRate[]>> {
+  try {
+    const data = await httpGet<unknown>('/ir/')
+    const parsed = z.array(IncidenceRateSchema.passthrough()).safeParse(data)
+    if (!parsed.success) {
+      logger.error('IncidenceRate', 'listIncidenceRates validation', parsed.error)
+      return failure('Invalid incidence rate list response')
+    }
+    return success(parsed.data as IncidenceRate[])
+  } catch (err) {
+    logger.error('IncidenceRate', 'listIncidenceRates failed', err)
+    return failure(err instanceof Error ? err.message : 'Failed to list incidence rates')
+  }
+}
+
+/** GET /ir/{id} — full IR definition. */
+export async function getIncidenceRate(id: number): Promise<ApiResult<IncidenceRate>> {
+  try {
+    const data = await httpGet<unknown>(`/ir/${id}`)
+    const parsed = IncidenceRateSchema.passthrough().safeParse(data)
+    if (!parsed.success) {
+      logger.error('IncidenceRate', 'getIncidenceRate validation', parsed.error)
+      return failure('Invalid incidence rate response')
+    }
+    return success(parsed.data as IncidenceRate)
+  } catch (err) {
+    logger.error('IncidenceRate', `getIncidenceRate(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch incidence rate')
+  }
+}
+
+/** POST /ir/ — create. */
+export async function createIncidenceRate(ir: IncidenceRate): Promise<ApiResult<IncidenceRate>> {
+  try {
+    const data = await httpPost<unknown>('/ir/', ir)
+    const parsed = IncidenceRateSchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid create response')
+    return success(parsed.data as IncidenceRate)
+  } catch (err) {
+    logger.error('IncidenceRate', 'createIncidenceRate failed', err)
+    return failure(err instanceof Error ? err.message : 'Failed to create incidence rate')
+  }
+}
+
+/** PUT /ir/{id} — update. */
+export async function saveIncidenceRate(id: number, ir: IncidenceRate): Promise<ApiResult<IncidenceRate>> {
+  try {
+    const data = await httpPut<unknown>(`/ir/${id}`, ir)
+    const parsed = IncidenceRateSchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid save response')
+    return success(parsed.data as IncidenceRate)
+  } catch (err) {
+    logger.error('IncidenceRate', `saveIncidenceRate(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to save incidence rate')
+  }
+}
+
+/** GET /ir/{id}/copy — server-side duplicate. */
+export async function copyIncidenceRate(id: number): Promise<ApiResult<IncidenceRate>> {
+  try {
+    const data = await httpGet<unknown>(`/ir/${id}/copy`)
+    const parsed = IncidenceRateSchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid copy response')
+    return success(parsed.data as IncidenceRate)
+  } catch (err) {
+    logger.error('IncidenceRate', `copyIncidenceRate(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to copy incidence rate')
+  }
+}
+
+/** DELETE /ir/{id}. */
+export async function deleteIncidenceRate(id: number): Promise<boolean> {
+  try {
+    await httpDelete(`/ir/${id}`)
+    return true
+  } catch (err) {
+    logger.error('IncidenceRate', `deleteIncidenceRate(${id}) failed`, err)
+    return false
+  }
+}
+
+/** GET /ir/{id}/exists?name=... — uniqueness check (id=0 for unsaved). */
+export async function existsIncidenceRate(name: string, id = 0): Promise<number> {
+  try {
+    const data = await httpGet<number>(`/ir/${id}/exists?name=${encodeURIComponent(name)}`)
+    return typeof data === 'number' ? data : 0
+  } catch (err) {
+    logger.error('IncidenceRate', 'existsIncidenceRate failed', err)
+    return 0
+  }
+}
+
+/** POST /ir/{id}/tag/{tagId}. */
+export async function assignIncidenceRateTag(id: number, tagId: number): Promise<boolean> {
+  try {
+    await httpPost(`/ir/${id}/tag/${tagId}`, undefined)
+    return true
+  } catch (err) {
+    logger.error('IncidenceRate', 'assignIncidenceRateTag failed', err)
+    return false
+  }
+}
+
+/** DELETE /ir/{id}/tag/{tagId}. */
+export async function unassignIncidenceRateTag(id: number, tagId: number): Promise<boolean> {
+  try {
+    await httpDelete(`/ir/${id}/tag/${tagId}`)
+    return true
+  } catch (err) {
+    logger.error('IncidenceRate', 'unassignIncidenceRateTag failed', err)
+    return false
+  }
+}
+
+/** GET /ir/{id}/info — array of execution info, one per source. */
+export async function listIncidenceRateInfo(id: number): Promise<ApiResult<IncidenceRateInfoBySource[]>> {
+  try {
+    const data = await httpGet<unknown>(`/ir/${id}/info`)
+    const parsed = IncidenceRateInfoListSchema.safeParse(data)
+    if (!parsed.success) {
+      logger.error('IncidenceRate', 'listIncidenceRateInfo validation', parsed.error)
+      return failure('Invalid info list response')
+    }
+    return success(parsed.data)
+  } catch (err) {
+    logger.error('IncidenceRate', `listIncidenceRateInfo(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to list info')
+  }
+}
+
+/** GET /ir/{id}/info/{sourceKey} — execution info + summary list for one source. */
+export async function getIncidenceRateInfoBySource(
+  id: number, sourceKey: string,
+): Promise<ApiResult<IncidenceRateInfoBySource>> {
+  try {
+    const data = await httpGet<unknown>(`/ir/${id}/info/${sourceKey}`)
+    const parsed = IncidenceRateInfoBySourceSchema.safeParse(data)
+    if (!parsed.success) return failure('Invalid info-by-source response')
+    return success(parsed.data)
+  } catch (err) {
+    logger.error('IncidenceRate', 'getIncidenceRateInfoBySource failed', err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch info')
+  }
+}
+
+/** GET /ir/{id}/execute/{sourceKey} — start a generation. */
+export async function generateIncidenceRate(
+  id: number, sourceKey: string,
+): Promise<ApiResult<IncidenceRateExecutionInfo>> {
+  try {
+    const data = await httpGet<unknown>(`/ir/${id}/execute/${sourceKey}`)
+    const parsed = IncidenceRateExecutionInfoSchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid generate response')
+    return success(parsed.data as IncidenceRateExecutionInfo)
+  } catch (err) {
+    logger.error('IncidenceRate', `generateIncidenceRate(${id},${sourceKey}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to start generation')
+  }
+}
+
+/** DELETE /ir/{id}/execute/{sourceKey} — cancel a running generation. */
+export async function cancelIncidenceRateGeneration(
+  id: number, sourceKey: string,
+): Promise<boolean> {
+  try {
+    await httpDelete(`/ir/${id}/execute/${sourceKey}`)
+    return true
+  } catch (err) {
+    logger.error('IncidenceRate', 'cancelIncidenceRateGeneration failed', err)
+    return false
+  }
+}
+
+/** DELETE /ir/{id}/info/{sourceKey} — clear results. */
+export async function deleteIncidenceRateInfo(
+  id: number, sourceKey: string,
+): Promise<boolean> {
+  try {
+    await httpDelete(`/ir/${id}/info/${sourceKey}`)
+    return true
+  } catch (err) {
+    logger.error('IncidenceRate', 'deleteIncidenceRateInfo failed', err)
+    return false
+  }
+}
+
+/** GET /ir/{id}/report/{sourceKey}?targetId=&outcomeId= — full report. */
+export async function getIncidenceRateReport(
+  id: number, sourceKey: string, targetId: number, outcomeId: number,
+): Promise<ApiResult<IncidenceRateReport>> {
+  try {
+    const url = `/ir/${id}/report/${sourceKey}?targetId=${targetId}&outcomeId=${outcomeId}`
+    const data = await httpGet<unknown>(url)
+    const parsed = IncidenceRateReportSchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid report response')
+    return success(parsed.data as IncidenceRateReport)
+  } catch (err) {
+    logger.error('IncidenceRate', 'getIncidenceRateReport failed', err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch report')
   }
 }

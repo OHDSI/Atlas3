@@ -1,0 +1,26 @@
+{
+  "id": 42,
+  "name": "COVID-19 Incidence in Hypertensive Patients",
+  "description": "Measures COVID-19 diagnosis incidence",
+  "expression": {
+    "ConceptSets": [],
+    "targetIds": [101, 102],
+    "outcomeIds": [201],
+    "timeAtRisk": {
+      "start": { "DateField": "StartDate", "Offset": 0 },
+      "end": { "DateField": "EndDate", "Offset": 365 }
+    },
+    "studyWindow": { "startDate": "2020-01-01", "endDate": "2023-12-31" },
+    "strata": [
+      {
+        "name": "Age 65+",
+        "description": "Elderly subgroup",
+        "expression": {
+          "Type": "ALL",
+          "CriteriaList": []
+        }
+      }
+    ]
+  },
+  "tags": []
+}

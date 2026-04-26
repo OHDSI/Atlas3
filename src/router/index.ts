@@ -238,6 +238,48 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/incidence-rates',
+      name: 'incidence-rates',
+      component: () => import('@/views/IncidenceRatesView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/incidence-rates/new',
+      name: 'incidence-rate-new',
+      component: () => import('@/views/IncidenceRateManagerView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/incidence-rates/:id(\\d+)',
+      name: 'incidence-rate-edit',
+      component: () => import('@/views/IncidenceRateManagerView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/incidence-rates/:id(\\d+)/version/:version',
+      name: 'incidence-rate-version-preview',
+      component: () => import('@/views/IncidenceRateManagerView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+      beforeEnter: async (to, _from, next) => {
+        const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
+        const irStore = useIncidenceRateStore()
+        const versionParam = to.params.version as string
+        const idParam = Number(to.params.id)
+        if (versionParam === 'current') {
+          irStore.clearPreviewVersion()
+        } else if (Number.isFinite(idParam)) {
+          const v = parseInt(versionParam)
+          if (!isNaN(v)) {
+            try { await irStore.loadVersionPreview(idParam, v) }
+            catch (error) { logger.error('Router', 'Failed to load IR version preview', error) }
+          }
+        }
+        next()
+      },
+    },
+    {
       path: '/datasources/:sourceKey?/:reportType?',
       name: 'datasources',
       component: () => import('@/views/DataSourcesView.vue'),

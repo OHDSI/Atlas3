@@ -226,6 +226,7 @@ const coreNavigationItems: NavigationItem[] = [
   { id: 'characterizations', titleKey: 'navigation.characterizations', route: '/characterizations', visible: true, active: false },
   { id: 'featureAnalyses', titleKey: 'navigation.featureAnalyses', route: '/feature-analyses', visible: true, active: false },
   { id: 'pathways', titleKey: 'navigation.pathways', route: '/pathways', visible: true, active: false },
+  { id: 'incidenceRates', titleKey: 'navigation.incidenceRates', route: '/incidence-rates', visible: true, active: false },
 ]
 
 const navigationItems = ref<NavigationItem[]>(getFilteredCoreNavigationItems())
@@ -271,6 +272,7 @@ function getNavTitle(key: string): string {
     'navigation.characterizations': 'Characterizations',
     'navigation.featureAnalyses': 'Feature Analyses',
     'navigation.pathways': 'Pathways',
+    'navigation.incidenceRates': 'Incidence Rates',
   }
   // If key starts with a capital letter, it's likely a direct title (from plugin)
   if (key && key.length > 0 && key[0] && key[0] === key[0].toUpperCase()) {

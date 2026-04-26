@@ -75,12 +75,13 @@ import type { Version, CommentUpdatePayload } from './types'
 import { updateVersion as updateCohortVersion } from '@/services/cohort-definition-versions.service'
 import { updateVersion as updateConceptSetVersion } from '@/services/concept-set-versions.service'
 import { updatePathwayVersion } from '@/services/pathway-versions.service'
+import { updateIncidenceRateVersion } from '@/services/incidence-rate-versions.service'
 
 // Props
 const props = defineProps<{
   modelValue: boolean
   version: Version | null
-  assetType: 'cohortdefinition' | 'conceptset' | 'pathway-analysis'
+  assetType: 'cohortdefinition' | 'conceptset' | 'pathway-analysis' | 'ir'
   assetId: number
 }>()
 
@@ -133,7 +134,10 @@ const updateVersionAPI =
   props.assetType === 'pathway-analysis'
     ? (id: number, version: number, payload: CommentUpdatePayload) =>
         updatePathwayVersion(id, version, { comment: payload.comment, archived: payload.archived })
-    : updateConceptSetVersion
+    : props.assetType === 'ir'
+      ? (id: number, version: number, payload: CommentUpdatePayload) =>
+          updateIncidenceRateVersion(id, version, { comment: payload.comment, archived: payload.archived })
+      : updateConceptSetVersion
 
 /**
  * Handle save button click

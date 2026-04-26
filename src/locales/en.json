@@ -171,6 +171,7 @@
     "feedback": "Feedback",
     "home": "Home",
     "incidencerate": "Incidence Rates",
+    "incidenceRates": "Incidence Rates",
     "jobs": "Jobs",
     "pathways": "Cohort Pathways",
     "prediction": "Prediction",
@@ -5129,5 +5130,65 @@
     "dateFrom": "From",
     "dateTo": "To",
     "noComment": "No comment"
+  },
+  "incidenceRate": {
+    "tabs": {
+      "definition": "Definition",
+      "conceptSets": "Concept Sets",
+      "generation": "Generation",
+      "versions": "Versions"
+    },
+    "list": {
+      "loading": "Loading…",
+      "empty": "No incidence rates yet."
+    },
+    "editor": {
+      "loading": "Loading incidence rate…",
+      "loadError": "Failed to load incidence rate",
+      "name": "Name"
+    },
+    "description": "Description",
+    "targetCohorts": "Target Cohorts",
+    "outcomeCohorts": "Outcome Cohorts",
+    "timeAtRisk": "Time at Risk",
+    "tarStart": "Start",
+    "tarEnd": "End",
+    "tarDays": "days",
+    "tarError": "Time-at-risk end must be after start when both reference the same date",
+    "studyWindow": "Study Window",
+    "studyWindowStart": "Start date",
+    "studyWindowEnd": "End date",
+    "stratifyRules": "Stratify Rules",
+    "stratifyName": "Rule name",
+    "stratifyDescription": "Description",
+    "addStratifyRule": "Add rule",
+    "noStratifyRules": "No stratify rules yet.",
+    "selectRulePrompt": "Select a rule to edit, or add one.",
+    "untitled": "Untitled rule",
+    "conceptSets": "Concept Sets",
+    "noConceptSets": "This incidence rate has no concept sets attached.",
+    "generation": "Generation",
+    "target": "Target",
+    "outcome": "Outcome",
+    "rateMultiplier": "Rate per",
+    "source": "Data Source",
+    "status": "Status",
+    "persons": "Persons",
+    "cases": "Cases",
+    "tarYears": "TAR (years)",
+    "rate": "Rate",
+    "generateBtn": "Generate",
+    "viewReport": "View report",
+    "noSources": "No data sources available.",
+    "report": "Report",
+    "loadingReport": "Loading report…",
+    "exportSvg": "SVG",
+    "exportPng": "PNG",
+    "selectSourceTargetOutcome": "Select source, target, and outcome to view report.",
+    "summary": "Summary",
+    "proportion": "Proportion"
+  },
+  "incidenceRateAnalysis": {
+    "newAnalysis": "New incidence rate"
   }
 }
