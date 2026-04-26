@@ -21,7 +21,9 @@
         value="sets"
         data-test="highlights-tab-sets"
         :disabled="!store.hasCohortContext"
-      >Sets</v-tab>
+      >
+        Sets
+      </v-tab>
     </v-tabs>
 
     <v-window v-model="tab">
