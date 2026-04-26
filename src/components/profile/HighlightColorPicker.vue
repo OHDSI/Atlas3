@@ -18,7 +18,9 @@
       class="mt-2"
       data-test="highlight-clear"
       @click="$emit('clear')"
-    >{{ tv('profiles.clearAllHighlightColors', 'Clear all highlight colors') }}</v-btn>
+    >
+      {{ tv('profiles.clearAllHighlightColors', 'Clear all highlight colors') }}
+    </v-btn>
   </div>
 </template>
 
