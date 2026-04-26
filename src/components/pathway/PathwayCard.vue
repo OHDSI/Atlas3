@@ -14,11 +14,11 @@
       </div>
       <div class="tags">
         <v-chip
-          v-for="t in pathway.tags"
-          :key="t.id"
+          v-for="tag in pathway.tags"
+          :key="tag.id"
           size="x-small"
         >
-          {{ t.name }}
+          {{ tag.name }}
         </v-chip>
       </div>
     </v-card-text>
