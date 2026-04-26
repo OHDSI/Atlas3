@@ -42,6 +42,15 @@ export const useProfileStore = defineStore('profile', () => {
   // highlights
   const highlights = ref<Map<number, HighlightColor>>(new Map())
 
+  function clearPersonState() {
+    person.value = null
+    error.value = null
+    domainFilter.value = new Set()
+    textFilter.value = ''
+    dateRange.value = null
+    highlights.value = new Map()
+  }
+
   function setRouteParams(p: RouteParams) {
     const sourceChanged = p.sourceKey !== sourceKey.value
     const personChanged = p.personId !== personId.value
@@ -49,25 +58,15 @@ export const useProfileStore = defineStore('profile', () => {
     personId.value = p.personId
     cohortDefinitionId.value = p.cohortDefinitionId ?? null
     if (sourceChanged || personChanged) {
-      person.value = null
-      error.value = null
-      domainFilter.value = new Set()
-      textFilter.value = ''
-      dateRange.value = null
-      highlights.value = new Map()
+      clearPersonState()
     }
   }
 
   function reset() {
-    person.value = null
     personId.value = null
     cohortDefinitionId.value = null
     cohortConceptSets.value = []
-    error.value = null
-    domainFilter.value = new Set()
-    textFilter.value = ''
-    dateRange.value = null
-    highlights.value = new Map()
+    clearPersonState()
   }
 
   function setDomainFilter(domain: string, on: boolean) {
@@ -103,14 +102,15 @@ export const useProfileStore = defineStore('profile', () => {
       const result = await getPerson(sourceKey.value, personId.value, cohortDefinitionId.value ?? undefined)
       if (result.success) {
         person.value = result.data
+        if (cohortDefinitionId.value !== null) {
+          const cs = await getCohortConceptSets(cohortDefinitionId.value)
+          cohortConceptSets.value = cs.success ? cs.data : []
+        } else {
+          cohortConceptSets.value = []
+        }
       } else {
         person.value = null
         error.value = result.error
-      }
-      if (cohortDefinitionId.value !== null) {
-        const cs = await getCohortConceptSets(cohortDefinitionId.value)
-        cohortConceptSets.value = cs.success ? cs.data : []
-      } else {
         cohortConceptSets.value = []
       }
     } catch (err) {

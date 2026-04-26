@@ -104,6 +104,16 @@ describe('Profile Store — loadPerson', () => {
     expect(getCohortConceptSets).toHaveBeenCalledWith(42)
     expect(s.cohortConceptSets).toEqual([{ id: 0, name: 'A' }])
   })
+
+  it('does not fetch concept sets when person load fails (even with cohortDefinitionId)', async () => {
+    const { getPerson, getCohortConceptSets } = await import('@/services/profile.service')
+    ;(getPerson as ReturnType<typeof vi.fn>).mockResolvedValue({ success: false, error: 'boom' })
+    const s = useProfileStore()
+    s.setRouteParams({ sourceKey: 'SYNPUF', personId: 99, cohortDefinitionId: 42 })
+    await s.loadPerson()
+    expect(getCohortConceptSets).not.toHaveBeenCalled()
+    expect(s.cohortConceptSets).toEqual([])
+  })
 })
 
 describe('Profile Store — getters', () => {
@@ -164,5 +174,42 @@ describe('Profile Store — getters', () => {
   it('observationBands derives from observationPeriods', () => {
     const s = seed([])
     expect(s.observationBands).toEqual([{ x1: -100, x2: 100 }])
+  })
+
+  it('indexDate uses matching cohort.startDate when cohort context present', () => {
+    const s = seed([{ startDay: 0 }])
+    s.setRouteParams({ sourceKey: 'X', personId: 1, cohortDefinitionId: 42 })
+    s.person = {
+      ...s.person!,
+      cohorts: [{ cohortDefinitionId: 42, startDate: 9999, endDate: null }],
+      records: [{ conceptId: 1, conceptName: 'X', domain: 'Drug', startDate: 100, endDate: null, startDay: 0, endDay: null }],
+    } as never
+    expect(s.indexDate).toBe(9999)
+  })
+
+  it('indexDate falls back to min(record.startDate) when no cohort match', () => {
+    const s = seed([])
+    s.person = {
+      ...s.person!,
+      records: [
+        { conceptId: 1, conceptName: 'A', domain: 'Drug', startDate: 200, endDate: null, startDay: 0, endDay: null },
+        { conceptId: 2, conceptName: 'B', domain: 'Drug', startDate: 50,  endDate: null, startDay: 0, endDay: null },
+        { conceptId: 3, conceptName: 'C', domain: 'Drug', startDate: 300, endDate: null, startDay: 0, endDay: null },
+      ],
+    } as never
+    expect(s.indexDate).toBe(50)
+  })
+
+  it('indexDate is null when there are no records and no cohort match', () => {
+    const s = seed([])
+    s.person = { ...s.person!, records: [], cohorts: [] } as never
+    expect(s.indexDate).toBeNull()
+  })
+
+  it('hasCohortContext reflects cohortDefinitionId', () => {
+    const s = useProfileStore()
+    expect(s.hasCohortContext).toBe(false)
+    s.setRouteParams({ sourceKey: 'X', personId: 1, cohortDefinitionId: 42 })
+    expect(s.hasCohortContext).toBe(true)
   })
 })
