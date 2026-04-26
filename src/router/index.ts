@@ -105,6 +105,58 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/pathways',
+      name: 'pathways',
+      component: () => import('@/views/PathwaysView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/pathways/new',
+      name: 'pathway-new',
+      component: () => import('@/views/PathwayManagerView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/pathways/:id(\\d+)',
+      name: 'pathway-edit',
+      component: () => import('@/views/PathwayManagerView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/pathway-analysis/:id(\\d+)/version/:version',
+      name: 'pathway-version-preview',
+      component: () => import('@/views/PathwayManagerView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+      beforeEnter: async (to, _from, next) => {
+        const { usePathwayStore } = await import('@/stores/pathway')
+        const pathwayStore = usePathwayStore()
+        const versionParam = to.params.version as string
+        const idParam = Number(to.params.id)
+        if (versionParam === 'current') {
+          pathwayStore.clearPreviewVersion()
+        } else if (Number.isFinite(idParam)) {
+          const versionNumber = parseInt(versionParam)
+          if (!isNaN(versionNumber)) {
+            try {
+              await pathwayStore.loadVersionPreview(idParam, versionNumber)
+            } catch (error) {
+              logger.error('Router', 'Failed to load pathway version preview', error)
+            }
+          }
+        }
+        next()
+      },
+    },
+    {
+      path: '/pathways/:id(\\d+)/results/:executionId(\\d+)',
+      name: 'pathway-results',
+      component: () => import('@/views/PathwayResultsView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/datasources/:sourceKey?/:reportType?',
       name: 'datasources',
       component: () => import('@/views/DataSourcesView.vue'),
