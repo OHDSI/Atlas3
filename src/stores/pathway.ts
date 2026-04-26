@@ -3,7 +3,8 @@ import { ref, computed } from 'vue'
 import type { Pathway, PathwayCohortRef, PathwayDesign } from '@/models/pathway.types'
 import { PATHWAY_DEFAULTS, STORAGE_KEY_PATHWAY_DRAFT, PATHWAY_AUTO_SAVE_INTERVAL_MS } from '@/models/pathway.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
-import { getPathway } from '@/services/webapi'
+import { getPathway, assignPathwayTag, unassignPathwayTag } from '@/services/webapi'
+import type { Tag } from '@/models/webapi.types'
 import { getPathwayVersion } from '@/services/pathway-versions.service'
 import { logger } from '@/utils/logger'
 
@@ -210,6 +211,34 @@ export const usePathwayStore = defineStore('pathway', () => {
     validationErrors.value = errors
   }
 
+  async function addTag(tag: Tag): Promise<boolean> {
+    if (!currentPathway.value?.id) return false
+    const ok = await assignPathwayTag(currentPathway.value.id, tag.id!)
+    if (ok && !currentPathway.value.tags.some(t => t.id === tag.id)) {
+      currentPathway.value.tags.push(tag)
+      // intentionally do NOT mark dirty — tag mutations are metadata
+    }
+    return ok
+  }
+
+  async function removeTag(tagId: number): Promise<boolean> {
+    if (!currentPathway.value?.id) return false
+    const ok = await unassignPathwayTag(currentPathway.value.id, tagId)
+    if (ok && currentPathway.value) {
+      currentPathway.value.tags = currentPathway.value.tags.filter(t => t.id !== tagId)
+    }
+    return ok
+  }
+
+  async function syncTags(newTags: Tag[]): Promise<void> {
+    if (!currentPathway.value?.id) return
+    const current = currentPathway.value.tags
+    const toAdd = newTags.filter(n => !current.some(c => c.id === n.id))
+    const toRemove = current.filter(c => !newTags.some(n => n.id === c.id))
+    for (const t of toAdd) await addTag(t)
+    for (const t of toRemove) await removeTag(t.id!)
+  }
+
   const canSave = computed(() =>
     isDirty.value &&
     !hasErrors.value &&
@@ -245,5 +274,6 @@ export const usePathwayStore = defineStore('pathway', () => {
     loadPathway, loadVersionPreview, clearPreviewVersion,
     saveToDraft, restoreFromDraft, clearDraft, startAutoSave, stopAutoSave,
     validatePathway, canSave, canGenerate,
+    addTag, removeTag, syncTags,
   }
 })

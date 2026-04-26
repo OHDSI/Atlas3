@@ -42,6 +42,13 @@
           :config="versionsConfig"
         />
       </v-dialog>
+
+      <TagSelectionDialog
+        v-if="currentPathway?.id"
+        v-model="showTags"
+        :selected-tags="pathwayTags"
+        @update:selected-tags="handleTagsUpdate"
+      />
     </template>
   </div>
 </template>
@@ -54,7 +61,9 @@ import PathwayBuilderToolbar from './PathwayBuilderToolbar.vue'
 import PathwayDesignForm from './PathwayDesignForm.vue'
 import PathwayGenerationPanel from './PathwayGenerationPanel.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
+import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
 import type { VersionsConfig, VersionsTableItem } from '@/components/versions/types'
+import type { Tag } from '@/models/webapi.types'
 
 const store = usePathwayStore()
 const { currentPathway, previewVersion, isDirty, isPreviewMode } = storeToRefs(store)
@@ -65,6 +74,12 @@ const showPermissions = ref(false)
 
 const canEdit = computed(() => !isPreviewMode.value)
 const isDirtyRef = computed(() => isDirty.value)
+
+const pathwayTags = computed(() => currentPathway.value?.tags ?? [])
+
+async function handleTagsUpdate(newTags: Tag[]) {
+  await store.syncTags(newTags)
+}
 
 const versionsConfig = computed<VersionsConfig | null>(() => {
   const p = currentPathway.value
