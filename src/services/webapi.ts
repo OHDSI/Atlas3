@@ -1566,18 +1566,13 @@ export async function listCharacterizations(): Promise<CharacterizationListItem[
 export async function getCharacterization(
   id: number
 ): Promise<CharacterizationDefinition | null> {
-  try {
-    const data = await httpGet<unknown>(`/cohort-characterization/${id}/design`)
-    const parsed = CharacterizationDefinitionSchema.safeParse(data)
-    if (!parsed.success) {
-      logger.error('WebAPI', `getCharacterization(${id}) validation error`, parsed.error)
-      throw new Error(`Invalid response from /cohort-characterization/${id}/design`)
-    }
-    return parsed.data as CharacterizationDefinition
-  } catch (error) {
-    logger.error('WebAPI', `Failed to fetch characterization ${id}`, error)
-    throw error
+  const data = await httpGet<unknown>(`/cohort-characterization/${id}/design`)
+  const parsed = CharacterizationDefinitionSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', `getCharacterization(${id}) validation error`, parsed.error)
+    throw new Error(`Invalid response from /cohort-characterization/${id}/design`)
   }
+  return parsed.data as CharacterizationDefinition
 }
 
 /**
@@ -1719,24 +1714,19 @@ export async function listCharacterizationExecutions(
 export async function getCharacterizationExecution(
   generationId: number
 ): Promise<CharacterizationExecution | null> {
-  try {
-    const data = await httpGet<unknown>(`/cohort-characterization/generation/${generationId}`)
-    const parsed = CharacterizationExecutionSchema.safeParse(data)
-    if (!parsed.success) {
-      logger.error(
-        'WebAPI',
-        `getCharacterizationExecution(${generationId}) validation error`,
-        parsed.error
-      )
-      throw new Error(
-        `Invalid response from /cohort-characterization/generation/${generationId}`
-      )
-    }
-    return parsed.data
-  } catch (error) {
-    logger.error('WebAPI', `Failed to fetch characterization execution ${generationId}`, error)
-    throw error
+  const data = await httpGet<unknown>(`/cohort-characterization/generation/${generationId}`)
+  const parsed = CharacterizationExecutionSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error(
+      'WebAPI',
+      `getCharacterizationExecution(${generationId}) validation error`,
+      parsed.error
+    )
+    throw new Error(
+      `Invalid response from /cohort-characterization/generation/${generationId}`
+    )
   }
+  return parsed.data
 }
 
 /**
@@ -1814,30 +1804,21 @@ export async function getCharacterizationDesignSnapshot(
 export async function getCharacterizationResultCount(
   generationId: number
 ): Promise<number> {
-  try {
-    const data = await httpGet<unknown>(
-      `/cohort-characterization/generation/${generationId}/result/count`
-    )
-    const parsed = z.number().safeParse(data)
-    if (!parsed.success) {
-      logger.error(
-        'WebAPI',
-        `getCharacterizationResultCount(${generationId}) validation error`,
-        parsed.error
-      )
-      throw new Error(
-        `Invalid response from /cohort-characterization/generation/${generationId}/result/count`
-      )
-    }
-    return parsed.data
-  } catch (error) {
+  const data = await httpGet<unknown>(
+    `/cohort-characterization/generation/${generationId}/result/count`
+  )
+  const parsed = z.number().safeParse(data)
+  if (!parsed.success) {
     logger.error(
       'WebAPI',
-      `Failed to fetch characterization result count for ${generationId}`,
-      error
+      `getCharacterizationResultCount(${generationId}) validation error`,
+      parsed.error
     )
-    throw error
+    throw new Error(
+      `Invalid response from /cohort-characterization/generation/${generationId}/result/count`
+    )
   }
+  return parsed.data
 }
 
 /**
@@ -1937,18 +1918,13 @@ export async function listFeatureAnalyses(): Promise<FeatureAnalysisListItem[]> 
  * Endpoint: GET /feature-analysis/{id}
  */
 export async function getFeatureAnalysis(id: number): Promise<FeatureAnalysis | null> {
-  try {
-    const data = await httpGet<unknown>(`/feature-analysis/${id}`)
-    const parsed = FeatureAnalysisSchema.safeParse(data)
-    if (!parsed.success) {
-      logger.error('WebAPI', `getFeatureAnalysis(${id}) validation error`, parsed.error)
-      throw new Error(`Invalid response from /feature-analysis/${id}`)
-    }
-    return parsed.data as FeatureAnalysis
-  } catch (error) {
-    logger.error('WebAPI', `Failed to fetch feature analysis ${id}`, error)
-    throw error
+  const data = await httpGet<unknown>(`/feature-analysis/${id}`)
+  const parsed = FeatureAnalysisSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', `getFeatureAnalysis(${id}) validation error`, parsed.error)
+    throw new Error(`Invalid response from /feature-analysis/${id}`)
   }
+  return parsed.data as FeatureAnalysis
 }
 
 /**
