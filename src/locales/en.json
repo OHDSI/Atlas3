@@ -1329,6 +1329,34 @@
       }
     }
   },
+  "characterizations": {
+    "list": {
+      "title": "Characterizations",
+      "newButton": "New Characterization",
+      "searchPlaceholder": "Search characterizations...",
+      "empty": "No characterizations found.",
+      "columns": {
+        "name": "Name",
+        "description": "Description",
+        "cohorts": "Cohorts",
+        "featureAnalyses": "Feature Analyses",
+        "createdBy": "Created By",
+        "createdDate": "Created",
+        "modifiedDate": "Modified",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Edit",
+        "copy": "Copy",
+        "delete": "Delete"
+      },
+      "deleteConfirm": "Delete characterization '{name}'?"
+    },
+    "editor": {
+      "comingSoon": "Characterization editor coming soon",
+      "back": "Back to list"
+    }
+  },
   "featureAnalyses": {
     "list": {
       "title": "Feature Analyses",

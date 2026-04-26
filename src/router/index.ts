@@ -58,6 +58,34 @@ const router = createRouter({
       props: true,
       meta: { requiresAuth: true },
     },
+    {
+      path: '/characterizations',
+      name: 'characterizations',
+      component: () => import('@/views/CharacterizationsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/characterizations/new',
+      name: 'characterization-new',
+      component: () => import('@/views/CharacterizationBuilderView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/characterizations/:id',
+      name: 'characterization-edit',
+      component: () => import('@/views/CharacterizationBuilderView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      // NOTE: beforeEnter version-preview hook is intentionally deferred to
+      // Phase 3B when the store gains loadVersionPreview / clearPreviewVersion.
+      path: '/characterization/:id/version/:version',
+      name: 'characterization-version-preview',
+      component: () => import('@/views/CharacterizationBuilderView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
     // Version preview routes (T036, T037)
     {
       path: '/cohortdefinition/:id/version/:version',
