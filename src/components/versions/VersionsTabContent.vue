@@ -242,6 +242,9 @@ async function savePreviewAsCurrent(): Promise<boolean> {
   } else if (props.config.assetType === 'pathway-analysis') {
     // Pathway store does not yet expose savePreviewAsCurrent; fall back to false
     return false
+  } else if (props.config.assetType === 'ir') {
+    // Incidence Rate store does not yet expose savePreviewAsCurrent; fall back to false
+    return false
   } else {
     const { useConceptSetsStore } = await import('@/stores/concept-sets')
     const conceptSetStore = useConceptSetsStore()
