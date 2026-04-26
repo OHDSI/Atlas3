@@ -30,7 +30,34 @@ import {
   type InclusionRuleReportMode,
   type InclusionTreemapNode,
 } from '@/models/report.types'
-import { httpClient, getBaseUrl, type HttpClientOptions } from '@/services/http-client'
+import {
+  httpClient,
+  httpGet,
+  httpPost,
+  httpPut,
+  httpDelete,
+  getBaseUrl,
+  type HttpClientOptions,
+} from '@/services/http-client'
+import {
+  CharacterizationDefinitionSchema,
+  CharacterizationListItemSchema,
+  CharacterizationExecutionSchema,
+  type CharacterizationDefinition,
+  type CharacterizationListItem,
+  type CharacterizationExecution,
+} from '@/models/characterization.types'
+import {
+  FeatureAnalysisSchema,
+  FeatureAnalysisListItemSchema,
+  FeatureAnalysisAggregateSchema,
+  CovariateSettingSchema,
+  type FeatureAnalysis,
+  type FeatureAnalysisListItem,
+  type FeatureAnalysisAggregate,
+  type CovariateSetting,
+} from '@/models/feature-analysis.types'
+import { z } from 'zod'
 
 /**
  * @deprecated Use httpClient from '@/services/http-client' for new code
@@ -1495,4 +1522,560 @@ export async function getCohortPrintFriendly(
     logger.error('WebAPI', 'Failed to fetch print-friendly cohort', error)
     return null
   }
+}
+
+// ============================================================================
+// Characterization Endpoints (WebAPI /cohort-characterization/...)
+// ============================================================================
+
+/**
+ * The WebAPI list endpoint may return either a bare array or a Spring
+ * Data-style page wrapper `{ content: [...] }`. Normalise to a plain array.
+ */
+function unwrapList<T = unknown>(payload: unknown): T[] {
+  if (Array.isArray(payload)) return payload as T[]
+  if (
+    payload !== null &&
+    typeof payload === 'object' &&
+    Array.isArray((payload as { content?: unknown }).content)
+  ) {
+    return (payload as { content: T[] }).content
+  }
+  return []
+}
+
+/**
+ * List all characterizations.
+ * Endpoint: GET /cohort-characterization?size=10000
+ */
+export async function listCharacterizations(): Promise<CharacterizationListItem[]> {
+  const data = await httpGet<unknown>('/cohort-characterization?size=10000')
+  const list = unwrapList(data)
+  const parsed = z.array(CharacterizationListItemSchema).safeParse(list)
+  if (!parsed.success) {
+    logger.error('WebAPI', 'listCharacterizations validation error', parsed.error)
+    throw new Error('Invalid response from /cohort-characterization')
+  }
+  return parsed.data
+}
+
+/**
+ * Get the full design of a characterization.
+ * Endpoint: GET /cohort-characterization/{id}/design
+ */
+export async function getCharacterization(
+  id: number
+): Promise<CharacterizationDefinition | null> {
+  try {
+    const data = await httpGet<unknown>(`/cohort-characterization/${id}/design`)
+    const parsed = CharacterizationDefinitionSchema.safeParse(data)
+    if (!parsed.success) {
+      logger.error('WebAPI', `getCharacterization(${id}) validation error`, parsed.error)
+      throw new Error(`Invalid response from /cohort-characterization/${id}/design`)
+    }
+    return parsed.data as CharacterizationDefinition
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch characterization ${id}`, error)
+    throw error
+  }
+}
+
+/**
+ * Create a new characterization.
+ * Endpoint: POST /cohort-characterization
+ */
+export async function createCharacterization(
+  def: CharacterizationDefinition
+): Promise<CharacterizationDefinition> {
+  const data = await httpPost<unknown>('/cohort-characterization', def)
+  const parsed = CharacterizationDefinitionSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', 'createCharacterization validation error', parsed.error)
+    throw new Error('Invalid response from POST /cohort-characterization')
+  }
+  return parsed.data as CharacterizationDefinition
+}
+
+/**
+ * Update an existing characterization.
+ * Endpoint: PUT /cohort-characterization/{id}
+ */
+export async function updateCharacterization(
+  def: CharacterizationDefinition
+): Promise<CharacterizationDefinition> {
+  if (typeof def.id !== 'number') {
+    throw new Error('updateCharacterization requires def.id')
+  }
+  const data = await httpPut<unknown>(`/cohort-characterization/${def.id}`, def)
+  const parsed = CharacterizationDefinitionSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', `updateCharacterization(${def.id}) validation error`, parsed.error)
+    throw new Error(`Invalid response from PUT /cohort-characterization/${def.id}`)
+  }
+  return parsed.data as CharacterizationDefinition
+}
+
+/**
+ * Delete a characterization.
+ * Endpoint: DELETE /cohort-characterization/{id}
+ */
+export async function deleteCharacterization(id: number): Promise<void> {
+  try {
+    await httpDelete(`/cohort-characterization/${id}`)
+  } catch (error) {
+    logger.error('WebAPI', `Failed to delete characterization ${id}`, error)
+    throw error
+  }
+}
+
+/**
+ * Server-side copy of a characterization. Atlas 2.15 uses `POST /{id}` for
+ * the copy operation (no body).
+ * Endpoint: POST /cohort-characterization/{id}
+ */
+export async function copyCharacterization(
+  id: number
+): Promise<CharacterizationDefinition> {
+  const data = await httpPost<unknown>(`/cohort-characterization/${id}`)
+  const parsed = CharacterizationDefinitionSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', `copyCharacterization(${id}) validation error`, parsed.error)
+    throw new Error(`Invalid response from POST /cohort-characterization/${id}`)
+  }
+  return parsed.data as CharacterizationDefinition
+}
+
+/**
+ * Whether a characterization with the given name already exists.
+ * Endpoint: GET /cohort-characterization/{id}/exists?name={name}
+ */
+export async function characterizationNameExists(
+  id: number,
+  name: string
+): Promise<boolean> {
+  try {
+    const data = await httpGet<unknown>(
+      `/cohort-characterization/${id}/exists?name=${encodeURIComponent(name)}`
+    )
+    if (typeof data === 'boolean') return data
+    if (typeof data === 'number') return data > 0
+    return Boolean(data)
+  } catch (error) {
+    logger.error('WebAPI', `characterizationNameExists(${id}, ${name}) failed`, error)
+    throw error
+  }
+}
+
+/**
+ * Export a characterization design as a JSON-importable object.
+ * Endpoint: GET /cohort-characterization/{id}/export
+ */
+export async function exportCharacterization(id: number): Promise<unknown> {
+  try {
+    return await httpGet<unknown>(`/cohort-characterization/${id}/export`)
+  } catch (error) {
+    logger.error('WebAPI', `exportCharacterization(${id}) failed`, error)
+    throw error
+  }
+}
+
+/**
+ * Import a characterization design.
+ * Endpoint: POST /cohort-characterization/import
+ */
+export async function importCharacterization(
+  design: unknown
+): Promise<CharacterizationDefinition> {
+  const data = await httpPost<unknown>('/cohort-characterization/import', design)
+  const parsed = CharacterizationDefinitionSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', 'importCharacterization validation error', parsed.error)
+    throw new Error('Invalid response from POST /cohort-characterization/import')
+  }
+  return parsed.data as CharacterizationDefinition
+}
+
+/**
+ * List executions (generations) for a characterization.
+ * Endpoint: GET /cohort-characterization/{id}/generation
+ */
+export async function listCharacterizationExecutions(
+  id: number
+): Promise<CharacterizationExecution[]> {
+  const data = await httpGet<unknown>(`/cohort-characterization/${id}/generation`)
+  const list = unwrapList(data)
+  const parsed = z.array(CharacterizationExecutionSchema).safeParse(list)
+  if (!parsed.success) {
+    logger.error('WebAPI', `listCharacterizationExecutions(${id}) validation error`, parsed.error)
+    throw new Error(`Invalid response from /cohort-characterization/${id}/generation`)
+  }
+  return parsed.data
+}
+
+/**
+ * Get a specific characterization execution.
+ * Endpoint: GET /cohort-characterization/generation/{generationId}
+ */
+export async function getCharacterizationExecution(
+  generationId: number
+): Promise<CharacterizationExecution | null> {
+  try {
+    const data = await httpGet<unknown>(`/cohort-characterization/generation/${generationId}`)
+    const parsed = CharacterizationExecutionSchema.safeParse(data)
+    if (!parsed.success) {
+      logger.error(
+        'WebAPI',
+        `getCharacterizationExecution(${generationId}) validation error`,
+        parsed.error
+      )
+      throw new Error(
+        `Invalid response from /cohort-characterization/generation/${generationId}`
+      )
+    }
+    return parsed.data
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch characterization execution ${generationId}`, error)
+    throw error
+  }
+}
+
+/**
+ * Trigger a characterization generation against a given source.
+ * Endpoint: POST /cohort-characterization/{id}/generation/{sourceKey}
+ */
+export async function generateCharacterization(
+  id: number,
+  sourceKey: string
+): Promise<CharacterizationExecution> {
+  const data = await httpPost<unknown>(
+    `/cohort-characterization/${id}/generation/${encodeURIComponent(sourceKey)}`
+  )
+  const parsed = CharacterizationExecutionSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error(
+      'WebAPI',
+      `generateCharacterization(${id}, ${sourceKey}) validation error`,
+      parsed.error
+    )
+    throw new Error(
+      `Invalid response from POST /cohort-characterization/${id}/generation/${sourceKey}`
+    )
+  }
+  return parsed.data
+}
+
+/**
+ * Cancel an in-progress characterization generation.
+ * Endpoint: DELETE /cohort-characterization/{id}/generation/{sourceKey}
+ */
+export async function cancelCharacterizationGeneration(
+  id: number,
+  sourceKey: string
+): Promise<void> {
+  try {
+    await httpDelete(
+      `/cohort-characterization/${id}/generation/${encodeURIComponent(sourceKey)}`
+    )
+  } catch (error) {
+    logger.error(
+      'WebAPI',
+      `Failed to cancel characterization generation ${id}/${sourceKey}`,
+      error
+    )
+    throw error
+  }
+}
+
+/**
+ * Fetch the design that was active at the time a generation was created.
+ * Endpoint: GET /cohort-characterization/generation/{generationId}/design
+ */
+export async function getCharacterizationDesignSnapshot(
+  generationId: number
+): Promise<unknown> {
+  try {
+    return await httpGet<unknown>(
+      `/cohort-characterization/generation/${generationId}/design`
+    )
+  } catch (error) {
+    logger.error(
+      'WebAPI',
+      `getCharacterizationDesignSnapshot(${generationId}) failed`,
+      error
+    )
+    throw error
+  }
+}
+
+/**
+ * Get the total count of result rows for a generation.
+ * Endpoint: GET /cohort-characterization/generation/{generationId}/result/count
+ */
+export async function getCharacterizationResultCount(
+  generationId: number
+): Promise<number> {
+  try {
+    const data = await httpGet<unknown>(
+      `/cohort-characterization/generation/${generationId}/result/count`
+    )
+    const parsed = z.number().safeParse(data)
+    if (!parsed.success) {
+      logger.error(
+        'WebAPI',
+        `getCharacterizationResultCount(${generationId}) validation error`,
+        parsed.error
+      )
+      throw new Error(
+        `Invalid response from /cohort-characterization/generation/${generationId}/result/count`
+      )
+    }
+    return parsed.data
+  } catch (error) {
+    logger.error(
+      'WebAPI',
+      `Failed to fetch characterization result count for ${generationId}`,
+      error
+    )
+    throw error
+  }
+}
+
+/**
+ * Body parameters for `getCharacterizationResults`.
+ * Atlas 2.15 sends a free-form filter object; only a few keys are common.
+ */
+export interface CharacterizationResultsBody {
+  thresholdValuePct?: number
+  analysisIds?: number[]
+  cohortIds?: number[]
+  // The server accepts additional keys (e.g. `domainIds`, `summary`) and we
+  // pass them through unchanged. Result rows are validated as `unknown[]`
+  // here; conversion / typed mapping lands in the report-mapper layer.
+  [key: string]: unknown
+}
+
+/**
+ * Fetch result rows for a generation.
+ * Endpoint: POST /cohort-characterization/generation/{generationId}/result
+ */
+export async function getCharacterizationResults(
+  generationId: number,
+  body: CharacterizationResultsBody
+): Promise<unknown[]> {
+  try {
+    const data = await httpPost<unknown>(
+      `/cohort-characterization/generation/${generationId}/result`,
+      body
+    )
+    if (!Array.isArray(data)) {
+      logger.error(
+        'WebAPI',
+        `getCharacterizationResults(${generationId}) returned non-array`,
+        data
+      )
+      throw new Error(
+        `Invalid response from POST /cohort-characterization/generation/${generationId}/result`
+      )
+    }
+    return data
+  } catch (error) {
+    logger.error(
+      'WebAPI',
+      `Failed to fetch characterization results for ${generationId}`,
+      error
+    )
+    throw error
+  }
+}
+
+/**
+ * Drill into the prevalence values for a single covariate / cohort cell.
+ * Endpoint:
+ * GET /cohort-characterization/generation/{generationId}/explore/prevalence/{analysisId}/{cohortId}/{covariateId}
+ */
+export async function explorePrevalence(
+  generationId: number,
+  analysisId: number,
+  cohortId: number,
+  covariateId: number
+): Promise<unknown> {
+  try {
+    return await httpGet<unknown>(
+      `/cohort-characterization/generation/${generationId}/explore/prevalence/${analysisId}/${cohortId}/${covariateId}`
+    )
+  } catch (error) {
+    logger.error(
+      'WebAPI',
+      `explorePrevalence(${generationId}, ${analysisId}, ${cohortId}, ${covariateId}) failed`,
+      error
+    )
+    throw error
+  }
+}
+
+// ============================================================================
+// Feature Analysis Endpoints (WebAPI /feature-analysis/...)
+// ============================================================================
+
+/**
+ * List all feature analyses.
+ * Endpoint: GET /feature-analysis?size=100000
+ */
+export async function listFeatureAnalyses(): Promise<FeatureAnalysisListItem[]> {
+  const data = await httpGet<unknown>('/feature-analysis?size=100000')
+  const list = unwrapList(data)
+  const parsed = z.array(FeatureAnalysisListItemSchema).safeParse(list)
+  if (!parsed.success) {
+    logger.error('WebAPI', 'listFeatureAnalyses validation error', parsed.error)
+    throw new Error('Invalid response from /feature-analysis')
+  }
+  return parsed.data
+}
+
+/**
+ * Get a feature analysis by id.
+ * Endpoint: GET /feature-analysis/{id}
+ */
+export async function getFeatureAnalysis(id: number): Promise<FeatureAnalysis | null> {
+  try {
+    const data = await httpGet<unknown>(`/feature-analysis/${id}`)
+    const parsed = FeatureAnalysisSchema.safeParse(data)
+    if (!parsed.success) {
+      logger.error('WebAPI', `getFeatureAnalysis(${id}) validation error`, parsed.error)
+      throw new Error(`Invalid response from /feature-analysis/${id}`)
+    }
+    return parsed.data as FeatureAnalysis
+  } catch (error) {
+    logger.error('WebAPI', `Failed to fetch feature analysis ${id}`, error)
+    throw error
+  }
+}
+
+/**
+ * Create a feature analysis.
+ * Endpoint: POST /feature-analysis
+ */
+export async function createFeatureAnalysis(
+  fa: FeatureAnalysis
+): Promise<FeatureAnalysis> {
+  const data = await httpPost<unknown>('/feature-analysis', fa)
+  const parsed = FeatureAnalysisSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', 'createFeatureAnalysis validation error', parsed.error)
+    throw new Error('Invalid response from POST /feature-analysis')
+  }
+  return parsed.data as FeatureAnalysis
+}
+
+/**
+ * Update a feature analysis.
+ * Endpoint: PUT /feature-analysis/{id}
+ */
+export async function updateFeatureAnalysis(
+  fa: FeatureAnalysis
+): Promise<FeatureAnalysis> {
+  if (typeof fa.id !== 'number') {
+    throw new Error('updateFeatureAnalysis requires fa.id')
+  }
+  const data = await httpPut<unknown>(`/feature-analysis/${fa.id}`, fa)
+  const parsed = FeatureAnalysisSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', `updateFeatureAnalysis(${fa.id}) validation error`, parsed.error)
+    throw new Error(`Invalid response from PUT /feature-analysis/${fa.id}`)
+  }
+  return parsed.data as FeatureAnalysis
+}
+
+/**
+ * Delete a feature analysis.
+ * Endpoint: DELETE /feature-analysis/{id}
+ */
+export async function deleteFeatureAnalysis(id: number): Promise<void> {
+  try {
+    await httpDelete(`/feature-analysis/${id}`)
+  } catch (error) {
+    logger.error('WebAPI', `Failed to delete feature analysis ${id}`, error)
+    throw error
+  }
+}
+
+/**
+ * Server-side copy of a feature analysis. Atlas 2.15 uses GET /copy.
+ * Endpoint: GET /feature-analysis/{id}/copy
+ */
+export async function copyFeatureAnalysis(id: number): Promise<FeatureAnalysis> {
+  const data = await httpGet<unknown>(`/feature-analysis/${id}/copy`)
+  const parsed = FeatureAnalysisSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', `copyFeatureAnalysis(${id}) validation error`, parsed.error)
+    throw new Error(`Invalid response from /feature-analysis/${id}/copy`)
+  }
+  return parsed.data as FeatureAnalysis
+}
+
+/**
+ * Whether a feature analysis with the given name already exists.
+ * Endpoint: GET /feature-analysis/{id}/exists?name={name}
+ */
+export async function featureAnalysisNameExists(
+  id: number,
+  name: string
+): Promise<boolean> {
+  try {
+    const data = await httpGet<unknown>(
+      `/feature-analysis/${id}/exists?name=${encodeURIComponent(name)}`
+    )
+    if (typeof data === 'boolean') return data
+    if (typeof data === 'number') return data > 0
+    return Boolean(data)
+  } catch (error) {
+    logger.error('WebAPI', `featureAnalysisNameExists(${id}, ${name}) failed`, error)
+    throw error
+  }
+}
+
+/**
+ * List the CDM domains supported by feature analyses.
+ * Endpoint: GET /feature-analysis/domains
+ */
+export async function listFeatureAnalysisDomains(): Promise<string[]> {
+  const data = await httpGet<unknown>('/feature-analysis/domains')
+  const parsed = z.array(z.string()).safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', 'listFeatureAnalysisDomains validation error', parsed.error)
+    throw new Error('Invalid response from /feature-analysis/domains')
+  }
+  return parsed.data
+}
+
+/**
+ * List FeatureExtraction aggregate options used by the PRESET editor.
+ * Endpoint: GET /feature-analysis/aggregates
+ */
+export async function listFeatureAnalysisAggregates(): Promise<FeatureAnalysisAggregate[]> {
+  const data = await httpGet<unknown>('/feature-analysis/aggregates')
+  const parsed = z.array(FeatureAnalysisAggregateSchema).safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', 'listFeatureAnalysisAggregates validation error', parsed.error)
+    throw new Error('Invalid response from /feature-analysis/aggregates')
+  }
+  return parsed.data
+}
+
+/**
+ * Default FeatureExtraction covariate settings (toggled by `temporal`).
+ * Endpoint: GET /featureextraction/defaultcovariatesettings?temporal={temporal}
+ */
+export async function getDefaultCovariateSettings(
+  temporal: boolean
+): Promise<CovariateSetting> {
+  const data = await httpGet<unknown>(
+    `/featureextraction/defaultcovariatesettings?temporal=${temporal ? 'true' : 'false'}`
+  )
+  const parsed = CovariateSettingSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', 'getDefaultCovariateSettings validation error', parsed.error)
+    throw new Error('Invalid response from /featureextraction/defaultcovariatesettings')
+  }
+  return parsed.data
 }
