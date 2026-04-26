@@ -3,6 +3,6 @@ export function profileRouteFor(
   personId: number | string,
   cohortId?: number
 ): string {
-  const base = `/profiles/${encodeURIComponent(sourceKey)}/${personId}`
+  const base = `/profiles/${encodeURIComponent(sourceKey)}/${encodeURIComponent(String(personId))}`
   return cohortId !== undefined ? `${base}/${cohortId}` : base
 }

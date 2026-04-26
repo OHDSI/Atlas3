@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia, setActivePinia } from 'pinia'
 
 vi.mock('@/services/webapi', () => ({
   listCohortSamples: vi.fn(),
@@ -22,6 +23,10 @@ import {
 } from '@/services/webapi'
 
 const vuetify = createVuetify({ components, directives })
+const globalMountOpts = {
+  plugins: [vuetify, createPinia()],
+  stubs: { RouterLink: { template: '<a><slot /></a>' } },
+}
 
 const sample = {
   id: 1,
@@ -32,7 +37,10 @@ const sample = {
 }
 
 describe('CohortSamplesPanel', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    setActivePinia(createPinia())
+  })
 
   it('renders the empty state when no samples are returned', async () => {
     vi.mocked(listCohortSamples).mockResolvedValueOnce({
@@ -42,7 +50,7 @@ describe('CohortSamplesPanel', () => {
     })
 
     const wrapper = mount(CohortSamplesPanel, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { cohortId: 1, sourceKey: 'EUNOMIA' },
     })
     await flushPromises()
@@ -62,7 +70,7 @@ describe('CohortSamplesPanel', () => {
     })
 
     const wrapper = mount(CohortSamplesPanel, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { cohortId: 1, sourceKey: 'EUNOMIA' },
     })
     await flushPromises()
@@ -85,7 +93,7 @@ describe('CohortSamplesPanel', () => {
     vi.mocked(refreshCohortSample).mockResolvedValueOnce(sample)
 
     const wrapper = mount(CohortSamplesPanel, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { cohortId: 1, sourceKey: 'EUNOMIA' },
     })
     await flushPromises()
@@ -107,7 +115,7 @@ describe('CohortSamplesPanel', () => {
     vi.mocked(deleteCohortSample).mockResolvedValueOnce(true)
 
     const wrapper = mount(CohortSamplesPanel, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { cohortId: 1, sourceKey: 'EUNOMIA' },
     })
     await flushPromises()
@@ -131,7 +139,7 @@ describe('CohortSamplesPanel', () => {
     vi.mocked(createCohortSample).mockRejectedValueOnce(new Error('size must be smaller'))
 
     const wrapper = mount(CohortSamplesPanel, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { cohortId: 1, sourceKey: 'EUNOMIA' },
     })
     await flushPromises()
@@ -156,7 +164,7 @@ describe('CohortSamplesPanel', () => {
     })
 
     const wrapper = mount(CohortSamplesPanel, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { cohortId: 1, sourceKey: 'EUNOMIA' },
     })
     await flushPromises()
@@ -173,7 +181,7 @@ describe('CohortSamplesPanel', () => {
     vi.mocked(listCohortSamples).mockRejectedValueOnce('boom')
 
     const wrapper = mount(CohortSamplesPanel, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { cohortId: 1, sourceKey: 'EUNOMIA' },
     })
     await flushPromises()
@@ -185,7 +193,7 @@ describe('CohortSamplesPanel', () => {
     vi.mocked(listCohortSamples).mockResolvedValueOnce(null)
 
     const wrapper = mount(CohortSamplesPanel, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { cohortId: 1, sourceKey: 'EUNOMIA' },
     })
     await flushPromises()
@@ -202,7 +210,7 @@ describe('CohortSamplesPanel', () => {
     vi.mocked(createCohortSample).mockRejectedValueOnce('boom')
 
     const wrapper = mount(CohortSamplesPanel, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { cohortId: 1, sourceKey: 'EUNOMIA' },
     })
     await flushPromises()
@@ -223,7 +231,7 @@ describe('CohortSamplesPanel', () => {
     vi.mocked(refreshCohortSample).mockResolvedValueOnce(other)
 
     const wrapper = mount(CohortSamplesPanel, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { cohortId: 1, sourceKey: 'EUNOMIA' },
     })
     await flushPromises()

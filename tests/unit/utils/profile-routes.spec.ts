@@ -11,4 +11,7 @@ describe('profileRouteFor', () => {
   it('encodes special characters in sourceKey', () => {
     expect(profileRouteFor('My Source', 1)).toBe('/profiles/My%20Source/1')
   })
+  it('encodes special characters in personId when string', () => {
+    expect(profileRouteFor('SYNPUF', '7/admin')).toBe('/profiles/SYNPUF/7%2Fadmin')
+  })
 })
