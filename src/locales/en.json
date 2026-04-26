@@ -1357,7 +1357,9 @@
         "design": "Design",
         "conceptSets": "Concept Sets",
         "executions": "Executions",
-        "versions": "Versions"
+        "versions": "Versions",
+        "validation": "Validation",
+        "utilities": "Utilities"
       },
       "title": {
         "new": "New Characterization",
@@ -1444,6 +1446,46 @@
         "results": {
           "comingSoon": "Results viewer coming soon",
           "back": "Back to builder"
+        }
+      },
+      "validation": {
+        "tabLabel": "Validation",
+        "headers": {
+          "errors": "Errors",
+          "warnings": "Warnings",
+          "infos": "Notes"
+        },
+        "empty": "No issues. Design is valid.",
+        "rules": {
+          "nameRequired": "Name is required.",
+          "cohortsRequired": "At least one cohort must be linked.",
+          "featureAnalysesRequired": "At least one feature analysis must be linked.",
+          "strataNameMissing": "Stratum {n} has no name.",
+          "strataNameDuplicate": "Two or more strata share the name '{name}'.",
+          "strataCriteriaInvalid": "Stratum '{name}' has invalid criteria JSON.",
+          "strataOnlyButNoStrata": "Strata-only is enabled but no strata are defined.",
+          "tooManyFeatureAnalyses": "{count} feature analyses may slow generation."
+        },
+        "saveBlocked": "Fix validation errors first."
+      },
+      "utilities": {
+        "tabLabel": "Utilities",
+        "export": {
+          "title": "Export design",
+          "description": "Download the design as JSON.",
+          "download": "Download design JSON"
+        },
+        "import": {
+          "title": "Import design",
+          "description": "Upload a design JSON file. A new characterization is created.",
+          "fileLabel": "Choose file",
+          "parseError": "Could not parse design JSON.",
+          "importError": "Import failed.",
+          "importSuccess": "Imported successfully."
+        },
+        "diagnostics": {
+          "title": "Diagnostics",
+          "comingSoon": "Backend diagnostics check coming soon."
         }
       }
     },

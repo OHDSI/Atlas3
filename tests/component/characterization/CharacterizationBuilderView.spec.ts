@@ -196,6 +196,19 @@ describe('CharacterizationBuilderView', () => {
     await nameInput.setValue('My new characterization')
     await flushPromises()
 
+    // Seed cohorts + featureAnalyses via the design tab emit so the
+    // builder-level validator doesn't block save.
+    const designTab = mounted.wrapper.findComponent({
+      name: 'CharacterizationDesignTab',
+    })
+    designTab.vm.$emit('update:modelValue', {
+      ...designTab.props('modelValue'),
+      name: 'My new characterization',
+      cohorts: [{ id: 1, name: 'Cohort A' }],
+      featureAnalyses: [{ id: 10, name: 'Demographics' }],
+    })
+    await flushPromises()
+
     const saveBtn = mounted.wrapper.get('[data-testid="char-builder-save"]')
       .element as HTMLButtonElement
     saveBtn.click()

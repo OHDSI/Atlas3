@@ -136,6 +136,26 @@
             >
               {{ t('characterizations.editor.tabs.versions', 'Versions') }}
             </v-tab>
+            <v-tab
+              value="utilities"
+              data-testid="char-builder-tab-utilities"
+            >
+              {{ t('characterizations.editor.tabs.utilities', 'Utilities') }}
+            </v-tab>
+            <v-tab
+              value="validation"
+              data-testid="char-builder-tab-validation"
+            >
+              {{ t('characterizations.editor.tabs.validation', 'Validation') }}
+              <v-badge
+                v-if="validationBadge"
+                inline
+                :color="validationBadge.color"
+                :content="validationBadge.count"
+                class="ms-2"
+                data-testid="char-builder-tab-validation-badge"
+              />
+            </v-tab>
           </v-tabs>
 
           <v-card-text>
@@ -178,6 +198,21 @@
                     }}
                   </p>
                 </div>
+              </v-tabs-window-item>
+
+              <v-tabs-window-item value="utilities">
+                <CharacterizationUtilitiesTab
+                  :characterization="draft"
+                  data-testid="char-builder-utilities-tab"
+                  @imported="onImported"
+                />
+              </v-tabs-window-item>
+
+              <v-tabs-window-item value="validation">
+                <CharacterizationMessagesTab
+                  :characterization="draft"
+                  data-testid="char-builder-validation-tab"
+                />
               </v-tabs-window-item>
             </v-tabs-window>
           </v-card-text>
@@ -249,7 +284,13 @@ import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { logger } from '@/utils/logger'
 import CharacterizationDesignTab from '@/components/characterization/CharacterizationDesignTab.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
+import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
+import CharacterizationUtilitiesTab from '@/components/characterization/CharacterizationUtilitiesTab.vue'
 import ExecutionsPanel from '@/components/characterization/ExecutionsPanel.vue'
+import {
+  validateCharacterization,
+  countByLevel,
+} from '@/utils/characterization-validators'
 import type { CharacterizationDefinition } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
@@ -277,7 +318,9 @@ function makeEmptyDraft(): CharacterizationDefinition {
 }
 
 const draft = ref<CharacterizationDefinition>(makeEmptyDraft())
-const activeTab = ref<'design' | 'conceptSets' | 'executions' | 'versions'>('design')
+const activeTab = ref<
+  'design' | 'conceptSets' | 'executions' | 'versions' | 'utilities' | 'validation'
+>('design')
 const saving = ref<boolean>(false)
 const showDeleteDialog = ref<boolean>(false)
 
@@ -317,6 +360,17 @@ const titleText = computed(() => {
 
 const storeError = computed<string | null>(() => store.error)
 const loading = computed<boolean>(() => store.loading)
+
+const validationMessages = computed(() => validateCharacterization(draft.value))
+const validationCounts = computed(() => countByLevel(validationMessages.value))
+const hasValidationErrors = computed<boolean>(() => validationCounts.value.error > 0)
+
+const validationBadge = computed<{ color: string; count: number } | null>(() => {
+  const { error, warning } = validationCounts.value
+  if (error > 0) return { color: 'error', count: error }
+  if (warning > 0) return { color: 'warning', count: warning }
+  return null
+})
 
 const canSave = computed<boolean>(() => {
   if (saving.value || loading.value) return false
@@ -398,6 +452,18 @@ async function handleSave() {
     return
   }
 
+  if (hasValidationErrors.value) {
+    showSnackbar(
+      t(
+        'characterizations.editor.validation.saveBlocked',
+        'Fix validation errors first.'
+      ).value,
+      'error'
+    )
+    activeTab.value = 'validation'
+    return
+  }
+
   saving.value = true
   try {
     if (isEditing.value) {
@@ -467,6 +533,20 @@ async function handleSaveCopy() {
     )
   } finally {
     saving.value = false
+  }
+}
+
+async function onImported(newDef: CharacterizationDefinition) {
+  store.markClean()
+  showSnackbar(
+    t(
+      'characterizations.editor.utilities.import.importSuccess',
+      'Imported successfully.'
+    ).value,
+    'success'
+  )
+  if (newDef.id != null) {
+    await router.push(`/characterizations/${newDef.id}`)
   }
 }
 
