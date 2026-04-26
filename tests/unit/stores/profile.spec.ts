@@ -114,6 +114,27 @@ describe('Profile Store — loadPerson', () => {
     expect(getCohortConceptSets).not.toHaveBeenCalled()
     expect(s.cohortConceptSets).toEqual([])
   })
+
+  it('loadPerson catches thrown errors and sets generic error', async () => {
+    const { getPerson } = await import('@/services/profile.service')
+    ;(getPerson as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('network down'))
+    const s = useProfileStore()
+    s.setRouteParams({ sourceKey: 'X', personId: 1 })
+    await s.loadPerson()
+    expect(s.person).toBeNull()
+    expect(s.error).toBe('network down')
+    expect(s.loading).toBe(false)
+  })
+
+  it('setTextFilter and setDateRange update state', () => {
+    const s = useProfileStore()
+    s.setTextFilter('hyp')
+    expect(s.textFilter).toBe('hyp')
+    s.setDateRange([-10, 10])
+    expect(s.dateRange).toEqual([-10, 10])
+    s.setDateRange(null)
+    expect(s.dateRange).toBeNull()
+  })
 })
 
 describe('Profile Store — getters', () => {

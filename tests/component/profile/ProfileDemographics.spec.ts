@@ -50,4 +50,28 @@ describe('ProfileDemographics', () => {
     const w = mount(ProfileDemographics, { global: { plugins: [vuetify] } })
     expect(w.text().toLowerCase()).toContain('index')
   })
+
+  it('shows male icon for MALE gender', () => {
+    setActivePinia(createPinia())
+    const store = useProfileStore()
+    store.person = {
+      gender: 'MALE', yearOfBirth: 1985, monthOfBirth: null, dayOfBirth: null,
+      ageAtIndex: 40, recordCount: 100,
+      records: [], cohorts: [], observationPeriods: [],
+    } as never
+    const w = mount(ProfileDemographics, { global: { plugins: [vuetify] } })
+    expect(w.html()).toContain('mdi-gender-male')
+  })
+
+  it('falls back to mdi-help-circle-outline for unknown gender', () => {
+    setActivePinia(createPinia())
+    const store = useProfileStore()
+    store.person = {
+      gender: 'OTHER', yearOfBirth: 1985, monthOfBirth: null, dayOfBirth: null,
+      ageAtIndex: 40, recordCount: 0,
+      records: [], cohorts: [], observationPeriods: [],
+    } as never
+    const w = mount(ProfileDemographics, { global: { plugins: [vuetify] } })
+    expect(w.html()).toContain('mdi-help-circle-outline')
+  })
 })

@@ -42,4 +42,16 @@ describe('ProfileTimeline', () => {
     ;(w.vm as { onBrush?: (e: unknown) => void }).onBrush?.({ areas: [{ coordRange: [-30, 60] }] })
     expect(store.dateRange).toEqual([-30, 60])
   })
+
+  it('clears dateRange when brush returns no areas', async () => {
+    const s = useProfileStore()
+    s.person = {
+      gender: 'M', yearOfBirth: 1980, monthOfBirth: null, dayOfBirth: null,
+      ageAtIndex: 40, recordCount: 0, records: [], cohorts: [], observationPeriods: [],
+    } as never
+    s.setDateRange([-10, 10])
+    const w = mount(ProfileTimeline, { global: { plugins: [vuetify], stubs: { 'v-chart': true } } })
+    ;(w.vm as { onBrush: (e: unknown) => void }).onBrush({ areas: [] })
+    expect(s.dateRange).toBeNull()
+  })
 })

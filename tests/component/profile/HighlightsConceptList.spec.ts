@@ -43,4 +43,25 @@ describe('HighlightsConceptList', () => {
     await w.find('[data-test="highlight-concept-cb-7"] input').setValue(true)
     expect(w.emitted('selectionChange')?.[0]?.[0]).toEqual([7])
   })
+
+  it('drops selections whose concept disappears from filtered records', async () => {
+    const s = useProfileStore()
+    s.person = {
+      gender: 'M', yearOfBirth: 1980, monthOfBirth: null, dayOfBirth: null,
+      ageAtIndex: 40, recordCount: 1,
+      records: [
+        { conceptId: 7, conceptName: 'Z', domain: 'Drug', startDate: 1, endDate: null, startDay: 0, endDay: null },
+      ],
+      cohorts: [], observationPeriods: [],
+    } as never
+    const w = mount(HighlightsConceptList, { global: { plugins: [vuetify] } })
+    await w.find('[data-test="highlight-concept-cb-7"] input').setValue(true)
+    expect(w.emitted('selectionChange')?.[0]?.[0]).toEqual([7])
+    // Now filter so the concept disappears
+    s.setTextFilter('nope')
+    await w.vm.$nextTick()
+    await w.vm.$nextTick()
+    const events = w.emitted('selectionChange') ?? []
+    expect(events[events.length - 1]?.[0]).toEqual([])
+  })
 })

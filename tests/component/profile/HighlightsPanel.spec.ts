@@ -46,4 +46,23 @@ describe('HighlightsPanel', () => {
     await w.findAll('[data-test="highlight-swatch"]')[0]!.trigger('click')
     expect(s.highlights.get(9)).toBe(HIGHLIGHT_PALETTE[0])
   })
+
+  it('onSetSelectionChange records selected set ids without applying color (v1 no-op)', () => {
+    const s = useProfileStore()
+    const w = mountPanel()
+    const vm = w.vm as { onSetSelectionChange: (ids: number[]) => void; onApplyColor: (c: string) => void }
+    vm.onSetSelectionChange([1, 2])
+    // applying a color now should NOT touch store.highlights because no concept-id selection is active
+    vm.onApplyColor('#a6cee3')
+    expect(s.highlights.size).toBe(0)
+  })
+
+  it('clear-all click invokes store.clearHighlights', async () => {
+    const s = useProfileStore()
+    s.applyHighlight([1], '#a6cee3')
+    expect(s.highlights.size).toBe(1)
+    const w = mountPanel()
+    await w.find('[data-test="highlight-clear"]').trigger('click')
+    expect(s.highlights.size).toBe(0)
+  })
 })

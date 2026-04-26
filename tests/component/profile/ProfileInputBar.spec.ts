@@ -52,4 +52,20 @@ describe('ProfileInputBar', () => {
     await flushPromises()
     expect(router.currentRoute.value.path).toBe('/profiles/SYNPUF/1234')
   })
+
+  it('does nothing when source dropdown changes to null', async () => {
+    const { wrapper, router } = await setup('/profiles/SYNPUF')
+    const before = router.currentRoute.value.path
+    // Internally onSourceChange(null) returns early.
+    await (wrapper.vm as { onSourceChange?: (v: string | null) => Promise<void> }).onSourceChange?.(null)
+    await new Promise(r => setTimeout(r, 0))
+    expect(router.currentRoute.value.path).toBe(before)
+  })
+
+  it('does not navigate when submit fires without source or personId', async () => {
+    const { wrapper, router } = await setup('/profiles')
+    const before = router.currentRoute.value.path
+    await wrapper.find('[data-test="profile-person-form"]').trigger('submit.prevent')
+    expect(router.currentRoute.value.path).toBe(before)
+  })
 })

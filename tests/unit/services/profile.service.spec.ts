@@ -102,3 +102,23 @@ describe('getCohortConceptSets', () => {
     if (result.success) expect(result.data).toEqual([])
   })
 })
+
+describe('getCohortConceptSets — error paths', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns failure when httpGet throws', async () => {
+    const { httpGet } = await import('@/services/http-client')
+    ;(httpGet as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('boom'))
+    const result = await getCohortConceptSets(1)
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toBe('boom')
+  })
+
+  it('returns empty array when expression is malformed JSON string', async () => {
+    const { httpGet } = await import('@/services/http-client')
+    ;(httpGet as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1, name: 'x', expression: '{not json' })
+    const result = await getCohortConceptSets(1)
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data).toEqual([])
+  })
+})

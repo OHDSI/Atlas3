@@ -58,4 +58,15 @@ describe('ProfileView', () => {
     await w.vm.$nextTick()
     expect(w.find('[data-test="profile-demographics"]').exists()).toBe(true)
   })
+
+  it('renders the error banner when store.error is set', async () => {
+    setActivePinia(createPinia())
+    const w = await makeWrapper('/profiles/SYNPUF/7')
+    await new Promise(r => setTimeout(r, 0))
+    await w.vm.$nextTick()
+    const store = (await import('@/stores/profile')).useProfileStore()
+    store.error = 'boom'
+    await w.vm.$nextTick()
+    expect(w.find('[data-test="profile-error"]').exists()).toBe(true)
+  })
 })

@@ -90,4 +90,6 @@ async function onSubmit() {
   if (!selectedSource.value || !personIdInput.value) return
   await router.push(`/profiles/${selectedSource.value}/${personIdInput.value}`)
 }
+
+defineExpose({ onSourceChange, onSubmit })
 </script>
