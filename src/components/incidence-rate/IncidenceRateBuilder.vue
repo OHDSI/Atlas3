@@ -2,14 +2,34 @@
   <div class="ir-builder">
     <IncidenceRateBuilderToolbar />
 
-    <v-tabs v-model="activeTab" color="primary">
-      <v-tab value="definition">{{ t('incidenceRate.tabs.definition', 'Definition') }}</v-tab>
-      <v-tab value="conceptSets">{{ t('incidenceRate.tabs.conceptSets', 'Concept Sets') }}</v-tab>
-      <v-tab value="generation" :disabled="!store.currentIR?.id">{{ t('incidenceRate.tabs.generation', 'Generation') }}</v-tab>
-      <v-tab value="versions" :disabled="!store.currentIR?.id">{{ t('incidenceRate.tabs.versions', 'Versions') }}</v-tab>
+    <v-tabs
+      v-model="activeTab"
+      color="primary"
+    >
+      <v-tab value="definition">
+        {{ t('incidenceRate.tabs.definition', 'Definition') }}
+      </v-tab>
+      <v-tab value="conceptSets">
+        {{ t('incidenceRate.tabs.conceptSets', 'Concept Sets') }}
+      </v-tab>
+      <v-tab
+        value="generation"
+        :disabled="!store.currentIR?.id"
+      >
+        {{ t('incidenceRate.tabs.generation', 'Generation') }}
+      </v-tab>
+      <v-tab
+        value="versions"
+        :disabled="!store.currentIR?.id"
+      >
+        {{ t('incidenceRate.tabs.versions', 'Versions') }}
+      </v-tab>
     </v-tabs>
 
-    <v-window v-model="activeTab" class="window">
+    <v-window
+      v-model="activeTab"
+      class="window"
+    >
       <v-window-item value="definition">
         <IncidenceRateDefinitionPanel />
       </v-window-item>
@@ -17,10 +37,16 @@
         <IncidenceRateConceptSetsPanel />
       </v-window-item>
       <v-window-item value="generation">
-        <IncidenceRateGenerationPanel v-if="store.currentIR?.id" :ir-id="store.currentIR.id" />
+        <IncidenceRateGenerationPanel
+          v-if="store.currentIR?.id"
+          :ir-id="store.currentIR.id"
+        />
       </v-window-item>
       <v-window-item value="versions">
-        <IncidenceRateVersionsPanel v-if="store.currentIR?.id" :ir-id="store.currentIR.id" />
+        <IncidenceRateVersionsPanel
+          v-if="store.currentIR?.id"
+          :ir-id="store.currentIR.id"
+        />
       </v-window-item>
     </v-window>
   </div>

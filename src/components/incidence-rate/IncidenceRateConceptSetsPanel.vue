@@ -1,10 +1,16 @@
 <template>
   <v-card variant="outlined">
     <v-card-title>{{ t('incidenceRate.conceptSets', 'Concept Sets') }}</v-card-title>
-    <v-card-text v-if="conceptSets.length === 0" class="muted">
+    <v-card-text
+      v-if="conceptSets.length === 0"
+      class="muted"
+    >
       {{ t('incidenceRate.noConceptSets', 'This incidence rate has no concept sets attached.') }}
     </v-card-text>
-    <v-table v-else density="compact">
+    <v-table
+      v-else
+      density="compact"
+    >
       <thead>
         <tr>
           <th>{{ t('common.name', 'Name') }}</th>
@@ -12,7 +18,10 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="cs in conceptSets" :key="cs.id">
+        <tr
+          v-for="cs in conceptSets"
+          :key="cs.id"
+        >
           <td>{{ cs.name }}</td>
           <td>
             <v-btn
@@ -20,7 +29,9 @@
               size="x-small"
               variant="text"
               :to="`/conceptset/${cs.id}`"
-            >{{ t('common.view', 'View') }}</v-btn>
+            >
+              {{ t('common.view', 'View') }}
+            </v-btn>
           </td>
         </tr>
       </tbody>

@@ -1,5 +1,8 @@
 <template>
-  <v-toolbar density="compact" flat>
+  <v-toolbar
+    density="compact"
+    flat
+  >
     <v-text-field
       :model-value="store.currentIR?.name ?? ''"
       :label="t('incidenceRate.editor.name', 'Name').value"
@@ -19,7 +22,10 @@
     >
       {{ t('common.save', 'Save') }}
     </v-btn>
-    <v-btn :disabled="!store.currentIR?.id" @click="onCopy">
+    <v-btn
+      :disabled="!store.currentIR?.id"
+      @click="onCopy"
+    >
       {{ t('common.copy', 'Copy') }}
     </v-btn>
     <v-btn
@@ -31,14 +37,24 @@
       {{ t('common.delete', 'Delete') }}
     </v-btn>
 
-    <v-dialog v-model="askDelete" max-width="400">
+    <v-dialog
+      v-model="askDelete"
+      max-width="400"
+    >
       <v-card>
         <v-card-title>{{ t('incidenceRateAnalysis.delete', 'Delete incidence rate') }}</v-card-title>
         <v-card-text>{{ t('incidenceRateAnalysis.deleteConfirmation', 'Delete incidence rate analysis? Warning: deletion can not be undone!') }}</v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="askDelete = false">{{ t('common.cancel', 'Cancel') }}</v-btn>
-          <v-btn color="error" @click="onDelete">{{ t('common.delete', 'Delete') }}</v-btn>
+          <v-btn @click="askDelete = false">
+            {{ t('common.cancel', 'Cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            @click="onDelete"
+          >
+            {{ t('common.delete', 'Delete') }}
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -48,7 +64,9 @@
       :color="feedback?.color ?? 'info'"
       :timeout="3000"
       @update:model-value="(open: boolean) => { if (!open) feedback = null }"
-    >{{ feedback?.message }}</v-snackbar>
+    >
+      {{ feedback?.message }}
+    </v-snackbar>
   </v-toolbar>
 </template>
 

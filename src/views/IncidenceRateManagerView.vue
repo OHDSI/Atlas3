@@ -1,8 +1,18 @@
 <template>
   <v-container fluid>
-    <div v-if="loadingError" class="state error">{{ loadingError }}</div>
+    <div
+      v-if="loadingError"
+      class="state error"
+    >
+      {{ loadingError }}
+    </div>
     <IncidenceRateBuilder v-else-if="store.currentIR" />
-    <div v-else class="state">{{ t('incidenceRate.editor.loading', 'Loading incidence rate…') }}</div>
+    <div
+      v-else
+      class="state"
+    >
+      {{ t('incidenceRate.editor.loading', 'Loading incidence rate…') }}
+    </div>
   </v-container>
 </template>
 
