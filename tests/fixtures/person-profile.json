@@ -1,0 +1,52 @@
+{
+  "gender": "FEMALE",
+  "yearOfBirth": 1972,
+  "monthOfBirth": null,
+  "dayOfBirth": null,
+  "ageAtIndex": 52,
+  "recordCount": 4,
+  "records": [
+    {
+      "conceptId": 1308216,
+      "conceptName": "Lisinopril 10 MG Oral Tablet",
+      "domain": "Drug",
+      "startDate": 1577836800000,
+      "endDate": 1580515200000,
+      "startDay": -45,
+      "endDay": -15
+    },
+    {
+      "conceptId": 320128,
+      "conceptName": "Essential hypertension",
+      "domain": "Condition",
+      "startDate": 1577836800000,
+      "endDate": null,
+      "startDay": -45,
+      "endDay": null
+    },
+    {
+      "conceptId": 9201,
+      "conceptName": "Inpatient Visit",
+      "domain": "Visit",
+      "startDate": 1582934400000,
+      "endDate": 1583020800000,
+      "startDay": 14,
+      "endDay": 15
+    },
+    {
+      "conceptId": 4023213,
+      "conceptName": "Blood pressure measurement",
+      "domain": "Measurement",
+      "startDate": 1582934400000,
+      "endDate": null,
+      "startDay": 14,
+      "endDay": null
+    }
+  ],
+  "cohorts": [
+    { "cohortDefinitionId": 42, "startDate": 1581552000000, "endDate": null }
+  ],
+  "observationPeriods": [
+    { "startDate": 1546300800000, "endDate": 1609459200000, "startDays": -365, "endDays": 365 }
+  ]
+}

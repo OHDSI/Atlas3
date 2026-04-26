@@ -3,6 +3,9 @@
  * Provides mock responses for WebAPI endpoints
  */
 
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
 import type { Page, Route } from '@playwright/test'
 import {
   mockCohorts,
@@ -13,6 +16,15 @@ import {
   mockCardiovascularConcepts,
   createConceptSearchResponse
 } from '../fixtures'
+
+// Load the person profile fixture (JSON) at module load time. We avoid
+// `import x from '*.json'` because the test runner's ESM mode requires an
+// explicit `with { type: 'json' }` attribute; readFileSync sidesteps that.
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const personProfileFixture = JSON.parse(
+  readFileSync(resolve(__dirname, '../../fixtures/person-profile.json'), 'utf-8')
+)
 
 /**
  * Setup basic API mocks for all tests
@@ -354,6 +366,41 @@ export async function setupBasicMocks(page: Page) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify([])
+    })
+  })
+
+  // Mock person profile endpoint: GET /WebAPI/{sourceKey}/person/{personId}?cohort={id}
+  // Used by the Profiles feature.
+  await page.route('**/WebAPI/*/person/*', async (route: Route) => {
+    if (route.request().method() !== 'GET') {
+      await route.continue()
+      return
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(personProfileFixture)
+    })
+  })
+
+  // Mock cohort-definition fetch for the profiles cohort context (id 42).
+  // The Profiles feature calls getCohortConceptSets, which fetches
+  // /cohortdefinition/{id} and reads `expression` (string or object).
+  // This handler is registered after the generic **/cohortdefinition/** route
+  // so it takes precedence for id 42.
+  await page.route('**/WebAPI/cohortdefinition/42', async (route: Route) => {
+    if (route.request().method() !== 'GET') {
+      await route.continue()
+      return
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 42,
+        name: 'Hypertension',
+        expression: '{"ConceptSets":[{"id":0,"name":"ACE Inhibitors","expression":{"items":[]}}]}'
+      })
     })
   })
 }
