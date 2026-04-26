@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getPerson } from '@/services/profile.service'
-import { getCohortConceptSets } from '@/services/profile.service'
+import { getPerson, getCohortConceptSets } from '@/services/profile.service'
 
 vi.mock('@/services/http-client', () => ({
   httpGet: vi.fn(),

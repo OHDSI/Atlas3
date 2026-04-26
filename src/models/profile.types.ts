@@ -48,3 +48,14 @@ export const OMOP_DOMAINS = [
   'Drug', 'Condition', 'Visit', 'Procedure', 'Observation', 'Measurement',
   'Device', 'Specimen', 'ConditionEra', 'DrugEra', 'DoseEra', 'Death',
 ] as const
+
+export const CohortConceptSetSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+})
+export type CohortConceptSet = z.infer<typeof CohortConceptSetSchema>
+
+export const CohortDefExpressionSchema = z.object({
+  ConceptSets: z.array(CohortConceptSetSchema).optional(),
+})
+export type CohortDefExpression = z.infer<typeof CohortDefExpressionSchema>

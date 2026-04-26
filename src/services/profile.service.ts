@@ -1,7 +1,12 @@
 import { httpGet } from '@/services/http-client'
 import { logger } from '@/utils/logger'
 import { type ApiResult, success, failure } from '@/types/api'
-import { PersonProfileSchema, type PersonProfile } from '@/models/profile.types'
+import {
+  PersonProfileSchema,
+  type PersonProfile,
+  CohortDefExpressionSchema,
+  type CohortConceptSet,
+} from '@/models/profile.types'
 
 export async function getPerson(
   sourceKey: string,
@@ -26,26 +31,19 @@ export async function getPerson(
   }
 }
 
-export interface CohortConceptSet {
-  id: number
-  name: string
-}
-
-type CohortDefExpression = { ConceptSets?: Array<{ id: number; name: string }> }
-
 export async function getCohortConceptSets(
   cohortDefinitionId: number
 ): Promise<ApiResult<CohortConceptSet[]>> {
   try {
-    const def = await httpGet<{ expression: string | CohortDefExpression }>(
+    const def = await httpGet<{ expression: string | unknown }>(
       `/cohortdefinition/${cohortDefinitionId}`
     )
-    const expr = (typeof def.expression === 'string'
+    const raw = typeof def.expression === 'string'
       ? safeParseJson(def.expression)
-      : def.expression) as CohortDefExpression | null
-    const sets =
-      (expr && typeof expr === 'object' && 'ConceptSets' in expr ? expr.ConceptSets : []) ?? []
-    return success(sets.map((s) => ({ id: s.id, name: s.name })))
+      : def.expression
+    const parsed = CohortDefExpressionSchema.safeParse(raw)
+    if (!parsed.success) return success([])
+    return success(parsed.data.ConceptSets ?? [])
   } catch (err) {
     logger.error('ProfileService', 'Failed to fetch cohort concept sets', err)
     return failure(err instanceof Error ? err.message : 'Failed to fetch cohort concept sets')
@@ -53,5 +51,9 @@ export async function getCohortConceptSets(
 }
 
 function safeParseJson(s: string): unknown {
-  try { return JSON.parse(s) } catch { return null }
+  try {
+    return JSON.parse(s)
+  } catch {
+    return null
+  }
 }
