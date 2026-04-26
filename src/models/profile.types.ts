@@ -44,6 +44,8 @@ export const HIGHLIGHT_PALETTE = [
 ] as const
 export type HighlightColor = typeof HIGHLIGHT_PALETTE[number] | 'none'
 
+export const DEFAULT_HIGHLIGHT_COLOR = '#888888'
+
 export const OMOP_DOMAINS = [
   'Drug', 'Condition', 'Visit', 'Procedure', 'Observation', 'Measurement',
   'Device', 'Specimen', 'ConditionEra', 'DrugEra', 'DoseEra', 'Death',

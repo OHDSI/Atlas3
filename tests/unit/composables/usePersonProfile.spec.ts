@@ -35,4 +35,19 @@ describe('usePersonProfile', () => {
     const { getPerson } = await import('@/services/profile.service')
     expect(getPerson).not.toHaveBeenCalled()
   })
+
+  it('reloads when personId param changes after mount', async () => {
+    const { getPerson } = await import('@/services/profile.service')
+    const params = ref<{ sourceKey?: string; personId?: string; cohortId?: string }>({
+      sourceKey: 'SYNPUF', personId: '7',
+    })
+    usePersonProfile(params)
+    await new Promise(r => setTimeout(r, 0))
+    expect(getPerson).toHaveBeenCalledWith('SYNPUF', 7, undefined)
+
+    params.value = { sourceKey: 'SYNPUF', personId: '8' }
+    // wait for the watcher to fire and the loadPerson promise to resolve
+    await new Promise(r => setTimeout(r, 0))
+    expect(getPerson).toHaveBeenCalledWith('SYNPUF', 8, undefined)
+  })
 })

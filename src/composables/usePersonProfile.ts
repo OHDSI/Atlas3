@@ -32,7 +32,15 @@ export function usePersonProfile(params: Ref<ProfileRouteParams>): {
     }
   }
 
-  watch(() => ({ ...params.value }), syncFromParams, { immediate: true, deep: true })
+  watch(
+    [
+      () => asString(params.value.sourceKey),
+      () => asString(params.value.personId),
+      () => asString(params.value.cohortId),
+    ],
+    syncFromParams,
+    { immediate: true }
+  )
 
   return {
     person: computed(() => store.person),

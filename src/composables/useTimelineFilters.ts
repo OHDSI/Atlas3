@@ -1,5 +1,6 @@
 import { computed, type ComputedRef } from 'vue'
 import { useProfileStore } from '@/stores/profile'
+import { DEFAULT_HIGHLIGHT_COLOR } from '@/models/profile.types'
 
 export interface UniqueConcept {
   conceptId: number
@@ -20,8 +21,6 @@ export interface TimelineDataset {
   domain: string
   points: TimelinePoint[]
 }
-
-const DEFAULT_COLOR = '#888888'
 
 export function useTimelineFilters(): {
   uniqueConcepts: ComputedRef<UniqueConcept[]>
@@ -49,10 +48,14 @@ export function useTimelineFilters(): {
         conceptName: r.conceptName,
         startDay: r.startDay,
         endDay: r.endDay,
-        color: store.highlights.get(r.conceptId) ?? DEFAULT_COLOR,
+        color: store.highlights.get(r.conceptId) ?? DEFAULT_HIGHLIGHT_COLOR,
       }
       const arr = buckets.get(r.domain)
-      if (arr) arr.push(point); else buckets.set(r.domain, [point])
+      if (arr) {
+        arr.push(point)
+      } else {
+        buckets.set(r.domain, [point])
+      }
     }
     return Array.from(buckets.entries()).map(([domain, points]) => ({ domain, points }))
   })
