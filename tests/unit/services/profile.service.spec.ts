@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getPerson } from '@/services/profile.service'
+import { getCohortConceptSets } from '@/services/profile.service'
 
 vi.mock('@/services/http-client', () => ({
   httpGet: vi.fn(),
@@ -54,5 +55,51 @@ describe('getPerson', () => {
     const result = await getPerson('SYNPUF', 1)
     expect(result.success).toBe(false)
     if (!result.success) expect(result.code).toBeUndefined()
+  })
+})
+
+describe('getCohortConceptSets', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('extracts conceptSets from cohort definition expression', async () => {
+    const { httpGet } = await import('@/services/http-client')
+    ;(httpGet as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 42,
+      name: 'Hypertension',
+      expression: JSON.stringify({
+        ConceptSets: [
+          { id: 0, name: 'ACE Inhibitors', expression: { items: [] } },
+          { id: 1, name: 'HTN Diagnosis', expression: { items: [] } },
+        ],
+      }),
+    })
+    const result = await getCohortConceptSets(42)
+    expect(httpGet).toHaveBeenCalledWith('/cohortdefinition/42')
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data).toHaveLength(2)
+      expect(result.data[0]?.name).toBe('ACE Inhibitors')
+    }
+  })
+
+  it('handles parsed (non-string) expressions', async () => {
+    const { httpGet } = await import('@/services/http-client')
+    ;(httpGet as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 42, name: 'X',
+      expression: { ConceptSets: [{ id: 7, name: 'Z', expression: { items: [] } }] },
+    })
+    const result = await getCohortConceptSets(42)
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data).toHaveLength(1)
+  })
+
+  it('returns empty array when ConceptSets missing', async () => {
+    const { httpGet } = await import('@/services/http-client')
+    ;(httpGet as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 1, name: 'Y', expression: '{"x":1}',
+    })
+    const result = await getCohortConceptSets(1)
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data).toEqual([])
   })
 })
