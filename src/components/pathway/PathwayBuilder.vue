@@ -26,13 +26,10 @@
           <PathwayDesignForm />
         </div>
         <div class="side">
-          <!-- Task 23 will replace this with <PathwayGenerationPanel :pathway-id="..." /> -->
-          <div
+          <PathwayGenerationPanel
             v-if="currentPathway?.id"
-            class="pathway-side-panel-placeholder"
-          >
-            Generation panel placeholder (pathway #{{ currentPathway.id }})
-          </div>
+            :pathway-id="currentPathway.id"
+          />
         </div>
       </div>
     </template>
@@ -45,6 +42,7 @@ import { storeToRefs } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'
 import PathwayBuilderToolbar from './PathwayBuilderToolbar.vue'
 import PathwayDesignForm from './PathwayDesignForm.vue'
+import PathwayGenerationPanel from './PathwayGenerationPanel.vue'
 
 const store = usePathwayStore()
 const { currentPathway, previewVersion } = storeToRefs(store)
@@ -70,8 +68,5 @@ onBeforeUnmount(() => {
   background: #fff8c5; padding: 8px 12px; margin-bottom: 12px; border-left: 4px solid #d39e00;
 }
 .main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; margin-top: 12px; }
-.pathway-side-panel-placeholder {
-  border: 1px dashed #ccc; padding: 12px; color: #888; text-align: center;
-}
 @media (max-width: 1100px) { .main { grid-template-columns: 1fr; } }
 </style>
