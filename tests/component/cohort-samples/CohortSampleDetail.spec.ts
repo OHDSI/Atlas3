@@ -3,14 +3,21 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia, setActivePinia } from 'pinia'
 import CohortSampleDetail from '@/components/cohort-samples/CohortSampleDetail.vue'
 
 const vuetify = createVuetify({ components, directives })
+const globalMountOpts = {
+  plugins: [vuetify, createPinia()],
+  stubs: { RouterLink: { template: '<a><slot /></a>' } },
+}
+
+setActivePinia(createPinia())
 
 describe('CohortSampleDetail', () => {
   it('renders one row per element with gender labels', () => {
     const wrapper = mount(CohortSampleDetail, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: {
         sample: {
           id: 1,
@@ -35,7 +42,7 @@ describe('CohortSampleDetail', () => {
 
   it('renders the empty state when there are no elements', () => {
     const wrapper = mount(CohortSampleDetail, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { sample: { id: 1, name: 'demo', size: 0, elements: [] } },
     })
     expect(wrapper.find('[data-testid=cohort-sample-detail-empty]').exists()).toBe(true)
@@ -43,7 +50,7 @@ describe('CohortSampleDetail', () => {
 
   it('shows the loading skeleton when loading is true', () => {
     const wrapper = mount(CohortSampleDetail, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { sample: { id: 1, name: 'demo', size: 0 }, loading: true },
     })
     expect(wrapper.find('[data-testid=cohort-sample-detail-table]').exists()).toBe(false)
@@ -52,7 +59,7 @@ describe('CohortSampleDetail', () => {
 
   it('renders the records column when at least one element has a recordCount', () => {
     const wrapper = mount(CohortSampleDetail, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: {
         sample: {
           id: 1,
@@ -72,13 +79,13 @@ describe('CohortSampleDetail', () => {
 
   it('formats createdDate when present and falls back to em-dash otherwise', () => {
     const wrapperWithDate = mount(CohortSampleDetail, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { sample: { id: 1, name: 'demo', size: 0, createdDate: '2026-04-26T10:00:00Z', elements: [] } },
     })
     expect(wrapperWithDate.text()).toMatch(/2026|Apr/)
 
     const wrapperNoDate = mount(CohortSampleDetail, {
-      global: { plugins: [vuetify] },
+      global: globalMountOpts,
       props: { sample: { id: 1, name: 'demo', size: 0, elements: [] } },
     })
     expect(wrapperNoDate.text()).toContain('—')
