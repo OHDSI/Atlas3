@@ -15,13 +15,17 @@
       <v-btn
         data-testid="generate-btn"
         color="primary"
-        :disabled="!canGenerate || !selectedSource || generation.polling.value"
+        :disabled="!canGenerate || !selectedSource || generation.polling.value || !canGenerateForSource(selectedSource)"
         @click="onStart"
-      >Generate</v-btn>
+      >
+        Generate
+      </v-btn>
       <v-btn
-        :disabled="!generation.polling.value"
+        :disabled="!generation.polling.value || !canCancelForSource(selectedSource)"
         @click="onCancel"
-      >Cancel</v-btn>
+      >
+        Cancel
+      </v-btn>
     </div>
 
     <div
@@ -59,7 +63,9 @@
             <router-link
               v-if="e.status === 'COMPLETED'"
               :to="`/pathways/${pathwayId}/results/${e.id}`"
-            >View</router-link>
+            >
+              View
+            </router-link>
           </td>
         </tr>
       </tbody>
@@ -73,6 +79,7 @@ import { storeToRefs } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { usePathwayGeneration } from '@/composables/usePathwayGeneration'
+import { usePermissions } from '@/composables/usePermissions'
 import { listPathwayExecutions } from '@/services/webapi'
 import type { PathwayExecution } from '@/models/pathway.types'
 
@@ -80,6 +87,17 @@ const props = defineProps<{ pathwayId: number }>()
 const store = usePathwayStore()
 const ds = useDataSourcesStore()
 const { canGenerate } = storeToRefs(store)
+const { hasPermission } = usePermissions()
+
+function canGenerateForSource(sourceKey: string | null): boolean {
+  if (!sourceKey) return false
+  return hasPermission(`pathway:${props.pathwayId}:generation:${sourceKey}:post`)
+}
+
+function canCancelForSource(sourceKey: string | null): boolean {
+  if (!sourceKey) return false
+  return hasPermission(`pathway:${props.pathwayId}:generation:${sourceKey}:delete`)
+}
 
 const selectedSource = ref<string | null>(null)
 const executions = ref<PathwayExecution[]>([])

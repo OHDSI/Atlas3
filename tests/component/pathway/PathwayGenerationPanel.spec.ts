@@ -22,6 +22,12 @@ vi.mock('@/stores/datasources', () => ({
   }),
 }))
 
+vi.mock('@/composables/usePermissions', () => ({
+  usePermissions: () => ({
+    hasPermission: () => true,
+  }),
+}))
+
 describe('PathwayGenerationPanel', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
