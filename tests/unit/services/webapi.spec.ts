@@ -322,6 +322,62 @@ describe('WebAPI Service', () => {
 
       expect(result.success).toBe(false)
     })
+
+    it('normalizes WebAPI raw status COMPLETED to internal COMPLETE', async () => {
+      const mockInfo = [
+        { id: { cohortDefinitionId: 123, sourceId: 1 }, status: 'COMPLETED' },
+      ]
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(JSON.stringify(mockInfo)),
+      })
+      const result = await webapi.getCohortGenerationInfo(123)
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data[0]?.status).toBe('COMPLETE')
+    })
+
+    it('normalizes STARTING to PENDING', async () => {
+      const mockInfo = [
+        { id: { cohortDefinitionId: 123, sourceId: 1 }, status: 'STARTING' },
+      ]
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(JSON.stringify(mockInfo)),
+      })
+      const result = await webapi.getCohortGenerationInfo(123)
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data[0]?.status).toBe('PENDING')
+    })
+
+    it('normalizes STARTED to RUNNING', async () => {
+      const mockInfo = [
+        { id: { cohortDefinitionId: 123, sourceId: 1 }, status: 'STARTED' },
+      ]
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(JSON.stringify(mockInfo)),
+      })
+      const result = await webapi.getCohortGenerationInfo(123)
+      expect(result.success).toBe(true)
+      if (result.success) expect(result.data[0]?.status).toBe('RUNNING')
+    })
+
+    it('normalizes STOPPED / ABANDONED to FAILED', async () => {
+      const mockInfo = [
+        { id: { cohortDefinitionId: 123, sourceId: 1 }, status: 'STOPPED' },
+        { id: { cohortDefinitionId: 123, sourceId: 2 }, status: 'ABANDONED' },
+      ]
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve(JSON.stringify(mockInfo)),
+      })
+      const result = await webapi.getCohortGenerationInfo(123)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data[0]?.status).toBe('FAILED')
+        expect(result.data[1]?.status).toBe('FAILED')
+      }
+    })
   })
 
   describe('getConceptSet', () => {

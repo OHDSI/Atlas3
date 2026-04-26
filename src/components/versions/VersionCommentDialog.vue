@@ -74,12 +74,13 @@ import { logger } from '@/utils/logger'
 import type { Version, CommentUpdatePayload } from './types'
 import { updateVersion as updateCohortVersion } from '@/services/cohort-definition-versions.service'
 import { updateVersion as updateConceptSetVersion } from '@/services/concept-set-versions.service'
+import { updatePathwayVersion } from '@/services/pathway-versions.service'
 
 // Props
 const props = defineProps<{
   modelValue: boolean
   version: Version | null
-  assetType: 'cohortdefinition' | 'conceptset'
+  assetType: 'cohortdefinition' | 'conceptset' | 'pathway-analysis'
   assetId: number
 }>()
 
@@ -127,9 +128,12 @@ watch(() => props.version, (newVersion) => {
 }, { immediate: true })
 
 // Get appropriate API service
-const updateVersionAPI = props.assetType === 'cohortdefinition'
-  ? updateCohortVersion
-  : updateConceptSetVersion
+const updateVersionAPI =
+  props.assetType === 'cohortdefinition' ? updateCohortVersion :
+  props.assetType === 'pathway-analysis'
+    ? (id: number, version: number, payload: CommentUpdatePayload) =>
+        updatePathwayVersion(id, version, { comment: payload.comment, archived: payload.archived })
+    : updateConceptSetVersion
 
 /**
  * Handle save button click

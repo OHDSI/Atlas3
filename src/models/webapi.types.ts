@@ -81,12 +81,34 @@ export const CohortGenerationIdSchema = z.object({
   sourceId: z.number(),
 })
 
+// Map raw WebAPI Spring Batch status values onto the narrower internal
+// GenerationStatus. The /cohortdefinition/{id}/info endpoint returns the
+// underlying job-execution status (STARTING/STARTED/COMPLETED/...) — those
+// must be normalized before the rest of the UI sees them, otherwise polling
+// silently dies because the status never matches the four-value enum.
+const RAW_STATUS_TO_GENERATION_STATUS: Record<string, GenerationStatus> = {
+  PENDING: 'PENDING',
+  STARTING: 'PENDING',
+  STARTED: 'RUNNING',
+  RUNNING: 'RUNNING',
+  STOPPING: 'RUNNING',
+  COMPLETE: 'COMPLETE',
+  COMPLETED: 'COMPLETE',
+  FAILED: 'FAILED',
+  STOPPED: 'FAILED',
+  ABANDONED: 'FAILED',
+}
+
+const generationStatusFromRaw = z
+  .string()
+  .transform((s) => RAW_STATUS_TO_GENERATION_STATUS[s] ?? 'PENDING')
+
 // WebAPI cohort definition generation info response
 export const CohortGenerationInfoSchema = z.object({
   id: CohortGenerationIdSchema,
   startTime: z.number().nullable().optional(),
   executionDuration: z.number().nullable().optional(),
-  status: z.enum(['PENDING', 'RUNNING', 'COMPLETE', 'FAILED']),
+  status: generationStatusFromRaw,
   isValid: z.boolean().optional(),
   isCanceled: z.boolean().optional(),
   failMessage: z.string().nullable().optional(),

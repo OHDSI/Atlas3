@@ -57,6 +57,15 @@ import {
   type FeatureAnalysisAggregate,
   type CovariateSetting,
 } from '@/models/feature-analysis.types'
+import {
+  PathwayExecutionSchema,
+  PathwayExecutionListSchema,
+  PathwayResultsSchema,
+  type PathwayExecution,
+  type PathwayResults,
+  PathwaySchema,
+  type Pathway,
+} from '@/models/pathway.types'
 import { z } from 'zod'
 
 /**
@@ -2054,4 +2063,288 @@ export async function getDefaultCovariateSettings(
     throw new Error('Invalid response from /featureextraction/defaultcovariatesettings')
   }
   return parsed.data
+}
+
+// ─── Cohort Pathway CRUD ────────────────────────────────────────────────────
+
+/**
+ * List all pathway analyses.
+ * GET /pathway-analysis?size=10000
+ */
+export async function listPathways(): Promise<ApiResult<Pathway[]>> {
+  try {
+    const data = await httpGet<unknown>('/pathway-analysis?size=10000')
+    const parsed = z.array(PathwaySchema.passthrough()).safeParse(data)
+    if (!parsed.success) {
+      logger.error('Pathway', 'listPathways validation', parsed.error)
+      return failure('Invalid pathway list response')
+    }
+    return success(parsed.data as Pathway[])
+  } catch (err) {
+    logger.error('Pathway', 'listPathways failed', err)
+    return failure(err instanceof Error ? err.message : 'Failed to list pathways')
+  }
+}
+
+/**
+ * Fetch a single pathway analysis by id.
+ * GET /pathway-analysis/:id
+ */
+export async function getPathway(id: number): Promise<ApiResult<Pathway>> {
+  try {
+    const data = await httpGet<unknown>(`/pathway-analysis/${id}`)
+    const parsed = PathwaySchema.passthrough().safeParse(data)
+    if (!parsed.success) {
+      logger.error('Pathway', 'getPathway validation', parsed.error)
+      return failure('Invalid pathway response')
+    }
+    return success(parsed.data as Pathway)
+  } catch (err) {
+    logger.error('Pathway', `getPathway(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch pathway')
+  }
+}
+
+/**
+ * Create a new pathway analysis.
+ * POST /pathway-analysis
+ */
+export async function createPathway(pathway: Pathway): Promise<ApiResult<Pathway>> {
+  try {
+    const data = await httpPost<unknown>('/pathway-analysis', pathway)
+    const parsed = PathwaySchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid create response')
+    return success(parsed.data as Pathway)
+  } catch (err) {
+    logger.error('Pathway', 'createPathway failed', err)
+    return failure(err instanceof Error ? err.message : 'Failed to create pathway')
+  }
+}
+
+/**
+ * Update an existing pathway analysis.
+ * PUT /pathway-analysis/:id
+ */
+export async function savePathway(id: number, pathway: Pathway): Promise<ApiResult<Pathway>> {
+  try {
+    const data = await httpPut<unknown>(`/pathway-analysis/${id}`, pathway)
+    const parsed = PathwaySchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid save response')
+    return success(parsed.data as Pathway)
+  } catch (err) {
+    logger.error('Pathway', `savePathway(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to save pathway')
+  }
+}
+
+/**
+ * Copy a pathway analysis (creates a duplicate).
+ * POST /pathway-analysis/:id
+ */
+export async function copyPathway(id: number): Promise<ApiResult<Pathway>> {
+  try {
+    const data = await httpPost<unknown>(`/pathway-analysis/${id}`, undefined)
+    const parsed = PathwaySchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid copy response')
+    return success(parsed.data as Pathway)
+  } catch (err) {
+    logger.error('Pathway', `copyPathway(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to copy pathway')
+  }
+}
+
+/**
+ * Delete a pathway analysis.
+ * DELETE /pathway-analysis/:id
+ */
+export async function deletePathway(id: number): Promise<boolean> {
+  try {
+    await httpDelete(`/pathway-analysis/${id}`)
+    return true
+  } catch (err) {
+    logger.error('Pathway', `deletePathway(${id}) failed`, err)
+    return false
+  }
+}
+
+/**
+ * Check whether a pathway name already exists.
+ * GET /pathway-analysis/:id/exists?name=<encoded>
+ * Use id=0 (default) when checking for a new (unsaved) pathway.
+ */
+export async function existsPathway(name: string, id = 0): Promise<number> {
+  try {
+    const data = await httpGet<number>(
+      `/pathway-analysis/${id}/exists?name=${encodeURIComponent(name)}`
+    )
+    return typeof data === 'number' ? data : 0
+  } catch (err) {
+    logger.error('Pathway', 'existsPathway failed', err)
+    return 0
+  }
+}
+
+/**
+ * Assign a tag to a pathway analysis.
+ * POST /pathway-analysis/:id/tag/:tagId
+ */
+export async function assignPathwayTag(id: number, tagId: number): Promise<boolean> {
+  try {
+    await httpPost(`/pathway-analysis/${id}/tag/${tagId}`, undefined)
+    return true
+  } catch (err) {
+    logger.error('Pathway', `assignPathwayTag failed`, err)
+    return false
+  }
+}
+
+/**
+ * Remove a tag from a pathway analysis.
+ * DELETE /pathway-analysis/:id/tag/:tagId
+ */
+export async function unassignPathwayTag(id: number, tagId: number): Promise<boolean> {
+  try {
+    await httpDelete(`/pathway-analysis/${id}/tag/${tagId}`)
+    return true
+  } catch (err) {
+    logger.error('Pathway', `unassignPathwayTag failed`, err)
+    return false
+  }
+}
+
+export interface PathwayDiagnosticMessage {
+  severity: 'INFO' | 'WARNING' | 'CRITICAL'
+  message: string
+}
+
+/**
+ * Run diagnostics on a pathway analysis design.
+ * POST /pathway-analysis/check
+ */
+export async function runPathwayDiagnostics(
+  pathway: Pathway
+): Promise<PathwayDiagnosticMessage[]> {
+  try {
+    const data = await httpPost<unknown>('/pathway-analysis/check', pathway)
+    if (Array.isArray(data)) return data as PathwayDiagnosticMessage[]
+    return []
+  } catch (err) {
+    logger.error('Pathway', 'runPathwayDiagnostics failed', err)
+    return []
+  }
+}
+
+/**
+ * List all generations for a pathway analysis.
+ * GET /pathway-analysis/:id/generation
+ */
+export async function listPathwayExecutions(
+  id: number
+): Promise<ApiResult<PathwayExecution[]>> {
+  try {
+    const data = await httpGet<unknown>(`/pathway-analysis/${id}/generation`)
+    const parsed = PathwayExecutionListSchema.safeParse(data)
+    if (!parsed.success) return failure('Invalid execution list')
+    return success(parsed.data)
+  } catch (err) {
+    logger.error('Pathway', `listPathwayExecutions(${id}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to list executions')
+  }
+}
+
+/**
+ * Get a single pathway generation execution.
+ * GET /pathway-analysis/generation/:generationId
+ */
+export async function getPathwayExecution(
+  generationId: number
+): Promise<ApiResult<PathwayExecution>> {
+  try {
+    const data = await httpGet<unknown>(`/pathway-analysis/generation/${generationId}`)
+    const parsed = PathwayExecutionSchema.safeParse(data)
+    if (!parsed.success) return failure('Invalid execution response')
+    return success(parsed.data)
+  } catch (err) {
+    logger.error('Pathway', `getPathwayExecution(${generationId}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch execution')
+  }
+}
+
+/**
+ * Get results for a pathway generation.
+ * GET /pathway-analysis/generation/:generationId/result
+ */
+export async function getPathwayResults(
+  generationId: number
+): Promise<ApiResult<PathwayResults>> {
+  try {
+    const data = await httpGet<unknown>(
+      `/pathway-analysis/generation/${generationId}/result`
+    )
+    const parsed = PathwayResultsSchema.safeParse(data)
+    if (!parsed.success) return failure('Invalid results response')
+    return success(parsed.data)
+  } catch (err) {
+    logger.error('Pathway', `getPathwayResults(${generationId}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch results')
+  }
+}
+
+/**
+ * Trigger pathway generation for a given source.
+ * POST /pathway-analysis/:id/generation/:sourceKey
+ */
+export async function generatePathway(
+  id: number,
+  sourceKey: string
+): Promise<ApiResult<PathwayExecution>> {
+  try {
+    const data = await httpPost<unknown>(
+      `/pathway-analysis/${id}/generation/${sourceKey}`,
+      undefined
+    )
+    const parsed = PathwayExecutionSchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid generate response')
+    return success(parsed.data as PathwayExecution)
+  } catch (err) {
+    logger.error('Pathway', `generatePathway(${id}, ${sourceKey}) failed`, err)
+    return failure(err instanceof Error ? err.message : 'Failed to start generation')
+  }
+}
+
+/**
+ * Cancel an in-progress pathway generation.
+ * DELETE /pathway-analysis/:id/generation/:sourceKey
+ */
+export async function cancelPathwayGeneration(
+  id: number,
+  sourceKey: string
+): Promise<boolean> {
+  try {
+    await httpDelete(`/pathway-analysis/${id}/generation/${sourceKey}`)
+    return true
+  } catch (err) {
+    logger.error('Pathway', `cancelPathwayGeneration failed`, err)
+    return false
+  }
+}
+
+/**
+ * Get the pathway design snapshot stored with a generation.
+ * GET /pathway-analysis/generation/:generationId/design
+ */
+export async function getPathwayDesignByGeneration(
+  generationId: number
+): Promise<ApiResult<Pathway>> {
+  try {
+    const data = await httpGet<unknown>(
+      `/pathway-analysis/generation/${generationId}/design`
+    )
+    const parsed = PathwaySchema.passthrough().safeParse(data)
+    if (!parsed.success) return failure('Invalid design response')
+    return success(parsed.data as Pathway)
+  } catch (err) {
+    logger.error('Pathway', 'getPathwayDesignByGeneration failed', err)
+    return failure(err instanceof Error ? err.message : 'Failed to fetch design')
+  }
 }

@@ -70,6 +70,7 @@ import VersionCommentDialog from './VersionCommentDialog.vue'
 import { useVersions } from '@/composables/useVersions'
 import { copyVersion as copyCohortVersion } from '@/services/cohort-definition-versions.service'
 import { copyVersion as copyConceptSetVersion } from '@/services/concept-set-versions.service'
+import { copyPathwayVersion } from '@/services/pathway-versions.service'
 import type { VersionsConfig, VersionsTableItem, Version } from './types'
 
 // Props
@@ -94,9 +95,10 @@ const snackbar = reactive({
 })
 
 // Get appropriate API service for copy
-const copyVersionAPI = props.config.assetType === 'cohortdefinition'
-  ? copyCohortVersion
-  : copyConceptSetVersion
+const copyVersionAPI =
+  props.config.assetType === 'cohortdefinition' ? copyCohortVersion :
+  props.config.assetType === 'pathway-analysis' ? copyPathwayVersion :
+  copyConceptSetVersion
 
 // Load versions on mount
 onMounted(async () => {
@@ -237,6 +239,9 @@ async function savePreviewAsCurrent(): Promise<boolean> {
     const { useCohortStore } = await import('@/stores/cohort')
     const cohortStore = useCohortStore()
     return cohortStore.savePreviewAsCurrent()
+  } else if (props.config.assetType === 'pathway-analysis') {
+    // Pathway store does not yet expose savePreviewAsCurrent; fall back to false
+    return false
   } else {
     const { useConceptSetsStore } = await import('@/stores/concept-sets')
     const conceptSetStore = useConceptSetsStore()
