@@ -356,4 +356,109 @@ describe('CharacterizationService', () => {
       )
     })
   })
+
+  // Catch-block coverage for façade methods missing an explicit error path.
+  describe('error logging across façade', () => {
+    function force500(): void {
+      const fetchMock = global.fetch as ReturnType<typeof vi.fn>
+      fetchMock.mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Server Error',
+        text: () => Promise.resolve(''),
+      } as unknown as Response)
+    }
+
+    it('getCharacterization catch path', async () => {
+      force500()
+      await expect(getCharacterization(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('createCharacterization catch path', async () => {
+      force500()
+      await expect(createCharacterization(validDesign)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('updateCharacterization catch path', async () => {
+      force500()
+      await expect(updateCharacterization(validDesign)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('deleteCharacterization catch path', async () => {
+      force500()
+      await expect(deleteCharacterization(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('copyCharacterization catch path', async () => {
+      force500()
+      await expect(copyCharacterization(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('characterizationNameExists catch path', async () => {
+      force500()
+      await expect(characterizationNameExists(0, 'name')).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('exportCharacterization catch path', async () => {
+      force500()
+      await expect(exportCharacterization(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('importCharacterization catch path', async () => {
+      force500()
+      await expect(importCharacterization({ design: 'x' })).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('listCharacterizationExecutions catch path', async () => {
+      force500()
+      await expect(listCharacterizationExecutions(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('getCharacterizationExecution catch path', async () => {
+      force500()
+      await expect(getCharacterizationExecution(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('generateCharacterization catch path', async () => {
+      force500()
+      await expect(generateCharacterization(1, 'EUNOMIA')).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('cancelCharacterizationGeneration catch path', async () => {
+      force500()
+      await expect(
+        cancelCharacterizationGeneration(1, 'EUNOMIA')
+      ).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('getCharacterizationDesignSnapshot catch path', async () => {
+      force500()
+      await expect(getCharacterizationDesignSnapshot(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('getCharacterizationResultCount catch path', async () => {
+      force500()
+      await expect(getCharacterizationResultCount(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('explorePrevalence catch path', async () => {
+      force500()
+      await expect(explorePrevalence(1, 2, 3, 4)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+  })
 })

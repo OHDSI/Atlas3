@@ -252,6 +252,13 @@ describe('FeatureAnalysisService', () => {
       expect(result).toHaveLength(2)
       expect(result[0].id).toBe('mean')
     })
+
+    it('logs and rethrows on network/HTTP error', async () => {
+      mockFetchOnce(undefined, false, 500)
+
+      await expect(listFeatureAnalysisAggregates()).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
   })
 
   describe('getDefaultCovariateSettings', () => {
@@ -273,6 +280,73 @@ describe('FeatureAnalysisService', () => {
       const fetchMock = global.fetch as ReturnType<typeof vi.fn>
       const [url] = fetchMock.mock.calls[0]
       expect(url).toContain('temporal=false')
+    })
+
+    it('logs and rethrows on network/HTTP error', async () => {
+      mockFetchOnce(undefined, false, 500)
+
+      await expect(getDefaultCovariateSettings(true)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+  })
+
+  // Catch-block coverage for the remaining façade methods. Each call mocks
+  // a 500 (with retries exhausted) and asserts the façade logs + rethrows.
+  describe('error logging across façade', () => {
+    function force500(): void {
+      const fetchMock = global.fetch as ReturnType<typeof vi.fn>
+      fetchMock.mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Server Error',
+        text: () => Promise.resolve(''),
+      } as unknown as Response)
+    }
+
+    it('getFeatureAnalysis catch path', async () => {
+      force500()
+      await expect(getFeatureAnalysis(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('createFeatureAnalysis catch path', async () => {
+      force500()
+      await expect(
+        createFeatureAnalysis({ name: 'x', type: 'PRESET', design: {} })
+      ).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('updateFeatureAnalysis catch path', async () => {
+      force500()
+      await expect(
+        updateFeatureAnalysis({ id: 1, name: 'x', type: 'PRESET', design: {} })
+      ).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('deleteFeatureAnalysis catch path', async () => {
+      force500()
+      await expect(deleteFeatureAnalysis(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('copyFeatureAnalysis catch path', async () => {
+      force500()
+      await expect(copyFeatureAnalysis(1)).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('featureAnalysisNameExists catch path', async () => {
+      force500()
+      await expect(featureAnalysisNameExists(0, 'name')).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('listFeatureAnalysisDomains catch path', async () => {
+      force500()
+      await expect(listFeatureAnalysisDomains()).rejects.toThrow()
+      expect(logger.error).toHaveBeenCalled()
     })
   })
 })
