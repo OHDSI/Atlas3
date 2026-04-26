@@ -21,7 +21,7 @@ export async function getPerson(
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Failed to fetch person profile'
     logger.error('ProfileService', 'Failed to fetch person profile', err)
-    if (msg.includes('404')) return failure(msg, 'NOT_FOUND')
+    if (msg.startsWith('HTTP 404:')) return failure(msg, 'NOT_FOUND')
     return failure(msg)
   }
 }

@@ -47,4 +47,12 @@ describe('getPerson', () => {
     expect(result.success).toBe(false)
     if (!result.success) expect(result.code).toBe('NOT_FOUND')
   })
+
+  it('does not map a 500 error to NOT_FOUND even if message mentions 404', async () => {
+    const { httpGet } = await import('@/services/http-client')
+    ;(httpGet as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('HTTP 500: server error 404 in upstream'))
+    const result = await getPerson('SYNPUF', 1)
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.code).toBeUndefined()
+  })
 })
