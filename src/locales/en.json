@@ -1353,6 +1353,67 @@
       "deleteConfirm": "Delete characterization '{name}'?"
     },
     "editor": {
+      "tabs": {
+        "design": "Design",
+        "conceptSets": "Concept Sets",
+        "versions": "Versions"
+      },
+      "title": {
+        "new": "New Characterization",
+        "edit": "Edit Characterization"
+      },
+      "metadata": {
+        "name": "Name",
+        "description": "Description",
+        "stratifiedBy": "Stratified by",
+        "strataOnly": "Compute strata only (skip overall)"
+      },
+      "cohorts": {
+        "title": "Linked Cohorts",
+        "empty": "No cohorts linked.",
+        "add": "Add cohort",
+        "selectDialogTitle": "Select cohorts to link",
+        "remove": "Remove"
+      },
+      "featureAnalyses": {
+        "title": "Linked Feature Analyses",
+        "empty": "No feature analyses linked.",
+        "add": "Add feature analysis",
+        "selectDialogTitle": "Select feature analyses to link",
+        "includeAnnual": "Annual",
+        "includeTemporal": "Temporal",
+        "annualPending": "Pending FA backend support",
+        "remove": "Remove"
+      },
+      "strata": {
+        "title": "Subgroups (Strata)",
+        "empty": "No strata defined.",
+        "add": "Add stratum",
+        "name": "Stratum name",
+        "criteriaLabel": "Criteria (JSON)",
+        "criteriaPlaceholder": "Criteria builder integration ships in a follow-up. For now, paste a CriteriaGroup JSON.",
+        "remove": "Remove",
+        "invalidJson": "Invalid JSON"
+      },
+      "conceptSetsTab": {
+        "title": "Concept Sets",
+        "placeholder": "Stratum-derived concept sets will appear here once the criteria builder lands.",
+        "empty": "No concept sets."
+      },
+      "actions": {
+        "save": "Save",
+        "saveCopy": "Save as Copy",
+        "delete": "Delete",
+        "back": "Back",
+        "run": "Run",
+        "runDisabled": "Available in Phase 4"
+      },
+      "deleteConfirm": "Delete characterization '{name}'?",
+      "leaveConfirm": "You have unsaved changes. Leave anyway?",
+      "saveSuccess": "Characterization saved",
+      "saveError": "Failed to save characterization",
+      "nameRequired": "Name is required",
+      "versionsTodo": "Versions integration TODO — wires into characterization-versions.service in a follow-up.",
       "comingSoon": "Characterization editor coming soon",
       "back": "Back to list"
     }
