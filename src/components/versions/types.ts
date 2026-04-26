@@ -64,8 +64,8 @@ export interface VersionsTableItem extends Omit<Version, 'createdBy' | 'createdD
  * Configuration object passed to VersionsTable component via props
  */
 export interface VersionsConfig {
-  /** Asset type: cohort definition or concept set */
-  assetType: 'cohortdefinition' | 'conceptset'
+  /** Asset type: cohort definition, concept set, or pathway analysis */
+  assetType: 'cohortdefinition' | 'conceptset' | 'pathway-analysis'
   /** Asset ID */
   assetId: number
   /** Getter for current version data */
