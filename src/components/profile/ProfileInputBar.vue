@@ -38,7 +38,7 @@
           variant="tonal"
           data-test="profile-person-submit"
         >
-          Go
+          {{ tv('common.go', 'Go') }}
         </v-btn>
       </form>
       <v-chip

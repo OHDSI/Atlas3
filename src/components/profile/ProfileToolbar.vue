@@ -9,6 +9,7 @@
     <v-btn
       icon="mdi-refresh"
       :title="tv('common.reload', 'Reload')"
+      :aria-label="tv('common.reload', 'Reload')"
       data-test="profile-refresh"
       :disabled="!store.sourceKey || !store.personId"
       @click="onReload"
