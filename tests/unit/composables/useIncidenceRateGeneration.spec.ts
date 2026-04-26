@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
-vi.useFakeTimers()
+beforeAll(() => { vi.useFakeTimers() })
+afterAll(() => { vi.useRealTimers() })
+
 vi.mock('@/services/webapi', () => ({
   generateIncidenceRate: vi.fn().mockResolvedValue({
     success: true,
