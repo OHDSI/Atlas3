@@ -167,6 +167,7 @@
     "configuration": "Configuration",
     "datasources": "Data Sources",
     "estimation": "Estimation",
+    "featureAnalyses": "Feature Analyses",
     "feedback": "Feedback",
     "home": "Home",
     "incidencerate": "Incidence Rates",
@@ -1326,6 +1327,281 @@
           "tag": "Tag:"
         }
       }
+    }
+  },
+  "characterizations": {
+    "list": {
+      "title": "Characterizations",
+      "newButton": "New Characterization",
+      "searchPlaceholder": "Search characterizations...",
+      "empty": "No characterizations found.",
+      "columns": {
+        "name": "Name",
+        "description": "Description",
+        "cohorts": "Cohorts",
+        "featureAnalyses": "Feature Analyses",
+        "createdBy": "Created By",
+        "createdDate": "Created",
+        "modifiedDate": "Modified",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Edit",
+        "copy": "Copy",
+        "delete": "Delete"
+      },
+      "deleteConfirm": "Delete characterization '{name}'?"
+    },
+    "editor": {
+      "tabs": {
+        "design": "Design",
+        "conceptSets": "Concept Sets",
+        "executions": "Executions",
+        "versions": "Versions",
+        "validation": "Validation",
+        "utilities": "Utilities"
+      },
+      "title": {
+        "new": "New Characterization",
+        "edit": "Edit Characterization"
+      },
+      "metadata": {
+        "name": "Name",
+        "description": "Description",
+        "stratifiedBy": "Stratified by",
+        "strataOnly": "Compute strata only (skip overall)"
+      },
+      "cohorts": {
+        "title": "Linked Cohorts",
+        "empty": "No cohorts linked.",
+        "add": "Add cohort",
+        "selectDialogTitle": "Select cohorts to link",
+        "remove": "Remove"
+      },
+      "featureAnalyses": {
+        "title": "Linked Feature Analyses",
+        "empty": "No feature analyses linked.",
+        "add": "Add feature analysis",
+        "selectDialogTitle": "Select feature analyses to link",
+        "includeAnnual": "Annual",
+        "includeTemporal": "Temporal",
+        "annualPending": "Pending FA backend support",
+        "remove": "Remove"
+      },
+      "strata": {
+        "title": "Subgroups (Strata)",
+        "empty": "No strata defined.",
+        "add": "Add stratum",
+        "name": "Stratum name",
+        "criteriaLabel": "Criteria (JSON)",
+        "criteriaPlaceholder": "Criteria builder integration ships in a follow-up. For now, paste a CriteriaGroup JSON.",
+        "remove": "Remove",
+        "invalidJson": "Invalid JSON"
+      },
+      "conceptSetsTab": {
+        "title": "Concept Sets",
+        "placeholder": "Stratum-derived concept sets will appear here once the criteria builder lands.",
+        "empty": "No concept sets."
+      },
+      "actions": {
+        "save": "Save",
+        "saveCopy": "Save as Copy",
+        "delete": "Delete",
+        "back": "Back",
+        "run": "Run",
+        "runDisabled": "Available in Phase 4"
+      },
+      "deleteConfirm": "Delete characterization '{name}'?",
+      "leaveConfirm": "You have unsaved changes. Leave anyway?",
+      "saveSuccess": "Characterization saved",
+      "saveError": "Failed to save characterization",
+      "nameRequired": "Name is required",
+      "versionsTodo": "Versions integration TODO — wires into characterization-versions.service in a follow-up.",
+      "comingSoon": "Characterization editor coming soon",
+      "back": "Back to list",
+      "executions": {
+        "title": "Executions",
+        "tabLabel": "Executions",
+        "runButton": "Run",
+        "runDisabledNoId": "Save the characterization before running.",
+        "runDisabledDirty": "Save your changes before running.",
+        "dialog": {
+          "title": "Run characterization",
+          "sourceLabel": "Data source",
+          "sourceRequired": "Select a data source",
+          "run": "Run",
+          "cancel": "Cancel"
+        },
+        "row": {
+          "source": "Source",
+          "status": "Status",
+          "startTime": "Started",
+          "duration": "Duration",
+          "actions": "Actions",
+          "cancelAction": "Cancel",
+          "resultsAction": "View results",
+          "cancelConfirm": "Cancel execution on '{source}'?"
+        },
+        "empty": "No executions yet.",
+        "results": {
+          "comingSoon": "Results viewer coming soon",
+          "back": "Back to builder"
+        }
+      },
+      "validation": {
+        "tabLabel": "Validation",
+        "headers": {
+          "errors": "Errors",
+          "warnings": "Warnings",
+          "infos": "Notes"
+        },
+        "empty": "No issues. Design is valid.",
+        "rules": {
+          "nameRequired": "Name is required.",
+          "cohortsRequired": "At least one cohort must be linked.",
+          "featureAnalysesRequired": "At least one feature analysis must be linked.",
+          "strataNameMissing": "Stratum {n} has no name.",
+          "strataNameDuplicate": "Two or more strata share the name '{name}'.",
+          "strataCriteriaInvalid": "Stratum '{name}' has invalid criteria JSON.",
+          "strataOnlyButNoStrata": "Strata-only is enabled but no strata are defined.",
+          "tooManyFeatureAnalyses": "{count} feature analyses may slow generation."
+        },
+        "saveBlocked": "Fix validation errors first."
+      },
+      "utilities": {
+        "tabLabel": "Utilities",
+        "export": {
+          "title": "Export design",
+          "description": "Download the design as JSON.",
+          "download": "Download design JSON"
+        },
+        "import": {
+          "title": "Import design",
+          "description": "Upload a design JSON file. A new characterization is created.",
+          "fileLabel": "Choose file",
+          "parseError": "Could not parse design JSON.",
+          "importError": "Import failed.",
+          "importSuccess": "Imported successfully."
+        },
+        "diagnostics": {
+          "title": "Diagnostics",
+          "comingSoon": "Backend diagnostics check coming soon."
+        }
+      }
+    },
+    "results": {
+      "title": "Results",
+      "loading": "Loading results...",
+      "loadError": "Failed to load results.",
+      "back": "Back to builder",
+      "exportCsv": "Export CSV",
+      "header": {
+        "source": "Source",
+        "started": "Started",
+        "completed": "Completed",
+        "duration": "Duration",
+        "designHash": "Design Hash",
+        "resultCount": "Total rows",
+        "threshold": "Show covariates with prevalence ≥ {n}%"
+      },
+      "filter": {
+        "title": "Filters",
+        "domain": "Domain",
+        "analysis": "Analysis",
+        "cohort": "Cohort",
+        "all": "All"
+      },
+      "table": {
+        "covariate": "Covariate",
+        "conceptId": "Concept ID",
+        "count": "Count",
+        "pct": "%",
+        "stdDiff": "Std Diff",
+        "explore": "Explore",
+        "mean": "Mean",
+        "sd": "SD",
+        "min": "Min",
+        "p25": "P25",
+        "median": "Median",
+        "p75": "P75",
+        "max": "Max",
+        "empty": "No rows match the current filter."
+      },
+      "explore": {
+        "title": "Explore covariate: {name}",
+        "loading": "Loading...",
+        "empty": "No related concepts.",
+        "close": "Close"
+      }
+    }
+  },
+  "featureAnalyses": {
+    "list": {
+      "title": "Feature Analyses",
+      "newButton": "New Feature Analysis",
+      "searchPlaceholder": "Search feature analyses...",
+      "empty": "No feature analyses found.",
+      "columns": {
+        "name": "Name",
+        "type": "Type",
+        "domain": "Domain",
+        "statType": "Stat Type",
+        "createdBy": "Created By",
+        "createdDate": "Created",
+        "modifiedDate": "Modified",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Edit",
+        "copy": "Copy",
+        "delete": "Delete"
+      },
+      "deleteConfirm": "Delete feature analysis '{name}'?"
+    },
+    "editor": {
+      "comingSoon": "Feature Analysis editor coming soon",
+      "back": "Back to list",
+      "title": {
+        "new": "New Feature Analysis",
+        "edit": "Edit Feature Analysis"
+      },
+      "common": {
+        "name": "Name",
+        "description": "Description",
+        "type": "Type",
+        "domain": "Domain",
+        "statType": "Stat Type"
+      },
+      "typeOptions": {
+        "PRESET": "Preset (FeatureExtraction settings)",
+        "CRITERIA_SET": "Criteria Set",
+        "CUSTOM_FE": "Custom SQL"
+      },
+      "preset": {
+        "loadDefault": "Load default covariate settings",
+        "loadDefaultTemporal": "Load default temporal covariate settings",
+        "designLabel": "Covariate settings (JSON)",
+        "invalidJson": "Invalid JSON"
+      },
+      "criteriaSet": {
+        "explainer": "Criteria builder integration ships in Phase 3. For now, edit JSON directly.",
+        "conceptSetsLabel": "Concept sets (JSON array)",
+        "criteriaLabel": "Criteria group (JSON)"
+      },
+      "customFe": {
+        "sqlLabel": "Custom SQL"
+      },
+      "actions": {
+        "save": "Save",
+        "saveCopy": "Save as Copy",
+        "delete": "Delete",
+        "back": "Back"
+      },
+      "deleteConfirm": "Delete feature analysis '{name}'?",
+      "leaveConfirm": "You have unsaved changes. Leave anyway?",
+      "saveSuccess": "Feature analysis saved",
+      "saveError": "Failed to save feature analysis",
+      "nameRequired": "Name is required"
     }
   },
   "facets": {
