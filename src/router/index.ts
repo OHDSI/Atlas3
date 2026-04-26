@@ -39,6 +39,25 @@ const router = createRouter({
       props: true,
       meta: { requiresAuth: true },
     },
+    {
+      path: '/feature-analyses',
+      name: 'feature-analyses',
+      component: () => import('@/views/FeatureAnalysesView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/feature-analyses/new',
+      name: 'feature-analysis-new',
+      component: () => import('@/views/FeatureAnalysisEditorView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/feature-analyses/:id',
+      name: 'feature-analysis-edit',
+      component: () => import('@/views/FeatureAnalysisEditorView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
     // Version preview routes (T036, T037)
     {
       path: '/cohortdefinition/:id/version/:version',

@@ -167,6 +167,7 @@
     "configuration": "Configuration",
     "datasources": "Data Sources",
     "estimation": "Estimation",
+    "featureAnalyses": "Feature Analyses",
     "feedback": "Feedback",
     "home": "Home",
     "incidencerate": "Incidence Rates",
@@ -1326,6 +1327,34 @@
           "tag": "Tag:"
         }
       }
+    }
+  },
+  "featureAnalyses": {
+    "list": {
+      "title": "Feature Analyses",
+      "newButton": "New Feature Analysis",
+      "searchPlaceholder": "Search feature analyses...",
+      "empty": "No feature analyses found.",
+      "columns": {
+        "name": "Name",
+        "type": "Type",
+        "domain": "Domain",
+        "statType": "Stat Type",
+        "createdBy": "Created By",
+        "createdDate": "Created",
+        "modifiedDate": "Modified",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Edit",
+        "copy": "Copy",
+        "delete": "Delete"
+      },
+      "deleteConfirm": "Delete feature analysis '{name}'?"
+    },
+    "editor": {
+      "comingSoon": "Feature Analysis editor coming soon",
+      "back": "Back to list"
     }
   },
   "facets": {
