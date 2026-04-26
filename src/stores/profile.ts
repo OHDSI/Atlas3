@@ -94,12 +94,31 @@ export const useProfileStore = defineStore('profile', () => {
     highlights.value = new Map()
   }
 
-  // placeholders filled in later tasks
   async function loadPerson(): Promise<void> {
-    // Task 5 will implement this. Reference unused imports to satisfy lint:
-    void getPerson
-    void getCohortConceptSets
-    void logger
+    if (sourceKey.value === null || personId.value === null) return
+    loading.value = true
+    error.value = null
+    try {
+      const result = await getPerson(sourceKey.value, personId.value, cohortDefinitionId.value ?? undefined)
+      if (result.success) {
+        person.value = result.data
+      } else {
+        person.value = null
+        error.value = result.error
+      }
+      if (cohortDefinitionId.value !== null) {
+        const cs = await getCohortConceptSets(cohortDefinitionId.value)
+        cohortConceptSets.value = cs.success ? cs.data : []
+      } else {
+        cohortConceptSets.value = []
+      }
+    } catch (err) {
+      person.value = null
+      error.value = err instanceof Error ? err.message : 'Failed to load profile'
+      logger.error('ProfileStore', 'loadPerson failed', err)
+    } finally {
+      loading.value = false
+    }
   }
 
   return {
