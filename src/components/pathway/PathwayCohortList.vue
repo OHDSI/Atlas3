@@ -1,7 +1,7 @@
 <template>
   <v-table density="compact">
     <thead>
-      <tr><th>ID</th><th>Display name</th><th /></tr>
+      <tr><th>{{ t('pathway.cohort.id', 'ID') }}</th><th>{{ t('pathway.cohort.displayName', 'Display name') }}</th><th /></tr>
     </thead>
     <tbody>
       <tr
@@ -34,6 +34,7 @@
 
 <script setup lang="ts">
 import type { PathwayCohortRef } from '@/models/pathway.types'
+import { useI18n } from '@/composables/useI18n'
 
 defineProps<{
   cohorts: PathwayCohortRef[]
@@ -44,4 +45,6 @@ const emit = defineEmits<{
   rename: [id: number, name: string]
   remove: [id: number]
 }>()
+
+const { t } = useI18n()
 </script>

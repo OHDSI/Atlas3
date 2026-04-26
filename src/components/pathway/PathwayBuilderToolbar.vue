@@ -4,29 +4,41 @@
       color="primary"
       :disabled="!canSave"
       @click="onSave"
-    >Save</v-btn>
+    >
+      {{ t('pathwayDefinitions.save', 'Save') }}
+    </v-btn>
     <v-btn
       :disabled="!currentPathway?.id || !hasPermission(permKey('post'))"
       @click="onCopy"
-    >Copy</v-btn>
+    >
+      {{ t('pathwayDefinitions.copy', 'Copy') }}
+    </v-btn>
     <v-btn
       color="error"
       :disabled="!currentPathway?.id || !hasPermission(permKey('delete'))"
       @click="onDelete"
-    >Delete</v-btn>
+    >
+      {{ t('pathwayDefinitions.delete', 'Delete pathway') }}
+    </v-btn>
     <v-spacer />
     <v-btn
       :disabled="!currentPathway?.id"
       @click="emit('open-versions')"
-    >Versions</v-btn>
+    >
+      {{ t('pathwayDefinitions.versions', 'Versions') }}
+    </v-btn>
     <v-btn
       :disabled="!currentPathway?.id || isPreviewMode"
       @click="emit('open-tags')"
-    >Tags</v-btn>
+    >
+      {{ t('pathwayDefinitions.tags', 'Tags') }}
+    </v-btn>
     <v-btn
       :disabled="!currentPathway?.id"
       @click="emit('open-permissions')"
-    >Access</v-btn>
+    >
+      {{ t('pathwayDefinitions.access', 'Access') }}
+    </v-btn>
 
     <v-snackbar
       :model-value="!!feedback"
@@ -44,11 +56,13 @@ import { storeToRefs } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'
 import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
 import { usePermissions } from '@/composables/usePermissions'
+import { useI18n } from '@/composables/useI18n'
 
 const store = usePathwayStore()
 const { currentPathway, canSave, isPreviewMode } = storeToRefs(store)
 const { save, copy, remove, feedback } = usePathwayBuilder()
 const { hasPermission } = usePermissions()
+const { t } = useI18n()
 
 const emit = defineEmits<{
   'open-tags': []

@@ -9,7 +9,7 @@
       <v-card-text>
         <v-text-field
           v-model="search"
-          label="Search"
+          :label="tv('pathwayDefinitions.search', 'Search')"
           density="compact"
         />
         <v-list
@@ -28,14 +28,14 @@
       <v-card-actions>
         <v-spacer />
         <v-btn @click="close">
-          Cancel
+          {{ t('pathwayDefinitions.cancel', 'Cancel') }}
         </v-btn>
         <v-btn
           color="primary"
           :disabled="selected.length === 0"
           @click="confirm"
         >
-          Add
+          {{ t('pathway.addTarget', 'Add target cohort') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -47,6 +47,7 @@ import { ref, onMounted, computed } from 'vue'
 import { getCohorts } from '@/services/webapi'
 import type { PathwayCohortRef } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
 
 interface CohortOption { id: number; name: string }
 
@@ -63,6 +64,7 @@ const emit = defineEmits<{
 const cohorts = ref<CohortOption[]>([])
 const selected = ref<number[]>([])
 const search = ref('')
+const { t, tv } = useI18n()
 
 async function load() {
   const r = await getCohorts()

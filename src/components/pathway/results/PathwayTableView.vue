@@ -1,12 +1,12 @@
 <template>
   <div class="pathway-tables">
     <section>
-      <h3>All Pathways</h3>
+      <h3>{{ t('pathway.results.allPathways', 'All Pathways') }}</h3>
       <button
         class="export-btn"
         @click="exportCsv(allRows, 'all')"
       >
-        Export CSV
+        {{ t('pathway.results.exportCsv', 'Export CSV') }}
       </button>
       <table>
         <thead>
@@ -36,12 +36,12 @@
     </section>
 
     <section>
-      <h3>Counts by Rank</h3>
+      <h3>{{ t('pathway.results.countsByRank', 'Counts by Rank') }}</h3>
       <button
         class="export-btn"
         @click="exportCsv(rankRows, 'rank')"
       >
-        Export CSV
+        {{ t('pathway.results.exportCsv', 'Export CSV') }}
       </button>
       <table>
         <thead>
@@ -71,12 +71,12 @@
     </section>
 
     <section>
-      <h3>Event Cohort Counts</h3>
+      <h3>{{ t('pathway.results.eventCohortCounts', 'Event Cohort Counts') }}</h3>
       <button
         class="export-btn"
         @click="exportCsv(cohortCountRows, 'cohort-counts')"
       >
-        Export CSV
+        {{ t('pathway.results.exportCsv', 'Export CSV') }}
       </button>
       <table>
         <thead>
@@ -106,12 +106,12 @@
     </section>
 
     <section>
-      <h3>Distinct Event Cohort Counts</h3>
+      <h3>{{ t('pathway.results.distinctEventCounts', 'Distinct Event Cohort Counts') }}</h3>
       <button
         class="export-btn"
         @click="exportCsv(distinctRows, 'distinct')"
       >
-        Export CSV
+        {{ t('pathway.results.exportCsv', 'Export CSV') }}
       </button>
       <table>
         <thead>
@@ -145,6 +145,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Pathway, PathwayResults } from '@/models/pathway.types'
+import { useI18n } from '@/composables/useI18n'
 import {
   toAllPathwaysRows,
   toCountsByRankRows,
@@ -159,6 +160,8 @@ const props = defineProps<{
   results: PathwayResults
   targetCohortId: number
 }>()
+
+const { t } = useI18n()
 
 const group = computed(() =>
   props.results.pathwayGroups.find(g => g.targetCohortId === props.targetCohortId)

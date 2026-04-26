@@ -1,19 +1,33 @@
 <template>
   <v-container>
-    <div v-if="loading">Loading results…</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-if="loading">
+      Loading results…
+    </div>
+    <div
+      v-else-if="error"
+      class="error"
+    >
+      {{ error }}
+    </div>
     <template v-else-if="design && results && targetGroup">
-      <h2>Execution {{ execution?.id }} — {{ execution?.sourceKey }}</h2>
+      <h2>{{ t('pathway.results.executionPrefix', 'Execution') }} {{ execution?.id }} — {{ execution?.sourceKey }}</h2>
 
       <v-btn-toggle
         :model-value="mode"
         @update:model-value="(v: 'visual' | 'tabular' | null) => v && (mode = v)"
       >
-        <v-btn value="visual">Visualization</v-btn>
-        <v-btn value="tabular">Tabular</v-btn>
+        <v-btn value="visual">
+          {{ t('pathway.results.visualization', 'Visualization') }}
+        </v-btn>
+        <v-btn value="tabular">
+          {{ t('pathway.results.tabular', 'Tabular') }}
+        </v-btn>
       </v-btn-toggle>
 
-      <div v-if="mode === 'visual'" class="visual">
+      <div
+        v-if="mode === 'visual'"
+        class="visual"
+      >
         <div class="legend-col">
           <PathwayLegend
             :design="design"
@@ -53,6 +67,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePathwayResults } from '@/composables/usePathwayResults'
+import { useI18n } from '@/composables/useI18n'
 import PathwaySunburst from '@/components/pathway/results/PathwaySunburst.vue'
 import PathwayLegend from '@/components/pathway/results/PathwayLegend.vue'
 import PathwayPathDetails from '@/components/pathway/results/PathwayPathDetails.vue'
@@ -66,6 +81,7 @@ const PALETTE_20 = [
 
 const route = useRoute()
 const { execution, design, results, loading, error, load } = usePathwayResults()
+const { t } = useI18n()
 const mode = ref<'visual' | 'tabular'>('visual')
 const selectedPath = ref<{ code: number; nodeName: string; value: number } | null>(null)
 

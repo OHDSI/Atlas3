@@ -12,7 +12,7 @@
         v-if="previewVersion"
         class="preview-banner"
       >
-        Previewing version {{ previewVersion.version }} — saving will create a new pathway
+        {{ t('pathwayDefinitions.previewBanner', 'Previewing version — saving will create a new pathway') }}
       </div>
 
       <PathwayBuilderToolbar
@@ -57,6 +57,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'
+import { useI18n } from '@/composables/useI18n'
 import PathwayBuilderToolbar from './PathwayBuilderToolbar.vue'
 import PathwayDesignForm from './PathwayDesignForm.vue'
 import PathwayGenerationPanel from './PathwayGenerationPanel.vue'
@@ -67,6 +68,7 @@ import type { Tag } from '@/models/webapi.types'
 
 const store = usePathwayStore()
 const { currentPathway, previewVersion, isDirty, isPreviewMode } = storeToRefs(store)
+const { t } = useI18n()
 
 const showVersions = ref(false)
 const showTags = ref(false)

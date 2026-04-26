@@ -1,14 +1,25 @@
 <template>
   <v-container>
     <div class="header">
-      <v-btn color="primary" @click="handleNew">New pathway</v-btn>
+      <v-btn
+        color="primary"
+        @click="handleNew"
+      >
+        {{ t('pathwayDefinitions.newDefinition', 'New pathway') }}
+      </v-btn>
       <v-spacer />
       <v-btn-toggle
         :model-value="viewMode"
         @update:model-value="(v: 'tile' | 'table' | null) => v && (viewMode = v)"
       >
-        <v-btn value="tile" icon="mdi-view-grid" />
-        <v-btn value="table" icon="mdi-view-list" />
+        <v-btn
+          value="tile"
+          icon="mdi-view-grid"
+        />
+        <v-btn
+          value="table"
+          icon="mdi-view-list"
+        />
       </v-btn-toggle>
     </div>
 
@@ -19,11 +30,29 @@
       @clear="clearFilters"
     />
 
-    <div v-if="loading" class="state">Loading…</div>
-    <div v-else-if="error" class="state error">{{ error.message }}</div>
-    <div v-else-if="pathways.length === 0" class="state">No pathways yet.</div>
+    <div
+      v-if="loading"
+      class="state"
+    >
+      {{ t('pathway.list.loading', 'Loading…') }}
+    </div>
+    <div
+      v-else-if="error"
+      class="state error"
+    >
+      {{ error.message }}
+    </div>
+    <div
+      v-else-if="pathways.length === 0"
+      class="state"
+    >
+      {{ t('pathway.list.empty', 'No pathways yet.') }}
+    </div>
     <template v-else>
-      <div v-if="viewMode === 'tile'" class="grid">
+      <div
+        v-if="viewMode === 'tile'"
+        class="grid"
+      >
         <PathwayCard
           v-for="p in paginatedPathways"
           :key="p.id"
@@ -47,13 +76,24 @@
       />
     </template>
 
-    <v-dialog v-model="showDelete" max-width="400">
+    <v-dialog
+      v-model="showDelete"
+      max-width="400"
+    >
       <v-card>
-        <v-card-title>Delete pathway?</v-card-title>
+        <v-card-title>{{ t('pathwayDefinitions.delete', 'Delete pathway') }}</v-card-title>
+        <v-card-text>{{ t('pathwayDefinitions.deleteConfirm', 'Delete this pathway? This cannot be undone.') }}</v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="showDelete = false">Cancel</v-btn>
-          <v-btn color="error" @click="confirmDelete">Delete</v-btn>
+          <v-btn @click="showDelete = false">
+            {{ t('pathwayDefinitions.cancel', 'Cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            @click="confirmDelete"
+          >
+            {{ t('pathwayDefinitions.delete', 'Delete pathway') }}
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -73,6 +113,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePathways } from '@/composables/usePathways'
+import { useI18n } from '@/composables/useI18n'
 import type { PathwayFilters as PathwayFiltersType } from '@/composables/usePathways'
 import { usePathwayStore } from '@/stores/pathway'
 import { deletePathway } from '@/services/webapi'
@@ -90,6 +131,7 @@ const {
 
 const router = useRouter()
 const store = usePathwayStore()
+const { t } = useI18n()
 const viewMode = ref<'tile' | 'table'>('tile')
 const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)

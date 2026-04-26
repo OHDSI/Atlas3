@@ -1,12 +1,12 @@
 <template>
   <div class="pathway-gen-panel">
-    <h3>Generation</h3>
+    <h3>{{ t('pathway.generation.title', 'Generation') }}</h3>
     <v-select
       :model-value="selectedSource"
       :items="sourceItems"
       item-title="sourceName"
       item-value="sourceKey"
-      label="Data source"
+      :label="t('pathway.generation.dataSource', 'Data source').value"
       density="compact"
       hide-details
       @update:model-value="(v: string | null) => selectedSource = v ?? null"
@@ -18,13 +18,13 @@
         :disabled="!canGenerate || !selectedSource || generation.polling.value || !canGenerateForSource(selectedSource)"
         @click="onStart"
       >
-        Generate
+        {{ t('pathway.generation.generate', 'Generate') }}
       </v-btn>
       <v-btn
         :disabled="!generation.polling.value || !canCancelForSource(selectedSource)"
         @click="onCancel"
       >
-        Cancel
+        {{ t('pathway.generation.cancel', 'Cancel') }}
       </v-btn>
     </div>
 
@@ -32,7 +32,7 @@
       v-if="generation.execution.value"
       class="status"
     >
-      Status: {{ generation.execution.value.status }}
+      {{ t('pathway.generation.statusPrefix', 'Status:') }} {{ generation.execution.value.status }}
     </div>
     <div
       v-if="generation.error.value"
@@ -41,7 +41,7 @@
       {{ generation.error.value }}
     </div>
 
-    <h4>Past executions</h4>
+    <h4>{{ t('pathway.generation.pastExecutions', 'Past executions') }}</h4>
     <v-table density="compact">
       <thead>
         <tr>
@@ -82,6 +82,7 @@ import { usePathwayGeneration } from '@/composables/usePathwayGeneration'
 import { usePermissions } from '@/composables/usePermissions'
 import { listPathwayExecutions } from '@/services/webapi'
 import type { PathwayExecution } from '@/models/pathway.types'
+import { useI18n } from '@/composables/useI18n'
 
 const props = defineProps<{ pathwayId: number }>()
 const store = usePathwayStore()
@@ -102,6 +103,7 @@ function canCancelForSource(sourceKey: string | null): boolean {
 const selectedSource = ref<string | null>(null)
 const executions = ref<PathwayExecution[]>([])
 const generation = usePathwayGeneration(props.pathwayId)
+const { t } = useI18n()
 
 const sourceItems = computed(() => ds.sources)
 

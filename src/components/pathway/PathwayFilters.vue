@@ -2,7 +2,7 @@
   <div class="pathway-filters">
     <v-text-field
       :model-value="modelValue.searchQuery"
-      label="Search"
+      :label="tv('pathwayDefinitions.search', 'Search')"
       density="compact"
       hide-details
       style="max-width: 280px"
@@ -11,7 +11,7 @@
     <v-select
       :model-value="modelValue.selectedTags"
       :items="allTags"
-      label="Tags"
+      :label="tv('pathwayDefinitions.tags', 'Tags')"
       multiple
       chips
       density="compact"
@@ -21,24 +21,31 @@
     />
     <v-text-field
       :model-value="modelValue.author"
-      label="Author"
+      :label="tv('pathwayDefinitions.author', 'Author')"
       density="compact"
       hide-details
       style="max-width: 200px"
       @update:model-value="(v: string | null) => emit('update:modelValue', { ...modelValue, author: v ?? '' })"
     />
-    <v-btn variant="text" @click="emit('clear')">Clear</v-btn>
+    <v-btn
+      variant="text"
+      @click="emit('clear')"
+    >
+      Clear
+    </v-btn>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { PathwayFilters } from '@/composables/usePathways'
+import { useI18n } from '@/composables/useI18n'
 
 defineProps<{ modelValue: PathwayFilters; allTags: string[] }>()
 const emit = defineEmits<{
   'update:modelValue': [v: PathwayFilters]
   clear: []
 }>()
+const { tv } = useI18n()
 </script>
 
 <style scoped>

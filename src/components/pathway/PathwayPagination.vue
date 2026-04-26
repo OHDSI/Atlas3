@@ -1,8 +1,18 @@
 <template>
   <div class="pathway-pagination">
-    <v-btn :disabled="page <= 0" @click="emit('update:page', page - 1)">Prev</v-btn>
+    <v-btn
+      :disabled="page <= 0"
+      @click="emit('update:page', page - 1)"
+    >
+      Prev
+    </v-btn>
     <span>Page {{ page + 1 }} / {{ totalPages }}</span>
-    <v-btn :disabled="page >= totalPages - 1" @click="emit('update:page', page + 1)">Next</v-btn>
+    <v-btn
+      :disabled="page >= totalPages - 1"
+      @click="emit('update:page', page + 1)"
+    >
+      Next
+    </v-btn>
     <v-select
       :model-value="itemsPerPage"
       :items="[10, 25, 50, 100]"

@@ -2,7 +2,7 @@
   <v-table density="compact">
     <tbody>
       <tr>
-        <th>Collapse window (days)</th>
+        <th>{{ t('pathway.combinationWindow', 'Collapse window (days)') }}</th>
         <td>
           <v-select
             :model-value="modelValue.combinationWindow as (typeof combinationWindowOptions)[number]"
@@ -15,7 +15,7 @@
         </td>
       </tr>
       <tr>
-        <th>Minimum cell count</th>
+        <th>{{ t('pathway.minCellCount', 'Minimum cell count') }}</th>
         <td>
           <v-select
             :model-value="modelValue.minCellCount as (typeof minCellCountOptions)[number]"
@@ -28,7 +28,7 @@
         </td>
       </tr>
       <tr>
-        <th>Maximum path length</th>
+        <th>{{ t('pathway.maxDepth', 'Maximum path length') }}</th>
         <td>
           <v-select
             :model-value="modelValue.maxDepth as (typeof maxDepthOptions)[number]"
@@ -41,7 +41,7 @@
         </td>
       </tr>
       <tr>
-        <th>Allow repeats</th>
+        <th>{{ t('pathway.allowRepeats', 'Allow repeats') }}</th>
         <td>
           <v-switch
             :model-value="modelValue.allowRepeats"
@@ -57,6 +57,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '@/composables/useI18n'
 import type { PathwayDesign } from '@/models/pathway.types'
 import {
   COMBINATION_WINDOW_OPTIONS,
@@ -72,6 +73,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [v: PathwayDesign]
 }>()
+
+const { t } = useI18n()
 
 // Vuetify v-select expects a mutable array, not readonly
 const combinationWindowOptions = [...COMBINATION_WINDOW_OPTIONS]

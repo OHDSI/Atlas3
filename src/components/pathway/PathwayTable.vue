@@ -1,7 +1,13 @@
 <template>
   <v-table density="compact">
     <thead>
-      <tr><th>ID</th><th>Name</th><th>Author</th><th>Modified</th><th /></tr>
+      <tr>
+        <th>{{ t('pathway.cohort.id', 'ID') }}</th>
+        <th>{{ t('pathway.name', 'Name') }}</th>
+        <th>{{ t('pathwayDefinitions.author', 'Author') }}</th>
+        <th>Modified</th>
+        <th />
+      </tr>
     </thead>
     <tbody>
       <tr
@@ -20,7 +26,9 @@
             color="error"
             variant="text"
             @click.stop="emit('remove', p.id ?? 0)"
-          >Delete</v-btn>
+          >
+            {{ t('pathwayDefinitions.delete', 'Delete pathway') }}
+          </v-btn>
         </td>
       </tr>
     </tbody>
@@ -29,9 +37,11 @@
 
 <script setup lang="ts">
 import type { Pathway } from '@/models/pathway.types'
+import { useI18n } from '@/composables/useI18n'
 
 defineProps<{ pathways: Pathway[] }>()
 const emit = defineEmits<{ open: [id: number]; remove: [id: number] }>()
+const { t } = useI18n()
 </script>
 
 <style scoped>
