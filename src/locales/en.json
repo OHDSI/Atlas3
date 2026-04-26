@@ -1354,7 +1354,48 @@
     },
     "editor": {
       "comingSoon": "Feature Analysis editor coming soon",
-      "back": "Back to list"
+      "back": "Back to list",
+      "title": {
+        "new": "New Feature Analysis",
+        "edit": "Edit Feature Analysis"
+      },
+      "common": {
+        "name": "Name",
+        "description": "Description",
+        "type": "Type",
+        "domain": "Domain",
+        "statType": "Stat Type"
+      },
+      "typeOptions": {
+        "PRESET": "Preset (FeatureExtraction settings)",
+        "CRITERIA_SET": "Criteria Set",
+        "CUSTOM_FE": "Custom SQL"
+      },
+      "preset": {
+        "loadDefault": "Load default covariate settings",
+        "loadDefaultTemporal": "Load default temporal covariate settings",
+        "designLabel": "Covariate settings (JSON)",
+        "invalidJson": "Invalid JSON"
+      },
+      "criteriaSet": {
+        "explainer": "Criteria builder integration ships in Phase 3. For now, edit JSON directly.",
+        "conceptSetsLabel": "Concept sets (JSON array)",
+        "criteriaLabel": "Criteria group (JSON)"
+      },
+      "customFe": {
+        "sqlLabel": "Custom SQL"
+      },
+      "actions": {
+        "save": "Save",
+        "saveCopy": "Save as Copy",
+        "delete": "Delete",
+        "back": "Back"
+      },
+      "deleteConfirm": "Delete feature analysis '{name}'?",
+      "leaveConfirm": "You have unsaved changes. Leave anyway?",
+      "saveSuccess": "Feature analysis saved",
+      "saveError": "Failed to save feature analysis",
+      "nameRequired": "Name is required"
     }
   },
   "facets": {
