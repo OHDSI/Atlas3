@@ -222,6 +222,7 @@ const coreNavigationItems: NavigationItem[] = [
   { id: 'datasources', titleKey: 'navigation.datasources', route: '/datasources', visible: true, active: false },
   { id: 'concepts', titleKey: 'navigation.conceptsets', route: '/concepts', visible: true, active: false },
   { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true },
+  { id: 'profiles', titleKey: 'navigation.profiles', route: '/profiles', visible: true, active: false },
   { id: 'characterizations', titleKey: 'navigation.characterizations', route: '/characterizations', visible: true, active: false },
   { id: 'featureAnalyses', titleKey: 'navigation.featureAnalyses', route: '/feature-analyses', visible: true, active: false },
   { id: 'pathways', titleKey: 'navigation.pathways', route: '/pathways', visible: true, active: false },

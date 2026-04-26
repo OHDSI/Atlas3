@@ -40,6 +40,33 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/profiles',
+      name: 'profiles',
+      component: () => import('@/views/ProfileView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/profiles/:sourceKey',
+      name: 'profiles-source',
+      component: () => import('@/views/ProfileView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/profiles/:sourceKey/:personId(\\d+)',
+      name: 'profile-view',
+      component: () => import('@/views/ProfileView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/profiles/:sourceKey/:personId(\\d+)/:cohortId(\\d+)',
+      name: 'profile-view-cohort',
+      component: () => import('@/views/ProfileView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/feature-analyses',
       name: 'feature-analyses',
       component: () => import('@/views/FeatureAnalysesView.vue'),
