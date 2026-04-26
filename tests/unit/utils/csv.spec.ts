@@ -79,7 +79,7 @@ describe('downloadCsv', () => {
       .mockImplementation((tag: string) => {
         const el = originalCreate(tag)
         if (tag === 'a') {
-          ;(el as HTMLAnchorElement).click = clickSpy
+          (el as HTMLAnchorElement).click = clickSpy
         }
         return el
       })
