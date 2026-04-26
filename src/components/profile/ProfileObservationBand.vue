@@ -1,6 +1,14 @@
 <template>
-  <div class="profile-obs-band" data-test="profile-obs-band">
-    <svg :viewBox="`0 0 ${viewWidth} 12`" preserveAspectRatio="none" width="100%" height="12">
+  <div
+    class="profile-obs-band"
+    data-test="profile-obs-band"
+  >
+    <svg
+      :viewBox="`0 0 ${viewWidth} 12`"
+      preserveAspectRatio="none"
+      width="100%"
+      height="12"
+    >
       <rect
         v-for="(b, i) in bands"
         :key="i"

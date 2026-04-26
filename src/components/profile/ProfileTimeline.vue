@@ -1,5 +1,8 @@
 <template>
-  <div class="profile-timeline" data-test="profile-timeline">
+  <div
+    class="profile-timeline"
+    data-test="profile-timeline"
+  >
     <v-chart
       class="chart"
       :option="option"
