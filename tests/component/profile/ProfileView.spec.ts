@@ -31,7 +31,17 @@ async function makeWrapper(path: string) {
   setActivePinia(createPinia())
   await router.push(path)
   await router.isReady()
-  return mount(ProfileView, { global: { plugins: [router, vuetify] } })
+  return mount(ProfileView, {
+    global: {
+      plugins: [router, vuetify],
+      stubs: {
+        VNavigationDrawer: {
+          template: '<div class="v-navigation-drawer"><slot /></div>',
+          props: ['modelValue', 'location', 'permanent', 'width'],
+        },
+      },
+    },
+  })
 }
 
 describe('ProfileView', () => {
