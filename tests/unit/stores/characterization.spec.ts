@@ -21,6 +21,10 @@ vi.mock('@/services/characterization.service', () => ({
   updateCharacterization: vi.fn(),
   deleteCharacterization: vi.fn(),
   copyCharacterization: vi.fn(),
+  listCharacterizationExecutions: vi.fn(),
+  getCharacterizationExecution: vi.fn(),
+  generateCharacterization: vi.fn(),
+  cancelCharacterizationGeneration: vi.fn(),
 }))
 
 vi.mock('@/utils/logger', () => ({
@@ -39,7 +43,12 @@ import {
   updateCharacterization,
   deleteCharacterization,
   copyCharacterization,
+  listCharacterizationExecutions,
+  getCharacterizationExecution,
+  generateCharacterization,
+  cancelCharacterizationGeneration,
 } from '@/services/characterization.service'
+import type { CharacterizationExecution } from '@/models/characterization.types'
 
 const mockList: CharacterizationListItem[] = [
   {
@@ -339,6 +348,163 @@ describe('Characterization Store', () => {
       expect(store.isDirty).toBe(true)
       store.markClean()
       expect(store.isDirty).toBe(false)
+    })
+  })
+
+  describe('Executions', () => {
+    const baseExec: CharacterizationExecution = {
+      id: 100,
+      status: 'RUNNING',
+      sourceKey: 'CDM_V5',
+      startTime: 1700000000000,
+    }
+
+    describe('loadExecutions', () => {
+      it('populates executions sorted newest-first', async () => {
+        const store = useCharacterizationStore()
+        const older: CharacterizationExecution = {
+          ...baseExec,
+          id: 1,
+          startTime: 1000,
+          status: 'COMPLETED',
+        }
+        const newer: CharacterizationExecution = {
+          ...baseExec,
+          id: 2,
+          startTime: 2000,
+          status: 'COMPLETED',
+        }
+        vi.mocked(listCharacterizationExecutions).mockResolvedValue([older, newer])
+
+        await store.loadExecutions(42)
+
+        expect(store.executions[0]?.id).toBe(2)
+        expect(store.executions[1]?.id).toBe(1)
+        expect(store.executionsLoading).toBe(false)
+        expect(store.executionsError).toBeNull()
+      })
+
+      it('captures error on failure', async () => {
+        const store = useCharacterizationStore()
+        vi.mocked(listCharacterizationExecutions).mockRejectedValue(new Error('Boom'))
+
+        await store.loadExecutions(42)
+
+        expect(store.executionsError).toBe('Boom')
+        expect(store.executions).toEqual([])
+        expect(store.executionsLoading).toBe(false)
+      })
+    })
+
+    describe('runExecution', () => {
+      it('prepends new execution and returns it', async () => {
+        const store = useCharacterizationStore()
+        const created: CharacterizationExecution = { ...baseExec, id: 200 }
+        vi.mocked(generateCharacterization).mockResolvedValue(created)
+
+        const result = await store.runExecution(42, 'CDM_V5')
+
+        expect(result).toEqual(created)
+        expect(store.executions[0]).toEqual(created)
+        expect(store.executionsError).toBeNull()
+      })
+
+      it('replaces an existing execution with the same id', async () => {
+        const store = useCharacterizationStore()
+        const initial: CharacterizationExecution = { ...baseExec, id: 200, status: 'PENDING' }
+        store.executions = [initial]
+        const updated: CharacterizationExecution = { ...initial, status: 'RUNNING' }
+        vi.mocked(generateCharacterization).mockResolvedValue(updated)
+
+        await store.runExecution(42, 'CDM_V5')
+
+        expect(store.executions).toHaveLength(1)
+        expect(store.executions[0]?.status).toBe('RUNNING')
+      })
+
+      it('rethrows and sets error on failure', async () => {
+        const store = useCharacterizationStore()
+        vi.mocked(generateCharacterization).mockRejectedValue(new Error('Down'))
+
+        await expect(store.runExecution(42, 'CDM_V5')).rejects.toThrow('Down')
+        expect(store.executionsError).toBe('Down')
+      })
+    })
+
+    describe('cancelExecution', () => {
+      it('calls cancel and refreshes the list', async () => {
+        const store = useCharacterizationStore()
+        vi.mocked(cancelCharacterizationGeneration).mockResolvedValue(undefined)
+        vi.mocked(listCharacterizationExecutions).mockResolvedValue([])
+
+        await store.cancelExecution(42, 'CDM_V5')
+
+        expect(cancelCharacterizationGeneration).toHaveBeenCalledWith(42, 'CDM_V5')
+        expect(listCharacterizationExecutions).toHaveBeenCalledWith(42)
+      })
+
+      it('rethrows and sets error on failure', async () => {
+        const store = useCharacterizationStore()
+        vi.mocked(cancelCharacterizationGeneration).mockRejectedValue(new Error('Cant'))
+
+        await expect(store.cancelExecution(42, 'CDM_V5')).rejects.toThrow('Cant')
+        expect(store.executionsError).toBe('Cant')
+      })
+    })
+
+    describe('pollExecution', () => {
+      beforeEach(() => {
+        vi.useFakeTimers()
+      })
+      afterEach(() => {
+        vi.useRealTimers()
+      })
+
+      it('updates the matching execution and stops on terminal status', async () => {
+        const store = useCharacterizationStore()
+        store.executions = [{ ...baseExec, id: 300, status: 'PENDING' }]
+
+        vi.mocked(getCharacterizationExecution)
+          .mockResolvedValueOnce({ ...baseExec, id: 300, status: 'RUNNING' })
+          .mockResolvedValueOnce({ ...baseExec, id: 300, status: 'COMPLETED' })
+
+        const onTerminal = vi.fn<[CharacterizationExecution], void>()
+
+        store.pollExecution(300, onTerminal)
+        // Allow the immediate tick to resolve.
+        await vi.advanceTimersByTimeAsync(0)
+        expect(store.executions[0]?.status).toBe('RUNNING')
+        expect(store.pollingHandles.has(300)).toBe(true)
+
+        // Advance to the next scheduled poll (default 3000ms).
+        await vi.advanceTimersByTimeAsync(3000)
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(store.executions[0]?.status).toBe('COMPLETED')
+        expect(onTerminal).toHaveBeenCalledOnce()
+        expect(store.pollingHandles.has(300)).toBe(false)
+      })
+
+      it('stopPolling cancels an in-flight poll', async () => {
+        const store = useCharacterizationStore()
+        vi.mocked(getCharacterizationExecution).mockResolvedValue({
+          ...baseExec,
+          id: 400,
+          status: 'RUNNING',
+        })
+
+        store.pollExecution(400)
+        await vi.advanceTimersByTimeAsync(0)
+
+        expect(store.pollingHandles.has(400)).toBe(true)
+        store.stopPolling(400)
+        expect(store.pollingHandles.has(400)).toBe(false)
+
+        // Subsequent ticks must not run.
+        const callsBefore = vi.mocked(getCharacterizationExecution).mock.calls.length
+        await vi.advanceTimersByTimeAsync(10000)
+        expect(vi.mocked(getCharacterizationExecution).mock.calls.length).toBe(callsBefore)
+      })
     })
   })
 })

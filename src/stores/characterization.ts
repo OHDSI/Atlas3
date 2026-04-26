@@ -17,14 +17,24 @@ import {
   updateCharacterization,
   deleteCharacterization,
   copyCharacterization,
+  listCharacterizationExecutions,
+  getCharacterizationExecution,
+  generateCharacterization,
+  cancelCharacterizationGeneration,
 } from '@/services/characterization.service'
 import type {
   CharacterizationDefinition,
+  CharacterizationExecution,
   CharacterizationListItem,
 } from '@/models/characterization.types'
 import type { Version } from '@/components/versions/types'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
+import {
+  useExecutionPolling,
+  isTerminalStatus,
+} from '@/composables/useExecutionPolling'
+import { effectScope } from 'vue'
 
 export const useCharacterizationStore = defineStore('characterization', () => {
   // ============================================================================
@@ -40,6 +50,16 @@ export const useCharacterizationStore = defineStore('characterization', () => {
   // Future-proofing for Phase 3B (versions tab, auto-save).
   const previewVersion = ref<Version | null>(null)
   const isDirty = ref<boolean>(false)
+
+  // Phase 4: executions and polling.
+  const executions = ref<CharacterizationExecution[]>([])
+  const executionsLoading = ref<boolean>(false)
+  const executionsError = ref<string | null>(null)
+  // Map generationId -> stop function so callers can stop polling cleanly.
+  const pollingHandles = ref<Map<number, () => void>>(new Map())
+  // Each polling helper owns its own effect scope so we can dispose handles
+  // independently when an execution reaches a terminal state.
+  const pollingScopes = new Map<number, ReturnType<typeof effectScope>>()
 
   // ============================================================================
   // Getters
@@ -247,6 +267,181 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     isDirty.value = false
   }
 
+  // ============================================================================
+  // Executions / polling
+  // ============================================================================
+
+  function sortByStartTimeDesc(a: CharacterizationExecution, b: CharacterizationExecution) {
+    const aStart = a.startTime ?? 0
+    const bStart = b.startTime ?? 0
+    return bStart - aStart
+  }
+
+  /**
+   * Load executions for a characterization, sorted newest-first.
+   */
+  async function loadExecutions(characterizationId: number): Promise<void> {
+    executionsLoading.value = true
+    executionsError.value = null
+
+    try {
+      const list = await listCharacterizationExecutions(characterizationId)
+      executions.value = [...list].sort(sortByStartTimeDesc)
+    } catch (err) {
+      executionsError.value = err instanceof Error ? err.message : 'Failed to load executions'
+      logger.error('CharacterizationStore', 'Load executions error', err)
+      executions.value = []
+    } finally {
+      executionsLoading.value = false
+    }
+  }
+
+  /**
+   * Trigger a new characterization generation against the given source.
+   * Prepends the returned execution and returns it to the caller.
+   */
+  async function runExecution(
+    characterizationId: number,
+    sourceKey: string
+  ): Promise<CharacterizationExecution> {
+    executionsError.value = null
+
+    try {
+      const created = await generateCharacterization(characterizationId, sourceKey)
+
+      // Replace any existing execution with the same generation id; otherwise prepend.
+      const existingIdx = created.id != null
+        ? executions.value.findIndex((e) => e.id === created.id)
+        : -1
+      if (existingIdx >= 0) {
+        executions.value.splice(existingIdx, 1, created)
+      } else {
+        executions.value = [created, ...executions.value]
+      }
+
+      return created
+    } catch (err) {
+      executionsError.value = err instanceof Error ? err.message : 'Failed to start generation'
+      logger.error('CharacterizationStore', 'Run execution error', err)
+      throw err
+    }
+  }
+
+  /**
+   * Cancel a characterization generation. Stops polling for the matching
+   * generation id (if registered) and refreshes the executions list.
+   */
+  async function cancelExecution(
+    characterizationId: number,
+    sourceKey: string,
+    generationId?: number
+  ): Promise<void> {
+    executionsError.value = null
+
+    try {
+      await cancelCharacterizationGeneration(characterizationId, sourceKey)
+      if (generationId != null) {
+        stopPolling(generationId)
+      }
+      await loadExecutions(characterizationId)
+    } catch (err) {
+      executionsError.value = err instanceof Error ? err.message : 'Failed to cancel generation'
+      logger.error('CharacterizationStore', 'Cancel execution error', err)
+      throw err
+    }
+  }
+
+  function updateExecutionInList(updated: CharacterizationExecution): void {
+    const idx = executions.value.findIndex((e) => e.id === updated.id)
+    if (idx >= 0) {
+      executions.value.splice(idx, 1, updated)
+    } else {
+      executions.value = [updated, ...executions.value]
+    }
+  }
+
+  /**
+   * Begin polling a single execution. The handle is registered in
+   * `pollingHandles` so it can be stopped explicitly via `stopPolling`.
+   * `onTerminal` is called once when the execution reaches a terminal state.
+   */
+  function pollExecution(
+    generationId: number,
+    onTerminal?: (execution: CharacterizationExecution) => void
+  ): void {
+    // Avoid registering two pollers for the same id.
+    if (pollingHandles.value.has(generationId)) {
+      return
+    }
+
+    const scope = effectScope()
+
+    function cleanup() {
+      pollingHandles.value.delete(generationId)
+      pollingScopes.delete(generationId)
+    }
+
+    scope.run(() => {
+      const polling = useExecutionPolling<CharacterizationExecution>({
+        fetcher: async () => {
+          const item = await getCharacterizationExecution(generationId)
+          return item
+        },
+        isTerminal: (item) => isTerminalStatus(item.status),
+        onUpdate: (item) => {
+          updateExecutionInList(item)
+          if (isTerminalStatus(item.status)) {
+            try {
+              onTerminal?.(item)
+            } catch (err) {
+              logger.error('CharacterizationStore', 'pollExecution onTerminal threw', err)
+            }
+            // Polling will stop itself via isTerminal — clean up the registry.
+            cleanup()
+          }
+        },
+      })
+
+      // Wrap stop so explicit cancellation also clears the registry.
+      const stopAndCleanup = () => {
+        polling.stop()
+        scope.stop()
+        cleanup()
+      }
+
+      pollingHandles.value.set(generationId, stopAndCleanup)
+      pollingScopes.set(generationId, scope)
+
+      void polling.start()
+    })
+  }
+
+  /**
+   * Stop polling the given generation id (if registered).
+   */
+  function stopPolling(generationId: number): void {
+    const stop = pollingHandles.value.get(generationId)
+    if (stop) {
+      stop()
+    }
+  }
+
+  /**
+   * Stop all active polling. Call when the store is being torn down or
+   * the user navigates away from anything that needs live updates.
+   */
+  function dispose(): void {
+    for (const [, stop] of pollingHandles.value) {
+      try {
+        stop()
+      } catch (err) {
+        logger.error('CharacterizationStore', 'dispose stop threw', err)
+      }
+    }
+    pollingHandles.value.clear()
+    pollingScopes.clear()
+  }
+
   return {
     // State
     characterizations,
@@ -256,6 +451,10 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     filterTerm,
     previewVersion,
     isDirty,
+    executions,
+    executionsLoading,
+    executionsError,
+    pollingHandles,
 
     // Getters
     filteredCharacterizations,
@@ -273,5 +472,11 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     clearCurrent,
     markDirty,
     markClean,
+    loadExecutions,
+    runExecution,
+    cancelExecution,
+    pollExecution,
+    stopPolling,
+    dispose,
   }
 })

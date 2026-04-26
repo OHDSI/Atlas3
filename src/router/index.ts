@@ -78,6 +78,13 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/characterizations/:id/results/:executionId',
+      name: 'characterization-results',
+      component: () => import('@/views/CharacterizationResultsView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
       // NOTE: beforeEnter version-preview hook is intentionally deferred to
       // Phase 3B when the store gains loadVersionPreview / clearPreviewVersion.
       path: '/characterization/:id/version/:version',

@@ -38,7 +38,8 @@
           <div class="char-builder__toolbar-right">
             <v-tooltip
               location="top"
-              :text="t('characterizations.editor.actions.runDisabled', 'Available in Phase 4').value"
+              :text="runDisabledReason"
+              :disabled="!runDisabledReason"
             >
               <template #activator="{ props: tooltipProps }">
                 <div v-bind="tooltipProps">
@@ -46,8 +47,9 @@
                     color="primary"
                     variant="outlined"
                     prepend-icon="mdi-play"
-                    disabled
+                    :disabled="!canRun"
                     data-testid="char-builder-run"
+                    @click="handleRunClick"
                   >
                     {{ t('characterizations.editor.actions.run', 'Run') }}
                   </v-btn>
@@ -123,6 +125,12 @@
               {{ t('characterizations.editor.tabs.conceptSets', 'Concept Sets') }}
             </v-tab>
             <v-tab
+              value="executions"
+              data-testid="char-builder-tab-executions"
+            >
+              {{ t('characterizations.editor.tabs.executions', 'Executions') }}
+            </v-tab>
+            <v-tab
               value="versions"
               data-testid="char-builder-tab-versions"
             >
@@ -146,6 +154,13 @@
                 <CharacterizationConceptSetsTab
                   :characterization="draft"
                   data-testid="char-builder-conceptsets-tab"
+                />
+              </v-tabs-window-item>
+
+              <v-tabs-window-item value="executions">
+                <ExecutionsPanel
+                  :characterization-id="draftId"
+                  data-testid="char-builder-executions-tab"
                 />
               </v-tabs-window-item>
 
@@ -234,6 +249,7 @@ import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { logger } from '@/utils/logger'
 import CharacterizationDesignTab from '@/components/characterization/CharacterizationDesignTab.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
+import ExecutionsPanel from '@/components/characterization/ExecutionsPanel.vue'
 import type { CharacterizationDefinition } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
@@ -261,7 +277,7 @@ function makeEmptyDraft(): CharacterizationDefinition {
 }
 
 const draft = ref<CharacterizationDefinition>(makeEmptyDraft())
-const activeTab = ref<'design' | 'conceptSets' | 'versions'>('design')
+const activeTab = ref<'design' | 'conceptSets' | 'executions' | 'versions'>('design')
 const saving = ref<boolean>(false)
 const showDeleteDialog = ref<boolean>(false)
 
@@ -306,6 +322,33 @@ const canSave = computed<boolean>(() => {
   if (saving.value || loading.value) return false
   return draft.value.name.trim().length > 0
 })
+
+const draftId = computed<number | null>(() => draft.value.id ?? null)
+
+const canRun = computed<boolean>(() => {
+  return draftId.value != null && !store.isDirty
+})
+
+const runDisabledReason = computed<string>(() => {
+  if (draftId.value == null) {
+    return t(
+      'characterizations.editor.executions.runDisabledNoId',
+      'Save the characterization before running.'
+    ).value
+  }
+  if (store.isDirty) {
+    return t(
+      'characterizations.editor.executions.runDisabledDirty',
+      'Save your changes before running.'
+    ).value
+  }
+  return ''
+})
+
+function handleRunClick() {
+  if (!canRun.value) return
+  activeTab.value = 'executions'
+}
 
 const deleteMessage = computed<string>(() => {
   return t(

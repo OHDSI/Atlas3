@@ -1356,6 +1356,7 @@
       "tabs": {
         "design": "Design",
         "conceptSets": "Concept Sets",
+        "executions": "Executions",
         "versions": "Versions"
       },
       "title": {
@@ -1415,7 +1416,36 @@
       "nameRequired": "Name is required",
       "versionsTodo": "Versions integration TODO — wires into characterization-versions.service in a follow-up.",
       "comingSoon": "Characterization editor coming soon",
-      "back": "Back to list"
+      "back": "Back to list",
+      "executions": {
+        "title": "Executions",
+        "tabLabel": "Executions",
+        "runButton": "Run",
+        "runDisabledNoId": "Save the characterization before running.",
+        "runDisabledDirty": "Save your changes before running.",
+        "dialog": {
+          "title": "Run characterization",
+          "sourceLabel": "Data source",
+          "sourceRequired": "Select a data source",
+          "run": "Run",
+          "cancel": "Cancel"
+        },
+        "row": {
+          "source": "Source",
+          "status": "Status",
+          "startTime": "Started",
+          "duration": "Duration",
+          "actions": "Actions",
+          "cancelAction": "Cancel",
+          "resultsAction": "View results",
+          "cancelConfirm": "Cancel execution on '{source}'?"
+        },
+        "empty": "No executions yet.",
+        "results": {
+          "comingSoon": "Results viewer coming soon",
+          "back": "Back to builder"
+        }
+      }
     }
   },
   "featureAnalyses": {
