@@ -2,12 +2,34 @@
   <div class="pathway-tables">
     <section>
       <h3>All Pathways</h3>
-      <button class="export-btn" @click="exportCsv(allRows, 'all')">Export CSV</button>
+      <button
+        class="export-btn"
+        @click="exportCsv(allRows, 'all')"
+      >
+        Export CSV
+      </button>
       <table>
-        <thead><tr><th v-for="h in headerOf(allRows)" :key="h">{{ h }}</th></tr></thead>
+        <thead>
+          <tr>
+            <th
+              v-for="h in headerOf(allRows)"
+              :key="h"
+            >
+              {{ h }}
+            </th>
+          </tr>
+        </thead>
         <tbody>
-          <tr v-for="(r, i) in allRows" :key="i">
-            <td v-for="h in headerOf(allRows)" :key="h">{{ r[h] }}</td>
+          <tr
+            v-for="(r, i) in allRows"
+            :key="i"
+          >
+            <td
+              v-for="h in headerOf(allRows)"
+              :key="h"
+            >
+              {{ r[h] }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -15,12 +37,34 @@
 
     <section>
       <h3>Counts by Rank</h3>
-      <button class="export-btn" @click="exportCsv(rankRows, 'rank')">Export CSV</button>
+      <button
+        class="export-btn"
+        @click="exportCsv(rankRows, 'rank')"
+      >
+        Export CSV
+      </button>
       <table>
-        <thead><tr><th v-for="h in headerOf(rankRows)" :key="h">{{ h }}</th></tr></thead>
+        <thead>
+          <tr>
+            <th
+              v-for="h in headerOf(rankRows)"
+              :key="h"
+            >
+              {{ h }}
+            </th>
+          </tr>
+        </thead>
         <tbody>
-          <tr v-for="(r, i) in rankRows" :key="i">
-            <td v-for="h in headerOf(rankRows)" :key="h">{{ r[h] }}</td>
+          <tr
+            v-for="(r, i) in rankRows"
+            :key="i"
+          >
+            <td
+              v-for="h in headerOf(rankRows)"
+              :key="h"
+            >
+              {{ r[h] }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -28,12 +72,34 @@
 
     <section>
       <h3>Event Cohort Counts</h3>
-      <button class="export-btn" @click="exportCsv(cohortCountRows, 'cohort-counts')">Export CSV</button>
+      <button
+        class="export-btn"
+        @click="exportCsv(cohortCountRows, 'cohort-counts')"
+      >
+        Export CSV
+      </button>
       <table>
-        <thead><tr><th v-for="h in headerOf(cohortCountRows)" :key="h">{{ h }}</th></tr></thead>
+        <thead>
+          <tr>
+            <th
+              v-for="h in headerOf(cohortCountRows)"
+              :key="h"
+            >
+              {{ h }}
+            </th>
+          </tr>
+        </thead>
         <tbody>
-          <tr v-for="(r, i) in cohortCountRows" :key="i">
-            <td v-for="h in headerOf(cohortCountRows)" :key="h">{{ r[h] }}</td>
+          <tr
+            v-for="(r, i) in cohortCountRows"
+            :key="i"
+          >
+            <td
+              v-for="h in headerOf(cohortCountRows)"
+              :key="h"
+            >
+              {{ r[h] }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -41,12 +107,34 @@
 
     <section>
       <h3>Distinct Event Cohort Counts</h3>
-      <button class="export-btn" @click="exportCsv(distinctRows, 'distinct')">Export CSV</button>
+      <button
+        class="export-btn"
+        @click="exportCsv(distinctRows, 'distinct')"
+      >
+        Export CSV
+      </button>
       <table>
-        <thead><tr><th v-for="h in headerOf(distinctRows)" :key="h">{{ h }}</th></tr></thead>
+        <thead>
+          <tr>
+            <th
+              v-for="h in headerOf(distinctRows)"
+              :key="h"
+            >
+              {{ h }}
+            </th>
+          </tr>
+        </thead>
         <tbody>
-          <tr v-for="(r, i) in distinctRows" :key="i">
-            <td v-for="h in headerOf(distinctRows)" :key="h">{{ r[h] }}</td>
+          <tr
+            v-for="(r, i) in distinctRows"
+            :key="i"
+          >
+            <td
+              v-for="h in headerOf(distinctRows)"
+              :key="h"
+            >
+              {{ r[h] }}
+            </td>
           </tr>
         </tbody>
       </table>

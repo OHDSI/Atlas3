@@ -1,10 +1,13 @@
 <template>
   <v-table density="compact">
     <thead>
-      <tr><th>ID</th><th>Display name</th><th></th></tr>
+      <tr><th>ID</th><th>Display name</th><th /></tr>
     </thead>
     <tbody>
-      <tr v-for="c in cohorts" :key="c.id">
+      <tr
+        v-for="c in cohorts"
+        :key="c.id"
+      >
         <td>{{ c.id }}</td>
         <td>
           <v-text-field

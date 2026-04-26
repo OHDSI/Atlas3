@@ -1,11 +1,19 @@
 <template>
   <table class="path-details">
     <thead>
-      <tr><th></th><th>Event</th><th>Remain</th><th>%</th><th>Diff</th><th>%</th></tr>
+      <tr><th /><th>Event</th><th>Remain</th><th>%</th><th>Diff</th><th>%</th></tr>
     </thead>
     <tbody>
-      <tr v-for="(r, i) in rows" :key="i">
-        <td><span class="swatch" :style="{ backgroundColor: r.color }" /></td>
+      <tr
+        v-for="(r, i) in rows"
+        :key="i"
+      >
+        <td>
+          <span
+            class="swatch"
+            :style="{ backgroundColor: r.color }"
+          />
+        </td>
         <td>{{ r.name }}</td>
         <td>{{ r.remain.toLocaleString() }}</td>
         <td>{{ r.remainPct.toFixed(1) }}</td>

@@ -1,14 +1,22 @@
 <template>
   <v-dialog
     :model-value="modelValue"
-    @update:model-value="(v: boolean) => emit('update:modelValue', v)"
     max-width="600"
+    @update:model-value="(v: boolean) => emit('update:modelValue', v)"
   >
     <v-card>
       <v-card-title>Select cohorts</v-card-title>
       <v-card-text>
-        <v-text-field v-model="search" label="Search" density="compact" />
-        <v-list density="compact" select-strategy="independent" v-model:selected="selected">
+        <v-text-field
+          v-model="search"
+          label="Search"
+          density="compact"
+        />
+        <v-list
+          v-model:selected="selected"
+          density="compact"
+          select-strategy="independent"
+        >
           <v-list-item
             v-for="c in filtered"
             :key="c.id"
@@ -19,8 +27,16 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn @click="close">Cancel</v-btn>
-        <v-btn color="primary" @click="confirm" :disabled="selected.length === 0">Add</v-btn>
+        <v-btn @click="close">
+          Cancel
+        </v-btn>
+        <v-btn
+          color="primary"
+          :disabled="selected.length === 0"
+          @click="confirm"
+        >
+          Add
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

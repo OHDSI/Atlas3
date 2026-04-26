@@ -1,15 +1,22 @@
 <template>
   <div class="pathway-legend">
     <h4>{{ targetCohortName }}</h4>
-    <p>{{ totalPathwaysCount.toLocaleString() }} of
+    <p>
+      {{ totalPathwaysCount.toLocaleString() }} of
       {{ targetCohortCount.toLocaleString() }} persons with pathway
       ({{ pctWithPathway.toFixed(1) }}%)
     </p>
     <table>
       <tbody>
-        <tr v-for="(c, i) in design.design.eventCohorts" :key="c.id">
+        <tr
+          v-for="(c, i) in design.design.eventCohorts"
+          :key="c.id"
+        >
           <td>
-            <span class="swatch" :style="{ backgroundColor: colors(String(1 << i)) }" />
+            <span
+              class="swatch"
+              :style="{ backgroundColor: colors(String(1 << i)) }"
+            />
           </td>
           <td>{{ c.name }}</td>
         </tr>

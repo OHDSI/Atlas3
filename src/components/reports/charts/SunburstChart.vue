@@ -4,7 +4,10 @@
   ECharts sunburst wrapper for hierarchical data visualization (e.g. Cohort Pathways)
 -->
 <template>
-  <div class="sunburst-chart-container" :style="{ minHeight: `${minHeight}px` }">
+  <div
+    class="sunburst-chart-container"
+    :style="{ minHeight: `${minHeight}px` }"
+  >
     <v-chart
       :option="chartOption"
       :style="{ height: `${minHeight}px`, width: '100%' }"
