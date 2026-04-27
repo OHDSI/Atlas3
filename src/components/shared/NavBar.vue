@@ -222,10 +222,7 @@ const coreNavigationItems: NavigationItem[] = [
   { id: 'datasources', titleKey: 'navigation.datasources', route: '/datasources', visible: true, active: false },
   { id: 'concepts', titleKey: 'navigation.conceptsets', route: '/concepts', visible: true, active: false },
   { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true },
-  { id: 'characterizations', titleKey: 'navigation.characterizations', route: '/characterizations', visible: true, active: false },
-  { id: 'featureAnalyses', titleKey: 'navigation.featureAnalyses', route: '/feature-analyses', visible: true, active: false },
-  { id: 'pathways', titleKey: 'navigation.pathways', route: '/pathways', visible: true, active: false },
-  { id: 'incidenceRates', titleKey: 'navigation.incidenceRates', route: '/incidence-rates', visible: true, active: false },
+  { id: 'analysis', titleKey: 'navigation.analysis', route: '/analysis', visible: true, active: false },
 ]
 
 const navigationItems = ref<NavigationItem[]>(getFilteredCoreNavigationItems())
@@ -268,6 +265,7 @@ function getNavTitle(key: string): string {
     'navigation.conceptsets': 'Concept Sets',
     'navigation.cohortdefinitions': 'Cohorts',
     'navigation.datasources': 'Data Sources',
+    'navigation.analysis': 'Analysis',
     'navigation.characterizations': 'Characterizations',
     'navigation.featureAnalyses': 'Feature Analyses',
     'navigation.pathways': 'Pathways',
