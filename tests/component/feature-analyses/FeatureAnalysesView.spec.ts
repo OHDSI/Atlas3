@@ -115,13 +115,13 @@ describe('FeatureAnalysesView', () => {
     mounted = null
   })
 
-  it('mounts and renders the toolbar title', async () => {
+  it('mounts with the create and search controls', async () => {
     vi.mocked(listFeatureAnalyses).mockResolvedValue([])
     mounted = await mountView()
 
-    expect(mounted.wrapper.text()).toContain('Feature Analyses')
     expect(mounted.wrapper.find('[data-testid="feature-analyses-create"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="feature-analyses-search"]').exists()).toBe(true)
+    expect(mounted.wrapper.text()).toContain('New Feature Analysis')
   })
 
   it('renders rows from the store after fetch', async () => {

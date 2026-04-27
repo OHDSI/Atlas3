@@ -112,13 +112,13 @@ describe('CharacterizationsView', () => {
     mounted = null
   })
 
-  it('mounts and renders the toolbar title', async () => {
+  it('mounts with the create and search controls', async () => {
     vi.mocked(listCharacterizations).mockResolvedValue([])
     mounted = await mountView()
 
-    expect(mounted.wrapper.text()).toContain('Characterizations')
     expect(mounted.wrapper.find('[data-testid="characterizations-create"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="characterizations-search"]').exists()).toBe(true)
+    expect(mounted.wrapper.text()).toContain('New Characterization')
   })
 
   it('renders rows from the store after fetch', async () => {
