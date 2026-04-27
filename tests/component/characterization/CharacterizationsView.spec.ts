@@ -77,7 +77,8 @@ function makeRouter(): Router {
   return createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/characterizations', name: 'characterizations', component: { template: '<div />' } },
+      { path: '/analysis/characterizations', name: 'characterizations', component: { template: '<div />' } },
+      { path: '/characterizations', redirect: { name: 'characterizations' } },
       { path: '/characterizations/new', name: 'characterization-new', component: { template: '<div />' } },
       { path: '/characterizations/:id', name: 'characterization-edit', component: { template: '<div />' } },
     ],

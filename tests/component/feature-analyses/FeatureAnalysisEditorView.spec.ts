@@ -77,7 +77,8 @@ function makeRouter(): Router {
   return createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/feature-analyses', name: 'feature-analyses', component: { template: '<div />' } },
+      { path: '/analysis/feature-analyses', name: 'feature-analyses', component: { template: '<div />' } },
+      { path: '/feature-analyses', redirect: { name: 'feature-analyses' } },
       {
         path: '/feature-analyses/new',
         name: 'feature-analysis-new',
