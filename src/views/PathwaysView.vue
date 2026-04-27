@@ -1,57 +1,49 @@
 <template>
-  <v-container>
-    <div class="header">
+  <AnalysisListLayout
+    :error="error?.message ?? null"
+    :show-view-toggle="true"
+    :view-mode="viewMode"
+    testid="pathways"
+    @update:view-mode="(v) => viewMode = v"
+  >
+    <template #actions>
       <v-btn
         color="primary"
+        variant="flat"
+        size="large"
+        prepend-icon="mdi-plus"
+        data-testid="pathways-create"
         @click="handleNew"
       >
         {{ t('pathwayDefinitions.newDefinition', 'New pathway') }}
       </v-btn>
-      <v-spacer />
-      <v-btn-toggle
-        :model-value="viewMode"
-        @update:model-value="(v: 'tile' | 'table' | null) => v && (viewMode = v)"
-      >
-        <v-btn
-          value="tile"
-          icon="mdi-view-grid"
-        />
-        <v-btn
-          value="table"
-          icon="mdi-view-list"
-        />
-      </v-btn-toggle>
-    </div>
+    </template>
 
-    <PathwayFilters
-      :model-value="filters"
-      :all-tags="allTags"
-      @update:model-value="updateFilters"
-      @clear="clearFilters"
-    />
+    <template #filters>
+      <PathwayFilters
+        :model-value="filters"
+        :all-tags="allTags"
+        @update:model-value="updateFilters"
+        @clear="clearFilters"
+      />
+    </template>
 
     <div
       v-if="loading"
-      class="state"
+      class="pathways-view__state"
     >
       {{ t('pathway.list.loading', 'Loading…') }}
     </div>
     <div
-      v-else-if="error"
-      class="state error"
-    >
-      {{ error.message }}
-    </div>
-    <div
       v-else-if="pathways.length === 0"
-      class="state"
+      class="pathways-view__state"
     >
       {{ t('pathway.list.empty', 'No pathways yet.') }}
     </div>
     <template v-else>
       <div
         v-if="viewMode === 'tile'"
-        class="grid"
+        class="pathways-view__grid"
       >
         <PathwayCard
           v-for="p in paginatedPathways"
@@ -67,6 +59,12 @@
         @open="handleOpen"
         @remove="handleRemove"
       />
+    </template>
+
+    <template
+      v-if="!loading && pathways.length > 0"
+      #pagination
+    >
       <PathwayPagination
         :page="page"
         :total-pages="totalPages"
@@ -75,38 +73,38 @@
         @update:items-per-page="updateItemsPerPage"
       />
     </template>
+  </AnalysisListLayout>
 
-    <v-dialog
-      v-model="showDelete"
-      max-width="400"
-    >
-      <v-card>
-        <v-card-title>{{ t('pathwayDefinitions.delete', 'Delete pathway') }}</v-card-title>
-        <v-card-text>{{ t('pathwayDefinitions.deleteConfirm', 'Delete this pathway? This cannot be undone.') }}</v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="showDelete = false">
-            {{ t('pathwayDefinitions.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            @click="confirmDelete"
-          >
-            {{ t('pathwayDefinitions.delete', 'Delete pathway') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+  <v-dialog
+    v-model="showDelete"
+    max-width="400"
+  >
+    <v-card>
+      <v-card-title>{{ t('pathwayDefinitions.delete', 'Delete pathway') }}</v-card-title>
+      <v-card-text>{{ t('pathwayDefinitions.deleteConfirm', 'Delete this pathway? This cannot be undone.') }}</v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn @click="showDelete = false">
+          {{ t('pathwayDefinitions.cancel', 'Cancel') }}
+        </v-btn>
+        <v-btn
+          color="error"
+          @click="confirmDelete"
+        >
+          {{ t('pathwayDefinitions.delete', 'Delete pathway') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
-    <v-snackbar
-      :model-value="!!feedback"
-      :color="feedback?.color ?? 'info'"
-      :timeout="3000"
-      @update:model-value="(open: boolean) => { if (!open) feedback = null }"
-    >
-      {{ feedback?.message }}
-    </v-snackbar>
-  </v-container>
+  <v-snackbar
+    :model-value="!!feedback"
+    :color="feedback?.color ?? 'info'"
+    :timeout="3000"
+    @update:model-value="(open: boolean) => { if (!open) feedback = null }"
+  >
+    {{ feedback?.message }}
+  </v-snackbar>
 </template>
 
 <script setup lang="ts">
@@ -121,6 +119,7 @@ import PathwayCard from '@/components/pathway/PathwayCard.vue'
 import PathwayTable from '@/components/pathway/PathwayTable.vue'
 import PathwayFilters from '@/components/pathway/PathwayFilters.vue'
 import PathwayPagination from '@/components/pathway/PathwayPagination.vue'
+import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 
 const {
   pathways, loading, error,
@@ -186,13 +185,15 @@ async function confirmDelete() {
 </script>
 
 <style scoped>
-.header { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
-.grid {
+.pathways-view__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 12px;
-  margin: 16px 0;
 }
-.state { padding: 24px; text-align: center; color: #888; }
-.state.error { color: #c00; }
+
+.pathways-view__state {
+  padding: 32px;
+  text-align: center;
+  color: #666;
+}
 </style>
