@@ -1,57 +1,49 @@
 <template>
-  <v-container>
-    <div class="header">
+  <AnalysisListLayout
+    :error="error?.message ?? null"
+    :show-view-toggle="true"
+    :view-mode="viewMode"
+    testid="incidence-rates"
+    @update:view-mode="(v) => viewMode = v"
+  >
+    <template #actions>
       <v-btn
         color="primary"
+        variant="flat"
+        size="large"
+        prepend-icon="mdi-plus"
+        data-testid="incidence-rates-create"
         @click="handleNew"
       >
         {{ t('incidenceRateAnalysis.newAnalysis', 'New incidence rate') }}
       </v-btn>
-      <v-spacer />
-      <v-btn-toggle
-        :model-value="viewMode"
-        @update:model-value="(v: 'tile' | 'table' | null) => v && (viewMode = v)"
-      >
-        <v-btn
-          value="tile"
-          icon="mdi-view-grid"
-        />
-        <v-btn
-          value="table"
-          icon="mdi-view-list"
-        />
-      </v-btn-toggle>
-    </div>
+    </template>
 
-    <IncidenceRateFilters
-      :model-value="filters"
-      :all-tags="allTags"
-      @update:model-value="updateFilters"
-      @clear="clearFilters"
-    />
+    <template #filters>
+      <IncidenceRateFilters
+        :model-value="filters"
+        :all-tags="allTags"
+        @update:model-value="updateFilters"
+        @clear="clearFilters"
+      />
+    </template>
 
     <div
       v-if="loading"
-      class="state"
+      class="incidence-rates-view__state"
     >
       {{ t('incidenceRate.list.loading', 'Loading…') }}
     </div>
     <div
-      v-else-if="error"
-      class="state error"
-    >
-      {{ error.message }}
-    </div>
-    <div
       v-else-if="incidenceRates.length === 0"
-      class="state"
+      class="incidence-rates-view__state"
     >
       {{ t('incidenceRate.list.empty', 'No incidence rates yet.') }}
     </div>
     <template v-else>
       <div
         v-if="viewMode === 'tile'"
-        class="grid"
+        class="incidence-rates-view__grid"
       >
         <IncidenceRateCard
           v-for="ir in paginatedIncidenceRates"
@@ -67,6 +59,12 @@
         @open="handleOpen"
         @remove="handleRemove"
       />
+    </template>
+
+    <template
+      v-if="!loading && incidenceRates.length > 0"
+      #pagination
+    >
       <IncidenceRatePagination
         :page="page"
         :total-pages="totalPages"
@@ -75,38 +73,38 @@
         @update:items-per-page="updateItemsPerPage"
       />
     </template>
+  </AnalysisListLayout>
 
-    <v-dialog
-      v-model="showDelete"
-      max-width="400"
-    >
-      <v-card>
-        <v-card-title>{{ t('incidenceRateAnalysis.delete', 'Delete incidence rate') }}</v-card-title>
-        <v-card-text>{{ t('incidenceRateAnalysis.deleteConfirmation', 'Delete incidence rate analysis? Warning: deletion can not be undone!') }}</v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="showDelete = false">
-            {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            @click="confirmDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+  <v-dialog
+    v-model="showDelete"
+    max-width="400"
+  >
+    <v-card>
+      <v-card-title>{{ t('incidenceRateAnalysis.delete', 'Delete incidence rate') }}</v-card-title>
+      <v-card-text>{{ t('incidenceRateAnalysis.deleteConfirmation', 'Delete incidence rate analysis? Warning: deletion can not be undone!') }}</v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn @click="showDelete = false">
+          {{ t('common.cancel', 'Cancel') }}
+        </v-btn>
+        <v-btn
+          color="error"
+          @click="confirmDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
-    <v-snackbar
-      :model-value="!!feedback"
-      :color="feedback?.color ?? 'info'"
-      :timeout="3000"
-      @update:model-value="(open: boolean) => { if (!open) feedback = null }"
-    >
-      {{ feedback?.message }}
-    </v-snackbar>
-  </v-container>
+  <v-snackbar
+    :model-value="!!feedback"
+    :color="feedback?.color ?? 'info'"
+    :timeout="3000"
+    @update:model-value="(open: boolean) => { if (!open) feedback = null }"
+  >
+    {{ feedback?.message }}
+  </v-snackbar>
 </template>
 
 <script setup lang="ts">
@@ -121,6 +119,7 @@ import IncidenceRateCard from '@/components/incidence-rate/IncidenceRateCard.vue
 import IncidenceRateTable from '@/components/incidence-rate/IncidenceRateTable.vue'
 import IncidenceRateFilters from '@/components/incidence-rate/IncidenceRateFilters.vue'
 import IncidenceRatePagination from '@/components/incidence-rate/IncidenceRatePagination.vue'
+import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 
 const {
   incidenceRates, loading, error,
@@ -171,8 +170,15 @@ async function confirmDelete() {
 </script>
 
 <style scoped>
-.header { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin: 16px 0; }
-.state { padding: 24px; text-align: center; color: #888; }
-.state.error { color: #c00; }
+.incidence-rates-view__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.incidence-rates-view__state {
+  padding: 32px;
+  text-align: center;
+  color: #666;
+}
 </style>

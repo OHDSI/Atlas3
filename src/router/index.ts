@@ -7,325 +7,13 @@ import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
 import { authConfig } from '@/config/auth.config'
-import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
+import { routes } from './routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: () => import('@/views/LandingView.vue'),
-      meta: { requiresAuth: false },
-    },
-    {
-      path: '/cohorts',
-      name: 'cohorts',
-      component: () => import('@/views/CohortsView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/cohorts/new',
-      name: 'cohort-new',
-      component: () => import('@/views/CohortBuilderView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/cohorts/:id',
-      name: 'cohort-edit',
-      component: () => import('@/views/CohortBuilderView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/profiles',
-      name: 'profiles',
-      component: () => import('@/views/ProfileView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/profiles/:sourceKey',
-      name: 'profiles-source',
-      component: () => import('@/views/ProfileView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/profiles/:sourceKey/:personId(\\d+)',
-      name: 'profile-view',
-      component: () => import('@/views/ProfileView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/profiles/:sourceKey/:personId(\\d+)/:cohortId(\\d+)',
-      name: 'profile-view-cohort',
-      component: () => import('@/views/ProfileView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/feature-analyses',
-      name: 'feature-analyses',
-      component: () => import('@/views/FeatureAnalysesView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/feature-analyses/new',
-      name: 'feature-analysis-new',
-      component: () => import('@/views/FeatureAnalysisEditorView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/feature-analyses/:id',
-      name: 'feature-analysis-edit',
-      component: () => import('@/views/FeatureAnalysisEditorView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/characterizations',
-      name: 'characterizations',
-      component: () => import('@/views/CharacterizationsView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/characterizations/new',
-      name: 'characterization-new',
-      component: () => import('@/views/CharacterizationBuilderView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/characterizations/:id',
-      name: 'characterization-edit',
-      component: () => import('@/views/CharacterizationBuilderView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/characterizations/:id/results/:executionId',
-      name: 'characterization-results',
-      component: () => import('@/views/CharacterizationResultsView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      // NOTE: beforeEnter version-preview hook is intentionally deferred to
-      // Phase 3B when the store gains loadVersionPreview / clearPreviewVersion.
-      path: '/characterization/:id/version/:version',
-      name: 'characterization-version-preview',
-      component: () => import('@/views/CharacterizationBuilderView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    // Version preview routes (T036, T037)
-    {
-      path: '/cohortdefinition/:id/version/:version',
-      name: 'cohort-version-preview',
-      component: () => import('@/views/CohortBuilderView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-      beforeEnter: async (to, _from, next) => {
-        const { useCohortStore } = await import('@/stores/cohort')
-        const cohortStore = useCohortStore()
-        const versionParam = to.params.version as string
-
-        if (versionParam === 'current') {
-          // Clear preview mode (T037)
-          await cohortStore.clearPreviewVersion()
-        } else {
-          // Load version for preview (T037)
-          const versionNumber = parseInt(versionParam)
-          if (!isNaN(versionNumber)) {
-            try {
-              await cohortStore.loadVersionPreview(versionNumber)
-            } catch (error) {
-              logger.error('Router', 'Failed to load version preview', error)
-              // Continue navigation anyway - let the view handle the error
-            }
-          }
-        }
-        next()
-      },
-    },
-    {
-      path: '/conceptset/:id/version/:version',
-      name: 'conceptset-version-preview',
-      component: () => import('@/views/ConceptsView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-      beforeEnter: async (to, _from, next) => {
-        const { useConceptSetsStore } = await import('@/stores/concept-sets')
-        const conceptSetsStore = useConceptSetsStore()
-        const versionParam = to.params.version as string
-
-        if (versionParam === 'current') {
-          // Clear preview mode (T037)
-          await conceptSetsStore.clearPreviewVersion()
-        } else {
-          // Load version for preview (T037)
-          const versionNumber = parseInt(versionParam)
-          if (!isNaN(versionNumber)) {
-            try {
-              await conceptSetsStore.loadVersionPreview(versionNumber)
-            } catch (error) {
-              logger.error('Router', 'Failed to load version preview', error)
-              // Continue navigation anyway - let the view handle the error
-            }
-          }
-        }
-        next()
-      },
-    },
-    {
-      path: '/concepts',
-      name: 'concepts',
-      component: () => import('@/views/ConceptsView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/pathways',
-      name: 'pathways',
-      component: () => import('@/views/PathwaysView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/pathways/new',
-      name: 'pathway-new',
-      component: () => import('@/views/PathwayManagerView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/pathways/:id(\\d+)',
-      name: 'pathway-edit',
-      component: () => import('@/views/PathwayManagerView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/pathway-analysis/:id(\\d+)/version/:version',
-      name: 'pathway-version-preview',
-      component: () => import('@/views/PathwayManagerView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-      beforeEnter: async (to, _from, next) => {
-        const { usePathwayStore } = await import('@/stores/pathway')
-        const pathwayStore = usePathwayStore()
-        const versionParam = to.params.version as string
-        const idParam = Number(to.params.id)
-        if (versionParam === 'current') {
-          pathwayStore.clearPreviewVersion()
-        } else if (Number.isFinite(idParam)) {
-          const versionNumber = parseInt(versionParam)
-          if (!isNaN(versionNumber)) {
-            try {
-              await pathwayStore.loadVersionPreview(idParam, versionNumber)
-            } catch (error) {
-              logger.error('Router', 'Failed to load pathway version preview', error)
-            }
-          }
-        }
-        next()
-      },
-    },
-    {
-      path: '/pathways/:id(\\d+)/results/:executionId(\\d+)',
-      name: 'pathway-results',
-      component: () => import('@/views/PathwayResultsView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/incidence-rates',
-      name: 'incidence-rates',
-      component: () => import('@/views/IncidenceRatesView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/incidence-rates/new',
-      name: 'incidence-rate-new',
-      component: () => import('@/views/IncidenceRateManagerView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/incidence-rates/:id(\\d+)',
-      name: 'incidence-rate-edit',
-      component: () => import('@/views/IncidenceRateManagerView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/incidence-rates/:id(\\d+)/version/:version',
-      name: 'incidence-rate-version-preview',
-      component: () => import('@/views/IncidenceRateManagerView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-      beforeEnter: async (to, _from, next) => {
-        const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
-        const irStore = useIncidenceRateStore()
-        const versionParam = to.params.version as string
-        const idParam = Number(to.params.id)
-        if (versionParam === 'current') {
-          irStore.clearPreviewVersion()
-        } else if (Number.isFinite(idParam)) {
-          const v = parseInt(versionParam)
-          if (!isNaN(v)) {
-            try { await irStore.loadVersionPreview(idParam, v) }
-            catch (error) { logger.error('Router', 'Failed to load IR version preview', error) }
-          }
-        }
-        next()
-      },
-    },
-    {
-      path: '/datasources/:sourceKey?/:reportType?',
-      name: 'datasources',
-      component: () => import('@/views/DataSourcesView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    // Role and Permissions Management routes
-    {
-      path: '/config/roles',
-      name: 'role-management',
-      component: () => import('@/views/config/RoleManagementView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/config/roles/:id',
-      name: 'role-details',
-      component: () => import('@/views/config/RoleDetailsView.vue'),
-      props: true,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/oauth/callback',
-      name: 'oauth-callback',
-      component: () => import('@/views/LandingView.vue'),
-      meta: { isOAuthCallback: true },
-    },
-    {
-      path: '/saml/callback',
-      name: 'saml-callback',
-      component: () => import('@/views/LandingView.vue'),
-      meta: { isSAMLCallback: true },
-    },
-    {
-      path: '/openid/callback',
-      name: 'openid-callback',
-      component: () => import('@/views/LandingView.vue'),
-      meta: { isOpenIDCallback: true },
-    },
-    {
-      path: '/:client/:token/:redirectUrl?',
-      name: 'oauth-token',
-      component: () => import('@/views/LandingView.vue'),
-      meta: { isOAuthCallback: true },
-    },
-    ...generatePluginRoutes(),
-  ],
+  routes,
 })
 
 // Deeplink guard - handles ?cohortId=X and ?route=/path on initial load
@@ -388,13 +76,13 @@ router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, 
 
 // OAuth/SAML/OpenID callback handler
 router.beforeEach(async (to, _from, next) => {
-  const isAuthCallback = to.meta.isOAuthCallback || 
-                        to.meta.isSAMLCallback || 
+  const isAuthCallback = to.meta.isOAuthCallback ||
+                        to.meta.isSAMLCallback ||
                         to.meta.isOpenIDCallback ||
                         to.path === '/oauth/callback' ||
                         to.path === '/saml/callback' ||
                         to.path === '/openid/callback'
-  
+
   if (isAuthCallback) {
     const authStore = useAuthStore()
 
@@ -471,29 +159,29 @@ router.beforeEach(async (to, _from, next) => {
         next(destination || '/')
         return
       }
-      
+
       // Check for token in cookies (WebAPI might set it there)
       const cookieToken = getCookieToken()
       if (cookieToken) {
         logger.info('Router', 'Token found in cookie')
         authStore.setToken(cookieToken)
-        
+
         // Fetch user info
         const { authService } = await import('@/services/auth/authService')
         const userInfo = await authService.fetchUserInfo()
         authStore.setUser(userInfo)
-        
+
         // Clear the cookie token
         document.cookie = 'bearerToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-        
+
         // Restore destination URL or redirect to home
         const destination = sessionStorage.getItem('oauth_redirect_destination')
         sessionStorage.removeItem('oauth_redirect_destination')
-        
+
         next(destination || '/')
         return
       }
-      
+
       // No token found - OAuth failed
       logger.error('Router', 'No token received from OAuth provider')
       authStore.setError('Authentication failed - no token received')
@@ -506,7 +194,7 @@ router.beforeEach(async (to, _from, next) => {
       return
     }
   }
-  
+
   next()
 })
 

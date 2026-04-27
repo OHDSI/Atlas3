@@ -79,10 +79,11 @@ function makeRouter(): Router {
     history: createMemoryHistory(),
     routes: [
       {
-        path: '/characterizations',
+        path: '/analysis/characterizations',
         name: 'characterizations',
         component: { template: '<div />' },
       },
+      { path: '/characterizations', redirect: { name: 'characterizations' } },
       {
         path: '/characterizations/new',
         name: 'characterization-new',

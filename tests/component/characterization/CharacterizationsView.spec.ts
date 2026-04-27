@@ -77,7 +77,8 @@ function makeRouter(): Router {
   return createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/characterizations', name: 'characterizations', component: { template: '<div />' } },
+      { path: '/analysis/characterizations', name: 'characterizations', component: { template: '<div />' } },
+      { path: '/characterizations', redirect: { name: 'characterizations' } },
       { path: '/characterizations/new', name: 'characterization-new', component: { template: '<div />' } },
       { path: '/characterizations/:id', name: 'characterization-edit', component: { template: '<div />' } },
     ],
@@ -111,13 +112,13 @@ describe('CharacterizationsView', () => {
     mounted = null
   })
 
-  it('mounts and renders the toolbar title', async () => {
+  it('mounts with the create and search controls', async () => {
     vi.mocked(listCharacterizations).mockResolvedValue([])
     mounted = await mountView()
 
-    expect(mounted.wrapper.text()).toContain('Characterizations')
     expect(mounted.wrapper.find('[data-testid="characterizations-create"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="characterizations-search"]').exists()).toBe(true)
+    expect(mounted.wrapper.text()).toContain('New Characterization')
   })
 
   it('renders rows from the store after fetch', async () => {
