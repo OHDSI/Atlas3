@@ -82,7 +82,7 @@
             mdi-folder-open
           </v-icon>
           <p class="text-body-1 mt-4 text-grey">
-            {{ t('cs.manager.noConcepts', 'No concepts selected').value }}
+            {{ t('common.noData', 'No concepts selected').value }}
           </p>
           <p class="text-caption text-grey">
             Search for concepts and add them to this concept set

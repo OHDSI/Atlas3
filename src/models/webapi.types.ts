@@ -104,6 +104,11 @@ const generationStatusFromRaw = z
   .transform((s) => RAW_STATUS_TO_GENERATION_STATUS[s] ?? 'PENDING')
 
 // WebAPI cohort definition generation info response
+//
+// `createdBy` arrives as either null (legacy) or a `{id, login, name}` object
+// from current WebAPI builds — the union below tolerates both. We only care
+// about the status/counts here, so `passthrough()` lets future fields land
+// without re-tightening the schema.
 export const CohortGenerationInfoSchema = z.object({
   id: CohortGenerationIdSchema,
   startTime: z.number().nullable().optional(),
@@ -114,8 +119,8 @@ export const CohortGenerationInfoSchema = z.object({
   failMessage: z.string().nullable().optional(),
   personCount: z.number().nullable().optional(),
   recordCount: z.number().nullable().optional(),
-  createdBy: z.string().nullable().optional(),
-})
+  createdBy: z.union([z.string(), z.record(z.unknown())]).nullable().optional(),
+}).passthrough()
 
 export type CohortGenerationInfo = z.infer<typeof CohortGenerationInfoSchema>
 

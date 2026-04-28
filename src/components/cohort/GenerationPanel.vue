@@ -80,6 +80,15 @@
                   class="generation-layout__tabs"
                 >
                   <v-tab
+                    value="inclusion-rules"
+                    data-testid="generation-tab-inclusion-rules"
+                  >
+                    <v-icon class="mr-2">
+                      mdi-filter-variant
+                    </v-icon>
+                    Inclusion Rules
+                  </v-tab>
+                  <v-tab
                     value="reports"
                     data-testid="generation-tab-reports"
                   >
@@ -102,6 +111,18 @@
                   v-model="activeTab"
                   class="mt-2"
                 >
+                  <v-window-item value="inclusion-rules">
+                    <v-card
+                      flat
+                      class="pa-4"
+                    >
+                      <inclusion-rule-report
+                        v-if="cohortId && selectedSourceKey"
+                        :cohort-id="cohortId"
+                        :source-key="selectedSourceKey"
+                      />
+                    </v-card>
+                  </v-window-item>
                   <v-window-item value="reports">
                     <report-panel
                       :cohort-id="cohortId ?? 0"
@@ -151,10 +172,11 @@ import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
 import DataSourceTileGrid from '../generation/DataSourceTileGrid.vue'
 import ReportPanel from '../reports/ReportPanel.vue'
+import InclusionRuleReport from '../reports/inclusion/InclusionRuleReport.vue'
 import CohortSamplesPanel from '../cohort-samples/CohortSamplesPanel.vue'
 
 const { t } = useI18n()
-const activeTab = ref<'reports' | 'samples'>('reports')
+const activeTab = ref<'inclusion-rules' | 'reports' | 'samples'>('inclusion-rules')
 
 interface Props {
   modelValue: boolean

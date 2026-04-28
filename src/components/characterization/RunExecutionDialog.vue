@@ -15,7 +15,7 @@
   >
     <v-card>
       <v-card-title>
-        {{ t('characterizations.editor.executions.dialog.title', 'Run characterization') }}
+        {{ t('cc.viewEdit.executions.title', 'Run characterization') }}
       </v-card-title>
       <v-card-text>
         <v-alert
@@ -32,7 +32,7 @@
           :items="sourceItems"
           item-title="title"
           item-value="value"
-          :label="t('characterizations.editor.executions.dialog.sourceLabel', 'Data source').value"
+          :label="t('columns.sourceName', 'Data source').value"
           :loading="loadingSources"
           :disabled="loadingSources"
           :error-messages="sourceError"
@@ -49,7 +49,7 @@
           data-testid="run-execution-dialog-cancel"
           @click="close"
         >
-          {{ t('characterizations.editor.executions.dialog.cancel', 'Cancel') }}
+          {{ t('common.cancel', 'Cancel') }}
         </v-btn>
         <v-btn
           color="primary"
@@ -59,7 +59,7 @@
           data-testid="run-execution-dialog-run"
           @click="onRun"
         >
-          {{ t('characterizations.editor.executions.dialog.run', 'Run') }}
+          {{ t('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -148,7 +148,7 @@ async function onRun() {
   }
   if (!selectedSourceKey.value) {
     sourceError.value = tv(
-      'characterizations.editor.executions.dialog.sourceRequired',
+      'cohortDefinitions.cohortDefinitionManager.samples.selectASource',
       'Select a data source'
     )
     return

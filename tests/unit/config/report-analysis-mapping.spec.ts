@@ -197,12 +197,12 @@ describe('report-analysis-mapping', () => {
   })
 
   describe('getAvailableReportTypes', () => {
-    it('returns only the inclusion-rule report when no Heracles analyses are completed', () => {
-      // The inclusion-rule report comes from cohort generation, not Heracles, so
-      // it is always available — every other report needs at least one completed
-      // analysis id to qualify.
+    it('returns no Heracles-derived reports when no analyses are completed', () => {
+      // The inclusion-rule report has been promoted to its own top-level tab
+      // in the generation panel, so it no longer appears in this dropdown.
+      // Every remaining report needs at least one completed analysis id.
       const result = getAvailableReportTypes([])
-      expect(result).toEqual(['inclusion-rule'])
+      expect(result).toEqual([])
     })
 
     it('should return person report when person analyses completed', () => {

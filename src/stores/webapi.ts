@@ -121,19 +121,26 @@ export const useWebAPIStore = defineStore('webapi', () => {
   }
 
   /**
-   * Generate cohort for a specific data source
+   * Generate cohort for a specific data source.
+   *
+   * Jobs are keyed by sourceId so they line up with the /info endpoint, which
+   * returns entries keyed by `id.sourceId`. When sources aren't loaded we
+   * fall back to an existing job slot or the API-supplied id so polling can
+   * still match the entry by `info.id.sourceId === job.id`.
    */
   async function generateCohort(cohortId: number, sourceKey: string): Promise<GenerationJob | null> {
-    // Check if there's an existing job for this cohort/source combination
-    const existingJobs = getJobsByCohortId(cohortId)
-    const existingJob = existingJobs.find(j => j.sourceKey === sourceKey)
+    const source = sources.value.find(s => s.sourceKey === sourceKey)
+    const existingJob = getJobsByCohortId(cohortId).find(j => j.sourceKey === sourceKey)
+    const knownKey = source?.sourceId ?? existingJob?.id
 
-    // Immediately update UI to show "Starting generation..." status
-    if (existingJob) {
-      // Update existing job to show it's starting
-      updateGenerationJob(existingJob.id, {
-        ...existingJob,
+    if (knownKey != null) {
+      // Optimistically show PENDING while the start request is in flight.
+      updateGenerationJob(knownKey, {
+        id: knownKey,
+        cohortDefinitionId: cohortId,
+        sourceKey,
         status: 'PENDING',
+        startTime: existingJob?.startTime ?? new Date().toISOString(),
       })
     }
 
@@ -141,41 +148,41 @@ export const useWebAPIStore = defineStore('webapi', () => {
       const job = await webapi.generateCohort(cohortId, sourceKey)
 
       if (job) {
-        // Update or add the job
-        if (existingJob) {
-          updateGenerationJob(existingJob.id, {
-            ...job,
-            id: existingJob.id, // Keep the same ID for updates
-          })
-        } else {
-          addGenerationJob(job)
+        const finalKey = knownKey ?? job.id
+        if (knownKey != null && knownKey !== finalKey) {
+          removeGenerationJob(knownKey)
         }
-
-        // Start polling for status updates
+        updateGenerationJob(finalKey, {
+          ...job,
+          id: finalKey,
+          cohortDefinitionId: cohortId,
+          sourceKey,
+        })
         pollGenerationStatus(cohortId)
         return job
       }
 
-      // API call succeeded but returned null
+      // API call succeeded but returned null — surface as failure so the UI
+      // doesn't sit on PENDING forever.
+      if (knownKey != null) {
+        updateGenerationJob(knownKey, {
+          id: knownKey,
+          cohortDefinitionId: cohortId,
+          sourceKey,
+          status: 'FAILED',
+          failMessage: 'Generation request failed',
+        })
+      }
       return null
     } catch (error) {
-      // Revert UI state to show failure
-      if (existingJob) {
-        updateGenerationJob(existingJob.id, {
-          ...existingJob,
+      if (knownKey != null) {
+        updateGenerationJob(knownKey, {
+          id: knownKey,
+          cohortDefinitionId: cohortId,
+          sourceKey,
           status: 'FAILED',
           failMessage: error instanceof Error ? error.message : 'Generation failed',
         })
-      } else {
-        // Create a failed job entry so the UI shows the failure
-        const failedJob: GenerationJob = {
-          id: Date.now(),
-          cohortDefinitionId: cohortId,
-          sourceKey: sourceKey,
-          status: 'FAILED',
-          failMessage: error instanceof Error ? error.message : 'Generation failed',
-        }
-        addGenerationJob(failedJob)
       }
       logger.error('WebAPIStore', 'Failed to generate cohort', error)
       return null
@@ -202,51 +209,47 @@ export const useWebAPIStore = defineStore('webapi', () => {
       try {
         const result = await webapi.getCohortGenerationInfo(cohortId)
 
-        if (!result.success || result.data.length === 0) {
-          // If we can't get info, stop polling
+        // An empty/failed response doesn't mean we're done — a freshly kicked
+        // off generation may not be indexed yet. Keep polling and rely on the
+        // per-cohort terminal-state check below to stop.
+        if (result.success) {
+          for (const info of result.data) {
+            // Jobs are keyed by sourceId (matches /info entries directly).
+            const existing = generationJobs.value.get(info.id.sourceId)
+            // Only update jobs we actually started for this cohort. /info may
+            // return entries we don't have a job for — leave those alone.
+            if (!existing || existing.cohortDefinitionId !== cohortId) continue
+
+            const source = sources.value.find(s => s.sourceId === info.id.sourceId)
+            const sourceKey = source?.sourceKey ?? existing.sourceKey
+
+            updateGenerationJob(info.id.sourceId, {
+              id: info.id.sourceId,
+              cohortDefinitionId: cohortId,
+              sourceKey,
+              status: info.status,
+              personCount: info.personCount ?? undefined,
+              recordCount: info.recordCount ?? undefined,
+              startTime: info.startTime ? new Date(info.startTime).toISOString() : existing.startTime,
+              endTime: info.status === 'COMPLETE' || info.status === 'FAILED'
+                ? (info.startTime != null && info.executionDuration != null
+                    ? new Date(info.startTime + info.executionDuration).toISOString()
+                    : new Date().toISOString())
+                : undefined,
+              failMessage: info.failMessage ?? undefined,
+            })
+          }
+        }
+
+        const stillActive = getJobsByCohortId(cohortId).some(
+          j => j.status === 'PENDING' || j.status === 'RUNNING'
+        )
+
+        if (!stillActive) {
           stopPolling(cohortId)
           return
         }
 
-        const infoList = result.data
-
-        // Find the latest job for this cohort
-        const jobs = getJobsByCohortId(cohortId)
-        if (jobs.length > 0) {
-          const latestJob = jobs[jobs.length - 1]
-          if (!latestJob) {
-            stopPolling(cohortId)
-            return
-          }
-
-          // Find matching generation info for this job's source
-          // We need to match by sourceKey, but the info has sourceId
-          // For now, just use the first info entry (we'll need to improve this later)
-          const info = infoList[0]
-          if (info && info.status) {
-            const updatedJob: GenerationJob = {
-              id: latestJob.id,
-              cohortDefinitionId: cohortId,
-              sourceKey: latestJob.sourceKey, // Keep the original sourceKey
-              status: info.status,
-              personCount: info.personCount ?? undefined,
-              recordCount: info.recordCount ?? undefined,
-              startTime: info.startTime ? new Date(info.startTime).toISOString() : latestJob.startTime,
-              endTime: info.status === 'COMPLETE' || info.status === 'FAILED' ? new Date().toISOString() : undefined,
-              failMessage: info.failMessage ?? undefined,
-            }
-
-            updateGenerationJob(latestJob.id, updatedJob)
-
-            // Stop polling if complete or failed
-            if (info.status === 'COMPLETE' || info.status === 'FAILED') {
-              stopPolling(cohortId)
-              return
-            }
-          }
-        }
-
-        // Check for timeout
         if (Date.now() - startTime > POLL_TIMEOUT_MS) {
           logger.warn('WebAPIStore', `Generation polling timeout for cohort ${cohortId}`)
           stopPolling(cohortId)

@@ -1,7 +1,7 @@
 <template>
   <v-card variant="outlined">
     <v-card-title class="text-subtitle-1">
-      {{ t('common.observationPeriod', 'Observation Period') }}
+      {{ t('dataSources.reports.observationPeriod', 'Observation Period') }}
     </v-card-title>
     <v-card-text>
       <v-text-field

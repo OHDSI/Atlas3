@@ -1,12 +1,12 @@
 <template>
   <div class="pathway-gen-panel">
-    <h3>{{ t('pathway.generation.title', 'Generation') }}</h3>
+    <h3>{{ t('cohortDefinitions.cohortDefinitionManager.tabs.generation', 'Generation') }}</h3>
     <v-select
       :model-value="selectedSource"
       :items="sourceItems"
       item-title="sourceName"
       item-value="sourceKey"
-      :label="t('pathway.generation.dataSource', 'Data source').value"
+      :label="t('profiles.selectADataSource', 'Data source').value"
       density="compact"
       hide-details
       @update:model-value="(v: string | null) => selectedSource = v ?? null"
@@ -18,13 +18,13 @@
         :disabled="!canGenerate || !selectedSource || generation.polling.value || !canGenerateForSource(selectedSource)"
         @click="onStart"
       >
-        {{ t('pathway.generation.generate', 'Generate') }}
+        {{ t('components.generation.generate', 'Generate') }}
       </v-btn>
       <v-btn
         :disabled="!generation.polling.value || !canCancelForSource(selectedSource)"
         @click="onCancel"
       >
-        {{ t('pathway.generation.cancel', 'Cancel') }}
+        {{ t('common.cancel', 'Cancel') }}
       </v-btn>
     </div>
 
@@ -32,7 +32,7 @@
       v-if="generation.execution.value"
       class="status"
     >
-      {{ t('pathway.generation.statusPrefix', 'Status:') }} {{ generation.execution.value.status }}
+      {{ t('columns.status', 'Status:') }} {{ generation.execution.value.status }}
     </div>
     <div
       v-if="generation.error.value"
@@ -41,7 +41,7 @@
       {{ generation.error.value }}
     </div>
 
-    <h4>{{ t('pathway.generation.pastExecutions', 'Past executions') }}</h4>
+    <h4>{{ t('components.analysisExecution.buttons.allExecutions', 'Past executions') }}</h4>
     <v-table density="compact">
       <thead>
         <tr>

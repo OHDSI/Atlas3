@@ -10,7 +10,7 @@
         <v-icon class="mr-2">
           mdi-magnify
         </v-icon>
-        <span>{{ tv('conceptSearch.title') }}</span>
+        <span>{{ tv('search.headingTitle') }}</span>
         <v-spacer />
         <v-btn
           icon
@@ -25,8 +25,8 @@
       <v-card-text>
         <v-text-field
           v-model="searchQuery"
-          :label="tv('conceptSearch.searchLabel')"
-          :placeholder="tv('conceptSearch.searchPlaceholder')"
+          :label="tv('common.search')"
+          :placeholder="tv('search.placeholder')"
           variant="outlined"
           density="comfortable"
           prepend-inner-icon="mdi-magnify"
@@ -36,7 +36,7 @@
 
         <v-select
           v-model="selectedDomain"
-          :label="tv('conceptSearch.filterByDomain')"
+          :label="tv('search.domains')"
           :items="domainOptions"
           variant="outlined"
           density="comfortable"
@@ -116,7 +116,7 @@
           >
             mdi-magnify-remove-outline
           </v-icon>
-          <p>{{ t('conceptSearch.noResults', { query: searchQuery }) }}</p>
+          <p>{{ t('search.noResultsFoundFor', { query: searchQuery }) }}</p>
         </div>
 
         <div

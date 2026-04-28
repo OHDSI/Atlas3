@@ -10,18 +10,18 @@
         variant="flat"
         size="large"
         prepend-icon="mdi-plus"
-        :aria-label="t('featureAnalyses.list.newButton', 'New Feature Analysis').value"
+        :aria-label="t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis').value"
         data-testid="feature-analyses-create"
         @click="handleCreate"
       >
-        {{ t('featureAnalyses.list.newButton', 'New Feature Analysis') }}
+        {{ t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis') }}
       </v-btn>
     </template>
 
     <template #filters>
       <v-text-field
         :model-value="searchInput"
-        :label="t('featureAnalyses.list.searchPlaceholder', 'Search feature analyses...').value"
+        :label="t('datatable.language.searchPlaceholder', 'Search feature analyses...').value"
         prepend-inner-icon="mdi-magnify"
         density="compact"
         variant="outlined"
@@ -88,14 +88,14 @@
           icon="mdi-pencil"
           size="small"
           variant="text"
-          :aria-label="t('featureAnalyses.list.actions.edit', 'Edit').value"
+          :aria-label="t('components.linkedCohortList.table.actions.edit', 'Edit').value"
           @click="openEditor(item.id)"
         />
         <v-btn
           icon="mdi-content-copy"
           size="small"
           variant="text"
-          :aria-label="t('featureAnalyses.list.actions.copy', 'Copy').value"
+          :aria-label="t('common.copy', 'Copy').value"
           @click="handleCopy(item)"
         />
         <v-btn
@@ -103,7 +103,7 @@
           size="small"
           variant="text"
           color="error"
-          :aria-label="t('featureAnalyses.list.actions.delete', 'Delete').value"
+          :aria-label="t('common.delete', 'Delete').value"
           @click="handleDeleteClick(item)"
         />
       </template>
@@ -113,7 +113,7 @@
           class="feature-analyses-view__empty"
           data-testid="feature-analyses-empty"
         >
-          {{ t('featureAnalyses.list.empty', 'No feature analyses found.') }}
+          {{ t('common.noData', 'No feature analyses found.') }}
         </div>
       </template>
     </v-data-table>
@@ -127,7 +127,7 @@
         :disabled="!canGoPrevious"
         @click="previousPage"
       >
-        {{ t('common.previous', 'Previous') }}
+        {{ t('datatable.language.paginate.previous', 'Previous') }}
       </v-btn>
       <span class="feature-analyses-view__range">{{ rangeDisplay }}</span>
       <v-btn
@@ -135,7 +135,7 @@
         :disabled="!canGoNext"
         @click="nextPage"
       >
-        {{ t('common.next', 'Next') }}
+        {{ t('configuration.userImport.wizard.buttons.next', 'Next') }}
       </v-btn>
     </template>
   </AnalysisListLayout>
@@ -208,14 +208,14 @@ const {
 const searchInput = ref<string>('')
 
 const headers = computed(() => [
-  { title: t('featureAnalyses.list.columns.name', 'Name').value, key: 'name' },
-  { title: t('featureAnalyses.list.columns.type', 'Type').value, key: 'type' },
-  { title: t('featureAnalyses.list.columns.domain', 'Domain').value, key: 'domain' },
-  { title: t('featureAnalyses.list.columns.statType', 'Stat Type').value, key: 'statType' },
-  { title: t('featureAnalyses.list.columns.createdBy', 'Created By').value, key: 'createdBy' },
-  { title: t('featureAnalyses.list.columns.createdDate', 'Created').value, key: 'createdDate' },
-  { title: t('featureAnalyses.list.columns.modifiedDate', 'Modified').value, key: 'modifiedDate' },
-  { title: t('featureAnalyses.list.columns.actions', 'Actions').value, key: 'actions', sortable: false },
+  { title: t('columns.name', 'Name').value, key: 'name' },
+  { title: t('cc.fa.analysisType', 'Type').value, key: 'type' },
+  { title: t('cc.fa.domain', 'Domain').value, key: 'domain' },
+  { title: t('cc.fa.analysisType', 'Stat Type').value, key: 'statType' },
+  { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
+  { title: t('columns.createdDate', 'Created').value, key: 'createdDate' },
+  { title: t('columns.modified', 'Modified').value, key: 'modifiedDate' },
+  { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
 ])
 
 const showDeleteDialog = ref(false)

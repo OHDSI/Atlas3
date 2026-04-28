@@ -6,7 +6,7 @@
         class="export-btn"
         @click="exportCsv(allRows, 'all')"
       >
-        {{ t('pathway.results.exportCsv', 'Export CSV') }}
+        {{ t('common.export', 'Export CSV') }}
       </button>
       <table>
         <thead>
@@ -41,7 +41,7 @@
         class="export-btn"
         @click="exportCsv(rankRows, 'rank')"
       >
-        {{ t('pathway.results.exportCsv', 'Export CSV') }}
+        {{ t('common.export', 'Export CSV') }}
       </button>
       <table>
         <thead>
@@ -76,7 +76,7 @@
         class="export-btn"
         @click="exportCsv(cohortCountRows, 'cohort-counts')"
       >
-        {{ t('pathway.results.exportCsv', 'Export CSV') }}
+        {{ t('common.export', 'Export CSV') }}
       </button>
       <table>
         <thead>
@@ -106,12 +106,12 @@
     </section>
 
     <section>
-      <h3>{{ t('pathway.results.distinctEventCounts', 'Distinct Event Cohort Counts') }}</h3>
+      <h3>{{ t('columns.distinctEventCohorts', 'Distinct Event Cohort Counts') }}</h3>
       <button
         class="export-btn"
         @click="exportCsv(distinctRows, 'distinct')"
       >
-        {{ t('pathway.results.exportCsv', 'Export CSV') }}
+        {{ t('common.export', 'Export CSV') }}
       </button>
       <table>
         <thead>

@@ -10,7 +10,7 @@
     />
     <v-text-field
       :model-value="rule.description ?? ''"
-      :label="t('incidenceRate.stratifyDescription', 'Description').value"
+      :label="t('columns.description', 'Description').value"
       density="compact"
       hide-details
       class="mb-3"

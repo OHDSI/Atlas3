@@ -2,7 +2,7 @@
   <div class="pathway-filters">
     <v-text-field
       :model-value="modelValue.searchQuery"
-      :label="tv('pathwayDefinitions.search', 'Search')"
+      :label="tv('common.search', 'Search')"
       density="compact"
       hide-details
       style="max-width: 280px"
@@ -11,7 +11,7 @@
     <v-select
       :model-value="modelValue.selectedTags"
       :items="allTags"
-      :label="tv('pathwayDefinitions.tags', 'Tags')"
+      :label="tv('common.tags', 'Tags')"
       multiple
       chips
       density="compact"
@@ -21,7 +21,7 @@
     />
     <v-text-field
       :model-value="modelValue.author"
-      :label="tv('pathwayDefinitions.author', 'Author')"
+      :label="tv('columns.author', 'Author')"
       density="compact"
       hide-details
       style="max-width: 200px"

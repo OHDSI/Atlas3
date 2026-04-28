@@ -36,7 +36,7 @@
                 class="flex-1"
                 @click="tempLogicType = 'ALL'"
               >
-                {{ t('common.all', 'All') }}
+                {{ t('options.all', 'All') }}
               </v-btn>
               <v-btn
                 :variant="tempLogicType === 'ANY' ? 'tonal' : 'outlined'"
@@ -45,7 +45,7 @@
                 class="flex-1"
                 @click="tempLogicType = 'ANY'"
               >
-                {{ t('common.any', 'Any') }}
+                {{ t('options.any', 'Any') }}
               </v-btn>
               <v-btn
                 :variant="tempLogicType === 'AT_LEAST' ? 'tonal' : 'outlined'"
@@ -54,7 +54,7 @@
                 class="flex-1"
                 @click="tempLogicType = 'AT_LEAST'"
               >
-                {{ t('common.atLeast', 'At least') }}
+                {{ t('options.atLeast', 'At least') }}
               </v-btn>
               <v-btn
                 :variant="tempLogicType === 'AT_MOST' ? 'tonal' : 'outlined'"
@@ -63,14 +63,14 @@
                 class="flex-1"
                 @click="tempLogicType = 'AT_MOST'"
               >
-                {{ t('common.atMost', 'At most') }}
+                {{ t('options.atMost', 'At most') }}
               </v-btn>
             </div>
             <v-text-field
               v-if="tempLogicType === 'AT_LEAST' || tempLogicType === 'AT_MOST'"
               v-model.number="tempCount"
               type="number"
-              :label="t('common.count', 'Count').value"
+              :label="t('columns.count', 'Count').value"
               min="1"
               density="compact"
               class="mt-3"
@@ -90,7 +90,7 @@
               size="small"
               @click="confirmLogicType"
             >
-              {{ t('common.ok', 'OK') }}
+              {{ t('common.apply', 'OK') }}
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -122,7 +122,7 @@
                 size="small"
                 data-testid="add-criteria-to-nested-group"
               >
-                {{ t('components.nestedCriteria.addCriteria', 'Add Criteria') }}
+                {{ t('components.criteriaGroup.addCriteria', 'Add Criteria') }}
               </v-btn>
             </template>
             <v-list>
@@ -143,7 +143,7 @@
             size="small"
             variant="text"
             color="error"
-            :title="t('components.nestedCriteria.deleteGroup', 'Delete nested group').value"
+            :title="t('components.criteriaGroup.deleteGroup', 'Delete nested group').value"
             @click="$emit('remove')"
           />
         </div>
@@ -202,7 +202,7 @@
                       block
                       @click="selectConceptSet(index, event.id)"
                     >
-                      {{ event.conceptSet?.name || t('components.nestedCriteria.selectConceptSet', 'Select concept set...') }}
+                      {{ event.conceptSet?.name || t('components.conceptAddBox.selectConceptSet', 'Select concept set...') }}
                     </v-btn>
                   </div>
 
@@ -219,7 +219,7 @@
                       v-if="event.cardinality?.type !== 'EXACTLY' || true"
                       :model-value="event.cardinality?.count || 1"
                       type="number"
-                      :label="t('common.count', 'Count').value"
+                      :label="t('columns.count', 'Count').value"
                       density="compact"
                       min="1"
                       class="mt-1"
@@ -251,7 +251,7 @@
                   <div class="mb-2">
                     <v-switch
                       :model-value="event.attributes && event.attributes.length > 0"
-                      :label="t('components.nestedCriteria.addAttributes', 'Add attributes').value"
+                      :label="t('components.common.addAttribute', 'Add attributes').value"
                       density="compact"
                       color="primary"
                       hide-details
@@ -358,9 +358,9 @@ const criteriaTypes = computed(() => {
 })
 
 const cardinalityTypes = computed(() => [
-  { value: 'AT_LEAST', title: t('common.atLeast', 'At least') },
-  { value: 'EXACTLY', title: t('common.exactly', 'Exactly') },
-  { value: 'AT_MOST', title: t('common.atMost', 'At most') }
+  { value: 'AT_LEAST', title: t('options.atLeast', 'At least') },
+  { value: 'EXACTLY', title: t('options.exactly', 'Exactly') },
+  { value: 'AT_MOST', title: t('options.atMost', 'At most') }
 ])
 
 // Watch for external changes
@@ -408,9 +408,9 @@ function getLogicTypeDisplay(): string {
     case 'AT_MOST':
       return `${tv('options.atMost', 'At most')} ${count || 1}`
     case 'ALL':
-      return tv('options.allOf', 'ALL')
+      return tv('options.all', 'ALL')
     case 'ANY':
-      return tv('options.anyOf', 'ANY')
+      return tv('options.any', 'ANY')
     default:
       return logicType
   }
@@ -421,7 +421,7 @@ function addCriteria(criteriaType: CriteriaType) {
   const newEvent: CohortEvent = {
     id: uuidv4(),
     criteriaType,
-    conceptSet: { id: 0, name: t('components.nestedCriteria.selectConceptSet', 'Select concept set...').value },
+    conceptSet: { id: 0, name: t('components.conceptAddBox.selectConceptSet', 'Select concept set...').value },
     attributes: []
   }
 

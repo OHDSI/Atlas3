@@ -2,7 +2,7 @@
   <div class="jobs-section">
     <v-card>
       <v-card-title class="d-flex align-center flex-wrap ga-2">
-        <span>{{ t('configuration.jobs.title') }}</span>
+        <span>{{ t('navigation.jobs') }}</span>
         <v-spacer />
 
         <!-- Status Filter -->
@@ -17,7 +17,7 @@
             value="all"
             size="small"
           >
-            {{ t('configuration.jobs.filters.all') }}
+            {{ t('options.all') }}
             <v-chip
               size="x-small"
               class="ml-1"
@@ -37,7 +37,7 @@
             >
               mdi-play-circle
             </v-icon>
-            {{ t('configuration.jobs.filters.running') }}
+            {{ t('ir.results.running') }}
             <v-chip
               v-if="runningJobsCount > 0"
               size="x-small"
@@ -59,7 +59,7 @@
             >
               mdi-check-circle
             </v-icon>
-            {{ t('configuration.jobs.filters.completed') }}
+            {{ t('executionStatus.values.COMPLETED') }}
           </v-btn>
           <v-btn
             value="failed"
@@ -72,7 +72,7 @@
             >
               mdi-alert-circle
             </v-icon>
-            {{ t('configuration.jobs.filters.failed') }}
+            {{ t('ir.results.failed') }}
           </v-btn>
         </v-btn-toggle>
 
@@ -143,7 +143,7 @@
             {{ t('configuration.jobs.empty.title') }}
           </p>
           <p class="text-body-2">
-            {{ t('configuration.jobs.empty.description') }}
+            {{ t('columns.description') }}
           </p>
         </div>
 
@@ -304,12 +304,12 @@ const statusFilter = computed({
 
 // Table headers - using existing notification translation keys where available
 const tableHeaders = computed(() => [
-  { title: tv('configuration.jobs.columns.executionId'), key: 'executionId', sortable: true, width: '100px' },
-  { title: tv('configuration.jobs.columns.type'), key: 'type', sortable: true, width: '180px' },
+  { title: tv('columns.executionId'), key: 'executionId', sortable: true, width: '100px' },
+  { title: tv('columns.type'), key: 'type', sortable: true, width: '180px' },
   { title: tv('notifications.jobName'), key: 'name', sortable: true },
   { title: tv('notifications.status'), key: 'status', sortable: true, width: '140px' },
-  { title: tv('configuration.jobs.columns.author'), key: 'author', sortable: true, width: '150px' },
-  { title: tv('configuration.jobs.columns.startTime'), key: 'startTime', sortable: true, width: '180px' },
+  { title: tv('columns.author'), key: 'author', sortable: true, width: '150px' },
+  { title: tv('columns.startDate'), key: 'startTime', sortable: true, width: '180px' },
   { title: tv('notifications.endTime'), key: 'endTime', sortable: true, width: '180px' },
   { title: tv('notifications.duration'), key: 'duration', sortable: true, width: '100px' }
 ])

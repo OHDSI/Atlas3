@@ -10,14 +10,14 @@
             icon="mdi-chart-tree"
             class="mr-2"
           />
-          {{ t('common.treemap', 'Treemap') }}
+          {{ t('dataSources.treemap.treemapTab', 'Treemap') }}
         </v-tab>
         <v-tab value="table">
           <v-icon
             icon="mdi-table"
             class="mr-2"
           />
-          {{ t('common.table', 'Table') }}
+          {{ t('dataSources.table.tableTab', 'Table') }}
         </v-tab>
       </v-tabs>
 

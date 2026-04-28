@@ -14,7 +14,7 @@
             {{ t('search.tabs.search', 'Concept Search') }}
           </v-tab>
           <v-tab value="sets">
-            {{ t('cs.manager.title', 'Concept Sets') }}
+            {{ t('cs.browser.caption', 'Concept Sets') }}
           </v-tab>
         </v-tabs>
 

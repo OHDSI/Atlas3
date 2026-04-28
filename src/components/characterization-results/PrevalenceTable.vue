@@ -71,13 +71,13 @@
           :data-testid="`char-results-explore-${item.covariateId}`"
           @click="onExplore(item._row)"
         >
-          {{ tv('characterizations.results.table.explore', 'Explore') }}
+          {{ tv('columns.explore', 'Explore') }}
         </v-btn>
       </template>
 
       <template #no-data>
         <div class="prevalence-table__empty">
-          {{ tv('characterizations.results.table.empty', 'No rows match the current filter.') }}
+          {{ tv('common.noData', 'No rows match the current filter.') }}
         </div>
       </template>
     </v-data-table>
@@ -148,23 +148,23 @@ const tableRows = computed<FlattenedRow[]>(() =>
 const headers = computed(() => {
   const out: { title: string; key: string; sortable?: boolean; align?: 'start' | 'end' | 'center' }[] = [
     {
-      title: tv('characterizations.results.table.covariate', 'Covariate'),
+      title: tv('columns.covariate', 'Covariate'),
       key: 'covariateName',
     },
     {
-      title: tv('characterizations.results.table.conceptId', 'Concept ID'),
+      title: tv('columns.conceptId', 'Concept ID'),
       key: 'conceptId',
       align: 'end',
     },
   ]
   for (const cohort of props.cohorts) {
     out.push({
-      title: `${cohort.name} · ${tv('characterizations.results.table.count', 'Count')}`,
+      title: `${cohort.name} · ${tv('columns.count', 'Count')}`,
       key: `count_${cohort.id}`,
       align: 'end',
     })
     out.push({
-      title: `${cohort.name} · ${tv('characterizations.results.table.pct', '%')}`,
+      title: `${cohort.name} · ${tv('columns.pct', '%')}`,
       key: `pct_${cohort.id}`,
       align: 'end',
     })
@@ -177,7 +177,7 @@ const headers = computed(() => {
     })
   }
   out.push({
-    title: tv('characterizations.results.table.explore', 'Explore'),
+    title: tv('columns.explore', 'Explore'),
     key: 'actions',
     sortable: false,
     align: 'end',

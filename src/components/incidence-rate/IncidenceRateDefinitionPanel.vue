@@ -7,7 +7,7 @@
       <v-card-text>
         <v-textarea
           :model-value="store.currentIR?.description ?? ''"
-          :label="t('incidenceRate.description', 'Description').value"
+          :label="t('columns.description', 'Description').value"
           rows="2"
           auto-grow
           density="compact"
@@ -19,7 +19,7 @@
     <div class="cohort-grid">
       <v-card variant="outlined">
         <v-card-title>
-          {{ t('incidenceRate.targetCohorts', 'Target Cohorts') }}
+          {{ t('ir.editor.targetCohorts', 'Target Cohorts') }}
           <v-spacer />
           <v-btn
             size="small"
@@ -38,7 +38,7 @@
 
       <v-card variant="outlined">
         <v-card-title>
-          {{ t('incidenceRate.outcomeCohorts', 'Outcome Cohorts') }}
+          {{ t('ir.editor.outcomeCohorts', 'Outcome Cohorts') }}
           <v-spacer />
           <v-btn
             size="small"

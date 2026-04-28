@@ -27,7 +27,7 @@
             prepend-icon="mdi-arrow-left"
             @click="handleBackToCurrent"
           >
-            {{ t('versions.backToCurrent', 'Back to Current') }}
+            {{ t('common.backToCurrent', 'Back to Current') }}
           </v-btn>
         </div>
       </v-alert>
@@ -273,21 +273,21 @@
               size="small"
             >
               <span class="d-none d-lg-inline">{{ t('options.endOfContinuousObservation') }}</span>
-              <span class="d-lg-none">{{ t('options.continuousObs', 'Continuous Obs.') }}</span>
+              <span class="d-lg-none">{{ t('options.endOfContinuousObservation', 'Continuous Obs.') }}</span>
             </v-btn>
             <v-btn
               value="FIXED_DURATION"
               size="small"
             >
               <span class="d-none d-lg-inline">{{ t('options.fixedDurationRelativeToInitialEvent') }}</span>
-              <span class="d-lg-none">{{ t('options.fixedDuration', 'Fixed Duration') }}</span>
+              <span class="d-lg-none">{{ t('options.fixedDurationRelativeToInitialEvent', 'Fixed Duration') }}</span>
             </v-btn>
             <v-btn
               value="CONTINUOUS_DRUG"
               size="small"
             >
               <span class="d-none d-lg-inline">{{ t('options.endOfContinuousDrugExposure') }}</span>
-              <span class="d-lg-none">{{ t('options.continuousDrug', 'Continuous Drug') }}</span>
+              <span class="d-lg-none">{{ t('options.endOfContinuousDrugExposure', 'Continuous Drug') }}</span>
             </v-btn>
           </v-btn-toggle>
         </div>
@@ -402,7 +402,7 @@
           >
             mdi-history
           </v-icon>
-          {{ t('versions.tab', 'Versions') }}
+          {{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions') }}
           <v-spacer />
           <v-btn
             icon="mdi-close"
@@ -893,7 +893,7 @@ onBeforeRouteLeave((_to, _from, next) => {
   }
 
   isConfirmingNavigation.value = true
-  const confirmed = confirm(t('common.unsavedChangesWarning', 'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.').value)
+  const confirmed = confirm(t('common.unsavedWarning', 'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.').value)
   isConfirmingNavigation.value = false
 
   if (confirmed) {
@@ -1343,6 +1343,27 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
 async function handleSave() {
   if (!canSave.value) return
 
+  // Collect every concept set the cohort references (entry, additional,
+  // inclusion rules, exit, censoring) and hydrate items from the API for any
+  // that aren't already populated. Saving with just `gatherConceptSets()`
+  // (entry-only) drops inclusion-rule concept sets — the saved Atlas
+  // expression then references CodesetIds that don't exist, and the WebAPI
+  // generator returns 0 patients on the next run.
+  const conceptSetsForSave: ConceptSetReference[] = await Promise.all(
+    usedConceptSets.value.map(async (ref) => {
+      if (ref.items && ref.items.length > 0) {
+        return ref
+      }
+      if (ref.id !== undefined && ref.id !== null) {
+        const fullConceptSet = await getConceptSetById(ref.id)
+        if (fullConceptSet?.items) {
+          return { ...ref, items: fullConceptSet.items as ConceptSetItem[] }
+        }
+      }
+      return ref
+    })
+  )
+
   const cohortDefinition: CohortDefinition = {
     id: props.id ? Number(props.id) : undefined,
     name: cohortName.value,
@@ -1353,7 +1374,7 @@ async function handleSave() {
     inclusionQualifyingLimit: inclusionQualifyingLimit.value,
     additionalCriteria: additionalCriteria.value,
     inclusionRules: inclusionRules.value,
-    conceptSets: gatherConceptSets(),
+    conceptSets: conceptSetsForSave,
     exitCriteria: exitCriteria.value,
     observationPeriod: observationPeriod.value,
   }

@@ -101,9 +101,9 @@ export function useCardinality() {
    */
   function getCardinalityTypeOptions(): Array<{ value: CardinalityType; label: string }> {
     return [
-      { value: 'AT_LEAST', label: tv('cohortDefinitions.designTab.cardinalityOptions.atLeast') },
-      { value: 'EXACTLY', label: tv('cohortDefinitions.designTab.cardinalityOptions.exactly') },
-      { value: 'AT_MOST', label: tv('cohortDefinitions.designTab.cardinalityOptions.atMost') },
+      { value: 'AT_LEAST', label: tv('options.atLeast') },
+      { value: 'EXACTLY', label: tv('options.exactly') },
+      { value: 'AT_MOST', label: tv('options.atMost') },
     ]
   }
 
@@ -112,7 +112,7 @@ export function useCardinality() {
    */
   function getCountingMethodOptions(): Array<{ value: CountingMethod; label: string }> {
     return [
-      { value: 'ALL', label: tv('cohortDefinitions.designTab.countingOptions.all') },
+      { value: 'ALL', label: tv('options.all') },
       { value: 'DISTINCT_CONCEPT', label: tv('cohortDefinitions.designTab.countingOptions.distinctConcept') },
       { value: 'DISTINCT_START_DATE', label: tv('cohortDefinitions.designTab.countingOptions.distinctDate') },
       { value: 'DISTINCT_VISIT', label: tv('cohortDefinitions.designTab.countingOptions.distinctVisit') },

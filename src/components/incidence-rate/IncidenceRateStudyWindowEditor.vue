@@ -20,7 +20,7 @@
         color="error"
         @click="store.clearStudyWindow"
       >
-        {{ t('common.remove', 'Remove') }}
+        {{ t('columns.remove', 'Remove') }}
       </v-btn>
     </v-card-title>
     <v-card-text v-if="hasWindow">

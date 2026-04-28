@@ -55,7 +55,7 @@
             mdi-book-open-variant
           </v-icon>
           <p class="text-body-1 text-medium-emphasis">
-            {{ searchTerm ? t('cs.manager.search.noResults') : t('cs.manager.noConceptSets') }}
+            {{ searchTerm ? t('search.noResultsFoundFor') : t('cohortDefinitions.noConceptSets') }}
           </p>
           <v-btn
             color="primary"
@@ -66,7 +66,7 @@
             <v-icon start>
               mdi-plus
             </v-icon>
-            {{ t('cs.manager.new') }}
+            {{ t('cs.manager.createOption') }}
           </v-btn>
         </div>
 

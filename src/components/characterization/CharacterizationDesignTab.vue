@@ -11,11 +11,11 @@
     <!-- Metadata -->
     <section class="char-design-tab__section">
       <h2 class="char-design-tab__section-title">
-        {{ t('characterizations.editor.metadata.name', 'Name') }}
+        {{ t('columns.name', 'Name') }}
       </h2>
       <v-text-field
         :model-value="draft.name"
-        :label="t('characterizations.editor.metadata.name', 'Name').value"
+        :label="t('columns.name', 'Name').value"
         density="comfortable"
         variant="outlined"
         required
@@ -24,7 +24,7 @@
       />
       <v-textarea
         :model-value="draft.description ?? ''"
-        :label="t('characterizations.editor.metadata.description', 'Description').value"
+        :label="t('columns.description', 'Description').value"
         density="comfortable"
         variant="outlined"
         rows="2"
@@ -39,7 +39,7 @@
         >
           <v-text-field
             :model-value="draft.stratifiedBy ?? ''"
-            :label="t('characterizations.editor.metadata.stratifiedBy', 'Stratified by').value"
+            :label="t('cc.viewEdit.design.subgroups.stratifiedByPlaceholder', 'Stratified by').value"
             density="comfortable"
             variant="outlined"
             data-testid="char-design-stratifiedBy"
@@ -53,7 +53,7 @@
         >
           <v-switch
             :model-value="draft.strataOnly ?? false"
-            :label="t('characterizations.editor.metadata.strataOnly', 'Compute strata only (skip overall)').value"
+            :label="t('cc.viewEdit.design.subgroups.subgroupOnly', 'Compute strata only (skip overall)').value"
             density="comfortable"
             color="primary"
             hide-details

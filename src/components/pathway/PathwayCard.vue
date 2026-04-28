@@ -30,7 +30,7 @@
         variant="text"
         @click.stop="emit('remove', pathway.id ?? 0)"
       >
-        {{ t('pathwayDefinitions.delete', 'Delete pathway') }}
+        {{ t('common.delete', 'Delete pathway') }}
       </v-btn>
     </v-card-actions>
   </v-card>

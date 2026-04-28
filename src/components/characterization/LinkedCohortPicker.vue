@@ -8,7 +8,7 @@
   <div class="linked-cohort-picker">
     <div class="linked-cohort-picker__header">
       <h2 class="linked-cohort-picker__title">
-        {{ t('characterizations.editor.cohorts.title', 'Linked Cohorts') }}
+        {{ t('cc.viewEdit.results.filters.cohorts', 'Linked Cohorts') }}
       </h2>
       <v-btn
         variant="outlined"
@@ -18,7 +18,7 @@
         data-testid="linked-cohort-picker-add"
         @click="openDialog"
       >
-        {{ t('characterizations.editor.cohorts.add', 'Add cohort') }}
+        {{ t('common.add', 'Add cohort') }}
       </v-btn>
     </div>
 
@@ -27,7 +27,7 @@
       class="linked-cohort-picker__empty"
       data-testid="linked-cohort-picker-empty"
     >
-      {{ t('characterizations.editor.cohorts.empty', 'No cohorts linked.') }}
+      {{ t('common.noData', 'No cohorts linked.') }}
     </div>
 
     <v-list
@@ -52,7 +52,7 @@
             icon="mdi-close"
             size="x-small"
             variant="text"
-            :aria-label="t('characterizations.editor.cohorts.remove', 'Remove').value"
+            :aria-label="t('columns.remove', 'Remove').value"
             :data-testid="`linked-cohort-picker-remove-${cohort.id}`"
             @click="removeCohort(cohort.id)"
           />
@@ -66,7 +66,7 @@
     >
       <v-card>
         <v-card-title>
-          {{ t('characterizations.editor.cohorts.selectDialogTitle', 'Select cohorts to link') }}
+          {{ t('ir.editor.chooseACohort', 'Select cohorts to link') }}
         </v-card-title>
         <v-card-text class="linked-cohort-picker__dialog-body">
           <v-data-table
@@ -95,7 +95,7 @@
             data-testid="linked-cohort-picker-confirm"
             @click="confirmAdd"
           >
-            {{ t('characterizations.editor.cohorts.add', 'Add cohort') }}
+            {{ t('common.add', 'Add cohort') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -125,7 +125,7 @@ const dialogOpen = ref(false)
 const selectedIds = ref<number[]>([])
 
 const dialogHeaders = computed(() => [
-  { title: t('characterizations.editor.cohorts.title', 'Linked Cohorts').value, key: 'name' },
+  { title: t('cc.viewEdit.results.filters.cohorts', 'Linked Cohorts').value, key: 'name' },
 ])
 
 const selectableItems = computed(() => {

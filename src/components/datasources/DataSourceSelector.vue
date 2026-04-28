@@ -4,7 +4,7 @@
     :items="dataSourceItems"
     :loading="loading"
     :disabled="disabled || loading"
-    :label="t('dataSources.title', 'Data Source').value"
+    :label="t('dataSources.headingTitle', 'Data Source').value"
     item-title="label"
     item-value="value"
     variant="outlined"

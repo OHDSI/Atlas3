@@ -3,8 +3,8 @@
     <!-- Search Input -->
     <v-text-field
       v-model="searchInput"
-      :label="tv('conceptSearchInline.searchLabel')"
-      :placeholder="tv('conceptSearchInline.searchPlaceholder')"
+      :label="tv('common.search')"
+      :placeholder="tv('search.placeholder')"
       prepend-inner-icon="mdi-magnify"
       clearable
       variant="outlined"

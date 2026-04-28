@@ -38,7 +38,7 @@
             <v-select
               v-model="fixedDurationDateField"
               :items="dateFieldOptions"
-              :label="t('exitCriteria.fields.dateField', 'Date Field').value"
+              :label="t('components.dateOffsetStrategy.dateOffsetStrategyText_3', 'Date Field').value"
               :disabled="disabled"
               variant="outlined"
               density="compact"
@@ -48,7 +48,7 @@
             <v-text-field
               v-model.number="fixedDurationOffset"
               type="number"
-              :label="t('exitCriteria.fields.offset', 'Offset (days)').value"
+              :label="t('components.dateOffsetStrategy.dateOffsetStrategyText_4', 'Offset (days)').value"
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -72,7 +72,7 @@
             :disabled="disabled"
             @click="openConceptSetDialog"
           >
-            {{ t('customEraStrategy.selectDrugConceptSet', 'Select Drug Concept Set') }}
+            {{ t('components.customEraStrategy.selectDrugConceptSet', 'Select Drug Concept Set') }}
           </v-btn>
           <v-chip
             v-else
@@ -91,7 +91,7 @@
             <v-text-field
               v-model.number="persistenceWindow"
               type="number"
-              :label="t('exitCriteria.fields.persistenceWindow', 'Persistence Window (days)').value"
+              :label="t('components.customEraStrategy.customEraStrategyText_4', 'Persistence Window (days)').value"
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -107,7 +107,7 @@
                       class="text-medium-emphasis"
                     />
                   </template>
-                  <span>{{ t('exitCriteria.help.persistenceWindow', 'Maximum gap days between exposures') }}</span>
+                  <span>{{ t('components.customEraStrategy.customEraStrategyText_5', 'Maximum gap days between exposures') }}</span>
                 </v-tooltip>
               </template>
             </v-text-field>
@@ -116,7 +116,7 @@
             <v-text-field
               v-model.number="surveillanceWindow"
               type="number"
-              :label="t('exitCriteria.fields.surveillanceWindow', 'Surveillance Window (days)').value"
+              :label="t('components.customEraStrategy.customEraStrategyText_6', 'Surveillance Window (days)').value"
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -132,7 +132,7 @@
                       class="text-medium-emphasis"
                     />
                   </template>
-                  <span>{{ t('exitCriteria.help.surveillanceWindow', 'Additional days after final exposure before cohort exit') }}</span>
+                  <span>{{ t('components.customEraStrategy.customEraStrategyText_7', 'Additional days after final exposure before cohort exit') }}</span>
                 </v-tooltip>
               </template>
             </v-text-field>
@@ -189,8 +189,8 @@ const surveillanceWindow = ref(state.drugExposure.surveillanceWindow)
 
 // Date field options
 const dateFieldOptions = [
-  { value: 'START_DATE', title: tv('exitCriteria.fields.startDate', 'Start Date') },
-  { value: 'END_DATE', title: tv('exitCriteria.fields.endDate', 'End Date') }
+  { value: 'START_DATE', title: tv('columns.startDate', 'Start Date') },
+  { value: 'END_DATE', title: tv('columns.endDate', 'End Date') }
 ]
 
 // Selected concept set for drug exposure
@@ -203,11 +203,11 @@ const selectedConceptSet = computed(() => {
 const strategyHelpText = computed(() => {
   switch (selectedStrategy.value) {
     case 'CONTINUOUS_OBSERVATION':
-      return tv('exitCriteria.help.continuousObservation', 'Event persists until observation period ends')
+      return tv('options.endOfContinuousObservation', 'Event persists until observation period ends')
     case 'FIXED_DURATION':
-      return tv('exitCriteria.help.fixedDuration', 'Event persists for a specified number of days from start or end date')
+      return tv('components.dateOffsetStrategy.dateOffsetStrategyText_2', 'Event persists for a specified number of days from start or end date')
     case 'CONTINUOUS_DRUG':
-      return tv('exitCriteria.help.drugExposure', 'Event persists based on continuous drug exposure with allowable gaps between exposures')
+      return tv('components.customEraStrategy.customEraStrategyText_2', 'Event persists based on continuous drug exposure with allowable gaps between exposures')
     default:
       return ''
   }

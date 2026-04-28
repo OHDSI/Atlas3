@@ -2,13 +2,13 @@
   <v-text-field
     :model-value="modelValue"
     class="cohort-search"
-    :placeholder="t('common.filterCohorts', 'Filter cohorts...').value"
+    :placeholder="t('datatable.language.searchPlaceholder', 'Filter cohorts...').value"
     prepend-inner-icon="mdi-magnify"
     clearable
     variant="outlined"
     density="comfortable"
     hide-details
-    :aria-label="t('common.searchCohorts', 'Search cohorts by name').value"
+    :aria-label="t('datatable.language.search', 'Search cohorts by name').value"
     @update:model-value="handleInput"
   />
 </template>

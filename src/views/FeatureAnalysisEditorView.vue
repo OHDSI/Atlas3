@@ -43,7 +43,7 @@
               data-testid="feature-analysis-editor-copy"
               @click="handleSaveCopy"
             >
-              {{ t('featureAnalyses.editor.actions.saveCopy', 'Save as Copy') }}
+              {{ t('common.createACopy', 'Save as Copy') }}
             </v-btn>
             <v-btn
               v-if="isEditing"
@@ -54,7 +54,7 @@
               data-testid="feature-analysis-editor-delete"
               @click="handleDeleteClick"
             >
-              {{ t('featureAnalyses.editor.actions.delete', 'Delete') }}
+              {{ t('common.delete', 'Delete') }}
             </v-btn>
             <v-btn
               color="primary"
@@ -65,7 +65,7 @@
               data-testid="feature-analysis-editor-save"
               @click="handleSave"
             >
-              {{ t('featureAnalyses.editor.actions.save', 'Save') }}
+              {{ t('common.save', 'Save') }}
             </v-btn>
           </div>
         </div>
@@ -89,11 +89,11 @@
             <!-- Common section -->
             <div class="feature-analysis-editor__section">
               <h2 class="feature-analysis-editor__section-title">
-                {{ t('featureAnalyses.editor.common.name', 'Name') }}
+                {{ t('columns.name', 'Name') }}
               </h2>
               <v-text-field
                 v-model="draft.name"
-                :label="t('featureAnalyses.editor.common.name', 'Name').value"
+                :label="t('columns.name', 'Name').value"
                 :error-messages="nameError"
                 density="comfortable"
                 variant="outlined"
@@ -103,7 +103,7 @@
 
               <v-textarea
                 v-model="draft.description"
-                :label="t('featureAnalyses.editor.common.description', 'Description').value"
+                :label="t('columns.description', 'Description').value"
                 density="comfortable"
                 variant="outlined"
                 rows="2"
@@ -118,7 +118,7 @@
                 >
                   <v-select
                     v-model="draft.type"
-                    :label="t('featureAnalyses.editor.common.type', 'Type').value"
+                    :label="t('cc.fa.analysisType', 'Type').value"
                     :items="typeOptions"
                     item-title="label"
                     item-value="value"
@@ -134,7 +134,7 @@
                 >
                   <v-select
                     v-model="draft.domain"
-                    :label="t('featureAnalyses.editor.common.domain', 'Domain').value"
+                    :label="t('cc.fa.domain', 'Domain').value"
                     :items="domainOptions"
                     clearable
                     density="comfortable"
@@ -148,7 +148,7 @@
                 >
                   <v-select
                     v-model="draft.statType"
-                    :label="t('featureAnalyses.editor.common.statType', 'Stat Type').value"
+                    :label="t('cc.fa.analysisType', 'Stat Type').value"
                     :items="statTypeOptions"
                     clearable
                     density="comfortable"
@@ -166,7 +166,7 @@
               data-testid="feature-analysis-editor-design-preset"
             >
               <h2 class="feature-analysis-editor__section-title">
-                {{ t('featureAnalyses.editor.preset.designLabel', 'Covariate settings (JSON)') }}
+                {{ t('cc.fa.design', 'Covariate settings (JSON)') }}
               </h2>
               <div class="feature-analysis-editor__preset-actions">
                 <v-btn
@@ -201,7 +201,7 @@
               </div>
               <v-textarea
                 v-model="presetDesignJson"
-                :label="t('featureAnalyses.editor.preset.designLabel', 'Covariate settings (JSON)').value"
+                :label="t('cc.fa.design', 'Covariate settings (JSON)').value"
                 density="comfortable"
                 variant="outlined"
                 rows="14"
@@ -219,14 +219,14 @@
               data-testid="feature-analysis-editor-design-criteria"
             >
               <h2 class="feature-analysis-editor__section-title">
-                {{ t('featureAnalyses.editor.typeOptions.CRITERIA_SET', 'Criteria Set') }}
+                {{ t('cc.fa.criteria', 'Criteria Set') }}
               </h2>
               <p class="text-body-2 text-grey mb-2">
                 {{ t('featureAnalyses.editor.criteriaSet.explainer', 'Criteria builder integration ships in Phase 3. For now, edit JSON directly.') }}
               </p>
               <v-textarea
                 v-model="criteriaConceptSetsJson"
-                :label="t('featureAnalyses.editor.criteriaSet.conceptSetsLabel', 'Concept sets (JSON array)').value"
+                :label="t('cc.fa.tabs.conceptSets', 'Concept sets (JSON array)').value"
                 :error-messages="criteriaConceptSetsError"
                 density="comfortable"
                 variant="outlined"
@@ -238,7 +238,7 @@
               />
               <v-textarea
                 v-model="criteriaCriteriaJson"
-                :label="t('featureAnalyses.editor.criteriaSet.criteriaLabel', 'Criteria group (JSON)').value"
+                :label="t('cc.fa.criteria', 'Criteria group (JSON)').value"
                 :error-messages="criteriaCriteriaError"
                 density="comfortable"
                 variant="outlined"
@@ -257,11 +257,11 @@
               data-testid="feature-analysis-editor-design-custom"
             >
               <h2 class="feature-analysis-editor__section-title">
-                {{ t('featureAnalyses.editor.customFe.sqlLabel', 'Custom SQL') }}
+                {{ t('cc.fa.analysisSql', 'Custom SQL') }}
               </h2>
               <v-textarea
                 v-model="customFeSql"
-                :label="t('featureAnalyses.editor.customFe.sqlLabel', 'Custom SQL').value"
+                :label="t('cc.fa.analysisSql', 'Custom SQL').value"
                 density="comfortable"
                 variant="outlined"
                 rows="14"
@@ -280,7 +280,7 @@
         >
           <v-card>
             <v-card-title class="text-h5">
-              {{ t('featureAnalyses.list.actions.delete', 'Delete') }}
+              {{ t('common.delete', 'Delete') }}
             </v-card-title>
             <v-card-text>
               {{ deleteMessage }}
@@ -300,7 +300,7 @@
                 data-testid="feature-analysis-editor-delete-confirm"
                 @click="confirmDelete"
               >
-                {{ t('featureAnalyses.editor.actions.delete', 'Delete') }}
+                {{ t('common.delete', 'Delete') }}
               </v-btn>
             </v-card-actions>
           </v-card>
@@ -416,7 +416,7 @@ const isEditing = computed<boolean>(() => Boolean(props.id))
 const titleText = computed(() => {
   return isEditing.value
     ? t('featureAnalyses.editor.title.edit', 'Edit Feature Analysis').value
-    : t('featureAnalyses.editor.title.new', 'New Feature Analysis').value
+    : t('cc.new', 'New Feature Analysis').value
 })
 
 // ---------------------------------------------------------------------------
@@ -426,15 +426,15 @@ const titleText = computed(() => {
 const typeOptions = computed(() => [
   {
     value: 'PRESET' as FeatureAnalysisType,
-    label: t('featureAnalyses.editor.typeOptions.PRESET', 'Preset (FeatureExtraction settings)').value,
+    label: t('cc.fa.preset', 'Preset (FeatureExtraction settings)').value,
   },
   {
     value: 'CRITERIA_SET' as FeatureAnalysisType,
-    label: t('featureAnalyses.editor.typeOptions.CRITERIA_SET', 'Criteria Set').value,
+    label: t('cc.fa.criteria', 'Criteria Set').value,
   },
   {
     value: 'CUSTOM_FE' as FeatureAnalysisType,
-    label: t('featureAnalyses.editor.typeOptions.CUSTOM_FE', 'Custom SQL').value,
+    label: t('cc.fa.custom', 'Custom SQL').value,
   },
 ])
 
@@ -600,7 +600,7 @@ async function loadDefaultCovariateSettings(temporal: boolean) {
   } catch (err) {
     logger.error('FeatureAnalysisEditor', 'Failed to load default covariate settings', err)
     showSnackbar(
-      t('featureAnalyses.editor.saveError', 'Failed to save feature analysis').value,
+      t('cc.fa.saveError', 'Failed to save feature analysis').value,
       'error'
     )
   } finally {
@@ -653,7 +653,7 @@ function buildDesign(): CovariateSetting | FeatureAnalysisCriteriaSetDesign | st
 
 async function handleSave() {
   if (draft.value.name.trim().length === 0) {
-    nameError.value = t('featureAnalyses.editor.nameRequired', 'Name is required').value
+    nameError.value = t('cc.fa.designOrNameAreEmpty', 'Name is required').value
     return
   }
 
@@ -673,7 +673,7 @@ async function handleSave() {
         showSnackbar(t('featureAnalyses.editor.saveSuccess', 'Feature analysis saved').value, 'success')
         dirty.value = false
       } else {
-        showSnackbar(t('featureAnalyses.editor.saveError', 'Failed to save feature analysis').value, 'error')
+        showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
       }
     } else {
       const created = await store.create(payload)
@@ -682,12 +682,12 @@ async function handleSave() {
         dirty.value = false
         await router.push(`/feature-analyses/${created.id}`)
       } else {
-        showSnackbar(t('featureAnalyses.editor.saveError', 'Failed to save feature analysis').value, 'error')
+        showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
       }
     }
   } catch (err) {
     logger.error('FeatureAnalysisEditor', 'Save failed', err)
-    showSnackbar(t('featureAnalyses.editor.saveError', 'Failed to save feature analysis').value, 'error')
+    showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
   } finally {
     saving.value = false
   }
@@ -705,11 +705,11 @@ async function handleSaveCopy() {
       dirty.value = false
       await router.push(`/feature-analyses/${copied.id}`)
     } else {
-      showSnackbar(t('featureAnalyses.editor.saveError', 'Failed to save feature analysis').value, 'error')
+      showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
     }
   } catch (err) {
     logger.error('FeatureAnalysisEditor', 'Save Copy failed', err)
-    showSnackbar(t('featureAnalyses.editor.saveError', 'Failed to save feature analysis').value, 'error')
+    showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
   } finally {
     saving.value = false
   }
@@ -731,14 +731,14 @@ async function confirmDelete() {
     showDeleteDialog.value = false
     await router.push('/feature-analyses')
   } else {
-    showSnackbar(t('featureAnalyses.editor.saveError', 'Failed to save feature analysis').value, 'error')
+    showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
   }
 }
 
 function handleBack() {
   if (dirty.value) {
     const confirmed = window.confirm(
-      t('featureAnalyses.editor.leaveConfirm', 'You have unsaved changes. Leave anyway?').value
+      t('cc.fa.unsavedConfirmation', 'You have unsaved changes. Leave anyway?').value
     )
     if (!confirmed) return
   }
@@ -778,7 +778,7 @@ onBeforeRouteLeave((_to, _from, next) => {
     return
   }
   const confirmed = window.confirm(
-    t('featureAnalyses.editor.leaveConfirm', 'You have unsaved changes. Leave anyway?').value
+    t('cc.fa.unsavedConfirmation', 'You have unsaved changes. Leave anyway?').value
   )
   next(confirmed)
 })

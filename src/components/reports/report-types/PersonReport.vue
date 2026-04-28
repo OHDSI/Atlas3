@@ -52,7 +52,7 @@
 
     <v-card elevation="0">
       <v-card-title class="text-h6">
-        {{ t('common.demographics') }}
+        {{ t('components.featureextraction.covariateSettingsEditor.demographics') }}
       </v-card-title>
       <v-card-text>
         <v-row>
@@ -78,7 +78,7 @@
                   variant="tonal"
                   density="compact"
                 >
-                  {{ t('common.failedToLoad') }}
+                  {{ t('cs.manager.concept.tabs.recordCounts.failedToLoadData') }}
                 </v-alert>
                 <PieChart
                   v-else-if="genderData && genderData.length > 0"
@@ -119,7 +119,7 @@
                   variant="tonal"
                   density="compact"
                 >
-                  {{ t('common.failedToLoad') }}
+                  {{ t('cs.manager.concept.tabs.recordCounts.failedToLoadData') }}
                 </v-alert>
                 <PieChart
                   v-else-if="raceData && raceData.length > 0"
@@ -160,7 +160,7 @@
                   variant="tonal"
                   density="compact"
                 >
-                  {{ t('common.failedToLoad') }}
+                  {{ t('cs.manager.concept.tabs.recordCounts.failedToLoadData') }}
                 </v-alert>
                 <PieChart
                   v-else-if="ethnicityData && ethnicityData.length > 0"

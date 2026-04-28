@@ -275,7 +275,7 @@ const createdFromLabel = t('common.createdFrom', 'Created From')
 const createdToLabel = t('common.createdTo', 'Created To')
 const modifiedFromLabel = t('common.modifiedFrom', 'Modified From')
 const modifiedToLabel = t('common.modifiedTo', 'Modified To')
-const clearAllLabel = t('common.clearAll', 'Clear All')
+const clearAllLabel = t('search.clearAllSelections', 'Clear All')
 
 const panel = ref<number | undefined>(undefined)
 const localFilters = ref<FilterState>({ ...props.filters })

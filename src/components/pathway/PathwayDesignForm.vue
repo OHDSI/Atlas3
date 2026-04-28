@@ -4,17 +4,17 @@
     class="pathway-design-form"
   >
     <section>
-      <h3>{{ t('pathway.description', 'Description') }}</h3>
+      <h3>{{ t('columns.description', 'Description') }}</h3>
       <v-text-field
         :model-value="currentPathway.name"
-        :label="t('pathway.name', 'Name').value"
+        :label="t('columns.name', 'Name').value"
         :readonly="readonly"
         density="compact"
         @update:model-value="(v: string) => store.updateMeta({ name: v })"
       />
       <v-textarea
         :model-value="currentPathway.description ?? ''"
-        :label="t('pathway.description', 'Description').value"
+        :label="t('columns.description', 'Description').value"
         :readonly="readonly"
         density="compact"
         rows="3"
@@ -23,7 +23,7 @@
     </section>
 
     <section>
-      <h3>{{ t('pathway.targets', 'Target Cohorts') }}</h3>
+      <h3>{{ t('facets.caption.targetCohorts', 'Target Cohorts') }}</h3>
       <PathwayCohortList
         :cohorts="targetCohorts"
         :readonly="readonly"
@@ -34,7 +34,7 @@
         :disabled="readonly"
         @click="showTargetPicker = true"
       >
-        {{ t('pathway.addTarget', 'Add target cohort') }}
+        {{ t('ir.editor.addTargetCohort', 'Add target cohort') }}
       </v-btn>
       <PathwayCohortPicker
         v-model="showTargetPicker"
@@ -44,7 +44,7 @@
     </section>
 
     <section>
-      <h3>{{ t('pathway.events', 'Event Cohorts') }}</h3>
+      <h3>{{ t('columns.eventCohort', 'Event Cohorts') }}</h3>
       <PathwayCohortList
         :cohorts="eventCohorts"
         :readonly="readonly"
@@ -65,7 +65,7 @@
     </section>
 
     <section>
-      <h3>{{ t('pathway.settings', 'Settings') }}</h3>
+      <h3>{{ t('ple.spec.analysisSettings', 'Settings') }}</h3>
       <PathwaySettings
         :model-value="currentPathway.design"
         :readonly="readonly"

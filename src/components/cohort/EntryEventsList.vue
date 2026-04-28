@@ -50,11 +50,11 @@
           </v-icon>
           <!-- Short version for small screens -->
           <span class="d-md-none">
-            {{ observationPeriod.priorDays }} {{ t('common.before', 'before') }} {{ observationPeriod.postDays }} {{ t('common.after', 'after') }}
+            {{ observationPeriod.priorDays }} {{ t('options.before', 'before') }} {{ observationPeriod.postDays }} {{ t('options.after', 'after') }}
           </span>
           <!-- Full version for larger screens -->
           <span class="d-none d-md-inline">
-            {{ observationPeriod.priorDays }} {{ t('common.days', 'days') }} {{ t('common.before', 'before') }} {{ t('common.and', 'and') }} {{ observationPeriod.postDays }} {{ t('common.days', 'days') }} {{ t('common.after', 'after') }} {{ t('components.cohortExpressionEditor.eventIndexDate', 'the event index date') }}
+            {{ observationPeriod.priorDays }} {{ t('common.days', 'days') }} {{ t('options.before', 'before') }} {{ t('common.and', 'and') }} {{ observationPeriod.postDays }} {{ t('common.days', 'days') }} {{ t('options.after', 'after') }} {{ t('components.cohortExpressionEditor.eventIndexDate', 'the event index date') }}
           </span>
         </v-chip>
       </div>

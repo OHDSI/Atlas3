@@ -5,39 +5,39 @@
       :disabled="!canSave"
       @click="onSave"
     >
-      {{ t('pathwayDefinitions.save', 'Save') }}
+      {{ t('common.save', 'Save') }}
     </v-btn>
     <v-btn
       :disabled="!currentPathway?.id || !hasPermission(permKey('post'))"
       @click="onCopy"
     >
-      {{ t('pathwayDefinitions.copy', 'Copy') }}
+      {{ t('common.copy', 'Copy') }}
     </v-btn>
     <v-btn
       color="error"
       :disabled="!currentPathway?.id || !hasPermission(permKey('delete'))"
       @click="onDelete"
     >
-      {{ t('pathwayDefinitions.delete', 'Delete pathway') }}
+      {{ t('common.delete', 'Delete pathway') }}
     </v-btn>
     <v-spacer />
     <v-btn
       :disabled="!currentPathway?.id"
       @click="emit('open-versions')"
     >
-      {{ t('pathwayDefinitions.versions', 'Versions') }}
+      {{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions') }}
     </v-btn>
     <v-btn
       :disabled="!currentPathway?.id || isPreviewMode"
       @click="emit('open-tags')"
     >
-      {{ t('pathwayDefinitions.tags', 'Tags') }}
+      {{ t('common.tags', 'Tags') }}
     </v-btn>
     <v-btn
       :disabled="!currentPathway?.id"
       @click="emit('open-permissions')"
     >
-      {{ t('pathwayDefinitions.access', 'Access') }}
+      {{ t('common.configureAccess', 'Access') }}
     </v-btn>
 
     <v-snackbar

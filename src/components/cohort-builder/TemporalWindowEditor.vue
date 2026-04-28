@@ -233,8 +233,8 @@ watch(
           >
             <v-checkbox
               :model-value="startAllTime"
-              :label="t('common.allTime', 'All time').value"
-              :aria-label="t('common.allTime', 'All time').value"
+              :label="t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value"
+              :aria-label="t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value"
               density="compact"
               hide-details
               @update:model-value="updateStartAllTime"
@@ -277,8 +277,8 @@ watch(
             <v-text-field
               :model-value="endDays"
               type="number"
-              :label="t('common.endDays', 'End Days').value"
-              :aria-label="t('common.endDays', 'End Days').value"
+              :label="t('components.featureextraction.covariateSettingsEditor.endDays', 'End Days').value"
+              :aria-label="t('components.featureextraction.covariateSettingsEditor.endDays', 'End Days').value"
               density="compact"
               variant="outlined"
               min="0"
@@ -313,8 +313,8 @@ watch(
           >
             <v-checkbox
               :model-value="endAllTime"
-              :label="t('common.allTime', 'All time').value"
-              :aria-label="t('common.allTime', 'All time').value"
+              :label="t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value"
+              :aria-label="t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value"
               density="compact"
               hide-details
               @update:model-value="updateEndAllTime"

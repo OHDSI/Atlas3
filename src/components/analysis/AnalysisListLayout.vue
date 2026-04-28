@@ -33,7 +33,7 @@
                 <v-btn
                   value="table"
                   size="small"
-                  :aria-label="t('common.tableView', 'Table view').value"
+                  :aria-label="t('dataSources.table.tableTab', 'Table view').value"
                   :data-testid="testid ? `${testid}-view-toggle-table` : undefined"
                 >
                   <v-icon>mdi-view-list</v-icon>

@@ -13,7 +13,7 @@
   >
     <div class="executions-panel__header">
       <h2 class="executions-panel__title">
-        {{ t('characterizations.editor.executions.title', 'Executions') }}
+        {{ t('cc.viewEdit.executions.title', 'Executions') }}
       </h2>
       <v-tooltip
         location="top"
@@ -30,7 +30,7 @@
               data-testid="executions-panel-run"
               @click="openDialog"
             >
-              {{ t('characterizations.editor.executions.runButton', 'Run') }}
+              {{ t('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run') }}
             </v-btn>
           </div>
         </template>
@@ -64,7 +64,7 @@
       class="executions-panel__empty"
       data-testid="executions-panel-empty"
     >
-      {{ t('characterizations.editor.executions.empty', 'No executions yet.') }}
+      {{ t('common.noData', 'No executions yet.') }}
     </div>
 
     <div
@@ -123,7 +123,7 @@ const runDisabledReason = computed<string>(() => {
   }
   if (store.isDirty) {
     return tv(
-      'characterizations.editor.executions.runDisabledDirty',
+      'const.disabledReason.dirty',
       'Save your changes before running.'
     )
   }
@@ -166,7 +166,7 @@ function onStarted(execution: CharacterizationExecution) {
 async function onCancel(execution: CharacterizationExecution) {
   if (props.characterizationId == null) return
   const confirmText = tv(
-    'characterizations.editor.executions.row.cancelConfirm',
+    'components.analysisExecution.stopGenerationConfirmation',
     `Cancel execution on '${execution.sourceKey}'?`,
     { source: execution.sourceKey }
   )

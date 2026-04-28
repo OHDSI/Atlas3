@@ -10,7 +10,7 @@
       <v-icon class="mr-2">
         mdi-pill
       </v-icon>
-      {{ t('common.drugExposure') }}
+      {{ t('dataSources.reports.drugExposure') }}
     </v-card-title>
 
     <v-divider />

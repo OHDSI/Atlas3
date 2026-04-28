@@ -9,7 +9,7 @@
 <template>
   <div class="strata-editor">
     <h2 class="strata-editor__title">
-      {{ t('characterizations.editor.strata.title', 'Subgroups (Strata)') }}
+      {{ t('columns.strata', 'Subgroups (Strata)') }}
     </h2>
 
     <div
@@ -17,7 +17,7 @@
       class="strata-editor__empty"
       data-testid="strata-editor-empty"
     >
-      {{ t('characterizations.editor.strata.empty', 'No strata defined.') }}
+      {{ t('common.noData', 'No strata defined.') }}
     </div>
 
     <div
@@ -29,7 +29,7 @@
       <div class="strata-editor__card-header">
         <v-text-field
           :model-value="stratum.name"
-          :label="t('characterizations.editor.strata.name', 'Stratum name').value"
+          :label="t('columns.name', 'Stratum name').value"
           density="comfortable"
           variant="outlined"
           hide-details
@@ -42,7 +42,7 @@
           size="small"
           variant="text"
           color="error"
-          :aria-label="t('characterizations.editor.strata.remove', 'Remove').value"
+          :aria-label="t('columns.remove', 'Remove').value"
           :data-testid="`strata-editor-remove-${index}`"
           @click="removeStratum(index)"
         />
@@ -61,7 +61,7 @@
       </div>
       <v-textarea
         :model-value="jsonText[stratum.id] ?? ''"
-        :label="t('characterizations.editor.strata.criteriaLabel', 'Criteria (JSON)').value"
+        :label="t('components.dateAdjust.criteriaLabel', 'Criteria (JSON)').value"
         :placeholder="
           t(
             'characterizations.editor.strata.criteriaPlaceholder',
@@ -86,7 +86,7 @@
         data-testid="strata-editor-add"
         @click="addStratum"
       >
-        {{ t('characterizations.editor.strata.add', 'Add stratum') }}
+        {{ t('common.add', 'Add stratum') }}
       </v-btn>
     </div>
   </div>

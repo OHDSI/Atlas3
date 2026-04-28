@@ -162,7 +162,8 @@ describe('DataSourceTile', () => {
       const wrapper = mountComponent({ cohortId: 123 })
       expect(wrapper.text()).toContain('1,234')
       // i18n mock returns key when translation not found
-      expect(wrapper.text()).toMatch(/Patients|common\.patients/)
+      // After i18n migration, common.patients was remapped to columns.personsCount ("Persons")
+      expect(wrapper.text()).toMatch(/Patients|Persons|common\.patients|columns\.personsCount/)
     })
 
     it('should display generate button when complete', () => {
@@ -259,7 +260,8 @@ describe('DataSourceTile', () => {
 
       const wrapper = mountComponent({ cohortId: 456 })
       // i18n mock returns key when translation not found
-      expect(wrapper.text()).toMatch(/Failed|common\.failed/)
+      // After i18n migration the fallback uses ir.results.failed ("FAILED")
+      expect(wrapper.text()).toMatch(/Failed|FAILED|ir\.results\.failed/)
     })
   })
 

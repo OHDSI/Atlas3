@@ -2,14 +2,14 @@
   <v-card>
     <v-card-title>
       <div class="d-flex justify-space-between align-center">
-        <span>{{ t('conceptSets.title') }}</span>
+        <span>{{ t('cs.browser.caption') }}</span>
         <v-btn
           prepend-icon="mdi-plus"
           color="primary"
           data-testid="create-concept-set"
           @click="$emit('create')"
         >
-          {{ t('conceptSetList.createNew') }}
+          {{ t('components.conceptSetBuilder.newConceptSet') }}
         </v-btn>
       </div>
     </v-card-title>
@@ -18,7 +18,7 @@
       <!-- Search Filter -->
       <v-text-field
         v-model="searchFilter"
-        :label="tv('conceptSetList.searchLabel')"
+        :label="tv('common.search')"
         prepend-inner-icon="mdi-magnify"
         clearable
         density="compact"
@@ -79,10 +79,10 @@
         data-testid="empty-concept-sets"
       >
         <template v-if="searchFilter">
-          {{ t('conceptSetList.noMatch', { query: searchFilter }) }}
+          {{ t('search.noResultsFoundFor', { query: searchFilter }) }}
         </template>
         <template v-else>
-          {{ t('conceptSetList.noConceptSets') }}
+          {{ t('cohortDefinitions.noConceptSets') }}
         </template>
       </v-alert>
     </v-card-text>
@@ -95,7 +95,7 @@
       <v-card>
         <v-card-title>{{ t('conceptSetList.confirmDeleteTitle') }}</v-card-title>
         <v-card-text>
-          {{ t('conceptSetList.confirmDeleteMessage') }}
+          {{ t('cs.manager.csDeleteConfirmMessage') }}
         </v-card-text>
         <v-card-actions>
           <v-spacer />

@@ -18,13 +18,13 @@
         >
           mdi-shape
         </v-icon>
-        <span class="text-h6">{{ isEditMode ? t('common.edit', 'Edit').value : t('common.create', 'New').value }} {{ t('common.conceptSet', 'Concept Set').value }}</span>
+        <span class="text-h6">{{ isEditMode ? t('configuration.tagManagement.edit', 'Edit').value : t('common.create', 'New').value }} {{ t('common.conceptSet', 'Concept Set').value }}</span>
         <v-spacer />
 
         <!-- Versions Icon with Badge (only in edit mode) -->
         <v-tooltip
           v-if="isEditMode && props.conceptSet?.id"
-          :text="t('versions.tab', 'Versions').value"
+          :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
           location="bottom"
         >
           <template #activator="{ props: tooltipProps }">
@@ -108,7 +108,7 @@
               <v-icon start>
                 mdi-checkbox-marked-circle
               </v-icon>
-              {{ t('cs.manager.selectedConcepts', 'Selected concepts') }} ({{ itemCount }})
+              {{ t('cs.manager.tabs.includedConcepts', 'Selected concepts') }} ({{ itemCount }})
             </v-tab>
           </v-tabs>
 
@@ -148,7 +148,7 @@
     >
       <v-card>
         <v-card-title class="d-flex justify-space-between align-center">
-          <span>{{ t('versions.tab', 'Versions').value }}</span>
+          <span>{{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }}</span>
           <v-btn
             icon="mdi-close"
             variant="text"

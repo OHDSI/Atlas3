@@ -5,7 +5,7 @@
       <v-text-field
         v-model="localName"
         :label="t('columns.name', 'Name').value"
-        :placeholder="t('common.enterCohortName', 'Enter cohort name').value"
+        :placeholder="t('components.atlasCohortEditor.enterCohortPlaceholder', 'Enter cohort name').value"
         variant="outlined"
         density="comfortable"
         :rules="[rules.required]"
@@ -48,7 +48,7 @@
           <v-text-field
             v-model="newTagName"
             :label="t('common.addTag', 'Add tag').value"
-            :placeholder="t('common.tagName', 'Tag name').value"
+            :placeholder="t('components.tags.tagNamePlaceholder', 'Tag name').value"
             variant="outlined"
             density="compact"
             hide-details

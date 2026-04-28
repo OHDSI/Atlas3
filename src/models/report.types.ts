@@ -11,7 +11,6 @@ import { z } from 'zod'
  * Report type identifier - matches OHDSI Atlas report types
  */
 export type ReportType =
-  | 'inclusion-rule'
   | 'person'
   | 'condition-eras'
   | 'drug-eras'

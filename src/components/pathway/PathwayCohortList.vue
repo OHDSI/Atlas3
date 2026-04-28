@@ -1,7 +1,7 @@
 <template>
   <v-table density="compact">
     <thead>
-      <tr><th>{{ t('pathway.cohort.id', 'ID') }}</th><th>{{ t('pathway.cohort.displayName', 'Display name') }}</th><th /></tr>
+      <tr><th>{{ t('columns.id', 'ID') }}</th><th>{{ t('columns.name', 'Display name') }}</th><th /></tr>
     </thead>
     <tbody>
       <tr

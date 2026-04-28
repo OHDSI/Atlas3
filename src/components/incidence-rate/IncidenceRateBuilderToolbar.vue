@@ -5,7 +5,7 @@
   >
     <v-text-field
       :model-value="store.currentIR?.name ?? ''"
-      :label="t('incidenceRate.editor.name', 'Name').value"
+      :label="t('columns.name', 'Name').value"
       density="compact"
       hide-details
       class="name-field"
@@ -42,8 +42,8 @@
       max-width="400"
     >
       <v-card>
-        <v-card-title>{{ t('incidenceRateAnalysis.delete', 'Delete incidence rate') }}</v-card-title>
-        <v-card-text>{{ t('incidenceRateAnalysis.deleteConfirmation', 'Delete incidence rate analysis? Warning: deletion can not be undone!') }}</v-card-text>
+        <v-card-title>{{ t('common.delete', 'Delete incidence rate') }}</v-card-title>
+        <v-card-text>{{ t('ir.deleteConfirmation', 'Delete incidence rate analysis? Warning: deletion can not be undone!') }}</v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn @click="askDelete = false">

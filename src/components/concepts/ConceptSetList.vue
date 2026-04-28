@@ -25,7 +25,7 @@
             variant="flat"
             @click="onAddClick"
           >
-            {{ t('cs.manager.addConceptsButton', 'Add concept set') }}
+            {{ t('components.conceptSetBuilder.newConceptSet', 'Add concept set') }}
           </v-btn>
         </div>
       </v-card-text>

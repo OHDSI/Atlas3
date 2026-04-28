@@ -123,8 +123,11 @@ export async function fetchCDMSources(): Promise<ApiResult<CDMSource[]>> {
 }
 
 /**
- * Search for concepts in vocabulary
- * Endpoint: GET /vocabulary/{sourceKey}/search?query={query}
+ * Search for concepts in vocabulary.
+ *
+ * Uses POST /vocabulary/{sourceKey}/search with a JSON body — the GET form
+ * (`?query=...`) silently returns an empty array against current WebAPI
+ * builds, which made gender/race/etc. concept pickers look broken.
  */
 export async function searchConcepts(
   sourceKey: string,
@@ -135,14 +138,17 @@ export async function searchConcepts(
     return failure('Invalid vocabulary source. Please select a valid source in Configuration.')
   }
 
-  let endpoint = `/vocabulary/${sourceKey}/search?query=${encodeURIComponent(query)}`
-
+  const endpoint = `/vocabulary/${sourceKey}/search`
+  const body: Record<string, unknown> = { QUERY: query }
   if (domain) {
-    endpoint += `&domain=${encodeURIComponent(domain)}`
+    body.DOMAIN_ID = [domain]
   }
 
   try {
-    const data = await fetchJSON<unknown>(endpoint)
+    const data = await fetchJSON<unknown>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
     const parsed = ConceptSearchResponseSchema.safeParse(data)
 
     if (!parsed.success) {

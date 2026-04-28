@@ -2,9 +2,9 @@
   <v-table density="compact">
     <thead>
       <tr>
-        <th>{{ t('incidenceRate.cohort.id', 'ID') }}</th>
-        <th>{{ t('incidenceRate.name', 'Name') }}</th>
-        <th>{{ t('incidenceRate.author', 'Author') }}</th>
+        <th>{{ t('columns.id', 'ID') }}</th>
+        <th>{{ t('columns.name', 'Name') }}</th>
+        <th>{{ t('columns.author', 'Author') }}</th>
         <th>Modified</th>
         <th />
       </tr>
@@ -27,7 +27,7 @@
             variant="text"
             @click.stop="emit('remove', ir.id ?? 0)"
           >
-            {{ t('incidenceRateAnalysis.delete', 'Delete incidence rate') }}
+            {{ t('common.delete', 'Delete incidence rate') }}
           </v-btn>
         </td>
       </tr>

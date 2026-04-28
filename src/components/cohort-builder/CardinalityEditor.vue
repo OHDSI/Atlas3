@@ -117,7 +117,7 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
             :items="typeOptions"
             item-title="label"
             item-value="value"
-            :label="tv('components.cardinalityInput.type')"
+            :label="tv('columns.type')"
             aria-label="Cardinality Type"
             density="compact"
             variant="outlined"
@@ -134,7 +134,7 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
           <label
             class="v-label"
             for="count-input"
-          >{{ t('components.cardinalityInput.count') }}</label>
+          >{{ t('columns.count') }}</label>
           <input
             id="count-input"
             :value="count"
@@ -197,19 +197,19 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
         <v-col cols="12">
           <div class="text-caption text-medium-emphasis mt-2">
             <template v-if="cardinality.type === 'AT_LEAST'">
-              {{ t('components.cardinalityInput.help.atLeast', { count }) }}
+              {{ t('options.atLeast', { count }) }}
             </template>
             <template v-else-if="cardinality.type === 'EXACTLY'">
-              {{ t('components.cardinalityInput.help.exactly', { count }) }}
+              {{ t('options.exactly', { count }) }}
               <span
                 v-if="count === 0"
                 class="text-warning"
               >
-                {{ t('components.cardinalityInput.help.exclusion') }}
+                {{ t('options.excluded') }}
               </span>
             </template>
             <template v-else-if="cardinality.type === 'AT_MOST'">
-              {{ t('components.cardinalityInput.help.atMost', { count }) }}
+              {{ t('options.atMost', { count }) }}
             </template>
           </div>
         </v-col>

@@ -10,7 +10,7 @@
       <v-icon class="mr-2">
         mdi-calendar-range
       </v-icon>
-      {{ t('common.observationPeriods') }}
+      {{ t('dataSources.reports.observationPeriod') }}
     </v-card-title>
 
     <v-divider />

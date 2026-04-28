@@ -22,10 +22,10 @@
                 class="text-left"
                 style="width: 120px"
               >
-                {{ t('common.severity', 'Severity') }}
+                {{ t('columns.severity', 'Severity') }}
               </th>
               <th class="text-left">
-                {{ t('common.message', 'Message') }}
+                {{ t('columns.message', 'Message') }}
               </th>
             </tr>
           </thead>

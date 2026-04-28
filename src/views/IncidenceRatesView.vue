@@ -32,13 +32,13 @@
       v-if="loading"
       class="incidence-rates-view__state"
     >
-      {{ t('incidenceRate.list.loading', 'Loading…') }}
+      {{ t('common.loading', 'Loading…') }}
     </div>
     <div
       v-else-if="incidenceRates.length === 0"
       class="incidence-rates-view__state"
     >
-      {{ t('incidenceRate.list.empty', 'No incidence rates yet.') }}
+      {{ t('common.noData', 'No incidence rates yet.') }}
     </div>
     <template v-else>
       <div
@@ -80,8 +80,8 @@
     max-width="400"
   >
     <v-card>
-      <v-card-title>{{ t('incidenceRateAnalysis.delete', 'Delete incidence rate') }}</v-card-title>
-      <v-card-text>{{ t('incidenceRateAnalysis.deleteConfirmation', 'Delete incidence rate analysis? Warning: deletion can not be undone!') }}</v-card-text>
+      <v-card-title>{{ t('common.delete', 'Delete incidence rate') }}</v-card-title>
+      <v-card-text>{{ t('ir.deleteConfirmation', 'Delete incidence rate analysis? Warning: deletion can not be undone!') }}</v-card-text>
       <v-card-actions>
         <v-spacer />
         <v-btn @click="showDelete = false">

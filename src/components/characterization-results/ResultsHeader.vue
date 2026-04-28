@@ -15,7 +15,7 @@
       <div class="results-header__meta">
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('characterizations.results.header.source', 'Source') }}
+            {{ tv('const.newEntityNames.source', 'Source') }}
           </div>
           <div class="results-header__value">
             {{ execution?.sourceKey ?? '—' }}
@@ -23,7 +23,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('characterizations.results.header.started', 'Started') }}
+            {{ tv('columns.started', 'Started') }}
           </div>
           <div class="results-header__value">
             {{ formatTime(execution?.startTime) }}
@@ -31,7 +31,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('characterizations.results.header.completed', 'Completed') }}
+            {{ tv('columns.finished', 'Completed') }}
           </div>
           <div class="results-header__value">
             {{ formatTime(execution?.endTime) }}
@@ -39,7 +39,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('characterizations.results.header.duration', 'Duration') }}
+            {{ tv('columns.duration', 'Duration') }}
           </div>
           <div class="results-header__value">
             {{ durationLabel }}
@@ -47,7 +47,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('characterizations.results.header.designHash', 'Design Hash') }}
+            {{ tv('cc.viewEdit.results.detail.design', 'Design Hash') }}
           </div>
           <div
             class="results-header__value results-header__value--mono"
@@ -58,7 +58,7 @@
         </div>
         <div class="results-header__field">
           <div class="results-header__label">
-            {{ tv('characterizations.results.header.resultCount', 'Total rows') }}
+            {{ tv('columns.results', 'Total rows') }}
           </div>
           <div class="results-header__value">
             {{ resultCount }}
@@ -82,7 +82,7 @@
             <span class="results-header__threshold-label">
               {{
                 tv(
-                  'characterizations.results.header.threshold',
+                  'cc.viewEdit.results.threshold.label',
                   'Show covariates with prevalence ≥ {n}%',
                   { n: threshold }
                 )

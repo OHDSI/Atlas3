@@ -30,7 +30,7 @@
         variant="text"
         @click.stop="emit('remove', incidenceRate.id ?? 0)"
       >
-        {{ t('incidenceRateAnalysis.delete', 'Delete incidence rate') }}
+        {{ t('common.delete', 'Delete incidence rate') }}
       </v-btn>
     </v-card-actions>
   </v-card>

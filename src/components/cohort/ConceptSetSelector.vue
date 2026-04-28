@@ -4,7 +4,7 @@
       <v-icon class="mr-2">
         mdi-book-open-variant
       </v-icon>
-      <span>{{ t('conceptSets.title') }}</span>
+      <span>{{ t('cs.browser.caption') }}</span>
       <v-spacer />
       <v-btn
         color="primary"
@@ -15,7 +15,7 @@
         <v-icon class="mr-2">
           mdi-plus
         </v-icon>
-        {{ t('conceptSets.newConceptSet') }}
+        {{ t('components.conceptSetBuilder.newConceptSet') }}
       </v-btn>
     </v-card-title>
 
@@ -24,7 +24,7 @@
         v-if="conceptSetsList.length === 0"
         class="text-body-2 text-medium-emphasis"
       >
-        {{ t('conceptSets.noConceptSets') }}
+        {{ t('cohortDefinitions.noConceptSets') }}
       </p>
 
       <v-expansion-panels v-else>
@@ -48,7 +48,7 @@
           <v-expansion-panel-text>
             <v-text-field
               :model-value="conceptSet.name"
-              :label="tv('common.name')"
+              :label="tv('columns.name')"
               variant="outlined"
               density="compact"
               @update:model-value="conceptSet.id && updateConceptSetName(conceptSet.id, $event)"
@@ -82,7 +82,7 @@
                 <v-icon class="mr-2">
                   mdi-plus
                 </v-icon>
-                {{ t('conceptSets.addConcepts') }}
+                {{ t('components.conceptSet.addConcepts') }}
               </v-btn>
 
               <v-btn

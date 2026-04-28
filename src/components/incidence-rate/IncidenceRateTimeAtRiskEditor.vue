@@ -3,10 +3,10 @@
     variant="outlined"
     class="tar-card"
   >
-    <v-card-title>{{ t('incidenceRate.timeAtRisk', 'Time at Risk') }}</v-card-title>
+    <v-card-title>{{ t('ir.results.timeAtRisk', 'Time at Risk') }}</v-card-title>
     <v-card-text>
       <div class="row">
-        <span class="lbl">{{ t('incidenceRate.tarStart', 'Start') }}</span>
+        <span class="lbl">{{ t('ir.editor.timeAtRiskStartDate', 'Start') }}</span>
         <v-select
           :model-value="tar.start.DateField"
           :items="DATE_FIELD_OPTIONS"
@@ -23,10 +23,10 @@
           style="max-width:120px"
           @update:model-value="(v: string) => updateStart('Offset', Number(v))"
         />
-        <span class="d">{{ t('incidenceRate.tarDays', 'days') }}</span>
+        <span class="d">{{ t('common.days', 'days') }}</span>
       </div>
       <div class="row">
-        <span class="lbl">{{ t('incidenceRate.tarEnd', 'End') }}</span>
+        <span class="lbl">{{ t('ir.editor.timeAtRiskEndDate', 'End') }}</span>
         <v-select
           :model-value="tar.end.DateField"
           :items="DATE_FIELD_OPTIONS"
@@ -43,7 +43,7 @@
           style="max-width:120px"
           @update:model-value="(v: string) => updateEnd('Offset', Number(v))"
         />
-        <span class="d">{{ t('incidenceRate.tarDays', 'days') }}</span>
+        <span class="d">{{ t('common.days', 'days') }}</span>
       </div>
       <v-alert
         v-if="errorText"
@@ -76,7 +76,7 @@ const errorText = computed<string | null>(() => {
   const v = tar.value
   if (v.start.DateField === v.end.DateField && v.end.Offset <= v.start.Offset) {
     return t(
-      'incidenceRate.tarError',
+      'ir.editor.timeAtRiskWarningMessage',
       'Time-at-risk end must be after start when both reference the same date',
     ).value
   }

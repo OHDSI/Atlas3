@@ -75,7 +75,7 @@
               <v-icon start>
                 mdi-menu
               </v-icon>
-              {{ t('navigation.menu', 'Menu') }}
+              {{ t('common.menu', 'Menu') }}
             </v-btn>
           </template>
           <v-list>
