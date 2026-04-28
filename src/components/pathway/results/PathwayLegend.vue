@@ -9,7 +9,7 @@
     <table>
       <tbody>
         <tr
-          v-for="(c, i) in design.design.eventCohorts"
+          v-for="(c, i) in design.eventCohorts"
           :key="c.id"
         >
           <td>

@@ -25,24 +25,31 @@ describe('FeatureAnalysisTypeSchema', () => {
 })
 
 describe('FeatureAnalysisAggregateSchema', () => {
-  it('parses a realistic aggregate', () => {
+  it('parses a realistic aggregate from /feature-analysis/aggregates', () => {
     const result = FeatureAnalysisAggregateSchema.safeParse({
-      id: 'mean',
-      name: 'Mean',
-      description: 'Arithmetic mean of the covariate values',
+      id: 1,
+      name: 'Events count',
+      domain: null,
+      function: 'COUNT',
+      expression: '*',
+      additionalColumns: null,
+      default: true,
+      isDefault: true,
+      missingMeansZero: true,
     })
     expect(result.success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('keeps unknown fields via passthrough', () => {
     const result = FeatureAnalysisAggregateSchema.safeParse({
-      id: 'mean',
+      id: 1,
       name: 'Mean',
-      futureField: 'ignored',
+      futureField: 'kept',
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('futureField')
+      // passthrough keeps extra fields so future API additions don't break us
+      expect((result.data as Record<string, unknown>).futureField).toBe('kept')
     }
   })
 

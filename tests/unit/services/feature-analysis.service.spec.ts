@@ -243,14 +243,14 @@ describe('FeatureAnalysisService', () => {
   describe('listFeatureAnalysisAggregates', () => {
     it('returns parsed aggregates', async () => {
       mockFetchOnce([
-        { id: 'mean', name: 'Mean' },
-        { id: 'sum', name: 'Sum', description: 'Sum of values' },
+        { id: 1, name: 'Events count', expression: '*', function: 'COUNT' },
+        { id: 2, name: 'Sum', description: 'Sum of values' },
       ])
 
       const result = await listFeatureAnalysisAggregates()
 
       expect(result).toHaveLength(2)
-      expect(result[0].id).toBe('mean')
+      expect(result[0].id).toBe(1)
     })
 
     it('logs and rethrows on network/HTTP error', async () => {

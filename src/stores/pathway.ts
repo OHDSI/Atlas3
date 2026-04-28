@@ -18,14 +18,12 @@ function emptyPathway(): Pathway {
   return {
     name: '',
     description: '',
-    design: {
-      targetCohorts: [],
-      eventCohorts: [],
-      combinationWindow: PATHWAY_DEFAULTS.combinationWindow,
-      minCellCount: PATHWAY_DEFAULTS.minCellCount,
-      maxDepth: PATHWAY_DEFAULTS.maxDepth,
-      allowRepeats: PATHWAY_DEFAULTS.allowRepeats,
-    },
+    targetCohorts: [],
+    eventCohorts: [],
+    combinationWindow: PATHWAY_DEFAULTS.combinationWindow,
+    minCellCount: PATHWAY_DEFAULTS.minCellCount,
+    maxDepth: PATHWAY_DEFAULTS.maxDepth,
+    allowRepeats: PATHWAY_DEFAULTS.allowRepeats,
     tags: [],
   }
 }
@@ -56,9 +54,12 @@ export const usePathwayStore = defineStore('pathway', () => {
   function markDirty() { isDirty.value = true }
   function markClean() { isDirty.value = false }
 
+  // `updateDesign` writes the configurable settings sub-shape onto the
+  // flat Pathway object (the WebAPI no longer wraps these in a `design`
+  // sub-object — see pathway.types.ts).
   function updateDesign(partial: Partial<PathwayDesign>) {
     if (!currentPathway.value) return
-    currentPathway.value.design = { ...currentPathway.value.design, ...partial }
+    Object.assign(currentPathway.value, partial)
     markDirty()
   }
 
@@ -70,39 +71,39 @@ export const usePathwayStore = defineStore('pathway', () => {
 
   function addTargetCohort(refToAdd: PathwayCohortRef) {
     if (!currentPathway.value) return
-    if (currentPathway.value.design.targetCohorts.some(c => c.id === refToAdd.id)) return
-    currentPathway.value.design.targetCohorts.push(refToAdd)
+    if (currentPathway.value.targetCohorts.some(c => c.id === refToAdd.id)) return
+    currentPathway.value.targetCohorts.push(refToAdd)
     markDirty()
   }
 
   function removeTargetCohort(id: number) {
     if (!currentPathway.value) return
-    currentPathway.value.design.targetCohorts =
-      currentPathway.value.design.targetCohorts.filter(c => c.id !== id)
+    currentPathway.value.targetCohorts =
+      currentPathway.value.targetCohorts.filter(c => c.id !== id)
     markDirty()
   }
 
   function renameTargetCohort(id: number, name: string) {
-    const c = currentPathway.value?.design.targetCohorts.find(x => x.id === id)
+    const c = currentPathway.value?.targetCohorts.find(x => x.id === id)
     if (c) { c.name = name; markDirty() }
   }
 
   function addEventCohort(refToAdd: PathwayCohortRef) {
     if (!currentPathway.value) return
-    if (currentPathway.value.design.eventCohorts.some(c => c.id === refToAdd.id)) return
-    currentPathway.value.design.eventCohorts.push(refToAdd)
+    if (currentPathway.value.eventCohorts.some(c => c.id === refToAdd.id)) return
+    currentPathway.value.eventCohorts.push(refToAdd)
     markDirty()
   }
 
   function removeEventCohort(id: number) {
     if (!currentPathway.value) return
-    currentPathway.value.design.eventCohorts =
-      currentPathway.value.design.eventCohorts.filter(c => c.id !== id)
+    currentPathway.value.eventCohorts =
+      currentPathway.value.eventCohorts.filter(c => c.id !== id)
     markDirty()
   }
 
   function renameEventCohort(id: number, name: string) {
-    const c = currentPathway.value?.design.eventCohorts.find(x => x.id === id)
+    const c = currentPathway.value?.eventCohorts.find(x => x.id === id)
     if (c) { c.name = name; markDirty() }
   }
 
@@ -180,28 +181,28 @@ export const usePathwayStore = defineStore('pathway', () => {
     if (!p.name || p.name.trim() === '') {
       errors.push({ field: 'name', message: 'Name is required', severity: 'error' })
     }
-    if (p.design.targetCohorts.length === 0) {
+    if (p.targetCohorts.length === 0) {
       errors.push({
         field: 'targetCohorts',
         message: 'At least one target cohort is required',
         severity: 'error',
       })
     }
-    if (p.design.eventCohorts.length === 0) {
+    if (p.eventCohorts.length === 0) {
       errors.push({
         field: 'eventCohorts',
         message: 'At least one event cohort is required',
         severity: 'error',
       })
     }
-    if (p.design.maxDepth < 1) {
+    if (p.maxDepth < 1) {
       errors.push({
         field: 'maxDepth',
         message: 'Max depth must be at least 1',
         severity: 'error',
       })
     }
-    if (p.design.minCellCount < 1) {
+    if (p.minCellCount < 1) {
       errors.push({
         field: 'minCellCount',
         message: 'Min cell count must be at least 1',

@@ -1,27 +1,15 @@
 <template>
   <AnalysisListLayout
+    :title="t('cc.title', 'Characterizations').value"
+    :subtitle="ccSubtitle"
     :error="error ?? null"
     testid="characterizations"
     @clear-error="store.clearError()"
   >
     <template #actions>
-      <v-btn
-        color="primary"
-        variant="flat"
-        size="large"
-        prepend-icon="mdi-plus"
-        :aria-label="t('cc.new', 'New Characterization').value"
-        data-testid="characterizations-create"
-        @click="handleCreate"
-      >
-        {{ t('cc.new', 'New Characterization') }}
-      </v-btn>
-    </template>
-
-    <template #filters>
       <v-text-field
         :model-value="searchInput"
-        :label="t('datatable.language.searchPlaceholder', 'Search characterizations...').value"
+        :label="t('datatable.language.searchPlaceholder', 'Search characterizations…').value"
         prepend-inner-icon="mdi-magnify"
         density="compact"
         variant="outlined"
@@ -31,86 +19,38 @@
         data-testid="characterizations-search"
         @update:model-value="handleSearchInput"
       />
+      <v-spacer />
+      <v-btn
+        color="primary"
+        variant="flat"
+        size="large"
+        prepend-icon="mdi-plus"
+        :aria-label="t('cc.new', 'New Characterization').value"
+        data-testid="characterizations-create"
+        @click="handleCreate"
+      >
+        {{ t('home.newEntityNames.characterization', 'New characterization') }}
+      </v-btn>
     </template>
 
-    <v-data-table
+    <AnalysisDataTable
       :headers="headers"
       :items="paginatedCharacterizations"
       :loading="loading"
       :items-per-page="itemsPerPage"
-      hide-default-footer
-      density="comfortable"
-      data-testid="characterizations-table"
+      :empty-text="t('common.noData', 'No characterizations yet.').value"
+      testid="characterizations-table"
+      @open="handleOpen"
+      @copy="handleCopy"
+      @delete="handleDeleteClick"
     >
-      <template #[`item.name`]="{ item }">
-        <a
-          href="#"
-          class="characterizations-view__name-link"
-          data-testid="characterizations-row-name"
-          @click.prevent="openEditor(item.id)"
-        >
-          {{ item.name }}
-        </a>
-      </template>
-
-      <template #[`item.description`]="{ item }">
-        {{ truncate(item.description) }}
-      </template>
-
       <template #[`item.cohorts`]="{ item }">
         {{ item.cohorts?.length ?? 0 }}
       </template>
-
       <template #[`item.featureAnalyses`]="{ item }">
         {{ item.featureAnalyses?.length ?? 0 }}
       </template>
-
-      <template #[`item.createdBy`]="{ item }">
-        {{ formatUser(item.createdBy) }}
-      </template>
-
-      <template #[`item.createdDate`]="{ item }">
-        {{ formatDate(item.createdDate) }}
-      </template>
-
-      <template #[`item.modifiedDate`]="{ item }">
-        {{ formatDate(item.modifiedDate) }}
-      </template>
-
-      <template #[`item.actions`]="{ item }">
-        <v-btn
-          icon="mdi-pencil"
-          size="small"
-          variant="text"
-          :aria-label="t('configuration.tagManagement.edit', 'Edit').value"
-          @click="openEditor(item.id)"
-        />
-        <v-btn
-          icon="mdi-content-copy"
-          size="small"
-          variant="text"
-          :aria-label="t('common.copy', 'Copy').value"
-          @click="handleCopy(item)"
-        />
-        <v-btn
-          icon="mdi-delete"
-          size="small"
-          variant="text"
-          color="error"
-          :aria-label="t('common.delete', 'Delete').value"
-          @click="handleDeleteClick(item)"
-        />
-      </template>
-
-      <template #no-data>
-        <div
-          class="characterizations-view__empty"
-          data-testid="characterizations-empty"
-        >
-          {{ t('common.noData', 'No characterizations found.') }}
-        </div>
-      </template>
-    </v-data-table>
+    </AnalysisDataTable>
 
     <template
       v-if="!loading && totalItems > itemsPerPage"
@@ -174,10 +114,10 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCharacterizations } from '@/composables/useCharacterizations'
 import { useCharacterizationStore } from '@/stores/characterization'
-import { formatDate } from '@/utils/date-format'
 import { logger } from '@/utils/logger'
 import type { CharacterizationListItem } from '@/models/characterization.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
+import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -198,16 +138,20 @@ const {
   refresh,
 } = useCharacterizations()
 
-// Local search input state — debounce is handled in the store via setFilter.
 const searchInput = ref<string>('')
+
+const ccSubtitle = computed(() =>
+  totalItems.value === 0
+    ? t('common.noData', 'No characterizations yet.').value
+    : `${totalItems.value} ${totalItems.value === 1 ? 'characterization' : 'characterizations'}`
+)
 
 const headers = computed(() => [
   { title: t('columns.name', 'Name').value, key: 'name' },
   { title: t('columns.description', 'Description').value, key: 'description' },
-  { title: t('cc.viewEdit.results.filters.cohorts', 'Cohorts').value, key: 'cohorts' },
-  { title: t('cc.tabs.featureAnalyses.title', 'Feature Analyses').value, key: 'featureAnalyses' },
+  { title: t('cc.viewEdit.results.filters.cohorts', 'Cohorts').value, key: 'cohorts', sortable: false },
+  { title: t('cc.tabs.featureAnalyses.title', 'Feature Analyses').value, key: 'featureAnalyses', sortable: false },
   { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
-  { title: t('columns.createdDate', 'Created').value, key: 'createdDate' },
   { title: t('columns.modified', 'Modified').value, key: 'modifiedDate' },
   { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
 ])
@@ -235,8 +179,8 @@ function handleCreate() {
   router.push('/characterizations/new')
 }
 
-function openEditor(id: number) {
-  router.push(`/characterizations/${id}`)
+function handleOpen(item: CharacterizationListItem) {
+  router.push(`/characterizations/${item.id}`)
 }
 
 async function handleCopy(item: CharacterizationListItem) {
@@ -267,19 +211,6 @@ async function confirmDelete() {
   }
 }
 
-function formatUser(user: CharacterizationListItem['createdBy']): string {
-  if (!user) return '—'
-  if (typeof user === 'string') return user
-  return user.name ?? user.login ?? '—'
-}
-
-const DESCRIPTION_TRUNCATE_LIMIT = 80
-function truncate(value: string | undefined): string {
-  if (!value) return '—'
-  if (value.length <= DESCRIPTION_TRUNCATE_LIMIT) return value
-  return `${value.slice(0, DESCRIPTION_TRUNCATE_LIMIT)}…`
-}
-
 onMounted(() => {
   refresh()
 })
@@ -287,28 +218,13 @@ onMounted(() => {
 
 <style scoped>
 .characterizations-view__search {
-  max-width: 480px;
-}
-
-.characterizations-view__name-link {
-  color: rgb(var(--v-theme-primary));
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.characterizations-view__name-link:hover {
-  text-decoration: underline;
-}
-
-.characterizations-view__empty {
-  padding: 32px;
-  text-align: center;
-  color: #666;
+  max-width: 360px;
+  flex: 1 1 280px;
 }
 
 .characterizations-view__range {
   font-size: 0.875rem;
-  color: #666;
+  color: rgba(var(--v-theme-on-surface), 0.6);
   padding: 0 12px;
 }
 </style>

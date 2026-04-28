@@ -18,11 +18,9 @@ describe('usePathwayResults', () => {
     vi.mocked(webapi.getPathwayDesignByGeneration).mockResolvedValue({
       success: true, data: {
         name: 'X', tags: [],
-        design: {
-          targetCohorts: [{ id: 1, name: 'T' }],
-          eventCohorts: [{ id: 2, name: 'E' }],
-          combinationWindow: 30, minCellCount: 5, maxDepth: 3, allowRepeats: false,
-        },
+        targetCohorts: [{ id: 1, name: 'T' }],
+        eventCohorts: [{ id: 2, name: 'E' }],
+        combinationWindow: 30, minCellCount: 5, maxDepth: 3, allowRepeats: false,
       },
     })
     vi.mocked(webapi.getPathwayResults).mockResolvedValue({

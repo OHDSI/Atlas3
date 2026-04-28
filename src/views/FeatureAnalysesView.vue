@@ -1,27 +1,15 @@
 <template>
   <AnalysisListLayout
+    :title="t('cc.tabs.featureAnalyses.title', 'Feature analyses').value"
+    :subtitle="faSubtitle"
     :error="error ?? null"
     testid="feature-analyses"
     @clear-error="store.clearError()"
   >
     <template #actions>
-      <v-btn
-        color="primary"
-        variant="flat"
-        size="large"
-        prepend-icon="mdi-plus"
-        :aria-label="t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis').value"
-        data-testid="feature-analyses-create"
-        @click="handleCreate"
-      >
-        {{ t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis') }}
-      </v-btn>
-    </template>
-
-    <template #filters>
       <v-text-field
         :model-value="searchInput"
-        :label="t('datatable.language.searchPlaceholder', 'Search feature analyses...').value"
+        :label="t('datatable.language.searchPlaceholder', 'Search feature analyses…').value"
         prepend-inner-icon="mdi-magnify"
         density="compact"
         variant="outlined"
@@ -31,28 +19,31 @@
         data-testid="feature-analyses-search"
         @update:model-value="handleSearchInput"
       />
+      <v-spacer />
+      <v-btn
+        color="primary"
+        variant="flat"
+        size="large"
+        prepend-icon="mdi-plus"
+        :aria-label="t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis').value"
+        data-testid="feature-analyses-create"
+        @click="handleCreate"
+      >
+        {{ t('home.newEntityNames.featureAnalysis', 'New feature analysis') }}
+      </v-btn>
     </template>
 
-    <v-data-table
+    <AnalysisDataTable
       :headers="headers"
       :items="paginatedFeatureAnalyses"
       :loading="loading"
       :items-per-page="itemsPerPage"
-      hide-default-footer
-      density="comfortable"
-      data-testid="feature-analyses-table"
+      :empty-text="t('common.noData', 'No feature analyses yet.').value"
+      testid="feature-analyses-table"
+      @open="handleOpen"
+      @copy="handleCopy"
+      @delete="handleDeleteClick"
     >
-      <template #[`item.name`]="{ item }">
-        <a
-          href="#"
-          class="feature-analyses-view__name-link"
-          data-testid="feature-analyses-row-name"
-          @click.prevent="openEditor(item.id)"
-        >
-          {{ item.name }}
-        </a>
-      </template>
-
       <template #[`item.type`]="{ item }">
         <v-chip
           size="small"
@@ -62,61 +53,13 @@
           {{ item.type }}
         </v-chip>
       </template>
-
       <template #[`item.domain`]="{ item }">
         {{ item.domain ?? '—' }}
       </template>
-
       <template #[`item.statType`]="{ item }">
         {{ item.statType ?? '—' }}
       </template>
-
-      <template #[`item.createdBy`]="{ item }">
-        {{ formatUser(item.createdBy) }}
-      </template>
-
-      <template #[`item.createdDate`]="{ item }">
-        {{ formatDate(item.createdDate) }}
-      </template>
-
-      <template #[`item.modifiedDate`]="{ item }">
-        {{ formatDate(item.modifiedDate) }}
-      </template>
-
-      <template #[`item.actions`]="{ item }">
-        <v-btn
-          icon="mdi-pencil"
-          size="small"
-          variant="text"
-          :aria-label="t('components.linkedCohortList.table.actions.edit', 'Edit').value"
-          @click="openEditor(item.id)"
-        />
-        <v-btn
-          icon="mdi-content-copy"
-          size="small"
-          variant="text"
-          :aria-label="t('common.copy', 'Copy').value"
-          @click="handleCopy(item)"
-        />
-        <v-btn
-          icon="mdi-delete"
-          size="small"
-          variant="text"
-          color="error"
-          :aria-label="t('common.delete', 'Delete').value"
-          @click="handleDeleteClick(item)"
-        />
-      </template>
-
-      <template #no-data>
-        <div
-          class="feature-analyses-view__empty"
-          data-testid="feature-analyses-empty"
-        >
-          {{ t('common.noData', 'No feature analyses found.') }}
-        </div>
-      </template>
-    </v-data-table>
+    </AnalysisDataTable>
 
     <template
       v-if="!loading && totalItems > itemsPerPage"
@@ -180,10 +123,10 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useFeatureAnalyses } from '@/composables/useFeatureAnalyses'
 import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
-import { formatDate } from '@/utils/date-format'
 import { logger } from '@/utils/logger'
 import type { FeatureAnalysisListItem, FeatureAnalysisType } from '@/models/feature-analysis.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
+import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -204,16 +147,20 @@ const {
   refresh,
 } = useFeatureAnalyses()
 
-// Local search input state — debounce is handled in the store via setFilter.
 const searchInput = ref<string>('')
+
+const faSubtitle = computed(() =>
+  totalItems.value === 0
+    ? t('common.noData', 'No feature analyses yet.').value
+    : `${totalItems.value} ${totalItems.value === 1 ? 'analysis' : 'analyses'}`
+)
 
 const headers = computed(() => [
   { title: t('columns.name', 'Name').value, key: 'name' },
   { title: t('cc.fa.analysisType', 'Type').value, key: 'type' },
   { title: t('cc.fa.domain', 'Domain').value, key: 'domain' },
-  { title: t('cc.fa.analysisType', 'Stat Type').value, key: 'statType' },
+  { title: t('cc.fa.statType', 'Stat Type').value, key: 'statType' },
   { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
-  { title: t('columns.createdDate', 'Created').value, key: 'createdDate' },
   { title: t('columns.modified', 'Modified').value, key: 'modifiedDate' },
   { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
 ])
@@ -241,8 +188,8 @@ function handleCreate() {
   router.push('/feature-analyses/new')
 }
 
-function openEditor(id: number) {
-  router.push(`/feature-analyses/${id}`)
+function handleOpen(item: FeatureAnalysisListItem) {
+  router.push(`/feature-analyses/${item.id}`)
 }
 
 async function handleCopy(item: FeatureAnalysisListItem) {
@@ -273,22 +220,12 @@ async function confirmDelete() {
   }
 }
 
-function formatUser(user: FeatureAnalysisListItem['createdBy']): string {
-  if (!user) return '—'
-  if (typeof user === 'string') return user
-  return user.name ?? user.login ?? '—'
-}
-
 function typeChipColor(type: FeatureAnalysisType): string {
   switch (type) {
-    case 'PRESET':
-      return 'primary'
-    case 'CRITERIA_SET':
-      return 'info'
-    case 'CUSTOM_FE':
-      return 'warning'
-    default:
-      return 'default'
+    case 'PRESET': return 'primary'
+    case 'CRITERIA_SET': return 'info'
+    case 'CUSTOM_FE': return 'warning'
+    default: return 'default'
   }
 }
 
@@ -299,28 +236,13 @@ onMounted(() => {
 
 <style scoped>
 .feature-analyses-view__search {
-  max-width: 480px;
-}
-
-.feature-analyses-view__name-link {
-  color: rgb(var(--v-theme-primary));
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.feature-analyses-view__name-link:hover {
-  text-decoration: underline;
-}
-
-.feature-analyses-view__empty {
-  padding: 32px;
-  text-align: center;
-  color: #666;
+  max-width: 360px;
+  flex: 1 1 280px;
 }
 
 .feature-analyses-view__range {
   font-size: 0.875rem;
-  color: #666;
+  color: rgba(var(--v-theme-on-surface), 0.6);
   padding: 0 12px;
 }
 </style>

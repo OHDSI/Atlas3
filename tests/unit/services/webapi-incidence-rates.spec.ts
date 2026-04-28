@@ -26,57 +26,75 @@ import {
   getIncidenceRateReport,
 } from '@/services/webapi'
 
-const ir = {
-  id: 1, name: 'X',
-  expression: {
-    ConceptSets: [], targetIds: [], outcomeIds: [],
-    timeAtRisk: {
-      start: { DateField: 'StartDate', Offset: 0 },
-      end: { DateField: 'EndDate', Offset: 0 },
-    },
-    strata: [],
+const expressionObj = {
+  ConceptSets: [], targetIds: [], outcomeIds: [],
+  timeAtRisk: {
+    start: { DateField: 'StartDate', Offset: 0 },
+    end: { DateField: 'EndDate', Offset: 0 },
   },
+  strata: [],
+}
+
+// What the OHDSI WebAPI sends/accepts on the wire — `expression` is a
+// JSON string.
+const irWire = {
+  id: 1, name: 'X',
+  expression: JSON.stringify(expressionObj),
+  tags: [],
+}
+
+// Internal IR shape used by stores/composables — `expression` is parsed.
+const irInternal = {
+  id: 1, name: 'X',
+  expression: expressionObj,
   tags: [],
 }
 
 beforeEach(() => vi.clearAllMocks())
 
 describe('IR webapi', () => {
-  it('listIncidenceRates calls /ir/ and returns parsed list', async () => {
-    vi.mocked(http.httpGet).mockResolvedValueOnce([ir])
+  it('listIncidenceRates calls /ir/ and returns parsed summary list', async () => {
+    vi.mocked(http.httpGet).mockResolvedValueOnce([{ id: 1, name: 'X', tags: [] }])
     const r = await listIncidenceRates()
     expect(http.httpGet).toHaveBeenCalledWith('/ir/')
     expect(r.success).toBe(true)
   })
 
   it('listIncidenceRates returns failure on parse error', async () => {
-    vi.mocked(http.httpGet).mockResolvedValueOnce([{ name: '' }])
+    vi.mocked(http.httpGet).mockResolvedValueOnce([{ name: '', id: 'oops' }])
     const r = await listIncidenceRates()
     expect(r.success).toBe(false)
   })
 
-  it('getIncidenceRate hits /ir/{id}', async () => {
-    vi.mocked(http.httpGet).mockResolvedValueOnce(ir)
-    await getIncidenceRate(7)
+  it('getIncidenceRate hits /ir/{id} and decodes expression JSON', async () => {
+    vi.mocked(http.httpGet).mockResolvedValueOnce(irWire)
+    const r = await getIncidenceRate(7)
     expect(http.httpGet).toHaveBeenCalledWith('/ir/7')
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.expression.timeAtRisk.start.DateField).toBe('StartDate')
   })
 
-  it('createIncidenceRate POSTs to /ir/', async () => {
-    vi.mocked(http.httpPost).mockResolvedValueOnce(ir)
-    await createIncidenceRate(ir as never)
-    expect(http.httpPost).toHaveBeenCalledWith('/ir/', ir)
+  it('createIncidenceRate POSTs to /ir/ with expression as JSON string', async () => {
+    vi.mocked(http.httpPost).mockResolvedValueOnce(irWire)
+    await createIncidenceRate(irInternal as never)
+    const [path, body] = vi.mocked(http.httpPost).mock.calls[0]
+    expect(path).toBe('/ir/')
+    expect(typeof (body as { expression: unknown }).expression).toBe('string')
   })
 
-  it('saveIncidenceRate PUTs to /ir/{id}', async () => {
-    vi.mocked(http.httpPut).mockResolvedValueOnce(ir)
-    await saveIncidenceRate(7, ir as never)
-    expect(http.httpPut).toHaveBeenCalledWith('/ir/7', ir)
+  it('saveIncidenceRate PUTs to /ir/{id} with expression as JSON string', async () => {
+    vi.mocked(http.httpPut).mockResolvedValueOnce(irWire)
+    await saveIncidenceRate(7, irInternal as never)
+    const [path, body] = vi.mocked(http.httpPut).mock.calls[0]
+    expect(path).toBe('/ir/7')
+    expect(typeof (body as { expression: unknown }).expression).toBe('string')
   })
 
-  it('copyIncidenceRate GETs /ir/{id}/copy', async () => {
-    vi.mocked(http.httpGet).mockResolvedValueOnce(ir)
-    await copyIncidenceRate(7)
+  it('copyIncidenceRate GETs /ir/{id}/copy and decodes expression', async () => {
+    vi.mocked(http.httpGet).mockResolvedValueOnce(irWire)
+    const r = await copyIncidenceRate(7)
     expect(http.httpGet).toHaveBeenCalledWith('/ir/7/copy')
+    expect(r.success).toBe(true)
   })
 
   it('deleteIncidenceRate DELETEs /ir/{id}', async () => {

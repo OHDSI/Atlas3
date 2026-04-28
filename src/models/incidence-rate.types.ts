@@ -55,17 +55,22 @@ export type IncidenceRateExpression = z.infer<typeof IncidenceRateExpressionSche
 
 // ─── definition ───────────────────────────────────────────────────────────
 
+// In-memory shape used by the editor. The OHDSI WebAPI sends `expression`
+// as a serialized JSON string on the wire and accepts it the same way on
+// save — the (de)serialization happens at the webapi.ts boundary.
 export const IncidenceRateSchema = z.object({
   id: z.number().optional(),
   name: z.string().min(1),
   description: z.string().optional(),
   expression: IncidenceRateExpressionSchema,
-  hashCode: z.string().optional(),
+  hashCode: z.union([z.string(), z.number()]).optional(),
   tags: z.array(TagSchema).default([]),
   createdBy: userSchema.optional(),
   createdDate: z.union([z.string(), z.number()]).optional(),
   modifiedBy: userSchema.optional(),
   modifiedDate: z.union([z.string(), z.number()]).optional(),
+  hasReadAccess: z.boolean().optional(),
+  hasWriteAccess: z.boolean().optional(),
 }).passthrough()
 export type IncidenceRate = z.infer<typeof IncidenceRateSchema>
 
@@ -74,6 +79,16 @@ export const IncidenceRateSummarySchema = IncidenceRateSchema
   .omit({ expression: true })
   .extend({ id: z.number(), expression: IncidenceRateExpressionSchema.optional() })
 export type IncidenceRateSummary = z.infer<typeof IncidenceRateSummarySchema>
+
+// Wire shape — what /ir/ endpoints actually return: `expression` is a
+// JSON string (possibly absent on the list endpoint).
+export const IncidenceRateWireSchema = IncidenceRateSchema
+  .omit({ expression: true, name: true })
+  .extend({
+    name: z.string(),
+    expression: z.string().optional(),
+  })
+export type IncidenceRateWire = z.infer<typeof IncidenceRateWireSchema>
 
 // ─── execution / report ───────────────────────────────────────────────────
 

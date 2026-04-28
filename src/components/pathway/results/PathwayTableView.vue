@@ -168,7 +168,7 @@ const group = computed(() =>
 )
 
 const allRows = computed(() => group.value
-  ? toAllPathwaysRows(group.value, props.results.eventCodes, props.design.design.maxDepth)
+  ? toAllPathwaysRows(group.value, props.results.eventCodes, props.design.maxDepth)
   : []
 )
 const rankRows = computed(() => group.value

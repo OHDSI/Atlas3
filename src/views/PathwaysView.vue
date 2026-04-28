@@ -1,12 +1,24 @@
 <template>
   <AnalysisListLayout
+    :title="t('pathway.title', 'Pathway analyses').value"
+    :subtitle="subtitle"
     :error="error?.message ?? null"
-    :show-view-toggle="true"
-    :view-mode="viewMode"
     testid="pathways"
-    @update:view-mode="(v) => viewMode = v"
   >
     <template #actions>
+      <v-text-field
+        :model-value="searchInput"
+        :label="t('datatable.language.searchPlaceholder', 'Search pathways…').value"
+        prepend-inner-icon="mdi-magnify"
+        density="compact"
+        variant="outlined"
+        hide-details
+        clearable
+        class="pathways-view__search"
+        data-testid="pathways-search"
+        @update:model-value="handleSearchInput"
+      />
+      <v-spacer />
       <v-btn
         color="primary"
         variant="flat"
@@ -15,63 +27,48 @@
         data-testid="pathways-create"
         @click="handleNew"
       >
-        {{ t('cohortDefinitions.newDefinition', 'New pathway') }}
+        {{ t('home.newEntityNames.pathway', 'New pathway') }}
       </v-btn>
     </template>
 
-    <template #filters>
-      <PathwayFilters
-        :model-value="filters"
-        :all-tags="allTags"
-        @update:model-value="updateFilters"
-        @clear="clearFilters"
-      />
-    </template>
-
-    <div
-      v-if="loading"
-      class="pathways-view__state"
+    <AnalysisDataTable
+      :headers="headers"
+      :items="paginatedPathways"
+      :loading="loading"
+      :items-per-page="itemsPerPage"
+      :empty-text="t('common.noData', 'No pathways yet.').value"
+      testid="pathways-table"
+      @open="handleOpen"
+      @copy="handleCopy"
+      @delete="handleRemove"
     >
-      {{ t('common.loading', 'Loading…') }}
-    </div>
-    <div
-      v-else-if="pathways.length === 0"
-      class="pathways-view__state"
-    >
-      {{ t('common.noData', 'No pathways yet.') }}
-    </div>
-    <template v-else>
-      <div
-        v-if="viewMode === 'tile'"
-        class="pathways-view__grid"
-      >
-        <PathwayCard
-          v-for="p in paginatedPathways"
-          :key="p.id"
-          :pathway="p"
-          @open="handleOpen"
-          @remove="handleRemove"
-        />
-      </div>
-      <PathwayTable
-        v-else
-        :pathways="paginatedPathways"
-        @open="handleOpen"
-        @remove="handleRemove"
-      />
-    </template>
+      <template #[`item.targetCount`]="{ item }">
+        {{ item.targetCohorts?.length ?? 0 }}
+      </template>
+      <template #[`item.eventCount`]="{ item }">
+        {{ item.eventCohorts?.length ?? 0 }}
+      </template>
+    </AnalysisDataTable>
 
     <template
-      v-if="!loading && pathways.length > 0"
+      v-if="!loading && totalPages > 1"
       #pagination
     >
-      <PathwayPagination
-        :page="page"
-        :total-pages="totalPages"
-        :items-per-page="itemsPerPage"
-        @update:page="updatePage"
-        @update:items-per-page="updateItemsPerPage"
-      />
+      <v-btn
+        variant="text"
+        :disabled="page === 0"
+        @click="updatePage(page - 1)"
+      >
+        {{ t('datatable.language.paginate.previous', 'Previous') }}
+      </v-btn>
+      <span class="pathways-view__range">{{ page + 1 }} / {{ totalPages }}</span>
+      <v-btn
+        variant="text"
+        :disabled="page + 1 >= totalPages"
+        @click="updatePage(page + 1)"
+      >
+        {{ t('configuration.userImport.wizard.buttons.next', 'Next') }}
+      </v-btn>
     </template>
   </AnalysisListLayout>
 
@@ -112,48 +109,55 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePathways } from '@/composables/usePathways'
 import { useI18n } from '@/composables/useI18n'
-import type { PathwayFilters as PathwayFiltersType } from '@/composables/usePathways'
 import { usePathwayStore } from '@/stores/pathway'
-import { deletePathway } from '@/services/webapi'
-import PathwayCard from '@/components/pathway/PathwayCard.vue'
-import PathwayTable from '@/components/pathway/PathwayTable.vue'
-import PathwayFilters from '@/components/pathway/PathwayFilters.vue'
-import PathwayPagination from '@/components/pathway/PathwayPagination.vue'
+import { deletePathway, copyPathway } from '@/services/webapi'
+import { logger } from '@/utils/logger'
+import type { Pathway } from '@/models/pathway.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
+import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
 
 const {
-  pathways, loading, error,
+  loading, error,
   filters, page, itemsPerPage,
-  fetchPathways, clearFilters,
-  paginatedPathways, totalPages,
+  fetchPathways,
+  paginatedPathways, totalItems, totalPages,
 } = usePathways()
 
 const router = useRouter()
 const store = usePathwayStore()
 const { t } = useI18n()
-const viewMode = ref<'tile' | 'table'>('tile')
 const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)
 const feedback = ref<{ message: string; color: 'success' | 'error' | 'info' } | null>(null)
+const searchInput = ref('')
 
-const allTags = computed(() => {
-  const set = new Set<string>()
-  pathways.value.forEach(p => p.tags?.forEach(t => set.add(t.name)))
-  return [...set].sort()
-})
+const subtitle = computed(() =>
+  totalItems.value === 0
+    ? t('common.noData', 'No pathways yet.').value
+    : `${totalItems.value} ${totalItems.value === 1 ? 'pathway' : 'pathways'}`
+)
+
+const headers = computed(() => [
+  { title: t('columns.name', 'Name').value, key: 'name' },
+  { title: t('columns.description', 'Description').value, key: 'description' },
+  { title: t('facets.caption.targetCohorts', 'Targets').value, key: 'targetCount', sortable: false },
+  { title: t('columns.eventCohort', 'Events').value, key: 'eventCount', sortable: false },
+  { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
+  { title: t('columns.modified', 'Modified').value, key: 'modifiedDate' },
+  { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
+])
 
 onMounted(fetchPathways)
 
-function updateFilters(v: PathwayFiltersType) {
-  filters.value = v
+function handleSearchInput(v: string | null) {
+  const next = v ?? ''
+  searchInput.value = next
+  filters.value = { ...filters.value, searchQuery: next }
+  page.value = 0
 }
 
 function updatePage(n: number) {
-  page.value = n
-}
-
-function updateItemsPerPage(n: number) {
-  itemsPerPage.value = n
+  page.value = Math.max(0, Math.min(n, totalPages.value - 1))
 }
 
 function handleNew() {
@@ -161,12 +165,25 @@ function handleNew() {
   router.push('/pathways/new')
 }
 
-function handleOpen(id: number) {
-  if (id) router.push(`/pathways/${id}`)
+function handleOpen(p: Pathway) {
+  if (p.id) router.push(`/pathways/${p.id}`)
 }
 
-function handleRemove(id: number) {
-  deleteTarget.value = id
+async function handleCopy(p: Pathway) {
+  if (!p.id) return
+  const result = await copyPathway(p.id)
+  if (result.success && result.data.id) {
+    feedback.value = { message: 'Pathway copied', color: 'success' }
+    router.push(`/pathways/${result.data.id}`)
+  } else {
+    feedback.value = { message: 'Copy failed', color: 'error' }
+    logger.error('PathwaysView', 'copyPathway failed', !result.success ? result.error : null)
+  }
+}
+
+function handleRemove(p: Pathway) {
+  if (!p.id) return
+  deleteTarget.value = p.id
   showDelete.value = true
 }
 
@@ -185,15 +202,14 @@ async function confirmDelete() {
 </script>
 
 <style scoped>
-.pathways-view__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+.pathways-view__search {
+  max-width: 360px;
+  flex: 1 1 280px;
 }
 
-.pathways-view__state {
-  padding: 32px;
-  text-align: center;
-  color: #666;
+.pathways-view__range {
+  font-size: 0.875rem;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+  padding: 0 12px;
 }
 </style>

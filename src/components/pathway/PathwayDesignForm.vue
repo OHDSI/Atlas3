@@ -67,7 +67,7 @@
     <section>
       <h3>{{ t('ple.spec.analysisSettings', 'Settings') }}</h3>
       <PathwaySettings
-        :model-value="currentPathway.design"
+        :model-value="settings"
         :readonly="readonly"
         @update:model-value="(d) => store.updateDesign(d)"
       />
@@ -92,11 +92,18 @@ const { t } = useI18n()
 const showTargetPicker = ref(false)
 const showEventPicker = ref(false)
 
-const targetCohorts = computed(() => currentPathway.value?.design.targetCohorts ?? [])
-const eventCohorts = computed(() => currentPathway.value?.design.eventCohorts ?? [])
+const targetCohorts = computed(() => currentPathway.value?.targetCohorts ?? [])
+const eventCohorts = computed(() => currentPathway.value?.eventCohorts ?? [])
 
 const targetIds = computed(() => targetCohorts.value.map(c => c.id))
 const eventIds = computed(() => eventCohorts.value.map(c => c.id))
+
+const settings = computed(() => ({
+  combinationWindow: currentPathway.value?.combinationWindow ?? 0,
+  minCellCount: currentPathway.value?.minCellCount ?? 0,
+  maxDepth: currentPathway.value?.maxDepth ?? 0,
+  allowRepeats: currentPathway.value?.allowRepeats ?? false,
+}))
 </script>
 
 <style scoped>

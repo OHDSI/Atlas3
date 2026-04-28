@@ -15,11 +15,9 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 
 const design = {
   name: 'X', tags: [],
-  design: {
-    targetCohorts: [{ id: 1, name: 'T' }],
-    eventCohorts: [{ id: 10, name: 'A' }, { id: 20, name: 'B' }],
-    combinationWindow: 30, minCellCount: 5, maxDepth: 3, allowRepeats: false,
-  },
+  targetCohorts: [{ id: 1, name: 'T' }],
+  eventCohorts: [{ id: 10, name: 'A' }, { id: 20, name: 'B' }],
+  combinationWindow: 30, minCellCount: 5, maxDepth: 3, allowRepeats: false,
 }
 
 const results = {

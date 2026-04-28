@@ -12,320 +12,290 @@
   error reporting via the local v-snackbar.
 -->
 <template>
-  <div class="page-wrapper">
-    <div class="page-card">
-      <v-container
-        fluid
-        class="feature-analysis-editor"
+  <AnalysisBuilderShell
+    :title="titleText"
+    :error="storeError"
+    testid="feature-analysis-editor"
+    @back="handleBack"
+    @clear-error="store.clearError()"
+  >
+    <template #actions>
+      <v-btn
+        v-if="isEditing"
+        variant="outlined"
+        color="primary"
+        prepend-icon="mdi-content-copy"
+        :disabled="loading"
+        data-testid="feature-analysis-editor-copy"
+        @click="handleSaveCopy"
       >
-        <!-- Toolbar -->
-        <div class="feature-analysis-editor__toolbar">
-          <div class="feature-analysis-editor__toolbar-left">
-            <v-btn
-              variant="text"
-              prepend-icon="mdi-arrow-left"
-              data-testid="feature-analysis-editor-back"
-              @click="handleBack"
+        {{ t('common.createACopy', 'Save as Copy') }}
+      </v-btn>
+      <v-btn
+        v-if="isEditing"
+        variant="outlined"
+        color="error"
+        prepend-icon="mdi-delete"
+        :disabled="loading"
+        data-testid="feature-analysis-editor-delete"
+        @click="handleDeleteClick"
+      >
+        {{ t('common.delete', 'Delete') }}
+      </v-btn>
+      <v-btn
+        color="primary"
+        variant="elevated"
+        prepend-icon="mdi-content-save"
+        :disabled="!canSave"
+        :loading="saving"
+        data-testid="feature-analysis-editor-save"
+        @click="handleSave"
+      >
+        {{ t('common.save', 'Save') }}
+      </v-btn>
+    </template>
+
+    <!-- Main editor card -->
+    <v-card class="feature-analysis-editor__card">
+      <v-card-text>
+        <!-- Common section -->
+        <div class="feature-analysis-editor__section">
+          <h2 class="feature-analysis-editor__section-title">
+            {{ t('columns.name', 'Name') }}
+          </h2>
+          <v-text-field
+            v-model="draft.name"
+            :label="t('columns.name', 'Name').value"
+            :error-messages="nameError"
+            density="comfortable"
+            variant="outlined"
+            required
+            data-testid="feature-analysis-editor-name"
+          />
+
+          <v-textarea
+            v-model="draft.description"
+            :label="t('columns.description', 'Description').value"
+            density="comfortable"
+            variant="outlined"
+            rows="2"
+            auto-grow
+            data-testid="feature-analysis-editor-description"
+          />
+
+          <v-row>
+            <v-col
+              cols="12"
+              md="4"
             >
-              {{ t('featureAnalyses.editor.actions.back', 'Back') }}
-            </v-btn>
-            <h1 class="feature-analysis-editor__title">
-              {{ titleText }}
-            </h1>
-          </div>
-          <div class="feature-analysis-editor__toolbar-right">
-            <v-btn
-              v-if="isEditing"
-              variant="outlined"
-              color="primary"
-              prepend-icon="mdi-content-copy"
-              :disabled="loading"
-              data-testid="feature-analysis-editor-copy"
-              @click="handleSaveCopy"
+              <v-select
+                v-model="draft.type"
+                :label="t('cc.fa.analysisType', 'Type').value"
+                :items="typeOptions"
+                item-title="label"
+                item-value="value"
+                :disabled="isEditing"
+                density="comfortable"
+                variant="outlined"
+                data-testid="feature-analysis-editor-type"
+              />
+            </v-col>
+            <v-col
+              cols="12"
+              md="4"
             >
-              {{ t('common.createACopy', 'Save as Copy') }}
-            </v-btn>
-            <v-btn
-              v-if="isEditing"
-              variant="outlined"
-              color="error"
-              prepend-icon="mdi-delete"
-              :disabled="loading"
-              data-testid="feature-analysis-editor-delete"
-              @click="handleDeleteClick"
+              <v-select
+                v-model="draft.domain"
+                :label="t('cc.fa.domain', 'Domain').value"
+                :items="domainOptions"
+                clearable
+                density="comfortable"
+                variant="outlined"
+                data-testid="feature-analysis-editor-domain"
+              />
+            </v-col>
+            <v-col
+              cols="12"
+              md="4"
             >
-              {{ t('common.delete', 'Delete') }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              variant="elevated"
-              prepend-icon="mdi-content-save"
-              :disabled="!canSave"
-              :loading="saving"
-              data-testid="feature-analysis-editor-save"
-              @click="handleSave"
-            >
-              {{ t('common.save', 'Save') }}
-            </v-btn>
-          </div>
+              <v-select
+                v-model="draft.statType"
+                :label="t('cc.fa.analysisType', 'Stat Type').value"
+                :items="statTypeOptions"
+                clearable
+                density="comfortable"
+                variant="outlined"
+                data-testid="feature-analysis-editor-statType"
+              />
+            </v-col>
+          </v-row>
         </div>
 
-        <!-- Error from store -->
-        <v-alert
-          v-if="storeError"
-          type="error"
-          variant="tonal"
-          closable
-          class="mb-4"
-          data-testid="feature-analysis-editor-error"
-          @click:close="store.clearError()"
+        <!-- PRESET design -->
+        <div
+          v-if="draft.type === 'PRESET'"
+          class="feature-analysis-editor__section"
+          data-testid="feature-analysis-editor-design-preset"
         >
-          {{ storeError }}
-        </v-alert>
-
-        <!-- Main editor card -->
-        <v-card class="feature-analysis-editor__card">
-          <v-card-text>
-            <!-- Common section -->
-            <div class="feature-analysis-editor__section">
-              <h2 class="feature-analysis-editor__section-title">
-                {{ t('columns.name', 'Name') }}
-              </h2>
-              <v-text-field
-                v-model="draft.name"
-                :label="t('columns.name', 'Name').value"
-                :error-messages="nameError"
-                density="comfortable"
-                variant="outlined"
-                required
-                data-testid="feature-analysis-editor-name"
-              />
-
-              <v-textarea
-                v-model="draft.description"
-                :label="t('columns.description', 'Description').value"
-                density="comfortable"
-                variant="outlined"
-                rows="2"
-                auto-grow
-                data-testid="feature-analysis-editor-description"
-              />
-
-              <v-row>
-                <v-col
-                  cols="12"
-                  md="4"
-                >
-                  <v-select
-                    v-model="draft.type"
-                    :label="t('cc.fa.analysisType', 'Type').value"
-                    :items="typeOptions"
-                    item-title="label"
-                    item-value="value"
-                    :disabled="isEditing"
-                    density="comfortable"
-                    variant="outlined"
-                    data-testid="feature-analysis-editor-type"
-                  />
-                </v-col>
-                <v-col
-                  cols="12"
-                  md="4"
-                >
-                  <v-select
-                    v-model="draft.domain"
-                    :label="t('cc.fa.domain', 'Domain').value"
-                    :items="domainOptions"
-                    clearable
-                    density="comfortable"
-                    variant="outlined"
-                    data-testid="feature-analysis-editor-domain"
-                  />
-                </v-col>
-                <v-col
-                  cols="12"
-                  md="4"
-                >
-                  <v-select
-                    v-model="draft.statType"
-                    :label="t('cc.fa.analysisType', 'Stat Type').value"
-                    :items="statTypeOptions"
-                    clearable
-                    density="comfortable"
-                    variant="outlined"
-                    data-testid="feature-analysis-editor-statType"
-                  />
-                </v-col>
-              </v-row>
-            </div>
-
-            <!-- PRESET design -->
-            <div
-              v-if="draft.type === 'PRESET'"
-              class="feature-analysis-editor__section"
-              data-testid="feature-analysis-editor-design-preset"
-            >
-              <h2 class="feature-analysis-editor__section-title">
-                {{ t('cc.fa.design', 'Covariate settings (JSON)') }}
-              </h2>
-              <div class="feature-analysis-editor__preset-actions">
-                <v-btn
-                  variant="outlined"
-                  size="small"
-                  prepend-icon="mdi-download"
-                  :loading="loadingDefaults"
-                  data-testid="feature-analysis-editor-preset-default"
-                  @click="loadDefaultCovariateSettings(false)"
-                >
-                  {{ t('featureAnalyses.editor.preset.loadDefault', 'Load default covariate settings') }}
-                </v-btn>
-                <v-btn
-                  variant="outlined"
-                  size="small"
-                  prepend-icon="mdi-clock-outline"
-                  :loading="loadingDefaults"
-                  data-testid="feature-analysis-editor-preset-default-temporal"
-                  @click="loadDefaultCovariateSettings(true)"
-                >
-                  {{ t('featureAnalyses.editor.preset.loadDefaultTemporal', 'Load default temporal covariate settings') }}
-                </v-btn>
-                <v-chip
-                  v-if="presetJsonError"
-                  color="error"
-                  size="small"
-                  variant="tonal"
-                  data-testid="feature-analysis-editor-preset-invalid"
-                >
-                  {{ t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON') }}
-                </v-chip>
-              </div>
-              <v-textarea
-                v-model="presetDesignJson"
-                :label="t('cc.fa.design', 'Covariate settings (JSON)').value"
-                density="comfortable"
-                variant="outlined"
-                rows="14"
-                auto-grow
-                class="feature-analysis-editor__json"
-                data-testid="feature-analysis-editor-preset-json"
-                @blur="validatePresetJson"
-              />
-            </div>
-
-            <!-- CRITERIA_SET design -->
-            <div
-              v-else-if="draft.type === 'CRITERIA_SET'"
-              class="feature-analysis-editor__section"
-              data-testid="feature-analysis-editor-design-criteria"
-            >
-              <h2 class="feature-analysis-editor__section-title">
-                {{ t('cc.fa.criteria', 'Criteria Set') }}
-              </h2>
-              <p class="text-body-2 text-grey mb-2">
-                {{ t('featureAnalyses.editor.criteriaSet.explainer', 'Criteria builder integration ships in Phase 3. For now, edit JSON directly.') }}
-              </p>
-              <v-textarea
-                v-model="criteriaConceptSetsJson"
-                :label="t('cc.fa.tabs.conceptSets', 'Concept sets (JSON array)').value"
-                :error-messages="criteriaConceptSetsError"
-                density="comfortable"
-                variant="outlined"
-                rows="6"
-                auto-grow
-                class="feature-analysis-editor__json"
-                data-testid="feature-analysis-editor-criteria-conceptsets-json"
-                @blur="validateCriteriaConceptSetsJson"
-              />
-              <v-textarea
-                v-model="criteriaCriteriaJson"
-                :label="t('cc.fa.criteria', 'Criteria group (JSON)').value"
-                :error-messages="criteriaCriteriaError"
-                density="comfortable"
-                variant="outlined"
-                rows="10"
-                auto-grow
-                class="feature-analysis-editor__json"
-                data-testid="feature-analysis-editor-criteria-criteria-json"
-                @blur="validateCriteriaCriteriaJson"
-              />
-            </div>
-
-            <!-- CUSTOM_FE design -->
-            <div
-              v-else-if="draft.type === 'CUSTOM_FE'"
-              class="feature-analysis-editor__section"
-              data-testid="feature-analysis-editor-design-custom"
-            >
-              <h2 class="feature-analysis-editor__section-title">
-                {{ t('cc.fa.analysisSql', 'Custom SQL') }}
-              </h2>
-              <v-textarea
-                v-model="customFeSql"
-                :label="t('cc.fa.analysisSql', 'Custom SQL').value"
-                density="comfortable"
-                variant="outlined"
-                rows="14"
-                auto-grow
-                class="feature-analysis-editor__json feature-analysis-editor__sql"
-                data-testid="feature-analysis-editor-custom-sql"
-              />
-            </div>
-          </v-card-text>
-        </v-card>
-
-        <!-- Delete confirmation dialog -->
-        <v-dialog
-          v-model="showDeleteDialog"
-          max-width="500"
-        >
-          <v-card>
-            <v-card-title class="text-h5">
-              {{ t('common.delete', 'Delete') }}
-            </v-card-title>
-            <v-card-text>
-              {{ deleteMessage }}
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn
-                variant="text"
-                @click="showDeleteDialog = false"
-              >
-                {{ t('common.cancel', 'Cancel') }}
-              </v-btn>
-              <v-btn
-                color="error"
-                variant="elevated"
-                :loading="loading"
-                data-testid="feature-analysis-editor-delete-confirm"
-                @click="confirmDelete"
-              >
-                {{ t('common.delete', 'Delete') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-
-        <!-- Error snackbar -->
-        <v-snackbar
-          v-model="snackbar.show"
-          :color="snackbar.color"
-          :timeout="snackbar.timeout"
-          data-testid="feature-analysis-editor-snackbar"
-        >
-          {{ snackbar.message }}
-          <template #actions>
+          <h2 class="feature-analysis-editor__section-title">
+            {{ t('cc.fa.design', 'Covariate settings (JSON)') }}
+          </h2>
+          <div class="feature-analysis-editor__preset-actions">
             <v-btn
-              variant="text"
-              @click="snackbar.show = false"
+              variant="outlined"
+              size="small"
+              prepend-icon="mdi-download"
+              :loading="loadingDefaults"
+              data-testid="feature-analysis-editor-preset-default"
+              @click="loadDefaultCovariateSettings(false)"
             >
-              {{ t('common.close', 'Close') }}
+              {{ t('featureAnalyses.editor.preset.loadDefault', 'Load default covariate settings') }}
             </v-btn>
-          </template>
-        </v-snackbar>
-      </v-container>
-    </div>
-  </div>
+            <v-btn
+              variant="outlined"
+              size="small"
+              prepend-icon="mdi-clock-outline"
+              :loading="loadingDefaults"
+              data-testid="feature-analysis-editor-preset-default-temporal"
+              @click="loadDefaultCovariateSettings(true)"
+            >
+              {{ t('featureAnalyses.editor.preset.loadDefaultTemporal', 'Load default temporal covariate settings') }}
+            </v-btn>
+            <v-chip
+              v-if="presetJsonError"
+              color="error"
+              size="small"
+              variant="tonal"
+              data-testid="feature-analysis-editor-preset-invalid"
+            >
+              {{ t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON') }}
+            </v-chip>
+          </div>
+          <v-textarea
+            v-model="presetDesignJson"
+            :label="t('cc.fa.design', 'Covariate settings (JSON)').value"
+            density="comfortable"
+            variant="outlined"
+            rows="14"
+            auto-grow
+            class="feature-analysis-editor__json"
+            data-testid="feature-analysis-editor-preset-json"
+            @blur="validatePresetJson"
+          />
+        </div>
+
+        <!-- CRITERIA_SET design -->
+        <div
+          v-else-if="draft.type === 'CRITERIA_SET'"
+          class="feature-analysis-editor__section"
+          data-testid="feature-analysis-editor-design-criteria"
+        >
+          <h2 class="feature-analysis-editor__section-title">
+            {{ t('cc.fa.criteria', 'Criteria Set') }}
+          </h2>
+          <p class="text-body-2 text-grey mb-2">
+            {{ t('featureAnalyses.editor.criteriaSet.explainer', 'Criteria builder integration ships in Phase 3. For now, edit JSON directly.') }}
+          </p>
+          <v-textarea
+            v-model="criteriaConceptSetsJson"
+            :label="t('cc.fa.tabs.conceptSets', 'Concept sets (JSON array)').value"
+            :error-messages="criteriaConceptSetsError"
+            density="comfortable"
+            variant="outlined"
+            rows="6"
+            auto-grow
+            class="feature-analysis-editor__json"
+            data-testid="feature-analysis-editor-criteria-conceptsets-json"
+            @blur="validateCriteriaConceptSetsJson"
+          />
+          <v-textarea
+            v-model="criteriaCriteriaJson"
+            :label="t('cc.fa.criteria', 'Criteria group (JSON)').value"
+            :error-messages="criteriaCriteriaError"
+            density="comfortable"
+            variant="outlined"
+            rows="10"
+            auto-grow
+            class="feature-analysis-editor__json"
+            data-testid="feature-analysis-editor-criteria-criteria-json"
+            @blur="validateCriteriaCriteriaJson"
+          />
+        </div>
+
+        <!-- CUSTOM_FE design -->
+        <div
+          v-else-if="draft.type === 'CUSTOM_FE'"
+          class="feature-analysis-editor__section"
+          data-testid="feature-analysis-editor-design-custom"
+        >
+          <h2 class="feature-analysis-editor__section-title">
+            {{ t('cc.fa.analysisSql', 'Custom SQL') }}
+          </h2>
+          <v-textarea
+            v-model="customFeSql"
+            :label="t('cc.fa.analysisSql', 'Custom SQL').value"
+            density="comfortable"
+            variant="outlined"
+            rows="14"
+            auto-grow
+            class="feature-analysis-editor__json feature-analysis-editor__sql"
+            data-testid="feature-analysis-editor-custom-sql"
+          />
+        </div>
+      </v-card-text>
+    </v-card>
+
+    <!-- Delete confirmation dialog -->
+    <v-dialog
+      v-model="showDeleteDialog"
+      max-width="500"
+    >
+      <v-card>
+        <v-card-title class="text-h5">
+          {{ t('common.delete', 'Delete') }}
+        </v-card-title>
+        <v-card-text>
+          {{ deleteMessage }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            variant="text"
+            @click="showDeleteDialog = false"
+          >
+            {{ t('common.cancel', 'Cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="elevated"
+            :loading="loading"
+            data-testid="feature-analysis-editor-delete-confirm"
+            @click="confirmDelete"
+          >
+            {{ t('common.delete', 'Delete') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Error snackbar -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+      data-testid="feature-analysis-editor-snackbar"
+    >
+      {{ snackbar.message }}
+      <template #actions>
+        <v-btn
+          variant="text"
+          @click="snackbar.show = false"
+        >
+          {{ t('common.close', 'Close') }}
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
@@ -343,6 +313,7 @@ import type {
   FeatureAnalysisCriteriaSetDesign,
 } from '@/models/feature-analysis.types'
 import type { ConceptSetReference } from '@/models/concept-set.types'
+import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 
 const props = defineProps<{
   id?: string
@@ -785,56 +756,11 @@ onBeforeRouteLeave((_to, _from, next) => {
 </script>
 
 <style scoped>
-.page-wrapper {
-  min-height: 100%;
-  background-color: rgb(var(--v-theme-background));
-  display: flex;
-  padding: 32px;
-  box-sizing: border-box;
-}
-
-.page-card {
-  border-radius: 18px;
-  padding: 30px;
-  background-color: white;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
-.feature-analysis-editor {
-  padding: 0;
-}
-
-.feature-analysis-editor__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.feature-analysis-editor__toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.feature-analysis-editor__toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.feature-analysis-editor__title {
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin: 0;
-}
-
 .feature-analysis-editor__card {
   padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+  box-shadow: none !important;
 }
 
 .feature-analysis-editor__section {
