@@ -55,246 +55,246 @@
       </v-btn>
     </template>
 
-        <!-- Main editor card -->
-        <v-card class="feature-analysis-editor__card">
-          <v-card-text>
-            <!-- Common section -->
-            <div class="feature-analysis-editor__section">
-              <h2 class="feature-analysis-editor__section-title">
-                {{ t('columns.name', 'Name') }}
-              </h2>
-              <v-text-field
-                v-model="draft.name"
-                :label="t('columns.name', 'Name').value"
-                :error-messages="nameError"
-                density="comfortable"
-                variant="outlined"
-                required
-                data-testid="feature-analysis-editor-name"
-              />
+    <!-- Main editor card -->
+    <v-card class="feature-analysis-editor__card">
+      <v-card-text>
+        <!-- Common section -->
+        <div class="feature-analysis-editor__section">
+          <h2 class="feature-analysis-editor__section-title">
+            {{ t('columns.name', 'Name') }}
+          </h2>
+          <v-text-field
+            v-model="draft.name"
+            :label="t('columns.name', 'Name').value"
+            :error-messages="nameError"
+            density="comfortable"
+            variant="outlined"
+            required
+            data-testid="feature-analysis-editor-name"
+          />
 
-              <v-textarea
-                v-model="draft.description"
-                :label="t('columns.description', 'Description').value"
-                density="comfortable"
-                variant="outlined"
-                rows="2"
-                auto-grow
-                data-testid="feature-analysis-editor-description"
-              />
+          <v-textarea
+            v-model="draft.description"
+            :label="t('columns.description', 'Description').value"
+            density="comfortable"
+            variant="outlined"
+            rows="2"
+            auto-grow
+            data-testid="feature-analysis-editor-description"
+          />
 
-              <v-row>
-                <v-col
-                  cols="12"
-                  md="4"
-                >
-                  <v-select
-                    v-model="draft.type"
-                    :label="t('cc.fa.analysisType', 'Type').value"
-                    :items="typeOptions"
-                    item-title="label"
-                    item-value="value"
-                    :disabled="isEditing"
-                    density="comfortable"
-                    variant="outlined"
-                    data-testid="feature-analysis-editor-type"
-                  />
-                </v-col>
-                <v-col
-                  cols="12"
-                  md="4"
-                >
-                  <v-select
-                    v-model="draft.domain"
-                    :label="t('cc.fa.domain', 'Domain').value"
-                    :items="domainOptions"
-                    clearable
-                    density="comfortable"
-                    variant="outlined"
-                    data-testid="feature-analysis-editor-domain"
-                  />
-                </v-col>
-                <v-col
-                  cols="12"
-                  md="4"
-                >
-                  <v-select
-                    v-model="draft.statType"
-                    :label="t('cc.fa.analysisType', 'Stat Type').value"
-                    :items="statTypeOptions"
-                    clearable
-                    density="comfortable"
-                    variant="outlined"
-                    data-testid="feature-analysis-editor-statType"
-                  />
-                </v-col>
-              </v-row>
-            </div>
-
-            <!-- PRESET design -->
-            <div
-              v-if="draft.type === 'PRESET'"
-              class="feature-analysis-editor__section"
-              data-testid="feature-analysis-editor-design-preset"
+          <v-row>
+            <v-col
+              cols="12"
+              md="4"
             >
-              <h2 class="feature-analysis-editor__section-title">
-                {{ t('cc.fa.design', 'Covariate settings (JSON)') }}
-              </h2>
-              <div class="feature-analysis-editor__preset-actions">
-                <v-btn
-                  variant="outlined"
-                  size="small"
-                  prepend-icon="mdi-download"
-                  :loading="loadingDefaults"
-                  data-testid="feature-analysis-editor-preset-default"
-                  @click="loadDefaultCovariateSettings(false)"
-                >
-                  {{ t('featureAnalyses.editor.preset.loadDefault', 'Load default covariate settings') }}
-                </v-btn>
-                <v-btn
-                  variant="outlined"
-                  size="small"
-                  prepend-icon="mdi-clock-outline"
-                  :loading="loadingDefaults"
-                  data-testid="feature-analysis-editor-preset-default-temporal"
-                  @click="loadDefaultCovariateSettings(true)"
-                >
-                  {{ t('featureAnalyses.editor.preset.loadDefaultTemporal', 'Load default temporal covariate settings') }}
-                </v-btn>
-                <v-chip
-                  v-if="presetJsonError"
-                  color="error"
-                  size="small"
-                  variant="tonal"
-                  data-testid="feature-analysis-editor-preset-invalid"
-                >
-                  {{ t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON') }}
-                </v-chip>
-              </div>
-              <v-textarea
-                v-model="presetDesignJson"
-                :label="t('cc.fa.design', 'Covariate settings (JSON)').value"
+              <v-select
+                v-model="draft.type"
+                :label="t('cc.fa.analysisType', 'Type').value"
+                :items="typeOptions"
+                item-title="label"
+                item-value="value"
+                :disabled="isEditing"
                 density="comfortable"
                 variant="outlined"
-                rows="14"
-                auto-grow
-                class="feature-analysis-editor__json"
-                data-testid="feature-analysis-editor-preset-json"
-                @blur="validatePresetJson"
+                data-testid="feature-analysis-editor-type"
               />
-            </div>
-
-            <!-- CRITERIA_SET design -->
-            <div
-              v-else-if="draft.type === 'CRITERIA_SET'"
-              class="feature-analysis-editor__section"
-              data-testid="feature-analysis-editor-design-criteria"
+            </v-col>
+            <v-col
+              cols="12"
+              md="4"
             >
-              <h2 class="feature-analysis-editor__section-title">
-                {{ t('cc.fa.criteria', 'Criteria Set') }}
-              </h2>
-              <p class="text-body-2 text-grey mb-2">
-                {{ t('featureAnalyses.editor.criteriaSet.explainer', 'Criteria builder integration ships in Phase 3. For now, edit JSON directly.') }}
-              </p>
-              <v-textarea
-                v-model="criteriaConceptSetsJson"
-                :label="t('cc.fa.tabs.conceptSets', 'Concept sets (JSON array)').value"
-                :error-messages="criteriaConceptSetsError"
+              <v-select
+                v-model="draft.domain"
+                :label="t('cc.fa.domain', 'Domain').value"
+                :items="domainOptions"
+                clearable
                 density="comfortable"
                 variant="outlined"
-                rows="6"
-                auto-grow
-                class="feature-analysis-editor__json"
-                data-testid="feature-analysis-editor-criteria-conceptsets-json"
-                @blur="validateCriteriaConceptSetsJson"
+                data-testid="feature-analysis-editor-domain"
               />
-              <v-textarea
-                v-model="criteriaCriteriaJson"
-                :label="t('cc.fa.criteria', 'Criteria group (JSON)').value"
-                :error-messages="criteriaCriteriaError"
-                density="comfortable"
-                variant="outlined"
-                rows="10"
-                auto-grow
-                class="feature-analysis-editor__json"
-                data-testid="feature-analysis-editor-criteria-criteria-json"
-                @blur="validateCriteriaCriteriaJson"
-              />
-            </div>
-
-            <!-- CUSTOM_FE design -->
-            <div
-              v-else-if="draft.type === 'CUSTOM_FE'"
-              class="feature-analysis-editor__section"
-              data-testid="feature-analysis-editor-design-custom"
+            </v-col>
+            <v-col
+              cols="12"
+              md="4"
             >
-              <h2 class="feature-analysis-editor__section-title">
-                {{ t('cc.fa.analysisSql', 'Custom SQL') }}
-              </h2>
-              <v-textarea
-                v-model="customFeSql"
-                :label="t('cc.fa.analysisSql', 'Custom SQL').value"
+              <v-select
+                v-model="draft.statType"
+                :label="t('cc.fa.analysisType', 'Stat Type').value"
+                :items="statTypeOptions"
+                clearable
                 density="comfortable"
                 variant="outlined"
-                rows="14"
-                auto-grow
-                class="feature-analysis-editor__json feature-analysis-editor__sql"
-                data-testid="feature-analysis-editor-custom-sql"
+                data-testid="feature-analysis-editor-statType"
               />
-            </div>
-          </v-card-text>
-        </v-card>
+            </v-col>
+          </v-row>
+        </div>
 
-        <!-- Delete confirmation dialog -->
-        <v-dialog
-          v-model="showDeleteDialog"
-          max-width="500"
+        <!-- PRESET design -->
+        <div
+          v-if="draft.type === 'PRESET'"
+          class="feature-analysis-editor__section"
+          data-testid="feature-analysis-editor-design-preset"
         >
-          <v-card>
-            <v-card-title class="text-h5">
-              {{ t('common.delete', 'Delete') }}
-            </v-card-title>
-            <v-card-text>
-              {{ deleteMessage }}
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn
-                variant="text"
-                @click="showDeleteDialog = false"
-              >
-                {{ t('common.cancel', 'Cancel') }}
-              </v-btn>
-              <v-btn
-                color="error"
-                variant="elevated"
-                :loading="loading"
-                data-testid="feature-analysis-editor-delete-confirm"
-                @click="confirmDelete"
-              >
-                {{ t('common.delete', 'Delete') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-
-        <!-- Error snackbar -->
-        <v-snackbar
-          v-model="snackbar.show"
-          :color="snackbar.color"
-          :timeout="snackbar.timeout"
-          data-testid="feature-analysis-editor-snackbar"
-        >
-          {{ snackbar.message }}
-          <template #actions>
+          <h2 class="feature-analysis-editor__section-title">
+            {{ t('cc.fa.design', 'Covariate settings (JSON)') }}
+          </h2>
+          <div class="feature-analysis-editor__preset-actions">
             <v-btn
-              variant="text"
-              @click="snackbar.show = false"
+              variant="outlined"
+              size="small"
+              prepend-icon="mdi-download"
+              :loading="loadingDefaults"
+              data-testid="feature-analysis-editor-preset-default"
+              @click="loadDefaultCovariateSettings(false)"
             >
-              {{ t('common.close', 'Close') }}
+              {{ t('featureAnalyses.editor.preset.loadDefault', 'Load default covariate settings') }}
             </v-btn>
-          </template>
-        </v-snackbar>
+            <v-btn
+              variant="outlined"
+              size="small"
+              prepend-icon="mdi-clock-outline"
+              :loading="loadingDefaults"
+              data-testid="feature-analysis-editor-preset-default-temporal"
+              @click="loadDefaultCovariateSettings(true)"
+            >
+              {{ t('featureAnalyses.editor.preset.loadDefaultTemporal', 'Load default temporal covariate settings') }}
+            </v-btn>
+            <v-chip
+              v-if="presetJsonError"
+              color="error"
+              size="small"
+              variant="tonal"
+              data-testid="feature-analysis-editor-preset-invalid"
+            >
+              {{ t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON') }}
+            </v-chip>
+          </div>
+          <v-textarea
+            v-model="presetDesignJson"
+            :label="t('cc.fa.design', 'Covariate settings (JSON)').value"
+            density="comfortable"
+            variant="outlined"
+            rows="14"
+            auto-grow
+            class="feature-analysis-editor__json"
+            data-testid="feature-analysis-editor-preset-json"
+            @blur="validatePresetJson"
+          />
+        </div>
+
+        <!-- CRITERIA_SET design -->
+        <div
+          v-else-if="draft.type === 'CRITERIA_SET'"
+          class="feature-analysis-editor__section"
+          data-testid="feature-analysis-editor-design-criteria"
+        >
+          <h2 class="feature-analysis-editor__section-title">
+            {{ t('cc.fa.criteria', 'Criteria Set') }}
+          </h2>
+          <p class="text-body-2 text-grey mb-2">
+            {{ t('featureAnalyses.editor.criteriaSet.explainer', 'Criteria builder integration ships in Phase 3. For now, edit JSON directly.') }}
+          </p>
+          <v-textarea
+            v-model="criteriaConceptSetsJson"
+            :label="t('cc.fa.tabs.conceptSets', 'Concept sets (JSON array)').value"
+            :error-messages="criteriaConceptSetsError"
+            density="comfortable"
+            variant="outlined"
+            rows="6"
+            auto-grow
+            class="feature-analysis-editor__json"
+            data-testid="feature-analysis-editor-criteria-conceptsets-json"
+            @blur="validateCriteriaConceptSetsJson"
+          />
+          <v-textarea
+            v-model="criteriaCriteriaJson"
+            :label="t('cc.fa.criteria', 'Criteria group (JSON)').value"
+            :error-messages="criteriaCriteriaError"
+            density="comfortable"
+            variant="outlined"
+            rows="10"
+            auto-grow
+            class="feature-analysis-editor__json"
+            data-testid="feature-analysis-editor-criteria-criteria-json"
+            @blur="validateCriteriaCriteriaJson"
+          />
+        </div>
+
+        <!-- CUSTOM_FE design -->
+        <div
+          v-else-if="draft.type === 'CUSTOM_FE'"
+          class="feature-analysis-editor__section"
+          data-testid="feature-analysis-editor-design-custom"
+        >
+          <h2 class="feature-analysis-editor__section-title">
+            {{ t('cc.fa.analysisSql', 'Custom SQL') }}
+          </h2>
+          <v-textarea
+            v-model="customFeSql"
+            :label="t('cc.fa.analysisSql', 'Custom SQL').value"
+            density="comfortable"
+            variant="outlined"
+            rows="14"
+            auto-grow
+            class="feature-analysis-editor__json feature-analysis-editor__sql"
+            data-testid="feature-analysis-editor-custom-sql"
+          />
+        </div>
+      </v-card-text>
+    </v-card>
+
+    <!-- Delete confirmation dialog -->
+    <v-dialog
+      v-model="showDeleteDialog"
+      max-width="500"
+    >
+      <v-card>
+        <v-card-title class="text-h5">
+          {{ t('common.delete', 'Delete') }}
+        </v-card-title>
+        <v-card-text>
+          {{ deleteMessage }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            variant="text"
+            @click="showDeleteDialog = false"
+          >
+            {{ t('common.cancel', 'Cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="elevated"
+            :loading="loading"
+            data-testid="feature-analysis-editor-delete-confirm"
+            @click="confirmDelete"
+          >
+            {{ t('common.delete', 'Delete') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Error snackbar -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+      data-testid="feature-analysis-editor-snackbar"
+    >
+      {{ snackbar.message }}
+      <template #actions>
+        <v-btn
+          variant="text"
+          @click="snackbar.show = false"
+        >
+          {{ t('common.close', 'Close') }}
+        </v-btn>
+      </template>
+    </v-snackbar>
   </AnalysisBuilderShell>
 </template>
 

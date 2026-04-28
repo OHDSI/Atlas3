@@ -77,169 +77,169 @@
       </v-btn>
     </template>
 
-        <!-- Tabs -->
-        <v-card class="char-builder__card">
-          <v-tabs
-            v-model="activeTab"
-            color="primary"
-            data-testid="char-builder-tabs"
+    <!-- Tabs -->
+    <v-card class="char-builder__card">
+      <v-tabs
+        v-model="activeTab"
+        color="primary"
+        data-testid="char-builder-tabs"
+      >
+        <v-tab
+          value="design"
+          data-testid="char-builder-tab-design"
+        >
+          {{ t('cc.fa.tabs.design', 'Design') }}
+        </v-tab>
+        <v-tab
+          value="conceptSets"
+          data-testid="char-builder-tab-conceptSets"
+        >
+          {{ t('cc.fa.tabs.conceptSets', 'Concept Sets') }}
+        </v-tab>
+        <v-tab
+          value="executions"
+          data-testid="char-builder-tab-executions"
+        >
+          {{ t('cc.viewEdit.tabs.executions', 'Executions') }}
+        </v-tab>
+        <v-tab
+          value="versions"
+          data-testid="char-builder-tab-versions"
+        >
+          {{ t('cc.viewEdit.tabs.versions', 'Versions') }}
+        </v-tab>
+        <v-tab
+          value="utilities"
+          data-testid="char-builder-tab-utilities"
+        >
+          {{ t('cc.viewEdit.tabs.utilities', 'Utilities') }}
+        </v-tab>
+        <v-tab
+          value="validation"
+          data-testid="char-builder-tab-validation"
+        >
+          {{ t('cc.viewEdit.tabs.messages', 'Validation') }}
+          <v-badge
+            v-if="validationBadge"
+            inline
+            :color="validationBadge.color"
+            :content="validationBadge.count"
+            class="ms-2"
+            data-testid="char-builder-tab-validation-badge"
+          />
+        </v-tab>
+      </v-tabs>
+
+      <v-card-text>
+        <v-tabs-window v-model="activeTab">
+          <v-tabs-window-item value="design">
+            <CharacterizationDesignTab
+              :model-value="draft"
+              :available-cohorts="availableCohorts"
+              :available-feature-analyses="availableFeatureAnalyses"
+              data-testid="char-builder-design-tab"
+              @update:model-value="onDraftChange"
+            />
+          </v-tabs-window-item>
+
+          <v-tabs-window-item value="conceptSets">
+            <CharacterizationConceptSetsTab
+              :characterization="draft"
+              data-testid="char-builder-conceptsets-tab"
+            />
+          </v-tabs-window-item>
+
+          <v-tabs-window-item value="executions">
+            <ExecutionsPanel
+              :characterization-id="draftId"
+              data-testid="char-builder-executions-tab"
+            />
+          </v-tabs-window-item>
+
+          <v-tabs-window-item value="versions">
+            <div
+              class="char-builder__versions-stub"
+              data-testid="char-builder-versions-tab"
+            >
+              <p>
+                {{
+                  t(
+                    'characterizations.editor.versionsTodo',
+                    'Versions integration TODO — wires into characterization-versions.service in a follow-up.'
+                  )
+                }}
+              </p>
+            </div>
+          </v-tabs-window-item>
+
+          <v-tabs-window-item value="utilities">
+            <CharacterizationUtilitiesTab
+              :characterization="draft"
+              data-testid="char-builder-utilities-tab"
+              @imported="onImported"
+            />
+          </v-tabs-window-item>
+
+          <v-tabs-window-item value="validation">
+            <CharacterizationMessagesTab
+              :characterization="draft"
+              data-testid="char-builder-validation-tab"
+            />
+          </v-tabs-window-item>
+        </v-tabs-window>
+      </v-card-text>
+    </v-card>
+
+    <!-- Delete confirmation dialog -->
+    <v-dialog
+      v-model="showDeleteDialog"
+      max-width="500"
+    >
+      <v-card>
+        <v-card-title class="text-h5">
+          {{ t('common.delete', 'Delete') }}
+        </v-card-title>
+        <v-card-text>
+          {{ deleteMessage }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            variant="text"
+            @click="showDeleteDialog = false"
           >
-            <v-tab
-              value="design"
-              data-testid="char-builder-tab-design"
-            >
-              {{ t('cc.fa.tabs.design', 'Design') }}
-            </v-tab>
-            <v-tab
-              value="conceptSets"
-              data-testid="char-builder-tab-conceptSets"
-            >
-              {{ t('cc.fa.tabs.conceptSets', 'Concept Sets') }}
-            </v-tab>
-            <v-tab
-              value="executions"
-              data-testid="char-builder-tab-executions"
-            >
-              {{ t('cc.viewEdit.tabs.executions', 'Executions') }}
-            </v-tab>
-            <v-tab
-              value="versions"
-              data-testid="char-builder-tab-versions"
-            >
-              {{ t('cc.viewEdit.tabs.versions', 'Versions') }}
-            </v-tab>
-            <v-tab
-              value="utilities"
-              data-testid="char-builder-tab-utilities"
-            >
-              {{ t('cc.viewEdit.tabs.utilities', 'Utilities') }}
-            </v-tab>
-            <v-tab
-              value="validation"
-              data-testid="char-builder-tab-validation"
-            >
-              {{ t('cc.viewEdit.tabs.messages', 'Validation') }}
-              <v-badge
-                v-if="validationBadge"
-                inline
-                :color="validationBadge.color"
-                :content="validationBadge.count"
-                class="ms-2"
-                data-testid="char-builder-tab-validation-badge"
-              />
-            </v-tab>
-          </v-tabs>
+            {{ t('common.cancel', 'Cancel') }}
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="elevated"
+            :loading="loading"
+            data-testid="char-builder-delete-confirm"
+            @click="confirmDelete"
+          >
+            {{ t('common.delete', 'Delete') }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
-          <v-card-text>
-            <v-tabs-window v-model="activeTab">
-              <v-tabs-window-item value="design">
-                <CharacterizationDesignTab
-                  :model-value="draft"
-                  :available-cohorts="availableCohorts"
-                  :available-feature-analyses="availableFeatureAnalyses"
-                  data-testid="char-builder-design-tab"
-                  @update:model-value="onDraftChange"
-                />
-              </v-tabs-window-item>
-
-              <v-tabs-window-item value="conceptSets">
-                <CharacterizationConceptSetsTab
-                  :characterization="draft"
-                  data-testid="char-builder-conceptsets-tab"
-                />
-              </v-tabs-window-item>
-
-              <v-tabs-window-item value="executions">
-                <ExecutionsPanel
-                  :characterization-id="draftId"
-                  data-testid="char-builder-executions-tab"
-                />
-              </v-tabs-window-item>
-
-              <v-tabs-window-item value="versions">
-                <div
-                  class="char-builder__versions-stub"
-                  data-testid="char-builder-versions-tab"
-                >
-                  <p>
-                    {{
-                      t(
-                        'characterizations.editor.versionsTodo',
-                        'Versions integration TODO — wires into characterization-versions.service in a follow-up.'
-                      )
-                    }}
-                  </p>
-                </div>
-              </v-tabs-window-item>
-
-              <v-tabs-window-item value="utilities">
-                <CharacterizationUtilitiesTab
-                  :characterization="draft"
-                  data-testid="char-builder-utilities-tab"
-                  @imported="onImported"
-                />
-              </v-tabs-window-item>
-
-              <v-tabs-window-item value="validation">
-                <CharacterizationMessagesTab
-                  :characterization="draft"
-                  data-testid="char-builder-validation-tab"
-                />
-              </v-tabs-window-item>
-            </v-tabs-window>
-          </v-card-text>
-        </v-card>
-
-        <!-- Delete confirmation dialog -->
-        <v-dialog
-          v-model="showDeleteDialog"
-          max-width="500"
+    <!-- Snackbar -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+      data-testid="char-builder-snackbar"
+    >
+      {{ snackbar.message }}
+      <template #actions>
+        <v-btn
+          variant="text"
+          @click="snackbar.show = false"
         >
-          <v-card>
-            <v-card-title class="text-h5">
-              {{ t('common.delete', 'Delete') }}
-            </v-card-title>
-            <v-card-text>
-              {{ deleteMessage }}
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn
-                variant="text"
-                @click="showDeleteDialog = false"
-              >
-                {{ t('common.cancel', 'Cancel') }}
-              </v-btn>
-              <v-btn
-                color="error"
-                variant="elevated"
-                :loading="loading"
-                data-testid="char-builder-delete-confirm"
-                @click="confirmDelete"
-              >
-                {{ t('common.delete', 'Delete') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-
-        <!-- Snackbar -->
-        <v-snackbar
-          v-model="snackbar.show"
-          :color="snackbar.color"
-          :timeout="snackbar.timeout"
-          data-testid="char-builder-snackbar"
-        >
-          {{ snackbar.message }}
-          <template #actions>
-            <v-btn
-              variant="text"
-              @click="snackbar.show = false"
-            >
-              {{ t('common.close', 'Close') }}
-            </v-btn>
-          </template>
-        </v-snackbar>
+          {{ t('common.close', 'Close') }}
+        </v-btn>
+      </template>
+    </v-snackbar>
   </AnalysisBuilderShell>
 </template>
 

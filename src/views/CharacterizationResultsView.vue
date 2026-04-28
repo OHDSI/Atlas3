@@ -31,89 +31,89 @@
       </v-btn>
     </template>
 
-        <!-- Loading -->
-        <div
-          v-if="loading"
-          class="char-results__loading"
-          data-testid="char-results-loading"
-        >
-          <v-progress-circular
-            indeterminate
-            size="48"
-            color="primary"
-          />
-          <span class="ms-3">
-            {{ t('cc.viewEdit.results.loading', 'Loading results...') }}
-          </span>
-        </div>
+    <!-- Loading -->
+    <div
+      v-if="loading"
+      class="char-results__loading"
+      data-testid="char-results-loading"
+    >
+      <v-progress-circular
+        indeterminate
+        size="48"
+        color="primary"
+      />
+      <span class="ms-3">
+        {{ t('cc.viewEdit.results.loading', 'Loading results...') }}
+      </span>
+    </div>
 
-        <!-- Error -->
-        <v-alert
-          v-else-if="loadError"
-          type="error"
-          variant="tonal"
-          class="mb-4"
-          data-testid="char-results-error"
-        >
-          {{ loadError }}
-        </v-alert>
+    <!-- Error -->
+    <v-alert
+      v-else-if="loadError"
+      type="error"
+      variant="tonal"
+      class="mb-4"
+      data-testid="char-results-error"
+    >
+      {{ loadError }}
+    </v-alert>
 
-        <template v-else>
-          <ResultsHeader
-            :execution="execution"
-            :result-count="resultCount"
-            :threshold="threshold"
-            @update:threshold="threshold = $event"
-          />
+    <template v-else>
+      <ResultsHeader
+        :execution="execution"
+        :result-count="resultCount"
+        :threshold="threshold"
+        @update:threshold="threshold = $event"
+      />
 
-          <ResultsFilterPanel
-            :available-analyses="availableAnalyses"
-            :available-domains="availableDomains"
-            :available-cohorts="availableCohorts"
-            :selected-analysis-ids="selectedAnalysisIds"
-            :selected-domains="selectedDomains"
-            :selected-cohort-id="selectedCohortId"
-            @update:selected-analysis-ids="selectedAnalysisIds = $event"
-            @update:selected-domains="selectedDomains = $event"
-            @update:selected-cohort-id="selectedCohortId = $event"
-          />
+      <ResultsFilterPanel
+        :available-analyses="availableAnalyses"
+        :available-domains="availableDomains"
+        :available-cohorts="availableCohorts"
+        :selected-analysis-ids="selectedAnalysisIds"
+        :selected-domains="selectedDomains"
+        :selected-cohort-id="selectedCohortId"
+        @update:selected-analysis-ids="selectedAnalysisIds = $event"
+        @update:selected-domains="selectedDomains = $event"
+        @update:selected-cohort-id="selectedCohortId = $event"
+      />
 
-          <div
-            v-if="!filteredPrevalenceGroups.length && !filteredDistributionGroups.length"
-            class="char-results__empty"
-            data-testid="char-results-empty"
-          >
-            {{ t('common.noData', 'No rows match the current filter.') }}
-          </div>
+      <div
+        v-if="!filteredPrevalenceGroups.length && !filteredDistributionGroups.length"
+        class="char-results__empty"
+        data-testid="char-results-empty"
+      >
+        {{ t('common.noData', 'No rows match the current filter.') }}
+      </div>
 
-          <PrevalenceTable
-            v-for="group in filteredPrevalenceGroups"
-            :key="`prev-${group.analysisId}`"
-            :analysis-id="group.analysisId"
-            :analysis-name="group.analysisName"
-            :rows="group.rows"
-            :cohorts="group.cohorts"
-            @explore="onExplore"
-          />
+      <PrevalenceTable
+        v-for="group in filteredPrevalenceGroups"
+        :key="`prev-${group.analysisId}`"
+        :analysis-id="group.analysisId"
+        :analysis-name="group.analysisName"
+        :rows="group.rows"
+        :cohorts="group.cohorts"
+        @explore="onExplore"
+      />
 
-          <DistributionTable
-            v-for="group in filteredDistributionGroups"
-            :key="`dist-${group.analysisId}`"
-            :analysis-id="group.analysisId"
-            :analysis-name="group.analysisName"
-            :rows="group.rows"
-            :cohorts="group.cohorts"
-          />
-        </template>
+      <DistributionTable
+        v-for="group in filteredDistributionGroups"
+        :key="`dist-${group.analysisId}`"
+        :analysis-id="group.analysisId"
+        :analysis-name="group.analysisName"
+        :rows="group.rows"
+        :cohorts="group.cohorts"
+      />
+    </template>
 
-        <ExplorePrevalenceDialog
-          v-model="exploreOpen"
-          :generation-id="exploreGenerationId"
-          :analysis-id="exploreAnalysisId"
-          :cohort-id="exploreCohortId"
-          :covariate-id="exploreCovariateId"
-          :covariate-name="exploreCovariateName"
-        />
+    <ExplorePrevalenceDialog
+      v-model="exploreOpen"
+      :generation-id="exploreGenerationId"
+      :analysis-id="exploreAnalysisId"
+      :cohort-id="exploreCohortId"
+      :covariate-id="exploreCovariateId"
+      :covariate-name="exploreCovariateName"
+    />
   </AnalysisBuilderShell>
 </template>
 
