@@ -6,10 +6,9 @@ import * as webapi from '@/services/webapi'
 vi.mock('@/services/webapi')
 
 const mkPathway = (id: number, name: string, tags: { id: number; name: string }[] = []) => ({
-  id, name, tags, design: {
-    targetCohorts: [], eventCohorts: [],
-    combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
-  },
+  id, name, tags,
+  targetCohorts: [], eventCohorts: [],
+  combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
 })
 
 describe('usePathways', () => {

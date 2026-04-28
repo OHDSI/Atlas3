@@ -12,40 +12,24 @@
   Temporal / annual views remain deferred.
 -->
 <template>
-  <div class="page-wrapper">
-    <div class="page-card">
-      <v-container
-        fluid
-        class="char-results"
+  <AnalysisBuilderShell
+    :title="titleText"
+    :show-back="true"
+    testid="char-results"
+    @back="goBack"
+  >
+    <template #actions>
+      <v-btn
+        color="primary"
+        variant="outlined"
+        prepend-icon="mdi-download"
+        :disabled="!hasAnyPrevalence"
+        data-testid="char-results-export"
+        @click="onExport"
       >
-        <!-- Toolbar -->
-        <div class="char-results__toolbar">
-          <div class="char-results__toolbar-left">
-            <v-btn
-              variant="text"
-              prepend-icon="mdi-arrow-left"
-              data-testid="char-results-back"
-              @click="goBack"
-            >
-              {{ t('common.backToCurrent', 'Back to builder') }}
-            </v-btn>
-            <h1 class="char-results__title">
-              {{ titleText }}
-            </h1>
-          </div>
-          <div class="char-results__toolbar-right">
-            <v-btn
-              color="primary"
-              variant="outlined"
-              prepend-icon="mdi-download"
-              :disabled="!hasAnyPrevalence"
-              data-testid="char-results-export"
-              @click="onExport"
-            >
-              {{ t('cc.viewEdit.results.exportAll', 'Export CSV') }}
-            </v-btn>
-          </div>
-        </div>
+        {{ t('cc.viewEdit.results.exportAll', 'Export CSV') }}
+      </v-btn>
+    </template>
 
         <!-- Loading -->
         <div
@@ -130,9 +114,7 @@
           :covariate-id="exploreCovariateId"
           :covariate-name="exploreCovariateName"
         />
-      </v-container>
-    </div>
-  </div>
+  </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
@@ -164,6 +146,7 @@ import ResultsFilterPanel from '@/components/characterization-results/ResultsFil
 import PrevalenceTable from '@/components/characterization-results/PrevalenceTable.vue'
 import DistributionTable from '@/components/characterization-results/DistributionTable.vue'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
+import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 
 interface Props {
   id: string
@@ -508,50 +491,6 @@ function onExplore(row: PrevalenceStat): void {
 </script>
 
 <style scoped>
-.page-wrapper {
-  min-height: 100%;
-  background-color: rgb(var(--v-theme-background));
-  display: flex;
-  padding: 32px;
-  box-sizing: border-box;
-}
-
-.page-card {
-  border-radius: 18px;
-  padding: 30px;
-  background-color: white;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
-.char-results__toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.char-results__toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.char-results__toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.char-results__title {
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin: 0;
-}
-
 .char-results__loading {
   display: flex;
   align-items: center;

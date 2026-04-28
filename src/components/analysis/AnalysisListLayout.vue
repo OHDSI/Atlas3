@@ -1,86 +1,100 @@
 <template>
   <div class="page-wrapper">
     <div class="page-card">
-      <v-container
-        fluid
-        class="analysis-list"
+      <header
+        v-if="title || subtitle || $slots.title"
+        class="analysis-list__header"
       >
+        <div class="analysis-list__heading">
+          <slot name="title">
+            <h1
+              v-if="title"
+              class="analysis-list__title"
+            >
+              {{ title }}
+            </h1>
+          </slot>
+          <p
+            v-if="subtitle"
+            class="analysis-list__subtitle"
+          >
+            {{ subtitle }}
+          </p>
+        </div>
+      </header>
+
+      <div class="analysis-list">
         <!-- Toolbar: actions left, view-mode toggle right -->
-        <v-row align="center">
-          <v-col cols="12">
-            <div class="analysis-list__actions">
-              <slot name="actions" />
-              <v-spacer />
-              <v-btn-toggle
-                v-if="showViewToggle"
-                :model-value="viewMode"
-                mandatory
-                density="compact"
-                variant="outlined"
-                divided
-                class="analysis-list__view-toggle"
-                :data-testid="testid ? `${testid}-view-toggle` : undefined"
-                @update:model-value="onViewModeChange"
+        <div class="analysis-list__toolbar">
+          <div class="analysis-list__actions">
+            <slot name="actions" />
+            <v-spacer />
+            <v-btn-toggle
+              v-if="showViewToggle"
+              :model-value="viewMode"
+              mandatory
+              density="compact"
+              variant="outlined"
+              divided
+              class="analysis-list__view-toggle"
+              :data-testid="testid ? `${testid}-view-toggle` : undefined"
+              @update:model-value="onViewModeChange"
+            >
+              <v-btn
+                value="tile"
+                size="small"
+                :aria-label="t('common.tileView', 'Tile view').value"
+                :data-testid="testid ? `${testid}-view-toggle-tile` : undefined"
               >
-                <v-btn
-                  value="tile"
-                  size="small"
-                  :aria-label="t('common.tileView', 'Tile view').value"
-                  :data-testid="testid ? `${testid}-view-toggle-tile` : undefined"
-                >
-                  <v-icon>mdi-view-grid</v-icon>
-                </v-btn>
-                <v-btn
-                  value="table"
-                  size="small"
-                  :aria-label="t('dataSources.table.tableTab', 'Table view').value"
-                  :data-testid="testid ? `${testid}-view-toggle-table` : undefined"
-                >
-                  <v-icon>mdi-view-list</v-icon>
-                </v-btn>
-              </v-btn-toggle>
-            </div>
-          </v-col>
-        </v-row>
+                <v-icon>mdi-view-grid</v-icon>
+              </v-btn>
+              <v-btn
+                value="table"
+                size="small"
+                :aria-label="t('dataSources.table.tableTab', 'Table view').value"
+                :data-testid="testid ? `${testid}-view-toggle-table` : undefined"
+              >
+                <v-icon>mdi-view-list</v-icon>
+              </v-btn>
+            </v-btn-toggle>
+          </div>
+        </div>
 
         <!-- Filters -->
-        <v-row v-if="$slots.filters">
-          <v-col cols="12">
-            <slot name="filters" />
-          </v-col>
-        </v-row>
+        <div
+          v-if="$slots.filters"
+          class="analysis-list__filters"
+        >
+          <slot name="filters" />
+        </div>
 
         <!-- Error banner -->
-        <v-row v-if="error">
-          <v-col cols="12">
-            <v-alert
-              type="error"
-              variant="tonal"
-              closable
-              :data-testid="testid ? `${testid}-error` : undefined"
-              @click:close="$emit('clear-error')"
-            >
-              {{ error }}
-            </v-alert>
-          </v-col>
-        </v-row>
+        <v-alert
+          v-if="error"
+          type="error"
+          variant="tonal"
+          closable
+          density="compact"
+          class="analysis-list__error"
+          :data-testid="testid ? `${testid}-error` : undefined"
+          @click:close="$emit('clear-error')"
+        >
+          {{ error }}
+        </v-alert>
 
-        <!-- Body (tile or table view) -->
-        <v-row>
-          <v-col cols="12">
-            <slot />
-          </v-col>
-        </v-row>
+        <!-- Body -->
+        <div class="analysis-list__body">
+          <slot />
+        </div>
 
         <!-- Pagination -->
-        <v-row v-if="$slots.pagination">
-          <v-col cols="12">
-            <div class="analysis-list__pagination">
-              <slot name="pagination" />
-            </div>
-          </v-col>
-        </v-row>
-      </v-container>
+        <div
+          v-if="$slots.pagination"
+          class="analysis-list__pagination"
+        >
+          <slot name="pagination" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -95,6 +109,8 @@ interface Props {
   viewMode?: AnalysisViewMode
   showViewToggle?: boolean
   testid?: string
+  title?: string
+  subtitle?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -102,6 +118,8 @@ const props = withDefaults(defineProps<Props>(), {
   viewMode: 'tile',
   showViewToggle: false,
   testid: undefined,
+  title: undefined,
+  subtitle: undefined,
 })
 
 const emit = defineEmits<{
@@ -123,20 +141,64 @@ function onViewModeChange(value: AnalysisViewMode | null) {
   min-height: 100%;
   background-color: rgb(var(--v-theme-background));
   display: flex;
-  padding: 32px;
+  padding: 24px;
   box-sizing: border-box;
 }
 
 .page-card {
-  border-radius: 18px;
-  padding: 30px;
-  background-color: white;
+  border-radius: 16px;
+  background-color: rgb(var(--v-theme-surface));
   width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 12px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+.analysis-list__header {
+  padding: 28px 32px 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.analysis-list__heading {
+  min-width: 0;
+}
+
+.analysis-list__title {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(var(--v-theme-on-surface), 0.92);
+  margin: 0;
+}
+
+.analysis-list__subtitle {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 .analysis-list {
-  padding: 0;
+  padding: 20px 32px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.analysis-list__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 4px 0;
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--v-theme-surface)) 75%,
+    rgba(var(--v-theme-surface), 0)
+  );
 }
 
 .analysis-list__actions {
@@ -146,14 +208,32 @@ function onViewModeChange(value: AnalysisViewMode | null) {
   flex-wrap: wrap;
 }
 
+.analysis-list__filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .analysis-list__view-toggle :deep(.v-btn) {
-  border-color: rgba(0, 0, 0, 0.12);
+  border-color: rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.analysis-list__error {
+  border-radius: 10px;
+}
+
+.analysis-list__body {
+  border-radius: 12px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+  overflow: hidden;
+  background: rgb(var(--v-theme-surface));
 }
 
 .analysis-list__pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px 0;
+  padding: 4px 0 0;
 }
 </style>

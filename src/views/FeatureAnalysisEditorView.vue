@@ -12,76 +12,48 @@
   error reporting via the local v-snackbar.
 -->
 <template>
-  <div class="page-wrapper">
-    <div class="page-card">
-      <v-container
-        fluid
-        class="feature-analysis-editor"
+  <AnalysisBuilderShell
+    :title="titleText"
+    :error="storeError"
+    testid="feature-analysis-editor"
+    @back="handleBack"
+    @clear-error="store.clearError()"
+  >
+    <template #actions>
+      <v-btn
+        v-if="isEditing"
+        variant="outlined"
+        color="primary"
+        prepend-icon="mdi-content-copy"
+        :disabled="loading"
+        data-testid="feature-analysis-editor-copy"
+        @click="handleSaveCopy"
       >
-        <!-- Toolbar -->
-        <div class="feature-analysis-editor__toolbar">
-          <div class="feature-analysis-editor__toolbar-left">
-            <v-btn
-              variant="text"
-              prepend-icon="mdi-arrow-left"
-              data-testid="feature-analysis-editor-back"
-              @click="handleBack"
-            >
-              {{ t('featureAnalyses.editor.actions.back', 'Back') }}
-            </v-btn>
-            <h1 class="feature-analysis-editor__title">
-              {{ titleText }}
-            </h1>
-          </div>
-          <div class="feature-analysis-editor__toolbar-right">
-            <v-btn
-              v-if="isEditing"
-              variant="outlined"
-              color="primary"
-              prepend-icon="mdi-content-copy"
-              :disabled="loading"
-              data-testid="feature-analysis-editor-copy"
-              @click="handleSaveCopy"
-            >
-              {{ t('common.createACopy', 'Save as Copy') }}
-            </v-btn>
-            <v-btn
-              v-if="isEditing"
-              variant="outlined"
-              color="error"
-              prepend-icon="mdi-delete"
-              :disabled="loading"
-              data-testid="feature-analysis-editor-delete"
-              @click="handleDeleteClick"
-            >
-              {{ t('common.delete', 'Delete') }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              variant="elevated"
-              prepend-icon="mdi-content-save"
-              :disabled="!canSave"
-              :loading="saving"
-              data-testid="feature-analysis-editor-save"
-              @click="handleSave"
-            >
-              {{ t('common.save', 'Save') }}
-            </v-btn>
-          </div>
-        </div>
-
-        <!-- Error from store -->
-        <v-alert
-          v-if="storeError"
-          type="error"
-          variant="tonal"
-          closable
-          class="mb-4"
-          data-testid="feature-analysis-editor-error"
-          @click:close="store.clearError()"
-        >
-          {{ storeError }}
-        </v-alert>
+        {{ t('common.createACopy', 'Save as Copy') }}
+      </v-btn>
+      <v-btn
+        v-if="isEditing"
+        variant="outlined"
+        color="error"
+        prepend-icon="mdi-delete"
+        :disabled="loading"
+        data-testid="feature-analysis-editor-delete"
+        @click="handleDeleteClick"
+      >
+        {{ t('common.delete', 'Delete') }}
+      </v-btn>
+      <v-btn
+        color="primary"
+        variant="elevated"
+        prepend-icon="mdi-content-save"
+        :disabled="!canSave"
+        :loading="saving"
+        data-testid="feature-analysis-editor-save"
+        @click="handleSave"
+      >
+        {{ t('common.save', 'Save') }}
+      </v-btn>
+    </template>
 
         <!-- Main editor card -->
         <v-card class="feature-analysis-editor__card">
@@ -323,9 +295,7 @@
             </v-btn>
           </template>
         </v-snackbar>
-      </v-container>
-    </div>
-  </div>
+  </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
@@ -343,6 +313,7 @@ import type {
   FeatureAnalysisCriteriaSetDesign,
 } from '@/models/feature-analysis.types'
 import type { ConceptSetReference } from '@/models/concept-set.types'
+import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 
 const props = defineProps<{
   id?: string
@@ -785,56 +756,11 @@ onBeforeRouteLeave((_to, _from, next) => {
 </script>
 
 <style scoped>
-.page-wrapper {
-  min-height: 100%;
-  background-color: rgb(var(--v-theme-background));
-  display: flex;
-  padding: 32px;
-  box-sizing: border-box;
-}
-
-.page-card {
-  border-radius: 18px;
-  padding: 30px;
-  background-color: white;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
-.feature-analysis-editor {
-  padding: 0;
-}
-
-.feature-analysis-editor__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.feature-analysis-editor__toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.feature-analysis-editor__toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.feature-analysis-editor__title {
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin: 0;
-}
-
 .feature-analysis-editor__card {
   padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+  box-shadow: none !important;
 }
 
 .feature-analysis-editor__section {

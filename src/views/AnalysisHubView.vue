@@ -1,24 +1,29 @@
 <template>
   <div class="analysis-hub">
-    <v-tabs
-      :model-value="activeTabName"
-      align-tabs="start"
-      color="primary"
-      class="analysis-hub__tabs"
-    >
-      <v-tab
-        v-for="tab in tabs"
-        :key="tab.name"
-        :value="tab.name"
-        :to="{ name: tab.name }"
+    <nav class="analysis-hub__tabs-rail">
+      <v-tabs
+        :model-value="activeTabName"
+        align-tabs="start"
+        density="comfortable"
+        color="primary"
+        slider-color="primary"
+        class="analysis-hub__tabs"
       >
-        <v-icon
-          start
-          :icon="tab.icon"
-        />
-        {{ getLabel(tab) }}
-      </v-tab>
-    </v-tabs>
+        <v-tab
+          v-for="tab in tabs"
+          :key="tab.name"
+          :value="tab.name"
+          :to="{ name: tab.name }"
+          class="analysis-hub__tab"
+        >
+          <v-icon
+            start
+            :icon="tab.icon"
+          />
+          {{ getLabel(tab) }}
+        </v-tab>
+      </v-tabs>
+    </nav>
 
     <router-view />
   </div>
@@ -72,8 +77,36 @@ function getLabel(tab: Tab): string {
 </script>
 
 <style scoped>
+.analysis-hub {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.analysis-hub__tabs-rail {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: rgb(var(--v-theme-surface));
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
+  padding: 0 24px;
+}
+
 .analysis-hub__tabs {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-  margin-bottom: 8px;
+  max-width: 100%;
+}
+
+.analysis-hub__tab {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding-inline: 16px;
+  min-height: 52px;
+}
+
+.analysis-hub__tab :deep(.v-icon) {
+  margin-inline-end: 8px;
+  opacity: 0.85;
 }
 </style>

@@ -147,7 +147,7 @@ describe('treemap-export', () => {
           return this._src
         }
       }
-      ;(window as unknown as { Image: typeof Image }).Image =
+      (window as unknown as { Image: typeof Image }).Image =
         FakeImage as unknown as typeof Image
 
       // Stub canvas methods that jsdom does not implement.
@@ -170,7 +170,7 @@ describe('treemap-export', () => {
       try {
         await downloadPNG(svg, 'chart.png')
       } finally {
-        ;(window as unknown as { Image: typeof Image }).Image = originalImage
+        (window as unknown as { Image: typeof Image }).Image = originalImage
       }
 
       // First createObjectURL is for the SVG blob, second is for the PNG blob.
@@ -198,7 +198,7 @@ describe('treemap-export', () => {
           queueMicrotask(() => this.onload?.())
         }
       }
-      ;(window as unknown as { Image: typeof Image }).Image =
+      (window as unknown as { Image: typeof Image }).Image =
         FakeImage as unknown as typeof Image
 
       vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
@@ -217,7 +217,7 @@ describe('treemap-export', () => {
       try {
         await downloadPNG(svg, 'chart.png')
       } finally {
-        ;(window as unknown as { Image: typeof Image }).Image = originalImage
+        (window as unknown as { Image: typeof Image }).Image = originalImage
       }
 
       // No PNG download should have been triggered.
@@ -237,13 +237,13 @@ describe('treemap-export', () => {
           queueMicrotask(() => this.onerror?.(new Error('img boom')))
         }
       }
-      ;(window as unknown as { Image: typeof Image }).Image =
+      (window as unknown as { Image: typeof Image }).Image =
         FakeImage as unknown as typeof Image
 
       try {
         await expect(downloadPNG(svg, 'chart.png')).rejects.toBeDefined()
       } finally {
-        ;(window as unknown as { Image: typeof Image }).Image = originalImage
+        (window as unknown as { Image: typeof Image }).Image = originalImage
       }
     })
 
@@ -260,7 +260,7 @@ describe('treemap-export', () => {
           queueMicrotask(() => this.onload?.())
         }
       }
-      ;(window as unknown as { Image: typeof Image }).Image =
+      (window as unknown as { Image: typeof Image }).Image =
         FakeImage as unknown as typeof Image
 
       const fillRect = vi.fn()
@@ -280,7 +280,7 @@ describe('treemap-export', () => {
       try {
         await downloadPNG(svg, 'chart.png')
       } finally {
-        ;(window as unknown as { Image: typeof Image }).Image = originalImage
+        (window as unknown as { Image: typeof Image }).Image = originalImage
       }
 
       // fillRect should have been called with (0, 0, 1, 1) — Math.max(1, 0).

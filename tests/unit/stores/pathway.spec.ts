@@ -8,10 +8,8 @@ vi.mock('@/services/webapi', () => ({
     success: true,
     data: {
       id: 1, name: 'X', tags: [],
-      design: {
-        targetCohorts: [], eventCohorts: [],
-        combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
-      },
+      targetCohorts: [], eventCohorts: [],
+      combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
     },
   }),
   existsPathway: vi.fn().mockResolvedValue(0),
@@ -39,7 +37,7 @@ describe('pathway store — basics', () => {
     const s = usePathwayStore()
     s.createNewPathway()
     expect(s.currentPathway?.name).toBe('')
-    expect(s.currentPathway?.design.combinationWindow).toBe(PATHWAY_DEFAULTS.combinationWindow)
+    expect(s.currentPathway?.combinationWindow).toBe(PATHWAY_DEFAULTS.combinationWindow)
     expect(s.isDirty).toBe(false)
   })
 
@@ -47,7 +45,7 @@ describe('pathway store — basics', () => {
     const s = usePathwayStore()
     s.createNewPathway()
     s.updateDesign({ maxDepth: 7 })
-    expect(s.currentPathway?.design.maxDepth).toBe(7)
+    expect(s.currentPathway?.maxDepth).toBe(7)
     expect(s.isDirty).toBe(true)
   })
 
@@ -56,7 +54,7 @@ describe('pathway store — basics', () => {
     s.createNewPathway()
     s.addTargetCohort({ id: 1, name: 'A' })
     s.addTargetCohort({ id: 1, name: 'A duplicate' })
-    expect(s.currentPathway?.design.targetCohorts).toHaveLength(1)
+    expect(s.currentPathway?.targetCohorts).toHaveLength(1)
   })
 
   it('removeEventCohort drops by id', () => {
@@ -65,7 +63,7 @@ describe('pathway store — basics', () => {
     s.addEventCohort({ id: 1, name: 'A' })
     s.addEventCohort({ id: 2, name: 'B' })
     s.removeEventCohort(1)
-    expect(s.currentPathway?.design.eventCohorts.map(c => c.id)).toEqual([2])
+    expect(s.currentPathway?.eventCohorts.map(c => c.id)).toEqual([2])
   })
 
   it('renameTargetCohort updates the label only', () => {
@@ -73,7 +71,7 @@ describe('pathway store — basics', () => {
     s.createNewPathway()
     s.addTargetCohort({ id: 1, name: 'A' })
     s.renameTargetCohort(1, 'Better label')
-    expect(s.currentPathway?.design.targetCohorts[0].name).toBe('Better label')
+    expect(s.currentPathway?.targetCohorts[0].name).toBe('Better label')
   })
 
   it('loadPathway populates currentPathway and clears dirty', async () => {
@@ -115,10 +113,8 @@ describe('pathway store — auto-save', () => {
     sessionStorage.setItem('atlas3_pathway_draft', JSON.stringify({
       pathway: {
         name: 'From draft', tags: [],
-        design: {
-          targetCohorts: [], eventCohorts: [],
-          combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
-        },
+        targetCohorts: [], eventCohorts: [],
+        combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
       },
       timestamp: new Date().toISOString(),
     }))
@@ -228,7 +224,7 @@ describe('pathway store — design mutators (extended)', () => {
     s.addTargetCohort({ id: 1, name: 'A' })
     s.addTargetCohort({ id: 2, name: 'B' })
     s.removeTargetCohort(1)
-    expect(s.currentPathway?.design.targetCohorts.map(c => c.id)).toEqual([2])
+    expect(s.currentPathway?.targetCohorts.map(c => c.id)).toEqual([2])
   })
 
   it('renameEventCohort updates the label only', () => {
@@ -236,7 +232,7 @@ describe('pathway store — design mutators (extended)', () => {
     s.createNewPathway()
     s.addEventCohort({ id: 1, name: 'A' })
     s.renameEventCohort(1, 'Better')
-    expect(s.currentPathway?.design.eventCohorts[0].name).toBe('Better')
+    expect(s.currentPathway?.eventCohorts[0].name).toBe('Better')
   })
 
   it('addEventCohort dedupes by id', () => {
@@ -244,7 +240,7 @@ describe('pathway store — design mutators (extended)', () => {
     s.createNewPathway()
     s.addEventCohort({ id: 1, name: 'A' })
     s.addEventCohort({ id: 1, name: 'A duplicate' })
-    expect(s.currentPathway?.design.eventCohorts).toHaveLength(1)
+    expect(s.currentPathway?.eventCohorts).toHaveLength(1)
   })
 
   it('mutators no-op when currentPathway is null', () => {
@@ -290,10 +286,8 @@ describe('pathway store — load/preview lifecycle', () => {
       success: true,
       data: {
         id: 1, name: 'Loaded', tags: [],
-        design: {
-          targetCohorts: [], eventCohorts: [],
-          combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
-        },
+        targetCohorts: [], eventCohorts: [],
+        combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
       },
     } as never)
   })
@@ -316,10 +310,8 @@ describe('pathway store — load/preview lifecycle', () => {
       versionDTO: { assetId: 1, version: 3 } as never,
       entityDTO: {
         id: 1, name: 'Versioned', tags: [],
-        design: {
-          targetCohorts: [], eventCohorts: [],
-          combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
-        },
+        targetCohorts: [], eventCohorts: [],
+        combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
       } as never,
     })
     const s = usePathwayStore()
@@ -589,11 +581,9 @@ describe('pathway store — canSave / canGenerate', () => {
       versionDTO: { assetId: 1, version: 1 } as never,
       entityDTO: {
         id: 1, name: 'V', tags: [],
-        design: {
-          targetCohorts: [{ id: 1, name: 'T' }],
-          eventCohorts: [{ id: 2, name: 'E' }],
-          combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
-        },
+        targetCohorts: [{ id: 1, name: 'T' }],
+        eventCohorts: [{ id: 2, name: 'E' }],
+        combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
       } as never,
     })
     const s = usePathwayStore()

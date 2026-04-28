@@ -32,7 +32,7 @@ const emit = defineEmits<{
 
 const colorMap = computed(() => {
   const map = new Map<string, string>()
-  props.design.design.eventCohorts.forEach((_cohort, i) => {
+  props.design.eventCohorts.forEach((_cohort, i) => {
     const bit = 1 << i
     map.set(String(bit), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
   })
@@ -50,7 +50,7 @@ const hierarchy = computed(() => {
   return buildPathwayHierarchy(
     targetGroup.value,
     props.results.eventCodes,
-    props.design.design.maxDepth,
+    props.design.maxDepth,
     colors
   )
 })

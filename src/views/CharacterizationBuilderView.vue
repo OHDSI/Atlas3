@@ -14,96 +14,68 @@
   versions through `characterization-versions.service` separately.
 -->
 <template>
-  <div class="page-wrapper">
-    <div class="page-card">
-      <v-container
-        fluid
-        class="char-builder"
+  <AnalysisBuilderShell
+    :title="titleText"
+    :error="storeError"
+    testid="char-builder"
+    @back="handleBack"
+    @clear-error="store.clearError()"
+  >
+    <template #actions>
+      <v-tooltip
+        location="top"
+        :text="runDisabledReason"
+        :disabled="!runDisabledReason"
       >
-        <!-- Toolbar -->
-        <div class="char-builder__toolbar">
-          <div class="char-builder__toolbar-left">
-            <v-btn
-              variant="text"
-              prepend-icon="mdi-arrow-left"
-              data-testid="char-builder-back"
-              @click="handleBack"
-            >
-              {{ t('common.backToCurrent', 'Back') }}
-            </v-btn>
-            <h1 class="char-builder__title">
-              {{ titleText }}
-            </h1>
-          </div>
-          <div class="char-builder__toolbar-right">
-            <v-tooltip
-              location="top"
-              :text="runDisabledReason"
-              :disabled="!runDisabledReason"
-            >
-              <template #activator="{ props: tooltipProps }">
-                <div v-bind="tooltipProps">
-                  <v-btn
-                    color="primary"
-                    variant="outlined"
-                    prepend-icon="mdi-play"
-                    :disabled="!canRun"
-                    data-testid="char-builder-run"
-                    @click="handleRunClick"
-                  >
-                    {{ t('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run') }}
-                  </v-btn>
-                </div>
-              </template>
-            </v-tooltip>
-            <v-btn
-              v-if="isEditing"
-              variant="outlined"
-              color="primary"
-              prepend-icon="mdi-content-copy"
-              :disabled="loading"
-              data-testid="char-builder-copy"
-              @click="handleSaveCopy"
-            >
-              {{ t('common.createACopy', 'Save as Copy') }}
-            </v-btn>
-            <v-btn
-              v-if="isEditing"
-              variant="outlined"
-              color="error"
-              prepend-icon="mdi-delete"
-              :disabled="loading"
-              data-testid="char-builder-delete"
-              @click="handleDeleteClick"
-            >
-              {{ t('common.delete', 'Delete') }}
-            </v-btn>
+        <template #activator="{ props: tooltipProps }">
+          <div v-bind="tooltipProps">
             <v-btn
               color="primary"
-              variant="elevated"
-              prepend-icon="mdi-content-save"
-              :disabled="!canSave"
-              :loading="saving"
-              data-testid="char-builder-save"
-              @click="handleSave"
+              variant="outlined"
+              prepend-icon="mdi-play"
+              :disabled="!canRun"
+              data-testid="char-builder-run"
+              @click="handleRunClick"
             >
-              {{ t('common.save', 'Save') }}
+              {{ t('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run') }}
             </v-btn>
           </div>
-        </div>
-
-        <!-- Error from store -->
-        <v-alert
-          v-if="storeError"
-          type="error"
-          variant="tonal"
-          closable
-          class="mb-4"
-          data-testid="char-builder-error"
-          @click:close="store.clearError()"
-        >
-          {{ storeError }}
-        </v-alert>
+        </template>
+      </v-tooltip>
+      <v-btn
+        v-if="isEditing"
+        variant="outlined"
+        color="primary"
+        prepend-icon="mdi-content-copy"
+        :disabled="loading"
+        data-testid="char-builder-copy"
+        @click="handleSaveCopy"
+      >
+        {{ t('common.createACopy', 'Save as Copy') }}
+      </v-btn>
+      <v-btn
+        v-if="isEditing"
+        variant="outlined"
+        color="error"
+        prepend-icon="mdi-delete"
+        :disabled="loading"
+        data-testid="char-builder-delete"
+        @click="handleDeleteClick"
+      >
+        {{ t('common.delete', 'Delete') }}
+      </v-btn>
+      <v-btn
+        color="primary"
+        variant="elevated"
+        prepend-icon="mdi-content-save"
+        :disabled="!canSave"
+        :loading="saving"
+        data-testid="char-builder-save"
+        @click="handleSave"
+      >
+        {{ t('common.save', 'Save') }}
+      </v-btn>
+    </template>
 
         <!-- Tabs -->
         <v-card class="char-builder__card">
@@ -268,9 +240,7 @@
             </v-btn>
           </template>
         </v-snackbar>
-      </v-container>
-    </div>
-  </div>
+  </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
@@ -287,6 +257,7 @@ import CharacterizationConceptSetsTab from '@/components/characterization/Charac
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
 import CharacterizationUtilitiesTab from '@/components/characterization/CharacterizationUtilitiesTab.vue'
 import ExecutionsPanel from '@/components/characterization/ExecutionsPanel.vue'
+import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import {
   validateCharacterization,
   countByLevel,
@@ -640,61 +611,16 @@ onBeforeRouteLeave((_to, _from, next) => {
 </script>
 
 <style scoped>
-.page-wrapper {
-  min-height: 100%;
-  background-color: rgb(var(--v-theme-background));
-  display: flex;
-  padding: 32px;
-  box-sizing: border-box;
-}
-
-.page-card {
-  border-radius: 18px;
-  padding: 30px;
-  background-color: white;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
-.char-builder {
-  padding: 0;
-}
-
-.char-builder__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.char-builder__toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.char-builder__toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.char-builder__title {
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin: 0;
-}
-
 .char-builder__card {
   padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+  box-shadow: none !important;
 }
 
 .char-builder__versions-stub {
   padding: 24px;
-  color: #666;
+  color: rgba(var(--v-theme-on-surface), 0.6);
   font-style: italic;
 }
 </style>

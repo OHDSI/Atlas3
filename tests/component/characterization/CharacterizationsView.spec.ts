@@ -178,7 +178,7 @@ describe('CharacterizationsView', () => {
     mounted = await mountView()
     const { wrapper, router } = mounted
 
-    const link = wrapper.find('[data-testid="characterizations-row-name"]')
+    const link = wrapper.find('[data-testid="characterizations-table-row-name"]')
     expect(link.exists()).toBe(true)
     await link.trigger('click')
     await flushPromises()

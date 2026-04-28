@@ -45,20 +45,38 @@ export type CovariateSetting = Record<string, unknown>
 export const CovariateSettingSchema = z.record(z.unknown())
 
 // Aggregate metadata returned by `/feature-analysis/aggregates` — used by the
-// PRESET editor to pick which aggregate of a covariate to compute.
+// PRESET editor to pick which aggregate of a covariate to compute. Matches
+// the OHDSI WebAPI `FeatureExtractionAggregate` DTO exactly: `id` is a
+// numeric primary key, `expression`/`function`/`domain` describe the SQL
+// fragment, and the `default` flag (mirrored as `isDefault`) marks the
+// aggregate that's auto-selected for new analyses.
 export interface FeatureAnalysisAggregate {
-  id: string
+  id: number
   name: string
   description?: string
+  domain?: string | null
+  function?: string | null
+  expression?: string
+  default?: boolean
+  isDefault?: boolean
+  missingMeansZero?: boolean
+  additionalColumns?: string[] | null
 }
 
 export const FeatureAnalysisAggregateSchema = z
   .object({
-    id: z.string(),
+    id: z.number(),
     name: z.string(),
     description: z.string().optional(),
+    domain: z.string().nullable().optional(),
+    function: z.string().nullable().optional(),
+    expression: z.string().optional(),
+    default: z.boolean().optional(),
+    isDefault: z.boolean().optional(),
+    missingMeansZero: z.boolean().optional(),
+    additionalColumns: z.array(z.string()).nullable().optional(),
   })
-  .strip()
+  .passthrough()
 
 // ============================================================================
 // User reference (createdBy / modifiedBy come back as either string login or

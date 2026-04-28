@@ -1,34 +1,54 @@
 <template>
-  <v-container>
-    <div v-if="loading">
-      Loading results…
-    </div>
-    <div
-      v-else-if="error"
-      class="error"
-    >
-      {{ error }}
-    </div>
-    <template v-else-if="design && results && targetGroup">
-      <h2>{{ t('columns.executionId', 'Execution') }} {{ execution?.id }} — {{ execution?.sourceKey }}</h2>
-
+  <AnalysisBuilderShell
+    :title="title"
+    :subtitle="subtitle"
+    :error="error"
+    :show-back="true"
+    testid="pathway-results"
+    @back="handleBack"
+  >
+    <template #actions>
       <v-btn-toggle
         :model-value="mode"
+        density="compact"
+        variant="outlined"
+        divided
+        mandatory
         @update:model-value="(v: 'visual' | 'tabular' | null) => v && (mode = v)"
       >
-        <v-btn value="visual">
+        <v-btn
+          value="visual"
+          size="small"
+        >
+          <v-icon start>
+            mdi-chart-donut
+          </v-icon>
           {{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}
         </v-btn>
-        <v-btn value="tabular">
+        <v-btn
+          value="tabular"
+          size="small"
+        >
+          <v-icon start>
+            mdi-table
+          </v-icon>
           {{ t('pathway.results.tabular', 'Tabular') }}
         </v-btn>
       </v-btn-toggle>
+    </template>
 
+    <div
+      v-if="loading"
+      class="pathway-results__state"
+    >
+      {{ t('common.loading', 'Loading results…').value }}
+    </div>
+    <template v-else-if="design && results && targetGroup">
       <div
         v-if="mode === 'visual'"
-        class="visual"
+        class="pathway-results__visual"
       >
-        <div class="legend-col">
+        <div class="pathway-results__legend-col">
           <PathwayLegend
             :design="design"
             :colors="colors"
@@ -43,7 +63,7 @@
             :colors="colors"
           />
         </div>
-        <div class="chart-col">
+        <div class="pathway-results__chart-col">
           <PathwaySunburst
             :design="design"
             :results="results"
@@ -60,14 +80,15 @@
         :target-cohort-id="targetGroup.targetCohortId"
       />
     </template>
-  </v-container>
+  </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { usePathwayResults } from '@/composables/usePathwayResults'
 import { useI18n } from '@/composables/useI18n'
+import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import PathwaySunburst from '@/components/pathway/results/PathwaySunburst.vue'
 import PathwayLegend from '@/components/pathway/results/PathwayLegend.vue'
 import PathwayPathDetails from '@/components/pathway/results/PathwayPathDetails.vue'
@@ -80,6 +101,7 @@ const PALETTE_20 = [
 ]
 
 const route = useRoute()
+const router = useRouter()
 const { execution, design, results, loading, error, load } = usePathwayResults()
 const { t } = useI18n()
 const mode = ref<'visual' | 'tabular'>('visual')
@@ -90,9 +112,20 @@ const targetGroup = computed(() => {
   return results.value.pathwayGroups[0] ?? null
 })
 
+const title = computed(() => {
+  const name = design.value?.name?.trim()
+  return name || t('pathway.results.title', 'Pathway results').value
+})
+
+const subtitle = computed(() => {
+  const exec = execution.value
+  if (!exec) return undefined
+  return `${t('columns.executionId', 'Execution').value} #${exec.id} · ${exec.sourceKey}`
+})
+
 const targetCohortName = computed(() => {
   if (!design.value || !targetGroup.value) return ''
-  return design.value.design.targetCohorts.find(
+  return design.value.targetCohorts.find(
     c => c.id === targetGroup.value!.targetCohortId
   )?.name ?? ''
 })
@@ -100,13 +133,21 @@ const targetCohortName = computed(() => {
 const colorMap = computed(() => {
   const map = new Map<string, string>()
   if (design.value) {
-    design.value.design.eventCohorts.forEach((_, i) => {
+    design.value.eventCohorts.forEach((_, i) => {
       map.set(String(1 << i), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
     })
   }
   return map
 })
 const colors = (key: string): string => colorMap.value.get(key) ?? '#ccc'
+
+function handleBack() {
+  if (design.value?.id) {
+    router.push(`/pathways/${design.value.id}`)
+  } else {
+    router.push('/analysis/pathways')
+  }
+}
 
 onMounted(() => {
   const gid = Number(route.params.executionId)
@@ -115,7 +156,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.error { color: #c00; padding: 16px; }
-.visual { display: grid; grid-template-columns: 280px 1fr; gap: 16px; margin-top: 16px; }
-@media (max-width: 1100px) { .visual { grid-template-columns: 1fr; } }
+.pathway-results__state {
+  padding: 32px;
+  text-align: center;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+}
+
+.pathway-results__visual {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1100px) {
+  .pathway-results__visual {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

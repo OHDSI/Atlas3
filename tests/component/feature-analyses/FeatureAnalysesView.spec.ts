@@ -121,9 +121,8 @@ describe('FeatureAnalysesView', () => {
 
     expect(mounted.wrapper.find('[data-testid="feature-analyses-create"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="feature-analyses-search"]').exists()).toBe(true)
-    // After i18n migration the create button label collapsed to the WebAPI
-    // "Feature analysis" string (cc.fa.featureAnalysis)
-    expect(mounted.wrapper.text()).toContain('Feature analysis')
+    expect(mounted.wrapper.text()).toContain('Feature analyses')
+    expect(mounted.wrapper.text()).toContain('New feature analysis')
   })
 
   it('renders rows from the store after fetch', async () => {

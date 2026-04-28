@@ -64,10 +64,13 @@ import {
   type PathwayExecution,
   type PathwayResults,
   PathwaySchema,
+  PathwayListPageSchema,
   type Pathway,
 } from '@/models/pathway.types'
 import {
-  IncidenceRateSchema,
+  IncidenceRateSummarySchema,
+  IncidenceRateWireSchema,
+  IncidenceRateExpressionSchema,
   IncidenceRateInfoBySourceSchema,
   IncidenceRateInfoListSchema,
   IncidenceRateExecutionInfoSchema,
@@ -2093,12 +2096,15 @@ export async function getDefaultCovariateSettings(
 export async function listPathways(): Promise<ApiResult<Pathway[]>> {
   try {
     const data = await httpGet<unknown>('/pathway-analysis?size=10000')
-    const parsed = z.array(PathwaySchema.passthrough()).safeParse(data)
-    if (!parsed.success) {
-      logger.error('Pathway', 'listPathways validation', parsed.error)
-      return failure('Invalid pathway list response')
-    }
-    return success(parsed.data as Pathway[])
+    // OHDSI WebAPI returns a Spring `Page<...>` envelope. A few proxy
+    // configurations (or older WebAPI builds) expose a raw array, so we
+    // accept either shape.
+    const asPage = PathwayListPageSchema.safeParse(data)
+    if (asPage.success) return success(asPage.data.content as Pathway[])
+    const asArray = z.array(PathwaySchema).safeParse(data)
+    if (asArray.success) return success(asArray.data as Pathway[])
+    logger.error('Pathway', 'listPathways validation', asPage.error)
+    return failure('Invalid pathway list response')
   } catch (err) {
     logger.error('Pathway', 'listPathways failed', err)
     return failure(err instanceof Error ? err.message : 'Failed to list pathways')
@@ -2370,11 +2376,35 @@ export async function getPathwayDesignByGeneration(
 
 // ─── Incidence Rate CRUD ─────────────────────────────────────────────────────
 
-/** GET /ir/ — list of all incidence rate analyses. */
+// The OHDSI WebAPI ships `expression` as a JSON-encoded string on the wire
+// for both reads and writes. Decode/encode at the boundary so the editor
+// always works with a parsed object.
+function decodeIRExpression(wire: unknown): IncidenceRate {
+  const parsed = IncidenceRateWireSchema.safeParse(wire)
+  if (!parsed.success) throw parsed.error
+  const { expression: raw, ...rest } = parsed.data
+  if (!raw) {
+    return { ...rest, expression: IncidenceRateExpressionSchema.parse({
+      timeAtRisk: { start: { DateField: 'StartDate', Offset: 0 }, end: { DateField: 'StartDate', Offset: 0 } },
+    }) } as IncidenceRate
+  }
+  let parsedExpr: unknown
+  try { parsedExpr = JSON.parse(raw) }
+  catch { throw new Error('expression is not valid JSON') }
+  const expr = IncidenceRateExpressionSchema.parse(parsedExpr)
+  return { ...rest, expression: expr } as IncidenceRate
+}
+
+function encodeIRForSave(ir: IncidenceRate): Record<string, unknown> {
+  const { expression, ...rest } = ir
+  return { ...rest, expression: JSON.stringify(expression) }
+}
+
+/** GET /ir/ — list of all incidence rate analyses (no expression in payload). */
 export async function listIncidenceRates(): Promise<ApiResult<IncidenceRate[]>> {
   try {
     const data = await httpGet<unknown>('/ir/')
-    const parsed = z.array(IncidenceRateSchema.passthrough()).safeParse(data)
+    const parsed = z.array(IncidenceRateSummarySchema.passthrough()).safeParse(data)
     if (!parsed.success) {
       logger.error('IncidenceRate', 'listIncidenceRates validation', parsed.error)
       return failure('Invalid incidence rate list response')
@@ -2386,16 +2416,11 @@ export async function listIncidenceRates(): Promise<ApiResult<IncidenceRate[]>> 
   }
 }
 
-/** GET /ir/{id} — full IR definition. */
+/** GET /ir/{id} — full IR definition (decodes expression JSON string). */
 export async function getIncidenceRate(id: number): Promise<ApiResult<IncidenceRate>> {
   try {
     const data = await httpGet<unknown>(`/ir/${id}`)
-    const parsed = IncidenceRateSchema.passthrough().safeParse(data)
-    if (!parsed.success) {
-      logger.error('IncidenceRate', 'getIncidenceRate validation', parsed.error)
-      return failure('Invalid incidence rate response')
-    }
-    return success(parsed.data as IncidenceRate)
+    return success(decodeIRExpression(data))
   } catch (err) {
     logger.error('IncidenceRate', `getIncidenceRate(${id}) failed`, err)
     return failure(err instanceof Error ? err.message : 'Failed to fetch incidence rate')
@@ -2405,10 +2430,8 @@ export async function getIncidenceRate(id: number): Promise<ApiResult<IncidenceR
 /** POST /ir/ — create. */
 export async function createIncidenceRate(ir: IncidenceRate): Promise<ApiResult<IncidenceRate>> {
   try {
-    const data = await httpPost<unknown>('/ir/', ir)
-    const parsed = IncidenceRateSchema.passthrough().safeParse(data)
-    if (!parsed.success) return failure('Invalid create response')
-    return success(parsed.data as IncidenceRate)
+    const data = await httpPost<unknown>('/ir/', encodeIRForSave(ir))
+    return success(decodeIRExpression(data))
   } catch (err) {
     logger.error('IncidenceRate', 'createIncidenceRate failed', err)
     return failure(err instanceof Error ? err.message : 'Failed to create incidence rate')
@@ -2418,10 +2441,8 @@ export async function createIncidenceRate(ir: IncidenceRate): Promise<ApiResult<
 /** PUT /ir/{id} — update. */
 export async function saveIncidenceRate(id: number, ir: IncidenceRate): Promise<ApiResult<IncidenceRate>> {
   try {
-    const data = await httpPut<unknown>(`/ir/${id}`, ir)
-    const parsed = IncidenceRateSchema.passthrough().safeParse(data)
-    if (!parsed.success) return failure('Invalid save response')
-    return success(parsed.data as IncidenceRate)
+    const data = await httpPut<unknown>(`/ir/${id}`, encodeIRForSave(ir))
+    return success(decodeIRExpression(data))
   } catch (err) {
     logger.error('IncidenceRate', `saveIncidenceRate(${id}) failed`, err)
     return failure(err instanceof Error ? err.message : 'Failed to save incidence rate')
@@ -2432,9 +2453,7 @@ export async function saveIncidenceRate(id: number, ir: IncidenceRate): Promise<
 export async function copyIncidenceRate(id: number): Promise<ApiResult<IncidenceRate>> {
   try {
     const data = await httpGet<unknown>(`/ir/${id}/copy`)
-    const parsed = IncidenceRateSchema.passthrough().safeParse(data)
-    if (!parsed.success) return failure('Invalid copy response')
-    return success(parsed.data as IncidenceRate)
+    return success(decodeIRExpression(data))
   } catch (err) {
     logger.error('IncidenceRate', `copyIncidenceRate(${id}) failed`, err)
     return failure(err instanceof Error ? err.message : 'Failed to copy incidence rate')

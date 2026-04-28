@@ -80,8 +80,8 @@ const mockFA: FeatureAnalysis = {
 }
 
 const mockAggregates: FeatureAnalysisAggregate[] = [
-  { id: 'mean', name: 'Mean' },
-  { id: 'median', name: 'Median' },
+  { id: 1, name: 'Events count', expression: '*', function: 'COUNT' },
+  { id: 2, name: 'Distinct start dates', function: 'COUNT' },
 ]
 
 describe('Feature Analyses Store', () => {

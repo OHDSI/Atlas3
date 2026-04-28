@@ -1,22 +1,30 @@
 /**
  * Pathway Types
  * OHDSI Cohort Pathways analysis types with Zod validation
+ *
+ * NOTE: Field layout matches the OHDSI WebAPI `pathway-analysis` DTO, which
+ * is *flat* — `targetCohorts`, `eventCohorts`, `combinationWindow`,
+ * `minCellCount`, `maxDepth`, and `allowRepeats` are top-level on the
+ * Pathway object (not wrapped in a `design` sub-object). The list endpoint
+ * returns a Spring `Page<...>` envelope: `{ content: [...], pageable, ... }`.
  */
 import { z } from 'zod'
 import { TagSchema } from '@/models/webapi.types'
 import { userSchema } from '@/components/versions/schemas'
 
-// Cohort reference used within a pathway design
+// Cohort reference used inside a pathway. The WebAPI may attach extra
+// transport fields (`hasWriteAccess`, `hasReadAccess`, `pathwayCohortId`,
+// `code`) — keep them via passthrough so round-trip save preserves them.
 export const PathwayCohortRefSchema = z.object({
   id: z.number(),
   name: z.string(),
-})
+}).passthrough()
 export type PathwayCohortRef = z.infer<typeof PathwayCohortRefSchema>
 
-// Core design parameters for a pathway analysis
+// "Design" here is the configurable analysis-settings sub-shape (not a
+// nested object on the wire). It powers the `PathwaySettings` editor and
+// is the partial type accepted by `pathwayStore.updateDesign(...)`.
 export const PathwayDesignSchema = z.object({
-  targetCohorts: z.array(PathwayCohortRefSchema),
-  eventCohorts: z.array(PathwayCohortRefSchema),
   combinationWindow: z.number().int().min(1),
   minCellCount: z.number().int().min(1),
   maxDepth: z.number().int().min(1).max(10),
@@ -24,23 +32,37 @@ export const PathwayDesignSchema = z.object({
 })
 export type PathwayDesign = z.infer<typeof PathwayDesignSchema>
 
-// Full pathway analysis definition
+// Full pathway analysis definition — flat to match the WebAPI DTO.
 export const PathwaySchema = z.object({
   id: z.number().optional(),
   name: z.string().min(1),
   description: z.string().optional(),
-  design: PathwayDesignSchema,
+  targetCohorts: z.array(PathwayCohortRefSchema).default([]),
+  eventCohorts: z.array(PathwayCohortRefSchema).default([]),
+  combinationWindow: z.number().int().min(1).default(30),
+  minCellCount: z.number().int().min(1).default(5),
+  maxDepth: z.number().int().min(1).max(10).default(5),
+  allowRepeats: z.boolean().default(false),
   tags: z.array(TagSchema).default([]),
   createdBy: userSchema.optional(),
   createdDate: z.union([z.string(), z.number()]).optional(),
   modifiedBy: userSchema.optional(),
   modifiedDate: z.union([z.string(), z.number()]).optional(),
-  hashCode: z.string().optional(),
-})
+  hashCode: z.number().optional(),
+  hasReadAccess: z.boolean().optional(),
+  hasWriteAccess: z.boolean().optional(),
+}).passthrough()
 export type Pathway = z.infer<typeof PathwaySchema>
 
-// Summary view of a pathway (without full design, id required)
-export const PathwaySummarySchema = PathwaySchema.omit({ design: true }).extend({
+// List endpoint response: Spring Page wrapper. Some servers/proxies
+// flatten this to a raw array, so the loader tries both shapes.
+export const PathwayListPageSchema = z.object({
+  content: z.array(PathwaySchema),
+}).passthrough()
+
+// Summary view (id required). Same fields as Pathway since the API
+// already returns the full flat DTO in list mode.
+export const PathwaySummarySchema = PathwaySchema.extend({
   id: z.number(),
 })
 export type PathwaySummary = z.infer<typeof PathwaySummarySchema>

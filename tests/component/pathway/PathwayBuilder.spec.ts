@@ -16,7 +16,7 @@ describe('PathwayBuilder', () => {
     const w = mount(PathwayBuilder, {
       global: {
         plugins: [vuetify],
-        stubs: ['router-link', 'PathwayBuilderToolbar', 'PathwayDesignForm', 'PathwayGenerationPanel'],
+        stubs: ['router-link', 'router-view', 'PathwayDesignForm', 'PathwayGenerationPanel', 'VersionsTabContent', 'TagSelectionDialog'],
       },
     })
     expect(w.text()).toMatch(/No pathway loaded/i)
@@ -28,7 +28,7 @@ describe('PathwayBuilder', () => {
     const w = mount(PathwayBuilder, {
       global: {
         plugins: [vuetify],
-        stubs: ['router-link', 'PathwayBuilderToolbar', 'PathwayDesignForm', 'PathwayGenerationPanel'],
+        stubs: ['router-link', 'router-view', 'PathwayDesignForm', 'PathwayGenerationPanel', 'VersionsTabContent', 'TagSelectionDialog'],
       },
     })
     expect(w.text()).not.toMatch(/No pathway loaded/i)

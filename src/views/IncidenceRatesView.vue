@@ -1,12 +1,24 @@
 <template>
   <AnalysisListLayout
+    :title="t('ir.title', 'Incidence rate analyses').value"
+    :subtitle="subtitle"
     :error="error?.message ?? null"
-    :show-view-toggle="true"
-    :view-mode="viewMode"
     testid="incidence-rates"
-    @update:view-mode="(v) => viewMode = v"
   >
     <template #actions>
+      <v-text-field
+        :model-value="searchInput"
+        :label="t('datatable.language.searchPlaceholder', 'Search incidence rates…').value"
+        prepend-inner-icon="mdi-magnify"
+        density="compact"
+        variant="outlined"
+        hide-details
+        clearable
+        class="incidence-rates-view__search"
+        data-testid="incidence-rates-search"
+        @update:model-value="handleSearchInput"
+      />
+      <v-spacer />
       <v-btn
         color="primary"
         variant="flat"
@@ -15,63 +27,48 @@
         data-testid="incidence-rates-create"
         @click="handleNew"
       >
-        {{ t('incidenceRateAnalysis.newAnalysis', 'New incidence rate') }}
+        {{ t('home.newEntityNames.incidenceRate', 'New incidence rate') }}
       </v-btn>
     </template>
 
-    <template #filters>
-      <IncidenceRateFilters
-        :model-value="filters"
-        :all-tags="allTags"
-        @update:model-value="updateFilters"
-        @clear="clearFilters"
-      />
-    </template>
-
-    <div
-      v-if="loading"
-      class="incidence-rates-view__state"
+    <AnalysisDataTable
+      :headers="headers"
+      :items="paginatedIncidenceRates"
+      :loading="loading"
+      :items-per-page="itemsPerPage"
+      :empty-text="t('common.noData', 'No incidence rates yet.').value"
+      testid="incidence-rates-table"
+      @open="handleOpen"
+      @copy="handleCopy"
+      @delete="handleRemove"
     >
-      {{ t('common.loading', 'Loading…') }}
-    </div>
-    <div
-      v-else-if="incidenceRates.length === 0"
-      class="incidence-rates-view__state"
-    >
-      {{ t('common.noData', 'No incidence rates yet.') }}
-    </div>
-    <template v-else>
-      <div
-        v-if="viewMode === 'tile'"
-        class="incidence-rates-view__grid"
-      >
-        <IncidenceRateCard
-          v-for="ir in paginatedIncidenceRates"
-          :key="ir.id"
-          :incidence-rate="ir"
-          @open="handleOpen"
-          @remove="handleRemove"
-        />
-      </div>
-      <IncidenceRateTable
-        v-else
-        :incidence-rates="paginatedIncidenceRates"
-        @open="handleOpen"
-        @remove="handleRemove"
-      />
-    </template>
+      <template #[`item.targetCount`]="{ item }">
+        {{ item.expression?.targetIds?.length ?? 0 }}
+      </template>
+      <template #[`item.outcomeCount`]="{ item }">
+        {{ item.expression?.outcomeIds?.length ?? 0 }}
+      </template>
+    </AnalysisDataTable>
 
     <template
-      v-if="!loading && incidenceRates.length > 0"
+      v-if="!loading && totalPages > 1"
       #pagination
     >
-      <IncidenceRatePagination
-        :page="page"
-        :total-pages="totalPages"
-        :items-per-page="itemsPerPage"
-        @update:page="updatePage"
-        @update:items-per-page="updateItemsPerPage"
-      />
+      <v-btn
+        variant="text"
+        :disabled="page === 0"
+        @click="updatePage(page - 1)"
+      >
+        {{ t('datatable.language.paginate.previous', 'Previous') }}
+      </v-btn>
+      <span class="incidence-rates-view__range">{{ page + 1 }} / {{ totalPages }}</span>
+      <v-btn
+        variant="text"
+        :disabled="page + 1 >= totalPages"
+        @click="updatePage(page + 1)"
+      >
+        {{ t('configuration.userImport.wizard.buttons.next', 'Next') }}
+      </v-btn>
     </template>
   </AnalysisListLayout>
 
@@ -112,48 +109,83 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useIncidenceRates } from '@/composables/useIncidenceRates'
 import { useI18n } from '@/composables/useI18n'
-import type { IncidenceRateListFilters } from '@/composables/useIncidenceRates'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
-import { deleteIncidenceRate } from '@/services/webapi'
-import IncidenceRateCard from '@/components/incidence-rate/IncidenceRateCard.vue'
-import IncidenceRateTable from '@/components/incidence-rate/IncidenceRateTable.vue'
-import IncidenceRateFilters from '@/components/incidence-rate/IncidenceRateFilters.vue'
-import IncidenceRatePagination from '@/components/incidence-rate/IncidenceRatePagination.vue'
+import { deleteIncidenceRate, copyIncidenceRate } from '@/services/webapi'
+import { logger } from '@/utils/logger'
+import type { IncidenceRate } from '@/models/incidence-rate.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
+import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
 
 const {
-  incidenceRates, loading, error,
+  loading, error,
   filters, page, itemsPerPage,
-  fetchIncidenceRates, clearFilters,
-  paginatedIncidenceRates, totalPages,
+  fetchIncidenceRates,
+  paginatedIncidenceRates, totalItems, totalPages,
 } = useIncidenceRates()
 
 const router = useRouter()
 const store = useIncidenceRateStore()
 const { t } = useI18n()
-const viewMode = ref<'tile' | 'table'>('tile')
 const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)
 const feedback = ref<{ message: string; color: 'success' | 'error' | 'info' } | null>(null)
+const searchInput = ref('')
 
-const allTags = computed(() => {
-  const set = new Set<string>()
-  incidenceRates.value.forEach(ir => ir.tags?.forEach(t => set.add(t.name)))
-  return [...set].sort()
-})
+const subtitle = computed(() =>
+  totalItems.value === 0
+    ? t('common.noData', 'No incidence rates yet.').value
+    : `${totalItems.value} ${totalItems.value === 1 ? 'analysis' : 'analyses'}`
+)
+
+const headers = computed(() => [
+  { title: t('columns.name', 'Name').value, key: 'name' },
+  { title: t('columns.description', 'Description').value, key: 'description' },
+  { title: t('facets.caption.targetCohorts', 'Targets').value, key: 'targetCount', sortable: false },
+  { title: t('ir.editor.outcomes', 'Outcomes').value, key: 'outcomeCount', sortable: false },
+  { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
+  { title: t('columns.modified', 'Modified').value, key: 'modifiedDate' },
+  { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
+])
 
 onMounted(fetchIncidenceRates)
 
-function updateFilters(v: IncidenceRateListFilters) { filters.value = v }
-function updatePage(n: number) { page.value = n }
-function updateItemsPerPage(n: number) { itemsPerPage.value = n }
+function handleSearchInput(v: string | null) {
+  const next = v ?? ''
+  searchInput.value = next
+  filters.value = { ...filters.value, searchQuery: next }
+  page.value = 0
+}
+
+function updatePage(n: number) {
+  page.value = Math.max(0, Math.min(n, totalPages.value - 1))
+}
 
 function handleNew() {
   store.createNewIR()
   router.push('/incidence-rates/new')
 }
-function handleOpen(id: number) { if (id) router.push(`/incidence-rates/${id}`) }
-function handleRemove(id: number) { deleteTarget.value = id; showDelete.value = true }
+
+function handleOpen(ir: IncidenceRate) {
+  if (ir.id) router.push(`/incidence-rates/${ir.id}`)
+}
+
+async function handleCopy(ir: IncidenceRate) {
+  if (!ir.id) return
+  const result = await copyIncidenceRate(ir.id)
+  if (result.success && result.data.id) {
+    feedback.value = { message: 'Incidence rate copied', color: 'success' }
+    router.push(`/incidence-rates/${result.data.id}`)
+  } else {
+    feedback.value = { message: 'Copy failed', color: 'error' }
+    logger.error('IncidenceRatesView', 'copyIncidenceRate failed', !result.success ? result.error : null)
+  }
+}
+
+function handleRemove(ir: IncidenceRate) {
+  if (!ir.id) return
+  deleteTarget.value = ir.id
+  showDelete.value = true
+}
 
 async function confirmDelete() {
   if (!deleteTarget.value) return
@@ -170,15 +202,14 @@ async function confirmDelete() {
 </script>
 
 <style scoped>
-.incidence-rates-view__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+.incidence-rates-view__search {
+  max-width: 360px;
+  flex: 1 1 280px;
 }
 
-.incidence-rates-view__state {
-  padding: 32px;
-  text-align: center;
-  color: #666;
+.incidence-rates-view__range {
+  font-size: 0.875rem;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+  padding: 0 12px;
 }
 </style>

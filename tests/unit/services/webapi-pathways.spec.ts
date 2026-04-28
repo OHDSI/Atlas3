@@ -18,20 +18,32 @@ vi.mock('@/services/http-client')
 const samplePathway = {
   id: 1,
   name: 'Test',
-  design: {
-    targetCohorts: [], eventCohorts: [],
-    combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
-  },
+  targetCohorts: [],
+  eventCohorts: [],
+  combinationWindow: 30,
+  minCellCount: 5,
+  maxDepth: 5,
+  allowRepeats: false,
   tags: [],
 }
 
 describe('webapi pathway CRUD', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('listPathways GETs /pathway-analysis with size param', async () => {
-    vi.mocked(httpClient.httpGet).mockResolvedValue([samplePathway])
+  it('listPathways unwraps Spring Page envelope', async () => {
+    vi.mocked(httpClient.httpGet).mockResolvedValue({
+      content: [samplePathway],
+      pageable: {}, totalElements: 1,
+    })
     const result = await listPathways()
     expect(httpClient.httpGet).toHaveBeenCalledWith('/pathway-analysis?size=10000')
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data).toHaveLength(1)
+  })
+
+  it('listPathways also accepts a raw array (legacy/proxy)', async () => {
+    vi.mocked(httpClient.httpGet).mockResolvedValue([samplePathway])
+    const result = await listPathways()
     expect(result.success).toBe(true)
   })
 
