@@ -115,7 +115,7 @@ describe('WebAPI Service', () => {
       }
     })
 
-    it('includes domain filter when specified', async () => {
+    it('includes domain filter in POST body when specified', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         text: () => Promise.resolve(JSON.stringify([])),
@@ -124,8 +124,11 @@ describe('WebAPI Service', () => {
       await webapi.searchConcepts('SYNPUF1K', 'test', 'Condition')
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('domain=Condition'),
-        expect.any(Object)
+        expect.stringContaining('/vocabulary/SYNPUF1K/search'),
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"DOMAIN_ID":["Condition"]'),
+        })
       )
     })
 

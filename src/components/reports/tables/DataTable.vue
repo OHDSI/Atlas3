@@ -34,7 +34,7 @@
               prepend-icon="mdi-view-column"
               size="small"
             >
-              {{ t('common.columns') }}
+              {{ t('datatable.language.buttons.changeColumns') }}
             </v-btn>
           </template>
           <v-list>

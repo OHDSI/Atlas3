@@ -12,7 +12,7 @@
         v-if="previewVersion"
         class="preview-banner"
       >
-        {{ t('pathwayDefinitions.previewBanner', 'Previewing version — saving will create a new pathway') }}
+        {{ t('common.savePreviewWarning', 'Previewing version — saving will create a new pathway') }}
       </div>
 
       <PathwayBuilderToolbar

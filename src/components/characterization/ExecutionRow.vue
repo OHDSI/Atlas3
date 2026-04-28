@@ -49,7 +49,7 @@
         :data-testid="`execution-row-cancel-${execution.id}`"
         @click="onCancel"
       >
-        {{ t('characterizations.editor.executions.row.cancelAction', 'Cancel') }}
+        {{ t('common.cancel', 'Cancel') }}
       </v-btn>
       <v-btn
         v-if="isCompleted"
@@ -60,7 +60,7 @@
         :data-testid="`execution-row-results-${execution.id}`"
         @click="onViewResults"
       >
-        {{ t('characterizations.editor.executions.row.resultsAction', 'View results') }}
+        {{ t('cohortDefinitions.cohortDefinitionManager.panels.viewReports', 'View results') }}
       </v-btn>
     </div>
   </div>

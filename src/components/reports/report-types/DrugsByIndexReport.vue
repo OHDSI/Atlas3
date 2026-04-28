@@ -10,7 +10,7 @@
       <v-icon class="mr-2">
         mdi-timeline-clock
       </v-icon>
-      {{ t('common.drugsByIndex') }}
+      {{ t('cohortDefinitions.costUtilization.reportManager.reportManagerText_30') }}
     </v-card-title>
 
     <v-divider />

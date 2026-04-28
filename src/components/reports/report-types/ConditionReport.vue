@@ -10,7 +10,7 @@
       <v-icon class="mr-2">
         mdi-medical-bag
       </v-icon>
-      {{ t('common.conditions') }}
+      {{ t('dataSources.reports.conditionOccurrence') }}
     </v-card-title>
 
     <v-divider />

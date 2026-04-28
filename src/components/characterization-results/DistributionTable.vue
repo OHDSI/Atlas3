@@ -38,7 +38,7 @@
     >
       <template #no-data>
         <div class="distribution-table__empty">
-          {{ tv('characterizations.results.table.empty', 'No rows match the current filter.') }}
+          {{ tv('common.noData', 'No rows match the current filter.') }}
         </div>
       </template>
     </v-data-table>
@@ -127,14 +127,14 @@ const tableRows = computed(() =>
 )
 
 const headers = computed(() => [
-  { title: tv('characterizations.results.table.covariate', 'Covariate'), key: 'covariateName' },
-  { title: tv('characterizations.results.table.mean', 'Mean'), key: 'avg', align: 'end' as const },
-  { title: tv('characterizations.results.table.sd', 'SD'), key: 'stdDev', align: 'end' as const },
-  { title: tv('characterizations.results.table.min', 'Min'), key: 'min', align: 'end' as const },
-  { title: tv('characterizations.results.table.p25', 'P25'), key: 'p25', align: 'end' as const },
-  { title: tv('characterizations.results.table.median', 'Median'), key: 'median', align: 'end' as const },
-  { title: tv('characterizations.results.table.p75', 'P75'), key: 'p75', align: 'end' as const },
-  { title: tv('characterizations.results.table.max', 'Max'), key: 'max', align: 'end' as const },
+  { title: tv('columns.covariate', 'Covariate'), key: 'covariateName' },
+  { title: tv('columns.avg', 'Mean'), key: 'avg', align: 'end' as const },
+  { title: tv('columns.stddev', 'SD'), key: 'stdDev', align: 'end' as const },
+  { title: tv('common.min', 'Min'), key: 'min', align: 'end' as const },
+  { title: tv('columns.p25', 'P25'), key: 'p25', align: 'end' as const },
+  { title: tv('columns.median', 'Median'), key: 'median', align: 'end' as const },
+  { title: tv('columns.p75', 'P75'), key: 'p75', align: 'end' as const },
+  { title: tv('columns.max', 'Max'), key: 'max', align: 'end' as const },
 ])
 </script>
 

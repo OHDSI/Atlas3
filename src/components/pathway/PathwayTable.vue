@@ -2,9 +2,9 @@
   <v-table density="compact">
     <thead>
       <tr>
-        <th>{{ t('pathway.cohort.id', 'ID') }}</th>
-        <th>{{ t('pathway.name', 'Name') }}</th>
-        <th>{{ t('pathwayDefinitions.author', 'Author') }}</th>
+        <th>{{ t('columns.id', 'ID') }}</th>
+        <th>{{ t('columns.name', 'Name') }}</th>
+        <th>{{ t('columns.author', 'Author') }}</th>
         <th>Modified</th>
         <th />
       </tr>
@@ -27,7 +27,7 @@
             variant="text"
             @click.stop="emit('remove', p.id ?? 0)"
           >
-            {{ t('pathwayDefinitions.delete', 'Delete pathway') }}
+            {{ t('common.delete', 'Delete pathway') }}
           </v-btn>
         </td>
       </tr>

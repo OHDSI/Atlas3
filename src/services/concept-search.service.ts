@@ -26,13 +26,15 @@ export async function searchConcepts(
     throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
   }
 
-  const params = new URLSearchParams({ query: query.trim() })
+  // Use POST /vocabulary/{sourceKey}/search with a JSON body. Current WebAPI
+  // builds silently return [] for the GET form (`?query=...`), which made
+  // every concept picker look broken.
+  const endpoint = `/vocabulary/${sourceKey}/search`
+  const body: Record<string, unknown> = { QUERY: query.trim() }
   if (options?.domain) {
-    params.append('domain', options.domain)
+    body.DOMAIN_ID = [options.domain]
   }
-
-  const endpoint = `/vocabulary/${sourceKey}/search?${params.toString()}`
-  const data = await httpClient<unknown>(endpoint)
+  const data = await httpPost<unknown>(endpoint, body)
   const parsed = ConceptSearchResponseSchema.safeParse(data)
 
   if (!parsed.success) {

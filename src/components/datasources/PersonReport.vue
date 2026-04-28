@@ -71,7 +71,7 @@ const props = defineProps<Props>()
 const yearOfBirthBarChartData = computed<BarChartData>(() => ({
   categories: props.data.yearOfBirth.categories,
   values: props.data.yearOfBirth.series[0]?.data || [],
-  unit: props.data.yearOfBirth.unit || t('common.people', 'People').value
+  unit: props.data.yearOfBirth.unit || t('dataSources.dashboardReport.people', 'People').value
 }))
 </script>
 

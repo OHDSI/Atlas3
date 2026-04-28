@@ -69,7 +69,7 @@ const updateEndOffset = (value: number) => {
     color="white"
   >
     <v-card-title class="text-subtitle-1">
-      {{ t('common.dateAdjustment', 'Date Adjustment') }}
+      {{ t('components.dateAdjust.criteriaLabel', 'Date Adjustment') }}
     </v-card-title>
     <v-card-text>
       <!-- Start Date Adjustment -->

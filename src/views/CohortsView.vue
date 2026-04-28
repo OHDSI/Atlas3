@@ -52,7 +52,7 @@
                 <v-btn
                   value="table"
                   size="small"
-                  :aria-label="t('common.tableView', 'Table view').value"
+                  :aria-label="t('dataSources.table.tableTab', 'Table view').value"
                   data-testid="cohorts-view-toggle-table"
                 >
                   <v-icon>mdi-view-list</v-icon>
@@ -227,7 +227,7 @@
             <v-card-text>
               <v-text-field
                 v-model="newCohortName"
-                :label="t('cohortDefinitions.name', 'Cohort Name').value"
+                :label="t('columns.name', 'Cohort Name').value"
                 autofocus
                 @keyup.enter="confirmCreateCohort"
               />
@@ -300,7 +300,7 @@
               v-else
               class="text-center pa-6 text-error"
             >
-              {{ t('common.failedToLoad', 'Failed to load cohort information') }}
+              {{ t('cs.manager.concept.tabs.recordCounts.failedToLoadData', 'Failed to load cohort information') }}
             </v-card-text>
             <v-divider />
             <v-card-actions>

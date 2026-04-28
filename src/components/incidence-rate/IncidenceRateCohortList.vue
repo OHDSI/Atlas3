@@ -2,8 +2,8 @@
   <v-table density="compact">
     <thead>
       <tr>
-        <th>{{ t('incidenceRate.cohort.id', 'ID') }}</th>
-        <th>{{ t('incidenceRate.cohort.name', 'Name') }}</th>
+        <th>{{ t('columns.id', 'ID') }}</th>
+        <th>{{ t('columns.name', 'Name') }}</th>
         <th />
       </tr>
     </thead>

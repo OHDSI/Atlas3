@@ -8,7 +8,7 @@
       :items="reportItems"
       item-title="label"
       item-value="type"
-      :label="tv('reports.selectReportType')"
+      :label="tv('dataSources.selectAReport')"
       :disabled="disabled"
       variant="outlined"
       density="comfortable"
@@ -59,165 +59,159 @@ const emit = defineEmits<{
  */
 const allReportItems = [
   {
-    type: 'inclusion-rule' as ReportType,
-    label: tv('reports.types.inclusionRule.label', 'Inclusion-Rule Report'),
-    description: tv('reports.types.inclusionRule.description', 'Per-rule attrition, summary stats and population breakdown for the generated cohort.'),
-    icon: 'mdi-filter-variant'
-  },
-  {
     type: 'person' as ReportType,
-    label: tv('reports.types.person.label'),
-    description: tv('reports.types.person.description'),
+    label: tv('dataSources.reports.person'),
+    description: tv('columns.description'),
     icon: 'mdi-account-group'
   },
   {
     type: 'condition-eras' as ReportType,
-    label: tv('reports.types.conditionEras.label'),
-    description: tv('reports.types.conditionEras.description'),
+    label: tv('dataSources.reports.conditionEra'),
+    description: tv('columns.description'),
     icon: 'mdi-medical-bag'
   },
   {
     type: 'drug-eras' as ReportType,
-    label: tv('reports.types.drugEras.label'),
-    description: tv('reports.types.drugEras.description'),
+    label: tv('dataSources.reports.drugEra'),
+    description: tv('columns.description'),
     icon: 'mdi-pill'
   },
   {
     type: 'cohort-specific' as ReportType,
     label: tv('reports.types.cohortSpecific.label'),
-    description: tv('reports.types.cohortSpecific.description'),
+    description: tv('columns.description'),
     icon: 'mdi-chart-timeline-variant'
   },
   {
     type: 'condition' as ReportType,
-    label: tv('reports.types.condition.label'),
-    description: tv('reports.types.condition.description'),
+    label: tv('dataSources.reports.conditionOccurrence'),
+    description: tv('columns.description'),
     icon: 'mdi-hospital-box'
   },
   {
     type: 'conditions-by-index' as ReportType,
     label: tv('reports.types.conditionsByIndex.label'),
-    description: tv('reports.types.conditionsByIndex.description'),
+    description: tv('columns.description'),
     icon: 'mdi-calendar-clock'
   },
   {
     type: 'death' as ReportType,
-    label: tv('reports.types.death.label'),
-    description: tv('reports.types.death.description'),
+    label: tv('dataSources.reports.death'),
+    description: tv('columns.description'),
     icon: 'mdi-heart-pulse'
   },
   {
     type: 'drug-exposure' as ReportType,
-    label: tv('reports.types.drugExposure.label'),
-    description: tv('reports.types.drugExposure.description'),
+    label: tv('dataSources.reports.drugExposure'),
+    description: tv('columns.description'),
     icon: 'mdi-medication'
   },
   {
     type: 'drugs-by-index' as ReportType,
     label: tv('reports.types.drugsByIndex.label'),
-    description: tv('reports.types.drugsByIndex.description'),
+    description: tv('columns.description'),
     icon: 'mdi-calendar-range'
   },
   {
     type: 'observation-periods' as ReportType,
-    label: tv('reports.types.observationPeriods.label'),
-    description: tv('reports.types.observationPeriods.description'),
+    label: tv('dataSources.reports.observationPeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-calendar-multiple'
   },
   {
     type: 'procedure' as ReportType,
-    label: tv('reports.types.procedure.label'),
-    description: tv('reports.types.procedure.description'),
+    label: tv('dataSources.reports.procedure'),
+    description: tv('columns.description'),
     icon: 'mdi-medical-bag'
   },
   {
     type: 'procedures-by-index' as ReportType,
     label: tv('reports.types.proceduresByIndex.label'),
-    description: tv('reports.types.proceduresByIndex.description'),
+    description: tv('columns.description'),
     icon: 'mdi-calendar-check'
   },
   {
     type: 'data-completeness' as ReportType,
-    label: tv('reports.types.dataCompleteness.label'),
-    description: tv('reports.types.dataCompleteness.description'),
+    label: tv('cohortDefinitions.costUtilization.reportManager.reportManagerText_3'),
+    description: tv('columns.description'),
     icon: 'mdi-database-check'
   },
   {
     type: 'entropy' as ReportType,
     label: tv('reports.types.entropy.label'),
-    description: tv('reports.types.entropy.description'),
+    description: tv('columns.description'),
     icon: 'mdi-chart-scatter-plot'
   },
   {
     type: 'tornado' as ReportType,
-    label: tv('reports.types.tornado.label'),
-    description: tv('reports.types.tornado.description'),
+    label: tv('cohortDefinitions.costUtilization.reportManager.reportManagerText_22'),
+    description: tv('columns.description'),
     icon: 'mdi-weather-tornado'
   },
   {
     type: 'persons-exposure-baseline' as ReportType,
-    label: tv('reports.types.personsExposureBaseline.label'),
-    description: tv('reports.types.personsExposureBaseline.description'),
+    label: tv('options.reporting.personsAndExposureDuringBaselinePeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-account-clock'
   },
   {
     type: 'persons-exposure-cohort' as ReportType,
-    label: tv('reports.types.personsExposureCohort.label'),
-    description: tv('reports.types.personsExposureCohort.description'),
+    label: tv('options.reporting.personsAndExposureDuringCohortPeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-account-group-outline'
   },
   {
     type: 'visits-baseline' as ReportType,
-    label: tv('reports.types.visitsBaseline.label'),
-    description: tv('reports.types.visitsBaseline.description'),
+    label: tv('options.reporting.visitsDuringBaselinePeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-hospital-building'
   },
   {
     type: 'visit-dates-baseline' as ReportType,
-    label: tv('reports.types.visitDatesBaseline.label'),
-    description: tv('reports.types.visitDatesBaseline.description'),
+    label: tv('options.reporting.visitDatesDuringBaselinePeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-calendar'
   },
   {
     type: 'care-site-visit-dates-baseline' as ReportType,
-    label: tv('reports.types.careSiteVisitDatesBaseline.label'),
-    description: tv('reports.types.careSiteVisitDatesBaseline.description'),
+    label: tv('options.reporting.careSiteVisitDatesDuringBaselinePeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-domain'
   },
   {
     type: 'visits-cohort' as ReportType,
-    label: tv('reports.types.visitsCohort.label'),
-    description: tv('reports.types.visitsCohort.description'),
+    label: tv('options.reporting.visitsDuringCohortPeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-hospital'
   },
   {
     type: 'visit-dates-cohort' as ReportType,
-    label: tv('reports.types.visitDatesCohort.label'),
-    description: tv('reports.types.visitDatesCohort.description'),
+    label: tv('options.reporting.visitDatesDuringCohortPeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-calendar-month'
   },
   {
     type: 'care-site-visit-dates-cohort' as ReportType,
-    label: tv('reports.types.careSiteVisitDatesCohort.label'),
-    description: tv('reports.types.careSiteVisitDatesCohort.description'),
+    label: tv('options.reporting.careSiteVisitDatesDuringCohortPeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-office-building'
   },
   {
     type: 'drug-utilization-baseline' as ReportType,
-    label: tv('reports.types.drugUtilizationBaseline.label'),
-    description: tv('reports.types.drugUtilizationBaseline.description'),
+    label: tv('options.reporting.drugUtilizationDuringBaselinePeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-pill-multiple'
   },
   {
     type: 'drug-utilization-cohort' as ReportType,
-    label: tv('reports.types.drugUtilizationCohort.label'),
-    description: tv('reports.types.drugUtilizationCohort.description'),
+    label: tv('options.reporting.drugUtilizationDuringCohortPeriod'),
+    description: tv('columns.description'),
     icon: 'mdi-medication-outline'
   },
   {
     type: 'heracles-heel' as ReportType,
-    label: tv('reports.types.heraclesHeel.label'),
-    description: tv('reports.types.heraclesHeel.description'),
+    label: tv('cohortDefinitions.cohortDefinitionManager.heraclesHeel'),
+    description: tv('columns.description'),
     icon: 'mdi-alert-circle'
   }
 ]

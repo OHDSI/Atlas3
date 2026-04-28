@@ -9,7 +9,7 @@
       <v-card-text>
         <v-text-field
           v-model="search"
-          :label="tv('incidenceRate.search', 'Search')"
+          :label="tv('common.search', 'Search')"
           density="compact"
         />
         <v-list
@@ -28,14 +28,14 @@
       <v-card-actions>
         <v-spacer />
         <v-btn @click="close">
-          {{ t('incidenceRate.cancel', 'Cancel') }}
+          {{ t('common.cancel', 'Cancel') }}
         </v-btn>
         <v-btn
           color="primary"
           :disabled="selected.length === 0"
           @click="confirm"
         >
-          {{ t('incidenceRate.addCohort', 'Add cohort') }}
+          {{ t('common.add', 'Add cohort') }}
         </v-btn>
       </v-card-actions>
     </v-card>

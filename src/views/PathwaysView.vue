@@ -15,7 +15,7 @@
         data-testid="pathways-create"
         @click="handleNew"
       >
-        {{ t('pathwayDefinitions.newDefinition', 'New pathway') }}
+        {{ t('cohortDefinitions.newDefinition', 'New pathway') }}
       </v-btn>
     </template>
 
@@ -32,13 +32,13 @@
       v-if="loading"
       class="pathways-view__state"
     >
-      {{ t('pathway.list.loading', 'Loading…') }}
+      {{ t('common.loading', 'Loading…') }}
     </div>
     <div
       v-else-if="pathways.length === 0"
       class="pathways-view__state"
     >
-      {{ t('pathway.list.empty', 'No pathways yet.') }}
+      {{ t('common.noData', 'No pathways yet.') }}
     </div>
     <template v-else>
       <div
@@ -80,18 +80,18 @@
     max-width="400"
   >
     <v-card>
-      <v-card-title>{{ t('pathwayDefinitions.delete', 'Delete pathway') }}</v-card-title>
+      <v-card-title>{{ t('common.delete', 'Delete pathway') }}</v-card-title>
       <v-card-text>{{ t('pathwayDefinitions.deleteConfirm', 'Delete this pathway? This cannot be undone.') }}</v-card-text>
       <v-card-actions>
         <v-spacer />
         <v-btn @click="showDelete = false">
-          {{ t('pathwayDefinitions.cancel', 'Cancel') }}
+          {{ t('common.cancel', 'Cancel') }}
         </v-btn>
         <v-btn
           color="error"
           @click="confirmDelete"
         >
-          {{ t('pathwayDefinitions.delete', 'Delete pathway') }}
+          {{ t('common.delete', 'Delete pathway') }}
         </v-btn>
       </v-card-actions>
     </v-card>

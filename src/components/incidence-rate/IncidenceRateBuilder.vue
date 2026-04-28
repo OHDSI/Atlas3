@@ -7,22 +7,22 @@
       color="primary"
     >
       <v-tab value="definition">
-        {{ t('incidenceRate.tabs.definition', 'Definition') }}
+        {{ t('ir.tabs.definition', 'Definition') }}
       </v-tab>
       <v-tab value="conceptSets">
-        {{ t('incidenceRate.tabs.conceptSets', 'Concept Sets') }}
+        {{ t('ir.tabs.conceptSets', 'Concept Sets') }}
       </v-tab>
       <v-tab
         value="generation"
         :disabled="!store.currentIR?.id"
       >
-        {{ t('incidenceRate.tabs.generation', 'Generation') }}
+        {{ t('ir.tabs.generation', 'Generation') }}
       </v-tab>
       <v-tab
         value="versions"
         :disabled="!store.currentIR?.id"
       >
-        {{ t('incidenceRate.tabs.versions', 'Versions') }}
+        {{ t('ir.tabs.versions', 'Versions') }}
       </v-tab>
     </v-tabs>
 

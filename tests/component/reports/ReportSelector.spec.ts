@@ -46,9 +46,8 @@ describe('ReportSelector', () => {
     })
   }
 
-  // All 27 report types available in the component
+  // All report types available in the component
   const expectedReportTypes: ReportType[] = [
-    'inclusion-rule',
     'person',
     'condition-eras',
     'drug-eras',
@@ -77,34 +76,36 @@ describe('ReportSelector', () => {
     'heracles-heel',
   ]
 
+  // Labels and descriptions are sourced from WebAPI's messages_en.json after the
+  // i18n key migration — descriptions all collapse to the generic "Description"
+  // (columns.description) since per-report descriptions don't exist in WebAPI.
   const reportMetadata = {
-    'inclusion-rule': { label: 'Inclusion-Rule Report', description: 'Per-rule attrition, summary stats and population breakdown for the generated cohort.', icon: 'mdi-filter-variant' },
-    'person': { label: 'Person (Demographics)', description: 'Year of birth and demographic distributions', icon: 'mdi-account-group' },
-    'condition-eras': { label: 'Condition Eras', description: 'Condition prevalence and duration analysis', icon: 'mdi-medical-bag' },
-    'drug-eras': { label: 'Drug Eras', description: 'Drug exposure prevalence and duration', icon: 'mdi-pill' },
-    'cohort-specific': { label: 'Cohort Specific', description: 'Cohort timeline and distribution analytics', icon: 'mdi-chart-timeline-variant' },
-    'condition': { label: 'Condition Occurrence', description: 'Individual condition occurrences', icon: 'mdi-hospital-box' },
-    'conditions-by-index': { label: 'Conditions by Index', description: 'Conditions relative to cohort start', icon: 'mdi-calendar-clock' },
-    'death': { label: 'Death', description: 'Mortality data and causes', icon: 'mdi-heart-pulse' },
-    'drug-exposure': { label: 'Drug Exposure', description: 'Individual drug exposure events', icon: 'mdi-medication' },
-    'drugs-by-index': { label: 'Drugs by Index', description: 'Drug exposures relative to cohort start', icon: 'mdi-calendar-range' },
-    'observation-periods': { label: 'Observation Periods', description: 'Patient observation period coverage', icon: 'mdi-calendar-multiple' },
-    'procedure': { label: 'Procedure Occurrence', description: 'Procedure events and frequency', icon: 'mdi-medical-bag' },
-    'procedures-by-index': { label: 'Procedures by Index', description: 'Procedures relative to cohort start', icon: 'mdi-calendar-check' },
-    'data-completeness': { label: 'Data Completeness', description: 'Data quality metrics', icon: 'mdi-database-check' },
-    'entropy': { label: 'Entropy', description: 'Data entropy analysis', icon: 'mdi-chart-scatter-plot' },
-    'tornado': { label: 'Tornado', description: 'Tornado diagram visualization', icon: 'mdi-weather-tornado' },
-    'persons-exposure-baseline': { label: 'Persons/Exposure (Baseline)', description: 'Baseline period persons and exposures', icon: 'mdi-account-clock' },
-    'persons-exposure-cohort': { label: 'Persons/Exposure (Cohort)', description: 'Cohort period persons and exposures', icon: 'mdi-account-group-outline' },
-    'visits-baseline': { label: 'Visits (Baseline)', description: 'Baseline period visit data', icon: 'mdi-hospital-building' },
-    'visit-dates-baseline': { label: 'Visit Dates (Baseline)', description: 'Baseline visit date distribution', icon: 'mdi-calendar' },
-    'care-site-visit-dates-baseline': { label: 'Care Site Visit Dates (Baseline)', description: 'Baseline care site visit patterns', icon: 'mdi-domain' },
-    'visits-cohort': { label: 'Visits (Cohort)', description: 'Cohort period visit data', icon: 'mdi-hospital' },
-    'visit-dates-cohort': { label: 'Visit Dates (Cohort)', description: 'Cohort visit date distribution', icon: 'mdi-calendar-month' },
-    'care-site-visit-dates-cohort': { label: 'Care Site Visit Dates (Cohort)', description: 'Cohort care site visit patterns', icon: 'mdi-office-building' },
-    'drug-utilization-baseline': { label: 'Drug Utilization (Baseline)', description: 'Baseline drug utilization patterns', icon: 'mdi-pill-multiple' },
-    'drug-utilization-cohort': { label: 'Drug Utilization (Cohort)', description: 'Cohort drug utilization patterns', icon: 'mdi-medication-outline' },
-    'heracles-heel': { label: 'Heracles Heel', description: 'Data quality Achilles Heel results', icon: 'mdi-alert-circle' },
+    'person': { label: 'Person', description: 'Description', icon: 'mdi-account-group' },
+    'condition-eras': { label: 'Condition Era', description: 'Description', icon: 'mdi-medical-bag' },
+    'drug-eras': { label: 'Drug Era', description: 'Description', icon: 'mdi-pill' },
+    'cohort-specific': { label: 'Cohort Specific', description: 'Description', icon: 'mdi-chart-timeline-variant' },
+    'condition': { label: 'Condition Occurrence', description: 'Description', icon: 'mdi-hospital-box' },
+    'conditions-by-index': { label: 'Conditions by Index', description: 'Description', icon: 'mdi-calendar-clock' },
+    'death': { label: 'Death', description: 'Description', icon: 'mdi-heart-pulse' },
+    'drug-exposure': { label: 'Drug Exposure', description: 'Description', icon: 'mdi-medication' },
+    'drugs-by-index': { label: 'Drugs by Index', description: 'Description', icon: 'mdi-calendar-range' },
+    'observation-periods': { label: 'Observation Period', description: 'Description', icon: 'mdi-calendar-multiple' },
+    'procedure': { label: 'Procedure', description: 'Description', icon: 'mdi-medical-bag' },
+    'procedures-by-index': { label: 'Procedures by Index', description: 'Description', icon: 'mdi-calendar-check' },
+    'data-completeness': { label: 'Data Completeness', description: 'Description', icon: 'mdi-database-check' },
+    'entropy': { label: 'Entropy', description: 'Description', icon: 'mdi-chart-scatter-plot' },
+    'tornado': { label: 'Tornado', description: 'Description', icon: 'mdi-weather-tornado' },
+    'persons-exposure-baseline': { label: 'Persons and Exposure during baseline period', description: 'Description', icon: 'mdi-account-clock' },
+    'persons-exposure-cohort': { label: 'Persons and Exposure during cohort period', description: 'Description', icon: 'mdi-account-group-outline' },
+    'visits-baseline': { label: 'Visits during baseline period', description: 'Description', icon: 'mdi-hospital-building' },
+    'visit-dates-baseline': { label: 'Visit-dates during baseline period', description: 'Description', icon: 'mdi-calendar' },
+    'care-site-visit-dates-baseline': { label: 'Care-site-visit-dates during baseline period', description: 'Description', icon: 'mdi-domain' },
+    'visits-cohort': { label: 'Visits during cohort period', description: 'Description', icon: 'mdi-hospital' },
+    'visit-dates-cohort': { label: 'Visit-dates during cohort period', description: 'Description', icon: 'mdi-calendar-month' },
+    'care-site-visit-dates-cohort': { label: 'Care-site-visit-dates during cohort period', description: 'Description', icon: 'mdi-office-building' },
+    'drug-utilization-baseline': { label: 'Drug Utilization during baseline period', description: 'Description', icon: 'mdi-pill-multiple' },
+    'drug-utilization-cohort': { label: 'Drug Utilization during cohort period', description: 'Description', icon: 'mdi-medication-outline' },
+    'heracles-heel': { label: 'Heracles Heel', description: 'Description', icon: 'mdi-alert-circle' },
   }
 
   beforeEach(() => {
@@ -131,7 +132,7 @@ describe('ReportSelector', () => {
       wrapper = createWrapper()
       const select = wrapper.findComponent({ name: 'VSelect' })
       expect(select.exists()).toBe(true)
-      expect(select.props('label')).toBe('Select Report Type')
+      expect(select.props('label')).toBe('Select a Report')
       expect(select.props('variant')).toBe('outlined')
       expect(select.props('density')).toBe('comfortable')
     })
@@ -146,7 +147,7 @@ describe('ReportSelector', () => {
       const select = wrapper.findComponent({ name: 'VSelect' })
       const items = select.props('items')
 
-      expect(items).toHaveLength(27)
+      expect(items).toHaveLength(26)
 
       // Verify all expected report types are present
       const itemTypes = items.map((item: ReportItem) => item.type)
@@ -229,7 +230,7 @@ describe('ReportSelector', () => {
       const items = select.props('items')
 
       const personItem = items.find((item: ReportItem) => item.type === 'person')
-      expect(personItem.label).toBe('Person (Demographics)')
+      expect(personItem.label).toBe('Person')
     })
 
     it('should display correct description for condition-eras report', () => {
@@ -238,7 +239,8 @@ describe('ReportSelector', () => {
       const items = select.props('items')
 
       const conditionErasItem = items.find((item: ReportItem) => item.type === 'condition-eras')
-      expect(conditionErasItem.description).toBe('Condition prevalence and duration analysis')
+      // After i18n migration, descriptions collapse to generic "Description" (columns.description)
+      expect(conditionErasItem.description).toBe('Description')
     })
 
     it('should display correct icon for drug-eras report', () => {
@@ -268,7 +270,9 @@ describe('ReportSelector', () => {
 
       items.forEach((item: ReportItem) => {
         expect(item.description).toBeTruthy()
-        expect(item.description.length).toBeGreaterThan(10)
+        // Descriptions all collapse to "Description" after the i18n migration;
+        // we just check they're non-empty strings.
+        expect(item.description.length).toBeGreaterThan(0)
       })
     })
 

@@ -8,8 +8,8 @@
     <v-spacer />
     <v-btn
       icon="mdi-refresh"
-      :title="tv('common.reload', 'Reload')"
-      :aria-label="tv('common.reload', 'Reload')"
+      :title="tv('cohortDefinitions.cohortDefinitionManager.panels.reload', 'Reload')"
+      :aria-label="tv('cohortDefinitions.cohortDefinitionManager.panels.reload', 'Reload')"
       data-test="profile-refresh"
       :disabled="!store.sourceKey || !store.personId"
       @click="onReload"

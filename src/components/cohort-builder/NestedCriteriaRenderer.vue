@@ -86,8 +86,8 @@ const { availableFilters } = useFilterConfig(ref('criteriaGroup'))
 // Format logic type for display with i18n
 function formatLogicType(logicType: string, count?: number): string {
   const labels: Record<string, string> = {
-    ALL: tv('options.allOf', 'ALL of'),
-    ANY: tv('options.anyOf', 'ANY of'),
+    ALL: tv('options.all', 'ALL of'),
+    ANY: tv('options.any', 'ANY of'),
     AT_LEAST: `${tv('options.atLeast', 'At least')} ${count ?? 0} ${tv('options.of', 'of')}`,
     AT_MOST: `${tv('options.atMost', 'At most')} ${count ?? 0} ${tv('options.of', 'of')}`,
   }

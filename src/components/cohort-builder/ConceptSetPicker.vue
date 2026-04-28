@@ -61,7 +61,7 @@
               <template #prepend>
                 <v-icon>mdi-magnify</v-icon>
               </template>
-              <v-list-item-title>{{ t('search.searchConcepts', 'Search for concepts...') }}</v-list-item-title>
+              <v-list-item-title>{{ t('components.conceptSet.import.sourceCodes.searchConcepts', 'Search for concepts...') }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="showCreateNew = true">
               <template #prepend>

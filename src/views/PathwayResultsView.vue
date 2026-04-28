@@ -10,14 +10,14 @@
       {{ error }}
     </div>
     <template v-else-if="design && results && targetGroup">
-      <h2>{{ t('pathway.results.executionPrefix', 'Execution') }} {{ execution?.id }} — {{ execution?.sourceKey }}</h2>
+      <h2>{{ t('columns.executionId', 'Execution') }} {{ execution?.id }} — {{ execution?.sourceKey }}</h2>
 
       <v-btn-toggle
         :model-value="mode"
         @update:model-value="(v: 'visual' | 'tabular' | null) => v && (mode = v)"
       >
         <v-btn value="visual">
-          {{ t('pathway.results.visualization', 'Visualization') }}
+          {{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}
         </v-btn>
         <v-btn value="tabular">
           {{ t('pathway.results.tabular', 'Tabular') }}

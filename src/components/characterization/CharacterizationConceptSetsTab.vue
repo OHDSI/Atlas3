@@ -9,7 +9,7 @@
 <template>
   <div class="char-conceptsets-tab">
     <h2 class="char-conceptsets-tab__title">
-      {{ t('characterizations.editor.conceptSetsTab.title', 'Concept Sets') }}
+      {{ t('cc.fa.tabs.conceptSets', 'Concept Sets') }}
     </h2>
     <p class="char-conceptsets-tab__placeholder">
       {{
@@ -25,7 +25,7 @@
       class="char-conceptsets-tab__empty"
       data-testid="char-conceptsets-empty"
     >
-      {{ t('characterizations.editor.conceptSetsTab.empty', 'No concept sets.') }}
+      {{ t('common.noData', 'No concept sets.') }}
     </div>
     <v-list
       v-else

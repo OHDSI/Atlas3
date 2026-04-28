@@ -25,7 +25,7 @@
       >
         mdi-check-circle
       </v-icon>
-      {{ t('characterizations.editor.validation.empty', 'No issues. Design is valid.') }}
+      {{ t('common.noData', 'No issues. Design is valid.') }}
     </div>
 
     <template v-else>
@@ -67,7 +67,7 @@
         data-testid="char-messages-group-warnings"
       >
         <h3 class="char-messages-tab__group-title">
-          {{ t('characterizations.editor.validation.headers.warnings', 'Warnings') }}
+          {{ t('facets.values.warning', 'Warnings') }}
           ({{ warnings.length }})
         </h3>
         <v-list
@@ -99,7 +99,7 @@
         data-testid="char-messages-group-infos"
       >
         <h3 class="char-messages-tab__group-title">
-          {{ t('characterizations.editor.validation.headers.infos', 'Notes') }}
+          {{ t('facets.values.info', 'Notes') }}
           ({{ infos.length }})
         </h3>
         <v-list

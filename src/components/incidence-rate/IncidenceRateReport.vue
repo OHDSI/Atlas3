@@ -4,7 +4,7 @@
     class="report"
   >
     <v-card-title>
-      {{ t('incidenceRate.report', 'Report') }}
+      {{ t('ir.results.reports', 'Report') }}
       <v-spacer />
       <v-btn
         size="small"
@@ -22,7 +22,7 @@
       </v-btn>
     </v-card-title>
     <v-card-text v-if="loading">
-      {{ t('incidenceRate.loadingReport', 'Loading report…') }}
+      {{ t('dataSources.loadingReport', 'Loading report…') }}
     </v-card-text>
     <v-card-text
       v-else-if="error"
@@ -34,7 +34,7 @@
       v-else-if="!report"
       class="muted"
     >
-      {{ t('incidenceRate.selectSourceTargetOutcome', 'Select source, target, and outcome to view report.') }}
+      {{ t('ir.results.selectTargetAndOutcomeAlert', 'Select source, target, and outcome to view report.') }}
     </v-card-text>
     <v-card-text v-else>
       <div class="row">
@@ -50,15 +50,15 @@
         >
           <thead>
             <tr>
-              <th>{{ t('incidenceRate.summary', 'Summary') }}</th><th />
+              <th>{{ t('ir.results.summaryStatistics', 'Summary') }}</th><th />
             </tr>
           </thead>
           <tbody>
-            <tr><td>{{ t('incidenceRate.persons', 'Persons') }}</td><td>{{ format(report.summary.totalPersons) }}</td></tr>
-            <tr><td>{{ t('incidenceRate.cases', 'Cases') }}</td><td>{{ format(report.summary.cases) }}</td></tr>
-            <tr><td>{{ t('incidenceRate.tarDays', 'TAR (days)') }}</td><td>{{ format(report.summary.timeAtRisk) }}</td></tr>
-            <tr><td>{{ t('incidenceRate.proportion', 'Proportion') }}</td><td>{{ withMultiplier(report.summary.proportion) }}</td></tr>
-            <tr><td>{{ t('incidenceRate.rate', 'Rate') }}</td><td>{{ withMultiplier(report.summary.rate) }}</td></tr>
+            <tr><td>{{ t('ir.results.persons', 'Persons') }}</td><td>{{ format(report.summary.totalPersons) }}</td></tr>
+            <tr><td>{{ t('ir.results.cases', 'Cases') }}</td><td>{{ format(report.summary.cases) }}</td></tr>
+            <tr><td>{{ t('common.days', 'TAR (days)') }}</td><td>{{ format(report.summary.timeAtRisk) }}</td></tr>
+            <tr><td>{{ t('ir.results.proportion', 'Proportion') }}</td><td>{{ withMultiplier(report.summary.proportion) }}</td></tr>
+            <tr><td>{{ t('ir.results.rate', 'Rate') }}</td><td>{{ withMultiplier(report.summary.rate) }}</td></tr>
           </tbody>
         </v-table>
       </div>
@@ -69,10 +69,10 @@
       >
         <thead>
           <tr>
-            <th>{{ t('incidenceRate.stratifyName', 'Stratum') }}</th>
-            <th>{{ t('incidenceRate.persons', 'Persons') }}</th>
-            <th>{{ t('incidenceRate.cases', 'Cases') }}</th>
-            <th>{{ t('incidenceRate.tarDays', 'TAR (days)') }}</th>
+            <th>{{ t('ir.results.stratifyRule', 'Stratum') }}</th>
+            <th>{{ t('ir.results.persons', 'Persons') }}</th>
+            <th>{{ t('ir.results.cases', 'Cases') }}</th>
+            <th>{{ t('common.days', 'TAR (days)') }}</th>
           </tr>
         </thead>
         <tbody>

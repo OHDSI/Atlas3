@@ -29,7 +29,7 @@
             color="primary"
           />
           <span class="ms-3">
-            {{ tv('characterizations.results.explore.loading', 'Loading...') }}
+            {{ tv('common.loading', 'Loading...') }}
           </span>
         </div>
 
@@ -46,7 +46,7 @@
           v-else-if="!rows.length"
           class="explore-dialog__center"
         >
-          {{ tv('characterizations.results.explore.empty', 'No related concepts.') }}
+          {{ tv('common.noData', 'No related concepts.') }}
         </div>
 
         <v-data-table
@@ -64,7 +64,7 @@
           variant="text"
           @click="close"
         >
-          {{ tv('characterizations.results.explore.close', 'Close') }}
+          {{ tv('common.close', 'Close') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -99,7 +99,7 @@ const error = ref<string | null>(null)
 const rows = ref<Record<string, unknown>[]>([])
 
 const titleText = computed<string>(() =>
-  tv('characterizations.results.explore.title', 'Explore covariate: {name}', {
+  tv('cc.viewEdit.executions.prevalenceStatConverter.exploringConceptHierarchyFor', 'Explore covariate: {name}', {
     name: props.covariateName ?? '',
   })
 )

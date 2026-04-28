@@ -35,7 +35,7 @@
                 class="flex-1"
                 @click="matchTypeTemp = 'ALL'"
               >
-                {{ t('common.all', 'All') }}
+                {{ t('options.all', 'All') }}
               </v-btn>
               <v-btn
                 :variant="matchTypeTemp === 'ANY' ? 'tonal' : 'outlined'"
@@ -44,7 +44,7 @@
                 class="flex-1"
                 @click="matchTypeTemp = 'ANY'"
               >
-                {{ t('common.any', 'Any') }}
+                {{ t('options.any', 'Any') }}
               </v-btn>
               <v-btn
                 :variant="matchTypeTemp === 'AT_LEAST' ? 'tonal' : 'outlined'"
@@ -53,7 +53,7 @@
                 class="flex-1"
                 @click="matchTypeTemp = 'AT_LEAST'"
               >
-                {{ t('common.atLeast', 'At least') }}
+                {{ t('options.atLeast', 'At least') }}
               </v-btn>
               <v-btn
                 :variant="matchTypeTemp === 'AT_MOST' ? 'tonal' : 'outlined'"
@@ -62,14 +62,14 @@
                 class="flex-1"
                 @click="matchTypeTemp = 'AT_MOST'"
               >
-                {{ t('common.atMost', 'At most') }}
+                {{ t('options.atMost', 'At most') }}
               </v-btn>
             </div>
             <v-text-field
               v-if="matchTypeTemp === 'AT_LEAST' || matchTypeTemp === 'AT_MOST'"
               v-model.number="matchTypeCount"
               type="number"
-              :label="t('common.count', 'Count').value"
+              :label="t('columns.count', 'Count').value"
               min="1"
               density="compact"
               class="mt-3"
@@ -89,7 +89,7 @@
               size="small"
               @click="confirmMatchType"
             >
-              {{ t('common.ok', 'OK') }}
+              {{ t('common.apply', 'OK') }}
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -648,13 +648,13 @@ function getCardinalityType(event: CohortEvent): string {
 }
 
 function getCardinalityDisplayForEvent(event: CohortEvent): string {
-  if (!event.cardinality) return `${t('common.atLeast', 'At least').value} 1`
+  if (!event.cardinality) return `${t('options.atLeast', 'At least').value} 1`
   const typeMap: Record<string, string> = {
-    'AT_LEAST': t('common.atLeast', 'At least').value,
-    'EXACTLY': t('common.exactly', 'Exactly').value,
-    'AT_MOST': t('common.atMost', 'At most').value
+    'AT_LEAST': t('options.atLeast', 'At least').value,
+    'EXACTLY': t('options.exactly', 'Exactly').value,
+    'AT_MOST': t('options.atMost', 'At most').value
   }
-  const type = typeMap[event.cardinality.type] || t('common.atLeast', 'At least').value
+  const type = typeMap[event.cardinality.type] || t('options.atLeast', 'At least').value
   return `${type} ${event.cardinality.count ?? 1}`
 }
 

@@ -10,7 +10,7 @@
   <div class="linked-fa-picker">
     <div class="linked-fa-picker__header">
       <h2 class="linked-fa-picker__title">
-        {{ t('characterizations.editor.featureAnalyses.title', 'Linked Feature Analyses') }}
+        {{ t('cc.viewEdit.design.fa.title', 'Linked Feature Analyses') }}
       </h2>
       <v-btn
         variant="outlined"
@@ -20,7 +20,7 @@
         data-testid="linked-fa-picker-add"
         @click="openDialog"
       >
-        {{ t('characterizations.editor.featureAnalyses.add', 'Add feature analysis') }}
+        {{ t('common.add', 'Add feature analysis') }}
       </v-btn>
     </div>
 
@@ -29,7 +29,7 @@
       class="linked-fa-picker__empty"
       data-testid="linked-fa-picker-empty"
     >
-      {{ t('characterizations.editor.featureAnalyses.empty', 'No feature analyses linked.') }}
+      {{ t('common.noData', 'No feature analyses linked.') }}
     </div>
 
     <v-list
@@ -58,13 +58,13 @@
             <v-tooltip
               :disabled="Boolean(fa.supportsAnnual)"
               location="top"
-              :text="t('characterizations.editor.featureAnalyses.annualPending', 'Pending FA backend support').value"
+              :text="t('columns.supportsAnnual', 'Pending FA backend support').value"
             >
               <template #activator="{ props: tooltipProps }">
                 <div v-bind="tooltipProps">
                   <v-checkbox
                     :model-value="fa.includeAnnual ?? false"
-                    :label="t('characterizations.editor.featureAnalyses.includeAnnual', 'Annual').value"
+                    :label="t('columns.supportsAnnual', 'Annual').value"
                     :disabled="!fa.supportsAnnual"
                     density="compact"
                     hide-details
@@ -77,13 +77,13 @@
             <v-tooltip
               :disabled="Boolean(fa.supportsTemporal)"
               location="top"
-              :text="t('characterizations.editor.featureAnalyses.annualPending', 'Pending FA backend support').value"
+              :text="t('columns.supportsAnnual', 'Pending FA backend support').value"
             >
               <template #activator="{ props: tooltipProps }">
                 <div v-bind="tooltipProps">
                   <v-checkbox
                     :model-value="fa.includeTemporal ?? false"
-                    :label="t('characterizations.editor.featureAnalyses.includeTemporal', 'Temporal').value"
+                    :label="t('columns.temporal', 'Temporal').value"
                     :disabled="!fa.supportsTemporal"
                     density="compact"
                     hide-details
@@ -97,7 +97,7 @@
               icon="mdi-close"
               size="x-small"
               variant="text"
-              :aria-label="t('characterizations.editor.featureAnalyses.remove', 'Remove').value"
+              :aria-label="t('columns.remove', 'Remove').value"
               :data-testid="`linked-fa-picker-remove-${fa.id}`"
               @click="removeFa(fa.id)"
             />
@@ -112,7 +112,7 @@
     >
       <v-card>
         <v-card-title>
-          {{ t('characterizations.editor.featureAnalyses.selectDialogTitle', 'Select feature analyses to link') }}
+          {{ t('cc.modals.chooseAFeatureAnalyses', 'Select feature analyses to link') }}
         </v-card-title>
         <v-card-text class="linked-fa-picker__dialog-body">
           <v-data-table
@@ -141,7 +141,7 @@
             data-testid="linked-fa-picker-confirm"
             @click="confirmAdd"
           >
-            {{ t('characterizations.editor.featureAnalyses.add', 'Add feature analysis') }}
+            {{ t('common.add', 'Add feature analysis') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -171,10 +171,10 @@ const dialogOpen = ref(false)
 const selectedIds = ref<number[]>([])
 
 const dialogHeaders = computed(() => [
-  { title: t('characterizations.editor.metadata.name', 'Name').value, key: 'name' },
-  { title: t('featureAnalyses.list.columns.type', 'Type').value, key: 'type' },
+  { title: t('columns.name', 'Name').value, key: 'name' },
+  { title: t('cc.fa.analysisType', 'Type').value, key: 'type' },
   {
-    title: t('featureAnalyses.list.columns.description', 'Description').value,
+    title: t('columns.description', 'Description').value,
     key: 'description',
   },
 ])

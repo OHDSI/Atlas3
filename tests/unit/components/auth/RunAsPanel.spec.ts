@@ -109,7 +109,7 @@ describe('RunAsPanel', () => {
       wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const runAsButton = buttons.find(btn => btn.text().includes('runAsUser'))
+      const runAsButton = buttons.find(btn => /run\s*as|runAsUser/i.test(btn.text()))
       expect(runAsButton).toBeDefined()
     })
 
@@ -137,7 +137,7 @@ describe('RunAsPanel', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const runAsButton = buttons.find(btn => btn.text().includes('runAsUser'))
+      const runAsButton = buttons.find(btn => /run\s*as|runAsUser/i.test(btn.text()))
       expect(runAsButton?.props('disabled')).toBe(false)
     })
 
@@ -148,7 +148,7 @@ describe('RunAsPanel', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const runAsButton = buttons.find(btn => btn.text().includes('runAsUser'))
+      const runAsButton = buttons.find(btn => /run\s*as|runAsUser/i.test(btn.text()))
       expect(runAsButton?.props('disabled')).toBe(true)
     })
 
@@ -159,7 +159,7 @@ describe('RunAsPanel', () => {
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const runAsButton = buttons.find(btn => btn.text().includes('runAsUser'))
+      const runAsButton = buttons.find(btn => /run\s*as|runAsUser/i.test(btn.text()))
       expect(runAsButton?.props('disabled')).toBe(true)
     })
   })
@@ -309,7 +309,7 @@ describe('RunAsPanel', () => {
       wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const runAsButton = buttons.find(btn => btn.text().includes('runAsUser'))
+      const runAsButton = buttons.find(btn => /run\s*as|runAsUser/i.test(btn.text()))
       expect(runAsButton?.props('color')).toBe('primary')
     })
 
@@ -317,7 +317,7 @@ describe('RunAsPanel', () => {
       wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const runAsButton = buttons.find(btn => btn.text().includes('runAsUser'))
+      const runAsButton = buttons.find(btn => /run\s*as|runAsUser/i.test(btn.text()))
       expect(runAsButton?.props('block')).toBe(true)
     })
 
@@ -325,7 +325,7 @@ describe('RunAsPanel', () => {
       wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const runAsButton = buttons.find(btn => btn.text().includes('runAsUser'))
+      const runAsButton = buttons.find(btn => /run\s*as|runAsUser/i.test(btn.text()))
       expect(runAsButton?.props('size')).toBe('large')
     })
   })

@@ -27,7 +27,7 @@
               data-testid="char-results-back"
               @click="goBack"
             >
-              {{ t('characterizations.results.back', 'Back to builder') }}
+              {{ t('common.backToCurrent', 'Back to builder') }}
             </v-btn>
             <h1 class="char-results__title">
               {{ titleText }}
@@ -42,7 +42,7 @@
               data-testid="char-results-export"
               @click="onExport"
             >
-              {{ t('characterizations.results.exportCsv', 'Export CSV') }}
+              {{ t('cc.viewEdit.results.exportAll', 'Export CSV') }}
             </v-btn>
           </div>
         </div>
@@ -59,7 +59,7 @@
             color="primary"
           />
           <span class="ms-3">
-            {{ t('characterizations.results.loading', 'Loading results...') }}
+            {{ t('cc.viewEdit.results.loading', 'Loading results...') }}
           </span>
         </div>
 
@@ -99,7 +99,7 @@
             class="char-results__empty"
             data-testid="char-results-empty"
           >
-            {{ t('characterizations.results.table.empty', 'No rows match the current filter.') }}
+            {{ t('common.noData', 'No rows match the current filter.') }}
           </div>
 
           <PrevalenceTable
@@ -217,7 +217,7 @@ const executionId = computed<number | null>(() => {
 
 const titleText = computed<string>(() => {
   const name = characterization.value?.name
-  const baseTitle = tv('characterizations.results.title', 'Results')
+  const baseTitle = tv('cc.viewEdit.results.title', 'Results')
   return name ? `${baseTitle}: ${name}` : baseTitle
 })
 
@@ -410,7 +410,7 @@ async function loadAll(): Promise<void> {
     loadError.value =
       err instanceof Error
         ? err.message
-        : tv('characterizations.results.loadError', 'Failed to load results.')
+        : tv('dataSources.errorLoadingReport', 'Failed to load results.')
   } finally {
     loading.value = false
   }

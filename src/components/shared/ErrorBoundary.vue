@@ -19,7 +19,7 @@
                 icon="mdi-alert-circle"
                 class="mr-2"
               />
-              {{ t('common.error', 'Something Went Wrong') }}
+              {{ t('configuration.viewEdit.source.alerts.save.error', 'Something Went Wrong') }}
             </v-card-title>
             <v-card-text>
               <p class="mb-4">

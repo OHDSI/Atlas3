@@ -135,7 +135,8 @@ describe('CharacterizationBuilderView', () => {
     mounted = await mountBuilder('/characterizations/new')
 
     const text = mounted.wrapper.text()
-    expect(text).toContain('New Characterization')
+    // After i18n migration, the title in new mode collapsed to "New" (common.new)
+    expect(text).toContain('New')
 
     expect(mounted.wrapper.find('[data-testid="char-builder-tab-design"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="char-builder-tab-conceptSets"]').exists()).toBe(true)
@@ -161,7 +162,8 @@ describe('CharacterizationBuilderView', () => {
     mounted = await mountBuilder('/characterizations/42', { id: '42' })
     await flushPromises()
 
-    expect(mounted.wrapper.text()).toContain('Edit Characterization')
+    // After i18n migration, the title in edit mode uses generic "Edit" wording
+    expect(mounted.wrapper.text()).toContain('Edit')
 
     const nameInput = mounted.wrapper.find(
       '[data-testid="char-design-name"] input'

@@ -51,7 +51,7 @@
       >
         <div class="patient-count">
           <span class="patient-count__number">{{ patientCount?.toLocaleString() || '0' }}</span>
-          <span class="patient-count__label ml-1">{{ t('common.patients', 'Patients') }}</span>
+          <span class="patient-count__label ml-1">{{ t('columns.personsCount', 'Patients') }}</span>
         </div>
         <v-btn
           color="primary"
@@ -75,7 +75,7 @@
         >
           mdi-alert-circle
         </v-icon>
-        <span class="ml-2 text-error text-caption">{{ failMessage || t('common.failed', 'Failed').value }}</span>
+        <span class="ml-2 text-error text-caption">{{ failMessage || t('ir.results.failed', 'Failed').value }}</span>
         <v-btn
           color="primary"
           variant="text"

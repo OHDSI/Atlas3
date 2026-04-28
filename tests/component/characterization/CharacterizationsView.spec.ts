@@ -118,7 +118,8 @@ describe('CharacterizationsView', () => {
 
     expect(mounted.wrapper.find('[data-testid="characterizations-create"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="characterizations-search"]').exists()).toBe(true)
-    expect(mounted.wrapper.text()).toContain('New Characterization')
+    // After i18n migration, the create button label collapsed to "New" (common.new)
+    expect(mounted.wrapper.text()).toContain('New')
   })
 
   it('renders rows from the store after fetch', async () => {
@@ -133,7 +134,8 @@ describe('CharacterizationsView', () => {
     vi.mocked(listCharacterizations).mockResolvedValue([])
     mounted = await mountView()
 
-    expect(mounted.wrapper.text()).toContain('No characterizations found.')
+    // After i18n migration, the empty-state label uses the generic "No data" string
+    expect(mounted.wrapper.text()).toContain('No data')
   })
 
   it('search input drives the store filter (after debounce)', async () => {

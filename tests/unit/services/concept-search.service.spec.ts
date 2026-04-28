@@ -70,8 +70,11 @@ describe('ConceptSearchService', () => {
       const result = await searchConcepts('TEST', 'diabetes')
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/vocabulary/TEST/search?query=diabetes'),
-        expect.any(Object)
+        expect.stringContaining('/vocabulary/TEST/search'),
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"QUERY":"diabetes"'),
+        })
       )
       expect(result.concepts).toHaveLength(1)
       expect(result.total).toBe(1)
@@ -87,7 +90,7 @@ describe('ConceptSearchService', () => {
       expect(mockFetch).not.toHaveBeenCalled()
     })
 
-    it('should include domain filter when specified', async () => {
+    it('should include domain filter in POST body when specified', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -97,8 +100,11 @@ describe('ConceptSearchService', () => {
       await searchConcepts('TEST', 'diabetes', { domain: 'Condition' })
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('domain=Condition'),
-        expect.any(Object)
+        expect.stringContaining('/vocabulary/TEST/search'),
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"DOMAIN_ID":["Condition"]'),
+        })
       )
     })
 
@@ -112,8 +118,11 @@ describe('ConceptSearchService', () => {
       await searchConcepts('TEST', '  diabetes  ')
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('query=diabetes'),
-        expect.any(Object)
+        expect.stringContaining('/vocabulary/TEST/search'),
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"QUERY":"diabetes"'),
+        })
       )
     })
 

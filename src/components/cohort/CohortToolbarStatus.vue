@@ -85,7 +85,7 @@
     <!-- Versions Icon -->
     <v-tooltip
       v-if="cohortId && !isPreviewingVersion"
-      :text="t('versions.tab', 'Versions').value"
+      :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
@@ -110,7 +110,7 @@
     <!-- Tags Icon -->
     <v-tooltip
       v-if="!isPreviewingVersion"
-      :text="t('tags.manage', 'Manage Tags').value"
+      :text="t('configuration.buttons.tagManagement', 'Manage Tags').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">

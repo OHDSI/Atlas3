@@ -11,7 +11,7 @@
         <tbody>
           <tr>
             <td class="font-weight-medium">
-              {{ t('common.sourceName', 'Source Name') }}
+              {{ t('columns.sourceName', 'Source Name') }}
             </td>
             <td>{{ data.sourceName }}</td>
           </tr>

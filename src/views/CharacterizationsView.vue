@@ -10,18 +10,18 @@
         variant="flat"
         size="large"
         prepend-icon="mdi-plus"
-        :aria-label="t('characterizations.list.newButton', 'New Characterization').value"
+        :aria-label="t('cc.new', 'New Characterization').value"
         data-testid="characterizations-create"
         @click="handleCreate"
       >
-        {{ t('characterizations.list.newButton', 'New Characterization') }}
+        {{ t('cc.new', 'New Characterization') }}
       </v-btn>
     </template>
 
     <template #filters>
       <v-text-field
         :model-value="searchInput"
-        :label="t('characterizations.list.searchPlaceholder', 'Search characterizations...').value"
+        :label="t('datatable.language.searchPlaceholder', 'Search characterizations...').value"
         prepend-inner-icon="mdi-magnify"
         density="compact"
         variant="outlined"
@@ -82,14 +82,14 @@
           icon="mdi-pencil"
           size="small"
           variant="text"
-          :aria-label="t('characterizations.list.actions.edit', 'Edit').value"
+          :aria-label="t('configuration.tagManagement.edit', 'Edit').value"
           @click="openEditor(item.id)"
         />
         <v-btn
           icon="mdi-content-copy"
           size="small"
           variant="text"
-          :aria-label="t('characterizations.list.actions.copy', 'Copy').value"
+          :aria-label="t('common.copy', 'Copy').value"
           @click="handleCopy(item)"
         />
         <v-btn
@@ -97,7 +97,7 @@
           size="small"
           variant="text"
           color="error"
-          :aria-label="t('characterizations.list.actions.delete', 'Delete').value"
+          :aria-label="t('common.delete', 'Delete').value"
           @click="handleDeleteClick(item)"
         />
       </template>
@@ -107,7 +107,7 @@
           class="characterizations-view__empty"
           data-testid="characterizations-empty"
         >
-          {{ t('characterizations.list.empty', 'No characterizations found.') }}
+          {{ t('common.noData', 'No characterizations found.') }}
         </div>
       </template>
     </v-data-table>
@@ -121,7 +121,7 @@
         :disabled="!canGoPrevious"
         @click="previousPage"
       >
-        {{ t('common.previous', 'Previous') }}
+        {{ t('datatable.language.paginate.previous', 'Previous') }}
       </v-btn>
       <span class="characterizations-view__range">{{ rangeDisplay }}</span>
       <v-btn
@@ -129,7 +129,7 @@
         :disabled="!canGoNext"
         @click="nextPage"
       >
-        {{ t('common.next', 'Next') }}
+        {{ t('configuration.userImport.wizard.buttons.next', 'Next') }}
       </v-btn>
     </template>
   </AnalysisListLayout>
@@ -202,14 +202,14 @@ const {
 const searchInput = ref<string>('')
 
 const headers = computed(() => [
-  { title: t('characterizations.list.columns.name', 'Name').value, key: 'name' },
-  { title: t('characterizations.list.columns.description', 'Description').value, key: 'description' },
-  { title: t('characterizations.list.columns.cohorts', 'Cohorts').value, key: 'cohorts' },
-  { title: t('characterizations.list.columns.featureAnalyses', 'Feature Analyses').value, key: 'featureAnalyses' },
-  { title: t('characterizations.list.columns.createdBy', 'Created By').value, key: 'createdBy' },
-  { title: t('characterizations.list.columns.createdDate', 'Created').value, key: 'createdDate' },
-  { title: t('characterizations.list.columns.modifiedDate', 'Modified').value, key: 'modifiedDate' },
-  { title: t('characterizations.list.columns.actions', 'Actions').value, key: 'actions', sortable: false },
+  { title: t('columns.name', 'Name').value, key: 'name' },
+  { title: t('columns.description', 'Description').value, key: 'description' },
+  { title: t('cc.viewEdit.results.filters.cohorts', 'Cohorts').value, key: 'cohorts' },
+  { title: t('cc.tabs.featureAnalyses.title', 'Feature Analyses').value, key: 'featureAnalyses' },
+  { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
+  { title: t('columns.createdDate', 'Created').value, key: 'createdDate' },
+  { title: t('columns.modified', 'Modified').value, key: 'modifiedDate' },
+  { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },
 ])
 
 const showDeleteDialog = ref(false)
@@ -219,7 +219,7 @@ const deleting = ref(false)
 const deleteMessage = computed(() => {
   if (!selectedCC.value) return ''
   return t(
-    'characterizations.list.deleteConfirm',
+    'cc.viewEdit.deleteConfirmation',
     `Delete characterization '${selectedCC.value.name}'?`,
     { name: selectedCC.value.name }
   ).value

@@ -38,21 +38,21 @@
       persistent
     >
       <v-card>
-        <v-card-title>{{ t('versions.confirmSaveAsCurrent') }}</v-card-title>
+        <v-card-title>{{ t('common.saveAsCurrentVersion') }}</v-card-title>
         <v-card-text>
-          {{ t('versions.confirmSaveAsCurrentMessage') }}
+          {{ t('common.savePreviewWarning') }}
         </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn @click="saveConfirmDialogOpen = false">
-            {{ t('versions.cancel') }}
+            {{ t('common.cancel') }}
           </v-btn>
           <v-btn
             color="primary"
             :loading="savingPreview"
             @click="handleSavePreviewAsCurrent"
           >
-            {{ t('versions.save') }}
+            {{ t('common.save') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -114,7 +114,7 @@ onMounted(async () => {
 function handlePreview(versionNumber: number): void {
   // Check for unsaved changes (T044)
   if (props.config.isDirty.value) {
-    const confirmed = confirm(tv('versions.unsavedChanges'))
+    const confirmed = confirm(tv('common.unsavedWarning'))
     if (!confirmed) return
   }
 
@@ -161,7 +161,7 @@ async function handleCommentSaved(updatedVersion: Version): Promise<void> {
 async function handleCopy(versionNumber: number): Promise<void> {
   // Check for unsaved changes (T060)
   if (props.config.isDirty.value) {
-    const confirmed = confirm(tv('versions.unsavedChanges'))
+    const confirmed = confirm(tv('common.unsavedWarning'))
     if (!confirmed) return
   }
 

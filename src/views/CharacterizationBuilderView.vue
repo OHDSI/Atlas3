@@ -29,7 +29,7 @@
               data-testid="char-builder-back"
               @click="handleBack"
             >
-              {{ t('characterizations.editor.actions.back', 'Back') }}
+              {{ t('common.backToCurrent', 'Back') }}
             </v-btn>
             <h1 class="char-builder__title">
               {{ titleText }}
@@ -51,7 +51,7 @@
                     data-testid="char-builder-run"
                     @click="handleRunClick"
                   >
-                    {{ t('characterizations.editor.actions.run', 'Run') }}
+                    {{ t('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run') }}
                   </v-btn>
                 </div>
               </template>
@@ -65,7 +65,7 @@
               data-testid="char-builder-copy"
               @click="handleSaveCopy"
             >
-              {{ t('characterizations.editor.actions.saveCopy', 'Save as Copy') }}
+              {{ t('common.createACopy', 'Save as Copy') }}
             </v-btn>
             <v-btn
               v-if="isEditing"
@@ -76,7 +76,7 @@
               data-testid="char-builder-delete"
               @click="handleDeleteClick"
             >
-              {{ t('characterizations.editor.actions.delete', 'Delete') }}
+              {{ t('common.delete', 'Delete') }}
             </v-btn>
             <v-btn
               color="primary"
@@ -87,7 +87,7 @@
               data-testid="char-builder-save"
               @click="handleSave"
             >
-              {{ t('characterizations.editor.actions.save', 'Save') }}
+              {{ t('common.save', 'Save') }}
             </v-btn>
           </div>
         </div>
@@ -116,37 +116,37 @@
               value="design"
               data-testid="char-builder-tab-design"
             >
-              {{ t('characterizations.editor.tabs.design', 'Design') }}
+              {{ t('cc.fa.tabs.design', 'Design') }}
             </v-tab>
             <v-tab
               value="conceptSets"
               data-testid="char-builder-tab-conceptSets"
             >
-              {{ t('characterizations.editor.tabs.conceptSets', 'Concept Sets') }}
+              {{ t('cc.fa.tabs.conceptSets', 'Concept Sets') }}
             </v-tab>
             <v-tab
               value="executions"
               data-testid="char-builder-tab-executions"
             >
-              {{ t('characterizations.editor.tabs.executions', 'Executions') }}
+              {{ t('cc.viewEdit.tabs.executions', 'Executions') }}
             </v-tab>
             <v-tab
               value="versions"
               data-testid="char-builder-tab-versions"
             >
-              {{ t('characterizations.editor.tabs.versions', 'Versions') }}
+              {{ t('cc.viewEdit.tabs.versions', 'Versions') }}
             </v-tab>
             <v-tab
               value="utilities"
               data-testid="char-builder-tab-utilities"
             >
-              {{ t('characterizations.editor.tabs.utilities', 'Utilities') }}
+              {{ t('cc.viewEdit.tabs.utilities', 'Utilities') }}
             </v-tab>
             <v-tab
               value="validation"
               data-testid="char-builder-tab-validation"
             >
-              {{ t('characterizations.editor.tabs.validation', 'Validation') }}
+              {{ t('cc.viewEdit.tabs.messages', 'Validation') }}
               <v-badge
                 v-if="validationBadge"
                 inline
@@ -225,7 +225,7 @@
         >
           <v-card>
             <v-card-title class="text-h5">
-              {{ t('characterizations.editor.actions.delete', 'Delete') }}
+              {{ t('common.delete', 'Delete') }}
             </v-card-title>
             <v-card-text>
               {{ deleteMessage }}
@@ -245,7 +245,7 @@
                 data-testid="char-builder-delete-confirm"
                 @click="confirmDelete"
               >
-                {{ t('characterizations.editor.actions.delete', 'Delete') }}
+                {{ t('common.delete', 'Delete') }}
               </v-btn>
             </v-card-actions>
           </v-card>
@@ -354,8 +354,8 @@ const isEditing = computed<boolean>(() => Boolean(props.id))
 
 const titleText = computed(() => {
   return isEditing.value
-    ? t('characterizations.editor.title.edit', 'Edit Characterization').value
-    : t('characterizations.editor.title.new', 'New Characterization').value
+    ? t('configuration.tagManagement.edit', 'Edit Characterization').value
+    : t('cc.new', 'New Characterization').value
 })
 
 const storeError = computed<string | null>(() => store.error)
@@ -392,7 +392,7 @@ const runDisabledReason = computed<string>(() => {
   }
   if (store.isDirty) {
     return t(
-      'characterizations.editor.executions.runDisabledDirty',
+      'const.disabledReason.dirty',
       'Save your changes before running.'
     ).value
   }
@@ -406,7 +406,7 @@ function handleRunClick() {
 
 const deleteMessage = computed<string>(() => {
   return t(
-    'characterizations.editor.deleteConfirm',
+    'cc.viewEdit.deleteConfirmation',
     `Delete characterization '${draft.value.name}'?`,
     { name: draft.value.name }
   ).value
@@ -446,7 +446,7 @@ function onDraftChange(next: CharacterizationDefinition) {
 async function handleSave() {
   if (draft.value.name.trim().length === 0) {
     showSnackbar(
-      t('characterizations.editor.nameRequired', 'Name is required').value,
+      t('components.nameValidation.empty', 'Name is required').value,
       'error'
     )
     return
@@ -455,7 +455,7 @@ async function handleSave() {
   if (hasValidationErrors.value) {
     showSnackbar(
       t(
-        'characterizations.editor.validation.saveBlocked',
+        'const.disabledReason.invalidDesign',
         'Fix validation errors first.'
       ).value,
       'error'
@@ -477,7 +477,7 @@ async function handleSave() {
         hydrateFrom(updated)
       } else {
         showSnackbar(
-          t('characterizations.editor.saveError', 'Failed to save characterization').value,
+          t('cc.fa.saveError', 'Failed to save characterization').value,
           'error'
         )
       }
@@ -492,7 +492,7 @@ async function handleSave() {
         await router.push(`/characterizations/${created.id}`)
       } else {
         showSnackbar(
-          t('characterizations.editor.saveError', 'Failed to save characterization').value,
+          t('cc.fa.saveError', 'Failed to save characterization').value,
           'error'
         )
       }
@@ -500,7 +500,7 @@ async function handleSave() {
   } catch (err) {
     logger.error('CharacterizationBuilder', 'Save failed', err)
     showSnackbar(
-      t('characterizations.editor.saveError', 'Failed to save characterization').value,
+      t('cc.fa.saveError', 'Failed to save characterization').value,
       'error'
     )
   } finally {
@@ -521,14 +521,14 @@ async function handleSaveCopy() {
       await router.push(`/characterizations/${copied.id}`)
     } else {
       showSnackbar(
-        t('characterizations.editor.saveError', 'Failed to save characterization').value,
+        t('cc.fa.saveError', 'Failed to save characterization').value,
         'error'
       )
     }
   } catch (err) {
     logger.error('CharacterizationBuilder', 'Save Copy failed', err)
     showSnackbar(
-      t('characterizations.editor.saveError', 'Failed to save characterization').value,
+      t('cc.fa.saveError', 'Failed to save characterization').value,
       'error'
     )
   } finally {
@@ -567,7 +567,7 @@ async function confirmDelete() {
     await router.push('/characterizations')
   } else {
     showSnackbar(
-      t('characterizations.editor.saveError', 'Failed to save characterization').value,
+      t('cc.fa.saveError', 'Failed to save characterization').value,
       'error'
     )
   }
@@ -576,7 +576,7 @@ async function confirmDelete() {
 function handleBack() {
   if (store.isDirty) {
     const confirmed = window.confirm(
-      t('characterizations.editor.leaveConfirm', 'You have unsaved changes. Leave anyway?').value
+      t('common.unsavedWarning', 'You have unsaved changes. Leave anyway?').value
     )
     if (!confirmed) return
   }
@@ -633,7 +633,7 @@ onBeforeRouteLeave((_to, _from, next) => {
     return
   }
   const confirmed = window.confirm(
-    t('characterizations.editor.leaveConfirm', 'You have unsaved changes. Leave anyway?').value
+    t('common.unsavedWarning', 'You have unsaved changes. Leave anyway?').value
   )
   next(confirmed)
 })

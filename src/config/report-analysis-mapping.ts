@@ -11,10 +11,6 @@ import type { ReportType } from '@/models/report.types'
  * A report is only available if ALL required analyses are completed
  */
 export const REPORT_ANALYSIS_REQUIREMENTS: Record<ReportType, number[]> = {
-  // Inclusion-rule (generation) report — derived from cohort generation,
-  // not from Heracles analyses, so it has no analysis-id requirements.
-  'inclusion-rule': [],
-
   // Person demographics
   'person': [0, 1, 2, 3, 4, 5],
 
@@ -73,13 +69,6 @@ export function isReportAvailable(
   // It has its own dedicated endpoint and handling
   if (reportType === 'heracles-heel') {
     return false
-  }
-
-  // Inclusion-rule report is always available once a cohort is generated; it
-  // does not depend on Heracles analyses. The report component itself shows
-  // an empty state if generation hasn't run yet.
-  if (reportType === 'inclusion-rule') {
-    return true
   }
 
   const required = REPORT_ANALYSIS_REQUIREMENTS[reportType]

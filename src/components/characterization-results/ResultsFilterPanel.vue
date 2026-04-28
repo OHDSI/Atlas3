@@ -14,7 +14,7 @@
       <v-select
         :model-value="selectedDomains"
         :items="availableDomains"
-        :label="tv('characterizations.results.filter.domain', 'Domain')"
+        :label="tv('columns.domain', 'Domain')"
         density="comfortable"
         multiple
         chips
@@ -29,7 +29,7 @@
         :items="analysisItems"
         item-title="title"
         item-value="value"
-        :label="tv('characterizations.results.filter.analysis', 'Analysis')"
+        :label="tv('columns.analysis', 'Analysis')"
         density="comfortable"
         multiple
         chips
@@ -44,7 +44,7 @@
         :items="cohortItems"
         item-title="title"
         item-value="value"
-        :label="tv('characterizations.results.filter.cohort', 'Cohort')"
+        :label="tv('common.cohort', 'Cohort')"
         density="comfortable"
         clearable
         hide-details

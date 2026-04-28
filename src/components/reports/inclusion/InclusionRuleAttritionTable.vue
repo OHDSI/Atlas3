@@ -11,10 +11,10 @@
             #
           </th>
           <th class="attrition-table__col-name">
-            {{ t('cohortDefinitions.cohort.modals.cohortReport.includedIn', 'Inclusion rule').value }}
+            {{ t('components.feasibilityAttritionReport.inclusionRule', 'Inclusion rule').value }}
           </th>
           <th class="attrition-table__col-num">
-            {{ t('cohortDefinitions.cohort.modals.cohortReport.satisfying', 'Persons satisfying').value }}
+            {{ t('columns.personsCount', 'Persons satisfying').value }}
           </th>
           <th class="attrition-table__col-num">
             % remaining
@@ -64,7 +64,7 @@
     class="attrition-table__empty text-center py-6 text-grey-darken-1"
     data-testid="inclusion-attrition-empty"
   >
-    {{ t('cohortDefinitions.cohort.modals.cohortReport.noRules', 'This cohort has no inclusion rules to report.').value }}
+    {{ t('components.expressionCartoonBindings.noInclusionRules', 'This cohort has no inclusion rules to report.').value }}
   </div>
 </template>
 

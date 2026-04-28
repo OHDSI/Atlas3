@@ -11,7 +11,7 @@
       v-else
       class="state"
     >
-      {{ t('incidenceRate.editor.loading', 'Loading incidence rate…') }}
+      {{ t('common.loading', 'Loading incidence rate…') }}
     </div>
   </v-container>
 </template>

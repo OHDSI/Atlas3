@@ -1,13 +1,13 @@
 <template>
   <div class="gen-panel">
     <v-card variant="outlined">
-      <v-card-title>{{ t('incidenceRate.generation', 'Generation') }}</v-card-title>
+      <v-card-title>{{ t('ir.tabs.generation', 'Generation') }}</v-card-title>
       <v-card-text>
         <div class="filters">
           <v-select
             :model-value="store.selectedTargetId"
             :items="targetOptions"
-            :label="t('incidenceRate.target', 'Target').value"
+            :label="t('columns.target', 'Target').value"
             density="compact"
             hide-details
             @update:model-value="(v: number | null) => store.setSelectedTargetOutcome(v, store.selectedOutcomeId)"
@@ -15,7 +15,7 @@
           <v-select
             :model-value="store.selectedOutcomeId"
             :items="outcomeOptions"
-            :label="t('incidenceRate.outcome', 'Outcome').value"
+            :label="t('columns.outcomes', 'Outcome').value"
             density="compact"
             hide-details
             @update:model-value="(v: number | null) => store.setSelectedTargetOutcome(store.selectedTargetId, v)"
@@ -37,12 +37,12 @@
           <thead>
             <tr>
               <th />
-              <th>{{ t('incidenceRate.source', 'Data Source') }}</th>
-              <th>{{ t('incidenceRate.status', 'Status') }}</th>
-              <th>{{ t('incidenceRate.persons', 'Persons') }}</th>
-              <th>{{ t('incidenceRate.cases', 'Cases') }}</th>
-              <th>{{ t('incidenceRate.tarYears', 'TAR (years)') }}</th>
-              <th>{{ t('incidenceRate.rate', 'Rate') }}</th>
+              <th>{{ t('columns.sourceName', 'Data Source') }}</th>
+              <th>{{ t('columns.status', 'Status') }}</th>
+              <th>{{ t('ir.results.persons', 'Persons') }}</th>
+              <th>{{ t('ir.results.cases', 'Cases') }}</th>
+              <th>{{ t('ir.results.timeAtRiskYears', 'TAR (years)') }}</th>
+              <th>{{ t('ir.results.rate', 'Rate') }}</th>
               <th />
             </tr>
           </thead>
@@ -58,7 +58,7 @@
                   color="primary"
                   @click="onGenerate(src.sourceKey)"
                 >
-                  {{ t('incidenceRate.generateBtn', 'Generate') }}
+                  {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
                 </v-btn>
                 <v-btn
                   v-else
@@ -82,7 +82,7 @@
                   :disabled="!matchingSummary(src.sourceKey)"
                   @click="store.setSelectedSource(src.sourceKey)"
                 >
-                  {{ t('incidenceRate.viewReport', 'View report') }}
+                  {{ t('components.analysisExecution.datatable.viewReports', 'View report') }}
                 </v-btn>
               </td>
             </tr>
@@ -91,7 +91,7 @@
                 colspan="8"
                 class="empty"
               >
-                {{ t('incidenceRate.noSources', 'No data sources available.') }}
+                {{ t('commonErrors.noSources', 'No data sources available.') }}
               </td>
             </tr>
           </tbody>

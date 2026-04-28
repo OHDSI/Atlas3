@@ -46,15 +46,15 @@ export function useMatchType(options: UseMatchTypeOptions): UseMatchTypeReturn {
   function getMatchTypeDisplay(): string {
     switch (group.value.logicType) {
       case 'ALL':
-        return t('common.all', 'All').value
+        return t('options.all', 'All').value
       case 'ANY':
-        return t('common.any', 'Any').value
+        return t('options.any', 'Any').value
       case 'AT_LEAST':
-        return `${t('common.atLeast', 'At least').value} ${group.value.count || 1}`
+        return `${t('options.atLeast', 'At least').value} ${group.value.count || 1}`
       case 'AT_MOST':
-        return `${t('common.atMost', 'At most').value} ${group.value.count || 1}`
+        return `${t('options.atMost', 'At most').value} ${group.value.count || 1}`
       default:
-        return t('common.all', 'All').value
+        return t('options.all', 'All').value
     }
   }
 

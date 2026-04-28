@@ -41,6 +41,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,
+        // Rewrite Origin/Referer to the proxy target so WebAPI's CORS filter
+        // accepts the request. Without this, the browser-supplied Origin
+        // (http://localhost:5173) is forwarded verbatim and WebAPI rejects
+        // it with "Invalid CORS request" — login fails on the dev server.
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('origin', 'http://localhost:8080')
+            proxyReq.setHeader('referer', 'http://localhost:8080/')
+          })
+        },
       },
     },
   },

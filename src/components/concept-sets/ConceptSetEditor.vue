@@ -1,13 +1,13 @@
 <template>
   <v-card>
     <v-card-title>
-      {{ modelValue?.id ? t('conceptSetEditor.editTitle') : t('conceptSetEditor.createTitle') }}
+      {{ modelValue?.id ? t('components.conceptSet.actionEdit') : t('components.conceptSet.actionCreate') }}
     </v-card-title>
     <v-card-text>
       <!-- Concept Set Name -->
       <v-text-field
         :model-value="modelValue?.name || ''"
-        :label="tv('conceptSetEditor.nameLabel')"
+        :label="tv('components.conceptSet.name')"
         :placeholder="tv('conceptSetEditor.namePlaceholder')"
         data-testid="concept-set-name"
         @update:model-value="updateName"
@@ -45,7 +45,7 @@
                 <!-- Include Descendants Checkbox -->
                 <v-checkbox
                   :model-value="item.includeDescendants"
-                  :label="tv('conceptSetEditor.includeDescendants')"
+                  :label="tv('columns.descendants')"
                   hide-details
                   density="compact"
                   :data-testid="`include-descendants-${index}`"
@@ -70,7 +70,7 @@
             type="info"
             variant="text"
           >
-            {{ t('conceptSetEditor.noConceptsYet') }}
+            {{ t('common.noData') }}
           </v-alert>
 
           <!-- Add Concept Button -->
@@ -81,7 +81,7 @@
             data-testid="add-concept-btn"
             @click="$emit('add-concepts')"
           >
-            {{ t('conceptSets.addConcepts') }}
+            {{ t('components.conceptSet.addConcepts') }}
           </v-btn>
         </v-card-text>
       </v-card>

@@ -10,7 +10,7 @@
       <v-icon class="mr-2">
         mdi-heart-broken
       </v-icon>
-      {{ t('common.death') }}
+      {{ t('dataSources.reports.death') }}
     </v-card-title>
 
     <v-divider />
@@ -120,7 +120,7 @@ async function loadData() {
       headers: [
         { key: 'conceptId', title: tv('columns.conceptId'), sortable: true },
         { key: 'conceptName', title: tv('common.causeOfDeath'), sortable: true },
-        { key: 'recordsPerPerson', title: tv('columns.recordsPerPerson'), sortable: true, align: 'end' },
+        { key: 'recordsPerPerson', title: tv('dataSources.datadensityReport.recordsPerPerson'), sortable: true, align: 'end' },
         { key: 'personCount', title: tv('columns.personCount'), sortable: true, align: 'end' },
         { key: 'prevalence', title: tv('dataSources.prevalence'), sortable: true, align: 'end' }
       ],

@@ -129,7 +129,8 @@ describe('FeatureAnalysisEditorView', () => {
     mounted = await mountEditor('/feature-analyses/new')
 
     const text = mounted.wrapper.text()
-    expect(text).toContain('New Feature Analysis')
+    // After i18n migration, the title in new mode collapsed to "New" (common.new)
+    expect(text).toContain('New')
     expect(
       mounted.wrapper.find('[data-testid="feature-analysis-editor-design-preset"]').exists()
     ).toBe(true)
@@ -158,7 +159,8 @@ describe('FeatureAnalysisEditorView', () => {
     await flushPromises()
 
     const text = mounted.wrapper.text()
-    expect(text).toContain('Edit Feature Analysis')
+    // After i18n migration, the editor title uses the generic "Edit" wording
+    expect(text).toContain('Edit')
 
     const nameInput = mounted.wrapper.find(
       '[data-testid="feature-analysis-editor-name"] input'

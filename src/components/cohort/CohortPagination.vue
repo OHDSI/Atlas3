@@ -32,7 +32,7 @@
           size="small"
           variant="text"
           :disabled="!canGoPrevious"
-          :aria-label="t('common.previousPage', 'Previous page').value"
+          :aria-label="t('datatable.language.paginate.previous', 'Previous page').value"
           @click="$emit('previous')"
         />
         <v-btn
@@ -40,7 +40,7 @@
           size="small"
           variant="text"
           :disabled="!canGoNext"
-          :aria-label="t('common.nextPage', 'Next page').value"
+          :aria-label="t('datatable.language.paginate.next', 'Next page').value"
           @click="$emit('next')"
         />
       </div>

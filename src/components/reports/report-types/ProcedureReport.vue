@@ -10,7 +10,7 @@
       <v-icon class="mr-2">
         mdi-hospital-box
       </v-icon>
-      {{ t('common.procedures') }}
+      {{ t('dataSources.reports.procedure') }}
     </v-card-title>
 
     <v-divider />

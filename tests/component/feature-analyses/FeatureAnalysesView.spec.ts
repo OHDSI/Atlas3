@@ -121,7 +121,9 @@ describe('FeatureAnalysesView', () => {
 
     expect(mounted.wrapper.find('[data-testid="feature-analyses-create"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="feature-analyses-search"]').exists()).toBe(true)
-    expect(mounted.wrapper.text()).toContain('New Feature Analysis')
+    // After i18n migration the create button label collapsed to the WebAPI
+    // "Feature analysis" string (cc.fa.featureAnalysis)
+    expect(mounted.wrapper.text()).toContain('Feature analysis')
   })
 
   it('renders rows from the store after fetch', async () => {
@@ -138,7 +140,8 @@ describe('FeatureAnalysesView', () => {
     vi.mocked(listFeatureAnalyses).mockResolvedValue([])
     mounted = await mountView()
 
-    expect(mounted.wrapper.text()).toContain('No feature analyses found.')
+    // After i18n migration the empty-state label uses generic "No data" (common.noData)
+    expect(mounted.wrapper.text()).toContain('No data')
   })
 
   it('search input drives the store filter (after debounce)', async () => {

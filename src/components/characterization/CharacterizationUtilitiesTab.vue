@@ -15,7 +15,7 @@
     <!-- Export -->
     <section class="char-utilities-tab__section">
       <h3 class="char-utilities-tab__section-title">
-        {{ t('characterizations.editor.utilities.export.title', 'Export design') }}
+        {{ t('cc.viewEdit.results.exportAll', 'Export design') }}
       </h3>
       <p class="char-utilities-tab__section-desc">
         {{
@@ -36,7 +36,7 @@
       >
         {{
           t(
-            'characterizations.editor.utilities.export.download',
+            'common.download',
             'Download design JSON'
           )
         }}
@@ -60,7 +60,7 @@
     <!-- Import -->
     <section class="char-utilities-tab__section">
       <h3 class="char-utilities-tab__section-title">
-        {{ t('characterizations.editor.utilities.import.title', 'Import design') }}
+        {{ t('common.import', 'Import design') }}
       </h3>
       <p class="char-utilities-tab__section-desc">
         {{
@@ -101,7 +101,7 @@
     <section class="char-utilities-tab__section">
       <h3 class="char-utilities-tab__section-title">
         {{
-          t('characterizations.editor.utilities.diagnostics.title', 'Diagnostics')
+          t('cohortDefinitions.runDiagnostics', 'Diagnostics')
         }}
       </h3>
       <v-alert

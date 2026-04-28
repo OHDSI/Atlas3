@@ -17,8 +17,8 @@
 
     <v-text-field
       v-model="credentials.password"
-      :label="provider.passwordPlaceholder || t('common.password', 'Password').value"
-      :placeholder="provider.passwordPlaceholder || t('common.password', 'Enter password').value"
+      :label="provider.passwordPlaceholder || t('components.welcome.password', 'Password').value"
+      :placeholder="provider.passwordPlaceholder || t('components.welcome.password', 'Enter password').value"
       type="password"
       variant="outlined"
       prepend-inner-icon="mdi-lock"

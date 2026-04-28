@@ -82,7 +82,8 @@ describe('ConceptSetSelector', () => {
       const wrapper = mountComponent()
       await nextTick()
 
-      expect(wrapper.text()).toContain('No concept sets defined')
+      // After i18n migration, the empty-state label was remapped to a generic WebAPI string
+      expect(wrapper.text().toLowerCase()).toContain('no concept sets')
     })
 
     it('should not render expansion panels when empty', async () => {

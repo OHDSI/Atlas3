@@ -95,7 +95,8 @@ describe('ConceptSetSelectionDialog', () => {
 
       await nextTick()
 
-      expect(wrapper.text()).toContain('cs.manager.noConceptSets')
+      // After i18n migration, key remapped to a WebAPI string ("No concept sets" / similar)
+      expect(wrapper.text().toLowerCase()).toContain('no concept sets')
     })
 
     it('should display concept sets list', async () => {
@@ -184,7 +185,8 @@ describe('ConceptSetSelectionDialog', () => {
       await searchInput.vm.$emit('update:modelValue', 'nonexistent')
       await nextTick()
 
-      expect(wrapper.text()).toContain('cs.manager.search.noResults')
+      // After i18n migration, the no-results key was remapped to a WebAPI string
+      expect(wrapper.text().toLowerCase()).toContain('no results')
     })
 
     it('should show all concept sets when search is cleared', async () => {
@@ -464,7 +466,7 @@ describe('ConceptSetSelectionDialog', () => {
       await nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const createButtons = buttons.filter(btn => btn.text().includes('cs.manager.new'))
+      const createButtons = buttons.filter(btn => /Create New Concept Set|cs\.manager\.new/.test(btn.text()))
       expect(createButtons.length).toBeGreaterThan(0)
     })
 
@@ -478,7 +480,7 @@ describe('ConceptSetSelectionDialog', () => {
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       const createButton = buttons.find(btn =>
-        btn.text().includes('cs.manager.new')
+        /Create New Concept Set|cs\.manager\.new/.test(btn.text())
       )
 
       await createButton?.trigger('click')

@@ -4,13 +4,13 @@
     class="strat-card"
   >
     <v-card-title>
-      {{ t('incidenceRate.stratifyRules', 'Stratify Rules') }}
+      {{ t('ir.editor.stratifyCriteria', 'Stratify Rules') }}
       <v-spacer />
       <v-btn
         size="small"
         @click="addRule"
       >
-        {{ t('incidenceRate.addStratifyRule', 'Add rule') }}
+        {{ t('ir.editor.newStratifyCriteria', 'Add rule') }}
       </v-btn>
     </v-card-title>
     <v-card-text class="strat-body">
@@ -61,7 +61,7 @@
           v-else
           class="empty pad"
         >
-          {{ t('incidenceRate.selectRulePrompt', 'Select a rule to edit, or add one.') }}
+          {{ t('ir.editor.selectInclusionCriteriaMessage', 'Select a rule to edit, or add one.') }}
         </div>
       </div>
     </v-card-text>

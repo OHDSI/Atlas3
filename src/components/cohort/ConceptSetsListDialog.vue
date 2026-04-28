@@ -28,7 +28,7 @@
                 {{ t('common.concepts', 'Concepts') }}
               </th>
               <th class="text-left">
-                {{ t('common.actions', 'Actions') }}
+                {{ t('columns.actions', 'Actions') }}
               </th>
             </tr>
           </thead>
@@ -59,7 +59,7 @@
           v-if="conceptSets.length === 0"
           class="text-center py-8 text-grey"
         >
-          {{ t('common.noConceptSets', 'No concept sets in this cohort') }}
+          {{ t('cohortDefinitions.noConceptSets', 'No concept sets in this cohort') }}
         </div>
       </v-card-text>
       <v-card-actions>

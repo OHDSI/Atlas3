@@ -1,11 +1,11 @@
 <template>
   <v-card variant="outlined">
-    <v-card-title>{{ t('incidenceRate.conceptSets', 'Concept Sets') }}</v-card-title>
+    <v-card-title>{{ t('ir.tabs.conceptSets', 'Concept Sets') }}</v-card-title>
     <v-card-text
       v-if="conceptSets.length === 0"
       class="muted"
     >
-      {{ t('incidenceRate.noConceptSets', 'This incidence rate has no concept sets attached.') }}
+      {{ t('cohortDefinitions.noConceptSets', 'This incidence rate has no concept sets attached.') }}
     </v-card-text>
     <v-table
       v-else
@@ -13,8 +13,8 @@
     >
       <thead>
         <tr>
-          <th>{{ t('common.name', 'Name') }}</th>
-          <th>{{ t('common.actions', 'Actions') }}</th>
+          <th>{{ t('columns.name', 'Name') }}</th>
+          <th>{{ t('columns.actions', 'Actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -30,7 +30,7 @@
               variant="text"
               :to="`/conceptset/${cs.id}`"
             >
-              {{ t('common.view', 'View') }}
+              {{ t('cs.manager.concept.tabs.hierarchy.view', 'View') }}
             </v-btn>
           </td>
         </tr>

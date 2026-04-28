@@ -4,7 +4,7 @@
       <v-icon left>
         mdi-account-switch
       </v-icon>
-      {{ t('auth.runAsUser') }}
+      {{ t('components.welcome.runas') }}
     </v-card-title>
 
     <v-card-text>
@@ -52,8 +52,8 @@
 
       <v-text-field
         v-model="targetUser"
-        :label="tv('auth.targetUsername')"
-        :placeholder="tv('auth.enterUsernameToImpersonate')"
+        :label="tv('components.welcome.username')"
+        :placeholder="tv('components.welcome.username')"
         variant="outlined"
         prepend-inner-icon="mdi-account"
         :disabled="isRunningAs || isLoading"
@@ -72,7 +72,7 @@
         <v-icon left>
           mdi-account-switch
         </v-icon>
-        {{ t('auth.runAsUser') }}
+        {{ t('components.welcome.runas') }}
       </v-btn>
 
       <v-alert
@@ -81,7 +81,7 @@
         class="mt-4"
       >
         <div class="text-caption">
-          <strong>{{ t('common.warning') }}:</strong> {{ t('auth.runAsWarning') }}
+          <strong>{{ t('facets.values.warning') }}:</strong> {{ t('auth.runAsWarning') }}
         </div>
       </v-alert>
     </v-card-text>
