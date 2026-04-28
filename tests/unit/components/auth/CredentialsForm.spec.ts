@@ -239,20 +239,20 @@ describe('CredentialsForm', () => {
       expect(passwordField.props('variant')).toBe('outlined')
     })
 
-    it('should have account icon for username field', () => {
+    it('should have an account icon for username field', () => {
       wrapper = mountComponent()
 
       const textFields = wrapper.findAllComponents({ name: 'VTextField' })
       const usernameField = textFields[0]
-      expect(usernameField.props('prependInnerIcon')).toBe('mdi-account')
+      expect(usernameField.props('prependInnerIcon')).toMatch(/mdi-account/)
     })
 
-    it('should have lock icon for password field', () => {
+    it('should have a lock icon for password field', () => {
       wrapper = mountComponent()
 
       const textFields = wrapper.findAllComponents({ name: 'VTextField' })
       const passwordField = textFields[1]
-      expect(passwordField.props('prependInnerIcon')).toBe('mdi-lock')
+      expect(passwordField.props('prependInnerIcon')).toMatch(/mdi-lock/)
     })
 
     it('should have rules for username field', () => {

@@ -1,61 +1,84 @@
 <template>
   <v-dialog
     v-model="isOpen"
-    max-width="500"
-    persistent
+    :max-width="440"
+    :persistent="true"
+    transition="dialog-bottom-transition"
+    class="login-modal"
   >
-    <v-card>
-      <v-card-title class="text-h5 bg-primary">
-        <v-icon left>
-          mdi-login
-        </v-icon>
-        {{ t('common.menu', 'Sign In') }}
-      </v-card-title>
+    <v-card
+      :elevation="8"
+      rounded="lg"
+      class="login-card"
+    >
+      <div class="login-card__header">
+        <div class="login-card__brand">
+          Atlas
+        </div>
+        <h1 class="login-card__title">
+          {{ t('components.auth.welcomeBack', 'Welcome back') }}
+        </h1>
+        <p class="login-card__subtitle">
+          {{ t('components.auth.signInToAtlas', 'Sign in to continue') }}
+        </p>
+      </div>
 
-      <v-card-text class="pa-6">
-        <v-alert
+      <div class="login-card__body">
+        <div
           v-if="errorMessage"
-          type="error"
-          class="mb-4"
-          closable
-          @click:close="clearError"
+          class="login-card__error"
+          role="alert"
         >
-          {{ errorMessage }}
-        </v-alert>
+          <v-icon
+            size="18"
+            color="error"
+            class="mr-2"
+          >
+            mdi-alert-circle-outline
+          </v-icon>
+          <span>{{ errorMessage }}</span>
+          <v-btn
+            icon="mdi-close"
+            size="x-small"
+            variant="text"
+            class="ml-auto"
+            :aria-label="t('common.close', 'Dismiss').value"
+            @click="clearError"
+          />
+        </div>
 
         <div v-if="!selectedProvider">
-          <p class="text-subtitle-1 mb-4">
-            {{ t('components.authProviderSelect.info', 'Select an authentication provider:') }}
+          <p class="login-card__providers-label">
+            {{ t('components.authProviderSelect.info', 'Continue with') }}
           </p>
 
-          <v-list>
-            <v-list-item
+          <div class="login-card__providers">
+            <v-btn
               v-for="provider in providers"
               :key="provider.name"
-              class="mb-2"
+              variant="outlined"
+              color="default"
+              size="large"
+              block
+              class="login-card__provider-btn"
+              :prepend-icon="provider.icon"
+              :append-icon="'mdi-chevron-right'"
               @click="selectProvider(provider)"
             >
-              <template #prepend>
-                <v-icon
-                  :icon="provider.icon"
-                  size="24"
-                  class="mr-3"
-                />
-              </template>
-              <v-list-item-title>{{ provider.name }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
+              {{ provider.name }}
+            </v-btn>
+          </div>
         </div>
 
         <div v-else>
           <v-btn
-            text
-            class="mb-4"
+            v-if="providers.length > 1"
+            variant="text"
+            size="small"
+            class="login-card__back-btn"
+            prepend-icon="mdi-arrow-left"
             @click="backToProviders"
           >
-            <v-icon left>
-              mdi-arrow-left
-            </v-icon>
             {{ t('common.back', 'Back') }}
           </v-btn>
 
@@ -66,17 +89,24 @@
             @submit="handleLogin"
           />
         </div>
-      </v-card-text>
 
-      <v-card-actions v-if="!authConfig.userAuthenticationEnabled">
-        <v-spacer />
-        <v-btn
-          text
-          @click="close"
+        <div
+          v-if="!authConfig.userAuthenticationEnabled"
+          class="login-card__skip"
         >
-          {{ t('components.authProviderSelect.skipLogin', 'Skip Login') }}
-        </v-btn>
-      </v-card-actions>
+          <v-btn
+            variant="text"
+            size="small"
+            @click="close"
+          >
+            {{ t('components.authProviderSelect.skipLogin', 'Skip Login') }}
+          </v-btn>
+        </div>
+      </div>
+
+      <div class="login-card__footer">
+        Atlas v3.0 · OHDSI
+      </div>
     </v-card>
   </v-dialog>
 </template>
@@ -110,7 +140,6 @@ const loadingProviders = ref(false)
 const isAuthenticating = computed(() => auth.isAuthenticating.value)
 const errorMessage = computed(() => auth.errorMessage.value)
 
-// Function to fetch providers from WebAPI
 async function fetchProviders() {
   loadingProviders.value = true
   try {
@@ -120,13 +149,11 @@ async function fetchProviders() {
     if (fetchedProviders.length > 0) {
       providers.value = fetchedProviders
     } else {
-      // Fallback to config providers if WebAPI doesn't return any
       logger.debug('LoginModal', 'Using providers from config', authConfig.authProviders)
       providers.value = authConfig.authProviders
     }
   } catch (error) {
     logger.error('LoginModal', 'Failed to fetch providers from WebAPI', error)
-    // Fallback to config providers
     providers.value = authConfig.authProviders
   } finally {
     loadingProviders.value = false
@@ -137,15 +164,9 @@ watch(
   () => auth.loginModalOpen.value,
   async (newValue) => {
     if (newValue) {
-      // Reset selection first
       selectedProvider.value = null
-
-      // Fetch fresh providers whenever modal opens
       await fetchProviders()
 
-      // IMPORTANT: Wait for providers to be fetched before auto-selecting
-      // This ensures we use the backend's isUseCredentialsForm value, not env var
-      // Only auto-select if it's a credentials form (not OAuth redirect)
       if (providers.value.length === 1) {
         const firstProvider = providers.value[0]
         if (firstProvider && firstProvider.isUseCredentialsForm) {
@@ -153,7 +174,6 @@ watch(
         }
       }
     } else {
-      // Reset state when modal closes
       selectedProvider.value = null
     }
   },
@@ -163,12 +183,10 @@ watch(
 function selectProvider(provider: AuthProvider) {
   selectedProvider.value = provider
 
-  // Store the logout URL if this provider has one (needed for OIDC single logout)
   if (provider.logoutUrl) {
     auth.saveLogoutUrl(provider.logoutUrl)
   }
 
-  // For OAuth/redirect providers (non-AJAX), trigger redirect via authService
   if (!provider.isUseCredentialsForm && !provider.ajax) {
     auth.login(provider.url)
   }
@@ -199,3 +217,117 @@ function close() {
   selectedProvider.value = null
 }
 </script>
+
+<style scoped>
+.login-modal :deep(.v-overlay__scrim) {
+  backdrop-filter: blur(4px);
+  background: rgba(31, 66, 90, 0.45);
+  opacity: 1;
+}
+
+.login-card {
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.login-card__header {
+  padding: 32px 32px 0;
+  text-align: center;
+}
+
+.login-card__brand {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(var(--v-theme-primary));
+  margin-bottom: 24px;
+}
+
+.login-card__title {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0 0 6px;
+}
+
+.login-card__subtitle {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.55);
+  margin: 0 0 28px;
+}
+
+.login-card__body {
+  padding: 0 32px 24px;
+}
+
+.login-card__providers-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.login-card__providers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.login-card__provider-btn {
+  justify-content: flex-start;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  border-color: rgba(0, 0, 0, 0.12);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.login-card__provider-btn:hover {
+  background-color: rgba(31, 66, 90, 0.04);
+  border-color: rgba(31, 66, 90, 0.4);
+}
+
+.login-card__provider-btn :deep(.v-btn__content) {
+  flex: 1;
+  text-align: left;
+}
+
+.login-card__back-btn {
+  margin: 0 0 12px -8px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.login-card__error {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  background-color: rgba(255, 82, 82, 0.08);
+  border: 1px solid rgba(255, 82, 82, 0.25);
+  border-radius: 6px;
+  color: rgba(0, 0, 0, 0.78);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.login-card__skip {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.login-card__footer {
+  padding: 16px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(0, 0, 0, 0.4);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+</style>
