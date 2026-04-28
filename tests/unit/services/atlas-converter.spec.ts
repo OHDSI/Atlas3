@@ -3843,4 +3843,1298 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       }
     })
   })
+
+  // ==========================================================================
+  // Branch coverage extension tests (extending coverage of fallbacks)
+  // ==========================================================================
+  describe('Branch coverage - ConceptSet item field fallbacks', () => {
+    it('handles concept set item with null standardConcept and null conceptCode', () => {
+      const cohort = createMinimalCohort({
+        conceptSets: [
+          {
+            id: 1,
+            name: 'Test Set',
+            items: [
+              {
+                conceptId: 100,
+                conceptName: 'A concept',
+                domainId: 'Condition',
+                vocabularyId: 'SNOMED',
+                conceptClassId: 'Clinical Finding',
+                standardConcept: null,
+                conceptCode: null,
+                invalidReason: null,
+              },
+            ],
+          },
+        ],
+      })
+
+      const atlas = convertInternalToAtlas(cohort)
+      const conceptItem = atlas.ConceptSets[0]?.expression.items[0]
+      expect(conceptItem?.concept.STANDARD_CONCEPT).toBeUndefined()
+      expect(conceptItem?.concept.CONCEPT_CODE).toBeUndefined()
+      // Default invalidReason fallback
+      expect(conceptItem?.concept.INVALID_REASON).toBe('V')
+      expect(conceptItem?.concept.INVALID_REASON_CAPTION).toBe('Valid')
+    })
+
+    it('handles concept set item with Classification standard concept', () => {
+      const cohort = createMinimalCohort({
+        conceptSets: [
+          {
+            id: 1,
+            name: 'Test Set',
+            items: [
+              {
+                conceptId: 100,
+                conceptName: 'A concept',
+                domainId: 'Condition',
+                vocabularyId: 'SNOMED',
+                conceptClassId: 'Clinical Finding',
+                standardConcept: 'C',
+                conceptCode: 'X10',
+              },
+            ],
+          },
+        ],
+      })
+
+      const atlas = convertInternalToAtlas(cohort)
+      const conceptItem = atlas.ConceptSets[0]?.expression.items[0]
+      expect(conceptItem?.concept.STANDARD_CONCEPT).toBe('C')
+      expect(conceptItem?.concept.STANDARD_CONCEPT_CAPTION).toBe('Classification')
+      expect(conceptItem?.concept.CONCEPT_CODE).toBe('X10')
+    })
+
+    it('handles concept set item with non-S non-C standard concept', () => {
+      const cohort = createMinimalCohort({
+        conceptSets: [
+          {
+            id: 1,
+            name: 'Test Set',
+            items: [
+              {
+                conceptId: 100,
+                conceptName: 'A concept',
+                domainId: 'Condition',
+                vocabularyId: 'SNOMED',
+                conceptClassId: 'Clinical Finding',
+                standardConcept: 'N',
+              },
+            ],
+          },
+        ],
+      })
+
+      const atlas = convertInternalToAtlas(cohort)
+      const conceptItem = atlas.ConceptSets[0]?.expression.items[0]
+      expect(conceptItem?.concept.STANDARD_CONCEPT_CAPTION).toBe('Non-Standard')
+    })
+
+    it('marks invalid concept with explicit invalidReason as Invalid', () => {
+      const cohort = createMinimalCohort({
+        conceptSets: [
+          {
+            id: 1,
+            name: 'Test Set',
+            items: [
+              {
+                conceptId: 100,
+                conceptName: 'A concept',
+                domainId: 'Condition',
+                vocabularyId: 'SNOMED',
+                conceptClassId: 'Clinical Finding',
+                standardConcept: 'S',
+                invalidReason: 'D',
+              },
+            ],
+          },
+        ],
+      })
+
+      const atlas = convertInternalToAtlas(cohort)
+      const conceptItem = atlas.ConceptSets[0]?.expression.items[0]
+      expect(conceptItem?.concept.INVALID_REASON).toBe('D')
+      expect(conceptItem?.concept.INVALID_REASON_CAPTION).toBe('Invalid')
+    })
+
+    it('handles concept set without items array', () => {
+      const cohort = createMinimalCohort({
+        conceptSets: [{ id: 1, name: 'Empty Set' }],
+      })
+
+      const atlas = convertInternalToAtlas(cohort)
+      expect(atlas.ConceptSets[0]?.expression.items).toEqual([])
+    })
+
+    it('uses positional index when concept set id is not numeric', () => {
+      const cohort = createMinimalCohort({
+        conceptSets: [
+          { id: 'uuid-abc', name: 'Set A' },
+          { id: 'uuid-xyz', name: 'Set B' },
+        ],
+      })
+
+      const atlas = convertInternalToAtlas(cohort)
+      expect(atlas.ConceptSets[0]?.id).toBe(0)
+      expect(atlas.ConceptSets[1]?.id).toBe(1)
+    })
+
+    it('preserves explicit boolean fields true on concept items', () => {
+      const cohort = createMinimalCohort({
+        conceptSets: [
+          {
+            id: 1,
+            name: 'Test Set',
+            items: [
+              {
+                conceptId: 100,
+                conceptName: 'A concept',
+                domainId: 'Condition',
+                vocabularyId: 'SNOMED',
+                conceptClassId: 'Clinical Finding',
+                isExcluded: true,
+                includeDescendants: true,
+                includeMapped: true,
+              },
+            ],
+          },
+        ],
+      })
+
+      const atlas = convertInternalToAtlas(cohort)
+      const item = atlas.ConceptSets[0]?.expression.items[0]
+      expect(item?.isExcluded).toBe(true)
+      expect(item?.includeDescendants).toBe(true)
+      expect(item?.includeMapped).toBe(true)
+    })
+  })
+
+  describe('Branch coverage - Cardinality / Occurrence Type variants', () => {
+    it('serializes EXACTLY cardinality with explicit count and isDistinct', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            cardinality: {
+              type: 'EXACTLY',
+              count: 5,
+              countingMethod: 'ALL',
+              isDistinct: true,
+            },
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const occ = atlas.PrimaryCriteria.CriteriaList[0]?.Occurrence
+      expect(occ?.Type).toBe(0)
+      expect(occ?.Count).toBe(5)
+      expect(occ?.IsDistinct).toBe(true)
+    })
+
+    it('serializes AT_MOST cardinality (Type=1)', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            cardinality: { type: 'AT_MOST', count: 2 },
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const occ = atlas.PrimaryCriteria.CriteriaList[0]?.Occurrence
+      expect(occ?.Type).toBe(1)
+      expect(occ?.Count).toBe(2)
+      // CountMethod fallback to 'ALL'
+      expect(occ?.CountMethod).toBe('ALL')
+      // IsDistinct fallback to false
+      expect(occ?.IsDistinct).toBe(false)
+    })
+
+    it('serializes AT_LEAST cardinality (Type=2) with countColumn', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            cardinality: {
+              type: 'AT_LEAST',
+              count: 3,
+              countingMethod: 'DISTINCT',
+              countColumn: 'CONCEPT',
+            },
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const occ = atlas.PrimaryCriteria.CriteriaList[0]?.Occurrence
+      expect(occ?.Type).toBe(2)
+      expect(occ?.Count).toBe(3)
+      expect(occ?.CountMethod).toBe('DISTINCT')
+      expect(occ?.CountColumn).toBe('CONCEPT')
+    })
+
+    it('serializes unknown cardinality type to Type=0', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            cardinality: {
+              type: 'NOT_REAL_TYPE' as never,
+              count: 7,
+            },
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const occ = atlas.PrimaryCriteria.CriteriaList[0]?.Occurrence
+      expect(occ?.Type).toBe(0)
+      expect(occ?.Count).toBe(7)
+    })
+
+    it('serializes additionalCriteria with falsy logicType to ALL', () => {
+      const cohort = createMinimalCohort({
+        additionalCriteria: {
+          id: 'g1',
+          logicType: '' as unknown as import('@/models/cohort.types').LogicType,
+          events: [],
+        },
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      expect(atlas.AdditionalCriteria?.Type).toBe('ALL')
+    })
+
+    it('cardinality with missing count uses default of 1', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            // count omitted
+            cardinality: { type: 'EXACTLY' } as unknown as Parameters<typeof convertInternalToAtlas>[0]['entryEvents'][0]['cardinality'],
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      expect(atlas.PrimaryCriteria.CriteriaList[0]?.Occurrence?.Count).toBe(1)
+    })
+
+    it('parses unknown Atlas Occurrence Type back to EXACTLY', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: { CodesetId: null },
+              Occurrence: { Type: 99, Count: 4 },
+            },
+          ],
+        },
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.entryEvents?.[0]?.cardinality?.type).toBe('EXACTLY')
+      expect(internal.entryEvents?.[0]?.cardinality?.count).toBe(4)
+    })
+
+    it('parses Atlas Occurrence Type=1 to AT_MOST with default count and CountMethod', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: { CodesetId: null },
+              Occurrence: { Type: 1 }, // count missing
+            },
+          ],
+        },
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.entryEvents?.[0]?.cardinality?.type).toBe('AT_MOST')
+      expect(internal.entryEvents?.[0]?.cardinality?.count).toBe(1)
+      expect(internal.entryEvents?.[0]?.cardinality?.countingMethod).toBe('ALL')
+    })
+  })
+
+  describe('Branch coverage - Temporal window variants', () => {
+    it('serializes temporal window where startWindow days is null and endWindow uses INDEX_END', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            temporalWindow: {
+              startWindow: {
+                days: null,
+                beforeAfter: 'AFTER',
+                referencePoint: 'INDEX_END',
+              },
+              endWindow: {
+                days: null,
+                beforeAfter: 'BEFORE',
+                referencePoint: 'EVENT_END',
+              },
+            },
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const sw = atlas.PrimaryCriteria.CriteriaList[0]?.StartWindow
+      expect(sw?.Start?.Days).toBeUndefined()
+      expect(sw?.Start?.Coeff).toBe(1)
+      expect(sw?.End?.Days).toBeUndefined()
+      expect(sw?.End?.Coeff).toBe(-1)
+      expect(sw?.UseIndexEnd).toBe(true)
+      expect(sw?.UseEventEnd).toBe(false)
+    })
+
+    it('serializes temporal window with EVENT_END reference point', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            temporalWindow: {
+              startWindow: {
+                days: 7,
+                beforeAfter: 'AFTER',
+                referencePoint: 'EVENT_END',
+              },
+            },
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const sw = atlas.PrimaryCriteria.CriteriaList[0]?.StartWindow
+      expect(sw?.UseEventEnd).toBe(true)
+      expect(sw?.UseIndexEnd).toBe(false)
+      expect(sw?.End).toBeUndefined()
+    })
+
+    it('parses temporal window where Days is undefined and Coeff missing', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: { CodesetId: null },
+              StartWindow: {
+                Start: {}, // no Days, no Coeff
+                End: {},   // no Days, no Coeff
+              },
+            },
+          ],
+        },
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      const tw = internal.entryEvents?.[0]?.temporalWindow
+      expect(tw?.startWindow?.days).toBe(null)
+      expect(tw?.startWindow?.beforeAfter).toBe('AFTER')
+      expect(tw?.endWindow?.days).toBe(null)
+      expect(tw?.endWindow?.beforeAfter).toBe('AFTER')
+    })
+
+    it('parses temporal window where StartWindow uses EVENT_END reference', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: { CodesetId: null },
+              StartWindow: {
+                Start: { Days: 5, Coeff: 1 },
+                UseEventEnd: true,
+              },
+            },
+          ],
+        },
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.entryEvents?.[0]?.temporalWindow?.startWindow?.referencePoint).toBe('EVENT_END')
+    })
+
+    it('parses temporal window with end window Coeff<0 and UseIndexEnd', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: { CodesetId: null },
+              StartWindow: {
+                Start: { Days: 1, Coeff: -1 },
+                End: { Days: 5, Coeff: -1 },
+                UseIndexEnd: true,
+              },
+            },
+          ],
+        },
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      const tw = internal.entryEvents?.[0]?.temporalWindow
+      expect(tw?.startWindow?.beforeAfter).toBe('BEFORE')
+      expect(tw?.startWindow?.referencePoint).toBe('INDEX_END')
+      expect(tw?.endWindow?.beforeAfter).toBe('BEFORE')
+      expect(tw?.endWindow?.referencePoint).toBe('INDEX_END')
+    })
+
+    it('parses temporal window with end window using UseEventEnd', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: { CodesetId: null },
+              StartWindow: {
+                Start: { Days: 1, Coeff: 1 },
+                End: { Days: 5, Coeff: 1 },
+                UseEventEnd: true,
+              },
+            },
+          ],
+        },
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      const tw = internal.entryEvents?.[0]?.temporalWindow
+      expect(tw?.endWindow?.referencePoint).toBe('EVENT_END')
+    })
+  })
+
+  describe('Branch coverage - temporal relationship attribute (parse helper)', () => {
+    it('parseTemporalRelationshipAttribute handles end window with BEFORE/INDEX_END', () => {
+      const result = parseTemporalRelationshipAttribute('temporalRelationship', {
+        StartWindow: {
+          Start: { Days: 5, Coeff: -1 },
+          End: { Days: 10, Coeff: -1 },
+          UseIndexEnd: true,
+        },
+      })
+      if (result.type === 'temporalRelationship') {
+        expect(result.temporalWindow.endWindow?.beforeAfter).toBe('BEFORE')
+        expect(result.temporalWindow.endWindow?.referencePoint).toBe('INDEX_END')
+      }
+    })
+
+    it('parseTemporalRelationshipAttribute handles end window with EVENT_END', () => {
+      const result = parseTemporalRelationshipAttribute('temporalRelationship', {
+        StartWindow: {
+          Start: { Days: 5, Coeff: 1 },
+          End: { Days: 10, Coeff: 1 },
+          UseEventEnd: true,
+        },
+      })
+      if (result.type === 'temporalRelationship') {
+        expect(result.temporalWindow.endWindow?.referencePoint).toBe('EVENT_END')
+      }
+    })
+
+    it('parseTemporalRelationshipAttribute handles end window with default INDEX_START and missing Days', () => {
+      const result = parseTemporalRelationshipAttribute('temporalRelationship', {
+        StartWindow: {
+          Start: { Coeff: 1 },
+          End: { Coeff: 1 }, // no Days
+        },
+      })
+      if (result.type === 'temporalRelationship') {
+        expect(result.temporalWindow.startWindow?.days).toBe(null)
+        expect(result.temporalWindow.endWindow?.days).toBe(null)
+        expect(result.temporalWindow.startWindow?.referencePoint).toBe('INDEX_START')
+        expect(result.temporalWindow.endWindow?.referencePoint).toBe('INDEX_START')
+      }
+    })
+  })
+
+  describe('Branch coverage - convertTemporalRelationshipAttribute (write path)', () => {
+    it('serializes temporalRelationship with both start and end windows', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [
+              {
+                type: 'temporalRelationship',
+                attributeKey: 'temporalRelationship',
+                temporalWindow: {
+                  startWindow: {
+                    days: 30,
+                    beforeAfter: 'BEFORE',
+                    referencePoint: 'INDEX_START',
+                  },
+                  endWindow: {
+                    days: 10,
+                    beforeAfter: 'AFTER',
+                    referencePoint: 'INDEX_END',
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const tempRel = atlas.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence?.TemporalRelationship as {
+        StartWindow?: { Start?: { Coeff: number; Days?: number }; End?: { Coeff: number; Days?: number } }
+      }
+      expect(tempRel?.StartWindow?.Start?.Coeff).toBe(-1)
+      expect(tempRel?.StartWindow?.Start?.Days).toBe(30)
+      expect(tempRel?.StartWindow?.End?.Coeff).toBe(1)
+      expect(tempRel?.StartWindow?.End?.Days).toBe(10)
+    })
+
+    it('serializes temporalRelationship omitting days when null', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [
+              {
+                type: 'temporalRelationship',
+                attributeKey: 'temporalRelationship',
+                temporalWindow: {
+                  startWindow: {
+                    days: null,
+                    beforeAfter: 'AFTER',
+                    referencePoint: 'INDEX_START',
+                  },
+                  endWindow: {
+                    days: null,
+                    beforeAfter: 'BEFORE',
+                    referencePoint: 'INDEX_START',
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const tempRel = atlas.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence?.TemporalRelationship as {
+        StartWindow?: { Start?: { Coeff: number; Days?: number }; End?: { Coeff: number; Days?: number } }
+      }
+      expect(tempRel?.StartWindow?.Start?.Days).toBeUndefined()
+      expect(tempRel?.StartWindow?.End?.Days).toBeUndefined()
+    })
+  })
+
+  describe('Branch coverage - parseConceptSetAttribute edge cases', () => {
+    it('returns undefined for non-object raw input', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: {
+                CodesetId: null,
+                VisitTypeCS: 'not-an-object',
+              },
+            },
+          ],
+        },
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      const cs = internal.entryEvents?.[0]?.attributes?.find(a => a.type === 'conceptSet')
+      expect(cs).toBeUndefined()
+    })
+
+    it('returns undefined when CodesetId is null in *CS', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: {
+                CodesetId: null,
+                VisitTypeCS: { CodesetId: null },
+              },
+            },
+          ],
+        },
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      const cs = internal.entryEvents?.[0]?.attributes?.find(a => a.type === 'conceptSet')
+      expect(cs).toBeUndefined()
+    })
+
+    it('parses VisitTypeCS without IsExclusion correctly', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: {
+                CodesetId: null,
+                VisitTypeCS: { CodesetId: 17 }, // no IsExclusion
+              },
+            },
+          ],
+        },
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      const cs = internal.entryEvents?.[0]?.attributes?.find(a => a.type === 'conceptSet')
+      expect(cs).toBeDefined()
+      if (cs?.type === 'conceptSet') {
+        expect(cs.conceptSet.id).toBe(17)
+        expect(cs.isExclusion).toBeUndefined()
+      }
+    })
+
+    it('serializes conceptSet attribute without numeric id (CodesetId becomes null)', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [
+              {
+                type: 'conceptSet',
+                attributeKey: 'visitType', // no Cs suffix to test attributeKeyToAtlasField fallback
+                conceptSet: { id: 'uuid-not-numeric', name: 'Set' },
+              },
+            ],
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const co = atlas.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence as Record<string, unknown>
+      expect(co?.VisitType).toEqual({ CodesetId: null, IsExclusion: false })
+    })
+  })
+
+  describe('Branch coverage - convertAttributeToAtlas edge cases', () => {
+    it('returns empty object when attribute has no type', () => {
+      // Type-cast to bypass TS — this exercises the early-return branch
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [{} as never],
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      // Should not throw, and base criteria should still exist
+      expect(atlas.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence).toBeDefined()
+    })
+
+    it('returns empty object for unknown attribute type', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [{ type: 'unknownType', attributeKey: 'foo' } as unknown as never],
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      expect(atlas.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence).toBeDefined()
+    })
+
+    it('handles null attribute gracefully', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [null as unknown as never],
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      expect(atlas.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence).toBeDefined()
+    })
+  })
+
+  describe('Branch coverage - convertAtlasToInternal fallbacks', () => {
+    it('handles Atlas without QualifiedLimit (defaults to ALL)', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: { CriteriaList: [] },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.qualifyingLimit).toBe('ALL')
+      expect(internal.inclusionQualifyingLimit).toBeUndefined()
+    })
+
+    it('handles Atlas without PrimaryCriteria (entryEvents = [])', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.entryEvents).toEqual([])
+    })
+
+    it('handles Atlas without InclusionRules', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: { CriteriaList: [] },
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.inclusionRules).toEqual([])
+    })
+
+    it('handles Atlas without ConceptSets', () => {
+      const atlasJson = {
+        PrimaryCriteria: { CriteriaList: [] },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.conceptSets).toEqual([])
+    })
+
+    it('handles inclusion rule with missing name and description', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: { CriteriaList: [] },
+        InclusionRules: [
+          {
+            // no name or description
+            expression: {
+              CriteriaList: [{ ConditionOccurrence: { CodesetId: null } }],
+              DemographicCriteriaList: [],
+              Groups: [],
+            },
+          },
+        ],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.inclusionRules?.[0]?.name).toBe('Unnamed Rule')
+      expect(internal.inclusionRules?.[0]?.description).toBe('')
+    })
+
+    it('handles inclusion rule with only DemographicCriteriaList (no CriteriaList)', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: { CriteriaList: [] },
+        InclusionRules: [
+          {
+            name: 'Demo only',
+            expression: {
+              Type: '',
+              DemographicCriteriaList: [
+                { Age: { Op: 'gt', Value: 18 } },
+              ],
+              Groups: [],
+            },
+          },
+        ],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.inclusionRules?.[0]?.criteriaGroups).toHaveLength(1)
+      expect(internal.inclusionRules?.[0]?.criteriaGroups[0]?.logicType).toBe('ALL')
+    })
+
+    it('handles inclusion rule with both CriteriaList and DemographicCriteriaList', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: { CriteriaList: [] },
+        InclusionRules: [
+          {
+            name: 'Mixed',
+            expression: {
+              Type: 'ANY',
+              CriteriaList: [{ ConditionOccurrence: { CodesetId: null } }],
+              DemographicCriteriaList: [
+                { Age: { Op: 'gt', Value: 18 } },
+              ],
+              Groups: [],
+            },
+          },
+        ],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      // demographic events should be appended into the first group
+      expect(internal.inclusionRules?.[0]?.criteriaGroups).toHaveLength(1)
+      expect(internal.inclusionRules?.[0]?.criteriaGroups[0]?.events).toHaveLength(2)
+    })
+
+    it('handles Groups with missing Type and missing CriteriaList', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: { CriteriaList: [] },
+        InclusionRules: [
+          {
+            name: 'Group only',
+            expression: {
+              CriteriaList: [],
+              DemographicCriteriaList: [],
+              Groups: [{}],
+            },
+          },
+        ],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      const group = internal.inclusionRules?.[0]?.criteriaGroups?.[0]
+      expect(group?.logicType).toBe('ALL')
+      expect(group?.events).toEqual([])
+    })
+
+    it('handles AdditionalCriteria with missing Type', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [],
+          PrimaryCriteriaLimit: { Type: 'first' },
+        },
+        AdditionalCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: null } }],
+          DemographicCriteriaList: [],
+          Groups: [],
+        },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.additionalCriteria?.logicType).toBe('ALL')
+      expect(internal.additionalCriteria?.qualifyingLimit).toBe('FIRST')
+    })
+
+    it('parses concept set in convertAtlasToEvent without items', () => {
+      const atlasJson = {
+        ConceptSets: [
+          {
+            id: 1,
+            name: 'Empty CS',
+            expression: {}, // no items
+          },
+        ],
+        PrimaryCriteria: {
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 1 } }],
+        },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.entryEvents?.[0]?.conceptSet?.items).toEqual([])
+    })
+
+    it('handles ConceptSet without expression property', () => {
+      const atlasJson = {
+        ConceptSets: [{ id: 1, name: 'No expr' }],
+        PrimaryCriteria: { CriteriaList: [] },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.conceptSets?.[0]?.items).toEqual([])
+    })
+
+    it('handles Atlas event with empty Criteria object key', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [{ Criteria: {} }], // empty criteria object
+        },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      // Falls back to 'ConditionOccurrence'
+      expect(internal.entryEvents?.[0]?.criteriaType).toBe('ConditionOccurrence')
+    })
+
+    it('handles correlatedCriteria with missing Type and CriteriaList', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: { CodesetId: null },
+              CorrelatedCriteria: { Count: 2 }, // no Type, no CriteriaList
+            },
+          ],
+        },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      expect(internal.entryEvents?.[0]?.nestedCriteria?.logicType).toBe('ALL')
+      expect(internal.entryEvents?.[0]?.nestedCriteria?.events).toEqual([])
+    })
+  })
+
+  describe('Branch coverage - convertInternalToAtlas fallbacks', () => {
+    it('uses fallback "All" PrimaryCriteriaLimit when additionalCriteria.qualifyingLimit empty', () => {
+      const cohort = createMinimalCohort({
+        additionalCriteria: {
+          id: 'g1',
+          logicType: 'ALL',
+          // qualifyingLimit omitted
+          events: [],
+        },
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      expect(atlas.PrimaryCriteria.PrimaryCriteriaLimit?.Type).toBe('All')
+    })
+
+    it('uses fallback qualifyingLimit "All" when cohort.qualifyingLimit empty', () => {
+      const cohort = createMinimalCohort()
+      // Force empty
+      ;(cohort as { qualifyingLimit: unknown }).qualifyingLimit = ''
+      const atlas = convertInternalToAtlas(cohort)
+      expect(atlas.QualifiedLimit?.Type).toBe('All')
+    })
+  })
+
+  describe('Branch coverage - operator/text helpers', () => {
+    it('parseTextAttribute creates a text attribute', () => {
+      const result = parseTextAttribute('valueAsString', 'glucose')
+      expect(result).toEqual({
+        type: 'text',
+        attributeKey: 'valueAsString',
+        operator: 'CONTAINS',
+        value: 'glucose',
+      })
+    })
+
+    it('parseBooleanAttribute creates a boolean attribute', () => {
+      const result = parseBooleanAttribute('first', false)
+      expect(result).toEqual({
+        type: 'boolean',
+        attributeKey: 'first',
+        value: false,
+      })
+    })
+
+    it('parseConceptAttribute defaults to empty array when concepts undefined', () => {
+      const result = parseConceptAttribute(
+        'gender',
+        undefined as unknown as unknown[]
+      )
+      expect(result.type).toBe('concept')
+      if (result.type === 'concept') {
+        expect(result.concepts).toEqual([])
+      }
+    })
+
+    it('parseTemporalRelationshipAttribute handles missing StartWindow', () => {
+      const result = parseTemporalRelationshipAttribute('temporalRelationship', {})
+      expect(result.type).toBe('temporalRelationship')
+      if (result.type === 'temporalRelationship') {
+        expect(result.temporalWindow.startWindow).toBeUndefined()
+        expect(result.temporalWindow.endWindow).toBeUndefined()
+      }
+    })
+
+    it('parseDateAdjustmentAttribute applies defaults for missing fields', () => {
+      const result = parseDateAdjustmentAttribute('dateAdjustment', {})
+      expect(result.type).toBe('dateAdjustment')
+      if (result.type === 'dateAdjustment') {
+        expect(result.dateAdjustment.startWith).toBe('START_DATE')
+        expect(result.dateAdjustment.startOffset).toBe(0)
+        expect(result.dateAdjustment.endWith).toBe('END_DATE')
+        expect(result.dateAdjustment.endOffset).toBe(0)
+      }
+    })
+
+    it('parseUserDefinedPeriodAttribute creates the userDefinedPeriod attribute', () => {
+      const result = parseUserDefinedPeriodAttribute('userDefinedPeriod', '2020-01-01', '2020-12-31')
+      expect(result).toEqual({
+        type: 'userDefinedPeriod',
+        attributeKey: 'userDefinedPeriod',
+        period: { startDate: '2020-01-01', endDate: '2020-12-31' },
+      })
+    })
+  })
+
+  describe('Branch coverage - extractAttributesFromCriteria additional types', () => {
+    it('extracts conditionType, conditionStatus and their CS variants together', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: {
+                CodesetId: null,
+                ConditionType: [{ CONCEPT_ID: 1, CONCEPT_NAME: 'EHR' }],
+                ConditionTypeCS: { CodesetId: 11, IsExclusion: false },
+                ConditionStatus: [{ CONCEPT_ID: 2, CONCEPT_NAME: 'Active' }],
+                ConditionStatusCS: { CodesetId: 22, IsExclusion: true },
+              },
+            },
+          ],
+        },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      const attrs = internal.entryEvents?.[0]?.attributes ?? []
+      expect(attrs.find(a => a.attributeKey === 'conditionType')).toBeDefined()
+      expect(attrs.find(a => a.attributeKey === 'conditionTypeCs')).toBeDefined()
+      expect(attrs.find(a => a.attributeKey === 'conditionStatus')).toBeDefined()
+      expect(attrs.find(a => a.attributeKey === 'conditionStatusCs')).toBeDefined()
+    })
+
+    it('extracts genderCs/raceCs/ethnicityCs/visitTypeCs/providerSpecialtyCs concept-set variants', () => {
+      const atlasJson = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: {
+                CodesetId: null,
+                GenderCS: { CodesetId: 1 },
+                RaceCS: { CodesetId: 2 },
+                EthnicityCS: { CodesetId: 3 },
+                VisitTypeCS: { CodesetId: 4 },
+                ProviderSpecialtyCS: { CodesetId: 5 },
+              },
+            },
+          ],
+        },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJson)
+      const attrs = internal.entryEvents?.[0]?.attributes ?? []
+      expect(attrs.find(a => a.attributeKey === 'genderCs')).toBeDefined()
+      expect(attrs.find(a => a.attributeKey === 'raceCs')).toBeDefined()
+      expect(attrs.find(a => a.attributeKey === 'ethnicityCs')).toBeDefined()
+      expect(attrs.find(a => a.attributeKey === 'visitTypeCs')).toBeDefined()
+      expect(attrs.find(a => a.attributeKey === 'providerSpecialtyCs')).toBeDefined()
+    })
+
+    it('extracts TemporalRelationship and DateAdjustment when present and skips when fields missing', () => {
+      // present
+      const atlasJsonPresent = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: {
+                CodesetId: null,
+                TemporalRelationship: {
+                  StartWindow: {
+                    Start: { Days: 1, Coeff: -1 },
+                    UseIndexEnd: false,
+                    UseEventEnd: false,
+                  },
+                },
+                DateAdjustment: {
+                  StartWith: 'START_DATE',
+                  StartOffset: 0,
+                  EndWith: 'END_DATE',
+                  EndOffset: 0,
+                },
+                PeriodStartDate: '2020-01-01',
+                PeriodEndDate: '2020-12-31',
+              },
+            },
+          ],
+        },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal = convertAtlasToInternal(atlasJsonPresent)
+      const attrs = internal.entryEvents?.[0]?.attributes ?? []
+      expect(attrs.find(a => a.type === 'temporalRelationship')).toBeDefined()
+      expect(attrs.find(a => a.type === 'dateAdjustment')).toBeDefined()
+      expect(attrs.find(a => a.type === 'userDefinedPeriod')).toBeDefined()
+
+      // absent (missing inner fields)
+      const atlasJsonAbsent = {
+        ConceptSets: [],
+        PrimaryCriteria: {
+          CriteriaList: [
+            {
+              ConditionOccurrence: {
+                CodesetId: null,
+                TemporalRelationship: {}, // no StartWindow
+                DateAdjustment: {},        // no StartWith
+              },
+            },
+          ],
+        },
+        InclusionRules: [],
+        CensoringCriteria: [],
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: {},
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+      } as unknown as Parameters<typeof convertAtlasToInternal>[0]
+      const internal2 = convertAtlasToInternal(atlasJsonAbsent)
+      const attrs2 = internal2.entryEvents?.[0]?.attributes ?? []
+      expect(attrs2.find(a => a.type === 'temporalRelationship')).toBeUndefined()
+      expect(attrs2.find(a => a.type === 'dateAdjustment')).toBeUndefined()
+    })
+  })
+
+  describe('Branch coverage - convertOperatorToAtlas / convertAtlasToOperator fallbacks', () => {
+    it('falls back to eq for unknown internal operators', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [
+              {
+                type: 'numericRange',
+                attributeKey: 'age',
+                operator: 'NOT_A_REAL_OPERATOR' as never,
+                value: 18,
+              },
+            ],
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const ageAttr = atlas.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence?.Age as { Op: string; Value: unknown }
+      expect(ageAttr?.Op).toBe('eq')
+    })
+
+    it('numericRange with extent serializes Extent property', () => {
+      const cohort = createMinimalCohort({
+        entryEvents: [
+          {
+            id: 'evt-1',
+            criteriaType: 'ConditionOccurrence',
+            attributes: [
+              {
+                type: 'numericRange',
+                attributeKey: 'age',
+                operator: 'BETWEEN',
+                value: 18,
+                extent: 65,
+              },
+            ],
+          },
+        ],
+      })
+      const atlas = convertInternalToAtlas(cohort)
+      const ageAttr = atlas.PrimaryCriteria.CriteriaList[0]?.ConditionOccurrence?.Age as { Op: string; Value: number; Extent?: number }
+      expect(ageAttr?.Op).toBe('bt')
+      expect(ageAttr?.Extent).toBe(65)
+    })
+  })
 })

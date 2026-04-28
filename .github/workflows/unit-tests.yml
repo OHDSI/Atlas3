@@ -52,10 +52,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Coverage | Threshold | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|----------|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Lines | ${{ steps.coverage.outputs.lines }}% | 84% | $([[ $(echo "${{ steps.coverage.outputs.lines }} >= 84" | bc -l) -eq 1 ]] && echo '✅' || echo '❌') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Statements | ${{ steps.coverage.outputs.statements }}% | 84% | $([[ $(echo "${{ steps.coverage.outputs.statements }} >= 84" | bc -l) -eq 1 ]] && echo '✅' || echo '❌') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lines | ${{ steps.coverage.outputs.lines }}% | 86% | $([[ $(echo "${{ steps.coverage.outputs.lines }} >= 86" | bc -l) -eq 1 ]] && echo '✅' || echo '❌') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Statements | ${{ steps.coverage.outputs.statements }}% | 86% | $([[ $(echo "${{ steps.coverage.outputs.statements }} >= 86" | bc -l) -eq 1 ]] && echo '✅' || echo '❌') |" >> $GITHUB_STEP_SUMMARY
           echo "| Branches | ${{ steps.coverage.outputs.branches }}% | 85% | $([[ $(echo "${{ steps.coverage.outputs.branches }} >= 85" | bc -l) -eq 1 ]] && echo '✅' || echo '❌') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Functions | ${{ steps.coverage.outputs.functions }}% | 69% | $([[ $(echo "${{ steps.coverage.outputs.functions }} >= 69" | bc -l) -eq 1 ]] && echo '✅' || echo '❌') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Functions | ${{ steps.coverage.outputs.functions }}% | 71% | $([[ $(echo "${{ steps.coverage.outputs.functions }} >= 71" | bc -l) -eq 1 ]] && echo '✅' || echo '❌') |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "📊 Download the **coverage-report** artifact for the detailed HTML report." >> $GITHUB_STEP_SUMMARY
 

@@ -26,6 +26,9 @@ import {
   mapEntropyReport,
   mapTornadoReport,
   mapDrilldownReport,
+  mapBoxPlotData,
+  mapTrellisData,
+  mapTimeSeriesData,
   toBarChartData,
   toPieChartData,
   toLineChartData,
@@ -1330,6 +1333,318 @@ describe('report-mapper', () => {
       expect(result.byUnit).toBeUndefined()
       expect(result.byQualifier).toBeUndefined()
       expect(result.byFrequency).toBeUndefined()
+    })
+
+    it('omits breakdowns when arrays are present but empty', () => {
+      const raw: WebAPIDrilldownRaw = {
+        ageAtFirstDiagnosis: [],
+        lengthOfEra: [],
+        prevalenceByGenderAgeYear: [],
+        prevalenceByMonth: [],
+        conditionsByType: [],
+        measurementsByUnit: [],
+        observationsByValueAsConcept: [],
+        measurementsByOperator: [],
+        observationsByQualifier: [],
+        frequencyDistribution: [],
+      }
+      const result = mapDrilldownReport(raw, base.conceptId, base.conceptName, base.conceptPath, 'condition')
+      expect(result.ageAtFirstOccurrence).toBeUndefined()
+      expect(result.lengthOfEra).toBeUndefined()
+      expect(result.prevalenceByGenderAgeYear).toBeUndefined()
+      expect(result.prevalenceByMonth).toBeUndefined()
+      expect(result.byType).toBeUndefined()
+      expect(result.byUnit).toBeUndefined()
+      expect(result.byValueAsConcept).toBeUndefined()
+      expect(result.byOperator).toBeUndefined()
+      expect(result.byQualifier).toBeUndefined()
+      expect(result.byFrequency).toBeUndefined()
+    })
+
+    it('uses ageAtFirstExposure when ageAtFirstDiagnosis is absent', () => {
+      const raw: WebAPIDrilldownRaw = {
+        ageAtFirstExposure: [{ category: 'A', min: 1, max: 90 }],
+      }
+      const result = mapDrilldownReport(raw, base.conceptId, base.conceptName, base.conceptPath, 'drug')
+      expect(result.ageAtFirstOccurrence).toBeDefined()
+      expect(result.ageAtFirstOccurrence?.[0]?.category).toBe('A')
+    })
+
+    it('uses ageAtFirstOccurrence as final fallback', () => {
+      const raw: WebAPIDrilldownRaw = {
+        ageAtFirstOccurrence: [{ intervalIndex: 5, min: 1, max: 90 }],
+      }
+      const result = mapDrilldownReport(raw, base.conceptId, base.conceptName, base.conceptPath, 'condition')
+      expect(result.ageAtFirstOccurrence?.[0]?.category).toBe('Interval 5')
+    })
+
+    it('maps lengthOfEra and prevalenceByGenderAgeYear and prevalenceByMonth when present', () => {
+      const raw: WebAPIDrilldownRaw = {
+        lengthOfEra: [{ category: 'L', min: 0, max: 30 }],
+        prevalenceByGenderAgeYear: [
+          { trellisName: 'Female', seriesName: '20-29', xCalendarYear: 2020, yPrevalence1000Pp: 5 },
+        ],
+        prevalenceByMonth: [{ xCalendarMonth: 202001, yPrevalence1000Pp: 10 }],
+      }
+      const result = mapDrilldownReport(raw, base.conceptId, base.conceptName, base.conceptPath, 'condition')
+      expect(result.lengthOfEra).toBeDefined()
+      expect(result.prevalenceByGenderAgeYear).toBeDefined()
+      expect(result.prevalenceByMonth).toBeDefined()
+    })
+
+    it('uses fallback Concept ${conceptId} for missing concept names in byType, byUnit, byValueAsConcept, byOperator, byQualifier', () => {
+      const raw: WebAPIDrilldownRaw = {
+        // drugsByType branch (when conditionsByType absent)
+        drugsByType: [{ conceptId: 999, countValue: 10 }],
+        measurementsByUnit: [{ conceptId: 1001, countValue: 5 }],
+        measurementsByValueAsConcept: [{ conceptId: 1002, countValue: 3 }],
+        measurementsByOperator: [{ conceptId: 1003, countValue: 2 }],
+        observationsByQualifier: [{ conceptId: 1004, countValue: 1 }],
+      }
+      const result = mapDrilldownReport(raw, base.conceptId, base.conceptName, base.conceptPath, 'measurement')
+      expect(result.byType?.[0]).toEqual({ name: 'Concept 999', value: 10 })
+      expect(result.byUnit?.[0]).toEqual({ name: 'Concept 1001', value: 5 })
+      expect(result.byValueAsConcept?.[0]).toEqual({ name: 'Concept 1002', value: 3 })
+      expect(result.byOperator?.[0]).toEqual({ name: 'Concept 1003', value: 2 })
+      expect(result.byQualifier?.[0]).toEqual({ name: 'Concept 1004', value: 1 })
+    })
+
+    it('falls through observationsByType, measurementsByType, proceduresByType for byType', () => {
+      const result1 = mapDrilldownReport(
+        { observationsByType: [{ conceptId: 1, conceptName: 'Obs', countValue: 5 }] },
+        base.conceptId, base.conceptName, base.conceptPath, 'observation'
+      )
+      expect(result1.byType?.[0]).toEqual({ name: 'Obs', value: 5 })
+
+      const result2 = mapDrilldownReport(
+        { measurementsByType: [{ conceptId: 2, conceptName: 'Mea', countValue: 6 }] },
+        base.conceptId, base.conceptName, base.conceptPath, 'measurement'
+      )
+      expect(result2.byType?.[0]).toEqual({ name: 'Mea', value: 6 })
+
+      const result3 = mapDrilldownReport(
+        { proceduresByType: [{ conceptId: 3, conceptName: 'Pro', countValue: 7 }] },
+        base.conceptId, base.conceptName, base.conceptPath, 'procedure'
+      )
+      expect(result3.byType?.[0]).toEqual({ name: 'Pro', value: 7 })
+    })
+  })
+
+  describe('Branch coverage - additional fallback scenarios', () => {
+    it('mapPersonReport handles totalGender / totalRace / totalEthnicity = 0 (no division by zero)', () => {
+      const data: WebAPIPersonRaw = {
+        yearOfBirth: [],
+        gender: [
+          { conceptId: 8507, conceptName: 'Male', countValue: 0, conditionConceptName: null, conditionConceptId: 0, observationConceptName: null, observationConceptId: 0 },
+        ],
+        race: [
+          { conceptId: 8527, conceptName: 'White', countValue: 0, conditionConceptName: null, conditionConceptId: 0, observationConceptName: null, observationConceptId: 0 },
+        ],
+        ethnicity: [
+          { conceptId: 38003564, conceptName: 'Not Hispanic', countValue: 0, conditionConceptName: null, conditionConceptId: 0, observationConceptName: null, observationConceptId: 0 },
+        ],
+      }
+      const result = mapPersonReport(data)
+      expect(result.demographics.gender[0].percentage).toBe(0)
+      expect(result.demographics.race[0].percentage).toBe(0)
+      expect(result.demographics.ethnicity[0].percentage).toBe(0)
+    })
+
+    it('mapPersonsExposureReport uses fallback Concept name when conceptPath empty', () => {
+      const data: import('@/models/report.types').WebAPIPersonsExposureRaw = [
+        {
+          conceptId: 555,
+          conceptPath: '',
+          recordsPerPerson: 1,
+          percentPersons: 0.1,
+          numPersons: 10,
+          lengthOfEra: 0,
+          percentPersonsBefore: 0,
+          percentPersonsAfter: 0,
+          riskDiffAfterBefore: 0,
+          logRRAfterBefore: 0,
+          countValue: 10,
+        },
+      ]
+      const result = mapPersonsExposureReport(data)
+      expect(result.prevalence[0].conceptName).toBe('Concept 555')
+    })
+
+    it('mapVisitsReport uses fallback Concept name when path empty', () => {
+      const data = [
+        {
+          conceptId: 11,
+          conceptPath: '',
+          recordsPerPerson: 1,
+          percentPersons: 0.1,
+          numPersons: 10,
+          lengthOfEra: 0,
+          percentPersonsBefore: 0,
+          percentPersonsAfter: 0,
+          riskDiffAfterBefore: 0,
+          logRRAfterBefore: 0,
+          countValue: 10,
+        },
+      ]
+      const result = mapVisitsReport(data)
+      expect(result.prevalence[0].conceptName).toBe('Concept 11')
+    })
+
+    it('mapDrugUtilizationReport uses fallback Concept name when path empty', () => {
+      const data = [
+        {
+          conceptId: 22,
+          conceptPath: '',
+          recordsPerPerson: 1,
+          numPersons: 10,
+          percentPersons: 0.1,
+          lengthOfEra: 0,
+          percentPersonsBefore: 0,
+          percentPersonsAfter: 0,
+          riskDiffAfterBefore: 0,
+          logRRAfterBefore: 0,
+          countValue: 10,
+        },
+      ]
+      const result = mapDrugUtilizationReport(data)
+      expect(result.prevalence[0].conceptName).toBe('Concept 22')
+    })
+
+    it.each([
+      ['mapConditionsByIndexReport', mapConditionsByIndexReport, 'Concept 33', 33],
+      ['mapDeathReport', mapDeathReport, 'Concept 34', 34],
+      ['mapDrugExposureReport', mapDrugExposureReport, 'Concept 35', 35],
+      ['mapDrugsByIndexReport', mapDrugsByIndexReport, 'Concept 36', 36],
+      ['mapObservationPeriodsReport', mapObservationPeriodsReport, 'Concept 37', 37],
+      ['mapProcedureReport', mapProcedureReport, 'Concept 38', 38],
+      ['mapProceduresByIndexReport', mapProceduresByIndexReport, 'Concept 39', 39],
+      ['mapDataCompletenessReport', mapDataCompletenessReport, 'Concept 40', 40],
+      ['mapEntropyReport', mapEntropyReport, 'Concept 41', 41],
+      ['mapTornadoReport', mapTornadoReport, 'Concept 42', 42],
+    ])('%s falls back when conceptPath is empty', (_name, fn, expectedName, conceptId) => {
+      const data = [
+        {
+          conceptId,
+          conceptPath: '',
+          recordsPerPerson: 1,
+          numPersons: 10,
+          percentPersons: 0.1,
+          lengthOfEra: 0,
+          percentPersonsBefore: 0,
+          percentPersonsAfter: 0,
+          riskDiffAfterBefore: 0,
+          logRRAfterBefore: 0,
+          countValue: 10,
+        },
+      ]
+      const result = (fn as (d: typeof data) => { prevalence: Array<{ conceptName: string }> })(data)
+      expect(result.prevalence[0].conceptName).toBe(expectedName)
+    })
+
+    it('toTreemapData omits conceptId/conceptPath keys when not present', () => {
+      const data = [
+        { name: 'Foo', value: 100 },
+      ]
+      const result = toTreemapData(data, 'name', 'value')
+      expect(result[0].conceptId).toBeUndefined()
+      expect(result[0].conceptPath).toBeUndefined()
+    })
+
+    it('toTreemapData populates conceptId/conceptPath when keys present', () => {
+      const data = [
+        { name: 'X||Y', value: 100, conceptId: 42, conceptPath: 'A||B' },
+      ]
+      const result = toTreemapData(data, 'name', 'value')
+      expect(result[0].conceptId).toBe(42)
+      expect(result[0].conceptPath).toBe('A||B')
+      // extractConceptDisplayName splits on ||
+      expect(result[0].name).toBe('Y')
+    })
+
+    it('toTreemapData uses extractConceptDisplayName which returns empty string for empty path', () => {
+      const data = [
+        { name: '', value: 100 },
+      ]
+      const result = toTreemapData(data, 'name', 'value')
+      expect(result[0].name).toBe('')
+    })
+
+    it('toTreemapData uses extractConceptDisplayName fallback empty string when last segment is whitespace', () => {
+      const data = [
+        { name: 'A||B||   ', value: 100 },
+      ]
+      const result = toTreemapData(data, 'name', 'value')
+      expect(result[0].name).toBe('')
+    })
+
+    it('toHierarchicalTreemapData omits conceptId/conceptPath when missing on items', () => {
+      const data: Array<Record<string, unknown>> = [
+        { category: 'A', name: 'Foo', value: 100 },
+      ]
+      const result = toHierarchicalTreemapData(data, 'category', 'name', 'value')
+      expect(result[0].children?.[0]?.conceptId).toBeUndefined()
+      expect(result[0].children?.[0]?.conceptPath).toBeUndefined()
+    })
+
+    it('toHierarchicalTreemapData populates conceptId/conceptPath when present', () => {
+      const data: Array<Record<string, unknown>> = [
+        { category: 'A', name: 'Foo', value: 100, conceptId: 7, conceptPath: 'X||Y' },
+      ]
+      const result = toHierarchicalTreemapData(data, 'category', 'name', 'value')
+      expect(result[0].children?.[0]?.conceptId).toBe(7)
+      expect(result[0].children?.[0]?.conceptPath).toBe('X||Y')
+    })
+
+    it('mapBoxPlotData uses default fallbacks for missing fields', () => {
+      const result = mapBoxPlotData([{}])
+      expect(result[0]).toEqual({
+        category: 'Interval 0',
+        min: 0,
+        p10: 0,
+        p25: 0,
+        median: 0,
+        p75: 0,
+        p90: 0,
+        max: 0,
+      })
+    })
+
+    it('mapBoxPlotData uses avgValue when medianValue is missing', () => {
+      const result = mapBoxPlotData([{ avgValue: 50 }])
+      expect(result[0].median).toBe(50)
+    })
+
+    it('mapTrellisData applies defaults when fields missing', () => {
+      const result = mapTrellisData([
+        {}, // all missing
+      ])
+      expect(result.categories).toContain('Overall')
+      expect(result.series[0]?.name).toBe('Total')
+    })
+
+    it('mapTrellisData groups multiple series within a category', () => {
+      const result = mapTrellisData([
+        { trellisName: 'Female', seriesName: '20s', xCalendarYear: 2020, yPrevalence1000Pp: 5 },
+        { trellisName: 'Female', seriesName: '20s', xCalendarYear: 2019, yPrevalence1000Pp: 4 },
+        { trellisName: 'Female', seriesName: '30s', xCalendarYear: 2020, yPrevalence1000Pp: 6 },
+        { trellisName: 'Male', seriesName: '20s', xCalendarYear: 2020, yPrevalence1000Pp: 7 },
+      ])
+      expect(result.categories.length).toBe(2)
+      // Within 'Female' there are 2 series
+      const femaleSeries = result.series.filter(s => s.category === 'Female')
+      expect(femaleSeries).toHaveLength(2)
+      // 20s series sorted ascending by year
+      const female20s = femaleSeries.find(s => s.name === '20s')
+      expect(female20s?.data?.[0]?.x).toBe(2019)
+      expect(female20s?.data?.[1]?.x).toBe(2020)
+    })
+
+    it('mapTimeSeriesData converts YYYYMM number to MM/YYYY', () => {
+      const result = mapTimeSeriesData([
+        { xCalendarMonth: 202005, yPrevalence1000Pp: 12 },
+      ])
+      expect(result[0].date).toBe('05/2020')
+      expect(result[0].value).toBe(12)
     })
   })
 })

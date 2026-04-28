@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'
-import { PATHWAY_DEFAULTS } from '@/models/pathway.types'
+import { PATHWAY_DEFAULTS, PATHWAY_AUTO_SAVE_INTERVAL_MS } from '@/models/pathway.types'
 
 vi.mock('@/services/webapi', () => ({
   getPathway: vi.fn().mockResolvedValue({
@@ -15,6 +15,21 @@ vi.mock('@/services/webapi', () => ({
     },
   }),
   existsPathway: vi.fn().mockResolvedValue(0),
+  assignPathwayTag: vi.fn().mockResolvedValue(true),
+  unassignPathwayTag: vi.fn().mockResolvedValue(true),
+}))
+
+vi.mock('@/services/pathway-versions.service', () => ({
+  getPathwayVersion: vi.fn(),
+}))
+
+vi.mock('@/utils/logger', () => ({
+  logger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+  },
 }))
 
 describe('pathway store — basics', () => {
@@ -168,5 +183,423 @@ describe('pathway store — validation', () => {
     s.markClean()
     await s.validatePathway()
     expect(s.canSave).toBe(false)
+  })
+
+  it('validatePathway flags maxDepth < 1', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'M' })
+    s.addTargetCohort({ id: 1, name: 'T' })
+    s.addEventCohort({ id: 2, name: 'E' })
+    s.updateDesign({ maxDepth: 0 })
+    await s.validatePathway()
+    expect(s.validationErrors.some(e => e.field === 'maxDepth' && e.severity === 'error')).toBe(true)
+  })
+
+  it('validatePathway flags minCellCount < 1 as warning', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'M' })
+    s.addTargetCohort({ id: 1, name: 'T' })
+    s.addEventCohort({ id: 2, name: 'E' })
+    s.updateDesign({ minCellCount: 0 })
+    await s.validatePathway()
+    expect(s.validationErrors.some(e => e.field === 'minCellCount' && e.severity === 'warning')).toBe(true)
+    // hasErrors is only true for severity === 'error'; warnings don't trigger it
+    expect(s.hasErrors).toBe(false)
+  })
+
+  it('validatePathway with no current pathway clears errors', async () => {
+    const s = usePathwayStore()
+    s.validationErrors = [
+      { field: 'name', message: 'old', severity: 'error' },
+    ]
+    await s.validatePathway()
+    expect(s.validationErrors).toEqual([])
+  })
+})
+
+describe('pathway store — design mutators (extended)', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('removeTargetCohort drops by id', () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.addTargetCohort({ id: 1, name: 'A' })
+    s.addTargetCohort({ id: 2, name: 'B' })
+    s.removeTargetCohort(1)
+    expect(s.currentPathway?.design.targetCohorts.map(c => c.id)).toEqual([2])
+  })
+
+  it('renameEventCohort updates the label only', () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.addEventCohort({ id: 1, name: 'A' })
+    s.renameEventCohort(1, 'Better')
+    expect(s.currentPathway?.design.eventCohorts[0].name).toBe('Better')
+  })
+
+  it('addEventCohort dedupes by id', () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.addEventCohort({ id: 1, name: 'A' })
+    s.addEventCohort({ id: 1, name: 'A duplicate' })
+    expect(s.currentPathway?.design.eventCohorts).toHaveLength(1)
+  })
+
+  it('mutators no-op when currentPathway is null', () => {
+    const s = usePathwayStore()
+    // currentPathway is null; mutators should not throw
+    s.updateDesign({ maxDepth: 9 })
+    s.updateMeta({ name: 'foo' })
+    s.addTargetCohort({ id: 1, name: 'T' })
+    s.removeTargetCohort(1)
+    s.renameTargetCohort(1, 'name')
+    s.addEventCohort({ id: 1, name: 'E' })
+    s.removeEventCohort(1)
+    s.renameEventCohort(1, 'foo')
+    expect(s.currentPathway).toBeNull()
+    expect(s.isDirty).toBe(false)
+  })
+
+  it('renameTargetCohort no-ops when id not found', () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.addTargetCohort({ id: 1, name: 'A' })
+    s.markClean()
+    s.renameTargetCohort(999, 'nope')
+    expect(s.isDirty).toBe(false)
+  })
+
+  it('renameEventCohort no-ops when id not found', () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.addEventCohort({ id: 1, name: 'A' })
+    s.markClean()
+    s.renameEventCohort(999, 'nope')
+    expect(s.isDirty).toBe(false)
+  })
+})
+
+describe('pathway store — load/preview lifecycle', () => {
+  beforeEach(async () => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.getPathway).mockResolvedValue({
+      success: true,
+      data: {
+        id: 1, name: 'Loaded', tags: [],
+        design: {
+          targetCohorts: [], eventCohorts: [],
+          combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
+        },
+      },
+    } as never)
+  })
+
+  it('loadPathway returns false on failure and logs', async () => {
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.getPathway).mockResolvedValueOnce({
+      success: false,
+      error: 'not found',
+    } as never)
+    const s = usePathwayStore()
+    const ok = await s.loadPathway(1)
+    expect(ok).toBe(false)
+    expect(s.currentPathway).toBeNull()
+  })
+
+  it('loadVersionPreview sets previewVersion on success', async () => {
+    const versions = await import('@/services/pathway-versions.service')
+    vi.mocked(versions.getPathwayVersion).mockResolvedValueOnce({
+      versionDTO: { assetId: 1, version: 3 } as never,
+      entityDTO: {
+        id: 1, name: 'Versioned', tags: [],
+        design: {
+          targetCohorts: [], eventCohorts: [],
+          combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
+        },
+      } as never,
+    })
+    const s = usePathwayStore()
+    const ok = await s.loadVersionPreview(1, 3)
+    expect(ok).toBe(true)
+    expect(s.isPreviewMode).toBe(true)
+    expect(s.currentPathway?.name).toBe('Versioned')
+    s.clearPreviewVersion()
+    expect(s.isPreviewMode).toBe(false)
+  })
+
+  it('loadVersionPreview returns false on exception', async () => {
+    const versions = await import('@/services/pathway-versions.service')
+    vi.mocked(versions.getPathwayVersion).mockRejectedValueOnce(new Error('boom'))
+    const s = usePathwayStore()
+    const ok = await s.loadVersionPreview(1, 3)
+    expect(ok).toBe(false)
+  })
+})
+
+describe('pathway store — draft error paths', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    sessionStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('saveToDraft no-ops when currentPathway is null', () => {
+    const s = usePathwayStore()
+    s.saveToDraft()
+    expect(s.lastAutoSave).toBeNull()
+    expect(sessionStorage.getItem('atlas3_pathway_draft')).toBeNull()
+  })
+
+  it('saveToDraft swallows sessionStorage errors', () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    const original = Storage.prototype.setItem
+    Storage.prototype.setItem = function () {
+      throw new Error('quota exceeded')
+    }
+    try {
+      expect(() => s.saveToDraft()).not.toThrow()
+    } finally {
+      Storage.prototype.setItem = original
+    }
+  })
+
+  it('restoreFromDraft returns false when no draft exists', () => {
+    const s = usePathwayStore()
+    expect(s.restoreFromDraft()).toBe(false)
+  })
+
+  it('restoreFromDraft returns false on parse error', () => {
+    sessionStorage.setItem('atlas3_pathway_draft', 'not json')
+    const s = usePathwayStore()
+    expect(s.restoreFromDraft()).toBe(false)
+  })
+
+  it('clearDraft swallows sessionStorage errors', () => {
+    const original = Storage.prototype.removeItem
+    Storage.prototype.removeItem = function () {
+      throw new Error('boom')
+    }
+    try {
+      const s = usePathwayStore()
+      expect(() => s.clearDraft()).not.toThrow()
+    } finally {
+      Storage.prototype.removeItem = original
+    }
+  })
+})
+
+describe('pathway store — auto-save timer', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    sessionStorage.clear()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('startAutoSave persists draft when dirty after interval', () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'Draft' })
+    s.startAutoSave()
+
+    vi.advanceTimersByTime(PATHWAY_AUTO_SAVE_INTERVAL_MS + 100)
+
+    const raw = sessionStorage.getItem('atlas3_pathway_draft')
+    expect(raw).not.toBeNull()
+    s.stopAutoSave()
+  })
+
+  it('startAutoSave does not persist when not dirty', () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.markClean()
+    s.startAutoSave()
+
+    vi.advanceTimersByTime(PATHWAY_AUTO_SAVE_INTERVAL_MS + 100)
+
+    expect(sessionStorage.getItem('atlas3_pathway_draft')).toBeNull()
+    s.stopAutoSave()
+  })
+
+  it('stopAutoSave is idempotent', () => {
+    const s = usePathwayStore()
+    expect(() => {
+      s.stopAutoSave()
+      s.stopAutoSave()
+    }).not.toThrow()
+  })
+
+  it('startAutoSave clears any prior timer', () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'Z' })
+    s.startAutoSave()
+    s.startAutoSave() // should not stack timers
+    vi.advanceTimersByTime(PATHWAY_AUTO_SAVE_INTERVAL_MS + 100)
+    s.stopAutoSave()
+  })
+})
+
+describe('pathway store — tags', () => {
+  beforeEach(async () => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.assignPathwayTag).mockResolvedValue(true)
+    vi.mocked(webapi.unassignPathwayTag).mockResolvedValue(true)
+  })
+
+  it('addTag returns false when no pathway id', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    const ok = await s.addTag({ id: 1, name: 'covid' } as never)
+    expect(ok).toBe(false)
+  })
+
+  it('addTag does not mark dirty (metadata)', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.currentPathway!.id = 7
+    s.markClean()
+    const ok = await s.addTag({ id: 1, name: 'covid' } as never)
+    expect(ok).toBe(true)
+    expect(s.currentPathway?.tags.map(t => t.name)).toEqual(['covid'])
+    expect(s.isDirty).toBe(false)
+  })
+
+  it('addTag does not double-add same tag', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.currentPathway!.id = 7
+    s.currentPathway!.tags = [{ id: 1, name: 'covid' } as never]
+    const ok = await s.addTag({ id: 1, name: 'covid' } as never)
+    expect(ok).toBe(true)
+    expect(s.currentPathway?.tags).toHaveLength(1)
+  })
+
+  it('addTag returns false when API call fails (does not push)', async () => {
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.assignPathwayTag).mockResolvedValueOnce(false)
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.currentPathway!.id = 7
+    const ok = await s.addTag({ id: 1, name: 'foo' } as never)
+    expect(ok).toBe(false)
+    expect(s.currentPathway?.tags).toHaveLength(0)
+  })
+
+  it('removeTag returns false when no pathway id', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    const ok = await s.removeTag(99)
+    expect(ok).toBe(false)
+  })
+
+  it('removeTag removes tag on success', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.currentPathway!.id = 7
+    s.currentPathway!.tags = [
+      { id: 1, name: 'a' } as never,
+      { id: 2, name: 'b' } as never,
+    ]
+    const ok = await s.removeTag(1)
+    expect(ok).toBe(true)
+    expect(s.currentPathway?.tags.map(t => t.id)).toEqual([2])
+  })
+
+  it('removeTag returns false on API failure', async () => {
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.unassignPathwayTag).mockResolvedValueOnce(false)
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.currentPathway!.id = 7
+    s.currentPathway!.tags = [{ id: 1, name: 'foo' } as never]
+    const ok = await s.removeTag(1)
+    expect(ok).toBe(false)
+    expect(s.currentPathway?.tags).toHaveLength(1)
+  })
+
+  it('syncTags adds and removes diff', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.currentPathway!.id = 7
+    s.currentPathway!.tags = [
+      { id: 1, name: 'a' } as never,
+      { id: 2, name: 'b' } as never,
+    ]
+    await s.syncTags([
+      { id: 2, name: 'b' } as never,
+      { id: 3, name: 'c' } as never,
+    ])
+    const ids = s.currentPathway?.tags.map(t => t.id).sort()
+    expect(ids).toEqual([2, 3])
+  })
+
+  it('syncTags is a no-op when no pathway id', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    await s.syncTags([{ id: 1, name: 'x' } as never])
+    expect(s.currentPathway?.tags).toEqual([])
+  })
+})
+
+describe('pathway store — canSave / canGenerate', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('canGenerate requires id and not dirty and no errors', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'X' })
+    s.addTargetCohort({ id: 1, name: 'T' })
+    s.addEventCohort({ id: 2, name: 'E' })
+    await s.validatePathway()
+    s.markClean()
+    // No id yet → canGenerate is false
+    expect(s.canGenerate).toBe(false)
+
+    s.currentPathway!.id = 42
+    expect(s.canGenerate).toBe(true)
+  })
+
+  it('canSave is true when dirty + valid + not preview', async () => {
+    const s = usePathwayStore()
+    s.createNewPathway()
+    s.updateMeta({ name: 'X' })
+    s.addTargetCohort({ id: 1, name: 'T' })
+    s.addEventCohort({ id: 2, name: 'E' })
+    await s.validatePathway()
+    expect(s.canSave).toBe(true)
+  })
+
+  it('canGenerate is false in preview mode', async () => {
+    const versions = await import('@/services/pathway-versions.service')
+    vi.mocked(versions.getPathwayVersion).mockResolvedValueOnce({
+      versionDTO: { assetId: 1, version: 1 } as never,
+      entityDTO: {
+        id: 1, name: 'V', tags: [],
+        design: {
+          targetCohorts: [{ id: 1, name: 'T' }],
+          eventCohorts: [{ id: 2, name: 'E' }],
+          combinationWindow: 30, minCellCount: 5, maxDepth: 5, allowRepeats: false,
+        },
+      } as never,
+    })
+    const s = usePathwayStore()
+    await s.loadVersionPreview(1, 1)
+    expect(s.isPreviewMode).toBe(true)
+    expect(s.canSave).toBe(false)
+    expect(s.canGenerate).toBe(false)
   })
 })
