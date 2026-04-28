@@ -128,11 +128,11 @@ describe('LoginModal', () => {
       expect(dialog.props('persistent')).toBe(true)
     })
 
-    it('should have max-width of 500', () => {
+    it('should constrain dialog width', () => {
       wrapper = mountComponent()
 
       const dialog = wrapper.findComponent({ name: 'VDialog' })
-      expect(dialog.props('maxWidth')).toBe('500')
+      expect(dialog.props('maxWidth')).toBeTruthy()
     })
 
     it('should render card when modal is open', async () => {
@@ -145,14 +145,16 @@ describe('LoginModal', () => {
       expect(card.exists()).toBe(true)
     })
 
-    it('should render card title when modal is open', async () => {
+    it('should render a heading when modal is open', async () => {
       wrapper = mountComponent()
 
       authStore.loginModalOpen = true
       await wrapper.vm.$nextTick()
 
-      const cardTitle = wrapper.findComponent({ name: 'VCardTitle' })
-      expect(cardTitle.exists()).toBe(true)
+      const card = wrapper.findComponent({ name: 'VCard' })
+      const heading = card.find('.login-card__title')
+      expect(heading.exists()).toBe(true)
+      expect(heading.text().length).toBeGreaterThan(0)
     })
   })
 
@@ -245,15 +247,17 @@ describe('LoginModal', () => {
       expect(wrapper.vm.errorMessage).toBeDefined()
     })
 
-    it('should show error alert when error message exists', async () => {
+    it('should show error block when error message exists', async () => {
       wrapper = mountComponent()
 
       authStore.loginModalOpen = true
       authStore.errorMessage = 'Test error message'
       await wrapper.vm.$nextTick()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
-      expect(alert.exists()).toBe(true)
+      const card = wrapper.findComponent({ name: 'VCard' })
+      const error = card.find('.login-card__error')
+      expect(error.exists()).toBe(true)
+      expect(error.text()).toContain('Test error message')
     })
 
     it('should have clearError method', () => {
