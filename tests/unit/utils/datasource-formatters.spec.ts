@@ -463,4 +463,445 @@ describe('Data Source Formatters', () => {
       expect(result.prevalenceByGenderAgeYear).toBeUndefined()
     })
   })
+
+  // ============================================================================
+  // Branch coverage gap fillers — exercise null/undefined fallbacks and edge cases
+  // ============================================================================
+
+  describe('transformDashboardReport — fallback branches', () => {
+    it('uses empty string and 0 when summary entries are missing', () => {
+      const raw = {
+        summary: [],
+        gender: [],
+        ageAtFirstObservation: [],
+        cumulativeObservation: [],
+        observedByMonth: []
+      }
+
+      const result = transformDashboardReport(raw)
+
+      expect(result.summary.sourceName).toBe('')
+      expect(result.summary.personCount).toBe(0)
+      expect(result.genderDistribution).toEqual([])
+      expect(result.ageDistribution.categories).toEqual([])
+      expect(result.cumulativeObservation.categories).toEqual([])
+      expect(result.observationByMonth.categories).toEqual([])
+    })
+
+    it('uses empty string when Source name attribute exists but value is missing', () => {
+      const raw = {
+        summary: [
+          { attributeName: 'Source name', attributeValue: '' },
+          { attributeName: 'Number of persons', attributeValue: '' }
+        ],
+        gender: [],
+        ageAtFirstObservation: [],
+        cumulativeObservation: [],
+        observedByMonth: []
+      }
+
+      const result = transformDashboardReport(raw)
+      expect(result.summary.sourceName).toBe('')
+      // parseInt('0') -> 0 due to the `|| '0'` fallback when attributeValue is falsy
+      expect(result.summary.personCount).toBe(0)
+    })
+  })
+
+  describe('transformClinicalDomainReport — branch edge cases', () => {
+    it('falls back to 0 when recordsPerPerson is missing on non-era report', () => {
+      const raw = [
+        { conceptId: 1, conceptPath: 'A||B', numPersons: 100, percentPersons: 10 } // no recordsPerPerson
+      ]
+
+      const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
+      expect(result.tableRows[0].metric).toBe(0)
+    })
+
+    it('falls back to 0 when lengthOfEra is missing on era report', () => {
+      const raw = [
+        { conceptId: 1, conceptPath: 'D||E', numPersons: 100, percentPersons: 10 } // no lengthOfEra
+      ]
+
+      const result = transformClinicalDomainReport(raw, 'conditionEra')
+      expect(result.tableRows[0].metric).toBe(0)
+    })
+
+    it('caps colorAlpha at 1 when percentPersons exceeds 100', () => {
+      const raw = [
+        { conceptId: 1, conceptPath: 'A', numPersons: 1, percentPersons: 250 }
+      ]
+
+      const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
+      expect(result.treemapNodes[0].itemStyle?.colorAlpha).toBe(1)
+    })
+
+    it('handles empty conceptPath via extractConceptDisplayName', () => {
+      const raw = [
+        { conceptId: 1, conceptPath: '', numPersons: 5, percentPersons: 5, recordsPerPerson: 1 }
+      ]
+
+      const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
+      expect(result.treemapNodes[0].name).toBe('')
+    })
+
+    it('extracts trailing segment from concept path', () => {
+      const raw = [
+        { conceptId: 1, conceptPath: 'Level1||Level2||Final Name', numPersons: 5, percentPersons: 5, recordsPerPerson: 1 }
+      ]
+
+      const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
+      expect(result.treemapNodes[0].name).toBe('Final Name')
+    })
+
+    it('aggregates large era datasets with default 0 lengthOfEra', () => {
+      const raw = Array(10500).fill(null).map((_, i) => ({
+        conceptId: i,
+        conceptPath: `Drug ${i}`,
+        numPersons: 100 - (i % 100),
+        percentPersons: 0.01,
+        // No lengthOfEra — the otherNode aggregation must handle the missing field
+      }))
+
+      const result = transformClinicalDomainReport(raw, 'drugEra')
+      // Top 1000 + Other = 1001
+      expect(result.tableRows.length).toBe(1001)
+      expect(result.totalCount).toBe(10500)
+      const otherRow = result.tableRows.find(r => r.conceptId === -1)
+      expect(otherRow).toBeDefined()
+      // For era reports, the otherNode metric is averaged lengthOfEra; with all undefined it averages to 0
+      expect(otherRow?.metric).toBe(0)
+    })
+
+    it('aggregates large non-era datasets and averages recordsPerPerson', () => {
+      const raw = Array(10500).fill(null).map((_, i) => ({
+        conceptId: i,
+        conceptPath: `Cond ${i}`,
+        numPersons: 100,
+        percentPersons: 0.01,
+        recordsPerPerson: 2,
+      }))
+
+      const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
+      const otherRow = result.tableRows.find(r => r.conceptId === -1)
+      expect(otherRow).toBeDefined()
+      // (10500-1000)*2 / 9500 averaged ~= 2
+      expect(otherRow?.metric).toBeCloseTo(2, 5)
+    })
+  })
+
+  describe('transformDataDensityReport — fallback branches', () => {
+    it('returns empty result when fully empty input is given', () => {
+      const result = transformDataDensityReport({})
+
+      expect(result.totalRecords.categories).toEqual([])
+      expect(result.totalRecords.series).toEqual([])
+      expect(result.recordsPerPerson.categories).toEqual([])
+      expect(result.recordsPerPerson.series).toEqual([])
+      expect(result.conceptsPerPerson).toEqual([])
+    })
+
+    it('uses default series name "Total" when totalRecords seriesName is missing', () => {
+      const raw = {
+        totalRecords: [{ xCalendarMonth: 202301, yRecordCount: 100 }] // no seriesName
+      }
+
+      const result = transformDataDensityReport(raw)
+      expect(result.totalRecords.series[0].name).toBe('Total')
+    })
+
+    it('uses default series name "Records" when recordsPerPerson seriesName is missing', () => {
+      const raw = {
+        recordsPerPerson: [{ xCalendarMonth: 202301, yRecordCount: 5 }] // no seriesName
+      }
+
+      const result = transformDataDensityReport(raw)
+      expect(result.recordsPerPerson.series[0].name).toBe('Records')
+    })
+
+    it('falls back to 0 for missing yRecordCount values', () => {
+      const raw = {
+        totalRecords: [{ xCalendarMonth: 202301, seriesName: 'A' }],
+        recordsPerPerson: [{ xCalendarMonth: 202301, seriesName: 'B' }]
+      }
+
+      const result = transformDataDensityReport(raw)
+      expect(result.totalRecords.series[0].data).toEqual([0])
+      expect(result.recordsPerPerson.series[0].data).toEqual([0])
+    })
+
+    it('falls back to empty string for missing xCalendarMonth', () => {
+      const raw = {
+        totalRecords: [{ seriesName: 'A', yRecordCount: 10 }]
+      }
+
+      const result = transformDataDensityReport(raw)
+      expect(result.totalRecords.categories).toEqual([''])
+    })
+
+    it('uses defaults for missing conceptsPerPerson percentile fields', () => {
+      const raw = {
+        conceptsPerPerson: [{}] // every field missing
+      }
+
+      const result = transformDataDensityReport(raw)
+      expect(result.conceptsPerPerson).toEqual([
+        { category: '', min: 0, p10: 0, p25: 0, median: 0, p75: 0, p90: 0, max: 0 }
+      ])
+    })
+
+    it('groups multiple totalRecords entries with same series name', () => {
+      const raw = {
+        totalRecords: [
+          { xCalendarMonth: 202301, seriesName: 'X', yRecordCount: 10 },
+          { xCalendarMonth: 202302, seriesName: 'X', yRecordCount: 20 },
+          { xCalendarMonth: 202301, seriesName: 'Y', yRecordCount: 5 }
+        ]
+      }
+
+      const result = transformDataDensityReport(raw)
+      const xSeries = result.totalRecords.series.find(s => s.name === 'X')
+      const ySeries = result.totalRecords.series.find(s => s.name === 'Y')
+      expect(xSeries?.data).toEqual([10, 20])
+      expect(ySeries?.data).toEqual([5])
+    })
+  })
+
+  describe('transformPersonReport — fallback branches', () => {
+    it('returns empty arrays for fully empty input', () => {
+      const result = transformPersonReport({})
+
+      expect(result.yearOfBirth.categories).toEqual([])
+      expect(result.yearOfBirth.series[0].data).toEqual([])
+      expect(result.gender).toEqual([])
+      expect(result.race).toEqual([])
+      expect(result.ethnicity).toEqual([])
+    })
+
+    it('falls back to "Unknown" when conceptName and name are missing', () => {
+      const raw = {
+        gender: [{ countValue: 100 }],
+        race: [{ count: 50 }],
+        ethnicity: [{}]
+      }
+
+      const result = transformPersonReport(raw)
+      expect(result.gender[0]).toEqual({ name: 'Unknown', value: 100 })
+      expect(result.race[0]).toEqual({ name: 'Unknown', value: 50 })
+      expect(result.ethnicity[0]).toEqual({ name: 'Unknown', value: 0 })
+    })
+
+    it('falls back to 0 when count and countValue are both missing', () => {
+      const raw = {
+        gender: [{ name: 'M' }]
+      }
+
+      const result = transformPersonReport(raw)
+      expect(result.gender[0]).toEqual({ name: 'M', value: 0 })
+    })
+
+    it('falls back to empty string for yearOfBirth without year fields', () => {
+      const raw = {
+        yearOfBirth: [{ count: 100 }]
+      }
+
+      const result = transformPersonReport(raw)
+      expect(result.yearOfBirth.categories).toEqual([''])
+      expect(result.yearOfBirth.series[0].data).toEqual([100])
+    })
+
+    it('uses yearOfBirth field when year is missing', () => {
+      const raw = {
+        yearOfBirth: [{ yearOfBirth: 1985, countValue: 200 }]
+      }
+
+      const result = transformPersonReport(raw)
+      expect(result.yearOfBirth.categories).toEqual(['1985'])
+      expect(result.yearOfBirth.series[0].data).toEqual([200])
+    })
+  })
+
+  describe('transformObservationPeriodReport — fallback branches', () => {
+    it('falls back to empty strings for missing intervalIndex', () => {
+      const raw = {
+        ageAtFirst: [{ countValue: 50 }],
+        observationLength: [{ countValue: 30 }],
+        personsWithContinuousObservationsByYear: [{ countValue: 10 }]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.ageAtFirst?.categories).toEqual([''])
+      expect(result.ageAtFirst?.values).toEqual([50])
+      expect(result.observationLength?.categories).toEqual([''])
+      expect(result.personsWithContinuousObsByYear?.categories).toEqual([''])
+    })
+
+    it('falls back to 0 for missing countValue', () => {
+      const raw = {
+        ageAtFirst: [{ intervalIndex: 0 }],
+        observationLength: [{ intervalIndex: 30 }]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.ageAtFirst?.values).toEqual([0])
+      expect(result.observationLength?.values).toEqual([0])
+    })
+
+    it('falls back to empty string and 0 for missing cumulativeObservation fields', () => {
+      const raw = {
+        cumulativeObservation: [{}]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.cumulativeObservation?.categories).toEqual([''])
+      expect(result.cumulativeObservation?.series[0].data).toEqual([0])
+    })
+
+    it('falls back to empty string and 0 for missing observedByMonth fields', () => {
+      const raw = {
+        observedByMonth: [{}]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.observedByMonth?.categories).toEqual([''])
+      expect(result.observedByMonth?.series[0].data).toEqual([0])
+    })
+
+    it('returns undefined for empty boxplot arrays via mapBoxPlotArray', () => {
+      const raw = {
+        ageByGender: [],
+        durationByGender: [],
+        durationByAgeDecile: []
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.ageByGender).toBeUndefined()
+      expect(result.durationByGender).toBeUndefined()
+      expect(result.durationByAgeDecile).toBeUndefined()
+    })
+
+    it('uses default values for missing boxplot percentile fields', () => {
+      const raw = {
+        ageByGender: [{}] // no fields
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.ageByGender).toEqual([
+        { category: '', min: 0, p10: 0, p25: 0, median: 0, p75: 0, p90: 0, max: 0 }
+      ])
+    })
+
+    it('returns undefined observationPeriodsPerPerson when array is empty', () => {
+      const raw = { observationPeriodsPerPerson: [] }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.observationPeriodsPerPerson).toBeUndefined()
+    })
+
+    it('falls back to "Unknown" and 0 in observationPeriodsPerPerson', () => {
+      const raw = {
+        observationPeriodsPerPerson: [{}]
+      }
+
+      const result = transformObservationPeriodReport(raw)
+      expect(result.observationPeriodsPerPerson).toEqual([
+        { name: 'Unknown', value: 0 }
+      ])
+    })
+
+    it('passes through observationLengthStats unchanged', () => {
+      const stats = [{ attributeName: 'Avg', attributeValue: '12.5' }]
+      const result = transformObservationPeriodReport({ observationLengthStats: stats })
+      expect(result.observationLengthStats).toEqual(stats)
+    })
+  })
+
+  describe('transformDeathReport — fallback branches', () => {
+    it('falls back to "Unknown" for missing deathByType conceptName', () => {
+      const raw = { deathByType: [{ countValue: 100 }] }
+
+      const result = transformDeathReport(raw)
+      expect(result.deathByType[0]).toEqual({ name: 'Unknown', value: 100 })
+    })
+
+    it('falls back to 0 for missing deathByType countValue', () => {
+      const raw = { deathByType: [{ conceptName: 'X' }] }
+
+      const result = transformDeathReport(raw)
+      expect(result.deathByType[0]).toEqual({ name: 'X', value: 0 })
+    })
+
+    it('returns undefined prevalenceByMonth when raw field is missing', () => {
+      const result = transformDeathReport({})
+      expect(result.prevalenceByMonth).toBeUndefined()
+    })
+
+    it('falls back to empty string and 0 for missing prevalenceByMonth fields', () => {
+      const raw = { prevalenceByMonth: [{}] }
+
+      const result = transformDeathReport(raw)
+      expect(result.prevalenceByMonth?.categories).toEqual([''])
+      expect(result.prevalenceByMonth?.series[0].data).toEqual([0])
+    })
+
+    it('returns undefined prevalenceByGenderAgeYear for empty array', () => {
+      const result = transformDeathReport({ prevalenceByGenderAgeYear: [] })
+      expect(result.prevalenceByGenderAgeYear).toBeUndefined()
+    })
+
+    it('uses defaults for missing prevalenceByGenderAgeYear fields', () => {
+      const raw = {
+        prevalenceByGenderAgeYear: [
+          { yPrevalence1000Pp: 5 } // no trellisName, seriesName, xCalendarYear
+        ]
+      }
+
+      const result = transformDeathReport(raw)
+      expect(result.prevalenceByGenderAgeYear).toBeDefined()
+      const trellis = result.prevalenceByGenderAgeYear!
+      expect(trellis.categories).toContain('Unknown')
+      const totalSeries = trellis.series.find(s => s.name === 'Total')
+      expect(totalSeries).toBeDefined()
+      expect(totalSeries?.data).toEqual([{ x: 0, y: 5 }])
+    })
+
+    it('falls back to 0 for missing yPrevalence1000Pp', () => {
+      const raw = {
+        prevalenceByGenderAgeYear: [
+          { trellisName: 'T', seriesName: 'S', xCalendarYear: 2020 }
+        ]
+      }
+
+      const result = transformDeathReport(raw)
+      const series = result.prevalenceByGenderAgeYear!.series[0]
+      expect(series.data).toEqual([{ x: 2020, y: 0 }])
+    })
+
+    it('returns empty ageAtDeath array when raw ageAtDeath is missing', () => {
+      const result = transformDeathReport({})
+      expect(result.ageAtDeath).toEqual([])
+    })
+  })
+
+  describe('exportTableToCSV — edge cases', () => {
+    it('returns header-only CSV for empty rows', () => {
+      const csv = exportTableToCSV([], 'Records Per Person')
+      expect(csv).toBe('Concept ID,Name,Person Count,Prevalence (%),Records Per Person')
+    })
+  })
+
+  describe('formatNumber & formatPercentage — edge cases', () => {
+    it('formats zero', () => {
+      expect(formatNumber(0)).toBe('0')
+      expect(formatPercentage(0)).toBe('0.00%')
+    })
+
+    it('handles 0 decimals', () => {
+      expect(formatPercentage(10.567, 0)).toBe('11%')
+    })
+
+    it('formats negative numbers', () => {
+      expect(formatNumber(-1234)).toBe('-1,234')
+      expect(formatPercentage(-5.5)).toBe('-5.50%')
+    })
+  })
 })

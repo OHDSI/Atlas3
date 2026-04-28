@@ -307,6 +307,17 @@ describe('role.service', () => {
         expect(result.message).toBe('Invalid permissions response format')
       }
     })
+
+    it('should handle Error rejection by exposing the error message', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue(new Error('Permissions fetch failed'))
+
+      const result = await roleService.getRolePermissions(1)
+
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Permissions fetch failed')
+      }
+    })
   })
 
   describe('assignPermissionToRole', () => {
@@ -378,6 +389,17 @@ describe('role.service', () => {
       expect(result.isSuccess).toBe(false)
       if (!result.isSuccess) {
         expect(result.message).toBe('Invalid users response format')
+      }
+    })
+
+    it('should handle Error rejection by exposing the error message', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue(new Error('Users fetch failed'))
+
+      const result = await roleService.getRoleUsers(1)
+
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Users fetch failed')
       }
     })
   })
@@ -533,6 +555,244 @@ describe('role.service', () => {
       if (!result.isSuccess) {
         expect(result.message).toBe('Role already exists')
       }
+    })
+  })
+
+  // =================================================================
+  // Branch coverage extension
+  // =================================================================
+  describe('Branch coverage - non-Error rejection paths', () => {
+    it('fetchRoles uses default message when fetchJSON rejects with a non-Error', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue('boom')
+      const result = await roleService.fetchRoles()
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to fetch roles')
+      }
+    })
+
+    it('fetchRoleById uses default message for non-Error rejection', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue({ code: 500 })
+      const result = await roleService.fetchRoleById(1)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to fetch role')
+      }
+    })
+
+    it('createRole uses default message for non-Error rejection', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue('failure')
+      const result = await roleService.createRole({ name: 'X', description: '' })
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to create role')
+      }
+    })
+
+    it('updateRole uses default message for non-Error rejection', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue('failure')
+      const result = await roleService.updateRole(1, { name: 'X' })
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to update role')
+      }
+    })
+
+    it('deleteRole uses default message for non-Error rejection', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue('failure')
+      const result = await roleService.deleteRole(1)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to delete role')
+      }
+    })
+
+    it('getRolePermissions uses default message for non-Error rejection', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue('failure')
+      const result = await roleService.getRolePermissions(1)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to fetch role permissions')
+      }
+    })
+
+    it('assignPermissionToRole uses default message for non-Error rejection', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue('failure')
+      const result = await roleService.assignPermissionToRole(1, 2)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to assign permission to role')
+      }
+    })
+
+    it('removePermissionFromRole uses default message for non-Error rejection', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue('failure')
+      const result = await roleService.removePermissionFromRole(1, 2)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to remove permission from role')
+      }
+    })
+
+    it('getRoleUsers uses default message for non-Error rejection', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue('failure')
+      const result = await roleService.getRoleUsers(1)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to fetch role users')
+      }
+    })
+
+    it('assignUserToRole uses default message for non-Error rejection', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue('failure')
+      const result = await roleService.assignUserToRole(1, 2)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to assign user to role')
+      }
+    })
+
+    it('removeUserFromRole uses default message for non-Error rejection', async () => {
+      vi.mocked(fetchJSON).mockRejectedValue('failure')
+      const result = await roleService.removeUserFromRole(1, 2)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to remove user from role')
+      }
+    })
+
+    it('importRole uses default message for non-Error rejection', async () => {
+      // The non-Error rejection happens during createRole inside importRole.
+      // The createRole's catch will produce 'Failed to create role' which is then
+      // returned via the isSuccess check at line 417-419 with the propagated message.
+      const importData = JSON.stringify({ role: { name: 'X' } })
+      vi.mocked(fetchJSON).mockRejectedValue({ unexpected: true })
+      const result = await roleService.importRole(importData)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Failed to create role')
+      }
+    })
+  })
+
+  describe('Branch coverage - exportRole partial failures', () => {
+    it('returns failure when permissions fetch fails after role fetch succeeds', async () => {
+      vi.mocked(fetchJSON)
+        .mockResolvedValueOnce(mockRole) // fetchRoleById success
+        .mockResolvedValueOnce({ malformed: true }) // getRolePermissions validation fails
+
+      const result = await roleService.exportRole(1)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Invalid permissions response format')
+      }
+    })
+
+    it('returns failure when users fetch fails after role+permissions succeed', async () => {
+      vi.mocked(fetchJSON)
+        .mockResolvedValueOnce(mockRole) // fetchRoleById
+        .mockResolvedValueOnce(mockPermissions) // getRolePermissions
+        .mockResolvedValueOnce({ malformed: true }) // getRoleUsers
+
+      const result = await roleService.exportRole(1)
+      expect(result.isSuccess).toBe(false)
+      if (!result.isSuccess) {
+        expect(result.message).toBe('Invalid users response format')
+      }
+    })
+  })
+
+  describe('Branch coverage - exportRole permission.value fallback', () => {
+    it('falls back to p.value when p.permission is missing', async () => {
+      const permsWithValue = [
+        { id: 1, value: 'user:*:read', description: 'Read users', category: 'Users' },
+        { id: 2, permission: 'role:*:read', description: 'Read roles', category: 'Roles' },
+      ]
+      vi.mocked(fetchJSON)
+        .mockResolvedValueOnce(mockRole)
+        .mockResolvedValueOnce(permsWithValue)
+        .mockResolvedValueOnce(mockUsers)
+
+      const result = await roleService.exportRole(1)
+      expect(result.isSuccess).toBe(true)
+      if (result.isSuccess) {
+        const exported = JSON.parse(result.data)
+        // first permission falls back to value
+        expect(exported.role.permissions[0].permission).toBe('user:*:read')
+        expect(exported.role.permissions[1].permission).toBe('role:*:read')
+      }
+    })
+  })
+
+  describe('Branch coverage - importRole skip flows', () => {
+    it('handles permissions and users without ids (skipped)', async () => {
+      const importData = JSON.stringify({
+        role: {
+          name: 'Skip Role',
+          description: 'Test',
+          permissions: [{ description: 'no id' }, { id: null }],
+          users: [{ login: 'no-id' }, { id: 0 }],
+        },
+      })
+
+      const createdRole: Role = {
+        id: 99,
+        name: 'Skip Role',
+        description: 'Test',
+        createdDate: '2024-01-01T00:00:00Z',
+        modifiedDate: '2024-01-01T00:00:00Z',
+      }
+
+      vi.mocked(fetchJSON).mockResolvedValueOnce(createdRole) // only createRole called
+      const result = await roleService.importRole(importData)
+      expect(result.isSuccess).toBe(true)
+      // No assignment calls were issued because no permission/user had a truthy id
+      expect(fetchJSON).toHaveBeenCalledTimes(1)
+    })
+
+    it('handles import without permissions or users arrays', async () => {
+      const importData = JSON.stringify({
+        role: {
+          name: 'Plain Role',
+          description: 'Just metadata',
+        },
+      })
+
+      const createdRole: Role = {
+        id: 100,
+        name: 'Plain Role',
+        description: 'Just metadata',
+        createdDate: '2024-01-01T00:00:00Z',
+        modifiedDate: '2024-01-01T00:00:00Z',
+      }
+
+      vi.mocked(fetchJSON).mockResolvedValueOnce(createdRole)
+      const result = await roleService.importRole(importData)
+      expect(result.isSuccess).toBe(true)
+      expect(fetchJSON).toHaveBeenCalledTimes(1)
+    })
+
+    it('handles permissions/users that are not arrays (skipped)', async () => {
+      const importData = JSON.stringify({
+        role: {
+          name: 'Bad Types Role',
+          permissions: 'not-an-array',
+          users: { not: 'an-array' },
+        },
+      })
+
+      const createdRole: Role = {
+        id: 101,
+        name: 'Bad Types Role',
+        description: undefined,
+        createdDate: '2024-01-01T00:00:00Z',
+        modifiedDate: '2024-01-01T00:00:00Z',
+      }
+
+      vi.mocked(fetchJSON).mockResolvedValueOnce(createdRole)
+      const result = await roleService.importRole(importData)
+      expect(result.isSuccess).toBe(true)
+      expect(fetchJSON).toHaveBeenCalledTimes(1)
     })
   })
 })

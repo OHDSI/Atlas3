@@ -4,6 +4,25 @@
  */
 import { vi } from 'vitest'
 
+// Capture the real Blob constructor before any test file replaces it. Some
+// test files mock `global.Blob` in beforeEach without restoring it, which
+// leaks into later files under the singleFork pool. Tests that need a real
+// Blob can read it from globalThis.__OriginalBlob.
+//
+// setupFiles are run before EACH test file in the worker, so we must only
+// capture the first time — otherwise we overwrite the snapshot with the
+// already-mocked Blob from a prior file.
+{
+  const g = globalThis as { __OriginalBlob?: typeof Blob }
+  if (!g.__OriginalBlob) {
+    g.__OriginalBlob = globalThis.Blob
+  } else {
+    // A prior test file may have leaked a Blob mock. Restore the real one
+    // here so this run starts with a clean global.
+    globalThis.Blob = g.__OriginalBlob
+  }
+}
+
 // Mock navigator.userAgent (required for Vuetify display composable)
 Object.defineProperty(window.navigator, 'userAgent', {
   writable: true,

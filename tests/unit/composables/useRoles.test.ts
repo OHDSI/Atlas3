@@ -420,5 +420,207 @@ describe('useRoles', () => {
       expect(store.importRole).toHaveBeenCalled()
       expect(result).toEqual(newRole)
     })
+
+    it('should delegate fetchRoleById to store', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'fetchRoleById').mockResolvedValue(true)
+
+      const { fetchRoleById } = useRoles()
+      const result = await fetchRoleById(7)
+
+      expect(store.fetchRoleById).toHaveBeenCalledWith(7)
+      expect(result).toBe(true)
+    })
+
+    it('should delegate updateRole to store', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'updateRole').mockResolvedValue(true)
+
+      const { updateRole } = useRoles()
+      const result = await updateRole(1, { name: 'Renamed', description: 'd' })
+
+      expect(store.updateRole).toHaveBeenCalledWith(1, { name: 'Renamed', description: 'd' })
+      expect(result).toBe(true)
+    })
+
+    it('should delegate fetchPermissions to store', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'fetchPermissions').mockResolvedValue(true)
+
+      const { fetchPermissions } = useRoles()
+      const result = await fetchPermissions()
+
+      expect(store.fetchPermissions).toHaveBeenCalled()
+      expect(result).toBe(true)
+    })
+
+    it('should delegate fetchRolePermissions to store', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'fetchRolePermissions').mockResolvedValue(true)
+
+      const { fetchRolePermissions } = useRoles()
+      const result = await fetchRolePermissions(3)
+
+      expect(store.fetchRolePermissions).toHaveBeenCalledWith(3)
+      expect(result).toBe(true)
+    })
+
+    it('should delegate assignPermissionToRole to store', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'assignPermissionToRole').mockResolvedValue(true)
+
+      const { assignPermissionToRole } = useRoles()
+      const result = await assignPermissionToRole(1, 5)
+
+      expect(store.assignPermissionToRole).toHaveBeenCalledWith(1, 5)
+      expect(result).toBe(true)
+    })
+
+    it('should delegate removePermissionFromRole to store', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'removePermissionFromRole').mockResolvedValue(true)
+
+      const { removePermissionFromRole } = useRoles()
+      const result = await removePermissionFromRole(1, 5)
+
+      expect(store.removePermissionFromRole).toHaveBeenCalledWith(1, 5)
+      expect(result).toBe(true)
+    })
+
+    it('should delegate fetchUsers to store', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'fetchUsers').mockResolvedValue(true)
+
+      const { fetchUsers } = useRoles()
+      const result = await fetchUsers()
+
+      expect(store.fetchUsers).toHaveBeenCalled()
+      expect(result).toBe(true)
+    })
+
+    it('should delegate fetchRoleUsers to store', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'fetchRoleUsers').mockResolvedValue(true)
+
+      const { fetchRoleUsers } = useRoles()
+      const result = await fetchRoleUsers(2)
+
+      expect(store.fetchRoleUsers).toHaveBeenCalledWith(2)
+      expect(result).toBe(true)
+    })
+
+    it('should delegate assignUserToRole to store', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'assignUserToRole').mockResolvedValue(true)
+
+      const { assignUserToRole } = useRoles()
+      const result = await assignUserToRole(1, 9)
+
+      expect(store.assignUserToRole).toHaveBeenCalledWith(1, 9)
+      expect(result).toBe(true)
+    })
+
+    it('should delegate removeUserFromRole to store', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'removeUserFromRole').mockResolvedValue(true)
+
+      const { removeUserFromRole } = useRoles()
+      const result = await removeUserFromRole(1, 9)
+
+      expect(store.removeUserFromRole).toHaveBeenCalledWith(1, 9)
+      expect(result).toBe(true)
+    })
+
+    it('should delegate updateRole and propagate failures', async () => {
+      const store = useRolesStore()
+      vi.spyOn(store, 'updateRole').mockResolvedValue(false)
+
+      const { updateRole } = useRoles()
+      expect(await updateRole(1, { name: 'x' })).toBe(false)
+    })
+  })
+
+  describe('extra computed state', () => {
+    it('exposes currentRole, rolePermissions, roleUsers', () => {
+      const store = useRolesStore()
+      store.currentRole = mockRoles[0] ?? null
+      store.rolePermissions = mockPermissions
+      store.roleUsers = mockUsers
+
+      const { currentRole, rolePermissions, roleUsers } = useRoles()
+
+      expect(currentRole.value).toEqual(mockRoles[0])
+      expect(rolePermissions.value).toEqual(mockPermissions)
+      expect(roleUsers.value).toEqual(mockUsers)
+    })
+
+    it('exposes saving and deleting flags', () => {
+      const store = useRolesStore()
+      store.isSaving = true
+      store.isDeleting = true
+
+      const { isSaving, isDeleting } = useRoles()
+      expect(isSaving.value).toBe(true)
+      expect(isDeleting.value).toBe(true)
+    })
+
+    it('exposes loading aggregates', () => {
+      const store = useRolesStore()
+      store.isLoadingPermissions = true
+      store.isLoadingUsers = false
+
+      const { isLoadingPermissions, isLoadingUsers, isLoading } = useRoles()
+      expect(isLoadingPermissions.value).toBe(true)
+      expect(isLoadingUsers.value).toBe(false)
+      // isLoading is a getter on the store; just confirm it's exposed as computed
+      expect(typeof isLoading.value).toBe('boolean')
+    })
+
+    it('exposes error states aggregates', () => {
+      const store = useRolesStore()
+      store.permissionsError = 'p-err'
+      store.usersError = 'u-err'
+
+      const { permissionsError, usersError, hasError } = useRoles()
+      expect(permissionsError.value).toBe('p-err')
+      expect(usersError.value).toBe('u-err')
+      expect(typeof hasError.value).toBe('boolean')
+    })
+
+    it('exposes hasPermissions and hasUsers', () => {
+      const store = useRolesStore()
+      store.permissions = mockPermissions
+      store.users = mockUsers
+
+      const { hasPermissions, hasUsers } = useRoles()
+      expect(hasPermissions.value).toBe(true)
+      expect(hasUsers.value).toBe(true)
+    })
+  })
+
+  describe('downloadRoleAsJson defaults', () => {
+    it('uses default filename when none provided', async () => {
+      const store = useRolesStore()
+      const jsonData = '{"role":{}}'
+      vi.spyOn(store, 'exportRole').mockResolvedValue(jsonData)
+
+      const linkEl = { href: '', download: '', click: vi.fn() }
+      const mockCreateElement = vi.fn().mockReturnValue(linkEl)
+      const mockCreateObjectURL = vi.fn().mockReturnValue('blob:url')
+      const mockRevokeObjectURL = vi.fn()
+      const mockAppendChild = vi.fn()
+      const mockRemoveChild = vi.fn()
+
+      global.document.createElement = mockCreateElement
+      global.URL.createObjectURL = mockCreateObjectURL
+      global.URL.revokeObjectURL = mockRevokeObjectURL
+      global.document.body.appendChild = mockAppendChild
+      global.document.body.removeChild = mockRemoveChild
+
+      const { downloadRoleAsJson } = useRoles()
+      await downloadRoleAsJson(42)
+
+      expect(linkEl.download).toBe('role-42-export.json')
+    })
   })
 })
