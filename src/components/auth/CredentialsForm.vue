@@ -1,6 +1,7 @@
 <template>
   <v-form
     ref="formRef"
+    class="credentials-form"
     @submit.prevent="handleSubmit"
   >
     <v-text-field
@@ -8,7 +9,9 @@
       :label="provider.loginPlaceholder || t('columns.login', 'Username').value"
       :placeholder="provider.loginPlaceholder || t('columns.login', 'Enter username').value"
       variant="outlined"
-      prepend-inner-icon="mdi-account"
+      density="compact"
+      prepend-inner-icon="mdi-account-outline"
+      autocomplete="username"
       :disabled="loading"
       :rules="[required]"
       required
@@ -21,7 +24,9 @@
       :placeholder="provider.passwordPlaceholder || t('components.welcome.password', 'Enter password').value"
       type="password"
       variant="outlined"
-      prepend-inner-icon="mdi-lock"
+      density="compact"
+      prepend-inner-icon="mdi-lock-outline"
+      autocomplete="current-password"
       :disabled="loading"
       :rules="[required]"
       required
@@ -34,11 +39,9 @@
       block
       size="large"
       :loading="loading"
+      class="credentials-form__submit"
     >
-      <v-icon left>
-        mdi-login
-      </v-icon>
-      {{ t('common.menu', 'Sign In') }}
+      {{ t('common.menu', 'Sign in') }}
     </v-btn>
   </v-form>
 </template>
@@ -81,3 +84,12 @@ async function handleSubmit() {
   }
 }
 </script>
+
+<style scoped>
+.credentials-form__submit {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  margin-top: 4px;
+}
+</style>

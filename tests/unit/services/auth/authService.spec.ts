@@ -423,6 +423,49 @@ describe('AuthService', () => {
 
       expect(result).toBe(false)
     })
+
+    it('should send GET (not POST) to /user/refresh', async () => {
+      const authStore = useAuthStore()
+      authStore.setToken('old-token')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        headers: createHeadersMock({ 'Bearer': 'new-token' }),
+      })
+
+      await authService.refreshToken()
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('user/refresh'),
+        expect.objectContaining({ method: 'GET' })
+      )
+      const init = mockFetch.mock.calls[0][1] as RequestInit
+      expect(init.body).toBeUndefined()
+    })
+
+    it('should fall back to body.jwt when Bearer header is absent (WebAPI 3.0)', async () => {
+      const authStore = useAuthStore()
+      authStore.setToken('old-token')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        headers: createHeadersMock({}),
+        clone: () => ({
+          json: () =>
+            Promise.resolve({
+              login: 'admin',
+              jwt: 'new-token-from-body',
+              roles: [],
+              message: 'Refreshed Token in for session',
+            }),
+        }),
+      })
+
+      const result = await authService.refreshToken()
+
+      expect(result).toBe(true)
+      expect(authStore.token).toBe('new-token-from-body')
+    })
   })
 
   describe('fetchUserInfo', () => {

@@ -312,19 +312,30 @@ class AuthService implements IAuthService {
     try {
       const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
       const response = await fetch(`${baseUrl}user/refresh`, {
-        method: 'POST',
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${currentToken}`,
         },
-        body: JSON.stringify({ token: currentToken }),
       })
 
       if (!response.ok) {
         return false
       }
 
-      const newToken = response.headers.get('Bearer')
+      // WebAPI 3.0 returns { login, jwt, roles, message } in the JSON body.
+      // Older WebAPI versions returned the token in a `Bearer` response header.
+      let newToken = response.headers.get('Bearer')
+      if (!newToken) {
+        try {
+          const body = await response.clone().json()
+          if (body && typeof body.jwt === 'string') {
+            newToken = body.jwt
+          }
+        } catch {
+          // response wasn't JSON — fall through to the no-token error
+        }
+      }
+
       if (!newToken) {
         return false
       }

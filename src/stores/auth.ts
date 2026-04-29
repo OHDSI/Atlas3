@@ -243,8 +243,10 @@ export const useAuthStore = defineStore('auth', {
             })
           } catch (error) {
             logger.error('Auth', 'Failed to fetch user info on init', error)
-            // Token might be invalid, clear auth
             this.clearAuth()
+            if (authConfig.userAuthenticationEnabled) {
+              this.openLoginModal()
+            }
           }
         }
       }

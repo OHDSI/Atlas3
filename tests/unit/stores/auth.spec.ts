@@ -574,5 +574,25 @@ describe('Auth Store', () => {
 
       expect(store.token).toBeNull()
     })
+
+    it('should open login modal when stored token is rejected by server', async () => {
+      const store = useAuthStore()
+      // Reset debounce timer to ensure openLoginModal works
+      store.closeLoginModal()
+      vi.mocked(storageManager.getToken).mockReturnValue('stale-token')
+      vi.mocked(tokenManager.parseToken).mockReturnValue({
+        expirationDate: new Date(Date.now() + 3600000),
+        isExpired: false,
+        payload: {},
+      })
+      vi.mocked(tokenManager.isTokenExpired).mockReturnValue(false)
+      const { authService } = await import('@/services/auth/authService')
+      vi.mocked(authService.fetchUserInfo).mockRejectedValue(new Error('401'))
+
+      await store.initializeFromStorage()
+
+      expect(store.token).toBeNull()
+      expect(store.loginModalOpen).toBe(true)
+    })
   })
 })
