@@ -161,6 +161,7 @@
               variant="text"
               :aria-label="t('components.analysisExecution.buttons.generate', 'Generate').value"
               data-testid="cohort-table-generate"
+              :disabled="!access.canWrite(cohort.id)"
               @click.stop="$emit('generate', cohort)"
             />
             <v-btn
@@ -169,6 +170,7 @@
               variant="text"
               :aria-label="t('common.delete', 'Delete').value"
               data-testid="cohort-table-delete"
+              :disabled="!access.canDelete(cohort.id)"
               @click.stop="$emit('delete', cohort)"
             />
           </td>
@@ -182,10 +184,12 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 const { t, locale } = useI18n()
 const router = useRouter()
+const access = useEntityAccessFor('cohortDefinition')
 
 interface Props {
   cohorts: CohortDefinitionSummary[]

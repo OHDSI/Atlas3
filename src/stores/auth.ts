@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { AuthState, UserInfo } from '@/models/auth.types'
+import { emptyEntityAccess } from '@/models/auth.types'
 import { storageManager } from '@/services/auth/storageManager'
 import { tokenManager } from '@/services/auth/tokenManager'
 import { refreshManager } from '@/services/auth/refreshManager'
@@ -21,6 +22,7 @@ export const useAuthStore = defineStore('auth', {
     token: null,
     user: null,
     permissions: {},
+    entityAccess: emptyEntityAccess(),
     authProvider: null,
     authClient: null,
     tokenExpirationDate: null,
@@ -77,13 +79,15 @@ export const useAuthStore = defineStore('auth', {
       this.user = user
       if (user) {
         this.permissions = user.permissionIdx || {}
-        
+        this.entityAccess = user.entityAccess || emptyEntityAccess()
+
         // Clear permission cache when user changes
         import('@/services/auth/permissions').then(({ permissionService }) => {
           permissionService.clearCache()
         })
       } else {
         this.permissions = {}
+        this.entityAccess = emptyEntityAccess()
       }
     },
 
@@ -104,6 +108,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       this.user = null
       this.permissions = {}
+      this.entityAccess = emptyEntityAccess()
       this.authProvider = null
       this.authClient = null
       this.tokenExpirationDate = null

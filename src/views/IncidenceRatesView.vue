@@ -25,6 +25,7 @@
         size="large"
         prepend-icon="mdi-plus"
         data-testid="incidence-rates-create"
+        :disabled="!canCreate"
         @click="handleNew"
       >
         {{ t('home.newEntityNames.incidenceRate', 'New incidence rate') }}
@@ -38,6 +39,8 @@
       :items-per-page="itemsPerPage"
       :empty-text="t('common.noData', 'No incidence rates yet.').value"
       testid="incidence-rates-table"
+      :can-copy-item="(item) => canCopy && !!item.id"
+      :can-delete-item="(item) => entityAccess.canDelete(item.id)"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleRemove"
@@ -110,6 +113,8 @@ import { useRouter } from 'vue-router'
 import { useIncidenceRates } from '@/composables/useIncidenceRates'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
+import { usePermissions } from '@/composables/usePermissions'
+import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { deleteIncidenceRate, copyIncidenceRate } from '@/services/webapi'
 import { logger } from '@/utils/logger'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
@@ -124,6 +129,10 @@ const {
 } = useIncidenceRates()
 
 const router = useRouter()
+const { hasPermission } = usePermissions()
+const canCreate = computed(() => hasPermission('create:incidence'))
+const canCopy = computed(() => hasPermission('create:incidence'))
+const entityAccess = useEntityAccessFor('incidenceRate')
 const store = useIncidenceRateStore()
 const { t } = useI18n()
 const showDelete = ref(false)

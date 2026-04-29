@@ -43,10 +43,23 @@ vi.mock('@/services/webapi', () => ({
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
+    debug: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
     warn: vi.fn()
   }
+}))
+
+// usePermissions reads from the auth store (not initialised here); mock as
+// a permissive admin so CohortsView's gated buttons stay visible in the tests.
+vi.mock('@/composables/usePermissions', () => ({
+  usePermissions: () => ({
+    hasPermission: () => true,
+    hasAnyPermission: () => true,
+    hasAllPermissions: () => true,
+    cacheHitRate: ref(0),
+    clearCache: vi.fn(),
+  }),
 }))
 
 // Mock child components

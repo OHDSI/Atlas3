@@ -116,7 +116,7 @@
       </v-tooltip>
 
       <v-tooltip
-        :text="materializeTooltip"
+        :text="generateTooltipText"
         location="top"
       >
         <template #activator="{ props: tooltipProps }">
@@ -127,6 +127,7 @@
             variant="text"
             aria-label="Generate cohort"
             class="cohort-card__action-btn"
+            :disabled="!canWrite"
             @click.stop="handleGenerate"
           >
             <v-icon
@@ -140,7 +141,7 @@
       </v-tooltip>
 
       <v-tooltip
-        :text="deleteTooltip"
+        :text="deleteTooltipText"
         location="top"
       >
         <template #activator="{ props: tooltipProps }">
@@ -151,6 +152,7 @@
             variant="text"
             aria-label="Delete cohort"
             class="cohort-card__action-btn"
+            :disabled="!canDelete"
             @click.stop="$emit('delete', cohort)"
           >
             <v-icon
@@ -167,9 +169,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 interface Props {
@@ -199,8 +202,18 @@ const updatedOnLabel = t('columns.modified', 'Modified')
 const infoTooltip = t('common.cohortInformation', 'Cohort Information')
 const materializeTooltip = t('components.analysisExecution.buttons.generate', 'Generate')
 const deleteTooltip = t('common.delete', 'Delete')
+const noPermissionTooltip = t('common.noPermission', 'You do not have permission for this action')
 const unknownLabel = t('common.anonymous', 'Unknown')
 const naLabel = t('common.noData', 'N/A')
+
+const cohortId = toRef(() => props.cohort.id)
+const { canWrite, canDelete } = useEntityAccess('cohortDefinition', cohortId)
+const generateTooltipText = computed(() =>
+  canWrite.value ? materializeTooltip.value : noPermissionTooltip.value,
+)
+const deleteTooltipText = computed(() =>
+  canDelete.value ? deleteTooltip.value : noPermissionTooltip.value,
+)
 
 /**
  * Format user object or string to display name

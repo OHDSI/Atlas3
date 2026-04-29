@@ -14,6 +14,7 @@
                 size="large"
                 class="cohorts-view__action-btn"
                 :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
+                :disabled="!canCreateCohort"
                 @click="handleCreateCohort"
               >
                 {{ t('cohortDefinitions.newDefinition', 'New Cohort') }}
@@ -25,6 +26,7 @@
                 size="large"
                 class="cohorts-view__action-btn"
                 :aria-label="t('common.import', 'Import cohort from JSON').value"
+                :disabled="!canCreateCohort"
                 @click="handleImportCohort"
               >
                 {{ t('common.import', 'Import') }}
@@ -326,6 +328,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
+import { usePermissions } from '@/composables/usePermissions'
 import { deleteCohort, getCohortDefinition, getCohortPrintFriendly } from '@/services/webapi'
 import { logger } from '@/utils/logger'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
@@ -337,6 +340,8 @@ import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 const router = useRouter()
 const { t } = useI18n()
+const { hasPermission } = usePermissions()
+const canCreateCohort = computed(() => hasPermission('create:cohort-definition'))
 
 // View mode (tile vs table) — persisted to localStorage so the choice
 // survives across navigations and reloads.

@@ -27,6 +27,7 @@
         prepend-icon="mdi-plus"
         :aria-label="t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis').value"
         data-testid="feature-analyses-create"
+        :disabled="!canCreate"
         @click="handleCreate"
       >
         {{ t('home.newEntityNames.featureAnalysis', 'New feature analysis') }}
@@ -40,6 +41,8 @@
       :items-per-page="itemsPerPage"
       :empty-text="t('common.noData', 'No feature analyses yet.').value"
       testid="feature-analyses-table"
+      :can-copy-item="(item) => canCopy && !!item.id"
+      :can-delete-item="(item) => entityAccess.canDelete(item.id)"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleDeleteClick"
@@ -123,6 +126,8 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useFeatureAnalyses } from '@/composables/useFeatureAnalyses'
 import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
+import { usePermissions } from '@/composables/usePermissions'
+import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { logger } from '@/utils/logger'
 import type { FeatureAnalysisListItem, FeatureAnalysisType } from '@/models/feature-analysis.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
@@ -131,6 +136,10 @@ import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
 const router = useRouter()
 const { t } = useI18n()
 const store = useFeatureAnalysesStore()
+const { hasPermission } = usePermissions()
+const canCreate = computed(() => hasPermission('create:feature-analysis'))
+const canCopy = computed(() => hasPermission('create:feature-analysis'))
+const entityAccess = useEntityAccessFor('feAnalysis')
 
 const {
   loading,

@@ -9,6 +9,8 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
 
 vi.mock('@/composables/useI18n', async () => {
@@ -75,6 +77,20 @@ describe('ConceptSetEditor', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     setActivePinia(createPinia())
+    // The editor's Save/Delete buttons are now permission-gated. Set up an
+    // authenticated user with global write+create on concept sets so the
+    // existing button-click assertions still fire.
+    const authStore = useAuthStore()
+    authStore.setUser({
+      login: 'tester',
+      displayName: 'tester',
+      permissionIdx: {
+        create: ['create:conceptset'],
+        write: ['write:conceptset'],
+        read: ['read:conceptset'],
+      },
+      entityAccess: emptyEntityAccess(),
+    })
   })
 
   it('should mount successfully', () => {

@@ -23,6 +23,7 @@
           <v-btn
             color="primary"
             variant="flat"
+            :disabled="!canCreate"
             @click="onAddClick"
           >
             {{ t('components.conceptSetBuilder.newConceptSet', 'Add concept set') }}
@@ -81,6 +82,7 @@
               icon="mdi-pencil"
               size="small"
               variant="text"
+              :disabled="!access.canWrite(item.id)"
               @click="onEditClick(item.id)"
             />
           </div>
@@ -166,14 +168,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { usePermissions } from '@/composables/usePermissions'
+import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
 
 const { t } = useI18n()
+const { hasPermission } = usePermissions()
+const canCreate = computed(() => hasPermission('create:conceptset'))
+const access = useEntityAccessFor('conceptSet')
 
 // ============================================================================
 // Store

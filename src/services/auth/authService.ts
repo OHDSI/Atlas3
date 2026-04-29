@@ -1,7 +1,14 @@
-import type { LoginCredentials, UserInfo, AuthProvider } from '@/models/auth.types'
+import type {
+  LoginCredentials,
+  UserInfo,
+  AuthProvider,
+  EntityAccess,
+} from '@/models/auth.types'
+import { emptyEntityAccess } from '@/models/auth.types'
 import { useAuthStore } from '@/stores/auth'
 import { authConfig } from '@/config/auth.config'
 import { storageManager } from './storageManager'
+import { permissionChecker } from './permissionChecker'
 import { logger } from '@/utils/logger'
 
 export interface IAuthService {
@@ -11,6 +18,67 @@ export interface IAuthService {
   fetchUserInfo(): Promise<UserInfo>
   runAs(targetUsername: string): Promise<void>
   exitRunAs(): Promise<void>
+}
+
+/**
+ * Parse the /user/me response into a UserInfo.
+ *
+ * WebAPI 3.0 returns `{ user: { login, name, ... }, authz: { permissions: string[], ...AccessMaps } }`.
+ * Older WebAPI variants returned `{ login, name, permissions: { resource: [...] } }` at the top level;
+ * we accept both shapes so older backends still work in dev.
+ */
+export function parseUserInfo(data: Record<string, unknown>): UserInfo {
+  const user = (data.user as Record<string, unknown> | undefined) ?? data
+  const authz = (data.authz as Record<string, unknown> | undefined) ?? {}
+
+  const login = (user.login as string) ?? ''
+  const name = user.name as string | undefined
+  const email = user.email as string | undefined
+
+  const rawPerms = authz.permissions ?? data.permissions
+  let permissionIdx: Record<string, string[]>
+  let flatPerms: string[]
+  if (Array.isArray(rawPerms)) {
+    flatPerms = rawPerms as string[]
+    permissionIdx = permissionChecker.buildPermissionIndex(flatPerms)
+  } else if (rawPerms && typeof rawPerms === 'object') {
+    permissionIdx = rawPerms as Record<string, string[]>
+    flatPerms = Object.values(permissionIdx).flat()
+  } else {
+    permissionIdx = {}
+    flatPerms = []
+  }
+
+  const accessSource = (Object.keys(authz).length > 0 ? authz : data) as Record<string, unknown>
+  const entityAccess: EntityAccess = {
+    ...emptyEntityAccess(),
+    cohortDefinition: (accessSource.cohortDefinitionAccess as EntityAccess['cohortDefinition']) ?? {},
+    conceptSet: (accessSource.conceptSetAccess as EntityAccess['conceptSet']) ?? {},
+    cohortCharacterization:
+      (accessSource.cohortCharacterizationAccess as EntityAccess['cohortCharacterization']) ?? {},
+    feAnalysis: (accessSource.feAnalysisAccess as EntityAccess['feAnalysis']) ?? {},
+    pathway: (accessSource.pathwayAccess as EntityAccess['pathway']) ?? {},
+    incidenceRate: (accessSource.incidenceRateAccess as EntityAccess['incidenceRate']) ?? {},
+    reusable: (accessSource.reusableAccess as EntityAccess['reusable']) ?? {},
+    source: (accessSource.sourceAccess as EntityAccess['source']) ?? {},
+  }
+
+  // Old API exposed an explicit flag; new API drops it, so derive from the
+  // presence of any trexsql:* permission.
+  const trexsqlCacheEnabled =
+    typeof data.trexsqlCacheEnabled === 'boolean'
+      ? (data.trexsqlCacheEnabled as boolean)
+      : flatPerms.some((p) => p.startsWith('trexsql:'))
+
+  return {
+    login,
+    name,
+    displayName: name || login,
+    email,
+    permissionIdx,
+    entityAccess,
+    trexsqlCacheEnabled,
+  }
 }
 
 class AuthService implements IAuthService {
@@ -287,15 +355,7 @@ class AuthService implements IAuthService {
     }
 
     const data = await response.json()
-
-    return {
-      login: data.login,
-      name: data.name,
-      displayName: data.name || data.login,
-      email: data.email,
-      permissionIdx: data.permissions || {},
-      trexsqlCacheEnabled: data.trexsqlCacheEnabled ?? false,
-    }
+    return parseUserInfo(data)
   }
 
   async runAs(targetUsername: string): Promise<void> {

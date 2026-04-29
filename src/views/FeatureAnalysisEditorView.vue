@@ -25,7 +25,7 @@
         variant="outlined"
         color="primary"
         prepend-icon="mdi-content-copy"
-        :disabled="loading"
+        :disabled="loading || !canCopy"
         data-testid="feature-analysis-editor-copy"
         @click="handleSaveCopy"
       >
@@ -36,7 +36,7 @@
         variant="outlined"
         color="error"
         prepend-icon="mdi-delete"
-        :disabled="loading"
+        :disabled="loading || !canDelete"
         data-testid="feature-analysis-editor-delete"
         @click="handleDeleteClick"
       >
@@ -304,6 +304,8 @@ import { useRouter, onBeforeRouteLeave } from 'vue-router'
 
 import { useI18n } from '@/composables/useI18n'
 import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
+import { usePermissions } from '@/composables/usePermissions'
+import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getDefaultCovariateSettings } from '@/services/feature-analysis.service'
 import { logger } from '@/utils/logger'
 import type {
@@ -420,9 +422,19 @@ const loading = computed<boolean>(() => store.loading)
 // Save guard
 // ---------------------------------------------------------------------------
 
+// Permission gating: new FAs need create:feature-analysis; existing ones
+// need write access on the specific entity (ownership counts).
+const draftId = computed<number | null>(() =>
+  typeof draft.value.id === 'number' ? draft.value.id : null,
+)
+const { hasPermission } = usePermissions()
+const { canWrite, canDelete } = useEntityAccess('feAnalysis', draftId)
+const canCopy = computed<boolean>(() => hasPermission('create:feature-analysis'))
+
 const canSave = computed<boolean>(() => {
   if (saving.value || loading.value) return false
-  return draft.value.name.trim().length > 0
+  if (draft.value.name.trim().length === 0) return false
+  return isEditing.value ? canWrite.value : hasPermission('create:feature-analysis')
 })
 
 const deleteMessage = computed<string>(() => {

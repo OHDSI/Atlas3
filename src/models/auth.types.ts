@@ -30,13 +30,64 @@ export interface PermissionIndex {
   [resource: string]: string[]
 }
 
+/**
+ * Per-entity grant returned by /user/me for resources that support ownership
+ * (cohort definitions, concept sets, characterizations, etc.).
+ */
+export interface EntityGrant {
+  accessTypes: string[]
+  isOwner: boolean
+}
+
+export type EntityAccessMap = Record<string, EntityGrant>
+
+/** Source access uses a flat list of access types (no ownership concept). */
+export type SourceAccessMap = Record<string, string[]>
+
+/**
+ * Per-entity access maps surfaced from /user/me's authz block.
+ * Keys are entity ids (as strings); values describe what the user can do
+ * with that specific entity, independently of the global permission list.
+ */
+export interface EntityAccess {
+  cohortDefinition: EntityAccessMap
+  conceptSet: EntityAccessMap
+  cohortCharacterization: EntityAccessMap
+  feAnalysis: EntityAccessMap
+  pathway: EntityAccessMap
+  incidenceRate: EntityAccessMap
+  reusable: EntityAccessMap
+  source: SourceAccessMap
+}
+
+export type EntityAccessKind = Exclude<keyof EntityAccess, 'source'>
+
+export function emptyEntityAccess(): EntityAccess {
+  return {
+    cohortDefinition: {},
+    conceptSet: {},
+    cohortCharacterization: {},
+    feAnalysis: {},
+    pathway: {},
+    incidenceRate: {},
+    reusable: {},
+    source: {},
+  }
+}
+
 export interface UserInfo {
   login: string
   name?: string
   displayName: string
   email?: string
   permissionIdx: PermissionIndex
-  /** Whether TrexSQL cache feature is enabled on the server */
+  /**
+   * Per-entity access maps. Optional on UserInfo for test ergonomics — the
+   * auth store always materialises a full {@link EntityAccess} via
+   * {@link emptyEntityAccess} when storing the user.
+   */
+  entityAccess?: EntityAccess
+  /** Whether TrexSQL cache feature is enabled on the server (derived from perms) */
   trexsqlCacheEnabled?: boolean
 }
 
@@ -44,6 +95,7 @@ export interface AuthState {
   token: string | null
   user: UserInfo | null
   permissions: PermissionIndex
+  entityAccess: EntityAccess
   authProvider: string | null
   authClient: string | null
   tokenExpirationDate: Date | null

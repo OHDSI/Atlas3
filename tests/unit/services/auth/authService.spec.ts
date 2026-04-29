@@ -476,6 +476,73 @@ describe('AuthService', () => {
 
       await expect(authService.fetchUserInfo()).rejects.toThrow('Failed to fetch user info')
     })
+
+    it('parses the WebAPI 3.0 {user, authz} shape', async () => {
+      const authStore = useAuthStore()
+      authStore.setToken('valid-token')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            user: { id: 1, login: 'ohdsi', name: 'OHDSI User' },
+            authz: {
+              permissions: [
+                'read:cohort-definition',
+                'write:cohort-definition',
+                'create:conceptset',
+                'admin:tags',
+                'trexsql:d2e:*',
+              ],
+              cohortDefinitionAccess: { '7': { accessTypes: ['WRITE'], isOwner: true } },
+              conceptSetAccess: {},
+              cohortCharacterizationAccess: {},
+              feAnalysisAccess: {},
+              pathwayAccess: {},
+              incidenceRateAccess: {},
+              reusableAccess: {},
+              sourceAccess: { sample: ['WRITE'] },
+            },
+          }),
+      })
+
+      const userInfo = await authService.fetchUserInfo()
+
+      expect(userInfo.login).toBe('ohdsi')
+      expect(userInfo.displayName).toBe('OHDSI User')
+      // Permissions are bucketed by first colon segment (verb).
+      expect(userInfo.permissionIdx.read).toContain('read:cohort-definition')
+      expect(userInfo.permissionIdx.write).toContain('write:cohort-definition')
+      expect(userInfo.permissionIdx.admin).toContain('admin:tags')
+      // trexsqlCacheEnabled is derived from any trexsql:* permission.
+      expect(userInfo.trexsqlCacheEnabled).toBe(true)
+      expect(userInfo.entityAccess?.cohortDefinition['7']).toEqual({
+        accessTypes: ['WRITE'],
+        isOwner: true,
+      })
+      expect(userInfo.entityAccess?.source.sample).toEqual(['WRITE'])
+    })
+
+    it('falls back to legacy top-level shape', async () => {
+      const authStore = useAuthStore()
+      authStore.setToken('valid-token')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            login: 'legacy',
+            name: 'Legacy User',
+            permissions: { admin: ['admin:security'] },
+          }),
+      })
+
+      const userInfo = await authService.fetchUserInfo()
+      expect(userInfo.login).toBe('legacy')
+      expect(userInfo.permissionIdx).toEqual({ admin: ['admin:security'] })
+      // No trexsql:* perms, no explicit flag → false.
+      expect(userInfo.trexsqlCacheEnabled).toBe(false)
+    })
   })
 
   describe('runAs', () => {

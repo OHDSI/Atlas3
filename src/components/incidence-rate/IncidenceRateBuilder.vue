@@ -11,7 +11,7 @@
         v-if="store.currentIR?.id"
         variant="outlined"
         prepend-icon="mdi-content-copy"
-        :disabled="!store.currentIR?.id"
+        :disabled="!store.currentIR?.id || !canCopy"
         data-testid="ir-builder-copy"
         @click="onCopy"
       >
@@ -22,7 +22,7 @@
         variant="outlined"
         color="error"
         prepend-icon="mdi-delete"
-        :disabled="!store.currentIR?.id"
+        :disabled="!store.currentIR?.id || !canDelete"
         data-testid="ir-builder-delete"
         @click="askDelete = true"
       >
@@ -32,7 +32,7 @@
         color="primary"
         variant="elevated"
         prepend-icon="mdi-content-save"
-        :disabled="!store.canSave || saving"
+        :disabled="!store.canSave || saving || !canSave"
         :loading="saving"
         data-testid="ir-builder-save"
         @click="onSave"
@@ -143,6 +143,8 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
+import { usePermissions } from '@/composables/usePermissions'
+import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import IncidenceRateDefinitionPanel from '@/components/incidence-rate/IncidenceRateDefinitionPanel.vue'
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'
@@ -156,6 +158,15 @@ const { save, copy, remove, feedback } = useIncidenceRateBuilder()
 const activeTab = ref<'definition' | 'conceptSets' | 'generation' | 'versions'>('definition')
 const saving = ref(false)
 const askDelete = ref(false)
+
+// Permission gating for save/copy/delete buttons.
+const irId = computed<number | null>(() => store.currentIR?.id ?? null)
+const { hasPermission } = usePermissions()
+const { canWrite, canDelete } = useEntityAccess('incidenceRate', irId)
+const canCopy = computed<boolean>(() => hasPermission('create:incidence'))
+const canSave = computed<boolean>(() =>
+  irId.value === null ? hasPermission('create:incidence') : canWrite.value,
+)
 
 const title = computed(() => {
   const ir = store.currentIR
