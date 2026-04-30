@@ -342,22 +342,25 @@ describe('chart-config', () => {
       expect((options.series as ChartSeriesItem[])[0].type).toBe('treemap')
     })
 
-    it('should drive treemap colors from a single-hue gradient based on value', () => {
+    it('should color treemap nodes from a single-hue gradient by value', () => {
       const data: TreemapNode[] = [
         { name: 'A', value: 10 },
         { name: 'B', value: 20 }
       ]
 
       const options = defaultTreemapOptions(data)
-      const series = (options.series as ChartSeriesItem[])[0] as { levels?: Array<{ color?: string[]; colorMappingBy?: string }>; visualMin?: number; visualMax?: number }
+      const seriesData = (options.series as ChartSeriesItem[])[0].data as Array<{ value: number; itemStyle?: { color?: string } }>
 
-      // Atlas 2.15 semantic: nodes with higher values are darker; the
-      // gradient is mapped onto the value range, not assigned per index.
-      expect(series.levels?.[1]?.color).toBeDefined()
-      expect(series.levels?.[1]?.color?.length).toBeGreaterThan(1)
-      expect(series.levels?.[1]?.colorMappingBy).toBe('value')
-      expect(series.visualMin).toBe(10)
-      expect(series.visualMax).toBe(20)
+      // Atlas 2.15 semantic: higher value → darker color from a
+      // single-hue gradient (light blue → navy). Both nodes get a
+      // hex color; the lower-value node's color is the lighter end
+      // of the gradient and the higher-value node's is the darker.
+      expect(seriesData[0].itemStyle?.color).toMatch(/^#[0-9a-f]{6}$/i)
+      expect(seriesData[1].itemStyle?.color).toMatch(/^#[0-9a-f]{6}$/i)
+      // Lower value (A=10) maps to t=0 → first gradient stop (light).
+      // Higher value (B=20) maps to t=1 → last stop (Atlas navy).
+      expect(seriesData[0].itemStyle?.color?.toLowerCase()).toBe('#c7eaff')
+      expect(seriesData[1].itemStyle?.color?.toLowerCase()).toBe('#1f425a')
     })
 
     it('should handle hierarchical data', () => {

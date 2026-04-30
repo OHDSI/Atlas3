@@ -305,13 +305,6 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
           borderWidth: 2,
           gapWidth: 2
         },
-        // Encode magnitude with color (Atlas 2.15 semantic): nodes
-        // with higher aggregate values get a darker hue from the
-        // single-hue gradient; smaller values get the lighter end.
-        // ECharts' visualMap maps the data values onto the gradient
-        // automatically.
-        visualMin: extractTreemapValueRange(data).min,
-        visualMax: extractTreemapValueRange(data).max,
         levels: [
           {
             itemStyle: {
@@ -320,8 +313,6 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
             },
           },
           {
-            color: TREEMAP_GRADIENT as unknown as string[],
-            colorMappingBy: 'value',
             itemStyle: {
               borderWidth: 2,
               gapWidth: 2,
@@ -329,7 +320,10 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
             },
           },
         ],
-        data,
+        // Each node gets its own itemStyle.color computed from the
+        // single-hue gradient — higher aggregate value → darker color.
+        // Matches Atlas 2.15's getcolorvalue semantic.
+        data: paintTreemapNodesByValue(data),
       },
     ],
   }
@@ -337,8 +331,7 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
 
 /**
  * Walk a tree of treemap nodes and return the min / max numeric
- * value across all leaves. Used to set visualMin / visualMax so the
- * gradient covers the actual data range.
+ * value across all leaves.
  */
 function extractTreemapValueRange(nodes: TreemapNode[]): { min: number; max: number } {
   let min = Infinity
@@ -356,6 +349,69 @@ function extractTreemapValueRange(nodes: TreemapNode[]): { min: number; max: num
   if (!Number.isFinite(min)) min = 0
   if (!Number.isFinite(max)) max = 1
   return { min, max }
+}
+
+/**
+ * Convert a hex string like "#1f425a" to its RGB components.
+ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const v = hex.replace('#', '')
+  return {
+    r: parseInt(v.slice(0, 2), 16),
+    g: parseInt(v.slice(2, 4), 16),
+    b: parseInt(v.slice(4, 6), 16),
+  }
+}
+
+/**
+ * Linearly interpolate across an N-stop gradient. Returns a hex color.
+ * @param stops Array of hex strings, ordered light → dark.
+ * @param t Normalized position in [0, 1].
+ */
+function sampleGradient(stops: readonly string[], t: number): string {
+  const clamped = Math.max(0, Math.min(1, t))
+  const segments = stops.length - 1
+  if (segments < 1) return stops[0] ?? '#1f425a'
+  const segmentSize = 1 / segments
+  const segmentIndex = Math.min(Math.floor(clamped / segmentSize), segments - 1)
+  const localT = (clamped - segmentIndex * segmentSize) / segmentSize
+  const a = hexToRgb(stops[segmentIndex] ?? '#1f425a')
+  const b = hexToRgb(stops[segmentIndex + 1] ?? '#1f425a')
+  const r = Math.round(a.r + (b.r - a.r) * localT)
+  const g = Math.round(a.g + (b.g - a.g) * localT)
+  const blue = Math.round(a.b + (b.b - a.b) * localT)
+  return `#${[r, g, blue].map(v => v.toString(16).padStart(2, '0')).join('')}`
+}
+
+/**
+ * Recursively assign each treemap node an itemStyle.color taken
+ * from the TREEMAP_GRADIENT, scaled by the node's value relative to
+ * the global value range. Higher value → darker color.
+ *
+ * Replaces the older index-based assignTreemapColors that ignored
+ * the data values (and which gave a treemap a confusing categorical
+ * look despite the encoding being magnitude-based in Atlas 2.15).
+ */
+function paintTreemapNodesByValue(nodes: TreemapNode[]): TreemapNode[] {
+  const { min, max } = extractTreemapValueRange(nodes)
+  const range = max - min || 1
+
+  function paint(list: TreemapNode[]): TreemapNode[] {
+    return list.map(node => {
+      const t = ((node.value ?? min) - min) / range
+      const color = sampleGradient(TREEMAP_GRADIENT, t)
+      return {
+        ...node,
+        itemStyle: {
+          ...node.itemStyle,
+          color: node.itemStyle?.color || color,
+        },
+        children: node.children ? paint(node.children) : undefined,
+      }
+    })
+  }
+
+  return paint(nodes)
 }
 
 /**
