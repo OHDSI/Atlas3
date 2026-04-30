@@ -3,7 +3,7 @@
     <div class="analysis-hub">
       <nav class="page-tabs-rail analysis-hub__tabs-rail">
         <v-tabs
-          :model-value="activeTabName"
+          v-model="activeTabName"
           align-tabs="start"
           density="comfortable"
           color="primary"
@@ -15,7 +15,6 @@
             v-for="tab in tabs"
             :key="tab.name"
             :value="tab.name"
-            :to="{ name: tab.name }"
           >
             <v-icon
               start
@@ -26,21 +25,33 @@
         </v-tabs>
       </nav>
 
-      <router-view v-slot="{ Component, route: matchedRoute }">
-        <component
-          :is="Component"
-          :key="matchedRoute.path"
-        />
-      </router-view>
+      <v-window v-model="activeTabName">
+        <v-window-item value="characterizations">
+          <CharacterizationsView />
+        </v-window-item>
+        <v-window-item value="feature-analyses">
+          <FeatureAnalysesView />
+        </v-window-item>
+        <v-window-item value="pathways">
+          <PathwaysView />
+        </v-window-item>
+        <v-window-item value="incidence-rates">
+          <IncidenceRatesView />
+        </v-window-item>
+      </v-window>
     </div>
   </page-shell>
 </template>
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import PageShell from '@/components/shared/PageShell.vue'
+import CharacterizationsView from '@/views/CharacterizationsView.vue'
+import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
+import PathwaysView from '@/views/PathwaysView.vue'
+import IncidenceRatesView from '@/views/IncidenceRatesView.vue'
 
 interface Tab {
   name: string
@@ -51,6 +62,7 @@ interface Tab {
 
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
 
 const tabs: Tab[] = [
   { name: 'characterizations', titleKey: 'navigation.characterizations', defaultLabel: 'Characterizations', icon: 'mdi-chart-box-outline' },
@@ -61,9 +73,19 @@ const tabs: Tab[] = [
 
 const tabNames = new Set(tabs.map(tab => tab.name))
 
-const activeTabName = computed(() => {
-  const name = route.name as string | undefined
-  return name && tabNames.has(name) ? name : 'characterizations'
+// Bidirectional binding between active tab and the URL.
+// Reading: pick the tab from the current route name (or fall back).
+// Writing: pushing into v-tab/v-window updates the URL via router.push.
+const activeTabName = computed<string>({
+  get: () => {
+    const name = route.name as string | undefined
+    return name && tabNames.has(name) ? name : 'characterizations'
+  },
+  set: (name) => {
+    if (name && tabNames.has(name) && name !== route.name) {
+      router.push({ name })
+    }
+  },
 })
 
 const STORAGE_KEY = 'atlas3.analysis.lastTab'
@@ -98,30 +120,5 @@ function getLabel(tab: Tab): string {
   padding-inline: 32px;
   position: relative;
   z-index: 2;
-}
-
-/* Slide-fade between tab routes via a CSS keyframe.
- *
- * The route component's root (.analysis-list-layout) is remounted
- * whenever route.path changes (because of :key on <component :is>).
- * That mount triggers the `tab-fade-in` animation. No <transition>
- * wrapper is involved, which avoids Vue's transition system being
- * skipped for async-loaded route components.
- *
- * :deep() pierces the scoped-CSS boundary so the rule reaches the
- * route component's own scope. */
-.analysis-hub :deep(.analysis-list-layout) {
-  animation: tab-fade-in 280ms cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-@keyframes tab-fade-in {
-  from {
-    opacity: 0;
-    transform: translateX(16px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 </style>
