@@ -31,7 +31,13 @@ const vuetify = createVuetify({ components, directives })
 function mountComponent(options = {}) {
   return mount(LandingView, {
     global: {
-      plugins: [vuetify]
+      plugins: [vuetify],
+      stubs: {
+        RouterLink: {
+          template: '<a :href="to" class="router-link"><slot /></a>',
+          props: ['to']
+        }
+      }
     },
     ...options
   })
@@ -48,19 +54,19 @@ describe('LandingView', () => {
       expect(wrapper.find('.landing').exists()).toBe(true)
     })
 
-    it('should render the main card container', () => {
+    it('should render the hero card', () => {
       const wrapper = mountComponent()
-      expect(wrapper.find('.landing__card').exists()).toBe(true)
+      expect(wrapper.find('.landing__hero').exists()).toBe(true)
     })
 
-    it('should render the content container', () => {
+    it('should render the hero grid', () => {
       const wrapper = mountComponent()
-      expect(wrapper.find('.landing__container').exists()).toBe(true)
+      expect(wrapper.find('.landing__hero-grid').exists()).toBe(true)
     })
 
-    it('should render the content section', () => {
+    it('should render the hero content section', () => {
       const wrapper = mountComponent()
-      expect(wrapper.find('.landing__content').exists()).toBe(true)
+      expect(wrapper.find('.landing__hero-content').exists()).toBe(true)
     })
 
     it('should render the illustration section', () => {
@@ -70,24 +76,43 @@ describe('LandingView', () => {
   })
 
   describe('Title and Logo', () => {
-    it('should render the ATLAS title', () => {
+    it('should render the display title', () => {
       const wrapper = mountComponent()
       const title = wrapper.find('.landing__title')
       expect(title.exists()).toBe(true)
-      expect(title.text()).toBe('ATLAS')
+      expect(title.text()).toBe('Patient-level analytics, unified.')
     })
 
-    it('should render the ATLAS logo image', () => {
+    it('should render the Atlas logo image', () => {
       const wrapper = mountComponent()
       const logo = wrapper.find('.landing__logo')
       expect(logo.exists()).toBe(true)
-      expect(logo.attributes('alt')).toBe('ATLAS')
+      expect(logo.attributes('alt')).toBe('Atlas')
     })
 
     it('should have correct logo source', () => {
       const wrapper = mountComponent()
       const logo = wrapper.find('.landing__logo')
       expect(logo.attributes('src')).toContain('atlas-loading.svg')
+    })
+  })
+
+  describe('Eyebrow Row', () => {
+    it('should render the eyebrow row', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.find('.landing__eyebrow-row').exists()).toBe(true)
+    })
+
+    it('should render the accent rule', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.find('.landing__accent-rule').exists()).toBe(true)
+    })
+
+    it('should render the eyebrow text', () => {
+      const wrapper = mountComponent()
+      const eyebrow = wrapper.find('.text-eyebrow')
+      expect(eyebrow.exists()).toBe(true)
+      expect(eyebrow.text()).toContain('OHDSI')
     })
   })
 
@@ -143,51 +168,49 @@ describe('LandingView', () => {
 
     it('should render two action buttons', () => {
       const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
+      const buttons = wrapper.findAll('.landing__actions .v-btn')
       expect(buttons.length).toBe(2)
     })
 
-    it('should render Search Vocabulary button', () => {
+    it('should render Define New Cohort button first', () => {
       const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
-      const searchButton = buttons[0]
-      expect(searchButton.exists()).toBe(true)
-      expect(searchButton.classes()).toContain('landing__button--outline')
+      const buttons = wrapper.findAll('.landing__actions .v-btn')
+      const cohortButton = buttons[0]
+      expect(cohortButton.exists()).toBe(true)
     })
 
-    it('should render Define New Cohort button', () => {
+    it('should render Search Vocabulary button second', () => {
       const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
-      const cohortButton = buttons[1]
-      expect(cohortButton.exists()).toBe(true)
-      expect(cohortButton.classes()).toContain('landing__button--secondary')
+      const buttons = wrapper.findAll('.landing__actions .v-btn')
+      const searchButton = buttons[1]
+      expect(searchButton.exists()).toBe(true)
     })
   })
 
   describe('Navigation Interactions', () => {
-    it('should navigate to concepts page when Search Vocabulary button is clicked', async () => {
-      const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
-      const searchButton = buttons[0]
-
-      await searchButton.trigger('click')
-
-      expect(mockPush).toHaveBeenCalledWith('/concepts')
-    })
-
     it('should navigate to new cohort page when Define New Cohort button is clicked', async () => {
       const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
-      const cohortButton = buttons[1]
+      const buttons = wrapper.findAll('.landing__actions .v-btn')
+      const cohortButton = buttons[0]
 
       await cohortButton.trigger('click')
 
       expect(mockPush).toHaveBeenCalledWith('/cohorts/new')
     })
 
+    it('should navigate to concepts page when Search Vocabulary button is clicked', async () => {
+      const wrapper = mountComponent()
+      const buttons = wrapper.findAll('.landing__actions .v-btn')
+      const searchButton = buttons[1]
+
+      await searchButton.trigger('click')
+
+      expect(mockPush).toHaveBeenCalledWith('/concepts')
+    })
+
     it('should call router.push exactly once per button click', async () => {
       const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
+      const buttons = wrapper.findAll('.landing__actions .v-btn')
 
       await buttons[0].trigger('click')
       expect(mockPush).toHaveBeenCalledTimes(1)
@@ -200,42 +223,51 @@ describe('LandingView', () => {
   })
 
   describe('Component Structure', () => {
-    it('should have grid layout with two columns', () => {
+    it('should have grid layout in the hero', () => {
       const wrapper = mountComponent()
-      const container = wrapper.find('.landing__container')
-      expect(container.exists()).toBe(true)
+      const grid = wrapper.find('.landing__hero-grid')
+      expect(grid.exists()).toBe(true)
       // Grid layout is defined in CSS
     })
 
-    it('should have content section before illustration', () => {
+    it('should have hero-content section before illustration', () => {
       const wrapper = mountComponent()
-      const container = wrapper.find('.landing__container')
-      const children = container.element.children
+      const grid = wrapper.find('.landing__hero-grid')
+      const children = grid.element.children
 
-      expect(children[0].classList.contains('landing__content')).toBe(true)
+      expect(children[0].classList.contains('landing__hero-content')).toBe(true)
       expect(children[1].classList.contains('landing__illustration')).toBe(true)
     })
   })
 
-  describe('CSS Classes', () => {
-    it('should apply correct class to outline button', () => {
+  describe('Feature Tiles', () => {
+    it('should render the features section', () => {
       const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
-      expect(buttons[0].classes()).toContain('landing__button--outline')
+      expect(wrapper.find('.landing__features').exists()).toBe(true)
     })
 
-    it('should apply correct class to secondary button', () => {
+    it('should render three feature tiles', () => {
       const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
-      expect(buttons[1].classes()).toContain('landing__button--secondary')
+      const features = wrapper.findAll('.landing__feature')
+      expect(features.length).toBe(3)
     })
 
-    it('should apply base button class to all buttons', () => {
+    it('should render feature titles', () => {
       const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
-      buttons.forEach(button => {
-        expect(button.classes()).toContain('landing__button')
-      })
+      const featureTitles = wrapper.findAll('.landing__feature-title')
+      expect(featureTitles.length).toBe(3)
+    })
+
+    it('should render feature descriptions', () => {
+      const wrapper = mountComponent()
+      const featureDescriptions = wrapper.findAll('.landing__feature-description')
+      expect(featureDescriptions.length).toBe(3)
+    })
+
+    it('should render feature icons', () => {
+      const wrapper = mountComponent()
+      const featureIcons = wrapper.findAll('.landing__feature-icon')
+      expect(featureIcons.length).toBe(3)
     })
   })
 
@@ -243,7 +275,7 @@ describe('LandingView', () => {
     it('should have alt text on logo image', () => {
       const wrapper = mountComponent()
       const logo = wrapper.find('.landing__logo')
-      expect(logo.attributes('alt')).toBe('ATLAS')
+      expect(logo.attributes('alt')).toBe('Atlas')
     })
 
     it('should have semantic heading for title', () => {
@@ -256,12 +288,6 @@ describe('LandingView', () => {
       const wrapper = mountComponent()
       const sectionTitle = wrapper.find('h2.landing__section-title')
       expect(sectionTitle.exists()).toBe(true)
-    })
-
-    it('should have button elements for actions', () => {
-      const wrapper = mountComponent()
-      const buttons = wrapper.findAll('button.landing__button')
-      expect(buttons.length).toBe(2)
     })
   })
 
@@ -283,18 +309,18 @@ describe('LandingView', () => {
   })
 
   describe('I18n Integration', () => {
-    it('should use translation for vocabulary button text', () => {
-      const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
-      // The mock returns the fallback value
-      expect(buttons[0].text()).toBe('Search the Vocabulary')
-    })
-
     it('should use translation for cohort button text', () => {
       const wrapper = mountComponent()
-      const buttons = wrapper.findAll('.landing__button')
-      // The mock returns the fallback value
-      expect(buttons[1].text()).toBe('Define a New Cohort')
+      const buttons = wrapper.findAll('.landing__actions .v-btn')
+      // The mock returns the fallback value; new casing: lowercase "n"
+      expect(buttons[0].text()).toBe('Define a new cohort')
+    })
+
+    it('should use translation for vocabulary button text', () => {
+      const wrapper = mountComponent()
+      const buttons = wrapper.findAll('.landing__actions .v-btn')
+      // The mock returns the fallback value; new casing: lowercase "t"
+      expect(buttons[1].text()).toBe('Search the vocabulary')
     })
 
     it('should use translation for documentation title', () => {
@@ -314,11 +340,12 @@ describe('LandingView', () => {
       expect(wrapper.find('.landing__documentation').exists()).toBe(true)
       expect(wrapper.find('.landing__actions').exists()).toBe(true)
       expect(wrapper.find('.landing__illustration').exists()).toBe(true)
+      expect(wrapper.find('.landing__features').exists()).toBe(true)
     })
 
-    it('should render sections in correct order', () => {
+    it('should render hero-content children in correct order', () => {
       const wrapper = mountComponent()
-      const content = wrapper.find('.landing__content')
+      const content = wrapper.find('.landing__hero-content')
       const children = Array.from(content.element.children)
 
       const classNames = children.map(child => {
@@ -330,9 +357,9 @@ describe('LandingView', () => {
         return ''
       })
 
-      expect(classNames[0]).toBe('landing__title')
-      expect(classNames[1]).toBe('landing__description')
-      expect(classNames[2]).toBe('landing__documentation')
+      expect(classNames[0]).toBe('landing__eyebrow-row')
+      expect(classNames[1]).toBe('landing__title')
+      expect(classNames[2]).toBe('landing__description')
       expect(classNames[3]).toBe('landing__actions')
     })
   })
