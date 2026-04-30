@@ -41,7 +41,7 @@
       :loading="loading"
       class="credentials-form__submit"
     >
-      {{ t('common.menu', 'Sign in') }}
+      {{ t('components.userBar.signin', 'Sign in') }}
     </v-btn>
   </v-form>
 </template>
