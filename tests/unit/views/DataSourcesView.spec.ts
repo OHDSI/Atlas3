@@ -168,11 +168,11 @@ describe('DataSourcesView', () => {
       expect(wrapper.find('.datasources-view').exists()).toBe(true)
     })
 
-    it('should render page header with title', () => {
+    it('should render page header with title via PageShell', () => {
       wrapper = mountComponent()
-      const header = wrapper.find('.datasources-view__header')
-      expect(header.exists()).toBe(true)
-      expect(header.text()).toContain('Data Sources')
+      const heading = wrapper.find('.page-header__title')
+      expect(heading.exists()).toBe(true)
+      expect(heading.text()).toContain('Data Sources')
     })
 
     it('should render DataSourceSelector component', () => {
@@ -221,18 +221,19 @@ describe('DataSourcesView', () => {
       store.selectedReportType = 'dashboard'
       await wrapper.vm.$nextTick()
 
-      const subtitle = wrapper.find('.text-subtitle-1')
+      const subtitle = wrapper.find('.page-header__subtitle')
       expect(subtitle.exists()).toBe(true)
       expect(subtitle.text()).toContain('Test Database')
       expect(subtitle.text()).toContain('Dashboard')
     })
 
-    it('should not show subtitle when source is not selected', async () => {
+    it('should fall back to a generic subtitle when nothing is selected', async () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      const subtitle = wrapper.find('.text-subtitle-1')
-      expect(subtitle.exists()).toBe(false)
+      const subtitle = wrapper.find('.page-header__subtitle')
+      expect(subtitle.exists()).toBe(true)
+      expect(subtitle.text().toLowerCase()).toContain('data source')
     })
   })
 
@@ -360,7 +361,7 @@ describe('DataSourcesView', () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      const emptyState = wrapper.find('.text-center')
+      const emptyState = wrapper.find('.datasources-view__empty')
       expect(emptyState.exists()).toBe(true)
       expect(emptyState.text()).toContain('No data sources available')
     })
@@ -501,29 +502,26 @@ describe('DataSourcesView', () => {
       expect(wrapper.find('.datasources-view').exists()).toBe(true)
     })
 
-    it('should apply header class', () => {
+    it('should apply selector toolbar class', () => {
       wrapper = mountComponent()
-      expect(wrapper.find('.datasources-view__header').exists()).toBe(true)
+      expect(wrapper.find('.datasources-view__toolbar').exists()).toBe(true)
     })
   })
 
   describe('Accessibility', () => {
-    it('should have semantic heading for page title', () => {
+    it('should have semantic h1 page title via PageShell', () => {
       wrapper = mountComponent()
-      const heading = wrapper.find('h1.text-h4')
+      const heading = wrapper.find('h1.page-header__title')
       expect(heading.exists()).toBe(true)
       expect(heading.text()).toContain('Data Sources')
     })
 
-    it('should use v-container for proper grid layout', () => {
+    it('should render the selectors inside the shared toolbar', () => {
       wrapper = mountComponent()
-      expect(wrapper.findComponent({ name: 'VContainer' }).exists()).toBe(true)
-    })
-
-    it('should use v-row and v-col for responsive layout', () => {
-      wrapper = mountComponent()
-      expect(wrapper.findComponent({ name: 'VRow' }).exists()).toBe(true)
-      expect(wrapper.findComponent({ name: 'VCol' }).exists()).toBe(true)
+      const toolbar = wrapper.find('.datasources-view__toolbar')
+      expect(toolbar.exists()).toBe(true)
+      expect(toolbar.findAllComponents({ name: 'DataSourceSelector' }).length).toBe(1)
+      expect(toolbar.findAllComponents({ name: 'ReportTypeSelector' }).length).toBe(1)
     })
   })
 })
