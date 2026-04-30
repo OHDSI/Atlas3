@@ -3,7 +3,7 @@
     <div class="cohort-pagination__controls">
       <!-- Items per page selector -->
       <div class="cohort-pagination__per-page">
-        <span class="cohort-pagination__label">{{ t('datatable.language.lengthMenu', 'Items per page:') }}</span>
+        <span class="cohort-pagination__label">{{ t('datatable.itemsPerPage', 'Items per page:') }}</span>
         <v-select
           :model-value="itemsPerPage"
           :items="itemsPerPageOptions"

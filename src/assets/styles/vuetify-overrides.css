@@ -17,9 +17,14 @@
 
 /* Segmented buttons — v-btn-toggle children should NOT carry the global
  * rounded-lg default (which makes them look like separate floating
- * buttons). The toggle handles outer rounding; inner seams are flat.
- * !important is required because Vuetify's .rounded-lg atomic utility
- * uses !important itself. */
+ * buttons). The toggle wrapper sets the outer radius; the children
+ * are flat internally and inherit corner rounding on their outer
+ * sides. !important is required because Vuetify's .rounded-lg atomic
+ * utility uses !important itself. */
+.v-btn-toggle {
+  border-radius: 8px;
+  overflow: hidden;
+}
 .v-btn-toggle > .v-btn {
   border-radius: 0 !important;
 }
