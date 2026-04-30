@@ -39,7 +39,10 @@
       </v-card-title>
     </v-card>
 
-    <v-row v-if="!loading && data">
+    <v-row
+      v-if="!loading && data"
+      class="drilldown-details__chart-grid"
+    >
       <template
         v-for="field in fieldsForDomain"
         :key="field"
@@ -313,5 +316,19 @@ function formatTimeSeriesData(timeSeriesData: TimeSeriesData[]): LineChartData {
   top: 0;
   z-index: 10;
   background: white;
+}
+
+/* Vertical separation between chart cards. Default v-col padding
+ * gives ~24px between rows, which isn't enough to keep the title
+ * of the next chart clear of the x-axis labels of the chart above
+ * (especially when those x-axis labels are rotated). Add an extra
+ * 16px so the gap is comfortable. */
+.drilldown-details__chart-grid {
+  row-gap: 16px;
+}
+
+.drilldown-details__chart-grid :deep(.v-col) {
+  padding-bottom: 12px;
+  padding-top: 12px;
 }
 </style>

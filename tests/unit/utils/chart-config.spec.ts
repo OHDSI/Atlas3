@@ -403,10 +403,12 @@ describe('chart-config', () => {
       const optionsWithTitle = defaultTreemapOptions(dataWithTitle, 'Title')
       const optionsWithoutTitle = defaultTreemapOptions(dataWithoutTitle)
 
+      // The series.top still reserves room for the title.
       expect((optionsWithTitle.series as ChartSeriesItem[])[0].top).toBe('15%')
       expect((optionsWithoutTitle.series as ChartSeriesItem[])[0].top).toBe('5%')
-      expect((optionsWithTitle.series as ChartSeriesItem[])[0].breadcrumb?.top).toBe('10%')
-      expect((optionsWithoutTitle.series as ChartSeriesItem[])[0].breadcrumb?.top).toBe('0%')
+      // Breadcrumb is now hidden — see chart-config for rationale.
+      expect((optionsWithTitle.series as ChartSeriesItem[])[0].breadcrumb?.show).toBe(false)
+      expect((optionsWithoutTitle.series as ChartSeriesItem[])[0].breadcrumb?.show).toBe(false)
     })
 
     it('should handle empty data array', () => {

@@ -318,9 +318,17 @@ function handleReportTypeChange(reportType: ReportType | null) {
   }
 }
 
-// Initialize from route params
+// Initialize from route params. Tolerates being called before
+// store.sources has loaded — if the requested sourceKey isn't
+// matched yet, the function exits early and is re-run by the
+// watcher below once sources arrive.
 async function initializeFromRoute() {
   if (props.sourceKey) {
+    if (store.sources.length === 0) {
+      // Sources not loaded yet; the watch on store.sources will
+      // re-call this function once they arrive.
+      return
+    }
     const source = store.sources.find(s => s.sourceKey === props.sourceKey)
     if (source && source.sourceId !== store.selectedSourceId) {
       await store.selectDataSource(source.sourceId)
@@ -335,10 +343,17 @@ async function initializeFromRoute() {
   }
 }
 
-// Watch for route changes
-watch(() => [props.sourceKey, props.reportType], () => {
-  initializeFromRoute()
-})
+// Watch for route changes OR for the sources list arriving. Hard
+// refreshes on /datasources/<key>/<type> hit a race where the route
+// params arrive before fetchDataSources resolves; without a watch
+// on store.sources the initial init silently no-ops and the page
+// shows the empty state. Watching both fixes the reload bug.
+watch(
+  () => [props.sourceKey, props.reportType, store.sources.length],
+  () => {
+    initializeFromRoute()
+  }
+)
 
 onMounted(async () => {
   await store.fetchDataSources()

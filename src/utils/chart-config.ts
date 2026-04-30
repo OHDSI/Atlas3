@@ -96,13 +96,16 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
     yAxis: {
       type: 'value',
       name: data.unit || 'Count',
-      // Put the y-axis name above the axis, slightly indented from
-      // the chart edge so it doesn't crowd the y-axis tick labels
-      // and doesn't bleed into the chart above when stacked.
-      nameLocation: 'end',
-      nameGap: 12,
+      // Render the y-axis name vertically along the LEFT side of
+      // the axis (rotated 90°) instead of the default top-of-axis
+      // placement. The top placement bled into the previous chart's
+      // bottom area when charts are stacked vertically — vertical
+      // along-axis placement keeps the name inside the chart's own
+      // bounds.
+      nameLocation: 'middle',
+      nameRotate: 90,
+      nameGap: 40,
       nameTextStyle: {
-        align: 'left',
         color: '#5e6470',
         fontSize: 12,
       },
@@ -343,19 +346,18 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
         left: '5%',
         right: '5%',
         roam: false,
-        // 'zoomToNode' lets users click a parent node to drill into
-        // its subtree; the breadcrumb above the chart then shows
-        // the path back. Leaf clicks (which carry a conceptId)
-        // bubble up to the @click handler in TreemapChart for the
-        // drill-down details panel — no conflict because parent
-        // nodes don't carry a conceptId.
-        nodeClick: 'zoomToNode',
-        breadcrumb: {
-          show: true,
-          emptyItemWidth: 25,
-          height: 22,
-          top: title ? '10%' : '0%'
-        },
+        // Click-to-drilldown without zoom. ECharts' built-in
+        // `zoomToNode` was conflicting with the drill-down details
+        // panel: clicking a leaf would zoom + emit drill-down +
+        // re-render the chart, occasionally unmounting the panel
+        // before the user could read it. With nodeClick:false, all
+        // clicks bubble through to TreemapChart's @click handler,
+        // which decides whether the click is a leaf (drill-down)
+        // or a parent (no-op). The breadcrumb is hidden because
+        // it tracks zoom state which we no longer use; the concept
+        // path is shown in the drill-down panel header instead.
+        nodeClick: false,
+        breadcrumb: { show: false },
         label: {
           show: true,
           formatter: '{b}',

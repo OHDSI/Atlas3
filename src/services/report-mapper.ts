@@ -842,8 +842,16 @@ export function mapDrilldownReport(
 
   if (raw.frequencyDistribution && raw.frequencyDistribution.length > 0) {
     report.byFrequency = {
-      categories: raw.frequencyDistribution.map(i => i.intervalIndex.toString()),
-      values: raw.frequencyDistribution.map(i => i.countValue)
+      // Some WebAPI report types (drug era, measurement) come back
+      // without an intervalIndex on every entry. Coerce missing
+      // values to '' so the .toString() call doesn't blow up the
+      // entire drill-down for those domains.
+      categories: raw.frequencyDistribution.map(i =>
+        i.intervalIndex !== undefined && i.intervalIndex !== null
+          ? String(i.intervalIndex)
+          : ''
+      ),
+      values: raw.frequencyDistribution.map(i => i.countValue ?? 0)
     }
   }
 
