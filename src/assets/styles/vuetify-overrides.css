@@ -1,0 +1,33 @@
+/* Atlas3 — cross-cutting Vuetify component overrides
+ *
+ * Visual consistency fixes that span multiple components.
+ * Prefer scoped styles when a fix is local; keep this file small.
+ */
+
+/* Unified overlay scrim — backdrop blur with navy tint for every dialog,
+ * navigation drawer, and modal. Matches the login dialog's treatment
+ * so the rest of the app picks it up automatically. v-dialog renders
+ * .v-overlay__scrim; v-navigation-drawer renders its own scrim class. */
+.v-overlay__scrim,
+.v-navigation-drawer__scrim {
+  backdrop-filter: blur(4px);
+  background-color: rgba(31, 66, 90, 0.45);
+  opacity: 1;
+}
+
+/* Segmented buttons — v-btn-toggle children should NOT carry the global
+ * rounded-lg default (which makes them look like separate floating
+ * buttons). The toggle handles outer rounding; inner seams are flat.
+ * !important is required because Vuetify's .rounded-lg atomic utility
+ * uses !important itself. */
+.v-btn-toggle > .v-btn {
+  border-radius: 0 !important;
+}
+.v-btn-toggle > .v-btn:first-child {
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+}
+.v-btn-toggle > .v-btn:last-child {
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+}

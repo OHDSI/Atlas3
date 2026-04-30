@@ -522,15 +522,12 @@ onMounted(() => {
 /* Actions */
 .cohorts-view__actions {
   display: flex;
-  gap: 16px;
-  padding: 20px 24px;
+  align-items: center;
+  gap: 12px;
 }
 
 .cohorts-view__action-btn {
-  flex: 1;
-  text-transform: none;
   font-weight: 400;
-  letter-spacing: normal;
 }
 
 /* Pagination */
