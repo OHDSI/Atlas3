@@ -1,10 +1,9 @@
 <template>
-  <div class="page-wrapper">
-    <div class="page-card">
-      <v-container
-        fluid
-        class="cohorts-view"
-      >
+  <page-shell>
+    <v-container
+      fluid
+      class="cohorts-view"
+    >
         <v-row>
           <v-col cols="12">
             <div class="cohorts-view__actions">
@@ -315,9 +314,8 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-      </v-container>
-    </div>
-  </div>
+    </v-container>
+  </page-shell>
 </template>
 
 <script setup lang="ts">
@@ -328,6 +326,7 @@ import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
 import { deleteCohort, getCohortDefinition, getCohortPrintFriendly } from '@/services/webapi'
 import { logger } from '@/utils/logger'
+import PageShell from '@/components/shared/PageShell.vue'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
@@ -516,22 +515,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page-wrapper {
-  min-height: 100%;
-  background-color: rgb(var(--v-theme-background));
-  display: flex;
-  padding: 32px;
-  box-sizing: border-box;
-}
-
-.page-card {
-  border-radius: 18px;
-  padding: 30px;
-  background-color: white;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
 .cohorts-view {
   padding: 0;
 }
