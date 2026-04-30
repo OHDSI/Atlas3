@@ -111,13 +111,13 @@ function getLabel(tab: Tab): string {
  * :deep() pierces the scoped-CSS boundary so the rule reaches the
  * route component's own scope. */
 .analysis-hub :deep(.analysis-list-layout) {
-  animation: tab-fade-in 200ms ease both;
+  animation: tab-fade-in 280ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 @keyframes tab-fade-in {
   from {
     opacity: 0;
-    transform: translateX(8px);
+    transform: translateX(16px);
   }
   to {
     opacity: 1;
