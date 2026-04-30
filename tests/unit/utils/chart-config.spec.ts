@@ -358,9 +358,9 @@ describe('chart-config', () => {
       expect(seriesData[0].itemStyle?.color).toMatch(/^#[0-9a-f]{6}$/i)
       expect(seriesData[1].itemStyle?.color).toMatch(/^#[0-9a-f]{6}$/i)
       // Lower value (A=10) maps to t=0 → first gradient stop (light).
-      // Higher value (B=20) maps to t=1 → last stop (Atlas navy).
-      expect(seriesData[0].itemStyle?.color?.toLowerCase()).toBe('#c7eaff')
-      expect(seriesData[1].itemStyle?.color?.toLowerCase()).toBe('#1f425a')
+      // Higher value (B=20) maps to t=1 → last gradient stop (deep).
+      expect(seriesData[0].itemStyle?.color?.toLowerCase()).toBe('#60a5fa')
+      expect(seriesData[1].itemStyle?.color?.toLowerCase()).toBe('#1e3a8a')
     })
 
     it('should handle hierarchical data', () => {

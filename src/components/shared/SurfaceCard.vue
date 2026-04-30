@@ -57,9 +57,14 @@ void computed(() => props)
 .surface-card {
   background-color: rgb(var(--v-theme-surface));
   border-radius: 12px;
+  /* Two-pass shadow with enough presence to clearly separate the
+   * card from the surface-variant page background — but soft enough
+   * to read as "lift" rather than as a hard outline. The first pass
+   * (1-3px / 8% ambient) defines the edge; the second (8-24px / 8%
+   * diffuse) provides the lift. */
   box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 4px 12px rgba(15, 23, 42, 0.04);
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 8px 24px rgba(15, 23, 42, 0.08);
   box-sizing: border-box;
   text-decoration: none;
   color: inherit;
@@ -85,8 +90,8 @@ void computed(() => props)
 
 .surface-card--interactive:hover {
   box-shadow:
-    0 2px 4px rgba(15, 23, 42, 0.06),
-    0 8px 20px rgba(15, 23, 42, 0.08);
+    0 2px 6px rgba(15, 23, 42, 0.10),
+    0 12px 32px rgba(15, 23, 42, 0.12);
   transform: translateY(-2px);
 }
 

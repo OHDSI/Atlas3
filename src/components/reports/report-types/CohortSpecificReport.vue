@@ -71,46 +71,46 @@
               cols="12"
               md="4"
             >
-              <v-card variant="outlined">
-                <v-card-text class="text-center">
-                  <div class="text-h4 font-weight-bold">
-                    {{ reportData.cohortStart.totalPersons.toLocaleString() }}
-                  </div>
-                  <div class="text-subtitle-2 text-grey">
-                    Total Persons
-                  </div>
-                </v-card-text>
-              </v-card>
+              <SurfaceCard padding="sm">
+              <div class="text-center">
+                <div class="text-h4 font-weight-bold">
+                  {{ reportData.cohortStart.totalPersons.toLocaleString() }}
+                </div>
+                <div class="text-subtitle-2 text-grey">
+                  Total Persons
+                </div>
+              </div>
+            </SurfaceCard>
             </v-col>
             <v-col
               cols="12"
               md="4"
             >
-              <v-card variant="outlined">
-                <v-card-text class="text-center">
-                  <div class="text-h6">
-                    {{ reportData.cohortStart.startDate || '-' }}
-                  </div>
-                  <div class="text-subtitle-2 text-grey">
-                    Start Date
-                  </div>
-                </v-card-text>
-              </v-card>
+              <SurfaceCard padding="sm">
+              <div class="text-center">
+                <div class="text-h6">
+                  {{ reportData.cohortStart.startDate || '-' }}
+                </div>
+                <div class="text-subtitle-2 text-grey">
+                  Start Date
+                </div>
+              </div>
+            </SurfaceCard>
             </v-col>
             <v-col
               cols="12"
               md="4"
             >
-              <v-card variant="outlined">
-                <v-card-text class="text-center">
-                  <div class="text-h6">
-                    {{ reportData.cohortStart.endDate || '-' }}
-                  </div>
-                  <div class="text-subtitle-2 text-grey">
-                    End Date
-                  </div>
-                </v-card-text>
-              </v-card>
+              <SurfaceCard padding="sm">
+              <div class="text-center">
+                <div class="text-h6">
+                  {{ reportData.cohortStart.endDate || '-' }}
+                </div>
+                <div class="text-subtitle-2 text-grey">
+                  End Date
+                </div>
+              </div>
+            </SurfaceCard>
             </v-col>
           </v-row>
         </div>
@@ -205,6 +205,7 @@ import type { CohortSpecificReport, BarChartData, LineChartData } from '@/models
 import { toBarChartData, toLineChartData } from '@/services/report-mapper'
 import BarChart from '../charts/BarChart.vue'
 import LineChart from '../charts/LineChart.vue'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 /**
  * i18n

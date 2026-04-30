@@ -33,11 +33,18 @@ export const CHART_COLORS = [
 
 /**
  * Single-hue gradient used by treemaps and other "color-by-value"
- * surfaces. Encodes magnitude, not category. Matches Atlas 2.15's
- * treemapGradient (light blue → mid → Atlas navy) so an analyst
- * trained on Atlas 2.15 reads the new charts at a glance.
+ * surfaces. Encodes magnitude, not category — same semantic as
+ * Atlas 2.15's treemapGradient (light → dark blue, where darker =
+ * larger value).
+ *
+ * Modernized vs. Atlas 2.15's `#1f425a`-anchored ramp: a saturated
+ * Tailwind blue scale (blue-400 → blue-500 → blue-900). The light
+ * end is intentionally NOT blue-100 — at 1.1:1 contrast vs. white
+ * the labels would be unreadable. Blue-400 gives ~3:1 contrast vs.
+ * white, which passes WCAG AA for large text (which treemap labels
+ * effectively are).
  */
-export const TREEMAP_GRADIENT = ['#c7eaff', '#6e92a8', '#1f425a'] as const
+export const TREEMAP_GRADIENT = ['#60a5fa', '#3b82f6', '#1e3a8a'] as const
 
 /**
  * Default bar chart configuration
@@ -245,6 +252,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
  * Default treemap configuration
  */
 export function defaultTreemapOptions(data: TreemapNode[], title?: string): EChartsOption {
+  const { min: dataMin, max: dataMax } = extractTreemapValueRange(data)
   return {
     title: title ? {
       text: title,
@@ -274,11 +282,33 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
         return `${displayName}<br/><strong>${value}</strong>`
       }
     },
+    // Color-by-value legend: shows the gradient horizontally at the
+    // bottom of the chart with min/max labels so a user can read the
+    // encoding ("darker = larger value"). Display-only \u2014 actual node
+    // colors are computed by paintTreemapNodesByValue.
+    visualMap: {
+      show: true,
+      type: 'continuous',
+      min: dataMin,
+      max: dataMax,
+      calculable: false,
+      orient: 'horizontal',
+      left: 'center',
+      bottom: 8,
+      itemWidth: 12,
+      itemHeight: 140,
+      inRange: { color: [...TREEMAP_GRADIENT] },
+      text: [dataMax.toLocaleString(), dataMin.toLocaleString()],
+      textStyle: {
+        fontSize: 11,
+        color: '#5e6470'
+      }
+    },
     series: [
       {
         type: 'treemap',
         top: title ? '15%' : '5%',
-        bottom: '5%',
+        bottom: '14%',
         left: '5%',
         right: '5%',
         roam: false,

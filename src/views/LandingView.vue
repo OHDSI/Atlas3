@@ -145,10 +145,12 @@ const handleNewCohort = () => {
 }
 
 .landing__hero {
-  /* MD3 elevated: soft two-pass shadow, no outline. */
+  /* MD3 elevated: matches SurfaceCard's two-pass shadow so the hero
+   * reads at the same elevation as the rest of the cards on this
+   * page. v-card needs !important to override Vuetify's variant. */
   box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 4px 12px rgba(15, 23, 42, 0.04) !important;
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 8px 24px rgba(15, 23, 42, 0.08) !important;
 }
 
 .landing__hero-grid {
