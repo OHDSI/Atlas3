@@ -65,11 +65,17 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
       }
     },
     grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      top: '10%',
-      containLabel: true
+      // Use absolute pixel values so the y-axis name and the chart
+      // title don't overlap with the chart body when stacked
+      // vertically (the previous percentage values gave inconsistent
+      // gaps depending on chart height). 56px top leaves room for
+      // the y-axis name; 16px bottom reserves space for the x-axis
+      // line itself.
+      left: 16,
+      right: 24,
+      bottom: 16,
+      top: 56,
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
@@ -90,6 +96,16 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
     yAxis: {
       type: 'value',
       name: data.unit || 'Count',
+      // Put the y-axis name above the axis, slightly indented from
+      // the chart edge so it doesn't crowd the y-axis tick labels
+      // and doesn't bleed into the chart above when stacked.
+      nameLocation: 'end',
+      nameGap: 12,
+      nameTextStyle: {
+        align: 'left',
+        color: '#5e6470',
+        fontSize: 12,
+      },
       axisLabel: {
         formatter: (value: number) => value.toLocaleString()
       }
@@ -206,18 +222,25 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
       }
     },
     grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      top: title ? '15%' : '10%',
-      containLabel: true
+      // Absolute pixels for predictable spacing — see
+      // defaultBarChartOptions for the same rationale. Add extra
+      // top room when a chart title is rendered.
+      left: 16,
+      right: 24,
+      bottom: 16,
+      top: title ? 80 : 56,
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
       boundaryGap: false,
       data: data.xAxis,
       axisLabel: {
-        rotate: data.xAxis.length > 20 ? 45 : 0
+        rotate:
+          data.xAxis.length > 20 ? 45
+            : data.xAxis.length > 12 ? 30
+              : 0,
+        hideOverlap: true,
       }
     },
     yAxis: {
@@ -320,7 +343,13 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
         left: '5%',
         right: '5%',
         roam: false,
-        nodeClick: false,
+        // 'zoomToNode' lets users click a parent node to drill into
+        // its subtree; the breadcrumb above the chart then shows
+        // the path back. Leaf clicks (which carry a conceptId)
+        // bubble up to the @click handler in TreemapChart for the
+        // drill-down details panel — no conflict because parent
+        // nodes don't carry a conceptId.
+        nodeClick: 'zoomToNode',
         breadcrumb: {
           show: true,
           emptyItemWidth: 25,

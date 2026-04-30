@@ -299,8 +299,11 @@ describe('chart-config', () => {
       const optionsWithTitle = defaultLineChartOptions(dataWithTitle, 'Title')
       const optionsWithoutTitle = defaultLineChartOptions(dataWithoutTitle)
 
-      expect((optionsWithTitle.grid as ChartGridOption).top).toBe('15%')
-      expect((optionsWithoutTitle.grid as ChartGridOption).top).toBe('10%')
+      // Grid uses absolute pixel values now (was '15%' / '10%') so
+      // the chart title and y-axis name don't overlap with the
+      // chart area when stacked vertically.
+      expect((optionsWithTitle.grid as ChartGridOption).top).toBe(80)
+      expect((optionsWithoutTitle.grid as ChartGridOption).top).toBe(56)
     })
 
     it('should handle numeric xAxis values', () => {
