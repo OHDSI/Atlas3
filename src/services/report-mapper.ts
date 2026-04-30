@@ -674,7 +674,7 @@ export function mapTornadoReport(data: import('@/models/report.types').WebAPITor
 }
 
 export function mapBoxPlotData(raw: import('@/models/report.types').WebAPIBoxPlotRaw[]): import('@/models/report.types').BoxPlotData[] {
-  return raw.map(item => ({
+  const mapped = raw.map(item => ({
     category: item.category || `Interval ${item.intervalIndex || 0}`,
     min: item.min || 0,
     p10: item.p10Value || 0,
@@ -684,6 +684,35 @@ export function mapBoxPlotData(raw: import('@/models/report.types').WebAPIBoxPlo
     p90: item.p90Value || 0,
     max: item.max || 0
   }))
+  return sortByNumericLeadingPrefix(mapped)
+}
+
+/**
+ * Sort categorical chart data by the leading numeric prefix of the
+ * category label. Fixes string-sorted age brackets that come back
+ * as "0-9", "10-19", "100-109", "20-29" — which renders the bars
+ * out of order on the X axis. Non-numeric categories keep their
+ * original relative order. Generic so it can be reused for other
+ * decade / decile / interval categories.
+ */
+function sortByNumericLeadingPrefix<T extends { category: string }>(items: T[]): T[] {
+  const withSortKey = items.map((item, index) => {
+    const match = /^-?(\d+)/.exec(item.category)
+    return {
+      item,
+      index,
+      hasNumber: match !== null,
+      numericKey: match ? Number(match[1]) : 0,
+    }
+  })
+  // Only reorder if every entry starts with a number; otherwise
+  // preserve the original order (some box plots use named buckets
+  // like "Female"/"Male" where alphanumeric sort would be wrong).
+  const allNumeric = withSortKey.every(entry => entry.hasNumber)
+  if (!allNumeric) return items
+  return [...withSortKey]
+    .sort((a, b) => a.numericKey - b.numericKey || a.index - b.index)
+    .map(entry => entry.item)
 }
 
 export function mapTrellisData(raw: import('@/models/report.types').WebAPIPrevalenceByDemographic[]): import('@/models/report.types').TrellisChartData {

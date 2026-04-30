@@ -223,6 +223,7 @@ const coreNavigationItems: NavigationItem[] = [
   { id: 'concepts', titleKey: 'navigation.conceptsets', route: '/concepts', visible: true, active: false },
   { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true },
   { id: 'analysis', titleKey: 'navigation.analysis', route: '/analysis', visible: true, active: false },
+  { id: 'profiles', titleKey: 'navigation.profiles', route: '/profiles', visible: true, active: false },
 ]
 
 const navigationItems = ref<NavigationItem[]>(getFilteredCoreNavigationItems())
@@ -264,6 +265,7 @@ function getNavTitle(key: string): string {
   const defaults: Record<string, string> = {
     'navigation.conceptsets': 'Concept Sets',
     'navigation.cohortdefinitions': 'Cohorts',
+    'navigation.profiles': 'Profiles',
     'navigation.datasources': 'Data Sources',
     'navigation.analysis': 'Analysis',
     'navigation.characterizations': 'Characterizations',

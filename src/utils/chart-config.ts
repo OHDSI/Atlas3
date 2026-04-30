@@ -75,8 +75,16 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
       type: 'category',
       data: data.categories,
       axisLabel: {
-        rotate: data.categories.length > 10 ? 45 : 0,
-        interval: 0
+        // Tier the rotation so labels don't overlap on dense X
+        // axes. Up to 8 categories → horizontal; up to 14 → 30°;
+        // 15+ → 45°. Matches what Tableau / Apache Superset do
+        // with categorical axes.
+        rotate:
+          data.categories.length > 14 ? 45
+            : data.categories.length > 8 ? 30
+              : 0,
+        interval: 0,
+        hideOverlap: true,
       }
     },
     yAxis: {

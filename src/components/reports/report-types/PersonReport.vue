@@ -5,7 +5,10 @@
 -->
 <template>
   <div class="person-report">
-    <SurfaceCard padding="md" class="mb-4">
+    <SurfaceCard
+      padding="md"
+      class="mb-4"
+    >
       <div class="text-h6 mb-3">
         {{ t('dataSources.personReport.yearOfBirth') }}
       </div>

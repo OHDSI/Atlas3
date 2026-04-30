@@ -72,45 +72,45 @@
               md="4"
             >
               <SurfaceCard padding="sm">
-              <div class="text-center">
-                <div class="text-h4 font-weight-bold">
-                  {{ reportData.cohortStart.totalPersons.toLocaleString() }}
+                <div class="text-center">
+                  <div class="text-h4 font-weight-bold">
+                    {{ reportData.cohortStart.totalPersons.toLocaleString() }}
+                  </div>
+                  <div class="text-subtitle-2 text-grey">
+                    Total Persons
+                  </div>
                 </div>
-                <div class="text-subtitle-2 text-grey">
-                  Total Persons
-                </div>
-              </div>
-            </SurfaceCard>
+              </SurfaceCard>
             </v-col>
             <v-col
               cols="12"
               md="4"
             >
               <SurfaceCard padding="sm">
-              <div class="text-center">
-                <div class="text-h6">
-                  {{ reportData.cohortStart.startDate || '-' }}
+                <div class="text-center">
+                  <div class="text-h6">
+                    {{ reportData.cohortStart.startDate || '-' }}
+                  </div>
+                  <div class="text-subtitle-2 text-grey">
+                    Start Date
+                  </div>
                 </div>
-                <div class="text-subtitle-2 text-grey">
-                  Start Date
-                </div>
-              </div>
-            </SurfaceCard>
+              </SurfaceCard>
             </v-col>
             <v-col
               cols="12"
               md="4"
             >
               <SurfaceCard padding="sm">
-              <div class="text-center">
-                <div class="text-h6">
-                  {{ reportData.cohortStart.endDate || '-' }}
+                <div class="text-center">
+                  <div class="text-h6">
+                    {{ reportData.cohortStart.endDate || '-' }}
+                  </div>
+                  <div class="text-subtitle-2 text-grey">
+                    End Date
+                  </div>
                 </div>
-                <div class="text-subtitle-2 text-grey">
-                  End Date
-                </div>
-              </div>
-            </SurfaceCard>
+              </SurfaceCard>
             </v-col>
           </v-row>
         </div>

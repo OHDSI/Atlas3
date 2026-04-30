@@ -38,9 +38,13 @@
             @node-click="handleNodeClick"
           />
 
-          <!-- Drill-down details -->
+          <!-- Drill-down details. Render while LOADING too so the
+               progress overlay inside DrilldownDetails is visible
+               immediately on click — without v-if=loading the
+               component would only mount once the network request
+               returned data, leaving the user with no feedback. -->
           <DrilldownDetails
-            v-if="drilldownData"
+            v-if="drilldownData || drilldownLoading"
             :data="drilldownData"
             :loading="drilldownLoading"
             :concept-name="selectedConceptName"
