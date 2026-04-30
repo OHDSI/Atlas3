@@ -6,82 +6,73 @@
     :subtitle="pageSubtitle"
   >
     <div class="datasources-view">
-      <!-- Compact selectors toolbar -->
-      <div class="datasources-view__toolbar">
-        <div class="datasources-view__selector">
-          <DataSourceSelector
-            :model-value="store.selectedSourceId"
-            data-testid="datasource-selector"
-            :data-sources="store.sources"
-            :loading="store.loading.sources"
-            @update:model-value="handleSourceChange"
-          />
-        </div>
-        <div class="datasources-view__selector">
-          <ReportTypeSelector
-            :model-value="store.selectedReportType"
-            data-testid="report-type-selector"
-            :disabled="!store.selectedSourceId"
-            @update:model-value="handleReportTypeChange"
-          />
-        </div>
-      </div>
-
-      <!-- Error State: Sources -->
-      <v-alert
-        v-if="store.error.sources"
-        type="error"
-        variant="tonal"
-        density="compact"
-        class="datasources-view__alert"
-      >
-        <div class="d-flex align-center justify-space-between">
-          <span>{{ store.error.sources }}</span>
-          <v-btn
-            color="error"
-            variant="text"
-            size="small"
-            @click="store.retryFetchSources"
-          >
-            {{ t('common.retry', 'Retry') }}
-          </v-btn>
-        </div>
-      </v-alert>
-
-      <!-- Error State: Report -->
-      <v-alert
-        v-if="store.error.report"
-        type="error"
-        variant="tonal"
-        density="compact"
-        class="datasources-view__alert"
-      >
-        <div class="d-flex align-center justify-space-between">
-          <span>{{ store.error.report }}</span>
-          <v-btn
-            color="error"
-            variant="text"
-            size="small"
-            @click="store.retryFetchReport"
-          >
-            {{ t('common.retry', 'Retry') }}
-          </v-btn>
-        </div>
-      </v-alert>
-
-      <!-- Loading State -->
-      <v-skeleton-loader
-        v-if="store.loading.report"
-        type="card"
-        class="datasources-view__skeleton"
+      <!-- Two-column layout: report-type sidebar on the left,
+           main report content on the right. The compact source
+           picker sits in the page header (#actions slot) so it's
+           always visible without consuming vertical space. -->
+      <DataSourceSidebar
+        class="datasources-view__sidebar"
+        :model-value="store.selectedReportType"
+        :disabled="!store.selectedSourceId"
+        @update:model-value="handleReportTypeChange"
       />
 
-      <!-- Report Content -->
-      <SurfaceCard
-        v-else-if="store.selectedSource && store.selectedReportType && !store.error.report"
-        class="datasources-view__report"
-        padding="md"
-      >
+      <div class="datasources-view__main">
+        <!-- Error State: Sources -->
+        <v-alert
+          v-if="store.error.sources"
+          type="error"
+          variant="tonal"
+          density="compact"
+          class="datasources-view__alert"
+        >
+          <div class="d-flex align-center justify-space-between">
+            <span>{{ store.error.sources }}</span>
+            <v-btn
+              color="error"
+              variant="text"
+              size="small"
+              @click="store.retryFetchSources"
+            >
+              {{ t('common.retry', 'Retry') }}
+            </v-btn>
+          </div>
+        </v-alert>
+
+        <!-- Error State: Report -->
+        <v-alert
+          v-if="store.error.report"
+          type="error"
+          variant="tonal"
+          density="compact"
+          class="datasources-view__alert"
+        >
+          <div class="d-flex align-center justify-space-between">
+            <span>{{ store.error.report }}</span>
+            <v-btn
+              color="error"
+              variant="text"
+              size="small"
+              @click="store.retryFetchReport"
+            >
+              {{ t('common.retry', 'Retry') }}
+            </v-btn>
+          </div>
+        </v-alert>
+
+        <!-- Loading State -->
+        <v-skeleton-loader
+          v-if="store.loading.report"
+          type="card"
+          class="datasources-view__skeleton"
+        />
+
+        <!-- Report Content -->
+        <SurfaceCard
+          v-else-if="store.selectedSource && store.selectedReportType && !store.error.report"
+          class="datasources-view__report"
+          padding="md"
+        >
         <DashboardReport
           v-if="store.selectedReportType === 'dashboard' && dashboardData"
           data-testid="dashboard-report"
@@ -149,21 +140,33 @@
         </p>
       </div>
 
-      <!-- Idle hint when sources are loaded but nothing selected -->
-      <div
-        v-else-if="!store.loading.sources && store.sources.length > 0 && !store.selectedSource"
-        class="datasources-view__empty"
-      >
-        <v-icon
-          icon="mdi-database-arrow-down-outline"
-          size="36"
-          class="datasources-view__empty-icon"
-        />
-        <p class="datasources-view__empty-text">
-          Select a data source to view its reports.
-        </p>
+        <!-- Idle hint when sources are loaded but nothing selected -->
+        <div
+          v-else-if="!store.loading.sources && store.sources.length > 0 && !store.selectedSource"
+          class="datasources-view__empty"
+        >
+          <v-icon
+            icon="mdi-database-arrow-down-outline"
+            size="36"
+            class="datasources-view__empty-icon"
+          />
+          <p class="datasources-view__empty-text">
+            Select a data source to view its reports.
+          </p>
+        </div>
       </div>
     </div>
+
+    <template #actions>
+      <DataSourceSelector
+        :model-value="store.selectedSourceId"
+        data-testid="datasource-selector"
+        :data-sources="store.sources"
+        :loading="store.loading.sources"
+        class="datasources-view__source-picker"
+        @update:model-value="handleSourceChange"
+      />
+    </template>
   </page-shell>
 </template>
 
@@ -177,7 +180,7 @@ import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
 import PageShell from '@/components/shared/PageShell.vue'
 import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 import DataSourceSelector from '@/components/datasources/DataSourceSelector.vue'
-import ReportTypeSelector from '@/components/datasources/ReportTypeSelector.vue'
+import DataSourceSidebar from '@/components/datasources/DataSourceSidebar.vue'
 import DashboardReport from '@/components/datasources/DashboardReport.vue'
 import DataDensityReport from '@/components/datasources/DataDensityReport.vue'
 import PersonReport from '@/components/datasources/PersonReport.vue'
@@ -363,22 +366,56 @@ onMounted(async () => {
 
 <style scoped>
 .datasources-view {
+  /* Two-column layout: report-type sidebar on the left, the
+   * active report on the right. Falls back to stacked on narrow
+   * viewports (sidebar collapses above the content). */
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .datasources-view {
+    grid-template-columns: 1fr;
+  }
+}
+
+.datasources-view__sidebar {
+  border-right: 1px solid rgb(var(--v-theme-outline-variant));
+  /* Pull the rail flush with the page-shell card edge so the
+   * separator line spans the full card height. */
+  margin-block: -32px;
+  margin-inline-start: -32px;
+  padding-block: 32px 24px;
+  padding-inline-start: 16px;
+  align-self: stretch;
+  background: rgb(var(--v-theme-surface));
+}
+
+@media (max-width: 768px) {
+  .datasources-view__sidebar {
+    border-right: 0;
+    border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
+    margin-block: -32px 0;
+    margin-inline: -32px;
+    padding-inline: 16px;
+    padding-block: 16px;
+  }
+}
+
+.datasources-view__main {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
 }
 
-.datasources-view__toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-}
-
-.datasources-view__selector {
-  flex: 1 1 280px;
-  max-width: 360px;
-  min-width: 240px;
+.datasources-view__source-picker {
+  /* Compact source picker in the page header. The DataSourceSelector
+   * is a v-select; constrain its width so it doesn't stretch. */
+  min-width: 200px;
+  max-width: 280px;
 }
 
 .datasources-view__alert {

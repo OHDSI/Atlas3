@@ -65,10 +65,10 @@ vi.mock('@/components/datasources/DataSourceSelector.vue', () => ({
   },
 }))
 
-vi.mock('@/components/datasources/ReportTypeSelector.vue', () => ({
+vi.mock('@/components/datasources/DataSourceSidebar.vue', () => ({
   default: {
-    name: 'ReportTypeSelector',
-    template: '<div class="report-type-selector-mock"></div>',
+    name: 'DataSourceSidebar',
+    template: '<nav class="datasource-sidebar-mock"></nav>',
     props: ['modelValue', 'disabled'],
     emits: ['update:modelValue'],
   },
@@ -180,9 +180,9 @@ describe('DataSourcesView', () => {
       expect(wrapper.findComponent({ name: 'DataSourceSelector' }).exists()).toBe(true)
     })
 
-    it('should render ReportTypeSelector component', () => {
+    it('should render DataSourceSidebar component', () => {
       wrapper = mountComponent()
-      expect(wrapper.findComponent({ name: 'ReportTypeSelector' }).exists()).toBe(true)
+      expect(wrapper.findComponent({ name: 'DataSourceSidebar' }).exists()).toBe(true)
     })
   })
 
@@ -249,20 +249,20 @@ describe('DataSourcesView', () => {
       expect(selector.props('dataSources')).toEqual(mockSources)
     })
 
-    it('should disable ReportTypeSelector when no source is selected', () => {
+    it('should disable DataSourceSidebar when no source is selected', () => {
       wrapper = mountComponent()
 
-      const selector = wrapper.findComponent({ name: 'ReportTypeSelector' })
+      const selector = wrapper.findComponent({ name: 'DataSourceSidebar' })
       expect(selector.props('disabled')).toBe(true)
     })
 
-    it('should enable ReportTypeSelector when source is selected', async () => {
+    it('should enable DataSourceSidebar when source is selected', async () => {
       wrapper = mountComponent()
 
       store.selectedSourceId = 1
       await wrapper.vm.$nextTick()
 
-      const selector = wrapper.findComponent({ name: 'ReportTypeSelector' })
+      const selector = wrapper.findComponent({ name: 'DataSourceSidebar' })
       expect(selector.props('disabled')).toBe(false)
     })
   })
@@ -446,10 +446,10 @@ describe('DataSourcesView', () => {
       expect(selector.exists()).toBe(true)
     })
 
-    it('should have data-testid on ReportTypeSelector', () => {
+    it('should render the DataSourceSidebar component', () => {
       wrapper = mountComponent()
-      const selector = wrapper.find('[data-testid="report-type-selector"]')
-      expect(selector.exists()).toBe(true)
+      // The sidebar replaces the old report-type dropdown.
+      expect(wrapper.findComponent({ name: 'DataSourceSidebar' }).exists()).toBe(true)
     })
   })
 
@@ -504,7 +504,7 @@ describe('DataSourcesView', () => {
 
     it('should apply selector toolbar class', () => {
       wrapper = mountComponent()
-      expect(wrapper.find('.datasources-view__toolbar').exists()).toBe(true)
+      expect(wrapper.find('.datasources-view__sidebar').exists()).toBe(true)
     })
   })
 
@@ -516,12 +516,12 @@ describe('DataSourcesView', () => {
       expect(heading.text()).toContain('Data Sources')
     })
 
-    it('should render the selectors inside the shared toolbar', () => {
+    it('should render the report-type sidebar and the source picker', () => {
       wrapper = mountComponent()
-      const toolbar = wrapper.find('.datasources-view__toolbar')
-      expect(toolbar.exists()).toBe(true)
-      expect(toolbar.findAllComponents({ name: 'DataSourceSelector' }).length).toBe(1)
-      expect(toolbar.findAllComponents({ name: 'ReportTypeSelector' }).length).toBe(1)
+      // Sidebar lives in the page body
+      expect(wrapper.findComponent({ name: 'DataSourceSidebar' }).exists()).toBe(true)
+      // Source picker lives in the PageShell #actions slot (page header)
+      expect(wrapper.findComponent({ name: 'DataSourceSelector' }).exists()).toBe(true)
     })
   })
 })
