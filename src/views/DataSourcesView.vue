@@ -1,10 +1,9 @@
 <template>
-  <div class="page-wrapper">
-    <div class="page-card">
-      <v-container
-        fluid
-        class="datasources-view"
-      >
+  <page-shell>
+    <v-container
+      fluid
+      class="datasources-view"
+    >
         <!-- Page Header -->
         <v-row>
           <v-col cols="12">
@@ -170,8 +169,7 @@
           </v-col>
         </v-row>
       </v-container>
-    </div>
-  </div>
+  </page-shell>
 </template>
 
 <script setup lang="ts">
@@ -181,6 +179,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { logger } from '@/utils/logger'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
+import PageShell from '@/components/shared/PageShell.vue'
 import DataSourceSelector from '@/components/datasources/DataSourceSelector.vue'
 import ReportTypeSelector from '@/components/datasources/ReportTypeSelector.vue'
 import DashboardReport from '@/components/datasources/DashboardReport.vue'
@@ -338,22 +337,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.page-wrapper {
-  min-height: 100%;
-  background-color: rgb(var(--v-theme-background));
-  display: flex;
-  padding: 32px;
-  box-sizing: border-box;
-}
-
-.page-card {
-  border-radius: 18px;
-  padding: 30px;
-  background-color: white;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
 .datasources-view__header {
   margin-bottom: 1rem;
 }
