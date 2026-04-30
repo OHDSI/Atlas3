@@ -1,21 +1,32 @@
 <template>
   <page-shell>
     <div class="concepts-view">
-      <v-tabs
-        v-model="activeTab"
-        bg-color="transparent"
-        color="primary"
-        class="mb-4"
-        density="comfortable"
-        centered
-      >
-        <v-tab value="sets">
-          {{ t('cs.browser.caption', 'Concept Sets') }}
-        </v-tab>
-        <v-tab value="search">
-          {{ t('search.tabs.search', 'Concept Search') }}
-        </v-tab>
-      </v-tabs>
+      <nav class="page-tabs-rail concepts-view__tabs-rail">
+        <v-tabs
+          v-model="activeTab"
+          align-tabs="start"
+          density="comfortable"
+          color="primary"
+          slider-color="primary"
+          bg-color="transparent"
+          class="page-tabs"
+        >
+          <v-tab value="sets">
+            <v-icon
+              start
+              icon="mdi-bookmark-multiple-outline"
+            />
+            {{ t('cs.browser.caption', 'Concept Sets') }}
+          </v-tab>
+          <v-tab value="search">
+            <v-icon
+              start
+              icon="mdi-magnify"
+            />
+            {{ t('search.tabs.search', 'Concept Search') }}
+          </v-tab>
+        </v-tabs>
+      </nav>
 
       <v-window v-model="activeTab">
         <v-window-item value="sets">
@@ -68,7 +79,12 @@ watch(activeTab, (newTab) => {
   width: 100%;
 }
 
-:deep(.v-slide-group__content) {
-  justify-content: center !important;
+/* The shared .page-tabs-rail provides padding + bottom border;
+ * pull the rail flush to the page-shell card by negating the card's
+ * 32px padding so the rail spans the full width. */
+.concepts-view__tabs-rail {
+  margin-inline: -32px;
+  margin-top: -32px;
+  padding-inline: 32px;
 }
 </style>

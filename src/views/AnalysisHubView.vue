@@ -1,20 +1,20 @@
 <template>
   <div class="analysis-hub">
-    <nav class="analysis-hub__tabs-rail">
+    <nav class="page-tabs-rail analysis-hub__tabs-rail">
       <v-tabs
         :model-value="activeTabName"
         align-tabs="start"
         density="comfortable"
         color="primary"
         slider-color="primary"
-        class="analysis-hub__tabs"
+        bg-color="transparent"
+        class="page-tabs"
       >
         <v-tab
           v-for="tab in tabs"
           :key="tab.name"
           :value="tab.name"
           :to="{ name: tab.name }"
-          class="analysis-hub__tab"
         >
           <v-icon
             start
@@ -83,30 +83,12 @@ function getLabel(tab: Tab): string {
   min-height: 100%;
 }
 
+/* Sticky behavior is unique to the analysis hub — the shared
+ * .page-tabs-rail handles surface, border, padding, and spacing. */
 .analysis-hub__tabs-rail {
   position: sticky;
   top: 0;
   z-index: 3;
-  background: rgb(var(--v-theme-surface));
-  border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
-  padding: 0 24px;
-}
-
-.analysis-hub__tabs {
-  max-width: 100%;
-}
-
-.analysis-hub__tab {
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 500;
-  font-size: 0.95rem;
-  padding-inline: 16px;
-  min-height: 52px;
-}
-
-.analysis-hub__tab :deep(.v-icon) {
-  margin-inline-end: 8px;
-  opacity: 0.85;
+  margin: 0;
 }
 </style>
