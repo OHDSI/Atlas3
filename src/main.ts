@@ -16,6 +16,7 @@ import { setupGlobalMessageHandler } from './plugins/messaging/HostMessageBus.ts
 import { tokenExpiryService } from './services/auth/tokenExpiry'
 import { configLoaderService } from './services/config-loader.service'
 import { logger } from './utils/logger'
+import '@/assets/styles/typography.css'
 
 // SystemJS is loaded from index.html with import map for 'vue'
 logger.debug('Main', 'SystemJS available:', !!window.System)
