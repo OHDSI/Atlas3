@@ -39,7 +39,7 @@ export function createVuetifyInstance(primaryColor?: string | null) {
             surface: '#FFFFFF',
             'surface-variant': '#f6f7f9',
             'on-surface': '#000000',
-            'on-surface-variant': '#5e6470',
+            'on-surface-variant': '#616161',
             outline: '#e0e0e0',
             'outline-variant': '#eeeeee',
           },

@@ -4,316 +4,316 @@
       fluid
       class="cohorts-view"
     >
-        <v-row>
-          <v-col cols="12">
-            <div class="cohorts-view__actions">
-              <v-btn
-                color="primary"
-                variant="flat"
-                size="large"
-                class="cohorts-view__action-btn"
-                :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
-                @click="handleCreateCohort"
-              >
-                {{ t('cohortDefinitions.newDefinition', 'New Cohort') }}
-              </v-btn>
-
-              <v-btn
-                color="primary"
-                variant="flat"
-                size="large"
-                class="cohorts-view__action-btn"
-                :aria-label="t('common.import', 'Import cohort from JSON').value"
-                @click="handleImportCohort"
-              >
-                {{ t('common.import', 'Import') }}
-              </v-btn>
-
-              <v-spacer />
-
-              <v-btn-toggle
-                v-model="viewMode"
-                mandatory
-                density="compact"
-                variant="outlined"
-                divided
-                class="cohorts-view__view-toggle"
-                data-testid="cohorts-view-toggle"
-              >
-                <v-btn
-                  value="tile"
-                  size="small"
-                  :aria-label="t('common.tileView', 'Tile view').value"
-                  data-testid="cohorts-view-toggle-tile"
-                >
-                  <v-icon>mdi-view-grid</v-icon>
-                </v-btn>
-                <v-btn
-                  value="table"
-                  size="small"
-                  :aria-label="t('dataSources.table.tableTab', 'Table view').value"
-                  data-testid="cohorts-view-toggle-table"
-                >
-                  <v-icon>mdi-view-list</v-icon>
-                </v-btn>
-              </v-btn-toggle>
-            </div>
-          </v-col>
-        </v-row>
-
-        <!-- Filters -->
-        <v-row>
-          <v-col cols="12">
-            <cohort-filters
-              :filters="filters"
-              :available-tags="availableTags"
-              :available-authors="availableAuthors"
-              :active-filter-count="activeFilterCount"
-              @update:filters="filters = $event"
-              @clear="clearFilters"
-            />
-          </v-col>
-        </v-row>
-
-        <v-row>
-          <v-col cols="12">
-            <!-- Filtering indicator -->
-            <div
-              v-if="filtering"
-              class="cohorts-view__filtering"
+      <v-row>
+        <v-col cols="12">
+          <div class="cohorts-view__actions">
+            <v-btn
+              color="primary"
+              variant="flat"
+              size="large"
+              class="cohorts-view__action-btn"
+              :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
+              @click="handleCreateCohort"
             >
-              <v-progress-linear
-                indeterminate
-                color="primary"
-                height="2"
-              />
-              <div class="cohorts-view__filtering-text">
-                Filtering {{ cohorts.length.toLocaleString() }} cohorts...
-              </div>
-            </div>
+              {{ t('cohortDefinitions.newDefinition', 'New Cohort') }}
+            </v-btn>
 
-            <cohort-table
-              v-if="viewMode === 'table'"
-              :cohorts="paginatedCohorts"
-              :loading="loading"
-              :error="error"
-              :search-query="searchQuery"
-              :selected-tags="filters.selectedTags"
-              @retry="fetchCohorts"
-              @create-cohort="handleCreateCohort"
-              @generate="handleGenerate"
-              @delete="handleDeleteClick"
-              @tag-click="handleTagClick"
-              @show-info="handleShowInfo"
-            />
-            <cohort-grid
-              v-else
-              :cohorts="paginatedCohorts"
-              :loading="loading"
-              :error="error"
-              :search-query="searchQuery"
-              :selected-tags="filters.selectedTags"
-              @retry="fetchCohorts"
-              @create-cohort="handleCreateCohort"
-              @generate="handleGenerate"
-              @delete="handleDeleteClick"
-              @tag-click="handleTagClick"
-              @show-info="handleShowInfo"
-            />
-          </v-col>
-        </v-row>
-
-        <!-- Pagination -->
-        <v-row v-if="!loading && !error && filteredCohorts.length > 0">
-          <v-col cols="12">
-            <div class="cohorts-view__pagination">
-              <cohort-pagination
-                :page="page"
-                :items-per-page="itemsPerPage"
-                :items-per-page-options="itemsPerPageOptions"
-                :total-items="totalItems"
-                :can-go-previous="canGoPrevious"
-                :can-go-next="canGoNext"
-                :range-display="rangeDisplay"
-                @previous="previousPage"
-                @next="nextPage"
-                @update:items-per-page="setItemsPerPage"
-              />
-            </div>
-          </v-col>
-        </v-row>
-
-        <!-- Import Dialog -->
-        <v-dialog
-          v-model="showImportDialog"
-          max-width="600px"
-        >
-          <v-card>
-            <v-card-title class="text-h5">
+            <v-btn
+              color="primary"
+              variant="flat"
+              size="large"
+              class="cohorts-view__action-btn"
+              :aria-label="t('common.import', 'Import cohort from JSON').value"
+              @click="handleImportCohort"
+            >
               {{ t('common.import', 'Import') }}
-            </v-card-title>
-            <v-card-text>
-              <p class="mb-4">
-                {{ t('common.comingSoon', 'Import functionality will be implemented in a future update.') }}
-              </p>
-              <p class="text-body-2 text-grey">
-                {{ t('cohortDefinitions.cohortDefinitionManager.panels.importConceptSetExpression', 'Import Concept Set Expression') }}
-              </p>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn
-                color="grey"
-                variant="text"
-                @click="showImportDialog = false"
-              >
-                {{ t('common.close', 'Close') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+            </v-btn>
 
-        <!-- Delete Confirmation Dialog -->
-        <v-dialog
-          v-model="showDeleteDialog"
-          max-width="500px"
-        >
-          <v-card>
-            <v-card-title class="text-h5">
-              {{ t('common.deleteCohortTitle', 'Delete Cohort?') }}
-            </v-card-title>
-            <v-card-text>
-              <p class="mb-2">
-                {{ t('cohortDefinitions.cohortDefinitionManager.confirms.delete', 'Delete cohort definition? Warning: deletion can not be undone!') }}
-              </p>
-              <p class="mb-2">
-                <strong>{{ selectedCohort?.name }}</strong>
-              </p>
-              <p class="text-body-2 text-error">
-                {{ t('common.cannotUndo', 'This action cannot be undone.') }}
-              </p>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn
-                color="grey"
-                variant="text"
-                @click="showDeleteDialog = false"
-              >
-                {{ t('common.cancel', 'Cancel') }}
-              </v-btn>
-              <v-btn
-                color="error"
-                variant="elevated"
-                :loading="deleting"
-                @click="confirmDelete"
-              >
-                {{ t('common.delete', 'Delete') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+            <v-spacer />
 
-        <!-- New Cohort Dialog -->
-        <v-dialog
-          v-model="showNewCohortDialog"
-          max-width="500px"
-        >
-          <v-card>
-            <v-card-title class="text-h5">
-              {{ t('cohortDefinitions.newDefinitionTitle', 'Create New Cohort') }}
-            </v-card-title>
-            <v-card-text>
-              <v-text-field
-                v-model="newCohortName"
-                :label="t('columns.name', 'Cohort Name').value"
-                autofocus
-                @keyup.enter="confirmCreateCohort"
-              />
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn
-                color="grey"
-                variant="text"
-                @click="showNewCohortDialog = false"
-              >
-                {{ t('common.cancel', 'Cancel') }}
-              </v-btn>
-              <v-btn
-                color="primary"
-                variant="elevated"
-                :disabled="!newCohortName.trim()"
-                @click="confirmCreateCohort"
-              >
-                {{ t('common.create', 'Create') }}
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-
-        <!-- Generation Panel -->
-        <generation-panel
-          v-model="showGenerationPanel"
-          :cohort-id="selectedCohort?.id ?? null"
-        />
-
-        <!-- Cohort Info Dialog -->
-        <v-dialog
-          v-model="showCohortInfoDialog"
-          max-width="900px"
-          scrollable
-        >
-          <v-card>
-            <v-card-title class="d-flex align-center">
-              <v-icon
-                color="primary"
-                class="mr-2"
-              >
-                mdi-information-outline
-              </v-icon>
-              {{ t('common.cohortInformation', 'Cohort Information') }}
-            </v-card-title>
-            <v-divider />
-            <v-card-text
-              v-if="cohortInfoHtml"
-              style="max-height: 600px;"
-              class="cohort-info-content"
+            <v-btn-toggle
+              v-model="viewMode"
+              mandatory
+              density="compact"
+              variant="outlined"
+              divided
+              class="cohorts-view__view-toggle"
+              data-testid="cohorts-view-toggle"
             >
-              <!-- eslint-disable-next-line vue/no-v-html -- trusted server content -->
-              <div v-html="cohortInfoHtml" />
-            </v-card-text>
-            <v-card-text
-              v-else-if="loadingCohortInfo"
-              class="text-center pa-6"
-            >
-              <v-progress-circular
-                indeterminate
-                color="primary"
-              />
-              <div class="mt-4">
-                {{ t('common.loading', 'Loading') }}...
-              </div>
-            </v-card-text>
-            <v-card-text
-              v-else
-              class="text-center pa-6 text-error"
-            >
-              {{ t('cs.manager.concept.tabs.recordCounts.failedToLoadData', 'Failed to load cohort information') }}
-            </v-card-text>
-            <v-divider />
-            <v-card-actions>
-              <v-spacer />
               <v-btn
-                color="grey"
-                variant="text"
-                @click="showCohortInfoDialog = false"
+                value="tile"
+                size="small"
+                :aria-label="t('common.tileView', 'Tile view').value"
+                data-testid="cohorts-view-toggle-tile"
               >
-                {{ t('common.close', 'Close') }}
+                <v-icon>mdi-view-grid</v-icon>
               </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+              <v-btn
+                value="table"
+                size="small"
+                :aria-label="t('dataSources.table.tableTab', 'Table view').value"
+                data-testid="cohorts-view-toggle-table"
+              >
+                <v-icon>mdi-view-list</v-icon>
+              </v-btn>
+            </v-btn-toggle>
+          </div>
+        </v-col>
+      </v-row>
+
+      <!-- Filters -->
+      <v-row>
+        <v-col cols="12">
+          <cohort-filters
+            :filters="filters"
+            :available-tags="availableTags"
+            :available-authors="availableAuthors"
+            :active-filter-count="activeFilterCount"
+            @update:filters="filters = $event"
+            @clear="clearFilters"
+          />
+        </v-col>
+      </v-row>
+
+      <v-row>
+        <v-col cols="12">
+          <!-- Filtering indicator -->
+          <div
+            v-if="filtering"
+            class="cohorts-view__filtering"
+          >
+            <v-progress-linear
+              indeterminate
+              color="primary"
+              height="2"
+            />
+            <div class="cohorts-view__filtering-text">
+              Filtering {{ cohorts.length.toLocaleString() }} cohorts...
+            </div>
+          </div>
+
+          <cohort-table
+            v-if="viewMode === 'table'"
+            :cohorts="paginatedCohorts"
+            :loading="loading"
+            :error="error"
+            :search-query="searchQuery"
+            :selected-tags="filters.selectedTags"
+            @retry="fetchCohorts"
+            @create-cohort="handleCreateCohort"
+            @generate="handleGenerate"
+            @delete="handleDeleteClick"
+            @tag-click="handleTagClick"
+            @show-info="handleShowInfo"
+          />
+          <cohort-grid
+            v-else
+            :cohorts="paginatedCohorts"
+            :loading="loading"
+            :error="error"
+            :search-query="searchQuery"
+            :selected-tags="filters.selectedTags"
+            @retry="fetchCohorts"
+            @create-cohort="handleCreateCohort"
+            @generate="handleGenerate"
+            @delete="handleDeleteClick"
+            @tag-click="handleTagClick"
+            @show-info="handleShowInfo"
+          />
+        </v-col>
+      </v-row>
+
+      <!-- Pagination -->
+      <v-row v-if="!loading && !error && filteredCohorts.length > 0">
+        <v-col cols="12">
+          <div class="cohorts-view__pagination">
+            <cohort-pagination
+              :page="page"
+              :items-per-page="itemsPerPage"
+              :items-per-page-options="itemsPerPageOptions"
+              :total-items="totalItems"
+              :can-go-previous="canGoPrevious"
+              :can-go-next="canGoNext"
+              :range-display="rangeDisplay"
+              @previous="previousPage"
+              @next="nextPage"
+              @update:items-per-page="setItemsPerPage"
+            />
+          </div>
+        </v-col>
+      </v-row>
+
+      <!-- Import Dialog -->
+      <v-dialog
+        v-model="showImportDialog"
+        max-width="600px"
+      >
+        <v-card>
+          <v-card-title class="text-h5">
+            {{ t('common.import', 'Import') }}
+          </v-card-title>
+          <v-card-text>
+            <p class="mb-4">
+              {{ t('common.comingSoon', 'Import functionality will be implemented in a future update.') }}
+            </p>
+            <p class="text-body-2 text-grey">
+              {{ t('cohortDefinitions.cohortDefinitionManager.panels.importConceptSetExpression', 'Import Concept Set Expression') }}
+            </p>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn
+              color="grey"
+              variant="text"
+              @click="showImportDialog = false"
+            >
+              {{ t('common.close', 'Close') }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- Delete Confirmation Dialog -->
+      <v-dialog
+        v-model="showDeleteDialog"
+        max-width="500px"
+      >
+        <v-card>
+          <v-card-title class="text-h5">
+            {{ t('common.deleteCohortTitle', 'Delete Cohort?') }}
+          </v-card-title>
+          <v-card-text>
+            <p class="mb-2">
+              {{ t('cohortDefinitions.cohortDefinitionManager.confirms.delete', 'Delete cohort definition? Warning: deletion can not be undone!') }}
+            </p>
+            <p class="mb-2">
+              <strong>{{ selectedCohort?.name }}</strong>
+            </p>
+            <p class="text-body-2 text-error">
+              {{ t('common.cannotUndo', 'This action cannot be undone.') }}
+            </p>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn
+              color="grey"
+              variant="text"
+              @click="showDeleteDialog = false"
+            >
+              {{ t('common.cancel', 'Cancel') }}
+            </v-btn>
+            <v-btn
+              color="error"
+              variant="elevated"
+              :loading="deleting"
+              @click="confirmDelete"
+            >
+              {{ t('common.delete', 'Delete') }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- New Cohort Dialog -->
+      <v-dialog
+        v-model="showNewCohortDialog"
+        max-width="500px"
+      >
+        <v-card>
+          <v-card-title class="text-h5">
+            {{ t('cohortDefinitions.newDefinitionTitle', 'Create New Cohort') }}
+          </v-card-title>
+          <v-card-text>
+            <v-text-field
+              v-model="newCohortName"
+              :label="t('columns.name', 'Cohort Name').value"
+              autofocus
+              @keyup.enter="confirmCreateCohort"
+            />
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn
+              color="grey"
+              variant="text"
+              @click="showNewCohortDialog = false"
+            >
+              {{ t('common.cancel', 'Cancel') }}
+            </v-btn>
+            <v-btn
+              color="primary"
+              variant="elevated"
+              :disabled="!newCohortName.trim()"
+              @click="confirmCreateCohort"
+            >
+              {{ t('common.create', 'Create') }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- Generation Panel -->
+      <generation-panel
+        v-model="showGenerationPanel"
+        :cohort-id="selectedCohort?.id ?? null"
+      />
+
+      <!-- Cohort Info Dialog -->
+      <v-dialog
+        v-model="showCohortInfoDialog"
+        max-width="900px"
+        scrollable
+      >
+        <v-card>
+          <v-card-title class="d-flex align-center">
+            <v-icon
+              color="primary"
+              class="mr-2"
+            >
+              mdi-information-outline
+            </v-icon>
+            {{ t('common.cohortInformation', 'Cohort Information') }}
+          </v-card-title>
+          <v-divider />
+          <v-card-text
+            v-if="cohortInfoHtml"
+            style="max-height: 600px;"
+            class="cohort-info-content"
+          >
+            <!-- eslint-disable-next-line vue/no-v-html -- trusted server content -->
+            <div v-html="cohortInfoHtml" />
+          </v-card-text>
+          <v-card-text
+            v-else-if="loadingCohortInfo"
+            class="text-center pa-6"
+          >
+            <v-progress-circular
+              indeterminate
+              color="primary"
+            />
+            <div class="mt-4">
+              {{ t('common.loading', 'Loading') }}...
+            </div>
+          </v-card-text>
+          <v-card-text
+            v-else
+            class="text-center pa-6 text-error"
+          >
+            {{ t('cs.manager.concept.tabs.recordCounts.failedToLoadData', 'Failed to load cohort information') }}
+          </v-card-text>
+          <v-divider />
+          <v-card-actions>
+            <v-spacer />
+            <v-btn
+              color="grey"
+              variant="text"
+              @click="showCohortInfoDialog = false"
+            >
+              {{ t('common.close', 'Close') }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-container>
   </page-shell>
 </template>
@@ -517,24 +517,6 @@ onMounted(() => {
 <style scoped>
 .cohorts-view {
   padding: 0;
-}
-
-/* Breadcrumb */
-.cohorts-view__breadcrumb {
-  padding: 16px 24px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
-  text-align: center;
-}
-
-.cohorts-view__breadcrumb-item {
-  font-size: 1rem;
-  color: #666;
-}
-
-.cohorts-view__breadcrumb-item--active {
-  font-weight: 500;
-  color: #333;
 }
 
 /* Actions */
