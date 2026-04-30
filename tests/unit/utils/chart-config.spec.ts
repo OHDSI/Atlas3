@@ -235,9 +235,9 @@ describe('chart-config', () => {
       const options = defaultPieChartOptions(data)
       const seriesData = (options.series as ChartSeriesItem[])[0].data as Array<{ itemStyle: { color: string } }>
 
-      // Should wrap around color array
+      // Should wrap around color array (length is now 10, see chart-config CHART_COLORS)
       expect(seriesData[0].itemStyle.color).toBe(CHART_COLORS[0])
-      expect(seriesData[12].itemStyle.color).toBe(CHART_COLORS[0]) // 12 % 12 = 0
+      expect(seriesData[CHART_COLORS.length].itemStyle.color).toBe(CHART_COLORS[0])
     })
   })
 
@@ -342,17 +342,22 @@ describe('chart-config', () => {
       expect((options.series as ChartSeriesItem[])[0].type).toBe('treemap')
     })
 
-    it('should assign colors to treemap nodes', () => {
+    it('should drive treemap colors from a single-hue gradient based on value', () => {
       const data: TreemapNode[] = [
         { name: 'A', value: 10 },
         { name: 'B', value: 20 }
       ]
 
       const options = defaultTreemapOptions(data)
-      const seriesData = (options.series as ChartSeriesItem[])[0].data as Array<{ itemStyle: { color: string } }>
+      const series = (options.series as ChartSeriesItem[])[0] as { levels?: Array<{ color?: string[]; colorMappingBy?: string }>; visualMin?: number; visualMax?: number }
 
-      expect(seriesData[0].itemStyle.color).toBe(CHART_COLORS[0])
-      expect(seriesData[1].itemStyle.color).toBe(CHART_COLORS[1])
+      // Atlas 2.15 semantic: nodes with higher values are darker; the
+      // gradient is mapped onto the value range, not assigned per index.
+      expect(series.levels?.[1]?.color).toBeDefined()
+      expect(series.levels?.[1]?.color?.length).toBeGreaterThan(1)
+      expect(series.levels?.[1]?.colorMappingBy).toBe('value')
+      expect(series.visualMin).toBe(10)
+      expect(series.visualMax).toBe(20)
     })
 
     it('should handle hierarchical data', () => {

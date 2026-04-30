@@ -8,22 +8,36 @@ import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
 
 /**
- * Default color palette matching Vuetify theme
+ * Modern, restrained categorical palette for charts — Tableau 10.
+ *
+ * Atlas 2.15 used D3's d3.scale.category10 (bright, saturated). This
+ * is the well-tested Tableau 10 alternative: same number of distinct
+ * hues, lower saturation, better separation, more elegant on white
+ * surfaces and alongside the Atlas navy chrome.
+ *
+ * Charts that pick a single color use CHART_COLORS[0]; multi-series
+ * charts cycle through the array.
  */
 export const CHART_COLORS = [
-  '#1976D2', // primary blue
-  '#43A047', // success green
-  '#FB8C00', // warning orange
-  '#E53935', // error red
-  '#8E24AA', // purple
-  '#00ACC1', // cyan
-  '#FDD835', // yellow
-  '#6D4C41', // brown
-  '#546E7A', // blue-grey
-  '#7CB342', // light green
-  '#F4511E', // deep orange
-  '#5E35B1'  // deep purple
+  '#4e79a7', // blue
+  '#f28e2c', // orange
+  '#e15759', // red
+  '#76b7b2', // teal
+  '#59a14f', // green
+  '#edc949', // mustard
+  '#af7aa1', // purple
+  '#ff9da7', // soft coral
+  '#9c755f', // taupe
+  '#bab0ab', // warm grey
 ]
+
+/**
+ * Single-hue gradient used by treemaps and other "color-by-value"
+ * surfaces. Encodes magnitude, not category. Matches Atlas 2.15's
+ * treemapGradient (light blue → mid → Atlas navy) so an analyst
+ * trained on Atlas 2.15 reads the new charts at a glance.
+ */
+export const TREEMAP_GRADIENT = ['#c7eaff', '#6e92a8', '#1f425a'] as const
 
 /**
  * Default bar chart configuration
@@ -291,47 +305,57 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
           borderWidth: 2,
           gapWidth: 2
         },
+        // Encode magnitude with color (Atlas 2.15 semantic): nodes
+        // with higher aggregate values get a darker hue from the
+        // single-hue gradient; smaller values get the lighter end.
+        // ECharts' visualMap maps the data values onto the gradient
+        // automatically.
+        visualMin: extractTreemapValueRange(data).min,
+        visualMax: extractTreemapValueRange(data).max,
         levels: [
           {
             itemStyle: {
               borderWidth: 3,
-              gapWidth: 3
-            }
+              gapWidth: 3,
+            },
           },
           {
-            colorSaturation: [0.35, 0.5],
+            color: TREEMAP_GRADIENT as unknown as string[],
+            colorMappingBy: 'value',
             itemStyle: {
               borderWidth: 2,
               gapWidth: 2,
-              borderColorSaturation: 0.6
-            }
-          }
+              borderColorSaturation: 0.6,
+            },
+          },
         ],
-        data: assignTreemapColors(data)
-      }
-    ]
+        data,
+      },
+    ],
   }
 }
 
 /**
- * Assign colors to treemap nodes recursively
+ * Walk a tree of treemap nodes and return the min / max numeric
+ * value across all leaves. Used to set visualMin / visualMax so the
+ * gradient covers the actual data range.
  */
-function assignTreemapColors(nodes: TreemapNode[], colorIndex = 0): TreemapNode[] {
-  return nodes.map((node, index) => {
-    const currentColorIndex = (colorIndex + index) % CHART_COLORS.length
-    const color = CHART_COLORS[currentColorIndex]
-
-    return {
-      ...node,
-      itemStyle: {
-        ...node.itemStyle,
-        color: node.itemStyle?.color || color
-      },
-      children: node.children
-        ? assignTreemapColors(node.children, currentColorIndex * 2)
-        : undefined
-    }
-  })
+function extractTreemapValueRange(nodes: TreemapNode[]): { min: number; max: number } {
+  let min = Infinity
+  let max = -Infinity
+  function walk(list: TreemapNode[]) {
+    list.forEach(n => {
+      if (typeof n.value === 'number' && Number.isFinite(n.value)) {
+        if (n.value < min) min = n.value
+        if (n.value > max) max = n.value
+      }
+      if (n.children?.length) walk(n.children)
+    })
+  }
+  walk(nodes)
+  if (!Number.isFinite(min)) min = 0
+  if (!Number.isFinite(max)) max = 1
+  return { min, max }
 }
 
 /**

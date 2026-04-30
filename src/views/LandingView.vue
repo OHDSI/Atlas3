@@ -47,9 +47,12 @@
     </v-card>
 
     <div class="landing__features">
-      <router-link
+      <SurfaceCard
         v-for="feature in features"
         :key="feature.id"
+        tag="router-link"
+        interactive
+        padding="md"
         :to="feature.route"
         class="landing__feature"
       >
@@ -64,16 +67,19 @@
         <div class="landing__feature-description">
           {{ feature.description }}
         </div>
-      </router-link>
+      </SurfaceCard>
     </div>
 
-    <div class="landing__documentation">
+    <SurfaceCard
+      class="landing__documentation"
+      padding="md"
+    >
       <h2 class="landing__section-title">
         {{ t('home.documentation.title', 'Documentation') }}
       </h2>
       <!-- eslint-disable-next-line vue/no-v-html -- trusted i18n content -->
       <p v-html="tv('home.documentation.text', 'The ATLAS user guide can be found <a target=\'_new\' href=\'http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas\'>here</a>.')" />
-    </div>
+    </SurfaceCard>
   </div>
 </template>
 
@@ -81,6 +87,7 @@
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import atlasLogo from '@/assets/icons/atlas-loading.svg'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 interface FeatureTile {
   id: string
@@ -219,26 +226,12 @@ const handleNewCohort = () => {
 }
 
 .landing__feature {
+  /* SurfaceCard provides surface, radius, shadow, hover lift, and
+   * padding (md). This view-specific class only adds layout. */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  padding: 20px;
-  background-color: rgb(var(--v-theme-surface));
-  border-radius: 12px;
-  text-decoration: none;
-  color: inherit;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 2px 6px rgba(15, 23, 42, 0.04);
-  transition: box-shadow 160ms ease, transform 160ms ease;
-}
-
-.landing__feature:hover {
-  box-shadow:
-    0 2px 4px rgba(15, 23, 42, 0.06),
-    0 8px 20px rgba(15, 23, 42, 0.08);
-  transform: translateY(-2px);
 }
 
 .landing__feature-icon {
@@ -258,12 +251,7 @@ const handleNewCohort = () => {
 }
 
 .landing__documentation {
-  background-color: rgb(var(--v-theme-surface));
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 2px 6px rgba(15, 23, 42, 0.04);
+  /* SurfaceCard provides surface, radius, shadow, padding. */
 }
 
 .landing__section-title {

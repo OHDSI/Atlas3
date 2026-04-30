@@ -11,21 +11,15 @@
             variant="tonal"
             density="compact"
           >
-            <div class="d-flex align-center">
-              <v-icon
-                icon="mdi-information-outline"
-                class="mr-2"
-              />
+            <div>
               <div>
-                <div>
-                  <strong>Click</strong> on any area to view detailed analytics
-                </div>
-                <div
-                  v-if="!hasHierarchy"
-                  class="text-caption mt-1"
-                >
-                  Note: Hierarchical grouping not available for this data source
-                </div>
+                <strong>Click</strong> on any area to view detailed analytics
+              </div>
+              <div
+                v-if="!hasHierarchy"
+                class="text-caption mt-1"
+              >
+                Note: Hierarchical grouping not available for this data source
               </div>
             </div>
           </v-alert>

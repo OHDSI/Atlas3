@@ -1,6 +1,9 @@
 <template>
   <div class="page-wrapper">
-    <div class="page-card">
+    <SurfaceCard
+      class="page-card"
+      padding="lg"
+    >
       <div
         v-if="hasHeader"
         :class="['page-header', { 'page-header--hero': hero }]"
@@ -43,12 +46,13 @@
       <div class="page-card__body">
         <slot />
       </div>
-    </div>
+    </SurfaceCard>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, useSlots } from 'vue'
+import SurfaceCard from './SurfaceCard.vue'
 
 interface Props {
   title?: string
@@ -83,18 +87,9 @@ const hasHeader = computed(() => Boolean(props.title || slots.actions))
 }
 
 .page-card {
-  /* MD3 "elevated" card: surface fill + soft shadow, no outline.
-   * The shadow uses two passes — a tight 1-2px ambient and a wider
-   * 8-16px diffuse — which reads as a soft lift instead of a hard
-   * line. Replaces the previous outline-variant border. */
-  background-color: rgb(var(--v-theme-surface));
-  border-radius: 12px;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 4px 12px rgba(15, 23, 42, 0.04);
+  /* SurfaceCard provides surface, radius, shadow, and padding.
+   * PageShell only adds full-width sizing on top. */
   width: 100%;
-  padding: 32px;
-  box-sizing: border-box;
 }
 
 .page-header {
@@ -132,7 +127,7 @@ const hasHeader = computed(() => Boolean(props.title || slots.actions))
 
 .page-header__accent-rule {
   display: inline-block;
-  width: 28px;
+  width: 32px;
   height: 2px;
   background-color: rgb(var(--v-theme-orange));
   border-radius: 2px;

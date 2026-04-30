@@ -77,9 +77,10 @@
       />
 
       <!-- Report Content -->
-      <div
+      <SurfaceCard
         v-else-if="store.selectedSource && store.selectedReportType && !store.error.report"
         class="datasources-view__report"
+        padding="md"
       >
         <DashboardReport
           v-if="store.selectedReportType === 'dashboard' && dashboardData"
@@ -131,7 +132,7 @@
             Report type "{{ reportTypeLabel }}" is not yet implemented.
           </p>
         </div>
-      </div>
+      </SurfaceCard>
 
       <!-- Empty State: no sources -->
       <div
@@ -174,6 +175,7 @@ import { useDataSourcesStore } from '@/stores/datasources'
 import { logger } from '@/utils/logger'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
 import PageShell from '@/components/shared/PageShell.vue'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 import DataSourceSelector from '@/components/datasources/DataSourceSelector.vue'
 import ReportTypeSelector from '@/components/datasources/ReportTypeSelector.vue'
 import DashboardReport from '@/components/datasources/DashboardReport.vue'
@@ -372,14 +374,7 @@ onMounted(async () => {
   border-radius: 12px;
 }
 
-.datasources-view__report {
-  background: rgb(var(--v-theme-surface));
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 2px 6px rgba(15, 23, 42, 0.04);
-}
+/* .datasources-view__report styling now comes from SurfaceCard. */
 
 .datasources-view__empty {
   /* MD3 "filled" container — surface-variant tint, no border or
