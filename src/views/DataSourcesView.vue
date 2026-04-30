@@ -4,171 +4,171 @@
       fluid
       class="datasources-view"
     >
-        <!-- Page Header -->
-        <v-row>
-          <v-col cols="12">
-            <div class="datasources-view__header">
-              <h1 class="text-h4 mb-2">
-                {{ t('dataSources.headingTitle', 'Data Sources') }}
-              </h1>
-              <p
-                v-if="selectedSource && store.selectedReportType"
-                class="text-subtitle-1 text-medium-emphasis"
+      <!-- Page Header -->
+      <v-row>
+        <v-col cols="12">
+          <div class="datasources-view__header">
+            <h1 class="text-h4 mb-2">
+              {{ t('dataSources.headingTitle', 'Data Sources') }}
+            </h1>
+            <p
+              v-if="selectedSource && store.selectedReportType"
+              class="text-subtitle-1 text-medium-emphasis"
+            >
+              {{ selectedSource.sourceName }} - {{ reportTypeLabel }}
+            </p>
+          </div>
+        </v-col>
+      </v-row>
+
+      <!-- Selectors -->
+      <v-row>
+        <v-col
+          cols="12"
+          md="6"
+        >
+          <DataSourceSelector
+            :model-value="store.selectedSourceId"
+            data-testid="datasource-selector"
+            :data-sources="store.sources"
+            :loading="store.loading.sources"
+            @update:model-value="handleSourceChange"
+          />
+        </v-col>
+        <v-col
+          cols="12"
+          md="6"
+        >
+          <ReportTypeSelector
+            :model-value="store.selectedReportType"
+            data-testid="report-type-selector"
+            :disabled="!store.selectedSourceId"
+            @update:model-value="handleReportTypeChange"
+          />
+        </v-col>
+      </v-row>
+
+      <!-- Error State: Sources -->
+      <v-row v-if="store.error.sources">
+        <v-col cols="12">
+          <v-alert
+            type="error"
+            variant="tonal"
+          >
+            <div class="d-flex align-center justify-space-between">
+              <span>{{ store.error.sources }}</span>
+              <v-btn
+                color="error"
+                variant="text"
+                @click="store.retryFetchSources"
               >
-                {{ selectedSource.sourceName }} - {{ reportTypeLabel }}
-              </p>
+                {{ t('common.retry', 'Retry') }}
+              </v-btn>
             </div>
-          </v-col>
-        </v-row>
+          </v-alert>
+        </v-col>
+      </v-row>
 
-        <!-- Selectors -->
-        <v-row>
-          <v-col
-            cols="12"
-            md="6"
+      <!-- Error State: Report -->
+      <v-row v-if="store.error.report">
+        <v-col cols="12">
+          <v-alert
+            type="error"
+            variant="tonal"
           >
-            <DataSourceSelector
-              :model-value="store.selectedSourceId"
-              data-testid="datasource-selector"
-              :data-sources="store.sources"
-              :loading="store.loading.sources"
-              @update:model-value="handleSourceChange"
-            />
-          </v-col>
-          <v-col
-            cols="12"
-            md="6"
+            <div class="d-flex align-center justify-space-between">
+              <span>{{ store.error.report }}</span>
+              <v-btn
+                color="error"
+                variant="text"
+                @click="store.retryFetchReport"
+              >
+                {{ t('common.retry', 'Retry') }}
+              </v-btn>
+            </div>
+          </v-alert>
+        </v-col>
+      </v-row>
+
+      <!-- Loading State -->
+      <v-row v-if="store.loading.report">
+        <v-col cols="12">
+          <v-skeleton-loader type="card" />
+        </v-col>
+      </v-row>
+
+      <!-- Report Content -->
+      <v-row v-else-if="store.selectedSource && store.selectedReportType && !store.error.report">
+        <v-col cols="12">
+          <DashboardReport
+            v-if="store.selectedReportType === 'dashboard' && dashboardData"
+            data-testid="dashboard-report"
+            :data="dashboardData"
+          />
+            
+          <DataDensityReport
+            v-else-if="store.selectedReportType === 'datadensity' && dataDensityData"
+            data-testid="datadensity-report"
+            :data="dataDensityData"
+          />
+            
+          <PersonReport
+            v-else-if="store.selectedReportType === 'person' && personData"
+            data-testid="person-report"
+            :data="personData"
+          />
+            
+          <ObservationPeriodReport
+            v-else-if="store.selectedReportType === 'observationPeriod' && observationPeriodData"
+            data-testid="observation-period-report"
+            :data="observationPeriodData"
+          />
+            
+          <DeathReport
+            v-else-if="store.selectedReportType === 'death' && deathData"
+            data-testid="death-report"
+            :data="deathData"
+          />
+            
+          <ClinicalDomainReport
+            v-else-if="isClinicalDomainReport && clinicalData"
+            data-testid="clinical-domain-report"
+            :data="clinicalData"
+            :report-type="store.selectedReportType"
+          />
+            
+          <div
+            v-else
+            class="text-center py-8"
           >
-            <ReportTypeSelector
-              :model-value="store.selectedReportType"
-              data-testid="report-type-selector"
-              :disabled="!store.selectedSourceId"
-              @update:model-value="handleReportTypeChange"
+            <v-icon
+              icon="mdi-information-outline"
+              size="48"
+              class="mb-4"
             />
-          </v-col>
-        </v-row>
+            <p class="text-body-1">
+              Report type "{{ reportTypeLabel }}" is not yet implemented.
+            </p>
+          </div>
+        </v-col>
+      </v-row>
 
-        <!-- Error State: Sources -->
-        <v-row v-if="store.error.sources">
-          <v-col cols="12">
-            <v-alert
-              type="error"
-              variant="tonal"
-            >
-              <div class="d-flex align-center justify-space-between">
-                <span>{{ store.error.sources }}</span>
-                <v-btn
-                  color="error"
-                  variant="text"
-                  @click="store.retryFetchSources"
-                >
-                  {{ t('common.retry', 'Retry') }}
-                </v-btn>
-              </div>
-            </v-alert>
-          </v-col>
-        </v-row>
-
-        <!-- Error State: Report -->
-        <v-row v-if="store.error.report">
-          <v-col cols="12">
-            <v-alert
-              type="error"
-              variant="tonal"
-            >
-              <div class="d-flex align-center justify-space-between">
-                <span>{{ store.error.report }}</span>
-                <v-btn
-                  color="error"
-                  variant="text"
-                  @click="store.retryFetchReport"
-                >
-                  {{ t('common.retry', 'Retry') }}
-                </v-btn>
-              </div>
-            </v-alert>
-          </v-col>
-        </v-row>
-
-        <!-- Loading State -->
-        <v-row v-if="store.loading.report">
-          <v-col cols="12">
-            <v-skeleton-loader type="card" />
-          </v-col>
-        </v-row>
-
-        <!-- Report Content -->
-        <v-row v-else-if="store.selectedSource && store.selectedReportType && !store.error.report">
-          <v-col cols="12">
-            <DashboardReport
-              v-if="store.selectedReportType === 'dashboard' && dashboardData"
-              data-testid="dashboard-report"
-              :data="dashboardData"
+      <!-- Empty State -->
+      <v-row v-else-if="!store.loading.sources && store.sources.length === 0">
+        <v-col cols="12">
+          <div class="text-center py-8">
+            <v-icon
+              icon="mdi-database-off"
+              size="48"
+              class="mb-4"
             />
-            
-            <DataDensityReport
-              v-else-if="store.selectedReportType === 'datadensity' && dataDensityData"
-              data-testid="datadensity-report"
-              :data="dataDensityData"
-            />
-            
-            <PersonReport
-              v-else-if="store.selectedReportType === 'person' && personData"
-              data-testid="person-report"
-              :data="personData"
-            />
-            
-            <ObservationPeriodReport
-              v-else-if="store.selectedReportType === 'observationPeriod' && observationPeriodData"
-              data-testid="observation-period-report"
-              :data="observationPeriodData"
-            />
-            
-            <DeathReport
-              v-else-if="store.selectedReportType === 'death' && deathData"
-              data-testid="death-report"
-              :data="deathData"
-            />
-            
-            <ClinicalDomainReport
-              v-else-if="isClinicalDomainReport && clinicalData"
-              data-testid="clinical-domain-report"
-              :data="clinicalData"
-              :report-type="store.selectedReportType"
-            />
-            
-            <div
-              v-else
-              class="text-center py-8"
-            >
-              <v-icon
-                icon="mdi-information-outline"
-                size="48"
-                class="mb-4"
-              />
-              <p class="text-body-1">
-                Report type "{{ reportTypeLabel }}" is not yet implemented.
-              </p>
-            </div>
-          </v-col>
-        </v-row>
-
-        <!-- Empty State -->
-        <v-row v-else-if="!store.loading.sources && store.sources.length === 0">
-          <v-col cols="12">
-            <div class="text-center py-8">
-              <v-icon
-                icon="mdi-database-off"
-                size="48"
-                class="mb-4"
-              />
-              <p class="text-body-1">
-                No data sources available.
-              </p>
-            </div>
-          </v-col>
-        </v-row>
-      </v-container>
+            <p class="text-body-1">
+              No data sources available.
+            </p>
+          </div>
+        </v-col>
+      </v-row>
+    </v-container>
   </page-shell>
 </template>
 
