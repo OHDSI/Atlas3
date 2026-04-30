@@ -992,7 +992,15 @@ export function trellisChartOptions(
   title?: string,
   maxPlotsPerRow: number = 5
 ): EChartsOption {
-  const categories = data.categories.sort()
+  // Sort categories by leading numeric prefix so age brackets come
+  // out 0-9, 10-19, 20-29, ..., 100-109 instead of the ASCII order
+  // 0-9, 10-19, 100-109, 20-29.
+  const categories = [...data.categories].sort((a, b) => {
+    const aMatch = /^-?(\d+)/.exec(a)
+    const bMatch = /^-?(\d+)/.exec(b)
+    if (aMatch && bMatch) return Number(aMatch[1]) - Number(bMatch[1])
+    return a.localeCompare(b)
+  })
   const totalPlots = categories.length
   const plotsPerRow = Math.min(maxPlotsPerRow, totalPlots)
   const numRows = Math.ceil(totalPlots / plotsPerRow)
@@ -1022,35 +1030,36 @@ export function trellisChartOptions(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gridTitles: any[] = []
 
+  // Add the global "Age Group / Gender" header once (above the first
+  // row) and a global "Year" footer once (below the last row).
+  // Previously these were rendered per-row, which collided with the
+  // individual category titles (e.g., "100-109") sitting at the same
+  // top offset.
+  const lastRowTop = (numRows - 1) * (GRID_HEIGHT + GRID_VERTICAL_GAP) + GRID_TOP_MARGIN
+  gridTitles.push({
+    text: 'Age Group / Gender',
+    top: `${Math.max(GRID_TOP_MARGIN - 7, 1)}%`,
+    left: 'center',
+    textStyle: {
+      fontSize: 13,
+      color: '#6b6b6b',
+    },
+  })
+  gridTitles.push({
+    text: 'Year',
+    top: `${lastRowTop + GRID_HEIGHT + 6}%`,
+    left: 'center',
+    textStyle: {
+      fontSize: 13,
+      color: '#6b6b6b',
+    },
+  })
+
   categories.forEach((category, index) => {
     const rowIndex = Math.floor(index / plotsPerRow)
     const colIndex = index % plotsPerRow
 
     const rowTop = rowIndex * (GRID_HEIGHT + GRID_VERTICAL_GAP) + GRID_TOP_MARGIN
-
-    // Add row labels (only once per row, when colIndex === 0)
-    if (colIndex === 0) {
-      // Top label for this row (positioned above the demographic names)
-      gridTitles.push({
-        text: 'Age Group / Gender',
-        top: `${rowTop - 4.5}%`,
-        left: 'center',
-        textStyle: {
-          fontSize: 13,
-          color: '#6b6b6b'
-        }
-      })
-      // Bottom label for this row (positioned below x-axis)
-      gridTitles.push({
-        text: 'Year',
-        top: `${rowTop + GRID_HEIGHT + 3}%`,
-        left: 'center',
-        textStyle: {
-          fontSize: 13,
-          color: '#6b6b6b'
-        }
-      })
-    }
 
     // Grid positioning
     grid.push({
