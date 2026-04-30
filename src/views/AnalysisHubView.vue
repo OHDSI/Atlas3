@@ -26,13 +26,11 @@
         </v-tabs>
       </nav>
 
-      <router-view v-slot="{ Component, route }">
-        <transition name="tab-fade">
-          <component
-            :is="Component"
-            :key="route.path"
-          />
-        </transition>
+      <router-view v-slot="{ Component, route: matchedRoute }">
+        <component
+          :is="Component"
+          :key="matchedRoute.path"
+        />
       </router-view>
     </div>
   </page-shell>
@@ -102,24 +100,28 @@ function getLabel(tab: Tab): string {
   z-index: 2;
 }
 
-/* Slide-fade between tab routes. No `mode="out-in"` (which blanks
- * lazy-loaded routes during the dynamic-import gap) — old and new
- * components overlap briefly. The leaving component is absolutely
- * positioned so it doesn't push the new content down. */
-.tab-fade-enter-active,
-.tab-fade-leave-active {
-  transition: opacity 180ms ease, transform 180ms ease;
+/* Slide-fade between tab routes via a CSS keyframe.
+ *
+ * The route component's root (.analysis-list-layout) is remounted
+ * whenever route.path changes (because of :key on <component :is>).
+ * That mount triggers the `tab-fade-in` animation. No <transition>
+ * wrapper is involved, which avoids Vue's transition system being
+ * skipped for async-loaded route components.
+ *
+ * :deep() pierces the scoped-CSS boundary so the rule reaches the
+ * route component's own scope. */
+.analysis-hub :deep(.analysis-list-layout) {
+  animation: tab-fade-in 200ms ease both;
 }
-.tab-fade-enter-from {
-  opacity: 0;
-  transform: translateX(8px);
-}
-.tab-fade-leave-to {
-  opacity: 0;
-  transform: translateX(-8px);
-}
-.tab-fade-leave-active {
-  position: absolute;
-  inset: 32px 32px auto 32px;
+
+@keyframes tab-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 </style>
