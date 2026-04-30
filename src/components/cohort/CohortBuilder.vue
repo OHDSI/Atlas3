@@ -316,7 +316,10 @@
         <div class="section-spacer" />
       </div>
       <censor-window-editor
-        v-model="censorWindow"
+        :censor-window="censorWindow"
+        :collapse-settings="collapseSettings"
+        @update:censor-window="onCensorWindowUpdate"
+        @update:collapse-settings="collapseSettings = $event"
         @validation-error="handleCensorWindowValidation"
       />
     </div>
@@ -454,7 +457,8 @@ import type {
   ConceptSetReference,
   InclusionRule,
   ExitCriteria,
-  Period,
+  CensorWindow,
+  CollapseSettings,
   ObservationPeriod,
   QualifyingLimit,
   CriteriaGroup
@@ -506,7 +510,8 @@ const entryEvents = ref<CohortEvent[]>([])
 const additionalCriteria = ref<CriteriaGroup | undefined>(undefined)
 const inclusionRules = ref<InclusionRule[]>([])
 const exitCriteria = ref<ExitCriteria>({ strategy: 'CONTINUOUS_OBSERVATION' })
-const censorWindow = ref<Period | null>(null)
+const censorWindow = ref<CensorWindow | null>(null)
+const collapseSettings = ref<CollapseSettings>({ collapseType: 'ERA', eraPad: 0 })
 const censoringCriteria = ref<CohortEvent[]>([])
 const observationPeriod = ref<ObservationPeriod>({ priorDays: 0, postDays: 0 })
 const qualifyingLimit = ref<QualifyingLimit>('ALL') // For entry events
@@ -645,6 +650,7 @@ async function buildCohortExpression() {
       inclusionRules: inclusionRules.value,
       exitCriteria: exitCriteria.value,
       censorWindow: censorWindow.value || undefined,
+      collapseSettings: collapseSettings.value,
       censoringCriteria: censoringCriteria.value,
       observationPeriod: observationPeriod.value,
       qualifyingLimit: qualifyingLimit.value,
@@ -673,6 +679,7 @@ function createStateSnapshot(): string {
     inclusionRules: inclusionRules.value,
     exitCriteria: exitCriteria.value,
     censorWindow: censorWindow.value,
+    collapseSettings: collapseSettings.value,
     censoringCriteria: censoringCriteria.value,
     observationPeriod: observationPeriod.value,
     qualifyingLimit: qualifyingLimit.value,
@@ -1005,6 +1012,7 @@ async function loadCohort(id: string) {
     inclusionRules.value = cohortDef.inclusionRules
     exitCriteria.value = cohortDef.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
     censorWindow.value = cohortDef.censorWindow ?? null
+    collapseSettings.value = cohortDef.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
     censoringCriteria.value = cohortDef.censoringCriteria ?? []
     observationPeriod.value = cohortDef.observationPeriod || { priorDays: 0, postDays: 0 }
     qualifyingLimit.value = cohortDef.qualifyingLimit
@@ -1163,6 +1171,10 @@ function handleConceptsSelected(concepts: Array<{ conceptId: number; conceptName
 function handleCensorWindowValidation() {
   // Handle censor window validation errors
   // Currently just logging for now, could be used for aggregated validation display
+}
+
+function onCensorWindowUpdate(value: CensorWindow | undefined) {
+  censorWindow.value = value ?? null
 }
 
 function addAdditionalCriteria() {
@@ -1494,6 +1506,9 @@ async function _handleFileImport(event: Event) {
     additionalCriteria.value = importedCohort.additionalCriteria
     inclusionRules.value = importedCohort.inclusionRules || []
     exitCriteria.value = importedCohort.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+    censorWindow.value = importedCohort.censorWindow ?? null
+    collapseSettings.value = importedCohort.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
+    censoringCriteria.value = importedCohort.censoringCriteria ?? []
     observationPeriod.value = importedCohort.observationPeriod ?? { priorDays: 0, postDays: 0 }
     qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
     inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'

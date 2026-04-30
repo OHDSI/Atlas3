@@ -1,140 +1,83 @@
 <template>
-  <div class="censor-window-editor">
-    <div class="pa-4">
-      <div class="d-flex align-center mb-2">
-        <h3 class="text-h6">
-          {{ t('components.cohortExpressionEditor.censoringEvents', 'Censor Window').value }}
-        </h3>
-        <v-tooltip location="right">
-          <template #activator="{ props: tooltipProps }">
-            <v-icon
-              v-bind="tooltipProps"
-              icon="mdi-help-circle-outline"
-              size="small"
-              class="ml-2 text-medium-emphasis"
-            />
-          </template>
-          <span>{{ t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras').value }}</span>
-        </v-tooltip>
-      </div>
-      <p class="text-body-2 text-medium-emphasis mb-4">
-        Specify when cohort membership begins and ends
-      </p>
+  <div class="censor-window-editor pa-4">
+    <!-- Era collapse gap -->
+    <div class="era-pad-row">
+      <span class="era-pad-row__label">{{ eraGapLabel }}</span>
+      <v-text-field
+        v-model.number="eraPadModel"
+        type="number"
+        min="0"
+        density="compact"
+        variant="outlined"
+        hide-details
+        class="era-pad-row__input"
+        :disabled="disabled"
+        :aria-label="eraGapLabel"
+        @blur="emitCollapseSettings"
+      />
+      <span class="era-pad-row__suffix">{{ daysLabel }}</span>
+    </div>
 
-      <div>
-        <!-- Start Date Configuration -->
-        <div class="date-config-section">
-          <h4 class="text-subtitle-1 mb-2">
-            {{ t('options.startDate', 'Start Date').value }}
-          </h4>
-          <v-row>
-            <v-col cols="6">
-              <v-select
-                v-model="localStartDateField"
-                :items="dateFieldOptions"
-                :label="t('common.select', 'Date Field').value"
-                :disabled="disabled"
-                variant="outlined"
-                density="compact"
-                @update:model-value="updateStartDate"
-              />
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                v-model.number="localStartOffset"
-                type="number"
-                :label="t('components.cohortExpressionEditor.days', 'Offset (days)').value"
-                :disabled="disabled"
-                :rules="[offsetRule]"
-                variant="outlined"
-                density="compact"
-                @blur="updateStartDate"
-              >
-                <template #append-inner>
-                  <v-tooltip location="top">
-                    <template #activator="{ props: tipProps }">
-                      <v-icon
-                        v-bind="tipProps"
-                        icon="mdi-information-outline"
-                        size="small"
-                        class="text-medium-emphasis"
-                      />
-                    </template>
-                    <span>Negative values represent days before the index event</span>
-                  </v-tooltip>
-                </template>
-              </v-text-field>
-            </v-col>
-          </v-row>
+    <!-- Trimming options (left/right censor calendar dates) -->
+    <div class="trim-options mt-4">
+      <button
+        v-if="!showTrimOptions"
+        type="button"
+        class="trim-toggle"
+        :disabled="disabled"
+        @click="showTrimOptions = true"
+      >
+        {{ addTrimmingLabel }}
+      </button>
+
+      <div
+        v-else
+        class="trim-rows"
+      >
+        <div class="trim-row">
+          <span class="trim-row__label">{{ leftCensorLabel }}</span>
+          <v-text-field
+            v-model="startDateModel"
+            type="date"
+            density="compact"
+            variant="outlined"
+            hide-details
+            class="trim-row__input"
+            :placeholder="noCensoringLabel"
+            :disabled="disabled"
+            :aria-label="leftCensorLabel"
+            clearable
+            @update:model-value="emitCensorWindow"
+            @click:clear="clearStartDate"
+          />
+        </div>
+        <div class="trim-row">
+          <span class="trim-row__label">{{ rightCensorLabel }}</span>
+          <v-text-field
+            v-model="endDateModel"
+            type="date"
+            density="compact"
+            variant="outlined"
+            hide-details
+            class="trim-row__input"
+            :placeholder="noCensoringLabel"
+            :disabled="disabled"
+            :aria-label="rightCensorLabel"
+            clearable
+            @update:model-value="emitCensorWindow"
+            @click:clear="clearEndDate"
+          />
         </div>
 
-        <!-- End Date Configuration -->
-        <div class="date-config-section mt-4">
-          <h4 class="text-subtitle-1 mb-2">
-            {{ t('options.endDate', 'End Date').value }}
-          </h4>
-          <v-row>
-            <v-col cols="6">
-              <v-select
-                v-model="localEndDateField"
-                :items="dateFieldOptions"
-                :label="t('common.select', 'Date Field').value"
-                :disabled="disabled"
-                variant="outlined"
-                density="compact"
-                @update:model-value="updateEndDate"
-              />
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                v-model.number="localEndOffset"
-                type="number"
-                :label="t('components.cohortExpressionEditor.days', 'Offset (days)').value"
-                :disabled="disabled"
-                :rules="[offsetRule]"
-                variant="outlined"
-                density="compact"
-                @blur="updateEndDate"
-              >
-                <template #append-inner>
-                  <v-tooltip location="top">
-                    <template #activator="{ props: tipProps }">
-                      <v-icon
-                        v-bind="tipProps"
-                        icon="mdi-information-outline"
-                        size="small"
-                        class="text-medium-emphasis"
-                      />
-                    </template>
-                    <span>Negative values represent days before the index event</span>
-                  </v-tooltip>
-                </template>
-              </v-text-field>
-            </v-col>
-          </v-row>
-        </div>
-
-        <!-- Warning for invalid offset range -->
         <v-alert
-          v-if="hasOffsetWarning"
+          v-if="dateOrderWarning"
           type="warning"
           variant="tonal"
           density="compact"
-          class="mt-4"
+          class="mt-2"
         >
-          {{ t('exitCriteria.validation.startGreaterThanEnd', 'Start offset must be less than or equal to end offset').value }}
+          {{ dateOrderWarning }}
         </v-alert>
-      </div>
-
-      <div class="mt-4">
-        <v-btn
-          variant="text"
-          color="error"
-          :disabled="disabled"
-          @click="clearCensorWindow"
-        >
-          {{ t('components.filterPanel.buttons.clear', 'Clear Censor Window').value }}
-        </v-btn>
       </div>
     </div>
   </div>
@@ -143,119 +86,194 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import type { Period } from '@/models/cohort.types'
+import type { CensorWindow, CollapseSettings } from '@/models/cohort.types'
 import type { ValidationError } from '@/models/validation.types'
 
 const { t } = useI18n()
 
 interface Props {
-  modelValue?: Period | null
+  censorWindow?: CensorWindow | null
+  collapseSettings?: CollapseSettings | null
   disabled?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  censorWindow: null,
+  collapseSettings: null,
+  disabled: false,
+})
+
 const emit = defineEmits<{
-  'update:modelValue': [value: Period | null]
+  'update:censorWindow': [value: CensorWindow | undefined]
+  'update:collapseSettings': [value: CollapseSettings]
   'validation-error': [errors: ValidationError[]]
 }>()
 
-// Local state
-const localStartDateField = ref<'START_DATE' | 'END_DATE'>(
-  props.modelValue?.startDate?.dateField || 'START_DATE'
+const eraGapLabel = computed(() =>
+  t('components.cohortExpressionEditor.cohortErasText_1', 'Specify era collapse gap size:').value
 )
-const localStartOffset = ref<number>(
-  props.modelValue?.startDate?.offset || 0
+const daysLabel = computed(() =>
+  t('components.cohortExpressionEditor.days', 'days').value
 )
-const localEndDateField = ref<'START_DATE' | 'END_DATE'>(
-  props.modelValue?.endDate?.dateField || 'END_DATE'
+const addTrimmingLabel = computed(() =>
+  t('components.cohortExpressionEditor.addTrimmingOptions', 'add trimming options...').value
 )
-const localEndOffset = ref<number>(
-  props.modelValue?.endDate?.offset || 0
+const leftCensorLabel = computed(() =>
+  t('components.cohortExpressionEditor.cohortErasText_2', 'Left censor cohort start dates to').value
+)
+const rightCensorLabel = computed(() =>
+  t('components.cohortExpressionEditor.cohortErasText_3', 'Right censor cohort end dates to').value
+)
+const noCensoringLabel = computed(() =>
+  t('components.cohortExpressionEditor.noCensoring', 'No Censoring').value
 )
 
-// Date field options
-const dateFieldOptions = [
-  { value: 'START_DATE', title: t('options.startDate', 'Start Date').value },
-  { value: 'END_DATE', title: t('options.endDate', 'End Date').value }
-]
+const eraPadModel = ref<number>(props.collapseSettings?.eraPad ?? 0)
+const startDateModel = ref<string | null>(props.censorWindow?.startDate ?? null)
+const endDateModel = ref<string | null>(props.censorWindow?.endDate ?? null)
+const showTrimOptions = ref<boolean>(
+  Boolean(props.censorWindow?.startDate || props.censorWindow?.endDate)
+)
 
-// Validation
-const offsetRule = (value: number) => {
-  if (value === undefined || value === null) {
-    return true
-  }
-  if (isNaN(value)) {
-    return t('exitCriteria.validation.offsetRequired', 'Offset is required').value
-  }
-  return true
-}
+watch(
+  () => props.collapseSettings,
+  (value) => {
+    eraPadModel.value = value?.eraPad ?? 0
+  },
+  { deep: true }
+)
 
-// Check for invalid offset range (warning only)
-const hasOffsetWarning = computed(() => {
-  if (localStartOffset.value !== undefined && localEndOffset.value !== undefined) {
-    return localStartOffset.value > localEndOffset.value
+watch(
+  () => props.censorWindow,
+  (value) => {
+    startDateModel.value = value?.startDate ?? null
+    endDateModel.value = value?.endDate ?? null
+    if (value?.startDate || value?.endDate) {
+      showTrimOptions.value = true
+    }
+  },
+  { deep: true }
+)
+
+const dateOrderWarning = computed(() => {
+  if (startDateModel.value && endDateModel.value && startDateModel.value > endDateModel.value) {
+    return t(
+      'exitCriteria.validation.startGreaterThanEnd',
+      'Start date must be on or before end date'
+    ).value
   }
-  return false
+  return ''
 })
 
-// Update functions
-function updateStartDate() {
-  emitUpdatedValue()
+function emitCollapseSettings() {
+  const eraPad = Number.isFinite(eraPadModel.value) && eraPadModel.value >= 0
+    ? Math.floor(eraPadModel.value)
+    : 0
+  eraPadModel.value = eraPad
+  emit('update:collapseSettings', {
+    collapseType: props.collapseSettings?.collapseType ?? 'ERA',
+    eraPad,
+  })
 }
 
-function updateEndDate() {
-  emitUpdatedValue()
-}
-
-function emitUpdatedValue() {
-  const value: Period = {
-    startDate: {
-      dateField: localStartDateField.value,
-      offset: localStartOffset.value
-    },
-    endDate: {
-      dateField: localEndDateField.value,
-      offset: localEndOffset.value
-    }
+function emitCensorWindow() {
+  const start = startDateModel.value || null
+  const end = endDateModel.value || null
+  if (!start && !end) {
+    emit('update:censorWindow', undefined)
+    emit('validation-error', [])
+    return
   }
-
-  emit('update:modelValue', value)
-
-  // Emit validation warnings if needed
-  if (hasOffsetWarning.value) {
-    const warnings: ValidationError[] = [{
-      field: 'censorWindow.endDate.offset',
-      message: t('exitCriteria.validation.startGreaterThanEnd', 'Start offset must be less than or equal to end offset').value,
-      severity: 'warning'
-    }]
-    emit('validation-error', warnings)
+  emit('update:censorWindow', { startDate: start, endDate: end })
+  if (dateOrderWarning.value) {
+    emit('validation-error', [
+      {
+        field: 'censorWindow.endDate',
+        message: dateOrderWarning.value,
+        severity: 'warning',
+      },
+    ])
   } else {
     emit('validation-error', [])
   }
 }
 
-function clearCensorWindow() {
-  emit('update:modelValue', null)
-  emit('validation-error', [])
+function clearStartDate() {
+  startDateModel.value = null
+  emitCensorWindow()
 }
 
-// Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    localStartDateField.value = newValue.startDate?.dateField || 'START_DATE'
-    localStartOffset.value = newValue.startDate?.offset || 0
-    localEndDateField.value = newValue.endDate?.dateField || 'END_DATE'
-    localEndOffset.value = newValue.endDate?.offset || 0
-  }
-}, { deep: true })
+function clearEndDate() {
+  endDateModel.value = null
+  emitCensorWindow()
+}
 </script>
 
 <style scoped>
 .censor-window-editor {
-  margin: 16px 0;
+  margin: 0;
 }
 
-.date-config-section {
-  padding: 8px 0;
+.era-pad-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.era-pad-row__label {
+  font-size: 14px;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.era-pad-row__input {
+  max-width: 120px;
+}
+
+.era-pad-row__suffix {
+  font-size: 14px;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.trim-toggle {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 13px;
+  color: rgb(var(--v-theme-primary));
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.trim-toggle:hover:not(:disabled) {
+  color: rgb(var(--v-theme-primary-darken-1));
+}
+
+.trim-toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.trim-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trim-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.trim-row__label {
+  font-size: 14px;
+  color: rgb(var(--v-theme-on-surface));
+  min-width: 240px;
+}
+
+.trim-row__input {
+  max-width: 200px;
 }
 </style>

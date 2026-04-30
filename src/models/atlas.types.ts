@@ -34,17 +34,14 @@ export interface AtlasCollapseSettings {
 }
 
 /**
- * Atlas censor window (period structure)
+ * Atlas censor window — plain ISO date strings (yyyy-mm-dd) or null.
+ * Per Atlas 2.15 (`InputTypes/Period.js`), CensorWindow is NOT the
+ * date-field+offset structure used elsewhere; it's literal calendar
+ * dates that left/right-censor cohort start/end dates.
  */
 export interface AtlasCensorWindow {
-  StartDate?: {
-    DateField: string
-    Offset: number
-  }
-  EndDate?: {
-    DateField: string
-    Offset: number
-  }
+  StartDate?: string | null
+  EndDate?: string | null
 }
 
 export interface AtlasCohortDefinition {
