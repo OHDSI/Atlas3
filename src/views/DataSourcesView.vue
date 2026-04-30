@@ -1,5 +1,7 @@
 <template>
   <page-shell
+    hero
+    eyebrow="OHDSI · CDM"
     :title="pageTitle"
     :subtitle="pageSubtitle"
   >
