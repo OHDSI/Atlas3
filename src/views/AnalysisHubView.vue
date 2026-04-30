@@ -88,7 +88,7 @@ function getLabel(tab: Tab): string {
   top: 0;
   z-index: 3;
   background: rgb(var(--v-theme-surface));
-  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
+  border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
   padding: 0 24px;
 }
 
