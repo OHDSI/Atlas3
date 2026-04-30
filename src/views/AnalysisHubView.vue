@@ -26,14 +26,7 @@
         </v-tabs>
       </nav>
 
-      <router-view v-slot="{ Component }">
-        <transition
-          name="tab-fade"
-          mode="out-in"
-        >
-          <component :is="Component" />
-        </transition>
-      </router-view>
+      <router-view />
     </div>
   </page-shell>
 </template>
@@ -100,19 +93,4 @@ function getLabel(tab: Tab): string {
   padding-inline: 32px;
 }
 
-/* Slide-fade between tab routes — gives router-view the same
- * polish that v-window's built-in transition provides on
- * the Concepts page. */
-.tab-fade-enter-active,
-.tab-fade-leave-active {
-  transition: opacity 180ms ease, transform 180ms ease;
-}
-.tab-fade-enter-from {
-  opacity: 0;
-  transform: translateX(8px);
-}
-.tab-fade-leave-to {
-  opacity: 0;
-  transform: translateX(-8px);
-}
 </style>
