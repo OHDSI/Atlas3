@@ -1005,13 +1005,17 @@ export function trellisChartOptions(
   const plotsPerRow = Math.min(maxPlotsPerRow, totalPlots)
   const numRows = Math.ceil(totalPlots / plotsPerRow)
 
-  // Grid dimensions
-  const GRID_WIDTH = 90 / plotsPerRow
+  // Grid dimensions. Reserved a bit more horizontal margin on the
+  // left so the rotated y-axis name + tick labels of the leftmost
+  // chart don't collide with the page edge or the previous column.
+  // Bump the vertical gap so the title of the next row sits clear
+  // of the x-axis tick labels of the row above.
+  const GRID_WIDTH = 88 / plotsPerRow
   const GRID_GAP = 5 / plotsPerRow
-  const GRID_LEFT_MARGIN = 5
-  const GRID_HEIGHT = 60 / numRows
-  const GRID_TOP_MARGIN = title ? 15 : 8  // More space if there's a main title
-  const GRID_VERTICAL_GAP = 30 / numRows
+  const GRID_LEFT_MARGIN = 7
+  const GRID_HEIGHT = 56 / numRows
+  const GRID_TOP_MARGIN = title ? 15 : 9  // More space if there's a main title
+  const GRID_VERTICAL_GAP = 14
 
   // Calculate global Y-axis range for consistent scale across all plots
   const allYValues = data.series.flatMap(s => s.data.map(d => d.y))
@@ -1129,16 +1133,22 @@ export function trellisChartOptions(
         show: colIndex === 0,
         fontSize: 10
       },
-      // Only show y axis name for leftmost chart in each row
+      // Only show y axis name for leftmost chart in each row.
+      // Render the name vertically (rotated 90°) along the y-axis
+      // line so it doesn't extend horizontally across the chart
+      // area or collide with the row above. nameGap stays modest
+      // so the label sits next to the tick numbers, not far left.
       ...(colIndex === 0 && {
         name: 'Prevalence Per 1000 People',
         nameLocation: 'middle',
-        nameGap: 50,
+        nameRotate: 90,
+        nameGap: 38,
         position: 'left',
         nameTextStyle: {
-          fontSize: 14,
-          fontWeight: 'bold'
-        }
+          fontSize: 12,
+          fontWeight: 'normal',
+          color: '#5e6470',
+        },
       })
     })
 
