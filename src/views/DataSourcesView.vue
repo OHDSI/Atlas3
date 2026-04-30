@@ -372,19 +372,23 @@ onMounted(async () => {
 
 .datasources-view__report {
   background: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline-variant));
   border-radius: 12px;
   padding: 20px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
 .datasources-view__empty {
+  /* MD3 "filled" container — surface-variant tint, no border or
+   * dashed line. The fill alone signals "this is a placeholder
+   * region." */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
   padding: 56px 24px;
-  border: 1px dashed rgb(var(--v-theme-outline-variant));
   border-radius: 12px;
   background: rgb(var(--v-theme-surface-variant));
 }

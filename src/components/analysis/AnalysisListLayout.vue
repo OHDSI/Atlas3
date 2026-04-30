@@ -211,8 +211,10 @@ function onViewModeChange(value: AnalysisViewMode | null) {
 }
 
 .analysis-list__body {
+  /* The body sits inside the page-shell card already, so no extra
+   * border or shadow is needed — the data table provides its own
+   * row dividers. */
   border-radius: 12px;
-  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
   overflow: hidden;
   background: rgb(var(--v-theme-surface));
 }

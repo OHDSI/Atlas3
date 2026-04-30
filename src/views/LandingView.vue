@@ -138,8 +138,10 @@ const handleNewCohort = () => {
 }
 
 .landing__hero {
-  border: 1px solid rgb(var(--v-theme-outline-variant)) !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  /* MD3 elevated: soft two-pass shadow, no outline. */
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 12px rgba(15, 23, 42, 0.04) !important;
 }
 
 .landing__hero-grid {
@@ -223,17 +225,20 @@ const handleNewCohort = () => {
   gap: 6px;
   padding: 20px;
   background-color: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline-variant));
   border-radius: 12px;
   text-decoration: none;
   color: inherit;
-  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 2px 6px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 160ms ease, transform 160ms ease;
 }
 
 .landing__feature:hover {
-  border-color: rgba(31, 66, 90, 0.4);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(15, 23, 42, 0.06),
+    0 8px 20px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
 }
 
 .landing__feature-icon {
@@ -254,9 +259,11 @@ const handleNewCohort = () => {
 
 .landing__documentation {
   background-color: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline-variant));
   border-radius: 12px;
   padding: 24px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
 .landing__section-title {

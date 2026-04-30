@@ -58,10 +58,15 @@ const hasHeader = computed(() => Boolean(props.title || slots.actions))
 }
 
 .page-card {
+  /* MD3 "elevated" card: surface fill + soft shadow, no outline.
+   * The shadow uses two passes — a tight 1-2px ambient and a wider
+   * 8-16px diffuse — which reads as a soft lift instead of a hard
+   * line. Replaces the previous outline-variant border. */
   background-color: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline-variant));
   border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 12px rgba(15, 23, 42, 0.04);
   width: 100%;
   padding: 32px;
   box-sizing: border-box;
