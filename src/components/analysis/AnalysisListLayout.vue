@@ -1,99 +1,97 @@
 <template>
-  <div class="page-wrapper">
-    <div class="page-card">
-      <header
-        v-if="title || subtitle || $slots.title"
-        class="analysis-list__header"
-      >
-        <div class="analysis-list__heading">
-          <slot name="title">
-            <h1
-              v-if="title"
-              class="analysis-list__title"
-            >
-              {{ title }}
-            </h1>
-          </slot>
-          <p
-            v-if="subtitle"
-            class="analysis-list__subtitle"
+  <div class="analysis-list-layout">
+    <header
+      v-if="title || subtitle || $slots.title"
+      class="analysis-list__header"
+    >
+      <div class="analysis-list__heading">
+        <slot name="title">
+          <h1
+            v-if="title"
+            class="analysis-list__title"
           >
-            {{ subtitle }}
-          </p>
-        </div>
-      </header>
+            {{ title }}
+          </h1>
+        </slot>
+        <p
+          v-if="subtitle"
+          class="analysis-list__subtitle"
+        >
+          {{ subtitle }}
+        </p>
+      </div>
+    </header>
 
-      <div class="analysis-list">
-        <!-- Toolbar: actions left, view-mode toggle right -->
-        <div class="analysis-list__toolbar">
-          <div class="analysis-list__actions">
-            <slot name="actions" />
-            <v-spacer />
-            <v-btn-toggle
-              v-if="showViewToggle"
-              :model-value="viewMode"
-              mandatory
-              density="compact"
-              variant="outlined"
-              divided
-              class="analysis-list__view-toggle"
-              :data-testid="testid ? `${testid}-view-toggle` : undefined"
-              @update:model-value="onViewModeChange"
+    <div class="analysis-list">
+      <!-- Toolbar: actions left, view-mode toggle right -->
+      <div class="analysis-list__toolbar">
+        <div class="analysis-list__actions">
+          <slot name="actions" />
+          <v-spacer />
+          <v-btn-toggle
+            v-if="showViewToggle"
+            :model-value="viewMode"
+            mandatory
+            density="compact"
+            variant="outlined"
+            divided
+            class="analysis-list__view-toggle"
+            :data-testid="testid ? `${testid}-view-toggle` : undefined"
+            @update:model-value="onViewModeChange"
+          >
+            <v-btn
+              value="tile"
+              size="small"
+              :aria-label="t('common.tileView', 'Tile view').value"
+              :data-testid="testid ? `${testid}-view-toggle-tile` : undefined"
             >
-              <v-btn
-                value="tile"
-                size="small"
-                :aria-label="t('common.tileView', 'Tile view').value"
-                :data-testid="testid ? `${testid}-view-toggle-tile` : undefined"
-              >
-                <v-icon>mdi-view-grid</v-icon>
-              </v-btn>
-              <v-btn
-                value="table"
-                size="small"
-                :aria-label="t('dataSources.table.tableTab', 'Table view').value"
-                :data-testid="testid ? `${testid}-view-toggle-table` : undefined"
-              >
-                <v-icon>mdi-view-list</v-icon>
-              </v-btn>
-            </v-btn-toggle>
-          </div>
+              <v-icon>mdi-view-grid</v-icon>
+            </v-btn>
+            <v-btn
+              value="table"
+              size="small"
+              :aria-label="t('dataSources.table.tableTab', 'Table view').value"
+              :data-testid="testid ? `${testid}-view-toggle-table` : undefined"
+            >
+              <v-icon>mdi-view-list</v-icon>
+            </v-btn>
+          </v-btn-toggle>
         </div>
+      </div>
 
-        <!-- Filters -->
-        <div
-          v-if="$slots.filters"
-          class="analysis-list__filters"
-        >
-          <slot name="filters" />
-        </div>
+      <!-- Filters -->
+      <div
+        v-if="$slots.filters"
+        class="analysis-list__filters"
+      >
+        <slot name="filters" />
+      </div>
 
-        <!-- Error banner -->
-        <v-alert
-          v-if="error"
-          type="error"
-          variant="tonal"
-          closable
-          density="compact"
-          class="analysis-list__error"
-          :data-testid="testid ? `${testid}-error` : undefined"
-          @click:close="$emit('clear-error')"
-        >
-          {{ error }}
-        </v-alert>
+      <!-- Error banner -->
+      <v-alert
+        v-if="error"
+        type="error"
+        variant="tonal"
+        closable
+        density="compact"
+        class="analysis-list__error"
+        :data-testid="testid ? `${testid}-error` : undefined"
+        @click:close="$emit('clear-error')"
+      >
+        {{ error }}
+      </v-alert>
 
-        <!-- Body -->
-        <div class="analysis-list__body">
-          <slot />
-        </div>
+      <!-- Body -->
+      <div class="analysis-list__body">
+        <slot />
+      </div>
 
-        <!-- Pagination -->
-        <div
-          v-if="$slots.pagination"
-          class="analysis-list__pagination"
-        >
-          <slot name="pagination" />
-        </div>
+      <!-- Pagination -->
+      <div
+        v-if="$slots.pagination"
+        class="analysis-list__pagination"
+      >
+        <slot name="pagination" />
       </div>
     </div>
   </div>
@@ -137,26 +135,16 @@ function onViewModeChange(value: AnalysisViewMode | null) {
 </script>
 
 <style scoped>
-.page-wrapper {
-  min-height: 100%;
-  background-color: rgb(var(--v-theme-background));
+/* The outer card now comes from the parent page-shell (via
+ * AnalysisHubView). This component just renders the section's
+ * header + toolbar + body inside that card. */
+.analysis-list-layout {
   display: flex;
-  padding: 24px;
-  box-sizing: border-box;
-}
-
-.page-card {
-  border-radius: 16px;
-  background-color: rgb(var(--v-theme-surface));
-  width: 100%;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 4px 12px rgba(15, 23, 42, 0.04);
-  overflow: hidden;
+  flex-direction: column;
 }
 
 .analysis-list__header {
-  padding: 28px 32px 0;
+  padding: 0 0 16px;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -183,7 +171,6 @@ function onViewModeChange(value: AnalysisViewMode | null) {
 }
 
 .analysis-list {
-  padding: 20px 32px 28px;
   display: flex;
   flex-direction: column;
   gap: 16px;

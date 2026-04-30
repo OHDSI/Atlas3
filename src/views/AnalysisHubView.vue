@@ -1,38 +1,48 @@
 <template>
-  <div class="analysis-hub">
-    <nav class="page-tabs-rail analysis-hub__tabs-rail">
-      <v-tabs
-        :model-value="activeTabName"
-        align-tabs="start"
-        density="comfortable"
-        color="primary"
-        slider-color="primary"
-        bg-color="transparent"
-        class="page-tabs"
-      >
-        <v-tab
-          v-for="tab in tabs"
-          :key="tab.name"
-          :value="tab.name"
-          :to="{ name: tab.name }"
+  <page-shell>
+    <div class="analysis-hub">
+      <nav class="page-tabs-rail analysis-hub__tabs-rail">
+        <v-tabs
+          :model-value="activeTabName"
+          align-tabs="start"
+          density="comfortable"
+          color="primary"
+          slider-color="primary"
+          bg-color="transparent"
+          class="page-tabs"
         >
-          <v-icon
-            start
-            :icon="tab.icon"
-          />
-          {{ getLabel(tab) }}
-        </v-tab>
-      </v-tabs>
-    </nav>
+          <v-tab
+            v-for="tab in tabs"
+            :key="tab.name"
+            :value="tab.name"
+            :to="{ name: tab.name }"
+          >
+            <v-icon
+              start
+              :icon="tab.icon"
+            />
+            {{ getLabel(tab) }}
+          </v-tab>
+        </v-tabs>
+      </nav>
 
-    <router-view />
-  </div>
+      <router-view v-slot="{ Component }">
+        <transition
+          name="tab-fade"
+          mode="out-in"
+        >
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </div>
+  </page-shell>
 </template>
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import PageShell from '@/components/shared/PageShell.vue'
 
 interface Tab {
   name: string
@@ -80,15 +90,29 @@ function getLabel(tab: Tab): string {
 .analysis-hub {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
 }
 
-/* Sticky behavior is unique to the analysis hub — the shared
- * .page-tabs-rail handles surface, border, padding, and spacing. */
+/* Pull the rail flush to the page-shell card edges so the bottom
+ * border spans the full card width — same trick ConceptsView uses. */
 .analysis-hub__tabs-rail {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  margin: 0;
+  margin-inline: -32px;
+  margin-top: -32px;
+  padding-inline: 32px;
+}
+
+/* Slide-fade between tab routes — gives router-view the same
+ * polish that v-window's built-in transition provides on
+ * the Concepts page. */
+.tab-fade-enter-active,
+.tab-fade-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.tab-fade-enter-from {
+  opacity: 0;
+  transform: translateX(8px);
+}
+.tab-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-8px);
 }
 </style>
