@@ -51,7 +51,7 @@
         :items="store.filteredSets"
         :loading="store.loading"
         :items-per-page="itemsPerPage"
-        :items-per-page-text="t('datatable.language.lengthMenu', 'Rows per page:').value"
+        :items-per-page-text="t('datatable.itemsPerPage', 'Rows per page:').value"
         class="elevation-1"
       >
         <!-- Name -->
