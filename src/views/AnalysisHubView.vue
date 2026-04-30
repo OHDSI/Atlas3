@@ -26,7 +26,14 @@
         </v-tabs>
       </nav>
 
-      <router-view />
+      <router-view v-slot="{ Component, route }">
+        <transition name="tab-fade">
+          <component
+            :is="Component"
+            :key="route.path"
+          />
+        </transition>
+      </router-view>
     </div>
   </page-shell>
 </template>
@@ -91,6 +98,28 @@ function getLabel(tab: Tab): string {
   margin-inline: -32px;
   margin-top: -32px;
   padding-inline: 32px;
+  position: relative;
+  z-index: 2;
 }
 
+/* Slide-fade between tab routes. No `mode="out-in"` (which blanks
+ * lazy-loaded routes during the dynamic-import gap) — old and new
+ * components overlap briefly. The leaving component is absolutely
+ * positioned so it doesn't push the new content down. */
+.tab-fade-enter-active,
+.tab-fade-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.tab-fade-enter-from {
+  opacity: 0;
+  transform: translateX(8px);
+}
+.tab-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+.tab-fade-leave-active {
+  position: absolute;
+  inset: 32px 32px auto 32px;
+}
 </style>
