@@ -42,9 +42,12 @@ describe('SunburstChart', () => {
       },
     })
     const exposed = w.vm as unknown as {
-      handleChartClick: (e: { data?: { name: string; value: number } }) => void
+      handleChartClick: (e: { dataIndex?: number }) => void
     }
-    exposed.handleChartClick({ data: { name: '1', value: 10 } })
-    expect(w.emitted('arc-click')).toBeTruthy()
+    exposed.handleChartClick({ dataIndex: 0 })
+    const events = w.emitted('arc-click') as Array<[unknown]> | undefined
+    expect(events).toBeTruthy()
+    const payload = events?.[0]?.[0] as { name: string } | undefined
+    expect(payload?.name).toBe('1')
   })
 })
