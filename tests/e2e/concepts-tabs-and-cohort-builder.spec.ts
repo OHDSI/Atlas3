@@ -131,34 +131,20 @@ test.describe('Cohort Builder - Name Editing', () => {
     await waitForPageReady(page)
   })
 
-  test('should display edit name icon in breadcrumb', async ({ page }) => {
-    // Check for edit icon
-    const editIcon = page.locator('.cohort-builder__breadcrumb-edit-icon, .mdi-pencil').first()
-    await expect(editIcon).toBeVisible({ timeout: 5000 })
+  test('should display inline-editable cohort name input', async ({ page }) => {
+    const titleInput = page.locator('.cohort-builder-view__title-input')
+    await expect(titleInput).toBeVisible({ timeout: 5000 })
   })
 
-  test('should open edit name dialog when clicking edit icon', async ({ page }) => {
-    // Ensure no overlays are blocking
+  test('should accept a new name typed into the inline title input', async ({ page }) => {
     await waitForOverlaysToClose(page)
 
-    // Find and click edit icon
-    const editIcon = page.locator('.cohort-builder__breadcrumb-edit-icon, .mdi-pencil').first()
-    await expect(editIcon).toBeVisible({ timeout: 5000 })
+    const titleInput = page.locator('.cohort-builder-view__title-input')
+    await expect(titleInput).toBeVisible({ timeout: 5000 })
 
-    await editIcon.click()
-    await page.waitForTimeout(500)
-
-    // Check if dialog appears
-    const dialog = page.locator('.v-dialog, [role="dialog"]')
-    const hasDialog = await dialog.count() > 0
-
-    if (hasDialog) {
-      await expect(dialog).toBeVisible()
-
-      // Check for name input field
-      const nameInput = page.locator('.v-dialog input[type="text"]').first()
-      await expect(nameInput).toBeVisible()
-    }
+    await titleInput.fill('Renamed cohort')
+    await titleInput.blur()
+    await expect(titleInput).toHaveValue('Renamed cohort')
   })
 })
 

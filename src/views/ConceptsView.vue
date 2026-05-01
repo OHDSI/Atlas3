@@ -80,12 +80,15 @@ const sourceKey = ref('SYNPUF1K')
 // Provide sourceKey to child components
 provide('sourceKey', sourceKey)
 
-// Watch for tab changes and update URL
+// Watch for tab changes and update URL. `immediate: true` syncs the URL to
+// the default tab on mount so deep-links / query params stay accurate.
 watch(activeTab, (newTab) => {
-  router.push({ query: { ...route.query, tab: newTab } })
+  if (route.query.tab !== newTab) {
+    router.replace({ query: { ...route.query, tab: newTab } })
+  }
   // Close the editor when switching tabs
   conceptSetsStore.closeEditor()
-})
+}, { immediate: true })
 </script>
 
 <style scoped>

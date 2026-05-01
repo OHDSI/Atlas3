@@ -8,9 +8,9 @@ import { waitForOverlaysToClose, waitForPageReady } from '../helpers/wait-utils'
 
 test.describe('Concept Search', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to concepts page
+    // Navigate to concepts page (search tab — default is now "sets")
     await setupBasicMocks(page)
-    await page.goto('/concepts')
+    await page.goto('/concepts?tab=search')
 
     // Wait for page to load
     await waitForPageReady(page)
@@ -318,6 +318,8 @@ test.describe('Concept Search', () => {
   test('should display validity status badges', async ({ page }) => {
     const searchInput = page.getByPlaceholder(/search/i)
     await searchInput.fill('diabetes')
+    // Search only fires on Enter / button click — there is no auto-search.
+    await searchInput.press('Enter')
     await page.waitForSelector('table tbody tr', { timeout: 5000 })
     
     // Look for Valid/Invalid badges
