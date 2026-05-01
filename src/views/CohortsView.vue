@@ -111,7 +111,6 @@
         @retry="fetchCohorts"
         @create-cohort="handleCreateCohort"
         @clear-filters="clearFilters"
-        @generate="handleGenerate"
         @delete="handleDeleteClick"
         @tag-click="handleTagClick"
         @show-info="handleShowInfo"
@@ -126,7 +125,6 @@
         @retry="fetchCohorts"
         @create-cohort="handleCreateCohort"
         @clear-filters="clearFilters"
-        @generate="handleGenerate"
         @delete="handleDeleteClick"
         @tag-click="handleTagClick"
         @show-info="handleShowInfo"
@@ -311,12 +309,6 @@
         </v-card>
       </v-dialog>
 
-      <!-- Generation Panel -->
-      <generation-panel
-        v-model="showGenerationPanel"
-        :cohort-id="selectedCohort?.id ?? null"
-      />
-
       <!-- Cohort Info Dialog: refreshed header (eyebrow + accent rule
            + clean title) and tightened typography in the body. -->
       <v-dialog
@@ -389,7 +381,6 @@ import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import CohortFilters from '@/components/cohort/CohortFilters.vue'
-import GenerationPanel from '@/components/cohort/GenerationPanel.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 const router = useRouter()
@@ -422,7 +413,6 @@ watch(viewMode, (mode) => {
 const showImportDialog = ref(false)
 const showDeleteDialog = ref(false)
 const showNewCohortDialog = ref(false)
-const showGenerationPanel = ref(false)
 const newCohortName = ref('')
 const selectedCohort = ref<CohortDefinitionSummary | null>(null)
 const deleting = ref(false)
@@ -585,11 +575,6 @@ async function confirmImport() {
   } finally {
     importing.value = false
   }
-}
-
-function handleGenerate(cohort: CohortDefinitionSummary) {
-  selectedCohort.value = cohort
-  showGenerationPanel.value = true
 }
 
 /**
