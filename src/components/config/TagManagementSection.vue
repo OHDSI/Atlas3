@@ -46,15 +46,37 @@
                 Back to Tag Groups
               </v-btn>
             </div>
-            <v-btn
-              color="primary"
-              prepend-icon="mdi-plus"
-              size="small"
-              @click="openCreateTagDialog"
+            <v-tooltip
+              :disabled="selectedGroup.allowCustom"
+              location="bottom"
+              text="Enable 'Free-form' on this tag group to allow custom tags."
             >
-              Create Tag
-            </v-btn>
+              <template #activator="{ props: tooltipProps }">
+                <span v-bind="tooltipProps">
+                  <v-btn
+                    color="primary"
+                    prepend-icon="mdi-plus"
+                    size="small"
+                    :disabled="!selectedGroup.allowCustom"
+                    @click="openCreateTagDialog"
+                  >
+                    Create Tag
+                  </v-btn>
+                </span>
+              </template>
+            </v-tooltip>
           </div>
+
+          <v-alert
+            v-if="!selectedGroup.allowCustom"
+            type="info"
+            variant="tonal"
+            density="compact"
+            class="mb-3"
+          >
+            This tag group does not allow custom tags. Edit the group and enable
+            <strong>Free-form</strong> to add tags here.
+          </v-alert>
 
           <TagTable
             :items="groupTags"

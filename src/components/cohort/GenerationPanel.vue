@@ -89,15 +89,6 @@
                     Inclusion Rules
                   </v-tab>
                   <v-tab
-                    value="reports"
-                    data-testid="generation-tab-reports"
-                  >
-                    <v-icon class="mr-2">
-                      mdi-chart-box
-                    </v-icon>
-                    Reports
-                  </v-tab>
-                  <v-tab
                     value="samples"
                     data-testid="generation-tab-samples"
                   >
@@ -122,14 +113,6 @@
                         :source-key="selectedSourceKey"
                       />
                     </v-card>
-                  </v-window-item>
-                  <v-window-item value="reports">
-                    <report-panel
-                      :cohort-id="cohortId ?? 0"
-                      :source-key="selectedSourceKey"
-                      :is-open="showReports"
-                      @close="handleCloseReports"
-                    />
                   </v-window-item>
                   <v-window-item value="samples">
                     <v-card
@@ -171,12 +154,11 @@ import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
 import DataSourceTileGrid from '../generation/DataSourceTileGrid.vue'
-import ReportPanel from '../reports/ReportPanel.vue'
 import InclusionRuleReport from '../reports/inclusion/InclusionRuleReport.vue'
 import CohortSamplesPanel from '../cohort-samples/CohortSamplesPanel.vue'
 
 const { t } = useI18n()
-const activeTab = ref<'inclusion-rules' | 'reports' | 'samples'>('inclusion-rules')
+const activeTab = ref<'inclusion-rules' | 'samples'>('inclusion-rules')
 
 interface Props {
   modelValue: boolean
@@ -201,16 +183,9 @@ function close() {
   emit('update:modelValue', false)
 }
 
-// Handle data source tile click to open reports
 function handleDataSourceClick(sourceKey: string) {
   selectedSourceKey.value = sourceKey
   showReports.value = true
-}
-
-// Handle close event from ReportPanel
-function handleCloseReports() {
-  showReports.value = false
-  selectedSourceKey.value = null
 }
 
 // Polling lifecycle

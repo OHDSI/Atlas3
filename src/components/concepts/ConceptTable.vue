@@ -10,6 +10,35 @@
       hide-default-footer
       class="elevation-1"
     >
+      <template
+        v-if="selectable"
+        #header.select
+      >
+        <div :data-testid="'concept-table-select-all'">
+          <v-checkbox-btn
+            :model-value="allVisibleSelected"
+            :indeterminate="someVisibleSelected && !allVisibleSelected"
+            density="compact"
+            hide-details
+            @update:model-value="onToggleSelectAll"
+          />
+        </div>
+      </template>
+
+      <template
+        v-if="selectable"
+        #item.select="{ item }"
+      >
+        <div :data-testid="`concept-table-row-checkbox-${item.conceptId}`">
+          <v-checkbox-btn
+            :model-value="isSelected(item.conceptId)"
+            density="compact"
+            hide-details
+            @update:model-value="(v: boolean | null) => onToggleRow(item.conceptId, v)"
+          />
+        </div>
+      </template>
+
       <!-- Concept Type Badge -->
       <template #item.standardConcept="{ item }">
         <v-chip
@@ -207,6 +236,8 @@ interface Props {
   itemsPerPage?: number
   showAddButton?: boolean
   conceptsInSet?: Set<number>  // Track which concepts are already in set
+  selectable?: boolean         // Render leading checkbox column for bulk selection
+  selected?: number[]          // v-model:selected — list of selected conceptIds
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -216,6 +247,8 @@ const props = withDefaults(defineProps<Props>(), {
   itemsPerPage: 60,
   showAddButton: false,
   conceptsInSet: () => new Set(),
+  selectable: false,
+  selected: () => [],
 })
 
 const emit = defineEmits<{
@@ -223,6 +256,7 @@ const emit = defineEmits<{
   'update:itemsPerPage': [itemsPerPage: number]
   'update:sortBy': [sortBy: string]
   'update:sortDesc': [sortDesc: boolean]
+  'update:selected': [conceptIds: number[]]
   'add-concept': [concept: Concept]
   'remove-concept': [concept: Concept]
 }>()
@@ -248,11 +282,17 @@ const headers = computed(() => {
     { title: t('columns.dpcTooltip', 'DPC').value, key: 'descendantPersonCount', sortable: true, width: '100px', align: 'end' as const },
   ]
 
+  let result = baseHeaders
+
   if (props.showAddButton) {
-    return [{ title: '', key: 'actions', sortable: false, width: '100px' }, ...baseHeaders]
+    result = [{ title: '', key: 'actions', sortable: false, width: '100px' }, ...result]
   }
 
-  return baseHeaders
+  if (props.selectable) {
+    result = [{ title: '', key: 'select', sortable: false, width: '48px' }, ...result]
+  }
+
+  return result
 })
 
 // ============================================================================
@@ -262,6 +302,43 @@ const headers = computed(() => {
 const totalPages = computed(() => {
   return Math.ceil(props.totalItems / props.itemsPerPage)
 })
+
+const selectedSet = computed(() => new Set(props.selected))
+
+const visibleIds = computed(() => props.concepts.map((c) => c.conceptId))
+
+const allVisibleSelected = computed(() => {
+  if (visibleIds.value.length === 0) return false
+  return visibleIds.value.every((id) => selectedSet.value.has(id))
+})
+
+const someVisibleSelected = computed(() => {
+  return visibleIds.value.some((id) => selectedSet.value.has(id))
+})
+
+function isSelected(conceptId: number): boolean {
+  return selectedSet.value.has(conceptId)
+}
+
+function onToggleRow(conceptId: number, value: boolean | null): void {
+  const next = new Set(selectedSet.value)
+  if (value) {
+    next.add(conceptId)
+  } else {
+    next.delete(conceptId)
+  }
+  emit('update:selected', Array.from(next))
+}
+
+function onToggleSelectAll(value: boolean | null): void {
+  const next = new Set(selectedSet.value)
+  if (value) {
+    for (const id of visibleIds.value) next.add(id)
+  } else {
+    for (const id of visibleIds.value) next.delete(id)
+  }
+  emit('update:selected', Array.from(next))
+}
 
 const pageRangeText = computed(() => {
   if (props.totalItems === 0) return '0-0 of 0'

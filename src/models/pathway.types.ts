@@ -44,9 +44,9 @@ export const PathwaySchema = z.object({
   maxDepth: z.number().int().min(1).max(10).default(5),
   allowRepeats: z.boolean().default(false),
   tags: z.array(TagSchema).default([]),
-  createdBy: userSchema.optional(),
+  createdBy: z.union([userSchema, z.object({}).passthrough()]).optional(),
   createdDate: z.union([z.string(), z.number()]).optional(),
-  modifiedBy: userSchema.optional(),
+  modifiedBy: z.union([userSchema, z.object({}).passthrough()]).optional(),
   modifiedDate: z.union([z.string(), z.number()]).optional(),
   hashCode: z.number().optional(),
   hasReadAccess: z.boolean().optional(),
@@ -109,9 +109,12 @@ export const PathwayExecutionSchema = z.object({
   id: z.number(),
   status: PathwayExecutionStatusSchema,
   sourceKey: z.string(),
-  hashCode: z.string().optional(),
+  hashCode: z.union([z.string(), z.number()]).optional(),
   executionDate: z.union([z.string(), z.number()]).optional(),
+  startTime: z.union([z.string(), z.number()]).optional(),
+  endTime: z.union([z.string(), z.number()]).optional(),
   duration: z.number().optional(),
+  exitMessage: z.string().optional(),
 })
 export type PathwayExecution = z.infer<typeof PathwayExecutionSchema>
 

@@ -77,6 +77,53 @@ describe('CohortSampleDetail', () => {
     expect(wrapper.text()).toContain('—') // null recordCount in row 2
   })
 
+  it('renders a profile router-link per row when sourceKey is provided', () => {
+    const wrapper = mount(CohortSampleDetail, {
+      global: {
+        plugins: [vuetify, createPinia()],
+        stubs: {
+          RouterLink: {
+            props: ['to'],
+            template: '<a :data-href="to"><slot /></a>',
+          },
+        },
+      },
+      props: {
+        sourceKey: 'EUNOMIA',
+        sample: {
+          id: 1,
+          name: 'demo',
+          cohortDefinitionId: 42,
+          size: 1,
+          elements: [
+            { sampleId: 1, rank: 1, personId: '1001', genderConceptId: 8507, age: 50 },
+          ],
+        },
+      },
+    })
+    const link = wrapper.find('[data-test=cohort-sample-profile-link]')
+    expect(link.exists()).toBe(true)
+    expect(link.attributes('data-href')).toBe('/profiles/EUNOMIA/1001/42')
+  })
+
+  it('renders the personId as plain text when no sourceKey is available', () => {
+    const wrapper = mount(CohortSampleDetail, {
+      global: globalMountOpts,
+      props: {
+        sample: {
+          id: 1,
+          name: 'demo',
+          size: 1,
+          elements: [
+            { sampleId: 1, rank: 1, personId: '1001', genderConceptId: 8507, age: 50 },
+          ],
+        },
+      },
+    })
+    expect(wrapper.find('[data-test=cohort-sample-profile-link]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('1001')
+  })
+
   it('formats createdDate when present and falls back to em-dash otherwise', () => {
     const wrapperWithDate = mount(CohortSampleDetail, {
       global: globalMountOpts,

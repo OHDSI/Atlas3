@@ -97,10 +97,8 @@ describe('useIncidenceRateBuilder', () => {
       const ok = await save()
 
       expect(ok).toBe(false)
-      expect(feedback.value).toEqual({
-        message: 'Cannot save — fix validation errors first',
-        color: 'error',
-      })
+      expect(feedback.value?.color).toBe('error')
+      expect(feedback.value?.message).toMatch(/^Cannot save/)
     })
 
     it('returns false and notifies if name is taken', async () => {

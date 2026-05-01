@@ -5,6 +5,7 @@ DO $$
 DECLARE
     admin_role_id INTEGER;
     perm_id INTEGER;
+    perm_value TEXT;
 BEGIN
     SELECT id INTO admin_role_id FROM webapi.sec_role WHERE name = 'admin';
     IF admin_role_id IS NULL THEN
@@ -82,6 +83,45 @@ BEGIN
     VALUES ('role:*:users:*:delete', 'Remove users from role') ON CONFLICT (value) DO NOTHING;
     SELECT id INTO perm_id FROM webapi.sec_permission WHERE value = 'role:*:users:*:delete';
     INSERT INTO webapi.sec_role_permission (role_id, permission_id) VALUES (admin_role_id, perm_id) ON CONFLICT DO NOTHING;
+
+    -- Global read/write/create permissions used by WebAPI's @PreAuthorize
+    -- annotations (see e.g. ConceptSetService.java: `isPermitted('read:conceptset')`).
+    -- These are global verbs — not URL-shaped Shiro wildcards.
+    -- Granting these to the admin role lets admin read/write entities owned
+    -- by other users (e.g. the seeded `ohdsi` author).
+    FOR perm_value IN SELECT unnest(ARRAY[
+        'admin:security',
+        'admin:source',
+        'admin:tags',
+        'create:conceptset',
+        'read:conceptset',
+        'write:conceptset',
+        'create:cohort-definition',
+        'read:cohort-definition',
+        'write:cohort-definition',
+        'create:cohort-characterization',
+        'write:cohort-characterization',
+        'create:feature-analysis',
+        'read:feature-analysis',
+        'write:feature-analysis',
+        'create:incidence',
+        'read:incidence',
+        'write:incidence',
+        'create:pathway',
+        'read:pathway',
+        'write:pathway',
+        'create:reusable',
+        'read:reusable',
+        'write:reusable',
+        'write:source'
+    ]) LOOP
+        INSERT INTO webapi.sec_permission (value, description)
+        VALUES (perm_value, 'Granted to admin by atlasdb seed')
+        ON CONFLICT (value) DO NOTHING;
+        SELECT id INTO perm_id FROM webapi.sec_permission WHERE value = perm_value;
+        INSERT INTO webapi.sec_role_permission (role_id, permission_id)
+        VALUES (admin_role_id, perm_id) ON CONFLICT DO NOTHING;
+    END LOOP;
 
     -- Assign admin user to admin role
     INSERT INTO webapi.sec_user_role (user_id, role_id)
