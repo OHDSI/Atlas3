@@ -85,7 +85,12 @@ export async function setupBasicMocks(page: Page) {
         login: 'test_user',
         name: 'Test User',
         id: 1,
-        permissionIdx: {},
+        // Wildcard grants every permission so action buttons gated by
+        // hasPermission(...) (e.g. create/import cohort, delete) stay enabled.
+        // parseUserInfo reads `authz.permissions ?? data.permissions`, so we
+        // expose it under both keys to cover legacy and WebAPI 3.0 shapes.
+        permissions: ['*'],
+        authz: { permissions: ['*'] },
         permissionsBySourceKey: {},
         trexsqlCacheEnabled: false
       })

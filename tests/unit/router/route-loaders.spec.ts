@@ -25,7 +25,7 @@ describe('route table loaders', () => {
       if (typeof r.component === 'function') {
         const result = (r.component as () => unknown)()
         if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
-          ;(result as Promise<unknown>).then(
+          (result as Promise<unknown>).then(
             () => {},
             () => {},
           )

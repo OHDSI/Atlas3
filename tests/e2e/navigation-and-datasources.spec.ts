@@ -23,10 +23,12 @@ test.describe('Landing Page Navigation', () => {
     await waitForPageReady(page)
   })
 
-  test('should display landing page with ATLAS title', async ({ page }) => {
-    // Check for ATLAS title
-    const title = page.locator('h1:has-text("ATLAS")')
-    await expect(title).toBeVisible()
+  test('should display landing page with ATLAS branding', async ({ page }) => {
+    // Eyebrow carries the ATLAS branding now ("OHDSI · Atlas v3.0");
+    // the h1 is the marketing tagline.
+    const eyebrow = page.locator('.text-eyebrow:has-text("Atlas")')
+    await expect(eyebrow.first()).toBeVisible()
+    await expect(page.locator('h1.landing__title')).toBeVisible()
   })
 
   test('should have Search Vocabulary button that navigates to concepts', async ({ page }) => {
@@ -92,9 +94,10 @@ test.describe('DataSources Page - Basic Functionality', () => {
   })
 
   test('should display report type selector component', async ({ page }) => {
-    // Check for report type selector
-    const reportSelector = page.getByTestId('report-type-selector')
-    await expect(reportSelector).toBeVisible({ timeout: 5000 })
+    // Report-type chooser is now a sidebar list, not a dropdown.
+    const sidebar = page.locator('.datasource-sidebar')
+    await expect(sidebar).toBeVisible({ timeout: 5000 })
+    await expect(sidebar.locator('[data-testid^="datasource-sidebar-"]').first()).toBeVisible()
   })
 
 })

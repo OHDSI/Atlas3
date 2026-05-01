@@ -14,7 +14,8 @@ test.describe('Profile direct URL', () => {
   test('renders header, demographics, and events table', async ({ page }) => {
     await page.goto('/profiles/SYNPUF1K/1234/42')
 
-    await expect(page.locator('[data-test="profile-input-bar"]')).toBeVisible()
+    // Person input + source select replaced the single profile-input-bar.
+    await expect(page.locator('[data-test="profile-person-input"]')).toBeVisible()
     await expect(page.locator('[data-test="profile-demographics"]')).toBeVisible()
     await expect(page.locator('[data-test="profile-events-table"]')).toBeVisible()
     await expect(page.locator('[data-test="profile-events-table"]')).toContainText('Lisinopril')

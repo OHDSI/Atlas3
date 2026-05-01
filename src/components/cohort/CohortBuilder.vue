@@ -588,6 +588,8 @@ import { useWebAPIStore } from '@/stores/webapi'
 import { useAtlasConverter } from '@/composables/useAtlasConverter'
 import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
+import { usePermissions } from '@/composables/usePermissions'
+import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getCohortDefinition } from '@/services/webapi'
 import { convertAtlasToInternal, convertInternalToAtlas } from '@/services/atlas-converter'
 import { getConceptSetById } from '@/services/concept-set.service'
@@ -850,8 +852,24 @@ const {
   inclusionQualifyingLimit,
 })
 
+// Permission gating for save: a *new* cohort needs `create:cohort-definition`,
+// editing an existing one needs write access on that specific entity (which
+// canWrite already considers global write perms + ownership + per-entity
+// grant). Save is hidden in version preview separately via isPreviewingVersion.
+const { hasPermission } = usePermissions()
+const { canWrite: canWriteCohort } = useEntityAccess('cohortDefinition', cohortId)
+const canSavePermission = computed(() =>
+  cohortId.value === null
+    ? hasPermission('create:cohort-definition')
+    : canWriteCohort.value,
+)
+
 const canSave = computed(() => {
-  return cohortName.value.trim().length > 0 && entryEvents.value.length > 0
+  return (
+    cohortName.value.trim().length > 0 &&
+    entryEvents.value.length > 0 &&
+    canSavePermission.value
+  )
 })
 
 // Preview mode state

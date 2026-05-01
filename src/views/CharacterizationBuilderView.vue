@@ -47,7 +47,7 @@
         variant="tonal"
         color="primary"
         prepend-icon="mdi-content-copy-outline"
-        :disabled="loading"
+        :disabled="loading || !canCopy"
         data-testid="char-builder-copy"
         @click="handleSaveCopy"
       >
@@ -58,7 +58,7 @@
         variant="text"
         color="error"
         prepend-icon="mdi-delete-outline"
-        :disabled="loading"
+        :disabled="loading || !canDelete"
         data-testid="char-builder-delete"
         @click="handleDeleteClick"
       >
@@ -285,6 +285,8 @@ import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import { useI18n } from '@/composables/useI18n'
 import { useCharacterizationStore } from '@/stores/characterization'
+import { usePermissions } from '@/composables/usePermissions'
+import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getCohorts } from '@/services/webapi'
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import { logger } from '@/utils/logger'
@@ -379,12 +381,19 @@ const validationBadge = computed<{ color: string; count: number } | null>(() => 
   return null
 })
 
+const draftId = computed<number | null>(() => draft.value.id ?? null)
+
+// Permission gating: new characterizations need create:cohort-characterization;
+// existing ones need write access on the specific entity (ownership counts).
+const { hasPermission } = usePermissions()
+const { canWrite, canDelete } = useEntityAccess('cohortCharacterization', draftId)
+const canCopy = computed<boolean>(() => hasPermission('create:cohort-characterization'))
+
 const canSave = computed<boolean>(() => {
   if (saving.value || loading.value) return false
-  return draft.value.name.trim().length > 0
+  if (draft.value.name.trim().length === 0) return false
+  return isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization')
 })
-
-const draftId = computed<number | null>(() => draft.value.id ?? null)
 
 const canRun = computed<boolean>(() => {
   return draftId.value != null && !store.isDirty

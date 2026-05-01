@@ -115,9 +115,9 @@
         <!-- Language Selector -->
         <LanguageSelector v-if="showLanguageSelector" />
 
-        <!-- Configuration Panel Icon -->
+        <!-- Configuration Panel Icon: hidden when user has no admin perms -->
         <v-btn
-          v-if="showConfigButton"
+          v-if="showConfigButton && hasAnyAdminAccess"
           icon
           variant="text"
           aria-label="Open configuration panel"
@@ -175,10 +175,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
+import { usePermissions } from '@/composables/usePermissions'
 import { useUIStore } from '@/stores/ui'
 import { authConfig } from '@/config/auth.config'
 import { generatePluginMenuItems, type PluginMenuItem } from '@/plugins/navigation/PluginMenuIntegration.ts'
@@ -201,7 +202,21 @@ interface NavigationItem {
 const router = useRouter()
 const auth = useAuth()
 const { t } = useI18n()
+const { hasAnyPermission } = usePermissions()
 const uiStore = useUIStore()
+
+// Hide the cog icon entirely for users without any admin permission. Mirrors
+// the per-tab gating in ConfigPanel — if every section would be hidden, the
+// entry point shouldn't be visible at all.
+const hasAnyAdminAccess = computed(() =>
+  hasAnyPermission([
+    'admin:cache',
+    'admin:source',
+    'admin:tags',
+    'admin:security',
+    'job:*:get',
+  ]),
+)
 
 const logoSrc = logoSvg
 const logoOhdsiOnlySrc = logoOhdsiOnlyPng

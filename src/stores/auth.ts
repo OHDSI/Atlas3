@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
 import type { AuthState, UserInfo } from '@/models/auth.types'
+import { emptyEntityAccess } from '@/models/auth.types'
 import { storageManager } from '@/services/auth/storageManager'
 import { tokenManager } from '@/services/auth/tokenManager'
 import { refreshManager } from '@/services/auth/refreshManager'
+import { permissionService } from '@/services/auth/permissions'
 import { authConfig } from '@/config/auth.config'
 import { logger } from '@/utils/logger'
 
@@ -21,6 +23,7 @@ export const useAuthStore = defineStore('auth', {
     token: null,
     user: null,
     permissions: {},
+    entityAccess: emptyEntityAccess(),
     authProvider: null,
     authClient: null,
     tokenExpirationDate: null,
@@ -74,16 +77,20 @@ export const useAuthStore = defineStore('auth', {
     },
 
     setUser(user: UserInfo | null) {
+      // Clear permission cache BEFORE mutating reactive state. permissionService
+      // keys its cache only by the required-permission string, so any value
+      // cached against the previous user must be evicted before computeds that
+      // depend on `this.user` re-run — otherwise they hit the stale entry and
+      // return the wrong answer (most visibly: action buttons stay disabled).
+      permissionService.clearCache()
+
       this.user = user
       if (user) {
         this.permissions = user.permissionIdx || {}
-        
-        // Clear permission cache when user changes
-        import('@/services/auth/permissions').then(({ permissionService }) => {
-          permissionService.clearCache()
-        })
+        this.entityAccess = user.entityAccess || emptyEntityAccess()
       } else {
         this.permissions = {}
+        this.entityAccess = emptyEntityAccess()
       }
     },
 
@@ -104,6 +111,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       this.user = null
       this.permissions = {}
+      this.entityAccess = emptyEntityAccess()
       this.authProvider = null
       this.authClient = null
       this.tokenExpirationDate = null
@@ -116,11 +124,9 @@ export const useAuthStore = defineStore('auth', {
 
       storageManager.clearAll()
       this.cancelRefreshTimer()
-      
+
       // Clear permission cache on logout
-      import('@/services/auth/permissions').then(({ permissionService }) => {
-        permissionService.clearCache()
-      })
+      permissionService.clearCache()
     },
 
     setRunAsState(targetUser: UserInfo) {

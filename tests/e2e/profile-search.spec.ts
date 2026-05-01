@@ -22,7 +22,8 @@ test.describe('Profile search flow', () => {
     const personInput = page.locator('[data-test="profile-person-input"] input')
     await expect(personInput).toBeEnabled()
     await personInput.fill('1234')
-    await page.locator('[data-test="profile-person-submit"]').click()
+    // Submit is Enter / blur; there is no separate submit button.
+    await personInput.press('Enter')
 
     await expect(page.locator('[data-test="profile-demographics"]')).toBeVisible()
   })

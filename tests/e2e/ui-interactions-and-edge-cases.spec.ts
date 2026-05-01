@@ -21,34 +21,24 @@ test.describe('DataSources - Report Type Selector', () => {
     await waitForPageReady(page)
   })
 
-  test('should display report type dropdown with options', async ({ page }) => {
-    // Check for report type selector
-    const reportSelector = page.getByTestId('report-type-selector')
-    await expect(reportSelector).toBeVisible({ timeout: 5000 })
+  test('should display report type sidebar with options', async ({ page }) => {
+    // Report-type chooser is now a sidebar list, not a v-select dropdown.
+    const sidebar = page.locator('.datasource-sidebar')
+    await expect(sidebar).toBeVisible({ timeout: 5000 })
 
-    // Verify the selector has an input element (it's a select component)
-    const selectorInput = reportSelector.locator('input')
-    await expect(selectorInput).toBeAttached()
-
-    // Verify it has some value or placeholder
-    const inputValue = await selectorInput.getAttribute('value')
-    expect(inputValue).toBeTruthy()
+    const items = sidebar.locator('[data-testid^="datasource-sidebar-"]')
+    expect(await items.count()).toBeGreaterThan(0)
   })
 
-  test('should be disabled when no datasource is selected', async ({ page }) => {
-    // Navigate without selecting a source
+  test('should render the sidebar regardless of datasource selection', async ({ page }) => {
     await page.goto('/datasources')
     await waitForNetworkIdle(page)
 
-    const reportSelector = page.getByTestId('report-type-selector')
-    const hasSelector = await reportSelector.count() > 0
+    const sidebar = page.locator('.datasource-sidebar')
+    const hasSidebar = await sidebar.count() > 0
 
-    if (hasSelector) {
-      // Check if selector is disabled or enabled based on state
-      const isDisabled = await reportSelector.locator('input').isDisabled().catch(() => false)
-
-      // Either disabled (no source) or enabled (default source)
-      expect(isDisabled || !isDisabled).toBeTruthy()
+    if (hasSidebar) {
+      await expect(sidebar).toBeVisible()
     }
   })
 })
@@ -56,7 +46,9 @@ test.describe('DataSources - Report Type Selector', () => {
 test.describe('Concept Search - Advanced Features', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/concepts')
+    // Default tab is now "sets"; the search-tab-only tests below need
+    // the search hero input as the page's primary text field.
+    await page.goto('/concepts?tab=search')
     await waitForPageReady(page)
   })
 
@@ -104,8 +96,8 @@ test.describe('Concept Search - Advanced Features', () => {
     await page.keyboard.press('Escape')
     await waitForOverlaysToClose(page)
 
-    const searchButton = page.getByRole('button', { name: 'Search', exact: true })
-    await searchButton.click()
+    // Search is triggered by Enter — there is no Search button.
+    await searchInput.press('Enter')
     await page.waitForTimeout(2000)
 
     // Check for no results message

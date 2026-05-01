@@ -36,6 +36,19 @@ vi.mock('@/composables/useAuth', () => ({
   })
 }))
 
+// usePermissions reads from the auth store, which isn't initialised in this
+// suite; mock it to behave as an admin so the existing config-button
+// assertions keep passing.
+vi.mock('@/composables/usePermissions', () => ({
+  usePermissions: () => ({
+    hasPermission: () => true,
+    hasAnyPermission: () => true,
+    hasAllPermissions: () => true,
+    cacheHitRate: ref(0),
+    clearCache: vi.fn(),
+  }),
+}))
+
 vi.mock('@/composables/useI18n', () => ({
   useI18n: () => ({
     t: (key: string, fallback: string) => ref(fallback)
