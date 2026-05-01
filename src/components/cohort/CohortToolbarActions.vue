@@ -1,6 +1,5 @@
 <template>
   <div class="cohort-toolbar-actions">
-    <!-- Cancel — quiet text variant since it's a secondary path. -->
     <v-btn
       variant="text"
       @click="$emit('cancel')"
@@ -11,8 +10,38 @@
       <span class="d-none d-md-inline">{{ t('common.cancel') }}</span>
     </v-btn>
 
-    <!-- Generate — secondary primary action, tonal so it doesn't
-         compete with Save. Was orange-outlined which read as alarm. -->
+    <v-menu>
+      <template #activator="{ props: menuProps }">
+        <v-btn
+          v-bind="menuProps"
+          variant="text"
+          icon="mdi-export-variant"
+          size="small"
+          :aria-label="t('common.export', 'Export').value"
+          data-testid="export-btn"
+        />
+      </template>
+      <v-list
+        density="compact"
+        min-width="220"
+      >
+        <v-list-item
+          data-testid="export-download-json"
+          prepend-icon="mdi-download"
+          :title="t('cohortDefinitions.cohortDefinitionManager.panels.json', 'JSON').value"
+          :subtitle="t('common.downloadFile', 'Download as file').value"
+          @click="$emit('export-download')"
+        />
+        <v-list-item
+          data-testid="export-copy-json"
+          prepend-icon="mdi-clipboard-text-outline"
+          :title="t('common.copyToClipboard', 'Copy To Clipboard').value"
+          :subtitle="t('cohortDefinitions.cohortDefinitionManager.panels.json', 'JSON').value"
+          @click="$emit('export-copy')"
+        />
+      </v-list>
+    </v-menu>
+
     <v-btn
       v-if="showGenerate"
       variant="tonal"
@@ -33,9 +62,6 @@
       <span class="d-none d-md-inline">{{ t('components.analysisExecution.buttons.generate') }}</span>
     </v-btn>
 
-    <!-- Save — the primary call to action. The disabled state
-         already reflects "no changes / can't save", so the legacy
-         mdi-circle "unsaved" dot was redundant. -->
     <v-btn
       color="primary"
       variant="flat"
@@ -65,6 +91,8 @@ defineEmits<{
   (e: 'cancel'): void
   (e: 'save'): void
   (e: 'generate'): void
+  (e: 'export-download'): void
+  (e: 'export-copy'): void
 }>()
 
 const { t } = useI18n()

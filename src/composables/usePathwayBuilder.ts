@@ -31,7 +31,11 @@ export function usePathwayBuilder() {
     if (!store.currentPathway) return null
     await store.validatePathway()
     if (store.hasErrors) {
-      notify('Cannot save — fix validation errors first', 'error')
+      const messages = store.validationErrors
+        .filter((e) => e.severity === 'error')
+        .map((e) => e.message)
+        .join(' · ')
+      notify(messages ? `Cannot save: ${messages}` : 'Cannot save — fix validation errors first', 'error')
       return null
     }
     const id = store.currentPathway.id

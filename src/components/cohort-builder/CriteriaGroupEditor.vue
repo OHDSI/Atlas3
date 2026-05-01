@@ -111,14 +111,26 @@
                 {{ t('components.criteriaGroup.addCriteria') }}
               </v-btn>
             </template>
-            <v-list>
-              <v-list-item
+            <v-list
+              density="compact"
+              min-width="280"
+              max-height="60vh"
+            >
+              <v-tooltip
                 v-for="criteriaType in criteriaTypes"
                 :key="criteriaType.value"
-                :title="criteriaType.label"
-                :subtitle="criteriaType.description"
-                @click="criteriaType.value === 'Group' ? addNestedGroup() : addEvent(criteriaType.value as CriteriaType)"
-              />
+                :text="criteriaType.description"
+                location="end"
+                open-delay="500"
+              >
+                <template #activator="{ props: tipProps }">
+                  <v-list-item
+                    v-bind="tipProps"
+                    :title="criteriaType.label"
+                    @click="criteriaType.value === 'Group' ? addNestedGroup() : addEvent(criteriaType.value as CriteriaType)"
+                  />
+                </template>
+              </v-tooltip>
             </v-list>
           </v-menu>
 

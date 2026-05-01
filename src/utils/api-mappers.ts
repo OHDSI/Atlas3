@@ -2,7 +2,14 @@
  * API Response Mappers
  * Convert WebAPI UPPERCASE responses to camelCase TypeScript interfaces
  */
-import type { Concept, ConceptSetItem, ConceptSet, ConceptSetExpression } from '@/models/concept-set.types'
+import type {
+  Concept,
+  ConceptSetItem,
+  ConceptSet,
+  ConceptSetExpression,
+  ConceptSetExpressionItem,
+  ComparisonResultItem,
+} from '@/models/concept-set.types'
 
 /**
  * WebAPI concept set metadata response format
@@ -57,8 +64,9 @@ export function mapConceptFromAPI(raw: {
   CONCEPT_CLASS_ID: string
   STANDARD_CONCEPT: string | null
   INVALID_REASON: string | null
+  RELATIONSHIPS?: string[]
 }): Concept {
-  return {
+  const concept: Concept = {
     conceptId: raw.CONCEPT_ID,
     conceptName: raw.CONCEPT_NAME,
     conceptCode: raw.CONCEPT_CODE,
@@ -68,6 +76,10 @@ export function mapConceptFromAPI(raw: {
     standardConcept: raw.STANDARD_CONCEPT,
     invalidReason: raw.INVALID_REASON,
   }
+  if (raw.RELATIONSHIPS !== undefined) {
+    concept.relationships = raw.RELATIONSHIPS
+  }
+  return concept
 }
 
 /**
@@ -122,6 +134,33 @@ export function mapConceptSetFromAPI(raw: ConceptSetAPIResponse): ConceptSet {
       includeMapped: item.includeMapped,
     })) || [],
   }
+}
+
+/**
+ * Map ConceptSetItem to WebAPI ConceptSetExpressionItem (UPPERCASE concept fields)
+ */
+export function conceptSetItemToExpressionItem(
+  item: ConceptSetItem
+): ConceptSetExpressionItem {
+  return {
+    concept: {
+      CONCEPT_ID: item.conceptId,
+      CONCEPT_NAME: item.conceptName,
+      CONCEPT_CODE: item.conceptCode,
+      DOMAIN_ID: item.domainId,
+      VOCABULARY_ID: item.vocabularyId,
+      CONCEPT_CLASS_ID: item.conceptClassId,
+      STANDARD_CONCEPT: item.standardConcept,
+      INVALID_REASON: item.invalidReason,
+    },
+    isExcluded: item.isExcluded,
+    includeDescendants: item.includeDescendants,
+    includeMapped: item.includeMapped,
+  }
+}
+
+export function mapComparisonItemFromAPI(raw: ComparisonResultItem): ComparisonResultItem {
+  return raw
 }
 
 /**

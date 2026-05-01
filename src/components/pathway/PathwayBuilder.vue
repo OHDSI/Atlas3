@@ -7,31 +7,54 @@
     @back="handleBack"
   >
     <template #actions>
-      <v-btn
+      <v-tooltip
         v-if="currentPathway?.id"
-        variant="outlined"
-        prepend-icon="mdi-history"
-        :disabled="!currentPathway?.id"
-        data-testid="pathway-builder-versions"
-        @click="showVersions = true"
+        :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+        location="bottom"
       >
-        {{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions') }}
-      </v-btn>
-      <v-btn
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-history"
+            variant="text"
+            size="small"
+            density="comfortable"
+            data-testid="pathway-builder-versions"
+            @click="showVersions = true"
+          />
+        </template>
+      </v-tooltip>
+      <v-tooltip
         v-if="currentPathway?.id"
-        variant="outlined"
-        prepend-icon="mdi-tag-outline"
-        :disabled="!currentPathway?.id || isPreviewMode"
-        data-testid="pathway-builder-tags"
-        @click="showTags = true"
+        :text="t('common.tags', 'Tags').value"
+        location="bottom"
       >
-        {{ t('common.tags', 'Tags') }}
-      </v-btn>
+        <template #activator="{ props: tipProps }">
+          <v-badge
+            v-bind="tipProps"
+            :content="pathwayTags.length || 0"
+            :model-value="pathwayTags.length > 0"
+            color="primary"
+            offset-x="6"
+            offset-y="6"
+          >
+            <v-btn
+              icon="mdi-tag-outline"
+              variant="text"
+              size="small"
+              density="comfortable"
+              :disabled="isPreviewMode"
+              data-testid="pathway-builder-tags"
+              @click="showTags = true"
+            />
+          </v-badge>
+        </template>
+      </v-tooltip>
       <v-btn
         v-if="currentPathway?.id"
         variant="outlined"
         prepend-icon="mdi-content-copy"
-        :disabled="!currentPathway?.id || !hasPermission(permKey('post'))"
+        :disabled="!currentPathway?.id || !canCopy"
         data-testid="pathway-builder-copy"
         @click="onCopy"
       >
@@ -42,7 +65,7 @@
         variant="outlined"
         color="error"
         prepend-icon="mdi-delete"
-        :disabled="!currentPathway?.id || !hasPermission(permKey('delete'))"
+        :disabled="!currentPathway?.id || !hasPermission('write:pathway')"
         data-testid="pathway-builder-delete"
         @click="onDelete"
       >
@@ -85,9 +108,15 @@
         <PathwayGenerationPanel
           v-if="currentPathway?.id"
           :pathway-id="currentPathway.id"
+          @select="(id) => (selectedExecutionId = id)"
         />
       </div>
     </div>
+
+    <PathwayResultsPanel
+      v-if="selectedExecutionId !== null"
+      :execution-id="selectedExecutionId"
+    />
 
     <v-dialog
       v-model="showVersions"
@@ -128,6 +157,7 @@ import { usePermissions } from '@/composables/usePermissions'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import PathwayDesignForm from './PathwayDesignForm.vue'
 import PathwayGenerationPanel from './PathwayGenerationPanel.vue'
+import PathwayResultsPanel from './results/PathwayResultsPanel.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
 import type { VersionsConfig, VersionsTableItem } from '@/components/versions/types'
@@ -142,6 +172,7 @@ const { t } = useI18n()
 
 const showVersions = ref(false)
 const showTags = ref(false)
+const selectedExecutionId = ref<number | null>(null)
 
 const canEdit = computed(() => !isPreviewMode.value)
 const isDirtyRef = computed(() => isDirty.value)
@@ -162,11 +193,12 @@ const subtitle = computed(() => {
     : t('home.newEntityNames.pathway', 'New pathway').value
 })
 
-function permKey(suffix: string): string {
-  return currentPathway.value?.id
-    ? `pathway:${currentPathway.value.id}:${suffix}`
-    : `pathway:${suffix}`
-}
+// Mirrors the server's @PreAuthorize on POST /pathway-analysis/{id}:
+//   (read:pathway OR write:pathway) AND create:pathway
+const canCopy = computed(() => {
+  const hasRead = hasPermission('read:pathway') || hasPermission('write:pathway')
+  return hasRead && hasPermission('create:pathway')
+})
 
 function handleBack() {
   router.push('/analysis/pathways')
@@ -191,7 +223,7 @@ const versionsConfig = computed<VersionsConfig | null>(() => {
   const current: VersionsTableItem = {
     version: 0,
     assetId: p.id,
-    createdBy: { id: 0, name: p.createdBy?.name ?? '' },
+    createdBy: { id: 0, name: (p.createdBy as { name?: string } | undefined)?.name ?? '' },
     createdDate: typeof p.createdDate === 'string'
       ? p.createdDate
       : (typeof p.createdDate === 'number' ? new Date(p.createdDate).toISOString() : ''),

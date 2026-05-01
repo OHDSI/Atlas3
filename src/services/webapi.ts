@@ -43,6 +43,7 @@ import {
   CharacterizationDefinitionSchema,
   CharacterizationListItemSchema,
   CharacterizationExecutionSchema,
+  GenerationStatusSchema,
   type CharacterizationDefinition,
   type CharacterizationListItem,
   type CharacterizationExecution,
@@ -60,6 +61,7 @@ import {
 import {
   PathwayExecutionSchema,
   PathwayExecutionListSchema,
+  PathwayExecutionStatusSchema,
   PathwayResultsSchema,
   type PathwayExecution,
   type PathwayResults,
@@ -1763,6 +1765,11 @@ export async function getCharacterizationExecution(
 /**
  * Trigger a characterization generation against a given source.
  * Endpoint: POST /cohort-characterization/{id}/generation/{sourceKey}
+ *
+ * The POST response is the Spring Batch JobExecution that started the run, not
+ * a fully-populated CharacterizationExecution row. We accept either shape and
+ * normalize to CharacterizationExecution; callers refetch via the list/get
+ * endpoints once polling kicks in.
  */
 export async function generateCharacterization(
   id: number,
@@ -1771,18 +1778,35 @@ export async function generateCharacterization(
   const data = await httpPost<unknown>(
     `/cohort-characterization/${id}/generation/${encodeURIComponent(sourceKey)}`
   )
-  const parsed = CharacterizationExecutionSchema.safeParse(data)
-  if (!parsed.success) {
+
+  const direct = CharacterizationExecutionSchema.safeParse(data)
+  if (direct.success) return direct.data
+
+  const jobExecutionSchema = z
+    .object({
+      executionId: z.number().optional(),
+      id: z.number().optional(),
+      status: GenerationStatusSchema.optional(),
+    })
+    .passthrough()
+  const job = jobExecutionSchema.safeParse(data)
+  if (!job.success) {
     logger.error(
       'WebAPI',
       `generateCharacterization(${id}, ${sourceKey}) validation error`,
-      parsed.error
+      job.error
     )
     throw new Error(
       `Invalid response from POST /cohort-characterization/${id}/generation/${sourceKey}`
     )
   }
-  return parsed.data
+
+  const executionId = job.data.executionId ?? job.data.id ?? 0
+  return {
+    id: executionId,
+    status: job.data.status ?? 'STARTING',
+    sourceKey,
+  }
 }
 
 /**
@@ -1869,6 +1893,10 @@ export interface CharacterizationResultsBody {
 /**
  * Fetch result rows for a generation.
  * Endpoint: POST /cohort-characterization/generation/{generationId}/result
+ *
+ * Newer WebAPIs wrap rows as `{ reports: [{ analysisId, items: [...] }] }`;
+ * older builds return a flat array. Flatten either shape so the mapper sees
+ * a single list of rows.
  */
 export async function getCharacterizationResults(
   generationId: number,
@@ -1879,17 +1907,27 @@ export async function getCharacterizationResults(
       `/cohort-characterization/generation/${generationId}/result`,
       body
     )
-    if (!Array.isArray(data)) {
-      logger.error(
-        'WebAPI',
-        `getCharacterizationResults(${generationId}) returned non-array`,
-        data
-      )
-      throw new Error(
-        `Invalid response from POST /cohort-characterization/generation/${generationId}/result`
-      )
+    if (Array.isArray(data)) return data
+
+    if (data && typeof data === 'object' && 'reports' in data) {
+      const reports = (data as { reports: unknown }).reports
+      if (Array.isArray(reports)) {
+        return reports.flatMap((report) => {
+          if (!report || typeof report !== 'object') return []
+          const items = (report as { items?: unknown }).items
+          return Array.isArray(items) ? items : []
+        })
+      }
     }
-    return data
+
+    logger.error(
+      'WebAPI',
+      `getCharacterizationResults(${generationId}) returned unexpected shape`,
+      data
+    )
+    throw new Error(
+      `Invalid response from POST /cohort-characterization/generation/${generationId}/result`
+    )
   } catch (error) {
     logger.error(
       'WebAPI',
@@ -2044,15 +2082,25 @@ export async function featureAnalysisNameExists(
 /**
  * List the CDM domains supported by feature analyses.
  * Endpoint: GET /feature-analysis/domains
+ *
+ * Newer WebAPIs return `[{id, name}]`; older builds returned `string[]`.
+ * Accept both and surface the id list to callers (the name is only used as
+ * a display label, which we don't currently render).
  */
 export async function listFeatureAnalysisDomains(): Promise<string[]> {
   const data = await httpGet<unknown>('/feature-analysis/domains')
-  const parsed = z.array(z.string()).safeParse(data)
+  const schema = z.array(
+    z.union([
+      z.string(),
+      z.object({ id: z.string() }).passthrough(),
+    ])
+  )
+  const parsed = schema.safeParse(data)
   if (!parsed.success) {
     logger.error('WebAPI', 'listFeatureAnalysisDomains validation error', parsed.error)
     throw new Error('Invalid response from /feature-analysis/domains')
   }
-  return parsed.data
+  return parsed.data.map((entry) => (typeof entry === 'string' ? entry : entry.id))
 }
 
 /**
@@ -2318,6 +2366,10 @@ export async function getPathwayResults(
 /**
  * Trigger pathway generation for a given source.
  * POST /pathway-analysis/:id/generation/:sourceKey
+ *
+ * The POST returns a Spring Batch JobExecution, not a fully populated
+ * PathwayExecution. Accept either shape and synthesize a PathwayExecution
+ * for callers; the list/get endpoints return the canonical row.
  */
 export async function generatePathway(
   id: number,
@@ -2328,9 +2380,27 @@ export async function generatePathway(
       `/pathway-analysis/${id}/generation/${sourceKey}`,
       undefined
     )
-    const parsed = PathwayExecutionSchema.passthrough().safeParse(data)
-    if (!parsed.success) return failure('Invalid generate response')
-    return success(parsed.data as PathwayExecution)
+
+    const direct = PathwayExecutionSchema.passthrough().safeParse(data)
+    if (direct.success) return success(direct.data as PathwayExecution)
+
+    const jobSchema = z
+      .object({
+        executionId: z.number().optional(),
+        id: z.number().optional(),
+        status: PathwayExecutionStatusSchema.optional(),
+      })
+      .passthrough()
+    const job = jobSchema.safeParse(data)
+    if (!job.success) {
+      logger.error('Pathway', `generatePathway(${id}, ${sourceKey}) validation error`, job.error)
+      return failure('Invalid generate response')
+    }
+    return success({
+      id: job.data.executionId ?? job.data.id ?? 0,
+      status: job.data.status ?? 'STARTING',
+      sourceKey,
+    })
   } catch (err) {
     logger.error('Pathway', `generatePathway(${id}, ${sourceKey}) failed`, err)
     return failure(err instanceof Error ? err.message : 'Failed to start generation')

@@ -224,7 +224,7 @@ export const GenerationStatusSchema = z.enum([
 export interface CharacterizationExecution {
   id: number
   ccGenerationId?: number
-  hashCode?: string
+  hashCode?: string | number
   status: GenerationStatus
   startTime?: number
   endTime?: number
@@ -233,13 +233,14 @@ export interface CharacterizationExecution {
   sourceKey: string
   designHash?: string
   cdmDatabaseSchema?: string
+  exitMessage?: string
 }
 
 export const CharacterizationExecutionSchema = z
   .object({
     id: z.number(),
     ccGenerationId: z.number().optional(),
-    hashCode: z.string().optional(),
+    hashCode: z.union([z.string(), z.number()]).optional(),
     status: GenerationStatusSchema,
     startTime: z.number().optional(),
     endTime: z.number().optional(),
@@ -248,6 +249,7 @@ export const CharacterizationExecutionSchema = z
     sourceKey: z.string(),
     designHash: z.string().optional(),
     cdmDatabaseSchema: z.string().optional(),
+    exitMessage: z.string().optional(),
   })
   .strip()
 

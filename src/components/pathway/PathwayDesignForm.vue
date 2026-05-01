@@ -3,13 +3,19 @@
     v-if="currentPathway"
     class="pathway-design-form"
   >
-    <section>
-      <h3>{{ t('columns.description', 'Description') }}</h3>
+    <section class="pathway-design-form__section">
+      <header class="pathway-design-form__header">
+        <span class="text-eyebrow">{{ t('columns.description', 'Description').value }}</span>
+        <span class="pathway-design-form__rule" />
+      </header>
       <v-text-field
         :model-value="currentPathway.name"
         :label="t('columns.name', 'Name').value"
         :readonly="readonly"
         density="compact"
+        variant="outlined"
+        hide-details
+        class="mb-2"
         @update:model-value="(v: string) => store.updateMeta({ name: v })"
       />
       <v-textarea
@@ -17,25 +23,34 @@
         :label="t('columns.description', 'Description').value"
         :readonly="readonly"
         density="compact"
-        rows="3"
+        variant="outlined"
+        hide-details
+        rows="2"
+        auto-grow
         @update:model-value="(v: string) => store.updateMeta({ description: v })"
       />
     </section>
 
-    <section>
-      <h3>{{ t('facets.caption.targetCohorts', 'Target Cohorts') }}</h3>
+    <section class="pathway-design-form__section">
+      <header class="pathway-design-form__header">
+        <span class="text-eyebrow">{{ t('facets.caption.targetCohorts', 'Target Cohorts').value }}</span>
+        <span class="pathway-design-form__rule" />
+        <v-btn
+          variant="text"
+          size="small"
+          prepend-icon="mdi-plus"
+          :disabled="readonly"
+          @click="showTargetPicker = true"
+        >
+          {{ t('common.add', 'Add').value }}
+        </v-btn>
+      </header>
       <PathwayCohortList
         :cohorts="targetCohorts"
         :readonly="readonly"
         @rename="(id, name) => store.renameTargetCohort(id, name)"
         @remove="(id) => store.removeTargetCohort(id)"
       />
-      <v-btn
-        :disabled="readonly"
-        @click="showTargetPicker = true"
-      >
-        {{ t('ir.editor.addTargetCohort', 'Add target cohort') }}
-      </v-btn>
       <PathwayCohortPicker
         v-model="showTargetPicker"
         :excluded-ids="targetIds"
@@ -43,20 +58,26 @@
       />
     </section>
 
-    <section>
-      <h3>{{ t('columns.eventCohort', 'Event Cohorts') }}</h3>
+    <section class="pathway-design-form__section">
+      <header class="pathway-design-form__header">
+        <span class="text-eyebrow">{{ t('columns.eventCohort', 'Event Cohorts').value }}</span>
+        <span class="pathway-design-form__rule" />
+        <v-btn
+          variant="text"
+          size="small"
+          prepend-icon="mdi-plus"
+          :disabled="readonly"
+          @click="showEventPicker = true"
+        >
+          {{ t('common.add', 'Add').value }}
+        </v-btn>
+      </header>
       <PathwayCohortList
         :cohorts="eventCohorts"
         :readonly="readonly"
         @rename="(id, name) => store.renameEventCohort(id, name)"
         @remove="(id) => store.removeEventCohort(id)"
       />
-      <v-btn
-        :disabled="readonly"
-        @click="showEventPicker = true"
-      >
-        {{ t('pathway.addEvent', 'Add event cohort') }}
-      </v-btn>
       <PathwayCohortPicker
         v-model="showEventPicker"
         :excluded-ids="eventIds"
@@ -64,8 +85,11 @@
       />
     </section>
 
-    <section>
-      <h3>{{ t('ple.spec.analysisSettings', 'Settings') }}</h3>
+    <section class="pathway-design-form__section">
+      <header class="pathway-design-form__header">
+        <span class="text-eyebrow">{{ t('ple.spec.analysisSettings', 'Settings').value }}</span>
+        <span class="pathway-design-form__rule" />
+      </header>
       <PathwaySettings
         :model-value="settings"
         :readonly="readonly"
@@ -107,5 +131,21 @@ const settings = computed(() => ({
 </script>
 
 <style scoped>
-.pathway-design-form section { margin-bottom: 24px; }
+.pathway-design-form__section {
+  margin-bottom: 16px;
+}
+.pathway-design-form__section:last-child {
+  margin-bottom: 0;
+}
+.pathway-design-form__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.pathway-design-form__rule {
+  flex: 1;
+  height: 1px;
+  background-color: rgba(var(--v-theme-on-surface), 0.08);
+}
 </style>

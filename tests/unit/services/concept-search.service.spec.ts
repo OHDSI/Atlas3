@@ -25,11 +25,21 @@ vi.mock('@/utils/api-mappers', () => ({
     standardConcept: data.STANDARD_CONCEPT,
     conceptCode: data.CONCEPT_CODE,
     invalidReason: data.INVALID_REASON,
+    ...(data.RELATIONSHIPS !== undefined ? { relationships: data.RELATIONSHIPS } : {}),
   })),
+  mapComparisonItemFromAPI: vi.fn((data) => data),
 }))
 
-import { searchConcepts, getConceptById, getConceptRecordCounts } from '@/services/concept-search.service'
+import {
+  searchConcepts,
+  getConceptById,
+  getConceptRecordCounts,
+  getRecommendedConcepts,
+  compareConceptSets,
+} from '@/services/concept-search.service'
 import { mapConceptFromAPI } from '@/utils/api-mappers'
+import { logger } from '@/utils/logger'
+import type { ConceptSetExpression } from '@/models/concept-set.types'
 
 describe('ConceptSearchService', () => {
   let mockFetch: ReturnType<typeof vi.fn>
@@ -316,6 +326,269 @@ describe('ConceptSearchService', () => {
       expect(result.size).toBe(2)
       expect(result.has(123)).toBe(true)
       expect(result.has(456)).toBe(true)
+    })
+  })
+
+  describe('getRecommendedConcepts', () => {
+    it('should return available:true with empty concepts when conceptIds is empty (no fetch)', async () => {
+      const result = await getRecommendedConcepts('TEST', [])
+
+      expect(result).toEqual({ available: true, concepts: [] })
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('should throw for invalid sourceKey (empty string)', async () => {
+      await expect(getRecommendedConcepts('', [123])).rejects.toThrow(
+        'Invalid vocabulary source'
+      )
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("should throw for invalid sourceKey ('null')", async () => {
+      await expect(getRecommendedConcepts('null', [123])).rejects.toThrow(
+        'Invalid vocabulary source'
+      )
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('should POST to /vocabulary/{key}/lookup/recommended with conceptIds and map results', async () => {
+      const mockResponse = [
+        {
+          CONCEPT_ID: 999,
+          CONCEPT_NAME: 'Recommended Concept',
+          DOMAIN_ID: 'Condition',
+          VOCABULARY_ID: 'SNOMED',
+          CONCEPT_CLASS_ID: 'Clinical Finding',
+          STANDARD_CONCEPT: 'S',
+          CONCEPT_CODE: '99999',
+          INVALID_REASON: null,
+          RELATIONSHIPS: ['Maps to', 'Subsumes'],
+        },
+      ]
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(mockResponse)),
+      })
+
+      const result = await getRecommendedConcepts('TEST', [201826, 4034964])
+
+      expect(result.available).toBe(true)
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/vocabulary/TEST/lookup/recommended'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify([201826, 4034964]),
+        })
+      )
+      expect(result.concepts).toHaveLength(1)
+      expect(result.concepts[0].conceptId).toBe(999)
+      expect(result.concepts[0].relationships).toEqual(['Maps to', 'Subsumes'])
+      expect(mapConceptFromAPI).toHaveBeenCalledWith(mockResponse[0], 0, mockResponse)
+    })
+
+    it('should map results without RELATIONSHIPS when not provided', async () => {
+      const mockResponse = [
+        {
+          CONCEPT_ID: 1000,
+          CONCEPT_NAME: 'Plain Concept',
+          DOMAIN_ID: 'Condition',
+          VOCABULARY_ID: 'SNOMED',
+          CONCEPT_CLASS_ID: 'Clinical Finding',
+          STANDARD_CONCEPT: 'S',
+          CONCEPT_CODE: '1000',
+          INVALID_REASON: null,
+        },
+      ]
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(mockResponse)),
+      })
+
+      const result = await getRecommendedConcepts('TEST', [123])
+
+      expect(result.available).toBe(true)
+      expect(result.concepts).toHaveLength(1)
+      expect(result.concepts[0].relationships).toBeUndefined()
+    })
+
+    it('should return available:false on HTTP 501 without throwing or logging error', async () => {
+      // 501 is in the 5xx retryable range; http-client will attempt the
+      // request multiple times before giving up. Use mockResolvedValue (not
+      // Once) so every retry sees the same 501 response.
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 501,
+        statusText: 'Not Implemented',
+      })
+
+      const result = await getRecommendedConcepts('TEST', [123])
+
+      expect(result).toEqual({ available: false, concepts: [] })
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
+    it('should propagate non-501 server errors', async () => {
+      // 404 is not retryable
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+      })
+
+      await expect(getRecommendedConcepts('TEST', [123])).rejects.toThrow('HTTP 404')
+    })
+
+    it('should throw and log validation error for malformed response', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ unexpected: 'shape' })),
+      })
+
+      await expect(getRecommendedConcepts('TEST', [123])).rejects.toThrow(
+        'Invalid recommended concepts response format'
+      )
+      expect(logger.error).toHaveBeenCalled()
+    })
+  })
+
+  describe('compareConceptSets', () => {
+    function makeExpression(conceptId: number): ConceptSetExpression {
+      return {
+        items: [
+          {
+            concept: {
+              CONCEPT_ID: conceptId,
+              CONCEPT_NAME: `Concept ${conceptId}`,
+              CONCEPT_CODE: `${conceptId}`,
+              DOMAIN_ID: 'Condition',
+              VOCABULARY_ID: 'SNOMED',
+              CONCEPT_CLASS_ID: 'Clinical Finding',
+              STANDARD_CONCEPT: 'S',
+              INVALID_REASON: null,
+            },
+            isExcluded: false,
+            includeDescendants: false,
+            includeMapped: false,
+          },
+        ],
+      }
+    }
+
+    function makeRow(overrides: Partial<Record<string, unknown>> = {}) {
+      return {
+        conceptId: 100,
+        conceptIn1Only: 0,
+        conceptIn2Only: 0,
+        conceptIn1And2: 1,
+        conceptName: 'Type 2 diabetes mellitus',
+        conceptCode: '44054006',
+        conceptClassId: 'Clinical Finding',
+        domainId: 'Condition',
+        vocabularyId: 'SNOMED',
+        standardConcept: 'S',
+        invalidReason: null,
+        validStartDate: '2002-01-31',
+        validEndDate: '2099-12-31',
+        nameMismatch: false,
+        ...overrides,
+      }
+    }
+
+    it('should POST to /vocabulary/{key}/compare with the two expressions in order and parse results', async () => {
+      const mockResponse = [
+        makeRow({ conceptId: 1, conceptIn1Only: 1, conceptIn2Only: 0, conceptIn1And2: 0 }),
+        makeRow({ conceptId: 2, conceptIn1Only: 0, conceptIn2Only: 1, conceptIn1And2: 0 }),
+        makeRow({ conceptId: 3, conceptIn1Only: 0, conceptIn2Only: 0, conceptIn1And2: 1 }),
+      ]
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(mockResponse)),
+      })
+
+      const expr1 = makeExpression(1)
+      const expr2 = makeExpression(2)
+      const result = await compareConceptSets('TEST', expr1, expr2)
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      const [url, init] = mockFetch.mock.calls[0]
+      expect(url).toContain('/vocabulary/TEST/compare')
+      expect(init.method).toBe('POST')
+      const sentBody = JSON.parse(init.body)
+      expect(Array.isArray(sentBody)).toBe(true)
+      expect(sentBody).toHaveLength(2)
+      expect(sentBody[0]).toEqual(expr1)
+      expect(sentBody[1]).toEqual(expr2)
+
+      expect(result).toHaveLength(3)
+      expect(result[0].conceptId).toBe(1)
+      expect(result[0].conceptIn1Only).toBe(1)
+      expect(result[1].conceptIn2Only).toBe(1)
+      expect(result[2].conceptIn1And2).toBe(1)
+    })
+
+    it('should default nameMismatch to false when missing from response', async () => {
+      const row = makeRow()
+      delete (row as Record<string, unknown>).nameMismatch
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify([row])),
+      })
+
+      const result = await compareConceptSets('TEST', makeExpression(1), makeExpression(2))
+      expect(result).toHaveLength(1)
+      expect(result[0].nameMismatch).toBe(false)
+    })
+
+    it('should return [] without making a request when expression1 has no items', async () => {
+      const empty: ConceptSetExpression = { items: [] }
+      const result = await compareConceptSets('TEST', empty, makeExpression(2))
+
+      expect(result).toEqual([])
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('should return [] without making a request when expression2 has no items', async () => {
+      const empty: ConceptSetExpression = { items: [] }
+      const result = await compareConceptSets('TEST', makeExpression(1), empty)
+
+      expect(result).toEqual([])
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('should throw for invalid sourceKey (empty string)', async () => {
+      await expect(
+        compareConceptSets('', makeExpression(1), makeExpression(2))
+      ).rejects.toThrow('Invalid vocabulary source')
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it("should throw for invalid sourceKey ('null')", async () => {
+      await expect(
+        compareConceptSets('null', makeExpression(1), makeExpression(2))
+      ).rejects.toThrow('Invalid vocabulary source')
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('should throw and log validation error for malformed response', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ unexpected: 'shape' })),
+      })
+
+      await expect(
+        compareConceptSets('TEST', makeExpression(1), makeExpression(2))
+      ).rejects.toThrow('Invalid concept set comparison response format')
+      expect(logger.error).toHaveBeenCalled()
     })
   })
 })

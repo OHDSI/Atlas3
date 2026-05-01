@@ -333,7 +333,7 @@ export const tagSchema = z.object({
     .min(1, 'Name is required')
     .max(255, 'Name must be less than 255 characters'),
   color: z.string()
-    .regex(/^#[0-9A-F]{6}$/i, 'Invalid color format (must be hex: #RRGGBB)')
+    .regex(/^(#[0-9A-F]{6})?$/i, 'Invalid color format (must be hex: #RRGGBB)')
     .optional(),
   icon: z.string().max(50, 'Icon name too long').optional(),
   mandatory: z.boolean().optional(),
@@ -341,8 +341,13 @@ export const tagSchema = z.object({
   multiSelection: z.boolean().optional(),
   allowCustom: z.boolean().optional(),
   description: z.string().max(1000, 'Description too long').optional(),
-  createdDate: z.string().optional(),
-  createdBy: z.object({ login: z.string() }).optional(),
+  createdDate: z.union([z.string(), z.number()]).optional(),
+  modifiedDate: z.union([z.string(), z.number()]).optional(),
+  createdBy: z.object({ login: z.string() }).passthrough().optional(),
+  modifiedBy: z.object({ login: z.string() }).passthrough().optional(),
+  type: z.string().optional(),
+  writeAccess: z.boolean().optional(),
+  readAccess: z.boolean().optional(),
   groups: z.array(z.any()).default([]),
   count: z.number().optional(),
   permissionProtected: z.boolean().optional()

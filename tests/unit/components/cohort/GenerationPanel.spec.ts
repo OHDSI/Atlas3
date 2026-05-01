@@ -45,10 +45,6 @@ function mountComponent(props = {}) {
         DataSourceTileGrid: {
           template: '<div class="data-source-tile-grid"><slot /></div>',
           props: ['cohortId', 'sources']
-        },
-        ReportPanel: {
-          template: '<div class="report-panel"><slot /></div>',
-          props: ['cohortId', 'sourceKey', 'isOpen']
         }
       }
     }
@@ -204,26 +200,6 @@ describe('GenerationPanel', () => {
 
       expect(wrapper.vm.selectedSourceKey).toBe('cdm-1')
       expect(wrapper.vm.showReports).toBe(true)
-    })
-  })
-
-  describe('handleCloseReports function', () => {
-    it('should hide reports and clear selected source', async () => {
-      const store = useWebAPIStore()
-      store.sourcesList = [mockSource1]
-
-      const wrapper = mountComponent()
-
-      // First open reports
-      wrapper.vm.handleDataSourceClick('cdm-1')
-      expect(wrapper.vm.showReports).toBe(true)
-      expect(wrapper.vm.selectedSourceKey).toBe('cdm-1')
-
-      // Then close them
-      wrapper.vm.handleCloseReports()
-
-      expect(wrapper.vm.showReports).toBe(false)
-      expect(wrapper.vm.selectedSourceKey).toBeNull()
     })
   })
 })

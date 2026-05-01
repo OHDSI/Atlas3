@@ -1,7 +1,7 @@
 /**
  * CohortToolbarActions Component Tests
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
@@ -18,7 +18,7 @@ vi.mock('@/composables/useI18n', () => ({
 
 const vuetify = createVuetify({ components, directives })
 
-function mountComponent(props = {}) {
+function mountComponent(props: Record<string, unknown> = {}, options: Record<string, unknown> = {}) {
   return mount(CohortToolbarActions, {
     props: {
       canSave: true,
@@ -32,7 +32,8 @@ function mountComponent(props = {}) {
           template: '<div><slot name="activator" :props="{}" /><slot /></div>'
         }
       }
-    }
+    },
+    ...options,
   })
 }
 
@@ -279,6 +280,39 @@ describe('CohortToolbarActions', () => {
 
       await generateBtn.trigger('click')
       expect(wrapper.emitted('generate')).toBeTruthy()
+    })
+  })
+
+  describe('Export Menu', () => {
+    afterEach(() => {
+      // Vuetify v-menu teleports its content to body; tear down between
+      // tests so a stale menu from a prior mount can't intercept clicks.
+      document.body.innerHTML = ''
+    })
+
+    it('renders the export trigger button', () => {
+      const wrapper = mountComponent()
+      expect(wrapper.find('[data-testid="export-btn"]').exists()).toBe(true)
+    })
+
+    it('emits export-download when the JSON download item is clicked', async () => {
+      const wrapper = mountComponent({}, { attachTo: document.body })
+      await wrapper.find('[data-testid="export-btn"]').trigger('click')
+      const downloadItem = document.querySelector('[data-testid="export-download-json"]') as HTMLElement | null
+      expect(downloadItem).not.toBeNull()
+      downloadItem!.click()
+      expect(wrapper.emitted('export-download')).toBeTruthy()
+      wrapper.unmount()
+    })
+
+    it('emits export-copy when the JSON copy item is clicked', async () => {
+      const wrapper = mountComponent({}, { attachTo: document.body })
+      await wrapper.find('[data-testid="export-btn"]').trigger('click')
+      const copyItem = document.querySelector('[data-testid="export-copy-json"]') as HTMLElement | null
+      expect(copyItem).not.toBeNull()
+      copyItem!.click()
+      expect(wrapper.emitted('export-copy')).toBeTruthy()
+      wrapper.unmount()
     })
   })
 })

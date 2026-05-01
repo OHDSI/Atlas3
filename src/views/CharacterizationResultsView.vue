@@ -205,8 +205,8 @@ const executionId = computed<number | null>(() => {
 
 const titleText = computed<string>(() => {
   const name = characterization.value?.name
-  const baseTitle = tv('cc.viewEdit.results.title', 'Results')
-  return name ? `${baseTitle}: ${name}` : baseTitle
+  const base = tv('common.results', 'Results')
+  return name ? `${base}: ${name}` : base
 })
 
 const availableAnalyses = computed<{ id: number; name: string }[]>(() => {

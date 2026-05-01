@@ -16,7 +16,7 @@
         :data-testid="testid ? `${testid}-back` : undefined"
         @click="$emit('back')"
       >
-        {{ t('common.backToCurrent', 'Back').value }}
+        {{ backLabel ?? t('common.back', 'Back').value }}
       </v-btn>
       <slot name="actions" />
     </template>
@@ -63,6 +63,7 @@ interface Props {
   eyebrow?: string
   error?: string | null
   showBack?: boolean
+  backLabel?: string
   testid?: string
 }
 
@@ -72,6 +73,7 @@ withDefaults(defineProps<Props>(), {
   eyebrow: undefined,
   error: null,
   showBack: true,
+  backLabel: undefined,
   testid: undefined,
 })
 

@@ -11,13 +11,24 @@ import {
   updateConceptSet,
   deleteConceptSet,
 } from '@/services/concept-set.service'
-import type { ConceptSet, ConceptSetListItem, ConceptSetItem } from '@/models/concept-set.types'
+import type {
+  ConceptSet,
+  ConceptSetListItem,
+  ConceptSetItem,
+  ComparisonResultItem,
+  ConceptSetExpression,
+} from '@/models/concept-set.types'
 import type { Concept } from '@/models/concept-set.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
-import { conceptToConceptSetItem } from '@/utils/api-mappers'
+import { conceptToConceptSetItem, conceptSetItemToExpressionItem } from '@/utils/api-mappers'
 import {
   getVersion as getVersionAPI,
 } from '@/services/concept-set-versions.service'
+import {
+  getRecommendedConcepts,
+  getConceptRecordCounts,
+  compareConceptSets,
+} from '@/services/concept-search.service'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 
@@ -36,6 +47,16 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   // Version preview state (T017)
   const previewVersion = ref<Version | null>(null)
   const isDirty = ref<boolean>(false)
+
+  const recommendedConcepts = ref<Concept[]>([])
+  const loadingRecommended = ref<boolean>(false)
+  const isRecommendedAvailable = ref<boolean>(true)
+  const recommendedError = ref<string | null>(null)
+
+  const comparison = ref<ComparisonResultItem[]>([])
+  const comparisonOtherSet = ref<ConceptSet | null>(null)
+  const loadingComparison = ref<boolean>(false)
+  const comparisonError = ref<string | null>(null)
 
   // ============================================================================
   // Getters
@@ -399,6 +420,113 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     }
   }
 
+  async function loadRecommendedConcepts(sourceKey: string): Promise<void> {
+    const seed = (currentSet.value?.items ?? [])
+      .filter((item) => !item.isExcluded)
+      .map((item) => item.conceptId)
+
+    if (seed.length === 0) {
+      recommendedConcepts.value = []
+      isRecommendedAvailable.value = true
+      recommendedError.value = null
+      return
+    }
+
+    loadingRecommended.value = true
+    recommendedError.value = null
+
+    try {
+      const result = await getRecommendedConcepts(sourceKey, seed)
+
+      if (!result.available) {
+        isRecommendedAvailable.value = false
+        recommendedConcepts.value = []
+        return
+      }
+
+      const existingIds = new Set(
+        (currentSet.value?.items ?? []).map((item) => item.conceptId)
+      )
+      const candidates = result.concepts.filter(
+        (c) => !existingIds.has(c.conceptId)
+      )
+
+      isRecommendedAvailable.value = true
+
+      const ids = candidates.map((c) => c.conceptId)
+      const counts = await getConceptRecordCounts(sourceKey, ids)
+      const enriched = candidates.map((c) => {
+        const rc = counts.get(c.conceptId)
+        if (!rc) return c
+        return {
+          ...c,
+          recordCount: rc.recordCount,
+          descendantRecordCount: rc.descendantRecordCount,
+          personCount: rc.personCount,
+          descendantPersonCount: rc.descendantPersonCount,
+        }
+      })
+
+      recommendedConcepts.value = enriched
+    } catch (err) {
+      logger.error('ConceptSetsStore', 'Failed to load recommended concepts', err)
+      recommendedError.value = String(err)
+      recommendedConcepts.value = []
+    } finally {
+      loadingRecommended.value = false
+    }
+  }
+
+  async function loadComparison(
+    sourceKey: string,
+    otherSetId: number | string
+  ): Promise<void> {
+    if (!currentSet.value || (currentSet.value.items?.length ?? 0) === 0) {
+      comparison.value = []
+      comparisonOtherSet.value = null
+      comparisonError.value = 'No concept set loaded'
+      return
+    }
+
+    if (otherSetId === currentSet.value.id) {
+      comparison.value = []
+      comparisonOtherSet.value = null
+      comparisonError.value = 'Cannot compare a concept set with itself'
+      return
+    }
+
+    loadingComparison.value = true
+    comparisonError.value = null
+
+    try {
+      const cs2 = await getConceptSetById(otherSetId)
+      if (!cs2) {
+        comparisonError.value = 'Other concept set not found'
+        comparison.value = []
+        comparisonOtherSet.value = null
+        return
+      }
+
+      const expr1: ConceptSetExpression = {
+        items: currentSet.value.items.map(conceptSetItemToExpressionItem),
+      }
+      const expr2: ConceptSetExpression = {
+        items: (cs2.items ?? []).map(conceptSetItemToExpressionItem),
+      }
+
+      const result = await compareConceptSets(sourceKey, expr1, expr2)
+      comparison.value = result
+      comparisonOtherSet.value = cs2
+    } catch (err) {
+      logger.error('ConceptSetsStore', 'Failed to load concept set comparison', err)
+      comparisonError.value = String(err)
+      comparison.value = []
+      comparisonOtherSet.value = null
+    } finally {
+      loadingComparison.value = false
+    }
+  }
+
   // ============================================================================
   // Return
   // ============================================================================
@@ -413,6 +541,14 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     editorOpen,
     previewVersion,
     isDirty,
+    recommendedConcepts,
+    loadingRecommended,
+    isRecommendedAvailable,
+    recommendedError,
+    comparison,
+    comparisonOtherSet,
+    loadingComparison,
+    comparisonError,
 
     // Getters
     filteredSets,
@@ -440,5 +576,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     loadVersionPreview,
     clearPreviewVersion,
     savePreviewAsCurrent,
+    loadRecommendedConcepts,
+    loadComparison,
   }
 })
