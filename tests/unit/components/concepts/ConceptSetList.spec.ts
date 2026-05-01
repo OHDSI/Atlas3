@@ -77,8 +77,18 @@ describe('ConceptSetList', () => {
     expect(buttons.length).toBeGreaterThan(0)
   })
 
-  it('should render data table', () => {
+  it('should render data table when concept sets exist', async () => {
     const wrapper = mountComponent()
+    const store = useConceptSetsStore()
+
+    // Refresh: the data table only renders when there are rows or
+    // the store is loading. With an empty store we render an MD3
+    // filled empty-state container instead — see the empty-state
+    // tests below.
+    store.conceptSets = mockConceptSets
+    store.filterTerm = ''
+    await wrapper.vm.$nextTick()
+
     const dataTable = wrapper.findComponent({ name: 'VDataTable' })
     expect(dataTable.exists()).toBe(true)
   })
@@ -308,7 +318,7 @@ describe('ConceptSetList', () => {
     expect(dataTable.props('items')).toEqual(mockConceptSets)
   })
 
-  it('should display no data message when list is empty', async () => {
+  it('should render the filled empty-state container when list is empty', async () => {
     const wrapper = mountComponent()
     const store = useConceptSetsStore()
 
@@ -317,11 +327,13 @@ describe('ConceptSetList', () => {
     store.loading = false
     await wrapper.vm.$nextTick()
 
-    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
-    expect(dataTable.props('items')).toEqual([])
+    // Refresh: empty list renders the MD3 empty-state container in
+    // place of the data table.
+    expect(wrapper.find('.concept-set-list__empty').exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'VDataTable' }).exists()).toBe(false)
   })
 
-  it('should display empty state message', async () => {
+  it('should display empty state message and create CTA', async () => {
     const wrapper = mountComponent()
     const store = useConceptSetsStore()
 
@@ -330,8 +342,12 @@ describe('ConceptSetList', () => {
     store.loading = false
     await wrapper.vm.$nextTick()
 
-    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
-    expect(dataTable.props('items')).toEqual([])
+    const empty = wrapper.find('.concept-set-list__empty')
+    expect(empty.exists()).toBe(true)
+    expect(empty.text()).toMatch(/concept sets/i)
+    // CTA is present when there's no active filter.
+    const ctaButtons = empty.findAllComponents({ name: 'VBtn' })
+    expect(ctaButtons.length).toBeGreaterThan(0)
   })
 
   it('should render loading skeleton when loading', async () => {

@@ -82,22 +82,23 @@ describe('InclusionCriteriaPanel', () => {
       expect(wrapper.exists()).toBe(true)
     })
 
-    it('should render vertical label container', () => {
+    it('should not render the legacy vertical "ALL" sticker', () => {
+      // Refresh: vertical sideways-lr label was retired; the
+      // qualifying-limit toggle in the surrounding section header
+      // is the single source of truth for that information now.
       const wrapper = mountComponent()
-      const container = wrapper.find('.vertical-label-container')
-      expect(container.exists()).toBe(true)
+      expect(wrapper.find('.vertical-label').exists()).toBe(false)
+      expect(wrapper.find('.inclusion-criteria-panel__relation-pill').exists()).toBe(false)
     })
 
-    it('should display "ALL" label', () => {
+    it('should expose addNewRule for the parent section header', () => {
+      // Refresh: the panel no longer renders its own add-rule
+      // button (parent section header hosts that action). The
+      // panel exposes addNewRule via defineExpose so the parent
+      // can trigger it.
       const wrapper = mountComponent()
-      const label = wrapper.find('.vertical-label')
-      expect(label.text()).toBe('ALL')
-    })
-
-    it('should render add button', () => {
-      const wrapper = mountComponent()
-      const button = wrapper.find('[data-testid="add-inclusion-rule"]')
-      expect(button.exists()).toBe(true)
+      const vm = wrapper.vm as unknown as { addNewRule?: () => void }
+      expect(typeof vm.addNewRule).toBe('function')
     })
 
     it('should display empty state when no rules', () => {
@@ -109,9 +110,10 @@ describe('InclusionCriteriaPanel', () => {
 
   describe('Empty State', () => {
     it('should show empty state message', () => {
+      // Refresh: replaced v-alert with the MD3 filled empty-state
+      // container used elsewhere in the modernised UI.
       const wrapper = mountComponent({ modelValue: [] })
-      const alert = wrapper.findComponent({ name: 'VAlert' })
-      expect(alert.exists()).toBe(true)
+      expect(wrapper.find('.inclusion-criteria-panel__empty').exists()).toBe(true)
     })
 
     it('should display helpful text in empty state', () => {
@@ -542,28 +544,20 @@ describe('InclusionCriteriaPanel', () => {
   })
 
   describe('Styling and Layout', () => {
-    it('should apply events-container class', () => {
+    it('should apply the panel root class', () => {
+      // Refresh: events-container + vertical-label + flex-grow-1
+      // class names retired alongside the sticker layout. The
+      // panel now lives under a single .inclusion-criteria-panel
+      // root with a header strip and rules list.
       const wrapper = mountComponent()
-      const container = wrapper.find('.events-container')
-      expect(container.exists()).toBe(true)
+      expect(wrapper.find('.inclusion-criteria-panel').exists()).toBe(true)
     })
 
-    it('should display vertical label with correct styling', () => {
+    it('should not render an internal header strip', () => {
+      // Refresh: the in-panel header strip + add-rule action were
+      // retired; the surrounding section header hosts that now.
       const wrapper = mountComponent()
-      const label = wrapper.find('.vertical-label')
-      expect(label.exists()).toBe(true)
-    })
-
-    it('should use flex layout', () => {
-      const wrapper = mountComponent()
-      const flexContainer = wrapper.find('.flex-grow-1')
-      expect(flexContainer.exists()).toBe(true)
-    })
-
-    it('should center add button at top', () => {
-      const wrapper = mountComponent()
-      const buttonContainer = wrapper.find('.add-button-container-top')
-      expect(buttonContainer.exists()).toBe(true)
+      expect(wrapper.find('.inclusion-criteria-panel__header').exists()).toBe(false)
     })
   })
 
@@ -574,12 +568,11 @@ describe('InclusionCriteriaPanel', () => {
     })
 
     it('should handle empty modelValue as default', () => {
-      // Component requires modelValue prop, so test with empty array instead
+      // Component requires modelValue prop, so test with empty array.
+      // Empty state is now a div, not a v-alert.
       const wrapper = mountComponent({ modelValue: [] })
       expect(wrapper.exists()).toBe(true)
-      // Empty state should be visible
-      const alert = wrapper.findComponent({ name: 'VAlert' })
-      expect(alert.exists()).toBe(true)
+      expect(wrapper.find('.inclusion-criteria-panel__empty').exists()).toBe(true)
     })
 
     it('should handle rule without criteria groups', () => {

@@ -144,7 +144,15 @@ export interface MultiLineChartData {
 
 export interface TreemapNode {
   name: string
+  /** Drives the rectangle area (size). Typically personCount. */
   value: number
+  /**
+   * Drives the rectangle colour (separate from size). Atlas 2.15
+   * encodes magnitude by recordsPerPerson on the colour channel —
+   * not the area, which encodes prevalence. Optional: when missing,
+   * the colour falls back to `value`.
+   */
+  colorValue?: number
   conceptId?: number
   conceptPath?: string
   itemStyle?: {

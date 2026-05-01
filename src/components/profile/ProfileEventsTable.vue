@@ -1,40 +1,47 @@
 <template>
-  <div
-    class="profile-events-table"
-    data-test="profile-events-table"
-  >
-    <div class="d-flex align-center ga-3 mb-2">
-      <ProfileFilterChips />
-      <v-spacer />
-      <v-text-field
-        :model-value="store.textFilter"
-        :label="tv('common.search', 'Search')"
-        density="compact"
-        hide-details
-        clearable
-        data-test="profile-search"
-        style="max-width: 280px;"
-        @update:model-value="(v: string) => store.setTextFilter(v ?? '')"
-      />
+  <SurfaceCard padding="md">
+    <div class="section-header">
+      <div class="section-header__title-row">
+        <span class="text-eyebrow">EVENTS</span>
+        <span class="section-header__rule" />
+        <h2 class="section-title">Events</h2>
+      </div>
+      <div class="section-header__actions">
+        <v-text-field
+          :model-value="store.textFilter"
+          :label="tv('profiles.searchEvents', 'Search events')"
+          density="compact"
+          hide-details
+          clearable
+          data-test="profile-search"
+          style="min-width: 220px; max-width: 280px;"
+          @update:model-value="(v: string) => store.setTextFilter(v ?? '')"
+        />
+      </div>
     </div>
-    <v-data-table
-      :headers="headers"
-      :items="store.filteredRecords"
-      :items-per-page="25"
-      density="compact"
-      data-test="profile-table"
+    <div
+      class="profile-events-table section-body"
+      data-test="profile-events-table"
     >
-      <template #item.endDay="{ item }">
-        {{ item.endDay ?? '—' }}
-      </template>
-    </v-data-table>
-  </div>
+      <v-data-table
+        :headers="headers"
+        :items="store.filteredRecords"
+        :items-per-page="25"
+        density="compact"
+        data-test="profile-table"
+      >
+        <template #item.endDay="{ item }">
+          {{ item.endDay ?? '—' }}
+        </template>
+      </v-data-table>
+    </div>
+  </SurfaceCard>
 </template>
 
 <script setup lang="ts">
-import ProfileFilterChips from '@/components/profile/ProfileFilterChips.vue'
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 const store = useProfileStore()
 const { tv } = useI18n()
@@ -47,3 +54,11 @@ const headers = [
   { title: tv('columns.endDay', 'End Day'), key: 'endDay' },
 ]
 </script>
+
+<style scoped>
+.section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+.section-header__title-row { display: flex; align-items: center; gap: 10px; }
+.section-header__rule { width: 28px; height: 2px; background-color: rgb(var(--v-theme-orange)); border-radius: 2px; }
+.section-title { font-size: 16px; font-weight: 600; line-height: 1.2; margin: 0; }
+.section-header__actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+</style>

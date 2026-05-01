@@ -1,173 +1,228 @@
 <template>
-  <page-shell>
-    <v-container
-      fluid
-      class="cohorts-view"
-    >
-      <v-row>
-        <v-col cols="12">
-          <div class="cohorts-view__actions">
-            <v-btn
-              color="primary"
-              variant="flat"
-              size="large"
-              class="cohorts-view__action-btn"
-              :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
-              @click="handleCreateCohort"
-            >
-              {{ t('cohortDefinitions.newDefinition', 'New Cohort') }}
-            </v-btn>
+  <page-shell
+    hero
+    compact
+    eyebrow="OHDSI · Cohorts"
+    :title="pageTitle"
+    :subtitle="pageSubtitle"
+  >
+    <template #actions>
+      <v-btn-toggle
+        v-model="viewMode"
+        mandatory
+        density="compact"
+        variant="outlined"
+        divided
+        class="cohorts-view__view-toggle"
+        data-testid="cohorts-view-toggle"
+      >
+        <v-btn
+          value="tile"
+          size="small"
+          :aria-label="t('common.tileView', 'Tile view').value"
+          data-testid="cohorts-view-toggle-tile"
+        >
+          <v-icon>mdi-view-grid-outline</v-icon>
+        </v-btn>
+        <v-btn
+          value="table"
+          size="small"
+          :aria-label="t('dataSources.table.tableTab', 'Table view').value"
+          data-testid="cohorts-view-toggle-table"
+        >
+          <v-icon>mdi-view-list-outline</v-icon>
+        </v-btn>
+      </v-btn-toggle>
+    </template>
 
-            <v-btn
-              color="primary"
-              variant="flat"
-              size="large"
-              class="cohorts-view__action-btn"
-              :aria-label="t('common.import', 'Import cohort from JSON').value"
-              @click="handleImportCohort"
-            >
-              {{ t('common.import', 'Import') }}
-            </v-btn>
+    <div class="cohorts-view">
+      <!-- Toolbar: primary actions on the left, status chip + filters
+           toggle on the right. Sits flush on the page card surface
+           with no inner v-card wrapper. -->
+      <div class="cohorts-view__toolbar">
+        <v-btn
+          color="primary"
+          variant="flat"
+          prepend-icon="mdi-plus"
+          :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
+          @click="handleCreateCohort"
+        >
+          {{ t('cohortDefinitions.newDefinition', 'New cohort') }}
+        </v-btn>
 
-            <v-spacer />
+        <v-btn
+          variant="tonal"
+          prepend-icon="mdi-upload-outline"
+          :aria-label="t('common.import', 'Import cohort from JSON').value"
+          @click="handleImportCohort"
+        >
+          {{ t('common.import', 'Import') }}
+        </v-btn>
 
-            <v-btn-toggle
-              v-model="viewMode"
-              mandatory
-              density="compact"
-              variant="outlined"
-              divided
-              class="cohorts-view__view-toggle"
-              data-testid="cohorts-view-toggle"
-            >
-              <v-btn
-                value="tile"
-                size="small"
-                :aria-label="t('common.tileView', 'Tile view').value"
-                data-testid="cohorts-view-toggle-tile"
-              >
-                <v-icon>mdi-view-grid</v-icon>
-              </v-btn>
-              <v-btn
-                value="table"
-                size="small"
-                :aria-label="t('dataSources.table.tableTab', 'Table view').value"
-                data-testid="cohorts-view-toggle-table"
-              >
-                <v-icon>mdi-view-list</v-icon>
-              </v-btn>
-            </v-btn-toggle>
-          </div>
-        </v-col>
-      </v-row>
+        <v-chip
+          v-if="!loading && filteredCohorts.length > 0"
+          size="small"
+          variant="tonal"
+          color="primary"
+          class="cohorts-view__count"
+        >
+          {{ countLabel }}
+        </v-chip>
+
+        <v-spacer />
+      </div>
 
       <!-- Filters -->
-      <v-row>
-        <v-col cols="12">
-          <cohort-filters
-            :filters="filters"
-            :available-tags="availableTags"
-            :available-authors="availableAuthors"
-            :active-filter-count="activeFilterCount"
-            @update:filters="filters = $event"
-            @clear="clearFilters"
-          />
-        </v-col>
-      </v-row>
+      <cohort-filters
+        :filters="filters"
+        :available-tags="availableTags"
+        :available-authors="availableAuthors"
+        :active-filter-count="activeFilterCount"
+        class="cohorts-view__filters"
+        @update:filters="filters = $event"
+        @clear="clearFilters"
+      />
 
-      <v-row>
-        <v-col cols="12">
-          <!-- Filtering indicator -->
-          <div
-            v-if="filtering"
-            class="cohorts-view__filtering"
-          >
-            <v-progress-linear
-              indeterminate
-              color="primary"
-              height="2"
-            />
-            <div class="cohorts-view__filtering-text">
-              Filtering {{ cohorts.length.toLocaleString() }} cohorts...
-            </div>
-          </div>
+      <!-- Filtering indicator -->
+      <div
+        v-if="filtering"
+        class="cohorts-view__filtering"
+      >
+        <v-progress-linear
+          indeterminate
+          color="primary"
+          height="2"
+          rounded
+        />
+        <div class="cohorts-view__filtering-text">
+          {{ t('common.filtering', 'Filtering').value }} {{ cohorts.length.toLocaleString() }} {{ t('cohortDefinitions.cohortsLower', 'cohorts').value }}…
+        </div>
+      </div>
 
-          <cohort-table
-            v-if="viewMode === 'table'"
-            :cohorts="paginatedCohorts"
-            :loading="loading"
-            :error="error"
-            :search-query="searchQuery"
-            :selected-tags="filters.selectedTags"
-            @retry="fetchCohorts"
-            @create-cohort="handleCreateCohort"
-            @generate="handleGenerate"
-            @delete="handleDeleteClick"
-            @tag-click="handleTagClick"
-            @show-info="handleShowInfo"
-          />
-          <cohort-grid
-            v-else
-            :cohorts="paginatedCohorts"
-            :loading="loading"
-            :error="error"
-            :search-query="searchQuery"
-            :selected-tags="filters.selectedTags"
-            @retry="fetchCohorts"
-            @create-cohort="handleCreateCohort"
-            @generate="handleGenerate"
-            @delete="handleDeleteClick"
-            @tag-click="handleTagClick"
-            @show-info="handleShowInfo"
-          />
-        </v-col>
-      </v-row>
+      <cohort-table
+        v-if="viewMode === 'table'"
+        :cohorts="paginatedCohorts"
+        :loading="loading"
+        :error="error"
+        :search-query="searchQuery"
+        :selected-tags="filters.selectedTags"
+        @retry="fetchCohorts"
+        @create-cohort="handleCreateCohort"
+        @clear-filters="clearFilters"
+        @delete="handleDeleteClick"
+        @tag-click="handleTagClick"
+        @show-info="handleShowInfo"
+      />
+      <cohort-grid
+        v-else
+        :cohorts="paginatedCohorts"
+        :loading="loading"
+        :error="error"
+        :search-query="searchQuery"
+        :selected-tags="filters.selectedTags"
+        @retry="fetchCohorts"
+        @create-cohort="handleCreateCohort"
+        @clear-filters="clearFilters"
+        @delete="handleDeleteClick"
+        @tag-click="handleTagClick"
+        @show-info="handleShowInfo"
+      />
 
       <!-- Pagination -->
-      <v-row v-if="!loading && !error && filteredCohorts.length > 0">
-        <v-col cols="12">
-          <div class="cohorts-view__pagination">
-            <cohort-pagination
-              :page="page"
-              :items-per-page="itemsPerPage"
-              :items-per-page-options="itemsPerPageOptions"
-              :total-items="totalItems"
-              :can-go-previous="canGoPrevious"
-              :can-go-next="canGoNext"
-              :range-display="rangeDisplay"
-              @previous="previousPage"
-              @next="nextPage"
-              @update:items-per-page="setItemsPerPage"
-            />
-          </div>
-        </v-col>
-      </v-row>
+      <div
+        v-if="!loading && !error && filteredCohorts.length > 0"
+        class="cohorts-view__pagination"
+      >
+        <cohort-pagination
+          :page="page"
+          :items-per-page="itemsPerPage"
+          :items-per-page-options="itemsPerPageOptions"
+          :total-items="totalItems"
+          :range-display="rangeDisplay"
+          @update:page="setPage"
+          @update:items-per-page="setItemsPerPage"
+        />
+      </div>
 
-      <!-- Import Dialog -->
+      <!-- Import Dialog: paste an Atlas cohort JSON expression or
+           upload a .json file. Posts to /cohortdefinition and
+           navigates to the new cohort on success. -->
       <v-dialog
         v-model="showImportDialog"
-        max-width="600px"
+        max-width="640"
       >
         <v-card>
-          <v-card-title class="text-h5">
-            {{ t('common.import', 'Import') }}
+          <v-card-title class="text-h6">
+            {{ t('common.importCohort', 'Import cohort definition').value }}
           </v-card-title>
           <v-card-text>
-            <p class="mb-4">
-              {{ t('common.comingSoon', 'Import functionality will be implemented in a future update.') }}
+            <p class="cohorts-view__import-hint">
+              {{ t('cohortDefinitions.importHint', 'Paste an Atlas cohort JSON or upload a .json file. The expression is validated before saving.').value }}
             </p>
-            <p class="text-body-2 text-grey">
-              {{ t('cohortDefinitions.cohortDefinitionManager.panels.importConceptSetExpression', 'Import Concept Set Expression') }}
-            </p>
+
+            <v-text-field
+              v-model="importName"
+              :label="t('columns.name', 'Cohort name').value"
+              variant="outlined"
+              density="comfortable"
+              :disabled="importing"
+              class="mb-3"
+            />
+
+            <v-file-input
+              v-model="importFile"
+              :label="t('cohortDefinitions.uploadJsonLabel', 'Upload JSON file').value"
+              accept="application/json,.json"
+              prepend-icon=""
+              prepend-inner-icon="mdi-paperclip"
+              variant="outlined"
+              density="comfortable"
+              show-size
+              hide-details
+              :disabled="importing"
+              class="mb-3"
+              @update:model-value="onImportFileSelected"
+            />
+
+            <v-textarea
+              v-model="importJson"
+              :label="t('cohortDefinitions.expressionJsonLabel', 'Expression JSON').value"
+              :placeholder="'{ &quot;ConceptSets&quot;: [], &quot;PrimaryCriteria&quot;: { … } }'"
+              rows="8"
+              variant="outlined"
+              density="comfortable"
+              hide-details
+              :disabled="importing"
+              class="cohorts-view__import-json"
+            />
+
+            <v-alert
+              v-if="importError"
+              type="error"
+              variant="tonal"
+              density="compact"
+              class="mt-3"
+            >
+              {{ importError }}
+            </v-alert>
           </v-card-text>
           <v-card-actions>
+            <v-btn
+              variant="text"
+              :disabled="importing"
+              @click="closeImportDialog"
+            >
+              {{ t('common.cancel', 'Cancel').value }}
+            </v-btn>
             <v-spacer />
             <v-btn
-              color="grey"
-              variant="text"
-              @click="showImportDialog = false"
+              color="primary"
+              variant="flat"
+              :loading="importing"
+              :disabled="!canImport"
+              @click="confirmImport"
             >
-              {{ t('common.close', 'Close') }}
+              {{ t('common.import', 'Import').value }}
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -176,11 +231,11 @@
       <!-- Delete Confirmation Dialog -->
       <v-dialog
         v-model="showDeleteDialog"
-        max-width="500px"
+        max-width="500"
       >
         <v-card>
-          <v-card-title class="text-h5">
-            {{ t('common.deleteCohortTitle', 'Delete Cohort?') }}
+          <v-card-title class="text-h6">
+            {{ t('common.deleteCohortTitle', 'Delete cohort?') }}
           </v-card-title>
           <v-card-text>
             <p class="mb-2">
@@ -196,7 +251,6 @@
           <v-card-actions>
             <v-spacer />
             <v-btn
-              color="grey"
               variant="text"
               @click="showDeleteDialog = false"
             >
@@ -204,7 +258,7 @@
             </v-btn>
             <v-btn
               color="error"
-              variant="elevated"
+              variant="flat"
               :loading="deleting"
               @click="confirmDelete"
             >
@@ -217,16 +271,18 @@
       <!-- New Cohort Dialog -->
       <v-dialog
         v-model="showNewCohortDialog"
-        max-width="500px"
+        max-width="500"
       >
         <v-card>
-          <v-card-title class="text-h5">
-            {{ t('cohortDefinitions.newDefinitionTitle', 'Create New Cohort') }}
+          <v-card-title class="text-h6">
+            {{ t('cohortDefinitions.newDefinitionTitle', 'Create new cohort') }}
           </v-card-title>
           <v-card-text>
             <v-text-field
               v-model="newCohortName"
-              :label="t('columns.name', 'Cohort Name').value"
+              :label="t('columns.name', 'Cohort name').value"
+              variant="outlined"
+              density="comfortable"
               autofocus
               @keyup.enter="confirmCreateCohort"
             />
@@ -234,7 +290,6 @@
           <v-card-actions>
             <v-spacer />
             <v-btn
-              color="grey"
               variant="text"
               @click="showNewCohortDialog = false"
             >
@@ -242,7 +297,7 @@
             </v-btn>
             <v-btn
               color="primary"
-              variant="elevated"
+              variant="flat"
               :disabled="!newCohortName.trim()"
               @click="confirmCreateCohort"
             >
@@ -252,28 +307,31 @@
         </v-card>
       </v-dialog>
 
-      <!-- Generation Panel -->
-      <generation-panel
-        v-model="showGenerationPanel"
-        :cohort-id="selectedCohort?.id ?? null"
-      />
-
-      <!-- Cohort Info Dialog -->
+      <!-- Cohort Info Dialog: refreshed header (eyebrow + accent rule
+           + clean title) and tightened typography in the body. -->
       <v-dialog
         v-model="showCohortInfoDialog"
-        max-width="900px"
+        max-width="900"
         scrollable
       >
         <v-card>
-          <v-card-title class="d-flex align-center">
-            <v-icon
-              color="primary"
-              class="mr-2"
-            >
-              mdi-information-outline
-            </v-icon>
-            {{ t('common.cohortInformation', 'Cohort Information') }}
-          </v-card-title>
+          <div class="cohort-info__header">
+            <div class="cohort-info__title-block">
+              <div class="cohort-info__eyebrow-row">
+                <span class="text-eyebrow">{{ t('common.cohortDefinition', 'Cohort definition').value }}</span>
+                <span class="cohort-info__accent-rule" />
+              </div>
+              <h2 class="cohort-info__title">
+                {{ selectedCohort?.name || t('common.cohortInformation', 'Cohort information').value }}
+              </h2>
+            </div>
+            <v-btn
+              icon="mdi-close"
+              variant="text"
+              :aria-label="t('common.close', 'Close').value"
+              @click="showCohortInfoDialog = false"
+            />
+          </div>
           <v-divider />
           <v-card-text
             v-if="cohortInfoHtml"
@@ -292,7 +350,7 @@
               color="primary"
             />
             <div class="mt-4">
-              {{ t('common.loading', 'Loading') }}...
+              {{ t('common.loading', 'Loading') }}…
             </div>
           </v-card-text>
           <v-card-text
@@ -301,20 +359,9 @@
           >
             {{ t('cs.manager.concept.tabs.recordCounts.failedToLoadData', 'Failed to load cohort information') }}
           </v-card-text>
-          <v-divider />
-          <v-card-actions>
-            <v-spacer />
-            <v-btn
-              color="grey"
-              variant="text"
-              @click="showCohortInfoDialog = false"
-            >
-              {{ t('common.close', 'Close') }}
-            </v-btn>
-          </v-card-actions>
         </v-card>
       </v-dialog>
-    </v-container>
+    </div>
   </page-shell>
 </template>
 
@@ -324,18 +371,27 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
-import { deleteCohort, getCohortDefinition, getCohortPrintFriendly } from '@/services/webapi'
+import { deleteCohort, getCohortDefinition, getCohortPrintFriendly, saveCohortDefinition } from '@/services/webapi'
 import { logger } from '@/utils/logger'
 import PageShell from '@/components/shared/PageShell.vue'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import CohortFilters from '@/components/cohort/CohortFilters.vue'
-import GenerationPanel from '@/components/cohort/GenerationPanel.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 const router = useRouter()
 const { t } = useI18n()
+
+const pageTitle = computed(() =>
+  t('cohortDefinitions.cohortDefinitions', 'Cohort Definitions').value
+)
+const pageSubtitle = computed(() =>
+  t(
+    'cohortDefinitions.pageSubtitle',
+    'Browse, filter, and manage cohort definitions.'
+  ).value
+)
 
 // View mode (tile vs table) — persisted to localStorage so the choice
 // survives across navigations and reloads.
@@ -351,11 +407,17 @@ watch(viewMode, (mode) => {
 
 const showImportDialog = ref(false)
 const showDeleteDialog = ref(false)
-const showGenerationPanel = ref(false)
 const showNewCohortDialog = ref(false)
 const newCohortName = ref('')
 const selectedCohort = ref<CohortDefinitionSummary | null>(null)
 const deleting = ref(false)
+
+// Import-cohort state
+const importName = ref('')
+const importJson = ref('')
+const importFile = ref<File | File[] | null>(null)
+const importError = ref<string | null>(null)
+const importing = ref(false)
 
 // Cohort info dialog state
 const showCohortInfoDialog = ref(false)
@@ -385,11 +447,8 @@ const {
   page,
   itemsPerPage,
   itemsPerPageOptions,
-  canGoPrevious,
-  canGoNext,
   rangeDisplay,
-  nextPage,
-  previousPage,
+  setPage,
   setItemsPerPage,
 } = usePagination(totalItems)
 
@@ -400,6 +459,11 @@ const paginatedCohorts = computed(() => {
   const start = (page.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
   return filteredCohorts.value.slice(start, end)
+})
+
+const countLabel = computed(() => {
+  const n = filteredCohorts.value.length
+  return n === 1 ? '1 cohort' : `${n.toLocaleString()} cohorts`
 })
 
 /**
@@ -425,15 +489,87 @@ function confirmCreateCohort() {
  * Open import cohort dialog
  */
 function handleImportCohort() {
+  importName.value = ''
+  importJson.value = ''
+  importFile.value = null
+  importError.value = null
   showImportDialog.value = true
 }
 
+function closeImportDialog() {
+  showImportDialog.value = false
+  importName.value = ''
+  importJson.value = ''
+  importFile.value = null
+  importError.value = null
+  importing.value = false
+}
+
 /**
- * Open generation panel for a cohort
+ * When the user picks a .json file, read it into the textarea so they
+ * see what's about to be imported (and can edit it if they want).
  */
-function handleGenerate(cohort: CohortDefinitionSummary) {
-  selectedCohort.value = cohort
-  showGenerationPanel.value = true
+async function onImportFileSelected(value: File | File[] | null) {
+  const file = Array.isArray(value) ? value[0] : value
+  if (!file) return
+  try {
+    const text = await file.text()
+    importJson.value = text
+    importError.value = null
+    // Try to derive a default name from the file if the user hasn't
+    // typed one yet.
+    if (!importName.value.trim()) {
+      importName.value = file.name.replace(/\.json$/i, '')
+    }
+  } catch (err) {
+    logger.error('CohortsView', 'Failed to read import file', err)
+    importError.value = t('cohortDefinitions.importFileReadError', 'Failed to read the selected file.').value
+  }
+}
+
+const canImport = computed(() => {
+  return importName.value.trim().length > 0
+    && importJson.value.trim().length > 0
+    && !importing.value
+})
+
+async function confirmImport() {
+  importError.value = null
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(importJson.value)
+  } catch {
+    importError.value = t('cohortDefinitions.importInvalidJson', 'Expression JSON is not valid JSON.').value
+    return
+  }
+
+  if (!parsed || typeof parsed !== 'object') {
+    importError.value = t('cohortDefinitions.importInvalidShape', 'Expression must be a JSON object.').value
+    return
+  }
+
+  importing.value = true
+  try {
+    const result = await saveCohortDefinition({
+      name: importName.value.trim(),
+      expressionType: 'SIMPLE_EXPRESSION',
+      expression: parsed as object,
+    })
+
+    if (!result || !result.id) {
+      importError.value = t('cohortDefinitions.importFailed', 'Import failed. Check the JSON and try again.').value
+      return
+    }
+
+    closeImportDialog()
+    await fetchCohorts()
+    router.push(`/cohorts/${result.id}`)
+  } catch (err) {
+    logger.error('CohortsView', 'Failed to import cohort', err)
+    importError.value = t('cohortDefinitions.importFailed', 'Import failed. Check the JSON and try again.').value
+  } finally {
+    importing.value = false
+  }
 }
 
 /**
@@ -516,162 +652,151 @@ onMounted(() => {
 
 <style scoped>
 .cohorts-view {
-  padding: 0;
+  width: 100%;
 }
 
-/* Actions */
-.cohorts-view__actions {
+.cohorts-view__toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.cohorts-view__action-btn {
-  font-weight: 400;
+.cohorts-view__count {
+  align-self: center;
 }
 
-/* Pagination */
+.cohorts-view__view-toggle {
+  /* Sit in the page-shell #actions slot — keep it tight. */
+  flex-shrink: 0;
+}
+
+.cohorts-view__filters {
+  margin-bottom: 16px;
+}
+
 .cohorts-view__pagination {
   display: flex;
   justify-content: center;
-  padding: 24px 0;
+  padding: 24px 0 8px;
 }
 
 @media (max-width: 599px) {
-  .cohorts-view__actions {
+  .cohorts-view__toolbar {
     flex-direction: column;
+    align-items: stretch;
   }
 }
 
-/* Filtering indicator */
+/* Filtering indicator: a slim progress bar with a quiet label, sits
+ * directly on the page surface — no grey box. */
 .cohorts-view__filtering {
   margin-bottom: 16px;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-  padding: 12px 16px;
 }
 
 .cohorts-view__filtering-text {
-  margin-top: 8px;
-  font-size: 0.875rem;
-  color: #666;
-  text-align: center;
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 
-/* Cohort Info Dialog Styling */
+.cohorts-view__import-hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.cohorts-view__import-json :deep(textarea) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+/* Cohort Info Dialog header */
+.cohort-info__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px 16px;
+}
+.cohort-info__title-block {
+  flex: 1;
+  min-width: 0;
+}
+.cohort-info__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.cohort-info__accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+.cohort-info__title {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
+  word-break: break-word;
+}
+
+/* Cohort Info body — quieter, token-driven typography (replaces the
+ * old block of bespoke heading/list/table CSS). The print-friendly
+ * HTML inherits Vuetify's text colour and gets a few minimal tweaks
+ * so it reads as content, not chrome. */
 .cohort-info-content :deep(h1),
 .cohort-info-content :deep(h2),
 .cohort-info-content :deep(h3),
 .cohort-info-content :deep(h4) {
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
   font-weight: 600;
-  color: #333;
-}
-
-.cohort-info-content :deep(h1) {
-  font-size: 1.5rem;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 0.5rem;
-}
-
-.cohort-info-content :deep(h2) {
-  font-size: 1.25rem;
+  margin: 1.25rem 0 0.5rem;
   color: rgb(var(--v-theme-primary));
 }
-
-.cohort-info-content :deep(h3) {
-  font-size: 1.1rem;
-}
-
-.cohort-info-content :deep(h4) {
-  font-size: 1rem;
-}
-
-.cohort-info-content :deep(p) {
-  margin-bottom: 0.75rem;
+.cohort-info-content :deep(h1) { font-size: 1.25rem; }
+.cohort-info-content :deep(h2) { font-size: 1.1rem; }
+.cohort-info-content :deep(h3) { font-size: 1rem; }
+.cohort-info-content :deep(h4) { font-size: 0.95rem; }
+.cohort-info-content :deep(p),
+.cohort-info-content :deep(li) {
   line-height: 1.6;
 }
-
 .cohort-info-content :deep(ul),
 .cohort-info-content :deep(ol) {
-  margin-left: 1.5rem;
-  margin-bottom: 1rem;
-  padding-left: 0.5rem;
+  padding-inline-start: 1.5rem;
+  margin-block: 0.5rem;
 }
-
-.cohort-info-content :deep(li) {
-  margin-bottom: 0.5rem;
-  line-height: 1.6;
-}
-
-.cohort-info-content :deep(ul ul),
-.cohort-info-content :deep(ol ol),
-.cohort-info-content :deep(ul ol),
-.cohort-info-content :deep(ol ul) {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
 .cohort-info-content :deep(table) {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1rem;
+  margin-block: 0.75rem;
   font-size: 0.9rem;
 }
-
 .cohort-info-content :deep(th),
 .cohort-info-content :deep(td) {
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   text-align: left;
-  border: 1px solid #e0e0e0;
+  border-bottom: 1px solid rgb(var(--v-theme-outline-variant, 224, 224, 224));
 }
-
 .cohort-info-content :deep(th) {
-  background-color: #f5f5f5;
   font-weight: 600;
-  color: #333;
+  color: rgb(var(--v-theme-on-surface-variant));
+  background: rgb(var(--v-theme-surface-variant));
 }
-
-.cohort-info-content :deep(tr:nth-child(even)) {
-  background-color: #fafafa;
-}
-
-.cohort-info-content :deep(strong),
-.cohort-info-content :deep(b) {
-  font-weight: 600;
-  color: #333;
-}
-
-.cohort-info-content :deep(code) {
-  background-color: #f5f5f5;
-  padding: 0.2rem 0.4rem;
-  border-radius: 3px;
-  font-family: monospace;
-  font-size: 0.9em;
-}
-
+.cohort-info-content :deep(code),
 .cohort-info-content :deep(pre) {
-  background-color: #f5f5f5;
-  padding: 1rem;
+  background: rgb(var(--v-theme-surface-variant));
   border-radius: 4px;
-  overflow-x: auto;
-  margin-bottom: 1rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
 }
-
-/* Specific styling for entry/exit events and inclusion criteria */
-.cohort-info-content :deep(.event),
-.cohort-info-content :deep(.criteria) {
-  background-color: #f9f9f9;
-  border-left: 3px solid rgb(var(--v-theme-primary));
+.cohort-info-content :deep(code) { padding: 0.1rem 0.3rem; }
+.cohort-info-content :deep(pre) {
   padding: 0.75rem;
-  margin-bottom: 0.75rem;
-  border-radius: 4px;
-}
-
-.cohort-info-content :deep(.entry-event),
-.cohort-info-content :deep(.exit-event) {
-  padding-left: 1rem;
-  margin-top: 0.5rem;
+  overflow-x: auto;
 }
 </style>

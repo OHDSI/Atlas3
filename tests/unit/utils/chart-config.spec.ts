@@ -360,10 +360,17 @@ describe('chart-config', () => {
       // of the gradient and the higher-value node's is the darker.
       expect(seriesData[0].itemStyle?.color).toMatch(/^#[0-9a-f]{6}$/i)
       expect(seriesData[1].itemStyle?.color).toMatch(/^#[0-9a-f]{6}$/i)
-      // Lower value (A=10) maps to t=0 → first gradient stop (light).
-      // Higher value (B=20) maps to t=1 → last gradient stop (deep).
-      expect(seriesData[0].itemStyle?.color?.toLowerCase()).toBe('#60a5fa')
-      expect(seriesData[1].itemStyle?.color?.toLowerCase()).toBe('#1e3a8a')
+
+      // Lower-value tile is somewhere between the lightest stop and
+      // the mid stop (FLOOR of 0.15 prevents it tinting near-white
+      // against the page background). Higher-value tile is the
+      // darkest stop (Atlas brand navy).
+      const lightHex = seriesData[0].itemStyle?.color?.toLowerCase() ?? ''
+      const darkHex = seriesData[1].itemStyle?.color?.toLowerCase() ?? ''
+      // Convert to numeric for ordering checks.
+      const toInt = (h: string) => parseInt(h.replace('#', ''), 16)
+      expect(toInt(lightHex)).toBeGreaterThan(toInt(darkHex))
+      expect(darkHex).toBe('#1f425a')
     })
 
     it('should handle hierarchical data', () => {

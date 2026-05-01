@@ -131,7 +131,9 @@ describe('PersonReport.vue', () => {
       wrapper = createWrapper()
       await wrapper.vm.$nextTick()
 
-      const yearOfBirthCard = wrapper.findAll('.v-card').at(0)
+      // Component was migrated from v-card to SurfaceCard — the
+      // year-of-birth section is the first SurfaceCard.
+      const yearOfBirthCard = wrapper.findAll('.surface-card').at(0)
       expect(yearOfBirthCard?.findComponent({ name: 'VSkeletonLoader' }).exists()).toBe(true)
     })
 

@@ -88,13 +88,23 @@ export function mapConditionErasReport(data: WebAPIConditionEraRaw): ConditionEr
       hlt,
       personCount: item.numPersons,
       prevalence: item.percentPersons * 100, // Convert to percentage
-      averageDuration: item.lengthOfEra
+      averageDuration: item.lengthOfEra,
+      recordsPerPerson: item.recordsPerPerson
     }
   })
 
+  // Atlas 2.15 condition-era treemap: area = personCount, colour =
+  // length of era (aggProperties.byLengthOfEra in const.js).
   return {
     prevalence,
-    treemapData: prevalence.length > 0 ? toTreemapData(prevalence as unknown as Record<string, unknown>[], 'conceptName', 'personCount') : undefined
+    treemapData: prevalence.length > 0
+      ? toTreemapData(
+          prevalence as unknown as Record<string, unknown>[],
+          'conceptName',
+          'personCount',
+          'averageDuration'
+        )
+      : undefined
   }
 }
 
@@ -142,13 +152,23 @@ export function mapDrugErasReport(data: WebAPIDrugEraRaw): DrugErasReport {
       ingredient,
       personCount: item.numPersons,
       prevalence: item.percentPersons * 100, // Convert to percentage
-      averageDuration: item.lengthOfEra
+      averageDuration: item.lengthOfEra,
+      recordsPerPerson: item.recordsPerPerson
     }
   })
 
+  // Atlas 2.15 drug-era treemap: area = personCount, colour = length
+  // of era (aggProperties.byLengthOfEra in const.js).
   return {
     prevalence,
-    treemapData: prevalence.length > 0 ? toTreemapData(prevalence as unknown as Record<string, unknown>[], 'conceptName', 'personCount') : undefined
+    treemapData: prevalence.length > 0
+      ? toTreemapData(
+          prevalence as unknown as Record<string, unknown>[],
+          'conceptName',
+          'personCount',
+          'averageDuration'
+        )
+      : undefined
   }
 }
 
@@ -258,13 +278,24 @@ function extractConceptDisplayName(conceptPath: string): string {
 export function toTreemapData<T extends object>(
   data: T[],
   nameKey: keyof T,
-  valueKey: keyof T
+  valueKey: keyof T,
+  /**
+   * Optional key for the magnitude that drives the colour channel
+   * (separate from the rectangle area). Atlas 2.15 colours treemap
+   * tiles by recordsPerPerson — pass that key here when available.
+   */
+  colorKey?: keyof T
 ): TreemapNode[] {
   return data.map(item => {
     const fullName = String(item[nameKey])
+    const colorValueRaw = colorKey ? item[colorKey] : undefined
+    const colorValue = colorValueRaw !== undefined && colorValueRaw !== null
+      ? Number(colorValueRaw)
+      : undefined
     return {
       name: extractConceptDisplayName(fullName),
       value: Number(item[valueKey]),
+      colorValue: Number.isFinite(colorValue) ? colorValue : undefined,
       conceptId: 'conceptId' in item ? Number(item.conceptId) : undefined,
       conceptPath: 'conceptPath' in item ? String(item.conceptPath) : undefined
     }
@@ -841,17 +872,22 @@ export function mapDrilldownReport(
   }
 
   if (raw.frequencyDistribution && raw.frequencyDistribution.length > 0) {
+    // WebAPI returns each row as { xCount, yNumPersons } — same
+    // shape Atlas 2.15 reads via ChartUtils.normalizeArray, then
+    // bins as a histogram (xCount = bucket label, yNumPersons =
+    // bar height). We previously read intervalIndex / countValue
+    // which don't exist in the response, so the chart silently
+    // produced empty categories and looked broken.
+    //
+    // Older builds that DO emit intervalIndex / countValue still
+    // work — the destructuring above falls back to those names.
+    const fd = raw.frequencyDistribution
     report.byFrequency = {
-      // Some WebAPI report types (drug era, measurement) come back
-      // without an intervalIndex on every entry. Coerce missing
-      // values to '' so the .toString() call doesn't blow up the
-      // entire drill-down for those domains.
-      categories: raw.frequencyDistribution.map(i =>
-        i.intervalIndex !== undefined && i.intervalIndex !== null
-          ? String(i.intervalIndex)
-          : ''
-      ),
-      values: raw.frequencyDistribution.map(i => i.countValue ?? 0)
+      categories: fd.map(i => {
+        const x = i.xCount ?? i.intervalIndex
+        return x !== undefined && x !== null ? String(x) : ''
+      }),
+      values: fd.map(i => i.yNumPersons ?? i.countValue ?? 0),
     }
   }
 

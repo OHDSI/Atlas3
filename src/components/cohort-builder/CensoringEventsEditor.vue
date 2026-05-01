@@ -1,23 +1,32 @@
 <template>
   <div class="censoring-events-editor">
-    <div class="pa-4">
-      <h3 class="text-h6 mb-2">
-        {{ t('components.cohortExpressionEditor.censoringEvents', 'Censoring Events:') }}
-      </h3>
-      <p class="text-body-2 text-medium-emphasis mb-4">
-        Exit cohort when any of these events occur
+    <div class="censoring-events-editor__body">
+      <!-- The "Censoring Events:" h3 was removed — its information
+           is duplicated by the eyebrow + the explanatory line below.
+           Eyebrow + a one-line description carries the same meaning
+           with less vertical weight. -->
+      <div class="censoring-events-editor__heading">
+        <span class="text-eyebrow">{{ t('components.cohortExpressionEditor.censoringEvents', 'Censoring events').value }}</span>
+        <span class="censoring-events-editor__heading-rule" />
+      </div>
+      <p class="censoring-events-editor__lede">
+        {{ t('components.cohortExpressionEditor.censoringEventsDescription', 'Exit cohort when any of these events occur.').value }}
       </p>
 
       <div>
-        <!-- Empty state -->
-        <v-alert
+        <!-- Empty state — quiet inline hint (matches event
+             persistence + data sources hint style). -->
+        <div
           v-if="localEvents.length === 0"
-          type="info"
-          variant="tonal"
-          density="compact"
+          class="censoring-events__hint"
         >
-          No censoring events defined. Cohort membership will not be affected by additional events.
-        </v-alert>
+          <v-icon
+            icon="mdi-information-outline"
+            size="16"
+            class="censoring-events__hint-icon"
+          />
+          <span>No censoring events defined. Cohort membership will not be affected by additional events.</span>
+        </div>
 
         <!-- Event list -->
         <div
@@ -204,7 +213,51 @@ validateEvents()
 
 <style scoped>
 .censoring-events-editor {
-  margin: 16px 0;
+  margin: 0;
+}
+
+.censoring-events-editor__body {
+  padding: 12px 16px;
+  border-top: 1px dashed rgb(var(--v-theme-outline-variant, 224, 224, 224));
+}
+
+.censoring-events-editor__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.censoring-events-editor__heading-rule {
+  display: inline-block;
+  width: 24px;
+  height: 2px;
+  background: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+
+.censoring-events-editor__lede {
+  font-size: 12px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+/* Quiet inline hint — matches event persistence + data sources. */
+.censoring-events__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  line-height: 1.5;
+}
+
+.censoring-events__hint-icon {
+  color: rgb(var(--v-theme-primary));
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .events-list {

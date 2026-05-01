@@ -1,26 +1,8 @@
 <template>
   <div class="analysis-list-layout">
-    <header
-      v-if="title || subtitle || $slots.title"
-      class="analysis-list__header"
-    >
-      <div class="analysis-list__heading">
-        <slot name="title">
-          <h1
-            v-if="title"
-            class="analysis-list__title"
-          >
-            {{ title }}
-          </h1>
-        </slot>
-        <p
-          v-if="subtitle"
-          class="analysis-list__subtitle"
-        >
-          {{ subtitle }}
-        </p>
-      </div>
-    </header>
+    <!-- Title / subtitle are now provided by the surrounding
+         PageShell hero (in AnalysisHubView). The legacy inline
+         heading was dropped to avoid the duplicated nesting. -->
 
     <div class="analysis-list">
       <!-- Toolbar: actions left, view-mode toggle right -->
@@ -141,33 +123,6 @@ function onViewModeChange(value: AnalysisViewMode | null) {
 .analysis-list-layout {
   display: flex;
   flex-direction: column;
-}
-
-.analysis-list__header {
-  padding: 0 0 16px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.analysis-list__heading {
-  min-width: 0;
-}
-
-.analysis-list__title {
-  font-size: 1.5rem;
-  line-height: 1.2;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: rgba(var(--v-theme-on-surface), 0.92);
-  margin: 0;
-}
-
-.analysis-list__subtitle {
-  margin: 4px 0 0;
-  font-size: 0.875rem;
-  color: rgba(var(--v-theme-on-surface), 0.6);
 }
 
 .analysis-list {

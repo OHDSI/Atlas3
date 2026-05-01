@@ -32,48 +32,51 @@
       </div>
     </v-alert>
 
-    <!-- Empty -->
+    <!-- Empty: branch between "filtered → no matches" and "no
+         cohorts at all" so the CTA actually helps. -->
     <div
       v-else-if="cohorts.length === 0"
       class="cohort-table__empty"
     >
       <v-icon
-        size="80"
-        color="grey-lighten-1"
-      >
-        mdi-folder-open-outline
-      </v-icon>
-      <h2 class="cohort-table__empty-title">
-        {{ t('common.noData', 'No cohorts found').value }}
-      </h2>
-      <p
-        v-if="emptyMessage"
-        class="cohort-table__empty-subtitle"
-      >
+        :icon="isFiltered ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
+        size="36"
+        class="cohort-table__empty-icon"
+      />
+      <p class="cohort-table__empty-text">
         {{ emptyMessage }}
       </p>
       <v-btn
+        v-if="isFiltered"
+        size="small"
+        variant="tonal"
+        prepend-icon="mdi-close"
+        @click="$emit('clear-filters')"
+      >
+        {{ t('search.clearAllSelections', 'Clear filters').value }}
+      </v-btn>
+      <v-btn
+        v-else
         color="primary"
-        variant="elevated"
-        size="large"
-        class="mt-4"
+        variant="flat"
+        prepend-icon="mdi-plus"
         @click="$emit('create-cohort')"
       >
-        <v-icon start>
-          mdi-plus
-        </v-icon>
-        {{ t('cohortDefinitions.newDefinition', 'New Cohort').value }}
+        {{ t('cohortDefinitions.newDefinition', 'New cohort').value }}
       </v-btn>
     </div>
 
     <!-- Table -->
-    <v-table
+    <SurfaceCard
       v-else
-      density="comfortable"
-      hover
-      class="cohort-table__grid"
-      data-testid="cohort-table"
+      padding="none"
     >
+      <v-table
+        density="comfortable"
+        hover
+        class="cohort-table__grid"
+        data-testid="cohort-table"
+      >
       <thead>
         <tr>
           <th class="cohort-table__col-id">
@@ -147,34 +150,29 @@
             {{ formatDate(cohort.modifiedDate) }}
           </td>
           <td class="cohort-table__col-actions">
-            <v-btn
-              icon="mdi-information-outline"
-              size="small"
-              variant="text"
-              :aria-label="t('common.cohortInformation', 'Cohort Information').value"
-              data-testid="cohort-table-info"
-              @click.stop="$emit('show-info', cohort)"
-            />
-            <v-btn
-              icon="mdi-account-multiple"
-              size="small"
-              variant="text"
-              :aria-label="t('components.analysisExecution.buttons.generate', 'Generate').value"
-              data-testid="cohort-table-generate"
-              @click.stop="$emit('generate', cohort)"
-            />
-            <v-btn
-              icon="mdi-delete-outline"
-              size="small"
-              variant="text"
-              :aria-label="t('common.delete', 'Delete').value"
-              data-testid="cohort-table-delete"
-              @click.stop="$emit('delete', cohort)"
-            />
+            <div class="cohort-table__actions">
+              <v-btn
+                icon="mdi-information-outline"
+                size="small"
+                variant="text"
+                :aria-label="t('common.cohortInformation', 'Cohort Information').value"
+                data-testid="cohort-table-info"
+                @click.stop="$emit('show-info', cohort)"
+              />
+              <v-btn
+                icon="mdi-delete-outline"
+                size="small"
+                variant="text"
+                :aria-label="t('common.delete', 'Delete').value"
+                data-testid="cohort-table-delete"
+                @click.stop="$emit('delete', cohort)"
+              />
+            </div>
           </td>
         </tr>
       </tbody>
-    </v-table>
+      </v-table>
+    </SurfaceCard>
   </div>
 </template>
 
@@ -183,6 +181,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -205,19 +204,23 @@ const props = withDefaults(defineProps<Props>(), {
 defineEmits<{
   retry: []
   'create-cohort': []
-  generate: [cohort: CohortDefinitionSummary]
+  'clear-filters': []
   delete: [cohort: CohortDefinitionSummary]
   'tag-click': [tagName: string]
   'show-info': [cohort: CohortDefinitionSummary]
 }>()
 
+const isFiltered = computed(() =>
+  Boolean(props.searchQuery) || (props.selectedTags?.length ?? 0) > 0
+)
+
 const emptyMessage = computed(() => {
-  if (props.searchQuery && props.selectedTags.length > 0) {
+  if (props.searchQuery && (props.selectedTags?.length ?? 0) > 0) {
     return `No cohorts match "${props.searchQuery}" with the selected tags.`
   }
   if (props.searchQuery) return `No cohorts match "${props.searchQuery}".`
-  if (props.selectedTags.length > 0) return 'No cohorts match the selected tags.'
-  return 'Get started by creating your first cohort.'
+  if ((props.selectedTags?.length ?? 0) > 0) return 'No cohorts match the selected tags.'
+  return 'No cohorts yet — create one to start defining a study population.'
 })
 
 const unknownLabel = t('common.anonymous', 'Unknown')
@@ -284,26 +287,43 @@ function openCohort(cohort: CohortDefinitionSummary) {
 .cohort-table__col-author { width: 120px; }
 .cohort-table__col-date { width: 120px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cohort-table__col-actions {
-  width: 140px;
+  width: 96px;
   white-space: nowrap;
   text-align: right;
+}
+
+/* Hover-only action icons — keeps the long list reading as data first. */
+.cohort-table__actions {
+  display: inline-flex;
+  gap: 0;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.cohort-table__row:hover .cohort-table__actions,
+.cohort-table__row:focus-within .cohort-table__actions {
+  opacity: 1;
 }
 
 .cohort-table__empty {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 56px 24px;
+  border-radius: 12px;
+  background: rgb(var(--v-theme-surface-variant));
+}
+.cohort-table__empty-icon {
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.7;
+}
+.cohort-table__empty-text {
+  margin: 0;
+  font-size: 14px;
+  color: rgb(var(--v-theme-on-surface-variant));
   text-align: center;
-  padding: 64px 24px;
-}
-.cohort-table__empty-title {
-  font-size: 1.25rem;
-  margin-top: 16px;
-  color: rgba(0, 0, 0, 0.74);
-}
-.cohort-table__empty-subtitle {
-  color: rgba(0, 0, 0, 0.6);
-  margin-top: 4px;
+  max-width: 480px;
 }
 .cohort-table__error {
   display: flex;

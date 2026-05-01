@@ -1,7 +1,5 @@
 <template>
   <AnalysisListLayout
-    :title="t('pathway.title', 'Pathway analyses').value"
-    :subtitle="subtitle"
     :error="error?.message ?? null"
     testid="pathways"
   >
@@ -22,7 +20,6 @@
       <v-btn
         color="primary"
         variant="flat"
-        size="large"
         prepend-icon="mdi-plus"
         data-testid="pathways-create"
         @click="handleNew"
@@ -77,18 +74,33 @@
     max-width="400"
   >
     <v-card>
-      <v-card-title>{{ t('common.delete', 'Delete pathway') }}</v-card-title>
+      <div class="confirm-dialog__header">
+        <div class="confirm-dialog__title-block">
+          <div class="confirm-dialog__eyebrow-row">
+            <span class="text-eyebrow">{{ t('pathway.entity', 'Pathway').value }}</span>
+            <span class="confirm-dialog__accent-rule" />
+          </div>
+          <h2 class="confirm-dialog__title">
+            {{ t('common.delete', 'Delete').value }}
+          </h2>
+        </div>
+      </div>
+      <v-divider />
       <v-card-text>{{ t('pathwayDefinitions.deleteConfirm', 'Delete this pathway? This cannot be undone.') }}</v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn @click="showDelete = false">
+        <v-btn
+          variant="text"
+          @click="showDelete = false"
+        >
           {{ t('common.cancel', 'Cancel') }}
         </v-btn>
         <v-btn
           color="error"
+          variant="flat"
           @click="confirmDelete"
         >
-          {{ t('common.delete', 'Delete pathway') }}
+          {{ t('common.delete', 'Delete') }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -120,7 +132,7 @@ const {
   loading, error,
   filters, page, itemsPerPage,
   fetchPathways,
-  paginatedPathways, totalItems, totalPages,
+  paginatedPathways, totalPages,
 } = usePathways()
 
 const router = useRouter()
@@ -130,12 +142,6 @@ const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)
 const feedback = ref<{ message: string; color: 'success' | 'error' | 'info' } | null>(null)
 const searchInput = ref('')
-
-const subtitle = computed(() =>
-  totalItems.value === 0
-    ? t('common.noData', 'No pathways yet.').value
-    : `${totalItems.value} ${totalItems.value === 1 ? 'pathway' : 'pathways'}`
-)
 
 const headers = computed(() => [
   { title: t('columns.name', 'Name').value, key: 'name' },
@@ -211,5 +217,32 @@ async function confirmDelete() {
   font-size: 0.875rem;
   color: rgba(var(--v-theme-on-surface), 0.6);
   padding: 0 12px;
+}
+
+.confirm-dialog__header {
+  padding: 20px 24px 14px;
+}
+.confirm-dialog__title-block {
+  flex: 1;
+}
+.confirm-dialog__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.confirm-dialog__accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+.confirm-dialog__title {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
 }
 </style>

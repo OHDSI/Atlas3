@@ -1,44 +1,36 @@
 <template>
   <div class="domain-prevalence-treemap">
-    <div class="treemap-controls mb-4">
-      <v-row align="center">
-        <v-col
-          cols="12"
-          :md="hasHierarchy ? 8 : 12"
+    <!-- Quiet hint row replaces the heavy info v-alert. The cue is
+         the icon + tone, not a full-bleed colored alert background. -->
+    <div class="treemap-controls">
+      <div class="treemap-controls__hint">
+        <v-icon
+          icon="mdi-cursor-default-click-outline"
+          size="16"
+          class="treemap-controls__hint-icon"
+        />
+        <span>
+          <strong>Click</strong> on any area to view detailed analytics
+        </span>
+        <span
+          v-if="!hasHierarchy"
+          class="treemap-controls__hint-note"
         >
-          <v-alert
-            type="info"
-            variant="tonal"
-            density="compact"
-          >
-            <div>
-              <div>
-                <strong>Click</strong> on any area to view detailed analytics
-              </div>
-              <div
-                v-if="!hasHierarchy"
-                class="text-caption mt-1"
-              >
-                Note: Hierarchical grouping not available for this data source
-              </div>
-            </div>
-          </v-alert>
-        </v-col>
-        <v-col
-          v-if="hasHierarchy"
-          cols="12"
-          md="4"
-          class="text-right"
-        >
-          <v-switch
-            v-model="hierarchicalView"
-            color="primary"
-            density="compact"
-            hide-details
-            label="Group by hierarchy"
-          />
-        </v-col>
-      </v-row>
+          · Hierarchical grouping not available for this data source
+        </span>
+      </div>
+
+      <v-spacer />
+
+      <v-switch
+        v-if="hasHierarchy"
+        v-model="hierarchicalView"
+        color="primary"
+        density="compact"
+        hide-details
+        label="Group by hierarchy"
+        class="treemap-controls__switch"
+      />
     </div>
 
     <TreemapChart
@@ -98,6 +90,9 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
   interface MapNode {
     name: string
     value: number
+    /** Carried through so leaves (and parent rollups) keep the
+     *  records-per-person / length-of-era colour magnitude. */
+    colorValue?: number
     children?: Map<string, MapNode>
     conceptId?: number
     conceptPath?: string
@@ -118,6 +113,7 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
         root.set(nodeName, {
           name: item.name,
           value: item.value,
+          colorValue: item.colorValue,
           conceptId: item.conceptId,
           conceptPath: item.conceptPath,
           itemStyle: item.itemStyle
@@ -153,11 +149,14 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
           children: isLeaf ? undefined : new Map()
         }
 
-        // Only add conceptId and conceptPath to leaf nodes
+        // Only add conceptId / conceptPath / colorValue to leaf
+        // nodes — parent colour magnitudes are computed downstream
+        // from children.
         if (isLeaf) {
           node.conceptId = item.conceptId
           node.conceptPath = item.conceptPath
           node.itemStyle = item.itemStyle
+          node.colorValue = item.colorValue
         }
 
         currentLevel.set(levelName, node)
@@ -202,6 +201,9 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
       }
       if (node.itemStyle !== undefined) {
         treeNode.itemStyle = node.itemStyle
+      }
+      if (node.colorValue !== undefined) {
+        treeNode.colorValue = node.colorValue
       }
 
       if (node.children && node.children.size > 0) {
@@ -255,5 +257,31 @@ function handleNodeClick(conceptId: number, conceptName: string, conceptPath: st
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.treemap-controls__hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.treemap-controls__hint-icon {
+  color: rgb(var(--v-theme-primary));
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.treemap-controls__hint-note {
+  font-size: 12px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.85;
+}
+
+.treemap-controls__switch {
+  flex-shrink: 0;
 }
 </style>

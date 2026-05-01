@@ -1,7 +1,5 @@
 <template>
   <AnalysisListLayout
-    :title="t('cc.tabs.featureAnalyses.title', 'Feature analyses').value"
-    :subtitle="faSubtitle"
     :error="error ?? null"
     testid="feature-analyses"
     @clear-error="store.clearError()"
@@ -23,7 +21,6 @@
       <v-btn
         color="primary"
         variant="flat"
-        size="large"
         prepend-icon="mdi-plus"
         :aria-label="t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis').value"
         data-testid="feature-analyses-create"
@@ -89,9 +86,18 @@
     max-width="500"
   >
     <v-card>
-      <v-card-title class="text-h5">
-        {{ t('common.delete', 'Delete') }}
-      </v-card-title>
+      <div class="confirm-dialog__header">
+        <div class="confirm-dialog__title-block">
+          <div class="confirm-dialog__eyebrow-row">
+            <span class="text-eyebrow">{{ t('fa.entity', 'Feature analysis').value }}</span>
+            <span class="confirm-dialog__accent-rule" />
+          </div>
+          <h2 class="confirm-dialog__title">
+            {{ t('common.delete', 'Delete').value }}
+          </h2>
+        </div>
+      </div>
+      <v-divider />
       <v-card-text v-if="selectedFA">
         {{ deleteMessage }}
       </v-card-text>
@@ -105,7 +111,7 @@
         </v-btn>
         <v-btn
           color="error"
-          variant="elevated"
+          variant="flat"
           :loading="deleting"
           @click="confirmDelete"
         >
@@ -148,12 +154,6 @@ const {
 } = useFeatureAnalyses()
 
 const searchInput = ref<string>('')
-
-const faSubtitle = computed(() =>
-  totalItems.value === 0
-    ? t('common.noData', 'No feature analyses yet.').value
-    : `${totalItems.value} ${totalItems.value === 1 ? 'analysis' : 'analyses'}`
-)
 
 const headers = computed(() => [
   { title: t('columns.name', 'Name').value, key: 'name' },
@@ -244,5 +244,32 @@ onMounted(() => {
   font-size: 0.875rem;
   color: rgba(var(--v-theme-on-surface), 0.6);
   padding: 0 12px;
+}
+
+.confirm-dialog__header {
+  padding: 20px 24px 14px;
+}
+.confirm-dialog__title-block {
+  flex: 1;
+}
+.confirm-dialog__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.confirm-dialog__accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+.confirm-dialog__title {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
 }
 </style>

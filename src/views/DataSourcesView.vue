@@ -1,6 +1,7 @@
 <template>
   <page-shell
     hero
+    compact
     eyebrow="OHDSI · CDM"
     :title="pageTitle"
     :subtitle="pageSubtitle"
@@ -73,72 +74,72 @@
           class="datasources-view__report"
           padding="md"
         >
-        <DashboardReport
-          v-if="store.selectedReportType === 'dashboard' && dashboardData"
-          data-testid="dashboard-report"
-          :data="dashboardData"
-        />
+          <DashboardReport
+            v-if="store.selectedReportType === 'dashboard' && dashboardData"
+            data-testid="dashboard-report"
+            :data="dashboardData"
+          />
 
-        <DataDensityReport
-          v-else-if="store.selectedReportType === 'datadensity' && dataDensityData"
-          data-testid="datadensity-report"
-          :data="dataDensityData"
-        />
+          <DataDensityReport
+            v-else-if="store.selectedReportType === 'datadensity' && dataDensityData"
+            data-testid="datadensity-report"
+            :data="dataDensityData"
+          />
 
-        <PersonReport
-          v-else-if="store.selectedReportType === 'person' && personData"
-          data-testid="person-report"
-          :data="personData"
-        />
+          <PersonReport
+            v-else-if="store.selectedReportType === 'person' && personData"
+            data-testid="person-report"
+            :data="personData"
+          />
 
-        <ObservationPeriodReport
-          v-else-if="store.selectedReportType === 'observationPeriod' && observationPeriodData"
-          data-testid="observation-period-report"
-          :data="observationPeriodData"
-        />
+          <ObservationPeriodReport
+            v-else-if="store.selectedReportType === 'observationPeriod' && observationPeriodData"
+            data-testid="observation-period-report"
+            :data="observationPeriodData"
+          />
 
-        <DeathReport
-          v-else-if="store.selectedReportType === 'death' && deathData"
-          data-testid="death-report"
-          :data="deathData"
-        />
+          <DeathReport
+            v-else-if="store.selectedReportType === 'death' && deathData"
+            data-testid="death-report"
+            :data="deathData"
+          />
 
-        <ClinicalDomainReport
-          v-else-if="isClinicalDomainReport && clinicalData"
-          data-testid="clinical-domain-report"
-          :data="clinicalData"
-          :report-type="store.selectedReportType"
-        />
+          <ClinicalDomainReport
+            v-else-if="isClinicalDomainReport && clinicalData"
+            data-testid="clinical-domain-report"
+            :data="clinicalData"
+            :report-type="store.selectedReportType"
+          />
 
+          <div
+            v-else
+            class="datasources-view__empty"
+          >
+            <v-icon
+              icon="mdi-information-outline"
+              size="36"
+              class="datasources-view__empty-icon"
+            />
+            <p class="datasources-view__empty-text">
+              Report type "{{ reportTypeLabel }}" is not yet implemented.
+            </p>
+          </div>
+        </SurfaceCard>
+
+        <!-- Empty State: no sources -->
         <div
-          v-else
+          v-else-if="!store.loading.sources && store.sources.length === 0 && !store.error.sources"
           class="datasources-view__empty"
         >
           <v-icon
-            icon="mdi-information-outline"
+            icon="mdi-database-off"
             size="36"
             class="datasources-view__empty-icon"
           />
           <p class="datasources-view__empty-text">
-            Report type "{{ reportTypeLabel }}" is not yet implemented.
+            No data sources available.
           </p>
         </div>
-      </SurfaceCard>
-
-      <!-- Empty State: no sources -->
-      <div
-        v-else-if="!store.loading.sources && store.sources.length === 0 && !store.error.sources"
-        class="datasources-view__empty"
-      >
-        <v-icon
-          icon="mdi-database-off"
-          size="36"
-          class="datasources-view__empty-icon"
-        />
-        <p class="datasources-view__empty-text">
-          No data sources available.
-        </p>
-      </div>
 
         <!-- Idle hint when sources are loaded but nothing selected -->
         <div
@@ -383,11 +384,13 @@ onMounted(async () => {
 
 .datasources-view__sidebar {
   border-right: 1px solid rgb(var(--v-theme-outline-variant));
-  /* Pull the rail flush with the page-shell card edge so the
-   * separator line spans the full card height. */
-  margin-block: -32px;
+  /* Pull the rail to the bottom + leading edges of the page-shell
+   * card so the separator line spans full card height beneath the
+   * hero header. The top stays at zero so the sidebar starts below
+   * the header instead of overlapping it. */
+  margin-block: 0 -32px;
   margin-inline-start: -32px;
-  padding-block: 32px 24px;
+  padding-block: 0 24px;
   padding-inline-start: 16px;
   align-self: stretch;
   background: rgb(var(--v-theme-surface));
@@ -397,7 +400,7 @@ onMounted(async () => {
   .datasources-view__sidebar {
     border-right: 0;
     border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
-    margin-block: -32px 0;
+    margin-block: 0;
     margin-inline: -32px;
     padding-inline: 16px;
     padding-block: 16px;

@@ -22,9 +22,9 @@
     <template #actions>
       <v-btn
         v-if="isEditing"
-        variant="outlined"
+        variant="tonal"
         color="primary"
-        prepend-icon="mdi-content-copy"
+        prepend-icon="mdi-content-copy-outline"
         :disabled="loading"
         data-testid="feature-analysis-editor-copy"
         @click="handleSaveCopy"
@@ -33,9 +33,9 @@
       </v-btn>
       <v-btn
         v-if="isEditing"
-        variant="outlined"
+        variant="text"
         color="error"
-        prepend-icon="mdi-delete"
+        prepend-icon="mdi-delete-outline"
         :disabled="loading"
         data-testid="feature-analysis-editor-delete"
         @click="handleDeleteClick"
@@ -44,8 +44,8 @@
       </v-btn>
       <v-btn
         color="primary"
-        variant="elevated"
-        prepend-icon="mdi-content-save"
+        variant="flat"
+        prepend-icon="mdi-content-save-outline"
         :disabled="!canSave"
         :loading="saving"
         data-testid="feature-analysis-editor-save"
@@ -142,9 +142,9 @@
           </h2>
           <div class="feature-analysis-editor__preset-actions">
             <v-btn
-              variant="outlined"
+              variant="tonal"
               size="small"
-              prepend-icon="mdi-download"
+              prepend-icon="mdi-download-outline"
               :loading="loadingDefaults"
               data-testid="feature-analysis-editor-preset-default"
               @click="loadDefaultCovariateSettings(false)"
@@ -152,7 +152,7 @@
               {{ t('featureAnalyses.editor.preset.loadDefault', 'Load default covariate settings') }}
             </v-btn>
             <v-btn
-              variant="outlined"
+              variant="tonal"
               size="small"
               prepend-icon="mdi-clock-outline"
               :loading="loadingDefaults"
@@ -251,9 +251,18 @@
       max-width="500"
     >
       <v-card>
-        <v-card-title class="text-h5">
-          {{ t('common.delete', 'Delete') }}
-        </v-card-title>
+        <div class="confirm-dialog__header">
+          <div class="confirm-dialog__title-block">
+            <div class="confirm-dialog__eyebrow-row">
+              <span class="text-eyebrow">{{ t('cc.fa.title', 'Feature analysis').value }}</span>
+              <span class="confirm-dialog__accent-rule" />
+            </div>
+            <h2 class="confirm-dialog__title">
+              {{ t('common.delete', 'Delete').value }}
+            </h2>
+          </div>
+        </div>
+        <v-divider />
         <v-card-text>
           {{ deleteMessage }}
         </v-card-text>
@@ -267,7 +276,7 @@
           </v-btn>
           <v-btn
             color="error"
-            variant="elevated"
+            variant="flat"
             :loading="loading"
             data-testid="feature-analysis-editor-delete-confirm"
             @click="confirmDelete"
@@ -788,5 +797,36 @@ onBeforeRouteLeave((_to, _from, next) => {
 
 .feature-analysis-editor__sql :deep(textarea) {
   white-space: pre;
+}
+
+.confirm-dialog__header {
+  padding: 20px 24px 14px;
+}
+
+.confirm-dialog__title-block {
+  flex: 1;
+}
+
+.confirm-dialog__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.confirm-dialog__accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+
+.confirm-dialog__title {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
 }
 </style>

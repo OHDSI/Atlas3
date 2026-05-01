@@ -1,5 +1,11 @@
 <template>
-  <page-shell>
+  <page-shell
+    hero
+    compact
+    eyebrow="OHDSI · Vocabulary"
+    :title="pageTitle"
+    :subtitle="pageSubtitle"
+  >
     <div class="concepts-view">
       <nav class="page-tabs-rail concepts-view__tabs-rail">
         <v-tabs
@@ -42,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, provide, watch } from 'vue'
+import { ref, computed, provide, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import PageShell from '@/components/shared/PageShell.vue'
@@ -54,6 +60,16 @@ const route = useRoute()
 const router = useRouter()
 const conceptSetsStore = useConceptSetsStore()
 const { t } = useI18n()
+
+const pageTitle = computed(() =>
+  t('cs.browser.caption', 'Concepts').value
+)
+const pageSubtitle = computed(() =>
+  t(
+    'cs.browser.subtitle',
+    'Browse the OMOP vocabulary and curate reusable concept sets.'
+  ).value
+)
 
 // Active tab state - sync with URL query. Default to "sets" (concept sets list).
 const activeTab = ref<string>((route.query.tab as string) || 'sets')
@@ -81,10 +97,12 @@ watch(activeTab, (newTab) => {
 
 /* The shared .page-tabs-rail provides padding + bottom border;
  * pull the rail flush to the page-shell card by negating the card's
- * 32px padding so the rail spans the full width. */
+ * horizontal padding so the rail spans the full width. With the hero
+ * header above, the rail flows below it naturally — no negative
+ * top margin. */
 .concepts-view__tabs-rail {
   margin-inline: -32px;
-  margin-top: -32px;
+  margin-bottom: 16px;
   padding-inline: 32px;
 }
 </style>

@@ -37,14 +37,15 @@ export const CHART_COLORS = [
  * Atlas 2.15's treemapGradient (light → dark blue, where darker =
  * larger value).
  *
- * Modernized vs. Atlas 2.15's `#1f425a`-anchored ramp: a saturated
- * Tailwind blue scale (blue-400 → blue-500 → blue-900). The light
- * end is intentionally NOT blue-100 — at 1.1:1 contrast vs. white
- * the labels would be unreadable. Blue-400 gives ~3:1 contrast vs.
- * white, which passes WCAG AA for large text (which treemap labels
- * effectively are).
+ * Anchored on the primary categorical chart colour (CHART_COLORS[0],
+ * Tableau blue `#4e79a7`) so a treemap reads as part of the same
+ * chart family. The light end is intentionally NOT a near-white tint
+ * — small tiles would visually merge with the white page background.
+ * `#7e9bbf` has ~3.5:1 contrast against white, the darkest end is
+ * the Atlas brand navy `#1f425a` so the gradient tails into the
+ * surrounding chrome.
  */
-export const TREEMAP_GRADIENT = ['#60a5fa', '#3b82f6', '#1e3a8a'] as const
+export const TREEMAP_GRADIENT = ['#7e9bbf', '#4e79a7', '#1f425a'] as const
 
 /**
  * Default bar chart configuration
@@ -454,20 +455,52 @@ function sampleGradient(stops: readonly string[], t: number): string {
 
 /**
  * Recursively assign each treemap node an itemStyle.color taken
- * from the TREEMAP_GRADIENT, scaled by the node's value relative to
- * the global value range. Higher value → darker color.
+ * from the TREEMAP_GRADIENT, scaled by the node's *colour* magnitude
+ * relative to the global colour range.
  *
- * Replaces the older index-based assignTreemapColors that ignored
- * the data values (and which gave a treemap a confusing categorical
- * look despite the encoding being magnitude-based in Atlas 2.15).
+ * Atlas 2.15 semantics: the rectangle AREA encodes prevalence /
+ * personCount (the `value` field); the COLOUR encodes
+ * records-per-person (the `colorValue` field). When `colorValue` is
+ * absent — older callers, hierarchical parent rollups — we fall
+ * back to `value` so the gradient still has something to scale by.
+ *
+ * Higher colour magnitude → darker tile.
  */
 function paintTreemapNodesByValue(nodes: TreemapNode[]): TreemapNode[] {
-  const { min, max } = extractTreemapValueRange(nodes)
+  // Pick the colour magnitude per node: prefer colorValue, else fall
+  // back to value.
+  const colorMagnitude = (node: TreemapNode): number =>
+    node.colorValue ?? node.value ?? 0
+
+  // Compute global min/max of colour magnitudes (recurse).
+  const allColorValues: number[] = []
+  function collect(list: TreemapNode[]) {
+    for (const n of list) {
+      // Only count leaves for the colour scale — parent rollups
+      // would otherwise dominate the range with summed values.
+      if (!n.children || n.children.length === 0) {
+        allColorValues.push(colorMagnitude(n))
+      }
+      if (n.children) collect(n.children)
+    }
+  }
+  collect(nodes)
+
+  const min = allColorValues.length ? Math.min(...allColorValues) : 0
+  const max = allColorValues.length ? Math.max(...allColorValues) : 1
   const range = max - min || 1
+
+  // Pull the lightest possible sample off zero so tiles with the
+  // smallest colour magnitude don't tint near-white and disappear
+  // against the page background. 0.15 leaves the lowest tile
+  // visibly distinct from a value of 0 / undefined while still
+  // preserving relative ordering across the rest of the range.
+  const FLOOR = 0.15
 
   function paint(list: TreemapNode[]): TreemapNode[] {
     return list.map(node => {
-      const t = ((node.value ?? min) - min) / range
+      const tRaw = (colorMagnitude(node) - min) / range
+      const t = FLOOR + tRaw * (1 - FLOOR)
       const color = sampleGradient(TREEMAP_GRADIENT, t)
       return {
         ...node,

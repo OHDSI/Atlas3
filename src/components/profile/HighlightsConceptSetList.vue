@@ -10,34 +10,57 @@
     <v-list
       v-else
       density="compact"
+      class="overflow-auto"
+      max-height="320"
     >
       <v-list-item
         v-for="cs in store.cohortConceptSets"
         :key="cs.id"
-        :title="cs.name"
-        :prepend-icon="selected.has(cs.id) ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'"
-        @click="toggle(cs.id)"
-      />
+      >
+        <v-list-item-title>{{ cs.name }}</v-list-item-title>
+        <template #append>
+          <!-- TODO: wire up store.applyHighlight expansion for concept
+               sets. The store needs a way to resolve a concept-set id
+               to its concept-id list before this dot can drive a real
+               highlight. Until then the dot is inert. -->
+          <v-tooltip
+            :text="tv('profiles.conceptSetHighlightingComingSoon', 'Concept-set highlighting coming soon')"
+            location="top"
+          >
+            <template #activator="{ props: tipProps }">
+              <span
+                v-bind="tipProps"
+                class="color-dot color-dot--disabled"
+                :data-test="`highlight-color-dot-set-${cs.id}`"
+                aria-disabled="true"
+              />
+            </template>
+          </v-tooltip>
+        </template>
+      </v-list-item>
     </v-list>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
 
 const store = useProfileStore()
 const { tv } = useI18n()
-
-const emit = defineEmits<{ (e: 'selectionChange', ids: number[]): void }>()
-const selected = ref<Set<number>>(new Set())
-
-function toggle(id: number) {
-  const next = new Set(selected.value)
-  if (next.has(id)) next.delete(id)
-  else next.add(id)
-  selected.value = next
-  emit('selectionChange', Array.from(next))
-}
 </script>
+
+<style scoped>
+.color-dot {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(15, 23, 42, 0.15);
+  background: rgb(var(--v-theme-surface-variant));
+}
+.color-dot--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+</style>

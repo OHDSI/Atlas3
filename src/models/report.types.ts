@@ -409,7 +409,15 @@ export interface LineChartData {
 
 export interface TreemapNode {
   name: string
+  /** Drives the rectangle area (size). Typically personCount. */
   value: number
+  /**
+   * Drives the rectangle colour, separate from size. Atlas 2.15
+   * encodes magnitude on the colour channel by recordsPerPerson
+   * (or lengthOfEra for era reports). When undefined the colour
+   * shader falls back to `value`.
+   */
+  colorValue?: number
   conceptId?: number
   conceptPath?: string
   children?: TreemapNode[]
@@ -477,7 +485,14 @@ export interface WebAPIDrilldownRaw {
   observationsByValueAsConcept?: WebAPIConceptCount[]
   measurementsByOperator?: WebAPIConceptCount[]
   observationsByQualifier?: WebAPIConceptCount[]
-  frequencyDistribution?: Array<{ intervalIndex: number; countValue: number }>
+  /**
+   * Frequency-distribution histogram. WebAPI returns `xCount`
+   * (number of records) and `yNumPersons` (how many people had
+   * that many records). Same shape Atlas 2.15 reads in
+   * components/reports/reportDrilldown.js → parseFrequencyDistribution.
+   * Both fields are optional so we tolerate older WebAPI builds.
+   */
+  frequencyDistribution?: Array<{ xCount?: number; yNumPersons?: number; intervalIndex?: number; countValue?: number }>
   prevalenceByGenderAgeYear?: WebAPIPrevalenceByDemographic[]
   prevalenceByMonth?: WebAPIPrevalenceByMonth[]
 }
