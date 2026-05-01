@@ -15,6 +15,8 @@ import { setActivePinia, createPinia } from 'pinia'
 import { createRouter, createMemoryHistory, type Router } from 'vue-router'
 
 import type { FeatureAnalysis } from '@/models/feature-analysis.types'
+import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
 
 // Mock i18n with real translations
 vi.mock('@/composables/useI18n', async () => {
@@ -99,8 +101,24 @@ async function mountEditor(path: string, props?: Record<string, unknown>) {
   await router.push(path)
   await router.isReady()
 
+  // Pinia must be installed AND active before the component sets up, so that
+  // the new usePermissions() / useEntityAccess composables read a permitted
+  // user. Without this, canSave is false and the Save button stays disabled.
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  const authStore = useAuthStore()
+  authStore.setUser({
+    login: 'tester',
+    displayName: 'tester',
+    permissionIdx: {
+      create: ['create:feature-analysis'],
+      write: ['write:feature-analysis'],
+    },
+    entityAccess: emptyEntityAccess(),
+  })
+
   const wrapper = mount(FeatureAnalysisEditorView, {
-    global: { plugins: [vuetify, createPinia(), router] },
+    global: { plugins: [vuetify, pinia, router] },
     props,
   })
 

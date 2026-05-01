@@ -33,31 +33,46 @@
           color="primary"
           class="config-panel__nav"
         >
-          <v-tab value="cache">
+          <v-tab
+            v-if="canSeeCache"
+            value="cache"
+          >
             <v-icon start>
               mdi-database
             </v-icon>
             Cache
           </v-tab>
-          <v-tab value="sources">
+          <v-tab
+            v-if="canSeeSources"
+            value="sources"
+          >
             <v-icon start>
               mdi-database-cog
             </v-icon>
             Data Sources
           </v-tab>
-          <v-tab value="tags">
+          <v-tab
+            v-if="canSeeTags"
+            value="tags"
+          >
             <v-icon start>
               mdi-tag-multiple
             </v-icon>
             Tags
           </v-tab>
-          <v-tab value="permissions">
+          <v-tab
+            v-if="canSeePermissions"
+            value="permissions"
+          >
             <v-icon start>
               mdi-shield-account
             </v-icon>
             Permissions
           </v-tab>
-          <v-tab value="jobs">
+          <v-tab
+            v-if="canSeeJobs"
+            value="jobs"
+          >
             <v-icon start>
               mdi-run
             </v-icon>
@@ -73,7 +88,7 @@
         >
           <!-- Cache Management Section (v-if ensures fresh data after login) -->
           <div
-            v-if="activeSection === 'cache'"
+            v-if="activeSection === 'cache' && canSeeCache"
             class="config-section"
           >
             <CacheManagementSection />
@@ -81,7 +96,7 @@
 
           <!-- Data Sources Section (v-if ensures fresh data after login) -->
           <div
-            v-if="activeSection === 'sources'"
+            v-if="activeSection === 'sources' && canSeeSources"
             class="config-section"
           >
             <DataSourcesSection />
@@ -89,7 +104,7 @@
 
           <!-- Tag Management Section (v-if ensures fresh data after login) -->
           <div
-            v-if="activeSection === 'tags'"
+            v-if="activeSection === 'tags' && canSeeTags"
             class="config-section config-section--centered"
           >
             <TagManagementSection />
@@ -97,7 +112,7 @@
 
           <!-- Permissions Section (v-if ensures fresh data after login) -->
           <div
-            v-if="activeSection === 'permissions'"
+            v-if="activeSection === 'permissions' && canSeePermissions"
             class="config-section config-section--centered"
           >
             <PermissionsSection />
@@ -105,10 +120,24 @@
 
           <!-- Jobs Section (v-if ensures fresh data after login) -->
           <div
-            v-if="activeSection === 'jobs'"
+            v-if="activeSection === 'jobs' && canSeeJobs"
             class="config-section"
           >
             <JobsSection />
+          </div>
+
+          <!-- All admin sections hidden — show a friendly placeholder. -->
+          <div
+            v-if="!hasAnyAdminTab"
+            class="config-section"
+          >
+            <v-alert
+              type="info"
+              variant="tonal"
+              density="comfortable"
+            >
+              You don't have access to any administrative settings.
+            </v-alert>
           </div>
         </v-card-text>
       </div>
@@ -119,6 +148,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useUIStore } from '@/stores/ui'
+import { usePermissions } from '@/composables/usePermissions'
 import CacheManagementSection from './CacheManagementSection.vue'
 import DataSourcesSection from './DataSourcesSection.vue'
 import TagManagementSection from './TagManagementSection.vue'
@@ -126,6 +156,25 @@ import PermissionsSection from './PermissionsSection.vue'
 import JobsSection from './JobsSection.vue'
 
 const uiStore = useUIStore()
+const { hasPermission } = usePermissions()
+
+// Admin-only sections: hidden entirely from users without the matching admin
+// permission, per the rule that admin functionality should disappear for
+// normal users rather than show as disabled. The cog icon itself is hidden
+// from the navbar when none of these are visible.
+const canSeeCache = computed(() => hasPermission('admin:cache'))
+const canSeeSources = computed(() => hasPermission('admin:source'))
+const canSeeTags = computed(() => hasPermission('admin:tags'))
+const canSeePermissions = computed(() => hasPermission('admin:security'))
+const canSeeJobs = computed(() => hasPermission('job:*:get'))
+const hasAnyAdminTab = computed(
+  () =>
+    canSeeCache.value ||
+    canSeeSources.value ||
+    canSeeTags.value ||
+    canSeePermissions.value ||
+    canSeeJobs.value,
+)
 
 // Reactive state from UI store
 const isOpen = computed({

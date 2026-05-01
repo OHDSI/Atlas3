@@ -22,6 +22,7 @@
         variant="flat"
         prepend-icon="mdi-plus"
         data-testid="pathways-create"
+        :disabled="!canCreate"
         @click="handleNew"
       >
         {{ t('home.newEntityNames.pathway', 'New pathway') }}
@@ -35,6 +36,8 @@
       :items-per-page="itemsPerPage"
       :empty-text="t('common.noData', 'No pathways yet.').value"
       testid="pathways-table"
+      :can-copy-item="(item) => canCopy && !!item.id"
+      :can-delete-item="(item) => entityAccess.canDelete(item.id)"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleRemove"
@@ -122,6 +125,8 @@ import { useRouter } from 'vue-router'
 import { usePathways } from '@/composables/usePathways'
 import { useI18n } from '@/composables/useI18n'
 import { usePathwayStore } from '@/stores/pathway'
+import { usePermissions } from '@/composables/usePermissions'
+import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { deletePathway, copyPathway } from '@/services/webapi'
 import { logger } from '@/utils/logger'
 import type { Pathway } from '@/models/pathway.types'
@@ -136,6 +141,10 @@ const {
 } = usePathways()
 
 const router = useRouter()
+const { hasPermission } = usePermissions()
+const canCreate = computed(() => hasPermission('create:pathway'))
+const canCopy = computed(() => hasPermission('create:pathway'))
+const entityAccess = useEntityAccessFor('pathway')
 const store = usePathwayStore()
 const { t } = useI18n()
 const showDelete = ref(false)

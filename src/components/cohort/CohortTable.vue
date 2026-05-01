@@ -160,11 +160,21 @@
                   @click.stop="$emit('show-info', cohort)"
                 />
                 <v-btn
+                  icon="mdi-account-multiple"
+                  size="small"
+                  variant="text"
+                  :aria-label="t('components.analysisExecution.buttons.generate', 'Generate').value"
+                  data-testid="cohort-table-generate"
+                  :disabled="!access.canWrite(cohort.id)"
+                  @click.stop="$emit('generate', cohort)"
+                />
+                <v-btn
                   icon="mdi-delete-outline"
                   size="small"
                   variant="text"
                   :aria-label="t('common.delete', 'Delete').value"
                   data-testid="cohort-table-delete"
+                  :disabled="!access.canDelete(cohort.id)"
                   @click.stop="$emit('delete', cohort)"
                 />
               </div>
@@ -180,11 +190,13 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 const { t, locale } = useI18n()
 const router = useRouter()
+const access = useEntityAccessFor('cohortDefinition')
 
 interface Props {
   cohorts: CohortDefinitionSummary[]
@@ -205,6 +217,7 @@ defineEmits<{
   retry: []
   'create-cohort': []
   'clear-filters': []
+  generate: [cohort: CohortDefinitionSummary]
   delete: [cohort: CohortDefinitionSummary]
   'tag-click': [tagName: string]
   'show-info': [cohort: CohortDefinitionSummary]

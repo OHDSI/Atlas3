@@ -42,6 +42,8 @@ vi.mock('@/utils/logger', () => ({
 import { listCharacterizations } from '@/services/characterization.service'
 import CharacterizationsView from '@/views/CharacterizationsView.vue'
 import { useCharacterizationStore } from '@/stores/characterization'
+import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -90,8 +92,21 @@ async function mountView() {
   await router.push('/characterizations')
   await router.isReady()
 
+  // Pinia must be installed AND active before the component sets up, so that
+  // the new usePermissions() / useEntityAccess composables can read the auth
+  // store. Set a permitted user so the gated Create button isn't disabled.
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  const authStore = useAuthStore()
+  authStore.setUser({
+    login: 'tester',
+    displayName: 'tester',
+    permissionIdx: { create: ['create:cohort-characterization'] },
+    entityAccess: emptyEntityAccess(),
+  })
+
   const wrapper = mount(CharacterizationsView, {
-    global: { plugins: [vuetify, createPinia(), router] },
+    global: { plugins: [vuetify, pinia, router] },
   })
 
   await flushPromises()

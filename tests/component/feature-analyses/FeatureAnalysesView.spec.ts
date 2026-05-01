@@ -44,6 +44,8 @@ vi.mock('@/utils/logger', () => ({
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
 import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
 import { useFeatureAnalysesStore } from '@/stores/feature-analyses'
+import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -93,8 +95,20 @@ async function mountView() {
   await router.push('/feature-analyses')
   await router.isReady()
 
+  // Set up a permitted user so the new permission gate doesn't disable the
+  // Create button (the view now requires create:feature-analysis).
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  const authStore = useAuthStore()
+  authStore.setUser({
+    login: 'tester',
+    displayName: 'tester',
+    permissionIdx: { create: ['create:feature-analysis'] },
+    entityAccess: emptyEntityAccess(),
+  })
+
   const wrapper = mount(FeatureAnalysesView, {
-    global: { plugins: [vuetify, createPinia(), router] },
+    global: { plugins: [vuetify, pinia, router] },
   })
 
   await flushPromises()

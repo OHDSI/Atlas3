@@ -82,6 +82,7 @@
           size="small"
           variant="text"
           :aria-label="t('common.copy', 'Copy').value"
+          :disabled="!canCopyItem(item)"
           @click.stop="$emit('copy', item)"
         />
         <v-btn
@@ -90,6 +91,7 @@
           variant="text"
           color="error"
           :aria-label="t('common.delete', 'Delete').value"
+          :disabled="!canDeleteItem(item)"
           @click.stop="$emit('delete', item)"
         />
       </div>
@@ -154,6 +156,13 @@ interface Props {
   testid?: string
   maxVisibleTags?: number
   descriptionLimit?: number
+  /**
+   * Optional permission callbacks. Each receives the row item and returns
+   * whether the action button should be enabled. Defaulting to `true` keeps
+   * existing call sites that don't gate actions working unchanged.
+   */
+  canCopyItem?: (item: T) => boolean
+  canDeleteItem?: (item: T) => boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -166,6 +175,8 @@ const props = withDefaults(defineProps<Props>(), {
   testid: undefined,
   maxVisibleTags: 2,
   descriptionLimit: 80,
+  canCopyItem: () => () => true,
+  canDeleteItem: () => () => true,
 })
 
 defineEmits<{

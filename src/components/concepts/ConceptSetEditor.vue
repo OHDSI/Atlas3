@@ -74,7 +74,7 @@
               v-if="isEditMode"
               color="error"
               variant="text"
-              :disabled="loading"
+              :disabled="loading || !canDelete"
               @click="onDelete"
             >
               {{ t('common.delete', 'Delete') }}
@@ -83,7 +83,7 @@
             <v-btn
               color="primary"
               variant="flat"
-              :disabled="!formValid || loading"
+              :disabled="!formValid || loading || !canSubmit"
               :loading="loading"
               @click="onSave"
             >
@@ -352,6 +352,8 @@ import { logger } from '@/utils/logger'
 import { ref, computed, inject, watch, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { usePermissions } from '@/composables/usePermissions'
+import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import ConceptSearchInline from './ConceptSearchInline.vue'
@@ -429,6 +431,15 @@ const sourceKey = inject<{ value: string }>('sourceKey', { value: 'SYNPUF1K' })
 const isEditMode = computed(() => {
   return props.conceptSet?.id !== undefined && props.conceptSet?.id !== null
 })
+
+// Permission gating: a new concept set needs `create:conceptset`; editing
+// or deleting an existing one needs write access on the specific entity.
+const conceptSetId = computed<number | string | null>(() => props.conceptSet?.id ?? null)
+const { hasPermission } = usePermissions()
+const { canWrite, canDelete } = useEntityAccess('conceptSet', conceptSetId)
+const canSubmit = computed<boolean>(() =>
+  isEditMode.value ? canWrite.value : hasPermission('create:conceptset'),
+)
 
 const itemCount = computed(() => {
   return store.currentSet?.items?.length || 0

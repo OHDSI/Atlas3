@@ -7,7 +7,10 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { ref } from 'vue'
+import { createPinia, setActivePinia } from 'pinia'
 import CohortCard from '@/components/cohort/CohortCard.vue'
+import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
 
 // Mock dependencies
 const mockPush = vi.fn()
@@ -59,6 +62,16 @@ function mountComponent(props = {}) {
 
 describe('CohortCard', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
+    // Default to a user with full write access to any cohort so existing
+    // assertions about delete/generate buttons keep working.
+    const authStore = useAuthStore()
+    authStore.setUser({
+      login: 'tester',
+      displayName: 'tester',
+      permissionIdx: { write: ['write:cohort-definition'] },
+      entityAccess: emptyEntityAccess(),
+    })
     vi.clearAllMocks()
   })
 

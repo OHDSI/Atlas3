@@ -10,16 +10,25 @@ import { ref } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 import ConceptsView from '@/views/ConceptsView.vue'
 
-// Mock vue-router
-const mockPush = vi.fn()
+// Mock vue-router. The component uses router.replace + a watcher with
+// `immediate: true` and a `route.query.tab !== newTab` guard, so the mock
+// updates mockQuery on every replace to simulate real navigation — that
+// keeps the guard accurate across multiple tab switches in a single test.
+const mockReplace = vi.fn((opts?: { query?: Record<string, string | string[]> }) => {
+  if (opts?.query) {
+    mockQuery.value = { ...opts.query }
+  }
+})
 const mockQuery = ref<Record<string, string | string[]>>({})
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({
-    push: mockPush,
+    replace: mockReplace,
   }),
   useRoute: () => ({
-    query: mockQuery.value,
+    get query() {
+      return mockQuery.value
+    },
   }),
 }))
 
@@ -184,7 +193,7 @@ describe('ConceptsView', () => {
       wrapper.vm.activeTab = 'search'
       await flushPromises()
 
-      expect(mockPush).toHaveBeenCalledWith({ query: { tab: 'search' } })
+      expect(mockReplace).toHaveBeenCalledWith({ query: { tab: 'search' } })
     })
 
     it('should close editor when switching tabs', async () => {
@@ -203,7 +212,7 @@ describe('ConceptsView', () => {
       wrapper.vm.activeTab = 'search'
       await flushPromises()
 
-      expect(mockPush).toHaveBeenCalledWith({ query: { foo: 'bar', tab: 'search' } })
+      expect(mockReplace).toHaveBeenCalledWith({ query: { foo: 'bar', tab: 'search' } })
     })
 
     it('should handle rapid tab switching', async () => {
@@ -222,7 +231,7 @@ describe('ConceptsView', () => {
       await flushPromises()
 
       // Should have called push for each change
-      expect(mockPush).toHaveBeenCalledTimes(3)
+      expect(mockReplace).toHaveBeenCalledTimes(3)
       expect(mockCloseEditor).toHaveBeenCalledTimes(3)
     })
   })
@@ -377,7 +386,7 @@ describe('ConceptsView', () => {
       wrapper.vm.activeTab = 'search'
       await flushPromises()
 
-      expect(mockPush).toHaveBeenCalledWith(
+      expect(mockReplace).toHaveBeenCalledWith(
         expect.objectContaining({
           query: expect.objectContaining({ tab: 'search' })
         })

@@ -3,10 +3,12 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
+import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
 
 const vuetify = createVuetify({ components, directives })
 
@@ -24,8 +26,19 @@ function makeWrapper(props: Partial<{
   searchQuery: string
   selectedTags: string[]
 }> = {}) {
+  // Per-test pinia + a permitted user so the row action buttons aren't
+  // disabled by the new permission gating.
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  const authStore = useAuthStore()
+  authStore.setUser({
+    login: 'tester',
+    displayName: 'tester',
+    permissionIdx: { write: ['write:cohort-definition'] },
+    entityAccess: emptyEntityAccess(),
+  })
   return mount(CohortTable, {
-    global: { plugins: [vuetify, createPinia(), makeRouter()] },
+    global: { plugins: [vuetify, pinia, makeRouter()] },
     props: {
       cohorts: [],
       loading: false,

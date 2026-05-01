@@ -45,6 +45,7 @@
           variant="flat"
           prepend-icon="mdi-plus"
           :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
+          :disabled="!canCreateCohort"
           @click="handleCreateCohort"
         >
           {{ t('cohortDefinitions.newDefinition', 'New cohort') }}
@@ -54,6 +55,7 @@
           variant="tonal"
           prepend-icon="mdi-upload-outline"
           :aria-label="t('common.import', 'Import cohort from JSON').value"
+          :disabled="!canCreateCohort"
           @click="handleImportCohort"
         >
           {{ t('common.import', 'Import') }}
@@ -371,6 +373,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
+import { usePermissions } from '@/composables/usePermissions'
 import { deleteCohort, getCohortDefinition, getCohortPrintFriendly, saveCohortDefinition } from '@/services/webapi'
 import { logger } from '@/utils/logger'
 import PageShell from '@/components/shared/PageShell.vue'
@@ -382,6 +385,8 @@ import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 const router = useRouter()
 const { t } = useI18n()
+const { hasPermission } = usePermissions()
+const canCreateCohort = computed(() => hasPermission('create:cohort-definition'))
 
 const pageTitle = computed(() =>
   t('cohortDefinitions.cohortDefinitions', 'Cohort Definitions').value

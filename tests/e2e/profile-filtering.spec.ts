@@ -13,13 +13,9 @@ test.describe('Profile filtering', () => {
   })
 
   test('add Drug chip filters table to drug rows only', async ({ page }) => {
-    await page.locator('[data-test="profile-chip-add"]').click()
-    // The "+ Domain" menu opens a v-list; pick the "Drug" item.
-    await page
-      .getByRole('listitem')
-      .filter({ hasText: /^Drug \(/ })
-      .first()
-      .click()
+    // Domain chips are now rendered directly (no "+ Domain" menu); click the
+    // Drug chip to toggle its filter.
+    await page.locator('[data-test="profile-chip-Drug"]').click()
 
     // After filtering, the v-data-table renders only Drug rows.
     const rows = page.locator('[data-test="profile-table"] tbody tr')

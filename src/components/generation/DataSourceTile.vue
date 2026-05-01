@@ -24,7 +24,7 @@
           color="primary"
           variant="flat"
           size="small"
-          :disabled="!cohortId"
+          :disabled="!cohortId || !canWriteSource"
           block
           @click.stop="handleGenerate"
         >
@@ -57,7 +57,7 @@
           color="primary"
           variant="text"
           size="small"
-          :disabled="!cohortId"
+          :disabled="!cohortId || !canWriteSource"
           block
           @click.stop="handleGenerate"
         >
@@ -80,7 +80,7 @@
           color="primary"
           variant="text"
           size="small"
-          :disabled="!cohortId"
+          :disabled="!cohortId || !canWriteSource"
           block
           class="mt-2"
           @click.stop="handleGenerate"
@@ -93,9 +93,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
+import { useSourceAccess } from '@/composables/useEntityAccess'
 import type { CDMSource, TileStatus } from '@/models/webapi.types'
 import { logger } from '@/utils/logger'
 
@@ -113,6 +114,11 @@ const emit = defineEmits<{
 }>()
 
 const webapiStore = useWebAPIStore()
+
+// Per-source write access — covers both global admin:source and per-source
+// WRITE grants from /user/me's sourceAccess map. Disables Generate when the
+// user can't run jobs against this source.
+const { canWrite: canWriteSource } = useSourceAccess(toRef(() => props.source.sourceKey))
 
 const job = computed(() => {
   if (!props.cohortId) return undefined

@@ -24,6 +24,7 @@
         prepend-icon="mdi-plus"
         :aria-label="t('cc.new', 'New Characterization').value"
         data-testid="characterizations-create"
+        :disabled="!canCreate"
         @click="handleCreate"
       >
         {{ t('home.newEntityNames.characterization', 'New characterization') }}
@@ -37,6 +38,8 @@
       :items-per-page="itemsPerPage"
       :empty-text="t('common.noData', 'No characterizations yet.').value"
       testid="characterizations-table"
+      :can-copy-item="(item) => canCopy && !!item.id"
+      :can-delete-item="(item) => entityAccess.canDelete(item.id)"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleDeleteClick"
@@ -120,6 +123,8 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCharacterizations } from '@/composables/useCharacterizations'
 import { useCharacterizationStore } from '@/stores/characterization'
+import { usePermissions } from '@/composables/usePermissions'
+import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { logger } from '@/utils/logger'
 import type { CharacterizationListItem } from '@/models/characterization.types'
 import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
@@ -128,6 +133,11 @@ import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
 const router = useRouter()
 const { t } = useI18n()
 const store = useCharacterizationStore()
+const { hasPermission } = usePermissions()
+const canCreate = computed(() => hasPermission('create:cohort-characterization'))
+// Copy creates a new characterization, so it requires the same create perm.
+const canCopy = computed(() => hasPermission('create:cohort-characterization'))
+const entityAccess = useEntityAccessFor('cohortCharacterization')
 
 const {
   loading,

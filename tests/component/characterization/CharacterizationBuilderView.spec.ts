@@ -15,6 +15,8 @@ import { setActivePinia, createPinia } from 'pinia'
 import { createRouter, createMemoryHistory, type Router } from 'vue-router'
 
 import type { CharacterizationDefinition } from '@/models/characterization.types'
+import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')
@@ -104,8 +106,24 @@ async function mountBuilder(path: string, props?: Record<string, unknown>) {
   await router.push(path)
   await router.isReady()
 
+  // Pinia must be installed AND active before the component sets up, so that
+  // the new usePermissions() / useEntityAccess composables read a permitted
+  // user. Without this, canSave is false and the Save button stays disabled.
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  const authStore = useAuthStore()
+  authStore.setUser({
+    login: 'tester',
+    displayName: 'tester',
+    permissionIdx: {
+      create: ['create:cohort-characterization'],
+      write: ['write:cohort-characterization'],
+    },
+    entityAccess: emptyEntityAccess(),
+  })
+
   const wrapper = mount(CharacterizationBuilderView, {
-    global: { plugins: [vuetify, createPinia(), router] },
+    global: { plugins: [vuetify, pinia, router] },
     props,
   })
 

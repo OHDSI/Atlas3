@@ -9,6 +9,8 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import DataSourceTile from '@/components/generation/DataSourceTile.vue'
 import { useWebAPIStore } from '@/stores/webapi'
+import { useAuthStore } from '@/stores/auth'
+import { emptyEntityAccess } from '@/models/auth.types'
 import { createMockCDMSource, createMockGenerationJob } from '../../../helpers/mock-factories'
 import type { CDMSource, GenerationJob } from '@/models/webapi.types'
 
@@ -39,6 +41,17 @@ describe('DataSourceTile', () => {
       sourceDialect: 'postgresql',
       daimons: [],
     }) as CDMSource
+
+    // The Generate button is now gated on per-source write access. Set up an
+    // auth user with a WRITE grant on TEST_SOURCE so the existing assertions
+    // about button enablement and click behaviour still hold.
+    const authStore = useAuthStore()
+    authStore.setUser({
+      login: 'tester',
+      displayName: 'tester',
+      permissionIdx: {},
+      entityAccess: { ...emptyEntityAccess(), source: { TEST_SOURCE: ['WRITE'] } },
+    })
 
     vi.clearAllMocks()
     // Stop any polling

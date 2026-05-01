@@ -89,7 +89,25 @@
       </v-tooltip>
 
       <v-tooltip
-        :text="deleteTooltip"
+        :text="generateTooltipText"
+        location="top"
+      >
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            v-bind="tooltipProps"
+            icon="mdi-account-multiple"
+            size="small"
+            variant="text"
+            aria-label="Generate cohort"
+            class="cohort-card__action-btn"
+            :disabled="!canWrite"
+            @click.stop="handleGenerate"
+          />
+        </template>
+      </v-tooltip>
+
+      <v-tooltip
+        :text="deleteTooltipText"
         location="top"
       >
         <template #activator="{ props: tooltipProps }">
@@ -100,6 +118,7 @@
             variant="text"
             :aria-label="deleteTooltip"
             class="cohort-card__action-btn"
+            :disabled="!canDelete"
             @click.stop="$emit('delete', cohort)"
           />
         </template>
@@ -109,8 +128,10 @@
 </template>
 
 <script setup lang="ts">
+import { computed, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
@@ -120,6 +141,7 @@ interface Props {
 }
 
 interface Emits {
+  (e: 'generate', cohort: CohortDefinitionSummary): void
   (e: 'delete', cohort: CohortDefinitionSummary): void
   (e: 'tag-click', tagName: string): void
   (e: 'show-info', cohort: CohortDefinitionSummary): void
@@ -128,7 +150,7 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   selectedTags: () => [],
 })
-defineEmits<Emits>()
+const emit = defineEmits<Emits>()
 const router = useRouter()
 const { t, locale } = useI18n()
 
@@ -137,9 +159,20 @@ const byLabel = t('columns.author', 'Author')
 const createdLabel = t('columns.created', 'Created')
 const updatedOnLabel = t('columns.modified', 'Modified')
 const infoTooltip = t('common.cohortInformation', 'Cohort information')
+const materializeTooltip = t('components.analysisExecution.buttons.generate', 'Generate')
 const deleteTooltip = t('common.delete', 'Delete')
+const noPermissionTooltip = t('common.noPermission', 'You do not have permission for this action')
 const unknownLabel = t('common.anonymous', 'Unknown')
 const naLabel = t('common.noData', 'N/A')
+
+const cohortId = toRef(() => props.cohort.id)
+const { canWrite, canDelete } = useEntityAccess('cohortDefinition', cohortId)
+const generateTooltipText = computed(() =>
+  canWrite.value ? materializeTooltip.value : noPermissionTooltip.value,
+)
+const deleteTooltipText = computed(() =>
+  canDelete.value ? deleteTooltip.value : noPermissionTooltip.value,
+)
 
 function formatUser(userValue: unknown): string {
   if (!userValue) return unknownLabel.value
@@ -164,6 +197,10 @@ function formatDate(dateValue: string | number | null | undefined): string {
 
 function handleCardClick() {
   router.push(`/cohorts/${props.cohort.id}`)
+}
+
+function handleGenerate() {
+  emit('generate', props.cohort)
 }
 </script>
 

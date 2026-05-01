@@ -33,7 +33,8 @@ import {
   LineChart,
   ScatterChart,
   TreemapChart,
-  SunburstChart
+  SunburstChart,
+  BoxplotChart
 } from 'echarts/charts'
 
 // Import ECharts components
@@ -60,6 +61,7 @@ use([
   ScatterChart,
   TreemapChart,
   SunburstChart,
+  BoxplotChart,
   TitleComponent,
   TooltipComponent,
   GridComponent,
