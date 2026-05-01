@@ -267,104 +267,76 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
   })
 
   describe('CensorWindow', () => {
-    it('preserves CensorWindow on round-trip', () => {
-      // Create cohort with CensorWindow
+    it('preserves CensorWindow date strings on round-trip', () => {
       const cohort = createMinimalCohort({
         censorWindow: {
-          startDate: {
-            dateField: 'START_DATE',
-            offset: 0,
-          },
-          endDate: {
-            dateField: 'END_DATE',
-            offset: 30,
-          },
+          startDate: '2020-01-01',
+          endDate: '2020-12-31',
         },
       })
 
-      // Convert to Atlas and back
       const atlasJSON = convertInternalToAtlas(cohort)
       const converted = convertAtlasToInternal(atlasJSON)
 
-      // Verify CensorWindow structure is preserved
+      // Atlas 2.15 schema: literal ISO date strings, not date-field+offset.
       expect(atlasJSON.CensorWindow).toEqual({
-        StartDate: {
-          DateField: 'START_DATE',
-          Offset: 0,
-        },
-        EndDate: {
-          DateField: 'END_DATE',
-          Offset: 30,
-        },
+        StartDate: '2020-01-01',
+        EndDate: '2020-12-31',
       })
       expect(converted.censorWindow).toEqual({
-        startDate: {
-          dateField: 'START_DATE',
-          offset: 0,
-        },
-        endDate: {
-          dateField: 'END_DATE',
-          offset: 30,
-        },
+        startDate: '2020-01-01',
+        endDate: '2020-12-31',
       })
     })
 
     it('handles empty CensorWindow', () => {
-      // Create cohort without censorWindow
       const cohort = createMinimalCohort()
       delete cohort.censorWindow
 
-      // Convert to Atlas
       const atlasJSON = convertInternalToAtlas(cohort)
 
-      // Should create empty object
       expect(atlasJSON.CensorWindow).toEqual({})
     })
 
-    it('preserves zero offset values', () => {
-      // CRITICAL: Test that ?? operator preserves 0 correctly
+    it('preserves an explicit null censor date through round-trip', () => {
       const cohort = createMinimalCohort({
         censorWindow: {
-          startDate: {
-            dateField: 'START_DATE',
-            offset: 0,
-          },
+          startDate: '2020-01-01',
+          endDate: null,
         },
       })
 
       const atlasJSON = convertInternalToAtlas(cohort)
       const converted = convertAtlasToInternal(atlasJSON)
 
-      expect(atlasJSON.CensorWindow?.StartDate?.Offset).toBe(0)
-      expect(converted.censorWindow?.startDate?.offset).toBe(0)
+      expect(atlasJSON.CensorWindow).toEqual({
+        StartDate: '2020-01-01',
+        EndDate: null,
+      })
+      expect(converted.censorWindow?.startDate).toBe('2020-01-01')
+      expect(converted.censorWindow?.endDate).toBeNull()
     })
 
     it('handles CensorWindow with only startDate', () => {
       const cohort = createMinimalCohort({
         censorWindow: {
-          startDate: {
-            dateField: 'START_DATE',
-            offset: 10,
-          },
+          startDate: '2020-06-01',
         },
       })
 
       const atlasJSON = convertInternalToAtlas(cohort)
       const converted = convertAtlasToInternal(atlasJSON)
 
-      expect(atlasJSON.CensorWindow?.StartDate).toBeDefined()
+      expect(atlasJSON.CensorWindow?.StartDate).toBe('2020-06-01')
       expect(atlasJSON.CensorWindow?.EndDate).toBeUndefined()
-      expect(converted.censorWindow?.startDate).toBeDefined()
+      expect(converted.censorWindow?.startDate).toBe('2020-06-01')
       expect(converted.censorWindow?.endDate).toBeUndefined()
     })
 
     it('handles CensorWindow with only endDate', () => {
       const cohort = createMinimalCohort({
         censorWindow: {
-          endDate: {
-            dateField: 'END_DATE',
-            offset: 20,
-          },
+          endDate: '2020-12-31',
         },
       })
 
@@ -372,9 +344,9 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       const converted = convertAtlasToInternal(atlasJSON)
 
       expect(atlasJSON.CensorWindow?.StartDate).toBeUndefined()
-      expect(atlasJSON.CensorWindow?.EndDate).toBeDefined()
+      expect(atlasJSON.CensorWindow?.EndDate).toBe('2020-12-31')
       expect(converted.censorWindow?.startDate).toBeUndefined()
-      expect(converted.censorWindow?.endDate).toBeDefined()
+      expect(converted.censorWindow?.endDate).toBe('2020-12-31')
     })
 
     it('converts from Atlas with empty CensorWindow', () => {
@@ -404,25 +376,35 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
 
       const converted = convertAtlasToInternal(atlasJSON)
 
-      // Empty CensorWindow should convert to undefined
       expect(converted.censorWindow).toBeUndefined()
     })
 
-    it('handles missing offset in DateField', () => {
-      // Test default behavior when offset is not provided
-      const cohort = createMinimalCohort({
-        censorWindow: {
-          startDate: {
-            dateField: 'START_DATE',
-            // offset intentionally omitted
-          },
+    it('gracefully drops legacy date-field+offset structures from old data', () => {
+      // Older Atlas3 cohorts wrote CensorWindow in a non-standard
+      // {DateField, Offset} shape. Loading them should not crash —
+      // they degrade to an empty censor window.
+      const atlasJSON = {
+        expressionType: 'SIMPLE_EXPRESSION',
+        cdmVersionRange: '>=5.0.0',
+        ConceptSets: [],
+        PrimaryCriteria: { CriteriaList: [] },
+        AdditionalCriteria: {
+          Type: 'ALL',
+          CriteriaList: [],
+          DemographicCriteriaList: [],
+          Groups: [],
         },
-      })
+        InclusionRules: [],
+        CensoringCriteria: [],
+        QualifiedLimit: { Type: 'All' },
+        ExpressionLimit: { Type: 'All' },
+        CollapseSettings: { CollapseType: 'ERA', EraPad: 0 },
+        CensorWindow: { StartDate: { DateField: 'START_DATE', Offset: 0 } },
+      }
 
-      const atlasJSON = convertInternalToAtlas(cohort)
+      const converted = convertAtlasToInternal(atlasJSON)
 
-      // Should apply default offset of 0
-      expect(atlasJSON.CensorWindow?.StartDate?.Offset).toBe(0)
+      expect(converted.censorWindow).toEqual({})
     })
   })
 
@@ -490,14 +472,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
           eraPad: 15,
         },
         censorWindow: {
-          startDate: {
-            dateField: 'START_DATE',
-            offset: 5,
-          },
-          endDate: {
-            dateField: 'END_DATE',
-            offset: 10,
-          },
+          startDate: '2020-01-05',
+          endDate: '2020-12-10',
         },
       })
 
@@ -513,14 +489,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
         eraPad: 15,
       })
       expect(converted.censorWindow).toEqual({
-        startDate: {
-          dateField: 'START_DATE',
-          offset: 5,
-        },
-        endDate: {
-          dateField: 'END_DATE',
-          offset: 10,
-        },
+        startDate: '2020-01-05',
+        endDate: '2020-12-10',
       })
     })
 
@@ -851,21 +821,18 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       expect(atlasJSON.expressionType).toBe('')
     })
 
-    it('handles negative offset values in CensorWindow', () => {
+    it('round-trips a CensorWindow with only the start date set', () => {
       const cohort = createMinimalCohort({
         censorWindow: {
-          startDate: {
-            dateField: 'START_DATE',
-            offset: -10,
-          },
+          startDate: '2019-07-04',
         },
       })
 
       const atlasJSON = convertInternalToAtlas(cohort)
       const converted = convertAtlasToInternal(atlasJSON)
 
-      expect(atlasJSON.CensorWindow?.StartDate?.Offset).toBe(-10)
-      expect(converted.censorWindow?.startDate?.offset).toBe(-10)
+      expect(atlasJSON.CensorWindow?.StartDate).toBe('2019-07-04')
+      expect(converted.censorWindow?.startDate).toBe('2019-07-04')
     })
 
     it('handles very large eraPad values', () => {
@@ -911,10 +878,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
           eraPad: 30,
         },
         censorWindow: {
-          startDate: {
-            dateField: 'START_DATE',
-            offset: 0,
-          },
+          startDate: '2020-01-01',
         },
       })
 
@@ -954,10 +918,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
           EraPad: 30,
         },
         CensorWindow: {
-          StartDate: {
-            DateField: 'START_DATE',
-            Offset: 5,
-          },
+          StartDate: '2020-01-01',
         },
       }
 
@@ -3431,14 +3392,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
           eraPad: 30,
         },
         censorWindow: {
-          startDate: {
-            dateField: 'START_DATE',
-            offset: 0,
-          },
-          endDate: {
-            dateField: 'END_DATE',
-            offset: 90,
-          },
+          startDate: '2020-01-01',
+          endDate: '2020-12-31',
         },
         observationPeriod: {
           priorDays: 365,
@@ -3562,7 +3517,7 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
       expect(converted.expressionType).toBe('SIMPLE_EXPRESSION')
       expect(converted.cdmVersionRange).toBe('>=5.3.0')
       expect(converted.collapseSettings?.eraPad).toBe(30)
-      expect(converted.censorWindow?.endDate?.offset).toBe(90)
+      expect(converted.censorWindow?.endDate).toBe('2020-12-31')
       expect(converted.observationPeriod?.priorDays).toBe(365)
       expect(converted.qualifyingLimit).toBe('FIRST')
       expect(converted.entryEvents).toHaveLength(1)

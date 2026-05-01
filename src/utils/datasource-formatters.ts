@@ -108,15 +108,28 @@ export function transformClinicalDomainReport(
     metric: isEra ? (item.lengthOfEra || 0) : (item.recordsPerPerson || 0)
   }))
 
-  const treemapNodes: TreemapNode[] = processedRaw.map(item => ({
-    name: extractConceptDisplayName(item.conceptPath),
-    value: item.numPersons,
-    conceptId: item.conceptId,
-    conceptPath: item.conceptPath,
-    itemStyle: {
-      colorAlpha: Math.min(1, item.percentPersons / 100)
+  // Atlas 2.15 treemap encoding (see js/components/reports/classes/Treemap.js
+   // and per-domain aggProperty in js/pages/data-sources/components/reports/*):
+   //   - rectangle area  → numPersons (size)
+   //   - rectangle colour → recordsPerPerson for non-era reports,
+   //                         lengthOfEra for era reports.
+   // We carry colour magnitude on TreemapNode.colorValue so the
+   // gradient shader (paintTreemapNodesByValue) can scale it
+   // independently of `value`. Drop the legacy colorAlpha — that
+   // was a (different) prevalence-based dimming hack.
+  const treemapNodes: TreemapNode[] = processedRaw.map(item => {
+    const colorValueRaw = isEra ? item.lengthOfEra : item.recordsPerPerson
+    const colorValue = typeof colorValueRaw === 'number' && Number.isFinite(colorValueRaw)
+      ? colorValueRaw
+      : undefined
+    return {
+      name: extractConceptDisplayName(item.conceptPath),
+      value: item.numPersons,
+      colorValue,
+      conceptId: item.conceptId,
+      conceptPath: item.conceptPath,
     }
-  }))
+  })
 
   return {
     treemapNodes,

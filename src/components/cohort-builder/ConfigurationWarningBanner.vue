@@ -7,10 +7,7 @@
     closable
     class="configuration-warning-banner"
   >
-    <v-alert-title class="d-flex align-center">
-      <v-icon start>
-        mdi-alert-circle-outline
-      </v-icon>
+    <v-alert-title>
       Configuration Validation Warnings
     </v-alert-title>
 

@@ -81,8 +81,10 @@ describe('ConceptSetTable', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('should render data table', () => {
-    const wrapper = mountComponent()
+  it('should render data table when items exist', () => {
+    // Refresh: the table only renders when there are rows; empty
+    // sets render an MD3 filled empty-state container instead.
+    const wrapper = mountComponent({ items: mockItems })
     const dataTable = wrapper.findComponent({ name: 'VDataTable' })
     expect(dataTable.exists()).toBe(true)
   })
@@ -150,7 +152,7 @@ describe('ConceptSetTable', () => {
   it('should emit remove when delete button is clicked', async () => {
     const wrapper = mountComponent({ items: mockItems })
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const deleteButtons = buttons.filter(btn => btn.props('icon') === 'mdi-delete')
+    const deleteButtons = buttons.filter(btn => btn.props('icon') === 'mdi-delete-outline')
 
     // Note: Items are sorted by conceptId ascending, so first item is 192855
     if (deleteButtons.length > 0) {
@@ -249,20 +251,21 @@ describe('ConceptSetTable', () => {
     expect(excludeCheckbox).toBeTruthy()
   })
 
-  it('should display no data message when items is empty', async () => {
+  it('should render the filled empty-state container when items is empty', async () => {
     const wrapper = mountComponent({ items: [] })
     await wrapper.vm.$nextTick()
 
-    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
-    expect(dataTable.props('items')).toEqual([])
+    expect(wrapper.find('.concept-set-table__empty').exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'VDataTable' }).exists()).toBe(false)
   })
 
-  it('should display empty state instructions', async () => {
+  it('should display empty-state instructions when items is empty', async () => {
     const wrapper = mountComponent({ items: [] })
     await wrapper.vm.$nextTick()
 
-    const dataTable = wrapper.findComponent({ name: 'VDataTable' })
-    expect(dataTable.props('items')).toEqual([])
+    const empty = wrapper.find('.concept-set-table__empty')
+    expect(empty.exists()).toBe(true)
+    expect(empty.text()).toMatch(/concept/i)
   })
 
   it('should display loading skeleton when loading', async () => {
@@ -274,7 +277,8 @@ describe('ConceptSetTable', () => {
   })
 
   it('should set items per page to 50', () => {
-    const wrapper = mountComponent()
+    // Table only renders with rows; assert against the populated table.
+    const wrapper = mountComponent({ items: mockItems })
     const dataTable = wrapper.findComponent({ name: 'VDataTable' })
     expect(dataTable.props('itemsPerPage')).toBe(50)
   })
@@ -283,8 +287,9 @@ describe('ConceptSetTable', () => {
     const wrapper = mountComponent({ items: mockItems })
     await wrapper.vm.$nextTick()
 
+    // Refresh switched to mdi-delete-outline for the row action.
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const deleteButtons = buttons.filter(btn => btn.props('icon') === 'mdi-delete')
+    const deleteButtons = buttons.filter(btn => btn.props('icon') === 'mdi-delete-outline')
     expect(deleteButtons.length).toBe(mockItems.length)
   })
 

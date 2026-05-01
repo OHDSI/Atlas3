@@ -89,7 +89,7 @@ describe('Vuetify Plugin', () => {
       const vuetify = createVuetifyInstance()
 
       const theme = vuetify.theme.themes.value.light
-      expect(theme.colors.background).toBe('#f2f0f1')
+      expect(theme.colors.background).toBe('#f6f7f9')
     })
   })
 })

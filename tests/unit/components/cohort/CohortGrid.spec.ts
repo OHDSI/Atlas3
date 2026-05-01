@@ -164,43 +164,45 @@ describe('CohortGrid', () => {
       expect(emptyState.exists()).toBe(true)
     })
 
-    it('should display folder icon in empty state', () => {
+    it('should display the bookmark icon in the initial empty state', () => {
+      // Refresh: replaced the legacy folder-open icon with the
+      // bookmark mark used across modernised empty states.
       const wrapper = mountComponent({ cohorts: [] })
 
-      // Check that empty state section contains the folder icon
       const emptyState = wrapper.find('.cohort-grid__empty')
       expect(emptyState.exists()).toBe(true)
-      expect(emptyState.html()).toContain('mdi-folder-open-outline')
+      expect(emptyState.html()).toContain('mdi-bookmark-outline')
     })
 
-    it('should display empty title', () => {
+    it('should display the empty-state text', () => {
       const wrapper = mountComponent({ cohorts: [] })
 
-      const title = wrapper.find('.cohort-grid__empty-title')
-      expect(title.exists()).toBe(true)
-      expect(title.text()).toContain('No cohorts found')
+      const text = wrapper.find('.cohort-grid__empty-text')
+      expect(text.exists()).toBe(true)
+      expect(text.text().toLowerCase()).toContain('no cohorts')
     })
 
-    it('should display default empty message', () => {
+    it('should display the initial empty message when no filters are applied', () => {
       const wrapper = mountComponent({ cohorts: [] })
 
-      expect(wrapper.text()).toContain('Get started by creating your first cohort definition')
+      // Refresh: empty-state copy was tightened.
+      expect(wrapper.text()).toContain('No cohorts yet')
     })
 
-    it('should display search-specific empty message when search query exists', () => {
+    it('should display the filtered-empty message when a search query is set', () => {
       const wrapper = mountComponent({
         cohorts: [],
         searchQuery: 'diabetes'
       })
 
-      expect(wrapper.text()).toContain('No cohorts found matching "diabetes"')
+      expect(wrapper.text()).toContain('No cohorts match "diabetes"')
     })
 
-    it('should show create cohort button in empty state', () => {
+    it('should show the New cohort button in the initial empty state', () => {
       const wrapper = mountComponent({ cohorts: [] })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const createBtn = buttons.find(btn => btn.text().includes('New Cohort'))
+      const createBtn = buttons.find(btn => btn.text().toLowerCase().includes('new cohort'))
       expect(createBtn).toBeDefined()
     })
 
@@ -208,10 +210,20 @@ describe('CohortGrid', () => {
       const wrapper = mountComponent({ cohorts: [] })
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const createBtn = buttons.find(btn => btn.text().includes('New Cohort'))
+      const createBtn = buttons.find(btn => btn.text().toLowerCase().includes('new cohort'))
       await createBtn?.trigger('click')
 
       expect(wrapper.emitted('create-cohort')).toBeTruthy()
+    })
+
+    it('should emit clear-filters when filtered-empty Clear filters is clicked', async () => {
+      const wrapper = mountComponent({ cohorts: [], searchQuery: 'diabetes' })
+
+      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const clearBtn = buttons.find(btn => btn.text().toLowerCase().includes('clear filters'))
+      await clearBtn?.trigger('click')
+
+      expect(wrapper.emitted('clear-filters')).toBeTruthy()
     })
 
     it('should not show empty state when loading', () => {
@@ -274,15 +286,9 @@ describe('CohortGrid', () => {
   })
 
   describe('Events', () => {
-    it('should emit generate event from cohort card', async () => {
-      const wrapper = mountComponent({ cohorts: mockCohorts })
-
-      const card = wrapper.findComponent({ name: 'CohortCard' })
-      await card.vm.$emit('generate', mockCohorts[0])
-
-      expect(wrapper.emitted('generate')).toBeTruthy()
-      expect(wrapper.emitted('generate')![0]).toEqual([mockCohorts[0]])
-    })
+    // Refresh: Generate was removed from the cohort cards (and the
+    // table row) because the overview is for browse/manage; running
+    // a cohort happens from the cohort builder instead.
 
     it('should emit delete event from cohort card', async () => {
       const wrapper = mountComponent({ cohorts: mockCohorts })

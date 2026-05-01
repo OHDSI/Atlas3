@@ -33,22 +33,24 @@ describe('InclusionCriteriaPanel', () => {
     })
   }
 
-  it('should display empty state when no rules', () => {
+  it('should display the empty-state container when no rules', () => {
+    // Refresh: header strip with the add-rule button was retired —
+    // the parent (CohortBuilder) section header now hosts that
+    // action. The panel's empty-state CTA still exists and emits.
     const wrapper = createWrapper([])
-    // Check that add button exists for empty state
-    const addButton = wrapper.find('[data-testid="add-inclusion-rule"]')
-    expect(addButton.exists()).toBe(true)
+    expect(wrapper.find('.inclusion-criteria-panel__empty').exists()).toBe(true)
   })
 
-  it('should display add rule button', () => {
+  it('should expose addNewRule for the parent section header to call', () => {
     const wrapper = createWrapper()
-    const addButton = wrapper.find('[data-testid="add-inclusion-rule"]')
-    expect(addButton.exists()).toBe(true)
+    const vm = wrapper.vm as unknown as { addNewRule?: () => void }
+    expect(typeof vm.addNewRule).toBe('function')
   })
 
-  it('should emit update when adding rule', async () => {
+  it('should emit update when addNewRule is invoked', async () => {
     const wrapper = createWrapper()
-    await wrapper.find('[data-testid="add-inclusion-rule"]').trigger('click')
+    const vm = wrapper.vm as unknown as { addNewRule: () => void }
+    vm.addNewRule()
     await wrapper.vm.$nextTick()
 
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()

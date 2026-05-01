@@ -17,6 +17,23 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
+// AnalysisHubView statically imports the four sub-views, which pull in
+// Pinia stores. The hub itself doesn't touch a store, so we stub the
+// children to keep this spec hermetic — without these stubs each test
+// file would need its own Pinia instance.
+vi.mock('@/views/CharacterizationsView.vue', () => ({
+  default: { name: 'CharacterizationsViewStub', render: () => h('div', { class: 'child-chr' }, 'chr') },
+}))
+vi.mock('@/views/FeatureAnalysesView.vue', () => ({
+  default: { name: 'FeatureAnalysesViewStub', render: () => h('div', { class: 'child-fa' }, 'fa') },
+}))
+vi.mock('@/views/PathwaysView.vue', () => ({
+  default: { name: 'PathwaysViewStub', render: () => h('div', { class: 'child-pw' }, 'pw') },
+}))
+vi.mock('@/views/IncidenceRatesView.vue', () => ({
+  default: { name: 'IncidenceRatesViewStub', render: () => h('div', { class: 'child-ir' }, 'ir') },
+}))
+
 import AnalysisHubView from '@/views/AnalysisHubView.vue'
 
 const childStub = (label: string) => defineComponent({ render: () => h('div', { class: `child-${label}` }, label) })

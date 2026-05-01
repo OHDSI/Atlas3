@@ -88,13 +88,23 @@ export function mapConditionErasReport(data: WebAPIConditionEraRaw): ConditionEr
       hlt,
       personCount: item.numPersons,
       prevalence: item.percentPersons * 100, // Convert to percentage
-      averageDuration: item.lengthOfEra
+      averageDuration: item.lengthOfEra,
+      recordsPerPerson: item.recordsPerPerson
     }
   })
 
+  // Atlas 2.15 condition-era treemap: area = personCount, colour =
+  // length of era (aggProperties.byLengthOfEra in const.js).
   return {
     prevalence,
-    treemapData: prevalence.length > 0 ? toTreemapData(prevalence as unknown as Record<string, unknown>[], 'conceptName', 'personCount') : undefined
+    treemapData: prevalence.length > 0
+      ? toTreemapData(
+          prevalence as unknown as Record<string, unknown>[],
+          'conceptName',
+          'personCount',
+          'averageDuration'
+        )
+      : undefined
   }
 }
 
@@ -142,13 +152,23 @@ export function mapDrugErasReport(data: WebAPIDrugEraRaw): DrugErasReport {
       ingredient,
       personCount: item.numPersons,
       prevalence: item.percentPersons * 100, // Convert to percentage
-      averageDuration: item.lengthOfEra
+      averageDuration: item.lengthOfEra,
+      recordsPerPerson: item.recordsPerPerson
     }
   })
 
+  // Atlas 2.15 drug-era treemap: area = personCount, colour = length
+  // of era (aggProperties.byLengthOfEra in const.js).
   return {
     prevalence,
-    treemapData: prevalence.length > 0 ? toTreemapData(prevalence as unknown as Record<string, unknown>[], 'conceptName', 'personCount') : undefined
+    treemapData: prevalence.length > 0
+      ? toTreemapData(
+          prevalence as unknown as Record<string, unknown>[],
+          'conceptName',
+          'personCount',
+          'averageDuration'
+        )
+      : undefined
   }
 }
 
@@ -258,13 +278,24 @@ function extractConceptDisplayName(conceptPath: string): string {
 export function toTreemapData<T extends object>(
   data: T[],
   nameKey: keyof T,
-  valueKey: keyof T
+  valueKey: keyof T,
+  /**
+   * Optional key for the magnitude that drives the colour channel
+   * (separate from the rectangle area). Atlas 2.15 colours treemap
+   * tiles by recordsPerPerson — pass that key here when available.
+   */
+  colorKey?: keyof T
 ): TreemapNode[] {
   return data.map(item => {
     const fullName = String(item[nameKey])
+    const colorValueRaw = colorKey ? item[colorKey] : undefined
+    const colorValue = colorValueRaw !== undefined && colorValueRaw !== null
+      ? Number(colorValueRaw)
+      : undefined
     return {
       name: extractConceptDisplayName(fullName),
       value: Number(item[valueKey]),
+      colorValue: Number.isFinite(colorValue) ? colorValue : undefined,
       conceptId: 'conceptId' in item ? Number(item.conceptId) : undefined,
       conceptPath: 'conceptPath' in item ? String(item.conceptPath) : undefined
     }
@@ -674,7 +705,7 @@ export function mapTornadoReport(data: import('@/models/report.types').WebAPITor
 }
 
 export function mapBoxPlotData(raw: import('@/models/report.types').WebAPIBoxPlotRaw[]): import('@/models/report.types').BoxPlotData[] {
-  return raw.map(item => ({
+  const mapped = raw.map(item => ({
     category: item.category || `Interval ${item.intervalIndex || 0}`,
     min: item.min || 0,
     p10: item.p10Value || 0,
@@ -684,6 +715,35 @@ export function mapBoxPlotData(raw: import('@/models/report.types').WebAPIBoxPlo
     p90: item.p90Value || 0,
     max: item.max || 0
   }))
+  return sortByNumericLeadingPrefix(mapped)
+}
+
+/**
+ * Sort categorical chart data by the leading numeric prefix of the
+ * category label. Fixes string-sorted age brackets that come back
+ * as "0-9", "10-19", "100-109", "20-29" — which renders the bars
+ * out of order on the X axis. Non-numeric categories keep their
+ * original relative order. Generic so it can be reused for other
+ * decade / decile / interval categories.
+ */
+function sortByNumericLeadingPrefix<T extends { category: string }>(items: T[]): T[] {
+  const withSortKey = items.map((item, index) => {
+    const match = /^-?(\d+)/.exec(item.category)
+    return {
+      item,
+      index,
+      hasNumber: match !== null,
+      numericKey: match ? Number(match[1]) : 0,
+    }
+  })
+  // Only reorder if every entry starts with a number; otherwise
+  // preserve the original order (some box plots use named buckets
+  // like "Female"/"Male" where alphanumeric sort would be wrong).
+  const allNumeric = withSortKey.every(entry => entry.hasNumber)
+  if (!allNumeric) return items
+  return [...withSortKey]
+    .sort((a, b) => a.numericKey - b.numericKey || a.index - b.index)
+    .map(entry => entry.item)
 }
 
 export function mapTrellisData(raw: import('@/models/report.types').WebAPIPrevalenceByDemographic[]): import('@/models/report.types').TrellisChartData {
@@ -812,9 +872,22 @@ export function mapDrilldownReport(
   }
 
   if (raw.frequencyDistribution && raw.frequencyDistribution.length > 0) {
+    // WebAPI returns each row as { xCount, yNumPersons } — same
+    // shape Atlas 2.15 reads via ChartUtils.normalizeArray, then
+    // bins as a histogram (xCount = bucket label, yNumPersons =
+    // bar height). We previously read intervalIndex / countValue
+    // which don't exist in the response, so the chart silently
+    // produced empty categories and looked broken.
+    //
+    // Older builds that DO emit intervalIndex / countValue still
+    // work — the destructuring above falls back to those names.
+    const fd = raw.frequencyDistribution
     report.byFrequency = {
-      categories: raw.frequencyDistribution.map(i => i.intervalIndex.toString()),
-      values: raw.frequencyDistribution.map(i => i.countValue)
+      categories: fd.map(i => {
+        const x = i.xCount ?? i.intervalIndex
+        return x !== undefined && x !== null ? String(x) : ''
+      }),
+      values: fd.map(i => i.yNumPersons ?? i.countValue ?? 0),
     }
   }
 

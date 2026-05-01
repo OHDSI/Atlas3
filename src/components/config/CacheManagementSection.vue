@@ -15,16 +15,9 @@
           variant="tonal"
           class="mb-4"
         >
-          <div class="d-flex align-center">
-            <v-icon class="mr-2">
-              mdi-information
-            </v-icon>
-            <div>
-              <strong>Cache Status:</strong>
-              {{ cacheStats.itemCount }} item{{ cacheStats.itemCount !== 1 ? 's' : '' }} cached
-              ({{ formatBytes(cacheStats.estimatedSize) }})
-            </div>
-          </div>
+          <strong>Cache Status:</strong>
+          {{ cacheStats.itemCount }} item{{ cacheStats.itemCount !== 1 ? 's' : '' }} cached
+          ({{ formatBytes(cacheStats.estimatedSize) }})
         </v-alert>
 
         <!-- Clear Cache Button -->

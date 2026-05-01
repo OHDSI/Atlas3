@@ -22,7 +22,6 @@ function mountComponent(props = {}) {
   return mount(CohortToolbarActions, {
     props: {
       canSave: true,
-      hasUnsavedChanges: false,
       showGenerate: true,
       ...props
     },
@@ -81,12 +80,15 @@ describe('CohortToolbarActions', () => {
   })
 
   describe('Cancel Button', () => {
-    it('should have outlined variant', () => {
+    it('should be a quiet text-variant button', () => {
+      // Refresh: cancel was outlined; the toolbar now uses text
+      // variant for the secondary path so it doesn't compete with
+      // the primary save button.
       const wrapper = mountComponent()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       const cancelBtn = buttons.find(btn => btn.text().includes('Cancel') || btn.html().includes('mdi-close'))
-      expect(cancelBtn?.props('variant')).toBe('outlined')
+      expect(cancelBtn?.props('variant')).toBe('text')
     })
 
     it('should emit cancel event when clicked', async () => {
@@ -172,20 +174,15 @@ describe('CohortToolbarActions', () => {
   })
 
   describe('Generate Button', () => {
-    it('should have orange color', () => {
+    it('should be a tonal primary-color button', () => {
+      // Refresh: was orange-outlined which read as alarm; tonal
+      // primary keeps it readable as a secondary action.
       const wrapper = mountComponent({ showGenerate: true })
 
       const generateBtn = wrapper.find('[data-testid="generate-btn"]')
       const btnComponent = generateBtn.findComponent({ name: 'VBtn' })
-      expect(btnComponent.props('color')).toBe('orange')
-    })
-
-    it('should have outlined variant', () => {
-      const wrapper = mountComponent({ showGenerate: true })
-
-      const generateBtn = wrapper.find('[data-testid="generate-btn"]')
-      const btnComponent = generateBtn.findComponent({ name: 'VBtn' })
-      expect(btnComponent.props('variant')).toBe('outlined')
+      expect(btnComponent.props('color')).toBe('primary')
+      expect(btnComponent.props('variant')).toBe('tonal')
     })
 
     it('should be enabled when canSave is true', () => {

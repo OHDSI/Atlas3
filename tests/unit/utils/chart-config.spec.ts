@@ -235,9 +235,9 @@ describe('chart-config', () => {
       const options = defaultPieChartOptions(data)
       const seriesData = (options.series as ChartSeriesItem[])[0].data as Array<{ itemStyle: { color: string } }>
 
-      // Should wrap around color array
+      // Should wrap around color array (length is now 10, see chart-config CHART_COLORS)
       expect(seriesData[0].itemStyle.color).toBe(CHART_COLORS[0])
-      expect(seriesData[12].itemStyle.color).toBe(CHART_COLORS[0]) // 12 % 12 = 0
+      expect(seriesData[CHART_COLORS.length].itemStyle.color).toBe(CHART_COLORS[0])
     })
   })
 
@@ -299,8 +299,11 @@ describe('chart-config', () => {
       const optionsWithTitle = defaultLineChartOptions(dataWithTitle, 'Title')
       const optionsWithoutTitle = defaultLineChartOptions(dataWithoutTitle)
 
-      expect((optionsWithTitle.grid as ChartGridOption).top).toBe('15%')
-      expect((optionsWithoutTitle.grid as ChartGridOption).top).toBe('10%')
+      // Grid uses absolute pixel values now (was '15%' / '10%') so
+      // the chart title and y-axis name don't overlap with the
+      // chart area when stacked vertically.
+      expect((optionsWithTitle.grid as ChartGridOption).top).toBe(80)
+      expect((optionsWithoutTitle.grid as ChartGridOption).top).toBe(56)
     })
 
     it('should handle numeric xAxis values', () => {
@@ -342,17 +345,32 @@ describe('chart-config', () => {
       expect((options.series as ChartSeriesItem[])[0].type).toBe('treemap')
     })
 
-    it('should assign colors to treemap nodes', () => {
+    it('should color treemap nodes from a single-hue gradient by value', () => {
       const data: TreemapNode[] = [
         { name: 'A', value: 10 },
         { name: 'B', value: 20 }
       ]
 
       const options = defaultTreemapOptions(data)
-      const seriesData = (options.series as ChartSeriesItem[])[0].data as Array<{ itemStyle: { color: string } }>
+      const seriesData = (options.series as ChartSeriesItem[])[0].data as Array<{ value: number; itemStyle?: { color?: string } }>
 
-      expect(seriesData[0].itemStyle.color).toBe(CHART_COLORS[0])
-      expect(seriesData[1].itemStyle.color).toBe(CHART_COLORS[1])
+      // Atlas 2.15 semantic: higher value → darker color from a
+      // single-hue gradient (light blue → navy). Both nodes get a
+      // hex color; the lower-value node's color is the lighter end
+      // of the gradient and the higher-value node's is the darker.
+      expect(seriesData[0].itemStyle?.color).toMatch(/^#[0-9a-f]{6}$/i)
+      expect(seriesData[1].itemStyle?.color).toMatch(/^#[0-9a-f]{6}$/i)
+
+      // Lower-value tile is somewhere between the lightest stop and
+      // the mid stop (FLOOR of 0.15 prevents it tinting near-white
+      // against the page background). Higher-value tile is the
+      // darkest stop (Atlas brand navy).
+      const lightHex = seriesData[0].itemStyle?.color?.toLowerCase() ?? ''
+      const darkHex = seriesData[1].itemStyle?.color?.toLowerCase() ?? ''
+      // Convert to numeric for ordering checks.
+      const toInt = (h: string) => parseInt(h.replace('#', ''), 16)
+      expect(toInt(lightHex)).toBeGreaterThan(toInt(darkHex))
+      expect(darkHex).toBe('#1f425a')
     })
 
     it('should handle hierarchical data', () => {
@@ -392,10 +410,12 @@ describe('chart-config', () => {
       const optionsWithTitle = defaultTreemapOptions(dataWithTitle, 'Title')
       const optionsWithoutTitle = defaultTreemapOptions(dataWithoutTitle)
 
+      // The series.top still reserves room for the title.
       expect((optionsWithTitle.series as ChartSeriesItem[])[0].top).toBe('15%')
       expect((optionsWithoutTitle.series as ChartSeriesItem[])[0].top).toBe('5%')
-      expect((optionsWithTitle.series as ChartSeriesItem[])[0].breadcrumb?.top).toBe('10%')
-      expect((optionsWithoutTitle.series as ChartSeriesItem[])[0].breadcrumb?.top).toBe('0%')
+      // Breadcrumb is now hidden — see chart-config for rationale.
+      expect((optionsWithTitle.series as ChartSeriesItem[])[0].breadcrumb?.show).toBe(false)
+      expect((optionsWithoutTitle.series as ChartSeriesItem[])[0].breadcrumb?.show).toBe(false)
     })
 
     it('should handle empty data array', () => {

@@ -1,56 +1,68 @@
 <template>
-  <div class="clinical-domain-report">
-    <v-card variant="outlined">
+  <SurfaceCard
+    class="clinical-domain-report"
+    padding="none"
+  >
+    <nav class="page-tabs-rail clinical-domain-report__tabs-rail">
       <v-tabs
         v-model="activeTab"
-        bg-color="grey-lighten-4"
+        align-tabs="start"
+        density="comfortable"
+        color="primary"
+        slider-color="primary"
+        bg-color="transparent"
+        class="page-tabs"
       >
         <v-tab value="treemap">
           <v-icon
+            start
             icon="mdi-chart-tree"
-            class="mr-2"
           />
           {{ t('dataSources.treemap.treemapTab', 'Treemap') }}
         </v-tab>
         <v-tab value="table">
           <v-icon
+            start
             icon="mdi-table"
-            class="mr-2"
           />
           {{ t('dataSources.table.tableTab', 'Table') }}
         </v-tab>
       </v-tabs>
+    </nav>
 
-      <v-card-text class="pa-6">
-        <v-window v-model="activeTab">
-          <v-window-item value="treemap">
-            <DomainPrevalenceTreemap
-              :data="data.prevalenceData.treemapNodes"
-              @node-click="handleNodeClick"
-            />
+    <div class="clinical-domain-report__body">
+      <v-window v-model="activeTab">
+        <v-window-item value="treemap">
+          <DomainPrevalenceTreemap
+            :data="data.prevalenceData.treemapNodes"
+            @node-click="handleNodeClick"
+          />
 
-            <!-- Drill-down details -->
-            <DrilldownDetails
-              v-if="drilldownData"
-              :data="drilldownData"
-              :loading="drilldownLoading"
-              :concept-name="selectedConceptName"
-              :concept-path="selectedConceptPath"
-              :domain="drilldownDomain"
-              @close="clearDrilldown"
-            />
-          </v-window-item>
+          <!-- Drill-down details. Render while LOADING too so the
+               progress overlay inside DrilldownDetails is visible
+               immediately on click — without v-if=loading the
+               component would only mount once the network request
+               returned data, leaving the user with no feedback. -->
+          <DrilldownDetails
+            v-if="drilldownData || drilldownLoading"
+            :data="drilldownData"
+            :loading="drilldownLoading"
+            :concept-name="selectedConceptName"
+            :concept-path="selectedConceptPath"
+            :domain="drilldownDomain"
+            @close="clearDrilldown"
+          />
+        </v-window-item>
 
-          <v-window-item value="table">
-            <DomainPrevalenceTable
-              :data="data.prevalenceData.tableRows"
-              :metric-label="metricLabel"
-            />
-          </v-window-item>
-        </v-window>
-      </v-card-text>
-    </v-card>
-  </div>
+        <v-window-item value="table">
+          <DomainPrevalenceTable
+            :data="data.prevalenceData.tableRows"
+            :metric-label="metricLabel"
+          />
+        </v-window-item>
+      </v-window>
+    </div>
+  </SurfaceCard>
 </template>
 
 <script setup lang="ts">
@@ -64,6 +76,7 @@ import { getMetricLabel } from '@/utils/datasource-formatters'
 import { getCDMDrilldown } from '@/services/webapi'
 import { mapDrilldownReport } from '@/services/report-mapper'
 import { logger } from '@/utils/logger'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 import DomainPrevalenceTreemap from '@/components/datasources/DomainPrevalenceTreemap.vue'
 import DomainPrevalenceTable from '@/components/datasources/DomainPrevalenceTable.vue'
 import DrilldownDetails from '@/components/reports/DrilldownDetails.vue'
@@ -157,5 +170,14 @@ function clearDrilldown() {
 <style scoped>
 .clinical-domain-report {
   width: 100%;
+}
+
+.clinical-domain-report__tabs-rail {
+  /* Pull rail flush to card edges; keep the bottom-border separator. */
+  margin: 0;
+}
+
+.clinical-domain-report__body {
+  padding: 24px;
 }
 </style>

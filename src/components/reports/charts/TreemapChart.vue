@@ -154,13 +154,20 @@ function handleExportError(format: 'png' | 'svg', error: Error) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function handleChartClick(params: any) {
-  // Only emit if node has conceptId
-  if (params.data && params.data.conceptId !== undefined) {
+  const data = params?.data
+  if (!data) return
+  // Only emit drill-down for leaf nodes (those carry conceptId).
+  // Parent-node clicks are handled by ECharts' built-in
+  // nodeClick: 'zoomToNode', which produces the breadcrumb. We
+  // intentionally don't emit for them.
+  const hasChildren = Array.isArray(data.children) && data.children.length > 0
+  if (hasChildren) return
+  if (data.conceptId !== undefined) {
     emit(
       'node-click',
-      params.data.conceptId,
-      params.data.name || '',
-      params.data.conceptPath || ''
+      data.conceptId,
+      data.name || '',
+      data.conceptPath || ''
     )
   }
 }

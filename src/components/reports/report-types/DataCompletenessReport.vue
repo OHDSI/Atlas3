@@ -57,7 +57,6 @@
         v-else
         type="info"
         variant="tonal"
-        icon="mdi-information"
       >
         No data completeness metrics available
       </v-alert>

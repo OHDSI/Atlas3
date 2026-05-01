@@ -667,14 +667,8 @@ describe('Cohort Store', () => {
         inclusionRules: [],
         conceptSets: [],
         censorWindow: {
-          startDate: {
-            dateField: 'END_DATE',
-            offset: 0,
-          },
-          endDate: {
-            dateField: 'START_DATE',
-            offset: 0,
-          },
+          startDate: '2020-12-31',
+          endDate: '2020-01-01',
         },
       }
 
@@ -701,10 +695,7 @@ describe('Cohort Store', () => {
         inclusionRules: [],
         conceptSets: [],
         censorWindow: {
-          startDate: {
-            dateField: 'START_DATE',
-            offset: 0,
-          },
+          startDate: '2020-01-01',
         },
       }
 
@@ -830,14 +821,8 @@ describe('Cohort Store', () => {
         inclusionRules: [],
         conceptSets: [],
         censorWindow: {
-          startDate: {
-            dateField: 'END_DATE',
-            offset: 0,
-          },
-          endDate: {
-            dateField: 'START_DATE',
-            offset: 0,
-          },
+          startDate: '2020-12-31',
+          endDate: '2020-01-01',
         },
       }
 

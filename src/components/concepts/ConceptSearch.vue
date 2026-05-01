@@ -1,43 +1,30 @@
 <template>
   <div class="concept-search">
-    <!-- Search Input -->
-    <v-card
-      flat
-      class="mb-4"
-    >
-      <v-card-text>
-        <v-text-field
-          v-model="searchInput"
-          :label="t('search.headingTitle', 'Search for concepts').value"
-          :placeholder="t('search.placeholder', 'Enter at least 3 characters to search...').value"
-          prepend-inner-icon="mdi-magnify"
-          clearable
-          variant="outlined"
-          density="comfortable"
-          :error-messages="validationError"
-          :disabled="loading"
-          @update:model-value="onSearchInput"
-          @click:clear="onClear"
-          @keyup.enter="onSearch"
-        >
-          <template #append>
-            <v-btn
-              color="primary"
-              :disabled="!isSearchValid || loading"
-              :loading="loading"
-              @click="onSearch"
-            >
-              {{ t('search.buttonTitle', 'Search') }}
-            </v-btn>
-          </template>
-        </v-text-field>
+    <!-- Hero search input — sits directly on the page card, no inner
+         wrapper. Enter triggers the search; minimum 3 characters
+         enforced via validation. -->
+    <div class="concept-search__hero">
+      <v-text-field
+        v-model="searchInput"
+        :placeholder="t('search.placeholder', 'Search SNOMED, ICD, RxNorm, LOINC… (Enter to search)').value"
+        prepend-inner-icon="mdi-magnify"
+        clearable
+        variant="outlined"
+        density="comfortable"
+        hide-details
+        :disabled="loading"
+        :loading="loading"
+        class="concept-search__input"
+        @update:model-value="onSearchInput"
+        @click:clear="onClear"
+        @keyup.enter="onSearch"
+      />
 
-        <!-- Search hint -->
-        <div class="text-caption text-grey mt-1">
-          {{ t('search.vocabulariesInfo', 'Search across SNOMED, ICD, RxNorm, LOINC, and other standard vocabularies') }}
-        </div>
-      </v-card-text>
-    </v-card>
+      <p class="concept-search__hint">
+        <span v-if="validationError">{{ validationError }}</span>
+        <span v-else>{{ t('search.vocabulariesInfo', 'Type at least 3 characters; press Enter to search across SNOMED, ICD, RxNorm, LOINC, and other vocabularies.') }}</span>
+      </p>
+    </div>
 
     <!-- Error Message -->
     <v-alert
@@ -141,5 +128,23 @@ function onItemsPerPageChange(itemsPerPage: number) {
 <style scoped>
 .concept-search {
   width: 100%;
+}
+
+.concept-search__hero {
+  margin-bottom: 16px;
+}
+
+.concept-search__input :deep(.v-field) {
+  min-height: 48px;
+  font-size: 14px;
+}
+.concept-search__input :deep(.v-field__input) {
+  font-size: 14px;
+}
+
+.concept-search__hint {
+  margin: 6px 4px 0;
+  font-size: 12px;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 </style>

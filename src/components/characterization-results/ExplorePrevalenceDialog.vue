@@ -15,22 +15,29 @@
     @update:model-value="onUpdateModel"
   >
     <v-card data-testid="char-results-explore-dialog">
-      <v-card-title class="explore-dialog__title">
-        {{ titleText }}
-      </v-card-title>
+      <div class="explore-dialog__header">
+        <div class="explore-dialog__title-block">
+          <div class="explore-dialog__eyebrow-row">
+            <span class="text-eyebrow">{{ tv('columns.explore', 'Explore') }}</span>
+            <span class="explore-dialog__accent-rule" />
+          </div>
+          <h2 class="explore-dialog__title">
+            {{ titleText }}
+          </h2>
+        </div>
+      </div>
+      <v-divider />
 
       <v-card-text class="explore-dialog__body">
         <div
           v-if="loading"
-          class="explore-dialog__center"
+          class="explore-dialog__loading"
         >
-          <v-progress-circular
-            indeterminate
-            color="primary"
+          <v-skeleton-loader
+            v-for="n in 4"
+            :key="n"
+            type="table-row"
           />
-          <span class="ms-3">
-            {{ tv('common.loading', 'Loading...') }}
-          </span>
         </div>
 
         <v-alert
@@ -44,9 +51,16 @@
 
         <div
           v-else-if="!rows.length"
-          class="explore-dialog__center"
+          class="explore-dialog__empty"
         >
-          {{ tv('common.noData', 'No related concepts.') }}
+          <v-icon
+            icon="mdi-database-off-outline"
+            size="32"
+            class="explore-dialog__empty-icon"
+          />
+          <p class="explore-dialog__empty-text">
+            {{ tv('common.noData', 'No related concepts.') }}
+          </p>
         </div>
 
         <v-data-table
@@ -177,20 +191,67 @@ function onUpdateModel(value: boolean): void {
 </script>
 
 <style scoped>
+.explore-dialog__header {
+  padding: 20px 24px 14px;
+}
+
+.explore-dialog__title-block {
+  flex: 1;
+}
+
+.explore-dialog__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.explore-dialog__accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+
 .explore-dialog__title {
-  font-size: 1.1rem;
+  font-size: 22px;
   font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
 }
 
 .explore-dialog__body {
   min-height: 200px;
 }
 
-.explore-dialog__center {
+.explore-dialog__loading {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.explore-dialog__empty {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px;
-  color: rgba(var(--v-theme-on-surface), 0.6);
+  gap: 12px;
+  padding: 48px 24px;
+  border-radius: 12px;
+  background: rgb(var(--v-theme-surface-variant));
+}
+
+.explore-dialog__empty-icon {
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.7;
+}
+
+.explore-dialog__empty-text {
+  margin: 0;
+  font-size: 14px;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 </style>

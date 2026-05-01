@@ -258,9 +258,11 @@ describe('CohortsView.vue', () => {
       })
     })
 
-    it('should render "New Cohort" button', () => {
+    it('should render "New cohort" button', () => {
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const newCohortButton = buttons.find(btn => btn.text().includes('New Cohort'))
+      // Refresh: button label switched to sentence case ("New cohort")
+      // to match the rest of the modernised UI.
+      const newCohortButton = buttons.find(btn => btn.text().toLowerCase().includes('new cohort'))
 
       expect(newCohortButton).toBeDefined()
     })
@@ -272,9 +274,9 @@ describe('CohortsView.vue', () => {
       expect(importButton).toBeDefined()
     })
 
-    it('should open new cohort dialog when "New Cohort" clicked', async () => {
+    it('should open new cohort dialog when "New cohort" clicked', async () => {
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const newCohortButton = buttons.find(btn => btn.text().includes('New Cohort'))
+      const newCohortButton = buttons.find(btn => btn.text().toLowerCase().includes('new cohort'))
 
       await newCohortButton?.trigger('click')
       await wrapper.vm.$nextTick()
@@ -345,7 +347,10 @@ describe('CohortsView.vue', () => {
       expect(pagination.exists()).toBe(true)
     })
 
-    it('should render GenerationPanel component', () => {
+    it('should not render GenerationPanel — generate flow moved off the overview', () => {
+      // Refresh: removed Generate buttons from cards/rows and the
+      // GenerationPanel from the cohort overview entirely. Generation
+      // happens from the cohort builder page.
       wrapper = mount(CohortsView, {
         global: {
           plugins: [vuetify]
@@ -353,7 +358,7 @@ describe('CohortsView.vue', () => {
       })
 
       const panel = wrapper.findComponent({ name: 'GenerationPanel' })
-      expect(panel.exists()).toBe(true)
+      expect(panel.exists()).toBe(false)
     })
 
     it('should pass correct props to CohortGrid', () => {
@@ -439,14 +444,17 @@ describe('CohortsView.vue', () => {
       expect(importDialog).toBeDefined()
     })
 
-    it('should close import dialog when close button clicked', async () => {
+    it('should close import dialog when cancel clicked', async () => {
+      // Refresh: import dialog now actually imports a JSON expression
+      // — the placeholder "Close" button was replaced with Cancel
+      // (and a primary Import button).
       wrapper.vm.showImportDialog = true
       await wrapper.vm.$nextTick()
 
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const closeButton = buttons.find(btn => btn.text().includes('Close'))
+      const cancelButton = buttons.find(btn => btn.text().includes('Cancel'))
 
-      await closeButton?.trigger('click')
+      await cancelButton?.trigger('click')
       await wrapper.vm.$nextTick()
 
       expect(wrapper.vm.showImportDialog).toBe(false)
@@ -543,33 +551,10 @@ describe('CohortsView.vue', () => {
     })
   })
 
-  describe('Generation Panel', () => {
-    const mockCohort = createMockCohort(1)
-
-    beforeEach(() => {
-      wrapper = mount(CohortsView, {
-        global: {
-          plugins: [vuetify]
-        }
-      })
-    })
-
-    it('should open generation panel when handleGenerate is called', async () => {
-      await wrapper.vm.handleGenerate(mockCohort)
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.vm.showGenerationPanel).toBe(true)
-      expect(wrapper.vm.selectedCohort).toEqual(mockCohort)
-    })
-
-    it('should pass cohort ID to GenerationPanel', async () => {
-      await wrapper.vm.handleGenerate(mockCohort)
-      await wrapper.vm.$nextTick()
-
-      const panel = wrapper.findComponent({ name: 'GenerationPanel' })
-      expect(panel.props('cohortId')).toBe(mockCohort.id)
-    })
-  })
+  // The "Generation Panel" group was removed: the cohort overview no
+  // longer hosts the Generate flow. Running a cohort happens from the
+  // cohort builder page instead, so handleGenerate / showGenerationPanel
+  // / GenerationPanel are gone from CohortsView.
 
   describe('Cohort Info Dialog', () => {
     const mockCohort = createMockCohort(1)
@@ -800,14 +785,15 @@ describe('CohortsView.vue', () => {
       expect(wrapper.vm.showNewCohortDialog).toBe(true)
     })
 
-    it('should handle generate action from grid', async () => {
-      const mockCohort = createMockCohort(1)
+    it('should clear filters when grid emits clear-filters', async () => {
+      // Refresh: grid no longer emits "generate"; instead the filtered
+      // empty-state CTA emits "clear-filters" which should clear all
+      // active filters from the cohorts composable.
       const grid = wrapper.findComponent({ name: 'CohortGrid' })
 
-      await grid.vm.$emit('generate', mockCohort)
+      await grid.vm.$emit('clear-filters')
 
-      expect(wrapper.vm.selectedCohort).toEqual(mockCohort)
-      expect(wrapper.vm.showGenerationPanel).toBe(true)
+      expect(mockClearFilters).toHaveBeenCalled()
     })
 
     it('should handle delete action from grid', async () => {
@@ -850,7 +836,8 @@ describe('CohortsView.vue', () => {
 
       expect(wrapper.vm.showImportDialog).toBe(false)
       expect(wrapper.vm.showDeleteDialog).toBe(false)
-      expect(wrapper.vm.showGenerationPanel).toBe(false)
+      // showGenerationPanel removed — Generate flow lives on the
+      // cohort builder page now.
       expect(wrapper.vm.showCohortInfoDialog).toBe(false)
     })
 

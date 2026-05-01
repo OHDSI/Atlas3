@@ -1,15 +1,18 @@
 <template>
   <div class="exit-criteria-panel">
-    <!-- Legacy Conflict Warning Banner -->
-    <v-alert
+    <!-- Legacy Conflict Warning — quieter inline warning row,
+         matches the rest of the modernised design. -->
+    <div
       v-if="hasLegacyConflict"
-      type="warning"
-      closable
-      variant="tonal"
-      class="mb-4"
+      class="exit-criteria-panel__warning"
     >
-      {{ t('exitCriteria.warnings.legacyConflict', 'This cohort has both legacy and new exit criteria formats. Displaying Atlas format.').value }}
-    </v-alert>
+      <v-icon
+        icon="mdi-alert-outline"
+        size="18"
+        class="exit-criteria-panel__warning-icon"
+      />
+      <span>{{ t('exitCriteria.warnings.legacyConflict', 'This cohort has both legacy and new exit criteria formats. Displaying Atlas format.').value }}</span>
+    </div>
 
     <div class="panel-content">
       <!-- Event Persistence Section -->
@@ -37,27 +40,31 @@
       </div>
     </div>
 
-    <!-- Validation aggregation (errors from sub-components) -->
+    <!-- Validation aggregation — quiet inline error block with
+         icon + tinted-error text; replaces the heavy v-alert
+         tonal full-width fill so it fits the design language. -->
     <div
       v-if="aggregatedErrors.length > 0"
-      class="validation-summary mt-4"
+      class="exit-criteria-panel__validation"
     >
-      <v-alert
-        type="error"
-        variant="tonal"
-      >
-        <div class="text-subtitle-2 mb-2">
-          Validation Errors:
-        </div>
-        <ul>
-          <li
-            v-for="error in aggregatedErrors"
-            :key="error.field"
-          >
-            <strong>{{ error.field }}:</strong> {{ error.message }}
-          </li>
-        </ul>
-      </v-alert>
+      <div class="exit-criteria-panel__validation-header">
+        <v-icon
+          icon="mdi-alert-circle-outline"
+          size="18"
+          class="exit-criteria-panel__validation-icon"
+        />
+        <span class="exit-criteria-panel__validation-title">
+          {{ t('common.validationErrors', 'Validation errors').value }}
+        </span>
+      </div>
+      <ul class="exit-criteria-panel__validation-list">
+        <li
+          v-for="error in aggregatedErrors"
+          :key="error.field"
+        >
+          <strong>{{ error.field }}:</strong> {{ error.message }}
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -172,7 +179,62 @@ function handleRemoveCensoringEvent(_index: number) {
   margin-bottom: 24px;
 }
 
-.validation-summary {
-  padding: 0 16px 16px;
+/* Legacy-conflict warning — soft amber accent matching the
+ * validation-error block pattern. */
+.exit-criteria-panel__warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(var(--v-theme-warning, 255, 193, 7), 0.08);
+  border-left: 3px solid rgb(var(--v-theme-warning, 255, 193, 7));
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.exit-criteria-panel__warning-icon {
+  color: rgb(var(--v-theme-warning, 255, 193, 7));
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.exit-criteria-panel__validation {
+  margin: 12px 16px 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(var(--v-theme-error), 0.06);
+  border-left: 3px solid rgb(var(--v-theme-error));
+}
+
+.exit-criteria-panel__validation-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.exit-criteria-panel__validation-icon {
+  color: rgb(var(--v-theme-error));
+}
+
+.exit-criteria-panel__validation-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgb(var(--v-theme-error));
+}
+
+.exit-criteria-panel__validation-list {
+  margin: 0 0 0 26px;
+  padding: 0;
+  list-style: disc;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgb(var(--v-theme-on-surface));
+}
+.exit-criteria-panel__validation-list li {
+  margin-bottom: 2px;
 }
 </style>

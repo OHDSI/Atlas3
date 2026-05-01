@@ -15,14 +15,15 @@
   <AnalysisBuilderShell
     :title="titleText"
     :show-back="true"
+    :error="loadError"
     testid="char-results"
     @back="goBack"
   >
     <template #actions>
       <v-btn
         color="primary"
-        variant="outlined"
-        prepend-icon="mdi-download"
+        variant="tonal"
+        prepend-icon="mdi-download-outline"
         :disabled="!hasAnyPrevalence"
         data-testid="char-results-export"
         @click="onExport"
@@ -31,32 +32,29 @@
       </v-btn>
     </template>
 
-    <!-- Loading -->
+    <!-- Loading: skeleton stack -->
     <div
       v-if="loading"
       class="char-results__loading"
       data-testid="char-results-loading"
     >
-      <v-progress-circular
-        indeterminate
-        size="48"
-        color="primary"
+      <v-skeleton-loader
+        type="heading"
+        class="char-results__skeleton-header"
       />
-      <span class="ms-3">
-        {{ t('cc.viewEdit.results.loading', 'Loading results...') }}
-      </span>
+      <v-skeleton-loader
+        v-for="n in 3"
+        :key="`filter-${n}`"
+        type="list-item"
+        class="char-results__skeleton-filter"
+      />
+      <v-skeleton-loader
+        v-for="n in 5"
+        :key="`row-${n}`"
+        type="table-row"
+        class="char-results__skeleton-row"
+      />
     </div>
-
-    <!-- Error -->
-    <v-alert
-      v-else-if="loadError"
-      type="error"
-      variant="tonal"
-      class="mb-4"
-      data-testid="char-results-error"
-    >
-      {{ loadError }}
-    </v-alert>
 
     <template v-else>
       <ResultsHeader
@@ -83,7 +81,14 @@
         class="char-results__empty"
         data-testid="char-results-empty"
       >
-        {{ t('common.noData', 'No rows match the current filter.') }}
+        <v-icon
+          icon="mdi-filter-off-outline"
+          size="36"
+          class="char-results__empty-icon"
+        />
+        <p class="char-results__empty-text">
+          {{ t('common.noData', 'No rows match the current filter.') }}
+        </p>
       </div>
 
       <PrevalenceTable
@@ -493,14 +498,42 @@ function onExplore(row: PrevalenceStat): void {
 <style scoped>
 .char-results__loading {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 64px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.char-results__skeleton-header {
+  border-radius: 12px;
+}
+
+.char-results__skeleton-filter {
+  border-radius: 12px;
+}
+
+.char-results__skeleton-row {
+  border-radius: 8px;
 }
 
 .char-results__empty {
-  padding: 48px;
-  text-align: center;
-  color: rgba(var(--v-theme-on-surface), 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 56px 24px;
+  border-radius: 12px;
+  background: rgb(var(--v-theme-surface-variant));
+}
+
+.char-results__empty-icon {
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.7;
+}
+
+.char-results__empty-text {
+  margin: 0;
+  font-size: 14px;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 </style>

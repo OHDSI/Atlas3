@@ -251,21 +251,15 @@ export const useCohortStore = defineStore('cohort', () => {
       }
     }
 
-    // Validate CensorWindow dates
+    // Validate CensorWindow dates (literal ISO date strings per Atlas 2.15)
     if (cohort.censorWindow) {
       const { startDate, endDate } = cohort.censorWindow
-      if (startDate && endDate) {
-        // Ensure start comes before end (simplified check)
-        if (
-          startDate.dateField === 'END_DATE' &&
-          endDate.dateField === 'START_DATE'
-        ) {
-          errors.push({
-            field: 'censorWindow',
-            message: 'Censor window start date must come before end date',
-            severity: 'warning',
-          })
-        }
+      if (startDate && endDate && startDate > endDate) {
+        errors.push({
+          field: 'censorWindow',
+          message: 'Censor window start date must come before end date',
+          severity: 'warning',
+        })
       }
     }
 

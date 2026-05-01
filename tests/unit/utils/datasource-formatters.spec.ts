@@ -526,13 +526,18 @@ describe('Data Source Formatters', () => {
       expect(result.tableRows[0].metric).toBe(0)
     })
 
-    it('caps colorAlpha at 1 when percentPersons exceeds 100', () => {
+    it('does not set colorAlpha — that legacy prevalence-dimming hack was removed', () => {
+      // Refresh: treemap nodes now carry an explicit colorValue
+      // (recordsPerPerson / lengthOfEra) and let the gradient
+      // shader compute the colour. The legacy colorAlpha based on
+      // percentPersons was misleading and is gone.
       const raw = [
-        { conceptId: 1, conceptPath: 'A', numPersons: 1, percentPersons: 250 }
+        { conceptId: 1, conceptPath: 'A', numPersons: 1, percentPersons: 250, recordsPerPerson: 5 }
       ]
 
       const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
-      expect(result.treemapNodes[0].itemStyle?.colorAlpha).toBe(1)
+      expect(result.treemapNodes[0].itemStyle).toBeUndefined()
+      expect(result.treemapNodes[0].colorValue).toBe(5)
     })
 
     it('handles empty conceptPath via extractConceptDisplayName', () => {

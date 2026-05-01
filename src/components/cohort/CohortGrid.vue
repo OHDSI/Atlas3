@@ -39,34 +39,37 @@
       </div>
     </v-alert>
 
-    <!-- Empty State -->
+    <!-- Empty State: same MD3 filled container as concept-set list,
+         with a context-aware CTA (clear filters vs. create new). -->
     <div
       v-else-if="cohorts.length === 0"
       class="cohort-grid__empty"
     >
       <v-icon
-        size="80"
-        color="grey-lighten-1"
-      >
-        mdi-folder-open-outline
-      </v-icon>
-      <h2 class="cohort-grid__empty-title">
-        {{ t('common.noData', 'No cohorts found').value }}
-      </h2>
-      <p class="cohort-grid__empty-subtitle">
+        :icon="isFiltered ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
+        size="36"
+        class="cohort-grid__empty-icon"
+      />
+      <p class="cohort-grid__empty-text">
         {{ emptyMessage }}
       </p>
       <v-btn
+        v-if="isFiltered"
+        size="small"
+        variant="tonal"
+        prepend-icon="mdi-close"
+        @click="$emit('clear-filters')"
+      >
+        {{ t('search.clearAllSelections', 'Clear filters').value }}
+      </v-btn>
+      <v-btn
+        v-else
         color="primary"
-        variant="elevated"
-        size="large"
-        class="mt-4"
+        variant="flat"
+        prepend-icon="mdi-plus"
         @click="$emit('create-cohort')"
       >
-        <v-icon start>
-          mdi-plus
-        </v-icon>
-        {{ t('cohortDefinitions.newDefinition', 'New Cohort').value }}
+        {{ t('cohortDefinitions.newDefinition', 'New cohort').value }}
       </v-btn>
     </div>
 
@@ -81,7 +84,6 @@
         :cohort="cohort"
         :selected-tags="selectedTags"
         class="cohort-grid__card"
-        @generate="$emit('generate', $event)"
         @delete="$emit('delete', $event)"
         @tag-click="$emit('tag-click', $event)"
         @show-info="$emit('show-info', $event)"
@@ -109,7 +111,7 @@ interface Props {
 interface Emits {
   (e: 'retry'): void
   (e: 'create-cohort'): void
-  (e: 'generate', cohort: CohortDefinitionSummary): void
+  (e: 'clear-filters'): void
   (e: 'delete', cohort: CohortDefinitionSummary): void
   (e: 'tag-click', tagName: string): void
   (e: 'show-info', cohort: CohortDefinitionSummary): void
@@ -126,21 +128,27 @@ defineEmits<Emits>()
 
 const skeletonCount = 12 // Show 12 skeleton loaders while loading
 
+const isFiltered = computed(() =>
+  Boolean(props.searchQuery) || (props.selectedTags?.length ?? 0) > 0
+)
+
 /**
- * Empty state message based on whether search is active
+ * Empty state message: branches on whether the user is filtered or
+ * on a truly-empty repository.
  */
 const emptyMessage = computed(() => {
-  if (props.searchQuery) {
-    return `No cohorts found matching "${props.searchQuery}"`
+  if (props.searchQuery && (props.selectedTags?.length ?? 0) > 0) {
+    return `No cohorts match "${props.searchQuery}" with the selected tags.`
   }
-  return 'Get started by creating your first cohort definition'
+  if (props.searchQuery) return `No cohorts match "${props.searchQuery}".`
+  if ((props.selectedTags?.length ?? 0) > 0) return 'No cohorts match the selected tags.'
+  return 'No cohorts yet — create one to start defining a study population.'
 })
 </script>
 
 <style scoped>
 .cohort-grid {
   width: 100%;
-  padding: 0 24px;
 }
 
 .cohort-grid__container {
@@ -201,22 +209,22 @@ const emptyMessage = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 64px 24px;
+  gap: 12px;
+  padding: 56px 24px;
+  border-radius: 12px;
+  background: rgb(var(--v-theme-surface-variant));
+}
+
+.cohort-grid__empty-icon {
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.7;
+}
+
+.cohort-grid__empty-text {
+  margin: 0;
+  font-size: 14px;
+  color: rgb(var(--v-theme-on-surface-variant));
   text-align: center;
-  min-height: 400px;
-}
-
-.cohort-grid__empty-title {
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
-  margin-top: 16px;
-  margin-bottom: 8px;
-}
-
-.cohort-grid__empty-subtitle {
-  font-size: 1rem;
-  color: rgba(0, 0, 0, 0.5);
-  max-width: 500px;
+  max-width: 480px;
 }
 </style>

@@ -16,6 +16,8 @@ import { setupGlobalMessageHandler } from './plugins/messaging/HostMessageBus.ts
 import { tokenExpiryService } from './services/auth/tokenExpiry'
 import { configLoaderService } from './services/config-loader.service'
 import { logger } from './utils/logger'
+import '@/assets/styles/typography.css'
+import '@/assets/styles/vuetify-overrides.css'
 
 // SystemJS is loaded from index.html with import map for 'vue'
 logger.debug('Main', 'SystemJS available:', !!window.System)
@@ -29,6 +31,7 @@ import {
   BarChart,
   PieChart,
   LineChart,
+  ScatterChart,
   TreemapChart,
   SunburstChart
 } from 'echarts/charts'
@@ -40,7 +43,9 @@ import {
   GridComponent,
   LegendComponent,
   DatasetComponent,
-  TransformComponent
+  TransformComponent,
+  BrushComponent,
+  ToolboxComponent
 } from 'echarts/components'
 
 // Import ECharts features and renderers
@@ -52,6 +57,7 @@ use([
   BarChart,
   PieChart,
   LineChart,
+  ScatterChart,
   TreemapChart,
   SunburstChart,
   TitleComponent,
@@ -60,6 +66,8 @@ use([
   LegendComponent,
   DatasetComponent,
   TransformComponent,
+  BrushComponent,
+  ToolboxComponent,
   LabelLayout,
   UniversalTransition,
   CanvasRenderer,
@@ -161,6 +169,14 @@ initializeApp().then(async (app) => {
   // Check for OAuth token in hash URL before router initialization
   // No reload needed here - app state will be applied during initialization
   await handleHashOAuthToken()
+
+  // Hydrate auth from localStorage SYNCHRONOUSLY before the router
+  // resolves its initial navigation. router.isReady() runs the
+  // beforeEach guards; if the store doesn't have the token by then,
+  // the auth guard sees isAuthenticated=false and pops the login
+  // modal — even when localStorage has a perfectly valid token.
+  // Has to live above router.isReady().
+  authStore.hydrateAuth()
 
   // Mount app first, then initialize stores asynchronously
   // This ensures the app is interactive immediately

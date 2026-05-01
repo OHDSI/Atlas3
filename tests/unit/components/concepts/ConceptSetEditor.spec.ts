@@ -66,6 +66,11 @@ function mountComponent(props = {}) {
         VNavigationDrawer: {
           template: '<div class="v-navigation-drawer"><slot /></div>',
         },
+        // Editor wraps the drawer in <Teleport to="body"> so the
+        // overlay scrim can cover the viewport. Stub Teleport in
+        // tests so its content stays inside the wrapper for
+        // findComponent / find calls.
+        Teleport: { template: '<div><slot /></div>' },
       },
     },
   })
@@ -84,6 +89,9 @@ describe('ConceptSetEditor', () => {
 
   it('should render as navigation drawer', () => {
     const wrapper = mountComponent()
+    // Drawer is teleported to body for the overlay scrim, but the
+    // test stubs Teleport so the drawer renders inline and we can
+    // assert against the stub's class.
     const drawer = wrapper.find('.v-navigation-drawer')
     expect(drawer.exists()).toBe(true)
   })
@@ -104,19 +112,21 @@ describe('ConceptSetEditor', () => {
     expect(deleteBtn).toBeTruthy()
   })
 
-  it('should render name input field', () => {
+  it('should render the inline name input', () => {
     const wrapper = mountComponent()
-    const textFields = wrapper.findAllComponents({ name: 'VTextField' })
-    expect(textFields.length).toBeGreaterThan(0)
+    // Refresh: the name field is now an inline-edit input styled
+    // like the title rather than a v-text-field below the header.
+    const titleInput = wrapper.find('input.cs-editor__title-input')
+    expect(titleInput.exists()).toBe(true)
   })
 
-  it('should populate name field with concept set name', async () => {
+  it('should populate the inline name input with the concept set name', async () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
     await wrapper.vm.$nextTick()
 
-    const textFields = wrapper.findAllComponents({ name: 'VTextField' })
-    const nameField = textFields.find(tf => tf.props('modelValue') === 'Test Concept Set')
-    expect(nameField).toBeTruthy()
+    const titleInput = wrapper.find('input.cs-editor__title-input')
+    expect(titleInput.exists()).toBe(true)
+    expect((titleInput.element as HTMLInputElement).value).toBe('Test Concept Set')
   })
 
   it('should render tabs for search and selected concepts', () => {
@@ -221,8 +231,7 @@ describe('ConceptSetEditor', () => {
     expect(createSpy).toHaveBeenCalled()
   })
 
-  it('should emit delete when delete button is clicked', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+  it('should emit delete when delete button is clicked and confirmed via the dialog', async () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
@@ -230,17 +239,22 @@ describe('ConceptSetEditor', () => {
 
     if (deleteBtn) {
       await deleteBtn.trigger('click')
+      // Native window.confirm has been replaced with a v-dialog —
+      // the click sets the dialog flag rather than emitting delete
+      // immediately.
+      expect((wrapper.vm as unknown as { showDeleteConfirm: boolean }).showDeleteConfirm).toBe(true)
+      expect(wrapper.emitted('delete')).toBeFalsy()
 
-      expect(confirmSpy).toHaveBeenCalled()
+      // Invoking the confirm handler emits the delete event.
+      ;(wrapper.vm as unknown as { confirmDelete: () => void }).confirmDelete()
+      await wrapper.vm.$nextTick()
+
       expect(wrapper.emitted('delete')).toBeTruthy()
       expect(wrapper.emitted('delete')![0]).toEqual([123])
     }
-
-    confirmSpy.mockRestore()
   })
 
-  it('should not emit delete when confirmation is cancelled', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+  it('should not emit delete when confirmation is cancelled via the dialog', async () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
@@ -248,33 +262,34 @@ describe('ConceptSetEditor', () => {
 
     if (deleteBtn) {
       await deleteBtn.trigger('click')
+      // Cancel by closing the dialog without invoking confirmDelete.
+      ;(wrapper.vm as unknown as { showDeleteConfirm: boolean }).showDeleteConfirm = false
+      await wrapper.vm.$nextTick()
 
       expect(wrapper.emitted('delete')).toBeFalsy()
     }
-
-    confirmSpy.mockRestore()
   })
 
-  it('should show confirmation dialog when closing with unsaved changes', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+  it('should open confirmation dialog when closing with unsaved changes', async () => {
     const wrapper = mountComponent({ conceptSet: mockConceptSet })
 
-    // Simulate changes
-    const textFields = wrapper.findAllComponents({ name: 'VTextField' })
-    if (textFields.length > 0) {
-      await textFields[0].vm.$emit('update:modelValue', 'Modified Name')
-      await wrapper.vm.$nextTick()
-    }
+    // Simulate user changes via the inline title input — the input
+    // event handler is what marks the form dirty (the deep watcher
+    // on form was removed because it false-positived on initial
+    // load when props.conceptSet populated form.value).
+    const titleInput = wrapper.find('input.cs-editor__title-input')
+    expect(titleInput.exists()).toBe(true)
+    ;(titleInput.element as HTMLInputElement).value = 'Modified Name'
+    await titleInput.trigger('input')
+    await wrapper.vm.$nextTick()
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
     const closeBtn = buttons.find(btn => btn.props('icon') === 'mdi-close')
 
     if (closeBtn) {
       await closeBtn.trigger('click')
-      expect(confirmSpy).toHaveBeenCalled()
+      expect((wrapper.vm as unknown as { showCloseConfirm: boolean }).showCloseConfirm).toBe(true)
     }
-
-    confirmSpy.mockRestore()
   })
 
   it('should add concept to set when add-concept is emitted', async () => {
