@@ -27,15 +27,21 @@ export function createVuetifyInstance(primaryColor?: string | null) {
         light: {
           colors: {
             primary: primaryColor || DEFAULT_PRIMARY_COLOR,
-            secondary: '#424242',  // Material Grey Darken-3
-            accent: '#2d5f7f',     // Lighter shade of primary
+            'primary-darken-1': '#163349',
+            secondary: '#424242',
+            accent: '#2d5f7f',
             error: '#FF5252',
             info: '#2196F3',
             success: '#4CAF50',
             warning: '#FB8C00',
-            orange: '#eb6622',     // Atlas orange accent color
-            background: '#f2f0f1', // Light grey background matching landing page
+            orange: '#eb6622',
+            background: '#f6f7f9',
             surface: '#FFFFFF',
+            'surface-variant': '#f6f7f9',
+            'on-surface': '#000000',
+            'on-surface-variant': '#616161',
+            outline: '#e0e0e0',
+            'outline-variant': '#eeeeee',
           },
         },
       },
@@ -44,22 +50,39 @@ export function createVuetifyInstance(primaryColor?: string | null) {
       VBtn: {
         variant: 'flat',
         color: 'primary',
+        rounded: 'lg',
+        style: 'text-transform: none; letter-spacing: 0;',
       },
       VCard: {
-        variant: 'elevated',
-        elevation: 2,
+        variant: 'flat',
+        rounded: 'lg',
       },
       VTextField: {
         variant: 'outlined',
         density: 'comfortable',
+        rounded: 'md',
       },
       VSelect: {
         variant: 'outlined',
         density: 'comfortable',
+        rounded: 'md',
       },
       VAutocomplete: {
         variant: 'outlined',
         density: 'comfortable',
+        rounded: 'md',
+      },
+      VDialog: {
+        rounded: 'lg',
+      },
+      VChip: {
+        variant: 'tonal',
+        rounded: 'md',
+        density: 'comfortable',
+      },
+      VAlert: {
+        variant: 'tonal',
+        rounded: 'md',
       },
     },
   })

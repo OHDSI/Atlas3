@@ -153,7 +153,7 @@ describe('EventPersistenceSelector', () => {
     expect(tooltips.length).toBeGreaterThan(0)
   })
 
-  it('should show help alert about missing days supply', () => {
+  it('should show help hint about missing days supply', () => {
     const exitCriteria: ExitCriteria = {
       strategy: 'CONTINUOUS_DRUG',
       conceptSet: { id: 1, name: 'Statins' },
@@ -163,10 +163,9 @@ describe('EventPersistenceSelector', () => {
 
     const wrapper = createWrapper(exitCriteria)
 
-    const alert = wrapper.findAllComponents({ name: 'VAlert' }).find(a =>
-      a.text().includes('days supply')
-    )
-    expect(alert).toBeDefined()
+    const hints = wrapper.findAll('.event-persistence__hint')
+    const daysSupplyHint = hints.find(h => h.text().includes('days supply'))
+    expect(daysSupplyHint).toBeDefined()
   })
 
 })

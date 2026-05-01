@@ -113,27 +113,30 @@ describe('ConceptsView', () => {
       expect(tabButtons.length).toBe(2)
     })
 
-    it('should have search tab with correct value', () => {
+    it('should have concept sets tab as the first tab', () => {
       const wrapper = mountComponent()
       const tabs = wrapper.findAllComponents({ name: 'VTab' })
-      const searchTab = tabs[0]
-      expect(searchTab.attributes('value')).toBe('search')
+      const setsTab = tabs[0]
+      expect(setsTab.attributes('value')).toBe('sets')
     })
 
-    it('should have concept sets tab with correct value', () => {
+    it('should have search tab as the second tab', () => {
       const wrapper = mountComponent()
       const tabs = wrapper.findAllComponents({ name: 'VTab' })
-      const setsTab = tabs[1]
-      expect(setsTab.attributes('value')).toBe('sets')
+      const searchTab = tabs[1]
+      expect(searchTab.attributes('value')).toBe('search')
     })
   })
 
   describe('Tab Content', () => {
     it('should render ConceptSearch component in search tab', () => {
+      // Mount with the search tab active so its window item renders ConceptSearch.
+      mockQuery.value = { tab: 'search' }
       const wrapper = mountComponent()
       const windowItems = wrapper.findAllComponents({ name: 'VWindowItem' })
       expect(windowItems.length).toBe(2)
-      expect(windowItems[0].findComponent({ name: 'ConceptSearch' }).exists()).toBe(true)
+      // Search is now the second window item (sets is first by default).
+      expect(windowItems[1].findComponent({ name: 'ConceptSearch' }).exists()).toBe(true)
     })
 
     it('should render ConceptSetList component in sets tab', () => {
@@ -148,13 +151,13 @@ describe('ConceptsView', () => {
   })
 
   describe('Default Tab State', () => {
-    it('should default to search tab when no query parameter is provided', () => {
+    it('should default to concept sets tab when no query parameter is provided', () => {
       mockQuery.value = {}
       const wrapper = mountComponent()
       const _tabs = wrapper.findComponent({ name: 'VTabs' })
 
-      // The v-model binding should be on the search tab by default
-      expect(wrapper.vm.activeTab).toBe('search')
+      // Default tab is concept sets — concept search is reachable via the second tab.
+      expect(wrapper.vm.activeTab).toBe('sets')
     })
 
     it('should set active tab from URL query parameter', () => {
@@ -168,8 +171,8 @@ describe('ConceptsView', () => {
       mockQuery.value = { tab: '' }
       const wrapper = mountComponent()
 
-      // Should fall back to default 'search'
-      expect(wrapper.vm.activeTab).toBe('search')
+      // Should fall back to default 'sets'
+      expect(wrapper.vm.activeTab).toBe('sets')
     })
   })
 
@@ -177,33 +180,37 @@ describe('ConceptsView', () => {
     it('should update URL when switching tabs', async () => {
       const wrapper = mountComponent()
 
-      wrapper.vm.activeTab = 'sets'
+      // Default tab is 'sets'; switching to 'search' should update the URL.
+      wrapper.vm.activeTab = 'search'
       await flushPromises()
 
-      expect(mockPush).toHaveBeenCalledWith({ query: { tab: 'sets' } })
+      expect(mockPush).toHaveBeenCalledWith({ query: { tab: 'search' } })
     })
 
     it('should close editor when switching tabs', async () => {
       const wrapper = mountComponent()
 
-      wrapper.vm.activeTab = 'sets'
+      wrapper.vm.activeTab = 'search'
       await flushPromises()
 
       expect(mockCloseEditor).toHaveBeenCalled()
     })
 
     it('should preserve other query parameters when switching tabs', async () => {
-      mockQuery.value = { foo: 'bar', tab: 'search' }
+      mockQuery.value = { foo: 'bar', tab: 'sets' }
       const wrapper = mountComponent()
 
-      wrapper.vm.activeTab = 'sets'
+      wrapper.vm.activeTab = 'search'
       await flushPromises()
 
-      expect(mockPush).toHaveBeenCalledWith({ query: { foo: 'bar', tab: 'sets' } })
+      expect(mockPush).toHaveBeenCalledWith({ query: { foo: 'bar', tab: 'search' } })
     })
 
     it('should handle rapid tab switching', async () => {
+      // Start on the non-default tab so each subsequent switch is a real change.
+      mockQuery.value = { tab: 'search' }
       const wrapper = mountComponent()
+      vi.clearAllMocks()
 
       wrapper.vm.activeTab = 'sets'
       await flushPromises()
@@ -266,10 +273,10 @@ describe('ConceptsView', () => {
   })
 
   describe('Component Lifecycle', () => {
-    it('should initialize with search tab active by default', () => {
+    it('should initialize with concept sets tab active by default', () => {
       const wrapper = mountComponent()
 
-      expect(wrapper.vm.activeTab).toBe('search')
+      expect(wrapper.vm.activeTab).toBe('sets')
     })
 
     it('should respect initial query parameter on mount', () => {
@@ -301,7 +308,7 @@ describe('ConceptsView', () => {
       mockQuery.value = {}
       const wrapper = mountComponent()
 
-      expect(wrapper.vm.activeTab).toBe('search')
+      expect(wrapper.vm.activeTab).toBe('sets')
       expect(wrapper.find('.concepts-view').exists()).toBe(true)
     })
   })
@@ -326,7 +333,7 @@ describe('ConceptsView', () => {
     it('should interact with concept sets store on tab change', async () => {
       const wrapper = mountComponent()
 
-      wrapper.vm.activeTab = 'sets'
+      wrapper.vm.activeTab = 'search'
       await flushPromises()
 
       expect(mockCloseEditor).toHaveBeenCalled()
@@ -365,14 +372,14 @@ describe('ConceptsView', () => {
     it('should sync activeTab state with router', async () => {
       const wrapper = mountComponent()
 
-      expect(wrapper.vm.activeTab).toBe('search')
+      expect(wrapper.vm.activeTab).toBe('sets')
 
-      wrapper.vm.activeTab = 'sets'
+      wrapper.vm.activeTab = 'search'
       await flushPromises()
 
       expect(mockPush).toHaveBeenCalledWith(
         expect.objectContaining({
-          query: expect.objectContaining({ tab: 'sets' })
+          query: expect.objectContaining({ tab: 'search' })
         })
       )
     })

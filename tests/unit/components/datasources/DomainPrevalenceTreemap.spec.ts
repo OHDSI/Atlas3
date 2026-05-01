@@ -89,23 +89,21 @@ describe('DomainPrevalenceTreemap', () => {
     expect(treemapChart.props('height')).toBe(500)
   })
 
-  it('should display instructions alert', () => {
-    const alert = wrapper.findComponent({ name: 'VAlert' })
-    expect(alert.exists()).toBe(true)
-    expect(alert.props('type')).toBe('info')
+  it('should display instructions hint', () => {
+    const hint = wrapper.find('.treemap-controls__hint')
+    expect(hint.exists()).toBe(true)
   })
 
-  it('should show click instructions in alert', () => {
-    const alert = wrapper.findComponent({ name: 'VAlert' })
-    const alertText = alert.text()
-    expect(alertText).toContain('Click')
-    expect(alertText).toContain('detailed analytics')
+  it('should show click instructions in hint', () => {
+    const hint = wrapper.find('.treemap-controls__hint')
+    const hintText = hint.text()
+    expect(hintText).toContain('Click')
+    expect(hintText).toContain('detailed analytics')
   })
 
-  it('should render information icon in alert', () => {
+  it('should render information icon in hint', () => {
     const icon = wrapper.findComponent({ name: 'VIcon' })
     expect(icon.exists()).toBe(true)
-    // Vuetify uses $info internally which maps to mdi-information-outline
     expect(icon.props('icon')).toBeTruthy()
   })
 
@@ -134,16 +132,6 @@ describe('DomainPrevalenceTreemap', () => {
     const wrapper2 = mountComponent({ data: flatData })
     const treemapChart = wrapper2.findComponent({ name: 'TreemapChart' })
     expect(treemapChart.props('data')).toEqual(flatData)
-  })
-
-  it('should use tonal variant for alert', () => {
-    const alert = wrapper.findComponent({ name: 'VAlert' })
-    expect(alert.props('variant')).toBe('tonal')
-  })
-
-  it('should use compact density for alert', () => {
-    const alert = wrapper.findComponent({ name: 'VAlert' })
-    expect(alert.props('density')).toBe('compact')
   })
 
   it('should have controls section for better layout', () => {

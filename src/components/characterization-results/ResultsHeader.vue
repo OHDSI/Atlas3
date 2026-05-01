@@ -6,12 +6,12 @@
   component just emits `update:threshold`.
 -->
 <template>
-  <v-card
+  <SurfaceCard
+    padding="md"
     class="results-header"
-    variant="outlined"
     data-testid="char-results-header"
   >
-    <v-card-text>
+    <div class="results-header__inner">
       <div class="results-header__meta">
         <div class="results-header__field">
           <div class="results-header__label">
@@ -91,8 +91,8 @@
           </template>
         </v-slider>
       </div>
-    </v-card-text>
-  </v-card>
+    </div>
+  </SurfaceCard>
 </template>
 
 <script setup lang="ts">
@@ -101,6 +101,7 @@ import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { CharacterizationExecution } from '@/models/characterization.types'
 import { formatDateTime } from '@/utils/format'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 interface Props {
   execution: CharacterizationExecution | null
@@ -159,6 +160,12 @@ function onThreshold(value: number | number[]): void {
 <style scoped>
 .results-header {
   margin-bottom: 16px;
+}
+
+.results-header__inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .results-header__meta {

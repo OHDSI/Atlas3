@@ -47,9 +47,15 @@ async function makeWrapper(path: string) {
 describe('ProfileView', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('renders the input bar even with no params', async () => {
+  it('renders source selector and refresh in the hero', async () => {
     const w = await makeWrapper('/profiles')
-    expect(w.find('[data-test="profile-input-bar"]').exists()).toBe(true)
+    expect(w.find('[data-test="profile-source-select"]').exists()).toBe(true)
+    expect(w.find('[data-test="profile-refresh"]').exists()).toBe(true)
+  })
+
+  it('shows the empty-state hint when no person is loaded', async () => {
+    const w = await makeWrapper('/profiles')
+    expect(w.find('[data-test="profile-empty"]').exists()).toBe(true)
   })
 
   it('renders demographics + timeline + table when person loaded', async () => {

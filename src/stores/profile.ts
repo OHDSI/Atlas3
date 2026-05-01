@@ -147,15 +147,26 @@ export const useProfileStore = defineStore('profile', () => {
   })
 
   const observationBands = computed<Array<{ x1: number; x2: number }>>(() => {
-    return (person.value?.observationPeriods ?? []).map(p => ({ x1: p.startDays, x2: p.endDays }))
+    // The WebAPI sometimes omits startDays/endDays — defensively
+    // skip those rows rather than blow up the timeline plot.
+    return (person.value?.observationPeriods ?? [])
+      .filter((p): p is typeof p & { startDays: number; endDays: number } =>
+        typeof p.startDays === 'number' && typeof p.endDays === 'number'
+      )
+      .map(p => ({ x1: p.startDays, x2: p.endDays }))
   })
 
   const indexDate = computed<number | null>(() => {
     const cohort = person.value?.cohorts.find(c => c.cohortDefinitionId === cohortDefinitionId.value)
-    if (cohort) return cohort.startDate
-    const records = person.value?.records ?? []
-    if (records.length === 0) return null
-    return records.reduce((m, r) => Math.min(m, r.startDate), records[0]!.startDate)
+    if (cohort?.startDate != null) return cohort.startDate
+    // records[].startDate can be null on Eunomia (which uses
+    // startDay offsets). Pick the smallest defined startDate, or
+    // fall back to null when none are present.
+    const dates = (person.value?.records ?? [])
+      .map(r => r.startDate)
+      .filter((d): d is number => typeof d === 'number')
+    if (dates.length === 0) return null
+    return Math.min(...dates)
   })
 
   const hasCohortContext = computed(() => cohortDefinitionId.value !== null)

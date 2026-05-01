@@ -47,23 +47,16 @@ describe('CDMSummaryTable', () => {
   it('should render as a card', () => {
     const wrapper = mountComponent()
 
-    expect(wrapper.findComponent({ name: 'VCard' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'SurfaceCard' }).exists()).toBe(true)
     expect(wrapper.find('.cdm-summary-table').exists()).toBe(true)
-  })
-
-  it('should have outlined variant', () => {
-    const wrapper = mountComponent()
-
-    const card = wrapper.findComponent({ name: 'VCard' })
-    expect(card.props('variant')).toBe('outlined')
   })
 
   it('should display card title', () => {
     const wrapper = mountComponent()
 
-    const cardTitle = wrapper.findComponent({ name: 'VCardTitle' })
-    expect(cardTitle.exists()).toBe(true)
-    expect(cardTitle.text()).toBe('CDM Summary')
+    const title = wrapper.find('.cdm-summary-table__title')
+    expect(title.exists()).toBe(true)
+    expect(title.text()).toBe('CDM Summary')
   })
 
   it('should render table', () => {

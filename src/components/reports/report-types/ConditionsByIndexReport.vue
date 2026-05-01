@@ -57,7 +57,6 @@
         v-else
         type="info"
         variant="tonal"
-        icon="mdi-information"
       >
         {{ t('common.noData') }}
       </v-alert>

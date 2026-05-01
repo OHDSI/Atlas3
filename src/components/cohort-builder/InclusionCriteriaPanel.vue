@@ -1,132 +1,133 @@
 <template>
-  <div class="events-container">
-    <!-- Vertical "ALL" Label -->
-    <div class="vertical-label-container">
-      <div class="vertical-label">
-        ALL
-      </div>
+  <div
+    ref="panelRoot"
+    class="inclusion-criteria-panel"
+  >
+    <!-- Add-rule action moved up into the surrounding section
+         header (next to the qualifying-limit toggle) so we don't
+         burn a whole row on a single button. -->
+
+    <!-- Empty state — single quiet line; the section header
+         already hosts the "Add rule" CTA. -->
+    <div
+      v-if="modelValue.length === 0"
+      class="inclusion-criteria-panel__empty"
+    >
+      <v-icon
+        icon="mdi-filter-variant-plus"
+        size="20"
+        class="inclusion-criteria-panel__empty-icon"
+      />
+      <span class="inclusion-criteria-panel__empty-text">
+        {{ t('components.cohortExpressionEditor.inclusionCriteriaTextShort', 'No inclusion rules — adding one narrows which patients qualify beyond the entry events.').value }}
+      </span>
     </div>
 
-    <!-- Main Content Area -->
-    <div class="flex-grow-1">
-      <!-- Add Rule Button (at top) -->
-      <div class="add-button-container-top">
-        <v-btn
-          color="primary"
-          variant="outlined"
-          prepend-icon="mdi-plus"
-          size="small"
-          data-testid="add-inclusion-rule"
-          @click="addNewRule"
-        >
-          {{ t('components.cohortExpressionEditor.newInclusionCriteria', 'New Inclusion Criteria') }}
-        </v-btn>
-      </div>
-
-      <!-- Empty State -->
-      <v-alert
-        v-if="modelValue.length === 0"
-        color="grey-lighten-4"
-        variant="outlined"
-        class="mb-4"
+    <!-- Inclusion Rules Accordion. Still uses v-expansion-panels
+         but the per-panel chrome was retired in favour of plain
+         SurfaceCard-style rows. -->
+    <v-expansion-panels
+      v-else
+      v-model="expandedPanel"
+      flat
+      class="inclusion-criteria-panel__rules"
+    >
+      <v-expansion-panel
+        v-for="(rule, index) in modelValue"
+        :key="rule.id"
+        :value="index"
+        class="inclusion-rule-panel"
       >
-        <div style="color: #666;">
-          {{ t('components.cohortExpressionEditor.inclusionCriteriaText', 'No inclusion rules defined. Inclusion rules allow you to specify additional requirements for patients to be included in the cohort beyond the entry events.') }}
-        </div>
-      </v-alert>
-
-      <!-- Inclusion Rules Accordion -->
-      <v-expansion-panels
-        v-else
-        v-model="expandedPanel"
-      >
-        <v-expansion-panel
-          v-for="(rule, index) in modelValue"
-          :key="rule.id"
-          :value="index"
-          class="inclusion-rule-panel"
-        >
-          <v-expansion-panel-title>
-            <div class="rule-title-container">
-              <span class="rule-title-display">{{ rule.name }}</span>
-              <div class="rule-actions">
-                <v-btn
-                  icon
-                  size="small"
-                  variant="text"
-                  @click.stop="openEditDialog(index)"
-                >
-                  <v-icon size="small">
-                    mdi-pencil
-                  </v-icon>
-                </v-btn>
-                <v-btn
-                  icon
-                  size="small"
-                  variant="text"
-                  color="primary"
-                  data-testid="remove-inclusion-rule"
-                  @click.stop="removeRule(index)"
-                >
-                  <v-icon>mdi-delete</v-icon>
-                </v-btn>
-              </div>
-            </div>
-          </v-expansion-panel-title>
-
-          <v-expansion-panel-text>
-            <!-- Rule Description (editable) -->
-            <div class="rule-description-container mb-3">
-              <input
-                v-model="rule.description"
-                class="rule-description-input"
-                placeholder="Enter a description for this inclusion rule..."
-                @blur="updateRuleDescription(index, $event)"
-              >
-            </div>
-
-            <!-- Criteria Groups -->
-            <div
-              v-for="(group, groupIndex) in rule.criteriaGroups"
-              :key="group.id"
-              class="mb-3"
-            >
-              <CriteriaGroupEditor
-                :model-value="group"
-                @update:model-value="updateGroup(index, groupIndex, $event)"
-                @remove="removeGroup(index, groupIndex)"
-                @select-concept-set="handleSelectConceptSet(index, groupIndex, $event)"
-                @select-concept="handleSelectConcept(index, groupIndex, $event)"
-                @edit-concept-set="$emit('edit-concept-set', $event)"
+        <v-expansion-panel-title>
+          <div class="rule-title-container">
+            <span class="rule-title-display">{{ rule.name }}</span>
+            <div class="rule-actions">
+              <v-btn
+                icon="mdi-pencil-outline"
+                size="small"
+                variant="text"
+                :aria-label="t('common.edit', 'Edit').value"
+                @click.stop="openEditDialog(index)"
+              />
+              <v-btn
+                icon="mdi-delete-outline"
+                size="small"
+                variant="text"
+                color="error"
+                data-testid="remove-inclusion-rule"
+                :aria-label="t('common.delete', 'Delete').value"
+                @click.stop="removeRule(index)"
               />
             </div>
+          </div>
+        </v-expansion-panel-title>
 
-            <!-- Add Group Button -->
-            <v-btn
-              variant="outlined"
-              prepend-icon="mdi-plus"
-              size="small"
-              @click="addGroup(index)"
+        <v-expansion-panel-text>
+          <!-- Rule Description (editable) -->
+          <div class="rule-description-container mb-3">
+            <input
+              v-model="rule.description"
+              class="rule-description-input"
+              placeholder="Add a description for this inclusion rule…"
+              @blur="updateRuleDescription(index, $event)"
             >
-              Add Criteria Group
-            </v-btn>
-          </v-expansion-panel-text>
-        </v-expansion-panel>
-      </v-expansion-panels>
-    </div>
+          </div>
 
-    <!-- Edit Name Dialog -->
+          <!-- Criteria Groups -->
+          <div
+            v-for="(group, groupIndex) in rule.criteriaGroups"
+            :key="group.id"
+            class="mb-3"
+          >
+            <CriteriaGroupEditor
+              :model-value="group"
+              @update:model-value="updateGroup(index, groupIndex, $event)"
+              @remove="removeGroup(index, groupIndex)"
+              @select-concept-set="handleSelectConceptSet(index, groupIndex, $event)"
+              @select-concept="handleSelectConcept(index, groupIndex, $event)"
+              @edit-concept-set="$emit('edit-concept-set', $event)"
+            />
+          </div>
+
+          <!-- Add Group Button -->
+          <v-btn
+            variant="tonal"
+            color="primary"
+            prepend-icon="mdi-plus"
+            size="small"
+            @click="addGroup(index)"
+          >
+            {{ t('components.cohortExpressionEditor.addCriteriaGroup', 'Add criteria group').value }}
+          </v-btn>
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
+
+    <!-- Edit Name Dialog: refreshed header (eyebrow + accent rule
+         + clean title), matching the rest of the modernised dialogs. -->
     <v-dialog
       v-model="showEditDialog"
       max-width="500"
     >
       <v-card>
-        <v-card-title>Edit Inclusion Rule Name</v-card-title>
+        <div class="inclusion-criteria-panel__dialog-header">
+          <div class="inclusion-criteria-panel__dialog-title-block">
+            <div class="inclusion-criteria-panel__dialog-eyebrow-row">
+              <span class="text-eyebrow">{{ t('components.cohortExpressionEditor.inclusionCriteriaTitle', 'Inclusion criteria').value }}</span>
+              <span class="inclusion-criteria-panel__dialog-accent-rule" />
+            </div>
+            <h2 class="inclusion-criteria-panel__dialog-title">
+              {{ t('common.editName', 'Rename rule').value }}
+            </h2>
+          </div>
+        </div>
+        <v-divider />
         <v-card-text>
           <v-text-field
             v-model="editingName"
-            label="Rule Name"
+            :label="t('cohortDefinitions.ruleName', 'Rule name').value"
             variant="outlined"
+            density="comfortable"
             autofocus
             @keyup.enter="saveEditedName"
           />
@@ -137,13 +138,14 @@
             variant="text"
             @click="showEditDialog = false"
           >
-            Cancel
+            {{ t('common.cancel', 'Cancel').value }}
           </v-btn>
           <v-btn
             color="primary"
+            variant="flat"
             @click="saveEditedName"
           >
-            Save
+            {{ t('common.save', 'Save').value }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -152,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import type { InclusionRule, CriteriaGroup, QualifyingLimit } from '@/models/cohort.types'
@@ -179,6 +181,7 @@ const emit = defineEmits<{
 
 // Local state - single expanded panel index (undefined = all closed)
 const expandedPanel = ref<number | undefined>(undefined)
+const panelRoot = ref<HTMLElement | null>(null)
 let ruleCounter = ref(1)
 
 // Edit dialog state
@@ -223,7 +226,7 @@ function removeRule(index: number) {
   emit('update:modelValue', updatedRules)
 }
 
-function addNewRule() {
+async function addNewRule() {
   // Create a default criteria group automatically
   const defaultGroup: CriteriaGroup = {
     id: uuidv4(),
@@ -246,6 +249,18 @@ function addNewRule() {
 
   // Automatically expand the new rule (index 0 since it's added at the beginning)
   expandedPanel.value = 0
+
+  // Auto-open the criteria-type picker inside the new rule's
+  // empty group so the user lands directly in the next step
+  // instead of having to find the "Add criteria" button. Two
+  // nextTick()s: one for the new rule to render, another for
+  // the expansion-panel-text to mount its inner content.
+  await nextTick()
+  await nextTick()
+  const addCriteriaBtn = panelRoot.value?.querySelector<HTMLButtonElement>(
+    '[data-testid="add-event-to-group"]'
+  )
+  addCriteriaBtn?.click()
 }
 
 function openEditDialog(index: number) {
@@ -290,64 +305,50 @@ function handleSelectConceptSet(ruleIndex: number, groupIndex: number, eventInde
 function handleSelectConcept(ruleIndex: number, groupIndex: number, context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined }) {
   emit('select-concept', { ruleIndex, groupIndex, ...context })
 }
+
+// Exposed so the surrounding section header can host the
+// "Add rule" button and call into the panel directly.
+defineExpose({ addNewRule })
 </script>
 
 <style scoped>
-.events-container {
-  display: flex;
-  background: white;
+.inclusion-criteria-panel {
+  padding: 12px 20px 16px;
 }
 
-.vertical-label-container {
+/* Single-line quiet hint instead of the previous large filled
+ * container — the "Add rule" button already sits in the section
+ * header, so the empty state just needs to explain WHY it's empty. */
+.inclusion-criteria-panel__empty {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 30px;
-  border: 1px solid #1f425a;
-  position: relative;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgb(var(--v-theme-surface-variant));
+}
+.inclusion-criteria-panel__empty-icon {
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.inclusion-criteria-panel__empty-text {
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  line-height: 1.5;
 }
 
-.vertical-label-container::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 30%;
-  background: #1f425a;
-}
-
-.vertical-label {
-  writing-mode: sideways-lr;
-  text-orientation: sideways;
-  font-size: 14px;
-  font-weight: 700;
-  color: #1f425a;
-  user-select: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  padding-left: 8px;
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  text-align: center;
-}
-
-.flex-grow-1 {
-  flex: 1;
-  padding: 24px 16px;
-}
-
-.add-button-container-top {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
+.inclusion-criteria-panel__rules {
+  background: transparent !important;
 }
 
 .inclusion-rule-panel {
   margin-bottom: 8px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 12px !important;
+  background: rgb(var(--v-theme-surface));
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 .rule-title-container {
@@ -411,17 +412,43 @@ function handleSelectConcept(ruleIndex: number, groupIndex: number, context: { e
   color: #999;
 }
 
-/* Override Vuetify expansion panel styles for better appearance */
+/* Override Vuetify expansion panel styles for tighter padding and
+ * to drop the Material Blue active border (#2196F3) which clashed
+ * with the navy/Tableau palette. */
 :deep(.v-expansion-panel-title) {
-  padding: 12px 16px;
-  min-height: 56px;
+  padding: 8px 16px;
+  min-height: 44px;
 }
 
 :deep(.v-expansion-panel-text__wrapper) {
-  padding: 16px;
+  padding: 8px 16px 12px;
 }
 
-:deep(.v-expansion-panel--active) {
-  border-color: #2196F3;
+/* Modernised rename-rule dialog header. */
+.inclusion-criteria-panel__dialog-header {
+  padding: 20px 24px 14px;
+}
+.inclusion-criteria-panel__dialog-title-block {
+  flex: 1;
+}
+.inclusion-criteria-panel__dialog-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.inclusion-criteria-panel__dialog-accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+.inclusion-criteria-panel__dialog-title {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
 }
 </style>

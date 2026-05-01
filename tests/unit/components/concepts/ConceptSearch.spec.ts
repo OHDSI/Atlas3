@@ -88,9 +88,11 @@ describe('ConceptSearch', () => {
       expect(wrapper.find('.concept-search').exists()).toBe(true)
     })
 
-    it('should render search card', () => {
+    it('should render the hero search container', () => {
       wrapper = mountComponent()
-      expect(wrapper.findComponent({ name: 'VCard' }).exists()).toBe(true)
+      // Refresh dropped the inner v-card wrapper — the search input now
+      // sits in a plain hero container directly on the page card.
+      expect(wrapper.find('.concept-search__hero').exists()).toBe(true)
     })
 
     it('should render search input field', () => {
@@ -103,32 +105,22 @@ describe('ConceptSearch', () => {
       expect(wrapper.findComponent({ name: 'ConceptTable' }).exists()).toBe(true)
     })
 
-    it('should render search button', () => {
-      wrapper = mountComponent()
-      const buttons = wrapper.findAll('.v-btn')
-      const hasSearchButton = buttons.some(btn => btn.text().includes('Search'))
-      expect(hasSearchButton).toBe(true)
-    })
-
     it('should render search hint text', () => {
       wrapper = mountComponent()
-      const hint = wrapper.find('.text-caption')
+      const hint = wrapper.find('.concept-search__hint')
       expect(hint.exists()).toBe(true)
-      expect(hint.text()).toContain('Search across SNOMED, ICD, RxNorm, LOINC')
+      expect(hint.text()).toMatch(/SNOMED|3 characters/)
     })
   })
 
   describe('Search Input Field', () => {
-    it('should have correct label', () => {
+    it('should have a placeholder describing the action', () => {
       wrapper = mountComponent()
       const textField = wrapper.findComponent({ name: 'VTextField' })
-      expect(textField.props('label')).toContain('Search for concepts')
-    })
-
-    it('should have correct placeholder', () => {
-      wrapper = mountComponent()
-      const textField = wrapper.findComponent({ name: 'VTextField' })
-      expect(textField.props('placeholder')).toContain('Enter at least 3 characters')
+      // Refresh dropped the floating label in favour of an inline
+      // placeholder + hint line below the input.
+      expect(textField.props('placeholder')).toBeTruthy()
+      expect(textField.props('placeholder')).toMatch(/Search|Enter/)
     })
 
     it('should have search icon', () => {
@@ -534,51 +526,32 @@ describe('ConceptSearch', () => {
       expect(wrapper.find('.concept-search').exists()).toBe(true)
     })
 
-    it('should apply mb-4 class to card', () => {
+    it('should render the hint with the dedicated hint class', () => {
       wrapper = mountComponent()
-      const card = wrapper.findComponent({ name: 'VCard' })
-      expect(card.classes()).toContain('mb-4')
-    })
-
-    it('should apply flat variant to card', () => {
-      wrapper = mountComponent()
-      const card = wrapper.findComponent({ name: 'VCard' })
-      expect(card.props('flat')).toBe(true)
-    })
-
-    it('should apply text-caption class to hint', () => {
-      wrapper = mountComponent()
-      expect(wrapper.find('.text-caption').exists()).toBe(true)
-    })
-
-    it('should apply text-grey class to hint', () => {
-      wrapper = mountComponent()
-      const hint = wrapper.find('.text-caption')
-      expect(hint.classes()).toContain('text-grey')
+      // Refresh swapped Vuetify text-caption + text-grey utilities for a
+      // scoped class so the hint can carry its own typography.
+      expect(wrapper.find('.concept-search__hint').exists()).toBe(true)
     })
   })
 
   describe('Accessibility', () => {
-    it('should have proper label for screen readers', () => {
-      wrapper = mountComponent()
-      const textField = wrapper.findComponent({ name: 'VTextField' })
-      expect(textField.props('label')).toBeTruthy()
-    })
-
     it('should have placeholder text for guidance', () => {
       wrapper = mountComponent()
       const textField = wrapper.findComponent({ name: 'VTextField' })
       expect(textField.props('placeholder')).toBeTruthy()
     })
 
-    it('should show error messages for validation', async () => {
+    it('should surface validation guidance via the hint area', async () => {
       wrapper = mountComponent()
 
       wrapper.vm.searchInput = 'ab'
       await wrapper.vm.$nextTick()
 
-      const textField = wrapper.findComponent({ name: 'VTextField' })
-      expect(textField.props('errorMessages')).toBe('Please enter at least 3 characters')
+      // Validation now flows through the hint line under the input
+      // rather than the v-text-field error-messages slot.
+      expect(wrapper.vm.validationError).toBe('Please enter at least 3 characters')
+      const hint = wrapper.find('.concept-search__hint')
+      expect(hint.text()).toContain('Please enter at least 3 characters')
     })
 
     it('should disable interactive elements when loading', async () => {

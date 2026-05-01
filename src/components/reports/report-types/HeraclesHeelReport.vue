@@ -56,7 +56,6 @@
         v-else
         type="success"
         variant="tonal"
-        icon="mdi-check-circle"
       >
         {{ t('common.noIssuesDetected') }}
       </v-alert>

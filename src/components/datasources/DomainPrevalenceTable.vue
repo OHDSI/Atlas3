@@ -1,25 +1,21 @@
 <template>
   <div class="domain-prevalence-table">
-    <!-- Large dataset warning -->
-    <v-alert
+    <!-- Quiet hint row instead of a heavy v-alert. -->
+    <div
       v-if="needsVirtualization"
-      type="info"
-      variant="tonal"
-      density="compact"
-      class="mb-4"
+      class="domain-prevalence-table__hint"
     >
-      <div class="d-flex align-center">
-        <v-icon
-          icon="mdi-information-outline"
-          class="mr-2"
-        />
-        <span class="text-caption">
-          Large dataset detected ({{ formatNumber(props.data.length) }} entries). 
-          Displaying top 1,000 entries by prevalence for performance. 
-          Use search or export CSV for full dataset.
-        </span>
-      </div>
-    </v-alert>
+      <v-icon
+        icon="mdi-information-outline"
+        size="16"
+        class="domain-prevalence-table__hint-icon"
+      />
+      <span>
+        Large dataset detected ({{ formatNumber(props.data.length) }} entries).
+        Displaying top 1,000 entries by prevalence for performance —
+        use search or export CSV for the full dataset.
+      </span>
+    </div>
 
     <div class="table-controls mb-4">
       <v-row>
@@ -267,6 +263,22 @@ function exportToCSV() {
 <style scoped>
 .domain-prevalence-table {
   width: 100%;
+}
+
+.domain-prevalence-table__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.domain-prevalence-table__hint-icon {
+  color: rgb(var(--v-theme-primary));
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .gap-2 {

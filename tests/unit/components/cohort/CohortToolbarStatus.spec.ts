@@ -21,7 +21,6 @@ const vuetify = createVuetify({ components, directives })
 function mountComponent(props = {}) {
   return mount(CohortToolbarStatus, {
     props: {
-      description: 'Test description',
       conceptSetCount: 0,
       validationCount: 0,
       validationColor: 'success',
@@ -51,71 +50,9 @@ describe('CohortToolbarStatus', () => {
       expect(wrapper.find('.cohort-toolbar-status').exists()).toBe(true)
     })
 
-    it('should render description section', () => {
-      const wrapper = mountComponent()
-
-      const descSection = wrapper.find('.cohort-toolbar-status__description')
-      expect(descSection.exists()).toBe(true)
-    })
-  })
-
-  describe('Description Input', () => {
-    it('should display description value', () => {
-      const wrapper = mountComponent({ description: 'My cohort description' })
-
-      const input = wrapper.find('[data-testid="cohort-description-input"]')
-      expect(input.element.value).toBe('My cohort description')
-    })
-
-    it('should have description label on desktop', () => {
-      const wrapper = mountComponent()
-
-      const label = wrapper.find('.cohort-toolbar-status__label')
-      expect(label.exists()).toBe(true)
-      expect(label.text()).toContain('DESCRIPTION')
-    })
-
-    it('should emit update:description when input changes', async () => {
-      const wrapper = mountComponent({ description: 'Old description' })
-
-      const input = wrapper.find('[data-testid="cohort-description-input"]')
-      await input.setValue('New description')
-
-      expect(wrapper.emitted('update:description')).toBeTruthy()
-      expect(wrapper.emitted('update:description')![0]).toEqual(['New description'])
-    })
-
-    it('should have placeholder text', () => {
-      const wrapper = mountComponent()
-
-      const input = wrapper.find('[data-testid="cohort-description-input"]')
-      expect(input.attributes('placeholder')).toBe('Description')
-    })
-  })
-
-  describe('Description Dialog (Mobile)', () => {
-    it('should not show dialog initially', () => {
-      const wrapper = mountComponent()
-
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
-      expect(dialog.props('modelValue')).toBe(false)
-    })
-
-    it('should have mobile icon button', () => {
-      const wrapper = mountComponent()
-
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const dialogBtn = buttons.find(btn => btn.props('icon') === 'mdi-text')
-      expect(dialogBtn).toBeDefined()
-    })
-
-    it('should have dialog with textarea', () => {
-      const wrapper = mountComponent()
-
-      // The dialog exists in the DOM
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
-      expect(dialog.exists()).toBe(true)
-    })
+    // Description editing moved to the inline-edit subtitle in the
+    // page-shell hero header. The toolbar status component no longer
+    // renders a description input or a "DESCRIPTION:" label.
   })
 
   describe('Concept Sets Badge', () => {
@@ -332,13 +269,6 @@ describe('CohortToolbarStatus', () => {
       })
     })
 
-    it('should handle empty description', () => {
-      const wrapper = mountComponent({ description: '' })
-
-      const input = wrapper.find('[data-testid="cohort-description-input"]')
-      expect(input.element.value).toBe('')
-    })
-
     it('should handle large validation count', () => {
       const wrapper = mountComponent({
         validationCount: 999,
@@ -355,25 +285,18 @@ describe('CohortToolbarStatus', () => {
   })
 
   describe('Event Handling', () => {
-    it('should emit all events correctly', async () => {
+    it('should emit toolbar action events correctly', async () => {
+      // Description update events removed — see header note above.
       const wrapper = mountComponent({
-        description: 'Test',
         conceptSetCount: 3,
         validationCount: 5,
         isValidating: false
       })
 
-      // Test description update
-      const input = wrapper.find('[data-testid="cohort-description-input"]')
-      await input.setValue('Updated')
-      expect(wrapper.emitted('update:description')).toBeTruthy()
-
-      // Test show concept sets
       const conceptIcon = wrapper.find('[data-testid="concept-sets-icon"]')
       await conceptIcon.trigger('click')
       expect(wrapper.emitted('show-concept-sets')).toBeTruthy()
 
-      // Test show validation
       const validationIcon = wrapper.find('[data-testid="validation-icon"]')
       await validationIcon.trigger('click')
       expect(wrapper.emitted('show-validation')).toBeTruthy()

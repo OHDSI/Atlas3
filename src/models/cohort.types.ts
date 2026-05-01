@@ -42,7 +42,7 @@ export interface CohortDefinition {
   expressionType?: string
   cdmVersionRange?: string
   collapseSettings?: CollapseSettings
-  censorWindow?: Period
+  censorWindow?: CensorWindow
   censoringCriteria?: CohortEvent[]
 }
 
@@ -162,6 +162,17 @@ export interface CollapseSettings {
 export interface Period {
   startDate?: DateField
   endDate?: DateField
+}
+
+/**
+ * CensorWindow - Optional left/right calendar-date trimming for
+ * cohort entry/exit dates. Atlas 2.15 calls this "trimming options"
+ * inside the Cohort Eras panel. Dates are ISO strings (yyyy-mm-dd)
+ * or null when no trim is set.
+ */
+export interface CensorWindow {
+  startDate?: string | null
+  endDate?: string | null
 }
 
 /**

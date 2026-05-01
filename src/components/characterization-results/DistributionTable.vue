@@ -6,14 +6,22 @@
   time — keeps the table readable.
 -->
 <template>
-  <v-card
+  <SurfaceCard
+    padding="none"
     class="distribution-table"
-    variant="outlined"
     :data-testid="`char-results-distribution-${analysisId}`"
   >
-    <v-card-title class="distribution-table__title">
-      {{ analysisName }}
-      <span class="distribution-table__count">({{ rows.length }})</span>
+    <div class="distribution-table__header">
+      <div class="distribution-table__title-block">
+        <div class="distribution-table__eyebrow-row">
+          <span class="text-eyebrow">{{ analysisName }}</span>
+          <span class="distribution-table__accent-rule" />
+        </div>
+        <h3 class="distribution-table__title">
+          {{ tv('characterizations.results.table.distribution', 'Distribution') }}
+          <span class="distribution-table__count">({{ rows.length }})</span>
+        </h3>
+      </div>
       <v-spacer />
       <v-select
         v-if="cohorts.length > 1"
@@ -21,12 +29,13 @@
         :items="cohortItems"
         item-title="title"
         item-value="value"
+        variant="outlined"
         density="compact"
         hide-details
         class="distribution-table__cohort-select"
         :data-testid="`char-results-distribution-cohort-${analysisId}`"
       />
-    </v-card-title>
+    </div>
 
     <v-data-table
       :items="tableRows"
@@ -42,7 +51,7 @@
         </div>
       </template>
     </v-data-table>
-  </v-card>
+  </SurfaceCard>
 </template>
 
 <script setup lang="ts">
@@ -51,6 +60,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 interface Props {
   analysisId: number
@@ -143,12 +153,41 @@ const headers = computed(() => [
   margin-bottom: 16px;
 }
 
-.distribution-table__title {
+.distribution-table__header {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 20px 20px 12px;
+}
+
+.distribution-table__title-block {
+  flex: 0 1 auto;
+}
+
+.distribution-table__eyebrow-row {
   display: flex;
   align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.distribution-table__accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+
+.distribution-table__title {
+  display: flex;
+  align-items: baseline;
   gap: 8px;
-  font-size: 1.1rem;
+  font-size: 18px;
   font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
 }
 
 .distribution-table__count {

@@ -1,131 +1,109 @@
 <template>
   <div class="cohort-pagination">
-    <div class="cohort-pagination__controls">
-      <!-- Items per page selector -->
-      <div class="cohort-pagination__per-page">
-        <span class="cohort-pagination__label">{{ t('datatable.language.lengthMenu', 'Items per page:') }}</span>
-        <v-select
-          :model-value="itemsPerPage"
-          :items="itemsPerPageOptions"
-          density="compact"
-          variant="outlined"
-          hide-details
-          class="cohort-pagination__select"
-          :aria-label="t('common.selectItemsPerPage', 'Select number of items per page').value"
-          @update:model-value="$emit('update:items-per-page', $event)"
-        />
-      </div>
-
-      <!-- Range display -->
-      <div
-        class="cohort-pagination__range"
-        role="status"
-        aria-live="polite"
-      >
-        {{ rangeDisplay }}
-      </div>
-
-      <!-- Navigation buttons -->
-      <div class="cohort-pagination__nav">
-        <v-btn
-          icon="mdi-chevron-left"
-          size="small"
-          variant="text"
-          :disabled="!canGoPrevious"
-          :aria-label="t('datatable.language.paginate.previous', 'Previous page').value"
-          @click="$emit('previous')"
-        />
-        <v-btn
-          icon="mdi-chevron-right"
-          size="small"
-          variant="text"
-          :disabled="!canGoNext"
-          :aria-label="t('datatable.language.paginate.next', 'Next page').value"
-          @click="$emit('next')"
-        />
-      </div>
+    <!-- Items per page on the left, range readout, then v-pagination
+         on the right. Replaces the previous hand-rolled prev / next
+         pair so we get keyboard nav, page numbers, and ellipses. -->
+    <div class="cohort-pagination__per-page">
+      <span class="cohort-pagination__label">{{ t('datatable.itemsPerPage', 'Rows per page:').value }}</span>
+      <v-select
+        :model-value="itemsPerPage"
+        :items="itemsPerPageOptions"
+        density="compact"
+        variant="outlined"
+        hide-details
+        class="cohort-pagination__select"
+        :aria-label="t('common.selectItemsPerPage', 'Select number of items per page').value"
+        @update:model-value="$emit('update:items-per-page', $event)"
+      />
     </div>
+
+    <div
+      class="cohort-pagination__range"
+      role="status"
+      aria-live="polite"
+    >
+      {{ rangeDisplay }}
+    </div>
+
+    <v-pagination
+      v-if="totalPages > 1"
+      :model-value="page"
+      :length="totalPages"
+      :total-visible="5"
+      density="comfortable"
+      class="cohort-pagination__pages"
+      @update:model-value="$emit('update:page', $event)"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 
 const { t } = useI18n()
+
 interface Props {
   page: number
   itemsPerPage: number
   itemsPerPageOptions: number[]
   totalItems: number
-  canGoPrevious: boolean
-  canGoNext: boolean
   rangeDisplay: string
 }
 
 interface Emits {
-  (e: 'previous'): void
-  (e: 'next'): void
+  (e: 'update:page', value: number): void
   (e: 'update:items-per-page', value: number): void
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 defineEmits<Emits>()
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(props.totalItems / props.itemsPerPage))
+)
 </script>
 
 <style scoped>
 .cohort-pagination {
   display: flex;
-  justify-content: center;
-  padding: 0;
-  margin: 0;
-}
-
-.cohort-pagination__controls {
-  display: flex;
   align-items: center;
   gap: 24px;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .cohort-pagination__per-page {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .cohort-pagination__label {
-  font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.6);
+  font-size: 12px;
+  color: rgb(var(--v-theme-on-surface-variant));
   white-space: nowrap;
 }
 
 .cohort-pagination__select {
-  width: 100px;
+  width: 92px;
 }
 
 .cohort-pagination__range {
-  font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.87);
-  font-weight: 500;
+  font-size: 12px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.cohort-pagination__nav {
-  display: flex;
-  gap: 8px;
+.cohort-pagination__pages {
+  flex-shrink: 0;
 }
 
-/* Responsive adjustments */
 @media (max-width: 599px) {
-  .cohort-pagination__controls {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .cohort-pagination__per-page {
-    width: 100%;
-    justify-content: space-between;
+  .cohort-pagination {
+    justify-content: center;
   }
 }
 </style>

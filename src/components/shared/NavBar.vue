@@ -223,6 +223,7 @@ const coreNavigationItems: NavigationItem[] = [
   { id: 'concepts', titleKey: 'navigation.conceptsets', route: '/concepts', visible: true, active: false },
   { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true },
   { id: 'analysis', titleKey: 'navigation.analysis', route: '/analysis', visible: true, active: false },
+  { id: 'profiles', titleKey: 'navigation.profiles', route: '/profiles', visible: true, active: false },
 ]
 
 const navigationItems = ref<NavigationItem[]>(getFilteredCoreNavigationItems())
@@ -264,6 +265,7 @@ function getNavTitle(key: string): string {
   const defaults: Record<string, string> = {
     'navigation.conceptsets': 'Concept Sets',
     'navigation.cohortdefinitions': 'Cohorts',
+    'navigation.profiles': 'Profiles',
     'navigation.datasources': 'Data Sources',
     'navigation.analysis': 'Analysis',
     'navigation.characterizations': 'Characterizations',
@@ -393,9 +395,9 @@ onMounted(() => {
 <style scoped>
 .nav-bar {
   width: 100%;
-  height: 56px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 60px;
+  background-color: rgb(var(--v-theme-surface));
+  border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
 }
 
 .nav-bar__container {
@@ -406,7 +408,7 @@ onMounted(() => {
 
 .nav-bar__ohdsi-logo {
   display: block;
-  height: 52px;
+  height: 48px;
   margin-left: 1rem;
   margin-right: 0.25rem;
 }
@@ -433,7 +435,7 @@ onMounted(() => {
 
 .nav-bar__custom-logo {
   display: block;
-  height: 52px;
+  height: 48px;
   width: auto;
   object-fit: contain;
 }
@@ -480,38 +482,38 @@ onMounted(() => {
 
 .nav-bar__nav-link {
   display: inline-block;
-  padding: 18px 12px;
-  color: rgb(var(--v-theme-primary));
+  padding: 20px 12px;
+  color: rgb(var(--v-theme-on-surface-variant));
   font-weight: 400;
   text-decoration: none;
   transition: color 0.15s ease-in-out;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .nav-bar__nav-link:hover {
-  color: rgb(var(--v-theme-accent));
+  color: rgb(var(--v-theme-primary));
 }
 
-/* Reduce font size on lg breakpoint (1280px-1919px) for better fit */
 @media (min-width: 960px) and (max-width: 1279px) {
   .nav-bar__nav-link {
-    font-size: 14px;
-    padding: 18px 8px;
+    font-size: 13px;
+    padding: 20px 8px;
   }
 }
 
 .nav-bar__nav-item--active .nav-bar__nav-link {
+  color: rgb(var(--v-theme-primary));
   font-weight: 500;
 }
 
 .nav-bar__nav-item--active::after {
   content: '';
   position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 0.5rem;
-  width: 100%;
+  bottom: -1px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
   background-color: rgb(var(--v-theme-primary));
-  border-radius: 0.5rem 0.5rem 0 0;
+  border-radius: 2px;
 }
 </style>

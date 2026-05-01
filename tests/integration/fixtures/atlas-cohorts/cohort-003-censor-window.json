@@ -51,14 +51,8 @@
     "EraPad": 0
   },
   "CensorWindow": {
-    "StartDate": {
-      "DateField": "START_DATE",
-      "Offset": 0
-    },
-    "EndDate": {
-      "DateField": "END_DATE",
-      "Offset": 365
-    }
+    "StartDate": "2020-01-01",
+    "EndDate": "2020-12-31"
   },
   "InclusionRules": [],
   "CensoringCriteria": []

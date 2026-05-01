@@ -35,8 +35,8 @@ test.describe('Concept Search', () => {
     await waitForOverlaysToClose(page)
 
     // Click the Search button to trigger search (exact match to avoid "Clear Search" button)
-    const searchButton = page.getByRole('button', { name: 'Search', exact: true })
-    await searchButton.click()
+    // Search is triggered by pressing Enter on the input (no Search button)
+    await searchInput.press('Enter')
     
     // Wait for search results (debounce + API call)
     await page.waitForTimeout(2000) // Wait for API call
@@ -70,8 +70,8 @@ test.describe('Concept Search', () => {
     await page.keyboard.press('Escape')
     await waitForOverlaysToClose(page)
 
-    const searchButton = page.getByRole('button', { name: 'Search', exact: true })
-    await searchButton.click()
+    // Search is triggered by pressing Enter on the input (no Search button)
+    await searchInput.press('Enter')
     
     // Wait for results
     await page.waitForTimeout(2000)
@@ -113,8 +113,8 @@ test.describe('Concept Search', () => {
     await page.keyboard.press('Escape')
     await waitForOverlaysToClose(page)
 
-    const searchButton = page.getByRole('button', { name: 'Search', exact: true })
-    await searchButton.click()
+    // Search is triggered by pressing Enter on the input (no Search button)
+    await searchInput.press('Enter')
     
     // Wait for results
     await page.waitForTimeout(2000)
@@ -188,8 +188,8 @@ test.describe('Concept Search', () => {
     await page.keyboard.press('Escape')
     await waitForOverlaysToClose(page)
 
-    const searchButton = page.getByRole('button', { name: 'Search', exact: true })
-    await searchButton.click()
+    // Search is triggered by pressing Enter on the input (no Search button)
+    await searchInput.press('Enter')
     
     // Wait for search to complete
     await page.waitForTimeout(2000)
@@ -232,8 +232,8 @@ test.describe('Concept Search', () => {
 
     const startTime = Date.now()
 
-    const searchButton = page.getByRole('button', { name: 'Search', exact: true })
-    await searchButton.click()
+    // Search is triggered by pressing Enter on the input (no Search button)
+    await searchInput.press('Enter')
     
     // Wait for results with generous timeout
     await page.waitForTimeout(3000)
@@ -284,8 +284,8 @@ test.describe('Concept Search', () => {
     await waitForOverlaysToClose(page)
 
     // Trigger search
-    const searchButton = page.getByRole('button', { name: 'Search', exact: true })
-    await searchButton.click()
+    // Search is triggered by pressing Enter on the input (no Search button)
+    await searchInput.press('Enter')
 
     // Wait for loading to complete - look for absence of loading indicator
     await page.waitForTimeout(4000) // Give more time for API call

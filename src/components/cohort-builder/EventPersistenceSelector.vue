@@ -1,32 +1,20 @@
 <template>
   <div class="event-persistence-selector">
-    <div class="pa-4">
-      <div class="d-flex align-center mb-3">
-        <h3 class="text-h6">
-          {{ t('components.cohortExpressionEditor.eventPersistence', 'Event Persistence:') }}
-        </h3>
-        <v-tooltip location="right">
-          <template #activator="{ props: tooltipProps }">
-            <v-icon
-              v-bind="tooltipProps"
-              icon="mdi-help-circle-outline"
-              size="small"
-              class="ml-2 text-medium-emphasis"
-            />
-          </template>
-          <span>Controls how long events persist in the cohort</span>
-        </v-tooltip>
-      </div>
+    <div class="event-persistence-selector__body">
+      <!-- The redundant "Event Persistence" h3 was removed — the
+           parent section already says "Cohort Exit · Strategy: …"
+           which covers this. -->
 
-      <!-- Strategy-specific help text -->
-      <v-alert
-        type="info"
-        variant="tonal"
-        density="compact"
-        class="mb-4"
-      >
-        {{ strategyHelpText }}
-      </v-alert>
+      <!-- Strategy-specific help text — quiet inline hint, not a
+           full-width tonal alert. -->
+      <div class="event-persistence__hint">
+        <v-icon
+          icon="mdi-information-outline"
+          size="16"
+          class="event-persistence__hint-icon"
+        />
+        <span>{{ strategyHelpText }}</span>
+      </div>
 
       <!-- Conditional Fields for Fixed Duration -->
       <div
@@ -140,15 +128,17 @@
         </v-row>
 
         <!-- Help text about missing days supply -->
-        <v-alert
+        <div
           v-if="selectedConceptSet"
-          type="info"
-          variant="tonal"
-          density="compact"
-          class="mt-2"
+          class="event-persistence__hint event-persistence__hint--mt"
         >
-          {{ t('exitCriteria.help.missingDaysSupply', 'If days supply is missing, system assumes 1 day per exposure') }}
-        </v-alert>
+          <v-icon
+            icon="mdi-information-outline"
+            size="16"
+            class="event-persistence__hint-icon"
+          />
+          <span>{{ t('exitCriteria.help.missingDaysSupply', 'If days supply is missing, system assumes 1 day per exposure').value }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -311,7 +301,11 @@ watch(() => props.modelValue.strategy, (newStrategy, oldStrategy) => {
 
 <style scoped>
 .event-persistence-selector {
-  margin: 16px 0;
+  margin: 0;
+}
+
+.event-persistence-selector__body {
+  padding: 12px 16px;
 }
 
 .strategy-selector {
@@ -321,5 +315,29 @@ watch(() => props.modelValue.strategy, (newStrategy, oldStrategy) => {
 
 .strategy-fields {
   margin-top: 16px;
+}
+
+/* Quiet inline hint pattern — matches the data-sources hint
+ * (no full-width tonal alert). */
+.event-persistence__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  line-height: 1.5;
+}
+
+.event-persistence__hint--mt {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.event-persistence__hint-icon {
+  color: rgb(var(--v-theme-primary));
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 </style>

@@ -1,61 +1,9 @@
 <template>
   <div class="cohort-toolbar-status">
-    <!-- Description Input -->
-    <div class="cohort-toolbar-status__description">
-      <label class="cohort-toolbar-status__label d-none d-md-inline">
-        {{ t('columns.description', 'DESCRIPTION').value.toUpperCase() }}:
-      </label>
-      <!-- Inline input for larger screens -->
-      <input
-        :value="description"
-        class="cohort-toolbar-status__description-input d-none d-md-inline-block"
-        :placeholder="t('columns.description', 'Description').value"
-        data-testid="cohort-description-input"
-        @input="$emit('update:description', ($event.target as HTMLInputElement).value)"
-      >
-      <!-- Icon button for smaller screens -->
-      <v-tooltip
-        :text="t('columns.description', 'Description').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tooltipProps }">
-          <v-btn
-            v-bind="tooltipProps"
-            class="d-md-none"
-            icon="mdi-text"
-            variant="text"
-            size="small"
-            @click="showDescriptionDialog = true"
-          />
-        </template>
-      </v-tooltip>
-    </div>
-
-    <!-- Description Dialog for smaller screens -->
-    <v-dialog
-      v-model="showDescriptionDialog"
-      max-width="600"
-    >
-      <v-card>
-        <v-card-title>{{ t('columns.description', 'Description').value }}</v-card-title>
-        <v-card-text>
-          <v-textarea
-            :model-value="description"
-            :placeholder="t('columns.description', 'Description').value"
-            rows="3"
-            variant="outlined"
-            data-testid="cohort-description-dialog-input"
-            @update:model-value="$emit('update:description', $event)"
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="showDescriptionDialog = false">
-            {{ t('common.close', 'Close') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- Description editing moved to the inline-edit subtitle in
+         the page-shell hero header. This component now only hosts
+         the icon-and-count chips for concept sets / validation /
+         versions / tags. -->
 
     <!-- Concept Sets Icon -->
     <v-tooltip
@@ -167,11 +115,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 
 interface Props {
-  description: string
   conceptSetCount: number
   validationCount: number
   validationColor: string
@@ -185,7 +131,6 @@ interface Props {
 defineProps<Props>()
 
 defineEmits<{
-  (e: 'update:description', value: string): void
   (e: 'show-concept-sets'): void
   (e: 'show-validation'): void
   (e: 'show-versions'): void
@@ -193,8 +138,6 @@ defineEmits<{
 }>()
 
 const { t } = useI18n()
-
-const showDescriptionDialog = ref(false)
 </script>
 
 <style scoped lang="scss">

@@ -87,8 +87,8 @@ describe('DomainPrevalenceTable', () => {
   })
 
   it('should not show virtualization warning for small datasets', () => {
-    const alert = wrapper.findComponent({ name: 'VAlert' })
-    expect(alert.exists()).toBe(false)
+    const hint = wrapper.find('.domain-prevalence-table__hint')
+    expect(hint.exists()).toBe(false)
   })
 
   it('should show virtualization warning for large datasets', () => {
@@ -101,8 +101,8 @@ describe('DomainPrevalenceTable', () => {
     }))
 
     const wrapper2 = mountComponent({ data: largeData })
-    const alert = wrapper2.findComponent({ name: 'VAlert' })
-    expect(alert.exists()).toBe(true)
+    const hint = wrapper2.find('.domain-prevalence-table__hint')
+    expect(hint.exists()).toBe(true)
   })
 
   it('should filter data when search is used', async () => {

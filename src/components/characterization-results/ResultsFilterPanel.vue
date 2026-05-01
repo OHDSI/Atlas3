@@ -5,19 +5,21 @@
   Pure controlled component — emits update:* for each binding.
 -->
 <template>
-  <v-card
+  <SurfaceCard
+    padding="md"
     class="results-filter"
-    variant="outlined"
     data-testid="char-results-filters"
   >
-    <v-card-text class="results-filter__row">
+    <div class="results-filter__row">
       <v-select
         :model-value="selectedDomains"
         :items="availableDomains"
         :label="tv('columns.domain', 'Domain')"
+        variant="outlined"
         density="comfortable"
         multiple
         chips
+        closable-chips
         clearable
         hide-details
         class="results-filter__select"
@@ -30,9 +32,11 @@
         item-title="title"
         item-value="value"
         :label="tv('columns.analysis', 'Analysis')"
+        variant="outlined"
         density="comfortable"
         multiple
         chips
+        closable-chips
         clearable
         hide-details
         class="results-filter__select"
@@ -45,6 +49,7 @@
         item-title="title"
         item-value="value"
         :label="tv('common.cohort', 'Cohort')"
+        variant="outlined"
         density="comfortable"
         clearable
         hide-details
@@ -52,8 +57,8 @@
         data-testid="char-results-filter-cohort"
         @update:model-value="onCohortChange"
       />
-    </v-card-text>
-  </v-card>
+    </div>
+  </SurfaceCard>
 </template>
 
 <script setup lang="ts">
@@ -61,6 +66,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import type { LinkedCohort } from '@/models/characterization.types'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 interface AnalysisOption {
   id: number
