@@ -11,191 +11,191 @@
       :width="drawerWidth"
       @update:model-value="$emit('update:modelValue', $event)"
     >
-    <div class="cs-editor h-100 d-flex flex-column">
-      <!-- Modern editor header: eyebrow + accent rule + inline-edit
+      <div class="cs-editor h-100 d-flex flex-column">
+        <!-- Modern editor header: eyebrow + accent rule + inline-edit
            title (replaces the legacy v-card-title with grey border).
            Actions are pushed to a single action row aligned with the
            title block. -->
-      <header class="cs-editor__header">
-        <div class="cs-editor__title-block">
-          <div class="cs-editor__eyebrow-row">
-            <span class="text-eyebrow">{{ eyebrowText }}</span>
-            <span class="cs-editor__accent-rule" />
-          </div>
-          <v-form
-            ref="formRef"
-            v-model="formValid"
-            @submit.prevent
-          >
-            <input
-              :value="form.name"
-              type="text"
-              class="cs-editor__title-input"
-              :placeholder="t('cs.manager.pleaseProvideNameMessage', 'Untitled concept set').value"
-              :disabled="loading"
-              :aria-label="t('columns.name', 'Name').value"
-              @input="onTitleInput"
+        <header class="cs-editor__header">
+          <div class="cs-editor__title-block">
+            <div class="cs-editor__eyebrow-row">
+              <span class="text-eyebrow">{{ eyebrowText }}</span>
+              <span class="cs-editor__accent-rule" />
+            </div>
+            <v-form
+              ref="formRef"
+              v-model="formValid"
+              @submit.prevent
             >
-            <p
-              v-if="nameError"
-              class="cs-editor__title-error"
-            >
-              {{ nameError }}
-            </p>
-          </v-form>
-        </div>
-
-        <div class="cs-editor__actions">
-          <v-tooltip
-            v-if="isEditMode && props.conceptSet?.id"
-            :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
-            location="bottom"
-          >
-            <template #activator="{ props: tooltipProps }">
-              <v-badge
-                v-bind="tooltipProps"
-                :content="versionCount"
-                :model-value="versionCount > 0"
-                color="primary"
-                offset-x="6"
-                offset-y="6"
+              <input
+                :value="form.name"
+                type="text"
+                class="cs-editor__title-input"
+                :placeholder="t('cs.manager.pleaseProvideNameMessage', 'Untitled concept set').value"
+                :disabled="loading"
+                :aria-label="t('columns.name', 'Name').value"
+                @input="onTitleInput"
               >
-                <v-btn
-                  icon="mdi-history"
-                  size="small"
-                  variant="text"
-                  @click="showVersionsDialog = true"
-                />
-              </v-badge>
-            </template>
-          </v-tooltip>
+              <p
+                v-if="nameError"
+                class="cs-editor__title-error"
+              >
+                {{ nameError }}
+              </p>
+            </v-form>
+          </div>
 
-          <v-btn
-            v-if="isEditMode"
-            color="error"
-            variant="text"
-            :disabled="loading"
-            @click="onDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </v-btn>
-
-          <v-btn
-            color="primary"
-            variant="flat"
-            :disabled="!formValid || loading"
-            :loading="loading"
-            @click="onSave"
-          >
-            {{ isEditMode ? t('common.save', 'Save') : t('common.create', 'Create') }}
-          </v-btn>
-
-          <v-btn
-            icon="mdi-close"
-            variant="text"
-            :aria-label="t('common.close', 'Close').value"
-            @click="onClose"
-          />
-        </div>
-      </header>
-
-      <!-- Tabs rail: same shared treatment as the outer page tabs. -->
-      <nav class="page-tabs-rail cs-editor__tabs-rail">
-        <v-tabs
-          v-model="activeTab"
-          align-tabs="start"
-          density="comfortable"
-          color="primary"
-          slider-color="primary"
-          bg-color="transparent"
-          class="page-tabs"
-        >
-          <v-tab value="selected">
-            <v-icon
-              start
-              icon="mdi-checkbox-marked-circle-outline"
-            />
-            {{ t('cs.manager.tabs.includedConcepts', 'Selected') }}
-            <v-chip
-              size="x-small"
-              variant="tonal"
-              color="primary"
-              class="cs-editor__tab-count"
+          <div class="cs-editor__actions">
+            <v-tooltip
+              v-if="isEditMode && props.conceptSet?.id"
+              :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+              location="bottom"
             >
-              {{ itemCount }}
-            </v-chip>
-          </v-tab>
-          <v-tab value="search">
-            <v-icon
-              start
-              icon="mdi-magnify"
+              <template #activator="{ props: tooltipProps }">
+                <v-badge
+                  v-bind="tooltipProps"
+                  :content="versionCount"
+                  :model-value="versionCount > 0"
+                  color="primary"
+                  offset-x="6"
+                  offset-y="6"
+                >
+                  <v-btn
+                    icon="mdi-history"
+                    size="small"
+                    variant="text"
+                    @click="showVersionsDialog = true"
+                  />
+                </v-badge>
+              </template>
+            </v-tooltip>
+
+            <v-btn
+              v-if="isEditMode"
+              color="error"
+              variant="text"
+              :disabled="loading"
+              @click="onDelete"
+            >
+              {{ t('common.delete', 'Delete') }}
+            </v-btn>
+
+            <v-btn
+              color="primary"
+              variant="flat"
+              :disabled="!formValid || loading"
+              :loading="loading"
+              @click="onSave"
+            >
+              {{ isEditMode ? t('common.save', 'Save') : t('common.create', 'Create') }}
+            </v-btn>
+
+            <v-btn
+              icon="mdi-close"
+              variant="text"
+              :aria-label="t('common.close', 'Close').value"
+              @click="onClose"
             />
-            {{ t('search.tabs.search', 'Search') }}
-          </v-tab>
-        </v-tabs>
+          </div>
+        </header>
 
-        <v-spacer />
+        <!-- Tabs rail: same shared treatment as the outer page tabs. -->
+        <nav class="page-tabs-rail cs-editor__tabs-rail">
+          <v-tabs
+            v-model="activeTab"
+            align-tabs="start"
+            density="comfortable"
+            color="primary"
+            slider-color="primary"
+            bg-color="transparent"
+            class="page-tabs"
+          >
+            <v-tab value="selected">
+              <v-icon
+                start
+                icon="mdi-checkbox-marked-circle-outline"
+              />
+              {{ t('cs.manager.tabs.includedConcepts', 'Selected') }}
+              <v-chip
+                size="x-small"
+                variant="tonal"
+                color="primary"
+                class="cs-editor__tab-count"
+              >
+                {{ itemCount }}
+              </v-chip>
+            </v-tab>
+            <v-tab value="search">
+              <v-icon
+                start
+                icon="mdi-magnify"
+              />
+              {{ t('search.tabs.search', 'Search') }}
+            </v-tab>
+          </v-tabs>
 
-        <v-btn
-          variant="text"
-          size="small"
-          prepend-icon="mdi-clipboard-text-outline"
-          class="cs-editor__paste-btn"
-          @click="showPasteDialog = true"
-        >
-          {{ t('cs.manager.pasteIds', 'Paste IDs') }}
-        </v-btn>
-      </nav>
+          <v-spacer />
 
-      <div class="cs-editor__body">
-        <v-window v-model="activeTab">
-          <!-- Selected Concepts Tab -->
-          <v-window-item value="selected">
-            <ConceptSetTable
-              :items="store.currentSet?.items || []"
-              :loading="false"
-              @toggle:descendants="onToggleDescendants"
-              @toggle:mapped="onToggleMapped"
-              @toggle:exclude="onToggleExclude"
-              @remove="onRemoveFromSet"
-            />
-          </v-window-item>
-
-          <!-- Search Tab -->
-          <v-window-item value="search">
-            <ConceptSearchInline
-              @add-concept="onAddConcept"
-              @remove-concept="onRemoveConcept"
-            />
-          </v-window-item>
-        </v-window>
-      </div>
-    </div>
-
-    <!-- Versions Dialog -->
-    <v-dialog
-      v-model="showVersionsDialog"
-      max-width="1200px"
-      scrollable
-    >
-      <v-card>
-        <v-card-title class="d-flex justify-space-between align-center">
-          <span>{{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }}</span>
           <v-btn
-            icon="mdi-close"
             variant="text"
             size="small"
-            @click="showVersionsDialog = false"
-          />
-        </v-card-title>
-        <v-card-text class="pa-0">
-          <VersionsTabContent
-            v-if="showVersionsDialog && props.conceptSet?.id"
-            :config="versionsConfig"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+            prepend-icon="mdi-clipboard-text-outline"
+            class="cs-editor__paste-btn"
+            @click="showPasteDialog = true"
+          >
+            {{ t('cs.manager.pasteIds', 'Paste IDs') }}
+          </v-btn>
+        </nav>
+
+        <div class="cs-editor__body">
+          <v-window v-model="activeTab">
+            <!-- Selected Concepts Tab -->
+            <v-window-item value="selected">
+              <ConceptSetTable
+                :items="store.currentSet?.items || []"
+                :loading="false"
+                @toggle:descendants="onToggleDescendants"
+                @toggle:mapped="onToggleMapped"
+                @toggle:exclude="onToggleExclude"
+                @remove="onRemoveFromSet"
+              />
+            </v-window-item>
+
+            <!-- Search Tab -->
+            <v-window-item value="search">
+              <ConceptSearchInline
+                @add-concept="onAddConcept"
+                @remove-concept="onRemoveConcept"
+              />
+            </v-window-item>
+          </v-window>
+        </div>
+      </div>
+
+      <!-- Versions Dialog -->
+      <v-dialog
+        v-model="showVersionsDialog"
+        max-width="1200px"
+        scrollable
+      >
+        <v-card>
+          <v-card-title class="d-flex justify-space-between align-center">
+            <span>{{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }}</span>
+            <v-btn
+              icon="mdi-close"
+              variant="text"
+              size="small"
+              @click="showVersionsDialog = false"
+            />
+          </v-card-title>
+          <v-card-text class="pa-0">
+            <VersionsTabContent
+              v-if="showVersionsDialog && props.conceptSet?.id"
+              :config="versionsConfig"
+            />
+          </v-card-text>
+        </v-card>
+      </v-dialog>
     </v-navigation-drawer>
   </Teleport>
 

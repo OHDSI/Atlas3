@@ -77,100 +77,100 @@
         class="cohort-table__grid"
         data-testid="cohort-table"
       >
-      <thead>
-        <tr>
-          <th class="cohort-table__col-id">
-            {{ t('columns.id', 'ID').value }}
-          </th>
-          <th class="cohort-table__col-name">
-            {{ t('columns.name', 'Name').value }}
-          </th>
-          <th class="cohort-table__col-tags">
-            {{ t('common.tags', 'Tags').value }}
-          </th>
-          <th class="cohort-table__col-author">
-            {{ t('columns.author', 'Author').value }}
-          </th>
-          <th class="cohort-table__col-date">
-            {{ t('columns.created', 'Created').value }}
-          </th>
-          <th class="cohort-table__col-date">
-            {{ t('columns.modified', 'Modified').value }}
-          </th>
-          <th class="cohort-table__col-actions" />
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="cohort in cohorts"
-          :key="cohort.id"
-          class="cohort-table__row"
-          data-testid="cohort-table-row"
-          @click="openCohort(cohort)"
-        >
-          <td class="cohort-table__col-id">
-            {{ cohort.id }}
-          </td>
-          <td class="cohort-table__col-name">
-            <div class="cohort-table__name">
-              {{ cohort.name }}
-            </div>
-            <div
-              v-if="cohort.description"
-              class="cohort-table__description"
-              :title="cohort.description"
-            >
-              {{ cohort.description }}
-            </div>
-          </td>
-          <td class="cohort-table__col-tags">
-            <div
-              v-if="cohort.tags && cohort.tags.length > 0"
-              class="cohort-table__tags"
-            >
-              <v-chip
-                v-for="tag in cohort.tags"
-                :key="tag.id || tag.name"
-                size="x-small"
-                :color="(selectedTags ?? []).includes(tag.name) ? 'primary' : 'default'"
-                :variant="(selectedTags ?? []).includes(tag.name) ? 'elevated' : 'tonal'"
-                @click.stop="$emit('tag-click', tag.name)"
+        <thead>
+          <tr>
+            <th class="cohort-table__col-id">
+              {{ t('columns.id', 'ID').value }}
+            </th>
+            <th class="cohort-table__col-name">
+              {{ t('columns.name', 'Name').value }}
+            </th>
+            <th class="cohort-table__col-tags">
+              {{ t('common.tags', 'Tags').value }}
+            </th>
+            <th class="cohort-table__col-author">
+              {{ t('columns.author', 'Author').value }}
+            </th>
+            <th class="cohort-table__col-date">
+              {{ t('columns.created', 'Created').value }}
+            </th>
+            <th class="cohort-table__col-date">
+              {{ t('columns.modified', 'Modified').value }}
+            </th>
+            <th class="cohort-table__col-actions" />
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="cohort in cohorts"
+            :key="cohort.id"
+            class="cohort-table__row"
+            data-testid="cohort-table-row"
+            @click="openCohort(cohort)"
+          >
+            <td class="cohort-table__col-id">
+              {{ cohort.id }}
+            </td>
+            <td class="cohort-table__col-name">
+              <div class="cohort-table__name">
+                {{ cohort.name }}
+              </div>
+              <div
+                v-if="cohort.description"
+                class="cohort-table__description"
+                :title="cohort.description"
               >
-                {{ tag.name }}
-              </v-chip>
-            </div>
-          </td>
-          <td class="cohort-table__col-author">
-            {{ formatUser(cohort.createdBy) }}
-          </td>
-          <td class="cohort-table__col-date">
-            {{ formatDate(cohort.createdDate) }}
-          </td>
-          <td class="cohort-table__col-date">
-            {{ formatDate(cohort.modifiedDate) }}
-          </td>
-          <td class="cohort-table__col-actions">
-            <div class="cohort-table__actions">
-              <v-btn
-                icon="mdi-information-outline"
-                size="small"
-                variant="text"
-                :aria-label="t('common.cohortInformation', 'Cohort Information').value"
-                data-testid="cohort-table-info"
-                @click.stop="$emit('show-info', cohort)"
-              />
-              <v-btn
-                icon="mdi-delete-outline"
-                size="small"
-                variant="text"
-                :aria-label="t('common.delete', 'Delete').value"
-                data-testid="cohort-table-delete"
-                @click.stop="$emit('delete', cohort)"
-              />
-            </div>
-          </td>
-        </tr>
-      </tbody>
+                {{ cohort.description }}
+              </div>
+            </td>
+            <td class="cohort-table__col-tags">
+              <div
+                v-if="cohort.tags && cohort.tags.length > 0"
+                class="cohort-table__tags"
+              >
+                <v-chip
+                  v-for="tag in cohort.tags"
+                  :key="tag.id || tag.name"
+                  size="x-small"
+                  :color="(selectedTags ?? []).includes(tag.name) ? 'primary' : 'default'"
+                  :variant="(selectedTags ?? []).includes(tag.name) ? 'elevated' : 'tonal'"
+                  @click.stop="$emit('tag-click', tag.name)"
+                >
+                  {{ tag.name }}
+                </v-chip>
+              </div>
+            </td>
+            <td class="cohort-table__col-author">
+              {{ formatUser(cohort.createdBy) }}
+            </td>
+            <td class="cohort-table__col-date">
+              {{ formatDate(cohort.createdDate) }}
+            </td>
+            <td class="cohort-table__col-date">
+              {{ formatDate(cohort.modifiedDate) }}
+            </td>
+            <td class="cohort-table__col-actions">
+              <div class="cohort-table__actions">
+                <v-btn
+                  icon="mdi-information-outline"
+                  size="small"
+                  variant="text"
+                  :aria-label="t('common.cohortInformation', 'Cohort Information').value"
+                  data-testid="cohort-table-info"
+                  @click.stop="$emit('show-info', cohort)"
+                />
+                <v-btn
+                  icon="mdi-delete-outline"
+                  size="small"
+                  variant="text"
+                  :aria-label="t('common.delete', 'Delete').value"
+                  data-testid="cohort-table-delete"
+                  @click.stop="$emit('delete', cohort)"
+                />
+              </div>
+            </td>
+          </tr>
+        </tbody>
       </v-table>
     </SurfaceCard>
   </div>

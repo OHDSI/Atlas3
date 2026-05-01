@@ -4,7 +4,9 @@
       <div class="section-header__title-row">
         <span class="text-eyebrow">OBSERVATION</span>
         <span class="section-header__rule" />
-        <h2 class="section-title">Observation periods</h2>
+        <h2 class="section-title">
+          Observation periods
+        </h2>
       </div>
     </div>
     <div class="section-body">

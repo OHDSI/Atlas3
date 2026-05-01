@@ -4,7 +4,9 @@
       <div class="section-header__title-row">
         <span class="text-eyebrow">EVENTS</span>
         <span class="section-header__rule" />
-        <h2 class="section-title">Events</h2>
+        <h2 class="section-title">
+          Events
+        </h2>
       </div>
       <div class="section-header__actions">
         <v-text-field
