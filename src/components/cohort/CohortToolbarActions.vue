@@ -21,7 +21,10 @@
           data-testid="export-btn"
         />
       </template>
-      <v-list density="compact" min-width="220">
+      <v-list
+        density="compact"
+        min-width="220"
+      >
         <v-list-item
           data-testid="export-download-json"
           prepend-icon="mdi-download"

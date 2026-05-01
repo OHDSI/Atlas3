@@ -16,18 +16,31 @@
         mandatory
         @update:model-value="(v: 'visual' | 'tabular' | null) => v && (mode = v)"
       >
-        <v-btn value="visual" size="small">
-          <v-icon start>mdi-chart-donut</v-icon>
+        <v-btn
+          value="visual"
+          size="small"
+        >
+          <v-icon start>
+            mdi-chart-donut
+          </v-icon>
           {{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}
         </v-btn>
-        <v-btn value="tabular" size="small">
-          <v-icon start>mdi-table</v-icon>
+        <v-btn
+          value="tabular"
+          size="small"
+        >
+          <v-icon start>
+            mdi-table
+          </v-icon>
           {{ t('pathway.results.tabular', 'Tabular') }}
         </v-btn>
       </v-btn-toggle>
     </div>
 
-    <div v-if="loading" class="pathway-results-panel__state">
+    <div
+      v-if="loading"
+      class="pathway-results-panel__state"
+    >
       {{ t('common.loading', 'Loading results…').value }}
     </div>
 

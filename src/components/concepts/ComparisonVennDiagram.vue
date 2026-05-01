@@ -64,8 +64,18 @@ const totalLabel = computed(() => {
       </text>
 
       <g class="venn-circles">
-        <circle cx="180" cy="150" r="90" class="venn-circle venn-circle-left" />
-        <circle cx="300" cy="150" r="90" class="venn-circle venn-circle-right" />
+        <circle
+          cx="180"
+          cy="150"
+          r="90"
+          class="venn-circle venn-circle-left"
+        />
+        <circle
+          cx="300"
+          cy="150"
+          r="90"
+          class="venn-circle venn-circle-right"
+        />
       </g>
 
       <text
@@ -97,7 +107,10 @@ const totalLabel = computed(() => {
       </text>
     </svg>
 
-    <div data-testid="venn-total" class="text-caption venn-total">
+    <div
+      data-testid="venn-total"
+      class="text-caption venn-total"
+    >
       {{ totalLabel }}
     </div>
   </div>
