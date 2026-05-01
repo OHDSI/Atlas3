@@ -15,7 +15,7 @@ import { z } from 'zod'
  * Raw Role Schema - transforms API response to normalized Role type
  */
 export const RawRoleSchema = z.object({
-  id: z.number().int().positive(),
+  id: z.number().int(),
   role: z.string().min(1).max(255).optional(),
   name: z.string().min(1).max(255).optional(),
   roleName: z.string().min(1).max(255).optional(),
@@ -41,7 +41,7 @@ export const RawRoleSchema = z.object({
  * Represents a named group with specific permissions
  */
 export const RoleSchema = z.object({
-  id: z.number().int().positive(),
+  id: z.number().int(),
   name: z.string().min(1).max(255),
   description: z.string().max(1000).optional().nullable(),
   createdDate: z.string().optional().nullable(),

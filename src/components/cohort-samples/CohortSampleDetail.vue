@@ -90,12 +90,13 @@ import { useDataSourcesStore } from '@/stores/datasources'
 const props = defineProps<{
   sample: CohortSample
   loading?: boolean
+  sourceKey?: string
 }>()
 
 const dsStore = useDataSourcesStore()
 
 function profilePath(personId: string): string | null {
-  const sourceKey = dsStore.selectedSource?.sourceKey
+  const sourceKey = props.sourceKey ?? dsStore.selectedSource?.sourceKey
   if (!sourceKey) return null
   const cohortId = props.sample.cohortDefinitionId ?? undefined
   return profileRouteFor(sourceKey, personId, cohortId)
@@ -132,5 +133,18 @@ const anyRecordCount = computed(() =>
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+}
+
+.profile-link {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid transparent;
+  transition: border-color 120ms ease;
+}
+.profile-link:hover,
+.profile-link:focus-visible {
+  border-bottom-color: currentColor;
+  outline: none;
 }
 </style>

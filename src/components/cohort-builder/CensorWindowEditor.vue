@@ -1,6 +1,5 @@
 <template>
-  <div class="censor-window-editor pa-4">
-    <!-- Era collapse gap -->
+  <div class="censor-window-editor">
     <div class="era-pad-row">
       <span class="era-pad-row__label">{{ eraGapLabel }}</span>
       <v-text-field
@@ -16,10 +15,6 @@
         @blur="emitCollapseSettings"
       />
       <span class="era-pad-row__suffix">{{ daysLabel }}</span>
-    </div>
-
-    <!-- Trimming options (left/right censor calendar dates) -->
-    <div class="trim-options mt-4">
       <button
         v-if="!showTrimOptions"
         type="button"
@@ -29,11 +24,13 @@
       >
         {{ addTrimmingLabel }}
       </button>
+    </div>
 
-      <div
-        v-else
-        class="trim-rows"
-      >
+    <div
+      v-if="showTrimOptions"
+      class="trim-options mt-2"
+    >
+      <div class="trim-rows">
         <div class="trim-row">
           <span class="trim-row__label">{{ leftCensorLabel }}</span>
           <v-text-field
@@ -212,6 +209,7 @@ function clearEndDate() {
 <style scoped>
 .censor-window-editor {
   margin: 0;
+  padding: 0 16px 16px;
 }
 
 .era-pad-row {
@@ -270,7 +268,7 @@ function clearEndDate() {
 .trim-row__label {
   font-size: 14px;
   color: rgb(var(--v-theme-on-surface));
-  min-width: 240px;
+  min-width: 200px;
 }
 
 .trim-row__input {

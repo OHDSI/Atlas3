@@ -29,7 +29,11 @@ export function useIncidenceRateBuilder() {
 
     await store.validateIR()
     if (store.hasErrors) {
-      notify('Cannot save — fix validation errors first', 'error')
+      const messages = store.validationErrors
+        .filter((e) => e.severity === 'error')
+        .map((e) => e.message)
+        .join(' · ')
+      notify(messages ? `Cannot save: ${messages}` : 'Cannot save — fix validation errors first', 'error')
       return false
     }
 

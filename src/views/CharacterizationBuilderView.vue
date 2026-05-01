@@ -23,6 +23,66 @@
   >
     <template #actions>
       <v-tooltip
+        :text="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-bookmark-multiple-outline"
+            variant="text"
+            size="small"
+            density="comfortable"
+            data-testid="char-builder-conceptsets-icon"
+            @click="showConceptSetsDialog = true"
+          />
+        </template>
+      </v-tooltip>
+
+      <v-tooltip
+        v-if="isEditing"
+        :text="t('cc.viewEdit.tabs.versions', 'Versions').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-history"
+            variant="text"
+            size="small"
+            density="comfortable"
+            data-testid="char-builder-versions-icon"
+            @click="showVersionsDialog = true"
+          />
+        </template>
+      </v-tooltip>
+
+      <v-tooltip
+        :text="t('cc.viewEdit.tabs.messages', 'Validation').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-badge
+            v-bind="tipProps"
+            :color="validationBadge?.color || 'default'"
+            :content="validationBadge?.count ?? 0"
+            :model-value="!!validationBadge"
+            offset-x="6"
+            offset-y="6"
+          >
+            <v-btn
+              icon="mdi-checkbox-marked-circle-outline"
+              variant="text"
+              size="small"
+              density="comfortable"
+              data-testid="char-builder-validation-icon"
+              @click="showValidationDialog = true"
+            />
+          </v-badge>
+        </template>
+      </v-tooltip>
+
+      <v-tooltip
         location="top"
         :text="runDisabledReason"
         :disabled="!runDisabledReason"
@@ -100,16 +160,6 @@
           {{ t('cc.fa.tabs.design', 'Design') }}
         </v-tab>
         <v-tab
-          value="conceptSets"
-          data-testid="char-builder-tab-conceptSets"
-        >
-          <v-icon
-            start
-            icon="mdi-bookmark-multiple-outline"
-          />
-          {{ t('cc.fa.tabs.conceptSets', 'Concept Sets') }}
-        </v-tab>
-        <v-tab
           value="executions"
           data-testid="char-builder-tab-executions"
         >
@@ -120,16 +170,6 @@
           {{ t('cc.viewEdit.tabs.executions', 'Executions') }}
         </v-tab>
         <v-tab
-          value="versions"
-          data-testid="char-builder-tab-versions"
-        >
-          <v-icon
-            start
-            icon="mdi-history"
-          />
-          {{ t('cc.viewEdit.tabs.versions', 'Versions') }}
-        </v-tab>
-        <v-tab
           value="utilities"
           data-testid="char-builder-tab-utilities"
         >
@@ -138,24 +178,6 @@
             icon="mdi-tools"
           />
           {{ t('cc.viewEdit.tabs.utilities', 'Utilities') }}
-        </v-tab>
-        <v-tab
-          value="validation"
-          data-testid="char-builder-tab-validation"
-        >
-          <v-icon
-            start
-            icon="mdi-checkbox-marked-circle-outline"
-          />
-          {{ t('cc.viewEdit.tabs.messages', 'Validation') }}
-          <v-badge
-            v-if="validationBadge"
-            inline
-            :color="validationBadge.color"
-            :content="validationBadge.count"
-            class="ms-2"
-            data-testid="char-builder-tab-validation-badge"
-          />
         </v-tab>
       </v-tabs>
     </nav>
@@ -171,34 +193,11 @@
         />
       </v-window-item>
 
-      <v-window-item value="conceptSets">
-        <CharacterizationConceptSetsTab
-          :characterization="draft"
-          data-testid="char-builder-conceptsets-tab"
-        />
-      </v-window-item>
-
       <v-window-item value="executions">
         <ExecutionsPanel
           :characterization-id="draftId"
           data-testid="char-builder-executions-tab"
         />
-      </v-window-item>
-
-      <v-window-item value="versions">
-        <div
-          class="char-builder__versions-stub"
-          data-testid="char-builder-versions-tab"
-        >
-          <p>
-            {{
-              t(
-                'characterizations.editor.versionsTodo',
-                'Versions integration TODO — wires into characterization-versions.service in a follow-up.'
-              )
-            }}
-          </p>
-        </div>
       </v-window-item>
 
       <v-window-item value="utilities">
@@ -208,14 +207,82 @@
           @imported="onImported"
         />
       </v-window-item>
-
-      <v-window-item value="validation">
-        <CharacterizationMessagesTab
-          :characterization="draft"
-          data-testid="char-builder-validation-tab"
-        />
-      </v-window-item>
     </v-window>
+
+    <v-dialog
+      v-model="showConceptSetsDialog"
+      max-width="1200"
+      scrollable
+    >
+      <v-card>
+        <AppDialogHeader
+          :eyebrow="t('cc.title', 'Characterization').value"
+          :title="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
+          :show-close="true"
+          :close-label="t('common.close', 'Close').value"
+          @close="showConceptSetsDialog = false"
+        />
+        <v-card-text class="pa-4">
+          <CharacterizationConceptSetsTab
+            :characterization="draft"
+            data-testid="char-builder-conceptsets-tab"
+          />
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      v-model="showVersionsDialog"
+      max-width="1000"
+      scrollable
+    >
+      <v-card>
+        <AppDialogHeader
+          :eyebrow="t('cc.title', 'Characterization').value"
+          :title="t('cc.viewEdit.tabs.versions', 'Versions').value"
+          :show-close="true"
+          :close-label="t('common.close', 'Close').value"
+          @close="showVersionsDialog = false"
+        />
+        <v-card-text class="pa-4">
+          <div
+            class="char-builder__versions-stub"
+            data-testid="char-builder-versions-tab"
+          >
+            <p>
+              {{
+                t(
+                  'characterizations.editor.versionsTodo',
+                  'Versions integration TODO — wires into characterization-versions.service in a follow-up.'
+                )
+              }}
+            </p>
+          </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      v-model="showValidationDialog"
+      max-width="800"
+      scrollable
+    >
+      <v-card>
+        <AppDialogHeader
+          :eyebrow="t('cc.title', 'Characterization').value"
+          :title="t('cc.viewEdit.tabs.messages', 'Validation').value"
+          :show-close="true"
+          :close-label="t('common.close', 'Close').value"
+          @close="showValidationDialog = false"
+        />
+        <v-card-text class="pa-4">
+          <CharacterizationMessagesTab
+            :characterization="draft"
+            data-testid="char-builder-validation-tab"
+          />
+        </v-card-text>
+      </v-card>
+    </v-dialog>
 
     <!-- Delete confirmation dialog -->
     <v-dialog
@@ -293,6 +360,7 @@ import { logger } from '@/utils/logger'
 import CharacterizationDesignTab from '@/components/characterization/CharacterizationDesignTab.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
+import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
 import CharacterizationUtilitiesTab from '@/components/characterization/CharacterizationUtilitiesTab.vue'
 import ExecutionsPanel from '@/components/characterization/ExecutionsPanel.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
@@ -332,6 +400,9 @@ const activeTab = ref<
 >('design')
 const saving = ref<boolean>(false)
 const showDeleteDialog = ref<boolean>(false)
+const showConceptSetsDialog = ref<boolean>(false)
+const showVersionsDialog = ref<boolean>(false)
+const showValidationDialog = ref<boolean>(false)
 
 const availableCohorts = ref<CohortDefinitionSummary[]>([])
 const availableFeatureAnalyses = ref<FeatureAnalysisListItem[]>([])
@@ -660,6 +731,10 @@ onBeforeRouteLeave((_to, _from, next) => {
   margin-inline: -32px;
   margin-bottom: 16px;
   padding-inline: 32px;
+}
+
+.char-builder__tab-icon {
+  min-width: 44px !important;
 }
 
 .char-builder__versions-stub {

@@ -6,9 +6,10 @@
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-card>
-      <v-card-title>
-        {{ isEditMode ? 'Edit' : 'Create' }} Tag
-      </v-card-title>
+      <AppDialogHeader
+        eyebrow="Tag"
+        :title="`${isEditMode ? 'Edit' : 'Create'} Tag`"
+      />
 
       <v-card-text>
         <v-form
@@ -109,6 +110,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { tagSchema, type Tag, type TagGroup } from '@/models/config.types'
+import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
 
 interface Props {
   modelValue: boolean

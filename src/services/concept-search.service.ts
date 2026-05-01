@@ -2,12 +2,31 @@
  * Concept Search Service
  * Business logic for searching and retrieving medical concepts
  */
-import { ConceptSearchResponseSchema, type Concept } from '@/models/concept-set.types'
-import { mapConceptFromAPI } from '@/utils/api-mappers'
+import {
+  ConceptSearchResponseSchema,
+  ComparisonResultSchema,
+  type Concept,
+  type ComparisonResultItem,
+  type ConceptSetExpression,
+} from '@/models/concept-set.types'
+import { mapConceptFromAPI, mapComparisonItemFromAPI } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
 import { httpClient, httpPost } from '@/services/http-client'
 
 type ConceptRecordCountResponse = Array<Record<string, number[]>>
+
+export type RecommendedConceptsResult =
+  | { available: true; concepts: Concept[] }
+  | { available: false; concepts: [] }
+
+// httpClient throws `Error('HTTP {status}: {statusText}')` — parse the code
+// out so we can distinguish 501 (feature unavailable) from real failures.
+function extractHttpStatus(error: unknown): number | null {
+  if (!(error instanceof Error)) return null
+  const match = /^HTTP (\d{3})\b/.exec(error.message)
+  if (!match || !match[1]) return null
+  return parseInt(match[1], 10)
+}
 
 export async function searchConcepts(
   sourceKey: string,
@@ -99,4 +118,64 @@ export async function getConceptRecordCounts(
   }
 
   return recordCountMap
+}
+
+export async function getRecommendedConcepts(
+  sourceKey: string,
+  conceptIds: number[]
+): Promise<RecommendedConceptsResult> {
+  if (conceptIds.length === 0) {
+    return { available: true, concepts: [] }
+  }
+
+  if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
+    throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
+  }
+
+  const endpoint = `/vocabulary/${sourceKey}/lookup/recommended`
+
+  let data: unknown
+  try {
+    data = await httpPost<unknown>(endpoint, conceptIds)
+  } catch (error) {
+    if (extractHttpStatus(error) === 501) {
+      return { available: false, concepts: [] }
+    }
+    throw error
+  }
+
+  const parsed = ConceptSearchResponseSchema.safeParse(data)
+
+  if (!parsed.success) {
+    logger.error('ConceptSearch', 'Recommended concepts validation error', parsed.error)
+    throw new Error('Invalid recommended concepts response format')
+  }
+
+  const concepts = parsed.data.map(mapConceptFromAPI)
+  return { available: true, concepts }
+}
+
+export async function compareConceptSets(
+  sourceKey: string,
+  expression1: ConceptSetExpression,
+  expression2: ConceptSetExpression
+): Promise<ComparisonResultItem[]> {
+  if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
+    throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
+  }
+
+  if (expression1.items.length === 0 || expression2.items.length === 0) {
+    return []
+  }
+
+  const endpoint = `/vocabulary/${sourceKey}/compare`
+  const data = await httpPost<unknown>(endpoint, [expression1, expression2])
+  const parsed = ComparisonResultSchema.safeParse(data)
+
+  if (!parsed.success) {
+    logger.error('ConceptSearch', 'Concept set comparison validation error', parsed.error)
+    throw new Error('Invalid concept set comparison response format')
+  }
+
+  return parsed.data.map(mapComparisonItemFromAPI)
 }

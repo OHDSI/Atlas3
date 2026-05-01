@@ -16,6 +16,12 @@ vi.mock('@/services/concept-set.service', () => ({
   deleteConceptSet: vi.fn(),
 }))
 
+vi.mock('@/services/concept-search.service', () => ({
+  getRecommendedConcepts: vi.fn(),
+  getConceptRecordCounts: vi.fn(),
+  compareConceptSets: vi.fn(),
+}))
+
 vi.mock('@/utils/api-mappers', () => ({
   conceptToConceptSetItem: vi.fn((concept: Concept): ConceptSetItem => ({
     conceptId: concept.conceptId,
@@ -29,6 +35,21 @@ vi.mock('@/utils/api-mappers', () => ({
     isExcluded: false,
     includeDescendants: false,
     includeMapped: false,
+  })),
+  conceptSetItemToExpressionItem: vi.fn((item: ConceptSetItem) => ({
+    concept: {
+      CONCEPT_ID: item.conceptId,
+      CONCEPT_NAME: item.conceptName,
+      CONCEPT_CODE: item.conceptCode,
+      DOMAIN_ID: item.domainId,
+      VOCABULARY_ID: item.vocabularyId,
+      CONCEPT_CLASS_ID: item.conceptClassId,
+      STANDARD_CONCEPT: item.standardConcept,
+      INVALID_REASON: item.invalidReason,
+    },
+    isExcluded: item.isExcluded,
+    includeDescendants: item.includeDescendants,
+    includeMapped: item.includeMapped,
   })),
 }))
 
@@ -48,6 +69,12 @@ import {
   updateConceptSet,
   deleteConceptSet,
 } from '@/services/concept-set.service'
+import {
+  getRecommendedConcepts,
+  getConceptRecordCounts,
+  compareConceptSets,
+} from '@/services/concept-search.service'
+import type { ComparisonResultItem } from '@/models/concept-set.types'
 
 const mockConceptSetList: ConceptSetListItem[] = [
   { id: 1, name: 'Diabetes Conditions' },
@@ -619,6 +646,363 @@ describe('Concept Sets Store', () => {
 
         expect(store.isConceptInSet(12345)).toBe(false)
       })
+    })
+  })
+
+  describe('Recommended Concepts', () => {
+    function makeItem(conceptId: number, isExcluded = false): ConceptSetItem {
+      return {
+        conceptId,
+        conceptName: `Concept ${conceptId}`,
+        conceptCode: `${conceptId}`,
+        domainId: 'Condition',
+        vocabularyId: 'SNOMED',
+        conceptClassId: 'Clinical Finding',
+        standardConcept: 'S',
+        invalidReason: null,
+        isExcluded,
+        includeDescendants: false,
+        includeMapped: false,
+      }
+    }
+
+    function makeRecommended(conceptId: number): Concept {
+      return {
+        conceptId,
+        conceptName: `Recommended ${conceptId}`,
+        conceptCode: `${conceptId}`,
+        domainId: 'Condition',
+        vocabularyId: 'SNOMED',
+        conceptClassId: 'Clinical Finding',
+        standardConcept: 'S',
+        invalidReason: null,
+      }
+    }
+
+    it('should have correct initial recommended state', () => {
+      const store = useConceptSetsStore()
+      expect(store.recommendedConcepts).toEqual([])
+      expect(store.loadingRecommended).toBe(false)
+      expect(store.isRecommendedAvailable).toBe(true)
+      expect(store.recommendedError).toBeNull()
+    })
+
+    it('should not call service if no current set', async () => {
+      const store = useConceptSetsStore()
+
+      await store.loadRecommendedConcepts('TEST')
+
+      expect(getRecommendedConcepts).not.toHaveBeenCalled()
+      expect(store.recommendedConcepts).toEqual([])
+      expect(store.isRecommendedAvailable).toBe(true)
+      expect(store.recommendedError).toBeNull()
+    })
+
+    it('should not call service if current set has no items', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Empty', items: [] }
+
+      await store.loadRecommendedConcepts('TEST')
+
+      expect(getRecommendedConcepts).not.toHaveBeenCalled()
+      expect(store.recommendedConcepts).toEqual([])
+    })
+
+    it('should not call service if all items are excluded', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = {
+        name: 'AllExcluded',
+        items: [makeItem(1, true), makeItem(2, true)],
+      }
+
+      await store.loadRecommendedConcepts('TEST')
+
+      expect(getRecommendedConcepts).not.toHaveBeenCalled()
+      expect(store.recommendedConcepts).toEqual([])
+    })
+
+    it('should filter out concepts already in the set, enrich with record counts, and set recommendedConcepts', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = {
+        name: 'Test',
+        items: [makeItem(1), makeItem(2, true), makeItem(3)],
+      }
+
+      const recommended = [
+        makeRecommended(2), // already in set (even if excluded)
+        makeRecommended(10),
+        makeRecommended(11),
+      ]
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({
+        available: true,
+        concepts: recommended,
+      })
+      const counts = new Map<
+        number,
+        { recordCount: number; descendantRecordCount: number; personCount: number; descendantPersonCount: number }
+      >([
+        [10, { recordCount: 100, descendantRecordCount: 200, personCount: 50, descendantPersonCount: 75 }],
+        [11, { recordCount: 5, descendantRecordCount: 6, personCount: 3, descendantPersonCount: 4 }],
+      ])
+      vi.mocked(getConceptRecordCounts).mockResolvedValue(counts)
+
+      await store.loadRecommendedConcepts('TEST')
+
+      // Seed = items where !isExcluded, so [1, 3]
+      expect(getRecommendedConcepts).toHaveBeenCalledWith('TEST', [1, 3])
+
+      // 2 was filtered out because it's already in the set
+      expect(store.recommendedConcepts).toHaveLength(2)
+      const ids = store.recommendedConcepts.map((c) => c.conceptId).sort()
+      expect(ids).toEqual([10, 11])
+
+      // Enrichment merged
+      const c10 = store.recommendedConcepts.find((c) => c.conceptId === 10)!
+      expect(c10.recordCount).toBe(100)
+      expect(c10.descendantRecordCount).toBe(200)
+      expect(c10.personCount).toBe(50)
+      expect(c10.descendantPersonCount).toBe(75)
+
+      expect(getConceptRecordCounts).toHaveBeenCalledWith('TEST', expect.arrayContaining([10, 11]))
+      expect(store.isRecommendedAvailable).toBe(true)
+      expect(store.recommendedError).toBeNull()
+      expect(store.loadingRecommended).toBe(false)
+    })
+
+    it('should flip isRecommendedAvailable to false when service returns available:false', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+
+      vi.mocked(getRecommendedConcepts).mockResolvedValue({
+        available: false,
+        concepts: [],
+      })
+
+      await store.loadRecommendedConcepts('TEST')
+
+      expect(store.isRecommendedAvailable).toBe(false)
+      expect(store.recommendedConcepts).toEqual([])
+      expect(store.loadingRecommended).toBe(false)
+      expect(getConceptRecordCounts).not.toHaveBeenCalled()
+    })
+
+    it('should set recommendedError and not flip availability when service throws', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+
+      vi.mocked(getRecommendedConcepts).mockRejectedValue(new Error('boom'))
+
+      await store.loadRecommendedConcepts('TEST')
+
+      expect(store.recommendedError).toContain('boom')
+      expect(store.recommendedConcepts).toEqual([])
+      expect(store.isRecommendedAvailable).toBe(true)
+      expect(store.loadingRecommended).toBe(false)
+    })
+
+    it('should toggle loadingRecommended true during call and false in finally', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Test', items: [makeItem(1)] }
+
+      let resolve: (v: { available: true; concepts: Concept[] }) => void = () => {}
+      const pending = new Promise<{ available: true; concepts: Concept[] }>((r) => {
+        resolve = r
+      })
+      vi.mocked(getRecommendedConcepts).mockReturnValue(pending)
+      vi.mocked(getConceptRecordCounts).mockResolvedValue(new Map())
+
+      const inFlight = store.loadRecommendedConcepts('TEST')
+      // After kicking off, loading should be true and error reset
+      expect(store.loadingRecommended).toBe(true)
+      expect(store.recommendedError).toBeNull()
+
+      resolve({ available: true, concepts: [] })
+      await inFlight
+
+      expect(store.loadingRecommended).toBe(false)
+    })
+  })
+
+  describe('Concept Set Comparison', () => {
+    function makeItem(conceptId: number): ConceptSetItem {
+      return {
+        conceptId,
+        conceptName: `Concept ${conceptId}`,
+        conceptCode: `${conceptId}`,
+        domainId: 'Condition',
+        vocabularyId: 'SNOMED',
+        conceptClassId: 'Clinical Finding',
+        standardConcept: 'S',
+        invalidReason: null,
+        isExcluded: false,
+        includeDescendants: false,
+        includeMapped: false,
+      }
+    }
+
+    function makeComparisonRow(conceptId: number, membership: '1only' | '2only' | 'both'): ComparisonResultItem {
+      return {
+        conceptId,
+        conceptIn1Only: membership === '1only' ? 1 : 0,
+        conceptIn2Only: membership === '2only' ? 1 : 0,
+        conceptIn1And2: membership === 'both' ? 1 : 0,
+        conceptName: `Concept ${conceptId}`,
+        conceptCode: `${conceptId}`,
+        conceptClassId: 'Clinical Finding',
+        domainId: 'Condition',
+        vocabularyId: 'SNOMED',
+        standardConcept: 'S',
+        invalidReason: null,
+        validStartDate: null,
+        validEndDate: null,
+        nameMismatch: false,
+      }
+    }
+
+    it('should have correct initial comparison state', () => {
+      const store = useConceptSetsStore()
+      expect(store.comparison).toEqual([])
+      expect(store.comparisonOtherSet).toBeNull()
+      expect(store.loadingComparison).toBe(false)
+      expect(store.comparisonError).toBeNull()
+    })
+
+    it('should set error and not call service when no current set is loaded', async () => {
+      const store = useConceptSetsStore()
+
+      await store.loadComparison('TEST', 2)
+
+      expect(getConceptSetById).not.toHaveBeenCalled()
+      expect(compareConceptSets).not.toHaveBeenCalled()
+      expect(store.comparison).toEqual([])
+      expect(store.comparisonOtherSet).toBeNull()
+      expect(store.comparisonError).toBe('No concept set loaded')
+    })
+
+    it('should set error and not call service when current set has no items', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { id: 1, name: 'Empty', items: [] }
+
+      await store.loadComparison('TEST', 2)
+
+      expect(getConceptSetById).not.toHaveBeenCalled()
+      expect(compareConceptSets).not.toHaveBeenCalled()
+      expect(store.comparisonError).toBe('No concept set loaded')
+    })
+
+    it('should set error and not call service when comparing with self (same id)', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { id: 7, name: 'Self', items: [makeItem(1)] }
+
+      await store.loadComparison('TEST', 7)
+
+      expect(getConceptSetById).not.toHaveBeenCalled()
+      expect(compareConceptSets).not.toHaveBeenCalled()
+      expect(store.comparisonError).toBe('Cannot compare a concept set with itself')
+    })
+
+    it('happy path: fetches CS2, builds two expressions, calls service, sets comparison + comparisonOtherSet', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = {
+        id: 1,
+        name: 'CS1',
+        items: [makeItem(100), makeItem(101)],
+      }
+
+      const cs2: ConceptSet = {
+        id: 2,
+        name: 'CS2',
+        items: [makeItem(101), makeItem(200)],
+      }
+      vi.mocked(getConceptSetById).mockResolvedValue(cs2)
+
+      const rows: ComparisonResultItem[] = [
+        makeComparisonRow(100, '1only'),
+        makeComparisonRow(200, '2only'),
+        makeComparisonRow(101, 'both'),
+      ]
+      vi.mocked(compareConceptSets).mockResolvedValue(rows)
+
+      await store.loadComparison('TEST', 2)
+
+      expect(getConceptSetById).toHaveBeenCalledWith(2)
+      expect(compareConceptSets).toHaveBeenCalledTimes(1)
+      const [sourceKey, expr1, expr2] = vi.mocked(compareConceptSets).mock.calls[0]
+      expect(sourceKey).toBe('TEST')
+      expect(expr1.items).toHaveLength(2)
+      expect(expr1.items[0].concept.CONCEPT_ID).toBe(100)
+      expect(expr2.items).toHaveLength(2)
+      expect(expr2.items[0].concept.CONCEPT_ID).toBe(101)
+
+      expect(store.comparison).toEqual(rows)
+      expect(store.comparisonOtherSet).toEqual(cs2)
+      expect(store.comparisonError).toBeNull()
+      expect(store.loadingComparison).toBe(false)
+    })
+
+    it('should set comparisonError when CS2 fetch returns null', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { id: 1, name: 'CS1', items: [makeItem(100)] }
+
+      vi.mocked(getConceptSetById).mockResolvedValue(null)
+
+      await store.loadComparison('TEST', 999)
+
+      expect(store.comparisonError).toBe('Other concept set not found')
+      expect(store.comparison).toEqual([])
+      expect(store.comparisonOtherSet).toBeNull()
+      expect(store.loadingComparison).toBe(false)
+      expect(compareConceptSets).not.toHaveBeenCalled()
+    })
+
+    it('should set comparisonError, clear comparison and other set when service throws', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { id: 1, name: 'CS1', items: [makeItem(100)] }
+
+      vi.mocked(getConceptSetById).mockResolvedValue({
+        id: 2,
+        name: 'CS2',
+        items: [makeItem(200)],
+      })
+      vi.mocked(compareConceptSets).mockRejectedValue(new Error('boom'))
+
+      await store.loadComparison('TEST', 2)
+
+      expect(store.comparisonError).toContain('boom')
+      expect(store.comparison).toEqual([])
+      expect(store.comparisonOtherSet).toBeNull()
+      expect(store.loadingComparison).toBe(false)
+    })
+
+    it('should toggle loadingComparison true during call and false in finally', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { id: 1, name: 'CS1', items: [makeItem(100)] }
+
+      vi.mocked(getConceptSetById).mockResolvedValue({
+        id: 2,
+        name: 'CS2',
+        items: [makeItem(200)],
+      })
+
+      let resolve: (v: ComparisonResultItem[]) => void = () => {}
+      const pending = new Promise<ComparisonResultItem[]>((r) => {
+        resolve = r
+      })
+      vi.mocked(compareConceptSets).mockReturnValue(pending)
+
+      const inFlight = store.loadComparison('TEST', 2)
+      // Need to await microtasks so the awaited getConceptSetById resolves
+      // and we reach the compareConceptSets call where loading is set true.
+      await Promise.resolve()
+      await Promise.resolve()
+      expect(store.loadingComparison).toBe(true)
+      expect(store.comparisonError).toBeNull()
+
+      resolve([])
+      await inFlight
+
+      expect(store.loadingComparison).toBe(false)
     })
   })
 })

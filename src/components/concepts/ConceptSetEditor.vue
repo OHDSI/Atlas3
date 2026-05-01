@@ -132,6 +132,20 @@
               />
               {{ t('search.tabs.search', 'Search') }}
             </v-tab>
+            <v-tab value="recommend">
+              <v-icon
+                start
+                icon="mdi-lightbulb-on-outline"
+              />
+              {{ t('cs.manager.tabs.recommend', 'Recommend') }}
+            </v-tab>
+            <v-tab value="compare">
+              <v-icon
+                start
+                icon="mdi-compare"
+              />
+              {{ t('cs.browser.compare.compare', 'Compare') }}
+            </v-tab>
           </v-tabs>
 
           <v-spacer />
@@ -168,6 +182,18 @@
                 @remove-concept="onRemoveConcept"
               />
             </v-window-item>
+
+            <!-- Recommend Tab -->
+            <v-window-item value="recommend">
+              <RecommendTab
+                :active="activeTab === 'recommend'"
+                @concepts-added="onRecommendedConceptsAdded"
+              />
+            </v-window-item>
+
+            <v-window-item value="compare">
+              <CompareTab :active="activeTab === 'compare'" />
+            </v-window-item>
           </v-window>
         </div>
       </div>
@@ -179,15 +205,13 @@
         scrollable
       >
         <v-card>
-          <v-card-title class="d-flex justify-space-between align-center">
-            <span>{{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }}</span>
-            <v-btn
-              icon="mdi-close"
-              variant="text"
-              size="small"
-              @click="showVersionsDialog = false"
-            />
-          </v-card-title>
+          <AppDialogHeader
+            :eyebrow="t('common.history', 'History').value"
+            :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+            :show-close="true"
+            :close-label="t('common.close', 'Close').value"
+            @close="showVersionsDialog = false"
+          />
           <v-card-text class="pa-0">
             <VersionsTabContent
               v-if="showVersionsDialog && props.conceptSet?.id"
@@ -207,9 +231,10 @@
     max-width="440"
   >
     <v-card>
-      <v-card-title class="text-h6">
-        {{ t('common.unsavedChanges', 'Unsaved changes').value }}
-      </v-card-title>
+      <AppDialogHeader
+        :eyebrow="t('common.confirm', 'Confirm').value"
+        :title="t('common.unsavedChanges', 'Unsaved changes').value"
+      />
       <v-card-text>
         {{ t('common.unsavedChangesMessage', 'You have unsaved changes. Are you sure you want to close?').value }}
       </v-card-text>
@@ -240,9 +265,10 @@
     max-width="640"
   >
     <v-card>
-      <v-card-title class="text-h6">
-        {{ t('cs.manager.pasteIdsTitle', 'Paste concept IDs').value }}
-      </v-card-title>
+      <AppDialogHeader
+        :eyebrow="t('cs.manager.pasteIds', 'Paste IDs').value"
+        :title="t('cs.manager.pasteIdsTitle', 'Paste concept IDs').value"
+      />
       <v-card-text>
         <p class="cs-paste__hint">
           {{ t('cs.manager.pasteIdsHint', 'Separate IDs with spaces, commas, semicolons, or newlines. We resolve each ID against the vocabulary before adding.').value }}
@@ -321,9 +347,10 @@
     max-width="440"
   >
     <v-card>
-      <v-card-title class="text-h6">
-        {{ t('common.delete', 'Delete').value }} {{ t('common.conceptSet', 'Concept Set').value }}
-      </v-card-title>
+      <AppDialogHeader
+        :eyebrow="t('common.confirm', 'Confirm').value"
+        :title="`${t('common.delete', 'Delete').value} ${t('common.conceptSet', 'Concept Set').value}`"
+      />
       <v-card-text>
         {{ t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete').value }} "{{ props.conceptSet?.name }}"?
       </v-card-text>
@@ -358,6 +385,9 @@ import type { ConceptSet, Concept } from '@/models/concept-set.types'
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
+import RecommendTab from './RecommendTab.vue'
+import CompareTab from './CompareTab.vue'
+import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getConceptById } from '@/services/concept-search.service'
@@ -685,6 +715,10 @@ function onToggleMapped(conceptId: number) {
 
 function onToggleExclude(conceptId: number) {
   store.toggleConceptFlag(conceptId, 'isExcluded')
+  hasUnsavedChanges.value = true
+}
+
+function onRecommendedConceptsAdded(_count: number) {
   hasUnsavedChanges.value = true
 }
 

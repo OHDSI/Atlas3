@@ -73,6 +73,8 @@
         @cancel="handleCancel"
         @save="handleSave"
         @generate="openGenerationPanel"
+        @export-download="handleExportDownload"
+        @export-copy="handleExportCopy"
       />
     </div>
 
@@ -319,7 +321,7 @@
         </div><!-- /.section-wrapper -->
       </div><!-- /.section-step (2) -->
 
-      <!-- Exit Criteria — Step 3 -->
+      <!-- Exit & Eras — Step 3 -->
       <div
         class="section-step mb-3"
         data-step="3"
@@ -328,17 +330,16 @@
         <div class="section-wrapper section-wrapper--step">
           <div class="section-header">
             <h3 class="section-title">
-              {{ t('components.cohortExpressionEditor.cohortExitTitle') }}
+              {{ t('components.cohortExpressionEditor.exitAndErasTitle', 'Cohort Exit & Eras') }}
             </h3>
-            <span :class="['section-state-chip', `section-state-chip--${exitCriteriaState.tone}`]">
+            <span
+              v-if="exitCriteriaState.tone !== 'muted'"
+              :class="['section-state-chip', `section-state-chip--${exitCriteriaState.tone}`]"
+            >
               {{ exitCriteriaState.label }}
             </span>
             <v-spacer />
             <div class="section-controls">
-              <!-- Segmented button kept (better at-a-glance visibility
-               than a dropdown for 3 mutually-exclusive choices).
-               Labels collapsed to short forms; tooltips reveal the
-               full descriptions on hover. -->
               <span class="section-controls__label">{{ t('components.cohortExpressionEditor.exitStrategyLabel', 'Strategy').value }}</span>
               <v-btn-toggle
                 v-model="exitCriteria.strategy"
@@ -400,23 +401,10 @@
             @select-drug-concept-set="handleSelectDrugConceptSet"
             @select-censoring-concept-set="handleSelectCensoringConceptSet"
           />
-        </div><!-- /.section-wrapper -->
-      </div><!-- /.section-step (3) -->
 
-      <!-- Cohort Eras — Step 4 -->
-      <div
-        class="section-step mb-3"
-        data-step="4"
-      >
-        <span class="section-step-badge">4</span>
-        <div class="section-wrapper section-wrapper--step">
-          <div class="section-header">
-            <h3 class="section-title">
-              {{ t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras') }}
-            </h3>
-            <span :class="['section-state-chip', `section-state-chip--${erasState.tone}`]">
-              {{ erasState.label }}
-            </span>
+          <div class="section-subheader">
+            <span class="text-eyebrow">{{ t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras').value }}</span>
+            <span class="section-subheader__rule" />
           </div>
           <censor-window-editor
             :censor-window="censorWindow"
@@ -426,7 +414,7 @@
             @validation-error="handleCensorWindowValidation"
           />
         </div><!-- /.section-wrapper -->
-      </div><!-- /.section-step (4) -->
+      </div><!-- /.section-step (3) -->
     </div><!-- /.cohort-builder__steps -->
 
     <!-- Concept Set Selection Dialog (shows all system concept sets) -->
@@ -674,7 +662,7 @@ const route = useRoute()
 const cohortStore = useCohortStore()
 const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
-const { importFromFile, downloadAtlasJSON, conversionError } = useAtlasConverter()
+const { importFromFile, downloadAtlasJSON, exportToAtlas, conversionError } = useAtlasConverter()
 const { t } = useI18n()
 
 // Core cohort state
@@ -790,13 +778,6 @@ const exitCriteriaState = computed<SectionState>(() => {
     return { label: 'Drug exposure', tone: 'success' }
   }
   return { label: 'Configured', tone: 'muted' }
-})
-
-const erasState = computed<SectionState>(() => {
-  const pad = collapseSettings.value?.eraPad ?? 0
-  return pad > 0
-    ? { label: `${pad}-day pad`, tone: 'primary' }
-    : { label: 'Default', tone: 'muted' }
 })
 
 // Two-way sync with the parent's inline-edit name + description
@@ -1830,11 +1811,8 @@ async function _handleFileImport(event: Event) {
   }
 }
 
-// @ts-expect-error - Planned feature, not yet implemented in UI
-function _handleExportAtlas() {
-  if (!canSave.value) return
-
-  const cohortDefinition: CohortDefinition = {
+function buildExportCohort(): CohortDefinition {
+  return {
     id: props.id ? Number(props.id) : undefined,
     name: cohortName.value,
     description: cohortDescription.value || undefined,
@@ -1847,16 +1825,39 @@ function _handleExportAtlas() {
     exitCriteria: exitCriteria.value,
     observationPeriod: observationPeriod.value,
   }
+}
 
-  const filename = `${cohortName.value.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_cohort.json`
-  downloadAtlasJSON(cohortDefinition, filename)
+function exportFilename(): string {
+  const slug = cohortName.value.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'cohort'
+  return `${slug}_cohort.json`
+}
 
+function handleExportDownload() {
+  downloadAtlasJSON(buildExportCohort(), exportFilename())
   if (conversionError.value) {
     errorMessage.value = `Export failed: ${conversionError.value}`
     showError.value = true
   } else {
-    successMessage.value = 'Atlas JSON exported successfully'
+    successMessage.value = 'Cohort JSON downloaded'
     showSuccess.value = true
+  }
+}
+
+async function handleExportCopy() {
+  const json = exportToAtlas(buildExportCohort())
+  if (!json || conversionError.value) {
+    errorMessage.value = `Export failed: ${conversionError.value || 'Empty cohort'}`
+    showError.value = true
+    return
+  }
+  try {
+    await navigator.clipboard.writeText(json)
+    successMessage.value = 'Cohort JSON copied to clipboard'
+    showSuccess.value = true
+  } catch (err) {
+    logger.error('CohortBuilder', 'Clipboard copy failed', err)
+    errorMessage.value = 'Could not copy to clipboard'
+    showError.value = true
   }
 }
 
@@ -2227,6 +2228,19 @@ defineExpose({
   font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.section-subheader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 4px;
+  padding: 0 16px;
+}
+.section-subheader__rule {
+  flex: 1;
+  height: 1px;
+  background-color: rgba(var(--v-theme-on-surface), 0.08);
 }
 
 /* ============================================================

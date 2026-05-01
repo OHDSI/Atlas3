@@ -55,6 +55,7 @@
         <CohortSampleDetail
           :sample="selectedSample"
           :loading="detailLoading"
+          :source-key="sourceKey"
         />
       </div>
     </template>

@@ -149,16 +149,15 @@ describe('CharacterizationBuilderView', () => {
     mounted = null
   })
 
-  it('mounts in new mode with empty form, all three tabs, and a disabled Run button', async () => {
+  it('mounts in new mode with empty form, header tabs/icons, and a disabled Run button', async () => {
     mounted = await mountBuilder('/characterizations/new')
 
     const text = mounted.wrapper.text()
-    // After i18n migration, the title in new mode collapsed to "New" (common.new)
     expect(text).toContain('New')
 
     expect(mounted.wrapper.find('[data-testid="char-builder-tab-design"]').exists()).toBe(true)
-    expect(mounted.wrapper.find('[data-testid="char-builder-tab-conceptSets"]').exists()).toBe(true)
-    expect(mounted.wrapper.find('[data-testid="char-builder-tab-versions"]').exists()).toBe(true)
+    // Concept sets and versions live as icon buttons in the action bar (not tabs).
+    expect(mounted.wrapper.find('[data-testid="char-builder-conceptsets-icon"]').exists()).toBe(true)
 
     const runBtn = mounted.wrapper.find('[data-testid="char-builder-run"]')
     expect(runBtn.exists()).toBe(true)

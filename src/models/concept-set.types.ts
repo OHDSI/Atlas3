@@ -22,6 +22,7 @@ export interface Concept {
   descendantRecordCount?: number   // DRC - Descendant Record Count
   personCount?: number       // PC - Person Count
   descendantPersonCount?: number   // DPC - Descendant Person Count
+  relationships?: string[]
 }
 
 // Zod validation schema for Concept
@@ -47,6 +48,7 @@ export const ConceptSearchResponseSchema = z.array(
     CONCEPT_CLASS_ID: z.string(),
     STANDARD_CONCEPT: z.string().nullable(),
     INVALID_REASON: z.string().nullable(),
+    RELATIONSHIPS: z.array(z.string()).optional(),
   })
 )
 
@@ -194,4 +196,46 @@ export interface ConceptSetReference {
   conceptCount?: number
   items?: ConceptSetItem[] // Full concept set items to embed in cohort definition
 }
+
+// ============================================================================
+// Concept Set Comparison
+// ============================================================================
+
+export interface ComparisonResultItem {
+  conceptId: number
+  conceptIn1Only: number
+  conceptIn2Only: number
+  conceptIn1And2: number
+  conceptName: string
+  conceptCode: string
+  conceptClassId: string
+  domainId: string
+  vocabularyId: string
+  standardConcept: string | null
+  invalidReason: string | null
+  validStartDate: string | number | null
+  validEndDate: string | number | null
+  nameMismatch: boolean
+}
+
+export const ComparisonResultItemSchema = z.object({
+  conceptId: z.number(),
+  conceptIn1Only: z.number(),
+  conceptIn2Only: z.number(),
+  conceptIn1And2: z.number(),
+  conceptName: z.string(),
+  conceptCode: z.string(),
+  conceptClassId: z.string(),
+  domainId: z.string(),
+  vocabularyId: z.string(),
+  standardConcept: z.string().nullable().optional().transform((v) => v ?? null),
+  invalidReason: z.string().nullable().optional().transform((v) => v ?? null),
+  validStartDate: z.union([z.string(), z.number()]).nullable().optional().transform((v) => v ?? null),
+  validEndDate: z.union([z.string(), z.number()]).nullable().optional().transform((v) => v ?? null),
+  nameMismatch: z.boolean().optional().default(false),
+})
+
+export const ComparisonResultSchema = z.array(ComparisonResultItemSchema)
+
+export type ComparisonResultResponse = z.infer<typeof ComparisonResultSchema>
 
