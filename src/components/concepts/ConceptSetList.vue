@@ -1,36 +1,43 @@
 <template>
   <div class="concept-set-list">
-    <!-- Header with Search and Add Button -->
-    <v-card
-      flat
-      class="mb-4"
-    >
-      <v-card-text>
-        <div class="d-flex align-center justify-space-between gap-4">
-          <v-text-field
-            :model-value="store.filterTerm"
-            :placeholder="t('common.search', 'Search').value"
-            prepend-inner-icon="mdi-magnify"
-            clearable
-            variant="outlined"
-            density="comfortable"
-            hide-details
-            style="max-width: 400px;"
-            @update:model-value="onFilterChange"
-            @click:clear="onFilterClear"
-          />
+    <!-- Toolbar: search + status chip + primary action.
+         Sits directly on the page card surface — no inner v-card. -->
+    <div class="concept-set-list__toolbar">
+      <v-text-field
+        :model-value="store.filterTerm"
+        :placeholder="t('common.search', 'Search concept sets…').value"
+        prepend-inner-icon="mdi-magnify"
+        clearable
+        variant="outlined"
+        density="comfortable"
+        hide-details
+        class="concept-set-list__search"
+        @update:model-value="onFilterChange"
+        @click:clear="onFilterClear"
+      />
 
-          <v-btn
-            color="primary"
-            variant="flat"
-            :disabled="!canCreate"
-            @click="onAddClick"
-          >
-            {{ t('components.conceptSetBuilder.newConceptSet', 'Add concept set') }}
-          </v-btn>
-        </div>
-      </v-card-text>
-    </v-card>
+      <v-chip
+        v-if="!store.loading && store.filteredSets.length > 0"
+        size="small"
+        variant="tonal"
+        color="primary"
+        class="concept-set-list__count"
+      >
+        {{ countLabel }}
+      </v-chip>
+
+      <v-spacer />
+
+      <v-btn
+        color="primary"
+        variant="flat"
+        prepend-icon="mdi-plus"
+        :disabled="!canCreate"
+        @click="onAddClick"
+      >
+        {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
+      </v-btn>
+    </div>
 
     <!-- Error Alert -->
     <v-alert
@@ -45,19 +52,24 @@
     </v-alert>
 
     <!-- Concept Sets Table -->
-    <v-card>
+    <SurfaceCard
+      v-if="store.loading || store.filteredSets.length > 0"
+      padding="none"
+    >
       <v-data-table
         v-model:sort-by="sortBy"
         :headers="headers"
         :items="store.filteredSets"
         :loading="store.loading"
         :items-per-page="itemsPerPage"
-        :items-per-page-text="t('datatable.language.lengthMenu', 'Rows per page:').value"
-        class="elevation-1"
+        :items-per-page-text="t('datatable.itemsPerPage', 'Rows per page:').value"
+        hover
+        class="concept-set-list__table"
+        @click:row="onRowClick"
       >
         <!-- Name -->
         <template #item.name="{ item }">
-          {{ item.name }}
+          <span class="concept-set-list__name">{{ item.name }}</span>
         </template>
 
         <!-- Created Date -->
@@ -75,37 +87,16 @@
           {{ getAuthorName(item.createdBy) }}
         </template>
 
-        <!-- Actions Column -->
+        <!-- Actions Column — hover-only for a quieter list. -->
         <template #item.actions="{ item }">
-          <div class="d-flex justify-center">
+          <div class="concept-set-list__actions">
             <v-btn
-              icon="mdi-pencil"
+              icon="mdi-pencil-outline"
               size="small"
               variant="text"
               :disabled="!access.canWrite(item.id)"
-              @click="onEditClick(item.id)"
+              @click.stop="onEditClick(item.id)"
             />
-          </div>
-        </template>
-
-        <!-- No data message -->
-        <template #no-data>
-          <div class="text-center py-8">
-            <v-icon
-              size="64"
-              color="grey-lighten-1"
-            >
-              mdi-folder-open
-            </v-icon>
-            <p class="text-body-1 mt-4 text-grey">
-              {{ store.loading ? t('common.loadingWithDots', 'Loading...') : t('common.noData', 'No concept sets found') }}
-            </p>
-            <p
-              v-if="!store.loading"
-              class="text-caption text-grey"
-            >
-              {{ t('cs.manager.emptyStateMessage', 'Click "Add concept set" to create your first concept set') }}
-            </p>
           </div>
         </template>
 
@@ -119,7 +110,34 @@
           />
         </template>
       </v-data-table>
-    </v-card>
+    </SurfaceCard>
+
+    <!-- Empty state: filled MD3 container, no border. Sits where the
+         table would have been so the toolbar above stays the focus. -->
+    <div
+      v-else
+      class="concept-set-list__empty"
+    >
+      <v-icon
+        icon="mdi-bookmark-multiple-outline"
+        size="36"
+        class="concept-set-list__empty-icon"
+      />
+      <p class="concept-set-list__empty-text">
+        {{ store.filterTerm
+          ? t('cs.manager.emptyFilterMessage', 'No concept sets match your search.')
+          : t('cs.manager.emptyStateMessage', 'No concept sets yet — create one to start curating concepts.') }}
+      </p>
+      <v-btn
+        v-if="!store.filterTerm"
+        color="primary"
+        variant="flat"
+        prepend-icon="mdi-plus"
+        @click="onAddClick"
+      >
+        {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
+      </v-btn>
+    </div>
 
     <!-- Delete Confirmation Dialog -->
     <v-dialog
@@ -176,6 +194,7 @@ import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()
@@ -196,6 +215,12 @@ const itemsPerPage = ref(25)
 const deleteDialog = ref(false)
 const deleteTarget = ref<ConceptSetListItem | null>(null)
 const sortBy = ref([{ key: 'modifiedDate', order: 'desc' as const }])
+
+const countLabel = computed(() => {
+  const n = store.filteredSets.length
+  // Pluralize as the design uses a short status chip.
+  return n === 1 ? '1 set' : `${n} sets`
+})
 
 // ============================================================================
 // Table Configuration
@@ -246,6 +271,13 @@ function onEditClick(id: number | string | undefined) {
   }
 }
 
+// Vuetify 3 v-data-table emits (event, { item }) for click:row.
+function onRowClick(_event: Event, payload: { item: ConceptSetListItem }) {
+  if (payload?.item?.id !== undefined) {
+    store.openEditEditor(payload.item.id)
+  }
+}
+
 function onDeleteClick(id: number | string) {
   const item = store.filteredSets.find(s => s.id === id)
   deleteTarget.value = item || null
@@ -274,11 +306,68 @@ async function onSave() {
   width: 100%;
 }
 
-.gap-2 {
-  gap: 8px;
+.concept-set-list__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.gap-4 {
-  gap: 16px;
+.concept-set-list__search {
+  flex: 1 1 320px;
+  max-width: 420px;
+}
+
+.concept-set-list__count {
+  /* Tonal chip aligned with the search input height. */
+  align-self: center;
+}
+
+.concept-set-list__name {
+  color: rgb(var(--v-theme-primary));
+  font-weight: 500;
+}
+
+/* Row pointer affordance — rows are clickable to open the editor. */
+.concept-set-list__table :deep(tbody tr) {
+  cursor: pointer;
+}
+
+/* Hover-only action icons keeps the long list reading as data first.
+ * Focus-within handles keyboard users and the always-visible state
+ * during editing flows. */
+.concept-set-list__actions {
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.concept-set-list__table :deep(tbody tr:hover) .concept-set-list__actions,
+.concept-set-list__table :deep(tbody tr:focus-within) .concept-set-list__actions {
+  opacity: 1;
+}
+
+.concept-set-list__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 56px 24px;
+  border-radius: 12px;
+  background: rgb(var(--v-theme-surface-variant));
+}
+
+.concept-set-list__empty-icon {
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.7;
+}
+
+.concept-set-list__empty-text {
+  margin: 0;
+  font-size: 14px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  text-align: center;
 }
 </style>

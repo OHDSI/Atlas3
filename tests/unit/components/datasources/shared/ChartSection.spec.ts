@@ -27,23 +27,16 @@ describe('ChartSection', () => {
   it('should render as a card', () => {
     const wrapper = mountComponent()
 
-    expect(wrapper.findComponent({ name: 'VCard' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'SurfaceCard' }).exists()).toBe(true)
     expect(wrapper.find('.chart-section').exists()).toBe(true)
-  })
-
-  it('should have outlined variant', () => {
-    const wrapper = mountComponent()
-
-    const card = wrapper.findComponent({ name: 'VCard' })
-    expect(card.props('variant')).toBe('outlined')
   })
 
   it('should display title', () => {
     const wrapper = mountComponent({ title: 'Age Distribution' })
 
-    const cardTitle = wrapper.findComponent({ name: 'VCardTitle' })
-    expect(cardTitle.exists()).toBe(true)
-    expect(cardTitle.text()).toBe('Age Distribution')
+    const title = wrapper.find('.chart-section__title')
+    expect(title.exists()).toBe(true)
+    expect(title.text()).toBe('Age Distribution')
   })
 
   it('should show skeleton loader when loading', () => {

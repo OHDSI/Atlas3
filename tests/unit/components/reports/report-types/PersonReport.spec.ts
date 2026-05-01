@@ -56,12 +56,12 @@ describe('PersonReport', () => {
 
   it('should render year of birth section', () => {
     const wrapper = mountComponent()
-    expect(wrapper.findAllComponents({ name: 'VCard' }).length).toBeGreaterThan(0)
+    expect(wrapper.findAllComponents({ name: 'SurfaceCard' }).length).toBeGreaterThan(0)
   })
 
   it('should render demographics section', () => {
     const wrapper = mountComponent()
-    expect(wrapper.findAllComponents({ name: 'VCard' }).length).toBeGreaterThan(0)
+    expect(wrapper.findAllComponents({ name: 'SurfaceCard' }).length).toBeGreaterThan(0)
   })
 
   it('should show loading skeletons initially', async () => {
@@ -115,7 +115,7 @@ describe('PersonReport', () => {
 
   it('should have gender, race, and ethnicity pie chart sections', () => {
     const wrapper = mountComponent()
-    const cards = wrapper.findAllComponents({ name: 'VCard' })
+    const cards = wrapper.findAllComponents({ name: 'SurfaceCard' })
     expect(cards.length).toBeGreaterThan(1)
   })
 })

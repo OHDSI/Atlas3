@@ -12,7 +12,7 @@ vi.mock('@/composables/useI18n', async () => {
 })
 
 import CensorWindowEditor from '@/components/cohort-builder/CensorWindowEditor.vue'
-import type { Period } from '@/models/cohort.types'
+import type { CensorWindow, CollapseSettings } from '@/models/cohort.types'
 
 const vuetify = createVuetify({
   components,
@@ -25,117 +25,116 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }))
 
-describe('CensorWindowEditor', () => {
+describe('CensorWindowEditor (Cohort Eras)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
-  const createWrapper = (censorWindow?: Period | null) => {
+  function createWrapper(opts: {
+    censorWindow?: CensorWindow | null
+    collapseSettings?: CollapseSettings
+  } = {}) {
     return mount(CensorWindowEditor, {
-      global: {
-        plugins: [vuetify],
-      },
+      global: { plugins: [vuetify] },
       props: {
-        modelValue: censorWindow,
+        censorWindow: opts.censorWindow ?? null,
+        collapseSettings: opts.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 },
       },
     })
   }
 
-  it('should render censor window editor', () => {
+  it('renders the era pad row by default', () => {
     const wrapper = createWrapper()
-    expect(wrapper.find('.censor-window-editor').exists()).toBe(true)
+    expect(wrapper.find('.era-pad-row').exists()).toBe(true)
+    expect(wrapper.find('.era-pad-row__input').exists()).toBe(true)
   })
 
-  it('should display start date and end date fields', () => {
-    const wrapper = createWrapper()
-    const textFields = wrapper.findAllComponents({ name: 'VTextField' })
-    const selects = wrapper.findAllComponents({ name: 'VSelect' })
-
-    // Should have 2 text fields (offset inputs) and 2 selects (date field selectors)
-    expect(textFields.length).toBeGreaterThanOrEqual(2)
-    expect(selects.length).toBeGreaterThanOrEqual(2)
+  it('shows the era pad value from collapseSettings', async () => {
+    const wrapper = createWrapper({ collapseSettings: { collapseType: 'ERA', eraPad: 30 } })
+    await wrapper.vm.$nextTick()
+    const input = wrapper.find('.era-pad-row__input input').element as HTMLInputElement
+    expect(input.value).toBe('30')
   })
 
-  it('should populate fields with provided values', () => {
-    const censorWindow: Period = {
-      startDate: {
-        dateField: 'START_DATE',
-        offset: 0
+  it('hides trim options behind a toggle when no censor dates are set', () => {
+    const wrapper = createWrapper()
+    expect(wrapper.find('.trim-toggle').exists()).toBe(true)
+    expect(wrapper.find('.trim-rows').exists()).toBe(false)
+  })
+
+  it('shows trim options inline when a censor date is preset', () => {
+    const wrapper = createWrapper({ censorWindow: { startDate: '2020-01-01', endDate: null } })
+    expect(wrapper.find('.trim-toggle').exists()).toBe(false)
+    expect(wrapper.find('.trim-rows').exists()).toBe(true)
+  })
+
+  it('reveals trim options after clicking the add-trim-options link', async () => {
+    const wrapper = createWrapper()
+    await wrapper.find('.trim-toggle').trigger('click')
+    expect(wrapper.find('.trim-rows').exists()).toBe(true)
+  })
+
+  it('emits collapseSettings on era pad blur', async () => {
+    const wrapper = createWrapper()
+    const input = wrapper.find('.era-pad-row__input input')
+    await input.setValue('14')
+    await input.trigger('blur')
+    const emitted = wrapper.emitted('update:collapseSettings')
+    expect(emitted).toBeTruthy()
+    expect(emitted![emitted!.length - 1]).toEqual([{ collapseType: 'ERA', eraPad: 14 }])
+  })
+
+  it('emits censorWindow with both date strings when start and end are set', async () => {
+    const wrapper = createWrapper({
+      censorWindow: { startDate: '2020-01-01', endDate: '2020-12-31' },
+    })
+    await wrapper.vm.$nextTick()
+    const inputs = wrapper.findAll('.trim-row__input input')
+    expect(inputs.length).toBe(2)
+    await inputs[0].setValue('2021-01-01')
+    const emitted = wrapper.emitted('update:censorWindow')
+    expect(emitted).toBeTruthy()
+    const last = emitted![emitted!.length - 1][0] as CensorWindow
+    expect(last.startDate).toBe('2021-01-01')
+    expect(last.endDate).toBe('2020-12-31')
+  })
+
+  it('emits undefined when both censor dates are cleared', async () => {
+    const wrapper = createWrapper({ censorWindow: { startDate: '2020-01-01', endDate: null } })
+    await wrapper.vm.$nextTick()
+    const inputs = wrapper.findAll('.trim-row__input input')
+    await inputs[0].setValue('')
+    const emitted = wrapper.emitted('update:censorWindow')
+    expect(emitted).toBeTruthy()
+    const last = emitted![emitted!.length - 1][0]
+    expect(last).toBeUndefined()
+  })
+
+  it('emits a warning validation error when start date is after end date', async () => {
+    const wrapper = createWrapper({
+      censorWindow: { startDate: '2020-01-01', endDate: '2020-12-31' },
+    })
+    await wrapper.vm.$nextTick()
+    const inputs = wrapper.findAll('.trim-row__input input')
+    // Push the start date past the end date — should emit an order warning
+    await inputs[0].setValue('2021-06-01')
+    const errors = wrapper.emitted('validation-error')
+    expect(errors).toBeTruthy()
+    const last = errors![errors!.length - 1][0] as Array<{ severity: string }>
+    expect(last.length).toBe(1)
+    expect(last[0].severity).toBe('warning')
+  })
+
+  it('disables inputs when disabled prop is set', async () => {
+    const wrapper = mount(CensorWindowEditor, {
+      global: { plugins: [vuetify] },
+      props: {
+        censorWindow: null,
+        collapseSettings: { collapseType: 'ERA', eraPad: 0 },
+        disabled: true,
       },
-      endDate: {
-        dateField: 'END_DATE',
-        offset: 365
-      }
-    }
-
-    const wrapper = createWrapper(censorWindow)
-
-    // Verify the component exists
-    expect(wrapper.find('.censor-window-editor').exists()).toBe(true)
-  })
-
-  it('should emit update when start offset changes', async () => {
-    const wrapper = createWrapper({
-      startDate: { dateField: 'START_DATE', offset: 0 },
-      endDate: { dateField: 'END_DATE', offset: 0 }
     })
-
-    const textFields = wrapper.findAllComponents({ name: 'VTextField' })
-    expect(textFields.length).toBeGreaterThan(0)
-
-    // Directly call the update methods on the component
-    // This simulates what happens when the user interacts with the fields
-    wrapper.vm.localStartOffset = 10
-    await wrapper.vm.updateStartDate()
-    await wrapper.vm.$nextTick()
-
-    // Check if update was emitted
-    const emitted = wrapper.emitted('update:modelValue')
-    expect(emitted).toBeDefined()
-    if (emitted && emitted.length > 0) {
-      expect(emitted[0][0]).toBeDefined()
-    }
-  })
-
-  it('should emit validation warning when start > end', async () => {
-    const censorWindow: Period = {
-      startDate: { dateField: 'START_DATE', offset: 100 },
-      endDate: { dateField: 'END_DATE', offset: 50 }
-    }
-
-    const wrapper = createWrapper(censorWindow)
-    await wrapper.vm.$nextTick()
-
-    // Component should detect invalid range
-    // Note: validation-error event may or may not be emitted depending on initialization
-    // The important thing is the component renders the warning
-    const alert = wrapper.findComponent({ name: 'VAlert' })
-    expect(alert.exists()).toBe(true)
-  })
-
-  it('should clear censor window when clear button is clicked', async () => {
-    const wrapper = createWrapper({
-      startDate: { dateField: 'START_DATE', offset: 0 },
-      endDate: { dateField: 'END_DATE', offset: 365 }
-    })
-
-    const clearButton = wrapper.findAllComponents({ name: 'VBtn' }).find(btn =>
-      btn.text().includes('Clear')
-    )
-
-    expect(clearButton).toBeDefined()
-    if (clearButton) {
-      await clearButton.trigger('click')
-      await wrapper.vm.$nextTick()
-
-      const emitted = wrapper.emitted('update:modelValue')
-      expect(emitted).toBeTruthy()
-      expect(emitted?.[emitted.length - 1][0]).toBeNull()
-    }
-  })
-
-  it('should handle null modelValue gracefully', () => {
-    const wrapper = createWrapper(null)
-    expect(wrapper.find('.censor-window-editor').exists()).toBe(true)
+    const eraInput = wrapper.find('.era-pad-row__input input')
+    expect((eraInput.element as HTMLInputElement).disabled).toBe(true)
   })
 })

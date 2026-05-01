@@ -60,41 +60,35 @@ describe('CohortFilters', () => {
   })
 
   describe('Rendering', () => {
-    it('should render expansion panel', () => {
+    it('should render the inline filter bar with always-visible search', () => {
       const wrapper = mountComponent()
 
-      expect(wrapper.findComponent({ name: 'VExpansionPanels' }).exists()).toBe(true)
+      // Refresh: replaced the v-expansion-panel with an inline filter
+      // bar. The search input is always visible; the rest is behind a
+      // "Filters" menu button.
+      expect(wrapper.find('.cohort-filters__bar').exists()).toBe(true)
+      expect(wrapper.findComponent({ name: 'VTextField' }).exists()).toBe(true)
     })
 
-    it('should display filter icon and title', () => {
+    it('should render the Filters menu activator button', () => {
       const wrapper = mountComponent()
 
-      const title = wrapper.find('.cohort-filters__title')
-      expect(title.exists()).toBe(true)
-      expect(title.text()).toBeTruthy()
+      const menuBtn = wrapper.find('.cohort-filters__menu-btn')
+      expect(menuBtn.exists()).toBe(true)
     })
 
-    it('should show badge when filters are active', () => {
+    it('should show an active-count chip on the menu button when filters are active', () => {
       const wrapper = mountComponent({ activeFilterCount: 3 })
 
-      const badge = wrapper.findComponent({ name: 'VBadge' })
-      expect(badge.exists()).toBe(true)
-      expect(badge.props('content')).toBe(3)
+      const countChip = wrapper.find('.cohort-filters__menu-count')
+      expect(countChip.exists()).toBe(true)
+      expect(countChip.text()).toContain('3')
     })
 
-    it('should not show badge when no filters are active', () => {
+    it('should not show the count chip when no filters are active', () => {
       const wrapper = mountComponent({ activeFilterCount: 0 })
 
-      const badges = wrapper.findAllComponents({ name: 'VBadge' })
-      expect(badges.length).toBe(0)
-    })
-
-    it('should have expansion panel structure', () => {
-      const wrapper = mountComponent()
-
-      // Check that the component has the expansion panel structure
-      const panel = wrapper.findComponent({ name: 'VExpansionPanel' })
-      expect(panel.exists()).toBe(true)
+      expect(wrapper.find('.cohort-filters__menu-count').exists()).toBe(false)
     })
   })
 

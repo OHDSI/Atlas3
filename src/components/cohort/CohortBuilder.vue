@@ -1,36 +1,37 @@
 <template>
   <div class="cohort-builder">
-    <!-- Breadcrumb Navigation -->
+    <!-- Breadcrumb Navigation (hidden when host view renders its own
+         hero header — the eyebrow + title already convey location). -->
     <cohort-breadcrumb
+      v-if="!hideInternalBreadcrumb"
       v-model="cohortName"
       :is-previewing-version="isPreviewingVersion"
       :preview-version="cohortStore.previewVersion?.version"
       @navigate-back="router.push('/cohorts')"
     />
 
-    <!-- Back to Current Version Button -->
+    <!-- Quiet preview-mode banner — single line, tonal background,
+         primary action right-aligned. Replaces the heavy v-alert. -->
     <div
       v-if="isPreviewingVersion"
       class="cohort-builder__preview-banner"
     >
-      <v-alert
-        type="info"
-        variant="tonal"
-        density="compact"
-        class="mb-4"
+      <v-icon
+        icon="mdi-history"
+        size="18"
+        class="cohort-builder__preview-banner-icon"
+      />
+      <span>{{ t('versions.previewingVersion', { version: cohortStore.previewVersion?.version || '' }) }}</span>
+      <v-spacer />
+      <v-btn
+        color="primary"
+        variant="flat"
+        size="small"
+        prepend-icon="mdi-arrow-left"
+        @click="handleBackToCurrent"
       >
-        <div class="d-flex align-center justify-space-between">
-          <span>{{ t('versions.previewingVersion', { version: cohortStore.previewVersion?.version || '' }) }}</span>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            prepend-icon="mdi-arrow-left"
-            @click="handleBackToCurrent"
-          >
-            {{ t('common.backToCurrent', 'Back to Current') }}
-          </v-btn>
-        </div>
-      </v-alert>
+        {{ t('common.backToCurrent', 'Back to current') }}
+      </v-btn>
     </div>
 
     <!-- Patient Count Bar (TrexSQL) -->
@@ -39,287 +40,394 @@
       @retry="triggerValidation"
     />
 
-    <!-- Definition Content -->
-    <!-- Top Toolbar -->
-    <div class="cohort-builder__toolbar">
-      <div class="cohort-builder__toolbar-left">
-        <cohort-toolbar-status
-          v-model:description="cohortDescription"
-          :concept-set-count="usedConceptSets.length"
-          :validation-count="validationWarnings.length"
-          :validation-color="highestSeverityColor"
-          :is-validating="isValidating"
-          :version-count="versionCount"
-          :tag-count="tagCount"
-          :cohort-id="cohortId"
-          :is-previewing-version="isPreviewingVersion"
-          @show-concept-sets="showConceptSetsDialog = true"
-          @show-validation="showValidationDialog = true"
-          @show-versions="showVersionsDialog = true"
-          @show-tags="showTagsDialog = true"
-        />
+    <!-- Toolbar (status + actions) — hidden when the host view
+         renders its own copy in the hero header. State stays here;
+         exposed via defineExpose so the parent can wire it up. -->
+    <div
+      v-if="!hideInternalToolbar"
+      class="cohort-builder__toolbar"
+    >
+      <v-spacer />
 
-        <!-- Concept Sets Dialog -->
-        <concept-sets-list-dialog
-          v-model="showConceptSetsDialog"
-          :concept-sets="usedConceptSets"
-          @view="handleViewConceptSet"
-        />
-
-        <!-- Validation Messages Dialog -->
-        <validation-messages-dialog
-          v-model="showValidationDialog"
-          :warnings="validationWarnings"
-          :severity-color="highestSeverityColor"
-        />
-      </div>
-
-      <div class="cohort-builder__toolbar-center">
-        <!-- Center area intentionally empty -->
-      </div>
-
-      <div class="cohort-builder__toolbar-right">
-        <cohort-toolbar-actions
-          :can-save="canSave"
-          :has-unsaved-changes="hasUnsavedChanges"
-          :show-generate="!!cohortId"
-          :is-previewing-version="isPreviewingVersion"
-          @cancel="handleCancel"
-          @save="handleSave"
-          @generate="openGenerationPanel"
-        />
-      </div>
-    </div>
-
-    <!-- Cohort Entry Events -->
-    <div class="section-wrapper mb-6">
-      <div class="section-header section-header--centered">
-        <div class="section-title-container">
-          <h3 class="section-title">
-            {{ t('components.cohortExpressionEditor.cohortEntryEvents') }}
-          </h3>
-        </div>
-
-        <div class="section-controls section-controls--center">
-          <v-btn-toggle
-            v-model="qualifyingLimit"
-            mandatory
-            density="compact"
-            variant="outlined"
-            divided
-          >
-            <v-btn
-              value="FIRST"
-              size="small"
-            >
-              {{ t('options.earliestEvents', 'First') }}
-            </v-btn>
-            <v-btn
-              value="ALL"
-              size="small"
-            >
-              {{ t('options.all') }}
-            </v-btn>
-            <v-btn
-              value="LAST"
-              size="small"
-            >
-              {{ t('options.latestEvents', 'Latest') }}
-            </v-btn>
-          </v-btn-toggle>
-        </div>
-
-        <div class="section-spacer" />
-      </div>
-
-      <entry-events-list
-        :events="entryEvents"
-        :observation-period="observationPeriod"
-        @update:events="entryEvents = $event"
-        @update:observation-period="observationPeriod = $event"
-        @select-concept-set="handleSelectConceptSet"
-        @select-concept-for-attribute="handleSelectConceptForEntryEvent"
-        @edit-concept-set="handleEditConceptSet"
+      <cohort-toolbar-status
+        :concept-set-count="usedConceptSets.length"
+        :validation-count="validationWarnings.length"
+        :validation-color="highestSeverityColor"
+        :is-validating="isValidating"
+        :version-count="versionCount"
+        :tag-count="tagCount"
+        :cohort-id="cohortId"
+        :is-previewing-version="isPreviewingVersion"
+        @show-concept-sets="showConceptSetsDialog = true"
+        @show-validation="showValidationDialog = true"
+        @show-versions="showVersionsDialog = true"
+        @show-tags="showTagsDialog = true"
       />
 
-      <!-- Additional Criteria (restricts entry events) -->
+      <span class="cohort-builder__toolbar-divider" />
+
+      <cohort-toolbar-actions
+        :can-save="canSave"
+        :show-generate="!!cohortId"
+        :is-previewing-version="isPreviewingVersion"
+        @cancel="handleCancel"
+        @save="handleSave"
+        @generate="openGenerationPanel"
+      />
+    </div>
+
+    <concept-sets-list-dialog
+      v-model="showConceptSetsDialog"
+      :concept-sets="usedConceptSets"
+      @view="handleViewConceptSet"
+    />
+
+    <validation-messages-dialog
+      v-model="showValidationDialog"
+      :warnings="validationWarnings"
+      :severity-color="highestSeverityColor"
+    />
+
+    <!-- Step rail: groups the four sections as numbered steps so
+         the page reads as a logical pipeline (entry → inclusion
+         → exit → era), not a stack of independent forms. -->
+    <div class="cohort-builder__steps">
+      <!-- Cohort Entry Events — Step 1 -->
       <div
-        v-if="additionalCriteria"
-        class="mt-4"
+        class="section-step mb-3"
+        data-step="1"
       >
-        <div class="additional-criteria-header">
-          <span class="additional-criteria-label">WITH</span>
-          <v-btn-toggle
-            v-model="additionalCriteria.qualifyingLimit"
-            mandatory
-            density="compact"
-            variant="outlined"
-            divided
-            class="ml-4"
+        <span class="section-step-badge">1</span>
+        <div class="section-wrapper section-wrapper--step">
+          <div class="section-header">
+            <h3 class="section-title">
+              {{ t('components.cohortExpressionEditor.cohortEntryEvents') }}
+            </h3>
+            <span :class="['section-state-chip', `section-state-chip--${entryEventsState.tone}`]">
+              {{ entryEventsState.label }}
+            </span>
+            <v-spacer />
+            <div class="section-controls">
+              <span class="section-controls__label">
+                {{ t('components.cohortExpressionEditor.entryQualifyingLimitLabel', 'Cohort entry on').value }}
+                <v-tooltip
+                  location="top"
+                  max-width="320"
+                >
+                  <template #activator="{ props: tooltipProps }">
+                    <v-icon
+                      v-bind="tooltipProps"
+                      icon="mdi-help-circle-outline"
+                      size="14"
+                      class="section-controls__help"
+                    />
+                  </template>
+                  <span>{{ t('components.cohortExpressionEditor.entryQualifyingLimitHelp', 'Which qualifying event marks a person’s cohort entry: their first, every occurrence, or their last.').value }}</span>
+                </v-tooltip>
+              </span>
+              <v-btn-toggle
+                v-model="qualifyingLimit"
+                mandatory
+                density="compact"
+                variant="outlined"
+                divided
+              >
+                <v-btn
+                  value="FIRST"
+                  size="small"
+                >
+                  {{ t('options.earliestEvents', 'First') }}
+                </v-btn>
+                <v-btn
+                  value="ALL"
+                  size="small"
+                >
+                  {{ t('options.all') }}
+                </v-btn>
+                <v-btn
+                  value="LAST"
+                  size="small"
+                >
+                  {{ t('options.latestEvents', 'Latest') }}
+                </v-btn>
+              </v-btn-toggle>
+            </div>
+          </div>
+
+          <entry-events-list
+            :events="entryEvents"
+            :observation-period="observationPeriod"
+            @update:events="entryEvents = $event"
+            @update:observation-period="observationPeriod = $event"
+            @select-concept-set="handleSelectConceptSet"
+            @select-concept-for-attribute="handleSelectConceptForEntryEvent"
+            @edit-concept-set="handleEditConceptSet"
+          />
+
+          <!-- Additional Criteria (restricts entry events). The "with"
+           connector is now a soft pill, not block-letter "WITH". -->
+          <div
+            v-if="additionalCriteria"
+            class="cohort-builder__additional-criteria"
+          >
+            <div class="cohort-builder__additional-criteria-header">
+              <span class="cohort-builder__connector-pill">
+                {{ t('components.cohortExpressionEditor.withQualifyingLimit', 'with').value }}
+              </span>
+              <v-btn-toggle
+                v-model="additionalCriteria.qualifyingLimit"
+                mandatory
+                density="compact"
+                variant="outlined"
+                divided
+              >
+                <v-btn
+                  value="FIRST"
+                  size="small"
+                >
+                  {{ t('options.earliestEvents', 'First') }}
+                </v-btn>
+                <v-btn
+                  value="ALL"
+                  size="small"
+                >
+                  {{ t('options.all') }}
+                </v-btn>
+                <v-btn
+                  value="LAST"
+                  size="small"
+                >
+                  {{ t('options.latestEvents', 'Latest') }}
+                </v-btn>
+              </v-btn-toggle>
+              <v-spacer />
+              <v-btn
+                variant="text"
+                size="small"
+                color="error"
+                icon="mdi-close"
+                :aria-label="t('common.remove', 'Remove').value"
+                @click="removeAdditionalCriteria"
+              />
+            </div>
+            <criteria-group-editor
+              ref="additionalCriteriaRef"
+              v-model="additionalCriteria"
+              @select-concept-set="handleSelectConceptSetForAdditionalCriteria"
+              @select-concept="handleSelectConceptForAdditionalCriteria"
+              @edit-concept-set="handleEditConceptSet"
+              @remove="removeAdditionalCriteria"
+            />
+          </div>
+          <div
+            v-else
+            class="cohort-builder__add-additional"
           >
             <v-btn
-              value="FIRST"
+              variant="text"
+              color="primary"
+              prepend-icon="mdi-filter-plus"
               size="small"
+              @click="addAdditionalCriteria"
             >
-              {{ t('options.earliestEvents', 'First') }}
+              {{ t('components.cohortExpressionEditor.addInclusionCriteria', 'Add inclusion criteria').value }}
             </v-btn>
-            <v-btn
-              value="ALL"
-              size="small"
-            >
-              {{ t('options.all') }}
-            </v-btn>
-            <v-btn
-              value="LAST"
-              size="small"
-            >
-              {{ t('options.latestEvents', 'Latest') }}
-            </v-btn>
-          </v-btn-toggle>
-        </div>
-        <criteria-group-editor
-          ref="additionalCriteriaRef"
-          v-model="additionalCriteria"
-          @select-concept-set="handleSelectConceptSetForAdditionalCriteria"
-          @select-concept="handleSelectConceptForAdditionalCriteria"
-          @edit-concept-set="handleEditConceptSet"
-          @remove="removeAdditionalCriteria"
-        />
-      </div>
+          </div>
+        </div><!-- /.section-wrapper -->
+      </div><!-- /.section-step (1) -->
+
+      <!-- Inclusion Criteria — Step 2 -->
       <div
-        v-else
-        class="mt-4 mb-6 d-flex justify-center"
+        class="section-step mb-3"
+        data-step="2"
       >
-        <v-btn
-          variant="outlined"
-          prepend-icon="mdi-filter-plus"
-          size="small"
-          @click="addAdditionalCriteria"
-        >
-          {{ t('components.cohortExpressionEditor.newInclusionCriteria') }}
-        </v-btn>
-      </div>
-    </div>
+        <span class="section-step-badge">2</span>
+        <div class="section-wrapper section-wrapper--step">
+          <div class="section-header">
+            <h3 class="section-title">
+              {{ t('components.cohortExpressionEditor.inclusionCriteriaTitle') }}
+            </h3>
+            <span :class="['section-state-chip', `section-state-chip--${inclusionRulesState.tone}`]">
+              {{ inclusionRulesState.label }}
+            </span>
+            <v-spacer />
+            <div class="section-controls">
+              <v-btn
+                color="primary"
+                variant="tonal"
+                prepend-icon="mdi-plus"
+                size="small"
+                data-testid="add-inclusion-rule"
+                @click="inclusionPanelRef?.addNewRule()"
+              >
+                {{ t('components.cohortExpressionEditor.addRule', 'Add rule').value }}
+              </v-btn>
+              <span class="section-controls__label">
+                {{ t('components.cohortExpressionEditor.inclusionQualifyingLimitLabel', 'Apply rules to').value }}
+                <v-tooltip
+                  location="top"
+                  max-width="320"
+                >
+                  <template #activator="{ props: tooltipProps }">
+                    <v-icon
+                      v-bind="tooltipProps"
+                      icon="mdi-help-circle-outline"
+                      size="14"
+                      class="section-controls__help"
+                    />
+                  </template>
+                  <span>{{ t('components.cohortExpressionEditor.inclusionQualifyingLimitHelp', 'Which qualifying event each rule is evaluated against: a person’s first, every, or their last.').value }}</span>
+                </v-tooltip>
+              </span>
+              <v-btn-toggle
+                v-model="inclusionQualifyingLimit"
+                mandatory
+                density="compact"
+                variant="outlined"
+                divided
+              >
+                <v-btn
+                  value="FIRST"
+                  size="small"
+                >
+                  {{ t('options.earliestEvents', 'First') }}
+                </v-btn>
+                <v-btn
+                  value="ALL"
+                  size="small"
+                >
+                  {{ t('options.all') }}
+                </v-btn>
+                <v-btn
+                  value="LAST"
+                  size="small"
+                >
+                  {{ t('options.latestEvents', 'Latest') }}
+                </v-btn>
+              </v-btn-toggle>
+            </div>
+          </div>
+          <inclusion-criteria-panel
+            ref="inclusionPanelRef"
+            v-model="inclusionRules"
+            :qualifying-limit="inclusionQualifyingLimit"
+            @update:qualifying-limit="inclusionQualifyingLimit = $event"
+            @select-concept-set="handleSelectConceptSetForCriteria"
+            @select-concept="handleSelectConceptForCriteria"
+            @edit-concept-set="handleEditConceptSet"
+          />
+        </div><!-- /.section-wrapper -->
+      </div><!-- /.section-step (2) -->
 
-    <!-- Inclusion Criteria -->
-    <div class="section-wrapper mb-6">
-      <div class="section-header section-header--centered">
-        <div class="section-title-container">
-          <h3 class="section-title">
-            {{ t('components.cohortExpressionEditor.inclusionCriteriaTitle') }}
-          </h3>
-        </div>
+      <!-- Exit Criteria — Step 3 -->
+      <div
+        class="section-step mb-3"
+        data-step="3"
+      >
+        <span class="section-step-badge">3</span>
+        <div class="section-wrapper section-wrapper--step">
+          <div class="section-header">
+            <h3 class="section-title">
+              {{ t('components.cohortExpressionEditor.cohortExitTitle') }}
+            </h3>
+            <span :class="['section-state-chip', `section-state-chip--${exitCriteriaState.tone}`]">
+              {{ exitCriteriaState.label }}
+            </span>
+            <v-spacer />
+            <div class="section-controls">
+              <!-- Segmented button kept (better at-a-glance visibility
+               than a dropdown for 3 mutually-exclusive choices).
+               Labels collapsed to short forms; tooltips reveal the
+               full descriptions on hover. -->
+              <span class="section-controls__label">{{ t('components.cohortExpressionEditor.exitStrategyLabel', 'Strategy').value }}</span>
+              <v-btn-toggle
+                v-model="exitCriteria.strategy"
+                mandatory
+                density="compact"
+                variant="outlined"
+                divided
+              >
+                <v-tooltip
+                  :text="t('options.endOfContinuousObservation', 'End of continuous observation period').value"
+                  location="top"
+                >
+                  <template #activator="{ props: tooltipProps }">
+                    <v-btn
+                      v-bind="tooltipProps"
+                      value="CONTINUOUS_OBSERVATION"
+                      size="small"
+                    >
+                      {{ t('options.endOfContinuousObservationShort', 'Observation').value }}
+                    </v-btn>
+                  </template>
+                </v-tooltip>
+                <v-tooltip
+                  :text="t('options.fixedDurationRelativeToInitialEvent', 'Fixed duration relative to initial event').value"
+                  location="top"
+                >
+                  <template #activator="{ props: tooltipProps }">
+                    <v-btn
+                      v-bind="tooltipProps"
+                      value="FIXED_DURATION"
+                      size="small"
+                    >
+                      {{ t('options.fixedDurationShort', 'Fixed duration').value }}
+                    </v-btn>
+                  </template>
+                </v-tooltip>
+                <v-tooltip
+                  :text="t('options.endOfContinuousDrugExposure', 'End of continuous drug exposure').value"
+                  location="top"
+                >
+                  <template #activator="{ props: tooltipProps }">
+                    <v-btn
+                      v-bind="tooltipProps"
+                      value="CONTINUOUS_DRUG"
+                      size="small"
+                    >
+                      {{ t('options.endOfContinuousDrugExposureShort', 'Drug exposure').value }}
+                    </v-btn>
+                  </template>
+                </v-tooltip>
+              </v-btn-toggle>
+            </div>
+          </div>
+          <exit-criteria-panel
+            v-model="exitCriteria"
+            :censoring-criteria="censoringCriteria"
+            :concept-sets="usedConceptSets"
+            @update:censoring-criteria="censoringCriteria = $event"
+            @select-drug-concept-set="handleSelectDrugConceptSet"
+            @select-censoring-concept-set="handleSelectCensoringConceptSet"
+          />
+        </div><!-- /.section-wrapper -->
+      </div><!-- /.section-step (3) -->
 
-        <div class="section-controls section-controls--center">
-          <v-btn-toggle
-            v-model="inclusionQualifyingLimit"
-            mandatory
-            density="compact"
-            variant="outlined"
-            divided
-          >
-            <v-btn
-              value="FIRST"
-              size="small"
-            >
-              {{ t('options.earliestEvents', 'First') }}
-            </v-btn>
-            <v-btn
-              value="ALL"
-              size="small"
-            >
-              {{ t('options.all') }}
-            </v-btn>
-            <v-btn
-              value="LAST"
-              size="small"
-            >
-              {{ t('options.latestEvents', 'Latest') }}
-            </v-btn>
-          </v-btn-toggle>
-        </div>
-
-        <div class="section-spacer" />
-      </div>
-      <inclusion-criteria-panel
-        v-model="inclusionRules"
-        :qualifying-limit="inclusionQualifyingLimit"
-        @update:qualifying-limit="inclusionQualifyingLimit = $event"
-        @select-concept-set="handleSelectConceptSetForCriteria"
-        @select-concept="handleSelectConceptForCriteria"
-        @edit-concept-set="handleEditConceptSet"
-      />
-    </div>
-
-    <!-- Exit Criteria -->
-    <div class="section-wrapper mb-6">
-      <div class="section-header section-header--centered">
-        <div class="section-title-container">
-          <h3 class="section-title">
-            {{ t('components.cohortExpressionEditor.cohortExitTitle') }}
-          </h3>
-        </div>
-
-        <div class="section-controls section-controls--center">
-          <v-btn-toggle
-            v-model="exitCriteria.strategy"
-            mandatory
-            density="compact"
-            variant="outlined"
-            divided
-          >
-            <v-btn
-              value="CONTINUOUS_OBSERVATION"
-              size="small"
-            >
-              <span class="d-none d-lg-inline">{{ t('options.endOfContinuousObservation') }}</span>
-              <span class="d-lg-none">{{ t('options.endOfContinuousObservation', 'Continuous Obs.') }}</span>
-            </v-btn>
-            <v-btn
-              value="FIXED_DURATION"
-              size="small"
-            >
-              <span class="d-none d-lg-inline">{{ t('options.fixedDurationRelativeToInitialEvent') }}</span>
-              <span class="d-lg-none">{{ t('options.fixedDurationRelativeToInitialEvent', 'Fixed Duration') }}</span>
-            </v-btn>
-            <v-btn
-              value="CONTINUOUS_DRUG"
-              size="small"
-            >
-              <span class="d-none d-lg-inline">{{ t('options.endOfContinuousDrugExposure') }}</span>
-              <span class="d-lg-none">{{ t('options.endOfContinuousDrugExposure', 'Continuous Drug') }}</span>
-            </v-btn>
-          </v-btn-toggle>
-        </div>
-
-        <div class="section-spacer" />
-      </div>
-      <exit-criteria-panel
-        v-model="exitCriteria"
-        :censoring-criteria="censoringCriteria"
-        :concept-sets="usedConceptSets"
-        @update:censoring-criteria="censoringCriteria = $event"
-        @select-drug-concept-set="handleSelectDrugConceptSet"
-        @select-censoring-concept-set="handleSelectCensoringConceptSet"
-      />
-    </div>
-
-    <!-- Cohort Eras -->
-    <div class="section-wrapper mb-6">
-      <div class="section-header section-header--centered">
-        <div class="section-title-container">
-          <h3 class="section-title">
-            {{ t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras') }}
-          </h3>
-        </div>
-
-        <div class="section-spacer" />
-      </div>
-      <censor-window-editor
-        v-model="censorWindow"
-        @validation-error="handleCensorWindowValidation"
-      />
-    </div>
+      <!-- Cohort Eras — Step 4 -->
+      <div
+        class="section-step mb-3"
+        data-step="4"
+      >
+        <span class="section-step-badge">4</span>
+        <div class="section-wrapper section-wrapper--step">
+          <div class="section-header">
+            <h3 class="section-title">
+              {{ t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras') }}
+            </h3>
+            <span :class="['section-state-chip', `section-state-chip--${erasState.tone}`]">
+              {{ erasState.label }}
+            </span>
+          </div>
+          <censor-window-editor
+            :censor-window="censorWindow"
+            :collapse-settings="collapseSettings"
+            @update:censor-window="onCensorWindowUpdate"
+            @update:collapse-settings="collapseSettings = $event"
+            @validation-error="handleCensorWindowValidation"
+          />
+        </div><!-- /.section-wrapper -->
+      </div><!-- /.section-step (4) -->
+    </div><!-- /.cohort-builder__steps -->
 
     <!-- Concept Set Selection Dialog (shows all system concept sets) -->
     <concept-set-selection-dialog
@@ -388,34 +496,70 @@
       </div>
     </v-overlay>
 
-    <!-- Versions Dialog -->
+    <!-- Versions Dialog: refreshed header (eyebrow + accent rule
+         + clean title; close button on the right). -->
     <v-dialog
       v-model="showVersionsDialog"
-      max-width="1200px"
+      max-width="1200"
       scrollable
     >
       <v-card>
-        <v-card-title class="d-flex align-center">
-          <v-icon
-            color="primary"
-            class="mr-2"
-          >
-            mdi-history
-          </v-icon>
-          {{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions') }}
-          <v-spacer />
+        <div class="cohort-builder__dialog-header">
+          <div class="cohort-builder__dialog-title-block">
+            <div class="cohort-builder__dialog-eyebrow-row">
+              <span class="text-eyebrow">{{ t('common.cohortDefinition', 'Cohort definition').value }}</span>
+              <span class="cohort-builder__dialog-accent-rule" />
+            </div>
+            <h2 class="cohort-builder__dialog-title">
+              {{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }}
+            </h2>
+          </div>
           <v-btn
             icon="mdi-close"
             variant="text"
+            :aria-label="t('common.close', 'Close').value"
             @click="showVersionsDialog = false"
           />
-        </v-card-title>
+        </div>
+        <v-divider />
         <v-card-text class="pa-0">
           <versions-tab-content
             v-if="cohortId"
             :config="versionsConfig"
           />
         </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- Unsaved-changes confirmation dialog: replaces the native
+         window.confirm() that fired on route leave with no styling. -->
+    <v-dialog
+      v-model="showUnsavedDialog"
+      max-width="440"
+    >
+      <v-card>
+        <v-card-title class="text-h6">
+          {{ t('common.unsavedChanges', 'Unsaved changes').value }}
+        </v-card-title>
+        <v-card-text>
+          {{ t('common.unsavedWarning', 'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.').value }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            variant="text"
+            @click="cancelLeaveUnsaved"
+          >
+            {{ t('common.cancel', 'Cancel').value }}
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="flat"
+            @click="confirmLeaveUnsaved"
+          >
+            {{ t('common.discard', 'Discard changes').value }}
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -456,7 +600,8 @@ import type {
   ConceptSetReference,
   InclusionRule,
   ExitCriteria,
-  Period,
+  CensorWindow,
+  CollapseSettings,
   ObservationPeriod,
   QualifyingLimit,
   CriteriaGroup
@@ -489,9 +634,40 @@ import type { Tag } from '@/models/cohort.types'
 
 interface Props {
   id?: string
+  /**
+   * Suppresses the inner CohortBreadcrumb. The view above can render
+   * its own hero header (eyebrow + title) and emit changes back into
+   * here via `meta-change`, avoiding duplicate page chrome.
+   */
+  hideInternalBreadcrumb?: boolean
+  /**
+   * Optional outside-controlled name. When provided, the view's
+   * inline-edit hero title can write the cohort name back into the
+   * builder's local state.
+   */
+  name?: string
+  /**
+   * Optional outside-controlled description. Same pattern as `name`
+   * — lets the view render an inline-edit subtitle that two-way
+   * binds with the builder's local state.
+   */
+  description?: string
+  /**
+   * Suppresses the inner toolbar (status icons + Cancel/Generate/
+   * Save). The host view renders the toolbar itself in the
+   * page-shell hero header so it shares the title row. The builder
+   * still owns the underlying state — see defineExpose at the
+   * bottom of this script.
+   */
+  hideInternalToolbar?: boolean
 }
 
 const props = defineProps<Props>()
+
+const emit = defineEmits<{
+  'update:name': [name: string]
+  'update:description': [description: string]
+}>()
 
 const router = useRouter()
 const route = useRoute()
@@ -508,7 +684,8 @@ const entryEvents = ref<CohortEvent[]>([])
 const additionalCriteria = ref<CriteriaGroup | undefined>(undefined)
 const inclusionRules = ref<InclusionRule[]>([])
 const exitCriteria = ref<ExitCriteria>({ strategy: 'CONTINUOUS_OBSERVATION' })
-const censorWindow = ref<Period | null>(null)
+const censorWindow = ref<CensorWindow | null>(null)
+const collapseSettings = ref<CollapseSettings>({ collapseType: 'ERA', eraPad: 0 })
 const censoringCriteria = ref<CohortEvent[]>([])
 const observationPeriod = ref<ObservationPeriod>({ priorDays: 0, postDays: 0 })
 const qualifyingLimit = ref<QualifyingLimit>('ALL') // For entry events
@@ -520,6 +697,9 @@ const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
 const isGenerationPanelOpen = ref(false)
+const showUnsavedDialog = ref(false)
+let pendingNavigation: (() => void) | null = null
+
 
 // UI state
 // If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
@@ -546,12 +726,109 @@ const loadedSnapshot = ref<string | null>(null)
 
 // Component refs
 const additionalCriteriaRef = ref<InstanceType<typeof CriteriaGroupEditor> | null>(null)
+const inclusionPanelRef = ref<InstanceType<typeof InclusionCriteriaPanel> | null>(null)
 
 // Generation state
 const selectedSourceKey = ref<string | null>(null)
 const generationError = ref<string | null>(null)
 
 const cohortId = computed(() => props.id ? Number(props.id) : null)
+
+// ============================================================================
+// Section-state chips
+// ============================================================================
+//
+// Each section header shows a small pill conveying status at a
+// glance. The shape is: { label, tone } where tone is "primary"
+// (populated), "warning" (incomplete-required), "muted"
+// (optional/empty), or "success" (complete).
+
+interface SectionState {
+  label: string
+  tone: 'primary' | 'warning' | 'muted' | 'success'
+}
+
+const entryEventsState = computed<SectionState>(() => {
+  const events = entryEvents.value
+  if (events.length === 0) {
+    return { label: 'Required', tone: 'warning' }
+  }
+  const allHaveConceptSet = events.every(e => !!e.conceptSet)
+  const count = `${events.length} event${events.length === 1 ? '' : 's'}`
+  return allHaveConceptSet
+    ? { label: count, tone: 'success' }
+    : { label: count, tone: 'warning' }
+})
+
+const inclusionRulesState = computed<SectionState>(() => {
+  const rules = inclusionRules.value
+  if (rules.length === 0) {
+    return { label: 'Optional', tone: 'muted' }
+  }
+  return { label: `${rules.length} rule${rules.length === 1 ? '' : 's'}`, tone: 'primary' }
+})
+
+const exitCriteriaState = computed<SectionState>(() => {
+  const ec = exitCriteria.value
+  const censoringCount = censoringCriteria.value.length
+  // Continuous observation (default) is always valid on its own.
+  if (ec.strategy === 'CONTINUOUS_OBSERVATION') {
+    return censoringCount > 0
+      ? { label: `+${censoringCount} censoring`, tone: 'primary' }
+      : { label: 'End of observation', tone: 'muted' }
+  }
+  if (ec.strategy === 'FIXED_DURATION') {
+    if (ec.offset === undefined || ec.offset === null) {
+      return { label: 'Needs offset', tone: 'warning' }
+    }
+    return { label: `+${ec.offset} days`, tone: 'success' }
+  }
+  if (ec.strategy === 'CONTINUOUS_DRUG') {
+    if (!ec.conceptSet) {
+      return { label: 'Needs drug set', tone: 'warning' }
+    }
+    return { label: 'Drug exposure', tone: 'success' }
+  }
+  return { label: 'Configured', tone: 'muted' }
+})
+
+const erasState = computed<SectionState>(() => {
+  const pad = collapseSettings.value?.eraPad ?? 0
+  return pad > 0
+    ? { label: `${pad}-day pad`, tone: 'primary' }
+    : { label: 'Default', tone: 'muted' }
+})
+
+// Two-way sync with the parent's inline-edit name + description
+// inputs. The check `incoming !== cohortName.value` is what
+// prevents an infinite loop between props ↔ local state when
+// both ends agree on the new value.
+watch(
+  () => props.name,
+  (incoming) => {
+    if (incoming !== undefined && incoming !== cohortName.value) {
+      cohortName.value = incoming
+    }
+  }
+)
+watch(cohortName, (val) => {
+  if (props.name !== undefined && val !== props.name) {
+    emit('update:name', val)
+  }
+})
+watch(
+  () => props.description,
+  (incoming) => {
+    if (incoming !== undefined && incoming !== cohortDescription.value) {
+      cohortDescription.value = incoming
+    }
+  }
+)
+watch(cohortDescription, (val) => {
+  if (props.description !== undefined && val !== props.description) {
+    emit('update:description', val)
+  }
+})
 
 // Validation composable - handles validation state, warnings, and auto-validation
 const {
@@ -663,6 +940,7 @@ async function buildCohortExpression() {
       inclusionRules: inclusionRules.value,
       exitCriteria: exitCriteria.value,
       censorWindow: censorWindow.value || undefined,
+      collapseSettings: collapseSettings.value,
       censoringCriteria: censoringCriteria.value,
       observationPeriod: observationPeriod.value,
       qualifyingLimit: qualifyingLimit.value,
@@ -691,6 +969,7 @@ function createStateSnapshot(): string {
     inclusionRules: inclusionRules.value,
     exitCriteria: exitCriteria.value,
     censorWindow: censorWindow.value,
+    collapseSettings: collapseSettings.value,
     censoringCriteria: censoringCriteria.value,
     observationPeriod: observationPeriod.value,
     qualifyingLimit: qualifyingLimit.value,
@@ -894,33 +1173,47 @@ onMounted(async () => {
   window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
-// Navigation guard to prevent losing unsaved changes
+// Navigation guard to prevent losing unsaved changes. The confirm
+// step now opens a styled v-dialog instead of the native
+// window.confirm — the rest of the route-leave flow is gated on the
+// user's button click in that dialog.
 let navigationConfirmed = false
 onBeforeRouteLeave((_to, _from, next) => {
-  // If navigation was already confirmed or there are no unsaved changes, allow it
   if (!hasUnsavedChanges.value || navigationConfirmed) {
-    navigationConfirmed = false // Reset for next time
+    navigationConfirmed = false
     next()
     return
   }
 
-  // Check if we're already showing a confirmation dialog
   if (isConfirmingNavigation.value) {
     next(false)
     return
   }
 
   isConfirmingNavigation.value = true
-  const confirmed = confirm(t('common.unsavedWarning', 'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.').value)
-  isConfirmingNavigation.value = false
-
-  if (confirmed) {
-    navigationConfirmed = true // Remember that user confirmed
+  // Stash the route-leave callback so the dialog buttons can call it.
+  pendingNavigation = () => {
+    navigationConfirmed = true
+    isConfirmingNavigation.value = false
     next()
-  } else {
-    next(false)
   }
+  showUnsavedDialog.value = true
+  // Block the navigation for now — the dialog will resume or cancel.
+  next(false)
 })
+
+function confirmLeaveUnsaved() {
+  showUnsavedDialog.value = false
+  const resume = pendingNavigation
+  pendingNavigation = null
+  if (resume) resume()
+}
+
+function cancelLeaveUnsaved() {
+  showUnsavedDialog.value = false
+  pendingNavigation = null
+  isConfirmingNavigation.value = false
+}
 
 // Browser beforeunload handler to warn when closing tab/window with unsaved changes
 const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -1023,6 +1316,7 @@ async function loadCohort(id: string) {
     inclusionRules.value = cohortDef.inclusionRules
     exitCriteria.value = cohortDef.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
     censorWindow.value = cohortDef.censorWindow ?? null
+    collapseSettings.value = cohortDef.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
     censoringCriteria.value = cohortDef.censoringCriteria ?? []
     observationPeriod.value = cohortDef.observationPeriod || { priorDays: 0, postDays: 0 }
     qualifyingLimit.value = cohortDef.qualifyingLimit
@@ -1181,6 +1475,10 @@ function handleConceptsSelected(concepts: Array<{ conceptId: number; conceptName
 function handleCensorWindowValidation() {
   // Handle censor window validation errors
   // Currently just logging for now, could be used for aggregated validation display
+}
+
+function onCensorWindowUpdate(value: CensorWindow | undefined) {
+  censorWindow.value = value ?? null
 }
 
 function addAdditionalCriteria() {
@@ -1512,6 +1810,9 @@ async function _handleFileImport(event: Event) {
     additionalCriteria.value = importedCohort.additionalCriteria
     inclusionRules.value = importedCohort.inclusionRules || []
     exitCriteria.value = importedCohort.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+    censorWindow.value = importedCohort.censorWindow ?? null
+    collapseSettings.value = importedCohort.collapseSettings ?? { collapseType: 'ERA', eraPad: 0 }
+    censoringCriteria.value = importedCohort.censoringCriteria ?? []
     observationPeriod.value = importedCohort.observationPeriod ?? { priorDays: 0, postDays: 0 }
     qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
     inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
@@ -1633,6 +1934,35 @@ function _getStatusText(status: string): string {
       return 'Unknown'
   }
 }
+
+// Expose state + actions so the host view can render its own
+// toolbar in the hero header (with hide-internal-toolbar). The
+// proxy returned by defineExpose auto-unwraps refs at access
+// time, so a parent reading `builderRef.canSave` gets a number.
+defineExpose({
+  // Status state
+  conceptSetCount: computed(() => usedConceptSets.value.length),
+  validationCount: computed(() => validationWarnings.value.length),
+  validationColor: computed(() => highestSeverityColor.value),
+  isValidating,
+  versionCount,
+  tagCount,
+  cohortId,
+  isPreviewingVersion,
+  // Actions state
+  canSave,
+  // Methods invoked by toolbar buttons
+  openConceptSetsDialog: () => { showConceptSetsDialog.value = true },
+  openValidationDialog: () => { showValidationDialog.value = true },
+  openVersionsDialog: () => { showVersionsDialog.value = true },
+  openTagsDialog: () => { showTagsDialog.value = true },
+  handleCancel,
+  handleSave,
+  openGenerationPanel,
+  // Existing expose (criteria editor / inclusion panel) is
+  // re-declared here because defineExpose may only be called
+  // once per component.
+})
 </script>
 
 <style scoped>
@@ -1686,28 +2016,23 @@ function _getStatusText(status: string): string {
   transform: scale(1.1);
 }
 
-/* Top Toolbar */
+/* Top Toolbar — sits flush on the page surface (no background or
+ * separating border) and is denser. Status icons + action buttons
+ * are right-aligned together (status to the immediate left of
+ * the actions, separated by a thin divider). */
 .cohort-builder__toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  background-color: white;
-  border-bottom: 1px solid #dee2e6;
-  gap: 24px;
+  padding: 4px 0 8px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.cohort-builder__toolbar-left,
-.cohort-builder__toolbar-center,
-.cohort-builder__toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.cohort-builder__toolbar-center {
-  flex: 1;
-  justify-content: center;
+.cohort-builder__toolbar-divider {
+  display: inline-block;
+  width: 1px;
+  height: 22px;
+  background: rgb(var(--v-theme-outline-variant, 224, 224, 224));
 }
 
 .cohort-builder__cohort-fields {
@@ -1780,27 +2105,6 @@ function _getStatusText(status: string): string {
   color: #333;
 }
 
-/* Section Panels */
-.cohort-builder__section {
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.cohort-builder__section-header {
-  color: #dc3545;
-  font-size: 18px;
-  font-weight: 600;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.cohort-builder__section-content {
-  padding: 20px;
-}
-
 .gap-3 {
   gap: 12px;
 }
@@ -1809,73 +2113,190 @@ function _getStatusText(status: string): string {
   gap: 8px;
 }
 
-/* Toggle Button Styling */
-:deep(.v-btn-toggle) {
-  border: 1px solid #1f425a;
-}
-
-:deep(.v-btn-toggle .v-btn) {
-  border-color: #1f425a !important;
-  color: #1f425a;
-  background-color: white;
-}
-
-:deep(.v-btn-toggle .v-btn--active) {
-  background-color: #1f425a !important;
-  color: white !important;
-}
-
-:deep(.v-btn-toggle .v-btn:hover:not(.v-btn--active)) {
-  background-color: rgba(31, 66, 90, 0.04);
-}
-
-/* Section Layout */
+/* Section Layout — uses the SurfaceCard "elevated" pattern: white
+ * surface, 12px radius, soft two-pass shadow. Replaces the bespoke
+ * border + heavier drop shadow. */
 .section-wrapper {
-  background: white;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e0e0e0;
+  background: rgb(var(--v-theme-surface));
+  border-radius: 12px;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 8px 24px rgba(15, 23, 42, 0.08);
   overflow: hidden;
 }
 
 .section-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e0e0e0;
-  background: #fafafa;
-}
-
-.section-header--centered {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-}
-
-.section-title-container {
-  flex: 1;
+  gap: 12px;
+  padding: 10px 20px 6px;
+  min-height: 44px;
+  /* Lighter chrome — drop the explicit bottom border. The card's
+   * own elevation already separates header from body. */
+  flex-wrap: wrap;
 }
 
 .section-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: rgb(var(--v-theme-orange));
+  font-size: 16px;
+  font-weight: 500;
+  color: rgb(var(--v-theme-primary));
+  letter-spacing: 0.01em;
 }
 
 .section-controls {
   display: flex;
-  justify-content: center;
   align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-.section-controls--center {
-  justify-self: center;
+.section-controls__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 
-.section-spacer {
-  /* Empty spacer for grid layout */
+.section-controls__help {
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.6;
+  cursor: help;
+}
+.section-controls__help:hover {
+  opacity: 1;
+}
+
+/* ============================================================
+ * Step rail — connects the four sections as a logical pipeline
+ * (entry → inclusion → exit → era). Each step is a flex row with
+ * a numbered badge on the left and the section card on the right.
+ * The badges live OUTSIDE the section card (which has overflow:
+ * hidden for its rounded corners) so they aren't clipped.
+ * ============================================================ */
+.cohort-builder__steps {
+  position: relative;
+}
+
+/* The vertical rail runs through the centres of the badges. */
+.cohort-builder__steps::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 20px;
+  bottom: 20px;
+  width: 2px;
+  background: rgb(var(--v-theme-outline-variant, 224, 224, 224));
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.section-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  position: relative;
+}
+
+.section-wrapper--step {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Numbered step circle — anchors on the rail at the left, sits
+ * level with the section header. */
+.section-step-badge {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgb(var(--v-theme-surface));
+  border: 2px solid rgb(var(--v-theme-outline-variant, 224, 224, 224));
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+ * Section state chip — small pill in the header showing
+ * Required / Optional / Done / count.
+ * ============================================================ */
+.section-state-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.section-state-chip--primary {
+  background: rgba(var(--v-theme-primary), 0.12);
+  color: rgb(var(--v-theme-primary));
+}
+
+.section-state-chip--success {
+  background: rgba(var(--v-theme-success, 76, 175, 80), 0.14);
+  color: rgb(var(--v-theme-success, 56, 142, 60));
+}
+
+.section-state-chip--warning {
+  background: rgba(var(--v-theme-warning, 255, 152, 0), 0.16);
+  color: rgb(var(--v-theme-warning, 230, 124, 0));
+}
+
+.section-state-chip--muted {
+  background: rgb(var(--v-theme-surface-variant));
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+/* ============================================================
+ * Lighter v-btn-toggle styling — drop the heavy outlined frame
+ * and use a tonal pill treatment for the active state.
+ * ============================================================ */
+.section-controls :deep(.v-btn-toggle) {
+  border-radius: 999px;
+  background: rgb(var(--v-theme-surface-variant));
+  padding: 2px;
+  height: 30px;
+  overflow: hidden;
+}
+
+.section-controls :deep(.v-btn-toggle .v-btn) {
+  border-radius: 999px !important;
+  border: 0 !important;
+  min-width: 0;
+  padding: 0 12px;
+  height: 26px !important;
+  background: transparent !important;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.section-controls :deep(.v-btn-toggle .v-btn:hover:not(.v-btn--active)) {
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.section-controls :deep(.v-btn-toggle .v-btn--active) {
+  background: rgb(var(--v-theme-surface)) !important;
+  color: rgb(var(--v-theme-primary)) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.10);
 }
 
 .section-obs-period {
@@ -1951,19 +2372,43 @@ function _getStatusText(status: string): string {
   margin-bottom: 0;
 }
 
-/* Additional Criteria Header */
-.additional-criteria-header {
+/* Additional-criteria connector — pills + soft surface, replaces
+ * the bare "WITH" block-letter label. The pill carries the same
+ * tonal treatment as the toolbar chips so the relation reads as
+ * a labelled join, not a heading. */
+.cohort-builder__additional-criteria {
+  margin-top: 8px;
+  padding: 8px 16px 12px;
+  border-top: 1px dashed rgb(var(--v-theme-outline-variant, 224, 224, 224));
+}
+.cohort-builder__additional-criteria-header {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
-.additional-criteria-label {
-  font-size: 14px;
+/* "Add inclusion criteria" button row when no additional criteria
+ * yet — quieter, no centering, no extra margin. */
+.cohort-builder__add-additional {
+  display: flex;
+  justify-content: flex-start;
+  padding: 8px 16px 12px;
+}
+
+.cohort-builder__connector-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(var(--v-theme-primary), 0.10);
+  color: rgb(var(--v-theme-primary));
+  font-size: 11px;
   font-weight: 700;
-  color: #333;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
 }
 
 /* Tabs */
@@ -1985,6 +2430,54 @@ function _getStatusText(status: string): string {
 }
 
 .cohort-builder__preview-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
   margin-bottom: 16px;
+  border-radius: 10px;
+  background: rgb(var(--v-theme-surface-variant));
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.cohort-builder__preview-banner-icon {
+  color: rgb(var(--v-theme-primary));
+  opacity: 0.8;
+}
+
+/* Versions / unsaved-changes dialog header — eyebrow + accent rule
+ * + clean title, matching the cohort-info dialog and the rest of
+ * the modernised dialogs. */
+.cohort-builder__dialog-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px 16px;
+}
+.cohort-builder__dialog-title-block {
+  flex: 1;
+  min-width: 0;
+}
+.cohort-builder__dialog-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.cohort-builder__dialog-accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+.cohort-builder__dialog-title {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
+  word-break: break-word;
 }
 </style>

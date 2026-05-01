@@ -94,23 +94,25 @@ describe('CohortTable', () => {
   })
 
   it('shows the empty state with a create button when no cohorts exist', async () => {
+    // Refresh: empty-state copy and CTA changed to sentence case.
     const wrapper = makeWrapper({ cohorts: [] })
-    expect(wrapper.text()).toContain('No cohorts found')
+    expect(wrapper.text()).toMatch(/No cohorts/i)
 
     await wrapper.findComponent({ name: 'VBtn' }).trigger('click')
     expect(wrapper.emitted('create-cohort')).toBeTruthy()
   })
 
   it('emits action events from the row buttons without bubbling row click', async () => {
+    // Refresh: removed the row-level Generate button. Action column
+    // now contains only Info and Delete.
     const wrapper = makeWrapper({ cohorts: [sampleCohorts[0]!] })
 
     await wrapper.find('[data-testid=cohort-table-info]').trigger('click')
-    await wrapper.find('[data-testid=cohort-table-generate]').trigger('click')
     await wrapper.find('[data-testid=cohort-table-delete]').trigger('click')
 
     expect(wrapper.emitted('show-info')).toHaveLength(1)
-    expect(wrapper.emitted('generate')).toHaveLength(1)
     expect(wrapper.emitted('delete')).toHaveLength(1)
+    expect(wrapper.emitted('generate')).toBeFalsy()
   })
 
   it('emits tag-click when a tag chip is clicked', async () => {

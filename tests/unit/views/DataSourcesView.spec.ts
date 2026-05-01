@@ -65,10 +65,10 @@ vi.mock('@/components/datasources/DataSourceSelector.vue', () => ({
   },
 }))
 
-vi.mock('@/components/datasources/ReportTypeSelector.vue', () => ({
+vi.mock('@/components/datasources/DataSourceSidebar.vue', () => ({
   default: {
-    name: 'ReportTypeSelector',
-    template: '<div class="report-type-selector-mock"></div>',
+    name: 'DataSourceSidebar',
+    template: '<nav class="datasource-sidebar-mock"></nav>',
     props: ['modelValue', 'disabled'],
     emits: ['update:modelValue'],
   },
@@ -168,11 +168,11 @@ describe('DataSourcesView', () => {
       expect(wrapper.find('.datasources-view').exists()).toBe(true)
     })
 
-    it('should render page header with title', () => {
+    it('should render page header with title via PageShell', () => {
       wrapper = mountComponent()
-      const header = wrapper.find('.datasources-view__header')
-      expect(header.exists()).toBe(true)
-      expect(header.text()).toContain('Data Sources')
+      const heading = wrapper.find('.page-header__title')
+      expect(heading.exists()).toBe(true)
+      expect(heading.text()).toContain('Data Sources')
     })
 
     it('should render DataSourceSelector component', () => {
@@ -180,9 +180,9 @@ describe('DataSourcesView', () => {
       expect(wrapper.findComponent({ name: 'DataSourceSelector' }).exists()).toBe(true)
     })
 
-    it('should render ReportTypeSelector component', () => {
+    it('should render DataSourceSidebar component', () => {
       wrapper = mountComponent()
-      expect(wrapper.findComponent({ name: 'ReportTypeSelector' }).exists()).toBe(true)
+      expect(wrapper.findComponent({ name: 'DataSourceSidebar' }).exists()).toBe(true)
     })
   })
 
@@ -221,18 +221,19 @@ describe('DataSourcesView', () => {
       store.selectedReportType = 'dashboard'
       await wrapper.vm.$nextTick()
 
-      const subtitle = wrapper.find('.text-subtitle-1')
+      const subtitle = wrapper.find('.page-header__subtitle')
       expect(subtitle.exists()).toBe(true)
       expect(subtitle.text()).toContain('Test Database')
       expect(subtitle.text()).toContain('Dashboard')
     })
 
-    it('should not show subtitle when source is not selected', async () => {
+    it('should fall back to a generic subtitle when nothing is selected', async () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      const subtitle = wrapper.find('.text-subtitle-1')
-      expect(subtitle.exists()).toBe(false)
+      const subtitle = wrapper.find('.page-header__subtitle')
+      expect(subtitle.exists()).toBe(true)
+      expect(subtitle.text().toLowerCase()).toContain('data source')
     })
   })
 
@@ -248,20 +249,20 @@ describe('DataSourcesView', () => {
       expect(selector.props('dataSources')).toEqual(mockSources)
     })
 
-    it('should disable ReportTypeSelector when no source is selected', () => {
+    it('should disable DataSourceSidebar when no source is selected', () => {
       wrapper = mountComponent()
 
-      const selector = wrapper.findComponent({ name: 'ReportTypeSelector' })
+      const selector = wrapper.findComponent({ name: 'DataSourceSidebar' })
       expect(selector.props('disabled')).toBe(true)
     })
 
-    it('should enable ReportTypeSelector when source is selected', async () => {
+    it('should enable DataSourceSidebar when source is selected', async () => {
       wrapper = mountComponent()
 
       store.selectedSourceId = 1
       await wrapper.vm.$nextTick()
 
-      const selector = wrapper.findComponent({ name: 'ReportTypeSelector' })
+      const selector = wrapper.findComponent({ name: 'DataSourceSidebar' })
       expect(selector.props('disabled')).toBe(false)
     })
   })
@@ -360,7 +361,7 @@ describe('DataSourcesView', () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      const emptyState = wrapper.find('.text-center')
+      const emptyState = wrapper.find('.datasources-view__empty')
       expect(emptyState.exists()).toBe(true)
       expect(emptyState.text()).toContain('No data sources available')
     })
@@ -445,10 +446,10 @@ describe('DataSourcesView', () => {
       expect(selector.exists()).toBe(true)
     })
 
-    it('should have data-testid on ReportTypeSelector', () => {
+    it('should render the DataSourceSidebar component', () => {
       wrapper = mountComponent()
-      const selector = wrapper.find('[data-testid="report-type-selector"]')
-      expect(selector.exists()).toBe(true)
+      // The sidebar replaces the old report-type dropdown.
+      expect(wrapper.findComponent({ name: 'DataSourceSidebar' }).exists()).toBe(true)
     })
   })
 
@@ -501,29 +502,26 @@ describe('DataSourcesView', () => {
       expect(wrapper.find('.datasources-view').exists()).toBe(true)
     })
 
-    it('should apply header class', () => {
+    it('should apply selector toolbar class', () => {
       wrapper = mountComponent()
-      expect(wrapper.find('.datasources-view__header').exists()).toBe(true)
+      expect(wrapper.find('.datasources-view__sidebar').exists()).toBe(true)
     })
   })
 
   describe('Accessibility', () => {
-    it('should have semantic heading for page title', () => {
+    it('should have semantic h1 page title via PageShell', () => {
       wrapper = mountComponent()
-      const heading = wrapper.find('h1.text-h4')
+      const heading = wrapper.find('h1.page-header__title')
       expect(heading.exists()).toBe(true)
       expect(heading.text()).toContain('Data Sources')
     })
 
-    it('should use v-container for proper grid layout', () => {
+    it('should render the report-type sidebar and the source picker', () => {
       wrapper = mountComponent()
-      expect(wrapper.findComponent({ name: 'VContainer' }).exists()).toBe(true)
-    })
-
-    it('should use v-row and v-col for responsive layout', () => {
-      wrapper = mountComponent()
-      expect(wrapper.findComponent({ name: 'VRow' }).exists()).toBe(true)
-      expect(wrapper.findComponent({ name: 'VCol' }).exists()).toBe(true)
+      // Sidebar lives in the page body
+      expect(wrapper.findComponent({ name: 'DataSourceSidebar' }).exists()).toBe(true)
+      // Source picker lives in the PageShell #actions slot (page header)
+      expect(wrapper.findComponent({ name: 'DataSourceSelector' }).exists()).toBe(true)
     })
   })
 })

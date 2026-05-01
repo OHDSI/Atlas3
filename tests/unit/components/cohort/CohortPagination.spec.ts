@@ -23,8 +23,6 @@ const defaultProps = {
   itemsPerPage: 10,
   itemsPerPageOptions: [10, 25, 50, 100],
   totalItems: 100,
-  canGoPrevious: false,
-  canGoNext: true,
   rangeDisplay: '1-10 of 100'
 }
 
@@ -73,62 +71,28 @@ describe('CohortPagination', () => {
     expect(wrapper.emitted('update:items-per-page')![0]).toEqual([25])
   })
 
-  it('should disable previous button when canGoPrevious is false', () => {
-    const wrapper = mountComponent({ canGoPrevious: false })
+  it('should render Vuetify v-pagination when there is more than one page', () => {
+    // Refresh: hand-rolled prev/next buttons replaced with v-pagination
+    // (numbered pages, ellipses, keyboard nav for free).
+    const wrapper = mountComponent({ totalItems: 100, itemsPerPage: 10 })
 
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const prevBtn = buttons.find(btn => btn.props('icon') === 'mdi-chevron-left')
-
-    expect(prevBtn?.props('disabled')).toBe(true)
+    expect(wrapper.findComponent({ name: 'VPagination' }).exists()).toBe(true)
   })
 
-  it('should enable previous button when canGoPrevious is true', () => {
-    const wrapper = mountComponent({ canGoPrevious: true })
+  it('should not render v-pagination when there is only one page', () => {
+    const wrapper = mountComponent({ totalItems: 5, itemsPerPage: 10 })
 
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const prevBtn = buttons.find(btn => btn.props('icon') === 'mdi-chevron-left')
-
-    expect(prevBtn?.props('disabled')).toBe(false)
+    expect(wrapper.findComponent({ name: 'VPagination' }).exists()).toBe(false)
   })
 
-  it('should disable next button when canGoNext is false', () => {
-    const wrapper = mountComponent({ canGoNext: false })
+  it('should emit update:page when v-pagination changes page', async () => {
+    const wrapper = mountComponent({ totalItems: 100, itemsPerPage: 10 })
 
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const nextBtn = buttons.find(btn => btn.props('icon') === 'mdi-chevron-right')
+    const pagination = wrapper.findComponent({ name: 'VPagination' })
+    await pagination.vm.$emit('update:modelValue', 3)
 
-    expect(nextBtn?.props('disabled')).toBe(true)
-  })
-
-  it('should enable next button when canGoNext is true', () => {
-    const wrapper = mountComponent({ canGoNext: true })
-
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const nextBtn = buttons.find(btn => btn.props('icon') === 'mdi-chevron-right')
-
-    expect(nextBtn?.props('disabled')).toBe(false)
-  })
-
-  it('should emit previous when previous button clicked', async () => {
-    const wrapper = mountComponent({ canGoPrevious: true })
-
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const prevBtn = buttons.find(btn => btn.props('icon') === 'mdi-chevron-left')
-
-    await prevBtn?.trigger('click')
-
-    expect(wrapper.emitted('previous')).toBeTruthy()
-  })
-
-  it('should emit next when next button clicked', async () => {
-    const wrapper = mountComponent({ canGoNext: true })
-
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const nextBtn = buttons.find(btn => btn.props('icon') === 'mdi-chevron-right')
-
-    await nextBtn?.trigger('click')
-
-    expect(wrapper.emitted('next')).toBeTruthy()
+    expect(wrapper.emitted('update:page')).toBeTruthy()
+    expect(wrapper.emitted('update:page')![0]).toEqual([3])
   })
 
   it('should have aria-live for range display', () => {

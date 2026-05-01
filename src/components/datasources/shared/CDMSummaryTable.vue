@@ -1,35 +1,37 @@
 <template>
-  <v-card
+  <SurfaceCard
     class="cdm-summary-table"
-    variant="outlined"
+    padding="none"
   >
-    <v-card-title class="text-h6 bg-grey-lighten-4">
+    <div class="cdm-summary-table__title">
       {{ t('dataSources.dashboardReport.cdmSummary', 'CDM Summary') }}
-    </v-card-title>
-    <v-card-text>
-      <v-table density="comfortable">
-        <tbody>
-          <tr>
-            <td class="font-weight-medium">
-              {{ t('columns.sourceName', 'Source Name') }}
-            </td>
-            <td>{{ data.sourceName }}</td>
-          </tr>
-          <tr>
-            <td class="font-weight-medium">
-              {{ t('dataSources.numberOfPeople', 'Number of People') }}
-            </td>
-            <td>{{ formatNumber(data.personCount) }}</td>
-          </tr>
-        </tbody>
-      </v-table>
-    </v-card-text>
-  </v-card>
+    </div>
+    <v-table
+      density="comfortable"
+      class="cdm-summary-table__table"
+    >
+      <tbody>
+        <tr>
+          <td class="font-weight-medium">
+            {{ t('columns.sourceName', 'Source Name') }}
+          </td>
+          <td>{{ data.sourceName }}</td>
+        </tr>
+        <tr>
+          <td class="font-weight-medium">
+            {{ t('dataSources.numberOfPeople', 'Number of People') }}
+          </td>
+          <td>{{ formatNumber(data.personCount) }}</td>
+        </tr>
+      </tbody>
+    </v-table>
+  </SurfaceCard>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
 import { formatNumber } from '@/utils/datasource-formatters'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 const { t } = useI18n()
 
@@ -44,8 +46,19 @@ defineProps<Props>()
 </script>
 
 <style scoped>
+.cdm-summary-table__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+  padding: 16px 20px 8px;
+}
+
+.cdm-summary-table__table {
+  background: transparent;
+}
+
 .cdm-summary-table :deep(td) {
-  padding: 12px !important;
+  padding: 12px 20px !important;
 }
 
 .cdm-summary-table :deep(td:first-child) {

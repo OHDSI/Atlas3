@@ -92,7 +92,7 @@ test.describe('Cohorts List', () => {
     await waitForOverlaysToClose(page)
 
     // Get the cohort ID from the card
-    const idText = await firstCard.locator('.cohort-card__meta-value').first().textContent()
+    const idText = await firstCard.locator('.cohort-card__meta-row dd').first().textContent()
     const cohortId = idText?.trim()
 
     // Click the card title area (more reliable than clicking the whole card)
@@ -196,11 +196,11 @@ test.describe('Cohorts List', () => {
 
   test('should show Create Cohort and Import Cohort buttons', async ({ page }) => {
     // Wait for page content to load
-    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('.cohorts-view__toolbar')).toBeVisible({ timeout: 10000 })
 
     // Verify action buttons are visible
-    const createButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /create/i }).first()
-    const importButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /import/i }).first()
+    const createButton = page.locator('.cohorts-view__toolbar').getByRole('button', { name: /create/i }).first()
+    const importButton = page.locator('.cohorts-view__toolbar').getByRole('button', { name: /import/i }).first()
 
     await expect(createButton).toBeVisible()
     await expect(importButton).toBeVisible()
@@ -208,13 +208,13 @@ test.describe('Cohorts List', () => {
 
   test('should navigate to create cohort page', async ({ page }) => {
     // Wait for page content to load
-    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('.cohorts-view__toolbar')).toBeVisible({ timeout: 10000 })
 
     // Ensure no overlays are blocking
     await waitForOverlaysToClose(page)
 
     // Click Create Cohort button
-    const createButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /create/i }).first()
+    const createButton = page.locator('.cohorts-view__toolbar').getByRole('button', { name: /create/i }).first()
     await createButton.click()
 
     // Wait for potential navigation
@@ -227,13 +227,13 @@ test.describe('Cohorts List', () => {
 
   test('should open import dialog', async ({ page }) => {
     // Wait for page content to load
-    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('.cohorts-view__toolbar')).toBeVisible({ timeout: 10000 })
 
     // Ensure no overlays are blocking
     await waitForOverlaysToClose(page)
 
     // Click Import Cohort button
-    const importButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /import/i }).first()
+    const importButton = page.locator('.cohorts-view__toolbar').getByRole('button', { name: /import/i }).first()
     await importButton.click()
 
     // Verify dialog opens (dialog just shows "Import" as title)
@@ -315,7 +315,7 @@ test.describe('Cohorts List', () => {
     await expect(grid).toBeVisible()
 
     // Check that action buttons stack vertically
-    const actions = page.locator('.cohorts-view__actions')
+    const actions = page.locator('.cohorts-view__toolbar')
     await expect(actions).toBeVisible()
   })
 
@@ -432,11 +432,11 @@ test.describe('Accessibility', () => {
   test('should have accessible button labels', async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts')
-    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('.cohorts-view__toolbar')).toBeVisible({ timeout: 10000 })
 
     // Check for aria-labels or accessible names
-    const createButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /create/i }).first()
-    const importButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /import/i }).first()
+    const createButton = page.locator('.cohorts-view__toolbar').getByRole('button', { name: /create/i }).first()
+    const importButton = page.locator('.cohorts-view__toolbar').getByRole('button', { name: /import/i }).first()
 
     await expect(createButton).toBeVisible()
     await expect(importButton).toBeVisible()
@@ -452,7 +452,7 @@ test.describe('Accessibility', () => {
   test('should support keyboard navigation', async ({ page }) => {
     await setupBasicMocks(page)
     await page.goto('/cohorts')
-    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('.cohorts-view__toolbar')).toBeVisible({ timeout: 10000 })
 
     // Tab through interactive elements
     await page.keyboard.press('Tab')
@@ -468,10 +468,10 @@ test.describe('Accessibility', () => {
     await setupBasicMocks(page)
     await page.goto('/cohorts')
     await waitForNetworkIdle(page)
-    await expect(page.locator('.cohorts-view__actions')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('.cohorts-view__toolbar')).toBeVisible({ timeout: 10000 })
 
     // Focus first interactive element
-    const createButton = page.locator('.cohorts-view__actions').getByRole('button', { name: /create/i }).first()
+    const createButton = page.locator('.cohorts-view__toolbar').getByRole('button', { name: /create/i }).first()
     await createButton.focus()
 
     // Verify button has focus (browser applies default focus styles)

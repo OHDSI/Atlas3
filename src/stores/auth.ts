@@ -222,13 +222,35 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async initializeFromStorage() {
+    /**
+     * Synchronous part of auth restoration. Reads the token from
+     * localStorage and applies it to the store immediately so route
+     * guards see `isAuthenticated = true` on the very first
+     * navigation. Must be called BEFORE `app.mount()` — otherwise
+     * the initial-route beforeEach fires with an empty store and
+     * opens the login modal even though the token is valid.
+     */
+    hydrateAuth() {
       const token = storageManager.getToken()
       const authClient = storageManager.getAuthClient()
 
       if (token) {
         this.setToken(token)
-        
+      }
+      if (authClient) {
+        this.setAuthClient(authClient)
+      }
+    },
+
+    async initializeFromStorage() {
+      // Make sure the synchronous hydration has run, in case this
+      // path is hit by a caller that didn't hit hydrateAuth() first.
+      if (!this.token) {
+        this.hydrateAuth()
+      }
+      const token = this.token
+
+      if (token) {
         // Fetch user info if we have a valid token
         if (!this.tokenExpired && this.isTokenValid) {
           try {
@@ -249,10 +271,6 @@ export const useAuthStore = defineStore('auth', {
             }
           }
         }
-      }
-
-      if (authClient) {
-        this.setAuthClient(authClient)
       }
 
       this.setupCrossTabSync()

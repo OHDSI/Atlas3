@@ -1,129 +1,154 @@
 <template>
-  <v-navigation-drawer
-    :model-value="modelValue"
-    location="right"
-    temporary
-    :width="drawerWidth"
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
-    <v-card
-      flat
-      class="h-100 d-flex flex-column"
+  <!-- Teleport to body so the drawer + scrim render outside the
+       page-shell layout. Inline rendering causes the scrim to be
+       constrained to the table region instead of covering the
+       whole viewport. -->
+  <Teleport to="body">
+    <v-navigation-drawer
+      :model-value="modelValue"
+      location="right"
+      temporary
+      :width="drawerWidth"
+      @update:model-value="$emit('update:modelValue', $event)"
     >
-      <!-- Header -->
-      <v-card-title class="d-flex align-center pa-4 border-b">
-        <v-icon
-          class="mr-2"
-          color="primary"
-        >
-          mdi-shape
-        </v-icon>
-        <span class="text-h6">{{ isEditMode ? t('configuration.tagManagement.edit', 'Edit').value : t('common.create', 'New').value }} {{ t('common.conceptSet', 'Concept Set').value }}</span>
-        <v-spacer />
-
-        <!-- Versions Icon with Badge (only in edit mode) -->
-        <v-tooltip
-          v-if="isEditMode && props.conceptSet?.id"
-          :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
-          location="bottom"
-        >
-          <template #activator="{ props: tooltipProps }">
-            <v-badge
-              v-bind="tooltipProps"
-              :content="versionCount"
-              color="primary"
-              class="mr-4"
+      <div class="cs-editor h-100 d-flex flex-column">
+        <!-- Modern editor header: eyebrow + accent rule + inline-edit
+           title (replaces the legacy v-card-title with grey border).
+           Actions are pushed to a single action row aligned with the
+           title block. -->
+        <header class="cs-editor__header">
+          <div class="cs-editor__title-block">
+            <div class="cs-editor__eyebrow-row">
+              <span class="text-eyebrow">{{ eyebrowText }}</span>
+              <span class="cs-editor__accent-rule" />
+            </div>
+            <v-form
+              ref="formRef"
+              v-model="formValid"
+              @submit.prevent
             >
-              <v-icon
-                color="primary"
-                icon="mdi-history"
-                size="small"
-                @click="showVersionsDialog = true"
-              />
-            </v-badge>
-          </template>
-        </v-tooltip>
+              <input
+                :value="form.name"
+                type="text"
+                class="cs-editor__title-input"
+                :placeholder="t('cs.manager.pleaseProvideNameMessage', 'Untitled concept set').value"
+                :disabled="loading"
+                :aria-label="t('columns.name', 'Name').value"
+                @input="onTitleInput"
+              >
+              <p
+                v-if="nameError"
+                class="cs-editor__title-error"
+              >
+                {{ nameError }}
+              </p>
+            </v-form>
+          </div>
 
-        <!-- Action Buttons -->
-        <v-btn
-          v-if="isEditMode"
-          color="error"
-          variant="outlined"
-          :disabled="loading || !canDelete"
-          class="mr-2"
-          @click="onDelete"
-        >
-          {{ t('common.delete', 'Delete') }}
-        </v-btn>
+          <div class="cs-editor__actions">
+            <v-tooltip
+              v-if="isEditMode && props.conceptSet?.id"
+              :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+              location="bottom"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <v-badge
+                  v-bind="tooltipProps"
+                  :content="versionCount"
+                  :model-value="versionCount > 0"
+                  color="primary"
+                  offset-x="6"
+                  offset-y="6"
+                >
+                  <v-btn
+                    icon="mdi-history"
+                    size="small"
+                    variant="text"
+                    @click="showVersionsDialog = true"
+                  />
+                </v-badge>
+              </template>
+            </v-tooltip>
 
-        <v-btn
-          color="primary"
-          variant="flat"
-          :disabled="!formValid || loading || !canSubmit"
-          :loading="loading"
-          class="mr-2"
-          @click="onSave"
-        >
-          {{ isEditMode ? t('common.save', 'Save') : t('common.create', 'Create') }}
-        </v-btn>
+            <v-btn
+              v-if="isEditMode"
+              color="error"
+              variant="text"
+              :disabled="loading || !canDelete"
+              @click="onDelete"
+            >
+              {{ t('common.delete', 'Delete') }}
+            </v-btn>
 
-        <v-btn
-          icon="mdi-close"
-          variant="text"
-          @click="onClose"
-        />
-      </v-card-title>
+            <v-btn
+              color="primary"
+              variant="flat"
+              :disabled="!formValid || loading || !canSubmit"
+              :loading="loading"
+              @click="onSave"
+            >
+              {{ isEditMode ? t('common.save', 'Save') : t('common.create', 'Create') }}
+            </v-btn>
 
-      <!-- Form Fields -->
-      <v-card-text class="flex-grow-1 overflow-y-auto pa-6">
-        <v-form
-          ref="formRef"
-          v-model="formValid"
-        >
-          <v-text-field
-            v-model="form.name"
-            :label="t('columns.name', 'Name').value"
-            :placeholder="t('cs.manager.pleaseProvideNameMessage', 'Enter concept set name').value"
-            variant="outlined"
-            :rules="nameRules"
-            :disabled="loading"
-            class="mb-4"
-          />
+            <v-btn
+              icon="mdi-close"
+              variant="text"
+              :aria-label="t('common.close', 'Close').value"
+              @click="onClose"
+            />
+          </div>
+        </header>
 
-          <v-divider class="my-4" />
-
-          <!-- Tabs for concept building -->
+        <!-- Tabs rail: same shared treatment as the outer page tabs. -->
+        <nav class="page-tabs-rail cs-editor__tabs-rail">
           <v-tabs
             v-model="activeTab"
-            bg-color="grey-lighten-3"
-            class="mb-4"
+            align-tabs="start"
+            density="comfortable"
+            color="primary"
+            slider-color="primary"
+            bg-color="transparent"
+            class="page-tabs"
           >
-            <v-tab value="search">
-              <v-icon start>
-                mdi-magnify
-              </v-icon>
-              {{ t('search.tabs.search', 'Search') }}
-            </v-tab>
             <v-tab value="selected">
-              <v-icon start>
-                mdi-checkbox-marked-circle
-              </v-icon>
-              {{ t('cs.manager.tabs.includedConcepts', 'Selected concepts') }} ({{ itemCount }})
+              <v-icon
+                start
+                icon="mdi-checkbox-marked-circle-outline"
+              />
+              {{ t('cs.manager.tabs.includedConcepts', 'Selected') }}
+              <v-chip
+                size="x-small"
+                variant="tonal"
+                color="primary"
+                class="cs-editor__tab-count"
+              >
+                {{ itemCount }}
+              </v-chip>
+            </v-tab>
+            <v-tab value="search">
+              <v-icon
+                start
+                icon="mdi-magnify"
+              />
+              {{ t('search.tabs.search', 'Search') }}
             </v-tab>
           </v-tabs>
 
-          <v-window
-            v-model="activeTab"
-            class="mt-4"
-          >
-            <!-- Search Tab -->
-            <v-window-item value="search">
-              <ConceptSearchInline
-                @add-concept="onAddConcept"
-                @remove-concept="onRemoveConcept"
-              />
-            </v-window-item>
+          <v-spacer />
 
+          <v-btn
+            variant="text"
+            size="small"
+            prepend-icon="mdi-clipboard-text-outline"
+            class="cs-editor__paste-btn"
+            @click="showPasteDialog = true"
+          >
+            {{ t('cs.manager.pasteIds', 'Paste IDs') }}
+          </v-btn>
+        </nav>
+
+        <div class="cs-editor__body">
+          <v-window v-model="activeTab">
             <!-- Selected Concepts Tab -->
             <v-window-item value="selected">
               <ConceptSetTable
@@ -135,41 +160,196 @@
                 @remove="onRemoveFromSet"
               />
             </v-window-item>
-          </v-window>
-        </v-form>
-      </v-card-text>
-    </v-card>
 
-    <!-- Versions Dialog -->
-    <v-dialog
-      v-model="showVersionsDialog"
-      max-width="1200px"
-      scrollable
-    >
-      <v-card>
-        <v-card-title class="d-flex justify-space-between align-center">
-          <span>{{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }}</span>
-          <v-btn
-            icon="mdi-close"
-            variant="text"
-            size="small"
-            @click="showVersionsDialog = false"
-          />
-        </v-card-title>
-        <v-card-text class="pa-0">
-          <VersionsTabContent
-            v-if="showVersionsDialog && props.conceptSet?.id"
-            :config="versionsConfig"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-  </v-navigation-drawer>
+            <!-- Search Tab -->
+            <v-window-item value="search">
+              <ConceptSearchInline
+                @add-concept="onAddConcept"
+                @remove-concept="onRemoveConcept"
+              />
+            </v-window-item>
+          </v-window>
+        </div>
+      </div>
+
+      <!-- Versions Dialog -->
+      <v-dialog
+        v-model="showVersionsDialog"
+        max-width="1200px"
+        scrollable
+      >
+        <v-card>
+          <v-card-title class="d-flex justify-space-between align-center">
+            <span>{{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }}</span>
+            <v-btn
+              icon="mdi-close"
+              variant="text"
+              size="small"
+              @click="showVersionsDialog = false"
+            />
+          </v-card-title>
+          <v-card-text class="pa-0">
+            <VersionsTabContent
+              v-if="showVersionsDialog && props.conceptSet?.id"
+              :config="versionsConfig"
+            />
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-navigation-drawer>
+  </Teleport>
+
+  <!-- Confirmation dialogs — kept outside the drawer Teleport so they
+       remain in the component's normal render tree but are themselves
+       v-dialogs (which Vuetify already teleports to body). -->
+  <v-dialog
+    v-model="showCloseConfirm"
+    max-width="440"
+  >
+    <v-card>
+      <v-card-title class="text-h6">
+        {{ t('common.unsavedChanges', 'Unsaved changes').value }}
+      </v-card-title>
+      <v-card-text>
+        {{ t('common.unsavedChangesMessage', 'You have unsaved changes. Are you sure you want to close?').value }}
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn
+          variant="text"
+          @click="showCloseConfirm = false"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </v-btn>
+        <v-btn
+          color="error"
+          variant="flat"
+          @click="confirmClose"
+        >
+          {{ t('common.discard', 'Discard changes').value }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- Bulk paste IDs dialog. Resolves IDs against the vocabulary
+       and shows a matched / unmatched summary before adding to the
+       set. -->
+  <v-dialog
+    v-model="showPasteDialog"
+    max-width="640"
+  >
+    <v-card>
+      <v-card-title class="text-h6">
+        {{ t('cs.manager.pasteIdsTitle', 'Paste concept IDs').value }}
+      </v-card-title>
+      <v-card-text>
+        <p class="cs-paste__hint">
+          {{ t('cs.manager.pasteIdsHint', 'Separate IDs with spaces, commas, semicolons, or newlines. We resolve each ID against the vocabulary before adding.').value }}
+        </p>
+        <v-textarea
+          v-model="pasteInput"
+          :placeholder="'201826\n313217, 4329847\n443238'"
+          :disabled="pasteResolving"
+          rows="6"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          class="cs-paste__textarea"
+        />
+
+        <div
+          v-if="pasteResolved.length || pasteUnresolved.length"
+          class="cs-paste__summary"
+        >
+          <div
+            v-if="pasteResolved.length"
+            class="cs-paste__summary-row cs-paste__summary-row--ok"
+          >
+            <v-icon
+              icon="mdi-check-circle-outline"
+              size="18"
+            />
+            <span>{{ t('cs.manager.pasteIdsResolved', 'Resolved').value }}: {{ pasteResolved.length }}</span>
+          </div>
+          <div
+            v-if="pasteUnresolved.length"
+            class="cs-paste__summary-row cs-paste__summary-row--err"
+          >
+            <v-icon
+              icon="mdi-alert-circle-outline"
+              size="18"
+            />
+            <span>{{ t('cs.manager.pasteIdsUnresolved', 'Not found').value }}: {{ pasteUnresolved.join(', ') }}</span>
+          </div>
+        </div>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn
+          variant="text"
+          :disabled="pasteResolving"
+          @click="closePasteDialog"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </v-btn>
+        <v-spacer />
+        <v-btn
+          v-if="!pasteResolved.length && !pasteUnresolved.length"
+          color="primary"
+          variant="flat"
+          :loading="pasteResolving"
+          :disabled="!pasteInput.trim()"
+          @click="resolvePastedIds"
+        >
+          {{ t('cs.manager.pasteIdsResolveBtn', 'Resolve').value }}
+        </v-btn>
+        <v-btn
+          v-else
+          color="primary"
+          variant="flat"
+          :disabled="!pasteResolved.length"
+          @click="applyPastedConcepts"
+        >
+          {{ t('cs.manager.pasteIdsAddBtn', 'Add').value }} {{ pasteResolved.length || '' }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog
+    v-model="showDeleteConfirm"
+    max-width="440"
+  >
+    <v-card>
+      <v-card-title class="text-h6">
+        {{ t('common.delete', 'Delete').value }} {{ t('common.conceptSet', 'Concept Set').value }}
+      </v-card-title>
+      <v-card-text>
+        {{ t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete').value }} "{{ props.conceptSet?.name }}"?
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn
+          variant="text"
+          @click="showDeleteConfirm = false"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </v-btn>
+        <v-btn
+          color="error"
+          variant="flat"
+          @click="confirmDelete"
+        >
+          {{ t('common.delete', 'Delete').value }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup lang="ts">
 import { logger } from '@/utils/logger'
-import { ref, computed, watch, toRef } from 'vue'
+import { ref, computed, inject, watch, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { usePermissions } from '@/composables/usePermissions'
@@ -180,6 +360,7 @@ import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
+import { getConceptById } from '@/services/concept-search.service'
 
 const { t } = useI18n()
 
@@ -228,6 +409,21 @@ const form = ref<FormData>({
 const showVersionsDialog = ref(false)
 const versionCount = ref(0)
 
+// Confirmation dialog state — replaces native window.confirm calls
+// so close + delete confirmations match the rest of the app.
+const showCloseConfirm = ref(false)
+const showDeleteConfirm = ref(false)
+// Bulk paste dialog state.
+const showPasteDialog = ref(false)
+const pasteInput = ref('')
+const pasteResolving = ref(false)
+const pasteResolved = ref<Concept[]>([])
+const pasteUnresolved = ref<number[]>([])
+
+// Source key for vocabulary lookups — falls back to SYNPUF1K, the
+// same default used by the surrounding page.
+const sourceKey = inject<{ value: string }>('sourceKey', { value: 'SYNPUF1K' })
+
 // ============================================================================
 // Computed
 // ============================================================================
@@ -248,6 +444,33 @@ const canSubmit = computed<boolean>(() =>
 const itemCount = computed(() => {
   return store.currentSet?.items?.length || 0
 })
+
+const eyebrowText = computed(() => {
+  if (isEditMode.value && props.conceptSet?.id !== undefined) {
+    return `${t('common.conceptSet', 'Concept set').value} · #${props.conceptSet.id}`
+  }
+  return t('common.conceptSet', 'Concept set').value
+})
+
+// Lightweight name validation surfaced under the inline title input
+// (replaces the v-text-field error-messages slot — the inline title
+// can't host the v-form rules system).
+const nameError = computed(() => {
+  const v = form.value.name
+  if (!v || v.trim().length === 0) {
+    return t('commonErrors.required', 'Name is required').value
+  }
+  if (v.length > 255) {
+    return t('commonErrors.lengthValidation', 'Name must be between 1 and 255 characters').value
+  }
+  return ''
+})
+
+// Drive the v-form's validity off our single field's error so the
+// Save button stays disabled while the name is invalid.
+watch(nameError, (err) => {
+  formValid.value = !err
+}, { immediate: true })
 
 // Fixed width to ensure consistent 85% across all tabs
 const drawerWidth = computed(() => {
@@ -318,10 +541,9 @@ function getCurrentVersionRow(): VersionsTableItem {
 // Validation Rules
 // ============================================================================
 
-const nameRules = [
-  (v: string) => !!v || t('commonErrors.required', 'Name is required').value,
-  (v: string) => (v && v.length >= 1 && v.length <= 255) || t('commonErrors.lengthValidation', 'Name must be between 1 and 255 characters').value,
-]
+// Validation now lives in the nameError computed above so the inline
+// title input can surface its own error message without depending on
+// v-text-field's rules slot.
 
 // ============================================================================
 // Watchers
@@ -343,12 +565,10 @@ watch(() => props.conceptSet, (newSet) => {
   }
 }, { immediate: true })
 
-// Track unsaved changes
-watch(form, () => {
-  if (props.modelValue) {
-    hasUnsavedChanges.value = true
-  }
-}, { deep: true })
+// Unsaved-changes is driven by explicit user actions only — the
+// previous deep watcher on `form` fired on the initial assignment
+// when the editor opened, which marked a freshly-opened set as
+// dirty before the user had touched anything.
 
 // Load version count when concept set changes
 watch(() => props.conceptSet?.id, async (id) => {
@@ -400,22 +620,36 @@ async function onSave() {
   }
 }
 
+function onTitleInput(event: Event) {
+  const target = event.target as HTMLInputElement
+  form.value.name = target.value
+  hasUnsavedChanges.value = true
+}
+
 function onClose() {
   if (hasUnsavedChanges.value) {
-    const confirmed = confirm('You have unsaved changes. Are you sure you want to close?')
-    if (!confirmed) return
+    showCloseConfirm.value = true
+    return
   }
 
   hasUnsavedChanges.value = false
   emit('update:modelValue', false)
 }
 
+function confirmClose() {
+  showCloseConfirm.value = false
+  hasUnsavedChanges.value = false
+  emit('update:modelValue', false)
+}
+
 function onDelete() {
   if (!props.conceptSet?.id) return
+  showDeleteConfirm.value = true
+}
 
-  const confirmed = confirm(`Are you sure you want to delete "${props.conceptSet.name}"?`)
-  if (!confirmed) return
-
+function confirmDelete() {
+  if (!props.conceptSet?.id) return
+  showDeleteConfirm.value = false
   emit('delete', props.conceptSet.id)
   emit('update:modelValue', false)
 }
@@ -453,14 +687,216 @@ function onToggleExclude(conceptId: number) {
   store.toggleConceptFlag(conceptId, 'isExcluded')
   hasUnsavedChanges.value = true
 }
+
+// ============================================================================
+// Bulk paste IDs
+// ============================================================================
+
+// Parse pasted text into a list of unique numeric concept IDs.
+// Accepts whitespace, commas, semicolons, tabs, or newlines as
+// separators; ignores empty tokens.
+function parsePastedIds(input: string): number[] {
+  const seen = new Set<number>()
+  const tokens = input.split(/[\s,;]+/).filter(Boolean)
+  for (const tok of tokens) {
+    const n = Number.parseInt(tok, 10)
+    if (Number.isFinite(n) && n > 0) {
+      seen.add(n)
+    }
+  }
+  return [...seen]
+}
+
+async function resolvePastedIds() {
+  const ids = parsePastedIds(pasteInput.value)
+  if (ids.length === 0) {
+    pasteResolved.value = []
+    pasteUnresolved.value = []
+    return
+  }
+
+  pasteResolving.value = true
+  try {
+    // Concurrently fetch each ID. WebAPI doesn't expose a batch
+    // lookup endpoint here, so Promise.all over individual GETs
+    // is the simplest reliable path.
+    const results = await Promise.all(
+      ids.map(async (id): Promise<{ id: number; concept: Concept | null }> => {
+        try {
+          const concept = await getConceptById(sourceKey.value, id)
+          return { id, concept }
+        } catch (err) {
+          logger.error('ConceptSetEditor', `Failed to resolve concept ${id}`, err)
+          return { id, concept: null }
+        }
+      })
+    )
+
+    pasteResolved.value = results
+      .map(r => r.concept)
+      .filter((c): c is Concept => c !== null)
+    pasteUnresolved.value = results
+      .filter(r => r.concept === null)
+      .map(r => r.id)
+  } finally {
+    pasteResolving.value = false
+  }
+}
+
+function applyPastedConcepts() {
+  for (const concept of pasteResolved.value) {
+    store.addConceptToSet(concept)
+  }
+  hasUnsavedChanges.value = true
+  closePasteDialog()
+  // Switch to the Selected tab so the user can see what landed.
+  activeTab.value = 'selected'
+}
+
+function closePasteDialog() {
+  showPasteDialog.value = false
+  pasteInput.value = ''
+  pasteResolved.value = []
+  pasteUnresolved.value = []
+  pasteResolving.value = false
+}
 </script>
 
 <style scoped>
-.border-t {
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
+.cs-editor {
+  background: rgb(var(--v-theme-surface));
 }
 
-.border-b {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+/* Header: eyebrow + accent rule + inline-edit title + action row.
+ * Matches the page-shell hero header styling so the drawer feels
+ * like a continuation of the workspace, not a different surface. */
+.cs-editor__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 28px 16px;
+}
+
+.cs-editor__title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.cs-editor__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cs-editor__accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+
+/* Inline-edit title: looks like an h2 but is editable. Border lights
+ * up on hover/focus so the affordance is discoverable without
+ * shouting. */
+.cs-editor__title-input {
+  width: 100%;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: rgb(var(--v-theme-primary));
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  padding: 2px 0 4px;
+  outline: none;
+  transition: border-color 120ms ease;
+}
+.cs-editor__title-input::placeholder {
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.7;
+  font-weight: 400;
+}
+.cs-editor__title-input:hover {
+  border-bottom-color: rgba(0, 0, 0, 0.12);
+}
+.cs-editor__title-input:focus {
+  border-bottom-color: rgb(var(--v-theme-primary));
+}
+.cs-editor__title-input:disabled {
+  color: rgb(var(--v-theme-on-surface-variant));
+  cursor: not-allowed;
+}
+
+.cs-editor__title-error {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: rgb(var(--v-theme-error));
+}
+
+.cs-editor__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+/* Tabs rail nests against the page-shell visuals; pull the rail
+ * across the full drawer width (cancel header padding) and keep
+ * the same border-bottom treatment used in the outer page tabs. */
+.cs-editor__tabs-rail {
+  display: flex;
+  align-items: center;
+  padding-inline: 28px;
+}
+
+.cs-editor__tab-count {
+  margin-inline-start: 8px;
+  height: 18px !important;
+  font-size: 11px !important;
+  letter-spacing: 0.02em;
+}
+
+.cs-editor__paste-btn {
+  margin-right: 4px;
+}
+
+.cs-editor__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 28px 28px;
+}
+
+/* Paste IDs dialog */
+.cs-paste__hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+.cs-paste__textarea :deep(textarea) {
+  font-family: var(--v-font-family-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 13px;
+}
+.cs-paste__summary {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cs-paste__summary-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.cs-paste__summary-row--ok {
+  color: rgb(var(--v-theme-success, 76, 175, 80));
+}
+.cs-paste__summary-row--err {
+  color: rgb(var(--v-theme-error));
+  word-break: break-word;
 }
 </style>

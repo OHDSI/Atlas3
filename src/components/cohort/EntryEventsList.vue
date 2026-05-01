@@ -1,21 +1,16 @@
 <template>
+  <!-- Vertical "ALL" sticker retired (matches the inclusion-rules
+       panel). Section header toggle is the source of truth. -->
   <div class="events-container">
-    <!-- Vertical "ALL" Label -->
-    <div class="vertical-label-container">
-      <div class="vertical-label">
-        {{ tv('options.all').toUpperCase() }}
-      </div>
-    </div>
-
-    <!-- Main Content Area -->
-    <div class="flex-grow-1">
-      <!-- Add Filter Button and Observation Period -->
+    <div class="events-container__body">
+      <!-- Toolbar: add-criteria menu + observation-period pill -->
       <div class="add-filter-wrapper">
         <v-menu>
           <template #activator="{ props: slotProps }">
             <v-btn
               v-bind="slotProps"
-              variant="outlined"
+              color="primary"
+              variant="tonal"
               prepend-icon="mdi-plus"
               size="small"
               data-testid="add-entry-event"
@@ -34,11 +29,12 @@
           </v-list>
         </v-menu>
 
-        <!-- Observation Period Chip -->
+        <!-- Observation Period chip — was orange-outlined which read
+             as alarm; tonal primary keeps it informative. -->
         <v-chip
           class="obs-period-chip"
-          color="orange"
-          variant="outlined"
+          color="primary"
+          variant="tonal"
           size="small"
           @click="showObsPeriodDialog = true"
         >
@@ -135,7 +131,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { t, tv } = useI18n()
+const { t } = useI18n()
 
 const emit = defineEmits<{
   'update:events': [events: CohortEvent[]]
@@ -196,52 +192,21 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
 
 <style scoped>
 .events-container {
-  display: flex;
-  background: white;
+  display: block;
+  background: rgb(var(--v-theme-surface));
 }
 
-.vertical-label-container {
-  display: flex;
-  align-items: center;
-  width: 30px;
-  border: 1px solid #616161;
-  position: relative;
-}
-
-.vertical-label-container::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 30%;
-  background: #616161;
-}
-
-.vertical-label {
-  writing-mode: sideways-lr;
-  text-orientation: sideways;
-  font-size: 14px;
-  font-weight: 700;
-  color: #616161;
-  user-select: none;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  padding-left: 8px;
-  position: relative;
-  z-index: 1;
-}
-
-.flex-grow-1 {
+.events-container__body {
   flex: 1;
-  padding: 24px 16px;
+  padding: 12px 20px 16px;
 }
 
 .add-filter-wrapper {
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin-bottom: 16px;
-  gap: 16px;
+  margin-bottom: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .obs-period-chip {

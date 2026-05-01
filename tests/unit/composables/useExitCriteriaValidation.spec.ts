@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { useExitCriteriaValidation } from '@/composables/useExitCriteriaValidation'
-import type { ExitCriteria, Period } from '@/models/cohort.types'
+import type { ExitCriteria, CensorWindow } from '@/models/cohort.types'
 
 describe('useExitCriteriaValidation', () => {
   describe('validate', () => {
@@ -194,9 +194,9 @@ describe('useExitCriteriaValidation', () => {
     it('should validate valid censor window', () => {
       const { validateCensorWindow } = useExitCriteriaValidation()
 
-      const censorWindow: Period = {
-        startDate: { dateField: 'START_DATE', offset: 0 },
-        endDate: { dateField: 'END_DATE', offset: 30 }
+      const censorWindow: CensorWindow = {
+        startDate: '2024-01-01',
+        endDate: '2024-01-31'
       }
 
       const result = validateCensorWindow(censorWindow)
@@ -204,25 +204,25 @@ describe('useExitCriteriaValidation', () => {
       expect(result.valid).toBe(true)
     })
 
-    it('should fail when start offset > end offset', () => {
+    it('should fail when startDate > endDate', () => {
       const { validateCensorWindow } = useExitCriteriaValidation()
 
-      const censorWindow: Period = {
-        startDate: { dateField: 'START_DATE', offset: 100 },
-        endDate: { dateField: 'END_DATE', offset: 30 }
+      const censorWindow: CensorWindow = {
+        startDate: '2024-12-31',
+        endDate: '2024-01-01'
       }
 
       const result = validateCensorWindow(censorWindow)
 
       expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.message.includes('less than or equal'))).toBe(true)
+      expect(result.errors.some(e => e.message.includes('Start date must be on or before end date'))).toBe(true)
     })
 
     it('should validate window with only startDate', () => {
       const { validateCensorWindow } = useExitCriteriaValidation()
 
-      const censorWindow: Period = {
-        startDate: { dateField: 'START_DATE', offset: 10 }
+      const censorWindow: CensorWindow = {
+        startDate: '2024-01-01'
       }
 
       const result = validateCensorWindow(censorWindow)
@@ -233,8 +233,8 @@ describe('useExitCriteriaValidation', () => {
     it('should validate window with only endDate', () => {
       const { validateCensorWindow } = useExitCriteriaValidation()
 
-      const censorWindow: Period = {
-        endDate: { dateField: 'END_DATE', offset: 30 }
+      const censorWindow: CensorWindow = {
+        endDate: '2024-12-31'
       }
 
       const result = validateCensorWindow(censorWindow)
@@ -242,12 +242,12 @@ describe('useExitCriteriaValidation', () => {
       expect(result.valid).toBe(true)
     })
 
-    it('should fail with invalid dateField in censor window', () => {
+    it('should fail with invalid date format in censor window', () => {
       const { validateCensorWindow } = useExitCriteriaValidation()
 
       const censorWindow = {
-        startDate: { dateField: 'INVALID', offset: 0 }
-      } as unknown as Period
+        startDate: 'not-a-date'
+      } as unknown as CensorWindow
 
       const result = validateCensorWindow(censorWindow)
 
@@ -257,9 +257,9 @@ describe('useExitCriteriaValidation', () => {
     it('should include severity in validation errors', () => {
       const { validateCensorWindow } = useExitCriteriaValidation()
 
-      const censorWindow: Period = {
-        startDate: { dateField: 'START_DATE', offset: 100 },
-        endDate: { dateField: 'END_DATE', offset: 30 }
+      const censorWindow: CensorWindow = {
+        startDate: '2024-12-31',
+        endDate: '2024-01-01'
       }
 
       const result = validateCensorWindow(censorWindow)
@@ -272,12 +272,12 @@ describe('useExitCriteriaValidation', () => {
     it('should return true for valid field', () => {
       const { validateCensorWindowField } = useExitCriteriaValidation()
 
-      const censorWindow: Period = {
-        startDate: { dateField: 'START_DATE', offset: 0 },
-        endDate: { dateField: 'END_DATE', offset: 30 }
+      const censorWindow: CensorWindow = {
+        startDate: '2024-01-01',
+        endDate: '2024-01-31'
       }
 
-      const result = validateCensorWindowField(censorWindow, 'startDate.offset')
+      const result = validateCensorWindowField(censorWindow, 'startDate')
 
       expect(result).toBe(true)
     })
@@ -285,26 +285,28 @@ describe('useExitCriteriaValidation', () => {
     it('should return error message for invalid field path', () => {
       const { validateCensorWindowField } = useExitCriteriaValidation()
 
-      const censorWindow: Period = {
-        startDate: { dateField: 'START_DATE', offset: 100 },
-        endDate: { dateField: 'END_DATE', offset: 30 }
+      const censorWindow: CensorWindow = {
+        startDate: '2024-12-31',
+        endDate: '2024-01-01'
       }
 
-      const result = validateCensorWindowField(censorWindow, 'endDate.offset')
+      // The cross-field error is reported on path 'endDate'
+      const result = validateCensorWindowField(censorWindow, 'endDate')
 
       expect(typeof result).toBe('string')
+      expect(result).toContain('Start date must be on or before end date')
     })
 
     it('should return true when specific field has no error', () => {
       const { validateCensorWindowField } = useExitCriteriaValidation()
 
-      const censorWindow: Period = {
-        startDate: { dateField: 'START_DATE', offset: 100 },
-        endDate: { dateField: 'END_DATE', offset: 30 }
+      const censorWindow: CensorWindow = {
+        startDate: '2024-12-31',
+        endDate: '2024-01-01'
       }
 
-      // Error is on endDate.offset, not startDate
-      const result = validateCensorWindowField(censorWindow, 'startDate.offset')
+      // Error is on endDate, not startDate
+      const result = validateCensorWindowField(censorWindow, 'startDate')
 
       expect(result).toBe(true)
     })

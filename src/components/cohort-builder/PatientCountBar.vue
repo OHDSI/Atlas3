@@ -421,33 +421,37 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* Hero metric treatment — when TrexSQL is enabled, the patient
+ * count gets prominent typography so the user sees the funnel
+ * size at a glance. Surface-variant background gives it presence
+ * without becoming a separate card. */
 .patient-count-bar {
-  background: linear-gradient(to right, #f8f9fa, #ffffff);
-  border-bottom: 1px solid #e0e0e0;
-  padding: 12px 24px;
+  margin: 0 0 12px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgb(var(--v-theme-surface-variant));
 }
 
 .patient-count-bar__content {
   display: flex;
   align-items: center;
-  gap: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .patient-count-bar__selector {
-  flex: 0 0 280px;
+  flex: 0 0 220px;
 }
 
 .patient-count-bar__select {
-  max-width: 280px;
+  max-width: 220px;
 }
 
 .patient-count-bar__count-section {
   flex: 1;
   display: flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 32px;
 }
 
 .patient-count-bar__error,
@@ -457,12 +461,12 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
-  color: #666;
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 
 .patient-count-bar__error {
-  color: #d32f2f;
+  color: rgb(var(--v-theme-error));
 }
 
 .patient-count-bar__error-text {
@@ -520,26 +524,33 @@ onBeforeUnmount(() => {
 }
 
 .patient-count-bar__cohort-count {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1976d2;
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: rgb(var(--v-theme-primary));
+  font-variant-numeric: tabular-nums;
 }
 
 .patient-count-bar__separator {
-  font-size: 16px;
-  color: #999;
-  margin: 0 2px;
+  font-size: 18px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.5;
+  margin: 0 4px;
+  font-weight: 300;
 }
 
 .patient-count-bar__total-count {
   font-size: 16px;
-  font-weight: 500;
-  color: #666;
+  font-weight: 400;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-variant-numeric: tabular-nums;
 }
 
 .patient-count-bar__label {
   font-size: 12px;
-  color: #999;
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0.7;
   margin-left: 4px;
 }
 

@@ -9,6 +9,7 @@ import CardinalityEditor from './CardinalityEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalFilterChip from './TemporalFilterChip.vue'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 const props = withDefaults(defineProps<{
   event: CohortEvent
@@ -126,30 +127,31 @@ const removeEvent = () => {
 </script>
 
 <template>
-  <v-card
-    class="event-card mb-3"
-    elevation="1"
+  <SurfaceCard
+    class="event-card mb-2"
+    padding="none"
   >
-    <!-- Header -->
-    <v-card-title class="d-flex align-center pa-3">
-      <v-icon
-        class="mr-2"
-        size="small"
-      >
-        mdi-medical-bag
-      </v-icon>
-      <div class="flex-grow-1">
-        <div class="text-subtitle-1">
+    <!-- Header — no generic mdi-medical-bag, criteria-type label
+         is the primary line, concept-set name is the secondary
+         line. Expand/delete sit aligned to the right. -->
+    <div class="event-card__header">
+      <div class="event-card__title-block">
+        <div class="event-card__type">
           {{ criteriaTypeLabel }}
         </div>
-        <div class="text-caption text-medium-emphasis">
-          {{ event.conceptSet?.name || 'No concept set' }}
-          <span
-            v-if="event.conceptSet?.conceptCount"
-            class="ml-1"
-          >
-            ({{ event.conceptSet.conceptCount }} concepts)
-          </span>
+        <div class="event-card__concept-set">
+          <template v-if="event.conceptSet?.name">
+            {{ event.conceptSet.name }}
+            <span
+              v-if="event.conceptSet?.conceptCount"
+              class="event-card__concept-set-count"
+            >
+              · {{ event.conceptSet.conceptCount }} concepts
+            </span>
+          </template>
+          <template v-else>
+            <span class="event-card__concept-set--placeholder">No concept set</span>
+          </template>
         </div>
       </div>
       <v-btn
@@ -157,16 +159,18 @@ const removeEvent = () => {
         variant="text"
         size="small"
         :class="{ 'rotate-180': expanded }"
+        :aria-label="expanded ? 'Collapse' : 'Expand'"
         @click="toggleExpanded"
       />
       <v-btn
-        icon="mdi-delete"
+        icon="mdi-delete-outline"
         variant="text"
         size="small"
         color="error"
+        :aria-label="'Remove event'"
         @click="removeEvent"
       />
-    </v-card-title>
+    </div>
 
     <!-- Summary Chips -->
     <v-card-text
@@ -345,16 +349,50 @@ const removeEvent = () => {
         </v-card-text>
       </div>
     </v-expand-transition>
-  </v-card>
+  </SurfaceCard>
 </template>
 
 <style scoped>
 .event-card {
-  transition: all 0.3s ease;
+  /* SurfaceCard provides surface + radius + shadow. */
 }
 
-.event-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.event-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+}
+
+.event-card__title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-card__type {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgb(var(--v-theme-primary));
+  line-height: 1.3;
+}
+
+.event-card__concept-set {
+  font-size: 12px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  line-height: 1.4;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-card__concept-set-count {
+  opacity: 0.85;
+}
+
+.event-card__concept-set--placeholder {
+  font-style: italic;
+  opacity: 0.7;
 }
 
 .rotate-180 {

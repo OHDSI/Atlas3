@@ -11,15 +11,21 @@
   ecosystem.
 -->
 <template>
-  <v-card
+  <SurfaceCard
+    padding="none"
     class="prevalence-table"
-    variant="outlined"
     :data-testid="`char-results-prevalence-${analysisId}`"
   >
-    <v-card-title class="prevalence-table__title">
-      {{ analysisName }}
-      <span class="prevalence-table__count">({{ rows.length }})</span>
-    </v-card-title>
+    <div class="prevalence-table__header">
+      <div class="prevalence-table__eyebrow-row">
+        <span class="text-eyebrow">{{ analysisName }}</span>
+        <span class="prevalence-table__accent-rule" />
+      </div>
+      <h3 class="prevalence-table__title">
+        {{ tv('characterizations.results.table.prevalence', 'Prevalence') }}
+        <span class="prevalence-table__count">({{ rows.length }})</span>
+      </h3>
+    </div>
 
     <v-data-table
       :items="tableRows"
@@ -81,7 +87,7 @@
         </div>
       </template>
     </v-data-table>
-  </v-card>
+  </SurfaceCard>
 </template>
 
 <script setup lang="ts">
@@ -90,6 +96,7 @@ import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 interface Props {
   analysisId: number
@@ -220,12 +227,34 @@ function onExplore(row: PrevalenceStat): void {
   margin-bottom: 16px;
 }
 
+.prevalence-table__header {
+  padding: 20px 20px 12px;
+}
+
+.prevalence-table__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.prevalence-table__accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+
 .prevalence-table__title {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  font-size: 1.1rem;
+  font-size: 18px;
   font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
 }
 
 .prevalence-table__count {

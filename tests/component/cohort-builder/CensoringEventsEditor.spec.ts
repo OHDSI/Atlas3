@@ -68,9 +68,9 @@ describe('CensoringEventsEditor', () => {
 
   it('should show empty state when no events', () => {
     const wrapper = createWrapper([])
-    const alert = wrapper.findComponent({ name: 'VAlert' })
-    expect(alert.exists()).toBe(true)
-    expect(alert.text()).toContain('No censoring events')
+    const hint = wrapper.find('.censoring-events__hint')
+    expect(hint.exists()).toBe(true)
+    expect(hint.text()).toContain('No censoring events')
   })
 
   it('should display event cards when events exist', () => {

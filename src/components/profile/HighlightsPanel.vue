@@ -1,12 +1,20 @@
 <template>
-  <v-navigation-drawer
-    v-model="open"
-    location="right"
-    permanent
-    width="320"
+  <!-- Was a permanent right v-navigation-drawer, but Vuetify's
+       layout positions those at top:0 of the v-app, overlapping the
+       NavBar (and its logout / config buttons). The ProfileView's
+       body grid already lays out as 1fr/auto, so a plain aside fits
+       in the second column without overlay chrome or z-index issues. -->
+  <aside
     class="highlights-panel"
     data-test="highlights-panel"
   >
+    <div class="highlights-panel__header">
+      <div class="highlights-panel__eyebrow-row">
+        <span class="text-eyebrow">{{ tv('profiles.highlightEyebrow', 'HIGHLIGHT') }}</span>
+        <span class="highlights-panel__accent-rule" />
+      </div>
+    </div>
+
     <v-tabs
       v-model="tab"
       density="compact"
@@ -15,62 +23,88 @@
         value="concepts"
         data-test="highlights-tab-concepts"
       >
-        {{ tv('profiles.eventHighlighting', 'Concepts') }}
+        {{ tv('profiles.highlightTabConcepts', 'concepts') }}
       </v-tab>
       <v-tab
         value="sets"
         data-test="highlights-tab-sets"
         :disabled="!store.hasCohortContext"
       >
-        Sets
+        {{ tv('profiles.highlightTabSets', 'sets') }}
       </v-tab>
     </v-tabs>
 
     <v-window v-model="tab">
       <v-window-item value="concepts">
-        <HighlightsConceptList @selection-change="onSelectionChange" />
+        <HighlightsConceptList />
       </v-window-item>
       <v-window-item value="sets">
-        <HighlightsConceptSetList @selection-change="onSetSelectionChange" />
+        <HighlightsConceptSetList />
       </v-window-item>
     </v-window>
 
     <v-divider class="my-2" />
-    <HighlightColorPicker
-      @select="onApplyColor"
-      @clear="onClearAll"
-    />
-  </v-navigation-drawer>
+
+    <div class="highlights-panel__footer">
+      <v-btn
+        size="small"
+        variant="text"
+        prepend-icon="mdi-close-circle-outline"
+        data-test="highlight-clear-all"
+        @click="store.clearHighlights()"
+      >
+        {{ tv('profiles.clearAllHighlights', 'Clear all highlights') }}
+      </v-btn>
+    </div>
+  </aside>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import HighlightsConceptList from '@/components/profile/HighlightsConceptList.vue'
 import HighlightsConceptSetList from '@/components/profile/HighlightsConceptSetList.vue'
-import HighlightColorPicker from '@/components/profile/HighlightColorPicker.vue'
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
-import type { HighlightColor } from '@/models/profile.types'
 
 const store = useProfileStore()
 const { tv } = useI18n()
 
-const open = ref(true)
 const tab = ref<'concepts' | 'sets'>('concepts')
-const selectedConceptIds = ref<number[]>([])
-const selectedSetIds = ref<number[]>([])
+</script>
 
-function onSelectionChange(ids: number[]) { selectedConceptIds.value = ids }
-function onSetSelectionChange(ids: number[]) { selectedSetIds.value = ids }
-
-function onApplyColor(color: HighlightColor) {
-  if (selectedConceptIds.value.length > 0) {
-    store.applyHighlight(selectedConceptIds.value, color)
-  }
-  // Concept-set application: future task — needs concept-id expansion. v1: no-op.
+<style scoped>
+.highlights-panel {
+  width: 320px;
+  flex-shrink: 0;
+  background: rgb(var(--v-theme-surface));
+  border-radius: 12px;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.08),
+    0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 8px 0;
+  align-self: flex-start;
 }
 
-function onClearAll() { store.clearHighlights() }
+.highlights-panel__header {
+  padding: 8px 16px 0;
+}
 
-defineExpose({ onSelectionChange, onSetSelectionChange, onApplyColor })
-</script>
+.highlights-panel__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.highlights-panel__accent-rule {
+  display: inline-block;
+  width: 32px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+
+.highlights-panel__footer {
+  padding: 0 8px 4px;
+}
+</style>

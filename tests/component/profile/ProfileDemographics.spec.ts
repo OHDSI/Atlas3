@@ -28,16 +28,22 @@ describe('ProfileDemographics', () => {
     const html = wrapper.html()
     expect(html).toContain('mdi-gender-female')
     expect(html).toContain('1972')
-    expect(html).toContain('52')
-    expect(html).toContain('4829')
+    // Age renders as just the number (no "y" suffix).
+    expect(wrapper.find('[data-test="profile-age"]').text()).toBe('52')
+    // Events use toLocaleString() so 4829 renders as 4,829.
+    expect(wrapper.find('[data-test="profile-count"]').text()).toBe('4,829')
   })
 
-  it('uses "at start of observation" wording when no cohort context', () => {
+  it('age tooltip uses "observation" wording when no cohort context', () => {
     const { wrapper } = makeWrapper()
-    expect(wrapper.text().toLowerCase()).toContain('observation')
+    // v-tooltip teleports its content; inspect the VTooltip component's
+    // `text` prop instead of the rendered DOM.
+    const tooltips = wrapper.findAllComponents({ name: 'VTooltip' })
+    const texts = tooltips.map(t => String(t.props('text') ?? '').toLowerCase())
+    expect(texts.some(t => t.includes('observation'))).toBe(true)
   })
 
-  it('uses "at index" wording when cohort context present', () => {
+  it('age tooltip uses "index" wording when cohort context present', () => {
     setActivePinia(createPinia())
     const store = useProfileStore()
     store.setRouteParams({ sourceKey: 'X', personId: 1, cohortDefinitionId: 42 })
@@ -48,7 +54,9 @@ describe('ProfileDemographics', () => {
       observationPeriods: [],
     } as never
     const w = mount(ProfileDemographics, { global: { plugins: [vuetify] } })
-    expect(w.text().toLowerCase()).toContain('index')
+    const tooltips = w.findAllComponents({ name: 'VTooltip' })
+    const texts = tooltips.map(t => String(t.props('text') ?? '').toLowerCase())
+    expect(texts.some(t => t.includes('index'))).toBe(true)
   })
 
   it('shows male icon for MALE gender', () => {

@@ -140,10 +140,11 @@ describe('EventCard', () => {
       expect(wrapper.exists()).toBe(true)
     })
 
-    it('should render card component', () => {
+    it('should render the SurfaceCard wrapper', () => {
+      // Refresh: replaced bespoke v-card elevation hover styles
+      // with SurfaceCard (single source of truth for card chrome).
       const wrapper = mountComponent()
-      const card = wrapper.findComponent({ name: 'VCard' })
-      expect(card.exists()).toBe(true)
+      expect(wrapper.find('.surface-card').exists()).toBe(true)
     })
 
     it('should display event criteria type label', () => {
@@ -188,9 +189,10 @@ describe('EventCard', () => {
     })
 
     it('should render delete button', () => {
+      // Refresh: icon switched to mdi-delete-outline.
       const wrapper = mountComponent()
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const deleteButton = buttons.some(btn => btn.props('icon') === 'mdi-delete')
+      const deleteButton = buttons.some(btn => btn.props('icon') === 'mdi-delete-outline')
       expect(deleteButton).toBe(true)
     })
 

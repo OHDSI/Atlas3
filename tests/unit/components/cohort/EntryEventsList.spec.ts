@@ -76,11 +76,12 @@ describe('EntryEventsList', () => {
       expect(wrapper.exists()).toBe(true)
     })
 
-    it('should render vertical label', () => {
+    it('should not render the legacy vertical "ALL" sticker', () => {
+      // Refresh: the section header's qualifying-limit toggle is
+      // the source of truth; the vertical sideways-lr label was
+      // retired here and in InclusionCriteriaPanel.
       const wrapper = mountComponent()
-      const verticalLabel = wrapper.find('.vertical-label')
-      expect(verticalLabel.exists()).toBe(true)
-      expect(verticalLabel.text()).toContain('ALL')
+      expect(wrapper.find('.vertical-label').exists()).toBe(false)
     })
 
     it('should render add entry event button', () => {

@@ -1,7 +1,5 @@
 <template>
   <AnalysisListLayout
-    :title="t('ir.title', 'Incidence rate analyses').value"
-    :subtitle="subtitle"
     :error="error?.message ?? null"
     testid="incidence-rates"
   >
@@ -22,7 +20,6 @@
       <v-btn
         color="primary"
         variant="flat"
-        size="large"
         prepend-icon="mdi-plus"
         data-testid="incidence-rates-create"
         :disabled="!canCreate"
@@ -80,15 +77,30 @@
     max-width="400"
   >
     <v-card>
-      <v-card-title>{{ t('common.delete', 'Delete incidence rate') }}</v-card-title>
+      <div class="confirm-dialog__header">
+        <div class="confirm-dialog__title-block">
+          <div class="confirm-dialog__eyebrow-row">
+            <span class="text-eyebrow">{{ t('ir.entity', 'Incidence rate').value }}</span>
+            <span class="confirm-dialog__accent-rule" />
+          </div>
+          <h2 class="confirm-dialog__title">
+            {{ t('common.delete', 'Delete').value }}
+          </h2>
+        </div>
+      </div>
+      <v-divider />
       <v-card-text>{{ t('ir.deleteConfirmation', 'Delete incidence rate analysis? Warning: deletion can not be undone!') }}</v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn @click="showDelete = false">
+        <v-btn
+          variant="text"
+          @click="showDelete = false"
+        >
           {{ t('common.cancel', 'Cancel') }}
         </v-btn>
         <v-btn
           color="error"
+          variant="flat"
           @click="confirmDelete"
         >
           {{ t('common.delete', 'Delete') }}
@@ -125,7 +137,7 @@ const {
   loading, error,
   filters, page, itemsPerPage,
   fetchIncidenceRates,
-  paginatedIncidenceRates, totalItems, totalPages,
+  paginatedIncidenceRates, totalPages,
 } = useIncidenceRates()
 
 const router = useRouter()
@@ -139,12 +151,6 @@ const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)
 const feedback = ref<{ message: string; color: 'success' | 'error' | 'info' } | null>(null)
 const searchInput = ref('')
-
-const subtitle = computed(() =>
-  totalItems.value === 0
-    ? t('common.noData', 'No incidence rates yet.').value
-    : `${totalItems.value} ${totalItems.value === 1 ? 'analysis' : 'analyses'}`
-)
 
 const headers = computed(() => [
   { title: t('columns.name', 'Name').value, key: 'name' },
@@ -220,5 +226,32 @@ async function confirmDelete() {
   font-size: 0.875rem;
   color: rgba(var(--v-theme-on-surface), 0.6);
   padding: 0 12px;
+}
+
+.confirm-dialog__header {
+  padding: 20px 24px 14px;
+}
+.confirm-dialog__title-block {
+  flex: 1;
+}
+.confirm-dialog__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.confirm-dialog__accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+.confirm-dialog__title {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
 }
 </style>

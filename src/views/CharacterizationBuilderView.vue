@@ -31,8 +31,8 @@
           <div v-bind="tooltipProps">
             <v-btn
               color="primary"
-              variant="outlined"
-              prepend-icon="mdi-play"
+              variant="tonal"
+              prepend-icon="mdi-play-outline"
               :disabled="!canRun"
               data-testid="char-builder-run"
               @click="handleRunClick"
@@ -44,9 +44,9 @@
       </v-tooltip>
       <v-btn
         v-if="isEditing"
-        variant="outlined"
+        variant="tonal"
         color="primary"
-        prepend-icon="mdi-content-copy"
+        prepend-icon="mdi-content-copy-outline"
         :disabled="loading || !canCopy"
         data-testid="char-builder-copy"
         @click="handleSaveCopy"
@@ -55,9 +55,9 @@
       </v-btn>
       <v-btn
         v-if="isEditing"
-        variant="outlined"
+        variant="text"
         color="error"
-        prepend-icon="mdi-delete"
+        prepend-icon="mdi-delete-outline"
         :disabled="loading || !canDelete"
         data-testid="char-builder-delete"
         @click="handleDeleteClick"
@@ -66,8 +66,8 @@
       </v-btn>
       <v-btn
         color="primary"
-        variant="elevated"
-        prepend-icon="mdi-content-save"
+        variant="flat"
+        prepend-icon="mdi-content-save-outline"
         :disabled="!canSave"
         :loading="saving"
         data-testid="char-builder-save"
@@ -78,46 +78,75 @@
     </template>
 
     <!-- Tabs -->
-    <v-card class="char-builder__card">
+    <nav class="page-tabs-rail char-builder__tabs-rail">
       <v-tabs
         v-model="activeTab"
+        align-tabs="start"
+        density="comfortable"
         color="primary"
+        slider-color="primary"
+        bg-color="transparent"
+        class="page-tabs"
         data-testid="char-builder-tabs"
       >
         <v-tab
           value="design"
           data-testid="char-builder-tab-design"
         >
+          <v-icon
+            start
+            icon="mdi-pencil-ruler-outline"
+          />
           {{ t('cc.fa.tabs.design', 'Design') }}
         </v-tab>
         <v-tab
           value="conceptSets"
           data-testid="char-builder-tab-conceptSets"
         >
+          <v-icon
+            start
+            icon="mdi-bookmark-multiple-outline"
+          />
           {{ t('cc.fa.tabs.conceptSets', 'Concept Sets') }}
         </v-tab>
         <v-tab
           value="executions"
           data-testid="char-builder-tab-executions"
         >
+          <v-icon
+            start
+            icon="mdi-play-circle-outline"
+          />
           {{ t('cc.viewEdit.tabs.executions', 'Executions') }}
         </v-tab>
         <v-tab
           value="versions"
           data-testid="char-builder-tab-versions"
         >
+          <v-icon
+            start
+            icon="mdi-history"
+          />
           {{ t('cc.viewEdit.tabs.versions', 'Versions') }}
         </v-tab>
         <v-tab
           value="utilities"
           data-testid="char-builder-tab-utilities"
         >
+          <v-icon
+            start
+            icon="mdi-tools"
+          />
           {{ t('cc.viewEdit.tabs.utilities', 'Utilities') }}
         </v-tab>
         <v-tab
           value="validation"
           data-testid="char-builder-tab-validation"
         >
+          <v-icon
+            start
+            icon="mdi-checkbox-marked-circle-outline"
+          />
           {{ t('cc.viewEdit.tabs.messages', 'Validation') }}
           <v-badge
             v-if="validationBadge"
@@ -129,66 +158,64 @@
           />
         </v-tab>
       </v-tabs>
+    </nav>
 
-      <v-card-text>
-        <v-tabs-window v-model="activeTab">
-          <v-tabs-window-item value="design">
-            <CharacterizationDesignTab
-              :model-value="draft"
-              :available-cohorts="availableCohorts"
-              :available-feature-analyses="availableFeatureAnalyses"
-              data-testid="char-builder-design-tab"
-              @update:model-value="onDraftChange"
-            />
-          </v-tabs-window-item>
+    <v-window v-model="activeTab">
+      <v-window-item value="design">
+        <CharacterizationDesignTab
+          :model-value="draft"
+          :available-cohorts="availableCohorts"
+          :available-feature-analyses="availableFeatureAnalyses"
+          data-testid="char-builder-design-tab"
+          @update:model-value="onDraftChange"
+        />
+      </v-window-item>
 
-          <v-tabs-window-item value="conceptSets">
-            <CharacterizationConceptSetsTab
-              :characterization="draft"
-              data-testid="char-builder-conceptsets-tab"
-            />
-          </v-tabs-window-item>
+      <v-window-item value="conceptSets">
+        <CharacterizationConceptSetsTab
+          :characterization="draft"
+          data-testid="char-builder-conceptsets-tab"
+        />
+      </v-window-item>
 
-          <v-tabs-window-item value="executions">
-            <ExecutionsPanel
-              :characterization-id="draftId"
-              data-testid="char-builder-executions-tab"
-            />
-          </v-tabs-window-item>
+      <v-window-item value="executions">
+        <ExecutionsPanel
+          :characterization-id="draftId"
+          data-testid="char-builder-executions-tab"
+        />
+      </v-window-item>
 
-          <v-tabs-window-item value="versions">
-            <div
-              class="char-builder__versions-stub"
-              data-testid="char-builder-versions-tab"
-            >
-              <p>
-                {{
-                  t(
-                    'characterizations.editor.versionsTodo',
-                    'Versions integration TODO — wires into characterization-versions.service in a follow-up.'
-                  )
-                }}
-              </p>
-            </div>
-          </v-tabs-window-item>
+      <v-window-item value="versions">
+        <div
+          class="char-builder__versions-stub"
+          data-testid="char-builder-versions-tab"
+        >
+          <p>
+            {{
+              t(
+                'characterizations.editor.versionsTodo',
+                'Versions integration TODO — wires into characterization-versions.service in a follow-up.'
+              )
+            }}
+          </p>
+        </div>
+      </v-window-item>
 
-          <v-tabs-window-item value="utilities">
-            <CharacterizationUtilitiesTab
-              :characterization="draft"
-              data-testid="char-builder-utilities-tab"
-              @imported="onImported"
-            />
-          </v-tabs-window-item>
+      <v-window-item value="utilities">
+        <CharacterizationUtilitiesTab
+          :characterization="draft"
+          data-testid="char-builder-utilities-tab"
+          @imported="onImported"
+        />
+      </v-window-item>
 
-          <v-tabs-window-item value="validation">
-            <CharacterizationMessagesTab
-              :characterization="draft"
-              data-testid="char-builder-validation-tab"
-            />
-          </v-tabs-window-item>
-        </v-tabs-window>
-      </v-card-text>
-    </v-card>
+      <v-window-item value="validation">
+        <CharacterizationMessagesTab
+          :characterization="draft"
+          data-testid="char-builder-validation-tab"
+        />
+      </v-window-item>
+    </v-window>
 
     <!-- Delete confirmation dialog -->
     <v-dialog
@@ -196,9 +223,18 @@
       max-width="500"
     >
       <v-card>
-        <v-card-title class="text-h5">
-          {{ t('common.delete', 'Delete') }}
-        </v-card-title>
+        <div class="confirm-dialog__header">
+          <div class="confirm-dialog__title-block">
+            <div class="confirm-dialog__eyebrow-row">
+              <span class="text-eyebrow">{{ t('cc.title', 'Characterization').value }}</span>
+              <span class="confirm-dialog__accent-rule" />
+            </div>
+            <h2 class="confirm-dialog__title">
+              {{ t('common.delete', 'Delete').value }}
+            </h2>
+          </div>
+        </div>
+        <v-divider />
         <v-card-text>
           {{ deleteMessage }}
         </v-card-text>
@@ -212,7 +248,7 @@
           </v-btn>
           <v-btn
             color="error"
-            variant="elevated"
+            variant="flat"
             :loading="loading"
             data-testid="char-builder-delete-confirm"
             @click="confirmDelete"
@@ -620,16 +656,46 @@ onBeforeRouteLeave((_to, _from, next) => {
 </script>
 
 <style scoped>
-.char-builder__card {
-  padding: 8px;
-  border-radius: 12px;
-  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
-  box-shadow: none !important;
+.char-builder__tabs-rail {
+  margin-inline: -32px;
+  margin-bottom: 16px;
+  padding-inline: 32px;
 }
 
 .char-builder__versions-stub {
   padding: 24px;
   color: rgba(var(--v-theme-on-surface), 0.6);
   font-style: italic;
+}
+
+.confirm-dialog__header {
+  padding: 20px 24px 14px;
+}
+
+.confirm-dialog__title-block {
+  flex: 1;
+}
+
+.confirm-dialog__eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.confirm-dialog__accent-rule {
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+
+.confirm-dialog__title {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-primary));
 }
 </style>

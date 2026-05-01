@@ -1,77 +1,57 @@
 <template>
-  <v-card
+  <SurfaceCard
+    interactive
+    padding="none"
     class="cohort-card"
-    :elevation="hover ? 4 : 1"
     @click="handleCardClick"
-    @mouseenter="hover = true"
-    @mouseleave="hover = false"
   >
-    <v-tooltip
-      :text="cohort.name"
-      location="top"
-    >
-      <template #activator="{ props: tooltipProps }">
-        <v-card-title
-          v-bind="tooltipProps"
-          class="cohort-card__title"
-        >
-          <v-icon
-            size="18"
-            class="cohort-card__title-icon"
+    <div class="cohort-card__body">
+      <v-tooltip
+        :text="cohort.name"
+        location="top"
+      >
+        <template #activator="{ props: tooltipProps }">
+          <h3
+            v-bind="tooltipProps"
+            class="cohort-card__title"
           >
-            mdi-web
-          </v-icon>
-          <span class="cohort-card__title-text">{{ cohort.name }}</span>
-        </v-card-title>
-      </template>
-    </v-tooltip>
+            {{ cohort.name }}
+          </h3>
+        </template>
+      </v-tooltip>
 
-    <!-- Description Preview -->
-    <v-tooltip
-      v-if="cohort.description"
-      :text="cohort.description"
-      location="bottom"
-    >
-      <template #activator="{ props: tooltipProps }">
-        <v-card-text
-          v-bind="tooltipProps"
-          class="cohort-card__description"
-        >
-          {{ cohort.description }}
-        </v-card-text>
-      </template>
-    </v-tooltip>
+      <v-tooltip
+        v-if="cohort.description"
+        :text="cohort.description"
+        location="bottom"
+      >
+        <template #activator="{ props: tooltipProps }">
+          <p
+            v-bind="tooltipProps"
+            class="cohort-card__description"
+          >
+            {{ cohort.description }}
+          </p>
+        </template>
+      </v-tooltip>
 
-    <v-card-text class="cohort-card__content">
-      <div class="cohort-card__meta">
+      <dl class="cohort-card__meta">
         <div class="cohort-card__meta-row">
-          <div class="cohort-card__meta-item">
-            <span class="cohort-card__meta-label">{{ idLabel }}:</span>
-            <span class="cohort-card__meta-value">{{ cohort.id }}</span>
-          </div>
-
-          <div class="cohort-card__meta-item">
-            <span class="cohort-card__meta-label">{{ byLabel }}:</span>
-            <span class="cohort-card__meta-value">{{ formatUser(cohort.createdBy) }}</span>
-          </div>
+          <dt>{{ idLabel }}</dt>
+          <dd>{{ cohort.id }}</dd>
+          <dt>{{ byLabel }}</dt>
+          <dd>{{ formatUser(cohort.createdBy) }}</dd>
         </div>
-
         <div class="cohort-card__meta-row">
-          <div class="cohort-card__meta-item">
-            <span class="cohort-card__meta-label">{{ createdLabel }}:</span>
-            <span class="cohort-card__meta-value">{{ formatDate(cohort.createdDate) }}</span>
-          </div>
-
-          <div class="cohort-card__meta-item">
-            <span class="cohort-card__meta-label">{{ updatedOnLabel }}:</span>
-            <span class="cohort-card__meta-value">{{ formatDate(cohort.modifiedDate) }}</span>
-          </div>
+          <dt>{{ createdLabel }}</dt>
+          <dd>{{ formatDate(cohort.createdDate) }}</dd>
+          <dt>{{ updatedOnLabel }}</dt>
+          <dd>{{ formatDate(cohort.modifiedDate) }}</dd>
         </div>
-      </div>
-    </v-card-text>
+      </dl>
+    </div>
 
-    <v-card-actions class="cohort-card__actions">
-      <!-- Tags -->
+    <div class="cohort-card__footer">
       <div
         v-if="cohort.tags && cohort.tags.length > 0"
         class="cohort-card__tags"
@@ -79,10 +59,10 @@
         <v-chip
           v-for="tag in cohort.tags"
           :key="tag.id || tag.name"
-          :color="tag.color || '#1f425a'"
           size="x-small"
-          :variant="selectedTags.includes(tag.name) ? 'elevated' : 'flat'"
-          :class="['cohort-card__tag', { 'cohort-card__tag--selected': selectedTags.includes(tag.name) }]"
+          :color="selectedTags.includes(tag.name) ? 'primary' : undefined"
+          :variant="selectedTags.includes(tag.name) ? 'flat' : 'tonal'"
+          class="cohort-card__tag"
           @click.stop="$emit('tag-click', tag.name)"
         >
           {{ tag.name }}
@@ -98,20 +78,13 @@
         <template #activator="{ props: tooltipProps }">
           <v-btn
             v-bind="tooltipProps"
-            icon
+            icon="mdi-information-outline"
             size="small"
             variant="text"
-            aria-label="Cohort information"
+            :aria-label="infoTooltip"
             class="cohort-card__action-btn"
             @click.stop="$emit('show-info', cohort)"
-          >
-            <v-icon
-              color="#1f425a"
-              size="22"
-            >
-              mdi-information-outline
-            </v-icon>
-          </v-btn>
+          />
         </template>
       </v-tooltip>
 
@@ -122,21 +95,14 @@
         <template #activator="{ props: tooltipProps }">
           <v-btn
             v-bind="tooltipProps"
-            icon
+            icon="mdi-account-multiple"
             size="small"
             variant="text"
             aria-label="Generate cohort"
             class="cohort-card__action-btn"
             :disabled="!canWrite"
             @click.stop="handleGenerate"
-          >
-            <v-icon
-              color="#1f425a"
-              size="22"
-            >
-              mdi-account-multiple
-            </v-icon>
-          </v-btn>
+          />
         </template>
       </v-tooltip>
 
@@ -147,33 +113,27 @@
         <template #activator="{ props: tooltipProps }">
           <v-btn
             v-bind="tooltipProps"
-            icon
+            icon="mdi-delete-outline"
             size="small"
             variant="text"
-            aria-label="Delete cohort"
+            :aria-label="deleteTooltip"
             class="cohort-card__action-btn"
             :disabled="!canDelete"
             @click.stop="$emit('delete', cohort)"
-          >
-            <v-icon
-              color="#1f425a"
-              size="22"
-            >
-              mdi-delete-outline
-            </v-icon>
-          </v-btn>
+          />
         </template>
       </v-tooltip>
-    </v-card-actions>
-  </v-card>
+    </div>
+  </SurfaceCard>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRef } from 'vue'
+import { computed, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
+import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
 interface Props {
   cohort: CohortDefinitionSummary
@@ -192,14 +152,13 @@ const props = withDefaults(defineProps<Props>(), {
 })
 const emit = defineEmits<Emits>()
 const router = useRouter()
-const hover = ref(false)
 const { t, locale } = useI18n()
 
 const idLabel = t('columns.id', 'ID')
 const byLabel = t('columns.author', 'Author')
 const createdLabel = t('columns.created', 'Created')
 const updatedOnLabel = t('columns.modified', 'Modified')
-const infoTooltip = t('common.cohortInformation', 'Cohort Information')
+const infoTooltip = t('common.cohortInformation', 'Cohort information')
 const materializeTooltip = t('components.analysisExecution.buttons.generate', 'Generate')
 const deleteTooltip = t('common.delete', 'Delete')
 const noPermissionTooltip = t('common.noPermission', 'You do not have permission for this action')
@@ -215,9 +174,6 @@ const deleteTooltipText = computed(() =>
   canDelete.value ? deleteTooltip.value : noPermissionTooltip.value,
 )
 
-/**
- * Format user object or string to display name
- */
 function formatUser(userValue: unknown): string {
   if (!userValue) return unknownLabel.value
   if (typeof userValue === 'string') return userValue
@@ -228,9 +184,6 @@ function formatUser(userValue: unknown): string {
   return unknownLabel.value
 }
 
-/**
- * Format ISO 8601 date or timestamp to user-friendly format
- */
 function formatDate(dateValue: string | number | null | undefined): string {
   if (!dateValue) return naLabel.value
   const date = new Date(dateValue)
@@ -242,63 +195,90 @@ function formatDate(dateValue: string | number | null | undefined): string {
   })
 }
 
-/**
- * Navigate to cohort edit page
- */
 function handleCardClick() {
   router.push(`/cohorts/${props.cohort.id}`)
 }
 
-/**
- * Emit generate event to open generation panel
- */
 function handleGenerate() {
   emit('generate', props.cohort)
 }
 </script>
 
 <style scoped>
+/* SurfaceCard provides elevation, hover lift, and border-radius;
+ * this component layers content + footer on top with consistent
+ * padding. */
 .cohort-card {
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  border-radius: 4px;
 }
 
-.cohort-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.18);
-  border-color: #d0d0d0;
+.cohort-card__body {
+  padding: 16px 18px 12px;
+  flex: 1;
 }
 
 .cohort-card__title {
-  font-size: 0.9375rem;
-  font-weight: 400;
-  color: rgb(var(--v-theme-orange));
-  padding: 16px 16px 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: rgb(var(--v-theme-primary));
+  margin: 0 0 8px;
   line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.cohort-card__description {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  line-height: 1.45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.cohort-card__meta {
+  margin: 0;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: help;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.cohort-card__title-icon {
-  flex-shrink: 0;
-  color: rgb(var(--v-theme-orange));
+.cohort-card__meta-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  gap: 4px 8px;
+  font-size: 12px;
+  align-items: baseline;
 }
 
-.cohort-card__title-text {
+.cohort-card__meta-row dt {
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.cohort-card__meta-row dd {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.74);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
   min-width: 0;
+}
+
+.cohort-card__footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-top: 1px solid rgb(var(--v-theme-outline-variant, 224, 224, 224));
 }
 
 .cohort-card__tags {
@@ -309,87 +289,15 @@ function handleGenerate() {
 }
 
 .cohort-card__tag {
-  font-size: 0.625rem;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-.cohort-card__tag:hover {
-  transform: scale(1.05);
-  opacity: 0.9;
-}
-
-.cohort-card__tag--selected {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 8px rgba(0, 0, 0, 0.3);
-  font-weight: 600;
-}
-
-.cohort-card__description {
-  padding: 0 16px 12px;
-  font-size: 0.8125rem;
-  color: #666;
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: help;
-}
-
-.cohort-card__content {
-  flex: 1;
-  padding: 0 16px 12px;
-}
-
-.cohort-card__meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.cohort-card__meta-row {
-  display: flex;
-  gap: 12px;
-}
-
-.cohort-card__meta-item {
-  display: flex;
-  gap: 6px;
-  font-size: 0.8125rem;
-  line-height: 1.7;
-  flex: 1;
-  min-width: 0;
-}
-
-.cohort-card__meta-label {
-  font-weight: 700;
-  color: #333;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.cohort-card__meta-value {
-  color: #666;
-  font-weight: 400;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cohort-card__actions {
-  padding: 8px 10px;
-  background-color: transparent;
-  border-top: none;
-  min-height: 42px;
-  display: flex;
-  align-items: center;
 }
 
 .cohort-card__action-btn {
-  opacity: 0.8;
-  transition: opacity 0.2s;
+  opacity: 0.7;
+  transition: opacity 120ms ease;
 }
-
-.cohort-card__action-btn:hover {
+.cohort-card:hover .cohort-card__action-btn,
+.cohort-card:focus-within .cohort-card__action-btn {
   opacity: 1;
 }
 </style>

@@ -125,21 +125,8 @@ describe('CohortCard', () => {
     expect(mockPush).toHaveBeenCalledWith('/cohorts/123')
   })
 
-  it('should emit generate event', async () => {
-    const wrapper = mountComponent()
-
-    // Find and click the generate button
-    const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-    const generateBtn = buttons.find(btn =>
-      btn.attributes('aria-label') === 'Generate cohort'
-    )
-
-    if (generateBtn) {
-      await generateBtn.trigger('click')
-      expect(wrapper.emitted('generate')).toBeTruthy()
-      expect(wrapper.emitted('generate')![0]).toEqual([mockCohort])
-    }
-  })
+  // Refresh: Generate button removed from cohort cards. Running a
+  // cohort happens from the cohort builder page now.
 
   it('should emit delete event', async () => {
     const wrapper = mountComponent()
@@ -160,8 +147,9 @@ describe('CohortCard', () => {
     const wrapper = mountComponent()
 
     const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+    // Refresh: aria-label is now sentence-case "Cohort information".
     const infoBtn = buttons.find(btn =>
-      btn.attributes('aria-label') === 'Cohort information'
+      (btn.attributes('aria-label') ?? '').toLowerCase().includes('cohort information')
     )
 
     if (infoBtn) {
@@ -188,7 +176,9 @@ describe('CohortCard', () => {
     const diabetesChip = chips.find(chip => chip.text() === 'Diabetes')
 
     if (diabetesChip) {
-      expect(diabetesChip.props('variant')).toBe('elevated')
+      // Refresh: selected → flat / unselected → tonal (was elevated /
+      // flat). Matches the chip pattern used elsewhere in the app.
+      expect(diabetesChip.props('variant')).toBe('flat')
     }
   })
 
@@ -208,17 +198,11 @@ describe('CohortCard', () => {
     expect(wrapper.findAllComponents({ name: 'VChip' })).toHaveLength(0)
   })
 
-  it('should show hover effect', async () => {
+  it('should render the SurfaceCard wrapper with interactive hover lift', () => {
+    // Refresh: replaced bespoke v-card + elevation watching with
+    // SurfaceCard interactive (pure-CSS hover lift).
     const wrapper = mountComponent()
 
-    await wrapper.find('.cohort-card').trigger('mouseenter')
-
-    // Hover state should be true
-    expect(wrapper.findComponent({ name: 'VCard' }).props('elevation')).toBe(4)
-
-    await wrapper.find('.cohort-card').trigger('mouseleave')
-
-    // Hover state should be false
-    expect(wrapper.findComponent({ name: 'VCard' }).props('elevation')).toBe(1)
+    expect(wrapper.find('.surface-card.surface-card--interactive').exists()).toBe(true)
   })
 })

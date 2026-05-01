@@ -121,7 +121,6 @@
         v-else-if="currentReportType && !currentReportComponent"
         type="warning"
         variant="tonal"
-        icon="mdi-alert-circle-outline"
       >
         <div class="text-subtitle-2 mb-1">
           Report Not Yet Implemented
@@ -136,7 +135,6 @@
         v-else
         type="info"
         variant="tonal"
-        icon="mdi-information"
       >
         Select a report type to view
       </v-alert>

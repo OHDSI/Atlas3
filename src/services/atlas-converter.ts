@@ -1,6 +1,6 @@
 // CRITICAL: Uses ?? operator for zero-count preservation (not ||)
 
-import type { CohortDefinition, CohortEvent, CriteriaType, Period, DateField, QualifyingLimit, LogicType } from '@/models/cohort.types'
+import type { CohortDefinition, CohortEvent, CensorWindow, CriteriaType, QualifyingLimit, LogicType } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
 import type {
   AtlasConceptSet,
@@ -128,7 +128,7 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
       EraPad: 0,
     },
 
-    CensorWindow: cohort.censorWindow ? convertPeriodToAtlas(cohort.censorWindow) : {},
+    CensorWindow: cohort.censorWindow ? convertCensorWindowToAtlas(cohort.censorWindow) : {},
   }
 }
 
@@ -506,7 +506,7 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
       eraPad: atlas.CollapseSettings.EraPad,
     } : undefined,
     censorWindow: atlas.CensorWindow && Object.keys(atlas.CensorWindow).length > 0
-      ? convertPeriodFromAtlas(atlas.CensorWindow)
+      ? convertCensorWindowFromAtlas(atlas.CensorWindow)
       : undefined,
     censoringCriteria: atlas.CensoringCriteria && atlas.CensoringCriteria.length > 0
       ? atlas.CensoringCriteria.map(e => convertAtlasToEvent(e, atlas.ConceptSets))
@@ -1012,57 +1012,34 @@ function convertAtlasToOperator(atlasOp: string): string {
 }
 
 /**
- * Convert internal Period to Atlas format
+ * Convert internal CensorWindow to Atlas format. Atlas serializes
+ * StartDate/EndDate as ISO date strings (yyyy-mm-dd) or null.
  */
-function convertPeriodToAtlas(period: Period): Record<string, unknown> {
+function convertCensorWindowToAtlas(cw: CensorWindow): Record<string, unknown> {
   const result: Record<string, unknown> = {}
-
-  if (period.startDate) {
-    result.StartDate = convertDateFieldToAtlas(period.startDate)
+  if (cw.startDate !== undefined) {
+    result.StartDate = cw.startDate ?? null
   }
-
-  if (period.endDate) {
-    result.EndDate = convertDateFieldToAtlas(period.endDate)
+  if (cw.endDate !== undefined) {
+    result.EndDate = cw.endDate ?? null
   }
-
   return result
 }
 
 /**
- * Convert internal DateField to Atlas format
+ * Convert Atlas CensorWindow to internal format. Accepts the legacy
+ * date-field+offset shape from older Atlas3 cohorts and degrades it
+ * to undefined dates so loading old data does not crash.
  */
-function convertDateFieldToAtlas(dateField: DateField): Record<string, unknown> {
-  return {
-    DateField: dateField.dateField,
-    Offset: dateField.offset ?? 0,
+function convertCensorWindowFromAtlas(atlasCw: Record<string, unknown>): CensorWindow {
+  const cw: CensorWindow = {}
+  if (typeof atlasCw.StartDate === 'string' || atlasCw.StartDate === null) {
+    cw.startDate = atlasCw.StartDate as string | null
   }
-}
-
-/**
- * Convert Atlas Period to internal format
- */
-function convertPeriodFromAtlas(atlasPeriod: Record<string, unknown>): Period {
-  const period: Period = {}
-
-  if (atlasPeriod.StartDate) {
-    period.startDate = convertDateFieldFromAtlas(atlasPeriod.StartDate as { DateField: string; Offset: number })
+  if (typeof atlasCw.EndDate === 'string' || atlasCw.EndDate === null) {
+    cw.endDate = atlasCw.EndDate as string | null
   }
-
-  if (atlasPeriod.EndDate) {
-    period.endDate = convertDateFieldFromAtlas(atlasPeriod.EndDate as { DateField: string; Offset: number })
-  }
-
-  return period
-}
-
-/**
- * Convert Atlas DateField to internal format
- */
-function convertDateFieldFromAtlas(atlasDateField: { DateField: string; Offset: number }): DateField {
-  return {
-    dateField: atlasDateField.DateField as 'START_DATE' | 'END_DATE',
-    offset: atlasDateField.Offset,
-  }
+  return cw
 }
 
 // Helpers

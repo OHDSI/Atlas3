@@ -8,22 +8,44 @@ import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
 
 /**
- * Default color palette matching Vuetify theme
+ * Modern, restrained categorical palette for charts — Tableau 10.
+ *
+ * Atlas 2.15 used D3's d3.scale.category10 (bright, saturated). This
+ * is the well-tested Tableau 10 alternative: same number of distinct
+ * hues, lower saturation, better separation, more elegant on white
+ * surfaces and alongside the Atlas navy chrome.
+ *
+ * Charts that pick a single color use CHART_COLORS[0]; multi-series
+ * charts cycle through the array.
  */
 export const CHART_COLORS = [
-  '#1976D2', // primary blue
-  '#43A047', // success green
-  '#FB8C00', // warning orange
-  '#E53935', // error red
-  '#8E24AA', // purple
-  '#00ACC1', // cyan
-  '#FDD835', // yellow
-  '#6D4C41', // brown
-  '#546E7A', // blue-grey
-  '#7CB342', // light green
-  '#F4511E', // deep orange
-  '#5E35B1'  // deep purple
+  '#4e79a7', // blue
+  '#f28e2c', // orange
+  '#e15759', // red
+  '#76b7b2', // teal
+  '#59a14f', // green
+  '#edc949', // mustard
+  '#af7aa1', // purple
+  '#ff9da7', // soft coral
+  '#9c755f', // taupe
+  '#bab0ab', // warm grey
 ]
+
+/**
+ * Single-hue gradient used by treemaps and other "color-by-value"
+ * surfaces. Encodes magnitude, not category — same semantic as
+ * Atlas 2.15's treemapGradient (light → dark blue, where darker =
+ * larger value).
+ *
+ * Anchored on the primary categorical chart colour (CHART_COLORS[0],
+ * Tableau blue `#4e79a7`) so a treemap reads as part of the same
+ * chart family. The light end is intentionally NOT a near-white tint
+ * — small tiles would visually merge with the white page background.
+ * `#7e9bbf` has ~3.5:1 contrast against white, the darkest end is
+ * the Atlas brand navy `#1f425a` so the gradient tails into the
+ * surrounding chrome.
+ */
+export const TREEMAP_GRADIENT = ['#7e9bbf', '#4e79a7', '#1f425a'] as const
 
 /**
  * Default bar chart configuration
@@ -44,23 +66,50 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
       }
     },
     grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      top: '10%',
-      containLabel: true
+      // Use absolute pixel values so the y-axis name and the chart
+      // title don't overlap with the chart body when stacked
+      // vertically (the previous percentage values gave inconsistent
+      // gaps depending on chart height). 56px top leaves room for
+      // the y-axis name; 16px bottom reserves space for the x-axis
+      // line itself.
+      left: 16,
+      right: 24,
+      bottom: 16,
+      top: 56,
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
       data: data.categories,
       axisLabel: {
-        rotate: data.categories.length > 10 ? 45 : 0,
-        interval: 0
+        // Tier the rotation so labels don't overlap on dense X
+        // axes. Up to 8 categories → horizontal; up to 14 → 30°;
+        // 15+ → 45°. Matches what Tableau / Apache Superset do
+        // with categorical axes.
+        rotate:
+          data.categories.length > 14 ? 45
+            : data.categories.length > 8 ? 30
+              : 0,
+        interval: 0,
+        hideOverlap: true,
       }
     },
     yAxis: {
       type: 'value',
       name: data.unit || 'Count',
+      // Render the y-axis name vertically along the LEFT side of
+      // the axis (rotated 90°) instead of the default top-of-axis
+      // placement. The top placement bled into the previous chart's
+      // bottom area when charts are stacked vertically — vertical
+      // along-axis placement keeps the name inside the chart's own
+      // bounds.
+      nameLocation: 'middle',
+      nameRotate: 90,
+      nameGap: 40,
+      nameTextStyle: {
+        color: '#5e6470',
+        fontSize: 12,
+      },
       axisLabel: {
         formatter: (value: number) => value.toLocaleString()
       }
@@ -177,18 +226,25 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
       }
     },
     grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      top: title ? '15%' : '10%',
-      containLabel: true
+      // Absolute pixels for predictable spacing — see
+      // defaultBarChartOptions for the same rationale. Add extra
+      // top room when a chart title is rendered.
+      left: 16,
+      right: 24,
+      bottom: 16,
+      top: title ? 80 : 56,
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
       boundaryGap: false,
       data: data.xAxis,
       axisLabel: {
-        rotate: data.xAxis.length > 20 ? 45 : 0
+        rotate:
+          data.xAxis.length > 20 ? 45
+            : data.xAxis.length > 12 ? 30
+              : 0,
+        hideOverlap: true,
       }
     },
     yAxis: {
@@ -231,6 +287,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
  * Default treemap configuration
  */
 export function defaultTreemapOptions(data: TreemapNode[], title?: string): EChartsOption {
+  const { min: dataMin, max: dataMax } = extractTreemapValueRange(data)
   return {
     title: title ? {
       text: title,
@@ -260,21 +317,48 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
         return `${displayName}<br/><strong>${value}</strong>`
       }
     },
+    // Color-by-value legend: shows the gradient horizontally at the
+    // bottom of the chart with min/max labels so a user can read the
+    // encoding ("darker = larger value"). Display-only \u2014 actual node
+    // colors are computed by paintTreemapNodesByValue.
+    visualMap: {
+      show: true,
+      type: 'continuous',
+      min: dataMin,
+      max: dataMax,
+      calculable: false,
+      orient: 'horizontal',
+      left: 'center',
+      bottom: 8,
+      itemWidth: 12,
+      itemHeight: 140,
+      inRange: { color: [...TREEMAP_GRADIENT] },
+      text: [dataMax.toLocaleString(), dataMin.toLocaleString()],
+      textStyle: {
+        fontSize: 11,
+        color: '#5e6470'
+      }
+    },
     series: [
       {
         type: 'treemap',
         top: title ? '15%' : '5%',
-        bottom: '5%',
+        bottom: '14%',
         left: '5%',
         right: '5%',
         roam: false,
+        // Click-to-drilldown without zoom. ECharts' built-in
+        // `zoomToNode` was conflicting with the drill-down details
+        // panel: clicking a leaf would zoom + emit drill-down +
+        // re-render the chart, occasionally unmounting the panel
+        // before the user could read it. With nodeClick:false, all
+        // clicks bubble through to TreemapChart's @click handler,
+        // which decides whether the click is a leaf (drill-down)
+        // or a parent (no-op). The breadcrumb is hidden because
+        // it tracks zoom state which we no longer use; the concept
+        // path is shown in the drill-down panel header instead.
         nodeClick: false,
-        breadcrumb: {
-          show: true,
-          emptyItemWidth: 25,
-          height: 22,
-          top: title ? '10%' : '0%'
-        },
+        breadcrumb: { show: false },
         label: {
           show: true,
           formatter: '{b}',
@@ -295,43 +379,141 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
           {
             itemStyle: {
               borderWidth: 3,
-              gapWidth: 3
-            }
+              gapWidth: 3,
+            },
           },
           {
-            colorSaturation: [0.35, 0.5],
             itemStyle: {
               borderWidth: 2,
               gapWidth: 2,
-              borderColorSaturation: 0.6
-            }
-          }
+              borderColorSaturation: 0.6,
+            },
+          },
         ],
-        data: assignTreemapColors(data)
-      }
-    ]
+        // Each node gets its own itemStyle.color computed from the
+        // single-hue gradient — higher aggregate value → darker color.
+        // Matches Atlas 2.15's getcolorvalue semantic.
+        data: paintTreemapNodesByValue(data),
+      },
+    ],
   }
 }
 
 /**
- * Assign colors to treemap nodes recursively
+ * Walk a tree of treemap nodes and return the min / max numeric
+ * value across all leaves.
  */
-function assignTreemapColors(nodes: TreemapNode[], colorIndex = 0): TreemapNode[] {
-  return nodes.map((node, index) => {
-    const currentColorIndex = (colorIndex + index) % CHART_COLORS.length
-    const color = CHART_COLORS[currentColorIndex]
+function extractTreemapValueRange(nodes: TreemapNode[]): { min: number; max: number } {
+  let min = Infinity
+  let max = -Infinity
+  function walk(list: TreemapNode[]) {
+    list.forEach(n => {
+      if (typeof n.value === 'number' && Number.isFinite(n.value)) {
+        if (n.value < min) min = n.value
+        if (n.value > max) max = n.value
+      }
+      if (n.children?.length) walk(n.children)
+    })
+  }
+  walk(nodes)
+  if (!Number.isFinite(min)) min = 0
+  if (!Number.isFinite(max)) max = 1
+  return { min, max }
+}
 
-    return {
-      ...node,
-      itemStyle: {
-        ...node.itemStyle,
-        color: node.itemStyle?.color || color
-      },
-      children: node.children
-        ? assignTreemapColors(node.children, currentColorIndex * 2)
-        : undefined
+/**
+ * Convert a hex string like "#1f425a" to its RGB components.
+ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const v = hex.replace('#', '')
+  return {
+    r: parseInt(v.slice(0, 2), 16),
+    g: parseInt(v.slice(2, 4), 16),
+    b: parseInt(v.slice(4, 6), 16),
+  }
+}
+
+/**
+ * Linearly interpolate across an N-stop gradient. Returns a hex color.
+ * @param stops Array of hex strings, ordered light → dark.
+ * @param t Normalized position in [0, 1].
+ */
+function sampleGradient(stops: readonly string[], t: number): string {
+  const clamped = Math.max(0, Math.min(1, t))
+  const segments = stops.length - 1
+  if (segments < 1) return stops[0] ?? '#1f425a'
+  const segmentSize = 1 / segments
+  const segmentIndex = Math.min(Math.floor(clamped / segmentSize), segments - 1)
+  const localT = (clamped - segmentIndex * segmentSize) / segmentSize
+  const a = hexToRgb(stops[segmentIndex] ?? '#1f425a')
+  const b = hexToRgb(stops[segmentIndex + 1] ?? '#1f425a')
+  const r = Math.round(a.r + (b.r - a.r) * localT)
+  const g = Math.round(a.g + (b.g - a.g) * localT)
+  const blue = Math.round(a.b + (b.b - a.b) * localT)
+  return `#${[r, g, blue].map(v => v.toString(16).padStart(2, '0')).join('')}`
+}
+
+/**
+ * Recursively assign each treemap node an itemStyle.color taken
+ * from the TREEMAP_GRADIENT, scaled by the node's *colour* magnitude
+ * relative to the global colour range.
+ *
+ * Atlas 2.15 semantics: the rectangle AREA encodes prevalence /
+ * personCount (the `value` field); the COLOUR encodes
+ * records-per-person (the `colorValue` field). When `colorValue` is
+ * absent — older callers, hierarchical parent rollups — we fall
+ * back to `value` so the gradient still has something to scale by.
+ *
+ * Higher colour magnitude → darker tile.
+ */
+function paintTreemapNodesByValue(nodes: TreemapNode[]): TreemapNode[] {
+  // Pick the colour magnitude per node: prefer colorValue, else fall
+  // back to value.
+  const colorMagnitude = (node: TreemapNode): number =>
+    node.colorValue ?? node.value ?? 0
+
+  // Compute global min/max of colour magnitudes (recurse).
+  const allColorValues: number[] = []
+  function collect(list: TreemapNode[]) {
+    for (const n of list) {
+      // Only count leaves for the colour scale — parent rollups
+      // would otherwise dominate the range with summed values.
+      if (!n.children || n.children.length === 0) {
+        allColorValues.push(colorMagnitude(n))
+      }
+      if (n.children) collect(n.children)
     }
-  })
+  }
+  collect(nodes)
+
+  const min = allColorValues.length ? Math.min(...allColorValues) : 0
+  const max = allColorValues.length ? Math.max(...allColorValues) : 1
+  const range = max - min || 1
+
+  // Pull the lightest possible sample off zero so tiles with the
+  // smallest colour magnitude don't tint near-white and disappear
+  // against the page background. 0.15 leaves the lowest tile
+  // visibly distinct from a value of 0 / undefined while still
+  // preserving relative ordering across the rest of the range.
+  const FLOOR = 0.15
+
+  function paint(list: TreemapNode[]): TreemapNode[] {
+    return list.map(node => {
+      const tRaw = (colorMagnitude(node) - min) / range
+      const t = FLOOR + tRaw * (1 - FLOOR)
+      const color = sampleGradient(TREEMAP_GRADIENT, t)
+      return {
+        ...node,
+        itemStyle: {
+          ...node.itemStyle,
+          color: node.itemStyle?.color || color,
+        },
+        children: node.children ? paint(node.children) : undefined,
+      }
+    })
+  }
+
+  return paint(nodes)
 }
 
 /**
@@ -843,18 +1025,30 @@ export function trellisChartOptions(
   title?: string,
   maxPlotsPerRow: number = 5
 ): EChartsOption {
-  const categories = data.categories.sort()
+  // Sort categories by leading numeric prefix so age brackets come
+  // out 0-9, 10-19, 20-29, ..., 100-109 instead of the ASCII order
+  // 0-9, 10-19, 100-109, 20-29.
+  const categories = [...data.categories].sort((a, b) => {
+    const aMatch = /^-?(\d+)/.exec(a)
+    const bMatch = /^-?(\d+)/.exec(b)
+    if (aMatch && bMatch) return Number(aMatch[1]) - Number(bMatch[1])
+    return a.localeCompare(b)
+  })
   const totalPlots = categories.length
   const plotsPerRow = Math.min(maxPlotsPerRow, totalPlots)
   const numRows = Math.ceil(totalPlots / plotsPerRow)
 
-  // Grid dimensions
-  const GRID_WIDTH = 90 / plotsPerRow
+  // Grid dimensions. Reserved a bit more horizontal margin on the
+  // left so the rotated y-axis name + tick labels of the leftmost
+  // chart don't collide with the page edge or the previous column.
+  // Bump the vertical gap so the title of the next row sits clear
+  // of the x-axis tick labels of the row above.
+  const GRID_WIDTH = 88 / plotsPerRow
   const GRID_GAP = 5 / plotsPerRow
-  const GRID_LEFT_MARGIN = 5
-  const GRID_HEIGHT = 60 / numRows
-  const GRID_TOP_MARGIN = title ? 15 : 8  // More space if there's a main title
-  const GRID_VERTICAL_GAP = 30 / numRows
+  const GRID_LEFT_MARGIN = 7
+  const GRID_HEIGHT = 56 / numRows
+  const GRID_TOP_MARGIN = title ? 15 : 9  // More space if there's a main title
+  const GRID_VERTICAL_GAP = 14
 
   // Calculate global Y-axis range for consistent scale across all plots
   const allYValues = data.series.flatMap(s => s.data.map(d => d.y))
@@ -873,35 +1067,36 @@ export function trellisChartOptions(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gridTitles: any[] = []
 
+  // Add the global "Age Group / Gender" header once (above the first
+  // row) and a global "Year" footer once (below the last row).
+  // Previously these were rendered per-row, which collided with the
+  // individual category titles (e.g., "100-109") sitting at the same
+  // top offset.
+  const lastRowTop = (numRows - 1) * (GRID_HEIGHT + GRID_VERTICAL_GAP) + GRID_TOP_MARGIN
+  gridTitles.push({
+    text: 'Age Group / Gender',
+    top: `${Math.max(GRID_TOP_MARGIN - 7, 1)}%`,
+    left: 'center',
+    textStyle: {
+      fontSize: 13,
+      color: '#6b6b6b',
+    },
+  })
+  gridTitles.push({
+    text: 'Year',
+    top: `${lastRowTop + GRID_HEIGHT + 6}%`,
+    left: 'center',
+    textStyle: {
+      fontSize: 13,
+      color: '#6b6b6b',
+    },
+  })
+
   categories.forEach((category, index) => {
     const rowIndex = Math.floor(index / plotsPerRow)
     const colIndex = index % plotsPerRow
 
     const rowTop = rowIndex * (GRID_HEIGHT + GRID_VERTICAL_GAP) + GRID_TOP_MARGIN
-
-    // Add row labels (only once per row, when colIndex === 0)
-    if (colIndex === 0) {
-      // Top label for this row (positioned above the demographic names)
-      gridTitles.push({
-        text: 'Age Group / Gender',
-        top: `${rowTop - 4.5}%`,
-        left: 'center',
-        textStyle: {
-          fontSize: 13,
-          color: '#6b6b6b'
-        }
-      })
-      // Bottom label for this row (positioned below x-axis)
-      gridTitles.push({
-        text: 'Year',
-        top: `${rowTop + GRID_HEIGHT + 3}%`,
-        left: 'center',
-        textStyle: {
-          fontSize: 13,
-          color: '#6b6b6b'
-        }
-      })
-    }
 
     // Grid positioning
     grid.push({
@@ -971,16 +1166,22 @@ export function trellisChartOptions(
         show: colIndex === 0,
         fontSize: 10
       },
-      // Only show y axis name for leftmost chart in each row
+      // Only show y axis name for leftmost chart in each row.
+      // Render the name vertically (rotated 90°) along the y-axis
+      // line so it doesn't extend horizontally across the chart
+      // area or collide with the row above. nameGap stays modest
+      // so the label sits next to the tick numbers, not far left.
       ...(colIndex === 0 && {
         name: 'Prevalence Per 1000 People',
         nameLocation: 'middle',
-        nameGap: 50,
+        nameRotate: 90,
+        nameGap: 38,
         position: 'left',
         nameTextStyle: {
-          fontSize: 14,
-          fontWeight: 'bold'
-        }
+          fontSize: 12,
+          fontWeight: 'normal',
+          color: '#5e6470',
+        },
       })
     })
 

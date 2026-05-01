@@ -1,0 +1,43 @@
+/* Atlas3 typography utility classes
+ *
+ * The five rhythm classes used in the refreshed design language.
+ * Use Vuetify's text-* classes for everything else.
+ */
+
+.text-display {
+  font-size: 40px;
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+.text-page-title {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: rgb(var(--v-theme-on-surface));
+  margin: 0;
+}
+
+.text-page-subtitle {
+  font-size: 13px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  margin: 0;
+}
+
+.text-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(var(--v-theme-primary));
+  display: inline-block;
+}
+
+.text-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--v-theme-on-surface-variant));
+}

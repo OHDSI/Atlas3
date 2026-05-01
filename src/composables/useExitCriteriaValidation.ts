@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod'
-import type { ExitCriteria, Period } from '@/models/cohort.types'
+import type { ExitCriteria, CensorWindow } from '@/models/cohort.types'
 import type { ValidationError, ValidationResult } from '@/models/validation.types'
 
 /**
@@ -48,28 +48,25 @@ const exitCriteriaSchema = z.object({
 )
 
 /**
- * Zod schema for CensorWindow (Period) validation
+ * Zod schema for CensorWindow validation. Atlas 2.15 stores literal
+ * ISO date strings (yyyy-mm-dd) or null for left/right cohort
+ * trimming. Validate that startDate <= endDate when both are set.
  */
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD')
+
 const censorWindowSchema = z.object({
-  startDate: z.object({
-    dateField: z.enum(['START_DATE', 'END_DATE']),
-    offset: z.number().int()
-  }).optional(),
-  endDate: z.object({
-    dateField: z.enum(['START_DATE', 'END_DATE']),
-    offset: z.number().int()
-  }).optional()
+  startDate: isoDate.nullable().optional(),
+  endDate: isoDate.nullable().optional()
 }).refine(
   (data) => {
-    // Validate start <= end if both present
     if (data.startDate && data.endDate) {
-      return data.startDate.offset! <= data.endDate.offset!
+      return data.startDate <= data.endDate
     }
     return true
   },
   {
-    message: 'Start offset must be less than or equal to end offset',
-    path: ['endDate', 'offset']
+    message: 'Start date must be on or before end date',
+    path: ['endDate']
   }
 )
 
@@ -126,7 +123,7 @@ export function useExitCriteriaValidation() {
   /**
    * Validate CensorWindow (Period)
    */
-  function validateCensorWindow(censorWindow: Period | undefined | null): ValidationResult {
+  function validateCensorWindow(censorWindow: CensorWindow | undefined | null): ValidationResult {
     if (!censorWindow) {
       return { valid: true, errors: [] }
     }
@@ -151,7 +148,7 @@ export function useExitCriteriaValidation() {
    * Validate single field within CensorWindow
    */
   function validateCensorWindowField(
-    censorWindow: Period,
+    censorWindow: CensorWindow,
     fieldPath: string
   ): string | true {
     try {
