@@ -6,7 +6,7 @@
         :model-value="modelValue.combinationWindow as (typeof combinationWindowOptions)[number]"
         :items="combinationWindowOptions"
         density="compact"
-        variant="underlined"
+        variant="plain"
         hide-details
         :readonly="readonly"
         class="pathway-settings__control"
@@ -19,7 +19,7 @@
         :model-value="modelValue.minCellCount as (typeof minCellCountOptions)[number]"
         :items="minCellCountOptions"
         density="compact"
-        variant="underlined"
+        variant="plain"
         hide-details
         :readonly="readonly"
         class="pathway-settings__control"
@@ -32,7 +32,7 @@
         :model-value="modelValue.maxDepth as (typeof maxDepthOptions)[number]"
         :items="maxDepthOptions"
         density="compact"
-        variant="underlined"
+        variant="plain"
         hide-details
         :readonly="readonly"
         class="pathway-settings__control"
@@ -91,24 +91,39 @@ function update<K extends keyof PathwayDesign>(key: K, value: PathwayDesign[K]) 
 }
 .pathway-settings__row {
   display: grid;
-  grid-template-columns: 1fr 110px;
+  grid-template-columns: 1fr 90px;
   align-items: center;
   gap: 8px;
   padding: 0;
-  min-height: 32px;
+  min-height: 26px;
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
+.pathway-settings__row:last-child { border-bottom: none; }
 .pathway-settings__label {
   font-size: 12px;
   color: rgba(var(--v-theme-on-surface), 0.78);
 }
-.pathway-settings__control :deep(.v-field__input) {
-  min-height: 28px;
-  padding-top: 0;
-  padding-bottom: 0;
-  font-size: 12px;
+.pathway-settings__control :deep(.v-field) {
+  min-height: 24px;
 }
+.pathway-settings__control :deep(.v-field__input) {
+  min-height: 24px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pathway-settings__control :deep(.v-field__append-inner) {
+  padding-top: 0;
+}
+.pathway-settings__control :deep(.v-input__details) { display: none; }
+.pathway-settings__switch :deep(.v-selection-control) { min-height: 24px; }
 .pathway-settings__switch :deep(.v-switch__track) {
-  height: 16px;
-  min-width: 30px;
+  height: 14px;
+  min-width: 28px;
+  opacity: 0.4;
+}
+.pathway-settings__switch :deep(.v-switch__thumb) {
+  width: 12px;
+  height: 12px;
 }
 </style>
