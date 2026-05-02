@@ -2460,7 +2460,22 @@
       "versions": "Versions",
       "messages": "Messages"
     },
-    "title": "Incidence Rate Analysis"
+    "title": "Incidence Rate Analysis",
+    "workbench": {
+      "noRunsHint": "Generate against a data source to see the rate.",
+      "noRunsTitle": "No runs yet",
+      "noRunsYet": "No runs yet",
+      "rateSummary": "Rate summary",
+      "runFailedHint": "See the error below or try again.",
+      "runFailedTitle": "Generation failed",
+      "runPendingHint": "This may take several minutes — feel free to leave the page.",
+      "runPendingTitle": "Generation in progress",
+      "saveFirstHint": "Saving enables generation against a data source.",
+      "saveFirstTitle": "Save the analysis first",
+      "selectToHint": "Use the target/outcome chips in the toolbar to view a rate.",
+      "selectToTitle": "Pick a target and outcome",
+      "treemap": "Treemap"
+    }
   },
   "profiles": {
     "ageAt": "Age <%=age%>",
