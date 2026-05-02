@@ -68,8 +68,25 @@
         </template>
       </v-tooltip>
       <v-tooltip
+        :text="t('common.import', 'Import design').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-upload"
+            variant="text"
+            size="small"
+            density="compact"
+            :loading="importing"
+            data-testid="pathway-builder-import"
+            @click="handleImportClick"
+          />
+        </template>
+      </v-tooltip>
+      <v-tooltip
         v-if="currentPathway?.id"
-        :text="t('common.export', 'Export').value"
+        :text="t('common.export', 'Export design').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
@@ -79,12 +96,20 @@
             variant="text"
             size="small"
             density="compact"
-            :disabled="!selectedExecutionId"
+            :loading="exporting"
             data-testid="pathway-builder-export"
-            @click="onExport"
+            @click="handleExport"
           />
         </template>
       </v-tooltip>
+      <input
+        ref="importFileInput"
+        type="file"
+        accept="application/json,.json"
+        style="display: none"
+        data-testid="pathway-builder-import-input"
+        @change="handleImportFileChange"
+      >
       <v-btn
         v-if="currentPathway?.id"
         variant="outlined"
@@ -205,6 +230,8 @@ import PathwayWorkbench from './PathwayWorkbench.vue'
 import PathwayGeneratePopover from './PathwayGeneratePopover.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
+import { exportPathway, importPathway } from '@/services/webapi'
+import { logger } from '@/utils/logger'
 import type { VersionsConfig, VersionsTableItem } from '@/components/versions/types'
 import type { Tag } from '@/models/webapi.types'
 
@@ -219,6 +246,9 @@ const showVersions = ref(false)
 const showTags = ref(false)
 const generateMenu = ref(false)
 const selectedExecutionId = ref<number | null>(null)
+const importing = ref(false)
+const exporting = ref(false)
+const importFileInput = ref<HTMLInputElement | null>(null)
 
 const canEdit = computed(() => !isPreviewMode.value)
 const isDirtyRef = computed(() => isDirty.value)
@@ -257,8 +287,73 @@ async function handleTagsUpdate(newTags: Tag[]) {
 async function onSave() { await save() }
 async function onCopy() { await copy() }
 async function onDelete() { await remove() }
-function onExport() {
-  // Export wiring lands in a follow-up; the toolbar/header surface the intent.
+
+function slugifyName(name: string): string {
+  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'design'
+}
+
+function triggerDownload(filename: string, payload: string): void {
+  if (typeof document === 'undefined' || typeof URL === 'undefined') return
+  const blob = new Blob([payload], { type: 'application/json;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+async function handleExport() {
+  const id = currentPathway.value?.id
+  if (!id) return
+  exporting.value = true
+  try {
+    const design = await exportPathway(id)
+    triggerDownload(`pathway-${slugifyName(currentPathway.value?.name ?? '')}-${id}.json`, JSON.stringify(design, null, 2))
+  } catch (err) {
+    logger.error('PathwayBuilder', 'Export failed', err)
+    feedback.value = { message: t('characterizations.editor.utilities.import.importError', 'Export failed').value, color: 'error' }
+  } finally {
+    exporting.value = false
+  }
+}
+
+function handleImportClick() {
+  importFileInput.value?.click()
+}
+
+async function handleImportFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  target.value = ''
+  if (!file) return
+
+  importing.value = true
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(await file.text())
+  } catch (err) {
+    logger.error('PathwayBuilder', 'Import parse failed', err)
+    feedback.value = { message: t('characterizations.editor.utilities.import.parseError', 'Could not parse design JSON').value, color: 'error' }
+    importing.value = false
+    return
+  }
+
+  try {
+    const created = await importPathway(parsed)
+    feedback.value = { message: t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully').value, color: 'success' }
+    if (created.id != null) {
+      await router.push(`/pathways/${created.id}`)
+    }
+  } catch (err) {
+    logger.error('PathwayBuilder', 'Import failed', err)
+    feedback.value = { message: t('characterizations.editor.utilities.import.importError', 'Import failed').value, color: 'error' }
+  } finally {
+    importing.value = false
+  }
 }
 
 function onSnackbarUpdate(open: boolean) {

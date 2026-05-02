@@ -71,7 +71,7 @@
             offset-y="6"
           >
             <v-btn
-              icon="mdi-checkbox-marked-circle-outline"
+              icon="mdi-message-text"
               variant="text"
               size="small"
               density="compact"

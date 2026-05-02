@@ -67,6 +67,49 @@
         </template>
       </v-tooltip>
       <v-tooltip
+        :text="t('common.import', 'Import design').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-upload"
+            variant="text"
+            size="small"
+            density="compact"
+            :loading="importing"
+            data-testid="ir-builder-import-icon"
+            @click="handleImportClick"
+          />
+        </template>
+      </v-tooltip>
+      <v-tooltip
+        v-if="store.currentIR?.id"
+        :text="t('common.export', 'Export design').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-download"
+            variant="text"
+            size="small"
+            density="compact"
+            :loading="exporting"
+            data-testid="ir-builder-export-icon"
+            @click="handleExport"
+          />
+        </template>
+      </v-tooltip>
+      <input
+        ref="importFileInput"
+        type="file"
+        accept="application/json,.json"
+        style="display: none"
+        data-testid="ir-builder-import-input"
+        @change="handleImportFileChange"
+      >
+      <v-tooltip
         v-if="store.isPreviewMode"
         :text="t('common.backToCurrent', 'Back to current version').value"
         location="bottom"
@@ -240,6 +283,8 @@ import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/Incidence
 import IncidenceRateGenerationPanel from '@/components/incidence-rate/IncidenceRateGenerationPanel.vue'
 import IncidenceRateVersionsPanel from '@/components/incidence-rate/IncidenceRateVersionsPanel.vue'
 import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
+import { exportIncidenceRate, importIncidenceRate } from '@/services/webapi'
+import { logger } from '@/utils/logger'
 import type { Tag } from '@/models/webapi.types'
 
 const { t } = useI18n()
@@ -251,11 +296,82 @@ const askDelete = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
+const importing = ref(false)
+const exporting = ref(false)
+const importFileInput = ref<HTMLInputElement | null>(null)
 
 const irTags = computed<Tag[]>(() => store.currentIR?.tags ?? [])
 
 async function handleTagsUpdate(newTags: Tag[]) {
   await store.syncTags(newTags)
+}
+
+function slugifyName(name: string): string {
+  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'design'
+}
+
+function triggerDownload(filename: string, payload: string): void {
+  if (typeof document === 'undefined' || typeof URL === 'undefined') return
+  const blob = new Blob([payload], { type: 'application/json;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+async function handleExport() {
+  const id = store.currentIR?.id
+  if (!id) return
+  exporting.value = true
+  try {
+    const design = await exportIncidenceRate(id)
+    triggerDownload(`incidence-rate-${slugifyName(store.currentIR?.name ?? '')}-${id}.json`, JSON.stringify(design, null, 2))
+  } catch (err) {
+    logger.error('IRBuilder', 'Export failed', err)
+    feedback.value = { message: t('characterizations.editor.utilities.import.importError', 'Export failed').value, color: 'error' }
+  } finally {
+    exporting.value = false
+  }
+}
+
+function handleImportClick() {
+  importFileInput.value?.click()
+}
+
+async function handleImportFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  target.value = ''
+  if (!file) return
+
+  importing.value = true
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(await file.text())
+  } catch (err) {
+    logger.error('IRBuilder', 'Import parse failed', err)
+    feedback.value = { message: t('characterizations.editor.utilities.import.parseError', 'Could not parse design JSON').value, color: 'error' }
+    importing.value = false
+    return
+  }
+
+  try {
+    const created = await importIncidenceRate(parsed)
+    feedback.value = { message: t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully').value, color: 'success' }
+    if (created.id != null) {
+      await router.push(`/incidence-rates/${created.id}`)
+    }
+  } catch (err) {
+    logger.error('IRBuilder', 'Import failed', err)
+    feedback.value = { message: t('characterizations.editor.utilities.import.importError', 'Import failed').value, color: 'error' }
+  } finally {
+    importing.value = false
+  }
 }
 
 const irId = computed<number | null>(() => store.currentIR?.id ?? null)
