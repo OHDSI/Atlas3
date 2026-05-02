@@ -158,7 +158,7 @@
         data-testid="char-builder-copy"
         @click="handleSaveCopy"
       >
-        {{ t('common.createACopy', 'Save as Copy') }}
+        {{ t('common.duplicate', 'Duplicate') }}
       </v-btn>
       <v-btn
         v-if="isEditing"

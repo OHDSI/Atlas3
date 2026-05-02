@@ -91,7 +91,7 @@
         data-testid="ir-builder-copy"
         @click="onCopy"
       >
-        {{ t('common.copy', 'Copy') }}
+        {{ t('common.duplicate', 'Duplicate') }}
       </v-btn>
       <v-btn
         v-if="store.currentIR?.id"

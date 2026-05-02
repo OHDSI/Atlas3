@@ -93,7 +93,7 @@
         data-testid="pathway-builder-copy"
         @click="onCopy"
       >
-        {{ t('common.copy', 'Copy') }}
+        {{ t('common.duplicate', 'Duplicate') }}
       </v-btn>
       <v-btn
         v-if="currentPathway?.id"
