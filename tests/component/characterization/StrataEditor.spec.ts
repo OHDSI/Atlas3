@@ -6,6 +6,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -37,7 +38,12 @@ function mountEditor(initial: Stratum[] = []) {
     },
     global: {
       plugins: [vuetify],
-      stubs: { CriteriaGroupEditor: true, AppDialogHeader: true },
+      stubs: {
+        CriteriaGroupEditor: true,
+        AppDialogHeader: true,
+        ConceptSetSelectionDialog: true,
+        ConceptSearchDialog: true,
+      },
     },
   })
 }
@@ -46,6 +52,7 @@ let wrapper: ReturnType<typeof mountEditor>
 
 describe('StrataEditor', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 

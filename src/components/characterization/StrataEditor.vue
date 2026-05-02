@@ -2,9 +2,10 @@
   StrataEditor — labelled "Subgroup analyses" in the UI to match Atlas 2.15
   terminology.
 
-  Per-subgroup criteria editing happens in a wide dialog (`CriteriaGroupEditor`
-  is too dense for the 280px rail). The card shows a name, a status chip
-  ("configured" / "empty"), and an Edit Criteria action.
+  Per-subgroup criteria editing happens in a wide dialog because the
+  CriteriaGroupEditor is too dense for the 280px rail. Concept-set and
+  concept pickers are wired directly so the user can pick from existing
+  concept sets or search the vocabulary while editing strata criteria.
 -->
 <template>
   <div class="strata-editor">
@@ -118,6 +119,8 @@
             v-if="dialogStratum"
             :model-value="dialogGroup"
             @update:model-value="onDialogGroupUpdate"
+            @select-concept-set="onSelectConceptSet"
+            @select-concept="onSelectConcept"
           />
         </v-card-text>
         <v-card-actions class="strata-editor__dialog-actions">
@@ -133,6 +136,17 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <ConceptSetSelectionDialog
+      v-model="conceptSetDialogOpen"
+      @concept-set-selected="onConceptSetSelected"
+    />
+
+    <ConceptSearchDialog
+      v-model="conceptSearchDialogOpen"
+      :domain-filter="conceptSearchDomainFilter"
+      @concepts-selected="onConceptsSelected"
+    />
   </div>
 </template>
 
@@ -141,10 +155,15 @@ import { computed, ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 
 import { useI18n } from '@/composables/useI18n'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
 import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
+import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
+import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
 import type { Stratum } from '@/models/characterization.types'
-import type { CriteriaGroup } from '@/models/cohort.types'
+import type { ConceptSetReference, CriteriaGroup } from '@/models/cohort.types'
+import type { Concept as AtlasConcept } from '@/models/event.types'
+import type { Concept as PickerConcept } from '@/models/concept-set.types'
 
 const props = defineProps<{
   modelValue: Stratum[]
@@ -157,9 +176,23 @@ const emit = defineEmits<{
 }>()
 
 const { t, tv } = useI18n()
+const conceptSetsStore = useConceptSetsStore()
 
 const dialogOpen = ref<boolean>(false)
 const editingStratumId = ref<string | null>(null)
+
+const conceptSetDialogOpen = ref<boolean>(false)
+const conceptSearchDialogOpen = ref<boolean>(false)
+// Context captured when CriteriaGroupEditor asks for a concept set or concept,
+// so the dialog's confirmation can write back to the right event/attribute.
+const pickerContext = ref<{
+  eventIndex: number
+  attributeIndex?: number
+  domainFilter?: string
+} | null>(null)
+const conceptSearchDomainFilter = computed<string | undefined>(
+  () => pickerContext.value?.domainFilter,
+)
 
 const dialogStratum = computed<Stratum | null>(() => {
   if (!editingStratumId.value) return null
@@ -256,6 +289,112 @@ function onDialogGroupUpdate(group: CriteriaGroup) {
   const id = editingStratumId.value
   const next = props.modelValue.map(s => (s.id === id ? { ...s, criteria: group } : s))
   emitUpdate(next)
+}
+
+function onSelectConceptSet(payload: number | { eventIndex: number; eventId: string }) {
+  const eventIndex = typeof payload === 'number' ? payload : payload.eventIndex
+  pickerContext.value = { eventIndex }
+  conceptSetDialogOpen.value = true
+}
+
+function onSelectConcept(context: {
+  eventIndex: number
+  attributeIndex: number
+  domainFilter: string | undefined
+}) {
+  pickerContext.value = {
+    eventIndex: context.eventIndex,
+    attributeIndex: context.attributeIndex,
+    domainFilter: context.domainFilter,
+  }
+  conceptSearchDialogOpen.value = true
+}
+
+async function onConceptSetSelected(conceptSet: {
+  id: number | string
+  name: string
+  items?: unknown[]
+}) {
+  const ctx = pickerContext.value
+  if (!ctx) {
+    conceptSetDialogOpen.value = false
+    return
+  }
+  // Fetch the full concept set with items so the criteria payload is
+  // self-contained (matches the cohort builder's behavior).
+  let full: ConceptSetReference = {
+    id: conceptSet.id,
+    name: conceptSet.name,
+    items: conceptSet.items ?? [],
+  }
+  if (conceptSet.id != null && (!conceptSet.items || conceptSet.items.length === 0)) {
+    await conceptSetsStore.fetchOne(conceptSet.id)
+    if (conceptSetsStore.currentSet && conceptSetsStore.currentSet.id !== undefined) {
+      full = {
+        id: conceptSetsStore.currentSet.id,
+        name: conceptSetsStore.currentSet.name,
+        items: conceptSetsStore.currentSet.items ?? [],
+      }
+    }
+  }
+
+  const group = dialogGroup.value
+  const event = group.events[ctx.eventIndex]
+  if (event) {
+    const updated: CriteriaGroup = {
+      ...group,
+      events: group.events.map((e, i) =>
+        i === ctx.eventIndex ? { ...e, conceptSet: full } : e,
+      ),
+    }
+    onDialogGroupUpdate(updated)
+  }
+  conceptSetDialogOpen.value = false
+  pickerContext.value = null
+}
+
+function onConceptsSelected(concepts: PickerConcept[]) {
+  const ctx = pickerContext.value
+  if (!ctx || ctx.attributeIndex === undefined || concepts.length === 0) {
+    conceptSearchDialogOpen.value = false
+    pickerContext.value = null
+    return
+  }
+
+  // Picker yields camelCase concepts; the cohort definition stores them in
+  // Atlas's UPPERCASE shape. Convert at the boundary.
+  const converted: AtlasConcept[] = concepts.map(c => ({
+    CONCEPT_ID: c.conceptId,
+    CONCEPT_NAME: c.conceptName,
+    CONCEPT_CODE: c.conceptCode,
+    DOMAIN_ID: c.domainId,
+    VOCABULARY_ID: c.vocabularyId,
+    CONCEPT_CLASS_ID: c.conceptClassId,
+    STANDARD_CONCEPT: c.standardConcept ?? null,
+    INVALID_REASON: c.invalidReason ?? null,
+  }))
+
+  const group = dialogGroup.value
+  const event = group.events[ctx.eventIndex]
+  if (event && event.attributes) {
+    const attr = event.attributes[ctx.attributeIndex]
+    if (attr && attr.type === 'concept') {
+      const merged = [...(attr.concepts ?? []), ...converted]
+      const updated: CriteriaGroup = {
+        ...group,
+        events: group.events.map((e, i) => {
+          if (i !== ctx.eventIndex) return e
+          const attrs = (e.attributes ?? []).map((a, j) =>
+            j === ctx.attributeIndex && a.type === 'concept' ? { ...a, concepts: merged } : a,
+          )
+          return { ...e, attributes: attrs }
+        }),
+      }
+      onDialogGroupUpdate(updated)
+    }
+  }
+  conceptSearchDialogOpen.value = false
+  pickerContext.value = null
 }
 
 function addStratum() {
