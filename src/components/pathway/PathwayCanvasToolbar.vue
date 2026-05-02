@@ -33,12 +33,16 @@
         :class="['canvas-toolbar__seg-btn', { 'canvas-toolbar__seg-btn--active': mode === 'visual' }]"
         data-testid="toolbar-mode-visual"
         @click="$emit('update:mode', 'visual')"
-      >{{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}</button>
+      >
+        {{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}
+      </button>
       <button
         :class="['canvas-toolbar__seg-btn', { 'canvas-toolbar__seg-btn--active': mode === 'tabular' }]"
         data-testid="toolbar-mode-tabular"
         @click="$emit('update:mode', 'tabular')"
-      >{{ t('pathway.results.tabular', 'Tabular') }}</button>
+      >
+        {{ t('pathway.results.tabular', 'Tabular') }}
+      </button>
     </div>
 
     <button
@@ -46,14 +50,18 @@
       data-testid="toolbar-generate"
       :title="t('components.generation.generate', 'Generate').value"
       @click="$emit('open-generate')"
-    >▶</button>
+    >
+      ▶
+    </button>
     <button
       class="canvas-toolbar__icon-btn"
       data-testid="toolbar-export"
       :disabled="!activeRun"
       :title="t('common.export', 'Export').value"
       @click="$emit('export')"
-    >↓</button>
+    >
+      ↓
+    </button>
   </div>
 </template>
 

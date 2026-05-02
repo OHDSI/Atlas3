@@ -3,7 +3,10 @@
     v-if="currentPathway"
     class="pathway-design-form"
   >
-    <details open class="pathway-design-form__section">
+    <details
+      open
+      class="pathway-design-form__section"
+    >
       <summary class="pathway-design-form__header">
         <span class="text-eyebrow">{{ t('columns.description', 'Description').value }}</span>
         <span class="pathway-design-form__rule" />
@@ -31,7 +34,10 @@
       />
     </details>
 
-    <details open class="pathway-design-form__section">
+    <details
+      open
+      class="pathway-design-form__section"
+    >
       <summary class="pathway-design-form__header">
         <span class="text-eyebrow">{{ t('facets.caption.targetCohorts', 'Target Cohorts').value }}</span>
         <span class="pathway-design-form__rule" />
@@ -41,7 +47,9 @@
           prepend-icon="mdi-plus"
           :disabled="readonly"
           @click.prevent.stop="showTargetPicker = true"
-        >{{ t('common.add', 'Add').value }}</v-btn>
+        >
+          {{ t('common.add', 'Add').value }}
+        </v-btn>
       </summary>
       <PathwayCohortList
         :cohorts="targetCohorts"
@@ -56,7 +64,10 @@
       />
     </details>
 
-    <details open class="pathway-design-form__section">
+    <details
+      open
+      class="pathway-design-form__section"
+    >
       <summary class="pathway-design-form__header">
         <span class="text-eyebrow">{{ t('columns.eventCohort', 'Event Cohorts').value }}</span>
         <span class="pathway-design-form__rule" />
@@ -66,7 +77,9 @@
           prepend-icon="mdi-plus"
           :disabled="readonly"
           @click.prevent.stop="showEventPicker = true"
-        >{{ t('common.add', 'Add').value }}</v-btn>
+        >
+          {{ t('common.add', 'Add').value }}
+        </v-btn>
       </summary>
       <PathwayCohortList
         :cohorts="eventCohorts"
@@ -81,7 +94,10 @@
       />
     </details>
 
-    <details open class="pathway-design-form__section">
+    <details
+      open
+      class="pathway-design-form__section"
+    >
       <summary class="pathway-design-form__header">
         <span class="text-eyebrow">{{ t('ple.spec.analysisSettings', 'Settings').value }}</span>
         <span class="pathway-design-form__rule" />

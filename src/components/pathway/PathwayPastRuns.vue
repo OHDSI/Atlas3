@@ -18,7 +18,9 @@
   <div
     v-else
     class="past-runs__empty"
-  >{{ t('common.noData', 'None yet').value }}</div>
+  >
+    {{ t('common.noData', 'None yet').value }}
+  </div>
 </template>
 
 <script setup lang="ts">

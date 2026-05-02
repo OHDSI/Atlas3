@@ -25,7 +25,9 @@
         class="workbench__canvas-empty"
         data-testid="canvas-empty"
       >
-        <div class="workbench__canvas-empty-icon">◌</div>
+        <div class="workbench__canvas-empty-icon">
+          ◌
+        </div>
         <h3>{{ t('pathway.workbench.emptyChartTitle', 'Your sunburst will appear here').value }}</h3>
         <p>{{ t('pathway.workbench.emptyChartHint', 'Pick at least one target cohort and a few event cohorts on the left, then run a generation against a data source.').value }}</p>
       </div>
@@ -35,14 +37,18 @@
         class="workbench__canvas-empty"
         data-testid="canvas-no-run"
       >
-        <div class="workbench__canvas-empty-icon">▶</div>
+        <div class="workbench__canvas-empty-icon">
+          ▶
+        </div>
         <h3>{{ t('pathway.workbench.noRunYetTitle', 'No runs yet').value }}</h3>
         <p>{{ t('pathway.workbench.noRunYetHint', 'Generate against a data source to see the sunburst.').value }}</p>
         <v-btn
           color="primary"
           variant="flat"
           @click="onOpenGenerate"
-        >{{ t('components.generation.generate', 'Generate') }}</v-btn>
+        >
+          {{ t('components.generation.generate', 'Generate') }}
+        </v-btn>
       </div>
 
       <div
@@ -94,7 +100,9 @@
           :target-cohort-count="targetGroup.targetCohortCount"
           :target-cohort-name="targetCohortName"
         />
-        <div class="workbench__sec-label">{{ t('pathway.workbench.legend', 'Legend').value }}</div>
+        <div class="workbench__sec-label">
+          {{ t('pathway.workbench.legend', 'Legend').value }}
+        </div>
         <PathwayLegend
           :design="design!"
           :colors="colors"
@@ -102,7 +110,9 @@
           :target-cohort-count="targetGroup.targetCohortCount"
           :total-pathways-count="targetGroup.totalPathwaysCount"
         />
-        <div class="workbench__sec-label">{{ t('pathway.workbench.selectedPath', 'Selected path').value }}</div>
+        <div class="workbench__sec-label">
+          {{ t('pathway.workbench.selectedPath', 'Selected path').value }}
+        </div>
         <PathwayPathStats
           v-if="pathStats"
           :stats="pathStats"
@@ -112,13 +122,17 @@
           v-else
           class="workbench__insights-hint"
           data-testid="insights-empty-hint"
-        >{{ t('pathway.workbench.selectPathHint', 'Click a slice to inspect a treatment path').value }}</div>
+        >
+          {{ t('pathway.workbench.selectPathHint', 'Click a slice to inspect a treatment path').value }}
+        </div>
       </template>
       <div
         v-else
         class="workbench__insights-hint"
         data-testid="insights-empty-hint"
-      >{{ t('pathway.workbench.insightsEmptyHint', 'Insights appear after the first run.').value }}</div>
+      >
+        {{ t('pathway.workbench.insightsEmptyHint', 'Insights appear after the first run.').value }}
+      </div>
     </aside>
   </div>
 </template>

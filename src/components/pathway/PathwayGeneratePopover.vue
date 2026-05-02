@@ -21,13 +21,17 @@
         variant="flat"
         :disabled="!canGenerate || !selectedSource || generation.polling.value || !canGenerateForSource(selectedSource)"
         @click="onStart"
-      >{{ t('components.generation.generate', 'Generate') }}</v-btn>
+      >
+        {{ t('components.generation.generate', 'Generate') }}
+      </v-btn>
       <v-btn
         size="small"
         variant="text"
         :disabled="!generation.polling.value || !canCancelForSource(selectedSource)"
         @click="onCancel"
-      >{{ t('common.cancel', 'Cancel') }}</v-btn>
+      >
+        {{ t('common.cancel', 'Cancel') }}
+      </v-btn>
     </div>
 
     <div
@@ -42,7 +46,9 @@
       variant="tonal"
       density="compact"
       class="mb-0"
-    >{{ generation.error.value }}</v-alert>
+    >
+      {{ generation.error.value }}
+    </v-alert>
   </div>
 </template>
 
