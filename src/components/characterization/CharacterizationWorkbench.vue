@@ -148,7 +148,7 @@ const router = useRouter()
 const store = useCharacterizationStore()
 const { execution, prevalence, distribution, resultCount, error, load, reset } = useCharacterizationResults()
 
-const viewMode = ref<ViewMode>('table1')
+const viewMode = ref<ViewMode>('perAnalysis')
 const config = ref<Table1Config>({ ...DEFAULT_TABLE1_CONFIG })
 const filters = ref<Table1Filters>({ ...DEFAULT_TABLE1_FILTERS })
 const configureOpen = ref<boolean>(false)

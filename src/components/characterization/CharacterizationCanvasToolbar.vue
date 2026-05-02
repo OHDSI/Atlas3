@@ -9,18 +9,18 @@
       @update:model-value="(v: ViewMode | null) => v && $emit('update:mode', v)"
     >
       <v-btn
-        value="table1"
-        size="small"
-        data-testid="char-toolbar-mode-table1"
-      >
-        {{ t('cc.viewEdit.workbench.modeTable1', 'Table 1').value }}
-      </v-btn>
-      <v-btn
         value="perAnalysis"
         size="small"
         data-testid="char-toolbar-mode-perAnalysis"
       >
         {{ t('cc.viewEdit.workbench.modePerAnalysis', 'Per-analysis').value }}
+      </v-btn>
+      <v-btn
+        value="table1"
+        size="small"
+        data-testid="char-toolbar-mode-table1"
+      >
+        {{ t('cc.viewEdit.workbench.modeTable1', 'Table 1').value }}
       </v-btn>
     </v-btn-toggle>
 
