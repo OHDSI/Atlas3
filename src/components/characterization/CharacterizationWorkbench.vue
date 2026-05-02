@@ -115,7 +115,7 @@ import {
 } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
-import { logger } from '@/utils/logger'
+import { arrayToCsv, downloadCsv } from '@/utils/csv'
 
 import type { ViewMode } from './CharacterizationCanvasToolbar.vue'
 
@@ -228,7 +228,39 @@ function onRunStarted(exec: CharacterizationExecution): void {
 function onExplore(row: PrevalenceStat): void { emit('explore', row) }
 
 function onExport(): void {
-  logger.debug('CharacterizationWorkbench', 'export not yet wired in this task')
+  const rows: Array<Record<string, string | number | null>> = []
+  for (const row of prevalence.value) {
+    const sKey = Object.keys(row.pct)[0]
+    if (!sKey) continue
+    for (const cohort of cohorts.value) {
+      rows.push({
+        analysisId: row.analysisId,
+        analysisName: row.analysisName,
+        covariateId: row.covariateId,
+        covariateName: row.covariateName,
+        conceptId: row.conceptId,
+        cohortId: cohort.id,
+        cohortName: cohort.name,
+        count: row.count[sKey]?.[String(cohort.id)] ?? null,
+        pct: row.pct[sKey]?.[String(cohort.id)] ?? null,
+        stdDiff: row.stdDiff ?? null,
+      })
+    }
+  }
+  if (rows.length === 0) return
+  const csv = arrayToCsv(rows, [
+    { key: 'analysisId', label: 'Analysis ID' },
+    { key: 'analysisName', label: 'Analysis' },
+    { key: 'covariateId', label: 'Covariate ID' },
+    { key: 'covariateName', label: 'Covariate' },
+    { key: 'conceptId', label: 'Concept ID' },
+    { key: 'cohortId', label: 'Cohort ID' },
+    { key: 'cohortName', label: 'Cohort' },
+    { key: 'count', label: 'Count' },
+    { key: 'pct', label: 'Pct' },
+    { key: 'stdDiff', label: 'Std Diff' },
+  ])
+  downloadCsv(`characterization-${selectedExecutionId.value ?? 'results'}.csv`, csv)
 }
 </script>
 
