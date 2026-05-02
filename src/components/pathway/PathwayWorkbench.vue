@@ -71,7 +71,6 @@
           :target-cohort-id="targetGroup.targetCohortId"
         />
       </div>
-
     </main>
 
     <aside
