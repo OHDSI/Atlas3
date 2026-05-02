@@ -1,5 +1,6 @@
 <template>
   <AnalysisBuilderShell
+    :eyebrow="t('navigation.pathways', 'Pathway analysis').value"
     :title="title"
     :subtitle="subtitle"
     :show-back="true"

@@ -16,7 +16,7 @@
         :items="availableDomains"
         :label="tv('columns.domain', 'Domain')"
         variant="outlined"
-        density="comfortable"
+        density="compact"
         multiple
         chips
         closable-chips
@@ -33,7 +33,7 @@
         item-value="value"
         :label="tv('columns.analysis', 'Analysis')"
         variant="outlined"
-        density="comfortable"
+        density="compact"
         multiple
         chips
         closable-chips
@@ -50,7 +50,7 @@
         item-value="value"
         :label="tv('common.cohort', 'Cohort')"
         variant="outlined"
-        density="comfortable"
+        density="compact"
         clearable
         hide-details
         class="results-filter__select"
@@ -92,16 +92,19 @@ const emit = defineEmits<{
 const { tv } = useI18n()
 
 const analysisItems = computed(() =>
-  props.availableAnalyses.map((a) => ({ title: a.name, value: a.id }))
+  props.availableAnalyses.map(a => ({ title: a.name, value: a.id }))
 )
 
 const cohortItems = computed(() =>
-  props.availableCohorts.map((c) => ({ title: c.name, value: c.id }))
+  props.availableCohorts.map(c => ({ title: c.name, value: c.id }))
 )
 
 function onDomainChange(value: unknown): void {
   if (Array.isArray(value)) {
-    emit('update:selectedDomains', value.filter((v): v is string => typeof v === 'string'))
+    emit(
+      'update:selectedDomains',
+      value.filter((v): v is string => typeof v === 'string')
+    )
   } else if (value === null || value === undefined) {
     emit('update:selectedDomains', [])
   }
@@ -109,7 +112,10 @@ function onDomainChange(value: unknown): void {
 
 function onAnalysisChange(value: unknown): void {
   if (Array.isArray(value)) {
-    emit('update:selectedAnalysisIds', value.filter((v): v is number => typeof v === 'number'))
+    emit(
+      'update:selectedAnalysisIds',
+      value.filter((v): v is number => typeof v === 'number')
+    )
   } else if (value === null || value === undefined) {
     emit('update:selectedAnalysisIds', [])
   }

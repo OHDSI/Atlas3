@@ -15,6 +15,7 @@
 -->
 <template>
   <AnalysisBuilderShell
+    :eyebrow="t('cc.title', 'Characterization').value"
     :title="titleText"
     :error="storeError"
     testid="char-builder"

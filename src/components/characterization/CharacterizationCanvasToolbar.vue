@@ -22,13 +22,6 @@
       >
         {{ t('cc.viewEdit.workbench.modePerAnalysis', 'Per-analysis').value }}
       </v-btn>
-      <v-btn
-        value="distribution"
-        size="small"
-        data-testid="char-toolbar-mode-distribution"
-      >
-        {{ t('cc.viewEdit.workbench.modeDistribution', 'Distribution').value }}
-      </v-btn>
     </v-btn-toggle>
 
     <v-chip
@@ -89,7 +82,7 @@
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
 
-export type ViewMode = 'table1' | 'perAnalysis' | 'distribution'
+export type ViewMode = 'table1' | 'perAnalysis'
 
 interface ActiveRun {
   id: number

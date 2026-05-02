@@ -62,7 +62,7 @@
             @explore="onExplore"
           />
           <CharacterizationPerAnalysisView
-            v-else-if="viewMode === 'perAnalysis'"
+            v-else
             :prevalence="prevalence"
             :distribution="distribution"
             :cohorts="cohorts"
@@ -71,16 +71,6 @@
             :selected-domains="filters.selectedDomains"
             :selected-cohort-id="filters.selectedCohortId"
             @explore="onExplore"
-          />
-          <CharacterizationPerAnalysisView
-            v-else
-            :prevalence="[]"
-            :distribution="distribution"
-            :cohorts="cohorts"
-            :threshold="filters.threshold"
-            :selected-analysis-ids="filters.selectedAnalysisIds"
-            :selected-domains="filters.selectedDomains"
-            :selected-cohort-id="filters.selectedCohortId"
           />
         </template>
 
