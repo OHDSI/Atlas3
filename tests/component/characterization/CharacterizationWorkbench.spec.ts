@@ -61,6 +61,7 @@ describe('CharacterizationWorkbench', () => {
 
   it('switches to per-analysis view on toolbar mode change', async () => {
     const router = makeRouter()
+    await router.push('/characterizations/5')
     const w = mount(CharacterizationWorkbench, {
       global: { plugins: [router, vuetify], stubs },
       props: { modelValue: baseDraft(), characterizationId: 5,
@@ -74,6 +75,7 @@ describe('CharacterizationWorkbench', () => {
 
   it('opens and closes the configure inspector', async () => {
     const router = makeRouter()
+    await router.push('/characterizations/5')
     const w = mount(CharacterizationWorkbench, {
       global: { plugins: [router, vuetify], stubs },
       props: { modelValue: baseDraft(), characterizationId: 5,

@@ -178,8 +178,13 @@ const emptyVariant = computed<'no-runs' | 'run-pending' | 'run-failed' | null>((
 
 watch(
   () => props.characterizationId,
-  async (id) => {
+  async (id, prev) => {
     if (id == null) return
+    if (prev !== undefined && prev !== id && route.query.run !== undefined) {
+      const { run: _run, ...rest } = route.query
+      void _run
+      await router.replace({ query: rest })
+    }
     await store.loadExecutions(id)
     if (selectedExecutionId.value === null) {
       const completed = store.executions.find(e => e.status === 'COMPLETED')
@@ -212,6 +217,7 @@ function onSelectRun(id: number): void {
 function onOpenRunDialog(): void { runDialogOpen.value = true }
 
 function onRunStarted(exec: CharacterizationExecution): void {
+  void router.replace({ query: { ...route.query, run: String(exec.id) } })
   store.pollExecution(exec.id, () => {
     if (props.characterizationId != null) {
       void store.loadExecutions(props.characterizationId)
