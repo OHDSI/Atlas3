@@ -2,10 +2,9 @@
   StrataEditor — labelled "Subgroup analyses" in the UI to match Atlas 2.15
   terminology.
 
-  Phase 3 placeholder for the criteria-builder integration. Each subgroup
-  has a name and a JSON textarea holding the CriteriaGroup payload — the
-  full builder lands in a follow-up. JSON parse errors surface inline as
-  a chip but never block typing.
+  Per-subgroup criteria editing happens in a wide dialog (`CriteriaGroupEditor`
+  is too dense for the 280px rail). The card shows a name, a status chip
+  ("configured" / "empty"), and an Edit Criteria action.
 -->
 <template>
   <div class="strata-editor">
@@ -78,42 +77,74 @@
           @click="removeStratum(index)"
         />
       </div>
-      <v-chip
-        v-if="jsonErrors[stratum.id]"
-        color="error"
-        size="small"
-        variant="tonal"
-        class="strata-editor__chip"
-        :data-testid="`strata-editor-invalid-${index}`"
-      >
-        {{ t('characterizations.editor.strata.invalidJson', 'Invalid JSON').value }}
-      </v-chip>
-      <v-textarea
-        :model-value="jsonText[stratum.id] ?? ''"
-        :label="t('components.dateAdjust.criteriaLabel', 'Criteria (JSON)').value"
-        :placeholder="
-          t(
-            'characterizations.editor.strata.criteriaPlaceholder',
-            'Criteria builder integration ships in a follow-up. For now, paste a CriteriaGroup JSON.'
-          ).value
-        "
-        density="compact"
-        variant="outlined"
-        rows="6"
-        auto-grow
-        class="strata-editor__criteria"
-        :data-testid="`strata-editor-criteria-${index}`"
-        @update:model-value="(value: string) => updateCriteria(stratum.id, value)"
-      />
+      <div class="strata-editor__criteria-row">
+        <v-chip
+          size="x-small"
+          :color="hasCriteria(stratum) ? 'primary' : undefined"
+          :variant="hasCriteria(stratum) ? 'tonal' : 'outlined'"
+          class="strata-editor__criteria-chip"
+        >
+          {{ criteriaSummary(stratum) }}
+        </v-chip>
+        <v-btn
+          size="x-small"
+          variant="text"
+          density="compact"
+          prepend-icon="mdi-pencil-outline"
+          :data-testid="`strata-editor-edit-criteria-${index}`"
+          @click="openCriteriaDialog(stratum.id)"
+        >
+          {{ t('common.edit', 'Edit criteria').value }}
+        </v-btn>
+      </div>
     </div>
+
+    <v-dialog
+      v-model="dialogOpen"
+      max-width="1100"
+      scrollable
+      :persistent="true"
+    >
+      <v-card>
+        <AppDialogHeader
+          :eyebrow="t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value"
+          :title="dialogTitle"
+          :show-close="true"
+          :close-label="t('common.close', 'Close').value"
+          @close="dialogOpen = false"
+        />
+        <v-card-text class="strata-editor__dialog-body">
+          <CriteriaGroupEditor
+            v-if="dialogStratum"
+            :model-value="dialogGroup"
+            @update:model-value="onDialogGroupUpdate"
+          />
+        </v-card-text>
+        <v-card-actions class="strata-editor__dialog-actions">
+          <v-spacer />
+          <v-btn
+            variant="text"
+            size="small"
+            density="compact"
+            @click="dialogOpen = false"
+          >
+            {{ t('common.close', 'Close').value }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, ref } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
 
 import { useI18n } from '@/composables/useI18n'
+import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
 import type { Stratum } from '@/models/characterization.types'
+import type { CriteriaGroup } from '@/models/cohort.types'
 
 const props = defineProps<{
   modelValue: Stratum[]
@@ -127,33 +158,29 @@ const emit = defineEmits<{
 
 const { t, tv } = useI18n()
 
-const jsonText = reactive<Record<string, string>>({})
-const jsonErrors = reactive<Record<string, boolean>>({})
+const dialogOpen = ref<boolean>(false)
+const editingStratumId = ref<string | null>(null)
 
-function syncFromModel(value: Stratum[]) {
-  for (const key of Object.keys(jsonText)) {
-    if (!value.some(s => s.id === key)) {
-      delete jsonText[key]
-      delete jsonErrors[key]
-    }
-  }
-  for (const stratum of value) {
-    if (!(stratum.id in jsonText)) {
-      jsonText[stratum.id] = stringifySafe(stratum.criteria)
-      jsonErrors[stratum.id] = false
-    }
-  }
-}
+const dialogStratum = computed<Stratum | null>(() => {
+  if (!editingStratumId.value) return null
+  return props.modelValue.find(s => s.id === editingStratumId.value) ?? null
+})
 
-watch(() => props.modelValue, syncFromModel, { immediate: true, deep: false })
-
-function stringifySafe(value: unknown): string {
-  try {
-    return JSON.stringify(value ?? {}, null, 2)
-  } catch {
-    return '{}'
+const dialogGroup = computed<CriteriaGroup>(() => {
+  const stratum = dialogStratum.value
+  const candidate = stratum?.criteria as CriteriaGroup | undefined
+  if (candidate && typeof candidate === 'object' && 'logicType' in candidate) {
+    return candidate
   }
-}
+  return { id: uuidv4(), logicType: 'ALL', events: [] }
+})
+
+const dialogTitle = computed<string>(() => {
+  const stratum = dialogStratum.value
+  if (!stratum) return ''
+  return stratum.name.trim()
+    || tv('cc.viewEdit.design.subgroups.namePlaceholder', 'Subgroup name')
+})
 
 function makeUuid(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -190,6 +217,26 @@ function nameErrors(name: string): string[] {
   return []
 }
 
+function hasCriteria(stratum: Stratum): boolean {
+  const c = stratum.criteria as CriteriaGroup | undefined
+  if (!c || typeof c !== 'object') return false
+  const events = (c as CriteriaGroup).events
+  if (!Array.isArray(events) || events.length === 0) return false
+  return true
+}
+
+function criteriaSummary(stratum: Stratum): string {
+  if (!hasCriteria(stratum)) {
+    return tv('characterizations.editor.strata.noCriteria', 'No criteria')
+  }
+  const events = (stratum.criteria as CriteriaGroup).events
+  return tv(
+    'characterizations.editor.strata.eventsCount',
+    `${events.length} event${events.length === 1 ? '' : 's'}`,
+    { n: events.length },
+  )
+}
+
 function emitUpdate(next: Stratum[]) {
   emit('update:modelValue', next)
 }
@@ -199,29 +246,23 @@ function updateName(index: number, name: string) {
   emitUpdate(next)
 }
 
-function updateCriteria(id: string, raw: string) {
-  jsonText[id] = raw
-  let parsed: unknown = {}
-  let invalid = false
-  try {
-    parsed = raw.trim() === '' ? {} : JSON.parse(raw)
-    invalid = false
-  } catch {
-    invalid = true
-  }
-  jsonErrors[id] = invalid
+function openCriteriaDialog(id: string) {
+  editingStratumId.value = id
+  dialogOpen.value = true
+}
 
-  if (!invalid) {
-    const next = props.modelValue.map(s => (s.id === id ? { ...s, criteria: parsed } : s))
-    emitUpdate(next)
-  }
+function onDialogGroupUpdate(group: CriteriaGroup) {
+  if (!editingStratumId.value) return
+  const id = editingStratumId.value
+  const next = props.modelValue.map(s => (s.id === id ? { ...s, criteria: group } : s))
+  emitUpdate(next)
 }
 
 function addStratum() {
   const stratum: Stratum = {
     id: makeUuid(),
     name: '',
-    criteria: {},
+    criteria: { id: uuidv4(), logicType: 'ALL', events: [] },
   }
   emitUpdate([...props.modelValue, stratum])
 }
@@ -278,12 +319,20 @@ function removeStratum(index: number) {
   flex: 1;
 }
 
-.strata-editor__chip {
-  align-self: flex-start;
+.strata-editor__criteria-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
-.strata-editor__criteria :deep(textarea) {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.8rem;
+.strata-editor__criteria-chip { font-size: 11px; }
+
+.strata-editor__dialog-body {
+  padding: 16px 20px;
+}
+
+.strata-editor__dialog-actions {
+  padding: 8px 16px 12px;
 }
 </style>

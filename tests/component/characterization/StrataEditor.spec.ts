@@ -1,9 +1,8 @@
 /**
  * StrataEditor component tests
  *
- * Confirm add/remove flows emit updates and that JSON parse errors surface
- * inline as a chip. The full criteria-builder integration is deferred —
- * here we only validate the JSON-textarea fallback.
+ * Confirm add/remove flows emit updates and that the criteria-edit dialog
+ * forwards CriteriaGroup updates back to the model.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -13,6 +12,7 @@ import * as directives from 'vuetify/directives'
 
 import StrataEditor from '@/components/characterization/StrataEditor.vue'
 import type { Stratum } from '@/models/characterization.types'
+import type { CriteriaGroup } from '@/models/cohort.types'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')
@@ -35,7 +35,10 @@ function mountEditor(initial: Stratum[] = []) {
         wrapper.setProps({ modelValue: value })
       },
     },
-    global: { plugins: [vuetify] },
+    global: {
+      plugins: [vuetify],
+      stubs: { CriteriaGroupEditor: true, AppDialogHeader: true },
+    },
   })
 }
 
@@ -51,7 +54,7 @@ describe('StrataEditor', () => {
     expect(wrapper.find('[data-testid="strata-editor-empty"]').exists()).toBe(true)
   })
 
-  it('emits a new stratum with a UUID id when Add is clicked', async () => {
+  it('emits a new stratum with a UUID id and a default CriteriaGroup when Add is clicked', async () => {
     wrapper = mountEditor([])
 
     await wrapper.get('[data-testid="strata-editor-add"]').trigger('click')
@@ -64,7 +67,9 @@ describe('StrataEditor', () => {
     expect(typeof next[0]!.id).toBe('string')
     expect(next[0]!.id.length).toBeGreaterThan(0)
     expect(next[0]!.name).toBe('')
-    expect(next[0]!.criteria).toEqual({})
+    const criteria = next[0]!.criteria as CriteriaGroup
+    expect(criteria.logicType).toBe('ALL')
+    expect(criteria.events).toEqual([])
   })
 
   it('removing a stratum filters it out of the modelValue', async () => {
@@ -84,32 +89,23 @@ describe('StrataEditor', () => {
     expect(next[0]!.id).toBe('b')
   })
 
-  it('surfaces an inline invalid-JSON chip when criteria parsing fails', async () => {
-    const initial: Stratum[] = [{ id: 'a', name: 'A', criteria: {} }]
+  it('forwards CriteriaGroupEditor update:modelValue back into the stratum', async () => {
+    const group: CriteriaGroup = { id: 'g1', logicType: 'ALL', events: [] }
+    const initial: Stratum[] = [{ id: 'a', name: 'A', criteria: group }]
     wrapper = mountEditor(initial)
 
-    const textarea = wrapper.get('[data-testid="strata-editor-criteria-0"] textarea')
-    await textarea.setValue('{ not valid json')
+    await wrapper.get('[data-testid="strata-editor-edit-criteria-0"]').trigger('click')
     await flushPromises()
 
-    expect(wrapper.find('[data-testid="strata-editor-invalid-0"]').exists()).toBe(true)
-  })
-
-  it('does not emit update on invalid JSON, but does on valid JSON', async () => {
-    const initial: Stratum[] = [{ id: 'a', name: 'A', criteria: {} }]
-    wrapper = mountEditor(initial)
-
-    const textarea = wrapper.get('[data-testid="strata-editor-criteria-0"] textarea')
-
-    await textarea.setValue('{ broken')
+    const editor = wrapper.findComponent({ name: 'CriteriaGroupEditor' })
+    expect(editor.exists()).toBe(true)
+    const nextGroup: CriteriaGroup = { id: 'g1', logicType: 'ANY', events: [] }
+    await editor.vm.$emit('update:modelValue', nextGroup)
     await flushPromises()
-    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
 
-    await textarea.setValue('{"foo": 1}')
-    await flushPromises()
     const emitted = wrapper.emitted('update:modelValue')
     expect(emitted).toBeTruthy()
     const next = emitted![0]![0] as Stratum[]
-    expect(next[0]!.criteria).toEqual({ foo: 1 })
+    expect((next[0]!.criteria as CriteriaGroup).logicType).toBe('ANY')
   })
 })
