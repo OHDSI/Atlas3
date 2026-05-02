@@ -138,7 +138,7 @@ const props = defineProps<{
   activeRunId?: number | null
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'execution:select': [id: number]
 }>()
 
@@ -168,7 +168,13 @@ const settings = computed(() => ({
 async function refreshRuns() {
   if (!props.pathwayId) return
   const r = await listPathwayExecutions(props.pathwayId)
-  if (r.success) pastRuns.value = r.data
+  if (r.success) {
+    pastRuns.value = r.data
+    if (!props.activeRunId) {
+      const latestCompleted = r.data.find(e => e.status === 'COMPLETED')
+      if (latestCompleted) emit('execution:select', latestCompleted.id)
+    }
+  }
 }
 
 watch(() => props.pathwayId, refreshRuns, { immediate: true })
