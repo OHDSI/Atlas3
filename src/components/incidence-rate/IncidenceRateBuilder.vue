@@ -499,6 +499,7 @@ async function onDelete() {
   border: none;
   border-bottom: 1px dashed transparent;
   padding: 0 0 2px;
+  margin: 0;
   font-family: inherit;
   outline: none;
 }
@@ -522,6 +523,7 @@ async function onDelete() {
   border: none;
   border-bottom: 1px dashed transparent;
   padding: 0 0 2px;
+  margin: 0;
   font-family: inherit;
   outline: none;
 }
