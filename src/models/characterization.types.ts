@@ -71,7 +71,7 @@ export interface Stratum {
 
 export const StratumSchema = z
   .object({
-    id: z.string(),
+    id: z.union([z.string(), z.number()]).transform((v) => String(v)),
     name: z.string(),
     criteria: z.unknown(),
   })

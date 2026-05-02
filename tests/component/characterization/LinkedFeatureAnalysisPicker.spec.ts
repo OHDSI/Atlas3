@@ -66,13 +66,16 @@ describe('LinkedFeatureAnalysisPicker', () => {
     wrapper.unmount()
   })
 
-  it('renders linked rows with name + per-row toggles', () => {
+  it('renders linked rows; annual/temporal toggles only when supported', () => {
     const wrapper = mountPicker([
       { id: 10, name: 'Demographics', description: 'Age + Sex' },
+      { id: 11, name: 'Comorbidities', supportsAnnual: true, supportsTemporal: true },
     ])
     expect(wrapper.find('[data-testid="linked-fa-picker-row-10"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="linked-fa-picker-annual-10"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="linked-fa-picker-temporal-10"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="linked-fa-picker-annual-10"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="linked-fa-picker-temporal-10"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="linked-fa-picker-annual-11"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="linked-fa-picker-temporal-11"]').exists()).toBe(true)
     wrapper.unmount()
   })
 
