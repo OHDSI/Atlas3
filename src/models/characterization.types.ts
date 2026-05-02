@@ -360,3 +360,82 @@ export const TemporalDataPointSchema = z
     pct: z.number(),
   })
   .strip()
+
+export interface Table1Config {
+  groupByAnalysis: boolean
+  pinTopK: { enabled: boolean; k: number }
+  binaryFormat: 'count-pct' | 'pct' | 'count' | 'count-of-total'
+  continuousFormat: 'mean-sd' | 'median-iqr'
+  showCounts: boolean
+  showPercent: boolean
+  showStdDiff: boolean
+  strataAsCols: boolean
+}
+
+export const DEFAULT_TABLE1_CONFIG: Table1Config = {
+  groupByAnalysis: true,
+  pinTopK: { enabled: false, k: 10 },
+  binaryFormat: 'count-pct',
+  continuousFormat: 'mean-sd',
+  showCounts: true,
+  showPercent: true,
+  showStdDiff: true,
+  strataAsCols: false,
+}
+
+export interface Table1CohortColumn {
+  cohortKey: string
+  cohortId: number
+  cohortName: string
+  strataKey?: string
+  strataLabel?: string
+}
+
+export interface Table1BinaryCell {
+  count: number
+  pct: number
+}
+
+export interface Table1ContinuousCell {
+  primary: number
+  secondary: number
+}
+
+export type Table1Row =
+  | { kind: 'group'; analysisId: number; label: string }
+  | {
+      kind: 'binary'
+      analysisId: number
+      analysisName: string
+      covariateId: number
+      conceptId: number
+      label: string
+      cells: Record<string, Table1BinaryCell | null>
+      stdDiff?: number
+      _source: PrevalenceStat
+    }
+  | {
+      kind: 'continuous'
+      analysisId: number
+      analysisName: string
+      covariateId: number
+      conceptId: number
+      label: string
+      stat: 'mean-sd' | 'median-iqr'
+      cells: Record<string, Table1ContinuousCell | null>
+      _source: DistributionStat
+    }
+
+export interface Table1Filters {
+  threshold: number
+  selectedAnalysisIds: number[]
+  selectedDomains: string[]
+  selectedCohortId: number | null
+}
+
+export const DEFAULT_TABLE1_FILTERS: Table1Filters = {
+  threshold: 0,
+  selectedAnalysisIds: [],
+  selectedDomains: [],
+  selectedCohortId: null,
+}
