@@ -31,36 +31,39 @@
           :error-message="execution?.status === 'FAILED' ? errorMessage : undefined"
           @run="onOpenRunDialog"
         />
-        <CharacterizationTable1View
-          v-if="viewMode === 'table1'"
-          :prevalence="prevalence"
-          :distribution="distribution"
-          :cohorts="cohorts"
-          :config="config"
-          :filters="filters"
-          @explore="onExplore"
-        />
-        <CharacterizationPerAnalysisView
-          v-else-if="viewMode === 'perAnalysis'"
-          :prevalence="prevalence"
-          :distribution="distribution"
-          :cohorts="cohorts"
-          :threshold="filters.threshold"
-          :selected-analysis-ids="filters.selectedAnalysisIds"
-          :selected-domains="filters.selectedDomains"
-          :selected-cohort-id="filters.selectedCohortId"
-          @explore="onExplore"
-        />
-        <CharacterizationPerAnalysisView
-          v-else
-          :prevalence="[]"
-          :distribution="distribution"
-          :cohorts="cohorts"
-          :threshold="filters.threshold"
-          :selected-analysis-ids="filters.selectedAnalysisIds"
-          :selected-domains="filters.selectedDomains"
-          :selected-cohort-id="filters.selectedCohortId"
-        />
+
+        <template v-else>
+          <CharacterizationTable1View
+            v-if="viewMode === 'table1'"
+            :prevalence="prevalence"
+            :distribution="distribution"
+            :cohorts="cohorts"
+            :config="config"
+            :filters="filters"
+            @explore="onExplore"
+          />
+          <CharacterizationPerAnalysisView
+            v-else-if="viewMode === 'perAnalysis'"
+            :prevalence="prevalence"
+            :distribution="distribution"
+            :cohorts="cohorts"
+            :threshold="filters.threshold"
+            :selected-analysis-ids="filters.selectedAnalysisIds"
+            :selected-domains="filters.selectedDomains"
+            :selected-cohort-id="filters.selectedCohortId"
+            @explore="onExplore"
+          />
+          <CharacterizationPerAnalysisView
+            v-else
+            :prevalence="[]"
+            :distribution="distribution"
+            :cohorts="cohorts"
+            :threshold="filters.threshold"
+            :selected-analysis-ids="filters.selectedAnalysisIds"
+            :selected-domains="filters.selectedDomains"
+            :selected-cohort-id="filters.selectedCohortId"
+          />
+        </template>
 
         <ConfigureInspector
           :open="configureOpen"

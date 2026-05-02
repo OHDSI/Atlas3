@@ -11,7 +11,9 @@ vi.mock('@/services/characterization.service', () => ({
   getCharacterizationExecution: vi.fn().mockResolvedValue({ id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 }),
   getCharacterizationResultCount: vi.fn().mockResolvedValue(0),
   getCharacterizationResults: vi.fn().mockResolvedValue([]),
-  listCharacterizationExecutions: vi.fn().mockResolvedValue([]),
+  listCharacterizationExecutions: vi.fn().mockResolvedValue([
+    { id: 7, sourceKey: 'CCAE', status: 'COMPLETED', startTime: 0, executionDuration: 0 }
+  ]),
   getCharacterizationExecutions: vi.fn().mockResolvedValue([]),
   generateCharacterization: vi.fn(),
   cancelCharacterizationGeneration: vi.fn(),
