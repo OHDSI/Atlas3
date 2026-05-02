@@ -165,7 +165,13 @@ const configureOpen = ref<boolean>(false)
 const runDialogOpen = ref<boolean>(false)
 const errorMessage = ref<string>('')
 
-const cohorts = computed<LinkedCohort[]>(() => props.modelValue.cohorts)
+const cohorts = computed<LinkedCohort[]>(() => {
+  const map = new Map<number, LinkedCohort>()
+  for (const r of prevalence.value) for (const c of r.cohorts) if (!map.has(c.id)) map.set(c.id, c)
+  for (const r of distribution.value) for (const c of r.cohorts) if (!map.has(c.id)) map.set(c.id, c)
+  if (map.size > 0) return Array.from(map.values())
+  return props.modelValue.cohorts
+})
 
 const hasStrata = computed<boolean>(() =>
   props.modelValue.stratas.length > 0
