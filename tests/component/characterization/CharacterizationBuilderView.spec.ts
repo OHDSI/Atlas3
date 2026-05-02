@@ -1,9 +1,9 @@
 /**
  * CharacterizationBuilderView component tests
  *
- * Smoke-level: mounts in new vs. edit mode, the tabs render, the name
- * input updates the draft, the Run button is disabled, and Save calls the
- * appropriate store action through the service-layer mock.
+ * Smoke-level: mounts in new vs. edit mode, the workbench renders, the
+ * name input updates the draft, the Run button is disabled, and Save
+ * calls the appropriate store action through the service-layer mock.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -155,9 +155,7 @@ describe('CharacterizationBuilderView', () => {
     const text = mounted.wrapper.text()
     expect(text).toContain('New')
 
-    // Tabs were removed — Design lives directly in the page.
-    expect(mounted.wrapper.find('[data-testid="char-builder-design-tab"]').exists()).toBe(true)
-    // Concept sets and versions live as icon buttons in the action bar (not tabs).
+    expect(mounted.wrapper.find('[data-testid="char-builder-workbench"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="char-builder-conceptsets-icon"]').exists()).toBe(true)
 
     const runBtn = mounted.wrapper.find('[data-testid="char-builder-run"]')
@@ -217,13 +215,11 @@ describe('CharacterizationBuilderView', () => {
     await nameInput.setValue('My new characterization')
     await flushPromises()
 
-    // Seed cohorts + featureAnalyses via the design tab emit so the
-    // builder-level validator doesn't block save.
-    const designTab = mounted.wrapper.findComponent({
-      name: 'CharacterizationDesignTab',
+    const workbench = mounted.wrapper.findComponent({
+      name: 'CharacterizationWorkbench',
     })
-    designTab.vm.$emit('update:modelValue', {
-      ...designTab.props('modelValue'),
+    workbench.vm.$emit('update:modelValue', {
+      ...(workbench.props('modelValue') as Record<string, unknown>),
       name: 'My new characterization',
       cohorts: [{ id: 1, name: 'Cohort A' }],
       featureAnalyses: [{ id: 10, name: 'Demographics' }],
