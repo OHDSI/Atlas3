@@ -81,3 +81,4 @@ desktop.ini
 *.pid
 *.pid.lock
 .gitignore
+.superpowers/
