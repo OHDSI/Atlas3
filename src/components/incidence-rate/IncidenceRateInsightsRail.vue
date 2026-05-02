@@ -1,40 +1,91 @@
 <template>
-  <aside class="ir-insights" data-testid="ir-insights-rail">
-    <div class="ir-insights__label">{{ t('ir.workbench.rateSummary', 'Rate summary').value }}</div>
+  <aside
+    class="ir-insights"
+    data-testid="ir-insights-rail"
+  >
+    <div class="ir-insights__label">
+      {{ t('ir.workbench.rateSummary', 'Rate summary').value }}
+    </div>
 
-    <div class="ir-insights__kpi" data-testid="ir-kpi">
-      <div class="k-label">{{ t('ir.results.persons', 'Persons').value }}</div>
-      <div class="k-val">{{ format(report.summary.totalPersons) }}</div>
+    <div
+      class="ir-insights__kpi"
+      data-testid="ir-kpi"
+    >
+      <div class="k-label">
+        {{ t('ir.results.persons', 'Persons').value }}
+      </div>
+      <div class="k-val">
+        {{ format(report.summary.totalPersons) }}
+      </div>
     </div>
-    <div class="ir-insights__kpi" data-testid="ir-kpi">
-      <div class="k-label">{{ t('ir.results.cases', 'Cases').value }}</div>
-      <div class="k-val">{{ format(report.summary.cases) }}</div>
-      <div class="k-hint">{{ propPct }}</div>
+    <div
+      class="ir-insights__kpi"
+      data-testid="ir-kpi"
+    >
+      <div class="k-label">
+        {{ t('ir.results.cases', 'Cases').value }}
+      </div>
+      <div class="k-val">
+        {{ format(report.summary.cases) }}
+      </div>
+      <div class="k-hint">
+        {{ propPct }}
+      </div>
     </div>
-    <div class="ir-insights__kpi" data-testid="ir-kpi">
-      <div class="k-label">{{ t('ir.results.timeAtRiskYears', 'TAR (years)').value }}</div>
-      <div class="k-val">{{ formatYears(report.summary.timeAtRisk) }}</div>
+    <div
+      class="ir-insights__kpi"
+      data-testid="ir-kpi"
+    >
+      <div class="k-label">
+        {{ t('ir.results.timeAtRiskYears', 'TAR (years)').value }}
+      </div>
+      <div class="k-val">
+        {{ formatYears(report.summary.timeAtRisk) }}
+      </div>
     </div>
-    <div class="ir-insights__kpi" data-testid="ir-kpi">
-      <div class="k-label">{{ t('ir.results.rate', 'Rate').value }} / {{ multiplier.toLocaleString() }}</div>
-      <div class="k-val k-val--accent">{{ rate(report.summary.rate) }}</div>
+    <div
+      class="ir-insights__kpi"
+      data-testid="ir-kpi"
+    >
+      <div class="k-label">
+        {{ t('ir.results.rate', 'Rate').value }} / {{ multiplier.toLocaleString() }}
+      </div>
+      <div class="k-val k-val--accent">
+        {{ rate(report.summary.rate) }}
+      </div>
     </div>
 
     <template v-if="report.stratifyStats.length > 0">
-      <div class="ir-insights__label">{{ t('ir.results.stratifyRule', 'Stratification').value }}</div>
-      <table class="ir-insights__strata" data-testid="ir-insights-strata">
+      <div class="ir-insights__label">
+        {{ t('ir.results.stratifyRule', 'Stratification').value }}
+      </div>
+      <table
+        class="ir-insights__strata"
+        data-testid="ir-insights-strata"
+      >
         <thead>
           <tr>
             <th>{{ t('ir.results.stratifyRule', 'Stratum').value }}</th>
-            <th class="num">{{ t('ir.results.cases', 'Cases').value }}</th>
-            <th class="num">{{ t('ir.results.rate', 'Rate').value }}</th>
+            <th class="num">
+              {{ t('ir.results.cases', 'Cases').value }}
+            </th>
+            <th class="num">
+              {{ t('ir.results.rate', 'Rate').value }}
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in sortedStrata" :key="r.id">
+          <tr
+            v-for="r in sortedStrata"
+            :key="r.id"
+          >
             <td>{{ r.name }}</td>
-            <td class="num">{{ format(r.cases) }}</td>
-            <td class="num">{{ rate(r.cases / Math.max(r.timeAtRisk / 365.25, 1)) }}</td>
+            <td class="num">
+              {{ format(r.cases) }}
+            </td>
+            <td class="num">
+              {{ rate(r.cases / Math.max(r.timeAtRisk / 365.25, 1)) }}
+            </td>
           </tr>
         </tbody>
       </table>

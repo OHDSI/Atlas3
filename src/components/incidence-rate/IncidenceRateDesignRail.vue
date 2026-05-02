@@ -1,12 +1,18 @@
 <template>
-  <aside class="ir-rail" data-testid="ir-design-rail">
+  <aside
+    class="ir-rail"
+    data-testid="ir-design-rail"
+  >
     <v-expansion-panels
       v-model="openPanels"
       multiple
       variant="accordion"
       class="ir-rail__panels"
     >
-      <v-expansion-panel value="targets" data-testid="ir-rail-panel-targets">
+      <v-expansion-panel
+        value="targets"
+        data-testid="ir-rail-panel-targets"
+      >
         <v-expansion-panel-title>
           <span class="text-eyebrow">{{ t('facets.caption.targetCohorts', 'Target cohorts').value }}</span>
           <template #actions="{ expanded }">
@@ -17,7 +23,9 @@
               prepend-icon="mdi-plus"
               :disabled="readonly"
               @click.stop="openTarget = true"
-            >{{ t('common.add', 'Add').value }}</v-btn>
+            >
+              {{ t('common.add', 'Add').value }}
+            </v-btn>
             <v-icon>{{ expanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
           </template>
         </v-expansion-panel-title>
@@ -33,7 +41,10 @@
         </v-expansion-panel-text>
       </v-expansion-panel>
 
-      <v-expansion-panel value="outcomes" data-testid="ir-rail-panel-outcomes">
+      <v-expansion-panel
+        value="outcomes"
+        data-testid="ir-rail-panel-outcomes"
+      >
         <v-expansion-panel-title>
           <span class="text-eyebrow">{{ t('columns.outcomes', 'Outcome cohorts').value }}</span>
           <template #actions="{ expanded }">
@@ -44,7 +55,9 @@
               prepend-icon="mdi-plus"
               :disabled="readonly"
               @click.stop="openOutcome = true"
-            >{{ t('common.add', 'Add').value }}</v-btn>
+            >
+              {{ t('common.add', 'Add').value }}
+            </v-btn>
             <v-icon>{{ expanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
           </template>
         </v-expansion-panel-title>
@@ -60,7 +73,10 @@
         </v-expansion-panel-text>
       </v-expansion-panel>
 
-      <v-expansion-panel value="tar" data-testid="ir-rail-panel-tar">
+      <v-expansion-panel
+        value="tar"
+        data-testid="ir-rail-panel-tar"
+      >
         <v-expansion-panel-title>
           <span class="text-eyebrow">{{ t('cohortDefinitions.appearance.timeAtRisk', 'Time at risk').value }}</span>
         </v-expansion-panel-title>
@@ -69,7 +85,10 @@
         </v-expansion-panel-text>
       </v-expansion-panel>
 
-      <v-expansion-panel value="window" data-testid="ir-rail-panel-window">
+      <v-expansion-panel
+        value="window"
+        data-testid="ir-rail-panel-window"
+      >
         <v-expansion-panel-title>
           <span class="text-eyebrow">{{ t('incidenceRate.studyWindow', 'Study window').value }}</span>
         </v-expansion-panel-title>
@@ -78,7 +97,10 @@
         </v-expansion-panel-text>
       </v-expansion-panel>
 
-      <v-expansion-panel value="strata" data-testid="ir-rail-panel-strata">
+      <v-expansion-panel
+        value="strata"
+        data-testid="ir-rail-panel-strata"
+      >
         <v-expansion-panel-title>
           <span class="text-eyebrow">{{ t('ir.editor.stratifyCriteria', 'Stratify rules').value }}</span>
           <span class="ir-rail__count">{{ strataCount }}</span>

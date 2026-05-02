@@ -59,7 +59,9 @@
       :disabled="readonly"
       data-testid="ir-strata-add"
       @click="$emit('add')"
-    >{{ t('common.add', 'Add').value }}</v-btn>
+    >
+      {{ t('common.add', 'Add').value }}
+    </v-btn>
   </div>
 </template>
 

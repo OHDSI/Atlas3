@@ -1,28 +1,62 @@
 <template>
-  <v-table density="compact" class="ir-rates">
+  <v-table
+    density="compact"
+    class="ir-rates"
+  >
     <thead>
       <tr>
         <th>{{ t('ir.results.stratifyRule', 'Stratum').value }}</th>
-        <th class="num">{{ t('ir.results.persons', 'Persons').value }}</th>
-        <th class="num">{{ t('ir.results.cases', 'Cases').value }}</th>
-        <th class="num">{{ t('ir.results.timeAtRiskYears', 'TAR (years)').value }}</th>
-        <th class="num">{{ t('ir.results.rate', 'Rate').value }} / {{ multiplier.toLocaleString() }}</th>
+        <th class="num">
+          {{ t('ir.results.persons', 'Persons').value }}
+        </th>
+        <th class="num">
+          {{ t('ir.results.cases', 'Cases').value }}
+        </th>
+        <th class="num">
+          {{ t('ir.results.timeAtRiskYears', 'TAR (years)').value }}
+        </th>
+        <th class="num">
+          {{ t('ir.results.rate', 'Rate').value }} / {{ multiplier.toLocaleString() }}
+        </th>
       </tr>
     </thead>
     <tbody>
-      <tr data-testid="ir-rate-row" class="ir-rates__sum">
+      <tr
+        data-testid="ir-rate-row"
+        class="ir-rates__sum"
+      >
         <td><strong>{{ t('ir.results.summaryStatistics', 'Summary').value }}</strong></td>
-        <td class="num">{{ format(report.summary.totalPersons) }}</td>
-        <td class="num">{{ format(report.summary.cases) }}</td>
-        <td class="num">{{ formatYears(report.summary.timeAtRisk) }}</td>
-        <td class="num">{{ rate(report.summary.rate) }}</td>
+        <td class="num">
+          {{ format(report.summary.totalPersons) }}
+        </td>
+        <td class="num">
+          {{ format(report.summary.cases) }}
+        </td>
+        <td class="num">
+          {{ formatYears(report.summary.timeAtRisk) }}
+        </td>
+        <td class="num">
+          {{ rate(report.summary.rate) }}
+        </td>
       </tr>
-      <tr v-for="row in report.stratifyStats" :key="row.id" data-testid="ir-rate-row">
+      <tr
+        v-for="row in report.stratifyStats"
+        :key="row.id"
+        data-testid="ir-rate-row"
+      >
         <td>{{ row.name }}</td>
-        <td class="num">{{ format(row.totalPersons) }}</td>
-        <td class="num">{{ format(row.cases) }}</td>
-        <td class="num">{{ formatYears(row.timeAtRisk) }}</td>
-        <td class="num">{{ rate(row.cases / Math.max(row.timeAtRisk / 365.25, 1)) }}</td>
+        <td class="num">
+          {{ format(row.totalPersons) }}
+        </td>
+        <td class="num">
+          {{ format(row.cases) }}
+        </td>
+        <td class="num">
+          {{ formatYears(row.timeAtRisk) }}
+        </td>
+        <td class="num">
+          {{ rate(row.cases / Math.max(row.timeAtRisk / 365.25, 1)) }}
+        </td>
       </tr>
     </tbody>
   </v-table>

@@ -21,13 +21,17 @@
         :disabled="!selectedSource || generation.polling.value"
         data-testid="ir-generate-btn"
         @click="onStart"
-      >{{ t('components.generation.generate', 'Generate').value }}</v-btn>
+      >
+        {{ t('components.generation.generate', 'Generate').value }}
+      </v-btn>
       <v-btn
         size="small"
         variant="text"
         :disabled="!generation.polling.value"
         @click="onCancel"
-      >{{ t('common.cancel', 'Cancel').value }}</v-btn>
+      >
+        {{ t('common.cancel', 'Cancel').value }}
+      </v-btn>
     </div>
 
     <v-alert
@@ -36,7 +40,9 @@
       variant="tonal"
       density="compact"
       class="mb-0"
-    >{{ generation.error.value }}</v-alert>
+    >
+      {{ generation.error.value }}
+    </v-alert>
   </div>
 </template>
 

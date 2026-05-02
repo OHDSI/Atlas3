@@ -1,11 +1,40 @@
 <template>
   <AnalysisBuilderShell
+    :eyebrow="t('navigation.incidenceRates', 'Incidence rate analysis').value"
     :title="title"
     :subtitle="subtitle"
     :show-back="true"
     testid="ir-builder"
     @back="handleBack"
   >
+    <template
+      v-if="store.currentIR"
+      #title
+    >
+      <input
+        :value="store.currentIR.name"
+        :placeholder="t('home.newEntityNames.incidenceRate', 'New incidence rate').value"
+        :aria-label="t('columns.name', 'Name').value"
+        :readonly="!canEdit"
+        class="ir-builder__title-input"
+        data-testid="ir-builder-name"
+        @input="(e: Event) => store.updateMeta({ name: (e.target as HTMLInputElement).value })"
+      >
+    </template>
+    <template
+      v-if="store.currentIR"
+      #subtitle
+    >
+      <input
+        :value="store.currentIR.description ?? ''"
+        :placeholder="t('cc.viewEdit.descriptionPlaceholder', 'Add a short description').value"
+        :aria-label="t('columns.description', 'Description').value"
+        :readonly="!canEdit"
+        class="ir-builder__subtitle-input"
+        data-testid="ir-builder-description"
+        @input="(e: Event) => store.updateMeta({ description: (e.target as HTMLInputElement).value })"
+      >
+    </template>
     <template #actions>
       <v-tooltip
         :text="t('ir.tabs.conceptSets', 'Concept Sets').value"
@@ -147,6 +176,30 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
+      <v-menu
+        v-if="store.currentIR?.id"
+        v-model="generateMenu"
+        :close-on-content-click="false"
+        offset="6"
+        location="bottom end"
+      >
+        <template #activator="{ props: menuProps }">
+          <v-btn
+            v-bind="menuProps"
+            color="primary"
+            variant="outlined"
+            prepend-icon="mdi-play"
+            data-testid="ir-builder-generate"
+          >
+            {{ t('components.generation.generate', 'Generate') }}
+          </v-btn>
+        </template>
+        <IncidenceRateGeneratePopover
+          v-if="store.currentIR?.id"
+          :ir-id="store.currentIR.id"
+          @generated="generateMenu = false"
+        />
+      </v-menu>
       <v-btn
         color="primary"
         variant="elevated"
@@ -160,31 +213,10 @@
       </v-btn>
     </template>
 
-    <div class="ir-builder">
-      <v-text-field
-        :model-value="store.currentIR?.name ?? ''"
-        :label="t('columns.name', 'Name').value"
-        density="compact"
-        variant="outlined"
-        hide-details
-        class="ir-builder__name-field"
-        :readonly="store.isReadOnly || store.isPreviewMode"
-        @update:model-value="(v: string) => store.updateMeta({ name: v })"
-      />
-
-      <IncidenceRateDefinitionPanel />
-
-      <section
-        v-if="store.currentIR?.id"
-        class="ir-builder__generation-section"
-      >
-        <header class="ir-builder__section-header">
-          <span class="text-eyebrow">{{ t('ir.tabs.generation', 'Generation').value }}</span>
-          <span class="ir-builder__section-rule" />
-        </header>
-        <IncidenceRateGenerationPanel :ir-id="store.currentIR.id" />
-      </section>
-    </div>
+    <IncidenceRateWorkbench
+      v-if="store.currentIR"
+      @open-generate="generateMenu = true"
+    />
 
     <v-dialog
       v-model="showConceptSetsDialog"
@@ -289,9 +321,9 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
-import IncidenceRateDefinitionPanel from '@/components/incidence-rate/IncidenceRateDefinitionPanel.vue'
+import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
+import IncidenceRateGeneratePopover from '@/components/incidence-rate/IncidenceRateGeneratePopover.vue'
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'
-import IncidenceRateGenerationPanel from '@/components/incidence-rate/IncidenceRateGenerationPanel.vue'
 import IncidenceRateVersionsPanel from '@/components/incidence-rate/IncidenceRateVersionsPanel.vue'
 import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
 import { exportIncidenceRate, importIncidenceRate } from '@/services/webapi'
@@ -307,9 +339,12 @@ const askDelete = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
+const generateMenu = ref(false)
 const importing = ref(false)
 const exporting = ref(false)
 const importFileInput = ref<HTMLInputElement | null>(null)
+
+const canEdit = computed(() => !store.isPreviewMode && !store.isReadOnly)
 
 const irTags = computed<Tag[]>(() => store.currentIR?.tags ?? [])
 
@@ -453,30 +488,50 @@ async function onDelete() {
 </script>
 
 <style scoped>
-.ir-builder {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.ir-builder__title-input {
+  width: 100%;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: rgb(var(--v-theme-primary));
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  padding: 0 0 2px;
+  font-family: inherit;
+  outline: none;
+}
+.ir-builder__title-input::placeholder {
+  color: rgba(var(--v-theme-on-surface), 0.32);
+  font-weight: 300;
+}
+.ir-builder__title-input:hover:not(:read-only) {
+  border-bottom-color: rgba(var(--v-theme-on-surface), 0.16);
+}
+.ir-builder__title-input:focus {
+  border-bottom-color: rgb(var(--v-theme-orange));
 }
 
-.ir-builder__name-field {
-  max-width: 480px;
+.ir-builder__subtitle-input {
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgb(var(--v-theme-on-surface-variant));
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  padding: 0 0 2px;
+  font-family: inherit;
+  outline: none;
 }
-
-.ir-builder__generation-section {
-  margin-top: 16px;
+.ir-builder__subtitle-input::placeholder {
+  color: rgba(var(--v-theme-on-surface), 0.32);
 }
-
-.ir-builder__section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+.ir-builder__subtitle-input:hover:not(:read-only) {
+  border-bottom-color: rgba(var(--v-theme-on-surface), 0.12);
 }
-
-.ir-builder__section-rule {
-  flex: 1;
-  height: 1px;
-  background-color: rgba(var(--v-theme-on-surface), 0.08);
+.ir-builder__subtitle-input:focus {
+  border-bottom-color: rgb(var(--v-theme-orange));
 }
 </style>
