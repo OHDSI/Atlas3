@@ -33,11 +33,18 @@ describe('CharacterizationDesignForm', () => {
     expect(w.findComponent({ name: 'StrataEditor' }).exists()).toBe(true)
   })
 
-  it('emits update:modelValue when strataOnly toggles', async () => {
+  it('forwards update:strata-only from StrataEditor as a strataOnly model update', async () => {
     const w = mount(CharacterizationDesignForm, {
       global: {
         plugins: [vuetify],
-        stubs: ['LinkedCohortPicker', 'LinkedFeatureAnalysisPicker', 'StrataEditor'],
+        stubs: {
+          LinkedCohortPicker: true,
+          LinkedFeatureAnalysisPicker: true,
+          StrataEditor: {
+            template: '<div data-testid="stub-strata" @click="$emit(\'update:strata-only\', true)"></div>',
+            emits: ['update:modelValue', 'update:strata-only'],
+          },
+        },
       },
       props: {
         modelValue: empty(),
@@ -45,7 +52,7 @@ describe('CharacterizationDesignForm', () => {
         availableFeatureAnalyses: [],
       },
     })
-    await w.find('[data-testid="char-design-strataOnly"] input').setValue(true)
+    await w.find('[data-testid="stub-strata"]').trigger('click')
     const evts = w.emitted('update:modelValue')
     expect(evts).toBeTruthy()
     expect((evts![0]![0] as CharacterizationDefinition).strataOnly).toBe(true)

@@ -1,19 +1,5 @@
 <template>
   <div class="char-design-form">
-    <v-switch
-      :model-value="draft.strataOnly ?? false"
-      :label="
-        t('cc.viewEdit.design.subgroups.subgroupOnly', 'Compute strata only (skip overall)').value
-      "
-      density="compact"
-      color="primary"
-      hide-details
-      data-testid="char-design-strataOnly"
-      @update:model-value="(v: boolean | null) => updateField('strataOnly', !!v)"
-    />
-
-    <v-divider class="my-3" />
-
     <LinkedCohortPicker
       :model-value="draft.cohorts"
       :available-cohorts="availableCohorts"
@@ -32,14 +18,15 @@
 
     <StrataEditor
       :model-value="draft.stratas"
+      :strata-only="draft.strataOnly ?? false"
       @update:model-value="v => updateField('stratas', v)"
+      @update:strata-only="v => updateField('strataOnly', v)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useI18n } from '@/composables/useI18n'
 import LinkedCohortPicker from './LinkedCohortPicker.vue'
 import LinkedFeatureAnalysisPicker from './LinkedFeatureAnalysisPicker.vue'
 import StrataEditor from './StrataEditor.vue'
@@ -55,7 +42,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{ 'update:modelValue': [value: CharacterizationDefinition] }>()
 
-const { t } = useI18n()
 const draft = computed<CharacterizationDefinition>(() => props.modelValue)
 
 function updateField<K extends keyof CharacterizationDefinition>(

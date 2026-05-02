@@ -1,24 +1,51 @@
 <!--
-  StrataEditor
+  StrataEditor — labelled "Subgroup analyses" in the UI to match Atlas 2.15
+  terminology.
 
-  Phase 3 placeholder for the criteria-builder integration. Each stratum
+  Phase 3 placeholder for the criteria-builder integration. Each subgroup
   has a name and a JSON textarea holding the CriteriaGroup payload — the
   full builder lands in a follow-up. JSON parse errors surface inline as
   a chip but never block typing.
 -->
 <template>
   <div class="strata-editor">
-    <h2 class="strata-editor__title">
-      {{ t('columns.strata', 'Subgroups (Strata)') }}
-    </h2>
+    <div class="strata-editor__header">
+      <h2 class="strata-editor__title">
+        {{ t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value }}
+      </h2>
+      <v-btn
+        variant="outlined"
+        color="primary"
+        size="small"
+        density="compact"
+        prepend-icon="mdi-plus"
+        data-testid="strata-editor-add"
+        @click="addStratum"
+      >
+        {{ t('cc.viewEdit.design.subgroups.newSubgroup', 'New subgroup').value }}
+      </v-btn>
+    </div>
 
     <div
       v-if="modelValue.length === 0"
       class="strata-editor__empty"
       data-testid="strata-editor-empty"
     >
-      {{ t('common.noData', 'No strata defined.') }}
+      {{ t('cc.viewEdit.design.subgroups.noSubgroups', 'No subgroups defined').value }}
     </div>
+
+    <v-switch
+      v-if="modelValue.length > 0"
+      :model-value="strataOnly"
+      :label="
+        t('cc.viewEdit.design.subgroups.subgroupOnly', 'Calculate subgroup analyses only').value
+      "
+      density="compact"
+      color="primary"
+      hide-details
+      data-testid="strata-editor-only"
+      @update:model-value="(v: boolean | null) => $emit('update:strataOnly', !!v)"
+    />
 
     <div
       v-for="(stratum, index) in modelValue"
@@ -29,10 +56,14 @@
       <div class="strata-editor__card-header">
         <v-text-field
           :model-value="stratum.name"
-          :label="t('columns.name', 'Stratum name').value"
+          :label="
+            t('cc.viewEdit.design.subgroups.namePlaceholder', 'Subgroup name').value
+          "
+          :error="!stratum.name.trim() || isDuplicate(stratum.name)"
+          :error-messages="nameErrors(stratum.name)"
           density="compact"
           variant="outlined"
-          hide-details
+          hide-details="auto"
           class="strata-editor__name"
           :data-testid="`strata-editor-name-${index}`"
           @update:model-value="(value: string) => updateName(index, value)"
@@ -47,18 +78,16 @@
           @click="removeStratum(index)"
         />
       </div>
-      <div class="strata-editor__criteria-row">
-        <v-chip
-          v-if="jsonErrors[stratum.id]"
-          color="error"
-          size="small"
-          variant="tonal"
-          class="strata-editor__chip"
-          :data-testid="`strata-editor-invalid-${index}`"
-        >
-          {{ t('characterizations.editor.strata.invalidJson', 'Invalid JSON') }}
-        </v-chip>
-      </div>
+      <v-chip
+        v-if="jsonErrors[stratum.id]"
+        color="error"
+        size="small"
+        variant="tonal"
+        class="strata-editor__chip"
+        :data-testid="`strata-editor-invalid-${index}`"
+      >
+        {{ t('characterizations.editor.strata.invalidJson', 'Invalid JSON').value }}
+      </v-chip>
       <v-textarea
         :model-value="jsonText[stratum.id] ?? ''"
         :label="t('components.dateAdjust.criteriaLabel', 'Criteria (JSON)').value"
@@ -77,53 +106,37 @@
         @update:model-value="(value: string) => updateCriteria(stratum.id, value)"
       />
     </div>
-
-    <div class="strata-editor__actions">
-      <v-btn
-        variant="outlined"
-        color="primary"
-        prepend-icon="mdi-plus"
-        data-testid="strata-editor-add"
-        @click="addStratum"
-      >
-        {{ t('common.add', 'Add stratum') }}
-      </v-btn>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import type { Stratum } from '@/models/characterization.types'
 
 const props = defineProps<{
   modelValue: Stratum[]
+  strataOnly?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: Stratum[]]
+  'update:strataOnly': [value: boolean]
 }>()
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
-// Mirror each stratum's `criteria` (an unknown object) as a JSON string per
-// stratum id. We sync back into the parent via emit on every change; parse
-// errors are tracked separately so the UI can flag them without blocking
-// the user mid-edit.
 const jsonText = reactive<Record<string, string>>({})
 const jsonErrors = reactive<Record<string, boolean>>({})
 
 function syncFromModel(value: Stratum[]) {
-  // Drop any keys that no longer exist.
   for (const key of Object.keys(jsonText)) {
     if (!value.some(s => s.id === key)) {
       delete jsonText[key]
       delete jsonErrors[key]
     }
   }
-  // Seed entries for any new strata we haven't typed for yet.
   for (const stratum of value) {
     if (!(stratum.id in jsonText)) {
       jsonText[stratum.id] = stringifySafe(stratum.criteria)
@@ -146,8 +159,35 @@ function makeUuid(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID()
   }
-  // Fallback for environments without crypto.randomUUID — sufficient for tests.
   return `s-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`
+}
+
+const nameCounts = computed<Record<string, number>>(() => {
+  const counts: Record<string, number> = {}
+  for (const s of props.modelValue) {
+    const key = s.name.trim()
+    if (!key) continue
+    counts[key] = (counts[key] ?? 0) + 1
+  }
+  return counts
+})
+
+function isDuplicate(name: string): boolean {
+  const key = name.trim()
+  if (!key) return false
+  return (nameCounts.value[key] ?? 0) > 1
+}
+
+function nameErrors(name: string): string[] {
+  if (!name.trim()) {
+    return [tv('cc.viewEdit.design.subgroups.messages.nameIsEmpty', 'Subgroup name is empty.')]
+  }
+  if (isDuplicate(name)) {
+    return [
+      tv('cc.viewEdit.design.subgroups.messages.nameIsNotUnique', 'Subgroup name is duplicated.'),
+    ]
+  }
+  return []
 }
 
 function emitUpdate(next: Stratum[]) {
@@ -196,25 +236,33 @@ function removeStratum(index: number) {
 .strata-editor {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+}
+
+.strata-editor__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .strata-editor__title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 500;
-  margin: 0 0 4px 0;
+  margin: 0;
 }
 
 .strata-editor__empty {
-  padding: 12px 0;
-  color: #666;
+  padding: 8px 0;
+  color: rgba(var(--v-theme-on-surface), 0.6);
   font-style: italic;
+  font-size: 12px;
 }
 
 .strata-editor__card {
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -222,29 +270,20 @@ function removeStratum(index: number) {
 
 .strata-editor__card-header {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .strata-editor__name {
   flex: 1;
 }
 
-.strata-editor__criteria-row {
-  min-height: 0;
-}
-
 .strata-editor__chip {
-  margin-bottom: 4px;
+  align-self: flex-start;
 }
 
 .strata-editor__criteria :deep(textarea) {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.85rem;
-}
-
-.strata-editor__actions {
-  display: flex;
-  justify-content: flex-start;
+  font-size: 0.8rem;
 }
 </style>
