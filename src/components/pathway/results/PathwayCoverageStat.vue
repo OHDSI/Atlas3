@@ -1,7 +1,11 @@
 <template>
   <div class="coverage-stat">
-    <div class="coverage-stat__label">{{ t('pathway.workbench.coverage', 'Cohort coverage').value }}</div>
-    <div class="coverage-stat__value">{{ pct.toFixed(1) }}%</div>
+    <div class="coverage-stat__label">
+      {{ t('pathway.workbench.coverage', 'Cohort coverage').value }}
+    </div>
+    <div class="coverage-stat__value">
+      {{ pct.toFixed(1) }}%
+    </div>
     <div class="coverage-stat__sub">
       {{ formatNumber(totalPathwaysCount) }} {{ t('common.of', 'of').value }}
       {{ formatNumber(targetCohortCount) }}
@@ -10,7 +14,9 @@
     <div
       v-if="targetCohortName"
       class="coverage-stat__cohort"
-    >{{ targetCohortName }}</div>
+    >
+      {{ targetCohortName }}
+    </div>
     <v-progress-linear
       :model-value="clampedPct"
       color="orange"

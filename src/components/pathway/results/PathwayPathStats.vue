@@ -21,7 +21,9 @@
             v-if="i < stats.summary.chips.length - 1"
             size="x-small"
             class="path-stats__arrow"
-          >mdi-arrow-right</v-icon>
+          >
+            mdi-arrow-right
+          </v-icon>
         </template>
       </div>
       <div class="path-stats__persons">
@@ -55,7 +57,9 @@
             :style="{ backgroundColor: colors(s.colorKey) }"
           />
         </template>
-        <v-list-item-title class="path-stats__step-name">{{ s.name }}</v-list-item-title>
+        <v-list-item-title class="path-stats__step-name">
+          {{ s.name }}
+        </v-list-item-title>
         <template #append>
           <span class="path-stats__step-count">
             {{ s.entered.toLocaleString() }}

@@ -17,8 +17,12 @@
       <template #prepend>
         <span :class="['past-run__status', `past-run__status--${r.status.toLowerCase()}`]" />
       </template>
-      <v-list-item-title class="past-run__src">{{ r.sourceKey }}</v-list-item-title>
-      <v-list-item-subtitle class="past-run__id">#{{ r.id }}</v-list-item-subtitle>
+      <v-list-item-title class="past-run__src">
+        {{ r.sourceKey }}
+      </v-list-item-title>
+      <v-list-item-subtitle class="past-run__id">
+        #{{ r.id }}
+      </v-list-item-subtitle>
     </v-list-item>
   </v-list>
   <div
