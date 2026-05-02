@@ -8,7 +8,12 @@ import type { RouteRecordRaw } from 'vue-router'
 import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
 import { logger } from '@/utils/logger'
 
-const ANALYSIS_TAB_NAMES = ['feature-analyses', 'characterizations', 'pathways', 'incidence-rates'] as const
+const ANALYSIS_TAB_NAMES = [
+  'feature-analyses',
+  'characterizations',
+  'pathways',
+  'incidence-rates',
+] as const
 const ANALYSIS_LAST_TAB_KEY = 'atlas3.analysis.lastTab'
 
 export const routes: RouteRecordRaw[] = [
@@ -147,8 +152,10 @@ export const routes: RouteRecordRaw[] = [
   {
     path: '/characterizations/:id/results/:executionId',
     name: 'characterization-results',
-    component: () => import('@/views/CharacterizationResultsView.vue'),
-    props: true,
+    redirect: (to) => ({
+      path: `/characterizations/${to.params.id as string}`,
+      query: { ...to.query, run: String(to.params.executionId) },
+    }),
     meta: { requiresAuth: true },
   },
   {
@@ -300,8 +307,11 @@ export const routes: RouteRecordRaw[] = [
       } else if (Number.isFinite(idParam)) {
         const v = parseInt(versionParam)
         if (!isNaN(v)) {
-          try { await irStore.loadVersionPreview(idParam, v) }
-          catch (error) { logger.error('Router', 'Failed to load IR version preview', error) }
+          try {
+            await irStore.loadVersionPreview(idParam, v)
+          } catch (error) {
+            logger.error('Router', 'Failed to load IR version preview', error)
+          }
         }
       }
       next()
