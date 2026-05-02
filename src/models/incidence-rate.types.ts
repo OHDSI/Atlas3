@@ -109,11 +109,11 @@ export const IncidenceRateExecutionInfoSchema = z
       sourceId: z.number(),
     }),
     status: IncidenceRateStatusSchema,
-    startTime: z.union([z.number(), z.string()]).optional(),
-    executionDuration: z.number().optional(),
-    isValid: z.boolean().optional(),
-    isCanceled: z.boolean().optional(),
-    message: z.string().optional(),
+    startTime: z.union([z.number(), z.string()]).nullish(),
+    executionDuration: z.number().nullish(),
+    isValid: z.boolean().nullish(),
+    isCanceled: z.boolean().nullish(),
+    message: z.string().nullish(),
   })
   .passthrough()
 export type IncidenceRateExecutionInfo = z.infer<typeof IncidenceRateExecutionInfoSchema>
@@ -152,9 +152,19 @@ export const IncidenceRateStratifyStatSchema = z
   .passthrough()
 export type IncidenceRateStratifyStat = z.infer<typeof IncidenceRateStratifyStatSchema>
 
+const EMPTY_IR_SUMMARY: IncidenceRateSummaryStats = {
+  targetId: 0,
+  outcomeId: 0,
+  totalPersons: 0,
+  cases: 0,
+  timeAtRisk: 0,
+  proportion: 0,
+  rate: 0,
+}
+
 export const IncidenceRateReportSchema = z
   .object({
-    summary: IncidenceRateSummaryStatsSchema,
+    summary: IncidenceRateSummaryStatsSchema.nullable().transform(s => s ?? EMPTY_IR_SUMMARY),
     stratifyStats: z.array(IncidenceRateStratifyStatSchema).default([]),
     treemapData: z.string().default(''),
   })

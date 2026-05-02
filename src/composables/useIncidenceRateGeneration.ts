@@ -5,11 +5,13 @@ import {
   listIncidenceRateInfo,
 } from '@/services/webapi'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
+import { useDataSourcesStore } from '@/stores/datasources'
 import { IR_GENERATION_POLL_MS, IR_TERMINAL_STATUSES } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
 
 export function useIncidenceRateGeneration(irId: number) {
   const store = useIncidenceRateStore()
+  const ds = useDataSourcesStore()
   const polling = ref(false)
   const error = ref<string | null>(null)
   let timer: ReturnType<typeof setInterval> | null = null
@@ -36,10 +38,11 @@ export function useIncidenceRateGeneration(irId: number) {
       stopPolling()
       return
     }
+    if (ds.sources.length === 0 && !ds.isLoading) await ds.fetchDataSources()
+    const idToKey = new Map(ds.sources.map(s => [s.sourceId, s.sourceKey]))
     for (const info of result.data) {
-      // Backend response keys generations by sourceId numerically;
-      // we treat the source key as a string. The caller tracks by sourceKey from the data sources store.
-      const sourceKey = String(info.executionInfo.id.sourceId)
+      const numId = info.executionInfo.id.sourceId
+      const sourceKey = idToKey.get(numId) ?? String(numId)
       store.setExecutionInfo(sourceKey, info)
     }
     if (!isAnyRunning()) stopPolling()
@@ -59,11 +62,7 @@ export function useIncidenceRateGeneration(irId: number) {
       logger.error('IRGeneration', 'start failed', result.error)
       return false
     }
-    // Optimistically register pending status
-    store.setExecutionInfo(sourceKey, {
-      executionInfo: result.data,
-      summaryList: [],
-    })
+    await pollOnce()
     startPolling()
     return true
   }

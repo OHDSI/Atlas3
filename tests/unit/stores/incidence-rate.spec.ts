@@ -643,3 +643,63 @@ describe('incidence-rate store — UI state setters and computed', () => {
     expect(Array.isArray(s.RATE_MULTIPLIER_OPTIONS)).toBe(true)
   })
 })
+
+describe('useIncidenceRateStore — executions getter', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('returns an empty list when no executions are recorded', () => {
+    const s = useIncidenceRateStore()
+    expect(s.executions).toEqual([])
+  })
+
+  it('flattens executionInfoBySourceKey into a sorted list (newest first)', () => {
+    const s = useIncidenceRateStore()
+    s.setExecutionInfo('CCAE', {
+      executionInfo: {
+        id: { analysisId: 1, sourceId: 10 },
+        status: 'COMPLETED',
+        startTime: 1_000,
+        executionDuration: 200,
+      },
+      summaryList: [],
+    })
+    s.setExecutionInfo('MDCD', {
+      executionInfo: {
+        id: { analysisId: 1, sourceId: 11 },
+        status: 'STARTED',
+        startTime: 2_000,
+      },
+      summaryList: [],
+    })
+    expect(s.executions).toEqual([
+      {
+        id: 11,
+        sourceKey: 'MDCD',
+        sourceId: 11,
+        status: 'STARTED',
+        startTime: 2_000,
+        duration: null,
+        message: null,
+      },
+      {
+        id: 10,
+        sourceKey: 'CCAE',
+        sourceId: 10,
+        status: 'COMPLETED',
+        startTime: 1_000,
+        duration: 200,
+        message: null,
+      },
+    ])
+  })
+
+  it('looks up an execution by its id (== sourceId)', () => {
+    const s = useIncidenceRateStore()
+    s.setExecutionInfo('CCAE', {
+      executionInfo: { id: { analysisId: 1, sourceId: 10 }, status: 'COMPLETED' },
+      summaryList: [],
+    })
+    expect(s.executionById(10)?.sourceKey).toBe('CCAE')
+    expect(s.executionById(99)).toBeNull()
+  })
+})
