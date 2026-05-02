@@ -51,6 +51,23 @@
         </template>
       </v-tooltip>
       <v-tooltip
+        v-if="previewVersion"
+        :text="t('common.backToCurrent', 'Back to current version').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-undo"
+            variant="text"
+            size="small"
+            density="compact"
+            data-testid="pathway-builder-back-to-current"
+            @click="store.clearPreviewVersion()"
+          />
+        </template>
+      </v-tooltip>
+      <v-tooltip
         v-if="currentPathway?.id"
         :text="t('common.export', 'Export').value"
         location="bottom"

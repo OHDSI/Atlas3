@@ -40,6 +40,49 @@
           />
         </template>
       </v-tooltip>
+      <v-tooltip
+        v-if="store.currentIR?.id"
+        :text="t('common.tags', 'Tags').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-badge
+            v-bind="tipProps"
+            :content="irTags.length || 0"
+            :model-value="irTags.length > 0"
+            color="primary"
+            offset-x="6"
+            offset-y="6"
+          >
+            <v-btn
+              icon="mdi-tag-outline"
+              variant="text"
+              size="small"
+              density="compact"
+              :disabled="store.isPreviewMode"
+              data-testid="ir-builder-tags-icon"
+              @click="showTagsDialog = true"
+            />
+          </v-badge>
+        </template>
+      </v-tooltip>
+      <v-tooltip
+        v-if="store.isPreviewMode"
+        :text="t('common.backToCurrent', 'Back to current version').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-undo"
+            variant="text"
+            size="small"
+            density="compact"
+            data-testid="ir-builder-back-to-current"
+            @click="store.clearPreviewVersion()"
+          />
+        </template>
+      </v-tooltip>
       <v-btn
         v-if="store.currentIR?.id"
         variant="outlined"
@@ -142,6 +185,13 @@
       </v-card>
     </v-dialog>
 
+    <TagSelectionDialog
+      v-if="store.currentIR?.id"
+      v-model="showTagsDialog"
+      :selected-tags="irTags"
+      @update:selected-tags="handleTagsUpdate"
+    />
+
     <v-dialog
       v-model="askDelete"
       max-width="400"
@@ -189,6 +239,8 @@ import IncidenceRateDefinitionPanel from '@/components/incidence-rate/IncidenceR
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'
 import IncidenceRateGenerationPanel from '@/components/incidence-rate/IncidenceRateGenerationPanel.vue'
 import IncidenceRateVersionsPanel from '@/components/incidence-rate/IncidenceRateVersionsPanel.vue'
+import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
+import type { Tag } from '@/models/webapi.types'
 
 const { t } = useI18n()
 const store = useIncidenceRateStore()
@@ -198,6 +250,13 @@ const saving = ref(false)
 const askDelete = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
+const showTagsDialog = ref(false)
+
+const irTags = computed<Tag[]>(() => store.currentIR?.tags ?? [])
+
+async function handleTagsUpdate(newTags: Tag[]) {
+  await store.syncTags(newTags)
+}
 
 const irId = computed<number | null>(() => store.currentIR?.id ?? null)
 const { hasPermission } = usePermissions()
