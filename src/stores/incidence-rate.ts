@@ -31,6 +31,16 @@ export interface IncidenceRateValidationError {
   severity: 'error' | 'warning'
 }
 
+export interface IncidenceRateExecutionSummary {
+  id: number
+  sourceKey: string
+  sourceId: number
+  status: string
+  startTime: number | null
+  duration: number | null
+  message: string | null
+}
+
 function emptyIR(): IncidenceRate {
   return {
     name: '',
@@ -378,6 +388,34 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
       !isPreviewMode.value
   )
 
+  const executions = computed<IncidenceRateExecutionSummary[]>(() => {
+    const out: IncidenceRateExecutionSummary[] = []
+    for (const [sourceKey, info] of Object.entries(executionInfoBySourceKey.value)) {
+      const rawStart = info.executionInfo.startTime
+      const startTime =
+        typeof rawStart === 'number'
+          ? rawStart
+          : typeof rawStart === 'string' && rawStart
+            ? Number(new Date(rawStart))
+            : null
+      out.push({
+        id: info.executionInfo.id.sourceId,
+        sourceKey,
+        sourceId: info.executionInfo.id.sourceId,
+        status: info.executionInfo.status,
+        startTime,
+        duration: info.executionInfo.executionDuration ?? null,
+        message: info.executionInfo.message ?? null,
+      })
+    }
+    out.sort((a, b) => (b.startTime ?? 0) - (a.startTime ?? 0))
+    return out
+  })
+
+  function executionById(id: number): IncidenceRateExecutionSummary | null {
+    return executions.value.find(e => e.id === id) ?? null
+  }
+
   return {
     // state
     currentIR,
@@ -397,6 +435,8 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     hasErrors,
     canSave,
     canGenerate,
+    executions,
+    executionById,
     // mutators
     setIR,
     createNewIR,
