@@ -4,7 +4,11 @@
       class="workbench__design"
       data-testid="workbench-design-rail"
     >
-      <PathwayDesignForm :pathway-id="pathwayId ?? undefined" />
+      <PathwayDesignForm
+        :pathway-id="pathwayId ?? undefined"
+        :active-run-id="selectedExecutionId ?? null"
+        @execution:select="(id) => $emit('execution:select', id)"
+      />
     </aside>
 
     <main

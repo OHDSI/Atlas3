@@ -8,6 +8,7 @@
             :model-value="modelValue.combinationWindow as (typeof combinationWindowOptions)[number]"
             :items="combinationWindowOptions"
             density="compact"
+            variant="outlined"
             hide-details
             :readonly="readonly"
             @update:model-value="(v: number | null) => v !== null && update('combinationWindow', v)"
@@ -21,6 +22,7 @@
             :model-value="modelValue.minCellCount as (typeof minCellCountOptions)[number]"
             :items="minCellCountOptions"
             density="compact"
+            variant="outlined"
             hide-details
             :readonly="readonly"
             @update:model-value="(v: number | null) => v !== null && update('minCellCount', v)"
@@ -34,6 +36,7 @@
             :model-value="modelValue.maxDepth as (typeof maxDepthOptions)[number]"
             :items="maxDepthOptions"
             density="compact"
+            variant="outlined"
             hide-details
             :readonly="readonly"
             @update:model-value="(v: number | null) => v !== null && update('maxDepth', v)"
