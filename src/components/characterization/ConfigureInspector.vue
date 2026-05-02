@@ -179,6 +179,11 @@ function patch(partial: Partial<Table1Config>): void {
   display: flex; align-items: center; justify-content: space-between;
 }
 .configure-inspector__section { display: flex; flex-direction: column; gap: 6px; }
+.configure-inspector :deep(.v-field__input),
+.configure-inspector :deep(.v-label),
+.configure-inspector :deep(.v-selection-control .v-label) {
+  font-size: 12px;
+}
 .configure-inspector__sec-label {
   font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
   text-transform: uppercase;

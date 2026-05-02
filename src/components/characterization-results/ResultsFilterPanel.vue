@@ -145,5 +145,14 @@ function onCohortChange(value: unknown): void {
 .results-filter__select {
   flex: 1 1 200px;
   min-width: 200px;
+  font-size: 12px;
+}
+.results-filter__select :deep(.v-field__input),
+.results-filter__select :deep(.v-label),
+.results-filter__select :deep(.v-chip) {
+  font-size: 12px;
+}
+.results-filter__select :deep(.v-chip) {
+  height: 22px;
 }
 </style>
