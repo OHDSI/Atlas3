@@ -34,7 +34,7 @@
 
     <v-list
       v-else
-      density="comfortable"
+      density="compact"
       class="linked-fa-picker__list"
       data-testid="linked-fa-picker-list"
     >
@@ -55,49 +55,33 @@
 
         <template #append>
           <div class="linked-fa-picker__row-actions">
-            <v-tooltip
-              :disabled="Boolean(fa.supportsAnnual)"
-              location="top"
-              :text="t('columns.supportsAnnual', 'Pending FA backend support').value"
-            >
-              <template #activator="{ props: tooltipProps }">
-                <div v-bind="tooltipProps">
-                  <v-checkbox
-                    :model-value="fa.includeAnnual ?? false"
-                    :label="t('columns.supportsAnnual', 'Annual').value"
-                    :disabled="!fa.supportsAnnual"
-                    density="compact"
-                    hide-details
-                    :data-testid="`linked-fa-picker-annual-${fa.id}`"
-                    @update:model-value="(value: boolean | null) => updateFlag(fa.id, 'includeAnnual', !!value)"
-                  />
-                </div>
-              </template>
-            </v-tooltip>
-            <v-tooltip
-              :disabled="Boolean(fa.supportsTemporal)"
-              location="top"
-              :text="t('columns.supportsAnnual', 'Pending FA backend support').value"
-            >
-              <template #activator="{ props: tooltipProps }">
-                <div v-bind="tooltipProps">
-                  <v-checkbox
-                    :model-value="fa.includeTemporal ?? false"
-                    :label="t('columns.temporal', 'Temporal').value"
-                    :disabled="!fa.supportsTemporal"
-                    density="compact"
-                    hide-details
-                    :data-testid="`linked-fa-picker-temporal-${fa.id}`"
-                    @update:model-value="(value: boolean | null) => updateFlag(fa.id, 'includeTemporal', !!value)"
-                  />
-                </div>
-              </template>
-            </v-tooltip>
+            <v-checkbox
+              v-if="fa.supportsAnnual"
+              :model-value="fa.includeAnnual ?? false"
+              :label="tv('columns.supportsAnnual', 'Annual')"
+              density="compact"
+              hide-details
+              :data-testid="`linked-fa-picker-annual-${fa.id}`"
+              @update:model-value="
+                (value: boolean | null) => updateFlag(fa.id, 'includeAnnual', !!value)
+              "
+            />
+            <v-checkbox
+              v-if="fa.supportsTemporal"
+              :model-value="fa.includeTemporal ?? false"
+              :label="tv('columns.temporal', 'Temporal')"
+              density="compact"
+              hide-details
+              :data-testid="`linked-fa-picker-temporal-${fa.id}`"
+              @update:model-value="
+                (value: boolean | null) => updateFlag(fa.id, 'includeTemporal', !!value)
+              "
+            />
             <v-btn
               icon="mdi-close"
               size="x-small"
               variant="text"
-              :aria-label="t('columns.remove', 'Remove').value"
+              :aria-label="tv('columns.remove', 'Remove')"
               :data-testid="`linked-fa-picker-remove-${fa.id}`"
               @click="removeFa(fa.id)"
             />
@@ -121,7 +105,7 @@
             :items="selectableItems"
             item-value="id"
             show-select
-            density="comfortable"
+            density="compact"
             data-testid="linked-fa-picker-table"
           />
         </v-card-text>
@@ -165,7 +149,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: LinkedFeatureAnalysis[]]
 }>()
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 const dialogOpen = ref(false)
 const selectedIds = ref<number[]>([])
@@ -180,10 +164,10 @@ const dialogHeaders = computed(() => [
 ])
 
 const selectableItems = computed(() => {
-  const linkedIds = new Set(props.modelValue.map((fa) => fa.id))
+  const linkedIds = new Set(props.modelValue.map(fa => fa.id))
   return props.availableFeatureAnalyses
-    .filter((fa) => !linkedIds.has(fa.id))
-    .map((fa) => ({
+    .filter(fa => !linkedIds.has(fa.id))
+    .map(fa => ({
       id: fa.id,
       name: fa.name,
       type: fa.type,
@@ -193,12 +177,12 @@ const selectableItems = computed(() => {
 
 function displayName(fa: LinkedFeatureAnalysis): string {
   if (fa.name && fa.name.length > 0) return fa.name
-  const match = props.availableFeatureAnalyses.find((a) => a.id === fa.id)
+  const match = props.availableFeatureAnalyses.find(a => a.id === fa.id)
   return match?.name ?? `#${fa.id}`
 }
 
 function displaySubtitle(fa: LinkedFeatureAnalysis): string {
-  const match = props.availableFeatureAnalyses.find((a) => a.id === fa.id)
+  const match = props.availableFeatureAnalyses.find(a => a.id === fa.id)
   const description = fa.description ?? match?.description ?? ''
   const type = match?.type
   if (type && description) return `${type} — ${description}`
@@ -213,9 +197,9 @@ function openDialog() {
 
 function confirmAdd() {
   const additions: LinkedFeatureAnalysis[] = selectedIds.value
-    .map((id) => props.availableFeatureAnalyses.find((fa) => fa.id === id))
+    .map(id => props.availableFeatureAnalyses.find(fa => fa.id === id))
     .filter((fa): fa is FeatureAnalysisListItem => Boolean(fa))
-    .map((fa) => ({
+    .map(fa => ({
       id: fa.id,
       name: fa.name,
       description: fa.description,
@@ -228,11 +212,8 @@ function confirmAdd() {
       includeTemporal: false,
     }))
 
-  const existingIds = new Set(props.modelValue.map((fa) => fa.id))
-  const merged = [
-    ...props.modelValue,
-    ...additions.filter((fa) => !existingIds.has(fa.id)),
-  ]
+  const existingIds = new Set(props.modelValue.map(fa => fa.id))
+  const merged = [...props.modelValue, ...additions.filter(fa => !existingIds.has(fa.id))]
 
   emit('update:modelValue', merged)
   dialogOpen.value = false
@@ -241,18 +222,14 @@ function confirmAdd() {
 function removeFa(id: number) {
   emit(
     'update:modelValue',
-    props.modelValue.filter((fa) => fa.id !== id)
+    props.modelValue.filter(fa => fa.id !== id)
   )
 }
 
-function updateFlag(
-  id: number,
-  flag: 'includeAnnual' | 'includeTemporal',
-  value: boolean
-) {
+function updateFlag(id: number, flag: 'includeAnnual' | 'includeTemporal', value: boolean) {
   emit(
     'update:modelValue',
-    props.modelValue.map((fa) => (fa.id === id ? { ...fa, [flag]: value } : fa))
+    props.modelValue.map(fa => (fa.id === id ? { ...fa, [flag]: value } : fa))
   )
 }
 </script>

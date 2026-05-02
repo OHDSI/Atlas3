@@ -21,18 +21,11 @@
       data-testid="char-design-description"
       @update:model-value="(v: string) => updateField('description', v)"
     />
-    <v-text-field
-      :model-value="draft.stratifiedBy ?? ''"
-      :label="t('cc.viewEdit.design.subgroups.stratifiedByPlaceholder', 'Stratified by').value"
-      density="compact"
-      variant="outlined"
-      hide-details="auto"
-      data-testid="char-design-stratifiedBy"
-      @update:model-value="(v: string) => updateField('stratifiedBy', v)"
-    />
     <v-switch
       :model-value="draft.strataOnly ?? false"
-      :label="t('cc.viewEdit.design.subgroups.subgroupOnly', 'Compute strata only (skip overall)').value"
+      :label="
+        t('cc.viewEdit.design.subgroups.subgroupOnly', 'Compute strata only (skip overall)').value
+      "
       density="compact"
       color="primary"
       hide-details
@@ -45,7 +38,7 @@
     <LinkedCohortPicker
       :model-value="draft.cohorts"
       :available-cohorts="availableCohorts"
-      @update:model-value="(v) => updateField('cohorts', v)"
+      @update:model-value="v => updateField('cohorts', v)"
     />
 
     <v-divider class="my-3" />
@@ -53,14 +46,14 @@
     <LinkedFeatureAnalysisPicker
       :model-value="draft.featureAnalyses"
       :available-feature-analyses="availableFeatureAnalyses"
-      @update:model-value="(v) => updateField('featureAnalyses', v)"
+      @update:model-value="v => updateField('featureAnalyses', v)"
     />
 
     <v-divider class="my-3" />
 
     <StrataEditor
       :model-value="draft.stratas"
-      @update:model-value="(v) => updateField('stratas', v)"
+      @update:model-value="v => updateField('stratas', v)"
     />
   </div>
 </template>
@@ -87,12 +80,17 @@ const { t } = useI18n()
 const draft = computed<CharacterizationDefinition>(() => props.modelValue)
 
 function updateField<K extends keyof CharacterizationDefinition>(
-  key: K, value: CharacterizationDefinition[K],
+  key: K,
+  value: CharacterizationDefinition[K]
 ) {
   emit('update:modelValue', { ...props.modelValue, [key]: value })
 }
 </script>
 
 <style scoped>
-.char-design-form { display: flex; flex-direction: column; gap: 8px; }
+.char-design-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 </style>
