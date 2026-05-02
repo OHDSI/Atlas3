@@ -33,7 +33,7 @@ describe('CharacterizationDesignForm', () => {
     expect(w.findComponent({ name: 'StrataEditor' }).exists()).toBe(true)
   })
 
-  it('emits update:modelValue when name changes', async () => {
+  it('emits update:modelValue when strataOnly toggles', async () => {
     const w = mount(CharacterizationDesignForm, {
       global: {
         plugins: [vuetify],
@@ -45,9 +45,9 @@ describe('CharacterizationDesignForm', () => {
         availableFeatureAnalyses: [],
       },
     })
-    await w.find('[data-testid="char-design-name"] input').setValue('Foo')
+    await w.find('[data-testid="char-design-strataOnly"] input').setValue(true)
     const evts = w.emitted('update:modelValue')
     expect(evts).toBeTruthy()
-    expect((evts![0]![0] as CharacterizationDefinition).name).toBe('Foo')
+    expect((evts![0]![0] as CharacterizationDefinition).strataOnly).toBe(true)
   })
 })

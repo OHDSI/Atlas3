@@ -1,26 +1,5 @@
 <template>
   <div class="char-design-form">
-    <v-text-field
-      :model-value="draft.name"
-      :label="t('columns.name', 'Name').value"
-      density="compact"
-      variant="outlined"
-      hide-details="auto"
-      required
-      data-testid="char-design-name"
-      @update:model-value="(v: string) => updateField('name', v)"
-    />
-    <v-textarea
-      :model-value="draft.description ?? ''"
-      :label="t('columns.description', 'Description').value"
-      density="compact"
-      variant="outlined"
-      hide-details="auto"
-      rows="2"
-      auto-grow
-      data-testid="char-design-description"
-      @update:model-value="(v: string) => updateField('description', v)"
-    />
     <v-switch
       :model-value="draft.strataOnly ?? false"
       :label="

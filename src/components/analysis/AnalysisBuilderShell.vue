@@ -6,6 +6,18 @@
     :title="title"
     :subtitle="subtitle"
   >
+    <template
+      v-if="$slots.title"
+      #title
+    >
+      <slot name="title" />
+    </template>
+    <template
+      v-if="$slots.subtitle"
+      #subtitle
+    >
+      <slot name="subtitle" />
+    </template>
     <template #actions>
       <v-btn
         v-if="showBack"

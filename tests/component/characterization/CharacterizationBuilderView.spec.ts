@@ -152,9 +152,6 @@ describe('CharacterizationBuilderView', () => {
   it('mounts in new mode with empty form, header tabs/icons, and a disabled Run button', async () => {
     mounted = await mountBuilder('/characterizations/new')
 
-    const text = mounted.wrapper.text()
-    expect(text).toContain('New')
-
     expect(mounted.wrapper.find('[data-testid="char-builder-workbench"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="char-builder-conceptsets-icon"]').exists()).toBe(true)
 
@@ -167,7 +164,7 @@ describe('CharacterizationBuilderView', () => {
     expect(mounted.wrapper.find('[data-testid="char-builder-delete"]').exists()).toBe(false)
 
     const nameInput = mounted.wrapper.find(
-      '[data-testid="char-design-name"] input'
+      '[data-testid="char-builder-name"]'
     ).element as HTMLInputElement
     expect(nameInput.value).toBe('')
   })
@@ -178,11 +175,8 @@ describe('CharacterizationBuilderView', () => {
     mounted = await mountBuilder('/characterizations/42', { id: '42' })
     await flushPromises()
 
-    // After i18n migration, the title in edit mode uses generic "Edit" wording
-    expect(mounted.wrapper.text()).toContain('Edit')
-
     const nameInput = mounted.wrapper.find(
-      '[data-testid="char-design-name"] input'
+      '[data-testid="char-builder-name"]'
     ).element as HTMLInputElement
     expect(nameInput.value).toBe('Diabetes Cohort Profile')
 
@@ -193,7 +187,7 @@ describe('CharacterizationBuilderView', () => {
   it('typing into the name input updates the draft', async () => {
     mounted = await mountBuilder('/characterizations/new')
 
-    const nameInput = mounted.wrapper.find('[data-testid="char-design-name"] input')
+    const nameInput = mounted.wrapper.find('[data-testid="char-builder-name"]')
     await nameInput.setValue('My new characterization')
     await flushPromises()
 
@@ -211,7 +205,7 @@ describe('CharacterizationBuilderView', () => {
 
     mounted = await mountBuilder('/characterizations/new')
 
-    const nameInput = mounted.wrapper.find('[data-testid="char-design-name"] input')
+    const nameInput = mounted.wrapper.find('[data-testid="char-builder-name"]')
     await nameInput.setValue('My new characterization')
     await flushPromises()
 
@@ -246,7 +240,7 @@ describe('CharacterizationBuilderView', () => {
     mounted = await mountBuilder('/characterizations/42', { id: '42' })
     await flushPromises()
 
-    const nameInput = mounted.wrapper.find('[data-testid="char-design-name"] input')
+    const nameInput = mounted.wrapper.find('[data-testid="char-builder-name"]')
     await nameInput.setValue('Renamed')
     await flushPromises()
 

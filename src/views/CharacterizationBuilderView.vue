@@ -21,6 +21,26 @@
     @back="handleBack"
     @clear-error="store.clearError()"
   >
+    <template #title>
+      <input
+        :value="draft.name"
+        :placeholder="t('cc.viewEdit.namePlaceholder', 'Name this characterization').value"
+        :aria-label="t('columns.name', 'Name').value"
+        class="char-builder__title-input"
+        data-testid="char-builder-name"
+        @input="(e: Event) => onDraftChange({ ...draft, name: (e.target as HTMLInputElement).value })"
+      >
+    </template>
+    <template #subtitle>
+      <input
+        :value="draft.description ?? ''"
+        :placeholder="t('cc.viewEdit.descriptionPlaceholder', 'Add a short description').value"
+        :aria-label="t('columns.description', 'Description').value"
+        class="char-builder__subtitle-input"
+        data-testid="char-builder-description"
+        @input="(e: Event) => onDraftChange({ ...draft, description: (e.target as HTMLInputElement).value })"
+      >
+    </template>
     <template #actions>
       <v-tooltip
         :text="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
@@ -834,5 +854,54 @@ onBeforeRouteLeave((_to, _from, next) => {
   line-height: 1.3;
   margin: 0;
   color: rgb(var(--v-theme-primary));
+}
+
+.char-builder__title-input {
+  width: 100%;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: rgb(var(--v-theme-primary));
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  padding: 0 0 2px;
+  margin: 0;
+  font-family: inherit;
+  outline: none;
+}
+.char-builder__title-input::placeholder {
+  color: rgba(var(--v-theme-on-surface), 0.32);
+  font-weight: 300;
+}
+.char-builder__title-input:hover {
+  border-bottom-color: rgba(var(--v-theme-on-surface), 0.16);
+}
+.char-builder__title-input:focus {
+  border-bottom-color: rgb(var(--v-theme-orange));
+}
+
+.char-builder__subtitle-input {
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgb(var(--v-theme-on-surface-variant));
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  padding: 0 0 2px;
+  margin: 0;
+  font-family: inherit;
+  outline: none;
+}
+.char-builder__subtitle-input::placeholder {
+  color: rgba(var(--v-theme-on-surface), 0.32);
+}
+.char-builder__subtitle-input:hover {
+  border-bottom-color: rgba(var(--v-theme-on-surface), 0.12);
+}
+.char-builder__subtitle-input:focus {
+  border-bottom-color: rgb(var(--v-theme-orange));
 }
 </style>

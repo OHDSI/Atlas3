@@ -13,7 +13,7 @@
     </h2>
 
     <div
-      v-if="strata.length === 0"
+      v-if="modelValue.length === 0"
       class="strata-editor__empty"
       data-testid="strata-editor-empty"
     >
@@ -21,7 +21,7 @@
     </div>
 
     <div
-      v-for="(stratum, index) in strata"
+      v-for="(stratum, index) in modelValue"
       :key="stratum.id"
       class="strata-editor__card"
       :data-testid="`strata-editor-card-${index}`"
@@ -108,8 +108,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const strata = props.modelValue
-
 // Mirror each stratum's `criteria` (an unknown object) as a JSON string per
 // stratum id. We sync back into the parent via emit on every change; parse
 // errors are tracked separately so the UI can flag them without blocking
@@ -120,7 +118,7 @@ const jsonErrors = reactive<Record<string, boolean>>({})
 function syncFromModel(value: Stratum[]) {
   // Drop any keys that no longer exist.
   for (const key of Object.keys(jsonText)) {
-    if (!value.some((s) => s.id === key)) {
+    if (!value.some(s => s.id === key)) {
       delete jsonText[key]
       delete jsonErrors[key]
     }
@@ -174,7 +172,7 @@ function updateCriteria(id: string, raw: string) {
   jsonErrors[id] = invalid
 
   if (!invalid) {
-    const next = props.modelValue.map((s) => (s.id === id ? { ...s, criteria: parsed } : s))
+    const next = props.modelValue.map(s => (s.id === id ? { ...s, criteria: parsed } : s))
     emitUpdate(next)
   }
 }
