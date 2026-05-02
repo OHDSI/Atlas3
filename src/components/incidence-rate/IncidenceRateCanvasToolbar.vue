@@ -17,29 +17,41 @@
       variant="outlined"
       class="ir-toolbar__chip ir-toolbar__chip--muted"
       data-testid="ir-toolbar-run-chip"
-    >{{ t('ir.workbench.noRunsYet', 'No runs yet').value }}</v-chip>
+    >
+      {{ t('ir.workbench.noRunsYet', 'No runs yet').value }}
+    </v-chip>
 
     <v-menu offset="6">
       <template #activator="{ props: ap }">
-        <v-chip v-bind="ap" size="small" variant="outlined" data-testid="ir-toolbar-target-chip">
+        <v-chip
+          v-bind="ap"
+          size="small"
+          variant="outlined"
+          data-testid="ir-toolbar-target-chip"
+        >
           <strong>T:</strong>
           <span class="muted">&nbsp;{{ targetLabel }}</span>
         </v-chip>
       </template>
       <v-list density="compact">
         <v-list-item
-          v-for="t in availableTargets"
-          :key="t.id"
-          @click="$emit('update:selectedTargetId', t.id)"
+          v-for="opt in availableTargets"
+          :key="opt.id"
+          @click="$emit('update:selectedTargetId', opt.id)"
         >
-          <v-list-item-title>{{ t.name }}</v-list-item-title>
+          <v-list-item-title>{{ opt.name }}</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-menu>
 
     <v-menu offset="6">
       <template #activator="{ props: ap }">
-        <v-chip v-bind="ap" size="small" variant="outlined" data-testid="ir-toolbar-outcome-chip">
+        <v-chip
+          v-bind="ap"
+          size="small"
+          variant="outlined"
+          data-testid="ir-toolbar-outcome-chip"
+        >
           <strong>O:</strong>
           <span class="muted">&nbsp;{{ outcomeLabel }}</span>
         </v-chip>
@@ -57,7 +69,12 @@
 
     <v-menu offset="6">
       <template #activator="{ props: ap }">
-        <v-chip v-bind="ap" size="small" variant="outlined" data-testid="ir-toolbar-mult-chip">
+        <v-chip
+          v-bind="ap"
+          size="small"
+          variant="outlined"
+          data-testid="ir-toolbar-mult-chip"
+        >
           <strong>×</strong>
           <span class="muted">&nbsp;{{ multiplier.toLocaleString() }}</span>
         </v-chip>
@@ -83,10 +100,18 @@
       divided
       @update:model-value="(v: 'treemap' | 'table' | null) => v && $emit('update:mode', v)"
     >
-      <v-btn value="treemap" size="small" data-testid="ir-toolbar-mode-treemap">
+      <v-btn
+        value="treemap"
+        size="small"
+        data-testid="ir-toolbar-mode-treemap"
+      >
         {{ t('ir.workbench.treemap', 'Treemap').value }}
       </v-btn>
-      <v-btn value="table" size="small" data-testid="ir-toolbar-mode-table">
+      <v-btn
+        value="table"
+        size="small"
+        data-testid="ir-toolbar-mode-table"
+      >
         {{ t('pathway.results.tabular', 'Table').value }}
       </v-btn>
     </v-btn-toggle>
@@ -100,7 +125,9 @@
           prepend-icon="mdi-download-outline"
           :disabled="!hasResults"
           data-testid="ir-toolbar-export"
-        >{{ t('cc.viewEdit.results.exportAll', 'Export').value }}</v-btn>
+        >
+          {{ t('cc.viewEdit.results.exportAll', 'Export').value }}
+        </v-btn>
       </template>
       <v-list density="compact">
         <v-list-item @click="$emit('export', 'csv')">

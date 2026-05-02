@@ -3,13 +3,17 @@
     class="ir-empty"
     :data-testid="`ir-empty-${variant}`"
   >
-    <div class="ir-empty__icon">{{ icon }}</div>
+    <div class="ir-empty__icon">
+      {{ icon }}
+    </div>
     <h3>{{ title }}</h3>
     <p>{{ hint }}</p>
     <p
       v-if="variant === 'run-failed' && errorMessage"
       class="ir-empty__error"
-    >{{ errorMessage }}</p>
+    >
+      {{ errorMessage }}
+    </p>
     <v-btn
       v-if="ctaLabel"
       color="primary"
@@ -17,7 +21,9 @@
       density="compact"
       data-testid="ir-empty-cta"
       @click="$emit('run')"
-    >{{ ctaLabel }}</v-btn>
+    >
+      {{ ctaLabel }}
+    </v-btn>
   </div>
 </template>
 
@@ -42,6 +48,7 @@ const icon = computed(() => {
     case 'run-pending': return '⏳'
     case 'run-failed':  return '⚠'
     case 'select-to':   return '◌'
+    default:            return ''
   }
 })
 
@@ -52,6 +59,7 @@ const title = computed(() => {
     case 'run-pending': return t('ir.workbench.runPendingTitle', 'Generation in progress').value
     case 'run-failed':  return t('ir.workbench.runFailedTitle', 'Generation failed').value
     case 'select-to':   return t('ir.workbench.selectToTitle', 'Pick a target and outcome').value
+    default:            return ''
   }
 })
 
@@ -62,6 +70,7 @@ const hint = computed(() => {
     case 'run-pending': return t('ir.workbench.runPendingHint', 'This may take several minutes — feel free to leave the page.').value
     case 'run-failed':  return t('ir.workbench.runFailedHint',  'See the error below or try again.').value
     case 'select-to':   return t('ir.workbench.selectToHint',   'Use the target/outcome chips in the toolbar to view a rate.').value
+    default:            return ''
   }
 })
 
