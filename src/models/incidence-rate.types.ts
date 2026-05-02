@@ -109,11 +109,11 @@ export const IncidenceRateExecutionInfoSchema = z
       sourceId: z.number(),
     }),
     status: IncidenceRateStatusSchema,
-    startTime: z.union([z.number(), z.string()]).optional(),
-    executionDuration: z.number().optional(),
-    isValid: z.boolean().optional(),
-    isCanceled: z.boolean().optional(),
-    message: z.string().optional(),
+    startTime: z.union([z.number(), z.string()]).nullish(),
+    executionDuration: z.number().nullish(),
+    isValid: z.boolean().nullish(),
+    isCanceled: z.boolean().nullish(),
+    message: z.string().nullish(),
   })
   .passthrough()
 export type IncidenceRateExecutionInfo = z.infer<typeof IncidenceRateExecutionInfoSchema>
