@@ -1,9 +1,9 @@
 /**
  * Type Definitions for Authentication Enhancements
- * 
+ *
  * Complete TypeScript type system for token refresh, expiry detection,
  * cross-tab sync, and wildcard permission matching features.
- * 
+ *
  * @packageDocumentation
  */
 
@@ -16,22 +16,22 @@
  */
 export interface TokenRefreshState {
   /** Whether a refresh operation is currently in progress */
-  isRefreshing: boolean;
-  
+  isRefreshing: boolean
+
   /** Promise reference for in-flight refresh (prevents duplicate requests) */
-  refreshPromise: Promise<boolean> | null;
-  
+  refreshPromise: Promise<boolean> | null
+
   /** Number of retry attempts for current refresh (max 3) */
-  retryCount: number;
-  
+  retryCount: number
+
   /** Timestamp of last successful refresh */
-  lastRefreshTime: Date | null;
-  
+  lastRefreshTime: Date | null
+
   /** Timestamp of last failed refresh attempt */
-  lastFailureTime: Date | null;
-  
+  lastFailureTime: Date | null
+
   /** Error from last failed refresh */
-  lastError: Error | null;
+  lastError: Error | null
 }
 
 /**
@@ -39,19 +39,19 @@ export interface TokenRefreshState {
  */
 export interface TokenRefreshConfig {
   /** Maximum number of retry attempts (default: 3) */
-  maxRetries: number;
-  
+  maxRetries: number
+
   /** Base delay in milliseconds for exponential backoff (default: 1000ms) */
-  baseDelayMs: number;
-  
+  baseDelayMs: number
+
   /** Buffer time in minutes before expiration to trigger refresh (default: 5) */
-  refreshBufferMinutes: number;
-  
+  refreshBufferMinutes: number
+
   /** API endpoint for token refresh (default: '/user/refresh') */
-  refreshEndpoint: string;
-  
+  refreshEndpoint: string
+
   /** Header name containing new token (default: 'bearer') */
-  tokenHeader: string;
+  tokenHeader: string
 }
 
 /**
@@ -59,19 +59,19 @@ export interface TokenRefreshConfig {
  */
 export interface TokenRefreshResult {
   /** Whether refresh was successful */
-  success: boolean;
-  
+  success: boolean
+
   /** New token if successful */
-  token?: string;
-  
+  token?: string
+
   /** Error if unsuccessful */
-  error?: Error;
-  
+  error?: Error
+
   /** Number of retries attempted */
-  retriesAttempted: number;
-  
+  retriesAttempted: number
+
   /** Total time taken in milliseconds */
-  durationMs: number;
+  durationMs: number
 }
 
 // ============================================================================
@@ -83,19 +83,19 @@ export interface TokenRefreshResult {
  */
 export interface ExpiryTimer {
   /** Timer ID from setTimeout (for cancellation) */
-  timerId: NodeJS.Timeout | null;
-  
+  timerId: NodeJS.Timeout | null
+
   /** When the token will expire */
-  expirationTime: Date | null;
-  
+  expirationTime: Date | null
+
   /** When the warning should appear (5 min before expiration) */
-  warningTime: Date | null;
-  
+  warningTime: Date | null
+
   /** Whether warning modal has been shown for current token */
-  warningShown: boolean;
-  
+  warningShown: boolean
+
   /** Whether warning modal is currently visible */
-  modalOpen: boolean;
+  modalOpen: boolean
 }
 
 /**
@@ -103,13 +103,13 @@ export interface ExpiryTimer {
  */
 export interface ExpiryDetectionConfig {
   /** Minutes before expiration to show warning (default: 5) */
-  warningMinutes: number;
-  
+  warningMinutes: number
+
   /** Whether to auto-logout on expiration (default: true) */
-  autoLogoutOnExpiry: boolean;
-  
+  autoLogoutOnExpiry: boolean
+
   /** Whether to attempt auto-refresh before showing warning (default: true) */
-  autoRefreshBeforeWarning: boolean;
+  autoRefreshBeforeWarning: boolean
 }
 
 /**
@@ -117,16 +117,16 @@ export interface ExpiryDetectionConfig {
  */
 export interface JWTPayload {
   /** Subject (usually username) */
-  sub?: string;
+  sub?: string
 
   /** Expiration time (Unix timestamp in seconds) */
-  exp?: number;
+  exp?: number
 
   /** Issued at time (Unix timestamp in seconds) */
-  iat?: number;
+  iat?: number
 
   /** Additional custom claims */
-  [key: string]: unknown;
+  [key: string]: unknown
 }
 
 // ============================================================================
@@ -136,26 +136,26 @@ export interface JWTPayload {
 /**
  * Type of authentication event detected in storage
  */
-export type AuthEventType = 'login' | 'logout' | 'refresh' | 'unknown';
+export type AuthEventType = 'login' | 'logout' | 'refresh' | 'unknown'
 
 /**
  * Auth state change detected from localStorage event
  */
 export interface StorageSyncEvent {
   /** Type of event detected */
-  eventType: AuthEventType;
-  
+  eventType: AuthEventType
+
   /** Previous token value */
-  oldValue: string | null;
-  
+  oldValue: string | null
+
   /** New token value */
-  newValue: string | null;
-  
+  newValue: string | null
+
   /** When the event was detected */
-  timestamp: Date;
-  
+  timestamp: Date
+
   /** Storage key that changed */
-  key: string;
+  key: string
 }
 
 /**
@@ -163,19 +163,19 @@ export interface StorageSyncEvent {
  */
 export interface SessionSyncConfig {
   /** localStorage key for token (default: 'auth_token') */
-  storageKey: string;
-  
+  storageKey: string
+
   /** Whether to sync login events (default: true) */
-  syncLogin: boolean;
-  
+  syncLogin: boolean
+
   /** Whether to sync logout events (default: true) */
-  syncLogout: boolean;
-  
+  syncLogout: boolean
+
   /** Whether to sync token refresh events (default: true) */
-  syncRefresh: boolean;
-  
+  syncRefresh: boolean
+
   /** Debounce time in ms for rapid changes (default: 100) */
-  debounceMs: number;
+  debounceMs: number
 }
 
 // ============================================================================
@@ -187,22 +187,22 @@ export interface SessionSyncConfig {
  */
 export interface PermissionRule {
   /** Original permission string */
-  original: string;
-  
+  original: string
+
   /** Resource type (first level) */
-  resource: string;
-  
+  resource: string
+
   /** Instance identifier (second level) */
-  instance: string;
-  
+  instance: string
+
   /** Action/operation (third level) */
-  action: string;
-  
+  action: string
+
   /** Whether this rule contains wildcards */
-  hasWildcard: boolean;
-  
+  hasWildcard: boolean
+
   /** Array of level indexes with wildcards */
-  wildcardLevels: number[];
+  wildcardLevels: number[]
 }
 
 /**
@@ -210,16 +210,16 @@ export interface PermissionRule {
  */
 export interface PermissionCacheEntry {
   /** Result of the permission check */
-  result: boolean;
-  
+  result: boolean
+
   /** When this was cached */
-  cachedAt: Date;
-  
+  cachedAt: Date
+
   /** When this expires */
-  expiresAt: Date;
-  
+  expiresAt: Date
+
   /** Number of cache hits for this entry */
-  hitCount: number;
+  hitCount: number
 }
 
 /**
@@ -227,22 +227,22 @@ export interface PermissionCacheEntry {
  */
 export interface PermissionCache {
   /** Map of permission string to cache entry */
-  entries: Map<string, PermissionCacheEntry>;
-  
+  entries: Map<string, PermissionCacheEntry>
+
   /** Total cache hits */
-  totalHits: number;
-  
+  totalHits: number
+
   /** Total cache misses */
-  totalMisses: number;
-  
+  totalMisses: number
+
   /** When cache was last cleared */
-  lastClearedAt: Date | null;
-  
+  lastClearedAt: Date | null
+
   /** Maximum cache size before LRU eviction */
-  maxSize: number;
-  
+  maxSize: number
+
   /** TTL in milliseconds */
-  ttlMs: number;
+  ttlMs: number
 }
 
 /**
@@ -250,19 +250,19 @@ export interface PermissionCache {
  */
 export interface PermissionConfig {
   /** Enable permission caching (default: true) */
-  enableCache: boolean;
-  
+  enableCache: boolean
+
   /** Cache TTL in minutes (default: 5) */
-  cacheTtlMinutes: number;
-  
+  cacheTtlMinutes: number
+
   /** Maximum cache entries (default: 1000) */
-  maxCacheSize: number;
-  
+  maxCacheSize: number
+
   /** Permission string separator (default: ':') */
-  separator: string;
-  
+  separator: string
+
   /** Wildcard character (default: '*') */
-  wildcardChar: string;
+  wildcardChar: string
 }
 
 /**
@@ -270,16 +270,16 @@ export interface PermissionConfig {
  */
 export interface PermissionCheckResult {
   /** Whether permission is granted */
-  granted: boolean;
-  
+  granted: boolean
+
   /** Matching user permission that granted access (if any) */
-  matchedPermission?: string;
-  
+  matchedPermission?: string
+
   /** Whether result came from cache */
-  fromCache: boolean;
-  
+  fromCache: boolean
+
   /** Time taken to check in milliseconds */
-  checkTimeMs: number;
+  checkTimeMs: number
 }
 
 // ============================================================================
@@ -291,28 +291,28 @@ export interface PermissionCheckResult {
  */
 export interface SessionExpiryModalProps {
   /** Whether modal is visible */
-  visible: boolean;
-  
+  visible: boolean
+
   /** When session expires */
-  expiresAt: Date;
-  
+  expiresAt: Date
+
   /** Remaining seconds until expiration */
-  remainingSeconds: number;
-  
+  remainingSeconds: number
+
   /** Handler for "Extend Session" button */
-  onExtend: () => Promise<void>;
-  
+  onExtend: () => Promise<void>
+
   /** Handler for "Logout" button */
-  onLogout: () => void;
-  
+  onLogout: () => void
+
   /** Handler for modal dismissal (X button, ESC) */
-  onDismiss: () => Promise<void>;
-  
+  onDismiss: () => Promise<void>
+
   /** Whether extend operation is in progress */
-  isExtending: boolean;
-  
+  isExtending: boolean
+
   /** Error message if extension failed */
-  extensionError: string | null;
+  extensionError: string | null
 }
 
 /**
@@ -320,16 +320,16 @@ export interface SessionExpiryModalProps {
  */
 export interface SessionExpiryModalEmits {
   /** Emitted when user requests session extension */
-  extend: [];
-  
+  extend: []
+
   /** Emitted when user chooses to logout */
-  logout: [];
-  
+  logout: []
+
   /** Emitted when modal is dismissed */
-  dismiss: [];
-  
+  dismiss: []
+
   /** Emitted when time runs out */
-  expired: [];
+  expired: []
 }
 
 // ============================================================================
@@ -341,19 +341,19 @@ export interface SessionExpiryModalEmits {
  */
 export interface UseTokenRefreshReturn {
   /** Manually trigger token refresh */
-  refreshToken: () => Promise<boolean>;
-  
+  refreshToken: () => Promise<boolean>
+
   /** Whether refresh is in progress */
-  isRefreshing: Ref<boolean>;
-  
+  isRefreshing: Ref<boolean>
+
   /** Last refresh error */
-  refreshError: Ref<Error | null>;
-  
+  refreshError: Ref<Error | null>
+
   /** Seconds until token expires */
-  timeUntilExpiry: Ref<number | null>;
-  
+  timeUntilExpiry: Ref<number | null>
+
   /** Whether expiry warning should show */
-  shouldShowWarning: Ref<boolean>;
+  shouldShowWarning: Ref<boolean>
 }
 
 /**
@@ -361,16 +361,16 @@ export interface UseTokenRefreshReturn {
  */
 export interface UseSessionSyncReturn {
   /** Whether session sync is active */
-  isActive: Ref<boolean>;
-  
+  isActive: Ref<boolean>
+
   /** Last sync event */
-  lastEvent: Ref<StorageSyncEvent | null>;
-  
+  lastEvent: Ref<StorageSyncEvent | null>
+
   /** Initialize session sync */
-  initialize: () => void;
-  
+  initialize: () => void
+
   /** Stop session sync */
-  stop: () => void;
+  stop: () => void
 }
 
 /**
@@ -378,19 +378,19 @@ export interface UseSessionSyncReturn {
  */
 export interface UsePermissionsReturn {
   /** Check if user has a specific permission */
-  hasPermission: (permission: string) => boolean;
-  
+  hasPermission: (permission: string) => boolean
+
   /** Check if user has any of the given permissions */
-  hasAnyPermission: (permissions: string[]) => boolean;
-  
+  hasAnyPermission: (permissions: string[]) => boolean
+
   /** Check if user has all of the given permissions */
-  hasAllPermissions: (permissions: string[]) => boolean;
-  
+  hasAllPermissions: (permissions: string[]) => boolean
+
   /** Current cache hit rate percentage */
-  cacheHitRate: Ref<number>;
-  
+  cacheHitRate: Ref<number>
+
   /** Clear permission cache */
-  clearCache: () => void;
+  clearCache: () => void
 }
 
 // ============================================================================
@@ -402,13 +402,13 @@ export interface UsePermissionsReturn {
  */
 export interface ITokenRefreshService {
   /** Refresh the authentication token */
-  refreshToken(retryCount?: number): Promise<boolean>;
-  
+  refreshToken(retryCount?: number): Promise<boolean>
+
   /** Get current refresh state */
-  getState(): TokenRefreshState;
-  
+  getState(): TokenRefreshState
+
   /** Check if token should be refreshed */
-  shouldRefresh(token: string): boolean;
+  shouldRefresh(token: string): boolean
 }
 
 /**
@@ -416,19 +416,19 @@ export interface ITokenRefreshService {
  */
 export interface ITokenExpiryService {
   /** Setup expiry warning for a token */
-  setupExpiryWarning(token: string): void;
-  
+  setupExpiryWarning(token: string): void
+
   /** Cancel current expiry warning */
-  cancelExpiryWarning(): void;
-  
+  cancelExpiryWarning(): void
+
   /** Show the expiry warning modal */
-  showExpiryWarning(expiresAt: Date): void;
-  
+  showExpiryWarning(expiresAt: Date): void
+
   /** Dismiss the expiry warning modal */
-  dismissExpiryWarning(): void;
-  
+  dismissExpiryWarning(): void
+
   /** Get current expiry timer state */
-  getTimerState(): ExpiryTimer;
+  getTimerState(): ExpiryTimer
 }
 
 /**
@@ -436,16 +436,16 @@ export interface ITokenExpiryService {
  */
 export interface ISessionSyncService {
   /** Initialize cross-tab session sync */
-  initialize(): void;
-  
+  initialize(): void
+
   /** Stop session sync */
-  stop(): void;
-  
+  stop(): void
+
   /** Manually sync state from localStorage */
-  syncNow(): void;
-  
+  syncNow(): void
+
   /** Check if sync is active */
-  isActive(): boolean;
+  isActive(): boolean
 }
 
 /**
@@ -453,19 +453,19 @@ export interface ISessionSyncService {
  */
 export interface IPermissionService {
   /** Check if user has permission */
-  hasPermission(permission: string): boolean;
-  
+  hasPermission(permission: string): boolean
+
   /** Check wildcard match between user perm and required perm */
-  checkWildcardMatch(userPerm: string, requiredPerm: string): boolean;
-  
+  checkWildcardMatch(userPerm: string, requiredPerm: string): boolean
+
   /** Parse permission string into rule */
-  parsePermission(permission: string): PermissionRule;
-  
+  parsePermission(permission: string): PermissionRule
+
   /** Clear permission cache */
-  clearCache(): void;
-  
+  clearCache(): void
+
   /** Get cache statistics */
-  getCacheStats(): { hitRate: number; size: number; totalChecks: number };
+  getCacheStats(): { hitRate: number; size: number; totalChecks: number }
 }
 
 // ============================================================================
@@ -476,7 +476,7 @@ export interface IPermissionService {
  * Type guard for checking if error is a token refresh error
  */
 export function isTokenRefreshError(error: unknown): error is Error {
-  return error instanceof Error && 'refreshToken' in error;
+  return error instanceof Error && 'refreshToken' in error
 }
 
 /**
@@ -494,10 +494,7 @@ export function isValidJWTPayload(payload: unknown): payload is JWTPayload {
  * Type guard for storage sync event
  */
 export function isAuthStorageEvent(event: StorageEvent): boolean {
-  return (
-    event.key === 'auth_token' &&
-    event.storageArea === localStorage
-  );
+  return event.key === 'auth_token' && event.storageArea === localStorage
 }
 
 // ============================================================================
@@ -507,21 +504,21 @@ export function isAuthStorageEvent(event: StorageEvent): boolean {
 /**
  * Ref type from Vue (for completeness)
  */
-import type { Ref } from 'vue';
+import type { Ref } from 'vue'
 
 /**
  * Deep readonly version of permission cache
  */
 export type ReadonlyPermissionCache = Readonly<
   Omit<PermissionCache, 'entries'> & {
-    entries: ReadonlyMap<string, Readonly<PermissionCacheEntry>>;
+    entries: ReadonlyMap<string, Readonly<PermissionCacheEntry>>
   }
->;
+>
 
 /**
  * Partial configuration types for service initialization
  */
-export type PartialTokenRefreshConfig = Partial<TokenRefreshConfig>;
-export type PartialExpiryDetectionConfig = Partial<ExpiryDetectionConfig>;
-export type PartialSessionSyncConfig = Partial<SessionSyncConfig>;
-export type PartialPermissionConfig = Partial<PermissionConfig>;
+export type PartialTokenRefreshConfig = Partial<TokenRefreshConfig>
+export type PartialExpiryDetectionConfig = Partial<ExpiryDetectionConfig>
+export type PartialSessionSyncConfig = Partial<SessionSyncConfig>
+export type PartialPermissionConfig = Partial<PermissionConfig>

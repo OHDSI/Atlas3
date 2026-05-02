@@ -131,11 +131,7 @@ async function load() {
   }
 }
 
-watch(
-  () => [props.cohortId, props.sourceKey, mode.value] as const,
-  load,
-  { immediate: true }
-)
+watch(() => [props.cohortId, props.sourceKey, mode.value] as const, load, { immediate: true })
 
 function formatCount(n: number): string {
   return new Intl.NumberFormat().format(n)

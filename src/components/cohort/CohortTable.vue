@@ -17,7 +17,9 @@
       class="cohort-table__alert"
     >
       <div class="cohort-table__error">
-        <div>{{ error.message || t('common.errorLoadingCohorts', 'Failed to load cohorts').value }}</div>
+        <div>
+          {{ error.message || t('common.errorLoadingCohorts', 'Failed to load cohorts').value }}
+        </div>
         <v-btn
           color="error"
           variant="elevated"
@@ -223,8 +225,8 @@ defineEmits<{
   'show-info': [cohort: CohortDefinitionSummary]
 }>()
 
-const isFiltered = computed(() =>
-  Boolean(props.searchQuery) || (props.selectedTags?.length ?? 0) > 0
+const isFiltered = computed(
+  () => Boolean(props.searchQuery) || (props.selectedTags?.length ?? 0) > 0
 )
 
 const emptyMessage = computed(() => {
@@ -297,8 +299,14 @@ function openCohort(cohort: CohortDefinitionSummary) {
   flex-wrap: wrap;
   gap: 4px;
 }
-.cohort-table__col-author { width: 120px; }
-.cohort-table__col-date { width: 120px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cohort-table__col-author {
+  width: 120px;
+}
+.cohort-table__col-date {
+  width: 120px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
 .cohort-table__col-actions {
   width: 96px;
   white-space: nowrap;

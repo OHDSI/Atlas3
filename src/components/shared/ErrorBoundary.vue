@@ -23,7 +23,12 @@
             </v-card-title>
             <v-card-text>
               <p class="mb-4">
-                {{ t('commonErrors.unexpectedError', 'An unexpected error occurred. This has been logged for investigation.').value }}
+                {{
+                  t(
+                    'commonErrors.unexpectedError',
+                    'An unexpected error occurred. This has been logged for investigation.'
+                  ).value
+                }}
               </p>
 
               <v-expansion-panels

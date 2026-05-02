@@ -115,13 +115,13 @@ import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
 interface Props {
   modelValue: boolean
   tag: Tag | null
-  tagGroup: TagGroup  // The parent group for this tag
+  tagGroup: TagGroup // The parent group for this tag
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'save': [tag: Tag]
+  save: [tag: Tag]
 }>()
 
 const formRef = ref()
@@ -135,7 +135,7 @@ const form = ref<Partial<Tag>>({
   icon: '',
   permissionProtected: false,
   description: '',
-  groups: []
+  groups: [],
 })
 
 const isEditMode = computed(() => !!props.tag?.id)
@@ -146,27 +146,31 @@ const isValidIcon = computed(() => {
 
 const nameRules = [
   (v: string) => !!v || 'Name is required',
-  (v: string) => (v?.length <= 255) || 'Name must be less than 255 characters'
+  (v: string) => v?.length <= 255 || 'Name must be less than 255 characters',
 ]
 
 // Watch for tag changes to populate form
-watch(() => props.tag, (tag) => {
-  if (tag) {
-    // Edit mode: populate form with tag data
-    form.value = { ...tag }
-  } else {
-    // Create mode: reset form with parent group
-    form.value = {
-      name: '',
-      color: '',
-      icon: '',
-      permissionProtected: false,
-      description: '',
-      groups: [props.tagGroup]
+watch(
+  () => props.tag,
+  tag => {
+    if (tag) {
+      // Edit mode: populate form with tag data
+      form.value = { ...tag }
+    } else {
+      // Create mode: reset form with parent group
+      form.value = {
+        name: '',
+        color: '',
+        icon: '',
+        permissionProtected: false,
+        description: '',
+        groups: [props.tagGroup],
+      }
     }
-  }
-  errors.value = {}
-}, { immediate: true })
+    errors.value = {}
+  },
+  { immediate: true }
+)
 
 async function handleSubmit() {
   errors.value = {}
@@ -174,7 +178,7 @@ async function handleSubmit() {
   // Ensure groups array contains the parent group
   const tagData = {
     ...form.value,
-    groups: [props.tagGroup]
+    groups: [props.tagGroup],
   }
 
   // Validate with Zod
@@ -182,7 +186,7 @@ async function handleSubmit() {
 
   if (!result.success) {
     // Map Zod errors to form fields
-    result.error.errors.forEach((err) => {
+    result.error.errors.forEach(err => {
       const field = err.path[0] as string
       errors.value[field] = err.message
     })

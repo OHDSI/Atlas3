@@ -28,9 +28,7 @@ const totalLabel = computed(() => {
     'cs.browser.compare.vennDiagramTotalAmountConcepts',
     'The total amount of concepts: <count>'
   )
-  return template
-    .replace('<%=count%>', String(total.value))
-    .replace('<count>', String(total.value))
+  return template.replace('<%=count%>', String(total.value)).replace('<count>', String(total.value))
 })
 </script>
 

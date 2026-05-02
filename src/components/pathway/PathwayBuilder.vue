@@ -1,11 +1,40 @@
 <template>
   <AnalysisBuilderShell
+    :eyebrow="t('navigation.pathways', 'Pathway analysis').value"
     :title="title"
     :subtitle="subtitle"
     :show-back="true"
     testid="pathway-builder"
     @back="handleBack"
   >
+    <template
+      v-if="currentPathway"
+      #title
+    >
+      <input
+        :value="currentPathway.name"
+        :placeholder="t('home.newEntityNames.pathway', 'New pathway').value"
+        :aria-label="t('columns.name', 'Name').value"
+        :readonly="!canEdit"
+        class="pathway-builder__title-input"
+        data-testid="pathway-builder-name"
+        @input="(e: Event) => store.updateMeta({ name: (e.target as HTMLInputElement).value })"
+      >
+    </template>
+    <template
+      v-if="currentPathway"
+      #subtitle
+    >
+      <input
+        :value="currentPathway.description ?? ''"
+        :placeholder="t('cc.viewEdit.descriptionPlaceholder', 'Add a short description').value"
+        :aria-label="t('columns.description', 'Description').value"
+        :readonly="!canEdit"
+        class="pathway-builder__subtitle-input"
+        data-testid="pathway-builder-description"
+        @input="(e: Event) => store.updateMeta({ description: (e.target as HTMLInputElement).value })"
+      >
+    </template>
     <template #actions>
       <v-tooltip
         v-if="currentPathway?.id"
@@ -185,7 +214,7 @@
       v-else
       :pathway-id="currentPathway?.id ?? null"
       :selected-execution-id="selectedExecutionId"
-      @execution:select="(id) => (selectedExecutionId = id)"
+      @execution:select="id => (selectedExecutionId = id)"
       @open-generate="generateMenu = true"
     />
 
@@ -284,12 +313,25 @@ async function handleTagsUpdate(newTags: Tag[]) {
   await store.syncTags(newTags)
 }
 
-async function onSave() { await save() }
-async function onCopy() { await copy() }
-async function onDelete() { await remove() }
+async function onSave() {
+  await save()
+}
+async function onCopy() {
+  await copy()
+}
+async function onDelete() {
+  await remove()
+}
 
 function slugifyName(name: string): string {
-  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'design'
+  return (
+    name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || 'design'
+  )
 }
 
 function triggerDownload(filename: string, payload: string): void {
@@ -312,10 +354,16 @@ async function handleExport() {
   exporting.value = true
   try {
     const design = await exportPathway(id)
-    triggerDownload(`pathway-${slugifyName(currentPathway.value?.name ?? '')}-${id}.json`, JSON.stringify(design, null, 2))
+    triggerDownload(
+      `pathway-${slugifyName(currentPathway.value?.name ?? '')}-${id}.json`,
+      JSON.stringify(design, null, 2)
+    )
   } catch (err) {
     logger.error('PathwayBuilder', 'Export failed', err)
-    feedback.value = { message: t('characterizations.editor.utilities.import.importError', 'Export failed').value, color: 'error' }
+    feedback.value = {
+      message: t('characterizations.editor.utilities.import.importError', 'Export failed').value,
+      color: 'error',
+    }
   } finally {
     exporting.value = false
   }
@@ -337,20 +385,33 @@ async function handleImportFileChange(event: Event) {
     parsed = JSON.parse(await file.text())
   } catch (err) {
     logger.error('PathwayBuilder', 'Import parse failed', err)
-    feedback.value = { message: t('characterizations.editor.utilities.import.parseError', 'Could not parse design JSON').value, color: 'error' }
+    feedback.value = {
+      message: t(
+        'characterizations.editor.utilities.import.parseError',
+        'Could not parse design JSON'
+      ).value,
+      color: 'error',
+    }
     importing.value = false
     return
   }
 
   try {
     const created = await importPathway(parsed)
-    feedback.value = { message: t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully').value, color: 'success' }
+    feedback.value = {
+      message: t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully')
+        .value,
+      color: 'success',
+    }
     if (created.id != null) {
       await router.push(`/pathways/${created.id}`)
     }
   } catch (err) {
     logger.error('PathwayBuilder', 'Import failed', err)
-    feedback.value = { message: t('characterizations.editor.utilities.import.importError', 'Import failed').value, color: 'error' }
+    feedback.value = {
+      message: t('characterizations.editor.utilities.import.importError', 'Import failed').value,
+      color: 'error',
+    }
   } finally {
     importing.value = false
   }
@@ -368,9 +429,12 @@ const versionsConfig = computed<VersionsConfig | null>(() => {
     version: 0,
     assetId: p.id,
     createdBy: { id: 0, name: (p.createdBy as { name?: string } | undefined)?.name ?? '' },
-    createdDate: typeof p.createdDate === 'string'
-      ? p.createdDate
-      : (typeof p.createdDate === 'number' ? new Date(p.createdDate).toISOString() : ''),
+    createdDate:
+      typeof p.createdDate === 'string'
+        ? p.createdDate
+        : typeof p.createdDate === 'number'
+          ? new Date(p.createdDate).toISOString()
+          : '',
     comment: null,
     archived: false,
     displayVersion: 'Current',
@@ -404,5 +468,54 @@ onBeforeUnmount(() => {
   padding: 48px;
   text-align: center;
   color: rgba(var(--v-theme-on-surface), 0.6);
+}
+
+.pathway-builder__title-input {
+  width: 100%;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: rgb(var(--v-theme-primary));
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  padding: 0 0 2px;
+  margin: 0;
+  font-family: inherit;
+  outline: none;
+}
+.pathway-builder__title-input::placeholder {
+  color: rgba(var(--v-theme-on-surface), 0.32);
+  font-weight: 300;
+}
+.pathway-builder__title-input:hover:not(:read-only) {
+  border-bottom-color: rgba(var(--v-theme-on-surface), 0.16);
+}
+.pathway-builder__title-input:focus {
+  border-bottom-color: rgb(var(--v-theme-orange));
+}
+
+.pathway-builder__subtitle-input {
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgb(var(--v-theme-on-surface-variant));
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  padding: 0 0 2px;
+  margin: 0;
+  font-family: inherit;
+  outline: none;
+}
+.pathway-builder__subtitle-input::placeholder {
+  color: rgba(var(--v-theme-on-surface), 0.32);
+}
+.pathway-builder__subtitle-input:hover:not(:read-only) {
+  border-bottom-color: rgba(var(--v-theme-on-surface), 0.12);
+}
+.pathway-builder__subtitle-input:focus {
+  border-bottom-color: rgb(var(--v-theme-orange));
 }
 </style>

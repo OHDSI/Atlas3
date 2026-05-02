@@ -23,7 +23,7 @@
           />
         </ChartSection>
       </v-col>
-      
+
       <v-col
         cols="12"
         md="4"
@@ -35,7 +35,7 @@
           />
         </ChartSection>
       </v-col>
-      
+
       <v-col
         cols="12"
         md="4"
@@ -71,7 +71,7 @@ const props = defineProps<Props>()
 const yearOfBirthBarChartData = computed<BarChartData>(() => ({
   categories: props.data.yearOfBirth.categories,
   values: props.data.yearOfBirth.series[0]?.data || [],
-  unit: props.data.yearOfBirth.unit || t('dataSources.dashboardReport.people', 'People').value
+  unit: props.data.yearOfBirth.unit || t('dataSources.dashboardReport.people', 'People').value,
 }))
 </script>
 

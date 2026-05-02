@@ -28,7 +28,14 @@
     "pluginsPath": "plugins",
     "showLoadingIndicators": true,
     "navigation": {
-      "enabledCoreItems": ["datasources", "concepts", "cohorts", "characterizations", "featureAnalyses", "pathways"]
+      "enabledCoreItems": [
+        "datasources",
+        "concepts",
+        "cohorts",
+        "characterizations",
+        "featureAnalyses",
+        "pathways"
+      ]
     },
     "theme": {
       "primaryColor": "#1f425a",

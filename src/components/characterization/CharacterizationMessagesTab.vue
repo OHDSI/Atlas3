@@ -149,9 +149,9 @@ const messages = computed<ValidationMessage[]>(() => {
   return validateCharacterization(props.characterization)
 })
 
-const errors = computed(() => messages.value.filter((m) => m.level === 'error'))
-const warnings = computed(() => messages.value.filter((m) => m.level === 'warning'))
-const infos = computed(() => messages.value.filter((m) => m.level === 'info'))
+const errors = computed(() => messages.value.filter(m => m.level === 'error'))
+const warnings = computed(() => messages.value.filter(m => m.level === 'warning'))
+const infos = computed(() => messages.value.filter(m => m.level === 'info'))
 
 function formatMessage(msg: ValidationMessage): string {
   if (msg.ruleId) {

@@ -18,10 +18,10 @@ export function toAllPathwaysRows(
       row[`Step ${i + 1}`] = step ? codeToName(eventCodes, step) : ''
     }
     row['Count'] = p.personCount
-    row['% with Pathway'] = group.totalPathwaysCount === 0
-      ? 0 : (p.personCount / group.totalPathwaysCount) * 100
-    row['% of Cohort'] = group.targetCohortCount === 0
-      ? 0 : (p.personCount / group.targetCohortCount) * 100
+    row['% with Pathway'] =
+      group.totalPathwaysCount === 0 ? 0 : (p.personCount / group.totalPathwaysCount) * 100
+    row['% of Cohort'] =
+      group.targetCohortCount === 0 ? 0 : (p.personCount / group.targetCohortCount) * 100
     return row
   })
 }
@@ -44,10 +44,9 @@ export function toCountsByRankRows(
     const rank = parts[1] ?? '0'
     return {
       'Event Cohort': codeToName(eventCodes, code),
-      'Rank': Number(rank),
-      'Count': count,
-      '%': group.totalPathwaysCount === 0
-        ? 0 : (count / group.totalPathwaysCount) * 100,
+      Rank: Number(rank),
+      Count: count,
+      '%': group.totalPathwaysCount === 0 ? 0 : (count / group.totalPathwaysCount) * 100,
     }
   })
 }
@@ -67,9 +66,8 @@ export function toEventCohortCountRows(
   }
   return [...tally.entries()].map(([name, count]) => ({
     'Event Cohort': name,
-    'Count': count,
-    '%': group.totalPathwaysCount === 0
-      ? 0 : (count / group.totalPathwaysCount) * 100,
+    Count: count,
+    '%': group.totalPathwaysCount === 0 ? 0 : (count / group.totalPathwaysCount) * 100,
   }))
 }
 
@@ -83,10 +81,12 @@ export function toDistinctEventCountRows(
     const distinct = new Set(p.path.split('-')).size
     buckets.set(distinct, (buckets.get(distinct) ?? 0) + p.personCount)
   }
-  return [...buckets.entries()].sort((a, b) => a[0] - b[0]).map(([n, count]) => ({
-    'Distinct Events': n,
-    'Count': count,
-  }))
+  return [...buckets.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([n, count]) => ({
+      'Distinct Events': n,
+      Count: count,
+    }))
 }
 
 export function toCsv(rows: Array<Record<string, string | number>>): string {

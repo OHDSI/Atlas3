@@ -10,7 +10,9 @@
             :label="t('columns.target', 'Target').value"
             density="compact"
             hide-details
-            @update:model-value="(v: number | null) => store.setSelectedTargetOutcome(v, store.selectedOutcomeId)"
+            @update:model-value="
+              (v: number | null) => store.setSelectedTargetOutcome(v, store.selectedOutcomeId)
+            "
           />
           <v-select
             :model-value="store.selectedOutcomeId"
@@ -18,7 +20,9 @@
             :label="t('columns.outcomes', 'Outcome').value"
             density="compact"
             hide-details
-            @update:model-value="(v: number | null) => store.setSelectedTargetOutcome(store.selectedTargetId, v)"
+            @update:model-value="
+              (v: number | null) => store.setSelectedTargetOutcome(store.selectedTargetId, v)
+            "
           />
           <v-select
             :model-value="store.rateMultiplier"
@@ -122,7 +126,7 @@ const dsStore = useDataSourcesStore()
 const gen = useIncidenceRateGeneration(props.irId)
 
 onMounted(() => {
-  gen.pollOnce()  // initial fetch
+  gen.pollOnce() // initial fetch
 })
 onBeforeUnmount(() => gen.stopPolling())
 
@@ -145,7 +149,9 @@ const outcomeOptions = computed(() =>
     value: id,
   }))
 )
-const multiplierOptions = computed(() => RATE_MULTIPLIER_OPTIONS.map(m => ({ title: `× ${m.toLocaleString()}`, value: m })))
+const multiplierOptions = computed(() =>
+  RATE_MULTIPLIER_OPTIONS.map(m => ({ title: `× ${m.toLocaleString()}`, value: m }))
+)
 
 function rowFor(sourceKey: string) {
   return store.executionInfoBySourceKey[sourceKey] ?? null
@@ -159,23 +165,44 @@ function matchingSummary(sourceKey: string) {
   const r = rowFor(sourceKey)
   if (!r) return undefined
   if (store.selectedTargetId == null || store.selectedOutcomeId == null) return r.summaryList[0]
-  return r.summaryList.find(s =>
-    s.targetId === store.selectedTargetId && s.outcomeId === store.selectedOutcomeId
+  return r.summaryList.find(
+    s => s.targetId === store.selectedTargetId && s.outcomeId === store.selectedOutcomeId
   )
 }
-function formatNum(n?: number) { return n == null ? '—' : Math.round(n).toLocaleString() }
-function toYears(days?: number) { return days == null ? undefined : days / 365.25 }
+function formatNum(n?: number) {
+  return n == null ? '—' : Math.round(n).toLocaleString()
+}
+function toYears(days?: number) {
+  return days == null ? undefined : days / 365.25
+}
 function formatRate(r?: number) {
   if (r == null) return '—'
   return (r * store.rateMultiplier).toFixed(2)
 }
 
-async function onGenerate(sourceKey: string) { await gen.start(sourceKey) }
-async function onCancel(sourceKey: string) { await gen.cancel(sourceKey) }
+async function onGenerate(sourceKey: string) {
+  await gen.start(sourceKey)
+}
+async function onCancel(sourceKey: string) {
+  await gen.cancel(sourceKey)
+}
 </script>
 
 <style scoped>
-.gen-panel { display: flex; flex-direction: column; gap: 12px; padding: 8px; }
-.filters { display: flex; gap: 12px; flex-wrap: wrap; }
-.empty { text-align: center; color: #888; padding: 16px; }
+.gen-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px;
+}
+.filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.empty {
+  text-align: center;
+  color: #888;
+  padding: 16px;
+}
 </style>

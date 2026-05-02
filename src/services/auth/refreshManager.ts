@@ -56,7 +56,10 @@ export class RefreshManager {
     }
 
     if (timeUntilRefresh > MAX_TIMEOUT_MS) {
-      logger.debug('RefreshManager', `Token refresh delay exceeds setTimeout limit (${(timeUntilRefresh / 86400000).toFixed(1)} days), skipping schedule`)
+      logger.debug(
+        'RefreshManager',
+        `Token refresh delay exceeds setTimeout limit (${(timeUntilRefresh / 86400000).toFixed(1)} days), skipping schedule`
+      )
       return null
     }
 
@@ -76,7 +79,7 @@ export class RefreshManager {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 }
 

@@ -19,15 +19,15 @@
       <pre v-if="error?.stack">{{ error.stack }}</pre>
     </div>
     <div class="actions">
-      <v-btn 
-        v-if="error?.recoverable" 
-        color="primary" 
+      <v-btn
+        v-if="error?.recoverable"
+        color="primary"
         @click="$emit('retry')"
       >
         Retry
       </v-btn>
-      <v-btn 
-        variant="text" 
+      <v-btn
+        variant="text"
         @click="showDetails = !showDetails"
       >
         {{ showDetails ? 'Hide' : 'Show' }} Details
@@ -37,27 +37,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from 'vue'
 
 defineProps<{
   error: {
-    message: string;
-    stack?: string;
-    timestamp?: Date;
-    recoverable?: boolean;
-  } | null;
-  pluginId: string;
-}>();
+    message: string
+    stack?: string
+    timestamp?: Date
+    recoverable?: boolean
+  } | null
+  pluginId: string
+}>()
 
 defineEmits<{
-  retry: [];
-}>();
+  retry: []
+}>()
 
-const showDetails = ref(false);
+const showDetails = ref(false)
 
 function formatTimestamp(timestamp?: Date): string {
-  if (!timestamp) return 'N/A';
-  return new Date(timestamp).toLocaleString();
+  if (!timestamp) return 'N/A'
+  return new Date(timestamp).toLocaleString()
 }
 </script>
 

@@ -122,7 +122,7 @@ function formatGender(conceptId: number): string {
 
 const anyRecordCount = computed(() =>
   (props.sample.elements ?? []).some(
-    (el) => typeof el.recordCount === 'number' && el.recordCount !== null
+    el => typeof el.recordCount === 'number' && el.recordCount !== null
   )
 )
 </script>

@@ -27,7 +27,7 @@ export function useConfigPanel() {
   const KEYS = {
     open: `${STORAGE_PREFIX}-open`,
     section: `${STORAGE_PREFIX}-section`,
-    scroll: `${STORAGE_PREFIX}-scroll`
+    scroll: `${STORAGE_PREFIX}-scroll`,
   }
 
   /**
@@ -68,7 +68,7 @@ export function useConfigPanel() {
   }
 
   // Watchers for persistence
-  watch(isOpen, (value) => {
+  watch(isOpen, value => {
     saveState(KEYS.open, value)
     if (value) {
       uiStore.openConfigPanel()
@@ -77,7 +77,7 @@ export function useConfigPanel() {
     }
   })
 
-  watch(activeSection, (value) => {
+  watch(activeSection, value => {
     saveState(KEYS.section, value)
     uiStore.setConfigPanelSection(value)
   })
@@ -85,7 +85,7 @@ export function useConfigPanel() {
   // Debounced scroll persistence (prevents excessive writes)
   watchDebounced(
     scrollPosition,
-    (value) => {
+    value => {
       saveState(KEYS.scroll, value)
       uiStore.setConfigPanelScroll(value)
     },
@@ -127,6 +127,6 @@ export function useConfigPanel() {
     togglePanel,
     setActiveSection,
     setScrollPosition,
-    loadState
+    loadState,
   }
 }

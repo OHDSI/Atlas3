@@ -1,9 +1,9 @@
 /**
  * CharacterizationBuilderView component tests
  *
- * Smoke-level: mounts in new vs. edit mode, the tabs render, the name
- * input updates the draft, the Run button is disabled, and Save calls the
- * appropriate store action through the service-layer mock.
+ * Smoke-level: mounts in new vs. edit mode, the workbench renders, the
+ * name input updates the draft, the Run button is disabled, and Save
+ * calls the appropriate store action through the service-layer mock.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -122,9 +122,16 @@ async function mountBuilder(path: string, props?: Record<string, unknown>) {
     entityAccess: emptyEntityAccess(),
   })
 
-  const wrapper = mount(CharacterizationBuilderView, {
+  const TestWrapper = {
+    components: { CharacterizationBuilderView },
+    props: { innerProps: { type: Object, default: () => ({}) } },
+    template:
+      '<v-app><CharacterizationBuilderView v-bind="innerProps" /></v-app>',
+  }
+
+  const wrapper = mount(TestWrapper, {
     global: { plugins: [vuetify, pinia, router] },
-    props,
+    props: { innerProps: props ?? {} },
   })
 
   await flushPromises()
@@ -152,12 +159,7 @@ describe('CharacterizationBuilderView', () => {
   it('mounts in new mode with empty form, header tabs/icons, and a disabled Run button', async () => {
     mounted = await mountBuilder('/characterizations/new')
 
-    const text = mounted.wrapper.text()
-    expect(text).toContain('New')
-
-    // Tabs were removed — Design lives directly in the page.
-    expect(mounted.wrapper.find('[data-testid="char-builder-design-tab"]').exists()).toBe(true)
-    // Concept sets and versions live as icon buttons in the action bar (not tabs).
+    expect(mounted.wrapper.find('[data-testid="char-builder-workbench"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="char-builder-conceptsets-icon"]').exists()).toBe(true)
 
     const runBtn = mounted.wrapper.find('[data-testid="char-builder-run"]')
@@ -169,7 +171,7 @@ describe('CharacterizationBuilderView', () => {
     expect(mounted.wrapper.find('[data-testid="char-builder-delete"]').exists()).toBe(false)
 
     const nameInput = mounted.wrapper.find(
-      '[data-testid="char-design-name"] input'
+      '[data-testid="char-builder-name"]'
     ).element as HTMLInputElement
     expect(nameInput.value).toBe('')
   })
@@ -180,11 +182,8 @@ describe('CharacterizationBuilderView', () => {
     mounted = await mountBuilder('/characterizations/42', { id: '42' })
     await flushPromises()
 
-    // After i18n migration, the title in edit mode uses generic "Edit" wording
-    expect(mounted.wrapper.text()).toContain('Edit')
-
     const nameInput = mounted.wrapper.find(
-      '[data-testid="char-design-name"] input'
+      '[data-testid="char-builder-name"]'
     ).element as HTMLInputElement
     expect(nameInput.value).toBe('Diabetes Cohort Profile')
 
@@ -195,7 +194,7 @@ describe('CharacterizationBuilderView', () => {
   it('typing into the name input updates the draft', async () => {
     mounted = await mountBuilder('/characterizations/new')
 
-    const nameInput = mounted.wrapper.find('[data-testid="char-design-name"] input')
+    const nameInput = mounted.wrapper.find('[data-testid="char-builder-name"]')
     await nameInput.setValue('My new characterization')
     await flushPromises()
 
@@ -213,17 +212,15 @@ describe('CharacterizationBuilderView', () => {
 
     mounted = await mountBuilder('/characterizations/new')
 
-    const nameInput = mounted.wrapper.find('[data-testid="char-design-name"] input')
+    const nameInput = mounted.wrapper.find('[data-testid="char-builder-name"]')
     await nameInput.setValue('My new characterization')
     await flushPromises()
 
-    // Seed cohorts + featureAnalyses via the design tab emit so the
-    // builder-level validator doesn't block save.
-    const designTab = mounted.wrapper.findComponent({
-      name: 'CharacterizationDesignTab',
+    const workbench = mounted.wrapper.findComponent({
+      name: 'CharacterizationWorkbench',
     })
-    designTab.vm.$emit('update:modelValue', {
-      ...designTab.props('modelValue'),
+    workbench.vm.$emit('update:modelValue', {
+      ...(workbench.props('modelValue') as Record<string, unknown>),
       name: 'My new characterization',
       cohorts: [{ id: 1, name: 'Cohort A' }],
       featureAnalyses: [{ id: 10, name: 'Demographics' }],
@@ -250,7 +247,7 @@ describe('CharacterizationBuilderView', () => {
     mounted = await mountBuilder('/characterizations/42', { id: '42' })
     await flushPromises()
 
-    const nameInput = mounted.wrapper.find('[data-testid="char-design-name"] input')
+    const nameInput = mounted.wrapper.find('[data-testid="char-builder-name"]')
     await nameInput.setValue('Renamed')
     await flushPromises()
 

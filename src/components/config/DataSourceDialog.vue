@@ -8,7 +8,9 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center justify-space-between">
-        <span>{{ isEditing ? t('configuration.tagManagement.edit') : t('configuration.newSource') }}</span>
+        <span>{{
+          isEditing ? t('configuration.tagManagement.edit') : t('configuration.newSource')
+        }}</span>
         <v-btn
           icon
           variant="text"
@@ -202,10 +204,10 @@
           <v-table density="comfortable">
             <thead>
               <tr>
-                <th style="width: 50px;">
+                <th style="width: 50px">
                   {{ t('columns.enabled') }}
                 </th>
-                <th style="width: 150px;">
+                <th style="width: 150px">
                   {{ t('columns.type') }}
                 </th>
                 <th>{{ t('columns.schema') }}</th>
@@ -317,13 +319,13 @@ import {
   type SourceRequest,
   type SourceDetails,
   type DaimonType,
-  type DaimonRequest
+  type DaimonRequest,
 } from '@/models/datasource.types'
 import {
   createSource,
   updateSource,
   deleteSource,
-  getSourceDetails
+  getSourceDetails,
 } from '@/services/source.service'
 
 const props = defineProps<{
@@ -355,7 +357,7 @@ const form = reactive({
   password: '',
   krbAuthMethod: 'KEYTAB' as 'KEYTAB' | 'PASSWORD',
   krbAdminServer: '',
-  checkConnection: false
+  checkConnection: false,
 })
 
 const keyfile = ref<File[]>([])
@@ -368,7 +370,7 @@ const daimonEnabled = reactive<Record<DaimonType, boolean>>({
   Results: false,
   CEM: false,
   CEMResults: false,
-  Temp: false
+  Temp: false,
 })
 
 const daimonSchemas = reactive<Record<DaimonType, string>>({
@@ -377,7 +379,7 @@ const daimonSchemas = reactive<Record<DaimonType, string>>({
   Results: '',
   CEM: '',
   CEMResults: '',
-  Temp: ''
+  Temp: '',
 })
 
 // Computed properties
@@ -386,7 +388,7 @@ const isEditing = computed(() => props.sourceKey != null)
 const dialectItems = computed(() =>
   SUPPORTED_DIALECTS.map(d => ({
     title: d.label,
-    value: d.value
+    value: d.value,
   }))
 )
 
@@ -402,18 +404,22 @@ const showBigQuery = computed(() => form.dialect === 'BIGQUERY')
 // Validation rules (use tv for non-reactive string values)
 const rules = {
   required: (v: string) => !!v || tv('configuration.viewEdit.source.validation.empty'),
-  validKey: (v: string) => /^[a-zA-Z0-9_-]+$/.test(v) || tv('configuration.viewEdit.source.validation.empty')
+  validKey: (v: string) =>
+    /^[a-zA-Z0-9_-]+$/.test(v) || tv('configuration.viewEdit.source.validation.empty'),
 }
 
 // Watch for dialog open/close
-watch(() => props.modelValue, async (isOpen) => {
-  if (isOpen) {
-    resetForm()
-    if (props.sourceKey) {
-      await loadSourceDetails(props.sourceKey)
+watch(
+  () => props.modelValue,
+  async isOpen => {
+    if (isOpen) {
+      resetForm()
+      if (props.sourceKey) {
+        await loadSourceDetails(props.sourceKey)
+      }
     }
   }
-})
+)
 
 // Reset form to initial state
 function resetForm() {
@@ -471,7 +477,7 @@ function buildDaimons(): DaimonRequest[] {
       daimons.push({
         daimonType: type,
         tableQualifier: daimonSchemas[type],
-        priority: priority++
+        priority: priority++,
       })
     }
   }
@@ -487,7 +493,7 @@ function buildRequest(): SourceRequest {
     dialect: form.dialect,
     connectionString: form.connectionString,
     daimons: buildDaimons(),
-    checkConnection: form.checkConnection
+    checkConnection: form.checkConnection,
   }
 
   if (showCredentials.value) {
@@ -511,11 +517,12 @@ async function handleSave() {
 
   try {
     const request = buildRequest()
-    const file = showBigQuery.value && keyfile.value.length > 0
-      ? keyfile.value[0]
-      : showKerberos.value && form.krbAuthMethod === 'KEYTAB' && keytabFile.value.length > 0
-        ? keytabFile.value[0]
-        : undefined
+    const file =
+      showBigQuery.value && keyfile.value.length > 0
+        ? keyfile.value[0]
+        : showKerberos.value && form.krbAuthMethod === 'KEYTAB' && keytabFile.value.length > 0
+          ? keytabFile.value[0]
+          : undefined
 
     if (isEditing.value && props.sourceKey) {
       await updateSource(props.sourceKey, request, file)

@@ -137,9 +137,7 @@
             >
               mdi-calendar-plus
             </v-icon>
-            <span class="text-caption">
-              Created: {{ formatDate(role.createdDate) }}
-            </span>
+            <span class="text-caption"> Created: {{ formatDate(role.createdDate) }} </span>
           </div>
           <div
             v-if="role.modifiedDate"
@@ -151,9 +149,7 @@
             >
               mdi-calendar-edit
             </v-icon>
-            <span class="text-caption">
-              Modified: {{ formatDate(role.modifiedDate) }}
-            </span>
+            <span class="text-caption"> Modified: {{ formatDate(role.modifiedDate) }} </span>
           </div>
         </div>
       </div>
@@ -202,11 +198,11 @@ const nameRules = [
   (v: string) => {
     if (!v) return true
     const trimmedName = v.trim().toLowerCase()
-    const isDuplicate = roles.value.some(r =>
-      r.name.toLowerCase() === trimmedName && r.id !== props.role.id
+    const isDuplicate = roles.value.some(
+      r => r.name.toLowerCase() === trimmedName && r.id !== props.role.id
     )
     return !isDuplicate || 'A role with this name already exists'
-  }
+  },
 ]
 
 const isNameValid = computed(() => {

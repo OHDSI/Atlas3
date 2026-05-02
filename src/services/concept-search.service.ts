@@ -89,7 +89,17 @@ export async function getConceptById(
 export async function getConceptRecordCounts(
   sourceKey: string,
   conceptIds: number[]
-): Promise<Map<number, { recordCount: number; descendantRecordCount: number; personCount: number; descendantPersonCount: number }>> {
+): Promise<
+  Map<
+    number,
+    {
+      recordCount: number
+      descendantRecordCount: number
+      personCount: number
+      descendantPersonCount: number
+    }
+  >
+> {
   const recordCountMap = new Map()
 
   if (conceptIds.length === 0) {

@@ -132,7 +132,7 @@ function onSearchInput(value: string | null) {
 
 function onSearch() {
   if (!isSearchValid.value) return
-  
+
   // Immediate search when user clicks button or presses Enter
   store.search(searchInput.value.trim())
 }

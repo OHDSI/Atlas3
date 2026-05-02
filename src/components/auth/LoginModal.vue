@@ -126,7 +126,7 @@ const { t } = useI18n()
 
 const isOpen = computed({
   get: () => auth.loginModalOpen.value,
-  set: (value) => {
+  set: value => {
     if (!value) {
       close()
     }
@@ -162,7 +162,7 @@ async function fetchProviders() {
 
 watch(
   () => auth.loginModalOpen.value,
-  async (newValue) => {
+  async newValue => {
     if (newValue) {
       selectedProvider.value = null
       await fetchProviders()
@@ -283,7 +283,9 @@ function close() {
   letter-spacing: 0;
   font-weight: 500;
   border-color: rgba(0, 0, 0, 0.12);
-  transition: background-color 120ms ease, border-color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
 }
 
 .login-card__provider-btn:hover {

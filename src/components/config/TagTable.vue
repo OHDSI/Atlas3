@@ -136,8 +136,8 @@ interface Props {
 defineProps<Props>()
 
 defineEmits<{
-  'edit': [tag: Tag]
-  'delete': [tag: Tag]
+  edit: [tag: Tag]
+  delete: [tag: Tag]
 }>()
 
 const headers = [
@@ -147,7 +147,7 @@ const headers = [
   { title: 'Author', key: 'createdBy', sortable: true, width: '120px' },
   { title: 'Description', key: 'description', sortable: false, width: '250px' },
   { title: 'Usage', key: 'count', sortable: true, width: '80px' },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const, width: '100px' }
+  { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
 ] as const
 
 /**
@@ -159,7 +159,7 @@ function formatDate(dateString: string): string {
     return date.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     })
   } catch {
     return dateString

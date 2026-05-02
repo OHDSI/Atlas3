@@ -122,9 +122,7 @@ export function useRoles() {
      */
     async assignPermissionsToRole(roleId: number, permissionIds: number[]): Promise<boolean> {
       const results = await Promise.all(
-        permissionIds.map(permissionId =>
-          rolesStore.assignPermissionToRole(roleId, permissionId)
-        )
+        permissionIds.map(permissionId => rolesStore.assignPermissionToRole(roleId, permissionId))
       )
       return results.every(result => result)
     },
@@ -135,9 +133,7 @@ export function useRoles() {
      */
     async removePermissionsFromRole(roleId: number, permissionIds: number[]): Promise<boolean> {
       const results = await Promise.all(
-        permissionIds.map(permissionId =>
-          rolesStore.removePermissionFromRole(roleId, permissionId)
-        )
+        permissionIds.map(permissionId => rolesStore.removePermissionFromRole(roleId, permissionId))
       )
       return results.every(result => result)
     },
@@ -180,9 +176,7 @@ export function useRoles() {
      */
     async assignUsersToRole(roleId: number, userIds: number[]): Promise<boolean> {
       const results = await Promise.all(
-        userIds.map(userId =>
-          rolesStore.assignUserToRole(roleId, userId)
-        )
+        userIds.map(userId => rolesStore.assignUserToRole(roleId, userId))
       )
       return results.every(result => result)
     },
@@ -193,9 +187,7 @@ export function useRoles() {
      */
     async removeUsersFromRole(roleId: number, userIds: number[]): Promise<boolean> {
       const results = await Promise.all(
-        userIds.map(userId =>
-          rolesStore.removeUserFromRole(roleId, userId)
-        )
+        userIds.map(userId => rolesStore.removeUserFromRole(roleId, userId))
       )
       return results.every(result => result)
     },

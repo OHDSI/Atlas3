@@ -10,7 +10,7 @@
       variant="outlined"
       hide-details
       class="mb-2"
-      @update:model-value="(v: string | null) => selectedSource = v ?? null"
+      @update:model-value="(v: string | null) => (selectedSource = v ?? null)"
     />
 
     <div class="generate-popover__actions">
@@ -19,7 +19,12 @@
         color="primary"
         size="small"
         variant="flat"
-        :disabled="!canGenerate || !selectedSource || generation.polling.value || !canGenerateForSource(selectedSource)"
+        :disabled="
+          !canGenerate ||
+            !selectedSource ||
+            generation.polling.value ||
+            !canGenerateForSource(selectedSource)
+        "
         @click="onStart"
       >
         {{ t('components.generation.generate', 'Generate') }}
@@ -104,7 +109,18 @@ async function onCancel() {
 </script>
 
 <style scoped>
-.generate-popover { padding: 12px; min-width: 240px; }
-.generate-popover__actions { display: flex; gap: 8px; margin-bottom: 8px; }
-.generate-popover__status { font-size: 12px; color: rgba(var(--v-theme-on-surface), 0.62); margin-bottom: 8px; }
+.generate-popover {
+  padding: 12px;
+  min-width: 240px;
+}
+.generate-popover__actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.generate-popover__status {
+  font-size: 12px;
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  margin-bottom: 8px;
+}
 </style>

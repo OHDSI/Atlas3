@@ -4,8 +4,8 @@
       <v-card-title>Cache Management</v-card-title>
       <v-card-text>
         <p class="text-body-1 mb-4">
-          Clear cached configuration data to force a refresh from the server.
-          This can help resolve issues with outdated or corrupted data.
+          Clear cached configuration data to force a refresh from the server. This can help resolve
+          issues with outdated or corrupted data.
         </p>
 
         <!-- Cache Statistics -->
@@ -16,8 +16,9 @@
           class="mb-4"
         >
           <strong>Cache Status:</strong>
-          {{ cacheStats.itemCount }} item{{ cacheStats.itemCount !== 1 ? 's' : '' }} cached
-          ({{ formatBytes(cacheStats.estimatedSize) }})
+          {{ cacheStats.itemCount }} item{{ cacheStats.itemCount !== 1 ? 's' : '' }} cached ({{
+            formatBytes(cacheStats.estimatedSize)
+          }})
         </v-alert>
 
         <!-- Clear Cache Button -->
@@ -43,8 +44,7 @@
       <v-card>
         <v-card-title>Clear Cache</v-card-title>
         <v-card-text>
-          Are you sure you want to clear the configuration cache?
-          This action cannot be undone.
+          Are you sure you want to clear the configuration cache? This action cannot be undone.
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -140,7 +140,8 @@ async function handleClearCache() {
     showConfirmDialog.value = false
   } catch (error: unknown) {
     // Error: show error toast
-    const errorMessage = error instanceof Error ? error.message : 'Failed to clear cache. Please try again.'
+    const errorMessage =
+      error instanceof Error ? error.message : 'Failed to clear cache. Please try again.'
     toastMessage.value = errorMessage
     toastColor.value = 'error'
     showToast.value = true

@@ -1,11 +1,17 @@
 <template>
   <v-card>
-    <v-card-title>{{ t('cohortDefinitions.cohort.modals.cohortDefinition.title', 'Cohort Definition') }}</v-card-title>
+    <v-card-title>
+      {{
+        t('cohortDefinitions.cohort.modals.cohortDefinition.title', 'Cohort Definition')
+      }}
+    </v-card-title>
     <v-card-text>
       <v-text-field
         v-model="localName"
         :label="t('columns.name', 'Name').value"
-        :placeholder="t('components.atlasCohortEditor.enterCohortPlaceholder', 'Enter cohort name').value"
+        :placeholder="
+          t('components.atlasCohortEditor.enterCohortPlaceholder', 'Enter cohort name').value
+        "
         variant="outlined"
         density="comfortable"
         :rules="[rules.required]"
@@ -15,7 +21,9 @@
       <v-textarea
         v-model="localDescription"
         :label="t('columns.description', 'Description').value"
-        :placeholder="t('common.enterCohortDescription', 'Enter cohort description (optional)').value"
+        :placeholder="
+          t('common.enterCohortDescription', 'Enter cohort description (optional)').value
+        "
         variant="outlined"
         density="comfortable"
         rows="3"
@@ -138,17 +146,27 @@ const colorSwatches = [
 ]
 
 // Sync with props changes
-watch(() => props.name, (newVal) => {
-  localName.value = newVal
-})
+watch(
+  () => props.name,
+  newVal => {
+    localName.value = newVal
+  }
+)
 
-watch(() => props.description, (newVal) => {
-  localDescription.value = newVal ?? ''
-})
+watch(
+  () => props.description,
+  newVal => {
+    localDescription.value = newVal ?? ''
+  }
+)
 
-watch(() => props.tags, (newVal) => {
-  localTags.value = newVal ?? []
-}, { deep: true })
+watch(
+  () => props.tags,
+  newVal => {
+    localTags.value = newVal ?? []
+  },
+  { deep: true }
+)
 
 // Add new tag
 function addTag() {
@@ -183,7 +201,8 @@ function removeTag(index: number) {
 }
 
 const rules = {
-  required: (value: string) => !!value || t('commonErrors.required', 'This field is required').value,
+  required: (value: string) =>
+    !!value || t('commonErrors.required', 'This field is required').value,
 }
 </script>
 

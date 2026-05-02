@@ -7,10 +7,7 @@
  * messages — the Validation tab groups them for display and the Save
  * button blocks when at least one error is present.
  */
-import type {
-  CharacterizationDefinition,
-  Stratum,
-} from '@/models/characterization.types'
+import type { CharacterizationDefinition, Stratum } from '@/models/characterization.types'
 
 export type ValidationLevel = 'error' | 'warning' | 'info'
 
@@ -61,9 +58,7 @@ function isStratumCriteriaValid(stratum: Stratum): boolean {
  * - warning: `strataOnly === true` && `stratas.length === 0`
  * - info: `featureAnalyses.length > 50` (large designs may be slow)
  */
-export function validateCharacterization(
-  def: CharacterizationDefinition
-): ValidationMessage[] {
+export function validateCharacterization(def: CharacterizationDefinition): ValidationMessage[] {
   const messages: ValidationMessage[] = []
 
   if (!def.name || def.name.trim().length === 0) {
@@ -127,7 +122,7 @@ export function validateCharacterization(
 
   // Duplicate strata names — case-sensitive trimmed compare; flag once per name.
   const nameCounts = new Map<string, number>()
-  strata.forEach((s) => {
+  strata.forEach(s => {
     const trimmed = (s.name ?? '').trim()
     if (trimmed.length === 0) return
     nameCounts.set(trimmed, (nameCounts.get(trimmed) ?? 0) + 1)
@@ -157,9 +152,7 @@ export function validateCharacterization(
 }
 
 /** Convenience: count messages per level. */
-export function countByLevel(
-  messages: ValidationMessage[]
-): Record<ValidationLevel, number> {
+export function countByLevel(messages: ValidationMessage[]): Record<ValidationLevel, number> {
   return messages.reduce<Record<ValidationLevel, number>>(
     (acc, m) => {
       acc[m.level] = (acc[m.level] ?? 0) + 1

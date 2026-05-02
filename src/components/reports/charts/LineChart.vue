@@ -57,7 +57,7 @@ const props = withDefaults(
     loading: false,
     height: 400,
     showExport: true,
-    exportFilename: 'line-chart'
+    exportFilename: 'line-chart',
   }
 )
 

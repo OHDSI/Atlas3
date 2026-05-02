@@ -15,7 +15,11 @@ import {
   type CohortGenerationInfoList,
   type GenerationStatus,
 } from '@/models/webapi.types'
-import { ConceptSearchResponseSchema, type Concept, type ConceptSet } from '@/models/concept-set.types'
+import {
+  ConceptSearchResponseSchema,
+  type Concept,
+  type ConceptSet,
+} from '@/models/concept-set.types'
 import {
   type AtlasCohortDefinition,
   type AtlasCohortDefinitionInput,
@@ -89,10 +93,7 @@ import { z } from 'zod'
 /**
  * @deprecated Use httpClient from '@/services/http-client' for new code
  */
-export async function fetchJSON<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
+export async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const clientOptions: HttpClientOptions = {
     method: options?.method,
     headers: options?.headers,
@@ -161,23 +162,24 @@ export async function searchConcepts(
       return failure('Invalid concept search response format')
     }
 
-    return success(parsed.data.map(c => ({
-      conceptId: c.CONCEPT_ID,
-      conceptName: c.CONCEPT_NAME,
-      conceptCode: c.CONCEPT_CODE,
-      domainId: c.DOMAIN_ID,
-      vocabularyId: c.VOCABULARY_ID,
-      conceptClassId: c.CONCEPT_CLASS_ID,
-      standardConcept: c.STANDARD_CONCEPT,
-      invalidReason: c.INVALID_REASON,
-    })))
+    return success(
+      parsed.data.map(c => ({
+        conceptId: c.CONCEPT_ID,
+        conceptName: c.CONCEPT_NAME,
+        conceptCode: c.CONCEPT_CODE,
+        domainId: c.DOMAIN_ID,
+        vocabularyId: c.VOCABULARY_ID,
+        conceptClassId: c.CONCEPT_CLASS_ID,
+        standardConcept: c.STANDARD_CONCEPT,
+        invalidReason: c.INVALID_REASON,
+      }))
+    )
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to search concepts'
     logger.error('WebAPI', 'searchConcepts error', error)
     return failure(message)
   }
 }
-
 
 /**
  * Get cohort definition by ID
@@ -293,12 +295,9 @@ export async function generateCohort(
       executionId?: number
       startDate?: string
       endDate?: string
-    }>(
-      `/cohortdefinition/${cohortId}/generate/${sourceKey}`,
-      {
-        method: 'GET',
-      }
-    )
+    }>(`/cohortdefinition/${cohortId}/generate/${sourceKey}`, {
+      method: 'GET',
+    })
 
     // The API returns a job execution object with format:
     // { status: "STARTING", executionId: number, jobParameters: {...} }
@@ -337,7 +336,9 @@ export async function generateCohort(
  * Endpoint: GET /cohortdefinition/{id}/info
  * Returns array of generation info for all sources
  */
-export async function getCohortGenerationInfo(cohortId: number): Promise<ApiResult<CohortGenerationInfoList>> {
+export async function getCohortGenerationInfo(
+  cohortId: number
+): Promise<ApiResult<CohortGenerationInfoList>> {
   try {
     const data = await fetchJSON<unknown>(`/cohortdefinition/${cohortId}/info`)
     const parsed = CohortGenerationInfoListSchema.safeParse(data)
@@ -349,7 +350,10 @@ export async function getCohortGenerationInfo(cohortId: number): Promise<ApiResu
 
     return success(parsed.data)
   } catch (error) {
-    const message = error instanceof Error ? error.message : `Failed to fetch cohort generation info for ${cohortId}`
+    const message =
+      error instanceof Error
+        ? error.message
+        : `Failed to fetch cohort generation info for ${cohortId}`
     logger.error('WebAPI', `Failed to fetch cohort generation info for ${cohortId}`, error)
     return failure(message)
   }
@@ -436,7 +440,9 @@ export async function deleteConceptSet(id: number | string): Promise<boolean> {
  * Endpoint: GET /cohortdefinition
  * Returns summary list of all cohorts
  */
-export async function getCohorts(): Promise<ApiResult<import('@/models/webapi.types').CohortDefinitionSummary[]>> {
+export async function getCohorts(): Promise<
+  ApiResult<import('@/models/webapi.types').CohortDefinitionSummary[]>
+> {
   try {
     const response = await fetchJSON<unknown[]>('/cohortdefinition')
     const { CohortDefinitionListSchema } = await import('@/models/webapi.types')
@@ -487,11 +493,13 @@ export async function validateCohortDefinition(
     // Return error as a warning so user sees it
     const errorMessage = error instanceof Error ? error.message : 'Validation request failed'
     return {
-      warnings: [{
-        type: 'DefaultWarning',
-        severity: 'WARNING',
-        message: `Validation error: ${errorMessage}`
-      }]
+      warnings: [
+        {
+          type: 'DefaultWarning',
+          severity: 'WARNING',
+          message: `Validation error: ${errorMessage}`,
+        },
+      ],
     }
   }
 }
@@ -525,7 +533,11 @@ export async function listCohortSamples(
     }
     return parsed.data
   } catch (error) {
-    logger.error('WebAPI', `Failed to list cohort samples for ${cohortDefinitionId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to list cohort samples for ${cohortDefinitionId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -566,7 +578,11 @@ export async function getCohortSample(
     }
     return parsed.data
   } catch (error) {
-    logger.error('WebAPI', `getCohortSample failed for ${cohortDefinitionId}/${sourceKey}/${sampleId}`, error)
+    logger.error(
+      'WebAPI',
+      `getCohortSample failed for ${cohortDefinitionId}/${sourceKey}/${sampleId}`,
+      error
+    )
     return null
   }
 }
@@ -581,14 +597,11 @@ export async function createCohortSample(
   parameters: SampleParameters
 ): Promise<CohortSample | null> {
   try {
-    const data = await fetchJSON<unknown>(
-      `/cohortsample/${cohortDefinitionId}/${sourceKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parameters),
-      }
-    )
+    const data = await fetchJSON<unknown>(`/cohortsample/${cohortDefinitionId}/${sourceKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(parameters),
+    })
     const parsed = CohortSampleSchema.safeParse(data)
     if (!parsed.success) {
       logger.error('WebAPI', 'createCohortSample validation error', parsed.error)
@@ -596,7 +609,11 @@ export async function createCohortSample(
     }
     return parsed.data
   } catch (error) {
-    logger.error('WebAPI', `createCohortSample failed for ${cohortDefinitionId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `createCohortSample failed for ${cohortDefinitionId}/${sourceKey}`,
+      error
+    )
     throw error instanceof Error ? error : new Error('Failed to create cohort sample')
   }
 }
@@ -622,7 +639,11 @@ export async function refreshCohortSample(
     }
     return parsed.data
   } catch (error) {
-    logger.error('WebAPI', `refreshCohortSample failed for ${cohortDefinitionId}/${sourceKey}/${sampleId}`, error)
+    logger.error(
+      'WebAPI',
+      `refreshCohortSample failed for ${cohortDefinitionId}/${sourceKey}/${sampleId}`,
+      error
+    )
     return null
   }
 }
@@ -637,13 +658,16 @@ export async function deleteCohortSample(
   sampleId: number
 ): Promise<boolean> {
   try {
-    await fetchJSON<unknown>(
-      `/cohortsample/${cohortDefinitionId}/${sourceKey}/${sampleId}`,
-      { method: 'DELETE' }
-    )
+    await fetchJSON<unknown>(`/cohortsample/${cohortDefinitionId}/${sourceKey}/${sampleId}`, {
+      method: 'DELETE',
+    })
     return true
   } catch (error) {
-    logger.error('WebAPI', `deleteCohortSample failed for ${cohortDefinitionId}/${sourceKey}/${sampleId}`, error)
+    logger.error(
+      'WebAPI',
+      `deleteCohortSample failed for ${cohortDefinitionId}/${sourceKey}/${sampleId}`,
+      error
+    )
     return false
   }
 }
@@ -661,9 +685,7 @@ export async function getCohortReport(
   sourceKey: string
 ): Promise<WebAPIReportResponse | null> {
   try {
-    const data = await fetchJSON<unknown>(
-      `/cohortdefinition/${cohortId}/report/${sourceKey}`
-    )
+    const data = await fetchJSON<unknown>(`/cohortdefinition/${cohortId}/report/${sourceKey}`)
 
     // Validate response structure
     const parsed = WebAPIReportResponseSchema.safeParse(data)
@@ -771,7 +793,11 @@ export async function getConditionErasReport(
       `/cohortresults/${sourceKey}/${cohortId}/conditionera`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch condition eras report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch condition eras report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -825,7 +851,11 @@ export async function getCohortSpecificReport(
       `/cohortresults/${sourceKey}/${cohortId}/cohortspecific`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch cohort specific report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch cohort specific report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -835,23 +865,19 @@ export async function getCohortSpecificReport(
  * Based on Atlas Heracles analysis identifiers
  */
 const FULL_ANALYSIS_IDS = [
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-  101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115,
-  200, 201, 202, 203, 204, 206, 207, 208, 209, 210, 211, 212, 213, 220,
-  301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 320,
-  400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 420,
-  500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515,
-  600, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611, 612, 613, 620,
-  700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711, 712, 713, 720,
-  800, 801, 802, 803, 804, 805, 806, 807, 808, 809, 810, 811, 812, 813, 814, 815, 816, 820,
-  900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 920,
-  1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1020,
-  1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1808, 1809, 1810, 1811, 1812, 1813, 1814, 1815, 1816, 1820
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 101, 102, 103, 104, 105,
+  106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 200, 201, 202, 203, 204, 206, 207, 208, 209,
+  210, 211, 212, 213, 220, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 320,
+  400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 420, 500, 501, 502, 503,
+  504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 515, 600, 601, 602, 603, 604, 605, 606,
+  607, 608, 609, 610, 611, 612, 613, 620, 700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710,
+  711, 712, 713, 720, 800, 801, 802, 803, 804, 805, 806, 807, 808, 809, 810, 811, 812, 813, 814,
+  815, 816, 820, 900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 920, 1000, 1001, 1002, 1003,
+  1004, 1005, 1006, 1007, 1008, 1009, 1010, 1020, 1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807,
+  1808, 1809, 1810, 1811, 1812, 1813, 1814, 1815, 1816, 1820,
 ]
 
-const QUICK_ANALYSIS_IDS = [
-  0, 1, 2, 101, 200, 301, 400, 500, 600, 700, 800, 900, 1000, 1800
-]
+const QUICK_ANALYSIS_IDS = [0, 1, 2, 101, 200, 301, 400, 500, 600, 700, 800, 900, 1000, 1800]
 
 /**
  * Trigger cohort analysis job (Heracles)
@@ -881,7 +907,7 @@ async function triggerCohortAnalysis(
       measurementConceptIds: [],
       periods: [],
       rollupUtilizationVisit: rollupUtilization,
-      rollupUtilizationDrug: rollupUtilization
+      rollupUtilizationDrug: rollupUtilization,
     }
 
     await fetchJSON('/cohortanalysis', {
@@ -899,10 +925,7 @@ async function triggerCohortAnalysis(
  * Trigger Full Analysis batch job
  * Endpoint: POST /cohortanalysis
  */
-export async function triggerFullAnalysis(
-  cohortId: number,
-  sourceKey: string
-): Promise<boolean> {
+export async function triggerFullAnalysis(cohortId: number, sourceKey: string): Promise<boolean> {
   return triggerCohortAnalysis(cohortId, sourceKey, FULL_ANALYSIS_IDS, true, true)
 }
 
@@ -910,10 +933,7 @@ export async function triggerFullAnalysis(
  * Trigger Quick Analysis batch job
  * Endpoint: POST /cohortanalysis
  */
-export async function triggerQuickAnalysis(
-  cohortId: number,
-  sourceKey: string
-): Promise<boolean> {
+export async function triggerQuickAnalysis(cohortId: number, sourceKey: string): Promise<boolean> {
   return triggerCohortAnalysis(cohortId, sourceKey, QUICK_ANALYSIS_IDS, true, false)
 }
 
@@ -921,10 +941,7 @@ export async function triggerQuickAnalysis(
  * Trigger Utilization batch job
  * Endpoint: POST /cohortanalysis
  */
-export async function triggerUtilization(
-  cohortId: number,
-  sourceKey: string
-): Promise<boolean> {
+export async function triggerUtilization(cohortId: number, sourceKey: string): Promise<boolean> {
   return triggerCohortAnalysis(cohortId, sourceKey, FULL_ANALYSIS_IDS, false, true)
 }
 
@@ -941,7 +958,11 @@ export async function getPersonsExposureBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/observationperiod`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch persons exposure baseline report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch persons exposure baseline report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -959,7 +980,11 @@ export async function getPersonsExposureCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/cohort`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch persons exposure cohort report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch persons exposure cohort report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -977,7 +1002,11 @@ export async function getVisitsBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitsbaseline`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch visits baseline report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch visits baseline report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -995,7 +1024,11 @@ export async function getVisitDatesBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitdatesbaseline`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch visit dates baseline report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch visit dates baseline report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1013,7 +1046,11 @@ export async function getCareSiteVisitDatesBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/caresitevisitdatesbaseline`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch care site visit dates baseline report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch care site visit dates baseline report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1031,7 +1068,11 @@ export async function getVisitsCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitscohort`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch visits cohort report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch visits cohort report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1049,7 +1090,11 @@ export async function getVisitDatesCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/visitdatescohort`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch visit dates cohort report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch visit dates cohort report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1067,7 +1112,11 @@ export async function getCareSiteVisitDatesCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/caresitevisitdatescohort`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch care site visit dates cohort report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch care site visit dates cohort report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1085,7 +1134,11 @@ export async function getDrugUtilizationBaselineReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugutilizationbaseline`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch drug utilization baseline report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch drug utilization baseline report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1103,7 +1156,11 @@ export async function getDrugUtilizationCohortReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugutilizationcohort`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch drug utilization cohort report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch drug utilization cohort report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1121,7 +1178,11 @@ export async function getHeraclesHeelReport(
       `/cohortresults/${sourceKey}/${cohortId}/heraclesheel`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch Heracles Heel report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch Heracles Heel report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1136,12 +1197,13 @@ export async function getCompletedAnalyses(
   sourceKey: string
 ): Promise<ApiResult<number[]>> {
   try {
-    const data = await fetchJSON<number[]>(
-      `/cohortresults/${sourceKey}/${cohortId}/analyses`
-    )
+    const data = await fetchJSON<number[]>(`/cohortresults/${sourceKey}/${cohortId}/analyses`)
     return success(data || [])
   } catch (error) {
-    const message = error instanceof Error ? error.message : `Failed to fetch completed analyses for ${cohortId}/${sourceKey}`
+    const message =
+      error instanceof Error
+        ? error.message
+        : `Failed to fetch completed analyses for ${cohortId}/${sourceKey}`
     logger.error('WebAPI', `Failed to fetch completed analyses for ${cohortId}/${sourceKey}`, error)
     return failure(message)
   }
@@ -1160,7 +1222,11 @@ export async function getConditionsByIndexReport(
       `/cohortresults/${sourceKey}/${cohortId}/conditionsbyindex`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch conditions by index report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch conditions by index report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1196,7 +1262,11 @@ export async function getDrugExposureReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugexposure`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch drug exposure report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch drug exposure report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1214,7 +1284,11 @@ export async function getDrugsByIndexReport(
       `/cohortresults/${sourceKey}/${cohortId}/drugsbyindex`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch drugs by index report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch drugs by index report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1232,7 +1306,11 @@ export async function getObservationPeriodsReport(
       `/cohortresults/${sourceKey}/${cohortId}/observationperiod`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch observation periods report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch observation periods report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1268,7 +1346,11 @@ export async function getProceduresByIndexReport(
       `/cohortresults/${sourceKey}/${cohortId}/proceduresbyindex`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch procedures by index report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch procedures by index report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1286,7 +1368,11 @@ export async function getDataCompletenessReport(
       `/cohortresults/${sourceKey}/${cohortId}/datacompleteness`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch data completeness report for ${cohortId}/${sourceKey}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch data completeness report for ${cohortId}/${sourceKey}`,
+      error
+    )
     return null
   }
 }
@@ -1345,7 +1431,11 @@ export async function getCDMDrilldown(
       `/cdmresults/${sourceKey}/${domain}/${conceptId}`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch CDM drill-down for ${sourceKey}/${domain}/${conceptId}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch CDM drill-down for ${sourceKey}/${domain}/${conceptId}`,
+      error
+    )
     return null
   }
 }
@@ -1368,7 +1458,11 @@ export async function getConditionDrilldown(
       `/cohortresults/${sourceKey}/${cohortId}/condition/${conditionId}`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch condition drill-down for ${cohortId}/${sourceKey}/${conditionId}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch condition drill-down for ${cohortId}/${sourceKey}/${conditionId}`,
+      error
+    )
     return null
   }
 }
@@ -1387,7 +1481,11 @@ export async function getConditionEraDrilldown(
       `/cohortresults/${sourceKey}/${cohortId}/conditionera/${conditionId}`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch condition era drill-down for ${cohortId}/${sourceKey}/${conditionId}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch condition era drill-down for ${cohortId}/${sourceKey}/${conditionId}`,
+      error
+    )
     return null
   }
 }
@@ -1406,7 +1504,11 @@ export async function getDrugDrilldown(
       `/cohortresults/${sourceKey}/${cohortId}/drug/${drugId}`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch drug drill-down for ${cohortId}/${sourceKey}/${drugId}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch drug drill-down for ${cohortId}/${sourceKey}/${drugId}`,
+      error
+    )
     return null
   }
 }
@@ -1425,7 +1527,11 @@ export async function getDrugEraDrilldown(
       `/cohortresults/${sourceKey}/${cohortId}/drugera/${drugId}`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch drug era drill-down for ${cohortId}/${sourceKey}/${drugId}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch drug era drill-down for ${cohortId}/${sourceKey}/${drugId}`,
+      error
+    )
     return null
   }
 }
@@ -1444,7 +1550,11 @@ export async function getMeasurementDrilldown(
       `/cohortresults/${sourceKey}/${cohortId}/measurement/${conceptId}`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch measurement drill-down for ${cohortId}/${sourceKey}/${conceptId}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch measurement drill-down for ${cohortId}/${sourceKey}/${conceptId}`,
+      error
+    )
     return null
   }
 }
@@ -1463,7 +1573,11 @@ export async function getObservationDrilldown(
       `/cohortresults/${sourceKey}/${cohortId}/observation/${conceptId}`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch observation drill-down for ${cohortId}/${sourceKey}/${conceptId}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch observation drill-down for ${cohortId}/${sourceKey}/${conceptId}`,
+      error
+    )
     return null
   }
 }
@@ -1482,7 +1596,11 @@ export async function getProcedureDrilldown(
       `/cohortresults/${sourceKey}/${cohortId}/procedure/${procedureId}`
     )
   } catch (error) {
-    logger.error('WebAPI', `Failed to fetch procedure drill-down for ${cohortId}/${sourceKey}/${procedureId}`, error)
+    logger.error(
+      'WebAPI',
+      `Failed to fetch procedure drill-down for ${cohortId}/${sourceKey}/${procedureId}`,
+      error
+    )
     return null
   }
 }
@@ -1596,9 +1714,7 @@ export async function listCharacterizations(): Promise<CharacterizationListItem[
  * Get the full design of a characterization.
  * Endpoint: GET /cohort-characterization/{id}/design
  */
-export async function getCharacterization(
-  id: number
-): Promise<CharacterizationDefinition | null> {
+export async function getCharacterization(id: number): Promise<CharacterizationDefinition | null> {
   const data = await httpGet<unknown>(`/cohort-characterization/${id}/design`)
   const parsed = CharacterizationDefinitionSchema.safeParse(data)
   if (!parsed.success) {
@@ -1608,6 +1724,22 @@ export async function getCharacterization(
   return parsed.data as CharacterizationDefinition
 }
 
+// WebAPI expects numeric strata IDs (Long); the editor generates UUID
+// placeholders for keying, which must be stripped before send so the backend
+// assigns real IDs.
+function serializeCharacterization(def: CharacterizationDefinition): unknown {
+  const stratas = def.stratas.map((s) => {
+    const numeric = Number(s.id)
+    if (Number.isFinite(numeric) && Number.isInteger(numeric) && numeric > 0) {
+      return { ...s, id: numeric }
+    }
+    const { id: _id, ...rest } = s
+    void _id
+    return rest
+  })
+  return { ...def, stratas }
+}
+
 /**
  * Create a new characterization.
  * Endpoint: POST /cohort-characterization
@@ -1615,7 +1747,7 @@ export async function getCharacterization(
 export async function createCharacterization(
   def: CharacterizationDefinition
 ): Promise<CharacterizationDefinition> {
-  const data = await httpPost<unknown>('/cohort-characterization', def)
+  const data = await httpPost<unknown>('/cohort-characterization', serializeCharacterization(def))
   const parsed = CharacterizationDefinitionSchema.safeParse(data)
   if (!parsed.success) {
     logger.error('WebAPI', 'createCharacterization validation error', parsed.error)
@@ -1634,7 +1766,7 @@ export async function updateCharacterization(
   if (typeof def.id !== 'number') {
     throw new Error('updateCharacterization requires def.id')
   }
-  const data = await httpPut<unknown>(`/cohort-characterization/${def.id}`, def)
+  const data = await httpPut<unknown>(`/cohort-characterization/${def.id}`, serializeCharacterization(def))
   const parsed = CharacterizationDefinitionSchema.safeParse(data)
   if (!parsed.success) {
     logger.error('WebAPI', `updateCharacterization(${def.id}) validation error`, parsed.error)
@@ -1661,9 +1793,7 @@ export async function deleteCharacterization(id: number): Promise<void> {
  * the copy operation (no body).
  * Endpoint: POST /cohort-characterization/{id}
  */
-export async function copyCharacterization(
-  id: number
-): Promise<CharacterizationDefinition> {
+export async function copyCharacterization(id: number): Promise<CharacterizationDefinition> {
   const data = await httpPost<unknown>(`/cohort-characterization/${id}`)
   const parsed = CharacterizationDefinitionSchema.safeParse(data)
   if (!parsed.success) {
@@ -1677,10 +1807,7 @@ export async function copyCharacterization(
  * Whether a characterization with the given name already exists.
  * Endpoint: GET /cohort-characterization/{id}/exists?name={name}
  */
-export async function characterizationNameExists(
-  id: number,
-  name: string
-): Promise<boolean> {
+export async function characterizationNameExists(id: number, name: string): Promise<boolean> {
   try {
     const data = await httpGet<unknown>(
       `/cohort-characterization/${id}/exists?name=${encodeURIComponent(name)}`
@@ -1711,9 +1838,7 @@ export async function exportCharacterization(id: number): Promise<unknown> {
  * Import a characterization design.
  * Endpoint: POST /cohort-characterization/import
  */
-export async function importCharacterization(
-  design: unknown
-): Promise<CharacterizationDefinition> {
+export async function importCharacterization(design: unknown): Promise<CharacterizationDefinition> {
   const data = await httpPost<unknown>('/cohort-characterization/import', design)
   const parsed = CharacterizationDefinitionSchema.safeParse(data)
   if (!parsed.success) {
@@ -1755,9 +1880,7 @@ export async function getCharacterizationExecution(
       `getCharacterizationExecution(${generationId}) validation error`,
       parsed.error
     )
-    throw new Error(
-      `Invalid response from /cohort-characterization/generation/${generationId}`
-    )
+    throw new Error(`Invalid response from /cohort-characterization/generation/${generationId}`)
   }
   return parsed.data
 }
@@ -1818,15 +1941,9 @@ export async function cancelCharacterizationGeneration(
   sourceKey: string
 ): Promise<void> {
   try {
-    await httpDelete(
-      `/cohort-characterization/${id}/generation/${encodeURIComponent(sourceKey)}`
-    )
+    await httpDelete(`/cohort-characterization/${id}/generation/${encodeURIComponent(sourceKey)}`)
   } catch (error) {
-    logger.error(
-      'WebAPI',
-      `Failed to cancel characterization generation ${id}/${sourceKey}`,
-      error
-    )
+    logger.error('WebAPI', `Failed to cancel characterization generation ${id}/${sourceKey}`, error)
     throw error
   }
 }
@@ -1835,19 +1952,11 @@ export async function cancelCharacterizationGeneration(
  * Fetch the design that was active at the time a generation was created.
  * Endpoint: GET /cohort-characterization/generation/{generationId}/design
  */
-export async function getCharacterizationDesignSnapshot(
-  generationId: number
-): Promise<unknown> {
+export async function getCharacterizationDesignSnapshot(generationId: number): Promise<unknown> {
   try {
-    return await httpGet<unknown>(
-      `/cohort-characterization/generation/${generationId}/design`
-    )
+    return await httpGet<unknown>(`/cohort-characterization/generation/${generationId}/design`)
   } catch (error) {
-    logger.error(
-      'WebAPI',
-      `getCharacterizationDesignSnapshot(${generationId}) failed`,
-      error
-    )
+    logger.error('WebAPI', `getCharacterizationDesignSnapshot(${generationId}) failed`, error)
     throw error
   }
 }
@@ -1856,9 +1965,7 @@ export async function getCharacterizationDesignSnapshot(
  * Get the total count of result rows for a generation.
  * Endpoint: GET /cohort-characterization/generation/{generationId}/result/count
  */
-export async function getCharacterizationResultCount(
-  generationId: number
-): Promise<number> {
+export async function getCharacterizationResultCount(generationId: number): Promise<number> {
   const data = await httpGet<unknown>(
     `/cohort-characterization/generation/${generationId}/result/count`
   )
@@ -1912,7 +2019,7 @@ export async function getCharacterizationResults(
     if (data && typeof data === 'object' && 'reports' in data) {
       const reports = (data as { reports: unknown }).reports
       if (Array.isArray(reports)) {
-        return reports.flatMap((report) => {
+        return reports.flatMap(report => {
           if (!report || typeof report !== 'object') return []
           const items = (report as { items?: unknown }).items
           return Array.isArray(items) ? items : []
@@ -1929,11 +2036,7 @@ export async function getCharacterizationResults(
       `Invalid response from POST /cohort-characterization/generation/${generationId}/result`
     )
   } catch (error) {
-    logger.error(
-      'WebAPI',
-      `Failed to fetch characterization results for ${generationId}`,
-      error
-    )
+    logger.error('WebAPI', `Failed to fetch characterization results for ${generationId}`, error)
     throw error
   }
 }
@@ -2000,9 +2103,7 @@ export async function getFeatureAnalysis(id: number): Promise<FeatureAnalysis | 
  * Create a feature analysis.
  * Endpoint: POST /feature-analysis
  */
-export async function createFeatureAnalysis(
-  fa: FeatureAnalysis
-): Promise<FeatureAnalysis> {
+export async function createFeatureAnalysis(fa: FeatureAnalysis): Promise<FeatureAnalysis> {
   const data = await httpPost<unknown>('/feature-analysis', fa)
   const parsed = FeatureAnalysisSchema.safeParse(data)
   if (!parsed.success) {
@@ -2016,9 +2117,7 @@ export async function createFeatureAnalysis(
  * Update a feature analysis.
  * Endpoint: PUT /feature-analysis/{id}
  */
-export async function updateFeatureAnalysis(
-  fa: FeatureAnalysis
-): Promise<FeatureAnalysis> {
+export async function updateFeatureAnalysis(fa: FeatureAnalysis): Promise<FeatureAnalysis> {
   if (typeof fa.id !== 'number') {
     throw new Error('updateFeatureAnalysis requires fa.id')
   }
@@ -2062,10 +2161,7 @@ export async function copyFeatureAnalysis(id: number): Promise<FeatureAnalysis> 
  * Whether a feature analysis with the given name already exists.
  * Endpoint: GET /feature-analysis/{id}/exists?name={name}
  */
-export async function featureAnalysisNameExists(
-  id: number,
-  name: string
-): Promise<boolean> {
+export async function featureAnalysisNameExists(id: number, name: string): Promise<boolean> {
   try {
     const data = await httpGet<unknown>(
       `/feature-analysis/${id}/exists?name=${encodeURIComponent(name)}`
@@ -2089,18 +2185,13 @@ export async function featureAnalysisNameExists(
  */
 export async function listFeatureAnalysisDomains(): Promise<string[]> {
   const data = await httpGet<unknown>('/feature-analysis/domains')
-  const schema = z.array(
-    z.union([
-      z.string(),
-      z.object({ id: z.string() }).passthrough(),
-    ])
-  )
+  const schema = z.array(z.union([z.string(), z.object({ id: z.string() }).passthrough()]))
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     logger.error('WebAPI', 'listFeatureAnalysisDomains validation error', parsed.error)
     throw new Error('Invalid response from /feature-analysis/domains')
   }
-  return parsed.data.map((entry) => (typeof entry === 'string' ? entry : entry.id))
+  return parsed.data.map(entry => (typeof entry === 'string' ? entry : entry.id))
 }
 
 /**
@@ -2121,9 +2212,7 @@ export async function listFeatureAnalysisAggregates(): Promise<FeatureAnalysisAg
  * Default FeatureExtraction covariate settings (toggled by `temporal`).
  * Endpoint: GET /featureextraction/defaultcovariatesettings?temporal={temporal}
  */
-export async function getDefaultCovariateSettings(
-  temporal: boolean
-): Promise<CovariateSetting> {
+export async function getDefaultCovariateSettings(temporal: boolean): Promise<CovariateSetting> {
   const data = await httpGet<unknown>(
     `/featureextraction/defaultcovariatesettings?temporal=${temporal ? 'true' : 'false'}`
   )
@@ -2321,9 +2410,7 @@ export interface PathwayDiagnosticMessage {
  * Run diagnostics on a pathway analysis design.
  * POST /pathway-analysis/check
  */
-export async function runPathwayDiagnostics(
-  pathway: Pathway
-): Promise<PathwayDiagnosticMessage[]> {
+export async function runPathwayDiagnostics(pathway: Pathway): Promise<PathwayDiagnosticMessage[]> {
   try {
     const data = await httpPost<unknown>('/pathway-analysis/check', pathway)
     if (Array.isArray(data)) return data as PathwayDiagnosticMessage[]
@@ -2338,9 +2425,7 @@ export async function runPathwayDiagnostics(
  * List all generations for a pathway analysis.
  * GET /pathway-analysis/:id/generation
  */
-export async function listPathwayExecutions(
-  id: number
-): Promise<ApiResult<PathwayExecution[]>> {
+export async function listPathwayExecutions(id: number): Promise<ApiResult<PathwayExecution[]>> {
   try {
     const data = await httpGet<unknown>(`/pathway-analysis/${id}/generation`)
     const parsed = PathwayExecutionListSchema.safeParse(data)
@@ -2374,13 +2459,9 @@ export async function getPathwayExecution(
  * Get results for a pathway generation.
  * GET /pathway-analysis/generation/:generationId/result
  */
-export async function getPathwayResults(
-  generationId: number
-): Promise<ApiResult<PathwayResults>> {
+export async function getPathwayResults(generationId: number): Promise<ApiResult<PathwayResults>> {
   try {
-    const data = await httpGet<unknown>(
-      `/pathway-analysis/generation/${generationId}/result`
-    )
+    const data = await httpGet<unknown>(`/pathway-analysis/generation/${generationId}/result`)
     const parsed = PathwayResultsSchema.safeParse(data)
     if (!parsed.success) return failure('Invalid results response')
     return success(parsed.data)
@@ -2438,10 +2519,7 @@ export async function generatePathway(
  * Cancel an in-progress pathway generation.
  * DELETE /pathway-analysis/:id/generation/:sourceKey
  */
-export async function cancelPathwayGeneration(
-  id: number,
-  sourceKey: string
-): Promise<boolean> {
+export async function cancelPathwayGeneration(id: number, sourceKey: string): Promise<boolean> {
   try {
     await httpDelete(`/pathway-analysis/${id}/generation/${sourceKey}`)
     return true
@@ -2459,9 +2537,7 @@ export async function getPathwayDesignByGeneration(
   generationId: number
 ): Promise<ApiResult<Pathway>> {
   try {
-    const data = await httpGet<unknown>(
-      `/pathway-analysis/generation/${generationId}/design`
-    )
+    const data = await httpGet<unknown>(`/pathway-analysis/generation/${generationId}/design`)
     const parsed = PathwaySchema.passthrough().safeParse(data)
     if (!parsed.success) return failure('Invalid design response')
     return success(parsed.data as Pathway)
@@ -2481,13 +2557,22 @@ function decodeIRExpression(wire: unknown): IncidenceRate {
   if (!parsed.success) throw parsed.error
   const { expression: raw, ...rest } = parsed.data
   if (!raw) {
-    return { ...rest, expression: IncidenceRateExpressionSchema.parse({
-      timeAtRisk: { start: { DateField: 'StartDate', Offset: 0 }, end: { DateField: 'StartDate', Offset: 0 } },
-    }) } as IncidenceRate
+    return {
+      ...rest,
+      expression: IncidenceRateExpressionSchema.parse({
+        timeAtRisk: {
+          start: { DateField: 'StartDate', Offset: 0 },
+          end: { DateField: 'StartDate', Offset: 0 },
+        },
+      }),
+    } as IncidenceRate
   }
   let parsedExpr: unknown
-  try { parsedExpr = JSON.parse(raw) }
-  catch { throw new Error('expression is not valid JSON') }
+  try {
+    parsedExpr = JSON.parse(raw)
+  } catch {
+    throw new Error('expression is not valid JSON')
+  }
   const expr = IncidenceRateExpressionSchema.parse(parsedExpr)
   return { ...rest, expression: expr } as IncidenceRate
 }
@@ -2536,7 +2621,10 @@ export async function createIncidenceRate(ir: IncidenceRate): Promise<ApiResult<
 }
 
 /** PUT /ir/{id} — update. */
-export async function saveIncidenceRate(id: number, ir: IncidenceRate): Promise<ApiResult<IncidenceRate>> {
+export async function saveIncidenceRate(
+  id: number,
+  ir: IncidenceRate
+): Promise<ApiResult<IncidenceRate>> {
   try {
     const data = await httpPut<unknown>(`/ir/${id}`, encodeIRForSave(ir))
     return success(decodeIRExpression(data))
@@ -2624,7 +2712,9 @@ export async function unassignIncidenceRateTag(id: number, tagId: number): Promi
 }
 
 /** GET /ir/{id}/info — array of execution info, one per source. */
-export async function listIncidenceRateInfo(id: number): Promise<ApiResult<IncidenceRateInfoBySource[]>> {
+export async function listIncidenceRateInfo(
+  id: number
+): Promise<ApiResult<IncidenceRateInfoBySource[]>> {
   try {
     const data = await httpGet<unknown>(`/ir/${id}/info`)
     const parsed = IncidenceRateInfoListSchema.safeParse(data)
@@ -2641,7 +2731,8 @@ export async function listIncidenceRateInfo(id: number): Promise<ApiResult<Incid
 
 /** GET /ir/{id}/info/{sourceKey} — execution info + summary list for one source. */
 export async function getIncidenceRateInfoBySource(
-  id: number, sourceKey: string,
+  id: number,
+  sourceKey: string
 ): Promise<ApiResult<IncidenceRateInfoBySource>> {
   try {
     const data = await httpGet<unknown>(`/ir/${id}/info/${sourceKey}`)
@@ -2656,7 +2747,8 @@ export async function getIncidenceRateInfoBySource(
 
 /** GET /ir/{id}/execute/{sourceKey} — start a generation. */
 export async function generateIncidenceRate(
-  id: number, sourceKey: string,
+  id: number,
+  sourceKey: string
 ): Promise<ApiResult<IncidenceRateExecutionInfo>> {
   try {
     const data = await httpGet<unknown>(`/ir/${id}/execute/${sourceKey}`)
@@ -2671,7 +2763,8 @@ export async function generateIncidenceRate(
 
 /** DELETE /ir/{id}/execute/{sourceKey} — cancel a running generation. */
 export async function cancelIncidenceRateGeneration(
-  id: number, sourceKey: string,
+  id: number,
+  sourceKey: string
 ): Promise<boolean> {
   try {
     await httpDelete(`/ir/${id}/execute/${sourceKey}`)
@@ -2683,9 +2776,7 @@ export async function cancelIncidenceRateGeneration(
 }
 
 /** DELETE /ir/{id}/info/{sourceKey} — clear results. */
-export async function deleteIncidenceRateInfo(
-  id: number, sourceKey: string,
-): Promise<boolean> {
+export async function deleteIncidenceRateInfo(id: number, sourceKey: string): Promise<boolean> {
   try {
     await httpDelete(`/ir/${id}/info/${sourceKey}`)
     return true
@@ -2697,7 +2788,10 @@ export async function deleteIncidenceRateInfo(
 
 /** GET /ir/{id}/report/{sourceKey}?targetId=&outcomeId= — full report. */
 export async function getIncidenceRateReport(
-  id: number, sourceKey: string, targetId: number, outcomeId: number,
+  id: number,
+  sourceKey: string,
+  targetId: number,
+  outcomeId: number
 ): Promise<ApiResult<IncidenceRateReport>> {
   try {
     const url = `/ir/${id}/report/${sourceKey}?targetId=${targetId}&outcomeId=${outcomeId}`

@@ -69,10 +69,7 @@ function toRawRow(value: unknown): RawRow | null {
     return null
   }
   // Minimum viable shape: needs an analysis + covariate + concept id.
-  if (
-    typeof value.analysisId !== 'number' ||
-    typeof value.covariateId !== 'number'
-  ) {
+  if (typeof value.analysisId !== 'number' || typeof value.covariateId !== 'number') {
     return null
   }
   return value as RawRow
@@ -134,7 +131,7 @@ function ensureCohort(cohorts: LinkedCohort[], row: RawRow): void {
   if (typeof row.cohortId !== 'number') {
     return
   }
-  if (cohorts.some((c) => c.id === row.cohortId)) {
+  if (cohorts.some(c => c.id === row.cohortId)) {
     return
   }
   cohorts.push({ id: row.cohortId, name: row.cohortName ?? `Cohort ${row.cohortId}` })
@@ -210,9 +207,7 @@ export function computeBinaryStdDiff(
 /**
  * Map raw WebAPI result rows to typed prevalence + distribution rows.
  */
-export function mapCharacterizationResults(
-  raw: unknown[]
-): MappedCharacterizationResults {
+export function mapCharacterizationResults(raw: unknown[]): MappedCharacterizationResults {
   const prevalenceMap = new Map<string, PrevalenceStat>()
   const distributionMap = new Map<string, DistributionStat>()
   let skipped = 0
@@ -294,10 +289,7 @@ export function mapCharacterizationResults(
   }
 
   if (skipped > 0) {
-    logger.debug(
-      'CharacterizationResultMapper',
-      `Skipped ${skipped} unclassifiable result row(s)`
-    )
+    logger.debug('CharacterizationResultMapper', `Skipped ${skipped} unclassifiable result row(s)`)
   }
 
   return {

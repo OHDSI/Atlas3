@@ -15,7 +15,7 @@
           hide-details
           clearable
           class="role-list__search"
-          style="max-width: 400px;"
+          style="max-width: 400px"
         />
       </div>
       <v-btn
@@ -107,7 +107,7 @@
       <template #item.description="{ item }">
         <div
           class="text-truncate"
-          style="max-width: 400px;"
+          style="max-width: 400px"
         >
           {{ item.description || '—' }}
         </div>
@@ -169,9 +169,7 @@
             <span v-if="debouncedSearchQuery">
               {{ filteredRoles.length }} of {{ roles.length }} roles
             </span>
-            <span v-else>
-              {{ roles.length }} role{{ roles.length !== 1 ? 's' : '' }} total
-            </span>
+            <span v-else> {{ roles.length }} role{{ roles.length !== 1 ? 's' : '' }} total </span>
           </div>
         </div>
       </template>
@@ -203,14 +201,7 @@ import RoleCreateDialog from './RoleCreateDialog.vue'
 import RoleDeleteDialog from './RoleDeleteDialog.vue'
 
 const router = useRouter()
-const {
-  roles,
-  isLoadingRoles,
-  rolesError,
-  fetchRoles,
-  fetchRoleUsers,
-  roleUsers,
-} = useRoles()
+const { roles, isLoadingRoles, rolesError, fetchRoles, fetchRoleUsers, roleUsers } = useRoles()
 
 // Search state with debouncing
 const searchQuery = ref('')
@@ -218,7 +209,7 @@ const debouncedSearchQuery = ref('')
 
 // Debounce search input (300ms)
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
-watch(searchQuery, (newValue) => {
+watch(searchQuery, newValue => {
   if (searchDebounceTimer) {
     clearTimeout(searchDebounceTimer)
   }

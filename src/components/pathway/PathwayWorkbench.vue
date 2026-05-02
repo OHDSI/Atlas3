@@ -7,7 +7,7 @@
       <PathwayDesignForm
         :pathway-id="pathwayId ?? undefined"
         :active-run-id="selectedExecutionId ?? null"
-        @execution:select="(id) => $emit('execution:select', id)"
+        @execution:select="id => $emit('execution:select', id)"
       />
     </aside>
 
@@ -19,7 +19,7 @@
         :mode="mode"
         :active-run="activeRunSummary"
         :coverage="coverageProps"
-        @update:mode="(v) => (mode = v)"
+        @update:mode="v => (mode = v)"
       />
 
       <div
@@ -30,8 +30,17 @@
         <div class="workbench__canvas-empty-icon">
           ◌
         </div>
-        <h3>{{ t('pathway.workbench.emptyChartTitle', 'Your sunburst will appear here').value }}</h3>
-        <p>{{ t('pathway.workbench.emptyChartHint', 'Pick at least one target cohort and a few event cohorts on the left, then run a generation against a data source.').value }}</p>
+        <h3>
+          {{ t('pathway.workbench.emptyChartTitle', 'Your sunburst will appear here').value }}
+        </h3>
+        <p>
+          {{
+            t(
+              'pathway.workbench.emptyChartHint',
+              'Pick at least one target cohort and a few event cohorts on the left, then run a generation against a data source.'
+            ).value
+          }}
+        </p>
       </div>
 
       <div
@@ -43,7 +52,14 @@
           ▶
         </div>
         <h3>{{ t('pathway.workbench.noRunYetTitle', 'No runs yet').value }}</h3>
-        <p>{{ t('pathway.workbench.noRunYetHint', 'Generate against a data source to see the sunburst.').value }}</p>
+        <p>
+          {{
+            t(
+              'pathway.workbench.noRunYetHint',
+              'Generate against a data source to see the sunburst.'
+            ).value
+          }}
+        </p>
         <v-btn
           color="primary"
           variant="flat"
@@ -106,7 +122,9 @@
           class="workbench__insights-hint"
           data-testid="insights-empty-hint"
         >
-          {{ t('pathway.workbench.selectPathHint', 'Click a slice to inspect a treatment path').value }}
+          {{
+            t('pathway.workbench.selectPathHint', 'Click a slice to inspect a treatment path').value
+          }}
         </div>
       </template>
       <div
@@ -134,9 +152,26 @@ import PathwayLegend from './results/PathwayLegend.vue'
 import PathwayPathStats from './results/PathwayPathStats.vue'
 
 const PALETTE_20 = [
-  '#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f',
-  '#bcbd22','#17becf','#aec7e8','#ffbb78','#98df8a','#ff9896','#c5b0d5','#c49c94',
-  '#f7b6d2','#c7c7c7','#dbdb8d','#9edae5',
+  '#1f77b4',
+  '#ff7f0e',
+  '#2ca02c',
+  '#d62728',
+  '#9467bd',
+  '#8c564b',
+  '#e377c2',
+  '#7f7f7f',
+  '#bcbd22',
+  '#17becf',
+  '#aec7e8',
+  '#ffbb78',
+  '#98df8a',
+  '#ff9896',
+  '#c5b0d5',
+  '#c49c94',
+  '#f7b6d2',
+  '#c7c7c7',
+  '#dbdb8d',
+  '#9edae5',
 ]
 
 const props = defineProps<{
@@ -159,9 +194,9 @@ const targetGroup = computed(() => results.value?.pathwayGroups[0] ?? null)
 
 const targetCohortName = computed(() => {
   if (!design.value || !targetGroup.value) return ''
-  return design.value.targetCohorts.find(
-    (c) => c.id === targetGroup.value!.targetCohortId,
-  )?.name ?? ''
+  return (
+    design.value.targetCohorts.find(c => c.id === targetGroup.value!.targetCohortId)?.name ?? ''
+  )
 })
 
 const colorMap = computed(() => {
@@ -197,11 +232,11 @@ const pathStats = computed(() => {
 
 watch(
   () => props.selectedExecutionId,
-  (id) => {
+  id => {
     selectedPath.value = null
     if (Number.isFinite(id) && id && id > 0) load(id)
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 function onPathSelect(info: { code: number; nodeName: string; value: number }) {
@@ -227,8 +262,12 @@ defineExpose({ onPathSelect })
   padding: 14px;
   overflow-y: auto;
 }
-.workbench__design { border-right: 1px solid rgba(var(--v-theme-on-surface), 0.08); }
-.workbench__insights { border-left: 1px solid rgba(var(--v-theme-on-surface), 0.08); }
+.workbench__design {
+  border-right: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+}
+.workbench__insights {
+  border-left: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+}
 
 .workbench__canvas {
   padding: 18px;
@@ -253,9 +292,22 @@ defineExpose({ onPathSelect })
   color: rgba(var(--v-theme-on-surface), 0.62);
   gap: 8px;
 }
-.workbench__canvas-empty h3 { margin: 0; color: rgb(var(--v-theme-on-surface)); font-weight: 500; font-size: 16px; }
-.workbench__canvas-empty p { margin: 0 0 8px; max-width: 360px; font-size: 13px; }
-.workbench__canvas-empty-icon { font-size: 42px; opacity: 0.7; line-height: 1; }
+.workbench__canvas-empty h3 {
+  margin: 0;
+  color: rgb(var(--v-theme-on-surface));
+  font-weight: 500;
+  font-size: 16px;
+}
+.workbench__canvas-empty p {
+  margin: 0 0 8px;
+  max-width: 360px;
+  font-size: 13px;
+}
+.workbench__canvas-empty-icon {
+  font-size: 42px;
+  opacity: 0.7;
+  line-height: 1;
+}
 
 .workbench__sunburst-stage {
   flex: 1;
@@ -294,11 +346,19 @@ defineExpose({ onPathSelect })
 }
 
 @media (max-width: 1280px) {
-  .workbench { grid-template-columns: 280px minmax(0, 1fr); }
-  .workbench__insights { display: none; }
+  .workbench {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+  .workbench__insights {
+    display: none;
+  }
 }
 @media (max-width: 1024px) {
-  .workbench { grid-template-columns: 1fr; }
-  .workbench__design { display: none; }
+  .workbench {
+    grid-template-columns: 1fr;
+  }
+  .workbench__design {
+    display: none;
+  }
 }
 </style>

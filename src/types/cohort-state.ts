@@ -71,7 +71,7 @@ export function createDefaultUIState(): CohortUIState {
     isImportDialogOpen: false,
     activePanel: null,
     selectedEventId: null,
-    expandedGroups: new Set<string>()
+    expandedGroups: new Set<string>(),
   }
 }
 
@@ -83,7 +83,7 @@ export function createDefaultLoadingState(): CohortLoadingState {
     isLoading: false,
     isSaving: false,
     loadError: null,
-    saveError: null
+    saveError: null,
   }
 }
 
@@ -94,6 +94,6 @@ export function createDefaultDataState(): CohortDataState {
   return {
     isDirty: false,
     validationErrors: [],
-    lastSaved: null
+    lastSaved: null,
   }
 }

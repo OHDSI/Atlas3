@@ -39,7 +39,11 @@
       v-model="form.color"
       label="Color (optional)"
       type="color"
-      :hint="form.selectedGroup ? `Defaults to group color (${form.selectedGroup.color || '#1976D2'})` : 'Select a tag group first'"
+      :hint="
+        form.selectedGroup
+          ? `Defaults to group color (${form.selectedGroup.color || '#1976D2'})`
+          : 'Select a tag group first'
+      "
       persistent-hint
       :error-messages="errors.color"
       variant="outlined"
@@ -164,8 +168,8 @@ interface Props {
 
 defineProps<Props>()
 const emit = defineEmits<{
-  'created': [tag: Tag]
-  'cancel': []
+  created: [tag: Tag]
+  cancel: []
 }>()
 
 const configStore = useConfigStore()
@@ -191,7 +195,7 @@ const form = ref<{
   color: '',
   icon: '',
   permissionProtected: false,
-  description: ''
+  description: '',
 })
 
 const effectiveColor = computed(() => {
@@ -210,12 +214,10 @@ const isValidIcon = computed(() => {
 
 const nameRules = [
   (v: string) => !!v || 'Tag name is required',
-  (v: string) => (v?.length <= 255) || 'Tag name must be less than 255 characters'
+  (v: string) => v?.length <= 255 || 'Tag name must be less than 255 characters',
 ]
 
-const groupRules = [
-  (v: TagGroup | null) => !!v || 'Tag group is required'
-]
+const groupRules = [(v: TagGroup | null) => !!v || 'Tag group is required']
 
 function resetForm() {
   form.value = {
@@ -224,7 +226,7 @@ function resetForm() {
     color: '',
     icon: '',
     permissionProtected: false,
-    description: ''
+    description: '',
   }
   errors.value = {}
   showAdvanced.value = undefined
@@ -247,13 +249,13 @@ async function handleSubmit() {
     icon: form.value.icon || undefined,
     permissionProtected: form.value.permissionProtected || undefined,
     description: form.value.description || undefined,
-    groups: [form.value.selectedGroup]
+    groups: [form.value.selectedGroup],
   }
 
   const result = tagSchema.safeParse(tagData)
 
   if (!result.success) {
-    result.error.errors.forEach((err) => {
+    result.error.errors.forEach(err => {
       const field = err.path[0] as string
       errors.value[field] = err.message
     })
@@ -268,7 +270,7 @@ async function handleSubmit() {
     const cohortTag: Tag = {
       id: createdTag.id,
       name: createdTag.name,
-      color: createdTag.color
+      color: createdTag.color,
     }
 
     successMessage.value = `Tag "${createdTag.name}" created successfully!`
@@ -280,7 +282,8 @@ async function handleSubmit() {
     }, 2000)
   } catch (error) {
     logger.error('CreateTagForm', 'Failed to create tag', error)
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to create tag. Please try again.'
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Failed to create tag. Please try again.'
   } finally {
     saving.value = false
   }

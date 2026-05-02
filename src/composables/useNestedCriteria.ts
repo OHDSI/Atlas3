@@ -8,11 +8,13 @@ import type { NestedCriteria, CohortEvent, LogicType, CriteriaType } from '@/mod
  * validating depth, and detecting circular references
  */
 export function useNestedCriteria(initial?: NestedCriteria) {
-  const nested = ref<NestedCriteria>(initial || {
-    id: uuidv4(),
-    logicType: 'ALL',
-    events: []
-  })
+  const nested = ref<NestedCriteria>(
+    initial || {
+      id: uuidv4(),
+      logicType: 'ALL',
+      events: [],
+    }
+  )
 
   const hasEvents = computed(() => nested.value.events.length > 0)
   const eventCount = computed(() => nested.value.events.length)
@@ -20,12 +22,15 @@ export function useNestedCriteria(initial?: NestedCriteria) {
   /**
    * Add a new event to the nested criteria
    */
-  function addEvent(criteriaType: CriteriaType, conceptSet?: { id: number; name: string }): CohortEvent {
+  function addEvent(
+    criteriaType: CriteriaType,
+    conceptSet?: { id: number; name: string }
+  ): CohortEvent {
     const newEvent: CohortEvent = {
       id: uuidv4(),
       criteriaType,
       conceptSet: conceptSet || { id: 0, name: 'Select concept set...' },
-      attributes: []
+      attributes: [],
     }
     nested.value.events.push(newEvent)
     return newEvent
@@ -168,6 +173,6 @@ export function useNestedCriteria(initial?: NestedCriteria) {
     hasCircularReference,
     getAllEventIds,
     getLogicTypeDisplay,
-    getAvailableCountOptions
+    getAvailableCountOptions,
   }
 }

@@ -19,7 +19,13 @@ let lastModalOpenTime = 0
 const MODAL_DEBOUNCE_MS = 500
 
 export const useAuthStore = defineStore('auth', {
-  state: (): AuthState & { refreshTimeoutId: number | null; isRunningAs: boolean; originalUser: UserInfo | null; sessionExpiryModalOpen: boolean; sessionExpiresAt: Date | null } => ({
+  state: (): AuthState & {
+    refreshTimeoutId: number | null
+    isRunningAs: boolean
+    originalUser: UserInfo | null
+    sessionExpiryModalOpen: boolean
+    sessionExpiresAt: Date | null
+  } => ({
     token: null,
     user: null,
     permissions: {},
@@ -41,15 +47,15 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isLoggedIn: (state) => state.isAuthenticated && !!state.token,
-    userDisplayName: (state) => state.user?.displayName || state.user?.login || 'Guest',
-    hasToken: (state) => !!state.token,
-    isTokenValid: (state) => {
+    isLoggedIn: state => state.isAuthenticated && !!state.token,
+    userDisplayName: state => state.user?.displayName || state.user?.login || 'Guest',
+    hasToken: state => !!state.token,
+    isTokenValid: state => {
       if (!state.token) return false
       return !tokenManager.isTokenExpired(state.token)
     },
     /** Whether TrexSQL cache feature is enabled on the server */
-    trexsqlCacheEnabled: (state) => state.user?.trexsqlCacheEnabled ?? false,
+    trexsqlCacheEnabled: state => state.user?.trexsqlCacheEnabled ?? false,
   },
 
   actions: {
@@ -194,7 +200,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const { authService } = await import('@/services/auth/authService')
         const success = await authService.refreshToken()
-        
+
         if (success) {
           logger.info('Auth', 'Token refreshed successfully')
           // Token is already updated in the store by authService.refreshToken()
@@ -259,11 +265,13 @@ export const useAuthStore = defineStore('auth', {
             const userInfo = await authService.fetchUserInfo()
             this.setUser(userInfo)
 
-            import('@/stores/locale').then(({ useLocaleStore }) => {
-              useLocaleStore().fetchAvailableLocales()
-            }).catch((err) => {
-              logger.warn('Auth', 'Failed to refresh locales on init', err)
-            })
+            import('@/stores/locale')
+              .then(({ useLocaleStore }) => {
+                useLocaleStore().fetchAvailableLocales()
+              })
+              .catch(err => {
+                logger.warn('Auth', 'Failed to refresh locales on init', err)
+              })
           } catch (error) {
             logger.error('Auth', 'Failed to fetch user info on init', error)
             this.clearAuth()
@@ -278,7 +286,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     setupCrossTabSync() {
-      storageHandler = (event) => {
+      storageHandler = event => {
         if (event.key === 'bearerToken' && event.storageArea === localStorage) {
           if (syncDebounceTimer) {
             clearTimeout(syncDebounceTimer)

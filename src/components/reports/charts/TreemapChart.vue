@@ -61,7 +61,7 @@ const props = withDefaults(
     height: 500,
     enableZoom: true,
     showExport: true,
-    exportFilename: 'treemap-chart'
+    exportFilename: 'treemap-chart',
   }
 )
 
@@ -98,7 +98,12 @@ const chartOption = computed(() => {
   const baseOption = defaultTreemapOptions(props.data, props.title)
 
   // Override roam setting if zoom is disabled
-  if (!props.enableZoom && baseOption.series && Array.isArray(baseOption.series) && baseOption.series[0]) {
+  if (
+    !props.enableZoom &&
+    baseOption.series &&
+    Array.isArray(baseOption.series) &&
+    baseOption.series[0]
+  ) {
     const seriesItem = baseOption.series[0] as TreemapSeriesOption
     seriesItem.roam = false
   }
@@ -163,12 +168,7 @@ function handleChartClick(params: any) {
   const hasChildren = Array.isArray(data.children) && data.children.length > 0
   if (hasChildren) return
   if (data.conceptId !== undefined) {
-    emit(
-      'node-click',
-      data.conceptId,
-      data.name || '',
-      data.conceptPath || ''
-    )
+    emit('node-click', data.conceptId, data.name || '', data.conceptPath || '')
   }
 }
 </script>

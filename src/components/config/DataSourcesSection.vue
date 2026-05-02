@@ -300,19 +300,19 @@ const deletingSource = ref<DataSourceDisplay | null>(null)
 const isDeleting = ref(false)
 
 // Watch for changes in selectedVocabulary and persist to localStorage
-watch(selectedVocabulary, (newValue) => {
+watch(selectedVocabulary, newValue => {
   if (newValue) {
     localStorage.setItem('selectedVocabulary', newValue)
   }
 })
 
-watch(selectedEvidence, (newValue) => {
+watch(selectedEvidence, newValue => {
   if (newValue) {
     localStorage.setItem('selectedEvidence', newValue)
   }
 })
 
-watch(selectedResults, (newValue) => {
+watch(selectedResults, newValue => {
   if (newValue) {
     localStorage.setItem('selectedResults', newValue)
   }
@@ -334,8 +334,8 @@ async function loadDataSources() {
 
     // Load each source and fetch vocabulary version if it has vocabulary
     const sourcesWithVersions = await Promise.all(
-      sources.map(async (s) => {
-        const hasVocab = s.daimons?.some((d) => d.daimonType === 'Vocabulary') ?? false
+      sources.map(async s => {
+        const hasVocab = s.daimons?.some(d => d.daimonType === 'Vocabulary') ?? false
         let vocabularyVersion: string | undefined
 
         // If source has vocabulary, try to fetch the vocabulary info
@@ -358,8 +358,8 @@ async function loadDataSources() {
           vocabularyVersion,
           initialized: true,
           hasVocabulary: hasVocab,
-          hasEvidence: s.daimons?.some((d) => d.daimonType === 'CEM') ?? false,
-          hasResults: s.daimons?.some((d) => d.daimonType === 'Results') ?? false
+          hasEvidence: s.daimons?.some(d => d.daimonType === 'CEM') ?? false,
+          hasResults: s.daimons?.some(d => d.daimonType === 'Results') ?? false,
         }
       })
     )
@@ -371,9 +371,12 @@ async function loadDataSources() {
     const savedEvidence = localStorage.getItem('selectedEvidence')
     const savedResults = localStorage.getItem('selectedResults')
 
-    selectedVocabulary.value = savedVocab || dataSources.value.find(s => s.hasVocabulary)?.sourceKey || ''
-    selectedEvidence.value = savedEvidence || dataSources.value.find(s => s.hasEvidence)?.sourceKey || ''
-    selectedResults.value = savedResults || dataSources.value.find(s => s.hasResults)?.sourceKey || ''
+    selectedVocabulary.value =
+      savedVocab || dataSources.value.find(s => s.hasVocabulary)?.sourceKey || ''
+    selectedEvidence.value =
+      savedEvidence || dataSources.value.find(s => s.hasEvidence)?.sourceKey || ''
+    selectedResults.value =
+      savedResults || dataSources.value.find(s => s.hasResults)?.sourceKey || ''
   } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : 'Failed to load data sources'
     showErrorToast.value = true
@@ -432,7 +435,8 @@ async function clearServerCache() {
     toastMessage.value = tv('configuration.alerts.clearServerCache')
     showToast.value = true
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : tv('executionStatus.values.FAILED')
+    errorMessage.value =
+      error instanceof Error ? error.message : tv('executionStatus.values.FAILED')
     showErrorToast.value = true
   }
 }

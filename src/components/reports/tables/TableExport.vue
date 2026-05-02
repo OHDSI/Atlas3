@@ -79,7 +79,11 @@ const toastTimeout = ref(3000)
 /**
  * Show toast notification
  */
-function showToastNotification(message: string, color: 'success' | 'error' | 'info' = 'info', timeout = 3000) {
+function showToastNotification(
+  message: string,
+  color: 'success' | 'error' | 'info' = 'info',
+  timeout = 3000
+) {
   toastMessage.value = message
   toastColor.value = color
   toastTimeout.value = timeout
@@ -98,15 +102,17 @@ async function handleCopy() {
     // Format data as tab-separated values (TSV) for better spreadsheet compatibility
     const headerRow = props.headers.map(h => h.title).join('\t')
     const dataRows = props.data.map(row => {
-      return props.headers.map(h => {
-        const value = row[h.key]
-        // Handle null/undefined
-        if (value == null) return ''
-        // Handle objects/arrays
-        if (typeof value === 'object') return JSON.stringify(value)
-        // Convert to string
-        return String(value)
-      }).join('\t')
+      return props.headers
+        .map(h => {
+          const value = row[h.key]
+          // Handle null/undefined
+          if (value == null) return ''
+          // Handle objects/arrays
+          if (typeof value === 'object') return JSON.stringify(value)
+          // Convert to string
+          return String(value)
+        })
+        .join('\t')
     })
 
     const tsvContent = [headerRow, ...dataRows].join('\n')
@@ -169,7 +175,7 @@ async function handleExportCSV() {
     const csv = Papa.unparse(csvData, {
       quotes: true, // Quote all fields
       header: true, // Include header row
-      skipEmptyLines: true
+      skipEmptyLines: true,
     })
 
     // Create blob and download

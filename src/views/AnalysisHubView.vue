@@ -123,7 +123,7 @@ const activeTabName = computed<string>({
     const name = route.name as string | undefined
     return name && tabNames.has(name) ? name : 'feature-analyses'
   },
-  set: (name) => {
+  set: name => {
     if (name && tabNames.has(name) && name !== route.name) {
       router.push({ name })
     }
@@ -132,16 +132,20 @@ const activeTabName = computed<string>({
 
 const STORAGE_KEY = 'atlas3.analysis.lastTab'
 
-watch(activeTabName, (name) => {
-  if (!name) return
-  try {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, name)
+watch(
+  activeTabName,
+  name => {
+    if (!name) return
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, name)
+      }
+    } catch {
+      // localStorage may be unavailable (private mode); ignore.
     }
-  } catch {
-    // localStorage may be unavailable (private mode); ignore.
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 function getLabel(tab: Tab): string {
   return t(tab.titleKey, tab.defaultLabel).value
@@ -155,15 +159,14 @@ const activeTab = computed(() => tabs.find(tab => tab.name === activeTabName.val
 // below the tab strip (see template) so the hero doesn't shake when
 // users switch tabs.
 const title = computed(() => t('navigation.analysis', 'Analysis').value)
-const subtitle = computed(() =>
-  t(
-    'analysis.subtitle',
-    'Characterize cohorts, build features, trace pathways, and compute incidence rates.'
-  ).value
+const subtitle = computed(
+  () =>
+    t(
+      'analysis.subtitle',
+      'Characterize cohorts, build features, trace pathways, and compute incidence rates.'
+    ).value
 )
-const activeTabHint = computed(() =>
-  t(activeTab.value.hintKey, activeTab.value.defaultHint).value
-)
+const activeTabHint = computed(() => t(activeTab.value.hintKey, activeTab.value.defaultHint).value)
 </script>
 
 <style scoped>

@@ -14,8 +14,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: TemporalWindow]
 }>()
 
-const { validateTemporalWindows, defaultWindow, getTemporalWindowPresets } =
-  useTemporalWindows()
+const { validateTemporalWindows, defaultWindow, getTemporalWindowPresets } = useTemporalWindows()
 
 // Local state with default values
 const temporalWindow = computed<TemporalWindow>({
@@ -117,17 +116,21 @@ const startDirection = computed(() =>
   temporalWindow.value.startWindow?.beforeAfter === 'AFTER' ? 'after' : 'before'
 )
 const startAllTime = computed(() => temporalWindow.value.startWindow?.days === null)
-const startReferencePoint = computed(() => temporalWindow.value.startWindow?.referencePoint ?? 'INDEX_START')
+const startReferencePoint = computed(
+  () => temporalWindow.value.startWindow?.referencePoint ?? 'INDEX_START'
+)
 
 const endDays = computed(() => temporalWindow.value.endWindow?.days ?? 90)
 const endDirection = computed(() =>
   temporalWindow.value.endWindow?.beforeAfter === 'AFTER' ? 'after' : 'before'
 )
 const endAllTime = computed(() => temporalWindow.value.endWindow?.days === null)
-const endReferencePoint = computed(() => temporalWindow.value.endWindow?.referencePoint ?? 'INDEX_START')
+const endReferencePoint = computed(
+  () => temporalWindow.value.endWindow?.referencePoint ?? 'INDEX_START'
+)
 
 // Reference point options
-const referencePointOptions: Array<{ value: Window['referencePoint'], label: string }> = [
+const referencePointOptions: Array<{ value: Window['referencePoint']; label: string }> = [
   { value: 'INDEX_START', label: t('options.indexStartDate', 'Index Start').value },
   { value: 'INDEX_END', label: t('options.indexEndDate', 'Index End').value },
   { value: 'EVENT_START', label: t('options.eventStarts', 'Event Start').value },
@@ -142,7 +145,7 @@ const applyPreset = (preset: TemporalWindow) => {
 // Initialize with defaults if no value provided
 watch(
   () => props.modelValue,
-  (newValue) => {
+  newValue => {
     if (!newValue) {
       emit('update:modelValue', {
         startWindow: defaultWindow('after', 0),
@@ -177,7 +180,7 @@ watch(
             variant="outlined"
             hide-details
             clearable
-            @update:model-value="(v) => v && applyPreset(v)"
+            @update:model-value="v => v && applyPreset(v)"
           />
         </v-col>
       </v-row>
@@ -204,7 +207,7 @@ watch(
               min="0"
               :disabled="startAllTime"
               hide-details
-              @update:model-value="(v) => updateStartDays(Number(v))"
+              @update:model-value="v => updateStartDays(Number(v))"
             />
           </v-col>
           <v-col
@@ -233,8 +236,12 @@ watch(
           >
             <v-checkbox
               :model-value="startAllTime"
-              :label="t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value"
-              :aria-label="t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value"
+              :label="
+                t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
+              "
+              :aria-label="
+                t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
+              "
               density="compact"
               hide-details
               @update:model-value="updateStartAllTime"
@@ -277,14 +284,18 @@ watch(
             <v-text-field
               :model-value="endDays"
               type="number"
-              :label="t('components.featureextraction.covariateSettingsEditor.endDays', 'End Days').value"
-              :aria-label="t('components.featureextraction.covariateSettingsEditor.endDays', 'End Days').value"
+              :label="
+                t('components.featureextraction.covariateSettingsEditor.endDays', 'End Days').value
+              "
+              :aria-label="
+                t('components.featureextraction.covariateSettingsEditor.endDays', 'End Days').value
+              "
               density="compact"
               variant="outlined"
               min="0"
               :disabled="endAllTime"
               hide-details
-              @update:model-value="(v) => updateEndDays(Number(v))"
+              @update:model-value="v => updateEndDays(Number(v))"
             />
           </v-col>
           <v-col
@@ -313,8 +324,12 @@ watch(
           >
             <v-checkbox
               :model-value="endAllTime"
-              :label="t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value"
-              :aria-label="t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value"
+              :label="
+                t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
+              "
+              :aria-label="
+                t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
+              "
               density="compact"
               hide-details
               @update:model-value="updateEndAllTime"

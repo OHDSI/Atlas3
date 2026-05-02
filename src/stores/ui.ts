@@ -16,7 +16,7 @@ export const useUIStore = defineStore('ui', () => {
   const configPanelState = ref<ConfigPanelState>({
     isOpen: false,
     activeSection: 'cache',
-    scrollPosition: 0
+    scrollPosition: 0,
   })
 
   // Actions
@@ -79,7 +79,9 @@ export const useUIStore = defineStore('ui', () => {
     configPanelState.value.isOpen = false
   }
 
-  function setConfigPanelSection(section: 'cache' | 'vocabulary' | 'tags' | 'permissions' | 'jobs') {
+  function setConfigPanelSection(
+    section: 'cache' | 'vocabulary' | 'tags' | 'permissions' | 'jobs'
+  ) {
     configPanelState.value.activeSection = section
   }
 

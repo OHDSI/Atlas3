@@ -57,7 +57,11 @@
           size="small"
           label
         >
-          {{ item.invalidReason ? t('commonErrors.invalid', 'Invalid').value : t('commonErrors.valid', 'Valid').value }}
+          {{
+            item.invalidReason
+              ? t('commonErrors.invalid', 'Invalid').value
+              : t('commonErrors.valid', 'Valid').value
+          }}
         </v-chip>
       </template>
 
@@ -235,9 +239,9 @@ interface Props {
   page?: number
   itemsPerPage?: number
   showAddButton?: boolean
-  conceptsInSet?: Set<number>  // Track which concepts are already in set
-  selectable?: boolean         // Render leading checkbox column for bulk selection
-  selected?: number[]          // v-model:selected — list of selected conceptIds
+  conceptsInSet?: Set<number> // Track which concepts are already in set
+  selectable?: boolean // Render leading checkbox column for bulk selection
+  selected?: number[] // v-model:selected — list of selected conceptIds
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -269,17 +273,66 @@ const emit = defineEmits<{
 const headers = computed(() => {
   const baseHeaders = [
     { title: t('columns.conceptId', 'ID').value, key: 'conceptId', sortable: true, width: '100px' },
-    { title: t('columns.conceptCode', 'Code').value, key: 'conceptCode', sortable: true, width: '120px' },
+    {
+      title: t('columns.conceptCode', 'Code').value,
+      key: 'conceptCode',
+      sortable: true,
+      width: '120px',
+    },
     { title: t('columns.conceptName', 'Name').value, key: 'conceptName', sortable: true },
-    { title: t('columns.vocabulary', 'Vocabulary').value, key: 'vocabularyId', sortable: true, width: '120px' },
-    { title: t('columns.type', 'Type').value, key: 'standardConcept', sortable: true, width: '140px' },
+    {
+      title: t('columns.vocabulary', 'Vocabulary').value,
+      key: 'vocabularyId',
+      sortable: true,
+      width: '120px',
+    },
+    {
+      title: t('columns.type', 'Type').value,
+      key: 'standardConcept',
+      sortable: true,
+      width: '140px',
+    },
     { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true, width: '120px' },
-    { title: t('columns.class', 'Class').value, key: 'conceptClassId', sortable: true, width: '150px' },
-    { title: t('columns.validEndDate', 'Validity').value, key: 'invalidReason', sortable: true, width: '100px' },
-    { title: t('columns.rcTooltip', 'RC').value, key: 'recordCount', sortable: true, width: '100px', align: 'end' as const },
-    { title: t('columns.drcTooltip', 'DRC').value, key: 'descendantRecordCount', sortable: true, width: '100px', align: 'end' as const },
-    { title: t('columns.pcTooltip', 'PC').value, key: 'personCount', sortable: true, width: '100px', align: 'end' as const },
-    { title: t('columns.dpcTooltip', 'DPC').value, key: 'descendantPersonCount', sortable: true, width: '100px', align: 'end' as const },
+    {
+      title: t('columns.class', 'Class').value,
+      key: 'conceptClassId',
+      sortable: true,
+      width: '150px',
+    },
+    {
+      title: t('columns.validEndDate', 'Validity').value,
+      key: 'invalidReason',
+      sortable: true,
+      width: '100px',
+    },
+    {
+      title: t('columns.rcTooltip', 'RC').value,
+      key: 'recordCount',
+      sortable: true,
+      width: '100px',
+      align: 'end' as const,
+    },
+    {
+      title: t('columns.drcTooltip', 'DRC').value,
+      key: 'descendantRecordCount',
+      sortable: true,
+      width: '100px',
+      align: 'end' as const,
+    },
+    {
+      title: t('columns.pcTooltip', 'PC').value,
+      key: 'personCount',
+      sortable: true,
+      width: '100px',
+      align: 'end' as const,
+    },
+    {
+      title: t('columns.dpcTooltip', 'DPC').value,
+      key: 'descendantPersonCount',
+      sortable: true,
+      width: '100px',
+      align: 'end' as const,
+    },
   ]
 
   let result = baseHeaders
@@ -305,15 +358,15 @@ const totalPages = computed(() => {
 
 const selectedSet = computed(() => new Set(props.selected))
 
-const visibleIds = computed(() => props.concepts.map((c) => c.conceptId))
+const visibleIds = computed(() => props.concepts.map(c => c.conceptId))
 
 const allVisibleSelected = computed(() => {
   if (visibleIds.value.length === 0) return false
-  return visibleIds.value.every((id) => selectedSet.value.has(id))
+  return visibleIds.value.every(id => selectedSet.value.has(id))
 })
 
 const someVisibleSelected = computed(() => {
-  return visibleIds.value.some((id) => selectedSet.value.has(id))
+  return visibleIds.value.some(id => selectedSet.value.has(id))
 })
 
 function isSelected(conceptId: number): boolean {

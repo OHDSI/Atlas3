@@ -28,7 +28,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
-  height: 300
+  height: 300,
 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

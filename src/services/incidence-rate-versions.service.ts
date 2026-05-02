@@ -31,7 +31,8 @@ export async function getIncidenceRateVersions(irId: number): Promise<Version[]>
 }
 
 export async function getIncidenceRateVersion(
-  irId: number, versionNumber: number,
+  irId: number,
+  versionNumber: number
 ): Promise<VersionedAsset<IncidenceRate>> {
   try {
     const data = await httpGet<unknown>(`/ir/${irId}/version/${versionNumber}`)
@@ -53,7 +54,9 @@ export interface IncidenceRateVersionUpdate {
 }
 
 export async function updateIncidenceRateVersion(
-  irId: number, versionNumber: number, payload: IncidenceRateVersionUpdate,
+  irId: number,
+  versionNumber: number,
+  payload: IncidenceRateVersionUpdate
 ): Promise<Version> {
   try {
     const data = await httpPut<unknown>(`/ir/${irId}/version/${versionNumber}`, payload)
@@ -67,10 +70,14 @@ export async function updateIncidenceRateVersion(
 }
 
 export async function copyIncidenceRateVersion(
-  irId: number, versionNumber: number,
+  irId: number,
+  versionNumber: number
 ): Promise<{ id: number }> {
   try {
-    const data = await httpPut<unknown>(`/ir/${irId}/version/${versionNumber}/createAsset`, undefined)
+    const data = await httpPut<unknown>(
+      `/ir/${irId}/version/${versionNumber}/createAsset`,
+      undefined
+    )
     const parsed = z.object({ id: z.number() }).passthrough().safeParse(data)
     if (!parsed.success) throw new Error('Invalid copyVersion response')
     return parsed.data

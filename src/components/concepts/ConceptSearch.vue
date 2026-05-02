@@ -6,7 +6,9 @@
     <div class="concept-search__hero">
       <v-text-field
         v-model="searchInput"
-        :placeholder="t('search.placeholder', 'Search SNOMED, ICD, RxNorm, LOINC… (Enter to search)').value"
+        :placeholder="
+          t('search.placeholder', 'Search SNOMED, ICD, RxNorm, LOINC… (Enter to search)').value
+        "
         prepend-inner-icon="mdi-magnify"
         clearable
         variant="outlined"
@@ -22,7 +24,12 @@
 
       <p class="concept-search__hint">
         <span v-if="validationError">{{ validationError }}</span>
-        <span v-else>{{ t('search.vocabulariesInfo', 'Type at least 3 characters; press Enter to search across SNOMED, ICD, RxNorm, LOINC, and other vocabularies.') }}</span>
+        <span v-else>{{
+          t(
+            'search.vocabulariesInfo',
+            'Type at least 3 characters; press Enter to search across SNOMED, ICD, RxNorm, LOINC, and other vocabularies.'
+          )
+        }}</span>
       </p>
     </div>
 
@@ -106,7 +113,7 @@ function onSearchInput(value: string | null) {
 
 function onSearch() {
   if (!isSearchValid.value) return
-  
+
   // Immediate search when user clicks button or presses Enter
   store.search(searchInput.value.trim())
 }

@@ -47,7 +47,12 @@ export const useWebAPIStore = defineStore('webapi', () => {
   function getValidVocabularySource(): string | null {
     const storedVocab = localStorage.getItem('selectedVocabulary')
 
-    if (storedVocab && storedVocab.trim() !== '' && storedVocab !== 'null' && storedVocab !== 'undefined') {
+    if (
+      storedVocab &&
+      storedVocab.trim() !== '' &&
+      storedVocab !== 'null' &&
+      storedVocab !== 'undefined'
+    ) {
       if (vocabularySources.value.some(s => s.sourceKey === storedVocab)) {
         return storedVocab
       }
@@ -69,7 +74,10 @@ export const useWebAPIStore = defineStore('webapi', () => {
     // Auto-select first source if none selected
     if (!selectedSource.value && sourcesList.length > 0) {
       selectedSource.value = sourcesList[0]?.sourceKey ?? null
-      logger.debug('WebAPIStore', 'Auto-selected first source', { selected: selectedSource.value, sources: sourcesList.map(s => s.sourceKey) })
+      logger.debug('WebAPIStore', 'Auto-selected first source', {
+        selected: selectedSource.value,
+        sources: sourcesList.map(s => s.sourceKey),
+      })
     }
   }
 
@@ -128,7 +136,10 @@ export const useWebAPIStore = defineStore('webapi', () => {
    * fall back to an existing job slot or the API-supplied id so polling can
    * still match the entry by `info.id.sourceId === job.id`.
    */
-  async function generateCohort(cohortId: number, sourceKey: string): Promise<GenerationJob | null> {
+  async function generateCohort(
+    cohortId: number,
+    sourceKey: string
+  ): Promise<GenerationJob | null> {
     const source = sources.value.find(s => s.sourceKey === sourceKey)
     const existingJob = getJobsByCohortId(cohortId).find(j => j.sourceKey === sourceKey)
     const knownKey = source?.sourceId ?? existingJob?.id
@@ -230,12 +241,15 @@ export const useWebAPIStore = defineStore('webapi', () => {
               status: info.status,
               personCount: info.personCount ?? undefined,
               recordCount: info.recordCount ?? undefined,
-              startTime: info.startTime ? new Date(info.startTime).toISOString() : existing.startTime,
-              endTime: info.status === 'COMPLETE' || info.status === 'FAILED'
-                ? (info.startTime != null && info.executionDuration != null
+              startTime: info.startTime
+                ? new Date(info.startTime).toISOString()
+                : existing.startTime,
+              endTime:
+                info.status === 'COMPLETE' || info.status === 'FAILED'
+                  ? info.startTime != null && info.executionDuration != null
                     ? new Date(info.startTime + info.executionDuration).toISOString()
-                    : new Date().toISOString())
-                : undefined,
+                    : new Date().toISOString()
+                  : undefined,
               failMessage: info.failMessage ?? undefined,
             })
           }
@@ -283,7 +297,7 @@ export const useWebAPIStore = defineStore('webapi', () => {
    * Stop all active polling
    */
   function stopAllPolling(): void {
-    pollingTimers.forEach((timer) => clearInterval(timer))
+    pollingTimers.forEach(timer => clearInterval(timer))
     pollingTimers.clear()
   }
 
@@ -318,9 +332,10 @@ export const useWebAPIStore = defineStore('webapi', () => {
           sourceKey: source.sourceKey,
           status: info.status,
           startTime: info.startTime ? new Date(info.startTime).toISOString() : undefined,
-          endTime: info.executionDuration && info.startTime
-            ? new Date(info.startTime + info.executionDuration).toISOString()
-            : undefined,
+          endTime:
+            info.executionDuration && info.startTime
+              ? new Date(info.startTime + info.executionDuration).toISOString()
+              : undefined,
           personCount: info.personCount ?? undefined,
           recordCount: info.recordCount ?? undefined,
           failMessage: info.failMessage ?? undefined,

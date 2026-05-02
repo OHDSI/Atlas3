@@ -109,15 +109,14 @@ const eyebrow = computed(() => {
   return t('common.cohortDefinition', 'Cohort definition').value
 })
 
-const placeholder = computed(() =>
-  t('cohortDefinitions.newDefinition', 'New cohort').value
-)
+const placeholder = computed(() => t('cohortDefinitions.newDefinition', 'New cohort').value)
 
-const subtitlePlaceholder = computed(() =>
-  t(
-    'cohortDefinitions.descriptionPlaceholder',
-    'Add a description (optional) — purpose, scope, references…'
-  ).value
+const subtitlePlaceholder = computed(
+  () =>
+    t(
+      'cohortDefinitions.descriptionPlaceholder',
+      'Add a description (optional) — purpose, scope, references…'
+    ).value
 )
 
 function onTitleInput(event: Event) {

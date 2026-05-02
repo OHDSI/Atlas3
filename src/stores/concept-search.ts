@@ -17,7 +17,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
   // ============================================================================
 
   const searchTerm = ref<string>('')
-  const allConcepts = ref<Concept[]>([])  // All search results
+  const allConcepts = ref<Concept[]>([]) // All search results
   const loading = ref<boolean>(false)
   const loadingRecordCounts = ref<boolean>(false)
   const error = ref<string | null>(null)
@@ -25,7 +25,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
   // Pagination state
   const page = ref<number>(1)
   const itemsPerPage = ref<number>(25)
-  
+
   // Sorting state
   const sortBy = ref<string | null>('conceptId')
   const sortDesc = ref<boolean>(false)
@@ -51,9 +51,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
         if (bVal === null || bVal === undefined) return -1
 
         if (typeof aVal === 'string' && typeof bVal === 'string') {
-          return sortDesc.value 
-            ? bVal.localeCompare(aVal)
-            : aVal.localeCompare(bVal)
+          return sortDesc.value ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal)
         }
 
         if (typeof aVal === 'number' && typeof bVal === 'number') {
@@ -67,7 +65,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     // Apply pagination
     const start = (page.value - 1) * itemsPerPage.value
     const end = start + itemsPerPage.value
-    
+
     return sorted.slice(start, end)
   })
 

@@ -89,7 +89,10 @@ export type AtlasCohortDefinitionInput = AtlasCohortDefinition | AtlasCohortDefi
 export function isAtlasCohortDefinitionWrapper(
   input: AtlasCohortDefinitionInput
 ): input is AtlasCohortDefinitionWrapper {
-  return 'expression' in input && (typeof input.expression === 'object' || typeof input.expression === 'string')
+  return (
+    'expression' in input &&
+    (typeof input.expression === 'object' || typeof input.expression === 'string')
+  )
 }
 
 export interface AtlasConceptSet {

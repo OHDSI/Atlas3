@@ -58,7 +58,7 @@
         density="compact"
         hide-details
         variant="outlined"
-        style="min-width: 220px; max-width: 260px;"
+        style="min-width: 220px; max-width: 260px"
         data-test="profile-source-select"
         @update:model-value="onSourceChange"
       />
@@ -119,7 +119,9 @@
           class="profile-empty__icon"
         />
         <div class="profile-empty__text">
-          {{ tv('profiles.emptyHint', 'Use the source picker and person ID above to load a profile.') }}
+          {{
+            tv('profiles.emptyHint', 'Use the source picker and person ID above to load a profile.')
+          }}
         </div>
       </div>
 
@@ -168,18 +170,30 @@ const { tv } = useI18n()
 
 // Hero source selector — mirrors store.sourceKey
 const selectedSource = ref<string | null>(store.sourceKey)
-watch(() => store.sourceKey, v => { selectedSource.value = v })
+watch(
+  () => store.sourceKey,
+  v => {
+    selectedSource.value = v
+  }
+)
 
 // Inline-edit person id input — mirrors store.personId
 const personIdInput = ref<string>(store.personId !== null ? String(store.personId) : '')
-watch(() => store.personId, v => { personIdInput.value = v !== null ? String(v) : '' })
+watch(
+  () => store.personId,
+  v => {
+    personIdInput.value = v !== null ? String(v) : ''
+  }
+)
 
 // Fetch sources on mount when the store hasn't loaded them yet —
 // the profile page is often the deep-link entry point so sources may
 // not be populated yet. The store no-ops when already populated.
 onMounted(() => {
   if (!ds.sources || ds.sources.length === 0) {
-    ds.fetchDataSources().catch(() => { /* surfaced via store error */ })
+    ds.fetchDataSources().catch(() => {
+      /* surfaced via store error */
+    })
   }
 })
 
@@ -240,7 +254,9 @@ async function onReload() {
   border-radius: 4px;
   transition: background 120ms ease;
 }
-.hero-person-id :deep(.v-field__outline) { display: none; }
+.hero-person-id :deep(.v-field__outline) {
+  display: none;
+}
 .hero-person-id:hover :deep(.v-field),
 .hero-person-id:focus-within :deep(.v-field) {
   background: rgba(var(--v-theme-on-surface), 0.04);

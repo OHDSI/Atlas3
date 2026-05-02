@@ -31,7 +31,9 @@
                 :value="form.name"
                 type="text"
                 class="cs-editor__title-input"
-                :placeholder="t('cs.manager.pleaseProvideNameMessage', 'Untitled concept set').value"
+                :placeholder="
+                  t('cs.manager.pleaseProvideNameMessage', 'Untitled concept set').value
+                "
                 :disabled="loading"
                 :aria-label="t('columns.name', 'Name').value"
                 @input="onTitleInput"
@@ -236,7 +238,12 @@
         :title="t('common.unsavedChanges', 'Unsaved changes').value"
       />
       <v-card-text>
-        {{ t('common.unsavedChangesMessage', 'You have unsaved changes. Are you sure you want to close?').value }}
+        {{
+          t(
+            'common.unsavedChangesMessage',
+            'You have unsaved changes. Are you sure you want to close?'
+          ).value
+        }}
       </v-card-text>
       <v-card-actions>
         <v-spacer />
@@ -271,7 +278,12 @@
       />
       <v-card-text>
         <p class="cs-paste__hint">
-          {{ t('cs.manager.pasteIdsHint', 'Separate IDs with spaces, commas, semicolons, or newlines. We resolve each ID against the vocabulary before adding.').value }}
+          {{
+            t(
+              'cs.manager.pasteIdsHint',
+              'Separate IDs with spaces, commas, semicolons, or newlines. We resolve each ID against the vocabulary before adding.'
+            ).value
+          }}
         </p>
         <v-textarea
           v-model="pasteInput"
@@ -296,7 +308,8 @@
               icon="mdi-check-circle-outline"
               size="18"
             />
-            <span>{{ t('cs.manager.pasteIdsResolved', 'Resolved').value }}: {{ pasteResolved.length }}</span>
+            <span>{{ t('cs.manager.pasteIdsResolved', 'Resolved').value }}:
+              {{ pasteResolved.length }}</span>
           </div>
           <div
             v-if="pasteUnresolved.length"
@@ -306,7 +319,8 @@
               icon="mdi-alert-circle-outline"
               size="18"
             />
-            <span>{{ t('cs.manager.pasteIdsUnresolved', 'Not found').value }}: {{ pasteUnresolved.join(', ') }}</span>
+            <span>{{ t('cs.manager.pasteIdsUnresolved', 'Not found').value }}:
+              {{ pasteUnresolved.join(', ') }}</span>
           </div>
         </div>
       </v-card-text>
@@ -352,7 +366,11 @@
         :title="`${t('common.delete', 'Delete').value} ${t('common.conceptSet', 'Concept Set').value}`"
       />
       <v-card-text>
-        {{ t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete').value }} "{{ props.conceptSet?.name }}"?
+        {{
+          t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete')
+            .value
+        }}
+        "{{ props.conceptSet?.name }}"?
       </v-card-text>
       <v-card-actions>
         <v-spacer />
@@ -407,8 +425,8 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'save': []
-  'delete': [id: number | string]
+  save: []
+  delete: [id: number | string]
 }>()
 
 // ============================================================================
@@ -425,7 +443,7 @@ const formRef = ref()
 const formValid = ref(false)
 const loading = ref(false)
 const hasUnsavedChanges = ref(false)
-const activeTab = ref<string>('selected')  // Tab state for concept building - default to selected
+const activeTab = ref<string>('selected') // Tab state for concept building - default to selected
 
 interface FormData {
   name: string
@@ -468,7 +486,7 @@ const conceptSetId = computed<number | string | null>(() => props.conceptSet?.id
 const { hasPermission } = usePermissions()
 const { canWrite, canDelete } = useEntityAccess('conceptSet', conceptSetId)
 const canSubmit = computed<boolean>(() =>
-  isEditMode.value ? canWrite.value : hasPermission('create:conceptset'),
+  isEditMode.value ? canWrite.value : hasPermission('create:conceptset')
 )
 
 const itemCount = computed(() => {
@@ -498,9 +516,13 @@ const nameError = computed(() => {
 
 // Drive the v-form's validity off our single field's error so the
 // Save button stays disabled while the name is invalid.
-watch(nameError, (err) => {
-  formValid.value = !err
-}, { immediate: true })
+watch(
+  nameError,
+  err => {
+    formValid.value = !err
+  },
+  { immediate: true }
+)
 
 // Fixed width to ensure consistent 85% across all tabs
 const drawerWidth = computed(() => {
@@ -549,9 +571,10 @@ function getCurrentVersionRow(): VersionsTableItem {
 
   // Handle createdDate/modifiedDate which can be string or number
   const dateValue = conceptSet.modifiedDate || conceptSet.createdDate
-  const createdDate = typeof dateValue === 'number'
-    ? new Date(dateValue).toISOString()
-    : (dateValue || new Date().toISOString())
+  const createdDate =
+    typeof dateValue === 'number'
+      ? new Date(dateValue).toISOString()
+      : dateValue || new Date().toISOString()
 
   return {
     version: 0,
@@ -580,20 +603,24 @@ function getCurrentVersionRow(): VersionsTableItem {
 // ============================================================================
 
 // Load concept set data when editor opens
-watch(() => props.conceptSet, (newSet) => {
-  if (newSet) {
-    form.value = {
-      name: newSet.name || '',
+watch(
+  () => props.conceptSet,
+  newSet => {
+    if (newSet) {
+      form.value = {
+        name: newSet.name || '',
+      }
+      hasUnsavedChanges.value = false
+    } else {
+      // Reset form for new concept set
+      form.value = {
+        name: '',
+      }
+      hasUnsavedChanges.value = false
     }
-    hasUnsavedChanges.value = false
-  } else {
-    // Reset form for new concept set
-    form.value = {
-      name: '',
-    }
-    hasUnsavedChanges.value = false
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 // Unsaved-changes is driven by explicit user actions only — the
 // previous deep watcher on `form` fired on the initial assignment
@@ -601,19 +628,23 @@ watch(() => props.conceptSet, (newSet) => {
 // dirty before the user had touched anything.
 
 // Load version count when concept set changes
-watch(() => props.conceptSet?.id, async (id) => {
-  if (id && typeof id === 'number') {
-    try {
-      const versions = await getConceptSetVersions(id)
-      versionCount.value = versions.length
-    } catch (err) {
-      logger.error('ConceptSetEditor', 'Failed to load version count', err)
+watch(
+  () => props.conceptSet?.id,
+  async id => {
+    if (id && typeof id === 'number') {
+      try {
+        const versions = await getConceptSetVersions(id)
+        versionCount.value = versions.length
+      } catch (err) {
+        logger.error('ConceptSetEditor', 'Failed to load version count', err)
+        versionCount.value = 0
+      }
+    } else {
       versionCount.value = 0
     }
-  } else {
-    versionCount.value = 0
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 // ============================================================================
 // Methods
@@ -766,12 +797,8 @@ async function resolvePastedIds() {
       })
     )
 
-    pasteResolved.value = results
-      .map(r => r.concept)
-      .filter((c): c is Concept => c !== null)
-    pasteUnresolved.value = results
-      .filter(r => r.concept === null)
-      .map(r => r.id)
+    pasteResolved.value = results.map(r => r.concept).filter((c): c is Concept => c !== null)
+    pasteUnresolved.value = results.filter(r => r.concept === null).map(r => r.id)
   } finally {
     pasteResolving.value = false
   }

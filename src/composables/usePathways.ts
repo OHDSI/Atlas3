@@ -50,8 +50,8 @@ export function usePathways() {
     const cr = filters.value.createdDateRange
     const mr = filters.value.modifiedDateRange
     return pathways.value.filter(p => {
-      if (q && !p.name.toLowerCase().includes(q)
-              && !(p.description?.toLowerCase().includes(q))) return false
+      if (q && !p.name.toLowerCase().includes(q) && !p.description?.toLowerCase().includes(q))
+        return false
       if (tags.length > 0) {
         const have = new Set((p.tags || []).map(t => t.name))
         if (!tags.every(t => have.has(t))) return false
@@ -66,9 +66,7 @@ export function usePathways() {
   })
 
   const totalItems = computed(() => filteredPathways.value.length)
-  const totalPages = computed(() =>
-    Math.max(1, Math.ceil(totalItems.value / itemsPerPage.value))
-  )
+  const totalPages = computed(() => Math.max(1, Math.ceil(totalItems.value / itemsPerPage.value)))
   const paginatedPathways = computed(() => {
     const start = page.value * itemsPerPage.value
     return filteredPathways.value.slice(start, start + itemsPerPage.value)
@@ -76,16 +74,27 @@ export function usePathways() {
 
   function clearFilters() {
     filters.value = {
-      searchQuery: '', selectedTags: [], author: '',
-      createdDateRange: {}, modifiedDateRange: {},
+      searchQuery: '',
+      selectedTags: [],
+      author: '',
+      createdDateRange: {},
+      modifiedDateRange: {},
     }
     page.value = 0
   }
 
   return {
-    pathways, loading, error,
-    filters, page, itemsPerPage,
-    fetchPathways, clearFilters,
-    filteredPathways, paginatedPathways, totalItems, totalPages,
+    pathways,
+    loading,
+    error,
+    filters,
+    page,
+    itemsPerPage,
+    fetchPathways,
+    clearFilters,
+    filteredPathways,
+    paginatedPathways,
+    totalItems,
+    totalPages,
   }
 }

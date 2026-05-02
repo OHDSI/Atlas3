@@ -206,9 +206,14 @@
         class="concept-set-table__empty-icon"
       />
       <p class="concept-set-table__empty-text">
-        {{ hasActiveFilters
-          ? t('cs.manager.emptyFilteredMessage', 'No concepts match the active filters.').value
-          : t('cs.manager.emptyConceptsMessage', 'No concepts in this set yet — search for concepts or paste IDs to add them.').value }}
+        {{
+          hasActiveFilters
+            ? t('cs.manager.emptyFilteredMessage', 'No concepts match the active filters.').value
+            : t(
+              'cs.manager.emptyConceptsMessage',
+              'No concepts in this set yet — search for concepts or paste IDs to add them.'
+            ).value
+        }}
       </p>
       <v-btn
         v-if="hasActiveFilters"
@@ -243,7 +248,7 @@ const emit = defineEmits<{
   'toggle:descendants': [conceptId: number]
   'toggle:mapped': [conceptId: number]
   'toggle:exclude': [conceptId: number]
-  'remove': [conceptId: number]
+  remove: [conceptId: number]
 }>()
 
 // ============================================================================
@@ -284,19 +289,23 @@ const domainCounts = computed(() => {
   return counts
 })
 
-const hasActiveFilters = computed(() =>
-  activeDomains.value.size > 0
-  || activeVocabularies.value.size > 0
-  || standardOnly.value
-  || excludedOnly.value
+const hasActiveFilters = computed(
+  () =>
+    activeDomains.value.size > 0 ||
+    activeVocabularies.value.size > 0 ||
+    standardOnly.value ||
+    excludedOnly.value
 )
 
 const filteredItems = computed(() => {
-  return props.items.filter((i) => {
+  return props.items.filter(i => {
     if (activeDomains.value.size > 0 && (!i.domainId || !activeDomains.value.has(i.domainId))) {
       return false
     }
-    if (activeVocabularies.value.size > 0 && (!i.vocabularyId || !activeVocabularies.value.has(i.vocabularyId))) {
+    if (
+      activeVocabularies.value.size > 0 &&
+      (!i.vocabularyId || !activeVocabularies.value.has(i.vocabularyId))
+    ) {
       return false
     }
     if (standardOnly.value && i.standardConcept !== 'S') return false
@@ -310,16 +319,46 @@ const filteredItems = computed(() => {
 // ============================================================================
 
 const headers = [
-  { title: t('columns.descendants', 'Desc.').value, key: 'includeDescendants', sortable: false, width: '76px' },
-  { title: t('columns.mapped', 'Mapped').value, key: 'includeMapped', sortable: false, width: '72px' },
+  {
+    title: t('columns.descendants', 'Desc.').value,
+    key: 'includeDescendants',
+    sortable: false,
+    width: '76px',
+  },
+  {
+    title: t('columns.mapped', 'Mapped').value,
+    key: 'includeMapped',
+    sortable: false,
+    width: '72px',
+  },
   { title: t('columns.exclude', 'Excl.').value, key: 'isExcluded', sortable: false, width: '64px' },
   { title: t('columns.conceptId', 'ID').value, key: 'conceptId', sortable: true, width: '90px' },
-  { title: t('columns.conceptCode', 'Code').value, key: 'conceptCode', sortable: true, width: '110px' },
+  {
+    title: t('columns.conceptCode', 'Code').value,
+    key: 'conceptCode',
+    sortable: true,
+    width: '110px',
+  },
   { title: t('columns.conceptName', 'Name').value, key: 'conceptName', sortable: true },
   { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true, width: '120px' },
-  { title: t('columns.vocabulary', 'Vocabulary').value, key: 'vocabularyId', sortable: true, width: '120px' },
-  { title: t('columns.type', 'Type').value, key: 'standardConcept', sortable: true, width: '120px' },
-  { title: t('columns.validEndDate', 'Validity').value, key: 'invalidReason', sortable: true, width: '90px' },
+  {
+    title: t('columns.vocabulary', 'Vocabulary').value,
+    key: 'vocabularyId',
+    sortable: true,
+    width: '120px',
+  },
+  {
+    title: t('columns.type', 'Type').value,
+    key: 'standardConcept',
+    sortable: true,
+    width: '120px',
+  },
+  {
+    title: t('columns.validEndDate', 'Validity').value,
+    key: 'invalidReason',
+    sortable: true,
+    width: '90px',
+  },
   { title: '', key: 'actions', sortable: false, width: '56px' },
 ]
 

@@ -30,10 +30,7 @@ import type {
 import type { Version } from '@/components/versions/types'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
-import {
-  useExecutionPolling,
-  isTerminalStatus,
-} from '@/composables/useExecutionPolling'
+import { useExecutionPolling, isTerminalStatus } from '@/composables/useExecutionPolling'
 import { effectScope } from 'vue'
 
 export const useCharacterizationStore = defineStore('characterization', () => {
@@ -71,9 +68,7 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     }
 
     const term = filterTerm.value.toLowerCase()
-    return characterizations.value.filter((cc) =>
-      cc.name.toLowerCase().includes(term)
-    )
+    return characterizations.value.filter(cc => cc.name.toLowerCase().includes(term))
   })
 
   const isEmpty = computed(() => characterizations.value.length === 0)
@@ -192,7 +187,7 @@ export const useCharacterizationStore = defineStore('characterization', () => {
 
     try {
       await deleteCharacterization(id)
-      characterizations.value = characterizations.value.filter((cc) => cc.id !== id)
+      characterizations.value = characterizations.value.filter(cc => cc.id !== id)
       if (currentCharacterization.value?.id === id) {
         currentCharacterization.value = null
       }
@@ -310,9 +305,8 @@ export const useCharacterizationStore = defineStore('characterization', () => {
       const created = await generateCharacterization(characterizationId, sourceKey)
 
       // Replace any existing execution with the same generation id; otherwise prepend.
-      const existingIdx = created.id != null
-        ? executions.value.findIndex((e) => e.id === created.id)
-        : -1
+      const existingIdx =
+        created.id != null ? executions.value.findIndex(e => e.id === created.id) : -1
       if (existingIdx >= 0) {
         executions.value.splice(existingIdx, 1, created)
       } else {
@@ -352,7 +346,7 @@ export const useCharacterizationStore = defineStore('characterization', () => {
   }
 
   function updateExecutionInList(updated: CharacterizationExecution): void {
-    const idx = executions.value.findIndex((e) => e.id === updated.id)
+    const idx = executions.value.findIndex(e => e.id === updated.id)
     if (idx >= 0) {
       executions.value.splice(idx, 1, updated)
     } else {
@@ -387,8 +381,8 @@ export const useCharacterizationStore = defineStore('characterization', () => {
           const item = await getCharacterizationExecution(generationId)
           return item
         },
-        isTerminal: (item) => isTerminalStatus(item.status),
-        onUpdate: (item) => {
+        isTerminal: item => isTerminalStatus(item.status),
+        onUpdate: item => {
           updateExecutionInList(item)
           if (isTerminalStatus(item.status)) {
             try {

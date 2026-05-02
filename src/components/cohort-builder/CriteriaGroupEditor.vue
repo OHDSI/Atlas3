@@ -127,7 +127,11 @@
                   <v-list-item
                     v-bind="tipProps"
                     :title="criteriaType.label"
-                    @click="criteriaType.value === 'Group' ? addNestedGroup() : addEvent(criteriaType.value as CriteriaType)"
+                    @click="
+                      criteriaType.value === 'Group'
+                        ? addNestedGroup()
+                        : addEvent(criteriaType.value as CriteriaType)
+                    "
                   />
                 </template>
               </v-tooltip>
@@ -188,29 +192,55 @@
                       <v-card-text class="pa-3">
                         <div class="segmented-buttons">
                           <v-btn
-                            :variant="getCardinalityType(event) === 'at_least' ? 'tonal' : 'outlined'"
-                            :color="getCardinalityType(event) === 'at_least' ? 'primary' : undefined"
+                            :variant="
+                              getCardinalityType(event) === 'at_least' ? 'tonal' : 'outlined'
+                            "
+                            :color="
+                              getCardinalityType(event) === 'at_least' ? 'primary' : undefined
+                            "
                             size="small"
                             class="flex-1"
-                            @click="updateEventCardinality(index, 'AT_LEAST', event.cardinality?.count || 1)"
+                            @click="
+                              updateEventCardinality(
+                                index,
+                                'AT_LEAST',
+                                event.cardinality?.count || 1
+                              )
+                            "
                           >
                             At least
                           </v-btn>
                           <v-btn
-                            :variant="getCardinalityType(event) === 'exactly' ? 'tonal' : 'outlined'"
+                            :variant="
+                              getCardinalityType(event) === 'exactly' ? 'tonal' : 'outlined'
+                            "
                             :color="getCardinalityType(event) === 'exactly' ? 'primary' : undefined"
                             size="small"
                             class="flex-1"
-                            @click="updateEventCardinality(index, 'EXACTLY', event.cardinality?.count || 1)"
+                            @click="
+                              updateEventCardinality(
+                                index,
+                                'EXACTLY',
+                                event.cardinality?.count || 1
+                              )
+                            "
                           >
                             Exactly
                           </v-btn>
                           <v-btn
-                            :variant="getCardinalityType(event) === 'at_most' ? 'tonal' : 'outlined'"
+                            :variant="
+                              getCardinalityType(event) === 'at_most' ? 'tonal' : 'outlined'
+                            "
                             :color="getCardinalityType(event) === 'at_most' ? 'primary' : undefined"
                             size="small"
                             class="flex-1"
-                            @click="updateEventCardinality(index, 'AT_MOST', event.cardinality?.count || 1)"
+                            @click="
+                              updateEventCardinality(
+                                index,
+                                'AT_MOST',
+                                event.cardinality?.count || 1
+                              )
+                            "
                           >
                             At most
                           </v-btn>
@@ -278,7 +308,11 @@
                         <!-- Concept Set Picker -->
                         <div class="concept-set-section">
                           <EventConceptSetField
-                            :concept-set="event.conceptSet && event.conceptSet.id !== 0 ? event.conceptSet : undefined"
+                            :concept-set="
+                              event.conceptSet && event.conceptSet.id !== 0
+                                ? event.conceptSet
+                                : undefined
+                            "
                             @select="selectConceptSetForEvent(index)"
                             @edit="emit('edit-concept-set', $event)"
                             @clear="clearConceptSet(index)"
@@ -301,7 +335,7 @@
                             </template>
                             <v-card
                               class="temporal-window-menu"
-                              style="min-width: 500px;"
+                              style="min-width: 500px"
                             >
                               <v-card-text class="pa-3">
                                 <TemporalWindowEditor
@@ -331,8 +365,13 @@
                           :has-nested-criteria="!!event.nestedCriteria"
                           @update:model-value="updateEventAttributes(index, $event)"
                           @add-nested-criteria="addNestedCriteria(index)"
-                          @select-concept-set-for-attribute="selectConceptSetForAttribute(index, $event)"
-                          @select-concept-for-attribute="(attributeIndex, domainFilter) => selectConceptForAttribute(index, attributeIndex, domainFilter)"
+                          @select-concept-set-for-attribute="
+                            selectConceptSetForAttribute(index, $event)
+                          "
+                          @select-concept-for-attribute="
+                            (attributeIndex, domainFilter) =>
+                              selectConceptForAttribute(index, attributeIndex, domainFilter)
+                          "
                         />
                       </div>
 
@@ -359,7 +398,7 @@
                 color="grey-lighten-4"
                 variant="outlined"
               >
-                <div style="color: #666;">
+                <div style="color: #666">
                   No events in group. Add events to build criteria logic.
                 </div>
               </v-alert>
@@ -397,7 +436,12 @@ import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import { useMatchType } from '@/composables/useMatchType'
 import NestedCriteriaEditor from './NestedCriteriaEditor.vue'
-import type { CriteriaGroup, CohortEvent, CriteriaType, NestedCriteria } from '@/models/cohort.types'
+import type {
+  CriteriaGroup,
+  CohortEvent,
+  CriteriaType,
+  NestedCriteria,
+} from '@/models/cohort.types'
 import type {
   EventAttribute,
   TemporalWindow,
@@ -427,21 +471,25 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: CriteriaGroup]
-  'remove': []
+  remove: []
   'select-concept-set': [context: { eventIndex: number; eventId: string } | number]
   'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
-  'select-concept': [context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined }]
+  'select-concept': [
+    context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined },
+  ]
 }>()
 
 // Composables
 const { formatTemporalWindowDisplay } = useTemporalWindows()
 
 // Local state
-const localGroup = ref<CriteriaGroup>(props.modelValue || {
-  id: uuidv4(),
-  logicType: 'ALL',
-  events: [],
-})
+const localGroup = ref<CriteriaGroup>(
+  props.modelValue || {
+    id: uuidv4(),
+    logicType: 'ALL',
+    events: [],
+  }
+)
 
 const validationError = ref('')
 
@@ -459,12 +507,16 @@ const {
 })
 
 // Watch for external changes
-watch(() => props.modelValue, (newVal) => {
-  if (newVal) {
-    // Deep clone to preserve nested reactivity
-    localGroup.value = JSON.parse(JSON.stringify(newVal))
-  }
-}, { deep: true })
+watch(
+  () => props.modelValue,
+  newVal => {
+    if (newVal) {
+      // Deep clone to preserve nested reactivity
+      localGroup.value = JSON.parse(JSON.stringify(newVal))
+    }
+  },
+  { deep: true }
+)
 
 // Use configuration-driven filter list (supports all 16 filter types)
 const { availableFilters } = useFilterConfig(ref('criteriaGroup'))
@@ -473,7 +525,7 @@ const criteriaTypes = computed(() => {
   return availableFilters.value.map(filter => ({
     value: filter.criteriaType,
     label: filter.name,
-    description: filter.description
+    description: filter.description,
   }))
 })
 
@@ -547,7 +599,7 @@ function addNestedCriteria(index: number) {
     event.nestedCriteria = {
       id: uuidv4(),
       logicType: 'ALL',
-      events: []
+      events: [],
     }
     emitUpdate()
   }
@@ -614,7 +666,11 @@ function selectConceptSetForAttribute(eventIndex: number, attributeIndex: number
   emit('select-concept-set', eventIndex)
 }
 
-function selectConceptForAttribute(eventIndex: number, attributeIndex: number, domainFilter: string | undefined) {
+function selectConceptForAttribute(
+  eventIndex: number,
+  attributeIndex: number,
+  domainFilter: string | undefined
+) {
   selectedEventIndex.value = eventIndex
   selectedAttributeIndex.value = attributeIndex
   selectedConceptDomainFilter.value = domainFilter
@@ -640,7 +696,7 @@ function updateEventConceptSet(index: number, conceptSet: { id: number; name: st
         if (attr && attr.type === 'conceptSet') {
           event.attributes[selectedAttributeIndex.value] = {
             ...attr,
-            conceptSet: conceptSet
+            conceptSet: conceptSet,
           }
         }
       }
@@ -653,7 +709,6 @@ function updateEventConceptSet(index: number, conceptSet: { id: number; name: st
   }
 }
 
-
 function getCardinalityType(event: CohortEvent): string {
   if (!event.cardinality) return 'at_least'
   return event.cardinality.type.toLowerCase()
@@ -662,9 +717,9 @@ function getCardinalityType(event: CohortEvent): string {
 function getCardinalityDisplayForEvent(event: CohortEvent): string {
   if (!event.cardinality) return `${t('options.atLeast', 'At least').value} 1`
   const typeMap: Record<string, string> = {
-    'AT_LEAST': t('options.atLeast', 'At least').value,
-    'EXACTLY': t('options.exactly', 'Exactly').value,
-    'AT_MOST': t('options.atMost', 'At most').value
+    AT_LEAST: t('options.atLeast', 'At least').value,
+    EXACTLY: t('options.exactly', 'Exactly').value,
+    AT_MOST: t('options.atMost', 'At most').value,
   }
   const type = typeMap[event.cardinality.type] || t('options.atLeast', 'At least').value
   return `${type} ${event.cardinality.count ?? 1}`
@@ -676,7 +731,7 @@ function updateEventCardinality(index: number, type: string, count: number) {
     event.cardinality = {
       type: type as 'AT_LEAST' | 'EXACTLY' | 'AT_MOST',
       count: count,
-      countingMethod: 'ALL'
+      countingMethod: 'ALL',
     }
     emitUpdate()
   }
@@ -815,7 +870,7 @@ function updateConceptAttribute(index: number, concepts: Concept[]) {
         const newConcepts = [...existingConcepts, ...concepts]
         event.attributes[selectedAttributeIndex.value] = {
           ...attr,
-          concepts: newConcepts
+          concepts: newConcepts,
         }
       }
       selectedAttributeIndex.value = -1 // Reset after update
@@ -882,10 +937,10 @@ defineExpose({
 }
 
 /* ALL - Navy */
-.vertical-label-container:has(.match-type-label[data-type="ALL"]) {
+.vertical-label-container:has(.match-type-label[data-type='ALL']) {
   border: 1px solid #1f425a;
 }
-.vertical-label-container:has(.match-type-label[data-type="ALL"])::before {
+.vertical-label-container:has(.match-type-label[data-type='ALL'])::before {
   content: '';
   position: absolute;
   left: 0;
@@ -895,15 +950,15 @@ defineExpose({
   background: #1f425a;
   border-radius: 0 0 0 6px;
 }
-.match-type-label[data-type="ALL"] {
+.match-type-label[data-type='ALL'] {
   color: #1f425a;
 }
 
 /* ANY - Orange */
-.vertical-label-container:has(.match-type-label[data-type="ANY"]) {
+.vertical-label-container:has(.match-type-label[data-type='ANY']) {
   border: 1px solid #eb6622;
 }
-.vertical-label-container:has(.match-type-label[data-type="ANY"])::before {
+.vertical-label-container:has(.match-type-label[data-type='ANY'])::before {
   content: '';
   position: absolute;
   left: 0;
@@ -913,15 +968,15 @@ defineExpose({
   background: #eb6622;
   border-radius: 0 0 0 6px;
 }
-.match-type-label[data-type="ANY"] {
+.match-type-label[data-type='ANY'] {
   color: #eb6622;
 }
 
 /* AT_LEAST - Light Blue */
-.vertical-label-container:has(.match-type-label[data-type="AT_LEAST"]) {
+.vertical-label-container:has(.match-type-label[data-type='AT_LEAST']) {
   border: 1px solid #69aed5;
 }
-.vertical-label-container:has(.match-type-label[data-type="AT_LEAST"])::before {
+.vertical-label-container:has(.match-type-label[data-type='AT_LEAST'])::before {
   content: '';
   position: absolute;
   left: 0;
@@ -931,15 +986,15 @@ defineExpose({
   background: #69aed5;
   border-radius: 0 0 0 6px;
 }
-.match-type-label[data-type="AT_LEAST"] {
+.match-type-label[data-type='AT_LEAST'] {
   color: #69aed5;
 }
 
 /* AT_MOST - Darker Blue */
-.vertical-label-container:has(.match-type-label[data-type="AT_MOST"]) {
+.vertical-label-container:has(.match-type-label[data-type='AT_MOST']) {
   border: 1px solid #336b91;
 }
-.vertical-label-container:has(.match-type-label[data-type="AT_MOST"])::before {
+.vertical-label-container:has(.match-type-label[data-type='AT_MOST'])::before {
   content: '';
   position: absolute;
   left: 0;
@@ -949,7 +1004,7 @@ defineExpose({
   background: #336b91;
   border-radius: 0 0 0 6px;
 }
-.match-type-label[data-type="AT_MOST"] {
+.match-type-label[data-type='AT_MOST'] {
   color: #336b91;
 }
 
@@ -1087,4 +1142,3 @@ defineExpose({
   margin-top: 16px;
 }
 </style>
-

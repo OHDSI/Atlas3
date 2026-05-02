@@ -75,7 +75,9 @@
         >
           mdi-alert-circle
         </v-icon>
-        <span class="ml-2 text-error text-caption">{{ failMessage || t('ir.results.failed', 'Failed').value }}</span>
+        <span class="ml-2 text-error text-caption">{{
+          failMessage || t('ir.results.failed', 'Failed').value
+        }}</span>
         <v-btn
           color="primary"
           variant="text"
@@ -122,7 +124,8 @@ const { canWrite: canWriteSource } = useSourceAccess(toRef(() => props.source.so
 
 const job = computed(() => {
   if (!props.cohortId) return undefined
-  return webapiStore.getJobsByCohortId(props.cohortId)
+  return webapiStore
+    .getJobsByCohortId(props.cohortId)
     .find(j => j.sourceKey === props.source.sourceKey)
 })
 

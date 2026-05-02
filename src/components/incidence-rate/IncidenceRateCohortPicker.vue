@@ -48,7 +48,10 @@ import { getCohorts } from '@/services/webapi'
 import { logger } from '@/utils/logger'
 import { useI18n } from '@/composables/useI18n'
 
-interface CohortOption { id: number; name: string }
+interface CohortOption {
+  id: number
+  name: string
+}
 
 const props = defineProps<{
   modelValue: boolean
@@ -57,7 +60,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [v: boolean]
-  'select': [ref: { id: number; name: string }]
+  select: [ref: { id: number; name: string }]
 }>()
 
 const cohorts = ref<CohortOption[]>([])
@@ -77,9 +80,10 @@ async function load() {
 onMounted(load)
 
 const filtered = computed(() =>
-  cohorts.value.filter(c =>
-    !(props.excludedIds ?? []).includes(c.id) &&
-    c.name.toLowerCase().includes(search.value.toLowerCase())
+  cohorts.value.filter(
+    c =>
+      !(props.excludedIds ?? []).includes(c.id) &&
+      c.name.toLowerCase().includes(search.value.toLowerCase())
   )
 )
 

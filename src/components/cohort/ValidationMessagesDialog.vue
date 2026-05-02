@@ -36,12 +36,18 @@
               :class="{
                 'bg-error-lighten-4': warning.severity === 'CRITICAL',
                 'bg-warning-lighten-4': warning.severity === 'WARNING',
-                'bg-info-lighten-4': warning.severity === 'INFO'
+                'bg-info-lighten-4': warning.severity === 'INFO',
               }"
             >
               <td>
                 <v-chip
-                  :color="warning.severity === 'CRITICAL' ? 'error' : warning.severity === 'WARNING' ? 'warning' : 'info'"
+                  :color="
+                    warning.severity === 'CRITICAL'
+                      ? 'error'
+                      : warning.severity === 'WARNING'
+                        ? 'warning'
+                        : 'info'
+                  "
                   size="small"
                   label
                 >

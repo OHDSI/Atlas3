@@ -14,8 +14,8 @@
 
       <v-card-text>
         <p class="text-body-1 mb-4">
-          Manage tag groups for organizing and categorizing cohorts and concept sets.
-          Tag groups allow you to apply structured metadata to your assets.
+          Manage tag groups for organizing and categorizing cohorts and concept sets. Tag groups
+          allow you to apply structured metadata to your assets.
         </p>
 
         <!-- Tag Groups Table -->
@@ -150,8 +150,8 @@
       <v-card>
         <v-card-title>Delete Tag</v-card-title>
         <v-card-text>
-          Are you sure you want to delete "{{ selectedTag?.name }}"?
-          This will unassign the tag from all assets.
+          Are you sure you want to delete "{{ selectedTag?.name }}"? This will unassign the tag from
+          all assets.
         </v-card-text>
         <v-card-actions>
           <v-spacer />

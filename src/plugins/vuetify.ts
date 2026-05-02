@@ -11,7 +11,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
 // Default theme colors
-const DEFAULT_PRIMARY_COLOR = '#1f425a'; // Atlas primary color
+const DEFAULT_PRIMARY_COLOR = '#1f425a' // Atlas primary color
 
 /**
  * Create Vuetify instance with optional theme color overrides

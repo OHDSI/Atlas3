@@ -3,7 +3,12 @@
     <EmptyReportState
       v-if="!hasData"
       :title="t('dataSources.deathReport.noDataTitle', 'No death data available').value"
-      :subtitle="t('dataSources.deathReport.noDataSubtitle', 'This data source has no death records to report on.').value"
+      :subtitle="
+        t(
+          'dataSources.deathReport.noDataSubtitle',
+          'This data source has no death records to report on.'
+        ).value
+      "
     />
 
     <!-- Age at Death by Gender -->
@@ -12,7 +17,9 @@
         <ChartSection :title="t('dataSources.deathReport.ageAtDeath', 'Age at Death').value">
           <BoxPlotChart
             :data="data.ageAtDeath"
-            :title="t('dataSources.deathReport.ageAtDeath', 'Age at Death Distribution by Gender').value"
+            :title="
+              t('dataSources.deathReport.ageAtDeath', 'Age at Death Distribution by Gender').value
+            "
             :height="400"
             data-testid="age-at-death-chart"
           />
@@ -35,11 +42,18 @@
     <!-- Prevalence by Month -->
     <v-row v-if="data.prevalenceByMonth && data.prevalenceByMonth.categories.length > 0">
       <v-col cols="12">
-        <ChartSection :title="t('dataSources.deathReport.deathPrevalenceByMonth', 'Death Prevalence by Month').value">
+        <ChartSection
+          :title="
+            t('dataSources.deathReport.deathPrevalenceByMonth', 'Death Prevalence by Month').value
+          "
+        >
           <MultiLineChart
             :data="data.prevalenceByMonth"
             :x-axis-label="t('dataSources.deathReport.date', 'Date').value"
-            :y-axis-label="t('dataSources.deathReport.prevalencePer1000People', 'Prevalence Per 1000 People').value"
+            :y-axis-label="
+              t('dataSources.deathReport.prevalencePer1000People', 'Prevalence Per 1000 People')
+                .value
+            "
             data-testid="prevalence-by-month-chart"
           />
         </ChartSection>
@@ -47,9 +61,18 @@
     </v-row>
 
     <!-- Prevalence by Gender, Age, Year (Trellis) -->
-    <v-row v-if="data.prevalenceByGenderAgeYear && data.prevalenceByGenderAgeYear.series.length > 0">
+    <v-row
+      v-if="data.prevalenceByGenderAgeYear && data.prevalenceByGenderAgeYear.series.length > 0"
+    >
       <v-col cols="12">
-        <ChartSection :title="t('dataSources.deathReport.deathPrevalenceByAgeGenderYear', 'Death Prevalence by Age, Gender, Year').value">
+        <ChartSection
+          :title="
+            t(
+              'dataSources.deathReport.deathPrevalenceByAgeGenderYear',
+              'Death Prevalence by Age, Gender, Year'
+            ).value
+          "
+        >
           <TrellisChart
             :data="data.prevalenceByGenderAgeYear"
             :height="600"
@@ -84,9 +107,9 @@ const hasData = computed(() => {
     d.ageAtDeath?.length,
     d.deathByType?.length,
     d.prevalenceByMonth?.categories?.length,
-    d.prevalenceByGenderAgeYear?.series?.length
+    d.prevalenceByGenderAgeYear?.series?.length,
   ]
-  return sectionLengths.some((n) => Boolean(n))
+  return sectionLengths.some(n => Boolean(n))
 })
 </script>
 

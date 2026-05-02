@@ -31,8 +31,9 @@
     >
       <strong>{{ coverage.totalPathwaysCount.toLocaleString() }}</strong>
       <span class="canvas-toolbar__age">
-        {{ t('common.of', 'of').value }} {{ coverage.targetCohortCount.toLocaleString() }}
-        ({{ coveragePct.toFixed(1) }}%)
+        {{ t('common.of', 'of').value }} {{ coverage.targetCohortCount.toLocaleString() }} ({{
+          coveragePct.toFixed(1)
+        }}%)
       </span>
     </v-chip>
 
@@ -106,8 +107,12 @@ const coveragePct = computed(() => {
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
   border-radius: 8px;
 }
-.canvas-toolbar__chip strong { font-weight: 600; }
-.canvas-toolbar__chip--muted { opacity: 0.7; }
+.canvas-toolbar__chip strong {
+  font-weight: 600;
+}
+.canvas-toolbar__chip--muted {
+  opacity: 0.7;
+}
 .canvas-toolbar__dot {
   width: 6px;
   height: 6px;

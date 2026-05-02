@@ -6,7 +6,10 @@
     >
       <div
         v-if="hasHeader"
-        :class="['page-header', { 'page-header--hero': hero, 'page-header--hero-compact': hero && compact }]"
+        :class="[
+          'page-header',
+          { 'page-header--hero': hero, 'page-header--hero-compact': hero && compact },
+        ]"
       >
         <div class="page-header__text">
           <div
@@ -28,13 +31,21 @@
                the title prop is rendered. -->
           <div
             v-if="$slots.title"
-            :class="hero ? 'page-header__title page-header__title--hero' : 'page-header__title text-page-title'"
+            :class="
+              hero
+                ? 'page-header__title page-header__title--hero'
+                : 'page-header__title text-page-title'
+            "
           >
             <slot name="title" />
           </div>
           <h1
             v-else-if="title"
-            :class="hero ? 'page-header__title page-header__title--hero' : 'page-header__title text-page-title'"
+            :class="
+              hero
+                ? 'page-header__title page-header__title--hero'
+                : 'page-header__title text-page-title'
+            "
           >
             {{ title }}
           </h1>

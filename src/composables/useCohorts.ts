@@ -39,7 +39,7 @@ export function useCohorts() {
     selectedTags: [],
     author: '',
     createdDateRange: {},
-    modifiedDateRange: {}
+    modifiedDateRange: {},
   })
 
   // Debounced search query
@@ -51,12 +51,15 @@ export function useCohorts() {
   }, 300)
 
   // Watch for search changes and debounce
-  watch(() => filters.value.searchQuery, (newQuery) => {
-    updateDebouncedSearchQuery(newQuery)
-  })
+  watch(
+    () => filters.value.searchQuery,
+    newQuery => {
+      updateDebouncedSearchQuery(newQuery)
+    }
+  )
 
   // Also watch the old searchQuery for backwards compatibility
-  watch(searchQuery, (newQuery) => {
+  watch(searchQuery, newQuery => {
     updateDebouncedSearchQuery(newQuery)
   })
 
@@ -71,17 +74,25 @@ export function useCohorts() {
   }, 400)
 
   // Debounce filter changes (tags, author, date ranges)
-  watch(() => filters.value, () => {
-    debouncedFilterCohortsAsync()
-  }, { deep: true })
+  watch(
+    () => filters.value,
+    () => {
+      debouncedFilterCohortsAsync()
+    },
+    { deep: true }
+  )
 
   // Initialize cached results with all cohorts
-  watch(cohorts, (newCohorts) => {
-    if (cachedFilteredResults.value.length === 0) {
-      cachedFilteredResults.value = newCohorts
-    }
-    filterCohortsAsync()
-  }, { immediate: true })
+  watch(
+    cohorts,
+    newCohorts => {
+      if (cachedFilteredResults.value.length === 0) {
+        cachedFilteredResults.value = newCohorts
+      }
+      filterCohortsAsync()
+    },
+    { immediate: true }
+  )
 
   /**
    * Fetch all cohorts from WebAPI
@@ -211,8 +222,12 @@ export function useCohorts() {
       const hasSearch = query.length > 0
       const hasTags = filters.value.selectedTags.length > 0
       const hasAuthor = filters.value.author.length > 0
-      const hasCreatedRange = !!(filters.value.createdDateRange.from || filters.value.createdDateRange.to)
-      const hasModifiedRange = !!(filters.value.modifiedDateRange.from || filters.value.modifiedDateRange.to)
+      const hasCreatedRange = !!(
+        filters.value.createdDateRange.from || filters.value.createdDateRange.to
+      )
+      const hasModifiedRange = !!(
+        filters.value.modifiedDateRange.from || filters.value.modifiedDateRange.to
+      )
 
       // Early exit: no filters applied
       if (!hasSearch && !hasTags && !hasAuthor && !hasCreatedRange && !hasModifiedRange) {
@@ -314,7 +329,7 @@ export function useCohorts() {
       selectedTags: [],
       author: '',
       createdDateRange: {},
-      modifiedDateRange: {}
+      modifiedDateRange: {},
     }
     searchQuery.value = ''
   }

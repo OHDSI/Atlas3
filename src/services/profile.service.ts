@@ -38,9 +38,7 @@ export async function getCohortConceptSets(
     const def = await httpGet<{ expression: string | unknown }>(
       `/cohortdefinition/${cohortDefinitionId}`
     )
-    const raw = typeof def.expression === 'string'
-      ? safeParseJson(def.expression)
-      : def.expression
+    const raw = typeof def.expression === 'string' ? safeParseJson(def.expression) : def.expression
     const parsed = CohortDefExpressionSchema.safeParse(raw)
     if (!parsed.success) return success([])
     return success(parsed.data.ConceptSets ?? [])

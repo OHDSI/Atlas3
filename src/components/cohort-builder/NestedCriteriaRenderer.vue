@@ -41,7 +41,8 @@
         </template>
 
         <v-list-item-title class="text-caption">
-          {{ formatEventType(event.criteriaType) }}: {{ event.conceptSet?.name || 'No concept set' }}
+          {{ formatEventType(event.criteriaType) }}:
+          {{ event.conceptSet?.name || 'No concept set' }}
         </v-list-item-title>
       </v-list-item>
     </v-list>

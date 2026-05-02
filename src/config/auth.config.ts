@@ -27,7 +27,10 @@ function parseProvidersFromEnv(): AuthProvider[] {
     logger.debug('AuthConfig', 'Parsed providers', parsed)
     return parsed
   } catch (error) {
-    logger.error('AuthConfig', 'Failed to parse VITE_AUTH_PROVIDERS', { error, rawValue: providersJson })
+    logger.error('AuthConfig', 'Failed to parse VITE_AUTH_PROVIDERS', {
+      error,
+      rawValue: providersJson,
+    })
     return []
   }
 }
@@ -57,7 +60,7 @@ const defaultConfig: AuthConfig = {
   enableSkipLogin: false,
   authProviders: [],
   refreshTokenThreshold: 1000 * 60 * 60 * 4, // 4 hours
-  webAPIRoot: '/WebAPI',  // Use proxy in development, override with full URL in production
+  webAPIRoot: '/WebAPI', // Use proxy in development, override with full URL in production
   enablePermissionManagement: true,
 }
 

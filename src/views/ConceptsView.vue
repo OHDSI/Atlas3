@@ -61,14 +61,10 @@ const router = useRouter()
 const conceptSetsStore = useConceptSetsStore()
 const { t } = useI18n()
 
-const pageTitle = computed(() =>
-  t('cs.browser.caption', 'Concepts').value
-)
-const pageSubtitle = computed(() =>
-  t(
-    'cs.browser.subtitle',
-    'Browse the OMOP vocabulary and curate reusable concept sets.'
-  ).value
+const pageTitle = computed(() => t('cs.browser.caption', 'Concepts').value)
+const pageSubtitle = computed(
+  () =>
+    t('cs.browser.subtitle', 'Browse the OMOP vocabulary and curate reusable concept sets.').value
 )
 
 // Active tab state - sync with URL query. Default to "sets" (concept sets list).
@@ -82,13 +78,17 @@ provide('sourceKey', sourceKey)
 
 // Watch for tab changes and update URL. `immediate: true` syncs the URL to
 // the default tab on mount so deep-links / query params stay accurate.
-watch(activeTab, (newTab) => {
-  if (route.query.tab !== newTab) {
-    router.replace({ query: { ...route.query, tab: newTab } })
-  }
-  // Close the editor when switching tabs
-  conceptSetsStore.closeEditor()
-}, { immediate: true })
+watch(
+  activeTab,
+  newTab => {
+    if (route.query.tab !== newTab) {
+      router.replace({ query: { ...route.query, tab: newTab } })
+    }
+    // Close the editor when switching tabs
+    conceptSetsStore.closeEditor()
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>

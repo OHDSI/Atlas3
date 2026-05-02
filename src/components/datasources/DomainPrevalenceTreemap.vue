@@ -9,9 +9,7 @@
           size="16"
           class="treemap-controls__hint-icon"
         />
-        <span>
-          <strong>Click</strong> on any area to view detailed analytics
-        </span>
+        <span> <strong>Click</strong> on any area to view detailed analytics </span>
         <span
           v-if="!hasHierarchy"
           class="treemap-controls__hint-note"
@@ -103,7 +101,12 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
 
   flatData.forEach(item => {
     // Skip items with "NA" or invalid conceptPath
-    if (!item.conceptPath || item.conceptPath === 'NA' || item.conceptPath === 'null' || item.conceptPath === 'undefined') {
+    if (
+      !item.conceptPath ||
+      item.conceptPath === 'NA' ||
+      item.conceptPath === 'null' ||
+      item.conceptPath === 'undefined'
+    ) {
       return
     }
 
@@ -116,7 +119,7 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
           colorValue: item.colorValue,
           conceptId: item.conceptId,
           conceptPath: item.conceptPath,
-          itemStyle: item.itemStyle
+          itemStyle: item.itemStyle,
         })
       } else {
         const existing = root.get(nodeName)
@@ -146,7 +149,7 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
         const node: MapNode = {
           name: levelName,
           value: isLeaf ? item.value : 0,
-          children: isLeaf ? undefined : new Map()
+          children: isLeaf ? undefined : new Map(),
         }
 
         // Only add conceptId / conceptPath / colorValue to leaf
@@ -165,14 +168,20 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
         if (existing && isLeaf) {
           existing.value += item.value
         } else if (!existing) {
-          logger.warn('DomainPrevalenceTreemap', 'Existing node not found', { levelName, conceptPath: item.conceptPath })
+          logger.warn('DomainPrevalenceTreemap', 'Existing node not found', {
+            levelName,
+            conceptPath: item.conceptPath,
+          })
         }
       }
 
       if (!isLeaf) {
         const currentNode = currentLevel.get(levelName)
         if (!currentNode) {
-          logger.warn('DomainPrevalenceTreemap', 'Current node undefined', { levelName, conceptPath: item.conceptPath })
+          logger.warn('DomainPrevalenceTreemap', 'Current node undefined', {
+            levelName,
+            conceptPath: item.conceptPath,
+          })
           return
         }
 
@@ -190,7 +199,7 @@ function buildHierarchy(flatData: TreemapNode[]): TreemapNode[] {
     map.forEach(node => {
       const treeNode: TreemapNode = {
         name: node.name,
-        value: node.value
+        value: node.value,
       }
 
       if (node.conceptId !== undefined) {

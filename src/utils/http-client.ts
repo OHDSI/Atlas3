@@ -14,9 +14,9 @@ import { logger } from '@/utils/logger'
  * Fetch options extending standard RequestInit
  */
 export interface FetchOptions extends Omit<RequestInit, 'signal'> {
-  maxRetries?: number       // default: 3
-  initialDelayMs?: number   // default: 500
-  timeout?: number          // default: 30000
+  maxRetries?: number // default: 3
+  initialDelayMs?: number // default: 500
+  timeout?: number // default: 30000
   signal?: AbortSignal
 }
 
@@ -51,10 +51,7 @@ export function createAbortController(timeoutMs?: number): AbortController {
  * @returns Parsed JSON response
  * @throws Error on network failure, timeout, or non-retryable errors
  */
-export async function fetchJSON<T>(
-  url: string,
-  options: FetchOptions = {}
-): Promise<T> {
+export async function fetchJSON<T>(url: string, options: FetchOptions = {}): Promise<T> {
   const {
     maxRetries = 3,
     initialDelayMs = 500,
@@ -88,7 +85,7 @@ export async function fetchJSON<T>(
 
       const response = await fetch(url, {
         ...fetchOptions,
-        signal: effectiveSignal
+        signal: effectiveSignal,
       })
 
       // Check if response is ok
@@ -113,14 +110,13 @@ export async function fetchJSON<T>(
 
       // Parse JSON response
       try {
-        const data = await response.json() as T
+        const data = (await response.json()) as T
         return data
       } catch (parseError) {
         throw new Error(
           `Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : String(parseError)}`
         )
       }
-
     } catch (error) {
       // Handle AbortError (timeout or external abort)
       if (error instanceof DOMException && error.name === 'AbortError') {

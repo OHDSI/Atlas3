@@ -187,9 +187,9 @@ interface Props {
 defineProps<Props>()
 
 defineEmits<{
-  'edit': [tagGroup: TagGroup]
-  'delete': [tagGroup: TagGroup]
-  'showTags': [tagGroup: TagGroup]
+  edit: [tagGroup: TagGroup]
+  delete: [tagGroup: TagGroup]
+  showTags: [tagGroup: TagGroup]
 }>()
 
 const headers = [
@@ -204,7 +204,7 @@ const headers = [
   { title: 'Author', key: 'createdBy', sortable: true, width: '120px' },
   { title: 'Description', key: 'description', sortable: false, width: '200px' },
   { title: '', key: 'showTagsBtn', sortable: false, width: '100px' },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const, width: '100px' }
+  { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
 ] as const
 
 /**
@@ -216,7 +216,7 @@ function formatDate(dateString: string): string {
     return date.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     })
   } catch {
     return dateString

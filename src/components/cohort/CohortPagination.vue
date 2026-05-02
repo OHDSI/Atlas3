@@ -4,7 +4,9 @@
          on the right. Replaces the previous hand-rolled prev / next
          pair so we get keyboard nav, page numbers, and ellipses. -->
     <div class="cohort-pagination__per-page">
-      <span class="cohort-pagination__label">{{ t('datatable.itemsPerPage', 'Rows per page:').value }}</span>
+      <span class="cohort-pagination__label">{{
+        t('datatable.itemsPerPage', 'Rows per page:').value
+      }}</span>
       <v-select
         :model-value="itemsPerPage"
         :items="itemsPerPageOptions"
@@ -59,9 +61,7 @@ interface Emits {
 const props = defineProps<Props>()
 defineEmits<Emits>()
 
-const totalPages = computed(() =>
-  Math.max(1, Math.ceil(props.totalItems / props.itemsPerPage))
-)
+const totalPages = computed(() => Math.max(1, Math.ceil(props.totalItems / props.itemsPerPage)))
 </script>
 
 <style scoped>

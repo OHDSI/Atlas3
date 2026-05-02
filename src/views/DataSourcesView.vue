@@ -208,9 +208,7 @@ const reportTypeLabel = computed(() => {
   return REPORT_TYPE_LABELS[store.selectedReportType]
 })
 
-const pageTitle = computed(() =>
-  t('dataSources.headingTitle', 'Data Sources').value
-)
+const pageTitle = computed(() => t('dataSources.headingTitle', 'Data Sources').value)
 
 const pageSubtitle = computed(() => {
   if (selectedSource.value && store.selectedReportType) {
@@ -233,7 +231,10 @@ const dashboardData = computed(() => {
 
 const dataDensityData = computed(() => {
   const report = store.currentReport
-  logger.debug('DataSourcesView', 'dataDensityData', { reportType: report?.type, hasData: !!report })
+  logger.debug('DataSourcesView', 'dataDensityData', {
+    reportType: report?.type,
+    hasData: !!report,
+  })
   if (report?.type === 'datadensity') {
     return report.data
   }
@@ -283,7 +284,7 @@ const isClinicalDomainReport = computed(() => {
     'drugExposure',
     'drugEra',
     'measurement',
-    'observation'
+    'observation',
   ]
   return clinicalReports.includes(store.selectedReportType)
 })
@@ -299,8 +300,8 @@ function handleSourceChange(sourceId: number | null) {
       name: 'datasources',
       params: {
         sourceKey: source.sourceKey,
-        reportType: store.selectedReportType
-      }
+        reportType: store.selectedReportType,
+      },
     })
   }
 }
@@ -316,8 +317,8 @@ function handleReportTypeChange(reportType: ReportType | null) {
       name: 'datasources',
       params: {
         sourceKey: source.sourceKey,
-        reportType
-      }
+        reportType,
+      },
     })
   }
 }

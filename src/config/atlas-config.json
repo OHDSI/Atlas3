@@ -130,20 +130,12 @@
     "initialEvents": {
       "name": "Cohort Entry Events",
       "buttonText": "Add Initial Event",
-      "excludeTypes": [
-        "locationRegion",
-        "group",
-        "demographic"
-      ]
+      "excludeTypes": ["locationRegion", "group", "demographic"]
     },
     "censoringEvents": {
       "name": "Cohort Exit",
       "buttonText": "Add Censoring Event",
-      "excludeTypes": [
-        "locationRegion",
-        "group",
-        "demographic"
-      ]
+      "excludeTypes": ["locationRegion", "group", "demographic"]
     },
     "criteriaGroup": {
       "name": "Criteria Group",
@@ -158,10 +150,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -290,10 +279,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -363,10 +349,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -499,10 +482,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -578,10 +558,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -658,10 +635,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -758,10 +732,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -890,10 +861,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -1001,10 +969,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -1095,10 +1060,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -1190,10 +1152,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -1289,10 +1248,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -1398,10 +1354,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -1477,10 +1430,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "first",
@@ -1618,10 +1568,7 @@
         "name": "Temporal Relationship",
         "description": "Define when the event occurs relative to the index date",
         "type": "temporalRelationship",
-        "excludeFromSections": [
-          "initialEvents",
-          "censoringEvents"
-        ]
+        "excludeFromSections": ["initialEvents", "censoringEvents"]
       },
       {
         "id": "age",

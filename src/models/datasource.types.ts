@@ -8,7 +8,14 @@ import type { BoxPlotData, TrellisChartData } from '@/models/report.types'
 
 export type DaimonType = 'CDM' | 'Vocabulary' | 'Results' | 'Temp' | 'CEM' | 'CEMResults'
 
-export const DAIMON_TYPES: DaimonType[] = ['CDM', 'Vocabulary', 'Results', 'CEM', 'CEMResults', 'Temp']
+export const DAIMON_TYPES: DaimonType[] = [
+  'CDM',
+  'Vocabulary',
+  'Results',
+  'CEM',
+  'CEMResults',
+  'Temp',
+]
 
 export interface Daimon {
   sourceDaimonId: number
@@ -69,10 +76,10 @@ export const SUPPORTED_DIALECTS = [
   { value: 'HIVE', label: 'Hive LLAP' },
   { value: 'SPARK', label: 'Spark' },
   { value: 'SNOWFLAKE', label: 'Snowflake' },
-  { value: 'SYNAPSE', label: 'Azure Synapse' }
+  { value: 'SYNAPSE', label: 'Azure Synapse' },
 ] as const
 
-export type DialectValue = typeof SUPPORTED_DIALECTS[number]['value']
+export type DialectValue = (typeof SUPPORTED_DIALECTS)[number]['value']
 
 // Report Types
 
@@ -105,7 +112,7 @@ export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
   measurement: 'Measurement',
   observation: 'Observation',
   observationPeriod: 'Observation Period',
-  death: 'Death'
+  death: 'Death',
 }
 
 // Chart Data Types
@@ -299,7 +306,7 @@ export const DaimonSchema = z.object({
   sourceDaimonId: z.number().int().positive(),
   daimonType: z.enum(['CDM', 'Vocabulary', 'Results', 'Temp', 'CEM', 'CEMResults']),
   tableQualifier: z.string(),
-  priority: z.number().int()
+  priority: z.number().int(),
 })
 
 export const DataSourceSchema = z.object({
@@ -307,7 +314,7 @@ export const DataSourceSchema = z.object({
   sourceName: z.string().min(1),
   sourceKey: z.string().min(1),
   sourceDialect: z.string(),
-  daimons: z.array(DaimonSchema)
+  daimons: z.array(DaimonSchema),
 })
 
 export const ReportTypeSchema = z.enum([
@@ -323,86 +330,96 @@ export const ReportTypeSchema = z.enum([
   'measurement',
   'observation',
   'observationPeriod',
-  'death'
+  'death',
 ])
 
 export const PieChartDataSchema = z.object({
   name: z.string(),
-  value: z.number().nonnegative()
+  value: z.number().nonnegative(),
 })
 
 export const BarChartDataSchema = z.object({
   categories: z.array(z.string()),
-  series: z.array(z.object({
-    name: z.string(),
-    data: z.array(z.number())
-  })),
-  unit: z.string().optional()
+  series: z.array(
+    z.object({
+      name: z.string(),
+      data: z.array(z.number()),
+    })
+  ),
+  unit: z.string().optional(),
 })
 
 export const LineChartDataSchema = z.object({
   categories: z.array(z.string()),
-  series: z.array(z.object({
-    name: z.string(),
-    data: z.array(z.number())
-  })),
+  series: z.array(
+    z.object({
+      name: z.string(),
+      data: z.array(z.number()),
+    })
+  ),
   xAxisLabel: z.string().optional(),
-  yAxisLabel: z.string().optional()
+  yAxisLabel: z.string().optional(),
 })
 
 export const MultiLineChartDataSchema = z.object({
   categories: z.array(z.string()),
-  series: z.array(z.object({
-    name: z.string(),
-    data: z.array(z.number())
-  }))
+  series: z.array(
+    z.object({
+      name: z.string(),
+      data: z.array(z.number()),
+    })
+  ),
 })
 
-export const TreemapNodeSchema: z.ZodType<TreemapNode> = z.lazy(() => 
+export const TreemapNodeSchema: z.ZodType<TreemapNode> = z.lazy(() =>
   z.object({
     name: z.string(),
     value: z.number().positive(),
-    itemStyle: z.object({
-      color: z.string().optional(),
-      colorAlpha: z.number().min(0).max(1).optional()
-    }).optional(),
-    children: z.array(TreemapNodeSchema).optional()
+    itemStyle: z
+      .object({
+        color: z.string().optional(),
+        colorAlpha: z.number().min(0).max(1).optional(),
+      })
+      .optional(),
+    children: z.array(TreemapNodeSchema).optional(),
   })
 )
 
 export const DashboardReportSchema = z.object({
   summary: z.object({
     sourceName: z.string(),
-    personCount: z.number().int().nonnegative()
+    personCount: z.number().int().nonnegative(),
   }),
   genderDistribution: z.array(PieChartDataSchema),
   ageDistribution: BarChartDataSchema,
   cumulativeObservation: LineChartDataSchema,
-  observationByMonth: LineChartDataSchema
+  observationByMonth: LineChartDataSchema,
 })
 
-export const BoxPlotDataArraySchema = z.array(z.object({
-  category: z.string(),
-  min: z.number(),
-  p10: z.number(),
-  p25: z.number(),
-  median: z.number(),
-  p75: z.number(),
-  p90: z.number(),
-  max: z.number()
-}))
+export const BoxPlotDataArraySchema = z.array(
+  z.object({
+    category: z.string(),
+    min: z.number(),
+    p10: z.number(),
+    p25: z.number(),
+    median: z.number(),
+    p75: z.number(),
+    p90: z.number(),
+    max: z.number(),
+  })
+)
 
 export const DataDensityReportSchema = z.object({
   totalRecords: MultiLineChartDataSchema,
   recordsPerPerson: MultiLineChartDataSchema,
-  conceptsPerPerson: BoxPlotDataArraySchema
+  conceptsPerPerson: BoxPlotDataArraySchema,
 })
 
 export const PersonReportSchema = z.object({
   yearOfBirth: BarChartDataSchema,
   gender: z.array(PieChartDataSchema),
   race: z.array(PieChartDataSchema),
-  ethnicity: z.array(PieChartDataSchema)
+  ethnicity: z.array(PieChartDataSchema),
 })
 
 export const PrevalenceTableRowSchema = z.object({
@@ -410,15 +427,15 @@ export const PrevalenceTableRowSchema = z.object({
   conceptName: z.string().min(1),
   personCount: z.number().int().nonnegative(),
   prevalence: z.number().min(0).max(100),
-  metric: z.number().nonnegative()
+  metric: z.number().nonnegative(),
 })
 
 export const PrevalenceDataSchema = z.object({
   treemapNodes: z.array(TreemapNodeSchema),
   tableRows: z.array(PrevalenceTableRowSchema),
-  totalCount: z.number().int().nonnegative()
+  totalCount: z.number().int().nonnegative(),
 })
 
 export const ClinicalDomainReportSchema = z.object({
-  prevalenceData: PrevalenceDataSchema
+  prevalenceData: PrevalenceDataSchema,
 })

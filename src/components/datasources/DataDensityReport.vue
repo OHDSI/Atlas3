@@ -13,7 +13,9 @@
 
     <v-row>
       <v-col cols="12">
-        <ChartSection :title="t('dataSources.datadensityReport.recordsPerPerson', 'Records Per Person').value">
+        <ChartSection
+          :title="t('dataSources.datadensityReport.recordsPerPerson', 'Records Per Person').value"
+        >
           <MultiLineChart
             :data="data.recordsPerPerson"
             :height="350"
@@ -24,7 +26,9 @@
 
     <v-row v-if="data.conceptsPerPerson && data.conceptsPerPerson.length > 0">
       <v-col cols="12">
-        <ChartSection :title="t('dataSources.datadensityReport.conceptsPerPerson', 'Concepts per Person').value">
+        <ChartSection
+          :title="t('dataSources.datadensityReport.conceptsPerPerson', 'Concepts per Person').value"
+        >
           <BoxPlotChart
             :data="data.conceptsPerPerson"
             :height="350"

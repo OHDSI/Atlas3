@@ -120,5 +120,5 @@ export function validateCdmVersion(currentVersion: string, constraint: string): 
  */
 export function getMinimumVersion(constraint: string): string | null {
   const match = constraint.match(/>=?(\d+\.\d+\.\d+)/)
-  return match ? (match[1] || null) : null
+  return match ? match[1] || null : null
 }

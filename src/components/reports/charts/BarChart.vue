@@ -55,7 +55,7 @@ const props = withDefaults(
     loading: false,
     height: 400,
     showExport: true,
-    exportFilename: 'bar-chart'
+    exportFilename: 'bar-chart',
   }
 )
 

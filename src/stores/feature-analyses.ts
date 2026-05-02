@@ -48,9 +48,7 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     }
 
     const term = filterTerm.value.toLowerCase()
-    return featureAnalyses.value.filter((fa) =>
-      fa.name.toLowerCase().includes(term)
-    )
+    return featureAnalyses.value.filter(fa => fa.name.toLowerCase().includes(term))
   })
 
   const isEmpty = computed(() => featureAnalyses.value.length === 0)
@@ -165,7 +163,7 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
 
     try {
       await deleteFeatureAnalysis(id)
-      featureAnalyses.value = featureAnalyses.value.filter((fa) => fa.id !== id)
+      featureAnalyses.value = featureAnalyses.value.filter(fa => fa.id !== id)
       if (currentFA.value?.id === id) {
         currentFA.value = null
       }
@@ -238,7 +236,8 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     try {
       aggregates.value = await listFeatureAnalysisAggregates()
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to load feature analysis aggregates'
+      error.value =
+        err instanceof Error ? err.message : 'Failed to load feature analysis aggregates'
       logger.error('FeatureAnalysesStore', 'Load aggregates error', err)
     }
   }

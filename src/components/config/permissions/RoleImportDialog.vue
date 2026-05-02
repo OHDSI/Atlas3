@@ -6,15 +6,14 @@
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-card>
-      <v-card-title>
-        Import Role
-      </v-card-title>
+      <v-card-title> Import Role </v-card-title>
 
       <v-card-text>
         <!-- File Upload -->
         <div v-if="!jsonData">
           <p class="text-body-2 mb-4">
-            Select a JSON file to import a role configuration. The file should be in Atlas 2.x compatible format.
+            Select a JSON file to import a role configuration. The file should be in Atlas 2.x
+            compatible format.
           </p>
 
           <v-file-input
@@ -195,7 +194,7 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'success': [roleName: string]
+  success: [roleName: string]
 }>()
 
 const { roles, importRole } = useRoles()
@@ -235,7 +234,7 @@ const nameRules = [
     const trimmedName = v.trim().toLowerCase()
     const isDuplicate = roles.value.some(r => r.name.toLowerCase() === trimmedName)
     return !isDuplicate || 'A role with this name already exists'
-  }
+  },
 ]
 
 const isNewNameValid = computed(() => {
@@ -416,11 +415,14 @@ function handleClose() {
 }
 
 // Reset state when dialog closes
-watch(() => props.modelValue, (isOpen) => {
-  if (!isOpen) {
-    // Reset will happen in handleClose
+watch(
+  () => props.modelValue,
+  isOpen => {
+    if (!isOpen) {
+      // Reset will happen in handleClose
+    }
   }
-})
+)
 </script>
 
 <style scoped>

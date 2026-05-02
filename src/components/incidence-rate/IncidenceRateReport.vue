@@ -34,7 +34,12 @@
       v-else-if="!report"
       class="muted"
     >
-      {{ t('ir.results.selectTargetAndOutcomeAlert', 'Select source, target, and outcome to view report.') }}
+      {{
+        t(
+          'ir.results.selectTargetAndOutcomeAlert',
+          'Select source, target, and outcome to view report.'
+        )
+      }}
     </v-card-text>
     <v-card-text v-else>
       <div class="row">
@@ -50,15 +55,31 @@
         >
           <thead>
             <tr>
-              <th>{{ t('ir.results.summaryStatistics', 'Summary') }}</th><th />
+              <th>{{ t('ir.results.summaryStatistics', 'Summary') }}</th>
+              <th />
             </tr>
           </thead>
           <tbody>
-            <tr><td>{{ t('ir.results.persons', 'Persons') }}</td><td>{{ format(report.summary.totalPersons) }}</td></tr>
-            <tr><td>{{ t('ir.results.cases', 'Cases') }}</td><td>{{ format(report.summary.cases) }}</td></tr>
-            <tr><td>{{ t('common.days', 'TAR (days)') }}</td><td>{{ format(report.summary.timeAtRisk) }}</td></tr>
-            <tr><td>{{ t('ir.results.proportion', 'Proportion') }}</td><td>{{ withMultiplier(report.summary.proportion) }}</td></tr>
-            <tr><td>{{ t('ir.results.rate', 'Rate') }}</td><td>{{ withMultiplier(report.summary.rate) }}</td></tr>
+            <tr>
+              <td>{{ t('ir.results.persons', 'Persons') }}</td>
+              <td>{{ format(report.summary.totalPersons) }}</td>
+            </tr>
+            <tr>
+              <td>{{ t('ir.results.cases', 'Cases') }}</td>
+              <td>{{ format(report.summary.cases) }}</td>
+            </tr>
+            <tr>
+              <td>{{ t('common.days', 'TAR (days)') }}</td>
+              <td>{{ format(report.summary.timeAtRisk) }}</td>
+            </tr>
+            <tr>
+              <td>{{ t('ir.results.proportion', 'Proportion') }}</td>
+              <td>{{ withMultiplier(report.summary.proportion) }}</td>
+            </tr>
+            <tr>
+              <td>{{ t('ir.results.rate', 'Rate') }}</td>
+              <td>{{ withMultiplier(report.summary.rate) }}</td>
+            </tr>
           </tbody>
         </v-table>
       </div>
@@ -111,7 +132,9 @@ const { report, loading, error } = useIncidenceRateReport(irIdRef, sourceKey, ta
 
 const treemapRef = ref<InstanceType<typeof IncidenceRateTreemap> | null>(null)
 
-function format(n?: number) { return n == null ? '—' : Math.round(n).toLocaleString() }
+function format(n?: number) {
+  return n == null ? '—' : Math.round(n).toLocaleString()
+}
 function withMultiplier(n?: number) {
   if (n == null) return '—'
   return (n * store.rateMultiplier).toFixed(2)
@@ -128,9 +151,22 @@ async function onPng() {
 </script>
 
 <style scoped>
-.report { margin-top: 12px; }
-.row { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
-.stats { min-width: 280px; }
-.muted { color: #888; }
-.error { color: #c00; }
+.report {
+  margin-top: 12px;
+}
+.row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.stats {
+  min-width: 280px;
+}
+.muted {
+  color: #888;
+}
+.error {
+  color: #c00;
+}
 </style>

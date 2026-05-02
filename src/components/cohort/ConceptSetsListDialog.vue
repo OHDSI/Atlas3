@@ -88,7 +88,7 @@ defineProps<Props>()
 
 defineEmits<{
   'update:modelValue': [value: boolean]
-  'view': [conceptSet: ConceptSetReference]
+  view: [conceptSet: ConceptSetReference]
 }>()
 
 const { t } = useI18n()

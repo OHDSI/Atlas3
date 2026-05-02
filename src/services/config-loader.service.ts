@@ -78,11 +78,7 @@ export class ConfigLoaderService {
 
       // Performance mark for monitoring
       performance.mark('config-load-end')
-      performance.measure(
-        'config-load',
-        'config-load-start',
-        'config-load-end'
-      )
+      performance.measure('config-load', 'config-load-start', 'config-load-end')
 
       // Log validation results
       this.logValidationResults()
@@ -127,7 +123,10 @@ export class ConfigLoaderService {
     // Only return config if filter type is valid
     if (!this.validationResult?.validFilterTypes.includes(filterType)) {
       if (import.meta.env.DEV) {
-        logger.warn('ConfigLoader', `Filter type '${filterType}' is invalid or not in valid filters list`)
+        logger.warn(
+          'ConfigLoader',
+          `Filter type '${filterType}' is invalid or not in valid filters list`
+        )
       }
       return undefined
     }
@@ -154,7 +153,11 @@ export class ConfigLoaderService {
 
     if (import.meta.env.DEV) {
       logger.debug('ConfigLoader', `Looking for section: ${section}`)
-      logger.debug('ConfigLoader', 'Available sections', this.sections.map(s => s.id))
+      logger.debug(
+        'ConfigLoader',
+        'Available sections',
+        this.sections.map(s => s.id)
+      )
     }
 
     const sectionConfig = this.getSectionConfig(section)
@@ -173,7 +176,7 @@ export class ConfigLoaderService {
     }
 
     // Filter based on section rules
-    const result = validTypes.filter((filterType) => {
+    const result = validTypes.filter(filterType => {
       const filterConfig = this.config!.criteriaTypes[filterType]
 
       // Check if filter is excluded from this section
@@ -182,11 +185,7 @@ export class ConfigLoaderService {
       }
 
       // Check if filter is groupOnly
-      if (
-        filterConfig?.groupOnly &&
-        section !== 'criteriaGroup' &&
-        !sectionConfig.includeAll
-      ) {
+      if (filterConfig?.groupOnly && section !== 'criteriaGroup' && !sectionConfig.includeAll) {
         return false
       }
 
@@ -210,10 +209,7 @@ export class ConfigLoaderService {
    * @param section - Section key
    * @returns Array of attribute configurations (filtered by section context)
    */
-  getAttributesForFilter(
-    filterType: string,
-    section: string
-  ): AttributeConfig[] {
+  getAttributesForFilter(filterType: string, section: string): AttributeConfig[] {
     if (!this.config) {
       logger.warn('ConfigLoader', 'Configuration not loaded')
       return []
@@ -233,7 +229,7 @@ export class ConfigLoaderService {
     }
 
     // Filter attributes based on section exclusions
-    return attributes.filter((attr) => {
+    return attributes.filter(attr => {
       if (!attr.excludeFromSections) {
         return true
       }
@@ -248,7 +244,7 @@ export class ConfigLoaderService {
    * @returns Section configuration or undefined if not found
    */
   getSectionConfig(sectionId: string): SectionConfig | undefined {
-    return this.sections.find((s) => s.id === sectionId)
+    return this.sections.find(s => s.id === sectionId)
   }
 
   /**
@@ -363,7 +359,7 @@ export class ConfigLoaderService {
    */
   private notifyConfigurationChange(): void {
     if (this.config) {
-      this.changeCallbacks.forEach((callback) => {
+      this.changeCallbacks.forEach(callback => {
         try {
           callback(this.config!)
         } catch (error) {
@@ -386,16 +382,25 @@ export class ConfigLoaderService {
       logger.info('ConfigLoader', formatValidationSummary(this.validationResult))
 
       if (this.validationResult.validFilterTypes.length > 0) {
-        logger.info('ConfigLoader', `Valid filter types: ${this.validationResult.validFilterTypes.join(', ')}`)
+        logger.info(
+          'ConfigLoader',
+          `Valid filter types: ${this.validationResult.validFilterTypes.join(', ')}`
+        )
       }
 
       if (this.validationResult.invalidFilterTypes.length > 0) {
-        logger.warn('ConfigLoader', `Invalid filter types: ${this.validationResult.invalidFilterTypes.join(', ')}`)
+        logger.warn(
+          'ConfigLoader',
+          `Invalid filter types: ${this.validationResult.invalidFilterTypes.join(', ')}`
+        )
       }
     } else {
       // Minimal logging in production
       if (!this.validationResult.valid) {
-        logger.warn('ConfigLoader', `Configuration validation: ${this.validationResult.errors.length} errors, ${this.validationResult.validFilterTypes.length} valid filters`)
+        logger.warn(
+          'ConfigLoader',
+          `Configuration validation: ${this.validationResult.errors.length} errors, ${this.validationResult.validFilterTypes.length} valid filters`
+        )
       }
     }
   }
@@ -406,7 +411,7 @@ export const configLoaderService = new ConfigLoaderService()
 
 // Hot-reload support - development mode only
 if (import.meta.hot) {
-  import.meta.hot.accept('@/config/atlas-config.json', (newModule) => {
+  import.meta.hot.accept('@/config/atlas-config.json', newModule => {
     if (newModule) {
       logger.info('ConfigLoader', 'Hot-reloading configuration...')
       configLoaderService.reload(newModule.default)

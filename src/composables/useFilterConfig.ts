@@ -16,10 +16,7 @@ import { computed, ref, type Ref, type ComputedRef } from 'vue'
 import { configLoaderService } from '@/services/config-loader.service'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
-import type {
-  FilterTypeConfig,
-  ValidationResult,
-} from '@/models/config.types'
+import type { FilterTypeConfig, ValidationResult } from '@/models/config.types'
 
 export interface FilterInfo {
   /** Filter type key in camelCase (e.g., 'conditionOccurrence') - matches config file */
@@ -81,9 +78,7 @@ export function useFilterConfig(section: Ref<string>): UseFilterConfigReturn {
   const { tv } = useI18n()
 
   // Get validation result (reactive)
-  const validationResult = ref<ValidationResult | null>(
-    configLoaderService.getValidationResult()
-  )
+  const validationResult = ref<ValidationResult | null>(configLoaderService.getValidationResult())
 
   /**
    * Get available filters for current section with translated metadata.
@@ -93,14 +88,12 @@ export function useFilterConfig(section: Ref<string>): UseFilterConfigReturn {
    * - Filter validation status
    */
   const availableFilters = computed<FilterInfo[]>(() => {
-    const filterKeys = configLoaderService.getValidFilterTypesForSection(
-      section.value
-    )
+    const filterKeys = configLoaderService.getValidFilterTypesForSection(section.value)
 
     logger.debug('useFilterConfig', `Section: ${section.value}, Filter keys`, filterKeys)
 
     return filterKeys
-      .map((key) => {
+      .map(key => {
         const config = configLoaderService.getFilterConfig(key)
         if (!config) {
           logger.warn('useFilterConfig', `No config found for filter: ${key}`)
@@ -109,7 +102,7 @@ export function useFilterConfig(section: Ref<string>): UseFilterConfigReturn {
 
         // Resolve locale keys to translated strings or use plain text
         // Support both i18n (nameKey) and plain text (name) formats
-        const name = config.nameKey ? tv(config.nameKey, key) : (config.name || key)
+        const name = config.nameKey ? tv(config.nameKey, key) : config.name || key
         const description = getFilterDescription(key)
 
         return {

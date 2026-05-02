@@ -6,7 +6,13 @@ import { computed } from 'vue'
 import type { ComputedRef } from 'vue'
 import { useLocaleStore } from '@/stores/locale'
 import { logger } from '@/utils/logger'
-import type { UseI18nReturn, LocaleCode, Locale, TranslationParams, LocaleFormat } from '@/types/i18n'
+import type {
+  UseI18nReturn,
+  LocaleCode,
+  Locale,
+  TranslationParams,
+  LocaleFormat,
+} from '@/types/i18n'
 
 /**
  * Get nested value from object using dot notation
@@ -118,7 +124,7 @@ export function useI18n(): UseI18nReturn {
   /**
    * Translation value function (non-reactive, returns string directly)
    * Use for v-bind attributes, function calls, or when reactivity is not needed
-   * 
+   *
    * Overloaded signatures:
    * - tv(key)
    * - tv(key, params)
@@ -155,6 +161,6 @@ export function useI18n(): UseI18nReturn {
     changeLocale,
     loading,
     error,
-    format
+    format,
   }
 }

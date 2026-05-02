@@ -33,7 +33,7 @@ function openDatabase(): Promise<IDBDatabase> {
       resolve(request.result)
     }
 
-    request.onupgradeneeded = (event) => {
+    request.onupgradeneeded = event => {
       const db = (event.target as IDBOpenDBRequest).result
 
       // Create object store if it doesn't exist
@@ -102,7 +102,7 @@ export async function getCacheStats(): Promise<CacheStats> {
 
         resolve({
           itemCount,
-          estimatedSize
+          estimatedSize,
         })
       }
 

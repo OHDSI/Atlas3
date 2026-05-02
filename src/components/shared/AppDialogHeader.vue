@@ -45,7 +45,7 @@ withDefaults(
     subtitle: '',
     showClose: false,
     closeLabel: 'Close',
-  },
+  }
 )
 
 defineEmits<{ close: [] }>()

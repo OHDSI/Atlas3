@@ -1,6 +1,13 @@
 // CRITICAL: Uses ?? operator for zero-count preservation (not ||)
 
-import type { CohortDefinition, CohortEvent, CensorWindow, CriteriaType, QualifyingLimit, LogicType } from '@/models/cohort.types'
+import type {
+  CohortDefinition,
+  CohortEvent,
+  CensorWindow,
+  CriteriaType,
+  QualifyingLimit,
+  LogicType,
+} from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
 import type {
   AtlasConceptSet,
@@ -9,7 +16,7 @@ import type {
   AtlasConcept,
   ConceptSetItem,
   AtlasCriteriaTypeObject,
-  AtlasConceptSetItem
+  AtlasConceptSetItem,
 } from '@/models/atlas.types'
 
 interface AtlasJSON {
@@ -41,72 +48,84 @@ interface AtlasJSON {
 // CRITICAL: Preserves zero-count cardinality using ?? operator
 export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
   return {
-    expressionType: cohort.expressionType ?? "SIMPLE_EXPRESSION",
-    cdmVersionRange: cohort.cdmVersionRange ?? ">=5.0.0",
+    expressionType: cohort.expressionType ?? 'SIMPLE_EXPRESSION',
+    cdmVersionRange: cohort.cdmVersionRange ?? '>=5.0.0',
 
     ConceptSets: cohort.conceptSets.map((cs, index) => ({
       id: typeof cs.id === 'number' ? cs.id : index,
       name: cs.name,
       expression: {
-        items: (cs.items as ConceptSetItem[] | undefined)?.map((item) => {
-          const concept: AtlasConcept = {
-            CONCEPT_ID: item.conceptId,
-            CONCEPT_NAME: item.conceptName,
-            DOMAIN_ID: item.domainId,
-            VOCABULARY_ID: item.vocabularyId,
-            CONCEPT_CLASS_ID: item.conceptClassId,
-          }
+        items:
+          (cs.items as ConceptSetItem[] | undefined)?.map(item => {
+            const concept: AtlasConcept = {
+              CONCEPT_ID: item.conceptId,
+              CONCEPT_NAME: item.conceptName,
+              DOMAIN_ID: item.domainId,
+              VOCABULARY_ID: item.vocabularyId,
+              CONCEPT_CLASS_ID: item.conceptClassId,
+            }
 
-          if (item.standardConcept !== undefined && item.standardConcept !== null) {
-            concept.STANDARD_CONCEPT = item.standardConcept
-            concept.STANDARD_CONCEPT_CAPTION = item.standardConcept === 'S' ? 'Standard' :
-                                               item.standardConcept === 'C' ? 'Classification' : 'Non-Standard'
-          }
+            if (item.standardConcept !== undefined && item.standardConcept !== null) {
+              concept.STANDARD_CONCEPT = item.standardConcept
+              concept.STANDARD_CONCEPT_CAPTION =
+                item.standardConcept === 'S'
+                  ? 'Standard'
+                  : item.standardConcept === 'C'
+                    ? 'Classification'
+                    : 'Non-Standard'
+            }
 
-          if (item.conceptCode !== undefined && item.conceptCode !== null) {
-            concept.CONCEPT_CODE = item.conceptCode
-          }
+            if (item.conceptCode !== undefined && item.conceptCode !== null) {
+              concept.CONCEPT_CODE = item.conceptCode
+            }
 
-          concept.INVALID_REASON = item.invalidReason || "V"
-          concept.INVALID_REASON_CAPTION = item.invalidReason === "V" || !item.invalidReason ? 'Valid' : 'Invalid'
+            concept.INVALID_REASON = item.invalidReason || 'V'
+            concept.INVALID_REASON_CAPTION =
+              item.invalidReason === 'V' || !item.invalidReason ? 'Valid' : 'Invalid'
 
-          return {
-            concept,
-            isExcluded: item.isExcluded ?? false,
-            includeDescendants: item.includeDescendants ?? false,
-            includeMapped: item.includeMapped ?? false,
-          }
-        }) || []
+            return {
+              concept,
+              isExcluded: item.isExcluded ?? false,
+              includeDescendants: item.includeDescendants ?? false,
+              includeMapped: item.includeMapped ?? false,
+            }
+          }) || [],
       },
     })),
 
     PrimaryCriteria: {
-      CriteriaList: cohort.entryEvents.map((event) => convertEventToAtlas(event, false)),
-      ObservationWindow: cohort.observationPeriod ? {
-        PriorDays: cohort.observationPeriod.priorDays,
-        PostDays: cohort.observationPeriod.postDays,
-      } : undefined,
+      CriteriaList: cohort.entryEvents.map(event => convertEventToAtlas(event, false)),
+      ObservationWindow: cohort.observationPeriod
+        ? {
+            PriorDays: cohort.observationPeriod.priorDays,
+            PostDays: cohort.observationPeriod.postDays,
+          }
+        : undefined,
       PrimaryCriteriaLimit: { Type: cohort.additionalCriteria?.qualifyingLimit || 'All' },
     },
 
-    AdditionalCriteria: cohort.additionalCriteria ? {
-      Type: cohort.additionalCriteria.logicType || "ALL",
-      CriteriaList: cohort.additionalCriteria.events.map(e => convertEventToAtlas(e, true)),
-      DemographicCriteriaList: [],
-      Groups: [],
-    } : {
-      Type: "ALL",
-      CriteriaList: [],
-      DemographicCriteriaList: [],
-      Groups: [],
-    },
+    AdditionalCriteria: cohort.additionalCriteria
+      ? {
+          Type: cohort.additionalCriteria.logicType || 'ALL',
+          CriteriaList: cohort.additionalCriteria.events.map(e => convertEventToAtlas(e, true)),
+          DemographicCriteriaList: [],
+          Groups: [],
+        }
+      : {
+          Type: 'ALL',
+          CriteriaList: [],
+          DemographicCriteriaList: [],
+          Groups: [],
+        },
 
-    InclusionRules: cohort.inclusionRules.map((rule) => ({
+    InclusionRules: cohort.inclusionRules.map(rule => ({
       name: rule.name,
       description: rule.description,
       expression: {
         Type: 'ALL', // Simplified
-        CriteriaList: rule.criteriaGroups.flatMap(g => g.events.map(e => convertEventToAtlas(e, true))),
+        CriteriaList: rule.criteriaGroups.flatMap(g =>
+          g.events.map(e => convertEventToAtlas(e, true))
+        ),
         DemographicCriteriaList: [],
         Groups: [],
       },
@@ -118,15 +137,17 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
 
     ExpressionLimit: cohort.inclusionQualifyingLimit
       ? { Type: capitalizeFirst(cohort.inclusionQualifyingLimit) }
-      : { Type: "All" },
+      : { Type: 'All' },
 
-    CollapseSettings: cohort.collapseSettings ? {
-      CollapseType: cohort.collapseSettings.collapseType,
-      EraPad: cohort.collapseSettings.eraPad,
-    } : {
-      CollapseType: "ERA",
-      EraPad: 0,
-    },
+    CollapseSettings: cohort.collapseSettings
+      ? {
+          CollapseType: cohort.collapseSettings.collapseType,
+          EraPad: cohort.collapseSettings.eraPad,
+        }
+      : {
+          CollapseType: 'ERA',
+          EraPad: 0,
+        },
 
     CensorWindow: cohort.censorWindow ? convertCensorWindowToAtlas(cohort.censorWindow) : {},
   }
@@ -135,7 +156,8 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
 // CRITICAL: Uses ?? for zero-count preservation
 function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false): AtlasCriteria {
   const criteriaTypeObj: AtlasCriteriaTypeObject = {
-    CodesetId: event.conceptSet && typeof event.conceptSet.id === 'number' ? event.conceptSet.id : null,
+    CodesetId:
+      event.conceptSet && typeof event.conceptSet.id === 'number' ? event.conceptSet.id : null,
   }
 
   switch (event.criteriaType) {
@@ -204,9 +226,14 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
   // CRITICAL: use ?? not ||
   if (event.cardinality) {
     atlasEvent.Occurrence = {
-      Type: event.cardinality.type === 'EXACTLY' ? 0 :
-            event.cardinality.type === 'AT_MOST' ? 1 :
-            event.cardinality.type === 'AT_LEAST' ? 2 : 0,
+      Type:
+        event.cardinality.type === 'EXACTLY'
+          ? 0
+          : event.cardinality.type === 'AT_MOST'
+            ? 1
+            : event.cardinality.type === 'AT_LEAST'
+              ? 2
+              : 0,
       Count: event.cardinality.count ?? 1,
       CountMethod: event.cardinality.countingMethod || 'ALL',
       IsDistinct: event.cardinality.isDistinct ?? false,
@@ -226,10 +253,12 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
           ...(startDays !== null ? { Days: startDays } : {}),
           Coeff: event.temporalWindow.startWindow.beforeAfter === 'AFTER' ? 1 : -1,
         },
-        End: event.temporalWindow.endWindow ? {
-          ...(endDays !== null ? { Days: endDays } : {}),
-          Coeff: event.temporalWindow.endWindow.beforeAfter === 'AFTER' ? 1 : -1,
-        } : undefined,
+        End: event.temporalWindow.endWindow
+          ? {
+              ...(endDays !== null ? { Days: endDays } : {}),
+              Coeff: event.temporalWindow.endWindow.beforeAfter === 'AFTER' ? 1 : -1,
+            }
+          : undefined,
         UseIndexEnd: event.temporalWindow.startWindow.referencePoint === 'INDEX_END',
         UseEventEnd: event.temporalWindow.startWindow.referencePoint === 'EVENT_END',
       }
@@ -256,7 +285,7 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
       Count: event.nestedCriteria.count,
       CriteriaList: event.nestedCriteria.events.map(e => convertEventToAtlas(e, true)),
       DemographicCriteriaList: [],
-      Groups: []
+      Groups: [],
     }
   }
 
@@ -290,7 +319,10 @@ export function parseBooleanAttribute(attributeKey: string, value: boolean): Eve
   }
 }
 
-function convertConceptAttribute(attributeKey: string, concepts: unknown[]): Record<string, unknown> {
+function convertConceptAttribute(
+  attributeKey: string,
+  concepts: unknown[]
+): Record<string, unknown> {
   const attributeName = convertToPascalCase(attributeKey)
   return { [attributeName]: concepts }
 }
@@ -327,18 +359,21 @@ export function parseConceptSetAttribute(
   }
 }
 
-function convertTemporalRelationshipAttribute(attributeKey: string, temporalWindow: {
-  startWindow?: {
-    days: number | null
-    beforeAfter: 'BEFORE' | 'AFTER'
-    referencePoint: string
+function convertTemporalRelationshipAttribute(
+  attributeKey: string,
+  temporalWindow: {
+    startWindow?: {
+      days: number | null
+      beforeAfter: 'BEFORE' | 'AFTER'
+      referencePoint: string
+    }
+    endWindow?: {
+      days: number | null
+      beforeAfter: 'BEFORE' | 'AFTER'
+      referencePoint: string
+    }
   }
-  endWindow?: {
-    days: number | null
-    beforeAfter: 'BEFORE' | 'AFTER'
-    referencePoint: string
-  }
-}): Record<string, unknown> {
+): Record<string, unknown> {
   const attributeName = convertToPascalCase(attributeKey)
   const atlasWindow: Record<string, unknown> = {}
 
@@ -351,10 +386,12 @@ function convertTemporalRelationshipAttribute(attributeKey: string, temporalWind
         ...(startDays !== null ? { Days: startDays } : {}),
         Coeff: temporalWindow.startWindow.beforeAfter === 'AFTER' ? 1 : -1,
       },
-      End: temporalWindow.endWindow ? {
-        ...(endDays !== null ? { Days: endDays } : {}),
-        Coeff: temporalWindow.endWindow.beforeAfter === 'AFTER' ? 1 : -1,
-      } : undefined,
+      End: temporalWindow.endWindow
+        ? {
+            ...(endDays !== null ? { Days: endDays } : {}),
+            Coeff: temporalWindow.endWindow.beforeAfter === 'AFTER' ? 1 : -1,
+          }
+        : undefined,
       UseIndexEnd: temporalWindow.startWindow.referencePoint === 'INDEX_END',
       UseEventEnd: temporalWindow.startWindow.referencePoint === 'EVENT_END',
     }
@@ -363,40 +400,62 @@ function convertTemporalRelationshipAttribute(attributeKey: string, temporalWind
   return { [attributeName]: atlasWindow }
 }
 
-export function parseTemporalRelationshipAttribute(attributeKey: string, temporalWindowData: {
-  StartWindow?: {
-    Start?: { Days?: number; Coeff?: number }
-    End?: { Days?: number; Coeff?: number }
-    UseIndexEnd?: boolean
-    UseEventEnd?: boolean
+export function parseTemporalRelationshipAttribute(
+  attributeKey: string,
+  temporalWindowData: {
+    StartWindow?: {
+      Start?: { Days?: number; Coeff?: number }
+      End?: { Days?: number; Coeff?: number }
+      UseIndexEnd?: boolean
+      UseEventEnd?: boolean
+    }
   }
-}): EventAttribute {
+): EventAttribute {
   return {
     type: 'temporalRelationship',
     attributeKey: attributeKey as 'temporalRelationship',
     temporalWindow: {
-      startWindow: temporalWindowData.StartWindow?.Start ? {
-        days: temporalWindowData.StartWindow.Start.Days !== undefined ? temporalWindowData.StartWindow.Start.Days : null,
-        beforeAfter: (temporalWindowData.StartWindow.Start.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
-        referencePoint: temporalWindowData.StartWindow.UseIndexEnd ? 'INDEX_END' :
-                       temporalWindowData.StartWindow.UseEventEnd ? 'EVENT_END' : 'INDEX_START',
-      } : undefined,
-      endWindow: temporalWindowData.StartWindow?.End ? {
-        days: temporalWindowData.StartWindow.End.Days !== undefined ? temporalWindowData.StartWindow.End.Days : null,
-        beforeAfter: (temporalWindowData.StartWindow.End.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
-        referencePoint: temporalWindowData.StartWindow.UseIndexEnd ? 'INDEX_END' :
-                       temporalWindowData.StartWindow.UseEventEnd ? 'EVENT_END' : 'INDEX_START',
-      } : undefined,
-    }
+      startWindow: temporalWindowData.StartWindow?.Start
+        ? {
+            days:
+              temporalWindowData.StartWindow.Start.Days !== undefined
+                ? temporalWindowData.StartWindow.Start.Days
+                : null,
+            beforeAfter: (temporalWindowData.StartWindow.Start.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
+            referencePoint: temporalWindowData.StartWindow.UseIndexEnd
+              ? 'INDEX_END'
+              : temporalWindowData.StartWindow.UseEventEnd
+                ? 'EVENT_END'
+                : 'INDEX_START',
+          }
+        : undefined,
+      endWindow: temporalWindowData.StartWindow?.End
+        ? {
+            days:
+              temporalWindowData.StartWindow.End.Days !== undefined
+                ? temporalWindowData.StartWindow.End.Days
+                : null,
+            beforeAfter: (temporalWindowData.StartWindow.End.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
+            referencePoint: temporalWindowData.StartWindow.UseIndexEnd
+              ? 'INDEX_END'
+              : temporalWindowData.StartWindow.UseEventEnd
+                ? 'EVENT_END'
+                : 'INDEX_START',
+          }
+        : undefined,
+    },
   }
 }
 
-function convertDateAdjustmentAttribute(attributeKey: string, dateAdjustment: {
-  startWith: string
-  startOffset: number
-  endWith: string
-  endOffset: number
-}): Record<string, unknown> {
+function convertDateAdjustmentAttribute(
+  attributeKey: string,
+  dateAdjustment: {
+    startWith: string
+    startOffset: number
+    endWith: string
+    endOffset: number
+  }
+): Record<string, unknown> {
   const attributeName = convertToPascalCase(attributeKey)
   return {
     [attributeName]: {
@@ -404,16 +463,19 @@ function convertDateAdjustmentAttribute(attributeKey: string, dateAdjustment: {
       StartOffset: dateAdjustment.startOffset,
       EndWith: dateAdjustment.endWith,
       EndOffset: dateAdjustment.endOffset,
-    }
+    },
   }
 }
 
-export function parseDateAdjustmentAttribute(attributeKey: string, dateAdjustmentData: {
-  StartWith?: string
-  StartOffset?: number
-  EndWith?: string
-  EndOffset?: number
-}): EventAttribute {
+export function parseDateAdjustmentAttribute(
+  attributeKey: string,
+  dateAdjustmentData: {
+    StartWith?: string
+    StartOffset?: number
+    EndWith?: string
+    EndOffset?: number
+  }
+): EventAttribute {
   return {
     type: 'dateAdjustment',
     attributeKey: attributeKey as 'dateAdjustment',
@@ -422,28 +484,35 @@ export function parseDateAdjustmentAttribute(attributeKey: string, dateAdjustmen
       startOffset: dateAdjustmentData.StartOffset || 0,
       endWith: (dateAdjustmentData.EndWith as 'START_DATE' | 'END_DATE') || 'END_DATE',
       endOffset: dateAdjustmentData.EndOffset || 0,
-    }
+    },
   }
 }
 
-function convertUserDefinedPeriodAttribute(_attributeKey: string, period: {
-  startDate: string
-  endDate: string
-}): Record<string, string> {
+function convertUserDefinedPeriodAttribute(
+  _attributeKey: string,
+  period: {
+    startDate: string
+    endDate: string
+  }
+): Record<string, string> {
   return {
     PeriodStartDate: period.startDate,
     PeriodEndDate: period.endDate,
   }
 }
 
-export function parseUserDefinedPeriodAttribute(attributeKey: string, startDate: string, endDate: string): EventAttribute {
+export function parseUserDefinedPeriodAttribute(
+  attributeKey: string,
+  startDate: string,
+  endDate: string
+): EventAttribute {
   return {
     type: 'userDefinedPeriod',
     attributeKey: attributeKey as 'userDefinedPeriod',
     period: {
       startDate,
       endDate,
-    }
+    },
   }
 }
 
@@ -458,7 +527,7 @@ function convertAttributeToAtlas(attr: EventAttribute): Record<string, unknown> 
       [attributeName]: {
         Op: convertOperatorToAtlas(attr.operator),
         Value: attr.value,
-      }
+      },
     }
     if (attr.extent !== undefined) {
       const attrValue = result[attributeName]
@@ -501,112 +570,146 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
   return {
     expressionType: atlas.expressionType,
     cdmVersionRange: atlas.cdmVersionRange,
-    collapseSettings: atlas.CollapseSettings ? {
-      collapseType: atlas.CollapseSettings.CollapseType as 'ERA',
-      eraPad: atlas.CollapseSettings.EraPad,
-    } : undefined,
-    censorWindow: atlas.CensorWindow && Object.keys(atlas.CensorWindow).length > 0
-      ? convertCensorWindowFromAtlas(atlas.CensorWindow)
+    collapseSettings: atlas.CollapseSettings
+      ? {
+          collapseType: atlas.CollapseSettings.CollapseType as 'ERA',
+          eraPad: atlas.CollapseSettings.EraPad,
+        }
       : undefined,
-    censoringCriteria: atlas.CensoringCriteria && atlas.CensoringCriteria.length > 0
-      ? atlas.CensoringCriteria.map(e => convertAtlasToEvent(e, atlas.ConceptSets))
-      : undefined,
+    censorWindow:
+      atlas.CensorWindow && Object.keys(atlas.CensorWindow).length > 0
+        ? convertCensorWindowFromAtlas(atlas.CensorWindow)
+        : undefined,
+    censoringCriteria:
+      atlas.CensoringCriteria && atlas.CensoringCriteria.length > 0
+        ? atlas.CensoringCriteria.map(e => convertAtlasToEvent(e, atlas.ConceptSets))
+        : undefined,
 
-    entryEvents: atlas.PrimaryCriteria?.CriteriaList?.map(e => convertAtlasToEvent(e, atlas.ConceptSets)) || [],
-    observationPeriod: atlas.PrimaryCriteria?.ObservationWindow ? {
-      priorDays: atlas.PrimaryCriteria.ObservationWindow.PriorDays,
-      postDays: atlas.PrimaryCriteria.ObservationWindow.PostDays,
-    } : undefined,
+    entryEvents:
+      atlas.PrimaryCriteria?.CriteriaList?.map(e => convertAtlasToEvent(e, atlas.ConceptSets)) ||
+      [],
+    observationPeriod: atlas.PrimaryCriteria?.ObservationWindow
+      ? {
+          priorDays: atlas.PrimaryCriteria.ObservationWindow.PriorDays,
+          postDays: atlas.PrimaryCriteria.ObservationWindow.PostDays,
+        }
+      : undefined,
     qualifyingLimit: (atlas.QualifiedLimit?.Type?.toUpperCase() || 'ALL') as QualifyingLimit,
     inclusionQualifyingLimit: atlas.ExpressionLimit?.Type
       ? (atlas.ExpressionLimit.Type.toUpperCase() as QualifyingLimit)
       : undefined,
     // Parse AdditionalCriteria
-    additionalCriteria: (atlas.AdditionalCriteria?.CriteriaList && atlas.AdditionalCriteria.CriteriaList.length > 0) ? {
-      id: generateId(),
-      logicType: (atlas.AdditionalCriteria.Type || 'ALL') as LogicType,
-      qualifyingLimit: (atlas.PrimaryCriteria?.PrimaryCriteriaLimit?.Type?.toUpperCase() || 'ALL') as QualifyingLimit,
-      events: atlas.AdditionalCriteria.CriteriaList.map((e: AtlasCriteria) => convertAtlasToEvent(e, atlas.ConceptSets)),
-    } : undefined,
-    inclusionRules: atlas.InclusionRules?.map((rule: AtlasInclusionRule) => {
-      const criteriaGroups: import('@/models/cohort.types').CriteriaGroup[] = []
-
-      if (rule.expression?.CriteriaList && rule.expression.CriteriaList.length > 0) {
-        criteriaGroups.push({
-          id: generateId(),
-          logicType: (rule.expression.Type || 'ALL') as LogicType,
-          events: rule.expression.CriteriaList.map((e: AtlasCriteria) => convertAtlasToEvent(e, atlas.ConceptSets)),
-        })
-      }
-
-      if (rule.expression?.DemographicCriteriaList && rule.expression.DemographicCriteriaList.length > 0) {
-        const demographicEvents = (rule.expression.DemographicCriteriaList as Array<Record<string, unknown>>).map((dc) =>
-          convertDemographicCriteriaToEvent(dc)
-        )
-
-        if (criteriaGroups.length > 0) {
-          const firstGroup = criteriaGroups[0]
-          if (firstGroup) {
-            firstGroup.events.push(...demographicEvents)
+    additionalCriteria:
+      atlas.AdditionalCriteria?.CriteriaList && atlas.AdditionalCriteria.CriteriaList.length > 0
+        ? {
+            id: generateId(),
+            logicType: (atlas.AdditionalCriteria.Type || 'ALL') as LogicType,
+            qualifyingLimit: (atlas.PrimaryCriteria?.PrimaryCriteriaLimit?.Type?.toUpperCase() ||
+              'ALL') as QualifyingLimit,
+            events: atlas.AdditionalCriteria.CriteriaList.map((e: AtlasCriteria) =>
+              convertAtlasToEvent(e, atlas.ConceptSets)
+            ),
           }
-        } else {
+        : undefined,
+    inclusionRules:
+      atlas.InclusionRules?.map((rule: AtlasInclusionRule) => {
+        const criteriaGroups: import('@/models/cohort.types').CriteriaGroup[] = []
+
+        if (rule.expression?.CriteriaList && rule.expression.CriteriaList.length > 0) {
           criteriaGroups.push({
             id: generateId(),
             logicType: (rule.expression.Type || 'ALL') as LogicType,
-            events: demographicEvents,
+            events: rule.expression.CriteriaList.map((e: AtlasCriteria) =>
+              convertAtlasToEvent(e, atlas.ConceptSets)
+            ),
           })
         }
-      }
 
-      if (rule.expression?.Groups && rule.expression.Groups.length > 0) {
-        criteriaGroups.push(...rule.expression.Groups.map((group: import('@/models/atlas.types').AtlasGroup) => ({
+        if (
+          rule.expression?.DemographicCriteriaList &&
+          rule.expression.DemographicCriteriaList.length > 0
+        ) {
+          const demographicEvents = (
+            rule.expression.DemographicCriteriaList as Array<Record<string, unknown>>
+          ).map(dc => convertDemographicCriteriaToEvent(dc))
+
+          if (criteriaGroups.length > 0) {
+            const firstGroup = criteriaGroups[0]
+            if (firstGroup) {
+              firstGroup.events.push(...demographicEvents)
+            }
+          } else {
+            criteriaGroups.push({
+              id: generateId(),
+              logicType: (rule.expression.Type || 'ALL') as LogicType,
+              events: demographicEvents,
+            })
+          }
+        }
+
+        if (rule.expression?.Groups && rule.expression.Groups.length > 0) {
+          criteriaGroups.push(
+            ...rule.expression.Groups.map((group: import('@/models/atlas.types').AtlasGroup) => ({
+              id: generateId(),
+              logicType: (group.Type || 'ALL') as LogicType,
+              events:
+                group.CriteriaList?.map((e: AtlasCriteria) =>
+                  convertAtlasToEvent(e, atlas.ConceptSets)
+                ) || [],
+            }))
+          )
+        }
+
+        return {
           id: generateId(),
-          logicType: (group.Type || 'ALL') as LogicType,
-          events: group.CriteriaList?.map((e: AtlasCriteria) => convertAtlasToEvent(e, atlas.ConceptSets)) || [],
-        })))
-      }
-
-      return {
-        id: generateId(),
-        name: rule.name || 'Unnamed Rule',
-        description: rule.description || '',
-        criteriaGroups,
-      }
-    }) || [],
-    conceptSets: atlas.ConceptSets?.map(cs => ({
-      id: cs.id,
-      name: cs.name,
-      items: cs.expression?.items?.map((item: AtlasConceptSetItem) => ({
-        conceptId: item.concept.CONCEPT_ID,
-        conceptName: item.concept.CONCEPT_NAME,
-        domainId: item.concept.DOMAIN_ID,
-        vocabularyId: item.concept.VOCABULARY_ID,
-        conceptClassId: item.concept.CONCEPT_CLASS_ID,
-        standardConcept: item.concept.STANDARD_CONCEPT,
-        conceptCode: item.concept.CONCEPT_CODE,
-        invalidReason: item.concept.INVALID_REASON,
-        includeDescendants: item.includeDescendants ?? false,
-        isExcluded: item.isExcluded ?? false,
-        includeMapped: item.includeMapped ?? false,
+          name: rule.name || 'Unnamed Rule',
+          description: rule.description || '',
+          criteriaGroups,
+        }
+      }) || [],
+    conceptSets:
+      atlas.ConceptSets?.map(cs => ({
+        id: cs.id,
+        name: cs.name,
+        items:
+          cs.expression?.items?.map((item: AtlasConceptSetItem) => ({
+            conceptId: item.concept.CONCEPT_ID,
+            conceptName: item.concept.CONCEPT_NAME,
+            domainId: item.concept.DOMAIN_ID,
+            vocabularyId: item.concept.VOCABULARY_ID,
+            conceptClassId: item.concept.CONCEPT_CLASS_ID,
+            standardConcept: item.concept.STANDARD_CONCEPT,
+            conceptCode: item.concept.CONCEPT_CODE,
+            invalidReason: item.concept.INVALID_REASON,
+            includeDescendants: item.includeDescendants ?? false,
+            isExcluded: item.isExcluded ?? false,
+            includeMapped: item.includeMapped ?? false,
+          })) || [],
       })) || [],
-    })) || [],
   }
 }
 
-function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConceptSet[]): CohortEvent {
+function convertAtlasToEvent(
+  atlasEvent: AtlasCriteria,
+  conceptSets?: AtlasConceptSet[]
+): CohortEvent {
   let criteriaType: string
   let criteriaObj: Record<string, unknown>
 
   if (atlasEvent.Criteria) {
     criteriaType = Object.keys(atlasEvent.Criteria)[0] || 'ConditionOccurrence'
-    criteriaObj = (atlasEvent.Criteria as Record<string, Record<string, unknown>>)[criteriaType] || {}
+    criteriaObj =
+      (atlasEvent.Criteria as Record<string, Record<string, unknown>>)[criteriaType] || {}
   } else {
     const possibleTypes = [
-      'ConditionOccurrence', 'ConditionEra',
-      'DrugExposure', 'DrugEra',
+      'ConditionOccurrence',
+      'ConditionEra',
+      'DrugExposure',
+      'DrugEra',
       'ProcedureOccurrence',
       'Observation',
-      'VisitOccurrence', 'VisitDetail',
+      'VisitOccurrence',
+      'VisitDetail',
       'Measurement',
       'DeviceExposure',
       'Specimen',
@@ -615,35 +718,48 @@ function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConce
       'PayerPlanPeriod',
       'LocationRegion',
     ]
-    criteriaType = possibleTypes.find(t => (atlasEvent as Record<string, unknown>)[t]) || 'ConditionOccurrence'
-    criteriaObj = ((atlasEvent as Record<string, unknown>)[criteriaType] as Record<string, unknown>) || {}
+    criteriaType =
+      possibleTypes.find(t => (atlasEvent as Record<string, unknown>)[t]) || 'ConditionOccurrence'
+    criteriaObj =
+      ((atlasEvent as Record<string, unknown>)[criteriaType] as Record<string, unknown>) || {}
   }
 
   const codesetId = criteriaObj.CodesetId as number | null | undefined
-  const conceptSet = (typeof codesetId === 'number' && conceptSets)
-    ? conceptSets.find(cs => cs.id === codesetId)
-    : undefined
+  const conceptSet =
+    typeof codesetId === 'number' && conceptSets
+      ? conceptSets.find(cs => cs.id === codesetId)
+      : undefined
 
   const event: CohortEvent = {
     id: generateId(),
     criteriaType: criteriaType as CriteriaType,
-    conceptSet: conceptSet ? {
-      id: conceptSet.id,
-      name: conceptSet.name,
-      items: conceptSet.expression?.items?.map((item: { concept: AtlasConcept; includeDescendants?: boolean; isExcluded?: boolean; includeMapped?: boolean }) => ({
-        conceptId: item.concept.CONCEPT_ID,
-        conceptName: item.concept.CONCEPT_NAME,
-        domainId: item.concept.DOMAIN_ID,
-        vocabularyId: item.concept.VOCABULARY_ID,
-        conceptClassId: item.concept.CONCEPT_CLASS_ID,
-        standardConcept: item.concept.STANDARD_CONCEPT,
-        conceptCode: item.concept.CONCEPT_CODE,
-        invalidReason: item.concept.INVALID_REASON,
-        includeDescendants: item.includeDescendants ?? false,
-        isExcluded: item.isExcluded ?? false,
-        includeMapped: item.includeMapped ?? false,
-      })) || [],
-    } : undefined,
+    conceptSet: conceptSet
+      ? {
+          id: conceptSet.id,
+          name: conceptSet.name,
+          items:
+            conceptSet.expression?.items?.map(
+              (item: {
+                concept: AtlasConcept
+                includeDescendants?: boolean
+                isExcluded?: boolean
+                includeMapped?: boolean
+              }) => ({
+                conceptId: item.concept.CONCEPT_ID,
+                conceptName: item.concept.CONCEPT_NAME,
+                domainId: item.concept.DOMAIN_ID,
+                vocabularyId: item.concept.VOCABULARY_ID,
+                conceptClassId: item.concept.CONCEPT_CLASS_ID,
+                standardConcept: item.concept.STANDARD_CONCEPT,
+                conceptCode: item.concept.CONCEPT_CODE,
+                invalidReason: item.concept.INVALID_REASON,
+                includeDescendants: item.includeDescendants ?? false,
+                isExcluded: item.isExcluded ?? false,
+                includeMapped: item.includeMapped ?? false,
+              })
+            ) || [],
+        }
+      : undefined,
     cardinality: (() => {
       interface AtlasEventWithOccurrence {
         Occurrence?: {
@@ -660,11 +776,17 @@ function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConce
       }
       const occurrence = eventWithOccurrence.Occurrence
       return {
-        type: occurrence.Type === 0 ? 'EXACTLY' :
-              occurrence.Type === 1 ? 'AT_MOST' :
-              occurrence.Type === 2 ? 'AT_LEAST' : 'EXACTLY',
+        type:
+          occurrence.Type === 0
+            ? 'EXACTLY'
+            : occurrence.Type === 1
+              ? 'AT_MOST'
+              : occurrence.Type === 2
+                ? 'AT_LEAST'
+                : 'EXACTLY',
         count: occurrence.Count ?? 1,
-        countingMethod: (occurrence.CountMethod as import('@/models/event.types').CountingMethod) || 'ALL',
+        countingMethod:
+          (occurrence.CountMethod as import('@/models/event.types').CountingMethod) || 'ALL',
         isDistinct: occurrence.IsDistinct,
         countColumn: occurrence.CountColumn,
       }
@@ -686,18 +808,28 @@ function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConce
   const startWindow = eventWithStartWindow.StartWindow
   if (startWindow) {
     event.temporalWindow = {
-      startWindow: startWindow.Start ? {
-        days: startWindow.Start.Days !== undefined ? startWindow.Start.Days : null,
-        beforeAfter: (startWindow.Start.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
-        referencePoint: startWindow.UseIndexEnd ? 'INDEX_END' :
-                       startWindow.UseEventEnd ? 'EVENT_END' : 'INDEX_START',
-      } : undefined,
-      endWindow: startWindow.End ? {
-        days: startWindow.End.Days !== undefined ? startWindow.End.Days : null,
-        beforeAfter: (startWindow.End.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
-        referencePoint: startWindow.UseIndexEnd ? 'INDEX_END' :
-                       startWindow.UseEventEnd ? 'EVENT_END' : 'INDEX_START',
-      } : undefined,
+      startWindow: startWindow.Start
+        ? {
+            days: startWindow.Start.Days !== undefined ? startWindow.Start.Days : null,
+            beforeAfter: (startWindow.Start.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
+            referencePoint: startWindow.UseIndexEnd
+              ? 'INDEX_END'
+              : startWindow.UseEventEnd
+                ? 'EVENT_END'
+                : 'INDEX_START',
+          }
+        : undefined,
+      endWindow: startWindow.End
+        ? {
+            days: startWindow.End.Days !== undefined ? startWindow.End.Days : null,
+            beforeAfter: (startWindow.End.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
+            referencePoint: startWindow.UseIndexEnd
+              ? 'INDEX_END'
+              : startWindow.UseEventEnd
+                ? 'EVENT_END'
+                : 'INDEX_START',
+          }
+        : undefined,
     }
   }
 
@@ -746,14 +878,19 @@ function convertAtlasToEvent(atlasEvent: AtlasCriteria, conceptSets?: AtlasConce
       id: generateId(),
       logicType: (correlatedCriteria.Type as LogicType) || 'ALL',
       count: correlatedCriteria.Count,
-      events: correlatedCriteria.CriteriaList?.map((e: AtlasCriteria) => convertAtlasToEvent(e, conceptSets)) || []
+      events:
+        correlatedCriteria.CriteriaList?.map((e: AtlasCriteria) =>
+          convertAtlasToEvent(e, conceptSets)
+        ) || [],
     }
   }
 
   return event
 }
 
-function convertDemographicCriteriaToEvent(demographicCriteria: Record<string, unknown>): CohortEvent {
+function convertDemographicCriteriaToEvent(
+  demographicCriteria: Record<string, unknown>
+): CohortEvent {
   const event: CohortEvent = {
     id: generateId(),
     criteriaType: 'ConditionOccurrence', // Use as placeholder
@@ -781,12 +918,18 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     })
   }
 
-  if (criteriaObj.AgeAtStart && typeof criteriaObj.AgeAtStart === 'object' && criteriaObj.AgeAtStart !== null) {
+  if (
+    criteriaObj.AgeAtStart &&
+    typeof criteriaObj.AgeAtStart === 'object' &&
+    criteriaObj.AgeAtStart !== null
+  ) {
     const ageAtStart = criteriaObj.AgeAtStart as { Op: string; Value: number; Extent?: number }
     attributes.push({
       type: 'numericRange',
       attributeKey: 'age',
-      operator: convertAtlasToOperator(ageAtStart.Op) as import('@/models/event.types').NumericOperator,
+      operator: convertAtlasToOperator(
+        ageAtStart.Op
+      ) as import('@/models/event.types').NumericOperator,
       value: ageAtStart.Value,
       extent: ageAtStart.Extent,
     })
@@ -794,7 +937,13 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
 
   // Gender - Concept array
   if (criteriaObj.Gender && Array.isArray(criteriaObj.Gender) && criteriaObj.Gender.length > 0) {
-    attributes.push(parseConceptAttribute('gender', criteriaObj.Gender, criteriaObj.GenderExclude as boolean | undefined))
+    attributes.push(
+      parseConceptAttribute(
+        'gender',
+        criteriaObj.Gender,
+        criteriaObj.GenderExclude as boolean | undefined
+      )
+    )
   }
   {
     const cs = parseConceptSetAttribute('genderCs', criteriaObj.GenderCS)
@@ -803,7 +952,13 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
 
   // Race - Concept array
   if (criteriaObj.Race && Array.isArray(criteriaObj.Race) && criteriaObj.Race.length > 0) {
-    attributes.push(parseConceptAttribute('race', criteriaObj.Race, criteriaObj.RaceExclude as boolean | undefined))
+    attributes.push(
+      parseConceptAttribute(
+        'race',
+        criteriaObj.Race,
+        criteriaObj.RaceExclude as boolean | undefined
+      )
+    )
   }
   {
     const cs = parseConceptSetAttribute('raceCs', criteriaObj.RaceCS)
@@ -811,8 +966,18 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
   }
 
   // Ethnicity - Concept array
-  if (criteriaObj.Ethnicity && Array.isArray(criteriaObj.Ethnicity) && criteriaObj.Ethnicity.length > 0) {
-    attributes.push(parseConceptAttribute('ethnicity', criteriaObj.Ethnicity, criteriaObj.EthnicityExclude as boolean | undefined))
+  if (
+    criteriaObj.Ethnicity &&
+    Array.isArray(criteriaObj.Ethnicity) &&
+    criteriaObj.Ethnicity.length > 0
+  ) {
+    attributes.push(
+      parseConceptAttribute(
+        'ethnicity',
+        criteriaObj.Ethnicity,
+        criteriaObj.EthnicityExclude as boolean | undefined
+      )
+    )
   }
   {
     const cs = parseConceptSetAttribute('ethnicityCs', criteriaObj.EthnicityCS)
@@ -820,8 +985,18 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
   }
 
   // ConditionType - Concept array with optional Exclude flag
-  if (criteriaObj.ConditionType && Array.isArray(criteriaObj.ConditionType) && criteriaObj.ConditionType.length > 0) {
-    attributes.push(parseConceptAttribute('conditionType', criteriaObj.ConditionType, criteriaObj.ConditionTypeExclude as boolean | undefined))
+  if (
+    criteriaObj.ConditionType &&
+    Array.isArray(criteriaObj.ConditionType) &&
+    criteriaObj.ConditionType.length > 0
+  ) {
+    attributes.push(
+      parseConceptAttribute(
+        'conditionType',
+        criteriaObj.ConditionType,
+        criteriaObj.ConditionTypeExclude as boolean | undefined
+      )
+    )
   }
   {
     const cs = parseConceptSetAttribute('conditionTypeCs', criteriaObj.ConditionTypeCS)
@@ -829,8 +1004,18 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
   }
 
   // ConditionStatus - Concept array with optional CS variant
-  if (criteriaObj.ConditionStatus && Array.isArray(criteriaObj.ConditionStatus) && criteriaObj.ConditionStatus.length > 0) {
-    attributes.push(parseConceptAttribute('conditionStatus', criteriaObj.ConditionStatus, criteriaObj.ConditionStatusExclude as boolean | undefined))
+  if (
+    criteriaObj.ConditionStatus &&
+    Array.isArray(criteriaObj.ConditionStatus) &&
+    criteriaObj.ConditionStatus.length > 0
+  ) {
+    attributes.push(
+      parseConceptAttribute(
+        'conditionStatus',
+        criteriaObj.ConditionStatus,
+        criteriaObj.ConditionStatusExclude as boolean | undefined
+      )
+    )
   }
   {
     const cs = parseConceptSetAttribute('conditionStatusCs', criteriaObj.ConditionStatusCS)
@@ -838,12 +1023,22 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
   }
 
   // ValueAsNumber - NumericRange
-  if (criteriaObj.ValueAsNumber && typeof criteriaObj.ValueAsNumber === 'object' && criteriaObj.ValueAsNumber !== null) {
-    const valueAsNumber = criteriaObj.ValueAsNumber as { Op: string; Value: number; Extent?: number }
+  if (
+    criteriaObj.ValueAsNumber &&
+    typeof criteriaObj.ValueAsNumber === 'object' &&
+    criteriaObj.ValueAsNumber !== null
+  ) {
+    const valueAsNumber = criteriaObj.ValueAsNumber as {
+      Op: string
+      Value: number
+      Extent?: number
+    }
     attributes.push({
       type: 'numericRange',
       attributeKey: 'valueAsNumber',
-      operator: convertAtlasToOperator(valueAsNumber.Op) as import('@/models/event.types').NumericOperator,
+      operator: convertAtlasToOperator(
+        valueAsNumber.Op
+      ) as import('@/models/event.types').NumericOperator,
       value: valueAsNumber.Value,
       extent: valueAsNumber.Extent,
     })
@@ -860,92 +1055,152 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
   }
 
   // OccurrenceStartDate - DateRange
-  if (criteriaObj.OccurrenceStartDate && typeof criteriaObj.OccurrenceStartDate === 'object' && criteriaObj.OccurrenceStartDate !== null) {
-    const occurrenceStartDate = criteriaObj.OccurrenceStartDate as { Op: string; Value: string; Extent?: string }
+  if (
+    criteriaObj.OccurrenceStartDate &&
+    typeof criteriaObj.OccurrenceStartDate === 'object' &&
+    criteriaObj.OccurrenceStartDate !== null
+  ) {
+    const occurrenceStartDate = criteriaObj.OccurrenceStartDate as {
+      Op: string
+      Value: string
+      Extent?: string
+    }
     attributes.push({
       type: 'dateRange',
       attributeKey: 'occurrenceStartDate',
-      operator: convertAtlasToOperator(occurrenceStartDate.Op) as import('@/models/event.types').DateOperator,
+      operator: convertAtlasToOperator(
+        occurrenceStartDate.Op
+      ) as import('@/models/event.types').DateOperator,
       value: occurrenceStartDate.Value,
       extent: occurrenceStartDate.Extent,
     })
   }
 
   // OccurrenceEndDate - DateRange
-  if (criteriaObj.OccurrenceEndDate && typeof criteriaObj.OccurrenceEndDate === 'object' && criteriaObj.OccurrenceEndDate !== null) {
-    const occurrenceEndDate = criteriaObj.OccurrenceEndDate as { Op: string; Value: string; Extent?: string }
+  if (
+    criteriaObj.OccurrenceEndDate &&
+    typeof criteriaObj.OccurrenceEndDate === 'object' &&
+    criteriaObj.OccurrenceEndDate !== null
+  ) {
+    const occurrenceEndDate = criteriaObj.OccurrenceEndDate as {
+      Op: string
+      Value: string
+      Extent?: string
+    }
     attributes.push({
       type: 'dateRange',
       attributeKey: 'occurrenceEndDate',
-      operator: convertAtlasToOperator(occurrenceEndDate.Op) as import('@/models/event.types').DateOperator,
+      operator: convertAtlasToOperator(
+        occurrenceEndDate.Op
+      ) as import('@/models/event.types').DateOperator,
       value: occurrenceEndDate.Value,
       extent: occurrenceEndDate.Extent,
     })
   }
 
   // EraStartDate - DateRange
-  if (criteriaObj.EraStartDate && typeof criteriaObj.EraStartDate === 'object' && criteriaObj.EraStartDate !== null) {
+  if (
+    criteriaObj.EraStartDate &&
+    typeof criteriaObj.EraStartDate === 'object' &&
+    criteriaObj.EraStartDate !== null
+  ) {
     const eraStartDate = criteriaObj.EraStartDate as { Op: string; Value: string; Extent?: string }
     attributes.push({
       type: 'dateRange',
       attributeKey: 'eraStartDate',
-      operator: convertAtlasToOperator(eraStartDate.Op) as import('@/models/event.types').DateOperator,
+      operator: convertAtlasToOperator(
+        eraStartDate.Op
+      ) as import('@/models/event.types').DateOperator,
       value: eraStartDate.Value,
       extent: eraStartDate.Extent,
     })
   }
 
   // EraEndDate - DateRange
-  if (criteriaObj.EraEndDate && typeof criteriaObj.EraEndDate === 'object' && criteriaObj.EraEndDate !== null) {
+  if (
+    criteriaObj.EraEndDate &&
+    typeof criteriaObj.EraEndDate === 'object' &&
+    criteriaObj.EraEndDate !== null
+  ) {
     const eraEndDate = criteriaObj.EraEndDate as { Op: string; Value: string; Extent?: string }
     attributes.push({
       type: 'dateRange',
       attributeKey: 'eraEndDate',
-      operator: convertAtlasToOperator(eraEndDate.Op) as import('@/models/event.types').DateOperator,
+      operator: convertAtlasToOperator(
+        eraEndDate.Op
+      ) as import('@/models/event.types').DateOperator,
       value: eraEndDate.Value,
       extent: eraEndDate.Extent,
     })
   }
 
   // VisitLength - NumericRange
-  if (criteriaObj.VisitLength && typeof criteriaObj.VisitLength === 'object' && criteriaObj.VisitLength !== null) {
+  if (
+    criteriaObj.VisitLength &&
+    typeof criteriaObj.VisitLength === 'object' &&
+    criteriaObj.VisitLength !== null
+  ) {
     const visitLength = criteriaObj.VisitLength as { Op: string; Value: number; Extent?: number }
     attributes.push({
       type: 'numericRange',
       attributeKey: 'visitLength',
-      operator: convertAtlasToOperator(visitLength.Op) as import('@/models/event.types').NumericOperator,
+      operator: convertAtlasToOperator(
+        visitLength.Op
+      ) as import('@/models/event.types').NumericOperator,
       value: visitLength.Value,
       extent: visitLength.Extent,
     })
   }
 
   // EraLength - NumericRange
-  if (criteriaObj.EraLength && typeof criteriaObj.EraLength === 'object' && criteriaObj.EraLength !== null) {
+  if (
+    criteriaObj.EraLength &&
+    typeof criteriaObj.EraLength === 'object' &&
+    criteriaObj.EraLength !== null
+  ) {
     const eraLength = criteriaObj.EraLength as { Op: string; Value: number; Extent?: number }
     attributes.push({
       type: 'numericRange',
       attributeKey: 'eraLength',
-      operator: convertAtlasToOperator(eraLength.Op) as import('@/models/event.types').NumericOperator,
+      operator: convertAtlasToOperator(
+        eraLength.Op
+      ) as import('@/models/event.types').NumericOperator,
       value: eraLength.Value,
       extent: eraLength.Extent,
     })
   }
 
   // Quantity - NumericRange
-  if (criteriaObj.Quantity && typeof criteriaObj.Quantity === 'object' && criteriaObj.Quantity !== null) {
+  if (
+    criteriaObj.Quantity &&
+    typeof criteriaObj.Quantity === 'object' &&
+    criteriaObj.Quantity !== null
+  ) {
     const quantity = criteriaObj.Quantity as { Op: string; Value: number; Extent?: number }
     attributes.push({
       type: 'numericRange',
       attributeKey: 'quantity',
-      operator: convertAtlasToOperator(quantity.Op) as import('@/models/event.types').NumericOperator,
+      operator: convertAtlasToOperator(
+        quantity.Op
+      ) as import('@/models/event.types').NumericOperator,
       value: quantity.Value,
       extent: quantity.Extent,
     })
   }
 
   // VisitType - Concept array
-  if (criteriaObj.VisitType && Array.isArray(criteriaObj.VisitType) && criteriaObj.VisitType.length > 0) {
-    attributes.push(parseConceptAttribute('visitType', criteriaObj.VisitType, criteriaObj.VisitTypeExclude as boolean | undefined))
+  if (
+    criteriaObj.VisitType &&
+    Array.isArray(criteriaObj.VisitType) &&
+    criteriaObj.VisitType.length > 0
+  ) {
+    attributes.push(
+      parseConceptAttribute(
+        'visitType',
+        criteriaObj.VisitType,
+        criteriaObj.VisitTypeExclude as boolean | undefined
+      )
+    )
   }
   {
     const cs = parseConceptSetAttribute('visitTypeCs', criteriaObj.VisitTypeCS)
@@ -953,8 +1208,18 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
   }
 
   // ProviderSpecialty - Concept array
-  if (criteriaObj.ProviderSpecialty && Array.isArray(criteriaObj.ProviderSpecialty) && criteriaObj.ProviderSpecialty.length > 0) {
-    attributes.push(parseConceptAttribute('providerSpecialty', criteriaObj.ProviderSpecialty, criteriaObj.ProviderSpecialtyExclude as boolean | undefined))
+  if (
+    criteriaObj.ProviderSpecialty &&
+    Array.isArray(criteriaObj.ProviderSpecialty) &&
+    criteriaObj.ProviderSpecialty.length > 0
+  ) {
+    attributes.push(
+      parseConceptAttribute(
+        'providerSpecialty',
+        criteriaObj.ProviderSpecialty,
+        criteriaObj.ProviderSpecialtyExclude as boolean | undefined
+      )
+    )
   }
   {
     const cs = parseConceptSetAttribute('providerSpecialtyCs', criteriaObj.ProviderSpecialtyCS)
@@ -971,24 +1236,51 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
   }
 
   // TemporalRelationship - TemporalWindow attribute
-  if (criteriaObj.TemporalRelationship && typeof criteriaObj.TemporalRelationship === 'object' && criteriaObj.TemporalRelationship !== null) {
+  if (
+    criteriaObj.TemporalRelationship &&
+    typeof criteriaObj.TemporalRelationship === 'object' &&
+    criteriaObj.TemporalRelationship !== null
+  ) {
     const temporalRelationship = criteriaObj.TemporalRelationship as { StartWindow?: unknown }
     if (temporalRelationship.StartWindow) {
-      attributes.push(parseTemporalRelationshipAttribute('temporalRelationship', temporalRelationship as Parameters<typeof parseTemporalRelationshipAttribute>[1]))
+      attributes.push(
+        parseTemporalRelationshipAttribute(
+          'temporalRelationship',
+          temporalRelationship as Parameters<typeof parseTemporalRelationshipAttribute>[1]
+        )
+      )
     }
   }
 
   // DateAdjustment - Date adjustment attribute
-  if (criteriaObj.DateAdjustment && typeof criteriaObj.DateAdjustment === 'object' && criteriaObj.DateAdjustment !== null) {
+  if (
+    criteriaObj.DateAdjustment &&
+    typeof criteriaObj.DateAdjustment === 'object' &&
+    criteriaObj.DateAdjustment !== null
+  ) {
     const dateAdjustment = criteriaObj.DateAdjustment as { StartWith?: string }
     if (dateAdjustment.StartWith) {
-      attributes.push(parseDateAdjustmentAttribute('dateAdjustment', dateAdjustment as Parameters<typeof parseDateAdjustmentAttribute>[1]))
+      attributes.push(
+        parseDateAdjustmentAttribute(
+          'dateAdjustment',
+          dateAdjustment as Parameters<typeof parseDateAdjustmentAttribute>[1]
+        )
+      )
     }
   }
 
   // UserDefinedPeriod - Custom period with start and end dates
-  if (typeof criteriaObj.PeriodStartDate === 'string' && typeof criteriaObj.PeriodEndDate === 'string') {
-    attributes.push(parseUserDefinedPeriodAttribute('userDefinedPeriod', criteriaObj.PeriodStartDate, criteriaObj.PeriodEndDate))
+  if (
+    typeof criteriaObj.PeriodStartDate === 'string' &&
+    typeof criteriaObj.PeriodEndDate === 'string'
+  ) {
+    attributes.push(
+      parseUserDefinedPeriodAttribute(
+        'userDefinedPeriod',
+        criteriaObj.PeriodStartDate,
+        criteriaObj.PeriodEndDate
+      )
+    )
   }
 
   return attributes

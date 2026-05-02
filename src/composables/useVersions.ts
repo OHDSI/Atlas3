@@ -62,10 +62,13 @@ export function useVersions(config: VersionsConfig) {
 
   // Get API service based on asset type
   const getVersionsAPI =
-    config.assetType === 'cohortdefinition' ? getCohortVersions :
-    config.assetType === 'pathway-analysis' ? getPathwayVersions :
-    config.assetType === 'ir' ? getIncidenceRateVersions :
-    getConceptSetVersions
+    config.assetType === 'cohortdefinition'
+      ? getCohortVersions
+      : config.assetType === 'pathway-analysis'
+        ? getPathwayVersions
+        : config.assetType === 'ir'
+          ? getIncidenceRateVersions
+          : getConceptSetVersions
 
   /**
    * Load versions from API and prepend current version row
@@ -81,9 +84,8 @@ export function useVersions(config: VersionsConfig) {
       // Convert to table items with formatting
       const tableItems: VersionsTableItem[] = historicalVersions.map(v => {
         // Handle different date formats (Unix timestamp or ISO string)
-        const dateStr = typeof v.createdDate === 'number'
-          ? new Date(v.createdDate).toISOString()
-          : v.createdDate
+        const dateStr =
+          typeof v.createdDate === 'number' ? new Date(v.createdDate).toISOString() : v.createdDate
 
         return {
           ...v,

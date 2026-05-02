@@ -41,9 +41,7 @@ export async function getFeatureAnalysis(id: number): Promise<FeatureAnalysis | 
 /**
  * Create a feature analysis.
  */
-export async function createFeatureAnalysis(
-  fa: FeatureAnalysis
-): Promise<FeatureAnalysis> {
+export async function createFeatureAnalysis(fa: FeatureAnalysis): Promise<FeatureAnalysis> {
   try {
     return await webapi.createFeatureAnalysis(fa)
   } catch (error) {
@@ -55,9 +53,7 @@ export async function createFeatureAnalysis(
 /**
  * Update a feature analysis.
  */
-export async function updateFeatureAnalysis(
-  fa: FeatureAnalysis
-): Promise<FeatureAnalysis> {
+export async function updateFeatureAnalysis(fa: FeatureAnalysis): Promise<FeatureAnalysis> {
   try {
     return await webapi.updateFeatureAnalysis(fa)
   } catch (error) {
@@ -97,10 +93,7 @@ export async function copyFeatureAnalysis(id: number): Promise<FeatureAnalysis> 
 /**
  * Whether a feature analysis with the given name already exists.
  */
-export async function featureAnalysisNameExists(
-  id: number,
-  name: string
-): Promise<boolean> {
+export async function featureAnalysisNameExists(id: number, name: string): Promise<boolean> {
   try {
     return await webapi.featureAnalysisNameExists(id, name)
   } catch (error) {
@@ -132,11 +125,7 @@ export async function listFeatureAnalysisAggregates(): Promise<FeatureAnalysisAg
   try {
     return await webapi.listFeatureAnalysisAggregates()
   } catch (error) {
-    logger.error(
-      'FeatureAnalysisService',
-      'Failed to list feature analysis aggregates',
-      error
-    )
+    logger.error('FeatureAnalysisService', 'Failed to list feature analysis aggregates', error)
     throw error
   }
 }
@@ -144,9 +133,7 @@ export async function listFeatureAnalysisAggregates(): Promise<FeatureAnalysisAg
 /**
  * Default FeatureExtraction covariate settings (toggled by `temporal`).
  */
-export async function getDefaultCovariateSettings(
-  temporal: boolean
-): Promise<CovariateSetting> {
+export async function getDefaultCovariateSettings(temporal: boolean): Promise<CovariateSetting> {
   try {
     return await webapi.getDefaultCovariateSettings(temporal)
   } catch (error) {

@@ -32,7 +32,7 @@
 
     <v-list
       v-else
-      density="comfortable"
+      density="compact"
       class="linked-cohort-picker__list"
       data-testid="linked-cohort-picker-list"
     >
@@ -75,7 +75,7 @@
             :items="selectableItems"
             item-value="id"
             show-select
-            density="comfortable"
+            density="compact"
             data-testid="linked-cohort-picker-table"
           />
         </v-card-text>
@@ -129,10 +129,10 @@ const dialogHeaders = computed(() => [
 ])
 
 const selectableItems = computed(() => {
-  const linkedIds = new Set(props.modelValue.map((c) => c.id))
+  const linkedIds = new Set(props.modelValue.map(c => c.id))
   return props.availableCohorts
-    .filter((c) => !linkedIds.has(c.id))
-    .map((c) => ({ id: c.id, name: c.name }))
+    .filter(c => !linkedIds.has(c.id))
+    .map(c => ({ id: c.id, name: c.name }))
 })
 
 function openDialog() {
@@ -142,13 +142,13 @@ function openDialog() {
 
 function confirmAdd() {
   const additions: LinkedCohort[] = selectedIds.value
-    .map((id) => props.availableCohorts.find((c) => c.id === id))
+    .map(id => props.availableCohorts.find(c => c.id === id))
     .filter((c): c is CohortDefinitionSummary => Boolean(c))
-    .map((c) => ({ id: c.id, name: c.name }))
+    .map(c => ({ id: c.id, name: c.name }))
 
   // De-dupe defensively in case the dialog state and model drifted.
-  const existingIds = new Set(props.modelValue.map((c) => c.id))
-  const merged = [...props.modelValue, ...additions.filter((a) => !existingIds.has(a.id))]
+  const existingIds = new Set(props.modelValue.map(c => c.id))
+  const merged = [...props.modelValue, ...additions.filter(a => !existingIds.has(a.id))]
 
   emit('update:modelValue', merged)
   dialogOpen.value = false
@@ -157,7 +157,7 @@ function confirmAdd() {
 function removeCohort(id: number) {
   emit(
     'update:modelValue',
-    props.modelValue.filter((c) => c.id !== id)
+    props.modelValue.filter(c => c.id !== id)
   )
 }
 </script>

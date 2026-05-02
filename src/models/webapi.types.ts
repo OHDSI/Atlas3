@@ -101,7 +101,7 @@ const RAW_STATUS_TO_GENERATION_STATUS: Record<string, GenerationStatus> = {
 
 const generationStatusFromRaw = z
   .string()
-  .transform((s) => RAW_STATUS_TO_GENERATION_STATUS[s] ?? 'PENDING')
+  .transform(s => RAW_STATUS_TO_GENERATION_STATUS[s] ?? 'PENDING')
 
 // WebAPI cohort definition generation info response
 //
@@ -109,18 +109,23 @@ const generationStatusFromRaw = z
 // from current WebAPI builds — the union below tolerates both. We only care
 // about the status/counts here, so `passthrough()` lets future fields land
 // without re-tightening the schema.
-export const CohortGenerationInfoSchema = z.object({
-  id: CohortGenerationIdSchema,
-  startTime: z.number().nullable().optional(),
-  executionDuration: z.number().nullable().optional(),
-  status: generationStatusFromRaw,
-  isValid: z.boolean().optional(),
-  isCanceled: z.boolean().optional(),
-  failMessage: z.string().nullable().optional(),
-  personCount: z.number().nullable().optional(),
-  recordCount: z.number().nullable().optional(),
-  createdBy: z.union([z.string(), z.record(z.unknown())]).nullable().optional(),
-}).passthrough()
+export const CohortGenerationInfoSchema = z
+  .object({
+    id: CohortGenerationIdSchema,
+    startTime: z.number().nullable().optional(),
+    executionDuration: z.number().nullable().optional(),
+    status: generationStatusFromRaw,
+    isValid: z.boolean().optional(),
+    isCanceled: z.boolean().optional(),
+    failMessage: z.string().nullable().optional(),
+    personCount: z.number().nullable().optional(),
+    recordCount: z.number().nullable().optional(),
+    createdBy: z
+      .union([z.string(), z.record(z.unknown())])
+      .nullable()
+      .optional(),
+  })
+  .passthrough()
 
 export type CohortGenerationInfo = z.infer<typeof CohortGenerationInfoSchema>
 
@@ -149,18 +154,20 @@ export type CohortInfo = z.infer<typeof CohortInfoSchema>
 
 // Cohort Definition Summary (for list view)
 // Based on actual WebAPI response structure
-export const CohortDefinitionSummarySchema = z.object({
-  id: z.number().int().positive(),
-  name: z.string(),
-  description: z.string().nullable().optional(),
-  createdBy: z.unknown().optional(), // May be string, object, or missing
-  createdDate: z.union([z.number(), z.string()]).optional(), // Can be timestamp or ISO string
-  modifiedBy: z.unknown().optional(), // May be string, object, or missing
-  modifiedDate: z.union([z.number(), z.string()]).optional(), // Can be timestamp or ISO string
-  hasWriteAccess: z.boolean().optional(),
-  hasReadAccess: z.boolean().optional(),
-  tags: z.array(TagSchema).optional(),
-}).passthrough() // Allow additional fields from WebAPI
+export const CohortDefinitionSummarySchema = z
+  .object({
+    id: z.number().int().positive(),
+    name: z.string(),
+    description: z.string().nullable().optional(),
+    createdBy: z.unknown().optional(), // May be string, object, or missing
+    createdDate: z.union([z.number(), z.string()]).optional(), // Can be timestamp or ISO string
+    modifiedBy: z.unknown().optional(), // May be string, object, or missing
+    modifiedDate: z.union([z.number(), z.string()]).optional(), // Can be timestamp or ISO string
+    hasWriteAccess: z.boolean().optional(),
+    hasReadAccess: z.boolean().optional(),
+    tags: z.array(TagSchema).optional(),
+  })
+  .passthrough() // Allow additional fields from WebAPI
 
 export type CohortDefinitionSummary = z.infer<typeof CohortDefinitionSummarySchema>
 

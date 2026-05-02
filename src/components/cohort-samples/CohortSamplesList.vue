@@ -147,7 +147,9 @@ function summarizeCriteria(sample: CohortSample): string {
 </script>
 
 <style scoped>
-.cohort-samples-list__row { cursor: pointer; }
+.cohort-samples-list__row {
+  cursor: pointer;
+}
 .cohort-samples-list__row--selected {
   background: rgba(31, 66, 90, 0.06);
 }
@@ -156,7 +158,9 @@ function summarizeCriteria(sample: CohortSample): string {
   text-decoration: none;
   font-weight: 500;
 }
-.cohort-samples-list__name:hover { text-decoration: underline; }
+.cohort-samples-list__name:hover {
+  text-decoration: underline;
+}
 .cohort-samples-list__criteria {
   color: rgba(0, 0, 0, 0.66);
   font-size: 13px;

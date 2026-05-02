@@ -15,7 +15,10 @@ export function useIncidenceRateGeneration(irId: number) {
   let timer: ReturnType<typeof setInterval> | null = null
 
   function stopPolling() {
-    if (timer) { clearInterval(timer); timer = null }
+    if (timer) {
+      clearInterval(timer)
+      timer = null
+    }
     polling.value = false
   }
 
@@ -71,7 +74,11 @@ export function useIncidenceRateGeneration(irId: number) {
   }
 
   // Initial fetch on mount-equivalent: caller may invoke pollOnce() directly.
-  try { onUnmounted(stopPolling) } catch { /* outside component */ }
+  try {
+    onUnmounted(stopPolling)
+  } catch {
+    /* outside component */
+  }
 
   return { polling, error, start, cancel, pollOnce, startPolling, stopPolling }
 }

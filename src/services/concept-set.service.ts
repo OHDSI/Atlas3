@@ -29,10 +29,7 @@ async function getAuthToken(): Promise<string | null> {
 /**
  * Internal fetch wrapper with error handling
  */
-async function fetchJSON<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
+async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${BASE_URL}${endpoint}`
 
   // Get auth token
@@ -61,7 +58,7 @@ async function fetchJSON<T>(
   }
 
   try {
-    return await response.json() as T
+    return (await response.json()) as T
   } catch (parseError) {
     logger.error('ConceptSet', 'Failed to parse JSON response', parseError)
     throw new Error('Invalid response format')
@@ -94,20 +91,18 @@ export async function getAllConceptSets(): Promise<ConceptSetListItem[]> {
  * @param id Concept set ID
  * @returns Concept set with items or null if not found
  */
-export async function getConceptSetById(
-  id: number | string
-): Promise<ConceptSet | null> {
+export async function getConceptSetById(id: number | string): Promise<ConceptSet | null> {
   try {
     // Fetch metadata and expression separately
     const [metadata, expression] = await Promise.all([
       fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${id}`),
-      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${id}/expression`)
+      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${id}/expression`),
     ])
 
     // Combine metadata and expression
     const combined: ConceptSetAPIResponse = {
       ...metadata,
-      expression: expression
+      expression: expression,
     }
 
     // Map WebAPI format to our interface
@@ -129,7 +124,7 @@ export async function createConceptSet(
   try {
     const metadataPayload = {
       name: conceptSet.name,
-      description: conceptSet.description
+      description: conceptSet.description,
     }
 
     const data = await fetchJSON<ConceptSetAPIResponse>('/conceptset', {
@@ -152,12 +147,12 @@ export async function createConceptSet(
 
       const [updatedMetadata, updatedExpression] = await Promise.all([
         fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${data.id}`),
-        fetchJSON<ConceptSetAPIExpression>(`/conceptset/${data.id}/expression`)
+        fetchJSON<ConceptSetAPIExpression>(`/conceptset/${data.id}/expression`),
       ])
 
       return mapConceptSetFromAPI({
         ...updatedMetadata,
-        expression: updatedExpression
+        expression: updatedExpression,
       })
     }
 
@@ -173,9 +168,7 @@ export async function createConceptSet(
  * @param conceptSet Concept set with id
  * @returns Updated concept set
  */
-export async function updateConceptSet(
-  conceptSet: ConceptSet
-): Promise<ConceptSet | null> {
+export async function updateConceptSet(conceptSet: ConceptSet): Promise<ConceptSet | null> {
   if (!conceptSet.id) {
     throw new Error('Concept set ID is required for update')
   }
@@ -184,7 +177,7 @@ export async function updateConceptSet(
     const metadataPayload = {
       id: conceptSet.id,
       name: conceptSet.name,
-      description: conceptSet.description
+      description: conceptSet.description,
     }
 
     await fetchJSON<ConceptSetAPIResponse>(`/conceptset/${conceptSet.id}`, {
@@ -206,12 +199,12 @@ export async function updateConceptSet(
 
     const [updatedMetadata, updatedExpression] = await Promise.all([
       fetchJSON<ConceptSetAPIMetadata>(`/conceptset/${conceptSet.id}`),
-      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${conceptSet.id}/expression`)
+      fetchJSON<ConceptSetAPIExpression>(`/conceptset/${conceptSet.id}/expression`),
     ])
 
     return mapConceptSetFromAPI({
       ...updatedMetadata,
-      expression: updatedExpression
+      expression: updatedExpression,
     })
   } catch (error) {
     logger.error('ConceptSet', `Failed to update concept set ${conceptSet.id}`, error)
@@ -224,9 +217,7 @@ export async function updateConceptSet(
  * @param id Concept set ID
  * @returns True if deleted successfully
  */
-export async function deleteConceptSet(
-  id: number | string
-): Promise<boolean> {
+export async function deleteConceptSet(id: number | string): Promise<boolean> {
   try {
     await fetchJSON(`/conceptset/${id}`, {
       method: 'DELETE',

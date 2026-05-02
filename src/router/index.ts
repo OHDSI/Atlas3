@@ -19,69 +19,74 @@ const router = createRouter({
 // Deeplink guard - handles ?cohortId=X and ?route=/path on initial load
 let deeplinkProcessed = false
 
-router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  if (deeplinkProcessed) {
-    next()
-    return
-  }
-
-  // Skip on auth callbacks
-  if (to.meta.isOAuthCallback || to.meta.isSAMLCallback || to.meta.isOpenIDCallback) {
-    deeplinkProcessed = true
-    next()
-    return
-  }
-
-  const cohortId = to.query.cohortId as string
-  const routeParam = to.query.route as string
-
-  if (cohortId) {
-    deeplinkProcessed = true
-    logger.info('Router', `Deeplink: redirecting to cohort ${cohortId}`)
-    next({ path: `/cohorts/${cohortId}`, replace: true })
-    return
-  }
-
-  if (routeParam) {
-    deeplinkProcessed = true
-    const targetRoute = routeParam.startsWith('/') ? routeParam : `/${routeParam}`
-
-    // Validate route exists to prevent open redirect
-    const resolved = router.resolve(targetRoute)
-    if (resolved.matched.length === 0) {
-      logger.warn('Router', `Deeplink: invalid route ${targetRoute}, ignoring`)
+router.beforeEach(
+  (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+    if (deeplinkProcessed) {
       next()
       return
     }
 
-    logger.info('Router', `Deeplink: redirecting to route ${targetRoute}`)
-    next({ path: targetRoute, replace: true })
-    return
-  }
-  deeplinkProcessed = true
-  next()
-})
-
-// Home redirect guard - must run before auth guard
-router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  if (to.path === '/') {
-    const logoNavigateTo = pluginConfigService.getLogoNavigateTo()
-    if (logoNavigateTo && logoNavigateTo !== '/') {
-      next(logoNavigateTo)
+    // Skip on auth callbacks
+    if (to.meta.isOAuthCallback || to.meta.isSAMLCallback || to.meta.isOpenIDCallback) {
+      deeplinkProcessed = true
+      next()
       return
     }
+
+    const cohortId = to.query.cohortId as string
+    const routeParam = to.query.route as string
+
+    if (cohortId) {
+      deeplinkProcessed = true
+      logger.info('Router', `Deeplink: redirecting to cohort ${cohortId}`)
+      next({ path: `/cohorts/${cohortId}`, replace: true })
+      return
+    }
+
+    if (routeParam) {
+      deeplinkProcessed = true
+      const targetRoute = routeParam.startsWith('/') ? routeParam : `/${routeParam}`
+
+      // Validate route exists to prevent open redirect
+      const resolved = router.resolve(targetRoute)
+      if (resolved.matched.length === 0) {
+        logger.warn('Router', `Deeplink: invalid route ${targetRoute}, ignoring`)
+        next()
+        return
+      }
+
+      logger.info('Router', `Deeplink: redirecting to route ${targetRoute}`)
+      next({ path: targetRoute, replace: true })
+      return
+    }
+    deeplinkProcessed = true
+    next()
   }
-  next()
-})
+)
+
+// Home redirect guard - must run before auth guard
+router.beforeEach(
+  (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+    if (to.path === '/') {
+      const logoNavigateTo = pluginConfigService.getLogoNavigateTo()
+      if (logoNavigateTo && logoNavigateTo !== '/') {
+        next(logoNavigateTo)
+        return
+      }
+    }
+    next()
+  }
+)
 
 // OAuth/SAML/OpenID callback handler
 router.beforeEach(async (to, _from, next) => {
-  const isAuthCallback = to.meta.isOAuthCallback ||
-                        to.meta.isSAMLCallback ||
-                        to.meta.isOpenIDCallback ||
-                        to.path === '/oauth/callback' ||
-                        to.path === '/saml/callback' ||
-                        to.path === '/openid/callback'
+  const isAuthCallback =
+    to.meta.isOAuthCallback ||
+    to.meta.isSAMLCallback ||
+    to.meta.isOpenIDCallback ||
+    to.path === '/oauth/callback' ||
+    to.path === '/saml/callback' ||
+    to.path === '/openid/callback'
 
   if (isAuthCallback) {
     const authStore = useAuthStore()
@@ -113,7 +118,10 @@ router.beforeEach(async (to, _from, next) => {
 
       if (tokenFromPath) {
         logger.info('Router', 'Token received in URL path (WebAPI pattern)')
-        logger.debug('Router', 'OAuth details', { client: clientFromPath, redirectUrl: redirectUrlFromPath })
+        logger.debug('Router', 'OAuth details', {
+          client: clientFromPath,
+          redirectUrl: redirectUrlFromPath,
+        })
 
         authStore.setToken(tokenFromPath)
 
@@ -201,56 +209,60 @@ router.beforeEach(async (to, _from, next) => {
 /**
  * Authentication guard - check if route requires authentication
  */
-router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  // Skip auth check for OAuth/SAML/OpenID callbacks (handled by their specific guard)
-  if (to.meta.isOAuthCallback || to.meta.isSAMLCallback || to.meta.isOpenIDCallback) {
-    next()
-    return
-  }
-
-  // Skip auth check if authentication is disabled
-  if (!authConfig.userAuthenticationEnabled) {
-    next()
-    return
-  }
-
-  // Check if route requires authentication
-  const requiresAuth = to.meta.requiresAuth === true // Default to false unless explicitly set to true
-
-  if (requiresAuth) {
-    const authStore = useAuthStore()
-
-    // If not authenticated, show login modal and stay on current page
-    // BUT only if authentication is actually enabled
-    if (!authStore.isAuthenticated && authConfig.userAuthenticationEnabled) {
-      logger.debug('Router', 'Route requires auth, opening login modal')
-      authStore.openLoginModal()
-
-      // Allow navigation anyway - login modal will overlay
-      // This prevents redirect loops and allows the app to render
+router.beforeEach(
+  (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+    // Skip auth check for OAuth/SAML/OpenID callbacks (handled by their specific guard)
+    if (to.meta.isOAuthCallback || to.meta.isSAMLCallback || to.meta.isOpenIDCallback) {
       next()
       return
     }
-  }
 
-  next()
-})
+    // Skip auth check if authentication is disabled
+    if (!authConfig.userAuthenticationEnabled) {
+      next()
+      return
+    }
+
+    // Check if route requires authentication
+    const requiresAuth = to.meta.requiresAuth === true // Default to false unless explicitly set to true
+
+    if (requiresAuth) {
+      const authStore = useAuthStore()
+
+      // If not authenticated, show login modal and stay on current page
+      // BUT only if authentication is actually enabled
+      if (!authStore.isAuthenticated && authConfig.userAuthenticationEnabled) {
+        logger.debug('Router', 'Route requires auth, opening login modal')
+        authStore.openLoginModal()
+
+        // Allow navigation anyway - login modal will overlay
+        // This prevents redirect loops and allows the app to render
+        next()
+        return
+      }
+    }
+
+    next()
+  }
+)
 
 /**
  * Configuration Panel Guard - Auto-close panel on navigation
  */
-router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  // Auto-close config panel when navigating to a different route
-  if (from.path !== to.path) {
-    const uiStore = useUIStore()
+router.beforeEach(
+  (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
+    // Auto-close config panel when navigating to a different route
+    if (from.path !== to.path) {
+      const uiStore = useUIStore()
 
-    if (uiStore.configPanelState.isOpen) {
-      uiStore.closeConfigPanel()
+      if (uiStore.configPanelState.isOpen) {
+        uiStore.closeConfigPanel()
+      }
     }
-  }
 
-  next()
-})
+    next()
+  }
+)
 
 /**
  * Get token from cookie

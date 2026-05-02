@@ -84,11 +84,32 @@ defineExpose({ onBrush })
 </script>
 
 <style scoped>
-.section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
-.section-header__title-row { display: flex; align-items: center; gap: 10px; }
-.section-header__rule { width: 28px; height: 2px; background-color: rgb(var(--v-theme-orange)); border-radius: 2px; }
-.section-title { font-size: 16px; font-weight: 600; line-height: 1.2; margin: 0; }
-.section-header__actions { margin-left: auto; }
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.section-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-header__rule {
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+}
+.section-header__actions {
+  margin-left: auto;
+}
 
 .profile-timeline__filters {
   margin-bottom: 12px;
@@ -97,6 +118,12 @@ defineExpose({ onBrush })
   gap: 8px;
   align-items: center;
 }
-.profile-timeline { height: 320px; width: 100%; }
-.chart { height: 100%; width: 100%; }
+.profile-timeline {
+  height: 320px;
+  width: 100%;
+}
+.chart {
+  height: 100%;
+  width: 100%;
+}
 </style>

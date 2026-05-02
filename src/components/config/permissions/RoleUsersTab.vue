@@ -12,7 +12,7 @@
           hide-details
           clearable
           class="role-users-tab__search"
-          style="max-width: 400px;"
+          style="max-width: 400px"
         />
 
         <div class="role-users-tab__actions">
@@ -74,10 +74,9 @@
             mdi-account-multiple
           </v-icon>
           <span class="text-body-2">
-            <strong>{{ selectedUserIds.size }}</strong> of <strong>{{ filteredUsers.length }}</strong> users assigned
-            <span v-if="debouncedSearchQuery">
-              (filtered from {{ users.length }} total)
-            </span>
+            <strong>{{ selectedUserIds.size }}</strong> of
+            <strong>{{ filteredUsers.length }}</strong> users assigned
+            <span v-if="debouncedSearchQuery"> (filtered from {{ users.length }} total) </span>
           </span>
         </div>
 
@@ -134,9 +133,7 @@
             >
               <a :href="`mailto:${item.email}`">{{ item.email }}</a>
             </div>
-            <span v-else>
-              —
-            </span>
+            <span v-else> — </span>
           </template>
         </v-data-table>
       </template>
@@ -196,7 +193,7 @@ const isSaving = ref(false)
 
 // Debounce search input (300ms)
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
-watch(searchQuery, (newValue) => {
+watch(searchQuery, newValue => {
   if (searchDebounceTimer) {
     clearTimeout(searchDebounceTimer)
   }
@@ -385,9 +382,12 @@ onMounted(() => {
 })
 
 // Reload when role changes
-watch(() => props.roleId, () => {
-  loadData()
-})
+watch(
+  () => props.roleId,
+  () => {
+    loadData()
+  }
+)
 </script>
 
 <style scoped>

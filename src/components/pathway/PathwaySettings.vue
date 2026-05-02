@@ -1,7 +1,9 @@
 <template>
   <div class="pathway-settings">
     <div class="pathway-settings__row">
-      <label class="pathway-settings__label">{{ t('pathway.combinationWindow', 'Collapse window (days)') }}</label>
+      <label class="pathway-settings__label">{{
+        t('pathway.combinationWindow', 'Collapse window (days)')
+      }}</label>
       <v-select
         :model-value="modelValue.combinationWindow as (typeof combinationWindowOptions)[number]"
         :items="combinationWindowOptions"
@@ -13,7 +15,9 @@
       />
     </div>
     <div class="pathway-settings__row">
-      <label class="pathway-settings__label">{{ t('pathway.minCellCount', 'Minimum cell count') }}</label>
+      <label class="pathway-settings__label">{{
+        t('pathway.minCellCount', 'Minimum cell count')
+      }}</label>
       <v-select
         :model-value="modelValue.minCellCount as (typeof minCellCountOptions)[number]"
         :items="minCellCountOptions"
@@ -25,7 +29,9 @@
       />
     </div>
     <div class="pathway-settings__row">
-      <label class="pathway-settings__label">{{ t('pathway.maxDepth', 'Maximum path length') }}</label>
+      <label class="pathway-settings__label">{{
+        t('pathway.maxDepth', 'Maximum path length')
+      }}</label>
       <v-select
         :model-value="modelValue.maxDepth as (typeof maxDepthOptions)[number]"
         :items="maxDepthOptions"
@@ -37,7 +43,9 @@
       />
     </div>
     <div class="pathway-settings__row">
-      <label class="pathway-settings__label">{{ t('pathway.allowRepeats', 'Allow repeats') }}</label>
+      <label class="pathway-settings__label">{{
+        t('pathway.allowRepeats', 'Allow repeats')
+      }}</label>
       <v-switch
         :model-value="modelValue.allowRepeats"
         density="compact"

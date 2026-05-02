@@ -46,11 +46,16 @@
           </v-icon>
           <!-- Short version for small screens -->
           <span class="d-md-none">
-            {{ observationPeriod.priorDays }} {{ t('options.before', 'before') }} {{ observationPeriod.postDays }} {{ t('options.after', 'after') }}
+            {{ observationPeriod.priorDays }} {{ t('options.before', 'before') }}
+            {{ observationPeriod.postDays }} {{ t('options.after', 'after') }}
           </span>
           <!-- Full version for larger screens -->
           <span class="d-none d-md-inline">
-            {{ observationPeriod.priorDays }} {{ t('common.days', 'days') }} {{ t('options.before', 'before') }} {{ t('common.and', 'and') }} {{ observationPeriod.postDays }} {{ t('common.days', 'days') }} {{ t('options.after', 'after') }} {{ t('components.cohortExpressionEditor.eventIndexDate', 'the event index date') }}
+            {{ observationPeriod.priorDays }} {{ t('common.days', 'days') }}
+            {{ t('options.before', 'before') }} {{ t('common.and', 'and') }}
+            {{ observationPeriod.postDays }} {{ t('common.days', 'days') }}
+            {{ t('options.after', 'after') }}
+            {{ t('components.cohortExpressionEditor.eventIndexDate', 'the event index date') }}
           </span>
         </v-chip>
       </div>
@@ -61,7 +66,11 @@
         max-width="500"
       >
         <v-card>
-          <v-card-title>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_6', 'Observation Period') }}</v-card-title>
+          <v-card-title>
+            {{
+              t('components.cohortExpressionEditor.cohortEntryEventsText_6', 'Observation Period')
+            }}
+          </v-card-title>
           <v-card-text>
             <div class="obs-period-dialog-content">
               <div class="obs-period-field">
@@ -109,8 +118,13 @@
         @update="updateEvent"
         @remove="removeEvent(event.id)"
         @select-concept-set="selectConceptSetForEvent(event.id)"
-        @select-concept-set-for-attribute="(attributeIndex) => $emit('select-concept-set-for-attribute', event.id, attributeIndex)"
-        @select-concept-for-attribute="(attributeIndex, domainFilter) => $emit('select-concept-for-attribute', event.id, attributeIndex, domainFilter)"
+        @select-concept-set-for-attribute="
+          attributeIndex => $emit('select-concept-set-for-attribute', event.id, attributeIndex)
+        "
+        @select-concept-for-attribute="
+          (attributeIndex, domainFilter) =>
+            $emit('select-concept-for-attribute', event.id, attributeIndex, domainFilter)
+        "
         @edit-concept-set="$emit('edit-concept-set', $event)"
       />
     </div>
@@ -138,7 +152,11 @@ const emit = defineEmits<{
   'update:observation-period': [period: ObservationPeriod]
   'select-concept-set': [eventId: string]
   'select-concept-set-for-attribute': [eventId: string, attributeIndex: number]
-  'select-concept-for-attribute': [eventId: string, attributeIndex: number, domainFilter: string | undefined]
+  'select-concept-for-attribute': [
+    eventId: string,
+    attributeIndex: number,
+    domainFilter: string | undefined,
+  ]
   'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
@@ -185,7 +203,7 @@ function selectConceptSetForEvent(eventId: string) {
 function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string | number) {
   emit('update:observation-period', {
     ...props.observationPeriod,
-    [field]: Number(value) || 0
+    [field]: Number(value) || 0,
   })
 }
 </script>
@@ -239,4 +257,3 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   margin-top: 16px;
 }
 </style>
-

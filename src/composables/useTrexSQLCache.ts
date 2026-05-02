@@ -8,13 +8,13 @@ import {
   type PatientCountResult,
   type TrexSQLCacheStatus,
   type DataSourceWithCacheStatus,
-  type PatientCountState
+  type PatientCountState,
 } from '@/models/trexsql.types'
 import {
   getPatientCount as fetchPatientCount,
   getCacheStatus,
   cancelCountRequest,
-  cancelAllCountRequests
+  cancelAllCountRequests,
 } from '@/services/trexsql.service'
 import { listDataSources } from '@/services/datasource.service'
 
@@ -32,7 +32,7 @@ export function useTrexSQLCache() {
     result: null,
     isLoading: false,
     error: null,
-    cacheStatus: null
+    cacheStatus: null,
   })
 
   const countError: Ref<string | null> = ref(null)
@@ -124,7 +124,7 @@ export function useTrexSQLCache() {
     }
   }
 
-  watch(selectedSourceKey, (newKey) => {
+  watch(selectedSourceKey, newKey => {
     saveSelectedSource(newKey)
     countState.value.selectedSourceKey = newKey
   })
@@ -150,14 +150,14 @@ export function useTrexSQLCache() {
             return {
               sourceKey: source.sourceKey,
               sourceName: source.sourceName,
-              cacheStatus
+              cacheStatus,
             }
           } catch (error) {
             logger.warn('TrexSQLCache', `Failed to get cache status for ${source.sourceKey}`, error)
             return {
               sourceKey: source.sourceKey,
               sourceName: source.sourceName,
-              cacheStatus: null
+              cacheStatus: null,
             }
           }
         })
@@ -190,7 +190,7 @@ export function useTrexSQLCache() {
         result: null,
         isLoading: false,
         error: null,
-        cacheStatus: dataSources.value.find(s => s.sourceKey === sourceKey)?.cacheStatus ?? null
+        cacheStatus: dataSources.value.find(s => s.sourceKey === sourceKey)?.cacheStatus ?? null,
       }
 
       selectedSourceKey.value = sourceKey
@@ -368,7 +368,7 @@ export function useTrexSQLCache() {
     getPatientCountImmediate,
     cancelCount,
     clearCount,
-    retryCount
+    retryCount,
   }
 }
 

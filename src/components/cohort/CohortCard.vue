@@ -168,10 +168,10 @@ const naLabel = t('common.noData', 'N/A')
 const cohortId = toRef(() => props.cohort.id)
 const { canWrite, canDelete } = useEntityAccess('cohortDefinition', cohortId)
 const generateTooltipText = computed(() =>
-  canWrite.value ? materializeTooltip.value : noPermissionTooltip.value,
+  canWrite.value ? materializeTooltip.value : noPermissionTooltip.value
 )
 const deleteTooltipText = computed(() =>
-  canDelete.value ? deleteTooltip.value : noPermissionTooltip.value,
+  canDelete.value ? deleteTooltip.value : noPermissionTooltip.value
 )
 
 function formatUser(userValue: unknown): string {

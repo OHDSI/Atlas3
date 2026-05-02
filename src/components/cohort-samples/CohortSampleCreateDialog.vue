@@ -210,7 +210,7 @@ const isRangeMode = computed(() => ageMode.value === 'between' || ageMode.value 
 // Reset form whenever the dialog is opened so a stale state doesn't leak between launches.
 watch(
   () => props.modelValue,
-  (open) => {
+  open => {
     if (open) {
       form.name = ''
       form.size = 100
@@ -272,5 +272,9 @@ function cancel() {
 // Re-export for templates / tests
 const _SAMPLE_SIZE_MAX = SAMPLE_SIZE_MAX
 const _SAMPLE_AGE_MAX = SAMPLE_AGE_MAX
-defineExpose({ SAMPLE_SIZE_MAX: _SAMPLE_SIZE_MAX, SAMPLE_AGE_MAX: _SAMPLE_AGE_MAX, SampleAgeModeValues })
+defineExpose({
+  SAMPLE_SIZE_MAX: _SAMPLE_SIZE_MAX,
+  SAMPLE_AGE_MAX: _SAMPLE_AGE_MAX,
+  SampleAgeModeValues,
+})
 </script>

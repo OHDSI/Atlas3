@@ -44,7 +44,8 @@ async function load() {
   }
   const id = Number(idStr)
   const ok = await store.loadIR(id)
-  if (!ok) loadingError.value = t('incidenceRate.editor.loadError', 'Failed to load incidence rate').value
+  if (!ok)
+    loadingError.value = t('incidenceRate.editor.loadError', 'Failed to load incidence rate').value
 }
 
 onMounted(async () => {
@@ -58,6 +59,12 @@ watch(() => route.params.id, load)
 </script>
 
 <style scoped>
-.state { padding: 24px; text-align: center; color: #888; }
-.state.error { color: #c00; }
+.state {
+  padding: 24px;
+  text-align: center;
+  color: #888;
+}
+.state.error {
+  color: #c00;
+}
 </style>

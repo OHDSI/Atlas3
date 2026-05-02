@@ -12,15 +12,19 @@ export function useIncidenceRateReport(
   irId: Ref<number | null>,
   sourceKey: Ref<string | null>,
   targetId: Ref<number | null>,
-  outcomeId: Ref<number | null>,
+  outcomeId: Ref<number | null>
 ) {
   const report = ref<IncidenceRateReport | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
   async function fetch() {
-    if (irId.value == null || sourceKey.value == null
-        || targetId.value == null || outcomeId.value == null) {
+    if (
+      irId.value == null ||
+      sourceKey.value == null ||
+      targetId.value == null ||
+      outcomeId.value == null
+    ) {
       report.value = null
       return
     }
@@ -28,10 +32,16 @@ export function useIncidenceRateReport(
     error.value = null
     try {
       const result = await getIncidenceRateReport(
-        irId.value, sourceKey.value, targetId.value, outcomeId.value,
+        irId.value,
+        sourceKey.value,
+        targetId.value,
+        outcomeId.value
       )
       if (result.success) report.value = result.data
-      else { error.value = result.error; report.value = null }
+      else {
+        error.value = result.error
+        report.value = null
+      }
     } catch (err) {
       logger.error('IRReport', 'fetch failed', err)
       error.value = err instanceof Error ? err.message : 'Failed to fetch report'

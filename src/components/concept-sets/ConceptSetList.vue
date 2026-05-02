@@ -35,7 +35,12 @@
           v-for="conceptSet in filteredConceptSets"
           :key="conceptSet.id"
           :title="conceptSet.name"
-          :subtitle="tv('conceptSetList.subtitle', { id: conceptSet.id ?? 0, count: getConceptCount(conceptSet) })"
+          :subtitle="
+            tv('conceptSetList.subtitle', {
+              id: conceptSet.id ?? 0,
+              count: getConceptCount(conceptSet),
+            })
+          "
         >
           <template #append>
             <div class="d-flex gap-2">
@@ -132,9 +137,9 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  'create': []
-  'edit': [id: number | string]
-  'delete': [id: number | string]
+  create: []
+  edit: [id: number | string]
+  delete: [id: number | string]
 }>()
 
 const searchFilter = ref('')
@@ -147,9 +152,8 @@ const filteredConceptSets = computed(() => {
   }
 
   const query = searchFilter.value.toLowerCase()
-  return props.conceptSets.filter((cs) =>
-    cs.name.toLowerCase().includes(query) ||
-    (cs.id?.toString() || '').includes(query)
+  return props.conceptSets.filter(
+    cs => cs.name.toLowerCase().includes(query) || (cs.id?.toString() || '').includes(query)
   )
 })
 

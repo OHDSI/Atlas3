@@ -81,10 +81,7 @@ export interface HttpClientResponse<T> {
   ok: boolean
 }
 
-export async function httpClient<T>(
-  endpoint: string,
-  options: HttpClientOptions = {}
-): Promise<T> {
+export async function httpClient<T>(endpoint: string, options: HttpClientOptions = {}): Promise<T> {
   const url = `${BASE_URL}${endpoint}`
   const maxRetries = options.maxRetries ?? MAX_RETRY_ATTEMPTS
   const initialDelay = options.initialRetryDelay ?? INITIAL_RETRY_DELAY_MS
@@ -102,7 +99,13 @@ export async function httpClient<T>(
         }
       }
 
-      const { body: rawBody, skipAuth: _skipAuth, maxRetries: _, initialRetryDelay: __, ...restOptions } = options
+      const {
+        body: rawBody,
+        skipAuth: _skipAuth,
+        maxRetries: _,
+        initialRetryDelay: __,
+        ...restOptions
+      } = options
       const requestInit: RequestInit = { ...restOptions, headers }
 
       // Only set Content-Type when there's a body (POST, PUT, PATCH)
@@ -124,7 +127,11 @@ export async function httpClient<T>(
         const error = new Error(`HTTP ${response.status}: ${response.statusText}`)
         if (isRetryableError(error, response.status) && attempt < maxRetries - 1) {
           const delay = initialDelay * Math.pow(2, attempt)
-          logger.warn('HttpClient', `Request failed (attempt ${attempt + 1}/${maxRetries}), retrying in ${delay}ms...`, error.message)
+          logger.warn(
+            'HttpClient',
+            `Request failed (attempt ${attempt + 1}/${maxRetries}), retrying in ${delay}ms...`,
+            error.message
+          )
           await sleep(delay)
           continue
         }
@@ -147,7 +154,11 @@ export async function httpClient<T>(
 
       if (isRetryableError(error) && attempt < maxRetries - 1) {
         const delay = initialDelay * Math.pow(2, attempt)
-        logger.warn('HttpClient', `Network error (attempt ${attempt + 1}/${maxRetries}), retrying in ${delay}ms...`, lastError.message)
+        logger.warn(
+          'HttpClient',
+          `Network error (attempt ${attempt + 1}/${maxRetries}), retrying in ${delay}ms...`,
+          lastError.message
+        )
         await sleep(delay)
         continue
       }
@@ -162,19 +173,33 @@ export async function httpClient<T>(
   throw lastError || new Error('Request failed after all retry attempts')
 }
 
-export function httpGet<T>(endpoint: string, options?: Omit<HttpClientOptions, 'method' | 'body'>): Promise<T> {
+export function httpGet<T>(
+  endpoint: string,
+  options?: Omit<HttpClientOptions, 'method' | 'body'>
+): Promise<T> {
   return httpClient<T>(endpoint, { ...options, method: 'GET' })
 }
 
-export function httpPost<T>(endpoint: string, body?: unknown, options?: Omit<HttpClientOptions, 'method' | 'body'>): Promise<T> {
+export function httpPost<T>(
+  endpoint: string,
+  body?: unknown,
+  options?: Omit<HttpClientOptions, 'method' | 'body'>
+): Promise<T> {
   return httpClient<T>(endpoint, { ...options, method: 'POST', body })
 }
 
-export function httpPut<T>(endpoint: string, body?: unknown, options?: Omit<HttpClientOptions, 'method' | 'body'>): Promise<T> {
+export function httpPut<T>(
+  endpoint: string,
+  body?: unknown,
+  options?: Omit<HttpClientOptions, 'method' | 'body'>
+): Promise<T> {
   return httpClient<T>(endpoint, { ...options, method: 'PUT', body })
 }
 
-export function httpDelete<T>(endpoint: string, options?: Omit<HttpClientOptions, 'method'>): Promise<T> {
+export function httpDelete<T>(
+  endpoint: string,
+  options?: Omit<HttpClientOptions, 'method'>
+): Promise<T> {
   return httpClient<T>(endpoint, { ...options, method: 'DELETE' })
 }
 

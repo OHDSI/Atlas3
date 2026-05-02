@@ -90,9 +90,13 @@ export function useTimelineFilters(): {
     for (const r of store.filteredRecords) {
       const existing = map.get(r.conceptId)
       if (existing) existing.count += 1
-      else map.set(r.conceptId, {
-        conceptId: r.conceptId, conceptName: r.conceptName, domain: r.domain, count: 1,
-      })
+      else
+        map.set(r.conceptId, {
+          conceptId: r.conceptId,
+          conceptName: r.conceptName,
+          domain: r.domain,
+          count: 1,
+        })
     }
     return Array.from(map.values())
   })

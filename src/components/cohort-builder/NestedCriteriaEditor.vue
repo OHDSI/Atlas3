@@ -20,7 +20,9 @@
             <div
               class="vertical-label match-type-label"
               :data-type="localNested.logicType"
-              :title="t('components.nestedCriteria.clickToChange', 'Click to change logic type').value"
+              :title="
+                t('components.nestedCriteria.clickToChange', 'Click to change logic type').value
+              "
             >
               {{ getLogicTypeDisplay() }}
             </div>
@@ -107,8 +109,14 @@
           class="mb-2"
         >
           <v-icon>mdi-alert</v-icon>
-          {{ t('components.nestedCriteria.depthWarning', 'Deep nesting detected') }} ({{ depth }} {{ t('common.levels', 'levels') }}).
-          {{ t('components.nestedCriteria.simplifyStructure', 'Consider simplifying your criteria structure.') }}
+          {{ t('components.nestedCriteria.depthWarning', 'Deep nesting detected') }} ({{ depth }}
+          {{ t('common.levels', 'levels') }}).
+          {{
+            t(
+              'components.nestedCriteria.simplifyStructure',
+              'Consider simplifying your criteria structure.'
+            )
+          }}
         </v-alert>
 
         <!-- Header with Add Criteria and Delete buttons -->
@@ -156,7 +164,12 @@
           density="compact"
           class="mb-2"
         >
-          {{ t('components.nestedCriteria.noEvents', 'No events in this group. Click "Add Criteria" to begin.') }}
+          {{
+            t(
+              'components.nestedCriteria.noEvents',
+              'No events in this group. Click "Add Criteria" to begin.'
+            )
+          }}
         </v-alert>
 
         <!-- Events List -->
@@ -202,7 +215,10 @@
                       block
                       @click="selectConceptSet(index, event.id)"
                     >
-                      {{ event.conceptSet?.name || t('components.conceptAddBox.selectConceptSet', 'Select concept set...') }}
+                      {{
+                        event.conceptSet?.name ||
+                          t('components.conceptAddBox.selectConceptSet', 'Select concept set...')
+                      }}
                     </v-btn>
                   </div>
 
@@ -231,7 +247,10 @@
                   <div class="mb-2">
                     <v-switch
                       :model-value="!!event.temporalWindow"
-                      :label="t('components.nestedCriteria.addTemporalWindow', 'Add temporal window').value"
+                      :label="
+                        t('components.nestedCriteria.addTemporalWindow', 'Add temporal window')
+                          .value
+                      "
                       density="compact"
                       color="primary"
                       hide-details
@@ -272,7 +291,9 @@
                   <div class="mb-2">
                     <v-switch
                       :model-value="!!event.nestedCriteria"
-                      :label="t('components.nestedCriteria.addNestedGroup', 'Add nested group').value"
+                      :label="
+                        t('components.nestedCriteria.addNestedGroup', 'Add nested group').value
+                      "
                       density="compact"
                       color="primary"
                       hide-details
@@ -307,14 +328,21 @@ import { ref, computed, watch, defineOptions } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
-import type { NestedCriteria, CohortEvent, CriteriaType, LogicType, TemporalWindow, EventAttribute } from '@/models/cohort.types'
+import type {
+  NestedCriteria,
+  CohortEvent,
+  CriteriaType,
+  LogicType,
+  TemporalWindow,
+  EventAttribute,
+} from '@/models/cohort.types'
 import type { CardinalityType } from '@/models/event.types'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
 
 // Define component name for recursive reference
 defineOptions({
-  name: 'NestedCriteriaEditor'
+  name: 'NestedCriteriaEditor',
 })
 
 interface Props {
@@ -342,7 +370,7 @@ const localNested = ref<NestedCriteria>({
   id: props.modelValue.id,
   logicType: props.modelValue.logicType,
   count: props.modelValue.count,
-  events: props.modelValue.events.map(e => ({ ...e }))
+  events: props.modelValue.events.map(e => ({ ...e })),
 })
 const showLogicTypeMenu = ref(false)
 const tempLogicType = ref<LogicType>(props.modelValue.logicType)
@@ -353,26 +381,30 @@ const criteriaTypes = computed(() => {
   return availableFilters.value.map(filter => ({
     value: filter.criteriaType,
     label: filter.name,
-    description: filter.description
+    description: filter.description,
   }))
 })
 
 const cardinalityTypes = computed(() => [
   { value: 'AT_LEAST', title: t('options.atLeast', 'At least') },
   { value: 'EXACTLY', title: t('options.exactly', 'Exactly') },
-  { value: 'AT_MOST', title: t('options.atMost', 'At most') }
+  { value: 'AT_MOST', title: t('options.atMost', 'At most') },
 ])
 
 // Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  // Deep clone to avoid reactivity issues with nested structures
-  localNested.value = {
-    id: newValue.id,
-    logicType: newValue.logicType,
-    count: newValue.count,
-    events: newValue.events.map(e => ({ ...e }))
-  }
-}, { deep: true, flush: 'sync' })
+watch(
+  () => props.modelValue,
+  newValue => {
+    // Deep clone to avoid reactivity issues with nested structures
+    localNested.value = {
+      id: newValue.id,
+      logicType: newValue.logicType,
+      count: newValue.count,
+      events: newValue.events.map(e => ({ ...e })),
+    }
+  },
+  { deep: true, flush: 'sync' }
+)
 
 // Emit changes to parent
 function emitUpdate() {
@@ -421,8 +453,11 @@ function addCriteria(criteriaType: CriteriaType) {
   const newEvent: CohortEvent = {
     id: uuidv4(),
     criteriaType,
-    conceptSet: { id: 0, name: t('components.conceptAddBox.selectConceptSet', 'Select concept set...').value },
-    attributes: []
+    conceptSet: {
+      id: 0,
+      name: t('components.conceptAddBox.selectConceptSet', 'Select concept set...').value,
+    },
+    attributes: [],
   }
 
   localNested.value.events.push(newEvent)
@@ -513,7 +548,7 @@ function toggleNestedCriteria(index: number, enabled: boolean) {
     event.nestedCriteria = {
       id: uuidv4(),
       logicType: 'ALL',
-      events: []
+      events: [],
     }
   } else {
     delete event.nestedCriteria
@@ -582,10 +617,10 @@ function formatEventType(type: CriteriaType): string {
 }
 
 /* ALL - Navy */
-.vertical-label-container:has(.match-type-label[data-type="ALL"]) {
+.vertical-label-container:has(.match-type-label[data-type='ALL']) {
   border: 1px solid #1f425a;
 }
-.vertical-label-container:has(.match-type-label[data-type="ALL"])::before {
+.vertical-label-container:has(.match-type-label[data-type='ALL'])::before {
   content: '';
   position: absolute;
   left: 0;
@@ -595,15 +630,15 @@ function formatEventType(type: CriteriaType): string {
   background: #1f425a;
   border-radius: 0 0 0 6px;
 }
-.match-type-label[data-type="ALL"] {
+.match-type-label[data-type='ALL'] {
   color: #1f425a;
 }
 
 /* ANY - Orange */
-.vertical-label-container:has(.match-type-label[data-type="ANY"]) {
+.vertical-label-container:has(.match-type-label[data-type='ANY']) {
   border: 1px solid #eb6622;
 }
-.vertical-label-container:has(.match-type-label[data-type="ANY"])::before {
+.vertical-label-container:has(.match-type-label[data-type='ANY'])::before {
   content: '';
   position: absolute;
   left: 0;
@@ -613,15 +648,15 @@ function formatEventType(type: CriteriaType): string {
   background: #eb6622;
   border-radius: 0 0 0 6px;
 }
-.match-type-label[data-type="ANY"] {
+.match-type-label[data-type='ANY'] {
   color: #eb6622;
 }
 
 /* AT_LEAST - Light Blue */
-.vertical-label-container:has(.match-type-label[data-type="AT_LEAST"]) {
+.vertical-label-container:has(.match-type-label[data-type='AT_LEAST']) {
   border: 1px solid #69aed5;
 }
-.vertical-label-container:has(.match-type-label[data-type="AT_LEAST"])::before {
+.vertical-label-container:has(.match-type-label[data-type='AT_LEAST'])::before {
   content: '';
   position: absolute;
   left: 0;
@@ -631,15 +666,15 @@ function formatEventType(type: CriteriaType): string {
   background: #69aed5;
   border-radius: 0 0 0 6px;
 }
-.match-type-label[data-type="AT_LEAST"] {
+.match-type-label[data-type='AT_LEAST'] {
   color: #69aed5;
 }
 
 /* AT_MOST - Darker Blue */
-.vertical-label-container:has(.match-type-label[data-type="AT_MOST"]) {
+.vertical-label-container:has(.match-type-label[data-type='AT_MOST']) {
   border: 1px solid #336b91;
 }
-.vertical-label-container:has(.match-type-label[data-type="AT_MOST"])::before {
+.vertical-label-container:has(.match-type-label[data-type='AT_MOST'])::before {
   content: '';
   position: absolute;
   left: 0;
@@ -649,7 +684,7 @@ function formatEventType(type: CriteriaType): string {
   background: #336b91;
   border-radius: 0 0 0 6px;
 }
-.match-type-label[data-type="AT_MOST"] {
+.match-type-label[data-type='AT_MOST'] {
   color: #336b91;
 }
 

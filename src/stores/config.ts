@@ -13,7 +13,7 @@ import * as tagGroupsAPI from '@/services/tag-groups'
 
 export const useConfigStore = defineStore('config', () => {
   // State
-  const allTags = ref<Tag[]>([])  // All tags (groups and individual tags)
+  const allTags = ref<Tag[]>([]) // All tags (groups and individual tags)
   const tagGroups = ref<TagGroup[]>([])
   const vocabularySchema = ref<string>('public')
   const isLoadingTagGroups = ref(false)
@@ -46,10 +46,8 @@ export const useConfigStore = defineStore('config', () => {
    * Gets tags for a specific tag group
    */
   function getTagsForGroup(groupId: number): Tag[] {
-    return allTags.value.filter(t =>
-      t.groups &&
-      t.groups.length > 0 &&
-      t.groups.some(g => g.id === groupId)
+    return allTags.value.filter(
+      t => t.groups && t.groups.length > 0 && t.groups.some(g => g.id === groupId)
     )
   }
 
@@ -61,7 +59,7 @@ export const useConfigStore = defineStore('config', () => {
     const tempId = -Date.now() // Negative ID to distinguish from real IDs
     const optimistic: TagGroup = {
       ...tagGroup,
-      id: tempId
+      id: tempId,
     }
     tagGroups.value.push(optimistic)
 
@@ -302,6 +300,6 @@ export const useConfigStore = defineStore('config', () => {
     clearCache,
     getCacheStats,
     fetchVocabularySchema,
-    updateVocabularySchema
+    updateVocabularySchema,
   }
 })

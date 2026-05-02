@@ -15,12 +15,33 @@
 -->
 <template>
   <AnalysisBuilderShell
+    :eyebrow="t('cc.title', 'Characterization').value"
     :title="titleText"
     :error="storeError"
     testid="char-builder"
     @back="handleBack"
     @clear-error="store.clearError()"
   >
+    <template #title>
+      <input
+        :value="draft.name"
+        :placeholder="t('cc.viewEdit.namePlaceholder', 'Name this characterization').value"
+        :aria-label="t('columns.name', 'Name').value"
+        class="char-builder__title-input"
+        data-testid="char-builder-name"
+        @input="(e: Event) => onDraftChange({ ...draft, name: (e.target as HTMLInputElement).value })"
+      >
+    </template>
+    <template #subtitle>
+      <input
+        :value="draft.description ?? ''"
+        :placeholder="t('cc.viewEdit.descriptionPlaceholder', 'Add a short description').value"
+        :aria-label="t('columns.description', 'Description').value"
+        class="char-builder__subtitle-input"
+        data-testid="char-builder-description"
+        @input="(e: Event) => onDraftChange({ ...draft, description: (e.target as HTMLInputElement).value })"
+      >
+    </template>
     <template #actions>
       <v-tooltip
         :text="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
@@ -184,27 +205,24 @@
       </v-btn>
     </template>
 
-    <CharacterizationDesignTab
+    <CharacterizationWorkbench
       :model-value="draft"
+      :characterization-id="draftId"
       :available-cohorts="availableCohorts"
       :available-feature-analyses="availableFeatureAnalyses"
-      data-testid="char-builder-design-tab"
+      data-testid="char-builder-workbench"
       @update:model-value="onDraftChange"
+      @explore="onExplore"
     />
 
-    <section
-      v-if="isEditing"
-      class="char-builder__executions-section"
-    >
-      <header class="char-builder__executions-header">
-        <span class="text-eyebrow">{{ t('cc.viewEdit.tabs.executions', 'Executions').value }}</span>
-        <span class="char-builder__executions-rule" />
-      </header>
-      <ExecutionsPanel
-        :characterization-id="draftId"
-        data-testid="char-builder-executions-tab"
-      />
-    </section>
+    <ExplorePrevalenceDialog
+      v-model="exploreOpen"
+      :generation-id="exploreGenerationId"
+      :analysis-id="exploreAnalysisId"
+      :cohort-id="exploreCohortId"
+      :covariate-id="exploreCovariateId"
+      :covariate-name="exploreCovariateName"
+    />
 
     <v-dialog
       v-model="showConceptSetsDialog"
@@ -353,22 +371,16 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getCohorts } from '@/services/webapi'
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
-import {
-  exportCharacterization,
-  importCharacterization,
-} from '@/services/characterization.service'
+import { exportCharacterization, importCharacterization } from '@/services/characterization.service'
 import { logger } from '@/utils/logger'
-import CharacterizationDesignTab from '@/components/characterization/CharacterizationDesignTab.vue'
+import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
 import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
-import ExecutionsPanel from '@/components/characterization/ExecutionsPanel.vue'
+import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import {
-  validateCharacterization,
-  countByLevel,
-} from '@/utils/characterization-validators'
-import type { CharacterizationDefinition } from '@/models/characterization.types'
+import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
+import type { CharacterizationDefinition, PrevalenceStat } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 
@@ -426,6 +438,33 @@ function showSnackbar(message: string, color: 'success' | 'error' | 'info' = 'su
   snackbar.show = true
 }
 
+const exploreOpen = ref<boolean>(false)
+const exploreGenerationId = ref<number | null>(null)
+const exploreAnalysisId = ref<number | null>(null)
+const exploreCohortId = ref<number | null>(null)
+const exploreCovariateId = ref<number | null>(null)
+const exploreCovariateName = ref<string | null>(null)
+
+function onExplore(row: PrevalenceStat): void {
+  const cohort = row.cohorts[0]
+  if (!cohort) return
+  const runId = readRunIdFromQuery()
+  if (runId === null) return
+  exploreGenerationId.value = runId
+  exploreAnalysisId.value = row.analysisId
+  exploreCohortId.value = cohort.id
+  exploreCovariateId.value = row.covariateId
+  exploreCovariateName.value = row.covariateName
+  exploreOpen.value = true
+}
+
+function readRunIdFromQuery(): number | null {
+  const q = router.currentRoute.value.query?.run
+  if (typeof q !== 'string') return null
+  const n = Number(q)
+  return Number.isFinite(n) ? n : null
+}
+
 // ---------------------------------------------------------------------------
 // Computed helpers
 // ---------------------------------------------------------------------------
@@ -433,9 +472,12 @@ function showSnackbar(message: string, color: 'success' | 'error' | 'info' = 'su
 const isEditing = computed<boolean>(() => Boolean(props.id))
 
 const titleText = computed(() => {
-  return isEditing.value
-    ? t('configuration.tagManagement.edit', 'Edit Characterization').value
-    : t('cc.new', 'New Characterization').value
+  if (!isEditing.value) {
+    return t('cc.new', 'New Characterization').value
+  }
+  const name = draft.value.name?.trim()
+  if (name && name.length > 0) return name
+  return t('configuration.tagManagement.edit', 'Edit Characterization').value
 })
 
 const storeError = computed<string | null>(() => store.error)
@@ -478,10 +520,7 @@ const runDisabledReason = computed<string>(() => {
     ).value
   }
   if (store.isDirty) {
-    return t(
-      'const.disabledReason.dirty',
-      'Save your changes before running.'
-    ).value
+    return t('const.disabledReason.dirty', 'Save your changes before running.').value
   }
   return ''
 })
@@ -492,11 +531,9 @@ function handleRunClick() {
 }
 
 const deleteMessage = computed<string>(() => {
-  return t(
-    'cc.viewEdit.deleteConfirmation',
-    `Delete characterization '${draft.value.name}'?`,
-    { name: draft.value.name }
-  ).value
+  return t('cc.viewEdit.deleteConfirmation', `Delete characterization '${draft.value.name}'?`, {
+    name: draft.value.name,
+  }).value
 })
 
 // ---------------------------------------------------------------------------
@@ -532,19 +569,13 @@ function onDraftChange(next: CharacterizationDefinition) {
 
 async function handleSave() {
   if (draft.value.name.trim().length === 0) {
-    showSnackbar(
-      t('components.nameValidation.empty', 'Name is required').value,
-      'error'
-    )
+    showSnackbar(t('components.nameValidation.empty', 'Name is required').value, 'error')
     return
   }
 
   if (hasValidationErrors.value) {
     showSnackbar(
-      t(
-        'const.disabledReason.invalidDesign',
-        'Fix validation errors first.'
-      ).value,
+      t('const.disabledReason.invalidDesign', 'Fix validation errors first.').value,
       'error'
     )
     showValidationDialog.value = true
@@ -563,10 +594,7 @@ async function handleSave() {
         store.markClean()
         hydrateFrom(updated)
       } else {
-        showSnackbar(
-          t('cc.fa.saveError', 'Failed to save characterization').value,
-          'error'
-        )
+        showSnackbar(t('cc.fa.saveError', 'Failed to save characterization').value, 'error')
       }
     } else {
       const created = await store.create(draft.value)
@@ -578,18 +606,12 @@ async function handleSave() {
         store.markClean()
         await router.push(`/characterizations/${created.id}`)
       } else {
-        showSnackbar(
-          t('cc.fa.saveError', 'Failed to save characterization').value,
-          'error'
-        )
+        showSnackbar(t('cc.fa.saveError', 'Failed to save characterization').value, 'error')
       }
     }
   } catch (err) {
     logger.error('CharacterizationBuilder', 'Save failed', err)
-    showSnackbar(
-      t('cc.fa.saveError', 'Failed to save characterization').value,
-      'error'
-    )
+    showSnackbar(t('cc.fa.saveError', 'Failed to save characterization').value, 'error')
   } finally {
     saving.value = false
   }
@@ -607,17 +629,11 @@ async function handleSaveCopy() {
       store.markClean()
       await router.push(`/characterizations/${copied.id}`)
     } else {
-      showSnackbar(
-        t('cc.fa.saveError', 'Failed to save characterization').value,
-        'error'
-      )
+      showSnackbar(t('cc.fa.saveError', 'Failed to save characterization').value, 'error')
     }
   } catch (err) {
     logger.error('CharacterizationBuilder', 'Save Copy failed', err)
-    showSnackbar(
-      t('cc.fa.saveError', 'Failed to save characterization').value,
-      'error'
-    )
+    showSnackbar(t('cc.fa.saveError', 'Failed to save characterization').value, 'error')
   } finally {
     saving.value = false
   }
@@ -626,12 +642,14 @@ async function handleSaveCopy() {
 const canExport = computed<boolean>(() => Boolean(draft.value.id))
 
 function slugifyName(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60) || 'design'
+  return (
+    name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || 'design'
+  )
 }
 
 function triggerDownload(filename: string, payload: string): void {
@@ -660,7 +678,7 @@ async function handleExport(): Promise<void> {
     logger.error('CharacterizationBuilder', 'Export failed', err)
     showSnackbar(
       t('characterizations.editor.utilities.import.importError', 'Export failed.').value,
-      'error',
+      'error'
     )
   } finally {
     exporting.value = false
@@ -686,8 +704,9 @@ async function handleImportFileChange(event: Event) {
   } catch (err) {
     logger.error('CharacterizationBuilder', 'Import parse failed', err)
     showSnackbar(
-      t('characterizations.editor.utilities.import.parseError', 'Could not parse design JSON.').value,
-      'error',
+      t('characterizations.editor.utilities.import.parseError', 'Could not parse design JSON.')
+        .value,
+      'error'
     )
     importing.value = false
     return
@@ -698,7 +717,7 @@ async function handleImportFileChange(event: Event) {
     store.markClean()
     showSnackbar(
       t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully.').value,
-      'success',
+      'success'
     )
     if (created.id != null) {
       await router.push(`/characterizations/${created.id}`)
@@ -707,7 +726,7 @@ async function handleImportFileChange(event: Event) {
     logger.error('CharacterizationBuilder', 'Import failed', err)
     showSnackbar(
       t('characterizations.editor.utilities.import.importError', 'Import failed.').value,
-      'error',
+      'error'
     )
   } finally {
     importing.value = false
@@ -730,10 +749,7 @@ async function confirmDelete() {
     showDeleteDialog.value = false
     await router.push('/characterizations')
   } else {
-    showSnackbar(
-      t('cc.fa.saveError', 'Failed to save characterization').value,
-      'error'
-    )
+    showSnackbar(t('cc.fa.saveError', 'Failed to save characterization').value, 'error')
   }
 }
 
@@ -804,23 +820,6 @@ onBeforeRouteLeave((_to, _from, next) => {
 </script>
 
 <style scoped>
-.char-builder__executions-section {
-  margin-top: 24px;
-}
-
-.char-builder__executions-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.char-builder__executions-rule {
-  flex: 1;
-  height: 1px;
-  background-color: rgba(var(--v-theme-on-surface), 0.08);
-}
-
 .char-builder__versions-stub {
   padding: 24px;
   color: rgba(var(--v-theme-on-surface), 0.6);
@@ -856,5 +855,54 @@ onBeforeRouteLeave((_to, _from, next) => {
   line-height: 1.3;
   margin: 0;
   color: rgb(var(--v-theme-primary));
+}
+
+.char-builder__title-input {
+  width: 100%;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: rgb(var(--v-theme-primary));
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  padding: 0 0 2px;
+  margin: 0;
+  font-family: inherit;
+  outline: none;
+}
+.char-builder__title-input::placeholder {
+  color: rgba(var(--v-theme-on-surface), 0.32);
+  font-weight: 300;
+}
+.char-builder__title-input:hover {
+  border-bottom-color: rgba(var(--v-theme-on-surface), 0.16);
+}
+.char-builder__title-input:focus {
+  border-bottom-color: rgb(var(--v-theme-orange));
+}
+
+.char-builder__subtitle-input {
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgb(var(--v-theme-on-surface-variant));
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  padding: 0 0 2px;
+  margin: 0;
+  font-family: inherit;
+  outline: none;
+}
+.char-builder__subtitle-input::placeholder {
+  color: rgba(var(--v-theme-on-surface), 0.32);
+}
+.char-builder__subtitle-input:hover {
+  border-bottom-color: rgba(var(--v-theme-on-surface), 0.12);
+}
+.char-builder__subtitle-input:focus {
+  border-bottom-color: rgb(var(--v-theme-orange));
 }
 </style>

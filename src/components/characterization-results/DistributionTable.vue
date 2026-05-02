@@ -76,23 +76,18 @@ const selectedCohortId = ref<number | null>(props.cohorts[0]?.id ?? null)
 
 watch(
   () => props.cohorts,
-  (next) => {
+  next => {
     if (!next.length) {
       selectedCohortId.value = null
       return
     }
-    if (
-      selectedCohortId.value === null ||
-      !next.some((c) => c.id === selectedCohortId.value)
-    ) {
+    if (selectedCohortId.value === null || !next.some(c => c.id === selectedCohortId.value)) {
       selectedCohortId.value = next[0]?.id ?? null
     }
   }
 )
 
-const cohortItems = computed(() =>
-  props.cohorts.map((c) => ({ title: c.name, value: c.id }))
-)
+const cohortItems = computed(() => props.cohorts.map(c => ({ title: c.name, value: c.id })))
 
 function pickStratumKey(rec: Record<string, Record<string, number>>): string | null {
   const keys = Object.keys(rec)
@@ -124,7 +119,7 @@ function fmt(value: number | undefined): string {
 }
 
 const tableRows = computed(() =>
-  props.rows.map((row) => ({
+  props.rows.map(row => ({
     covariateName: row.covariateName,
     avg: fmt(valueFor(row.avg, selectedCohortId.value)),
     stdDev: fmt(valueFor(row.stdDev, selectedCohortId.value)),

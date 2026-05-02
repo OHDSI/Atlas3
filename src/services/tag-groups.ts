@@ -41,7 +41,7 @@ export async function listTagGroups(): Promise<TagGroup[]> {
 export async function createTagGroup(tag: Omit<TagGroup, 'id'>): Promise<TagGroup> {
   return httpPost<TagGroup>('/tag/', {
     ...tag,
-    groups: [] // Tag groups have empty groups array
+    groups: [], // Tag groups have empty groups array
   })
 }
 
@@ -59,7 +59,7 @@ export async function updateTagGroup(tag: TagGroup): Promise<TagGroup> {
 
   return httpPut<TagGroup>(`/tag/${tag.id}`, {
     ...tag,
-    groups: tag.groups || [] // Ensure groups array exists
+    groups: tag.groups || [], // Ensure groups array exists
   })
 }
 
@@ -83,10 +83,8 @@ export async function deleteTagGroup(id: number): Promise<void> {
 export async function getTagGroupTags(tagGroupId: number): Promise<Tag[]> {
   const allTags = await loadAvailableTags()
   // Find tags that have this group in their groups array
-  return allTags.filter(t =>
-    t.groups &&
-    t.groups.length > 0 &&
-    t.groups.some(g => g.id === tagGroupId)
+  return allTags.filter(
+    t => t.groups && t.groups.length > 0 && t.groups.some(g => g.id === tagGroupId)
   )
 }
 

@@ -81,7 +81,11 @@
           :icon="pollingEnabled ? 'mdi-sync' : 'mdi-sync-off'"
           :color="pollingEnabled ? 'primary' : 'default'"
           variant="text"
-          :title="pollingEnabled ? tv('configuration.jobs.actions.stopPolling') : tv('configuration.jobs.actions.startPolling')"
+          :title="
+            pollingEnabled
+              ? tv('configuration.jobs.actions.stopPolling')
+              : tv('configuration.jobs.actions.startPolling')
+          "
           @click="togglePolling"
         />
 
@@ -255,9 +259,7 @@
             size="small"
             color="primary"
             class="mr-1 rotating"
-          >
-            mdi-sync
-          </v-icon>
+          > mdi-sync </v-icon>
           {{ t('configuration.jobs.autoRefreshOn') }}
         </span>
       </v-card-actions>
@@ -293,13 +295,13 @@ const {
   refresh,
   setFilter,
   togglePolling,
-  stopPolling
+  stopPolling,
 } = useJobs()
 
 // Status filter with computed getter/setter
 const statusFilter = computed({
   get: () => storeStatusFilter.value,
-  set: (value: JobStatusFilter) => setFilter(value)
+  set: (value: JobStatusFilter) => setFilter(value),
 })
 
 // Table headers - using existing notification translation keys where available
@@ -311,7 +313,7 @@ const tableHeaders = computed(() => [
   { title: tv('columns.author'), key: 'author', sortable: true, width: '150px' },
   { title: tv('columns.startDate'), key: 'startTime', sortable: true, width: '180px' },
   { title: tv('notifications.endTime'), key: 'endTime', sortable: true, width: '180px' },
-  { title: tv('notifications.duration'), key: 'duration', sortable: true, width: '100px' }
+  { title: tv('notifications.duration'), key: 'duration', sortable: true, width: '100px' },
 ])
 
 // Lifecycle hooks

@@ -16,7 +16,7 @@
           hide-details
           clearable
           data-test="profile-search"
-          style="min-width: 220px; max-width: 280px;"
+          style="min-width: 220px; max-width: 280px"
           @update:model-value="(v: string) => store.setTextFilter(v ?? '')"
         />
       </div>
@@ -58,9 +58,33 @@ const headers = [
 </script>
 
 <style scoped>
-.section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
-.section-header__title-row { display: flex; align-items: center; gap: 10px; }
-.section-header__rule { width: 28px; height: 2px; background-color: rgb(var(--v-theme-orange)); border-radius: 2px; }
-.section-title { font-size: 16px; font-weight: 600; line-height: 1.2; margin: 0; }
-.section-header__actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.section-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-header__rule {
+  width: 28px;
+  height: 2px;
+  background-color: rgb(var(--v-theme-orange));
+  border-radius: 2px;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+}
+.section-header__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 </style>

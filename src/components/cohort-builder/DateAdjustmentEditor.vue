@@ -106,7 +106,7 @@ const updateEndOffset = (value: number) => {
               variant="outlined"
               hide-details
               suffix="days"
-              @update:model-value="(v) => updateStartOffset(Number(v))"
+              @update:model-value="v => updateStartOffset(Number(v))"
             />
           </v-col>
         </v-row>
@@ -148,7 +148,7 @@ const updateEndOffset = (value: number) => {
               variant="outlined"
               hide-details
               suffix="days"
-              @update:model-value="(v) => updateEndOffset(Number(v))"
+              @update:model-value="v => updateEndOffset(Number(v))"
             />
           </v-col>
         </v-row>
@@ -162,7 +162,12 @@ const updateEndOffset = (value: number) => {
         class="mt-4"
       >
         <div class="text-caption">
-          {{ t('help.dateAdjustmentExplanation', 'Shifts criterion event dates by the specified offset. For example, "Start Date + 30 days" means the event start date will be 30 days after the original start date.').value }}
+          {{
+            t(
+              'help.dateAdjustmentExplanation',
+              'Shifts criterion event dates by the specified offset. For example, "Start Date + 30 days" means the event start date will be 30 days after the original start date.'
+            ).value
+          }}
         </div>
       </v-alert>
     </v-card-text>

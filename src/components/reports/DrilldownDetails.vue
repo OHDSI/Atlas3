@@ -66,7 +66,11 @@
         </v-col>
 
         <v-col
-          v-else-if="field === 'prevalenceByMonth' && data.prevalenceByMonth && data.prevalenceByMonth.length > 0"
+          v-else-if="
+            field === 'prevalenceByMonth' &&
+              data.prevalenceByMonth &&
+              data.prevalenceByMonth.length > 0
+          "
           cols="12"
           md="6"
         >
@@ -85,7 +89,11 @@
         </v-col>
 
         <v-col
-          v-else-if="field === 'ageAtFirstOccurrence' && data.ageAtFirstOccurrence && data.ageAtFirstOccurrence.length > 0"
+          v-else-if="
+            field === 'ageAtFirstOccurrence' &&
+              data.ageAtFirstOccurrence &&
+              data.ageAtFirstOccurrence.length > 0
+          "
           cols="12"
           md="6"
         >
@@ -161,7 +169,11 @@
         </v-col>
 
         <v-col
-          v-else-if="field === 'byValueAsConcept' && data.byValueAsConcept && data.byValueAsConcept.length > 0"
+          v-else-if="
+            field === 'byValueAsConcept' &&
+              data.byValueAsConcept &&
+              data.byValueAsConcept.length > 0
+          "
           cols="12"
           md="6"
         >
@@ -255,7 +267,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { DrilldownReport, TimeSeriesData, LineChartData } from '@/models/report.types'
-import { DOMAIN_DRILLDOWN_FIELDS, type Domain, type DrilldownField } from '@/config/drilldown-config'
+import {
+  DOMAIN_DRILLDOWN_FIELDS,
+  type Domain,
+  type DrilldownField,
+} from '@/config/drilldown-config'
 import TrellisChart from './charts/TrellisChart.vue'
 import BoxPlotChart from './charts/BoxPlotChart.vue'
 import LineChart from './charts/LineChart.vue'
@@ -272,7 +288,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
-  domain: 'condition'
+  domain: 'condition',
 })
 
 defineEmits<{
@@ -285,7 +301,7 @@ const fieldsForDomain = computed<DrilldownField[]>(() => {
 
 const hasAnyData = computed(() => {
   if (!props.data) return false
-  return fieldsForDomain.value.some((f) => {
+  return fieldsForDomain.value.some(f => {
     const v = (props.data as unknown as Record<string, unknown>)[f]
     if (Array.isArray(v)) return v.length > 0
     if (v && typeof v === 'object' && 'series' in (v as object)) {
@@ -299,7 +315,7 @@ function formatTimeSeriesData(timeSeriesData: TimeSeriesData[]): LineChartData {
   return {
     xAxis: timeSeriesData.map(d => d.date),
     yAxis: timeSeriesData.map(d => d.value),
-    seriesName: 'Prevalence per 1000 people'
+    seriesName: 'Prevalence per 1000 people',
   }
 }
 </script>

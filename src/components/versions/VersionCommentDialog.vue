@@ -104,7 +104,7 @@ const formRef = ref<HTMLFormElement | null>(null)
 // Computed
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: value => emit('update:modelValue', value),
 })
 
 const isCommentChanged = computed(() => {
@@ -121,23 +121,34 @@ function commentMaxLengthRule(value: string): boolean | string {
 }
 
 // Watch for version changes to update comment text
-watch(() => props.version, (newVersion) => {
-  if (newVersion) {
-    commentText.value = newVersion.comment || ''
-    originalComment.value = newVersion.comment || ''
-  }
-}, { immediate: true })
+watch(
+  () => props.version,
+  newVersion => {
+    if (newVersion) {
+      commentText.value = newVersion.comment || ''
+      originalComment.value = newVersion.comment || ''
+    }
+  },
+  { immediate: true }
+)
 
 // Get appropriate API service
 const updateVersionAPI =
-  props.assetType === 'cohortdefinition' ? updateCohortVersion :
-  props.assetType === 'pathway-analysis'
-    ? (id: number, version: number, payload: CommentUpdatePayload) =>
-        updatePathwayVersion(id, version, { comment: payload.comment, archived: payload.archived })
-    : props.assetType === 'ir'
+  props.assetType === 'cohortdefinition'
+    ? updateCohortVersion
+    : props.assetType === 'pathway-analysis'
       ? (id: number, version: number, payload: CommentUpdatePayload) =>
-          updateIncidenceRateVersion(id, version, { comment: payload.comment, archived: payload.archived })
-      : updateConceptSetVersion
+          updatePathwayVersion(id, version, {
+            comment: payload.comment,
+            archived: payload.archived,
+          })
+      : props.assetType === 'ir'
+        ? (id: number, version: number, payload: CommentUpdatePayload) =>
+            updateIncidenceRateVersion(id, version, {
+              comment: payload.comment,
+              archived: payload.archived,
+            })
+        : updateConceptSetVersion
 
 /**
  * Handle save button click
@@ -159,11 +170,7 @@ async function handleSave(): Promise<void> {
       archived: false,
     }
 
-    const updatedVersion = await updateVersionAPI(
-      props.assetId,
-      props.version.version,
-      payload
-    )
+    const updatedVersion = await updateVersionAPI(props.assetId, props.version.version, payload)
 
     // Emit saved event with updated version
     emit('saved', updatedVersion)

@@ -124,9 +124,14 @@
         class="concept-set-list__empty-icon"
       />
       <p class="concept-set-list__empty-text">
-        {{ store.filterTerm
-          ? t('cs.manager.emptyFilterMessage', 'No concept sets match your search.')
-          : t('cs.manager.emptyStateMessage', 'No concept sets yet — create one to start curating concepts.') }}
+        {{
+          store.filterTerm
+            ? t('cs.manager.emptyFilterMessage', 'No concept sets match your search.')
+            : t(
+              'cs.manager.emptyStateMessage',
+              'No concept sets yet — create one to start curating concepts.'
+            )
+        }}
       </p>
       <v-btn
         v-if="!store.filterTerm"
@@ -148,11 +153,14 @@
         <v-card-title class="text-h6">
           {{ t('common.delete', 'Delete') }} {{ t('common.conceptSet', 'Concept Set') }}
         </v-card-title>
-        
+
         <v-card-text>
-          {{ t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete') }} "{{ deleteTarget?.name }}"?
+          {{
+            t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete')
+          }}
+          "{{ deleteTarget?.name }}"?
         </v-card-text>
-        
+
         <v-card-actions>
           <v-spacer />
           <v-btn
@@ -178,7 +186,11 @@
       v-if="store.editorOpen"
       :model-value="store.editorOpen"
       :concept-set="store.currentSet"
-      @update:model-value="(value) => { if (!value) store.closeEditor() }"
+      @update:model-value="
+        value => {
+          if (!value) store.closeEditor()
+        }
+      "
       @save="onSave"
       @delete="onDeleteClick"
     />
@@ -229,8 +241,18 @@ const countLabel = computed(() => {
 const headers = [
   { title: t('columns.id', 'ID').value, key: 'id', sortable: true, width: '100px' },
   { title: t('columns.name', 'Name').value, key: 'name', sortable: true },
-  { title: t('columns.created', 'Created').value, key: 'createdDate', sortable: true, width: '120px' },
-  { title: t('columns.updated', 'Updated').value, key: 'modifiedDate', sortable: true, width: '120px' },
+  {
+    title: t('columns.created', 'Created').value,
+    key: 'createdDate',
+    sortable: true,
+    width: '120px',
+  },
+  {
+    title: t('columns.updated', 'Updated').value,
+    key: 'modifiedDate',
+    sortable: true,
+    width: '120px',
+  },
   { title: t('columns.author', 'Author').value, key: 'createdBy', sortable: true, width: '150px' },
   { title: '', key: 'actions', sortable: false, width: '80px', align: 'center' as const },
 ]
@@ -247,7 +269,9 @@ onMounted(async () => {
 // Methods
 // ============================================================================
 
-function getAuthorName(author: string | { id: number; name: string | null; login: string } | undefined): string {
+function getAuthorName(
+  author: string | { id: number; name: string | null; login: string } | undefined
+): string {
   if (!author) return ''
   if (typeof author === 'string') return author
   return author.name || author.login || ''
@@ -288,7 +312,7 @@ async function confirmDelete() {
   if (!deleteTarget.value) return
 
   const success = await store.remove(deleteTarget.value.id)
-  
+
   if (success) {
     deleteDialog.value = false
     deleteTarget.value = null

@@ -8,21 +8,22 @@
 <template>
   <v-dialog
     :model-value="modelValue"
-    max-width="500"
+    max-width="460"
     persistent
     data-testid="run-execution-dialog"
     @update:model-value="onModelUpdate"
   >
-    <v-card>
-      <v-card-title>
+    <v-card density="compact">
+      <v-card-title class="run-dialog__title">
         {{ t('cc.viewEdit.executions.title', 'Run characterization') }}
       </v-card-title>
-      <v-card-text>
+      <v-card-text class="run-dialog__body">
         <v-alert
           v-if="errorMessage"
           type="error"
           variant="tonal"
-          class="mb-4"
+          density="compact"
+          class="mb-3"
           data-testid="run-execution-dialog-error"
         >
           {{ errorMessage }}
@@ -41,10 +42,12 @@
           data-testid="run-execution-dialog-source"
         />
       </v-card-text>
-      <v-card-actions>
+      <v-card-actions class="run-dialog__actions">
         <v-spacer />
         <v-btn
           variant="text"
+          size="small"
+          density="compact"
           :disabled="running"
           data-testid="run-execution-dialog-cancel"
           @click="close"
@@ -53,7 +56,9 @@
         </v-btn>
         <v-btn
           color="primary"
-          variant="elevated"
+          variant="flat"
+          size="small"
+          density="compact"
           :loading="running"
           :disabled="!canRun"
           data-testid="run-execution-dialog-run"
@@ -98,7 +103,7 @@ const sourceError = ref<string>('')
 const errorMessage = ref<string>('')
 
 const sourceItems = computed(() =>
-  sources.value.map((s) => ({
+  sources.value.map(s => ({
     title: s.sourceName ?? s.sourceKey,
     value: s.sourceKey,
   }))
@@ -156,10 +161,7 @@ async function onRun() {
 
   running.value = true
   try {
-    const execution = await store.runExecution(
-      props.characterizationId,
-      selectedSourceKey.value
-    )
+    const execution = await store.runExecution(props.characterizationId, selectedSourceKey.value)
     emit('started', execution)
     close()
   } catch (err) {
@@ -184,3 +186,14 @@ watch(
   { immediate: true }
 )
 </script>
+
+<style scoped>
+.run-dialog__title {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 16px 4px;
+  letter-spacing: 0;
+}
+.run-dialog__body { padding: 12px 16px; }
+.run-dialog__actions { padding: 4px 12px 10px; gap: 4px; }
+</style>

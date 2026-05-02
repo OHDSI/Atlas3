@@ -25,91 +25,91 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, onErrorCaptured } from 'vue';
-import { useRoute } from 'vue-router';
-import { pluginRegistry } from '@/plugins/index';
-import { logger } from '@/utils/logger';
-import PluginErrorUI from './PluginErrorUI.vue';
-import PluginLoadingState from './PluginLoadingState.vue';
+import { ref, computed, onMounted, onUnmounted, onErrorCaptured } from 'vue'
+import { useRoute } from 'vue-router'
+import { pluginRegistry } from '@/plugins/index'
+import { logger } from '@/utils/logger'
+import PluginErrorUI from './PluginErrorUI.vue'
+import PluginLoadingState from './PluginLoadingState.vue'
 
-const route = useRoute();
-const pluginId = computed(() => route.params.pluginId as string);
-const pluginContainerId = computed(() => `plugin-${pluginId.value}`);
+const route = useRoute()
+const pluginId = computed(() => route.params.pluginId as string)
+const pluginContainerId = computed(() => `plugin-${pluginId.value}`)
 
-const hasError = ref(false);
+const hasError = ref(false)
 const error = ref<{
-  message: string;
-  stack?: string;
-  timestamp: Date;
-  recoverable: boolean;
-} | null>(null);
-const isLoading = ref(true);
+  message: string
+  stack?: string
+  timestamp: Date
+  recoverable: boolean
+} | null>(null)
+const isLoading = ref(true)
 
-let stateUnsubscribe: (() => void) | null = null;
+let stateUnsubscribe: (() => void) | null = null
 
 onMounted(async () => {
-  const maxAttempts = 20;
-  const delayMs = 100;
-  let plugin = null;
+  const maxAttempts = 20
+  const delayMs = 100
+  let plugin = null
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    plugin = pluginRegistry.getPlugin(pluginId.value);
+    plugin = pluginRegistry.getPlugin(pluginId.value)
     if (plugin) {
-      break;
+      break
     }
-    await new Promise(resolve => setTimeout(resolve, delayMs));
+    await new Promise(resolve => setTimeout(resolve, delayMs))
   }
 
   if (plugin) {
-    hasError.value = plugin.state === 'error';
-    error.value = plugin.error ?? null;
-    isLoading.value = plugin.state === 'loading' || plugin.state === 'not-loaded';
+    hasError.value = plugin.state === 'error'
+    error.value = plugin.error ?? null
+    isLoading.value = plugin.state === 'loading' || plugin.state === 'not-loaded'
 
-    stateUnsubscribe = pluginRegistry.onStateChange(pluginId.value, (state) => {
-      hasError.value = state === 'error';
-      isLoading.value = state === 'loading' || state === 'not-loaded';
+    stateUnsubscribe = pluginRegistry.onStateChange(pluginId.value, state => {
+      hasError.value = state === 'error'
+      isLoading.value = state === 'loading' || state === 'not-loaded'
 
       if (state === 'error') {
-        const p = pluginRegistry.getPlugin(pluginId.value);
-        error.value = p?.error ?? null;
+        const p = pluginRegistry.getPlugin(pluginId.value)
+        error.value = p?.error ?? null
       }
-    });
+    })
   } else {
-    logger.error('PluginContainer', `Plugin ${pluginId.value} not found`);
-    hasError.value = true;
-    isLoading.value = false;
+    logger.error('PluginContainer', `Plugin ${pluginId.value} not found`)
+    hasError.value = true
+    isLoading.value = false
     error.value = {
       message: `Plugin ${pluginId.value} not found`,
       timestamp: new Date(),
       recoverable: false,
-    };
+    }
   }
-});
+})
 
 onUnmounted(() => {
   if (stateUnsubscribe) {
-    stateUnsubscribe();
+    stateUnsubscribe()
   }
-});
+})
 
-onErrorCaptured((err) => {
-  logger.error('PluginContainer', `Error captured for plugin ${pluginId.value}`, err);
-  hasError.value = true;
+onErrorCaptured(err => {
+  logger.error('PluginContainer', `Error captured for plugin ${pluginId.value}`, err)
+  hasError.value = true
   error.value = {
     message: err.message,
     stack: err.stack,
     timestamp: new Date(),
     recoverable: true,
-  };
-  return false; // Prevent error propagation
-});
+  }
+  return false // Prevent error propagation
+})
 
 function handleRetry() {
-  hasError.value = false;
-  error.value = null;
+  hasError.value = false
+  error.value = null
 
   if (window.__pluginLoader) {
-    window.__pluginLoader.retryPlugin(pluginId.value);
+    window.__pluginLoader.retryPlugin(pluginId.value)
   }
 }
 </script>

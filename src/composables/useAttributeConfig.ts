@@ -69,7 +69,7 @@ export function useAttributeConfig(
     const attrs = configLoaderService.getAttributesForFilter(filterType.value, sectionValue)
 
     return attrs
-      .map((config) => {
+      .map(config => {
         // Resolve locale keys to translated strings (use id not key)
         const label = getAttributeLabel(config.id)
         const description = getAttributeDescription(config.id)
@@ -95,7 +95,7 @@ export function useAttributeConfig(
   function getAttribute(attributeKey: string): AttributeConfig | undefined {
     const sectionValue = section?.value || 'criteriaGroup'
     const attrs = configLoaderService.getAttributesForFilter(filterType.value, sectionValue)
-    return attrs.find((attr) => attr.id === attributeKey)
+    return attrs.find(attr => attr.id === attributeKey)
   }
 
   /**
@@ -165,7 +165,7 @@ export function useAttributeConfig(
         // Insert space before capital letters
         .replace(/([A-Z])/g, ' $1')
         // Capitalize first letter
-        .replace(/^./, (str) => str.toUpperCase())
+        .replace(/^./, str => str.toUpperCase())
         // Trim any leading space
         .trim()
     )

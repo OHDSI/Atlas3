@@ -120,28 +120,27 @@ export function mapConceptSetFromAPI(raw: ConceptSetAPIResponse): ConceptSet {
     modifiedDate: raw.modifiedDate,
     modifiedBy: getLogin(raw.modifiedBy),
     shared: raw.shared ?? false,
-    items: raw.expression?.items?.map((item) => ({
-      conceptId: item.concept.CONCEPT_ID,
-      conceptName: item.concept.CONCEPT_NAME,
-      conceptCode: item.concept.CONCEPT_CODE,
-      domainId: item.concept.DOMAIN_ID,
-      vocabularyId: item.concept.VOCABULARY_ID,
-      conceptClassId: item.concept.CONCEPT_CLASS_ID,
-      standardConcept: item.concept.STANDARD_CONCEPT,
-      invalidReason: item.concept.INVALID_REASON,
-      isExcluded: item.isExcluded,
-      includeDescendants: item.includeDescendants,
-      includeMapped: item.includeMapped,
-    })) || [],
+    items:
+      raw.expression?.items?.map(item => ({
+        conceptId: item.concept.CONCEPT_ID,
+        conceptName: item.concept.CONCEPT_NAME,
+        conceptCode: item.concept.CONCEPT_CODE,
+        domainId: item.concept.DOMAIN_ID,
+        vocabularyId: item.concept.VOCABULARY_ID,
+        conceptClassId: item.concept.CONCEPT_CLASS_ID,
+        standardConcept: item.concept.STANDARD_CONCEPT,
+        invalidReason: item.concept.INVALID_REASON,
+        isExcluded: item.isExcluded,
+        includeDescendants: item.includeDescendants,
+        includeMapped: item.includeMapped,
+      })) || [],
   }
 }
 
 /**
  * Map ConceptSetItem to WebAPI ConceptSetExpressionItem (UPPERCASE concept fields)
  */
-export function conceptSetItemToExpressionItem(
-  item: ConceptSetItem
-): ConceptSetExpressionItem {
+export function conceptSetItemToExpressionItem(item: ConceptSetItem): ConceptSetExpressionItem {
   return {
     concept: {
       CONCEPT_ID: item.conceptId,
@@ -177,7 +176,7 @@ export function mapConceptSetToAPI(conceptSet: ConceptSet): {
     name: conceptSet.name,
     shared: conceptSet.shared,
     expression: {
-      items: (conceptSet.items || []).map((item) => ({
+      items: (conceptSet.items || []).map(item => ({
         concept: {
           CONCEPT_ID: item.conceptId,
           CONCEPT_NAME: item.conceptName,

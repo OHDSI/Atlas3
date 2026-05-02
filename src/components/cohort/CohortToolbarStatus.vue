@@ -82,7 +82,11 @@
 
     <!-- Validation Notification Icon -->
     <v-tooltip
-      :text="isValidating ? t('common.loadingWithDots', 'Loading...').value : t('cc.viewEdit.tabs.messages', 'View validation messages').value"
+      :text="
+        isValidating
+          ? t('common.loadingWithDots', 'Loading...').value
+          : t('cc.viewEdit.tabs.messages', 'View validation messages').value
+      "
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">

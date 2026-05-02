@@ -182,7 +182,10 @@ import { useI18n } from '@/composables/useI18n'
 import { usePermissions } from '@/composables/usePermissions'
 import { useUIStore } from '@/stores/ui'
 import { authConfig } from '@/config/auth.config'
-import { generatePluginMenuItems, type PluginMenuItem } from '@/plugins/navigation/PluginMenuIntegration.ts'
+import {
+  generatePluginMenuItems,
+  type PluginMenuItem,
+} from '@/plugins/navigation/PluginMenuIntegration.ts'
 import { pluginRegistry } from '@/plugins/core/PluginRegistry'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
@@ -209,13 +212,7 @@ const uiStore = useUIStore()
 // the per-tab gating in ConfigPanel — if every section would be hidden, the
 // entry point shouldn't be visible at all.
 const hasAnyAdminAccess = computed(() =>
-  hasAnyPermission([
-    'admin:cache',
-    'admin:source',
-    'admin:tags',
-    'admin:security',
-    'job:*:get',
-  ]),
+  hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security', 'job:*:get'])
 )
 
 const logoSrc = logoSvg
@@ -234,11 +231,41 @@ const signOutLabel = t('components.userBar.signout', 'Sign Out')
 
 // Core navigation items (will be filtered based on plugin configuration)
 const coreNavigationItems: NavigationItem[] = [
-  { id: 'datasources', titleKey: 'navigation.datasources', route: '/datasources', visible: true, active: false },
-  { id: 'concepts', titleKey: 'navigation.conceptsets', route: '/concepts', visible: true, active: false },
-  { id: 'cohorts', titleKey: 'navigation.cohortdefinitions', route: '/cohorts', visible: true, active: true },
-  { id: 'analysis', titleKey: 'navigation.analysis', route: '/analysis', visible: true, active: false },
-  { id: 'profiles', titleKey: 'navigation.profiles', route: '/profiles', visible: true, active: false },
+  {
+    id: 'datasources',
+    titleKey: 'navigation.datasources',
+    route: '/datasources',
+    visible: true,
+    active: false,
+  },
+  {
+    id: 'concepts',
+    titleKey: 'navigation.conceptsets',
+    route: '/concepts',
+    visible: true,
+    active: false,
+  },
+  {
+    id: 'cohorts',
+    titleKey: 'navigation.cohortdefinitions',
+    route: '/cohorts',
+    visible: true,
+    active: true,
+  },
+  {
+    id: 'analysis',
+    titleKey: 'navigation.analysis',
+    route: '/analysis',
+    visible: true,
+    active: false,
+  },
+  {
+    id: 'profiles',
+    titleKey: 'navigation.profiles',
+    route: '/profiles',
+    visible: true,
+    active: false,
+  },
 ]
 
 const navigationItems = ref<NavigationItem[]>(getFilteredCoreNavigationItems())
@@ -265,7 +292,7 @@ function loadPluginMenuItems() {
           titleKey: pluginItem.name, // Use name directly as title
           route: pluginItem.route,
           visible: true,
-          active: false
+          active: false,
         })
       }
     })
@@ -335,7 +362,7 @@ function handleConfigClick() {
 
 const updateActiveNavFromRoute = () => {
   const currentPath = router.currentRoute.value.path
-  
+
   navigationItems.value.forEach(item => {
     item.active = currentPath.startsWith(item.route)
   })
@@ -371,7 +398,7 @@ onMounted(() => {
     plugins.forEach(plugin => {
       if (!watchedPlugins.has(plugin.registration.id)) {
         watchedPlugins.add(plugin.registration.id)
-        pluginRegistry.onStateChange(plugin.registration.id, (state) => {
+        pluginRegistry.onStateChange(plugin.registration.id, state => {
           if (state === 'loaded') {
             logger.debug('NavBar', `Plugin ${plugin.registration.id} loaded, reloading menu items`)
             loadPluginMenuItems()
@@ -401,7 +428,11 @@ onMounted(() => {
     updateActiveNavFromRoute()
   })
 
-  if (authConfig.userAuthenticationEnabled && authConfig.enableSkipLogin && !auth.isAuthenticated.value) {
+  if (
+    authConfig.userAuthenticationEnabled &&
+    authConfig.enableSkipLogin &&
+    !auth.isAuthenticated.value
+  ) {
     auth.openLoginModal()
   }
 })

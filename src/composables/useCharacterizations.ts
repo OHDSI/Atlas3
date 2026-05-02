@@ -14,14 +14,8 @@ import type { CharacterizationListItem } from '@/models/characterization.types'
 
 export function useCharacterizations() {
   const store = useCharacterizationStore()
-  const {
-    characterizations,
-    loading,
-    error,
-    filterTerm,
-    filteredCharacterizations,
-    isEmpty,
-  } = storeToRefs(store)
+  const { characterizations, loading, error, filterTerm, filteredCharacterizations, isEmpty } =
+    storeToRefs(store)
 
   // Pagination over filtered results
   const totalItems = computed<number>(() => filteredCharacterizations.value.length)

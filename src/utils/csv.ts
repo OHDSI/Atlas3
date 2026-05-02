@@ -1,9 +1,9 @@
 /**
  * CSV utilities
  *
- * Tiny helpers used by report viewers (e.g. CharacterizationResultsView)
- * to dump a tabular structure to CSV text and trigger a browser download
- * via the standard `URL.createObjectURL` + `<a download>` pattern.
+ * Tiny helpers used by report viewers to dump a tabular structure to CSV
+ * text and trigger a browser download via the standard
+ * `URL.createObjectURL` + `<a download>` pattern.
  */
 import { logger } from '@/utils/logger'
 
@@ -37,10 +37,10 @@ function escapeCell(value: unknown): string {
  * @param columns Column descriptors. The order is preserved.
  */
 export function arrayToCsv<T>(rows: T[], columns: CsvColumn<T>[]): string {
-  const header = columns.map((c) => escapeCell(c.label)).join(',')
-  const body = rows.map((row) =>
+  const header = columns.map(c => escapeCell(c.label)).join(',')
+  const body = rows.map(row =>
     columns
-      .map((c) => {
+      .map(c => {
         const value =
           typeof c.key === 'function'
             ? c.key(row)

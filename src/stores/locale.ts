@@ -8,7 +8,7 @@ import type {
   LocaleCode,
   LocaleFormat,
   TranslationCache,
-  Translations
+  Translations,
 } from '@/types/i18n'
 import { i18nService } from '@/services/i18n'
 import { logger } from '@/utils/logger'
@@ -23,20 +23,20 @@ export const useLocaleStore = defineStore('locale', {
     loading: false,
     error: null,
     translationCache: new Map<LocaleCode, TranslationCache>(),
-    initialized: false
+    initialized: false,
   }),
 
   getters: {
     currentLocale: (state): LocaleCode => state.locale,
-    
+
     isLoading: (state): boolean => state.loading,
-    
+
     hasError: (state): boolean => state.error !== null,
-    
+
     localeFormat: (state): LocaleFormat | undefined => {
       const cached = state.translationCache.get(state.locale)
       return cached?.bundle.format
-    }
+    },
   },
 
   actions: {
@@ -50,9 +50,7 @@ export const useLocaleStore = defineStore('locale', {
 
         // Set default locales in case WebAPI fails
         if (this.availableLocales.length === 0) {
-          this.availableLocales = [
-            { code: 'en', name: 'English' }
-          ]
+          this.availableLocales = [{ code: 'en', name: 'English' }]
         }
 
         // Try to fetch available locales from WebAPI
@@ -84,9 +82,7 @@ export const useLocaleStore = defineStore('locale', {
         this.availableLocales = locales
       } catch (error) {
         logger.error('LocaleStore', 'Failed to fetch available locales', error)
-        this.availableLocales = [
-          { code: 'en', name: 'English' }
-        ]
+        this.availableLocales = [{ code: 'en', name: 'English' }]
       }
     },
 
@@ -95,7 +91,7 @@ export const useLocaleStore = defineStore('locale', {
      */
     async fetchTranslations(locale: LocaleCode): Promise<void> {
       const cached = this.translationCache.get(locale)
-      
+
       if (cached && this.isCacheValid(cached)) {
         this.translations = cached.bundle.translations
         return
@@ -118,32 +114,34 @@ export const useLocaleStore = defineStore('locale', {
 
       this.loading = true
       this.error = null
-      
+
       try {
         const bundle = await i18nService.fetchTranslations(locale)
         const cache: TranslationCache = {
           bundle,
           cachedAt: Date.now(),
-          maxAge: CACHE_MAX_AGE
+          maxAge: CACHE_MAX_AGE,
         }
-        
+
         this.translationCache.set(locale, cache)
         localStorage.setItem(localStorageKey, JSON.stringify(cache))
         this.translations = bundle.translations
       } catch (error) {
         logger.error('LocaleStore', `Failed to fetch translations for ${locale}`, error)
         this.error = `Failed to load ${locale} translations. Falling back to English.`
-        
+
         // Show error notification
         if (typeof window !== 'undefined' && window.dispatchEvent) {
-          window.dispatchEvent(new CustomEvent('i18n-error', {
-            detail: {
-              message: this.error,
-              locale
-            }
-          }))
+          window.dispatchEvent(
+            new CustomEvent('i18n-error', {
+              detail: {
+                message: this.error,
+                locale,
+              },
+            })
+          )
         }
-        
+
         if (locale !== 'en') {
           await this.loadFallbackTranslations()
         }
@@ -164,7 +162,7 @@ export const useLocaleStore = defineStore('locale', {
       await this.fetchTranslations(locale)
       this.locale = locale
       localStorage.setItem('locale', locale)
-      
+
       // Update page title with locale
       if (typeof document !== 'undefined') {
         const currentTitle = document.title
@@ -214,8 +212,8 @@ export const useLocaleStore = defineStore('locale', {
             error: 'Error',
             loading: 'Loading...',
             save: 'Save',
-            cancel: 'Cancel'
-          }
+            cancel: 'Cancel',
+          },
         }
       }
     },
@@ -228,6 +226,6 @@ export const useLocaleStore = defineStore('locale', {
       Object.keys(localStorage)
         .filter(key => key.startsWith('translations_'))
         .forEach(key => localStorage.removeItem(key))
-    }
-  }
+    },
+  },
 })

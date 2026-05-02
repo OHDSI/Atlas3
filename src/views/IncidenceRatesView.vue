@@ -36,8 +36,8 @@
       :items-per-page="itemsPerPage"
       :empty-text="t('common.noData', 'No incidence rates yet.').value"
       testid="incidence-rates-table"
-      :can-copy-item="(item) => canCopy && !!item.id"
-      :can-delete-item="(item) => entityAccess.canDelete(item.id)"
+      :can-copy-item="item => canCopy && !!item.id"
+      :can-delete-item="item => entityAccess.canDelete(item.id)"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleRemove"
@@ -89,7 +89,14 @@
         </div>
       </div>
       <v-divider />
-      <v-card-text>{{ t('ir.deleteConfirmation', 'Delete incidence rate analysis? Warning: deletion can not be undone!') }}</v-card-text>
+      <v-card-text>
+        {{
+          t(
+            'ir.deleteConfirmation',
+            'Delete incidence rate analysis? Warning: deletion can not be undone!'
+          )
+        }}
+      </v-card-text>
       <v-card-actions>
         <v-spacer />
         <v-btn
@@ -113,7 +120,11 @@
     :model-value="!!feedback"
     :color="feedback?.color ?? 'info'"
     :timeout="3000"
-    @update:model-value="(open: boolean) => { if (!open) feedback = null }"
+    @update:model-value="
+      (open: boolean) => {
+        if (!open) feedback = null
+      }
+    "
   >
     {{ feedback?.message }}
   </v-snackbar>
@@ -134,10 +145,14 @@ import AnalysisListLayout from '@/components/analysis/AnalysisListLayout.vue'
 import AnalysisDataTable from '@/components/analysis/AnalysisDataTable.vue'
 
 const {
-  loading, error,
-  filters, page, itemsPerPage,
+  loading,
+  error,
+  filters,
+  page,
+  itemsPerPage,
   fetchIncidenceRates,
-  paginatedIncidenceRates, totalPages,
+  paginatedIncidenceRates,
+  totalPages,
 } = useIncidenceRates()
 
 const router = useRouter()
@@ -155,7 +170,11 @@ const searchInput = ref('')
 const headers = computed(() => [
   { title: t('columns.name', 'Name').value, key: 'name' },
   { title: t('columns.description', 'Description').value, key: 'description' },
-  { title: t('facets.caption.targetCohorts', 'Targets').value, key: 'targetCount', sortable: false },
+  {
+    title: t('facets.caption.targetCohorts', 'Targets').value,
+    key: 'targetCount',
+    sortable: false,
+  },
   { title: t('ir.editor.outcomes', 'Outcomes').value, key: 'outcomeCount', sortable: false },
   { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
   { title: t('columns.modified', 'Modified').value, key: 'modifiedDate' },
@@ -192,7 +211,11 @@ async function handleCopy(ir: IncidenceRate) {
     router.push(`/incidence-rates/${result.data.id}`)
   } else {
     feedback.value = { message: 'Copy failed', color: 'error' }
-    logger.error('IncidenceRatesView', 'copyIncidenceRate failed', !result.success ? result.error : null)
+    logger.error(
+      'IncidenceRatesView',
+      'copyIncidenceRate failed',
+      !result.success ? result.error : null
+    )
   }
 }
 

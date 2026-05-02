@@ -21,7 +21,7 @@ export const JobStatusSchema = z.enum([
   'STOPPED',
   'STOPPING',
   'ABANDONED',
-  'UNKNOWN'
+  'UNKNOWN',
 ])
 
 export type JobStatus = z.infer<typeof JobStatusSchema>
@@ -40,7 +40,7 @@ export const JobTypeSchema = z.enum([
   'cohortInclusionReport',
   'prediction',
   'estimation',
-  'UNKNOWN'
+  'UNKNOWN',
 ])
 
 export type JobType = z.infer<typeof JobTypeSchema>
@@ -48,24 +48,28 @@ export type JobType = z.infer<typeof JobTypeSchema>
 /**
  * Job instance schema - contains job type info
  */
-export const JobInstanceSchema = z.object({
-  name: z.string().optional(),
-  instanceId: z.number().optional()
-}).passthrough()
+export const JobInstanceSchema = z
+  .object({
+    name: z.string().optional(),
+    instanceId: z.number().optional(),
+  })
+  .passthrough()
 
 /**
  * Job parameter schema - parameters passed to job execution
  * Note: Some numeric fields may come as strings from the API, so we accept both
  */
-export const JobParameterSchema = z.object({
-  cohort_definition_id: z.union([z.number(), z.string()]).optional(),
-  source_id: z.union([z.number(), z.string()]).optional(),
-  source_key: z.string().optional(),
-  sourceKey: z.string().optional(),
-  analysis_id: z.union([z.number(), z.string()]).optional(),
-  jobName: z.string().optional(),
-  jobAuthor: z.string().optional()
-}).passthrough()
+export const JobParameterSchema = z
+  .object({
+    cohort_definition_id: z.union([z.number(), z.string()]).optional(),
+    source_id: z.union([z.number(), z.string()]).optional(),
+    source_key: z.string().optional(),
+    sourceKey: z.string().optional(),
+    analysis_id: z.union([z.number(), z.string()]).optional(),
+    jobName: z.string().optional(),
+    jobAuthor: z.string().optional(),
+  })
+  .passthrough()
 
 export type JobParameter = z.infer<typeof JobParameterSchema>
 
@@ -73,17 +77,19 @@ export type JobParameter = z.infer<typeof JobParameterSchema>
  * Job execution info from WebAPI
  * Endpoint: GET /job/execution?comprehensivePage=true
  */
-export const JobExecutionSchema = z.object({
-  executionId: z.number(),
-  status: JobStatusSchema.catch('UNKNOWN'),
-  // startDate and endDate are Unix timestamps (milliseconds) or ISO strings
-  startDate: z.union([z.number(), z.string()]).nullable().optional(),
-  endDate: z.union([z.number(), z.string()]).nullable().optional(),
-  exitStatus: z.string().nullable().optional(),
-  jobInstance: JobInstanceSchema.optional(),
-  jobParameters: JobParameterSchema.optional(),
-  ownerType: z.string().nullable().optional()
-}).passthrough()
+export const JobExecutionSchema = z
+  .object({
+    executionId: z.number(),
+    status: JobStatusSchema.catch('UNKNOWN'),
+    // startDate and endDate are Unix timestamps (milliseconds) or ISO strings
+    startDate: z.union([z.number(), z.string()]).nullable().optional(),
+    endDate: z.union([z.number(), z.string()]).nullable().optional(),
+    exitStatus: z.string().nullable().optional(),
+    jobInstance: JobInstanceSchema.optional(),
+    jobParameters: JobParameterSchema.optional(),
+    ownerType: z.string().nullable().optional(),
+  })
+  .passthrough()
 
 export type JobExecution = z.infer<typeof JobExecutionSchema>
 
@@ -91,21 +97,26 @@ export type JobExecution = z.infer<typeof JobExecutionSchema>
  * Paginated job execution response from WebAPI
  * The API returns a Page object with content array
  */
-export const JobExecutionPageSchema = z.object({
-  content: z.array(JobExecutionSchema),
-  pageable: z.object({
-    pageNumber: z.number(),
-    pageSize: z.number()
-  }).passthrough().optional(),
-  totalPages: z.number().optional(),
-  totalElements: z.number().optional(),
-  last: z.boolean().optional(),
-  first: z.boolean().optional(),
-  size: z.number().optional(),
-  number: z.number().optional(),
-  numberOfElements: z.number().optional(),
-  empty: z.boolean().optional()
-}).passthrough()
+export const JobExecutionPageSchema = z
+  .object({
+    content: z.array(JobExecutionSchema),
+    pageable: z
+      .object({
+        pageNumber: z.number(),
+        pageSize: z.number(),
+      })
+      .passthrough()
+      .optional(),
+    totalPages: z.number().optional(),
+    totalElements: z.number().optional(),
+    last: z.boolean().optional(),
+    first: z.boolean().optional(),
+    size: z.number().optional(),
+    number: z.number().optional(),
+    numberOfElements: z.number().optional(),
+    empty: z.boolean().optional(),
+  })
+  .passthrough()
 
 export type JobExecutionPage = z.infer<typeof JobExecutionPageSchema>
 
@@ -113,10 +124,7 @@ export type JobExecutionPage = z.infer<typeof JobExecutionPageSchema>
  * Comprehensive job execution response from WebAPI
  * Can be either a plain array or a paginated response
  */
-export const JobExecutionListSchema = z.union([
-  z.array(JobExecutionSchema),
-  JobExecutionPageSchema
-])
+export const JobExecutionListSchema = z.union([z.array(JobExecutionSchema), JobExecutionPageSchema])
 
 export type JobExecutionList = z.infer<typeof JobExecutionListSchema>
 
@@ -166,7 +174,7 @@ export const JOB_STATUS_DISPLAY: Record<JobStatus, JobStatusDisplay> = {
   STOPPED: { label: 'Canceled', color: 'grey', icon: 'mdi-stop-circle' },
   STOPPING: { label: 'Stopping', color: 'orange', icon: 'mdi-stop-circle-outline' },
   ABANDONED: { label: 'Abandoned', color: 'grey', icon: 'mdi-close-circle' },
-  UNKNOWN: { label: 'Unknown', color: 'grey', icon: 'mdi-help-circle' }
+  UNKNOWN: { label: 'Unknown', color: 'grey', icon: 'mdi-help-circle' },
 }
 
 /**
@@ -182,7 +190,7 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
   cohortInclusionReport: 'Inclusion Report',
   prediction: 'Prediction',
   estimation: 'Estimation',
-  UNKNOWN: 'Unknown'
+  UNKNOWN: 'Unknown',
 }
 
 /**
@@ -198,7 +206,7 @@ export const JOB_TYPE_ICONS: Record<JobType, string> = {
   cohortInclusionReport: 'mdi-file-document',
   prediction: 'mdi-crystal-ball',
   estimation: 'mdi-calculator',
-  UNKNOWN: 'mdi-help-circle'
+  UNKNOWN: 'mdi-help-circle',
 }
 
 /**
@@ -332,9 +340,8 @@ export function transformJobExecution(execution: JobExecution): Job {
   // Extract entity ID from job parameters (can be number or string)
   let entityId: number | null = null
   if (execution.jobParameters) {
-    const rawId = execution.jobParameters.cohort_definition_id ??
-                  execution.jobParameters.analysis_id ??
-                  null
+    const rawId =
+      execution.jobParameters.cohort_definition_id ?? execution.jobParameters.analysis_id ?? null
     if (rawId !== null && rawId !== undefined) {
       entityId = typeof rawId === 'number' ? rawId : parseInt(rawId, 10)
       if (isNaN(entityId)) entityId = null
@@ -342,14 +349,11 @@ export function transformJobExecution(execution: JobExecution): Job {
   }
 
   // Extract source key from job parameters
-  const sourceKey = execution.jobParameters?.source_key ??
-                   execution.jobParameters?.sourceKey ??
-                   null
+  const sourceKey =
+    execution.jobParameters?.source_key ?? execution.jobParameters?.sourceKey ?? null
 
   // Get job name from parameters
-  const name = execution.jobParameters?.jobName ??
-               execution.jobInstance?.name ??
-               'Unknown Job'
+  const name = execution.jobParameters?.jobName ?? execution.jobInstance?.name ?? 'Unknown Job'
 
   // Extract author from job parameters
   const author = execution.jobParameters?.jobAuthor ?? ''
@@ -376,6 +380,6 @@ export function transformJobExecution(execution: JobExecution): Job {
     duration,
     entityId,
     sourceKey,
-    exitMessage: execution.exitStatus ?? null
+    exitMessage: execution.exitStatus ?? null,
   }
 }

@@ -188,14 +188,7 @@ import RoleUsersTab from '@/components/config/permissions/RoleUsersTab.vue'
 import RoleCreateDialog from '@/components/config/permissions/RoleCreateDialog.vue'
 import RoleDeleteDialog from '@/components/config/permissions/RoleDeleteDialog.vue'
 
-const {
-  roles,
-  currentRole,
-  isLoadingRoles,
-  rolesError,
-  fetchRoles,
-  fetchRoleById,
-} = useRoles()
+const { roles, currentRole, isLoadingRoles, rolesError, fetchRoles, fetchRoleById } = useRoles()
 
 const auth = useAuth()
 
@@ -216,9 +209,9 @@ const editingRole = ref<Role | null>(null)
 const filteredRoles = computed(() => {
   if (!searchQuery.value) return roles.value
   const query = searchQuery.value.toLowerCase()
-  return roles.value.filter(role =>
-    role.name.toLowerCase().includes(query) ||
-    role.description?.toLowerCase().includes(query)
+  return roles.value.filter(
+    role =>
+      role.name.toLowerCase().includes(query) || role.description?.toLowerCase().includes(query)
   )
 })
 
@@ -245,7 +238,7 @@ function handleRoleDeleted() {
   fetchRoles()
 }
 
-watch(showCreateDialog, (isOpen) => {
+watch(showCreateDialog, isOpen => {
   if (!isOpen) {
     editingRole.value = null
   }

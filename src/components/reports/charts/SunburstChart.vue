@@ -33,13 +33,16 @@ export interface SunburstNode {
   splitChildren?: SunburstNode[]
 }
 
-const props = withDefaults(defineProps<{
-  data: SunburstNode
-  colors: (key: string) => string
-  minHeight?: number
-}>(), {
-  minHeight: 500,
-})
+const props = withDefaults(
+  defineProps<{
+    data: SunburstNode
+    colors: (key: string) => string
+    minHeight?: number
+  }>(),
+  {
+    minHeight: 500,
+  }
+)
 
 const emit = defineEmits<{
   'arc-click': [node: SunburstNode]
@@ -57,9 +60,12 @@ interface Band {
 function combinationBits(name: string): number[] | null {
   const num = Number(name)
   if (!Number.isFinite(num) || num <= 0 || !Number.isInteger(num)) return null
-  const bits = num.toString(2).split('').reverse()
+  const bits = num
+    .toString(2)
+    .split('')
+    .reverse()
     .map((b, i) => (b === '1' ? i : -1))
-    .filter((i) => i >= 0)
+    .filter(i => i >= 0)
   return bits.length > 1 ? bits : null
 }
 
@@ -78,24 +84,24 @@ function bandsForNode(d: LaidOutNode, colors: (key: string) => string): Band[] {
 
 const partitioned = computed<LaidOutNode[]>(() => {
   const root = hierarchy<SunburstNode>(props.data)
-    .sum((n) => {
+    .sum(n => {
       // d3 hierarchy sums nominal value for leaves only; intermediates are
       // computed. The pathway hierarchy already attaches `value` everywhere
       // — pass through for leaves, return 0 for nodes whose children sum.
-      const hasChildren = (n.children && n.children.length > 0)
-        || (n.splitChildren && n.splitChildren.length > 0)
+      const hasChildren =
+        (n.children && n.children.length > 0) || (n.splitChildren && n.splitChildren.length > 0)
       return hasChildren ? 0 : (n.value ?? 0)
     })
     .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
 
   // Layout in unit angle/radius; renderItem rescales to pixels.
-  return partition<SunburstNode>().size([2 * Math.PI, 1])(root).descendants()
+  return partition<SunburstNode>()
+    .size([2 * Math.PI, 1])(root)
+    .descendants()
 })
 
 // Skip the root node — it would render as a full disc covering everything.
-const renderable = computed<LaidOutNode[]>(() =>
-  partitioned.value.filter((d) => d.depth > 0),
-)
+const renderable = computed<LaidOutNode[]>(() => partitioned.value.filter(d => d.depth > 0))
 
 function buildBreadcrumb(d: LaidOutNode | undefined): string {
   if (!d) return ''
@@ -105,22 +111,33 @@ function buildBreadcrumb(d: LaidOutNode | undefined): string {
     chain.unshift(cur)
     cur = cur.parent as LaidOutNode | null
   }
-  const rows = chain.map((node) => {
+  const rows = chain.map(node => {
     const bits = combinationBits(node.data.name)
     const segs = bits
-      ? bits.map((b) => ({ name: String(1 << b), color: props.colors(String(1 << b)) }))
+      ? bits.map(b => ({ name: String(1 << b), color: props.colors(String(1 << b)) }))
       : [{ name: node.data.name, color: node.data.itemColor || props.colors(node.data.name) }]
     return segs
-      .map((s) => `<span style="display:inline-block;padding:1px 6px;margin-right:2px;border-radius:3px;background:${s.color};color:#fff;font-size:11px;">${escapeHtml(s.name)}</span>`)
+      .map(
+        s =>
+          `<span style="display:inline-block;padding:1px 6px;margin-right:2px;border-radius:3px;background:${s.color};color:#fff;font-size:11px;">${escapeHtml(s.name)}</span>`
+      )
       .join('')
   })
   return `<div style="font-size:12px;line-height:1.6;">${rows.join('<br/>')}<div style="margin-top:4px;color:#666;">count: ${d.value ?? 0}</div></div>`
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[c]!))
+  return s.replace(
+    /[&<>"']/g,
+    c =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[c]!
+  )
 }
 
 const chartOption = computed(() => ({
@@ -134,11 +151,14 @@ const chartOption = computed(() => ({
       type: 'custom' as const,
       coordinateSystem: undefined,
       animation: false,
-      data: renderable.value.map((d) => ({ value: d.value ?? 0, name: d.data.name })),
-      renderItem: (params: { dataIndex: number }, api: {
-        getWidth(): number
-        getHeight(): number
-      }) => {
+      data: renderable.value.map(d => ({ value: d.value ?? 0, name: d.data.name })),
+      renderItem: (
+        params: { dataIndex: number },
+        api: {
+          getWidth(): number
+          getHeight(): number
+        }
+      ) => {
         const d = renderable.value[params.dataIndex]
         if (!d) return null
         const w = api.getWidth()
@@ -156,7 +176,7 @@ const chartOption = computed(() => ({
         const endAngle = Math.PI / 2 - d.x0
 
         const bands = bandsForNode(d, props.colors)
-        const children = bands.map((b) => ({
+        const children = bands.map(b => ({
           type: 'sector',
           shape: {
             cx,

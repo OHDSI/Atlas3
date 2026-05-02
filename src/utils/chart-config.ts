@@ -55,7 +55,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
     tooltip: {
       trigger: 'axis',
       axisPointer: {
-        type: 'shadow'
+        type: 'shadow',
       },
       formatter: (params: unknown) => {
         const paramsArray = Array.isArray(params) ? params : [params]
@@ -63,7 +63,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
         const value = param.value.toLocaleString()
         const unit = data.unit ? ` ${data.unit}` : ''
         return `${param.name}<br/>${param.seriesName}: <strong>${value}${unit}</strong>`
-      }
+      },
     },
     grid: {
       // Use absolute pixel values so the y-axis name and the chart
@@ -86,13 +86,10 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
         // axes. Up to 8 categories → horizontal; up to 14 → 30°;
         // 15+ → 45°. Matches what Tableau / Apache Superset do
         // with categorical axes.
-        rotate:
-          data.categories.length > 14 ? 45
-            : data.categories.length > 8 ? 30
-              : 0,
+        rotate: data.categories.length > 14 ? 45 : data.categories.length > 8 ? 30 : 0,
         interval: 0,
         hideOverlap: true,
-      }
+      },
     },
     yAxis: {
       type: 'value',
@@ -111,8 +108,8 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
         fontSize: 12,
       },
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString()
-      }
+        formatter: (value: number) => value.toLocaleString(),
+      },
     },
     series: [
       {
@@ -120,17 +117,17 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
         type: 'bar',
         data: data.values,
         itemStyle: {
-          color: CHART_COLORS[0]
+          color: CHART_COLORS[0],
         },
         emphasis: {
           itemStyle: {
             shadowBlur: 10,
             shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        }
-      }
-    ]
+            shadowColor: 'rgba(0, 0, 0, 0.5)',
+          },
+        },
+      },
+    ],
   }
 }
 
@@ -139,15 +136,17 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
  */
 export function defaultPieChartOptions(data: PieChartData[], title?: string): EChartsOption {
   return {
-    title: title ? {
-      text: title,
-      left: 'center',
-      top: '5%',
-      textStyle: {
-        fontSize: 16,
-        fontWeight: 'normal'
-      }
-    } : undefined,
+    title: title
+      ? {
+          text: title,
+          left: 'center',
+          top: '5%',
+          textStyle: {
+            fontSize: 16,
+            fontWeight: 'normal',
+          },
+        }
+      : undefined,
     tooltip: {
       trigger: 'item',
       formatter: (params: unknown) => {
@@ -155,13 +154,13 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
         const value = p.value.toLocaleString()
         const percent = p.percent.toFixed(1)
         return `${p.name}<br/><strong>${value}</strong> (${percent}%)`
-      }
+      },
     },
     legend: {
       orient: 'vertical',
       left: 'left',
       top: 'middle',
-      data: data.map(item => item.name)
+      data: data.map(item => item.name),
     },
     series: [
       {
@@ -173,32 +172,32 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
         itemStyle: {
           borderRadius: 10,
           borderColor: '#fff',
-          borderWidth: 2
+          borderWidth: 2,
         },
         label: {
           show: true,
-          formatter: '{b}: {d}%'
+          formatter: '{b}: {d}%',
         },
         emphasis: {
           label: {
             show: true,
             fontSize: 16,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
           },
           itemStyle: {
             shadowBlur: 10,
             shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
+            shadowColor: 'rgba(0, 0, 0, 0.5)',
+          },
         },
         data: data.map((item, index) => ({
           ...item,
           itemStyle: {
-            color: CHART_COLORS[index % CHART_COLORS.length]
-          }
-        }))
-      }
-    ]
+            color: CHART_COLORS[index % CHART_COLORS.length],
+          },
+        })),
+      },
+    ],
   }
 }
 
@@ -207,15 +206,17 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
  */
 export function defaultLineChartOptions(data: LineChartData, title?: string): EChartsOption {
   return {
-    title: title ? {
-      text: title,
-      left: 'center',
-      top: '5%',
-      textStyle: {
-        fontSize: 16,
-        fontWeight: 'normal'
-      }
-    } : undefined,
+    title: title
+      ? {
+          text: title,
+          left: 'center',
+          top: '5%',
+          textStyle: {
+            fontSize: 16,
+            fontWeight: 'normal',
+          },
+        }
+      : undefined,
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
@@ -223,7 +224,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
         const param = paramsArray[0] as { name: string; seriesName: string; value: number }
         const value = param.value.toLocaleString()
         return `${param.name}<br/>${param.seriesName}: <strong>${value}</strong>`
-      }
+      },
     },
     grid: {
       // Absolute pixels for predictable spacing — see
@@ -240,18 +241,15 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
       boundaryGap: false,
       data: data.xAxis,
       axisLabel: {
-        rotate:
-          data.xAxis.length > 20 ? 45
-            : data.xAxis.length > 12 ? 30
-              : 0,
+        rotate: data.xAxis.length > 20 ? 45 : data.xAxis.length > 12 ? 30 : 0,
         hideOverlap: true,
-      }
+      },
     },
     yAxis: {
       type: 'value',
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString()
-      }
+        formatter: (value: number) => value.toLocaleString(),
+      },
     },
     series: [
       {
@@ -260,7 +258,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
         smooth: true,
         data: data.yAxis,
         itemStyle: {
-          color: CHART_COLORS[0]
+          color: CHART_COLORS[0],
         },
         areaStyle: {
           color: {
@@ -271,15 +269,15 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
             y2: 1,
             colorStops: [
               { offset: 0, color: CHART_COLORS[0] + '80' },
-              { offset: 1, color: CHART_COLORS[0] + '10' }
-            ]
-          }
+              { offset: 1, color: CHART_COLORS[0] + '10' },
+            ],
+          },
         },
         emphasis: {
-          focus: 'series'
-        }
-      }
-    ]
+          focus: 'series',
+        },
+      },
+    ],
   }
 }
 
@@ -289,15 +287,17 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
 export function defaultTreemapOptions(data: TreemapNode[], title?: string): EChartsOption {
   const { min: dataMin, max: dataMax } = extractTreemapValueRange(data)
   return {
-    title: title ? {
-      text: title,
-      left: 'center',
-      top: '5%',
-      textStyle: {
-        fontSize: 16,
-        fontWeight: 'normal'
-      }
-    } : undefined,
+    title: title
+      ? {
+          text: title,
+          left: 'center',
+          top: '5%',
+          textStyle: {
+            fontSize: 16,
+            fontWeight: 'normal',
+          },
+        }
+      : undefined,
     tooltip: {
       trigger: 'item',
       formatter: (params: unknown) => {
@@ -308,14 +308,16 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
         let displayName = p.name
         if (p.data?.conceptPath) {
           const parts = p.data.conceptPath.split('||')
-          displayName = parts.map((part, index) => {
-            const tabs = '\u00A0\u00A0\u00A0\u00A0'.repeat(index) // 4 non-breaking spaces per level
-            return tabs + part.trim()
-          }).join('<br/>')
+          displayName = parts
+            .map((part, index) => {
+              const tabs = '\u00A0\u00A0\u00A0\u00A0'.repeat(index) // 4 non-breaking spaces per level
+              return tabs + part.trim()
+            })
+            .join('<br/>')
         }
 
         return `${displayName}<br/><strong>${value}</strong>`
-      }
+      },
     },
     // Color-by-value legend: shows the gradient horizontally at the
     // bottom of the chart with min/max labels so a user can read the
@@ -336,8 +338,8 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
       text: [dataMax.toLocaleString(), dataMin.toLocaleString()],
       textStyle: {
         fontSize: 11,
-        color: '#5e6470'
-      }
+        color: '#5e6470',
+      },
     },
     series: [
       {
@@ -363,17 +365,17 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
           show: true,
           formatter: '{b}',
           overflow: 'truncate',
-          ellipsis: '...'
+          ellipsis: '...',
         },
         upperLabel: {
           show: true,
           height: 30,
-          color: '#fff'
+          color: '#fff',
         },
         itemStyle: {
           borderColor: '#fff',
           borderWidth: 2,
-          gapWidth: 2
+          gapWidth: 2,
         },
         levels: [
           {
@@ -469,8 +471,7 @@ function sampleGradient(stops: readonly string[], t: number): string {
 function paintTreemapNodesByValue(nodes: TreemapNode[]): TreemapNode[] {
   // Pick the colour magnitude per node: prefer colorValue, else fall
   // back to value.
-  const colorMagnitude = (node: TreemapNode): number =>
-    node.colorValue ?? node.value ?? 0
+  const colorMagnitude = (node: TreemapNode): number => node.colorValue ?? node.value ?? 0
 
   // Compute global min/max of colour magnitudes (recurse).
   const allColorValues: number[] = []
@@ -519,7 +520,10 @@ function paintTreemapNodesByValue(nodes: TreemapNode[]): TreemapNode[] {
 /**
  * Responsive chart resize handler
  */
-export function createResizeHandler(chart: { isDisposed: () => boolean; resize: () => void }, debounceMs = 150) {
+export function createResizeHandler(
+  chart: { isDisposed: () => boolean; resize: () => void },
+  debounceMs = 150
+) {
   let resizeTimer: ReturnType<typeof setTimeout> | null = null
 
   const handleResize = () => {
@@ -544,7 +548,7 @@ export function getExportConfig(backgroundColor = '#ffffff') {
   return {
     backgroundColor,
     pixelRatio: 2, // 2x for high-DPI displays
-    excludeComponents: ['toolbox']
+    excludeComponents: ['toolbox'],
   }
 }
 
@@ -552,7 +556,12 @@ export function getExportConfig(backgroundColor = '#ffffff') {
 // Dashboard-specific Chart Configurations
 // ============================================================================
 
-import type { BarChartData as DatasourceBarChartData, PieChartData as DatasourcePieChartData, LineChartData as DatasourceLineChartData, MultiLineChartData as DatasourceMultiLineChartData } from '@/models/datasource.types'
+import type {
+  BarChartData as DatasourceBarChartData,
+  PieChartData as DatasourcePieChartData,
+  LineChartData as DatasourceLineChartData,
+  MultiLineChartData as DatasourceMultiLineChartData,
+} from '@/models/datasource.types'
 
 /**
  * Dashboard Gender Pie Chart Configuration
@@ -566,12 +575,12 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
         const value = p.value.toLocaleString()
         const percent = p.percent.toFixed(1)
         return `<strong>${p.name}</strong><br/>Count: ${value}<br/>Percentage: ${percent}%`
-      }
+      },
     },
     legend: {
       orient: 'horizontal',
       bottom: '5%',
-      left: 'center'
+      left: 'center',
     },
     series: [
       {
@@ -583,33 +592,33 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
         itemStyle: {
           borderRadius: 8,
           borderColor: '#fff',
-          borderWidth: 2
+          borderWidth: 2,
         },
         label: {
           show: true,
           formatter: '{b}\n{d}%',
-          fontSize: 12
+          fontSize: 12,
         },
         emphasis: {
           label: {
             show: true,
             fontSize: 14,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
           },
           itemStyle: {
             shadowBlur: 10,
             shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.3)'
-          }
+            shadowColor: 'rgba(0, 0, 0, 0.3)',
+          },
         },
         data: data.map((item, index) => ({
           ...item,
           itemStyle: {
-            color: CHART_COLORS[index % CHART_COLORS.length]
-          }
-        }))
-      }
-    ]
+            color: CHART_COLORS[index % CHART_COLORS.length],
+          },
+        })),
+      },
+    ],
   }
 }
 
@@ -621,21 +630,21 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
     tooltip: {
       trigger: 'axis',
       axisPointer: {
-        type: 'shadow'
+        type: 'shadow',
       },
       formatter: (params: unknown) => {
         const paramsArray = Array.isArray(params) ? params : [params]
         const param = paramsArray[0] as { name: string; value: number }
         const value = param.value.toLocaleString()
         return `<strong>Age: ${param.name}</strong><br/>${data.unit || 'Count'}: ${value}`
-      }
+      },
     },
     grid: {
       left: '5%',
       right: '5%',
       bottom: '8%',
       top: '8%',
-      containLabel: true
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
@@ -646,8 +655,8 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
       axisLabel: {
         rotate: data.categories.length > 12 ? 45 : 0,
         interval: 0,
-        fontSize: 11
-      }
+        fontSize: 11,
+      },
     },
     yAxis: {
       type: 'value',
@@ -655,8 +664,8 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
       nameLocation: 'middle',
       nameGap: 50,
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString()
-      }
+        formatter: (value: number) => value.toLocaleString(),
+      },
     },
     series: data.series.map((s, index) => ({
       name: s.name,
@@ -664,16 +673,16 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
       data: s.data,
       itemStyle: {
         color: CHART_COLORS[index % CHART_COLORS.length],
-        borderRadius: [4, 4, 0, 0]
+        borderRadius: [4, 4, 0, 0],
       },
       emphasis: {
         itemStyle: {
           shadowBlur: 10,
           shadowOffsetX: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.3)'
-        }
-      }
-    }))
+          shadowColor: 'rgba(0, 0, 0, 0.3)',
+        },
+      },
+    })),
   }
 }
 
@@ -689,14 +698,14 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
         const param = paramsArray[0] as { name: string; value: number | string }
         const value = typeof param.value === 'number' ? param.value.toFixed(1) : param.value
         return `<strong>${data.xAxisLabel || 'Year'}: ${param.name}</strong><br/>${data.yAxisLabel || 'Percentage'}: ${value}%`
-      }
+      },
     },
     grid: {
       left: '5%',
       right: '5%',
       bottom: '10%',
       top: '8%',
-      containLabel: true
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
@@ -706,8 +715,8 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       nameLocation: 'middle',
       nameGap: 30,
       axisLabel: {
-        fontSize: 11
-      }
+        fontSize: 11,
+      },
     },
     yAxis: {
       type: 'value',
@@ -715,8 +724,8 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       nameLocation: 'middle',
       nameGap: 50,
       axisLabel: {
-        formatter: (value: number) => `${value}%`
-      }
+        formatter: (value: number) => `${value}%`,
+      },
     },
     series: data.series.map((s, index) => ({
       name: s.name,
@@ -726,10 +735,10 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       symbol: 'circle',
       symbolSize: 6,
       itemStyle: {
-        color: CHART_COLORS[index % CHART_COLORS.length]
+        color: CHART_COLORS[index % CHART_COLORS.length],
       },
       lineStyle: {
-        width: 2.5
+        width: 2.5,
       },
       areaStyle: {
         color: {
@@ -740,18 +749,18 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
           y2: 1,
           colorStops: [
             { offset: 0, color: CHART_COLORS[index % CHART_COLORS.length] + '50' },
-            { offset: 1, color: CHART_COLORS[index % CHART_COLORS.length] + '10' }
-          ]
-        }
+            { offset: 1, color: CHART_COLORS[index % CHART_COLORS.length] + '10' },
+          ],
+        },
       },
       emphasis: {
         focus: 'series',
         itemStyle: {
           borderWidth: 2,
-          borderColor: '#fff'
-        }
-      }
-    }))
+          borderColor: '#fff',
+        },
+      },
+    })),
   }
 }
 
@@ -767,14 +776,14 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
         const param = paramsArray[0] as { name: string; value: number }
         const value = param.value.toLocaleString()
         return `<strong>${param.name}</strong><br/>${data.yAxisLabel || 'Observations'}: ${value}`
-      }
+      },
     },
     grid: {
       left: '5%',
       right: '5%',
       bottom: '12%',
       top: '8%',
-      containLabel: true
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
@@ -786,8 +795,8 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       axisLabel: {
         rotate: data.categories.length > 24 ? 45 : 0,
         fontSize: 10,
-        interval: Math.max(0, Math.floor(data.categories.length / 12) - 1)
-      }
+        interval: Math.max(0, Math.floor(data.categories.length / 12) - 1),
+      },
     },
     yAxis: {
       type: 'value',
@@ -795,22 +804,22 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       nameLocation: 'middle',
       nameGap: 50,
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString()
-      }
+        formatter: (value: number) => value.toLocaleString(),
+      },
     },
     dataZoom: [
       {
         type: 'inside',
         start: 0,
-        end: 100
+        end: 100,
       },
       {
         type: 'slider',
         start: 0,
         end: 100,
         height: 20,
-        bottom: 10
-      }
+        bottom: 10,
+      },
     ],
     series: data.series.map((s, index) => ({
       name: s.name,
@@ -820,18 +829,18 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       symbol: 'none',
       sampling: 'lttb',
       itemStyle: {
-        color: CHART_COLORS[index % CHART_COLORS.length]
+        color: CHART_COLORS[index % CHART_COLORS.length],
       },
       lineStyle: {
-        width: 2
+        width: 2,
       },
       emphasis: {
         focus: 'series',
         lineStyle: {
-          width: 3
-        }
-      }
-    }))
+          width: 3,
+        },
+      },
+    })),
   }
 }
 
@@ -843,21 +852,21 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
     tooltip: {
       trigger: 'axis',
       axisPointer: {
-        type: 'cross'
-      }
+        type: 'cross',
+      },
     },
     legend: {
       data: data.series.map(s => s.name),
       type: 'scroll',
       bottom: 0,
-      left: 'center'
+      left: 'center',
     },
     grid: {
       left: '5%',
       right: '5%',
       bottom: '12%',
       top: '8%',
-      containLabel: true
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
@@ -865,14 +874,14 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
       data: data.categories,
       axisLabel: {
         rotate: data.categories.length > 24 ? 45 : 0,
-        fontSize: 10
-      }
+        fontSize: 10,
+      },
     },
     yAxis: {
       type: 'value',
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString()
-      }
+        formatter: (value: number) => value.toLocaleString(),
+      },
     },
     series: data.series.map((s, index) => ({
       name: s.name,
@@ -882,19 +891,19 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
       symbol: 'circle',
       symbolSize: 4,
       itemStyle: {
-        color: CHART_COLORS[index % CHART_COLORS.length]
+        color: CHART_COLORS[index % CHART_COLORS.length],
       },
       lineStyle: {
-        width: 2
+        width: 2,
       },
       emphasis: {
         focus: 'series',
         itemStyle: {
           borderWidth: 2,
-          borderColor: '#fff'
-        }
-      }
-    }))
+          borderColor: '#fff',
+        },
+      },
+    })),
   }
 }
 
@@ -912,8 +921,8 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
       trigger: 'item',
       formatter: (params: unknown) => {
         const p = params as {
-          name: string;
-          value: number;
+          name: string
+          value: number
           data: { prevalence?: number; metric?: number }
         }
         const value = p.value.toLocaleString()
@@ -931,7 +940,7 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
         }
 
         return tooltip
-      }
+      },
     },
     series: [
       {
@@ -946,41 +955,41 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
           show: true,
           emptyItemWidth: 25,
           height: 22,
-          top: '0%'
+          top: '0%',
         },
         label: {
           show: true,
           formatter: '{b}',
           overflow: 'truncate',
           ellipsis: '...',
-          fontSize: 12
+          fontSize: 12,
         },
         upperLabel: {
           show: true,
           height: 30,
           color: '#fff',
           fontSize: 14,
-          fontWeight: 'bold'
+          fontWeight: 'bold',
         },
         itemStyle: {
           borderColor: '#fff',
           borderWidth: 2,
-          gapWidth: 2
+          gapWidth: 2,
         },
         levels: [
           {
             itemStyle: {
               borderWidth: 3,
-              gapWidth: 3
-            }
+              gapWidth: 3,
+            },
           },
           {
             itemStyle: {
               borderWidth: 2,
               gapWidth: 2,
-              borderColorSaturation: 0.6
-            }
-          }
+              borderColorSaturation: 0.6,
+            },
+          },
         ],
         // Visual mapping for prevalence intensity (light to dark)
         visualMin: minValue,
@@ -992,11 +1001,11 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
           '#90caf9', // Light blue
           '#42a5f5', // Medium blue
           '#1e88e5', // Dark blue
-          '#1565c0'  // Very dark blue (high prevalence)
+          '#1565c0', // Very dark blue (high prevalence)
         ],
-        data: nodes
-      }
-    ]
+        data: nodes,
+      },
+    ],
   }
 }
 
@@ -1047,7 +1056,7 @@ export function trellisChartOptions(
   const GRID_GAP = 5 / plotsPerRow
   const GRID_LEFT_MARGIN = 7
   const GRID_HEIGHT = 56 / numRows
-  const GRID_TOP_MARGIN = title ? 15 : 9  // More space if there's a main title
+  const GRID_TOP_MARGIN = title ? 15 : 9 // More space if there's a main title
   const GRID_VERTICAL_GAP = 14
 
   // Calculate global Y-axis range for consistent scale across all plots
@@ -1107,7 +1116,7 @@ export function trellisChartOptions(
       top: `${rowTop}%`,
       borderColor: 'black',
       borderWidth: 1,
-      containLabel: true
+      containLabel: true,
     })
 
     // Grid title (demographic group name) - positioned above the grid
@@ -1118,8 +1127,8 @@ export function trellisChartOptions(
       left: `${colIndex * (GRID_WIDTH + GRID_GAP) + GRID_WIDTH / 2 + GRID_LEFT_MARGIN}%`,
       textStyle: {
         fontWeight: 'normal',
-        fontSize: 12
-      }
+        fontSize: 12,
+      },
     })
 
     // Get series for this category and sort by year
@@ -1137,16 +1146,16 @@ export function trellisChartOptions(
       data: xAxisData,
       boundaryGap: false,
       axisTick: {
-        show: false
+        show: false,
       },
       splitLine: {
-        show: true
+        show: true,
       },
       axisLabel: {
         show: true,
-        fontSize: 10
+        fontSize: 10,
       },
-      position: 'bottom'
+      position: 'bottom',
     })
 
     // Y axis
@@ -1156,15 +1165,15 @@ export function trellisChartOptions(
       min: globalYMin,
       max: globalYMax,
       axisTick: {
-        show: false
+        show: false,
       },
       splitLine: {
-        show: true
+        show: true,
       },
       // Only show y axis label for leftmost chart in each row
       axisLabel: {
         show: colIndex === 0,
-        fontSize: 10
+        fontSize: 10,
       },
       // Only show y axis name for leftmost chart in each row.
       // Render the name vertically (rotated 90°) along the y-axis
@@ -1182,7 +1191,7 @@ export function trellisChartOptions(
           fontWeight: 'normal',
           color: '#5e6470',
         },
-      })
+      }),
     })
 
     // Series for this grid
@@ -1212,37 +1221,39 @@ export function trellisChartOptions(
         symbol: 'circle',
         symbolSize: 4,
         lineStyle: {
-          width: 2
+          width: 2,
         },
         emphasis: {
-          focus: 'series'
+          focus: 'series',
         },
         label: {
           show: false,
-          position: 'top'
-        }
+          position: 'top',
+        },
       })
     })
   })
 
   return {
-    title: title ? [
-      {
-        text: title,
-        left: 'center',
-        top: '1%',
-        textStyle: {
-          fontSize: 16,
-          fontWeight: 'bold'
-        }
-      },
-      ...gridTitles
-    ] : gridTitles,
+    title: title
+      ? [
+          {
+            text: title,
+            left: 'center',
+            top: '1%',
+            textStyle: {
+              fontSize: 16,
+              fontWeight: 'bold',
+            },
+          },
+          ...gridTitles,
+        ]
+      : gridTitles,
     tooltip: {
       trigger: 'axis',
       axisPointer: {
-        type: 'line'
-      }
+        type: 'line',
+      },
     },
     grid,
     xAxis,
@@ -1250,8 +1261,8 @@ export function trellisChartOptions(
     series,
     legend: {
       top: 'bottom',
-      data: Array.from(new Set(data.series.map(s => s.name)))
-    }
+      data: Array.from(new Set(data.series.map(s => s.name))),
+    },
   }
 }
 
@@ -1266,13 +1277,7 @@ export function boxPlotChartOptions(
   const categories = data.map(d => d.category)
 
   // Convert data to ECharts boxplot format: [min, Q1, median, Q3, max]
-  const boxData = data.map(d => [
-    d.min,
-    d.p25,
-    d.median,
-    d.p75,
-    d.max
-  ])
+  const boxData = data.map(d => [d.min, d.p25, d.median, d.p75, d.max])
 
   // Outliers (p10 and p90 as whisker extensions)
   const outlierData: [number, number][] = []
@@ -1286,18 +1291,20 @@ export function boxPlotChartOptions(
   })
 
   return {
-    title: title ? {
-      text: title,
-      left: 'center',
-      textStyle: {
-        fontSize: 16,
-        fontWeight: 'bold'
-      }
-    } : undefined,
+    title: title
+      ? {
+          text: title,
+          left: 'center',
+          textStyle: {
+            fontSize: 16,
+            fontWeight: 'bold',
+          },
+        }
+      : undefined,
     tooltip: {
       trigger: 'item',
       axisPointer: {
-        type: 'shadow'
+        type: 'shadow',
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       formatter: (params: any) => {
@@ -1314,13 +1321,13 @@ export function boxPlotChartOptions(
             Min: ${value[1]}`
         }
         return params.name
-      }
+      },
     },
     grid: {
       left: '10%',
       right: '10%',
       bottom: '15%',
-      top: title ? '15%' : '10%'
+      top: title ? '15%' : '10%',
     },
     xAxis: {
       type: 'category',
@@ -1328,22 +1335,22 @@ export function boxPlotChartOptions(
       boundaryGap: true,
       nameGap: 30,
       splitArea: {
-        show: false
+        show: false,
       },
       axisLabel: {
         formatter: '{value}',
-        rotate: categories.length > 5 ? 45 : 0
+        rotate: categories.length > 5 ? 45 : 0,
       },
       splitLine: {
-        show: false
-      }
+        show: false,
+      },
     },
     yAxis: {
       type: 'value',
       name: 'Value',
       splitArea: {
-        show: true
-      }
+        show: true,
+      },
     },
     series: [
       {
@@ -1352,7 +1359,7 @@ export function boxPlotChartOptions(
         data: boxData,
         itemStyle: {
           color: CHART_COLORS[0],
-          borderColor: '#333'
+          borderColor: '#333',
         },
         tooltip: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1363,18 +1370,17 @@ export function boxPlotChartOptions(
               Median: ${param.value[3]}<br/>
               P25: ${param.value[2]}<br/>
               Min: ${param.value[1]}`
-          }
-        }
+          },
+        },
       },
       {
         name: 'outlier',
         type: 'scatter',
         data: outlierData,
         itemStyle: {
-          color: 'rgba(255, 0, 0, 0.5)'
-        }
-      }
-    ]
+          color: 'rgba(255, 0, 0, 0.5)',
+        },
+      },
+    ],
   }
 }
-

@@ -18,7 +18,7 @@ export const TEXT_OPERATORS = [
   { value: 'ENDS_WITH', label: 'Ends with' },
 ] as const
 
-export type TextOperator = typeof TEXT_OPERATORS[number]['value']
+export type TextOperator = (typeof TEXT_OPERATORS)[number]['value']
 
 /**
  * Numeric range operators
@@ -35,7 +35,7 @@ export const NUMERIC_OPERATORS = [
   { value: 'NOT_BETWEEN', label: 'Not Between' },
 ] as const
 
-export type NumericOperator = typeof NUMERIC_OPERATORS[number]['value']
+export type NumericOperator = (typeof NUMERIC_OPERATORS)[number]['value']
 
 /**
  * Date range operators
@@ -47,7 +47,7 @@ export const DATE_OPERATORS = [
   { value: 'AFTER', label: 'After' },
 ] as const
 
-export type DateOperator = typeof DATE_OPERATORS[number]['value']
+export type DateOperator = (typeof DATE_OPERATORS)[number]['value']
 
 /**
  * Get default operator for an attribute type

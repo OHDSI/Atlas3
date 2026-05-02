@@ -70,13 +70,8 @@
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
-import {
-  isTerminalStatus,
-} from '@/composables/useExecutionPolling'
-import type {
-  CharacterizationExecution,
-  GenerationStatus,
-} from '@/models/characterization.types'
+import { isTerminalStatus } from '@/composables/useExecutionPolling'
+import type { CharacterizationExecution, GenerationStatus } from '@/models/characterization.types'
 
 interface Props {
   execution: CharacterizationExecution

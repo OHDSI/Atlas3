@@ -41,9 +41,7 @@ const props = defineProps<{
 const { t } = useI18n()
 
 const pct = computed(() =>
-  props.targetCohortCount === 0
-    ? 0
-    : (props.totalPathwaysCount / props.targetCohortCount) * 100,
+  props.targetCohortCount === 0 ? 0 : (props.totalPathwaysCount / props.targetCohortCount) * 100
 )
 
 const clampedPct = computed(() => Math.max(0, Math.min(100, pct.value)))

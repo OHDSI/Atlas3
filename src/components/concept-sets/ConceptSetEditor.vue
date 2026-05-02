@@ -1,7 +1,11 @@
 <template>
   <v-card>
     <v-card-title>
-      {{ modelValue?.id ? t('components.conceptSet.actionEdit') : t('components.conceptSet.actionCreate') }}
+      {{
+        modelValue?.id
+          ? t('components.conceptSet.actionEdit')
+          : t('components.conceptSet.actionCreate')
+      }}
     </v-card-title>
     <v-card-text>
       <!-- Concept Set Name -->
@@ -34,11 +38,13 @@
                 {{ item.conceptName }}
               </v-list-item-title>
               <v-list-item-subtitle>
-                {{ t('conceptSetEditor.conceptDetails', { 
-                  id: item.conceptId, 
-                  domain: item.domainId, 
-                  vocabulary: item.vocabularyId 
-                }) }}
+                {{
+                  t('conceptSetEditor.conceptDetails', {
+                    id: item.conceptId,
+                    domain: item.domainId,
+                    vocabulary: item.vocabularyId,
+                  })
+                }}
               </v-list-item-subtitle>
 
               <template #append>
@@ -49,7 +55,7 @@
                   hide-details
                   density="compact"
                   :data-testid="`include-descendants-${index}`"
-                  @update:model-value="(val) => updateIncludeDescendants(index, val ?? false)"
+                  @update:model-value="val => updateIncludeDescendants(index, val ?? false)"
                 />
 
                 <!-- Remove Button -->
@@ -125,8 +131,8 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: ConceptSet]
-  'save': []
-  'cancel': []
+  save: []
+  cancel: []
   'add-concepts': []
 }>()
 

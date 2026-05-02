@@ -1,6 +1,6 @@
 /**
  * Host-Plugin Messaging Type Definitions
- * 
+ *
  * Defines the contract for communication between the host application
  * and plugin micro-frontends using a host-mediated messaging pattern.
  */
@@ -13,44 +13,44 @@
  * Standard message types for host-plugin communication
  */
 export type HostMessageType =
-  | 'navigation:request'   // Plugin requests navigation to a route
-  | 'navigation:back'      // Plugin requests back navigation
-  | 'auth:refresh'         // Plugin requests auth token refresh
-  | 'auth:check'           // Plugin requests current auth status
-  | 'notification:show'    // Plugin requests to show notification
-  | 'notification:hide'    // Plugin requests to hide notification
-  | 'data:request'         // Plugin requests data from host
-  | 'data:update'          // Plugin notifies host of data change
-  | 'state:get'            // Plugin requests global state
-  | 'state:set'            // Plugin requests to update global state
-  | 'error:report'         // Plugin reports an error
-  | 'plugin:ready'         // Plugin signals it's ready
-  | 'custom';              // Custom plugin-specific message
+  | 'navigation:request' // Plugin requests navigation to a route
+  | 'navigation:back' // Plugin requests back navigation
+  | 'auth:refresh' // Plugin requests auth token refresh
+  | 'auth:check' // Plugin requests current auth status
+  | 'notification:show' // Plugin requests to show notification
+  | 'notification:hide' // Plugin requests to hide notification
+  | 'data:request' // Plugin requests data from host
+  | 'data:update' // Plugin notifies host of data change
+  | 'state:get' // Plugin requests global state
+  | 'state:set' // Plugin requests to update global state
+  | 'error:report' // Plugin reports an error
+  | 'plugin:ready' // Plugin signals it's ready
+  | 'custom' // Custom plugin-specific message
 
 /**
  * Base message structure for all host-plugin messages
  */
 export interface HostMessage<TPayload = unknown> {
   /** Message type identifier */
-  type: HostMessageType | string;
+  type: HostMessageType | string
 
   /** ID of the plugin that sent the message */
-  sourcePluginId: string;
+  sourcePluginId: string
 
   /** Message payload (type varies by message type) */
-  payload: TPayload;
+  payload: TPayload
 
   /** Optional callback ID for request-response pattern */
-  callbackId?: string;
+  callbackId?: string
 
   /** Timestamp when message was created */
-  timestamp: Date;
+  timestamp: Date
 
   /** Optional correlation ID for message tracing */
-  correlationId?: string;
+  correlationId?: string
 
   /** Optional priority (higher = more urgent) */
-  priority?: number;
+  priority?: number
 }
 
 /**
@@ -58,23 +58,23 @@ export interface HostMessage<TPayload = unknown> {
  */
 export interface HostMessageResponse<TData = unknown> {
   /** Callback ID from the original request */
-  callbackId: string;
+  callbackId: string
 
   /** Whether the request was successful */
-  success: boolean;
+  success: boolean
 
   /** Response data if successful */
-  data?: TData;
+  data?: TData
 
   /** Error information if unsuccessful */
   error?: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
+    code: string
+    message: string
+    details?: unknown
+  }
 
   /** Timestamp of response */
-  timestamp: Date;
+  timestamp: Date
 }
 
 // ============================================================================
@@ -86,16 +86,16 @@ export interface HostMessageResponse<TData = unknown> {
  */
 export interface NavigationRequestPayload {
   /** Target path to navigate to */
-  path: string;
+  path: string
 
   /** Whether to replace current history entry */
-  replace?: boolean;
+  replace?: boolean
 
   /** Query parameters to include */
-  query?: Record<string, string | number | boolean>;
+  query?: Record<string, string | number | boolean>
 
   /** Optional state to pass with navigation */
-  state?: Record<string, unknown>;
+  state?: Record<string, unknown>
 }
 
 /**
@@ -103,22 +103,22 @@ export interface NavigationRequestPayload {
  */
 export interface NotificationPayload {
   /** Notification message text */
-  message: string;
-  
+  message: string
+
   /** Notification type/severity */
-  type: 'info' | 'success' | 'warning' | 'error';
-  
+  type: 'info' | 'success' | 'warning' | 'error'
+
   /** Optional title */
-  title?: string;
-  
+  title?: string
+
   /** Duration in milliseconds (0 = persistent) */
-  duration?: number;
-  
+  duration?: number
+
   /** Optional action buttons */
   actions?: Array<{
-    label: string;
-    callback: string; // Message type to send when clicked
-  }>;
+    label: string
+    callback: string // Message type to send when clicked
+  }>
 }
 
 /**
@@ -126,19 +126,19 @@ export interface NotificationPayload {
  */
 export interface DataRequestPayload {
   /** Resource identifier (e.g., 'users', 'cohorts', 'concepts') */
-  resource: string;
+  resource: string
 
   /** Optional resource ID for specific item */
-  id?: string | number;
+  id?: string | number
 
   /** Optional query parameters */
-  params?: Record<string, unknown>;
+  params?: Record<string, unknown>
 
   /** Optional cache options */
   cache?: {
-    enabled: boolean;
-    ttl?: number; // Time to live in seconds
-  };
+    enabled: boolean
+    ttl?: number // Time to live in seconds
+  }
 }
 
 /**
@@ -146,16 +146,16 @@ export interface DataRequestPayload {
  */
 export interface DataUpdatePayload {
   /** Resource that was updated */
-  resource: string;
+  resource: string
 
   /** ID of the updated item */
-  id: string | number;
+  id: string | number
 
   /** Type of update operation */
-  operation: 'create' | 'update' | 'delete';
+  operation: 'create' | 'update' | 'delete'
 
   /** Updated data (for create/update) */
-  data?: Record<string, unknown>;
+  data?: Record<string, unknown>
 }
 
 /**
@@ -163,13 +163,13 @@ export interface DataUpdatePayload {
  */
 export interface StateGetPayload {
   /** State key to retrieve */
-  key: string;
-  
+  key: string
+
   /** Optional namespace for scoped state */
-  namespace?: string;
-  
+  namespace?: string
+
   /** Whether to include history */
-  includeHistory?: boolean;
+  includeHistory?: boolean
 }
 
 /**
@@ -177,16 +177,16 @@ export interface StateGetPayload {
  */
 export interface StateSetPayload {
   /** State key to set */
-  key: string;
+  key: string
 
   /** Value to set */
-  value: unknown;
+  value: unknown
 
   /** Optional namespace for scoped state */
-  namespace?: string;
+  namespace?: string
 
   /** Whether to merge with existing value (for objects) */
-  merge?: boolean;
+  merge?: boolean
 }
 
 /**
@@ -194,22 +194,22 @@ export interface StateSetPayload {
  */
 export interface ErrorReportPayload {
   /** Error message */
-  message: string;
+  message: string
 
   /** Error stack trace if available */
-  stack?: string;
+  stack?: string
 
   /** Error severity */
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: 'low' | 'medium' | 'high' | 'critical'
 
   /** Error code/type */
-  code?: string;
+  code?: string
 
   /** Additional context */
-  context?: Record<string, unknown>;
+  context?: Record<string, unknown>
 
   /** Whether error is recoverable */
-  recoverable: boolean;
+  recoverable: boolean
 }
 
 /**
@@ -217,19 +217,19 @@ export interface ErrorReportPayload {
  */
 export interface AuthCheckResponsePayload {
   /** Whether user is authenticated */
-  isAuthenticated: boolean;
-  
+  isAuthenticated: boolean
+
   /** User information if authenticated */
   user?: {
-    id: string;
-    username: string;
-    email?: string;
-    permissions: string[];
-    roles?: string[];
-  };
-  
+    id: string
+    username: string
+    email?: string
+    permissions: string[]
+    roles?: string[]
+  }
+
   /** Token expiration time if applicable */
-  tokenExpiration?: Date;
+  tokenExpiration?: Date
 }
 
 // ============================================================================
@@ -245,10 +245,7 @@ export interface PluginMessageBus {
    * @param type - Message type
    * @param payload - Message payload
    */
-  send<TPayload = unknown>(
-    type: HostMessageType | string,
-    payload: TPayload
-  ): void;
+  send<TPayload = unknown>(type: HostMessageType | string, payload: TPayload): void
 
   /**
    * Send a request and wait for response
@@ -261,7 +258,7 @@ export interface PluginMessageBus {
     type: HostMessageType | string,
     payload: TRequest,
     timeout?: number
-  ): Promise<TResponse>;
+  ): Promise<TResponse>
 
   /**
    * Subscribe to messages from host (bidirectional communication)
@@ -272,14 +269,14 @@ export interface PluginMessageBus {
   subscribe<TPayload = unknown>(
     type: HostMessageType | string,
     callback: (payload: TPayload) => void
-  ): () => void;
+  ): () => void
 
   /**
    * Check if message type is supported by host
    * @param type - Message type to check
    * @returns True if supported
    */
-  supports(type: HostMessageType | string): boolean;
+  supports(type: HostMessageType | string): boolean
 }
 
 // ============================================================================
@@ -297,14 +294,14 @@ export interface HostMessageHandler {
    */
   handle<TPayload = unknown, TResponse = unknown>(
     message: HostMessage<TPayload>
-  ): Promise<TResponse> | TResponse | void;
+  ): Promise<TResponse> | TResponse | void
 
   /**
    * Check if handler supports this message type
    * @param type - Message type
    * @returns True if supported
    */
-  supports(type: HostMessageType | string): boolean;
+  supports(type: HostMessageType | string): boolean
 }
 
 // ============================================================================
@@ -315,8 +312,8 @@ export interface HostMessageHandler {
  * Validation result for messages
  */
 export interface MessageValidationResult {
-  valid: boolean;
-  errors?: string[];
+  valid: boolean
+  errors?: string[]
 }
 
 /**
@@ -328,7 +325,7 @@ export interface MessageValidator {
    * @param message - Message to validate
    * @returns Validation result
    */
-  validate(message: HostMessage): MessageValidationResult;
+  validate(message: HostMessage): MessageValidationResult
 }
 
 // ============================================================================
@@ -349,7 +346,7 @@ export function isHostMessage(obj: unknown): obj is HostMessage {
     'payload' in obj &&
     'timestamp' in obj &&
     obj.timestamp instanceof Date
-  );
+  )
 }
 
 /**
@@ -365,7 +362,7 @@ export function isHostMessageResponse(obj: unknown): obj is HostMessageResponse 
     typeof obj.success === 'boolean' &&
     'timestamp' in obj &&
     obj.timestamp instanceof Date
-  );
+  )
 }
 
 // ============================================================================
@@ -375,12 +372,12 @@ export function isHostMessageResponse(obj: unknown): obj is HostMessageResponse 
 /**
  * Default timeout for request-response pattern (5 seconds)
  */
-export const DEFAULT_REQUEST_TIMEOUT = 5000;
+export const DEFAULT_REQUEST_TIMEOUT = 5000
 
 /**
  * Maximum message payload size (1MB)
  */
-export const MAX_PAYLOAD_SIZE = 1024 * 1024;
+export const MAX_PAYLOAD_SIZE = 1024 * 1024
 
 /**
  * Standard message priorities
@@ -390,4 +387,4 @@ export const MESSAGE_PRIORITY = {
   NORMAL: 50,
   HIGH: 100,
   CRITICAL: 200,
-} as const;
+} as const
