@@ -1,5 +1,8 @@
 <template>
-  <div class="ir-workbench" data-testid="ir-workbench">
+  <div
+    class="ir-workbench"
+    data-testid="ir-workbench"
+  >
     <IncidenceRateDesignRail
       class="ir-workbench__rail"
       data-testid="ir-workbench-rail"
@@ -9,7 +12,10 @@
       @strata:edit="onStrataEdit"
     />
 
-    <main class="ir-workbench__canvas" data-testid="ir-workbench-canvas">
+    <main
+      class="ir-workbench__canvas"
+      data-testid="ir-workbench-canvas"
+    >
       <template v-if="!store.currentIR?.id">
         <IncidenceRateEmptyState variant="no-id" />
       </template>
@@ -25,8 +31,8 @@
           :available-outcomes="availableOutcomes"
           :has-results="!!report"
           @update:mode="(m) => (mode = m)"
-          @update:selectedTargetId="(id) => store.setSelectedTargetOutcome(id, store.selectedOutcomeId)"
-          @update:selectedOutcomeId="(id) => store.setSelectedTargetOutcome(store.selectedTargetId, id)"
+          @update:selected-target-id="(id) => store.setSelectedTargetOutcome(id, store.selectedOutcomeId)"
+          @update:selected-outcome-id="(id) => store.setSelectedTargetOutcome(store.selectedTargetId, id)"
           @update:multiplier="(m) => store.setRateMultiplier(m)"
           @export="onExport"
         />
@@ -83,6 +89,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { v4 as uuidv4 } from 'uuid'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useIncidenceRateReport } from '@/composables/useIncidenceRateReport'
+import { useIncidenceRateGeneration } from '@/composables/useIncidenceRateGeneration'
 import IncidenceRateDesignRail from './IncidenceRateDesignRail.vue'
 import IncidenceRateCanvasToolbar, { type ViewMode } from './IncidenceRateCanvasToolbar.vue'
 import IncidenceRateRunMeta from './IncidenceRateRunMeta.vue'
@@ -156,11 +163,15 @@ const emptyVariant = computed<'no-runs' | 'run-pending' | 'run-failed' | 'select
 })
 
 watch(
-  () => store.currentIR?.id,
-  async (id) => {
+  [() => store.currentIR?.id, () => store.executions],
+  async ([id, executions], [prevId]) => {
     if (id == null) return
+    if (id !== prevId) {
+      await useIncidenceRateGeneration(id).pollOnce()
+    }
     if (selectedExecutionId.value === null) {
-      const completed = store.executions.find(e => e.status === 'COMPLETED')
+      const list = id !== prevId ? store.executions : executions
+      const completed = list.find(e => e.status === 'COMPLETED')
       if (completed) await router.replace({ query: { ...route.query, run: String(completed.id) } })
     }
   },
