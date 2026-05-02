@@ -6,16 +6,22 @@
           v-for="(c, i) in stats.summary.chips"
           :key="i"
         >
-          <span
+          <v-chip
+            size="x-small"
+            variant="elevated"
             class="path-stats__chip"
-            :style="{ backgroundColor: colors(c.colorKey) }"
-            :title="c.name"
-          />
-          <span class="path-stats__chip-name">{{ c.name }}</span>
-          <span
+          >
+            <span
+              class="path-stats__chip-swatch"
+              :style="{ backgroundColor: colors(c.colorKey) }"
+            />
+            {{ c.name }}
+          </v-chip>
+          <v-icon
             v-if="i < stats.summary.chips.length - 1"
+            size="x-small"
             class="path-stats__arrow"
-          >→</span>
+          >mdi-arrow-right</v-icon>
         </template>
       </div>
       <div class="path-stats__persons">
@@ -32,28 +38,35 @@
     <div class="path-stats__section-label">
       {{ t('pathway.workbench.stepBreakdown', 'Step breakdown').value }}
     </div>
-    <div class="path-stats__steps">
-      <div
+    <v-list
+      density="compact"
+      class="path-stats__steps"
+    >
+      <v-list-item
         v-for="(s, i) in stats.steps"
         :key="i"
         class="path-stats__step"
         data-testid="path-step-row"
       >
-        <span class="path-stats__step-idx">{{ i + 1 }}</span>
-        <span
-          class="path-stats__step-swatch"
-          :style="{ backgroundColor: colors(s.colorKey) }"
-        />
-        <span class="path-stats__step-name">{{ s.name }}</span>
-        <span class="path-stats__step-count">
-          {{ s.entered.toLocaleString() }}
+        <template #prepend>
+          <span class="path-stats__step-idx">{{ i + 1 }}</span>
           <span
-            v-if="i > 0"
-            class="path-stats__step-pct"
-          >({{ Math.round(s.retentionPct) }}%)</span>
-        </span>
-      </div>
-    </div>
+            class="path-stats__step-swatch"
+            :style="{ backgroundColor: colors(s.colorKey) }"
+          />
+        </template>
+        <v-list-item-title class="path-stats__step-name">{{ s.name }}</v-list-item-title>
+        <template #append>
+          <span class="path-stats__step-count">
+            {{ s.entered.toLocaleString() }}
+            <span
+              v-if="i > 0"
+              class="path-stats__step-pct"
+            >({{ Math.round(s.retentionPct) }}%)</span>
+          </span>
+        </template>
+      </v-list-item>
+    </v-list>
 
     <div class="path-stats__section-label">
       {{ t('pathway.workbench.pathStats', 'Path stats').value }}
@@ -121,21 +134,20 @@ function formatDays(value: number | null): string {
   margin-bottom: 12px;
 }
 .path-stats__chips {
-  font-size: 13px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 4px;
   margin-bottom: 8px;
 }
-.path-stats__chip {
+.path-stats__chip-swatch {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 2px;
+  margin-right: 4px;
 }
-.path-stats__chip-name { font-weight: 600; }
-.path-stats__arrow { color: rgba(var(--v-theme-on-surface), 0.4); margin: 0 4px; }
+.path-stats__arrow { color: rgba(var(--v-theme-on-surface), 0.4); }
 .path-stats__persons { font-size: 18px; font-weight: 600; line-height: 1.1; }
 .path-stats__persons-label { font-size: 11px; font-weight: 500; color: rgba(var(--v-theme-orange), 0.85); margin-left: 4px; }
 .path-stats__sub { font-size: 11px; color: rgba(var(--v-theme-orange), 0.85); margin-top: 4px; }
@@ -149,29 +161,36 @@ function formatDays(value: number | null): string {
   margin: 12px 0 6px;
 }
 
-.path-stats__step {
-  display: grid;
-  grid-template-columns: 18px 12px 1fr auto;
-  gap: 8px;
-  align-items: center;
-  padding: 4px 0;
-  font-size: 12px;
-}
+.path-stats__steps { background: transparent; padding: 0; }
+.path-stats__step { min-height: 32px; }
 .path-stats__step-idx {
   width: 18px;
   height: 18px;
   border-radius: 50%;
   background: rgba(var(--v-theme-primary), 0.12);
   color: rgb(var(--v-theme-primary));
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 10px;
   font-weight: 700;
+  margin-right: 6px;
 }
-.path-stats__step-swatch { width: 10px; height: 10px; border-radius: 2px; }
-.path-stats__step-count { font-variant-numeric: tabular-nums; color: rgba(var(--v-theme-on-surface), 0.62); font-size: 11px; }
-.path-stats__step-pct { color: rgba(var(--v-theme-on-surface), 0.62); margin-left: 2px; }
+.path-stats__step-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.path-stats__step-count {
+  font-variant-numeric: tabular-nums;
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  font-size: 11px;
+}
+.path-stats__step-pct {
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  margin-left: 2px;
+}
 
 .path-stats__stat-row {
   display: flex;

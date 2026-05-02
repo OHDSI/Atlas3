@@ -42,17 +42,14 @@ describe('PathwayDesignForm', () => {
     expect(w.find('.pathway-design-form').exists()).toBe(false)
   })
 
-  it('renders each design section as a collapsible disclosure', () => {
+  it('renders each design section as a collapsible panel', () => {
     const store = usePathwayStore()
     store.createNewPathway()
     const w = mount(PathwayDesignForm, {
       global: { plugins: [vuetify], stubs: ['PathwayCohortList', 'PathwayCohortPicker', 'PathwaySettings', 'PathwayPastRuns'] },
     })
-    const disclosures = w.findAll('details')
-    expect(disclosures.length).toBeGreaterThanOrEqual(4)
-    disclosures.forEach((d) => {
-      expect(d.attributes('open')).toBeDefined()
-    })
+    const panels = w.findAllComponents({ name: 'VExpansionPanel' })
+    expect(panels.length).toBeGreaterThanOrEqual(4)
   })
 
   it('renders PathwayPastRuns when pathwayId is provided', () => {

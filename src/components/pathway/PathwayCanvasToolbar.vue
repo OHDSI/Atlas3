@@ -1,67 +1,86 @@
 <template>
   <div class="canvas-toolbar">
-    <span
+    <v-chip
       v-if="activeRun"
-      class="canvas-toolbar__pill"
+      size="small"
+      variant="tonal"
+      class="canvas-toolbar__chip"
     >
       <span class="canvas-toolbar__dot" />
       <strong>#{{ activeRun.id }}</strong>
-      · {{ activeRun.sourceKey }}
+      <span class="canvas-toolbar__age">· {{ activeRun.sourceKey }}</span>
       <span
         v-if="activeRun.age"
         class="canvas-toolbar__age"
       >· {{ activeRun.age }}</span>
-    </span>
-    <span
+    </v-chip>
+    <v-chip
       v-else
-      class="canvas-toolbar__pill canvas-toolbar__pill--muted"
-    >{{ t('pathway.workbench.noRunsYet', 'No runs yet').value }}</span>
+      size="small"
+      variant="outlined"
+      class="canvas-toolbar__chip canvas-toolbar__chip--muted"
+    >
+      {{ t('pathway.workbench.noRunsYet', 'No runs yet').value }}
+    </v-chip>
 
-    <span
+    <v-chip
       v-if="activeRun"
-      class="canvas-toolbar__pill"
+      size="small"
+      variant="tonal"
+      class="canvas-toolbar__chip"
     >
       <strong>{{ coverage.totalPathwaysCount.toLocaleString() }}</strong>
-      {{ t('common.of', 'of').value }} {{ coverage.targetCohortCount.toLocaleString() }}
-      ({{ coveragePct.toFixed(1) }}%)
-    </span>
+      <span class="canvas-toolbar__age">
+        {{ t('common.of', 'of').value }} {{ coverage.targetCohortCount.toLocaleString() }}
+        ({{ coveragePct.toFixed(1) }}%)
+      </span>
+    </v-chip>
 
-    <span class="canvas-toolbar__spacer" />
+    <v-spacer />
 
-    <div class="canvas-toolbar__seg">
-      <button
-        :class="['canvas-toolbar__seg-btn', { 'canvas-toolbar__seg-btn--active': mode === 'visual' }]"
+    <v-btn-toggle
+      :model-value="mode"
+      mandatory
+      density="compact"
+      variant="outlined"
+      divided
+      @update:model-value="(v: 'visual' | 'tabular' | null) => v && $emit('update:mode', v)"
+    >
+      <v-btn
+        value="visual"
+        size="small"
         data-testid="toolbar-mode-visual"
-        @click="$emit('update:mode', 'visual')"
       >
         {{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}
-      </button>
-      <button
-        :class="['canvas-toolbar__seg-btn', { 'canvas-toolbar__seg-btn--active': mode === 'tabular' }]"
+      </v-btn>
+      <v-btn
+        value="tabular"
+        size="small"
         data-testid="toolbar-mode-tabular"
-        @click="$emit('update:mode', 'tabular')"
       >
         {{ t('pathway.results.tabular', 'Tabular') }}
-      </button>
-    </div>
+      </v-btn>
+    </v-btn-toggle>
 
-    <button
-      class="canvas-toolbar__icon-btn"
+    <v-btn
+      icon="mdi-play"
+      size="small"
+      variant="outlined"
+      density="compact"
       data-testid="toolbar-generate"
       :title="t('components.generation.generate', 'Generate').value"
       @click="$emit('open-generate')"
-    >
-      ▶
-    </button>
-    <button
-      class="canvas-toolbar__icon-btn"
+    />
+    <v-btn
+      icon="mdi-download"
+      size="small"
+      variant="outlined"
+      density="compact"
       data-testid="toolbar-export"
       :disabled="!activeRun"
       :title="t('common.export', 'Export').value"
       @click="$emit('export')"
-    >
-      ↓
-    </button>
+    />
   </div>
 </template>
 
@@ -103,63 +122,23 @@ const coveragePct = computed(() => {
 .canvas-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 6px 10px;
   background: rgb(var(--v-theme-surface));
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
   border-radius: 8px;
 }
-.canvas-toolbar__pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: rgba(var(--v-theme-on-surface), 0.04);
-  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
-  border-radius: 999px;
-  font-size: 11px;
-  color: rgba(var(--v-theme-on-surface), 0.78);
-}
-.canvas-toolbar__pill strong { color: rgb(var(--v-theme-on-surface)); }
-.canvas-toolbar__pill--muted { opacity: 0.7; }
+.canvas-toolbar__chip strong { font-weight: 600; }
+.canvas-toolbar__chip--muted { opacity: 0.7; }
 .canvas-toolbar__dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: rgb(22, 163, 74);
+  margin-right: 4px;
 }
-.canvas-toolbar__age { color: rgba(var(--v-theme-on-surface), 0.62); }
-.canvas-toolbar__spacer { flex: 1; }
-.canvas-toolbar__seg {
-  display: flex;
-  background: rgba(var(--v-theme-on-surface), 0.04);
-  padding: 2px;
-  border-radius: 6px;
-}
-.canvas-toolbar__seg-btn {
-  padding: 4px 10px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
+.canvas-toolbar__age {
   color: rgba(var(--v-theme-on-surface), 0.62);
-  font-size: 11px;
-  font-weight: 500;
-  border-radius: 4px;
+  margin-left: 4px;
 }
-.canvas-toolbar__seg-btn--active {
-  background: rgb(var(--v-theme-surface));
-  color: rgb(var(--v-theme-on-surface));
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-}
-.canvas-toolbar__icon-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
-  background: rgb(var(--v-theme-surface));
-  color: rgba(var(--v-theme-on-surface), 0.62);
-  cursor: pointer;
-  font-size: 13px;
-}
-.canvas-toolbar__icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

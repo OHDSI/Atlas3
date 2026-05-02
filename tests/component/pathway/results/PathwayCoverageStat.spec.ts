@@ -40,8 +40,7 @@ describe('PathwayCoverageStat', () => {
   it('caps the progress bar at 100% even when input exceeds it', () => {
     const w = mountIt({ totalPathwaysCount: 200, targetCohortCount: 100 })
     const fill = w.find('[data-testid="coverage-progress-fill"]')
-    const style = fill.attributes('style') ?? ''
-    expect(style).toContain('width: 100%')
+    expect(fill.attributes('aria-valuenow')).toBe('100')
   })
 
   it('renders the cohort name when provided', () => {

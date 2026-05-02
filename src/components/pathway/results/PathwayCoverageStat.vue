@@ -1,11 +1,7 @@
 <template>
   <div class="coverage-stat">
-    <div class="coverage-stat__label">
-      {{ t('pathway.workbench.coverage', 'Cohort coverage').value }}
-    </div>
-    <div class="coverage-stat__value">
-      {{ pct.toFixed(1) }}%
-    </div>
+    <div class="coverage-stat__label">{{ t('pathway.workbench.coverage', 'Cohort coverage').value }}</div>
+    <div class="coverage-stat__value">{{ pct.toFixed(1) }}%</div>
     <div class="coverage-stat__sub">
       {{ formatNumber(totalPathwaysCount) }} {{ t('common.of', 'of').value }}
       {{ formatNumber(targetCohortCount) }}
@@ -14,16 +10,15 @@
     <div
       v-if="targetCohortName"
       class="coverage-stat__cohort"
-    >
-      {{ targetCohortName }}
-    </div>
-    <div class="coverage-stat__track">
-      <div
-        class="coverage-stat__fill"
-        data-testid="coverage-progress-fill"
-        :style="{ width: clampedPct + '%' }"
-      />
-    </div>
+    >{{ targetCohortName }}</div>
+    <v-progress-linear
+      :model-value="clampedPct"
+      color="orange"
+      height="6"
+      rounded
+      class="mt-2"
+      data-testid="coverage-progress-fill"
+    />
   </div>
 </template>
 
@@ -83,17 +78,5 @@ function formatNumber(n: number): string {
   font-weight: 600;
   color: rgb(var(--v-theme-on-surface));
   margin-top: 4px;
-}
-.coverage-stat__track {
-  height: 6px;
-  background: rgba(var(--v-theme-on-surface), 0.08);
-  border-radius: 999px;
-  margin-top: 10px;
-  overflow: hidden;
-}
-.coverage-stat__fill {
-  height: 100%;
-  background: linear-gradient(90deg, rgb(var(--v-theme-orange)), #fb923c);
-  border-radius: 999px;
 }
 </style>

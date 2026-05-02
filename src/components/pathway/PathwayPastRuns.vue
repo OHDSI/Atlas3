@@ -1,20 +1,26 @@
 <template>
-  <ul
+  <v-list
     v-if="runs.length > 0"
+    density="compact"
     class="past-runs"
+    nav
   >
-    <li
+    <v-list-item
       v-for="r in runs"
       :key="r.id"
       :class="['past-run', { 'past-run--active': r.id === activeId }]"
+      :active="r.id === activeId"
+      :disabled="r.status !== 'COMPLETED'"
       data-testid="past-run-row"
       @click="onClick(r)"
     >
-      <span class="past-run__id">#{{ r.id }}</span>
-      <span class="past-run__src">{{ r.sourceKey }}</span>
-      <span :class="['past-run__status', `past-run__status--${r.status.toLowerCase()}`]" />
-    </li>
-  </ul>
+      <template #prepend>
+        <span :class="['past-run__status', `past-run__status--${r.status.toLowerCase()}`]" />
+      </template>
+      <v-list-item-title class="past-run__src">{{ r.sourceKey }}</v-list-item-title>
+      <v-list-item-subtitle class="past-run__id">#{{ r.id }}</v-list-item-subtitle>
+    </v-list-item>
+  </v-list>
   <div
     v-else
     class="past-runs__empty"
@@ -42,30 +48,21 @@ function onClick(r: PathwayExecution) {
 </script>
 
 <style scoped>
-.past-runs { list-style: none; margin: 0; padding: 0; }
-.past-run {
-  display: grid;
-  grid-template-columns: 56px 1fr 12px;
-  gap: 8px;
-  align-items: center;
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 11.5px;
-  color: rgba(var(--v-theme-on-surface), 0.78);
+.past-runs { padding: 0; background: transparent; }
+.past-run { min-height: 36px; }
+.past-run__id {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 11px;
+  color: rgba(var(--v-theme-on-surface), 0.62);
 }
-.past-run:hover { background: rgba(var(--v-theme-on-surface), 0.04); }
-.past-run--active { background: rgba(var(--v-theme-primary), 0.08); }
-.past-run__id { font-family: ui-monospace, "SF Mono", monospace; color: rgba(var(--v-theme-on-surface), 0.62); }
-.past-run__src {
-  font-weight: 600;
-  color: rgb(var(--v-theme-on-surface));
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.past-run__src { font-size: 12px; font-weight: 600; }
+.past-run__status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(var(--v-theme-on-surface), 0.2);
+  display: inline-block;
 }
-.past-run__status { width: 8px; height: 8px; border-radius: 50%; background: rgba(var(--v-theme-on-surface), 0.2); }
 .past-run__status--completed { background: rgb(22, 163, 74); }
 .past-run__status--failed,
 .past-run__status--canceled { background: rgb(220, 38, 38); }
