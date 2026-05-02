@@ -43,7 +43,7 @@ export default defineConfig({
     // Use --mode test to load .env.test with auth disabled for E2E tests
     command: 'npm run dev -- --mode test',
     url: 'http://localhost:5173',
-    reuseExistingServer: false,
+    reuseExistingServer: true,
   },
 
   // Visual regression testing config (Task T141)

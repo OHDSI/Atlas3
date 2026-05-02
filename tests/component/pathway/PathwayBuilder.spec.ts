@@ -16,21 +16,21 @@ describe('PathwayBuilder', () => {
     const w = mount(PathwayBuilder, {
       global: {
         plugins: [vuetify],
-        stubs: ['router-link', 'router-view', 'PathwayDesignForm', 'PathwayGenerationPanel', 'VersionsTabContent', 'TagSelectionDialog'],
+        stubs: ['router-link', 'router-view', 'PathwayWorkbench', 'VersionsTabContent', 'TagSelectionDialog'],
       },
     })
     expect(w.text()).toMatch(/No pathway loaded/i)
   })
 
-  it('renders editor when a pathway is loaded', () => {
+  it('renders the workbench when a pathway is loaded', () => {
     const store = usePathwayStore()
     store.createNewPathway()
     const w = mount(PathwayBuilder, {
       global: {
         plugins: [vuetify],
-        stubs: ['router-link', 'router-view', 'PathwayDesignForm', 'PathwayGenerationPanel', 'VersionsTabContent', 'TagSelectionDialog'],
+        stubs: ['router-link', 'router-view', 'PathwayWorkbench', 'VersionsTabContent', 'TagSelectionDialog'],
       },
     })
-    expect(w.text()).not.toMatch(/No pathway loaded/i)
+    expect(w.findComponent({ name: 'PathwayWorkbench' }).exists()).toBe(true)
   })
 })

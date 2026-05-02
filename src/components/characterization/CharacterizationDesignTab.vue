@@ -16,7 +16,7 @@
       <v-text-field
         :model-value="draft.name"
         :label="t('columns.name', 'Name').value"
-        density="comfortable"
+        density="compact"
         variant="outlined"
         required
         data-testid="char-design-name"
@@ -25,7 +25,7 @@
       <v-textarea
         :model-value="draft.description ?? ''"
         :label="t('columns.description', 'Description').value"
-        density="comfortable"
+        density="compact"
         variant="outlined"
         rows="2"
         auto-grow
@@ -40,7 +40,7 @@
           <v-text-field
             :model-value="draft.stratifiedBy ?? ''"
             :label="t('cc.viewEdit.design.subgroups.stratifiedByPlaceholder', 'Stratified by').value"
-            density="comfortable"
+            density="compact"
             variant="outlined"
             data-testid="char-design-stratifiedBy"
             @update:model-value="(value: string) => updateField('stratifiedBy', value)"
@@ -54,7 +54,7 @@
           <v-switch
             :model-value="draft.strataOnly ?? false"
             :label="t('cc.viewEdit.design.subgroups.subgroupOnly', 'Compute strata only (skip overall)').value"
-            density="comfortable"
+            density="compact"
             color="primary"
             hide-details
             data-testid="char-design-strataOnly"

@@ -37,7 +37,7 @@
           :disabled="loadingSources"
           :error-messages="sourceError"
           variant="outlined"
-          density="comfortable"
+          density="compact"
           data-testid="run-execution-dialog-source"
         />
       </v-card-text>

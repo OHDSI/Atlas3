@@ -18,7 +18,7 @@
             icon="mdi-history"
             variant="text"
             size="small"
-            density="comfortable"
+            density="compact"
             data-testid="pathway-builder-versions"
             @click="showVersions = true"
           />
@@ -42,7 +42,7 @@
               icon="mdi-tag-outline"
               variant="text"
               size="small"
-              density="comfortable"
+              density="compact"
               :disabled="isPreviewMode"
               data-testid="pathway-builder-tags"
               @click="showTags = true"
@@ -50,6 +50,66 @@
           </v-badge>
         </template>
       </v-tooltip>
+      <v-tooltip
+        v-if="previewVersion"
+        :text="t('common.backToCurrent', 'Back to current version').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-undo"
+            variant="text"
+            size="small"
+            density="compact"
+            data-testid="pathway-builder-back-to-current"
+            @click="store.clearPreviewVersion()"
+          />
+        </template>
+      </v-tooltip>
+      <v-tooltip
+        :text="t('common.import', 'Import design').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-upload"
+            variant="text"
+            size="small"
+            density="compact"
+            :loading="importing"
+            data-testid="pathway-builder-import"
+            @click="handleImportClick"
+          />
+        </template>
+      </v-tooltip>
+      <v-tooltip
+        v-if="currentPathway?.id"
+        :text="t('common.export', 'Export design').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-download"
+            variant="text"
+            size="small"
+            density="compact"
+            :loading="exporting"
+            data-testid="pathway-builder-export"
+            @click="handleExport"
+          />
+        </template>
+      </v-tooltip>
+      <input
+        ref="importFileInput"
+        type="file"
+        accept="application/json,.json"
+        style="display: none"
+        data-testid="pathway-builder-import-input"
+        @change="handleImportFileChange"
+      >
       <v-btn
         v-if="currentPathway?.id"
         variant="outlined"
@@ -58,7 +118,7 @@
         data-testid="pathway-builder-copy"
         @click="onCopy"
       >
-        {{ t('common.copy', 'Copy') }}
+        {{ t('common.duplicate', 'Duplicate') }}
       </v-btn>
       <v-btn
         v-if="currentPathway?.id"
@@ -71,6 +131,30 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
+      <v-menu
+        v-if="currentPathway?.id"
+        v-model="generateMenu"
+        :close-on-content-click="false"
+        offset="6"
+        location="bottom end"
+      >
+        <template #activator="{ props: menuProps }">
+          <v-btn
+            v-bind="menuProps"
+            color="primary"
+            variant="outlined"
+            prepend-icon="mdi-play"
+            data-testid="pathway-builder-generate"
+          >
+            {{ t('components.generation.generate', 'Generate') }}
+          </v-btn>
+        </template>
+        <PathwayGeneratePopover
+          v-if="currentPathway?.id"
+          :pathway-id="currentPathway.id"
+          @generated="generateMenu = false"
+        />
+      </v-menu>
       <v-btn
         color="primary"
         variant="elevated"
@@ -97,25 +181,12 @@
       {{ t('common.noData', 'No pathway loaded').value }}
     </div>
 
-    <div
+    <PathwayWorkbench
       v-else
-      class="pathway-builder__main"
-    >
-      <div class="pathway-builder__design">
-        <PathwayDesignForm />
-      </div>
-      <div class="pathway-builder__side">
-        <PathwayGenerationPanel
-          v-if="currentPathway?.id"
-          :pathway-id="currentPathway.id"
-          @select="(id) => (selectedExecutionId = id)"
-        />
-      </div>
-    </div>
-
-    <PathwayResultsPanel
-      v-if="selectedExecutionId !== null"
-      :execution-id="selectedExecutionId"
+      :pathway-id="currentPathway?.id ?? null"
+      :selected-execution-id="selectedExecutionId"
+      @execution:select="(id) => (selectedExecutionId = id)"
+      @open-generate="generateMenu = true"
     />
 
     <v-dialog
@@ -155,11 +226,12 @@ import { useI18n } from '@/composables/useI18n'
 import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import PathwayDesignForm from './PathwayDesignForm.vue'
-import PathwayGenerationPanel from './PathwayGenerationPanel.vue'
-import PathwayResultsPanel from './results/PathwayResultsPanel.vue'
+import PathwayWorkbench from './PathwayWorkbench.vue'
+import PathwayGeneratePopover from './PathwayGeneratePopover.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
+import { exportPathway, importPathway } from '@/services/webapi'
+import { logger } from '@/utils/logger'
 import type { VersionsConfig, VersionsTableItem } from '@/components/versions/types'
 import type { Tag } from '@/models/webapi.types'
 
@@ -172,7 +244,11 @@ const { t } = useI18n()
 
 const showVersions = ref(false)
 const showTags = ref(false)
+const generateMenu = ref(false)
 const selectedExecutionId = ref<number | null>(null)
+const importing = ref(false)
+const exporting = ref(false)
+const importFileInput = ref<HTMLInputElement | null>(null)
 
 const canEdit = computed(() => !isPreviewMode.value)
 const isDirtyRef = computed(() => isDirty.value)
@@ -211,6 +287,74 @@ async function handleTagsUpdate(newTags: Tag[]) {
 async function onSave() { await save() }
 async function onCopy() { await copy() }
 async function onDelete() { await remove() }
+
+function slugifyName(name: string): string {
+  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'design'
+}
+
+function triggerDownload(filename: string, payload: string): void {
+  if (typeof document === 'undefined' || typeof URL === 'undefined') return
+  const blob = new Blob([payload], { type: 'application/json;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+async function handleExport() {
+  const id = currentPathway.value?.id
+  if (!id) return
+  exporting.value = true
+  try {
+    const design = await exportPathway(id)
+    triggerDownload(`pathway-${slugifyName(currentPathway.value?.name ?? '')}-${id}.json`, JSON.stringify(design, null, 2))
+  } catch (err) {
+    logger.error('PathwayBuilder', 'Export failed', err)
+    feedback.value = { message: t('characterizations.editor.utilities.import.importError', 'Export failed').value, color: 'error' }
+  } finally {
+    exporting.value = false
+  }
+}
+
+function handleImportClick() {
+  importFileInput.value?.click()
+}
+
+async function handleImportFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  target.value = ''
+  if (!file) return
+
+  importing.value = true
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(await file.text())
+  } catch (err) {
+    logger.error('PathwayBuilder', 'Import parse failed', err)
+    feedback.value = { message: t('characterizations.editor.utilities.import.parseError', 'Could not parse design JSON').value, color: 'error' }
+    importing.value = false
+    return
+  }
+
+  try {
+    const created = await importPathway(parsed)
+    feedback.value = { message: t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully').value, color: 'success' }
+    if (created.id != null) {
+      await router.push(`/pathways/${created.id}`)
+    }
+  } catch (err) {
+    logger.error('PathwayBuilder', 'Import failed', err)
+    feedback.value = { message: t('characterizations.editor.utilities.import.importError', 'Import failed').value, color: 'error' }
+  } finally {
+    importing.value = false
+  }
+}
 
 function onSnackbarUpdate(open: boolean) {
   if (!open) feedback.value = null
@@ -260,17 +404,5 @@ onBeforeUnmount(() => {
   padding: 48px;
   text-align: center;
   color: rgba(var(--v-theme-on-surface), 0.6);
-}
-
-.pathway-builder__main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 24px;
-}
-
-@media (max-width: 1100px) {
-  .pathway-builder__main {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

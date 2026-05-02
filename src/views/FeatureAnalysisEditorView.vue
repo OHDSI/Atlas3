@@ -29,7 +29,7 @@
         data-testid="feature-analysis-editor-copy"
         @click="handleSaveCopy"
       >
-        {{ t('common.createACopy', 'Save as Copy') }}
+        {{ t('common.duplicate', 'Duplicate') }}
       </v-btn>
       <v-btn
         v-if="isEditing"
@@ -67,7 +67,7 @@
             v-model="draft.name"
             :label="t('columns.name', 'Name').value"
             :error-messages="nameError"
-            density="comfortable"
+            density="compact"
             variant="outlined"
             required
             data-testid="feature-analysis-editor-name"
@@ -76,7 +76,7 @@
           <v-textarea
             v-model="draft.description"
             :label="t('columns.description', 'Description').value"
-            density="comfortable"
+            density="compact"
             variant="outlined"
             rows="2"
             auto-grow
@@ -95,7 +95,7 @@
                 item-title="label"
                 item-value="value"
                 :disabled="isEditing"
-                density="comfortable"
+                density="compact"
                 variant="outlined"
                 data-testid="feature-analysis-editor-type"
               />
@@ -109,7 +109,7 @@
                 :label="t('cc.fa.domain', 'Domain').value"
                 :items="domainOptions"
                 clearable
-                density="comfortable"
+                density="compact"
                 variant="outlined"
                 data-testid="feature-analysis-editor-domain"
               />
@@ -123,7 +123,7 @@
                 :label="t('cc.fa.analysisType', 'Stat Type').value"
                 :items="statTypeOptions"
                 clearable
-                density="comfortable"
+                density="compact"
                 variant="outlined"
                 data-testid="feature-analysis-editor-statType"
               />
@@ -174,7 +174,7 @@
           <v-textarea
             v-model="presetDesignJson"
             :label="t('cc.fa.design', 'Covariate settings (JSON)').value"
-            density="comfortable"
+            density="compact"
             variant="outlined"
             rows="14"
             auto-grow
@@ -200,7 +200,7 @@
             v-model="criteriaConceptSetsJson"
             :label="t('cc.fa.tabs.conceptSets', 'Concept sets (JSON array)').value"
             :error-messages="criteriaConceptSetsError"
-            density="comfortable"
+            density="compact"
             variant="outlined"
             rows="6"
             auto-grow
@@ -212,7 +212,7 @@
             v-model="criteriaCriteriaJson"
             :label="t('cc.fa.criteria', 'Criteria group (JSON)').value"
             :error-messages="criteriaCriteriaError"
-            density="comfortable"
+            density="compact"
             variant="outlined"
             rows="10"
             auto-grow
@@ -234,7 +234,7 @@
           <v-textarea
             v-model="customFeSql"
             :label="t('cc.fa.analysisSql', 'Custom SQL').value"
-            density="comfortable"
+            density="compact"
             variant="outlined"
             rows="14"
             auto-grow

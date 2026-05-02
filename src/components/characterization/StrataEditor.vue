@@ -30,7 +30,7 @@
         <v-text-field
           :model-value="stratum.name"
           :label="t('columns.name', 'Stratum name').value"
-          density="comfortable"
+          density="compact"
           variant="outlined"
           hide-details
           class="strata-editor__name"
@@ -68,7 +68,7 @@
             'Criteria builder integration ships in a follow-up. For now, paste a CriteriaGroup JSON.'
           ).value
         "
-        density="comfortable"
+        density="compact"
         variant="outlined"
         rows="6"
         auto-grow

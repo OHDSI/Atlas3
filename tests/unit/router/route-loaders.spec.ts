@@ -51,14 +51,14 @@ describe('route table loaders', () => {
       redirectedFrom: undefined,
     } as unknown as RouteLocationNormalized
 
-    // Default (nothing in localStorage) should redirect to characterizations.
+    // Default (nothing in localStorage) should redirect to feature-analyses.
     try {
       localStorage.removeItem('atlas3.analysis.lastTab')
     } catch {
       // localStorage may be unavailable in some envs.
     }
     const fn = analysis!.redirect as (to: RouteLocationNormalized) => { name: string }
-    expect(fn(fakeRoute)).toEqual({ name: 'characterizations' })
+    expect(fn(fakeRoute)).toEqual({ name: 'feature-analyses' })
 
     // A remembered tab name should win.
     try {
@@ -75,7 +75,7 @@ describe('route table loaders', () => {
     // An unrecognized stored value falls back to the default.
     try {
       localStorage.setItem('atlas3.analysis.lastTab', 'nope')
-      expect(fn(fakeRoute)).toEqual({ name: 'characterizations' })
+      expect(fn(fakeRoute)).toEqual({ name: 'feature-analyses' })
     } finally {
       try {
         localStorage.removeItem('atlas3.analysis.lastTab')

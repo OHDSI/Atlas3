@@ -2258,6 +2258,33 @@ export async function existsPathway(name: string, id = 0): Promise<number> {
 }
 
 /**
+ * Export a pathway analysis design as a JSON-importable object.
+ * GET /pathway-analysis/{id}/export
+ */
+export async function exportPathway(id: number): Promise<unknown> {
+  try {
+    return await httpGet<unknown>(`/pathway-analysis/${id}/export`)
+  } catch (err) {
+    logger.error('Pathway', `exportPathway(${id}) failed`, err)
+    throw err
+  }
+}
+
+/**
+ * Import a pathway analysis design. Server creates a new analysis.
+ * POST /pathway-analysis/import
+ */
+export async function importPathway(design: unknown): Promise<Pathway> {
+  const data = await httpPost<unknown>('/pathway-analysis/import', design)
+  const parsed = PathwaySchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('Pathway', 'importPathway validation', parsed.error)
+    throw new Error('Invalid response from POST /pathway-analysis/import')
+  }
+  return parsed.data as Pathway
+}
+
+/**
  * Assign a tag to a pathway analysis.
  * POST /pathway-analysis/:id/tag/:tagId
  */
@@ -2550,6 +2577,28 @@ export async function existsIncidenceRate(name: string, id = 0): Promise<number>
     logger.error('IncidenceRate', 'existsIncidenceRate failed', err)
     return 0
   }
+}
+
+/**
+ * Export an incidence-rate analysis design as a JSON-importable object.
+ * GET /ir/{id}/design
+ */
+export async function exportIncidenceRate(id: number): Promise<unknown> {
+  try {
+    return await httpGet<unknown>(`/ir/${id}/design`)
+  } catch (err) {
+    logger.error('IncidenceRate', `exportIncidenceRate(${id}) failed`, err)
+    throw err
+  }
+}
+
+/**
+ * Import an incidence-rate analysis design. Server creates a new analysis.
+ * POST /ir/design
+ */
+export async function importIncidenceRate(design: unknown): Promise<IncidenceRate> {
+  const data = await httpPost<unknown>('/ir/design', design)
+  return decodeIRExpression(data)
 }
 
 /** POST /ir/{id}/tag/{tagId}. */

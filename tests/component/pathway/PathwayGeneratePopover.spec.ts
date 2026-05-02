@@ -4,13 +4,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import PathwayGenerationPanel from '@/components/pathway/PathwayGenerationPanel.vue'
+import PathwayGeneratePopover from '@/components/pathway/PathwayGeneratePopover.vue'
 import { usePathwayStore } from '@/stores/pathway'
 
 const vuetify = createVuetify({ components, directives })
 
 vi.mock('@/services/webapi', () => ({
-  generatePathway: vi.fn(),
+  generatePathway: vi.fn().mockResolvedValue({ success: true, data: {} }),
   cancelPathwayGeneration: vi.fn(),
   getPathwayExecution: vi.fn(),
   listPathwayExecutions: vi.fn().mockResolvedValue({ success: true, data: [] }),
@@ -19,16 +19,16 @@ vi.mock('@/services/webapi', () => ({
 vi.mock('@/stores/datasources', () => ({
   useDataSourcesStore: () => ({
     sources: [{ sourceKey: 'cdm', sourceName: 'CDM Demo' }],
+    isLoading: false,
+    fetchDataSources: vi.fn(),
   }),
 }))
 
 vi.mock('@/composables/usePermissions', () => ({
-  usePermissions: () => ({
-    hasPermission: () => true,
-  }),
+  usePermissions: () => ({ hasPermission: () => true }),
 }))
 
-describe('PathwayGenerationPanel', () => {
+describe('PathwayGeneratePopover', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('disables Generate when pathway is dirty', async () => {
@@ -36,19 +36,16 @@ describe('PathwayGenerationPanel', () => {
     store.createNewPathway()
     if (store.currentPathway) store.currentPathway.id = 1
     store.markDirty()
-    const w = mount(PathwayGenerationPanel, {
+    const w = mount(PathwayGeneratePopover, {
       props: { pathwayId: 1 },
-      global: {
-        plugins: [vuetify],
-        stubs: ['router-link'],
-      },
+      global: { plugins: [vuetify] },
     })
     await flushPromises()
     const btn = w.find('button[data-testid="generate-btn"]')
     expect(btn.attributes('disabled')).toBeDefined()
   })
 
-  it('enables Generate when clean and valid', async () => {
+  it('disables Generate until a source is selected', async () => {
     const store = usePathwayStore()
     store.createNewPathway()
     if (store.currentPathway) store.currentPathway.id = 1
@@ -57,16 +54,12 @@ describe('PathwayGenerationPanel', () => {
     store.addEventCohort({ id: 2, name: 'E' })
     await store.validatePathway()
     store.markClean()
-    const w = mount(PathwayGenerationPanel, {
+    const w = mount(PathwayGeneratePopover, {
       props: { pathwayId: 1 },
-      global: {
-        plugins: [vuetify],
-        stubs: ['router-link'],
-      },
+      global: { plugins: [vuetify] },
     })
     await flushPromises()
     const btn = w.find('button[data-testid="generate-btn"]')
-    // Button is disabled until a source is selected
     expect(btn.attributes('disabled')).toBeDefined()
   })
 })
