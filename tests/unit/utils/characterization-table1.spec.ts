@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { buildTable1 } from '@/utils/characterization-table1'
+import {
+  buildTable1,
+  computeStdDiffCI,
+  deriveCohortSizes,
+} from '@/utils/characterization-table1'
 import {
   DEFAULT_TABLE1_CONFIG,
   DEFAULT_TABLE1_FILTERS,
@@ -335,5 +339,102 @@ describe('buildTable1', () => {
     expect(labels).toEqual(['big', 'medium'])
     const allLabels = result.rows.filter(r => r.kind !== 'group').map(r => (r as { label: string }).label)
     expect(new Set(allLabels).size).toBe(allLabels.length)
+  })
+})
+
+describe('computeStdDiffCI', () => {
+  it('returns null when sizes are missing', () => {
+    expect(computeStdDiffCI(0.42, 0, 100)).toBeNull()
+    expect(computeStdDiffCI(0.42, 100, 0)).toBeNull()
+  })
+
+  it('returns null for non-finite smd', () => {
+    expect(computeStdDiffCI(Number.NaN, 100, 100)).toBeNull()
+  })
+
+  it('produces a symmetric CI around the smd for equal sizes', () => {
+    const ci = computeStdDiffCI(0.5, 200, 200)
+    expect(ci).not.toBeNull()
+    const mid = (ci!.lower + ci!.upper) / 2
+    expect(mid).toBeCloseTo(0.5, 5)
+  })
+
+  it('CI width shrinks as sample size grows', () => {
+    const small = computeStdDiffCI(0.5, 50, 50)!
+    const large = computeStdDiffCI(0.5, 5000, 5000)!
+    const wSmall = small.upper - small.lower
+    const wLarge = large.upper - large.lower
+    expect(wLarge).toBeLessThan(wSmall)
+  })
+})
+
+describe('deriveCohortSizes', () => {
+  it('derives n from count/(pct/100) per cohort, preferring the largest valid value', () => {
+    const sizes = deriveCohortSizes({
+      cohorts: [COHORT_A, COHORT_B],
+      prevalence: [
+        prev({
+          analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X',
+          cohorts: [COHORT_A, COHORT_B],
+          byCohort: { '1': { count: 100, pct: 50 }, '2': { count: 80, pct: 40 } },
+        }),
+        prev({
+          analysisId: 1, analysisName: 'A', covariateId: 12, covariateName: 'Y',
+          cohorts: [COHORT_A, COHORT_B],
+          byCohort: { '1': { count: 1, pct: 0.5 }, '2': { count: 2, pct: 1 } },
+        }),
+      ],
+    })
+    expect(sizes['1']).toBe(200)
+    expect(sizes['2']).toBe(200)
+  })
+
+  it('skips cohorts with no positive pct rows', () => {
+    const sizes = deriveCohortSizes({
+      cohorts: [COHORT_A],
+      prevalence: [
+        prev({
+          analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X',
+          cohorts: [COHORT_A],
+          byCohort: { '1': { count: 0, pct: 0 } },
+        }),
+      ],
+    })
+    expect(sizes['1']).toBeUndefined()
+  })
+})
+
+describe('buildTable1 — std-diff CI', () => {
+  it('attaches stdDiffCI to binary rows when toggled on', () => {
+    const result = buildTable1(baseInput({
+      prevalence: [
+        prev({
+          analysisId: 1, analysisName: 'Demographics', covariateId: 11,
+          covariateName: 'Female', cohorts: [COHORT_A, COHORT_B], stdDiff: 0.5,
+          byCohort: { '1': { count: 50, pct: 50 }, '2': { count: 40, pct: 40 } },
+        }),
+      ],
+      config: { ...DEFAULT_TABLE1_CONFIG, showStdDiffCI: true },
+    }))
+    const row = result.rows.find(r => r.kind === 'binary') as
+      { stdDiffCI?: { lower: number; upper: number } }
+    expect(row.stdDiffCI).toBeDefined()
+    expect(row.stdDiffCI!.lower).toBeLessThan(0.5)
+    expect(row.stdDiffCI!.upper).toBeGreaterThan(0.5)
+  })
+
+  it('does not attach stdDiffCI when toggle is off', () => {
+    const result = buildTable1(baseInput({
+      prevalence: [
+        prev({
+          analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'X',
+          cohorts: [COHORT_A, COHORT_B], stdDiff: 0.5,
+          byCohort: { '1': { count: 50, pct: 50 }, '2': { count: 40, pct: 40 } },
+        }),
+      ],
+    }))
+    const row = result.rows.find(r => r.kind === 'binary') as
+      { stdDiffCI?: { lower: number; upper: number } }
+    expect(row.stdDiffCI).toBeUndefined()
   })
 })

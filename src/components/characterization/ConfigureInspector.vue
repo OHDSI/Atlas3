@@ -112,6 +112,16 @@
         @update:model-value="(v: boolean | null) => patch({ showStdDiff: !!v })"
       />
       <v-switch
+        :model-value="config.showStdDiffCI"
+        :label="t('cc.viewEdit.workbench.configurator.showStdDiffCI', '95% CI on Std Diff').value"
+        :disabled="cohortCount !== 2 || !config.showStdDiff"
+        density="compact"
+        color="primary"
+        hide-details
+        data-testid="configure-stddiff-ci"
+        @update:model-value="(v: boolean | null) => patch({ showStdDiffCI: !!v })"
+      />
+      <v-switch
         :model-value="config.strataAsCols"
         :label="t('cc.viewEdit.workbench.configurator.strataAsCols', 'Strata as columns').value"
         :disabled="!hasStrata"

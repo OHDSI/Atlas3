@@ -59,6 +59,7 @@
             :cohorts="cohorts"
             :config="config"
             :filters="filters"
+            :cohort-sizes="cohortSizes"
             @explore="onExplore"
           />
           <CharacterizationPerAnalysisView
@@ -113,8 +114,10 @@ import RunExecutionDialog from './RunExecutionDialog.vue'
 import ResultsFilterPanel from '@/components/characterization-results/ResultsFilterPanel.vue'
 
 import { useCharacterizationStore } from '@/stores/characterization'
+import { useDataSourcesStore } from '@/stores/datasources'
 import { useCharacterizationResults } from '@/composables/useCharacterizationResults'
 import { isTerminalStatus } from '@/composables/useExecutionPolling'
+import { getCohortGenerationInfo } from '@/services/webapi'
 import {
   DEFAULT_TABLE1_CONFIG, DEFAULT_TABLE1_FILTERS,
   type CharacterizationDefinition,
@@ -146,6 +149,8 @@ const emit = defineEmits<{
 const route = useRoute()
 const router = useRouter()
 const store = useCharacterizationStore()
+const sourcesStore = useDataSourcesStore()
+const cohortSizes = ref<Record<string, number>>({})
 const { execution, prevalence, distribution, resultCount, error, load, reset } = useCharacterizationResults()
 
 const viewMode = ref<ViewMode>('perAnalysis')
@@ -239,9 +244,39 @@ watch(
 watch(
   selectedExecutionId,
   async (id) => {
-    if (id === null) { reset(); return }
+    if (id === null) { reset(); cohortSizes.value = {}; return }
     const ok = await load(id)
     if (!ok) errorMessage.value = error.value ?? ''
+  },
+  { immediate: true },
+)
+
+watch(
+  [() => execution.value?.sourceKey, () => cohorts.value, () => config.value.showStdDiffCI],
+  async ([sourceKey, list, ciOn]) => {
+    if (!ciOn || !sourceKey || !Array.isArray(list) || list.length === 0) {
+      cohortSizes.value = {}
+      return
+    }
+    if (sourcesStore.sources.length === 0) {
+      try { await sourcesStore.fetchDataSources() } catch { /* surfaced elsewhere */ }
+    }
+    const src = sourcesStore.sources.find(s => s.sourceKey === sourceKey)
+    if (!src) { cohortSizes.value = {}; return }
+    const next: Record<string, number> = {}
+    const results = await Promise.all(
+      list.map(c =>
+        getCohortGenerationInfo(c.id).then(r => ({ id: c.id, r })).catch(() => ({ id: c.id, r: null })),
+      ),
+    )
+    for (const { id: cohortId, r } of results) {
+      if (!r || !r.success) continue
+      const gen = r.data.find(g => g.id.sourceId === src.sourceId)
+      if (gen && typeof gen.personCount === 'number' && gen.personCount > 0) {
+        next[String(cohortId)] = gen.personCount
+      }
+    }
+    cohortSizes.value = next
   },
   { immediate: true },
 )
@@ -274,6 +309,7 @@ function onExport(): void {
     cohorts: cohorts.value,
     config: config.value,
     filters: filters.value,
+    cohortSizes: cohortSizes.value,
   })
   if (built.rows.length === 0) return
 

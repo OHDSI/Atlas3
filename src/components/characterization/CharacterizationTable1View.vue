@@ -47,6 +47,14 @@
               {{ tv('characterizations.results.table.stdDiff', 'Std Diff') }}
             </th>
             <th
+              v-if="includeStdDiffCI"
+              class="char-t1__col-num"
+              rowspan="2"
+              data-testid="char-t1-stddiff-ci-header"
+            >
+              {{ tv('characterizations.results.table.stdDiffCI', '95% CI') }}
+            </th>
+            <th
               class="char-t1__col-num"
               rowspan="2"
             >
@@ -118,6 +126,12 @@
               >
                 {{ formatStdDiff(row) }}
               </td>
+              <td
+                v-if="includeStdDiffCI"
+                class="char-t1__cell-num char-t1__cell-ci"
+              >
+                {{ formatStdDiffCI(row) }}
+              </td>
               <td class="char-t1__cell-num">
                 <v-btn
                   v-if="row.kind === 'binary'"
@@ -158,6 +172,7 @@ const props = defineProps<{
   cohorts: LinkedCohort[]
   config: Table1Config
   filters: Table1Filters
+  cohortSizes?: Record<string, number>
 }>()
 
 defineEmits<{ explore: [row: PrevalenceStat] }>()
@@ -171,12 +186,16 @@ const built = computed(() =>
     cohorts: props.cohorts,
     config: props.config,
     filters: props.filters,
+    cohortSizes: props.cohortSizes,
   })
 )
 
 const rows = computed<Table1Row[]>(() => built.value.rows)
 const columns = computed(() => built.value.columns)
 const includeStdDiff = computed<boolean>(() => built.value.includeStdDiff)
+const includeStdDiffCI = computed<boolean>(
+  () => built.value.includeStdDiff && props.config.showStdDiffCI,
+)
 
 const cohortGroupHeaders = computed(() => {
   const numericCellsPerCohort =
@@ -205,7 +224,11 @@ const totalColumnCount = computed(() => {
   const numericCellsPerCohort =
     (props.config.showCounts ? 1 : 0) + (props.config.showPercent ? 1 : 0)
   return (
-    1 + columns.value.length * numericCellsPerCohort + (includeStdDiff.value ? 1 : 0) + 1
+    1 +
+    columns.value.length * numericCellsPerCohort +
+    (includeStdDiff.value ? 1 : 0) +
+    (includeStdDiffCI.value ? 1 : 0) +
+    1
   )
 })
 
@@ -241,6 +264,11 @@ function formatPct(row: Table1Row, key: string): string {
 function formatStdDiff(row: Table1Row): string {
   if (row.kind === 'binary' && typeof row.stdDiff === 'number') return row.stdDiff.toFixed(4)
   return '—'
+}
+
+function formatStdDiffCI(row: Table1Row): string {
+  if (row.kind !== 'binary' || !row.stdDiffCI) return '—'
+  return `[${row.stdDiffCI.lower.toFixed(3)}, ${row.stdDiffCI.upper.toFixed(3)}]`
 }
 
 function isHighStdDiff(row: Table1Row): boolean {
@@ -312,6 +340,10 @@ function isHighStdDiff(row: Table1Row): boolean {
 }
 .char-t1__cell-num {
   text-align: right;
+}
+.char-t1__cell-ci {
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  font-size: 11px;
 }
 .char-t1__cell-stddiff--high {
   color: rgb(192, 57, 43);

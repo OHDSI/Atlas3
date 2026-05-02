@@ -369,6 +369,7 @@ export interface Table1Config {
   showCounts: boolean
   showPercent: boolean
   showStdDiff: boolean
+  showStdDiffCI: boolean
   strataAsCols: boolean
 }
 
@@ -380,6 +381,7 @@ export const DEFAULT_TABLE1_CONFIG: Table1Config = {
   showCounts: true,
   showPercent: true,
   showStdDiff: true,
+  showStdDiffCI: false,
   strataAsCols: false,
 }
 
@@ -412,6 +414,7 @@ export type Table1Row =
       label: string
       cells: Record<string, Table1BinaryCell | null>
       stdDiff?: number
+      stdDiffCI?: { lower: number; upper: number }
       _source: PrevalenceStat
     }
   | {

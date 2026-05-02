@@ -15,6 +15,9 @@ export interface BuildTable1Input {
   cohorts: LinkedCohort[]
   config: Table1Config
   filters: Table1Filters
+  // Optional override for cohort sizes (cohortId → N). When provided these
+  // are used for the SMD CI; otherwise sizes are derived from prevalence rows.
+  cohortSizes?: Record<string, number>
 }
 
 export interface BuildTable1Output {
@@ -27,9 +30,26 @@ export function buildTable1(input: BuildTable1Input): BuildTable1Output {
   const columns = buildColumns(input)
   const includeStdDiff =
     input.cohorts.length === 2 && input.config.showStdDiff && !input.config.strataAsCols
+  const includeStdDiffCI = includeStdDiff && input.config.showStdDiffCI
 
   const binaryRows = mapPrevalenceRows(input)
   const continuousRows = mapDistributionRows(input)
+
+  if (includeStdDiffCI) {
+    const sizes = input.cohortSizes ?? deriveCohortSizes(input)
+    const c1 = input.cohorts[0]
+    const c2 = input.cohorts[1]
+    if (c1 && c2) {
+      const n1 = sizes[String(c1.id)] ?? 0
+      const n2 = sizes[String(c2.id)] ?? 0
+      for (const row of binaryRows) {
+        if (typeof row.stdDiff === 'number') {
+          const ci = computeStdDiffCI(row.stdDiff, n1, n2)
+          if (ci) row.stdDiffCI = ci
+        }
+      }
+    }
+  }
 
   const filteredBinary = binaryRows.filter(r => keepBinary(r, input))
   const filteredContinuous = continuousRows.filter(r => keepContinuous(r, input))
@@ -37,6 +57,48 @@ export function buildTable1(input: BuildTable1Input): BuildTable1Output {
   const ordered = orderAndGroup(filteredBinary, filteredContinuous, input.config)
 
   return { rows: ordered, columns, includeStdDiff }
+}
+
+// Derive per-cohort N from prevalence rows: pick the largest valid count/(pct/100)
+// observed across rows for each cohort. The "largest" choice is robust against
+// rows where pct is rounded down or where a covariate is rare; the maximum
+// closely approximates the true cohort size.
+export function deriveCohortSizes(
+  input: Pick<BuildTable1Input, 'prevalence' | 'cohorts'>,
+): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const cohort of input.cohorts) {
+    let best = 0
+    const idStr = String(cohort.id)
+    for (const row of input.prevalence) {
+      for (const stratumKey of Object.keys(row.pct)) {
+        const pct = row.pct[stratumKey]?.[idStr]
+        const cnt = row.count[stratumKey]?.[idStr]
+        if (typeof pct !== 'number' || typeof cnt !== 'number') continue
+        if (pct <= 0) continue
+        const derived = cnt / (pct / 100)
+        if (Number.isFinite(derived) && derived > best) best = derived
+      }
+    }
+    if (best > 0) out[idStr] = Math.round(best)
+  }
+  return out
+}
+
+// Standard SMD variance approximation used by Hmisc / cobalt:
+//   Var(SMD) ≈ (n1 + n2) / (n1 * n2) + SMD^2 / (2 * (n1 + n2))
+// Returns null when sizes are missing or non-positive.
+export function computeStdDiffCI(
+  smd: number,
+  n1: number,
+  n2: number,
+): { lower: number; upper: number } | null {
+  if (!Number.isFinite(smd)) return null
+  if (n1 < 1 || n2 < 1) return null
+  const variance = (n1 + n2) / (n1 * n2) + (smd * smd) / (2 * (n1 + n2))
+  const se = Math.sqrt(variance)
+  if (!Number.isFinite(se)) return null
+  return { lower: smd - 1.96 * se, upper: smd + 1.96 * se }
 }
 
 function buildColumns(input: BuildTable1Input): Table1CohortColumn[] {
