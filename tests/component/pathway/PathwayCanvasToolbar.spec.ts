@@ -48,10 +48,4 @@ describe('PathwayCanvasToolbar', () => {
     await tabular.trigger('click')
     expect(w.emitted()['update:mode']?.[0]).toEqual(['tabular'])
   })
-
-  it('emits open-generate when the generate trigger is clicked', async () => {
-    const w = mountIt()
-    await w.find('[data-testid="toolbar-generate"]').trigger('click')
-    expect(w.emitted()['open-generate']).toBeDefined()
-  })
 })

@@ -20,8 +20,6 @@
         :active-run="activeRunSummary"
         :coverage="coverageProps"
         @update:mode="(v) => (mode = v)"
-        @open-generate="onOpenGenerate"
-        @export="onExport"
       />
 
       <div
@@ -49,7 +47,7 @@
         <v-btn
           color="primary"
           variant="flat"
-          @click="onOpenGenerate"
+          @click="$emit('open-generate')"
         >
           {{ t('components.generation.generate', 'Generate') }}
         </v-btn>
@@ -74,24 +72,6 @@
         />
       </div>
 
-      <v-menu
-        v-model="generateMenu"
-        :close-on-content-click="false"
-        offset="6"
-        location="bottom end"
-      >
-        <template #activator="{ props: menuProps }">
-          <span
-            v-bind="menuProps"
-            class="workbench__generate-anchor"
-          />
-        </template>
-        <PathwayGeneratePopover
-          v-if="pathwayId"
-          :pathway-id="pathwayId"
-          @generated="onGenerated"
-        />
-      </v-menu>
     </main>
 
     <aside
@@ -149,7 +129,6 @@ import { computePathStats } from '@/utils/pathway-path-stats'
 import PathwayDesignForm from './PathwayDesignForm.vue'
 import PathwaySunburst from './results/PathwaySunburst.vue'
 import PathwayTableView from './results/PathwayTableView.vue'
-import PathwayGeneratePopover from './PathwayGeneratePopover.vue'
 import PathwayCanvasToolbar from './PathwayCanvasToolbar.vue'
 import PathwayCoverageStat from './results/PathwayCoverageStat.vue'
 import PathwayLegend from './results/PathwayLegend.vue'
@@ -168,13 +147,13 @@ const props = defineProps<{
 
 defineEmits<{
   'execution:select': [id: number]
+  'open-generate': []
 }>()
 
 const { t } = useI18n()
 const { design, results, load } = usePathwayResults()
 
 const mode = ref<'visual' | 'tabular'>('visual')
-const generateMenu = ref(false)
 const selectedPath = ref<{ path: string } | null>(null)
 
 const targetGroup = computed(() => results.value?.pathwayGroups[0] ?? null)
@@ -228,20 +207,6 @@ watch(
 
 function onPathSelect(info: { code: number; nodeName: string; value: number }) {
   selectedPath.value = { path: info.nodeName }
-}
-
-function onOpenGenerate() {
-  generateMenu.value = true
-}
-
-function onGenerated() {
-  generateMenu.value = false
-}
-
-function onExport() {
-  // Export wiring is out of scope for this task — the export button surfaces
-  // the intent so a follow-up task can hook it into the existing
-  // pathway-csv util without changing the toolbar shape.
 }
 
 defineExpose({ onPathSelect })

@@ -6,10 +6,9 @@
         :model-value="modelValue.combinationWindow as (typeof combinationWindowOptions)[number]"
         :items="combinationWindowOptions"
         density="compact"
-        variant="plain"
+        variant="underlined"
         hide-details
         :readonly="readonly"
-        class="pathway-settings__control"
         @update:model-value="(v: number | null) => v !== null && update('combinationWindow', v)"
       />
     </div>
@@ -19,10 +18,9 @@
         :model-value="modelValue.minCellCount as (typeof minCellCountOptions)[number]"
         :items="minCellCountOptions"
         density="compact"
-        variant="plain"
+        variant="underlined"
         hide-details
         :readonly="readonly"
-        class="pathway-settings__control"
         @update:model-value="(v: number | null) => v !== null && update('minCellCount', v)"
       />
     </div>
@@ -32,10 +30,9 @@
         :model-value="modelValue.maxDepth as (typeof maxDepthOptions)[number]"
         :items="maxDepthOptions"
         density="compact"
-        variant="plain"
+        variant="underlined"
         hide-details
         :readonly="readonly"
-        class="pathway-settings__control"
         @update:model-value="(v: number | null) => v !== null && update('maxDepth', v)"
       />
     </div>
@@ -47,7 +44,6 @@
         hide-details
         inset
         :readonly="readonly"
-        class="pathway-settings__control pathway-settings__switch"
         @update:model-value="(v: boolean | null) => v !== null && update('allowRepeats', v)"
       />
     </div>
@@ -87,43 +83,16 @@ function update<K extends keyof PathwayDesign>(key: K, value: PathwayDesign[K]) 
 .pathway-settings {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
 }
 .pathway-settings__row {
   display: grid;
-  grid-template-columns: 1fr 90px;
+  grid-template-columns: 1fr 110px;
   align-items: center;
-  gap: 8px;
-  padding: 0;
-  min-height: 26px;
-  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
+  gap: 12px;
 }
-.pathway-settings__row:last-child { border-bottom: none; }
 .pathway-settings__label {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(var(--v-theme-on-surface), 0.78);
-}
-.pathway-settings__control :deep(.v-field) {
-  min-height: 24px;
-}
-.pathway-settings__control :deep(.v-field__input) {
-  min-height: 24px;
-  padding: 0;
-  font-size: 12px;
-  font-weight: 600;
-}
-.pathway-settings__control :deep(.v-field__append-inner) {
-  padding-top: 0;
-}
-.pathway-settings__control :deep(.v-input__details) { display: none; }
-.pathway-settings__switch :deep(.v-selection-control) { min-height: 24px; }
-.pathway-settings__switch :deep(.v-switch__track) {
-  height: 14px;
-  min-width: 28px;
-  opacity: 0.4;
-}
-.pathway-settings__switch :deep(.v-switch__thumb) {
-  width: 12px;
-  height: 12px;
 }
 </style>

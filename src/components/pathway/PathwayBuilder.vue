@@ -50,6 +50,24 @@
           </v-badge>
         </template>
       </v-tooltip>
+      <v-tooltip
+        v-if="currentPathway?.id"
+        :text="t('common.export', 'Export').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-download"
+            variant="text"
+            size="small"
+            density="comfortable"
+            :disabled="!selectedExecutionId"
+            data-testid="pathway-builder-export"
+            @click="onExport"
+          />
+        </template>
+      </v-tooltip>
       <v-btn
         v-if="currentPathway?.id"
         variant="outlined"
@@ -71,6 +89,30 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
+      <v-menu
+        v-if="currentPathway?.id"
+        v-model="generateMenu"
+        :close-on-content-click="false"
+        offset="6"
+        location="bottom end"
+      >
+        <template #activator="{ props: menuProps }">
+          <v-btn
+            v-bind="menuProps"
+            color="primary"
+            variant="outlined"
+            prepend-icon="mdi-play"
+            data-testid="pathway-builder-generate"
+          >
+            {{ t('components.generation.generate', 'Generate') }}
+          </v-btn>
+        </template>
+        <PathwayGeneratePopover
+          v-if="currentPathway?.id"
+          :pathway-id="currentPathway.id"
+          @generated="generateMenu = false"
+        />
+      </v-menu>
       <v-btn
         color="primary"
         variant="elevated"
@@ -102,6 +144,7 @@
       :pathway-id="currentPathway?.id ?? null"
       :selected-execution-id="selectedExecutionId"
       @execution:select="(id) => (selectedExecutionId = id)"
+      @open-generate="generateMenu = true"
     />
 
     <v-dialog
@@ -142,6 +185,7 @@ import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import PathwayWorkbench from './PathwayWorkbench.vue'
+import PathwayGeneratePopover from './PathwayGeneratePopover.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
 import type { VersionsConfig, VersionsTableItem } from '@/components/versions/types'
@@ -156,6 +200,7 @@ const { t } = useI18n()
 
 const showVersions = ref(false)
 const showTags = ref(false)
+const generateMenu = ref(false)
 const selectedExecutionId = ref<number | null>(null)
 
 const canEdit = computed(() => !isPreviewMode.value)
@@ -195,6 +240,9 @@ async function handleTagsUpdate(newTags: Tag[]) {
 async function onSave() { await save() }
 async function onCopy() { await copy() }
 async function onDelete() { await remove() }
+function onExport() {
+  // Export wiring lands in a follow-up; the toolbar/header surface the intent.
+}
 
 function onSnackbarUpdate(open: boolean) {
   if (!open) feedback.value = null

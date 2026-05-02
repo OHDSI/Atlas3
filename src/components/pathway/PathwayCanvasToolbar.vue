@@ -61,26 +61,6 @@
         {{ t('pathway.results.tabular', 'Tabular') }}
       </v-btn>
     </v-btn-toggle>
-
-    <v-btn
-      icon="mdi-play"
-      size="small"
-      variant="outlined"
-      density="compact"
-      data-testid="toolbar-generate"
-      :title="t('components.generation.generate', 'Generate').value"
-      @click="$emit('open-generate')"
-    />
-    <v-btn
-      icon="mdi-download"
-      size="small"
-      variant="outlined"
-      density="compact"
-      data-testid="toolbar-export"
-      :disabled="!activeRun"
-      :title="t('common.export', 'Export').value"
-      @click="$emit('export')"
-    />
   </div>
 </template>
 
@@ -106,8 +86,6 @@ const props = defineProps<{
 
 defineEmits<{
   'update:mode': [mode: 'visual' | 'tabular']
-  'open-generate': []
-  'export': []
 }>()
 
 const { t } = useI18n()
