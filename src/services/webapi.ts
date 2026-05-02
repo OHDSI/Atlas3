@@ -79,13 +79,11 @@ import {
   IncidenceRateExpressionSchema,
   IncidenceRateInfoBySourceSchema,
   IncidenceRateInfoListSchema,
-  IncidenceRateExecutionInfoSchema,
   IncidenceRateReportSchema,
 } from '@/models/incidence-rate.types'
 import type {
   IncidenceRate,
   IncidenceRateInfoBySource,
-  IncidenceRateExecutionInfo,
   IncidenceRateReport,
 } from '@/models/incidence-rate.types'
 import { z } from 'zod'
@@ -2745,16 +2743,16 @@ export async function getIncidenceRateInfoBySource(
   }
 }
 
-/** GET /ir/{id}/execute/{sourceKey} — start a generation. */
+/** GET /ir/{id}/execute/{sourceKey} — start a generation.
+ * The endpoint returns a Spring JobExecutionResource, not an IRExecutionInfo —
+ * the canonical shape arrives via the next /info poll. We treat it as fire-and-forget. */
 export async function generateIncidenceRate(
   id: number,
   sourceKey: string
-): Promise<ApiResult<IncidenceRateExecutionInfo>> {
+): Promise<ApiResult<null>> {
   try {
-    const data = await httpGet<unknown>(`/ir/${id}/execute/${sourceKey}`)
-    const parsed = IncidenceRateExecutionInfoSchema.passthrough().safeParse(data)
-    if (!parsed.success) return failure('Invalid generate response')
-    return success(parsed.data as IncidenceRateExecutionInfo)
+    await httpGet<unknown>(`/ir/${id}/execute/${sourceKey}`)
+    return success(null)
   } catch (err) {
     logger.error('IncidenceRate', `generateIncidenceRate(${id},${sourceKey}) failed`, err)
     return failure(err instanceof Error ? err.message : 'Failed to start generation')
