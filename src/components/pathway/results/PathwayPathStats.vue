@@ -29,7 +29,9 @@
       </div>
     </div>
 
-    <div class="path-stats__section-label">{{ t('pathway.workbench.stepBreakdown', 'Step breakdown').value }}</div>
+    <div class="path-stats__section-label">
+      {{ t('pathway.workbench.stepBreakdown', 'Step breakdown').value }}
+    </div>
     <div class="path-stats__steps">
       <div
         v-for="(s, i) in stats.steps"
@@ -38,7 +40,10 @@
         data-testid="path-step-row"
       >
         <span class="path-stats__step-idx">{{ i + 1 }}</span>
-        <span class="path-stats__step-swatch" :style="{ backgroundColor: colors(s.colorKey) }" />
+        <span
+          class="path-stats__step-swatch"
+          :style="{ backgroundColor: colors(s.colorKey) }"
+        />
         <span class="path-stats__step-name">{{ s.name }}</span>
         <span class="path-stats__step-count">
           {{ s.entered.toLocaleString() }}
@@ -50,21 +55,35 @@
       </div>
     </div>
 
-    <div class="path-stats__section-label">{{ t('pathway.workbench.pathStats', 'Path stats').value }}</div>
+    <div class="path-stats__section-label">
+      {{ t('pathway.workbench.pathStats', 'Path stats').value }}
+    </div>
     <div class="path-stats__stat-rows">
-      <div class="path-stats__stat-row" data-testid="path-stat-row">
+      <div
+        class="path-stats__stat-row"
+        data-testid="path-stat-row"
+      >
         <span>{{ t('pathway.workbench.medianDuration', 'Median duration').value }}</span>
         <span class="path-stats__stat-v">{{ formatDays(stats.stats.medianDurationDays) }}</span>
       </div>
-      <div class="path-stats__stat-row" data-testid="path-stat-row">
+      <div
+        class="path-stats__stat-row"
+        data-testid="path-stat-row"
+      >
         <span>{{ t('pathway.workbench.medianStepGap', 'Median step gap').value }}</span>
         <span class="path-stats__stat-v">{{ formatDays(stats.stats.medianStepGapDays) }}</span>
       </div>
-      <div class="path-stats__stat-row" data-testid="path-stat-row">
+      <div
+        class="path-stats__stat-row"
+        data-testid="path-stat-row"
+      >
         <span>{{ t('pathway.workbench.daysToStep1', 'Cohort entry → step 1').value }}</span>
         <span class="path-stats__stat-v">{{ formatDays(stats.stats.daysToStep1) }}</span>
       </div>
-      <div class="path-stats__stat-row" data-testid="path-stat-row">
+      <div
+        class="path-stats__stat-row"
+        data-testid="path-stat-row"
+      >
         <span>{{ t('pathway.workbench.continuedPastLast', 'Continued past last step').value }}</span>
         <span class="path-stats__stat-v">{{ stats.stats.continuedPastLastStep === null ? '—' : stats.stats.continuedPastLastStep.toLocaleString() }}</span>
       </div>
@@ -95,8 +114,8 @@ function formatDays(value: number | null): string {
   border-radius: 8px;
 }
 .path-stats__summary {
-  background: rgb(254, 247, 237);
-  border: 1px solid rgb(254, 215, 170);
+  background: rgba(var(--v-theme-orange), 0.08);
+  border: 1px solid rgba(var(--v-theme-orange), 0.25);
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 12px;
@@ -116,10 +135,10 @@ function formatDays(value: number | null): string {
   border-radius: 2px;
 }
 .path-stats__chip-name { font-weight: 600; }
-.path-stats__arrow { color: rgba(0,0,0,0.4); margin: 0 4px; }
+.path-stats__arrow { color: rgba(var(--v-theme-on-surface), 0.4); margin: 0 4px; }
 .path-stats__persons { font-size: 18px; font-weight: 600; line-height: 1.1; }
-.path-stats__persons-label { font-size: 11px; font-weight: 500; color: rgb(154, 52, 18); margin-left: 4px; }
-.path-stats__sub { font-size: 11px; color: rgb(154, 52, 18); margin-top: 4px; }
+.path-stats__persons-label { font-size: 11px; font-weight: 500; color: rgba(var(--v-theme-orange), 0.85); margin-left: 4px; }
+.path-stats__sub { font-size: 11px; color: rgba(var(--v-theme-orange), 0.85); margin-top: 4px; }
 
 .path-stats__section-label {
   font-size: 10px;
