@@ -122,9 +122,16 @@ async function mountBuilder(path: string, props?: Record<string, unknown>) {
     entityAccess: emptyEntityAccess(),
   })
 
-  const wrapper = mount(CharacterizationBuilderView, {
+  const TestWrapper = {
+    components: { CharacterizationBuilderView },
+    props: { innerProps: { type: Object, default: () => ({}) } },
+    template:
+      '<v-app><CharacterizationBuilderView v-bind="innerProps" /></v-app>',
+  }
+
+  const wrapper = mount(TestWrapper, {
     global: { plugins: [vuetify, pinia, router] },
-    props,
+    props: { innerProps: props ?? {} },
   })
 
   await flushPromises()
