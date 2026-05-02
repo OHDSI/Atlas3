@@ -10,43 +10,13 @@
       class="pathway-design-form__panels"
     >
       <v-expansion-panel
-        value="description"
-        class="pathway-design-form__panel"
-      >
-        <v-expansion-panel-title>
-          <span class="text-eyebrow">{{ t('columns.description', 'Description').value }}</span>
-        </v-expansion-panel-title>
-        <v-expansion-panel-text>
-          <v-text-field
-            :model-value="currentPathway.name"
-            :label="t('columns.name', 'Name').value"
-            :readonly="readonly"
-            density="compact"
-            variant="outlined"
-            hide-details
-            class="mb-2"
-            @update:model-value="(v: string) => store.updateMeta({ name: v })"
-          />
-          <v-textarea
-            :model-value="currentPathway.description ?? ''"
-            :label="t('columns.description', 'Description').value"
-            :readonly="readonly"
-            density="compact"
-            variant="outlined"
-            hide-details
-            rows="2"
-            auto-grow
-            @update:model-value="(v: string) => store.updateMeta({ description: v })"
-          />
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-
-      <v-expansion-panel
         value="targets"
         class="pathway-design-form__panel"
       >
         <v-expansion-panel-title>
-          <span class="text-eyebrow">{{ t('facets.caption.targetCohorts', 'Target Cohorts').value }}</span>
+          <span class="text-eyebrow">{{
+            t('facets.caption.targetCohorts', 'Target Cohorts').value
+          }}</span>
           <template #actions="{ expanded }">
             <v-btn
               variant="text"
@@ -66,12 +36,12 @@
             :cohorts="targetCohorts"
             :readonly="readonly"
             @rename="(id, name) => store.renameTargetCohort(id, name)"
-            @remove="(id) => store.removeTargetCohort(id)"
+            @remove="id => store.removeTargetCohort(id)"
           />
           <PathwayCohortPicker
             v-model="showTargetPicker"
             :excluded-ids="targetIds"
-            @select="(refs) => refs.forEach((r) => store.addTargetCohort(r))"
+            @select="refs => refs.forEach(r => store.addTargetCohort(r))"
           />
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -101,12 +71,12 @@
             :cohorts="eventCohorts"
             :readonly="readonly"
             @rename="(id, name) => store.renameEventCohort(id, name)"
-            @remove="(id) => store.removeEventCohort(id)"
+            @remove="id => store.removeEventCohort(id)"
           />
           <PathwayCohortPicker
             v-model="showEventPicker"
             :excluded-ids="eventIds"
-            @select="(refs) => refs.forEach((r) => store.addEventCohort(r))"
+            @select="refs => refs.forEach(r => store.addEventCohort(r))"
           />
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -122,7 +92,7 @@
           <PathwaySettings
             :model-value="settings"
             :readonly="readonly"
-            @update:model-value="(d) => store.updateDesign(d)"
+            @update:model-value="d => store.updateDesign(d)"
           />
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -133,13 +103,17 @@
         class="pathway-design-form__panel"
       >
         <v-expansion-panel-title>
-          <span class="text-eyebrow">{{ t('components.analysisExecution.buttons.allExecutions', 'Past runs ({submissions})', { submissions: pastRuns.length }).value }}</span>
+          <span class="text-eyebrow">{{
+            t('components.analysisExecution.buttons.allExecutions', 'Past runs ({submissions})', {
+              submissions: pastRuns.length,
+            }).value
+          }}</span>
         </v-expansion-panel-title>
         <v-expansion-panel-text>
           <PathwayPastRuns
             :runs="pastRuns"
             :active-id="activeRunId ?? null"
-            @select="(id) => $emit('execution:select', id)"
+            @select="id => $emit('execution:select', id)"
           />
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -176,7 +150,7 @@ const { t } = useI18n()
 const showTargetPicker = ref(false)
 const showEventPicker = ref(false)
 const pastRuns = ref<PathwayExecution[]>([])
-const openPanels = ref<string[]>(['description', 'targets', 'events', 'settings', 'past-runs'])
+const openPanels = ref<string[]>(['targets', 'events', 'settings', 'past-runs'])
 
 const targetCohorts = computed(() => currentPathway.value?.targetCohorts ?? [])
 const eventCohorts = computed(() => currentPathway.value?.eventCohorts ?? [])

@@ -29,7 +29,6 @@ describe('PathwayDesignForm', () => {
     })
     await flushPromises()
     const t = w.text()
-    expect(t).toContain('Description')
     expect(t).toContain('Target')
     expect(t).toContain('Event')
     expect(t).toContain('Settings')
@@ -49,7 +48,7 @@ describe('PathwayDesignForm', () => {
       global: { plugins: [vuetify], stubs: ['PathwayCohortList', 'PathwayCohortPicker', 'PathwaySettings', 'PathwayPastRuns'] },
     })
     const panels = w.findAllComponents({ name: 'VExpansionPanel' })
-    expect(panels.length).toBeGreaterThanOrEqual(4)
+    expect(panels.length).toBeGreaterThanOrEqual(3)
   })
 
   it('renders PathwayPastRuns when pathwayId is provided', () => {
