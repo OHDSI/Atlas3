@@ -155,7 +155,8 @@ describe('CharacterizationBuilderView', () => {
     const text = mounted.wrapper.text()
     expect(text).toContain('New')
 
-    expect(mounted.wrapper.find('[data-testid="char-builder-tab-design"]').exists()).toBe(true)
+    // Tabs were removed — Design lives directly in the page.
+    expect(mounted.wrapper.find('[data-testid="char-builder-design-tab"]').exists()).toBe(true)
     // Concept sets and versions live as icon buttons in the action bar (not tabs).
     expect(mounted.wrapper.find('[data-testid="char-builder-conceptsets-icon"]').exists()).toBe(true)
 

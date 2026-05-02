@@ -11,7 +11,7 @@
         <v-tabs
           v-model="activeTabName"
           align-tabs="start"
-          density="comfortable"
+          density="compact"
           color="primary"
           slider-color="primary"
           bg-color="transparent"
