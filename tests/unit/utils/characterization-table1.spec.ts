@@ -219,6 +219,23 @@ describe('buildTable1', () => {
     expect(labels).toEqual(['X'])
   })
 
+  it('honors selected cohort filter', () => {
+    const result = buildTable1(baseInput({
+      prevalence: [
+        prev({ analysisId: 1, analysisName: 'A', covariateId: 11, covariateName: 'shared',
+               cohorts: [COHORT_A, COHORT_B],
+               byCohort: { '1': { count: 50, pct: 25 }, '2': { count: 50, pct: 25 } } }),
+        prev({ analysisId: 1, analysisName: 'A', covariateId: 12, covariateName: 'aOnly',
+               cohorts: [COHORT_A],
+               byCohort: { '1': { count: 50, pct: 25 } } }),
+      ],
+      filters: { ...DEFAULT_TABLE1_FILTERS, selectedCohortId: 2 },
+    }))
+    const labels = result.rows.filter(r => r.kind === 'binary')
+                              .map(r => (r as { label: string }).label)
+    expect(labels).toEqual(['shared'])
+  })
+
   it('emits Std Diff cell only when exactly 2 cohorts and showStdDiff', () => {
     const r2 = buildTable1(baseInput({
       prevalence: [
@@ -316,5 +333,7 @@ describe('buildTable1', () => {
     const firstNonGroup = result.rows.filter(r => r.kind !== 'group').slice(0, 2)
     const labels = firstNonGroup.map(r => (r as { label: string }).label)
     expect(labels).toEqual(['big', 'medium'])
+    const allLabels = result.rows.filter(r => r.kind !== 'group').map(r => (r as { label: string }).label)
+    expect(new Set(allLabels).size).toBe(allLabels.length)
   })
 })

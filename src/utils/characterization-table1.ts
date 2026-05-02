@@ -167,13 +167,13 @@ function mergeByCovariate(rows: PrevalenceStat[]): PrevalenceStat[] {
 
 function mapDistributionRows(input: BuildTable1Input): Extract<Table1Row, { kind: 'continuous' }>[] {
   const out: Extract<Table1Row, { kind: 'continuous' }>[] = []
+  const strataKeys = input.config.strataAsCols ? collectStrataKeys(input) : null
   for (const row of input.distribution) {
     const sKey = pickStratumKey(row.avg)
     const cells: Record<string, { primary: number; secondary: number } | null> = {}
     for (const c of input.cohorts) {
       const idStr = String(c.id)
-      if (input.config.strataAsCols) {
-        const strataKeys = collectStrataKeys(input)
+      if (strataKeys) {
         for (const k of strataKeys) {
           const key = `${c.id}::${k}`
           cells[key] = formatContinuousCell(row, k, idStr, input.config.continuousFormat)
@@ -246,6 +246,8 @@ function keepBinary(
   return true
 }
 
+// keepContinuous deliberately skips threshold (a prevalence percent — meaningless for
+// continuous covariates) and selectedCohortId (continuous rows always show all cohorts).
 function keepContinuous(
   row: Extract<Table1Row, { kind: 'continuous' }>,
   input: BuildTable1Input,
@@ -303,5 +305,7 @@ function applyPin(rows: Table1Row[], config: Table1Config): Table1Row[] {
     .sort((a, b) => Math.abs(b.stdDiff!) - Math.abs(a.stdDiff!) || a.covariateId - b.covariateId)
     .slice(0, config.pinTopK.k)
   if (ranked.length === 0) return rows
-  return [...ranked, ...rows]
+  const pinnedIds = new Set(ranked.map(r => r.covariateId))
+  const remaining = rows.filter(r => r.kind !== 'binary' || !pinnedIds.has(r.covariateId))
+  return [...ranked, ...remaining]
 }
