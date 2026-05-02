@@ -83,6 +83,53 @@
       </v-tooltip>
 
       <v-tooltip
+        :text="t('common.import', 'Import design').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-upload"
+            variant="text"
+            size="small"
+            density="comfortable"
+            :loading="importing"
+            data-testid="char-builder-import-icon"
+            @click="handleImportClick"
+          />
+        </template>
+      </v-tooltip>
+
+      <v-tooltip
+        v-if="isEditing"
+        :text="t('common.export', 'Export design').value"
+        location="bottom"
+      >
+        <template #activator="{ props: tipProps }">
+          <v-btn
+            v-bind="tipProps"
+            icon="mdi-download"
+            variant="text"
+            size="small"
+            density="comfortable"
+            :loading="exporting"
+            :disabled="!canExport"
+            data-testid="char-builder-export-icon"
+            @click="handleExport"
+          />
+        </template>
+      </v-tooltip>
+
+      <input
+        ref="importFileInput"
+        type="file"
+        accept="application/json,.json"
+        style="display: none"
+        data-testid="char-builder-import-input"
+        @change="handleImportFileChange"
+      >
+
+      <v-tooltip
         location="top"
         :text="runDisabledReason"
         :disabled="!runDisabledReason"
@@ -137,77 +184,27 @@
       </v-btn>
     </template>
 
-    <!-- Tabs -->
-    <nav class="page-tabs-rail char-builder__tabs-rail">
-      <v-tabs
-        v-model="activeTab"
-        align-tabs="start"
-        density="comfortable"
-        color="primary"
-        slider-color="primary"
-        bg-color="transparent"
-        class="page-tabs"
-        data-testid="char-builder-tabs"
-      >
-        <v-tab
-          value="design"
-          data-testid="char-builder-tab-design"
-        >
-          <v-icon
-            start
-            icon="mdi-pencil-ruler-outline"
-          />
-          {{ t('cc.fa.tabs.design', 'Design') }}
-        </v-tab>
-        <v-tab
-          value="executions"
-          data-testid="char-builder-tab-executions"
-        >
-          <v-icon
-            start
-            icon="mdi-play-circle-outline"
-          />
-          {{ t('cc.viewEdit.tabs.executions', 'Executions') }}
-        </v-tab>
-        <v-tab
-          value="utilities"
-          data-testid="char-builder-tab-utilities"
-        >
-          <v-icon
-            start
-            icon="mdi-tools"
-          />
-          {{ t('cc.viewEdit.tabs.utilities', 'Utilities') }}
-        </v-tab>
-      </v-tabs>
-    </nav>
+    <CharacterizationDesignTab
+      :model-value="draft"
+      :available-cohorts="availableCohorts"
+      :available-feature-analyses="availableFeatureAnalyses"
+      data-testid="char-builder-design-tab"
+      @update:model-value="onDraftChange"
+    />
 
-    <v-window v-model="activeTab">
-      <v-window-item value="design">
-        <CharacterizationDesignTab
-          :model-value="draft"
-          :available-cohorts="availableCohorts"
-          :available-feature-analyses="availableFeatureAnalyses"
-          data-testid="char-builder-design-tab"
-          @update:model-value="onDraftChange"
-        />
-      </v-window-item>
-
-      <v-window-item value="executions">
-        <ExecutionsPanel
-          :characterization-id="draftId"
-          data-testid="char-builder-executions-tab"
-        />
-      </v-window-item>
-
-      <v-window-item value="utilities">
-        <CharacterizationUtilitiesTab
-          :characterization="draft"
-          data-testid="char-builder-utilities-tab"
-          @imported="onImported"
-        />
-      </v-window-item>
-    </v-window>
+    <section
+      v-if="isEditing"
+      class="char-builder__executions-section"
+    >
+      <header class="char-builder__executions-header">
+        <span class="text-eyebrow">{{ t('cc.viewEdit.tabs.executions', 'Executions').value }}</span>
+        <span class="char-builder__executions-rule" />
+      </header>
+      <ExecutionsPanel
+        :characterization-id="draftId"
+        data-testid="char-builder-executions-tab"
+      />
+    </section>
 
     <v-dialog
       v-model="showConceptSetsDialog"
@@ -356,12 +353,15 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import { getCohorts } from '@/services/webapi'
 import { listFeatureAnalyses } from '@/services/feature-analysis.service'
+import {
+  exportCharacterization,
+  importCharacterization,
+} from '@/services/characterization.service'
 import { logger } from '@/utils/logger'
 import CharacterizationDesignTab from '@/components/characterization/CharacterizationDesignTab.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
 import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
-import CharacterizationUtilitiesTab from '@/components/characterization/CharacterizationUtilitiesTab.vue'
 import ExecutionsPanel from '@/components/characterization/ExecutionsPanel.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import {
@@ -395,14 +395,14 @@ function makeEmptyDraft(): CharacterizationDefinition {
 }
 
 const draft = ref<CharacterizationDefinition>(makeEmptyDraft())
-const activeTab = ref<
-  'design' | 'conceptSets' | 'executions' | 'versions' | 'utilities' | 'validation'
->('design')
 const saving = ref<boolean>(false)
 const showDeleteDialog = ref<boolean>(false)
 const showConceptSetsDialog = ref<boolean>(false)
 const showVersionsDialog = ref<boolean>(false)
 const showValidationDialog = ref<boolean>(false)
+const importing = ref<boolean>(false)
+const exporting = ref<boolean>(false)
+const importFileInput = ref<HTMLInputElement | null>(null)
 
 const availableCohorts = ref<CohortDefinitionSummary[]>([])
 const availableFeatureAnalyses = ref<FeatureAnalysisListItem[]>([])
@@ -488,7 +488,7 @@ const runDisabledReason = computed<string>(() => {
 
 function handleRunClick() {
   if (!canRun.value) return
-  activeTab.value = 'executions'
+  // Executions live inline in the design view; nothing to switch to.
 }
 
 const deleteMessage = computed<string>(() => {
@@ -547,7 +547,7 @@ async function handleSave() {
       ).value,
       'error'
     )
-    activeTab.value = 'validation'
+    showValidationDialog.value = true
     return
   }
 
@@ -623,17 +623,94 @@ async function handleSaveCopy() {
   }
 }
 
-async function onImported(newDef: CharacterizationDefinition) {
-  store.markClean()
-  showSnackbar(
-    t(
-      'characterizations.editor.utilities.import.importSuccess',
-      'Imported successfully.'
-    ).value,
-    'success'
-  )
-  if (newDef.id != null) {
-    await router.push(`/characterizations/${newDef.id}`)
+const canExport = computed<boolean>(() => Boolean(draft.value.id))
+
+function slugifyName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'design'
+}
+
+function triggerDownload(filename: string, payload: string): void {
+  if (typeof document === 'undefined' || typeof URL === 'undefined') return
+  const blob = new Blob([payload], { type: 'application/json;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+async function handleExport(): Promise<void> {
+  if (!draft.value.id) return
+  exporting.value = true
+  try {
+    const design = await exportCharacterization(draft.value.id)
+    const json = JSON.stringify(design, null, 2)
+    const filename = `characterization-${slugifyName(draft.value.name)}-${draft.value.id}.json`
+    triggerDownload(filename, json)
+  } catch (err) {
+    logger.error('CharacterizationBuilder', 'Export failed', err)
+    showSnackbar(
+      t('characterizations.editor.utilities.import.importError', 'Export failed.').value,
+      'error',
+    )
+  } finally {
+    exporting.value = false
+  }
+}
+
+function handleImportClick() {
+  importFileInput.value?.click()
+}
+
+async function handleImportFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  // Reset so selecting the same file twice still triggers a change event.
+  target.value = ''
+  if (!file) return
+
+  importing.value = true
+  let parsed: unknown
+  try {
+    const text = await file.text()
+    parsed = JSON.parse(text)
+  } catch (err) {
+    logger.error('CharacterizationBuilder', 'Import parse failed', err)
+    showSnackbar(
+      t('characterizations.editor.utilities.import.parseError', 'Could not parse design JSON.').value,
+      'error',
+    )
+    importing.value = false
+    return
+  }
+
+  try {
+    const created = await importCharacterization(parsed)
+    store.markClean()
+    showSnackbar(
+      t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully.').value,
+      'success',
+    )
+    if (created.id != null) {
+      await router.push(`/characterizations/${created.id}`)
+    }
+  } catch (err) {
+    logger.error('CharacterizationBuilder', 'Import failed', err)
+    showSnackbar(
+      t('characterizations.editor.utilities.import.importError', 'Import failed.').value,
+      'error',
+    )
+  } finally {
+    importing.value = false
   }
 }
 
@@ -727,14 +804,21 @@ onBeforeRouteLeave((_to, _from, next) => {
 </script>
 
 <style scoped>
-.char-builder__tabs-rail {
-  margin-inline: -32px;
-  margin-bottom: 16px;
-  padding-inline: 32px;
+.char-builder__executions-section {
+  margin-top: 24px;
 }
 
-.char-builder__tab-icon {
-  min-width: 44px !important;
+.char-builder__executions-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.char-builder__executions-rule {
+  flex: 1;
+  height: 1px;
+  background-color: rgba(var(--v-theme-on-surface), 0.08);
 }
 
 .char-builder__versions-stub {
