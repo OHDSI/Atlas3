@@ -5,9 +5,9 @@
     data-testid="char-t1"
   >
     <header class="char-t1__header">
-      <span class="text-eyebrow">{{ t('cc.viewEdit.workbench.table1.eyebrow', 'Run summary').value }}</span>
+      <span class="text-eyebrow">{{ tv('cc.viewEdit.workbench.table1.eyebrow', 'Run summary') }}</span>
       <h3 class="char-t1__title">
-        {{ t('cc.viewEdit.workbench.table1.title', 'Table 1 — Baseline Characteristics').value }}
+        {{ tv('cc.viewEdit.workbench.table1.title', 'Table 1 — Baseline Characteristics') }}
       </h3>
     </header>
 
@@ -16,7 +16,7 @@
       class="char-t1__empty"
       data-testid="char-t1-empty"
     >
-      {{ t('common.noData', 'No rows match the current filter.').value }}
+      {{ tv('common.noData', 'No rows match the current filter.') }}
     </div>
 
     <div
@@ -26,7 +26,9 @@
       <table class="char-t1__table">
         <thead>
           <tr>
-            <th class="char-t1__col-label">{{ t('columns.covariate', 'Covariate').value }}</th>
+            <th class="char-t1__col-label">
+              {{ tv('columns.covariate', 'Covariate') }}
+            </th>
             <th
               v-for="c in cohortGroupHeaders"
               :key="c.key"
@@ -42,17 +44,17 @@
               rowspan="2"
               data-testid="char-t1-stddiff-header"
             >
-              {{ t('characterizations.results.table.stdDiff', 'Std Diff').value }}
+              {{ tv('characterizations.results.table.stdDiff', 'Std Diff') }}
             </th>
             <th
               class="char-t1__col-num"
               rowspan="2"
             >
-              {{ t('columns.explore', 'Explore').value }}
+              {{ tv('columns.explore', 'Explore') }}
             </th>
           </tr>
           <tr>
-            <th></th>
+            <th />
             <template
               v-for="col in columns"
               :key="col.cohortKey"
@@ -61,13 +63,13 @@
                 v-if="config.showCounts"
                 class="char-t1__col-num"
               >
-                {{ t('columns.count', 'N').value }}
+                {{ tv('columns.count', 'N') }}
               </th>
               <th
                 v-if="config.showPercent"
                 class="char-t1__col-num"
               >
-                {{ t('columns.pct', '%').value }}
+                {{ tv('columns.pct', '%') }}
               </th>
             </template>
           </tr>
@@ -81,13 +83,17 @@
               v-if="row.kind === 'group'"
               class="char-t1__group"
             >
-              <td :colspan="totalColumnCount">{{ row.label }}</td>
+              <td :colspan="totalColumnCount">
+                {{ row.label }}
+              </td>
             </tr>
             <tr
               v-else
               class="char-t1__row"
             >
-              <td class="char-t1__cell-label">{{ row.label }}</td>
+              <td class="char-t1__cell-label">
+                {{ row.label }}
+              </td>
               <template
                 v-for="col in columns"
                 :key="col.cohortKey"
@@ -115,12 +121,14 @@
               <td class="char-t1__cell-num">
                 <v-btn
                   v-if="row.kind === 'binary'"
+                  icon="mdi-magnify"
                   size="x-small"
                   variant="text"
                   density="compact"
+                  :aria-label="tv('columns.explore', 'Explore')"
                   data-testid="char-t1-explore"
                   @click="$emit('explore', row._source)"
-                >🔍</v-btn>
+                />
               </td>
             </tr>
           </template>
@@ -154,7 +162,7 @@ const props = defineProps<{
 
 defineEmits<{ explore: [row: PrevalenceStat] }>()
 
-const { t } = useI18n()
+const { tv } = useI18n()
 
 const built = computed(() =>
   buildTable1({
