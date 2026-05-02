@@ -451,9 +451,12 @@ function readRunIdFromQuery(): number | null {
 const isEditing = computed<boolean>(() => Boolean(props.id))
 
 const titleText = computed(() => {
-  return isEditing.value
-    ? t('configuration.tagManagement.edit', 'Edit Characterization').value
-    : t('cc.new', 'New Characterization').value
+  if (!isEditing.value) {
+    return t('cc.new', 'New Characterization').value
+  }
+  const name = draft.value.name?.trim()
+  if (name && name.length > 0) return name
+  return t('configuration.tagManagement.edit', 'Edit Characterization').value
 })
 
 const storeError = computed<string | null>(() => store.error)
