@@ -8,13 +8,25 @@
       divided
       @update:model-value="(v: ViewMode | null) => v && $emit('update:mode', v)"
     >
-      <v-btn value="table1" size="small" data-testid="char-toolbar-mode-table1">
+      <v-btn
+        value="table1"
+        size="small"
+        data-testid="char-toolbar-mode-table1"
+      >
         {{ t('cc.viewEdit.workbench.modeTable1', 'Table 1').value }}
       </v-btn>
-      <v-btn value="perAnalysis" size="small" data-testid="char-toolbar-mode-perAnalysis">
+      <v-btn
+        value="perAnalysis"
+        size="small"
+        data-testid="char-toolbar-mode-perAnalysis"
+      >
         {{ t('cc.viewEdit.workbench.modePerAnalysis', 'Per-analysis').value }}
       </v-btn>
-      <v-btn value="distribution" size="small" data-testid="char-toolbar-mode-distribution">
+      <v-btn
+        value="distribution"
+        size="small"
+        data-testid="char-toolbar-mode-distribution"
+      >
         {{ t('cc.viewEdit.workbench.modeDistribution', 'Distribution').value }}
       </v-btn>
     </v-btn-toggle>
@@ -28,8 +40,11 @@
     >
       <strong>#{{ activeRun.id }}</strong>
       <span class="char-toolbar__muted">· {{ activeRun.sourceKey }}</span>
-      <span v-if="activeRun.personCount" class="char-toolbar__muted">
-        · {{ activeRun.personCount.toLocaleString() }} persons
+      <span
+        v-if="activeRun.personCount"
+        class="char-toolbar__muted"
+      >
+        · {{ activeRun.personCount.toLocaleString() }} {{ tv('columns.results', 'rows').toLowerCase() }}
       </span>
     </v-chip>
 
@@ -96,7 +111,7 @@ defineEmits<{
   'export': []
 }>()
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 </script>
 
 <style scoped>

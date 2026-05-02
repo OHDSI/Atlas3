@@ -25,6 +25,25 @@
           @export="onExport"
         />
 
+        <CharacterizationRunMeta
+          v-if="execution"
+          :execution="execution"
+          :result-count="resultCount"
+        />
+
+        <ResultsFilterPanel
+          v-if="prevalence.length > 0 || distribution.length > 0"
+          :available-analyses="availableAnalyses"
+          :available-domains="availableDomains"
+          :available-cohorts="availableCohortsForFilter"
+          :selected-analysis-ids="filters.selectedAnalysisIds"
+          :selected-domains="filters.selectedDomains"
+          :selected-cohort-id="filters.selectedCohortId"
+          @update:selected-analysis-ids="(v) => (filters.selectedAnalysisIds = v)"
+          @update:selected-domains="(v) => (filters.selectedDomains = v)"
+          @update:selected-cohort-id="(v) => (filters.selectedCohortId = v)"
+        />
+
         <CharacterizationEmptyState
           v-if="emptyVariant"
           :variant="emptyVariant"
@@ -95,11 +114,13 @@ import { useRoute, useRouter } from 'vue-router'
 
 import CharacterizationDesignRail from './CharacterizationDesignRail.vue'
 import CharacterizationCanvasToolbar from './CharacterizationCanvasToolbar.vue'
+import CharacterizationRunMeta from './CharacterizationRunMeta.vue'
 import CharacterizationTable1View from './CharacterizationTable1View.vue'
 import CharacterizationPerAnalysisView from './CharacterizationPerAnalysisView.vue'
 import CharacterizationEmptyState from './CharacterizationEmptyState.vue'
 import ConfigureInspector from './ConfigureInspector.vue'
 import RunExecutionDialog from './RunExecutionDialog.vue'
+import ResultsFilterPanel from '@/components/characterization-results/ResultsFilterPanel.vue'
 
 import { useCharacterizationStore } from '@/stores/characterization'
 import { useCharacterizationResults } from '@/composables/useCharacterizationResults'
@@ -116,6 +137,7 @@ import {
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 import { arrayToCsv, downloadCsv } from '@/utils/csv'
+import { buildTable1 } from '@/utils/characterization-table1'
 
 import type { ViewMode } from './CharacterizationCanvasToolbar.vue'
 
@@ -134,7 +156,7 @@ const emit = defineEmits<{
 const route = useRoute()
 const router = useRouter()
 const store = useCharacterizationStore()
-const { execution, prevalence, distribution, error, load, reset } = useCharacterizationResults()
+const { execution, prevalence, distribution, resultCount, error, load, reset } = useCharacterizationResults()
 
 const viewMode = ref<ViewMode>('table1')
 const config = ref<Table1Config>({ ...DEFAULT_TABLE1_CONFIG })
@@ -150,6 +172,27 @@ const hasStrata = computed<boolean>(() =>
   || (props.modelValue.stratifiedBy ?? '').trim().length > 0
 )
 
+const availableAnalyses = computed<{ id: number; name: string }[]>(() => {
+  const map = new Map<number, string>()
+  for (const r of prevalence.value) map.set(r.analysisId, r.analysisName)
+  for (const r of distribution.value) map.set(r.analysisId, r.analysisName)
+  return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
+})
+
+const availableDomains = computed<string[]>(() => {
+  const set = new Set<string>()
+  for (const r of prevalence.value) if (r.domainId) set.add(r.domainId)
+  for (const r of distribution.value) if (r.domainId) set.add(r.domainId)
+  return Array.from(set).sort()
+})
+
+const availableCohortsForFilter = computed<LinkedCohort[]>(() => {
+  const map = new Map<number, LinkedCohort>()
+  for (const r of prevalence.value) for (const c of r.cohorts) if (!map.has(c.id)) map.set(c.id, c)
+  for (const r of distribution.value) for (const c of r.cohorts) if (!map.has(c.id)) map.set(c.id, c)
+  return Array.from(map.values())
+})
+
 const selectedExecutionId = computed<number | null>(() => {
   const q = route.query?.run
   if (typeof q === 'string') {
@@ -164,6 +207,7 @@ const activeRunSummary = computed(() => {
   return {
     id: execution.value.id,
     sourceKey: execution.value.sourceKey,
+    personCount: resultCount.value || undefined,
   }
 })
 
@@ -228,38 +272,67 @@ function onRunStarted(exec: CharacterizationExecution): void {
 function onExplore(row: PrevalenceStat): void { emit('explore', row) }
 
 function onExport(): void {
-  const rows: Array<Record<string, string | number | null>> = []
-  for (const row of prevalence.value) {
-    const sKey = Object.keys(row.pct)[0]
-    if (!sKey) continue
-    for (const cohort of cohorts.value) {
-      rows.push({
-        analysisId: row.analysisId,
-        analysisName: row.analysisName,
-        covariateId: row.covariateId,
-        covariateName: row.covariateName,
-        conceptId: row.conceptId,
-        cohortId: cohort.id,
-        cohortName: cohort.name,
-        count: row.count[sKey]?.[String(cohort.id)] ?? null,
-        pct: row.pct[sKey]?.[String(cohort.id)] ?? null,
-        stdDiff: row.stdDiff ?? null,
-      })
-    }
-  }
-  if (rows.length === 0) return
-  const csv = arrayToCsv(rows, [
+  const built = buildTable1({
+    prevalence: prevalence.value,
+    distribution: distribution.value,
+    cohorts: cohorts.value,
+    config: config.value,
+    filters: filters.value,
+  })
+  if (built.rows.length === 0) return
+
+  const headers: { key: string; label: string }[] = [
+    { key: 'kind', label: 'Type' },
     { key: 'analysisId', label: 'Analysis ID' },
     { key: 'analysisName', label: 'Analysis' },
     { key: 'covariateId', label: 'Covariate ID' },
     { key: 'covariateName', label: 'Covariate' },
     { key: 'conceptId', label: 'Concept ID' },
-    { key: 'cohortId', label: 'Cohort ID' },
-    { key: 'cohortName', label: 'Cohort' },
-    { key: 'count', label: 'Count' },
-    { key: 'pct', label: 'Pct' },
-    { key: 'stdDiff', label: 'Std Diff' },
-  ])
+  ]
+  for (const col of built.columns) {
+    const colLabel = col.strataLabel
+      ? `${col.cohortName} · ${col.strataLabel}`
+      : col.cohortName
+    headers.push({ key: `${col.cohortKey}__primary`, label: `${colLabel} · primary` })
+    headers.push({ key: `${col.cohortKey}__secondary`, label: `${colLabel} · secondary` })
+  }
+  if (built.includeStdDiff) {
+    headers.push({ key: 'stdDiff', label: 'Std Diff' })
+  }
+
+  const rows: Array<Record<string, string | number | null>> = []
+  for (const row of built.rows) {
+    if (row.kind === 'group') continue
+    const out: Record<string, string | number | null> = {
+      kind: row.kind,
+      analysisId: row.analysisId,
+      analysisName: row.analysisName,
+      covariateId: row.covariateId,
+      covariateName: row.label,
+      conceptId: row.conceptId,
+    }
+    for (const col of built.columns) {
+      const cell = row.cells[col.cohortKey]
+      if (cell === null || cell === undefined) {
+        out[`${col.cohortKey}__primary`] = null
+        out[`${col.cohortKey}__secondary`] = null
+      } else if (row.kind === 'binary') {
+        out[`${col.cohortKey}__primary`] = (cell as { count: number }).count
+        out[`${col.cohortKey}__secondary`] = (cell as { pct: number }).pct
+      } else {
+        out[`${col.cohortKey}__primary`] = (cell as { primary: number }).primary
+        out[`${col.cohortKey}__secondary`] = (cell as { secondary: number }).secondary
+      }
+    }
+    if (built.includeStdDiff && row.kind === 'binary' && typeof row.stdDiff === 'number') {
+      out.stdDiff = row.stdDiff
+    } else {
+      out.stdDiff = null
+    }
+    rows.push(out)
+  }
+
+  const csv = arrayToCsv(rows, headers)
   downloadCsv(`characterization-${selectedExecutionId.value ?? 'results'}.csv`, csv)
 }
 </script>

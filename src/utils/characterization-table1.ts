@@ -26,9 +26,7 @@ export interface BuildTable1Output {
 export function buildTable1(input: BuildTable1Input): BuildTable1Output {
   const columns = buildColumns(input)
   const includeStdDiff =
-    input.cohorts.length === 2 &&
-    input.config.showStdDiff &&
-    !input.config.strataAsCols
+    input.cohorts.length === 2 && input.config.showStdDiff && !input.config.strataAsCols
 
   const binaryRows = mapPrevalenceRows(input)
   const continuousRows = mapDistributionRows(input)
@@ -36,11 +34,7 @@ export function buildTable1(input: BuildTable1Input): BuildTable1Output {
   const filteredBinary = binaryRows.filter(r => keepBinary(r, input))
   const filteredContinuous = continuousRows.filter(r => keepContinuous(r, input))
 
-  const ordered = orderAndGroup(
-    filteredBinary,
-    filteredContinuous,
-    input.config,
-  )
+  const ordered = orderAndGroup(filteredBinary, filteredContinuous, input.config)
 
   return { rows: ordered, columns, includeStdDiff }
 }
@@ -72,7 +66,10 @@ function collectStrataKeys(input: BuildTable1Input): string[] {
   const seen = new Set<string>()
   const ordered: string[] = []
   function add(k: string) {
-    if (!seen.has(k)) { seen.add(k); ordered.push(k) }
+    if (!seen.has(k)) {
+      seen.add(k)
+      ordered.push(k)
+    }
   }
   add(DEFAULT_STRATA_KEY)
   for (const row of input.prevalence) {
@@ -102,9 +99,8 @@ function mapPrevalenceRows(input: BuildTable1Input): Extract<Table1Row, { kind: 
           const cellKey = `${c.id}::${k}`
           const cnt = m.count[k]?.[String(c.id)]
           const pct = m.pct[k]?.[String(c.id)]
-          cells[cellKey] = (typeof cnt === 'number' && typeof pct === 'number')
-            ? { count: cnt, pct }
-            : null
+          cells[cellKey] =
+            typeof cnt === 'number' && typeof pct === 'number' ? { count: cnt, pct } : null
         }
       }
       out.push({
@@ -127,9 +123,8 @@ function mapPrevalenceRows(input: BuildTable1Input): Extract<Table1Row, { kind: 
     for (const c of input.cohorts) {
       const cnt = sKey ? row.count[sKey]?.[String(c.id)] : undefined
       const pct = sKey ? row.pct[sKey]?.[String(c.id)] : undefined
-      cells[String(c.id)] = (typeof cnt === 'number' && typeof pct === 'number')
-        ? { count: cnt, pct }
-        : null
+      cells[String(c.id)] =
+        typeof cnt === 'number' && typeof pct === 'number' ? { count: cnt, pct } : null
     }
     out.push({
       kind: 'binary',
@@ -165,7 +160,9 @@ function mergeByCovariate(rows: PrevalenceStat[]): PrevalenceStat[] {
   return Array.from(map.values())
 }
 
-function mapDistributionRows(input: BuildTable1Input): Extract<Table1Row, { kind: 'continuous' }>[] {
+function mapDistributionRows(
+  input: BuildTable1Input
+): Extract<Table1Row, { kind: 'continuous' }>[] {
   const out: Extract<Table1Row, { kind: 'continuous' }>[] = []
   const strataKeys = input.config.strataAsCols ? collectStrataKeys(input) : null
   for (const row of input.distribution) {
@@ -203,7 +200,7 @@ function formatContinuousCell(
   row: DistributionStat,
   strataKey: string,
   cohortIdStr: string,
-  fmt: 'mean-sd' | 'median-iqr',
+  fmt: 'mean-sd' | 'median-iqr'
 ): { primary: number; secondary: number } | null {
   if (fmt === 'mean-sd') {
     const a = row.avg[strataKey]?.[cohortIdStr]
@@ -220,27 +217,27 @@ function formatContinuousCell(
   return null
 }
 
-function keepBinary(
-  row: Extract<Table1Row, { kind: 'binary' }>,
-  input: BuildTable1Input,
-): boolean {
-  if (input.filters.selectedAnalysisIds.length > 0
-      && !input.filters.selectedAnalysisIds.includes(row.analysisId)) {
+function keepBinary(row: Extract<Table1Row, { kind: 'binary' }>, input: BuildTable1Input): boolean {
+  if (
+    input.filters.selectedAnalysisIds.length > 0 &&
+    !input.filters.selectedAnalysisIds.includes(row.analysisId)
+  ) {
     return false
   }
-  const domain = (row._source.domainId ?? '')
-  if (input.filters.selectedDomains.length > 0
-      && !input.filters.selectedDomains.includes(domain)) {
+  const domain = row._source.domainId ?? ''
+  if (input.filters.selectedDomains.length > 0 && !input.filters.selectedDomains.includes(domain)) {
     return false
   }
   if (input.filters.threshold > 0) {
     const cleared = Object.values(row.cells).some(
-      c => c !== null && c.pct >= input.filters.threshold,
+      c => c !== null && c.pct >= input.filters.threshold
     )
     if (!cleared) return false
   }
-  if (input.filters.selectedCohortId !== null
-      && !row._source.cohorts.some(c => c.id === input.filters.selectedCohortId)) {
+  if (
+    input.filters.selectedCohortId !== null &&
+    !row._source.cohorts.some(c => c.id === input.filters.selectedCohortId)
+  ) {
     return false
   }
   return true
@@ -250,15 +247,16 @@ function keepBinary(
 // continuous covariates) and selectedCohortId (continuous rows always show all cohorts).
 function keepContinuous(
   row: Extract<Table1Row, { kind: 'continuous' }>,
-  input: BuildTable1Input,
+  input: BuildTable1Input
 ): boolean {
-  if (input.filters.selectedAnalysisIds.length > 0
-      && !input.filters.selectedAnalysisIds.includes(row.analysisId)) {
+  if (
+    input.filters.selectedAnalysisIds.length > 0 &&
+    !input.filters.selectedAnalysisIds.includes(row.analysisId)
+  ) {
     return false
   }
-  const domain = (row._source.domainId ?? '')
-  if (input.filters.selectedDomains.length > 0
-      && !input.filters.selectedDomains.includes(domain)) {
+  const domain = row._source.domainId ?? ''
+  if (input.filters.selectedDomains.length > 0 && !input.filters.selectedDomains.includes(domain)) {
     return false
   }
   return true
@@ -267,23 +265,31 @@ function keepContinuous(
 function orderAndGroup(
   binary: Extract<Table1Row, { kind: 'binary' }>[],
   continuous: Extract<Table1Row, { kind: 'continuous' }>[],
-  config: Table1Config,
+  config: Table1Config
 ): Table1Row[] {
-  const all: (Extract<Table1Row, { kind: 'binary' }> | Extract<Table1Row, { kind: 'continuous' }>)[] =
-    [...binary, ...continuous]
+  const all: (
+    | Extract<Table1Row, { kind: 'binary' }>
+    | Extract<Table1Row, { kind: 'continuous' }>
+  )[] = [...binary, ...continuous]
 
   if (!config.groupByAnalysis) {
     all.sort((a, b) => a.label.localeCompare(b.label))
     return applyPin(all, config)
   }
 
-  const groups = new Map<number, {
-    name: string
-    rows: (Extract<Table1Row, { kind: 'binary' }> | Extract<Table1Row, { kind: 'continuous' }>)[]
-  }>()
+  const groups = new Map<
+    number,
+    {
+      name: string
+      rows: (Extract<Table1Row, { kind: 'binary' }> | Extract<Table1Row, { kind: 'continuous' }>)[]
+    }
+  >()
   for (const r of all) {
     let g = groups.get(r.analysisId)
-    if (!g) { g = { name: r.analysisName, rows: [] }; groups.set(r.analysisId, g) }
+    if (!g) {
+      g = { name: r.analysisName, rows: [] }
+      groups.set(r.analysisId, g)
+    }
     g.rows.push(r)
   }
 
@@ -299,13 +305,17 @@ function orderAndGroup(
 function applyPin(rows: Table1Row[], config: Table1Config): Table1Row[] {
   if (!config.pinTopK.enabled || config.pinTopK.k <= 0) return rows
   const ranked = rows
-    .filter((r): r is Extract<Table1Row, { kind: 'binary' }> =>
-      r.kind === 'binary' && typeof r.stdDiff === 'number')
+    .filter(
+      (r): r is Extract<Table1Row, { kind: 'binary' }> =>
+        r.kind === 'binary' && typeof r.stdDiff === 'number'
+    )
     .slice()
     .sort((a, b) => Math.abs(b.stdDiff!) - Math.abs(a.stdDiff!) || a.covariateId - b.covariateId)
     .slice(0, config.pinTopK.k)
   if (ranked.length === 0) return rows
-  const pinnedIds = new Set(ranked.map(r => r.covariateId))
-  const remaining = rows.filter(r => r.kind !== 'binary' || !pinnedIds.has(r.covariateId))
+  const pinnedKeys = new Set(ranked.map(r => `${r.analysisId}::${r.covariateId}`))
+  const remaining = rows.filter(r =>
+    r.kind !== 'binary' || !pinnedKeys.has(`${r.analysisId}::${r.covariateId}`),
+  )
   return [...ranked, ...remaining]
 }

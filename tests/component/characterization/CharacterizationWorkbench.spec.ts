@@ -28,6 +28,7 @@ vi.mock('@/services/characterization.service', () => ({
 const vuetify = createVuetify({ components, directives })
 const stubs = [
   'CharacterizationDesignRail', 'CharacterizationCanvasToolbar',
+  'CharacterizationRunMeta', 'ResultsFilterPanel',
   'CharacterizationTable1View', 'CharacterizationPerAnalysisView',
   'CharacterizationEmptyState', 'ConfigureInspector', 'RunExecutionDialog',
 ]
