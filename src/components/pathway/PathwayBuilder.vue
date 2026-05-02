@@ -97,25 +97,11 @@
       {{ t('common.noData', 'No pathway loaded').value }}
     </div>
 
-    <div
+    <PathwayWorkbench
       v-else
-      class="pathway-builder__main"
-    >
-      <div class="pathway-builder__design">
-        <PathwayDesignForm />
-      </div>
-      <div class="pathway-builder__side">
-        <PathwayGenerationPanel
-          v-if="currentPathway?.id"
-          :pathway-id="currentPathway.id"
-          @select="(id) => (selectedExecutionId = id)"
-        />
-      </div>
-    </div>
-
-    <PathwayResultsPanel
-      v-if="selectedExecutionId !== null"
-      :execution-id="selectedExecutionId"
+      :pathway-id="currentPathway?.id ?? null"
+      :selected-execution-id="selectedExecutionId"
+      @execution:select="(id) => (selectedExecutionId = id)"
     />
 
     <v-dialog
@@ -155,9 +141,7 @@ import { useI18n } from '@/composables/useI18n'
 import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import PathwayDesignForm from './PathwayDesignForm.vue'
-import PathwayGenerationPanel from './PathwayGenerationPanel.vue'
-import PathwayResultsPanel from './results/PathwayResultsPanel.vue'
+import PathwayWorkbench from './PathwayWorkbench.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
 import type { VersionsConfig, VersionsTableItem } from '@/components/versions/types'
@@ -260,17 +244,5 @@ onBeforeUnmount(() => {
   padding: 48px;
   text-align: center;
   color: rgba(var(--v-theme-on-surface), 0.6);
-}
-
-.pathway-builder__main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 24px;
-}
-
-@media (max-width: 1100px) {
-  .pathway-builder__main {
-    grid-template-columns: 1fr;
-  }
 }
 </style>
