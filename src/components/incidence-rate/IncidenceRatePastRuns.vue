@@ -10,7 +10,7 @@
       :key="r.id"
       :class="['ir-past-run', { 'ir-past-run--active': r.id === activeId }]"
       :active="r.id === activeId"
-      :disabled="r.status !== 'COMPLETED'"
+      :disabled="!isCompleted(r.status)"
       data-testid="ir-past-run-row"
       @click="onClick(r)"
     >
@@ -45,8 +45,12 @@ defineProps<{
 const emit = defineEmits<{ select: [id: number] }>()
 const { t } = useI18n()
 
+function isCompleted(s: string): boolean {
+  return s === 'COMPLETED' || s === 'COMPLETE'
+}
+
 function onClick(r: IncidenceRateExecutionSummary) {
-  if (r.status !== 'COMPLETED') return
+  if (!isCompleted(r.status)) return
   emit('select', r.id)
 }
 </script>
@@ -65,7 +69,8 @@ function onClick(r: IncidenceRateExecutionSummary) {
   background: rgba(var(--v-theme-on-surface), 0.2);
   display: inline-block;
 }
-.ir-past-run__dot--completed { background: rgb(22, 163, 74); }
+.ir-past-run__dot--completed,
+.ir-past-run__dot--complete { background: rgb(22, 163, 74); }
 .ir-past-run__dot--failed,
 .ir-past-run__dot--canceled { background: rgb(220, 38, 38); }
 .ir-past-run__dot--starting,

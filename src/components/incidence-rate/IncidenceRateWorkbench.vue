@@ -171,7 +171,7 @@ watch(
     }
     if (selectedExecutionId.value === null) {
       const list = id !== prevId ? store.executions : executions
-      const completed = list.find(e => e.status === 'COMPLETED')
+      const completed = list.find(e => e.status === 'COMPLETED' || e.status === 'COMPLETE')
       if (completed) await router.replace({ query: { ...route.query, run: String(completed.id) } })
     }
   },
