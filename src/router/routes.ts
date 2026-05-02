@@ -8,7 +8,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
 import { logger } from '@/utils/logger'
 
-const ANALYSIS_TAB_NAMES = ['characterizations', 'feature-analyses', 'pathways', 'incidence-rates'] as const
+const ANALYSIS_TAB_NAMES = ['feature-analyses', 'characterizations', 'pathways', 'incidence-rates'] as const
 const ANALYSIS_LAST_TAB_KEY = 'atlas3.analysis.lastTab'
 
 export const routes: RouteRecordRaw[] = [
@@ -81,20 +81,20 @@ export const routes: RouteRecordRaw[] = [
       } catch {
         // localStorage may be unavailable (private mode, SSR); fall through.
       }
-      const target = last && allowed.has(last) ? last : 'characterizations'
+      const target = last && allowed.has(last) ? last : 'feature-analyses'
       return { name: target }
     },
     children: [
       {
-        path: 'characterizations',
-        name: 'characterizations',
-        component: () => import('@/views/CharacterizationsView.vue'),
-        meta: { requiresAuth: true },
-      },
-      {
         path: 'feature-analyses',
         name: 'feature-analyses',
         component: () => import('@/views/FeatureAnalysesView.vue'),
+        meta: { requiresAuth: true },
+      },
+      {
+        path: 'characterizations',
+        name: 'characterizations',
+        component: () => import('@/views/CharacterizationsView.vue'),
         meta: { requiresAuth: true },
       },
       {

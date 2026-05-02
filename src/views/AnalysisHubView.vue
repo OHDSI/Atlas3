@@ -38,11 +38,11 @@
       </nav>
 
       <v-window v-model="activeTabName">
-        <v-window-item value="characterizations">
-          <CharacterizationsView />
-        </v-window-item>
         <v-window-item value="feature-analyses">
           <FeatureAnalysesView />
+        </v-window-item>
+        <v-window-item value="characterizations">
+          <CharacterizationsView />
         </v-window-item>
         <v-window-item value="pathways">
           <PathwaysView />
@@ -82,20 +82,20 @@ const router = useRouter()
 
 const tabs: Tab[] = [
   {
-    name: 'characterizations',
-    titleKey: 'navigation.characterizations',
-    defaultLabel: 'Characterizations',
-    icon: 'mdi-chart-box-outline',
-    hintKey: 'cc.subtitle',
-    defaultHint: 'Compare cohorts on shared feature analyses.',
-  },
-  {
     name: 'feature-analyses',
     titleKey: 'navigation.featureAnalyses',
     defaultLabel: 'Feature Analyses',
     icon: 'mdi-tune',
     hintKey: 'fa.subtitle',
     defaultHint: 'Reusable feature definitions for cohort characterization.',
+  },
+  {
+    name: 'characterizations',
+    titleKey: 'navigation.characterizations',
+    defaultLabel: 'Characterizations',
+    icon: 'mdi-chart-box-outline',
+    hintKey: 'cc.subtitle',
+    defaultHint: 'Compare cohorts on shared feature analyses.',
   },
   {
     name: 'pathways',
@@ -121,7 +121,7 @@ const tabNames = new Set(tabs.map(tab => tab.name))
 const activeTabName = computed<string>({
   get: () => {
     const name = route.name as string | undefined
-    return name && tabNames.has(name) ? name : 'characterizations'
+    return name && tabNames.has(name) ? name : 'feature-analyses'
   },
   set: (name) => {
     if (name && tabNames.has(name) && name !== route.name) {
