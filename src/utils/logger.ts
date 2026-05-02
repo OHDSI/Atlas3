@@ -18,12 +18,12 @@ const levels: Record<LogLevel, number> = {
   debug: 0,
   info: 1,
   warn: 2,
-  error: 3
+  error: 3,
 }
 
 const config: LoggerConfig = {
   level: import.meta.env.DEV ? 'debug' : 'warn',
-  enableInProd: false
+  enableInProd: false,
 }
 
 /**
@@ -125,7 +125,7 @@ export const logger = {
    */
   setEnableInProd(enable: boolean): void {
     config.enableInProd = enable
-  }
+  },
 }
 
 export default logger

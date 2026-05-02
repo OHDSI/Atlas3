@@ -16,7 +16,7 @@ import {
   JOB_TYPE_LABELS,
   JOB_TYPE_ICONS,
   getJobEntityRoute,
-  formatDuration
+  formatDuration,
 } from '@/models/jobs.types'
 
 /**
@@ -191,6 +191,6 @@ export function useJobs() {
     togglePolling,
     startPolling,
     stopPolling,
-    initializeOnMount
+    initializeOnMount,
   }
 }

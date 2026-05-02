@@ -149,7 +149,9 @@
               data-testid="feature-analysis-editor-preset-default"
               @click="loadDefaultCovariateSettings(false)"
             >
-              {{ t('featureAnalyses.editor.preset.loadDefault', 'Load default covariate settings') }}
+              {{
+                t('featureAnalyses.editor.preset.loadDefault', 'Load default covariate settings')
+              }}
             </v-btn>
             <v-btn
               variant="tonal"
@@ -159,7 +161,12 @@
               data-testid="feature-analysis-editor-preset-default-temporal"
               @click="loadDefaultCovariateSettings(true)"
             >
-              {{ t('featureAnalyses.editor.preset.loadDefaultTemporal', 'Load default temporal covariate settings') }}
+              {{
+                t(
+                  'featureAnalyses.editor.preset.loadDefaultTemporal',
+                  'Load default temporal covariate settings'
+                )
+              }}
             </v-btn>
             <v-chip
               v-if="presetJsonError"
@@ -194,7 +201,12 @@
             {{ t('cc.fa.criteria', 'Criteria Set') }}
           </h2>
           <p class="text-body-2 text-grey mb-2">
-            {{ t('featureAnalyses.editor.criteriaSet.explainer', 'Criteria builder integration ships in Phase 3. For now, edit JSON directly.') }}
+            {{
+              t(
+                'featureAnalyses.editor.criteriaSet.explainer',
+                'Criteria builder integration ships in Phase 3. For now, edit JSON directly.'
+              )
+            }}
           </p>
           <v-textarea
             v-model="criteriaConceptSetsJson"
@@ -434,7 +446,7 @@ const loading = computed<boolean>(() => store.loading)
 // Permission gating: new FAs need create:feature-analysis; existing ones
 // need write access on the specific entity (ownership counts).
 const draftId = computed<number | null>(() =>
-  typeof draft.value.id === 'number' ? draft.value.id : null,
+  typeof draft.value.id === 'number' ? draft.value.id : null
 )
 const { hasPermission } = usePermissions()
 const { canWrite, canDelete } = useEntityAccess('feAnalysis', draftId)
@@ -506,7 +518,7 @@ function hydrateDraftFrom(fa: FeatureAnalysis | null) {
 
 watch(
   () => store.currentFA,
-  (fa) => {
+  fa => {
     hydrateDraftFrom(fa)
   },
   { immediate: false }
@@ -556,13 +568,19 @@ function validateCriteriaConceptSetsJson(): boolean {
   try {
     const parsed = JSON.parse(criteriaConceptSetsJson.value || '[]')
     if (!Array.isArray(parsed)) {
-      criteriaConceptSetsError.value = t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON').value
+      criteriaConceptSetsError.value = t(
+        'featureAnalyses.editor.preset.invalidJson',
+        'Invalid JSON'
+      ).value
       return false
     }
     criteriaConceptSetsError.value = null
     return true
   } catch {
-    criteriaConceptSetsError.value = t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON').value
+    criteriaConceptSetsError.value = t(
+      'featureAnalyses.editor.preset.invalidJson',
+      'Invalid JSON'
+    ).value
     return false
   }
 }
@@ -573,7 +591,10 @@ function validateCriteriaCriteriaJson(): boolean {
     criteriaCriteriaError.value = null
     return true
   } catch {
-    criteriaCriteriaError.value = t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON').value
+    criteriaCriteriaError.value = t(
+      'featureAnalyses.editor.preset.invalidJson',
+      'Invalid JSON'
+    ).value
     return false
   }
 }
@@ -591,10 +612,7 @@ async function loadDefaultCovariateSettings(temporal: boolean) {
     dirty.value = true
   } catch (err) {
     logger.error('FeatureAnalysisEditor', 'Failed to load default covariate settings', err)
-    showSnackbar(
-      t('cc.fa.saveError', 'Failed to save feature analysis').value,
-      'error'
-    )
+    showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
   } finally {
     loadingDefaults.value = false
   }
@@ -607,10 +625,7 @@ async function loadDefaultCovariateSettings(temporal: boolean) {
 function buildDesign(): CovariateSetting | FeatureAnalysisCriteriaSetDesign | string | null {
   if (draft.value.type === 'PRESET') {
     if (!validatePresetJson()) {
-      showSnackbar(
-        t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON').value,
-        'error'
-      )
+      showSnackbar(t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON').value, 'error')
       return null
     }
     try {
@@ -624,10 +639,7 @@ function buildDesign(): CovariateSetting | FeatureAnalysisCriteriaSetDesign | st
     const conceptSetsOk = validateCriteriaConceptSetsJson()
     const criteriaOk = validateCriteriaCriteriaJson()
     if (!conceptSetsOk || !criteriaOk) {
-      showSnackbar(
-        t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON').value,
-        'error'
-      )
+      showSnackbar(t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON').value, 'error')
       return null
     }
     try {
@@ -662,7 +674,10 @@ async function handleSave() {
     if (isEditing.value) {
       const updated = await store.update(payload)
       if (updated) {
-        showSnackbar(t('featureAnalyses.editor.saveSuccess', 'Feature analysis saved').value, 'success')
+        showSnackbar(
+          t('featureAnalyses.editor.saveSuccess', 'Feature analysis saved').value,
+          'success'
+        )
         dirty.value = false
       } else {
         showSnackbar(t('cc.fa.saveError', 'Failed to save feature analysis').value, 'error')
@@ -670,7 +685,10 @@ async function handleSave() {
     } else {
       const created = await store.create(payload)
       if (created?.id) {
-        showSnackbar(t('featureAnalyses.editor.saveSuccess', 'Feature analysis saved').value, 'success')
+        showSnackbar(
+          t('featureAnalyses.editor.saveSuccess', 'Feature analysis saved').value,
+          'success'
+        )
         dirty.value = false
         await router.push(`/feature-analyses/${created.id}`)
       } else {
@@ -743,10 +761,10 @@ function handleBack() {
 
 onMounted(async () => {
   // Always make sure the lookup data is loaded — the editor needs domain/aggregate options.
-  store.loadDomains().catch((err) => {
+  store.loadDomains().catch(err => {
     logger.error('FeatureAnalysisEditor', 'Failed to load domains', err)
   })
-  store.loadAggregates().catch((err) => {
+  store.loadAggregates().catch(err => {
     logger.error('FeatureAnalysisEditor', 'Failed to load aggregates', err)
   })
 

@@ -4,7 +4,12 @@
  */
 import { logger } from '@/utils/logger'
 import { httpGet, httpPost, httpPut, httpDelete, getBaseUrl } from '@/services/http-client'
-import type { DataSource, SourceRequest, SourceDetails, DaimonRequest } from '@/models/datasource.types'
+import type {
+  DataSource,
+  SourceRequest,
+  SourceDetails,
+  DaimonRequest,
+} from '@/models/datasource.types'
 
 /**
  * Get detailed information about a source
@@ -50,7 +55,11 @@ export async function createSource(request: SourceRequest, keyfile?: File): Prom
  * Update an existing data source
  * Uses multipart/form-data when a keyfile is provided
  */
-export async function updateSource(sourceKey: string, request: SourceRequest, keyfile?: File): Promise<DataSource> {
+export async function updateSource(
+  sourceKey: string,
+  request: SourceRequest,
+  keyfile?: File
+): Promise<DataSource> {
   try {
     logger.debug('SourceService', `Updating source key ${sourceKey}`, { name: request.name })
 
@@ -66,7 +75,11 @@ export async function updateSource(sourceKey: string, request: SourceRequest, ke
     logger.debug('SourceService', `Successfully updated source: ${response.sourceName}`)
     return response
   } catch (error) {
-    logger.error('SourceService', 'Failed to update source', { sourceKey, name: request.name, error })
+    logger.error('SourceService', 'Failed to update source', {
+      sourceKey,
+      name: request.name,
+      error,
+    })
     throw new Error('Unable to update data source. Please try again.')
   }
 }
@@ -122,7 +135,7 @@ function mapRequestToApiPayload(request: SourceRequest): Record<string, unknown>
     sourceName: request.name,
     sourceDialect: request.dialect,
     sourceKey: request.key,
-    connectionString: request.connectionString
+    connectionString: request.connectionString,
   }
 
   if (request.username) {
@@ -145,7 +158,7 @@ function mapRequestToApiPayload(request: SourceRequest): Record<string, unknown>
     payload.daimons = request.daimons.map((daimon: DaimonRequest, index: number) => ({
       daimonType: daimon.daimonType,
       tableQualifier: daimon.tableQualifier,
-      priority: daimon.priority ?? index
+      priority: daimon.priority ?? index,
     }))
   }
 
@@ -183,7 +196,7 @@ async function uploadSourceWithKeyfile(
   const response = await fetch(url, {
     method,
     headers,
-    body: formData
+    body: formData,
   })
 
   if (!response.ok) {
@@ -193,4 +206,3 @@ async function uploadSourceWithKeyfile(
 
   return response.json()
 }
-

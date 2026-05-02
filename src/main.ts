@@ -35,7 +35,7 @@ import {
   TreemapChart,
   SunburstChart,
   BoxplotChart,
-  CustomChart
+  CustomChart,
 } from 'echarts/charts'
 
 // Import ECharts components
@@ -47,7 +47,7 @@ import {
   DatasetComponent,
   TransformComponent,
   BrushComponent,
-  ToolboxComponent
+  ToolboxComponent,
 } from 'echarts/components'
 
 // Import ECharts features and renderers
@@ -75,7 +75,7 @@ use([
   LabelLayout,
   UniversalTransition,
   CanvasRenderer,
-  SVGRenderer
+  SVGRenderer,
 ])
 
 // Initialize app creation function (will be called after loading plugin config)
@@ -165,109 +165,120 @@ window.addEventListener('hashchange', async () => {
 })
 
 // Initialize and mount the app
-initializeApp().then(async (app) => {
-  // Initialize stores
-  const authStore = useAuthStore()
-  const localeStore = useLocaleStore()
+initializeApp()
+  .then(async app => {
+    // Initialize stores
+    const authStore = useAuthStore()
+    const localeStore = useLocaleStore()
 
-  // Check for OAuth token in hash URL before router initialization
-  // No reload needed here - app state will be applied during initialization
-  await handleHashOAuthToken()
+    // Check for OAuth token in hash URL before router initialization
+    // No reload needed here - app state will be applied during initialization
+    await handleHashOAuthToken()
 
-  // Hydrate auth from localStorage SYNCHRONOUSLY before the router
-  // resolves its initial navigation. router.isReady() runs the
-  // beforeEach guards; if the store doesn't have the token by then,
-  // the auth guard sees isAuthenticated=false and pops the login
-  // modal — even when localStorage has a perfectly valid token.
-  // Has to live above router.isReady().
-  authStore.hydrateAuth()
+    // Hydrate auth from localStorage SYNCHRONOUSLY before the router
+    // resolves its initial navigation. router.isReady() runs the
+    // beforeEach guards; if the store doesn't have the token by then,
+    // the auth guard sees isAuthenticated=false and pops the login
+    // modal — even when localStorage has a perfectly valid token.
+    // Has to live above router.isReady().
+    authStore.hydrateAuth()
 
-  // Mount app first, then initialize stores asynchronously
-  // This ensures the app is interactive immediately
-  await router.isReady().then(async () => {
-  // Load configuration early
-  logger.info('Config', 'Loading atlas-config.json...')
-  try {
-    const validationResult = await configLoaderService.loadConfiguration()
-    if (validationResult.valid) {
-      logger.info('Config', 'Configuration loaded successfully')
-    } else if (validationResult.validFilterTypes.length > 0) {
-      logger.warn(
-        'Config',
-        `Configuration loaded with errors (${validationResult.validFilterTypes.length} valid filters)`
-      )
-    } else {
-      logger.error('Config', 'Configuration loading failed - no valid filters')
-    }
+    // Mount app first, then initialize stores asynchronously
+    // This ensures the app is interactive immediately
+    await router
+      .isReady()
+      .then(async () => {
+        // Load configuration early
+        logger.info('Config', 'Loading atlas-config.json...')
+        try {
+          const validationResult = await configLoaderService.loadConfiguration()
+          if (validationResult.valid) {
+            logger.info('Config', 'Configuration loaded successfully')
+          } else if (validationResult.validFilterTypes.length > 0) {
+            logger.warn(
+              'Config',
+              `Configuration loaded with errors (${validationResult.validFilterTypes.length} valid filters)`
+            )
+          } else {
+            logger.error('Config', 'Configuration loading failed - no valid filters')
+          }
 
-    // Make validation result available globally for UI components
-    app.provide('configValidationResult', validationResult)
-  } catch (error) {
-    logger.error('Config', 'Critical error loading configuration:', error)
-  }
+          // Make validation result available globally for UI components
+          app.provide('configValidationResult', validationResult)
+        } catch (error) {
+          logger.error('Config', 'Critical error loading configuration:', error)
+        }
 
-  // Mount the app first so it's interactive
-  app.mount('#app')
+        // Mount the app first so it's interactive
+        app.mount('#app')
 
-  // Setup token expiry watcher
-  watch(() => authStore.token, (newToken) => {
-    if (newToken) {
-      tokenExpiryService.setupExpiryWarning(newToken)
-    } else {
-      tokenExpiryService.cancelExpiryWarning()
-    }
-  }, { immediate: true })
+        // Setup token expiry watcher
+        watch(
+          () => authStore.token,
+          newToken => {
+            if (newToken) {
+              tokenExpiryService.setupExpiryWarning(newToken)
+            } else {
+              tokenExpiryService.cancelExpiryWarning()
+            }
+          },
+          { immediate: true }
+        )
 
-  // Initialize stores asynchronously after mount
-  Promise.all([
-    authStore.initializeFromStorage().catch((error) => {
-      logger.error('Auth', 'Initialization failed:', error)
-    }),
-    localeStore.initialize().catch((error) => {
-      logger.error('i18n', 'Initialization failed:', error)
-    })
-  ]).then(async () => {
-    // Initialize plugin framework after auth is ready
-    try {
-      // Import permission service for proper permission checking
-      const { permissionService } = await import('@/services/auth/permissions');
+        // Initialize stores asynchronously after mount
+        Promise.all([
+          authStore.initializeFromStorage().catch(error => {
+            logger.error('Auth', 'Initialization failed:', error)
+          }),
+          localeStore.initialize().catch(error => {
+            logger.error('i18n', 'Initialization failed:', error)
+          }),
+        ]).then(async () => {
+          // Initialize plugin framework after auth is ready
+          try {
+            // Import permission service for proper permission checking
+            const { permissionService } = await import('@/services/auth/permissions')
 
-      // Extract flat array of permissions from permissionIdx object
-      const userPermissions = authStore.user?.permissionIdx
-        ? Object.values(authStore.user.permissionIdx).flat()
-        : [];
+            // Extract flat array of permissions from permissionIdx object
+            const userPermissions = authStore.user?.permissionIdx
+              ? Object.values(authStore.user.permissionIdx).flat()
+              : []
 
-      const authContext = {
-        user: authStore.user ? {
-          id: authStore.user.login || '',
-          username: authStore.user.displayName || authStore.user.login || '',
-          email: authStore.user.email,
-          permissions: userPermissions,
-        } : null,
-        token: authStore.token,
-        isAuthenticated: authStore.isAuthenticated,
-        hasPermission(permission: string): boolean {
-          if (!this.user) return false;
-          return permissionService.hasPermission(permission, this.user.permissions);
-        },
-      };
+            const authContext = {
+              user: authStore.user
+                ? {
+                    id: authStore.user.login || '',
+                    username: authStore.user.displayName || authStore.user.login || '',
+                    email: authStore.user.email,
+                    permissions: userPermissions,
+                  }
+                : null,
+              token: authStore.token,
+              isAuthenticated: authStore.isAuthenticated,
+              hasPermission(permission: string): boolean {
+                if (!this.user) return false
+                return permissionService.hasPermission(permission, this.user.permissions)
+              },
+            }
 
-      await initializePluginFramework(authContext);
-      logger.info('App', 'Plugin framework initialized')
-    } catch (error) {
-      logger.error('App', 'Plugin framework initialization failed:', error)
-    }
+            await initializePluginFramework(authContext)
+            logger.info('App', 'Plugin framework initialized')
+          } catch (error) {
+            logger.error('App', 'Plugin framework initialization failed:', error)
+          }
+        })
+      })
+      .catch(error => {
+        logger.error('App', 'Router initialization failed:', error)
+        // Mount anyway
+        app.mount('#app')
+      })
   })
-  }).catch((error) => {
-    logger.error('App', 'Router initialization failed:', error)
-    // Mount anyway
-    app.mount('#app')
+  .catch(error => {
+    logger.error('App', 'Application initialization failed:', error)
   })
-}).catch((error) => {
-  logger.error('App', 'Application initialization failed:', error)
-})
 
 // Global unhandled promise rejection handler
-window.addEventListener('unhandledrejection', (event) => {
+window.addEventListener('unhandledrejection', event => {
   logger.error('Unhandled', 'Promise rejection', event.reason)
 })

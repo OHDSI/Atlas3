@@ -7,14 +7,12 @@
     closable
     class="configuration-warning-banner"
   >
-    <v-alert-title>
-      Configuration Validation Warnings
-    </v-alert-title>
+    <v-alert-title> Configuration Validation Warnings </v-alert-title>
 
     <div class="mt-2">
       <p class="mb-2">
-        Some filter types in the configuration are invalid or misconfigured.
-        These filters will not be available in the UI:
+        Some filter types in the configuration are invalid or misconfigured. These filters will not
+        be available in the UI:
       </p>
 
       <!-- Expandable details section -->

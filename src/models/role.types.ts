@@ -14,21 +14,22 @@ import { z } from 'zod'
 /**
  * Raw Role Schema - transforms API response to normalized Role type
  */
-export const RawRoleSchema = z.object({
-  id: z.number().int(),
-  role: z.string().min(1).max(255).optional(),
-  name: z.string().min(1).max(255).optional(),
-  roleName: z.string().min(1).max(255).optional(),
-  description: z.string().max(1000).optional().nullable(),
-  createdDate: z.string().optional().nullable(),
-  modifiedDate: z.string().optional().nullable(),
-  createdBy: z.any().optional(),
-  modifiedBy: z.any().optional(),
-  defaultImported: z.boolean().optional(),
-  systemRole: z.boolean().optional(),
-})
+export const RawRoleSchema = z
+  .object({
+    id: z.number().int(),
+    role: z.string().min(1).max(255).optional(),
+    name: z.string().min(1).max(255).optional(),
+    roleName: z.string().min(1).max(255).optional(),
+    description: z.string().max(1000).optional().nullable(),
+    createdDate: z.string().optional().nullable(),
+    modifiedDate: z.string().optional().nullable(),
+    createdBy: z.any().optional(),
+    modifiedBy: z.any().optional(),
+    defaultImported: z.boolean().optional(),
+    systemRole: z.boolean().optional(),
+  })
   .passthrough()
-  .transform((data) => ({
+  .transform(data => ({
     id: data.id,
     name: data.role || data.name || data.roleName || '',
     description: data.description || null,
@@ -66,13 +67,14 @@ export type RoleCreate = z.infer<typeof RoleCreateSchema>
  * Role update payload
  * At least one field must be provided
  */
-export const RoleUpdateSchema = z.object({
-  name: z.string().min(1).max(255).optional(),
-  description: z.string().max(1000).optional(),
-}).refine(
-  (data) => data.name !== undefined || data.description !== undefined,
-  { message: 'At least one field (name or description) must be provided' }
-)
+export const RoleUpdateSchema = z
+  .object({
+    name: z.string().min(1).max(255).optional(),
+    description: z.string().max(1000).optional(),
+  })
+  .refine(data => data.name !== undefined || data.description !== undefined, {
+    message: 'At least one field (name or description) must be provided',
+  })
 
 export type RoleUpdate = z.infer<typeof RoleUpdateSchema>
 
@@ -91,13 +93,14 @@ const PermissionStringSchema = z.string().min(1)
  * Permission Schema
  * Represents a specific capability or access right
  */
-export const PermissionSchema = z.object({
-  id: z.number().int().positive(),
-  permission: PermissionStringSchema.optional().nullable(),
-  value: PermissionStringSchema.optional().nullable(), // Alternative field name
-  description: z.string().max(500).optional().nullable(),
-  category: z.string().max(100).optional().nullable(),
-})
+export const PermissionSchema = z
+  .object({
+    id: z.number().int().positive(),
+    permission: PermissionStringSchema.optional().nullable(),
+    value: PermissionStringSchema.optional().nullable(), // Alternative field name
+    description: z.string().max(500).optional().nullable(),
+    category: z.string().max(100).optional().nullable(),
+  })
   .passthrough() // Allow additional fields from API
 
 export type Permission = z.infer<typeof PermissionSchema>
@@ -112,13 +115,14 @@ export const PermissionListSchema = z.array(PermissionSchema)
  * User Schema
  * Represents a person who uses the system
  */
-export const UserSchema = z.object({
-  id: z.number().int().positive(),
-  login: z.string().min(1).max(255),
-  name: z.string().max(255).optional().nullable(),
-  displayName: z.string().max(255).optional().nullable(),
-  email: z.string().optional().nullable(),
-})
+export const UserSchema = z
+  .object({
+    id: z.number().int().positive(),
+    login: z.string().min(1).max(255),
+    name: z.string().max(255).optional().nullable(),
+    displayName: z.string().max(255).optional().nullable(),
+    email: z.string().optional().nullable(),
+  })
   .passthrough() // Allow additional fields from API
 
 export type User = z.infer<typeof UserSchema>
@@ -157,9 +161,7 @@ export type RoleUserAssignment = z.infer<typeof RoleUserAssignmentSchema>
  * API Result type for consistent error handling
  * Follows existing Atlas3 pattern from src/services/webapi.ts
  */
-export type ApiResult<T> =
-  | { isSuccess: true; data: T }
-  | { isSuccess: false; message: string }
+export type ApiResult<T> = { isSuccess: true; data: T } | { isSuccess: false; message: string }
 
 /**
  * Helper to create success result

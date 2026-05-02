@@ -241,7 +241,14 @@
     >
       <v-card>
         <v-card-title>{{ t('common.delete', 'Delete incidence rate') }}</v-card-title>
-        <v-card-text>{{ t('ir.deleteConfirmation', 'Delete incidence rate analysis? Warning: deletion can not be undone!') }}</v-card-text>
+        <v-card-text>
+          {{
+            t(
+              'ir.deleteConfirmation',
+              'Delete incidence rate analysis? Warning: deletion can not be undone!'
+            )
+          }}
+        </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn @click="askDelete = false">
@@ -261,7 +268,11 @@
       :model-value="!!feedback"
       :color="feedback?.color ?? 'info'"
       :timeout="3000"
-      @update:model-value="(open: boolean) => { if (!open) feedback = null }"
+      @update:model-value="
+        (open: boolean) => {
+          if (!open) feedback = null
+        }
+      "
     >
       {{ feedback?.message }}
     </v-snackbar>
@@ -307,7 +318,14 @@ async function handleTagsUpdate(newTags: Tag[]) {
 }
 
 function slugifyName(name: string): string {
-  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'design'
+  return (
+    name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || 'design'
+  )
 }
 
 function triggerDownload(filename: string, payload: string): void {
@@ -330,10 +348,16 @@ async function handleExport() {
   exporting.value = true
   try {
     const design = await exportIncidenceRate(id)
-    triggerDownload(`incidence-rate-${slugifyName(store.currentIR?.name ?? '')}-${id}.json`, JSON.stringify(design, null, 2))
+    triggerDownload(
+      `incidence-rate-${slugifyName(store.currentIR?.name ?? '')}-${id}.json`,
+      JSON.stringify(design, null, 2)
+    )
   } catch (err) {
     logger.error('IRBuilder', 'Export failed', err)
-    feedback.value = { message: t('characterizations.editor.utilities.import.importError', 'Export failed').value, color: 'error' }
+    feedback.value = {
+      message: t('characterizations.editor.utilities.import.importError', 'Export failed').value,
+      color: 'error',
+    }
   } finally {
     exporting.value = false
   }
@@ -355,20 +379,33 @@ async function handleImportFileChange(event: Event) {
     parsed = JSON.parse(await file.text())
   } catch (err) {
     logger.error('IRBuilder', 'Import parse failed', err)
-    feedback.value = { message: t('characterizations.editor.utilities.import.parseError', 'Could not parse design JSON').value, color: 'error' }
+    feedback.value = {
+      message: t(
+        'characterizations.editor.utilities.import.parseError',
+        'Could not parse design JSON'
+      ).value,
+      color: 'error',
+    }
     importing.value = false
     return
   }
 
   try {
     const created = await importIncidenceRate(parsed)
-    feedback.value = { message: t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully').value, color: 'success' }
+    feedback.value = {
+      message: t('characterizations.editor.utilities.import.importSuccess', 'Imported successfully')
+        .value,
+      color: 'success',
+    }
     if (created.id != null) {
       await router.push(`/incidence-rates/${created.id}`)
     }
   } catch (err) {
     logger.error('IRBuilder', 'Import failed', err)
-    feedback.value = { message: t('characterizations.editor.utilities.import.importError', 'Import failed').value, color: 'error' }
+    feedback.value = {
+      message: t('characterizations.editor.utilities.import.importError', 'Import failed').value,
+      color: 'error',
+    }
   } finally {
     importing.value = false
   }
@@ -379,7 +416,7 @@ const { hasPermission } = usePermissions()
 const { canWrite, canDelete } = useEntityAccess('incidenceRate', irId)
 const canCopy = computed<boolean>(() => hasPermission('create:incidence'))
 const canSave = computed<boolean>(() =>
-  irId.value === null ? hasPermission('create:incidence') : canWrite.value,
+  irId.value === null ? hasPermission('create:incidence') : canWrite.value
 )
 
 const title = computed(() => {
@@ -400,10 +437,19 @@ function handleBack() {
 
 async function onSave() {
   saving.value = true
-  try { await save() } finally { saving.value = false }
+  try {
+    await save()
+  } finally {
+    saving.value = false
+  }
 }
-async function onCopy() { await copy() }
-async function onDelete() { askDelete.value = false; await remove() }
+async function onCopy() {
+  await copy()
+}
+async function onDelete() {
+  askDelete.value = false
+  await remove()
+}
 </script>
 
 <style scoped>

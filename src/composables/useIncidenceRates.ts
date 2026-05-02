@@ -47,8 +47,8 @@ export function useIncidenceRates() {
     const cr = filters.value.createdDateRange
     const mr = filters.value.modifiedDateRange
     return incidenceRates.value.filter(ir => {
-      if (q && !ir.name.toLowerCase().includes(q)
-              && !(ir.description?.toLowerCase().includes(q))) return false
+      if (q && !ir.name.toLowerCase().includes(q) && !ir.description?.toLowerCase().includes(q))
+        return false
       if (tags.length > 0) {
         const have = new Set((ir.tags || []).map(t => t.name))
         if (!tags.every(t => have.has(t))) return false
@@ -63,9 +63,7 @@ export function useIncidenceRates() {
   })
 
   const totalItems = computed(() => filteredIncidenceRates.value.length)
-  const totalPages = computed(() =>
-    Math.max(1, Math.ceil(totalItems.value / itemsPerPage.value))
-  )
+  const totalPages = computed(() => Math.max(1, Math.ceil(totalItems.value / itemsPerPage.value)))
   const paginatedIncidenceRates = computed(() => {
     const start = page.value * itemsPerPage.value
     return filteredIncidenceRates.value.slice(start, start + itemsPerPage.value)
@@ -73,16 +71,27 @@ export function useIncidenceRates() {
 
   function clearFilters() {
     filters.value = {
-      searchQuery: '', selectedTags: [], author: '',
-      createdDateRange: {}, modifiedDateRange: {},
+      searchQuery: '',
+      selectedTags: [],
+      author: '',
+      createdDateRange: {},
+      modifiedDateRange: {},
     }
     page.value = 0
   }
 
   return {
-    incidenceRates, loading, error,
-    filters, page, itemsPerPage,
-    fetchIncidenceRates, clearFilters,
-    filteredIncidenceRates, paginatedIncidenceRates, totalItems, totalPages,
+    incidenceRates,
+    loading,
+    error,
+    filters,
+    page,
+    itemsPerPage,
+    fetchIncidenceRates,
+    clearFilters,
+    filteredIncidenceRates,
+    paginatedIncidenceRates,
+    totalItems,
+    totalPages,
   }
 }

@@ -33,9 +33,7 @@ export function useAtlasConverter() {
     }
 
     // Check file extension
-    const hasValidExtension = ALLOWED_EXTENSIONS.some((ext) =>
-      file.name.toLowerCase().endsWith(ext)
-    )
+    const hasValidExtension = ALLOWED_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext))
     if (!hasValidExtension) {
       return { valid: false, error: 'File must be JSON format (.json)' }
     }
@@ -107,9 +105,9 @@ export function useAtlasConverter() {
       return null
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const reader = new FileReader()
-      reader.onload = async (e) => {
+      reader.onload = async e => {
         const text = e.target?.result as string
         const cohort = await importFromAtlas(text)
         resolve(cohort)

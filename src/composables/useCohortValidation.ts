@@ -1,5 +1,13 @@
 import { ref, computed, watch, type Ref, type ComputedRef, onUnmounted } from 'vue'
-import type { CohortDefinition, CohortEvent, InclusionRule, CriteriaGroup, ExitCriteria, ConceptSetReference, QualifyingLimit } from '@/models/cohort.types'
+import type {
+  CohortDefinition,
+  CohortEvent,
+  InclusionRule,
+  CriteriaGroup,
+  ExitCriteria,
+  ConceptSetReference,
+  QualifyingLimit,
+} from '@/models/cohort.types'
 import type { ValidationWarning, ValidationSeverity } from '@/models/cohort-validation.types'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import { validateCohortDefinition } from '@/services/webapi'
@@ -166,7 +174,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       _isValidatingInternal.value = true
 
       const conceptSetsWithItems: ConceptSetReference[] = await Promise.all(
-        usedConceptSets.value.map(async (ref) => {
+        usedConceptSets.value.map(async ref => {
           if (ref.items && ref.items.length > 0) {
             return ref
           }
@@ -176,7 +184,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
             if (fullConceptSet && fullConceptSet.items) {
               return {
                 ...ref,
-                items: fullConceptSet.items as ConceptSetItem[]
+                items: fullConceptSet.items as ConceptSetItem[],
               }
             }
           }

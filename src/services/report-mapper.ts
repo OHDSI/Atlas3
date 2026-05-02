@@ -24,7 +24,7 @@ import type {
   DemographicData,
   ConditionEraData,
   ConditionData,
-  DrugEraData
+  DrugEraData,
 } from '@/models/report.types'
 
 // ============================================================================
@@ -42,30 +42,38 @@ export function mapPersonReport(data: WebAPIPersonRaw): PersonReport {
   const totalEthnicity = data.ethnicity.reduce((sum, item) => sum + item.countValue, 0)
 
   return {
-    yearOfBirth: data.yearOfBirth.map((item): YearOfBirthData => ({
-      year: item.intervalIndex + 1920, // intervalIndex 0 = 1920, 1 = 1921, etc.
-      count: item.countValue
-    })),
+    yearOfBirth: data.yearOfBirth.map(
+      (item): YearOfBirthData => ({
+        year: item.intervalIndex + 1920, // intervalIndex 0 = 1920, 1 = 1921, etc.
+        count: item.countValue,
+      })
+    ),
     demographics: {
-      gender: data.gender.map((item): DemographicData => ({
-        conceptId: item.conceptId,
-        conceptName: item.conceptName,
-        count: item.countValue,
-        percentage: totalGender > 0 ? (item.countValue / totalGender) * 100 : 0
-      })),
-      race: data.race.map((item): DemographicData => ({
-        conceptId: item.conceptId,
-        conceptName: item.conceptName,
-        count: item.countValue,
-        percentage: totalRace > 0 ? (item.countValue / totalRace) * 100 : 0
-      })),
-      ethnicity: data.ethnicity.map((item): DemographicData => ({
-        conceptId: item.conceptId,
-        conceptName: item.conceptName,
-        count: item.countValue,
-        percentage: totalEthnicity > 0 ? (item.countValue / totalEthnicity) * 100 : 0
-      }))
-    }
+      gender: data.gender.map(
+        (item): DemographicData => ({
+          conceptId: item.conceptId,
+          conceptName: item.conceptName,
+          count: item.countValue,
+          percentage: totalGender > 0 ? (item.countValue / totalGender) * 100 : 0,
+        })
+      ),
+      race: data.race.map(
+        (item): DemographicData => ({
+          conceptId: item.conceptId,
+          conceptName: item.conceptName,
+          count: item.countValue,
+          percentage: totalRace > 0 ? (item.countValue / totalRace) * 100 : 0,
+        })
+      ),
+      ethnicity: data.ethnicity.map(
+        (item): DemographicData => ({
+          conceptId: item.conceptId,
+          conceptName: item.conceptName,
+          count: item.countValue,
+          percentage: totalEthnicity > 0 ? (item.countValue / totalEthnicity) * 100 : 0,
+        })
+      ),
+    },
   }
 }
 
@@ -89,7 +97,7 @@ export function mapConditionErasReport(data: WebAPIConditionEraRaw): ConditionEr
       personCount: item.numPersons,
       prevalence: item.percentPersons * 100, // Convert to percentage
       averageDuration: item.lengthOfEra,
-      recordsPerPerson: item.recordsPerPerson
+      recordsPerPerson: item.recordsPerPerson,
     }
   })
 
@@ -97,14 +105,15 @@ export function mapConditionErasReport(data: WebAPIConditionEraRaw): ConditionEr
   // length of era (aggProperties.byLengthOfEra in const.js).
   return {
     prevalence,
-    treemapData: prevalence.length > 0
-      ? toTreemapData(
-          prevalence as unknown as Record<string, unknown>[],
-          'conceptName',
-          'personCount',
-          'averageDuration'
-        )
-      : undefined
+    treemapData:
+      prevalence.length > 0
+        ? toTreemapData(
+            prevalence as unknown as Record<string, unknown>[],
+            'conceptName',
+            'personCount',
+            'averageDuration'
+          )
+        : undefined,
   }
 }
 
@@ -123,12 +132,12 @@ export function mapConditionReport(data: WebAPIConditionRaw): ConditionReport {
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100 // Convert to percentage
+      prevalence: item.percentPersons * 100, // Convert to percentage
     }
   })
 
   return {
-    prevalence
+    prevalence,
   }
 }
 
@@ -153,7 +162,7 @@ export function mapDrugErasReport(data: WebAPIDrugEraRaw): DrugErasReport {
       personCount: item.numPersons,
       prevalence: item.percentPersons * 100, // Convert to percentage
       averageDuration: item.lengthOfEra,
-      recordsPerPerson: item.recordsPerPerson
+      recordsPerPerson: item.recordsPerPerson,
     }
   })
 
@@ -161,14 +170,15 @@ export function mapDrugErasReport(data: WebAPIDrugEraRaw): DrugErasReport {
   // of era (aggProperties.byLengthOfEra in const.js).
   return {
     prevalence,
-    treemapData: prevalence.length > 0
-      ? toTreemapData(
-          prevalence as unknown as Record<string, unknown>[],
-          'conceptName',
-          'personCount',
-          'averageDuration'
-        )
-      : undefined
+    treemapData:
+      prevalence.length > 0
+        ? toTreemapData(
+            prevalence as unknown as Record<string, unknown>[],
+            'conceptName',
+            'personCount',
+            'averageDuration'
+          )
+        : undefined,
   }
 }
 
@@ -180,25 +190,26 @@ export function mapCohortSpecificReport(data: WebAPICohortSpecificRaw): CohortSp
   return {
     prevalenceByMonth: data.prevalenceByMonth.map(item => ({
       date: item.xCalendarMonth,
-      prevalence: item.yPrevalence1000Pp
+      prevalence: item.yPrevalence1000Pp,
     })),
     cohortStart: {
       startDate: data.personsInCohortFromCohortStartToEnd?.[0]?.xCalendarMonth || '',
       endDate: data.personsInCohortFromCohortStartToEnd?.slice(-1)[0]?.xCalendarMonth || '',
-      totalPersons: data.ageAtIndexDistribution.reduce((sum, item) => sum + item.countValue, 0)
+      totalPersons: data.ageAtIndexDistribution.reduce((sum, item) => sum + item.countValue, 0),
     },
-    personsInCohort: data.personsInCohortFromCohortStartToEnd?.map(item => ({
-      dayOffset: 0, // This data isn't available in the current structure
-      personCount: item.yRecordCount
-    })) || [],
+    personsInCohort:
+      data.personsInCohortFromCohortStartToEnd?.map(item => ({
+        dayOffset: 0, // This data isn't available in the current structure
+        personCount: item.yRecordCount,
+      })) || [],
     durationDistribution: data.personsByDurationFromStartToEnd.map(item => ({
       days: item.intervalIndex * 30, // Each interval is ~30 days
-      percentOfPopulation: item.percentValue * 100
+      percentOfPopulation: item.percentValue * 100,
     })),
     ageDistribution: data.ageAtIndexDistribution.map(item => ({
       age: item.intervalIndex + 18, // Assuming intervalIndex 0 = age 18
-      count: item.countValue
-    }))
+      count: item.countValue,
+    })),
   }
 }
 
@@ -222,7 +233,7 @@ export function toBarChartData<T extends object>(
   return {
     categories: data.map(item => String(item[categoryKey])),
     values: data.map(item => Number(item[valueKey])),
-    unit
+    unit,
   }
 }
 
@@ -239,7 +250,7 @@ export function toPieChartData<T extends object>(
 ): PieChartData[] {
   return data.map(item => ({
     name: String(item[nameKey]),
-    value: Number(item[valueKey])
+    value: Number(item[valueKey]),
   }))
 }
 
@@ -259,7 +270,7 @@ export function toLineChartData<T extends object>(
   return {
     xAxis: data.map(item => String(item[xKey])),
     yAxis: data.map(item => Number(item[yKey])),
-    seriesName
+    seriesName,
   }
 }
 
@@ -289,15 +300,14 @@ export function toTreemapData<T extends object>(
   return data.map(item => {
     const fullName = String(item[nameKey])
     const colorValueRaw = colorKey ? item[colorKey] : undefined
-    const colorValue = colorValueRaw !== undefined && colorValueRaw !== null
-      ? Number(colorValueRaw)
-      : undefined
+    const colorValue =
+      colorValueRaw !== undefined && colorValueRaw !== null ? Number(colorValueRaw) : undefined
     return {
       name: extractConceptDisplayName(fullName),
       value: Number(item[valueKey]),
       colorValue: Number.isFinite(colorValue) ? colorValue : undefined,
       conceptId: 'conceptId' in item ? Number(item.conceptId) : undefined,
-      conceptPath: 'conceptPath' in item ? String(item.conceptPath) : undefined
+      conceptPath: 'conceptPath' in item ? String(item.conceptPath) : undefined,
     }
   })
 }
@@ -334,15 +344,15 @@ export function toHierarchicalTreemapData(
   return Object.entries(grouped).map(([category, items]) => ({
     name: category,
     value: items.reduce((sum, item) => sum + Number(item[valueKey]), 0),
-    children: items.map((item) => {
+    children: items.map(item => {
       const fullName = String(item[nameKey])
       return {
         name: extractConceptDisplayName(fullName),
         value: Number(item[valueKey]),
         conceptId: item.conceptId ? Number(item.conceptId) : undefined,
-        conceptPath: item.conceptPath ? String(item.conceptPath) : undefined
+        conceptPath: item.conceptPath ? String(item.conceptPath) : undefined,
       }
-    })
+    }),
   }))
 }
 
@@ -374,7 +384,7 @@ export function formatDuration(days: number): string {
     const months = Math.round(days / 30)
     return `${months} month${months > 1 ? 's' : ''}`
   } else {
-    const years = Math.round(days / 365 * 10) / 10
+    const years = Math.round((days / 365) * 10) / 10
     return `${years} year${years > 1 ? 's' : ''}`
   }
 }
@@ -386,7 +396,9 @@ export function formatDuration(days: number): string {
 /**
  * Map WebAPI persons exposure data to internal PersonsExposureReport format
  */
-export function mapPersonsExposureReport(data: import('@/models/report.types').WebAPIPersonsExposureRaw): import('@/models/report.types').PersonsExposureReport {
+export function mapPersonsExposureReport(
+  data: import('@/models/report.types').WebAPIPersonsExposureRaw
+): import('@/models/report.types').PersonsExposureReport {
   const prevalence: import('@/models/report.types').PersonsExposureData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -396,7 +408,7 @@ export function mapPersonsExposureReport(data: import('@/models/report.types').W
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -406,7 +418,9 @@ export function mapPersonsExposureReport(data: import('@/models/report.types').W
 /**
  * Map WebAPI visits data to internal VisitsReport format
  */
-export function mapVisitsReport(data: import('@/models/report.types').WebAPIVisitsRaw): import('@/models/report.types').VisitsReport {
+export function mapVisitsReport(
+  data: import('@/models/report.types').WebAPIVisitsRaw
+): import('@/models/report.types').VisitsReport {
   const prevalence: import('@/models/report.types').VisitsData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -416,7 +430,7 @@ export function mapVisitsReport(data: import('@/models/report.types').WebAPIVisi
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -426,11 +440,13 @@ export function mapVisitsReport(data: import('@/models/report.types').WebAPIVisi
 /**
  * Map WebAPI visit dates data to internal VisitDatesReport format
  */
-export function mapVisitDatesReport(data: import('@/models/report.types').WebAPIVisitDatesRaw): import('@/models/report.types').VisitDatesReport {
+export function mapVisitDatesReport(
+  data: import('@/models/report.types').WebAPIVisitDatesRaw
+): import('@/models/report.types').VisitDatesReport {
   const visitData: import('@/models/report.types').VisitDatesData[] = data.map(item => ({
     date: item.xCalendarDate,
     visitCount: item.yRecordCount,
-    personCount: item.yRecordCount // API doesn't separate these
+    personCount: item.yRecordCount, // API doesn't separate these
   }))
 
   return { data: visitData }
@@ -439,7 +455,9 @@ export function mapVisitDatesReport(data: import('@/models/report.types').WebAPI
 /**
  * Map WebAPI care site visit dates data to internal CareSiteVisitDatesReport format
  */
-export function mapCareSiteVisitDatesReport(data: import('@/models/report.types').WebAPICareSiteVisitDatesRaw): import('@/models/report.types').CareSiteVisitDatesReport {
+export function mapCareSiteVisitDatesReport(
+  data: import('@/models/report.types').WebAPICareSiteVisitDatesRaw
+): import('@/models/report.types').CareSiteVisitDatesReport {
   const careSiteData: import('@/models/report.types').CareSiteVisitDatesData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const careSiteName = pathParts[pathParts.length - 1] || `Care Site ${item.conceptId}`
@@ -448,7 +466,7 @@ export function mapCareSiteVisitDatesReport(data: import('@/models/report.types'
       careSiteId: item.conceptId,
       careSiteName,
       visitCount: item.countValue,
-      personCount: item.numPersons
+      personCount: item.numPersons,
     }
   })
 
@@ -458,7 +476,9 @@ export function mapCareSiteVisitDatesReport(data: import('@/models/report.types'
 /**
  * Map WebAPI drug utilization data to internal DrugUtilizationReport format
  */
-export function mapDrugUtilizationReport(data: import('@/models/report.types').WebAPIDrugUtilizationRaw): import('@/models/report.types').DrugUtilizationReport {
+export function mapDrugUtilizationReport(
+  data: import('@/models/report.types').WebAPIDrugUtilizationRaw
+): import('@/models/report.types').DrugUtilizationReport {
   const prevalence: import('@/models/report.types').DrugUtilizationData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -468,7 +488,7 @@ export function mapDrugUtilizationReport(data: import('@/models/report.types').W
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -478,7 +498,9 @@ export function mapDrugUtilizationReport(data: import('@/models/report.types').W
 /**
  * Map WebAPI Heracles Heel data to internal HeraclesHeelReport format
  */
-export function mapHeraclesHeelReport(data: import('@/models/report.types').WebAPIHeraclesHeelRaw): import('@/models/report.types').HeraclesHeelReport {
+export function mapHeraclesHeelReport(
+  data: import('@/models/report.types').WebAPIHeraclesHeelRaw
+): import('@/models/report.types').HeraclesHeelReport {
   const results: import('@/models/report.types').HeraclesHeelData[] = data.map(item => {
     // Map severity level string to enum
     let severity: 'ERROR' | 'WARNING' | 'NOTIFICATION' = 'NOTIFICATION'
@@ -493,7 +515,7 @@ export function mapHeraclesHeelReport(data: import('@/models/report.types').WebA
       analysisName: item.analysisName,
       heelRule: item.heelRule,
       recordCount: item.recordCount,
-      severity
+      severity,
     }
   })
 
@@ -507,7 +529,9 @@ export function mapHeraclesHeelReport(data: import('@/models/report.types').WebA
 /**
  * Map WebAPI conditions by index data to internal format
  */
-export function mapConditionsByIndexReport(data: import('@/models/report.types').WebAPIConditionsByIndexRaw): import('@/models/report.types').ConditionsByIndexReport {
+export function mapConditionsByIndexReport(
+  data: import('@/models/report.types').WebAPIConditionsByIndexRaw
+): import('@/models/report.types').ConditionsByIndexReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -517,7 +541,7 @@ export function mapConditionsByIndexReport(data: import('@/models/report.types')
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -527,7 +551,9 @@ export function mapConditionsByIndexReport(data: import('@/models/report.types')
 /**
  * Map WebAPI death data to internal format
  */
-export function mapDeathReport(data: import('@/models/report.types').WebAPIDeathRaw): import('@/models/report.types').DeathReport {
+export function mapDeathReport(
+  data: import('@/models/report.types').WebAPIDeathRaw
+): import('@/models/report.types').DeathReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -537,7 +563,7 @@ export function mapDeathReport(data: import('@/models/report.types').WebAPIDeath
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -547,7 +573,9 @@ export function mapDeathReport(data: import('@/models/report.types').WebAPIDeath
 /**
  * Map WebAPI drug exposure data to internal format
  */
-export function mapDrugExposureReport(data: import('@/models/report.types').WebAPIDrugExposureRaw): import('@/models/report.types').DrugExposureReport {
+export function mapDrugExposureReport(
+  data: import('@/models/report.types').WebAPIDrugExposureRaw
+): import('@/models/report.types').DrugExposureReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -557,7 +585,7 @@ export function mapDrugExposureReport(data: import('@/models/report.types').WebA
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -567,7 +595,9 @@ export function mapDrugExposureReport(data: import('@/models/report.types').WebA
 /**
  * Map WebAPI drugs by index data to internal format
  */
-export function mapDrugsByIndexReport(data: import('@/models/report.types').WebAPIDrugsByIndexRaw): import('@/models/report.types').DrugsByIndexReport {
+export function mapDrugsByIndexReport(
+  data: import('@/models/report.types').WebAPIDrugsByIndexRaw
+): import('@/models/report.types').DrugsByIndexReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -577,7 +607,7 @@ export function mapDrugsByIndexReport(data: import('@/models/report.types').WebA
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -587,7 +617,9 @@ export function mapDrugsByIndexReport(data: import('@/models/report.types').WebA
 /**
  * Map WebAPI observation periods data to internal format
  */
-export function mapObservationPeriodsReport(data: import('@/models/report.types').WebAPIObservationPeriodsRaw): import('@/models/report.types').ObservationPeriodsReport {
+export function mapObservationPeriodsReport(
+  data: import('@/models/report.types').WebAPIObservationPeriodsRaw
+): import('@/models/report.types').ObservationPeriodsReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -597,7 +629,7 @@ export function mapObservationPeriodsReport(data: import('@/models/report.types'
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -607,7 +639,9 @@ export function mapObservationPeriodsReport(data: import('@/models/report.types'
 /**
  * Map WebAPI procedure data to internal format
  */
-export function mapProcedureReport(data: import('@/models/report.types').WebAPIProcedureRaw): import('@/models/report.types').ProcedureReport {
+export function mapProcedureReport(
+  data: import('@/models/report.types').WebAPIProcedureRaw
+): import('@/models/report.types').ProcedureReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -617,7 +651,7 @@ export function mapProcedureReport(data: import('@/models/report.types').WebAPIP
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -627,7 +661,9 @@ export function mapProcedureReport(data: import('@/models/report.types').WebAPIP
 /**
  * Map WebAPI procedures by index data to internal format
  */
-export function mapProceduresByIndexReport(data: import('@/models/report.types').WebAPIProceduresByIndexRaw): import('@/models/report.types').ProceduresByIndexReport {
+export function mapProceduresByIndexReport(
+  data: import('@/models/report.types').WebAPIProceduresByIndexRaw
+): import('@/models/report.types').ProceduresByIndexReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -637,7 +673,7 @@ export function mapProceduresByIndexReport(data: import('@/models/report.types')
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -647,7 +683,9 @@ export function mapProceduresByIndexReport(data: import('@/models/report.types')
 /**
  * Map WebAPI data completeness data to internal format
  */
-export function mapDataCompletenessReport(data: import('@/models/report.types').WebAPIDataCompletenessRaw): import('@/models/report.types').DataCompletenessReport {
+export function mapDataCompletenessReport(
+  data: import('@/models/report.types').WebAPIDataCompletenessRaw
+): import('@/models/report.types').DataCompletenessReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -657,7 +695,7 @@ export function mapDataCompletenessReport(data: import('@/models/report.types').
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -667,7 +705,9 @@ export function mapDataCompletenessReport(data: import('@/models/report.types').
 /**
  * Map WebAPI entropy data to internal format
  */
-export function mapEntropyReport(data: import('@/models/report.types').WebAPIEntropyRaw): import('@/models/report.types').EntropyReport {
+export function mapEntropyReport(
+  data: import('@/models/report.types').WebAPIEntropyRaw
+): import('@/models/report.types').EntropyReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -677,7 +717,7 @@ export function mapEntropyReport(data: import('@/models/report.types').WebAPIEnt
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
@@ -687,7 +727,9 @@ export function mapEntropyReport(data: import('@/models/report.types').WebAPIEnt
 /**
  * Map WebAPI tornado data to internal format
  */
-export function mapTornadoReport(data: import('@/models/report.types').WebAPITornadoRaw): import('@/models/report.types').TornadoReport {
+export function mapTornadoReport(
+  data: import('@/models/report.types').WebAPITornadoRaw
+): import('@/models/report.types').TornadoReport {
   const prevalence: import('@/models/report.types').ConditionData[] = data.map(item => {
     const pathParts = item.conceptPath.split('||')
     const conceptName = pathParts[pathParts.length - 1] || `Concept ${item.conceptId}`
@@ -697,14 +739,16 @@ export function mapTornadoReport(data: import('@/models/report.types').WebAPITor
       conceptName,
       recordsPerPerson: item.recordsPerPerson,
       personCount: item.numPersons,
-      prevalence: item.percentPersons * 100
+      prevalence: item.percentPersons * 100,
     }
   })
 
   return { prevalence }
 }
 
-export function mapBoxPlotData(raw: import('@/models/report.types').WebAPIBoxPlotRaw[]): import('@/models/report.types').BoxPlotData[] {
+export function mapBoxPlotData(
+  raw: import('@/models/report.types').WebAPIBoxPlotRaw[]
+): import('@/models/report.types').BoxPlotData[] {
   const mapped = raw.map(item => ({
     category: item.category || `Interval ${item.intervalIndex || 0}`,
     min: item.min || 0,
@@ -713,7 +757,7 @@ export function mapBoxPlotData(raw: import('@/models/report.types').WebAPIBoxPlo
     median: item.medianValue || item.avgValue || 0,
     p75: item.p75Value || 0,
     p90: item.p90Value || 0,
-    max: item.max || 0
+    max: item.max || 0,
   }))
   return sortByNumericLeadingPrefix(mapped)
 }
@@ -746,7 +790,9 @@ function sortByNumericLeadingPrefix<T extends { category: string }>(items: T[]):
     .map(entry => entry.item)
 }
 
-export function mapTrellisData(raw: import('@/models/report.types').WebAPIPrevalenceByDemographic[]): import('@/models/report.types').TrellisChartData {
+export function mapTrellisData(
+  raw: import('@/models/report.types').WebAPIPrevalenceByDemographic[]
+): import('@/models/report.types').TrellisChartData {
   const groupedData = new Map<string, Map<string, { x: number; y: number }[]>>()
   const categories = new Set<string>()
 
@@ -776,18 +822,20 @@ export function mapTrellisData(raw: import('@/models/report.types').WebAPIPreval
       series.push({
         name,
         category,
-        data: data.sort((a, b) => Number(a.x) - Number(b.x))
+        data: data.sort((a, b) => Number(a.x) - Number(b.x)),
       })
     })
   })
 
   return {
     series,
-    categories: Array.from(categories)
+    categories: Array.from(categories),
   }
 }
 
-export function mapTimeSeriesData(raw: import('@/models/report.types').WebAPIPrevalenceByMonth[]): import('@/models/report.types').TimeSeriesData[] {
+export function mapTimeSeriesData(
+  raw: import('@/models/report.types').WebAPIPrevalenceByMonth[]
+): import('@/models/report.types').TimeSeriesData[] {
   return raw.map(item => {
     // Convert YYYYMM to MM/YYYY format
     const monthStr = item.xCalendarMonth.toString()
@@ -797,7 +845,7 @@ export function mapTimeSeriesData(raw: import('@/models/report.types').WebAPIPre
 
     return {
       date: dateString,
-      value: item.yPrevalence1000Pp
+      value: item.yPrevalence1000Pp,
     }
   })
 }
@@ -812,7 +860,7 @@ export function mapDrilldownReport(
   const report: import('@/models/report.types').DrilldownReport = {
     conceptId,
     conceptName,
-    conceptPath
+    conceptPath,
   }
 
   const ageData = raw.ageAtFirstDiagnosis || raw.ageAtFirstExposure || raw.ageAtFirstOccurrence
@@ -833,19 +881,23 @@ export function mapDrilldownReport(
   }
 
   // Map by type (conditionsByType, drugsByType, etc.)
-  const byTypeData = raw.conditionsByType || raw.drugsByType || raw.observationsByType ||
-                      raw.measurementsByType || raw.proceduresByType
+  const byTypeData =
+    raw.conditionsByType ||
+    raw.drugsByType ||
+    raw.observationsByType ||
+    raw.measurementsByType ||
+    raw.proceduresByType
   if (byTypeData && byTypeData.length > 0) {
     report.byType = byTypeData.map(item => ({
       name: item.conceptName || `Concept ${item.conceptId}`,
-      value: item.countValue
+      value: item.countValue,
     }))
   }
 
   if (raw.measurementsByUnit && raw.measurementsByUnit.length > 0) {
     report.byUnit = raw.measurementsByUnit.map(i => ({
       name: i.conceptName || `Concept ${i.conceptId}`,
-      value: i.countValue
+      value: i.countValue,
     }))
   }
 
@@ -853,21 +905,21 @@ export function mapDrilldownReport(
   if (byValueAsConcept && byValueAsConcept.length > 0) {
     report.byValueAsConcept = byValueAsConcept.map(i => ({
       name: i.conceptName || `Concept ${i.conceptId}`,
-      value: i.countValue
+      value: i.countValue,
     }))
   }
 
   if (raw.measurementsByOperator && raw.measurementsByOperator.length > 0) {
     report.byOperator = raw.measurementsByOperator.map(i => ({
       name: i.conceptName || `Concept ${i.conceptId}`,
-      value: i.countValue
+      value: i.countValue,
     }))
   }
 
   if (raw.observationsByQualifier && raw.observationsByQualifier.length > 0) {
     report.byQualifier = raw.observationsByQualifier.map(i => ({
       name: i.conceptName || `Concept ${i.conceptId}`,
-      value: i.countValue
+      value: i.countValue,
     }))
   }
 

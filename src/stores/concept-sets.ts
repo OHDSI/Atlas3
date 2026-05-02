@@ -21,9 +21,7 @@ import type {
 import type { Concept } from '@/models/concept-set.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
 import { conceptToConceptSetItem, conceptSetItemToExpressionItem } from '@/utils/api-mappers'
-import {
-  getVersion as getVersionAPI,
-} from '@/services/concept-set-versions.service'
+import { getVersion as getVersionAPI } from '@/services/concept-set-versions.service'
 import {
   getRecommendedConcepts,
   getConceptRecordCounts,
@@ -68,9 +66,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     }
 
     const term = filterTerm.value.toLowerCase()
-    return conceptSets.value.filter((set) =>
-      set.name.toLowerCase().includes(term)
-    )
+    return conceptSets.value.filter(set => set.name.toLowerCase().includes(term))
   })
 
   const isEmpty = computed(() => conceptSets.value.length === 0)
@@ -128,7 +124,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   /**
    * Create a new concept set
    */
-  async function create(set: Omit<ConceptSet, 'id' | 'createdDate' | 'createdBy' | 'modifiedDate' | 'modifiedBy'>) {
+  async function create(
+    set: Omit<ConceptSet, 'id' | 'createdDate' | 'createdBy' | 'modifiedDate' | 'modifiedBy'>
+  ) {
     loading.value = true
     error.value = null
 
@@ -190,7 +188,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       const success = await deleteConceptSet(id)
       if (success) {
         // Remove from local list
-        conceptSets.value = conceptSets.value.filter((set) => set.id !== id)
+        conceptSets.value = conceptSets.value.filter(set => set.id !== id)
         if (currentSet.value?.id === id) {
           currentSet.value = null
         }
@@ -263,9 +261,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    const exists = currentSet.value.items.some(
-      (item) => item.conceptId === concept.conceptId
-    )
+    const exists = currentSet.value.items.some(item => item.conceptId === concept.conceptId)
 
     if (exists) {
       error.value = 'Concept already exists in this set'
@@ -286,9 +282,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    currentSet.value.items = currentSet.value.items.filter(
-      (item) => item.conceptId !== conceptId
-    )
+    currentSet.value.items = currentSet.value.items.filter(item => item.conceptId !== conceptId)
   }
 
   /**
@@ -303,9 +297,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
-    const item = currentSet.value.items.find(
-      (item) => item.conceptId === conceptId
-    )
+    const item = currentSet.value.items.find(item => item.conceptId === conceptId)
 
     if (item) {
       item[flag] = !item[flag]
@@ -318,9 +310,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   function isConceptInSet(conceptId: number): boolean {
     if (!currentSet.value) return false
 
-    return currentSet.value.items.some(
-      (item) => item.conceptId === conceptId
-    )
+    return currentSet.value.items.some(item => item.conceptId === conceptId)
   }
 
   // ============================================================================
@@ -346,7 +336,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
     try {
       loading.value = true
-      const versionedAsset: VersionedAsset<ConceptSet> = await getVersionAPI(conceptSetId, versionNumber)
+      const versionedAsset: VersionedAsset<ConceptSet> = await getVersionAPI(
+        conceptSetId,
+        versionNumber
+      )
 
       // Set preview version metadata
       previewVersion.value = versionedAsset.versionDTO
@@ -422,8 +415,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
 
   async function loadRecommendedConcepts(sourceKey: string): Promise<void> {
     const seed = (currentSet.value?.items ?? [])
-      .filter((item) => !item.isExcluded)
-      .map((item) => item.conceptId)
+      .filter(item => !item.isExcluded)
+      .map(item => item.conceptId)
 
     if (seed.length === 0) {
       recommendedConcepts.value = []
@@ -444,18 +437,14 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
         return
       }
 
-      const existingIds = new Set(
-        (currentSet.value?.items ?? []).map((item) => item.conceptId)
-      )
-      const candidates = result.concepts.filter(
-        (c) => !existingIds.has(c.conceptId)
-      )
+      const existingIds = new Set((currentSet.value?.items ?? []).map(item => item.conceptId))
+      const candidates = result.concepts.filter(c => !existingIds.has(c.conceptId))
 
       isRecommendedAvailable.value = true
 
-      const ids = candidates.map((c) => c.conceptId)
+      const ids = candidates.map(c => c.conceptId)
       const counts = await getConceptRecordCounts(sourceKey, ids)
-      const enriched = candidates.map((c) => {
+      const enriched = candidates.map(c => {
         const rc = counts.get(c.conceptId)
         if (!rc) return c
         return {
@@ -477,10 +466,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     }
   }
 
-  async function loadComparison(
-    sourceKey: string,
-    otherSetId: number | string
-  ): Promise<void> {
+  async function loadComparison(sourceKey: string, otherSetId: number | string): Promise<void> {
     if (!currentSet.value || (currentSet.value.items?.length ?? 0) === 0) {
       comparison.value = []
       comparisonOtherSet.value = null

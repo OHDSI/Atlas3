@@ -108,10 +108,7 @@ export async function createRole(payload: RoleCreate): Promise<ApiResult<Role>> 
  * Update an existing role
  * PUT /role/{roleId}
  */
-export async function updateRole(
-  roleId: number,
-  payload: RoleUpdate
-): Promise<ApiResult<Role>> {
+export async function updateRole(roleId: number, payload: RoleUpdate): Promise<ApiResult<Role>> {
   try {
     const data = await fetchJSON<unknown>(`/role/${roleId}`, {
       method: 'PUT',
@@ -185,8 +182,7 @@ export async function getRolePermissions(roleId: number): Promise<ApiResult<Perm
 
     return success(parsed.data)
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch role permissions'
+    const message = error instanceof Error ? error.message : 'Failed to fetch role permissions'
     logger.error('RoleService', `Failed to fetch permissions for role ${roleId}`, error)
     return failure(message)
   }
@@ -214,8 +210,7 @@ export async function assignPermissionToRole(
 
     return success(undefined)
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to assign permission to role'
+    const message = error instanceof Error ? error.message : 'Failed to assign permission to role'
     logger.error(
       'RoleService',
       `Failed to assign permission ${permissionId} to role ${roleId}`,
@@ -247,8 +242,7 @@ export async function removePermissionFromRole(
 
     return success(undefined)
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to remove permission from role'
+    const message = error instanceof Error ? error.message : 'Failed to remove permission from role'
     logger.error(
       'RoleService',
       `Failed to remove permission ${permissionId} from role ${roleId}`,
@@ -288,10 +282,7 @@ export async function getRoleUsers(roleId: number): Promise<ApiResult<User[]>> {
  * Assign a user to a role
  * PUT /role/{roleId}/users/{userId}
  */
-export async function assignUserToRole(
-  roleId: number,
-  userId: number
-): Promise<ApiResult<void>> {
+export async function assignUserToRole(roleId: number, userId: number): Promise<ApiResult<void>> {
   try {
     await fetchJSON(`/role/${roleId}/users/${userId}`, {
       method: 'PUT',
@@ -316,10 +307,7 @@ export async function assignUserToRole(
  * Remove a user from a role
  * DELETE /role/{roleId}/users/{userId}
  */
-export async function removeUserFromRole(
-  roleId: number,
-  userId: number
-): Promise<ApiResult<void>> {
+export async function removeUserFromRole(roleId: number, userId: number): Promise<ApiResult<void>> {
   try {
     await fetchJSON(`/role/${roleId}/users/${userId}`, {
       method: 'DELETE',
@@ -334,8 +322,7 @@ export async function removeUserFromRole(
 
     return success(undefined)
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to remove user from role'
+    const message = error instanceof Error ? error.message : 'Failed to remove user from role'
     logger.error('RoleService', `Failed to remove user ${userId} from role ${roleId}`, error)
     return failure(message)
   }
@@ -374,12 +361,12 @@ export async function exportRole(roleId: number): Promise<ApiResult<string>> {
       role: {
         name: roleResult.data.name,
         description: roleResult.data.description,
-        permissions: permissionsResult.data.map((p) => ({
+        permissions: permissionsResult.data.map(p => ({
           id: p.id,
           permission: p.permission || p.value,
           description: p.description,
         })),
-        users: usersResult.data.map((u) => ({
+        users: usersResult.data.map(u => ({
           id: u.id,
           login: u.login,
           name: u.name,

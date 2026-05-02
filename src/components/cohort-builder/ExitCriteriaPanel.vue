@@ -11,7 +11,12 @@
         size="18"
         class="exit-criteria-panel__warning-icon"
       />
-      <span>{{ t('exitCriteria.warnings.legacyConflict', 'This cohort has both legacy and new exit criteria formats. Displaying Atlas format.').value }}</span>
+      <span>{{
+        t(
+          'exitCriteria.warnings.legacyConflict',
+          'This cohort has both legacy and new exit criteria formats. Displaying Atlas format.'
+        ).value
+      }}</span>
     </div>
 
     <div class="panel-content">
@@ -90,7 +95,7 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: undefined,
   conceptSets: () => [],
   censoringCriteria: () => [],
-  disabled: false
+  disabled: false,
 })
 
 const emit = defineEmits<{
@@ -105,12 +110,12 @@ const emit = defineEmits<{
 // This prevents the infinite reactive loop that was causing "Maximum recursive updates exceeded"
 const localExitCriteria = computed<ExitCriteria>({
   get: () => props.modelValue || { strategy: 'CONTINUOUS_OBSERVATION' },
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 
 const localCensoringEvents = computed<CohortEvent[]>({
   get: () => props.censoringCriteria || [],
-  set: (value) => emit('update:censoringCriteria', value)
+  set: value => emit('update:censoringCriteria', value),
 })
 
 // Validation errors from sub-components
@@ -119,22 +124,20 @@ const censoringEventsErrors = ref<ValidationError[]>([])
 
 // Aggregate all validation errors
 const aggregatedErrors = computed(() => {
-  return [
-    ...eventPersistenceErrors.value,
-    ...censoringEventsErrors.value
-  ]
+  return [...eventPersistenceErrors.value, ...censoringEventsErrors.value]
 })
 
 // Detect legacy conflict
 // (Both old-style ExitCriteria and new CensoringCriteria exist)
 const hasLegacyConflict = computed(() => {
   // Check if we have both legacy exitCriteria fields AND new Atlas fields
-  const hasLegacyExitCriteria = props.modelValue &&
+  const hasLegacyExitCriteria =
+    props.modelValue &&
     (props.modelValue.strategy !== 'CONTINUOUS_OBSERVATION' ||
-     props.modelValue.offset !== undefined ||
-     props.modelValue.conceptSet !== undefined)
+      props.modelValue.offset !== undefined ||
+      props.modelValue.conceptSet !== undefined)
 
-  const hasNewAtlasFields = (localCensoringEvents.value.length > 0)
+  const hasNewAtlasFields = localCensoringEvents.value.length > 0
 
   return hasLegacyExitCriteria && hasNewAtlasFields
 })

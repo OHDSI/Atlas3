@@ -152,8 +152,8 @@
                   v-for="tag in getGroupTags(group)"
                   :key="tag.id"
                   :style="{
-                    backgroundColor: isSelected(tag) ? (tag.color || '#1976D2') : 'transparent',
-                    borderColor: tag.color || '#1976D2'
+                    backgroundColor: isSelected(tag) ? tag.color || '#1976D2' : 'transparent',
+                    borderColor: tag.color || '#1976D2',
                   }"
                   :variant="isSelected(tag) ? 'elevated' : 'outlined'"
                   class="ma-1"
@@ -173,7 +173,11 @@
                   >
                     {{ tag.icon }}
                   </v-icon>
-                  <span :style="{ color: isSelected(tag) ? getContrastColor(tag.color || '#1976D2') : 'inherit' }">
+                  <span
+                    :style="{
+                      color: isSelected(tag) ? getContrastColor(tag.color || '#1976D2') : 'inherit',
+                    }"
+                  >
                     {{ tag.name }}
                   </span>
                 </v-chip>
@@ -252,13 +256,16 @@ const loading = ref(false)
 const expandedPanels = ref<number[]>([])
 const showCreateForm = ref<number | undefined>(undefined)
 
-watch(() => props.modelValue, async (isOpen) => {
-  if (isOpen) {
-    await loadTags()
-    localSelectedTags.value = [...props.selectedTags]
-    expandPanelsWithSelections()
+watch(
+  () => props.modelValue,
+  async isOpen => {
+    if (isOpen) {
+      await loadTags()
+      localSelectedTags.value = [...props.selectedTags]
+      expandPanelsWithSelections()
+    }
   }
-})
+)
 
 onMounted(async () => {
   if (props.modelValue) {
@@ -285,7 +292,6 @@ const tagGroups = computed(() => {
   return configStore.allTags.filter(tag => tag.groups?.length === 0)
 })
 
-
 const filteredTagGroups = computed(() => {
   if (!searchQuery.value) {
     return tagGroups.value
@@ -306,9 +312,8 @@ const filteredTagGroups = computed(() => {
 function getGroupTags(group: TagGroup): ConfigTag[] {
   if (!group.id) return []
 
-  const tags = configStore.allTags.filter(tag =>
-    tag.groups?.length > 0 &&
-    tag.groups.some(g => g.id === group.id)
+  const tags = configStore.allTags.filter(
+    tag => tag.groups?.length > 0 && tag.groups.some(g => g.id === group.id)
   )
 
   if (searchQuery.value) {
@@ -321,9 +326,8 @@ function getGroupTags(group: TagGroup): ConfigTag[] {
 
 function getGroupSelectionCount(group: TagGroup): number {
   const groupTags = getGroupTags(group)
-  return groupTags.filter(tag =>
-    localSelectedTags.value.some(selected => selected.id === tag.id)
-  ).length
+  return groupTags.filter(tag => localSelectedTags.value.some(selected => selected.id === tag.id))
+    .length
 }
 
 function isSelected(tag: ConfigTag): boolean {
@@ -339,14 +343,14 @@ function toggleTag(tag: ConfigTag) {
     localSelectedTags.value.push({
       id: tag.id,
       name: tag.name,
-      color: tag.color
+      color: tag.color,
     })
   }
 }
 
 function deselectTag(tag: Tag) {
-  const index = localSelectedTags.value.findIndex(selected =>
-    selected.id === tag.id || selected.name === tag.name
+  const index = localSelectedTags.value.findIndex(
+    selected => selected.id === tag.id || selected.name === tag.name
   )
 
   if (index >= 0) {

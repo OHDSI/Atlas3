@@ -28,12 +28,16 @@
       </div>
       <div class="path-stats__persons">
         {{ stats.summary.persons.toLocaleString() }}
-        <span class="path-stats__persons-label">{{ t('pathway.workbench.persons', 'persons').value }}</span>
+        <span class="path-stats__persons-label">{{
+          t('pathway.workbench.persons', 'persons').value
+        }}</span>
       </div>
       <div class="path-stats__sub">
-        {{ stats.summary.pctOfCohort.toFixed(1) }}% {{ t('pathway.workbench.ofCohort', 'of cohort').value }}
+        {{ stats.summary.pctOfCohort.toFixed(1) }}%
+        {{ t('pathway.workbench.ofCohort', 'of cohort').value }}
         ·
-        {{ stats.summary.pctOfPathways.toFixed(1) }}% {{ t('pathway.workbench.ofPathways', 'of pathways').value }}
+        {{ stats.summary.pctOfPathways.toFixed(1) }}%
+        {{ t('pathway.workbench.ofPathways', 'of pathways').value }}
       </div>
     </div>
 
@@ -101,8 +105,14 @@
         class="path-stats__stat-row"
         data-testid="path-stat-row"
       >
-        <span>{{ t('pathway.workbench.continuedPastLast', 'Continued past last step').value }}</span>
-        <span class="path-stats__stat-v">{{ stats.stats.continuedPastLastStep === null ? '—' : stats.stats.continuedPastLastStep.toLocaleString() }}</span>
+        <span>{{
+          t('pathway.workbench.continuedPastLast', 'Continued past last step').value
+        }}</span>
+        <span class="path-stats__stat-v">{{
+          stats.stats.continuedPastLastStep === null
+            ? '—'
+            : stats.stats.continuedPastLastStep.toLocaleString()
+        }}</span>
       </div>
     </div>
   </div>
@@ -151,10 +161,25 @@ function formatDays(value: number | null): string {
   border-radius: 2px;
   margin-right: 4px;
 }
-.path-stats__arrow { color: rgba(var(--v-theme-on-surface), 0.4); }
-.path-stats__persons { font-size: 18px; font-weight: 600; line-height: 1.1; }
-.path-stats__persons-label { font-size: 11px; font-weight: 500; color: rgba(var(--v-theme-orange), 0.85); margin-left: 4px; }
-.path-stats__sub { font-size: 11px; color: rgba(var(--v-theme-orange), 0.85); margin-top: 4px; }
+.path-stats__arrow {
+  color: rgba(var(--v-theme-on-surface), 0.4);
+}
+.path-stats__persons {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.path-stats__persons-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(var(--v-theme-orange), 0.85);
+  margin-left: 4px;
+}
+.path-stats__sub {
+  font-size: 11px;
+  color: rgba(var(--v-theme-orange), 0.85);
+  margin-top: 4px;
+}
 
 .path-stats__section-label {
   font-size: 10px;
@@ -165,8 +190,13 @@ function formatDays(value: number | null): string {
   margin: 12px 0 6px;
 }
 
-.path-stats__steps { background: transparent; padding: 0; }
-.path-stats__step { min-height: 32px; }
+.path-stats__steps {
+  background: transparent;
+  padding: 0;
+}
+.path-stats__step {
+  min-height: 32px;
+}
 .path-stats__step-idx {
   width: 18px;
   height: 18px;
@@ -203,5 +233,8 @@ function formatDays(value: number | null): string {
   font-size: 12px;
   color: rgba(var(--v-theme-on-surface), 0.78);
 }
-.path-stats__stat-v { font-weight: 600; color: rgb(var(--v-theme-on-surface)); }
+.path-stats__stat-v {
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+}
 </style>

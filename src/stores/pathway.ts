@@ -1,7 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Pathway, PathwayCohortRef, PathwayDesign } from '@/models/pathway.types'
-import { PATHWAY_DEFAULTS, STORAGE_KEY_PATHWAY_DRAFT, PATHWAY_AUTO_SAVE_INTERVAL_MS } from '@/models/pathway.types'
+import {
+  PATHWAY_DEFAULTS,
+  STORAGE_KEY_PATHWAY_DRAFT,
+  PATHWAY_AUTO_SAVE_INTERVAL_MS,
+} from '@/models/pathway.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
 import { getPathway, assignPathwayTag, unassignPathwayTag } from '@/services/webapi'
 import type { Tag } from '@/models/webapi.types'
@@ -51,8 +55,12 @@ export const usePathwayStore = defineStore('pathway', () => {
     isReadOnly.value = false
   }
 
-  function markDirty() { isDirty.value = true }
-  function markClean() { isDirty.value = false }
+  function markDirty() {
+    isDirty.value = true
+  }
+  function markClean() {
+    isDirty.value = false
+  }
 
   // `updateDesign` writes the configurable settings sub-shape onto the
   // flat Pathway object (the WebAPI no longer wraps these in a `design`
@@ -78,14 +86,16 @@ export const usePathwayStore = defineStore('pathway', () => {
 
   function removeTargetCohort(id: number) {
     if (!currentPathway.value) return
-    currentPathway.value.targetCohorts =
-      currentPathway.value.targetCohorts.filter(c => c.id !== id)
+    currentPathway.value.targetCohorts = currentPathway.value.targetCohorts.filter(c => c.id !== id)
     markDirty()
   }
 
   function renameTargetCohort(id: number, name: string) {
     const c = currentPathway.value?.targetCohorts.find(x => x.id === id)
-    if (c) { c.name = name; markDirty() }
+    if (c) {
+      c.name = name
+      markDirty()
+    }
   }
 
   function addEventCohort(refToAdd: PathwayCohortRef) {
@@ -97,14 +107,16 @@ export const usePathwayStore = defineStore('pathway', () => {
 
   function removeEventCohort(id: number) {
     if (!currentPathway.value) return
-    currentPathway.value.eventCohorts =
-      currentPathway.value.eventCohorts.filter(c => c.id !== id)
+    currentPathway.value.eventCohorts = currentPathway.value.eventCohorts.filter(c => c.id !== id)
     markDirty()
   }
 
   function renameEventCohort(id: number, name: string) {
     const c = currentPathway.value?.eventCohorts.find(x => x.id === id)
-    if (c) { c.name = name; markDirty() }
+    if (c) {
+      c.name = name
+      markDirty()
+    }
   }
 
   async function loadPathway(id: number): Promise<boolean> {
@@ -142,10 +154,13 @@ export const usePathwayStore = defineStore('pathway', () => {
   function saveToDraft() {
     if (!currentPathway.value) return
     try {
-      sessionStorage.setItem(STORAGE_KEY_PATHWAY_DRAFT, JSON.stringify({
-        pathway: currentPathway.value,
-        timestamp: new Date().toISOString(),
-      }))
+      sessionStorage.setItem(
+        STORAGE_KEY_PATHWAY_DRAFT,
+        JSON.stringify({
+          pathway: currentPathway.value,
+          timestamp: new Date().toISOString(),
+        })
+      )
       lastAutoSave.value = new Date()
     } catch (err) {
       logger.error('Pathway', 'saveToDraft failed', err)
@@ -167,8 +182,11 @@ export const usePathwayStore = defineStore('pathway', () => {
   }
 
   function clearDraft() {
-    try { sessionStorage.removeItem(STORAGE_KEY_PATHWAY_DRAFT) }
-    catch (err) { logger.error('Pathway', 'clearDraft failed', err) }
+    try {
+      sessionStorage.removeItem(STORAGE_KEY_PATHWAY_DRAFT)
+    } catch (err) {
+      logger.error('Pathway', 'clearDraft failed', err)
+    }
   }
 
   async function validatePathway() {
@@ -240,21 +258,21 @@ export const usePathwayStore = defineStore('pathway', () => {
     for (const t of toRemove) await removeTag(t.id!)
   }
 
-  const canSave = computed(() =>
-    isDirty.value &&
-    !hasErrors.value &&
-    !isPreviewMode.value
-  )
+  const canSave = computed(() => isDirty.value && !hasErrors.value && !isPreviewMode.value)
 
-  const canGenerate = computed(() =>
-    !isDirty.value &&
-    !hasErrors.value &&
-    currentPathway.value?.id !== undefined &&
-    !isPreviewMode.value
+  const canGenerate = computed(
+    () =>
+      !isDirty.value &&
+      !hasErrors.value &&
+      currentPathway.value?.id !== undefined &&
+      !isPreviewMode.value
   )
 
   function stopAutoSave() {
-    if (autoSaveTimer) { clearInterval(autoSaveTimer); autoSaveTimer = null }
+    if (autoSaveTimer) {
+      clearInterval(autoSaveTimer)
+      autoSaveTimer = null
+    }
   }
 
   function startAutoSave() {
@@ -265,16 +283,39 @@ export const usePathwayStore = defineStore('pathway', () => {
   }
 
   return {
-    currentPathway, isDirty, lastAutoSave, previewVersion,
-    validationErrors, isReadOnly,
-    isPreviewMode, hasErrors,
-    setPathway, createNewPathway, markDirty, markClean,
-    updateDesign, updateMeta,
-    addTargetCohort, removeTargetCohort, renameTargetCohort,
-    addEventCohort, removeEventCohort, renameEventCohort,
-    loadPathway, loadVersionPreview, clearPreviewVersion,
-    saveToDraft, restoreFromDraft, clearDraft, startAutoSave, stopAutoSave,
-    validatePathway, canSave, canGenerate,
-    addTag, removeTag, syncTags,
+    currentPathway,
+    isDirty,
+    lastAutoSave,
+    previewVersion,
+    validationErrors,
+    isReadOnly,
+    isPreviewMode,
+    hasErrors,
+    setPathway,
+    createNewPathway,
+    markDirty,
+    markClean,
+    updateDesign,
+    updateMeta,
+    addTargetCohort,
+    removeTargetCohort,
+    renameTargetCohort,
+    addEventCohort,
+    removeEventCohort,
+    renameEventCohort,
+    loadPathway,
+    loadVersionPreview,
+    clearPreviewVersion,
+    saveToDraft,
+    restoreFromDraft,
+    clearDraft,
+    startAutoSave,
+    stopAutoSave,
+    validatePathway,
+    canSave,
+    canGenerate,
+    addTag,
+    removeTag,
+    syncTags,
   }
 })

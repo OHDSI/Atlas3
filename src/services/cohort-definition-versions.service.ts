@@ -34,7 +34,11 @@ export async function getVersions(cohortDefinitionId: number): Promise<Version[]
 
     return parsed.data
   } catch (error) {
-    logger.error('CohortDefinitionVersionsService', `Failed to fetch versions for cohort definition ${cohortDefinitionId}`, error)
+    logger.error(
+      'CohortDefinitionVersionsService',
+      `Failed to fetch versions for cohort definition ${cohortDefinitionId}`,
+      error
+    )
     throw error
   }
 }
@@ -57,7 +61,11 @@ export async function getVersion(
     const parsed = versionedAssetSchema(cohortDefinitionSchema).safeParse(data)
 
     if (!parsed.success) {
-      logger.error('CohortDefinitionVersionsService', 'Versioned asset validation error', parsed.error)
+      logger.error(
+        'CohortDefinitionVersionsService',
+        'Versioned asset validation error',
+        parsed.error
+      )
       throw new Error('Failed to validate version data')
     }
 
@@ -129,7 +137,11 @@ export async function copyVersion(
     const parsed = cohortDefinitionSchema.safeParse(data)
 
     if (!parsed.success) {
-      logger.error('CohortDefinitionVersionsService', 'Cohort definition validation error', parsed.error)
+      logger.error(
+        'CohortDefinitionVersionsService',
+        'Cohort definition validation error',
+        parsed.error
+      )
       throw new Error('Failed to validate created cohort definition')
     }
 

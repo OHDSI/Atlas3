@@ -10,7 +10,7 @@
     <template #prepend>
       <v-icon>{{ isExpiringSoon ? 'mdi-alert' : 'mdi-information' }}</v-icon>
     </template>
-    
+
     <div>
       <strong v-if="isExpiringSoon">{{ t('auth.sessionExpiringSoon') }}</strong>
       <strong v-else>{{ t('auth.sessionActive') }}</strong>
@@ -18,7 +18,7 @@
         {{ statusMessage }}
       </p>
     </div>
-    
+
     <template
       v-if="isExpiringSoon"
       #append
@@ -64,9 +64,9 @@ const showWarning = computed(() => {
 
 const statusMessage = computed(() => {
   if (!tokenExpirationDate.value) return t('auth.tokenInfoNotAvailable')
-  
+
   const minutesRemaining = Math.floor(timeRemaining.value / 60000)
-  
+
   if (minutesRemaining <= 0) {
     return t('auth.sessionExpired')
   } else if (minutesRemaining <= 5) {
@@ -87,7 +87,7 @@ function updateTimeRemaining() {
     timeRemaining.value = 0
     return
   }
-  
+
   const now = new Date().getTime()
   const expiration = new Date(tokenExpirationDate.value).getTime()
   timeRemaining.value = Math.max(0, expiration - now)

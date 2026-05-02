@@ -5,11 +5,7 @@
 
 export type CardinalityType = 'AT_LEAST' | 'EXACTLY' | 'AT_MOST'
 
-export type CountingMethod =
-  | 'ALL'
-  | 'DISTINCT_CONCEPT'
-  | 'DISTINCT_START_DATE'
-  | 'DISTINCT_VISIT'
+export type CountingMethod = 'ALL' | 'DISTINCT_CONCEPT' | 'DISTINCT_START_DATE' | 'DISTINCT_VISIT'
 
 export interface Cardinality {
   type: CardinalityType
@@ -151,12 +147,7 @@ export interface UserDefinedPeriodAttribute {
 }
 
 // Attribute keys
-export type NumericAttributeKey =
-  | 'age'
-  | 'valueAsNumber'
-  | 'visitLength'
-  | 'eraLength'
-  | 'quantity'
+export type NumericAttributeKey = 'age' | 'valueAsNumber' | 'visitLength' | 'eraLength' | 'quantity'
 
 /**
  * Identifier for a concept-typed attribute. Always camelCase; the canonical list

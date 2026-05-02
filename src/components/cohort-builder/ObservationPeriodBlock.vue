@@ -40,10 +40,16 @@ const emit = defineEmits<{
 }>()
 
 function updatePrior(value: string) {
-  emit('update:modelValue', { priorDays: parseInt(value), postDays: props.modelValue?.postDays || 0 })
+  emit('update:modelValue', {
+    priorDays: parseInt(value),
+    postDays: props.modelValue?.postDays || 0,
+  })
 }
 
 function updatePost(value: string) {
-  emit('update:modelValue', { priorDays: props.modelValue?.priorDays || 0, postDays: parseInt(value) })
+  emit('update:modelValue', {
+    priorDays: props.modelValue?.priorDays || 0,
+    postDays: parseInt(value),
+  })
 }
 </script>

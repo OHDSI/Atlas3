@@ -26,17 +26,11 @@ const characterizationDesignSchema = z.any()
  */
 export async function getVersions(characterizationId: number): Promise<Version[]> {
   try {
-    const data = await httpGet<unknown>(
-      `/cohort-characterization/${characterizationId}/version/`
-    )
+    const data = await httpGet<unknown>(`/cohort-characterization/${characterizationId}/version/`)
     const parsed = versionArraySchema.safeParse(data)
 
     if (!parsed.success) {
-      logger.error(
-        'CharacterizationVersionsService',
-        'Version list validation error',
-        parsed.error
-      )
+      logger.error('CharacterizationVersionsService', 'Version list validation error', parsed.error)
       throw new Error('Failed to validate version data')
     }
 
@@ -111,11 +105,7 @@ export async function updateVersion(
     const parsed = versionSchema.safeParse(data)
 
     if (!parsed.success) {
-      logger.error(
-        'CharacterizationVersionsService',
-        'Version validation error',
-        parsed.error
-      )
+      logger.error('CharacterizationVersionsService', 'Version validation error', parsed.error)
       throw new Error('Failed to validate updated version data')
     }
 

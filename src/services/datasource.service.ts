@@ -12,13 +12,13 @@ import {
   type DashboardAPIResponse,
   type ClinicalDomainAPIResponse,
   type PrevalenceData,
-  type ReportType
+  type ReportType,
 } from '@/models/datasource.types'
-import { 
-  transformDashboardReport, 
+import {
+  transformDashboardReport,
   transformClinicalDomainReport,
   transformDataDensityReport,
-  transformPersonReport
+  transformPersonReport,
 } from '@/utils/datasource-formatters'
 
 const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
@@ -82,9 +82,9 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
         headers: {
           'Content-Type': 'application/json',
           ...authHeaders,
-          ...options?.headers
+          ...options?.headers,
         },
-        signal
+        signal,
       })
 
       if (!response.ok) {
@@ -93,7 +93,10 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
 
         if (isRetryableError(status) && attempt < MAX_RETRY_ATTEMPTS - 1) {
           const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-          logger.warn('DataSource', `Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`)
+          logger.warn(
+            'DataSource',
+            `Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`
+          )
           await sleep(delayMs)
           continue
         }
@@ -115,12 +118,15 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
         logger.debug('DataSource', 'Request cancelled', endpoint)
         throw error
       }
-      
+
       lastError = error instanceof Error ? error : new Error('Unknown error')
-      
+
       if (attempt < MAX_RETRY_ATTEMPTS - 1) {
         const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt)
-        logger.warn('DataSource', `Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`)
+        logger.warn(
+          'DataSource',
+          `Retrying ${endpoint} after ${delayMs}ms (attempt ${attempt + 1}/${MAX_RETRY_ATTEMPTS})`
+        )
         await sleep(delayMs)
         continue
       }
@@ -194,7 +200,9 @@ export async function getDataDensityReport(sourceKey: string): Promise<DataDensi
     logger.debug('DataSource', `Fetching data density report for ${sourceKey}`)
     const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/datadensity`)
 
-    const transformed = transformDataDensityReport(response as Parameters<typeof transformDataDensityReport>[0])
+    const transformed = transformDataDensityReport(
+      response as Parameters<typeof transformDataDensityReport>[0]
+    )
 
     logger.debug('DataSource', `Successfully fetched data density report for ${sourceKey}`)
     return transformed
@@ -205,14 +213,16 @@ export async function getDataDensityReport(sourceKey: string): Promise<DataDensi
 }
 
 /**
- * Get Person Report  
+ * Get Person Report
  */
 export async function getPersonReport(sourceKey: string): Promise<PersonReport> {
   try {
     logger.debug('DataSource', `Fetching person report for ${sourceKey}`)
     const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/person`)
 
-    const transformed = transformPersonReport(response as Parameters<typeof transformPersonReport>[0])
+    const transformed = transformPersonReport(
+      response as Parameters<typeof transformPersonReport>[0]
+    )
 
     logger.debug('DataSource', `Successfully fetched person report for ${sourceKey}`)
     return transformed
@@ -232,14 +242,20 @@ export async function getClinicalDomainReport(
   try {
     const endpoint = getReportEndpoint(reportType)
     logger.debug('DataSource', `Fetching ${reportType} report for ${sourceKey}`)
-    
-    const response = await fetchJSON<ClinicalDomainAPIResponse[]>(`/cdmresults/${sourceKey}/${endpoint}`)
+
+    const response = await fetchJSON<ClinicalDomainAPIResponse[]>(
+      `/cdmresults/${sourceKey}/${endpoint}`
+    )
     const transformed = transformClinicalDomainReport(response, reportType)
-    
+
     logger.debug('DataSource', `Successfully fetched ${reportType} report for ${sourceKey}`)
     return transformed
   } catch (error) {
-    logger.error('DataSource', 'Failed to fetch clinical domain report', { sourceKey, reportType, error })
+    logger.error('DataSource', 'Failed to fetch clinical domain report', {
+      sourceKey,
+      reportType,
+      error,
+    })
     throw new Error(`Unable to load ${reportType} report. Please try again.`)
   }
 }
@@ -248,13 +264,17 @@ export async function getClinicalDomainReport(
  * Get Observation Period Report
  * Specialized method for observation period data
  */
-export async function getObservationPeriodReport(sourceKey: string): Promise<import('@/models/datasource.types').ObservationPeriodReport> {
+export async function getObservationPeriodReport(
+  sourceKey: string
+): Promise<import('@/models/datasource.types').ObservationPeriodReport> {
   try {
     logger.debug('DataSource', `Fetching observation period report for ${sourceKey}`)
     const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/observationPeriod`)
 
     const { transformObservationPeriodReport } = await import('@/utils/datasource-formatters')
-    const transformed = transformObservationPeriodReport(response as Parameters<typeof transformObservationPeriodReport>[0])
+    const transformed = transformObservationPeriodReport(
+      response as Parameters<typeof transformObservationPeriodReport>[0]
+    )
 
     logger.debug('DataSource', `Successfully fetched observation period report for ${sourceKey}`)
     return transformed
@@ -268,7 +288,9 @@ export async function getObservationPeriodReport(sourceKey: string): Promise<imp
  * Get Death Report
  * Specialized method for death data
  */
-export async function getDeathReport(sourceKey: string): Promise<import('@/models/datasource.types').DeathReport> {
+export async function getDeathReport(
+  sourceKey: string
+): Promise<import('@/models/datasource.types').DeathReport> {
   try {
     logger.debug('DataSource', `Fetching death report for ${sourceKey}`)
     const response = await fetchJSON<unknown>(`/cdmresults/${sourceKey}/death`)
@@ -301,8 +323,8 @@ function getReportEndpoint(reportType: ReportType): string {
     measurement: 'measurement',
     observation: 'observation',
     observationPeriod: 'observationPeriod',
-    death: 'death'
+    death: 'death',
   }
-  
+
   return mapping[reportType] || reportType
 }

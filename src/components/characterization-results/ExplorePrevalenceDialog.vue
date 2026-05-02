@@ -113,9 +113,13 @@ const error = ref<string | null>(null)
 const rows = ref<Record<string, unknown>[]>([])
 
 const titleText = computed<string>(() =>
-  tv('cc.viewEdit.executions.prevalenceStatConverter.exploringConceptHierarchyFor', 'Explore covariate: {name}', {
-    name: props.covariateName ?? '',
-  })
+  tv(
+    'cc.viewEdit.executions.prevalenceStatConverter.exploringConceptHierarchyFor',
+    'Explore covariate: {name}',
+    {
+      name: props.covariateName ?? '',
+    }
+  )
 )
 
 const headers = computed(() => {
@@ -125,7 +129,7 @@ const headers = computed(() => {
       keys.add(k)
     }
   }
-  return Array.from(keys).map((key) => ({
+  return Array.from(keys).map(key => ({
     title: key,
     key,
   }))

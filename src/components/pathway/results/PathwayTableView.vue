@@ -167,18 +167,17 @@ const group = computed(() =>
   props.results.pathwayGroups.find(g => g.targetCohortId === props.targetCohortId)
 )
 
-const allRows = computed(() => group.value
-  ? toAllPathwaysRows(group.value, props.results.eventCodes, props.design.maxDepth)
-  : []
+const allRows = computed(() =>
+  group.value ? toAllPathwaysRows(group.value, props.results.eventCodes, props.design.maxDepth) : []
 )
-const rankRows = computed(() => group.value
-  ? toCountsByRankRows(group.value, props.results.eventCodes) : []
+const rankRows = computed(() =>
+  group.value ? toCountsByRankRows(group.value, props.results.eventCodes) : []
 )
-const cohortCountRows = computed(() => group.value
-  ? toEventCohortCountRows(group.value, props.results.eventCodes) : []
+const cohortCountRows = computed(() =>
+  group.value ? toEventCohortCountRows(group.value, props.results.eventCodes) : []
 )
-const distinctRows = computed(() => group.value
-  ? toDistinctEventCountRows(group.value, props.results.eventCodes) : []
+const distinctRows = computed(() =>
+  group.value ? toDistinctEventCountRows(group.value, props.results.eventCodes) : []
 )
 
 function headerOf(rows: ReadonlyArray<Record<string, string | number>>): string[] {
@@ -191,8 +190,20 @@ function exportCsv(rows: Array<Record<string, string | number>>, name: string): 
 </script>
 
 <style scoped>
-.pathway-tables section { margin-bottom: 24px; }
-.pathway-tables table { width: 100%; border-collapse: collapse; }
-.pathway-tables th, .pathway-tables td { padding: 4px 8px; border-bottom: 1px solid #eee; text-align: left; }
-.export-btn { margin-bottom: 8px; }
+.pathway-tables section {
+  margin-bottom: 24px;
+}
+.pathway-tables table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.pathway-tables th,
+.pathway-tables td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+.export-btn {
+  margin-bottom: 8px;
+}
 </style>

@@ -46,7 +46,7 @@ export interface EntityAccessResult {
 
 export function useEntityAccess(
   kind: EntityAccessKind,
-  id: MaybeRefOrGetter<string | number | null | undefined>,
+  id: MaybeRefOrGetter<string | number | null | undefined>
 ): EntityAccessResult {
   const authStore = useAuthStore()
   const resource = RESOURCE_BY_KIND[kind]
@@ -125,9 +125,10 @@ export function useEntityAccessFor(kind: EntityAccessKind) {
  * Source-specific access. Sources have a different shape (no ownership; flat
  * access type list) and a different permission resource.
  */
-export function useSourceAccess(
-  sourceKey: MaybeRefOrGetter<string | null | undefined>,
-): { canRead: ComputedRef<boolean>; canWrite: ComputedRef<boolean> } {
+export function useSourceAccess(sourceKey: MaybeRefOrGetter<string | null | undefined>): {
+  canRead: ComputedRef<boolean>
+  canWrite: ComputedRef<boolean>
+} {
   const authStore = useAuthStore()
 
   const grant = computed<string[] | undefined>(() => {

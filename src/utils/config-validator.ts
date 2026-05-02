@@ -45,9 +45,7 @@ export function validateAtlasConfig(config: unknown): ValidationResult {
     const parsed = AtlasConfigSchema.parse(config)
 
     // Step 2: Validate each filter type individually (partial validation)
-    for (const [filterType, filterConfig] of Object.entries(
-      parsed.criteriaTypes
-    )) {
+    for (const [filterType, filterConfig] of Object.entries(parsed.criteriaTypes)) {
       try {
         FilterTypeConfigSchema.parse(filterConfig)
 
@@ -86,7 +84,7 @@ export function validateAtlasConfig(config: unknown): ValidationResult {
               filterType,
               attributeId: attr.id,
               message: `Invalid attribute configuration: ${zodError.errors
-                .map((e) => e.message)
+                .map(e => e.message)
                 .join(', ')}`,
               code: 'INVALID_ATTRIBUTE',
               details: zodError.errors,
@@ -104,7 +102,7 @@ export function validateAtlasConfig(config: unknown): ValidationResult {
         result.errors.push({
           filterType,
           message: `Invalid filter type configuration: ${zodError.errors
-            .map((e) => e.message)
+            .map(e => e.message)
             .join(', ')}`,
           code: 'INVALID_FILTER_TYPE',
           details: zodError.errors,
@@ -124,7 +122,7 @@ export function validateAtlasConfig(config: unknown): ValidationResult {
     result.valid = false
     result.errors.push({
       message: `Configuration structure is invalid: ${zodError.errors
-        .map((e) => `${e.path.join('.')}: ${e.message}`)
+        .map(e => `${e.path.join('.')}: ${e.message}`)
         .join(', ')}`,
       code: 'INVALID_SCHEMA',
       details: zodError.errors,
@@ -142,10 +140,7 @@ export function validateAtlasConfig(config: unknown): ValidationResult {
  * - excludeFromSections references valid section IDs
  * - Section excludeTypes reference valid filter types
  */
-function validateCrossReferences(
-  config: AtlasConfig,
-  result: ValidationResult
-): void {
+function validateCrossReferences(config: AtlasConfig, result: ValidationResult): void {
   const criteriaTypeKeys = Object.keys(config.criteriaTypes)
   const attributeMappingKeys = Object.keys(config.attributeMapping)
 
@@ -157,7 +152,7 @@ function validateCrossReferences(
         id,
       }))
 
-  const sectionIds = sections.map((s) => s.id)
+  const sectionIds = sections.map(s => s.id)
 
   // Check for attributeMapping keys that don't have corresponding criteriaTypes
   for (const key of attributeMappingKeys) {
@@ -182,9 +177,7 @@ function validateCrossReferences(
   }
 
   // Validate excludeFromSections references
-  for (const [filterType, attributes] of Object.entries(
-    config.attributeMapping
-  )) {
+  for (const [filterType, attributes] of Object.entries(config.attributeMapping)) {
     for (const attr of attributes) {
       if (attr.excludeFromSections) {
         for (const sectionId of attr.excludeFromSections) {
@@ -223,10 +216,7 @@ function validateCrossReferences(
  * @param config - Filter type configuration
  * @returns Array of validation errors (empty if valid)
  */
-export function validateFilterType(
-  filterType: string,
-  config: unknown
-): ValidationError[] {
+export function validateFilterType(filterType: string, config: unknown): ValidationError[] {
   const errors: ValidationError[] = []
 
   try {
@@ -236,7 +226,7 @@ export function validateFilterType(
     errors.push({
       filterType,
       message: `Invalid filter type configuration: ${zodError.errors
-        .map((e) => e.message)
+        .map(e => e.message)
         .join(', ')}`,
       code: 'INVALID_FILTER_TYPE',
       details: zodError.errors,
@@ -253,10 +243,7 @@ export function validateFilterType(
  * @param attribute - Attribute configuration
  * @returns Array of validation errors (empty if valid)
  */
-export function validateAttribute(
-  filterType: string,
-  attribute: unknown
-): ValidationError[] {
+export function validateAttribute(filterType: string, attribute: unknown): ValidationError[] {
   const errors: ValidationError[] = []
 
   try {
@@ -272,9 +259,7 @@ export function validateAttribute(
     errors.push({
       filterType,
       attributeId: (attribute as { id?: string }).id,
-      message: `Invalid attribute configuration: ${zodError.errors
-        .map((e) => e.message)
-        .join(', ')}`,
+      message: `Invalid attribute configuration: ${zodError.errors.map(e => e.message).join(', ')}`,
       code: 'INVALID_ATTRIBUTE',
       details: zodError.errors,
     })
@@ -293,9 +278,7 @@ export function isPartiallyValid(result: ValidationResult): boolean {
   // Configuration is partially valid if:
   // 1. Overall structure is valid (no INVALID_SCHEMA errors)
   // 2. At least one filter type is valid
-  const hasStructuralError = result.errors.some(
-    (e) => e.code === 'INVALID_SCHEMA'
-  )
+  const hasStructuralError = result.errors.some(e => e.code === 'INVALID_SCHEMA')
   const hasValidFilters = result.validFilterTypes.length > 0
 
   return !hasStructuralError && hasValidFilters
@@ -321,7 +304,7 @@ export function formatValidationSummary(result: ValidationResult): string {
 
   if (result.errors.length > 0) {
     lines.push(`\n❌ Errors (${result.errors.length}):`)
-    result.errors.slice(0, 5).forEach((error) => {
+    result.errors.slice(0, 5).forEach(error => {
       const location = error.filterType
         ? `[${error.filterType}${error.attributeId ? `.${error.attributeId}` : ''}]`
         : '[global]'
@@ -334,7 +317,7 @@ export function formatValidationSummary(result: ValidationResult): string {
 
   if (result.warnings.length > 0) {
     lines.push(`\n⚠️  Warnings (${result.warnings.length}):`)
-    result.warnings.slice(0, 3).forEach((warning) => {
+    result.warnings.slice(0, 3).forEach(warning => {
       const location = warning.filterType
         ? `[${warning.filterType}${warning.attributeId ? `.${warning.attributeId}` : ''}]`
         : '[global]'

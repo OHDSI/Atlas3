@@ -5,7 +5,9 @@
       v-if="conceptSets.length === 0"
       class="muted"
     >
-      {{ t('cohortDefinitions.noConceptSets', 'This incidence rate has no concept sets attached.') }}
+      {{
+        t('cohortDefinitions.noConceptSets', 'This incidence rate has no concept sets attached.')
+      }}
     </v-card-text>
     <v-table
       v-else
@@ -47,11 +49,15 @@ import { useIncidenceRateStore } from '@/stores/incidence-rate'
 const { t } = useI18n()
 const store = useIncidenceRateStore()
 
-const conceptSets = computed(() =>
-  (store.currentIR?.expression.ConceptSets ?? []) as Array<{ id?: number | string; name: string }>
+const conceptSets = computed(
+  () =>
+    (store.currentIR?.expression.ConceptSets ?? []) as Array<{ id?: number | string; name: string }>
 )
 </script>
 
 <style scoped>
-.muted { color: #888; padding: 16px; }
+.muted {
+  color: #888;
+  padding: 16px;
+}
 </style>

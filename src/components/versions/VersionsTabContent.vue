@@ -96,9 +96,11 @@ const snackbar = reactive({
 
 // Get appropriate API service for copy
 const copyVersionAPI =
-  props.config.assetType === 'cohortdefinition' ? copyCohortVersion :
-  props.config.assetType === 'pathway-analysis' ? copyPathwayVersion :
-  copyConceptSetVersion
+  props.config.assetType === 'cohortdefinition'
+    ? copyCohortVersion
+    : props.config.assetType === 'pathway-analysis'
+      ? copyPathwayVersion
+      : copyConceptSetVersion
 
 // Load versions on mount
 onMounted(async () => {

@@ -26,7 +26,9 @@
             <v-select
               v-model="fixedDurationDateField"
               :items="dateFieldOptions"
-              :label="t('components.dateOffsetStrategy.dateOffsetStrategyText_3', 'Date Field').value"
+              :label="
+                t('components.dateOffsetStrategy.dateOffsetStrategyText_3', 'Date Field').value
+              "
               :disabled="disabled"
               variant="outlined"
               density="compact"
@@ -36,7 +38,9 @@
             <v-text-field
               v-model.number="fixedDurationOffset"
               type="number"
-              :label="t('components.dateOffsetStrategy.dateOffsetStrategyText_4', 'Offset (days)').value"
+              :label="
+                t('components.dateOffsetStrategy.dateOffsetStrategyText_4', 'Offset (days)').value
+              "
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -79,7 +83,12 @@
             <v-text-field
               v-model.number="persistenceWindow"
               type="number"
-              :label="t('components.customEraStrategy.customEraStrategyText_4', 'Persistence Window (days)').value"
+              :label="
+                t(
+                  'components.customEraStrategy.customEraStrategyText_4',
+                  'Persistence Window (days)'
+                ).value
+              "
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -95,7 +104,12 @@
                       class="text-medium-emphasis"
                     />
                   </template>
-                  <span>{{ t('components.customEraStrategy.customEraStrategyText_5', 'Maximum gap days between exposures') }}</span>
+                  <span>{{
+                    t(
+                      'components.customEraStrategy.customEraStrategyText_5',
+                      'Maximum gap days between exposures'
+                    )
+                  }}</span>
                 </v-tooltip>
               </template>
             </v-text-field>
@@ -104,7 +118,12 @@
             <v-text-field
               v-model.number="surveillanceWindow"
               type="number"
-              :label="t('components.customEraStrategy.customEraStrategyText_6', 'Surveillance Window (days)').value"
+              :label="
+                t(
+                  'components.customEraStrategy.customEraStrategyText_6',
+                  'Surveillance Window (days)'
+                ).value
+              "
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
@@ -120,7 +139,12 @@
                       class="text-medium-emphasis"
                     />
                   </template>
-                  <span>{{ t('components.customEraStrategy.customEraStrategyText_7', 'Additional days after final exposure before cohort exit') }}</span>
+                  <span>{{
+                    t(
+                      'components.customEraStrategy.customEraStrategyText_7',
+                      'Additional days after final exposure before cohort exit'
+                    )
+                  }}</span>
                 </v-tooltip>
               </template>
             </v-text-field>
@@ -137,7 +161,12 @@
             size="16"
             class="event-persistence__hint-icon"
           />
-          <span>{{ t('exitCriteria.help.missingDaysSupply', 'If days supply is missing, system assumes 1 day per exposure').value }}</span>
+          <span>{{
+            t(
+              'exitCriteria.help.missingDaysSupply',
+              'If days supply is missing, system assumes 1 day per exposure'
+            ).value
+          }}</span>
         </div>
       </div>
     </div>
@@ -180,7 +209,7 @@ const surveillanceWindow = ref(state.drugExposure.surveillanceWindow)
 // Date field options
 const dateFieldOptions = [
   { value: 'START_DATE', title: tv('columns.startDate', 'Start Date') },
-  { value: 'END_DATE', title: tv('columns.endDate', 'End Date') }
+  { value: 'END_DATE', title: tv('columns.endDate', 'End Date') },
 ]
 
 // Selected concept set for drug exposure
@@ -193,11 +222,20 @@ const selectedConceptSet = computed(() => {
 const strategyHelpText = computed(() => {
   switch (selectedStrategy.value) {
     case 'CONTINUOUS_OBSERVATION':
-      return tv('options.endOfContinuousObservation', 'Event persists until observation period ends')
+      return tv(
+        'options.endOfContinuousObservation',
+        'Event persists until observation period ends'
+      )
     case 'FIXED_DURATION':
-      return tv('components.dateOffsetStrategy.dateOffsetStrategyText_2', 'Event persists for a specified number of days from start or end date')
+      return tv(
+        'components.dateOffsetStrategy.dateOffsetStrategyText_2',
+        'Event persists for a specified number of days from start or end date'
+      )
     case 'CONTINUOUS_DRUG':
-      return tv('components.customEraStrategy.customEraStrategyText_2', 'Event persists based on continuous drug exposure with allowable gaps between exposures')
+      return tv(
+        'components.customEraStrategy.customEraStrategyText_2',
+        'Event persists based on continuous drug exposure with allowable gaps between exposures'
+      )
     default:
       return ''
   }
@@ -248,8 +286,11 @@ function validateFields() {
     if (fixedDurationOffset.value === undefined) {
       errors.push({
         field: 'exitCriteria.offset',
-        message: tv('exitCriteria.validation.offsetRequired', 'Offset is required for fixed duration strategy'),
-        severity: 'error'
+        message: tv(
+          'exitCriteria.validation.offsetRequired',
+          'Offset is required for fixed duration strategy'
+        ),
+        severity: 'error',
       })
     }
   }
@@ -258,8 +299,11 @@ function validateFields() {
     if (!drugConceptSetId.value) {
       errors.push({
         field: 'exitCriteria.conceptSet',
-        message: tv('exitCriteria.validation.conceptSetRequired', 'Drug concept set required for this strategy'),
-        severity: 'warning'
+        message: tv(
+          'exitCriteria.validation.conceptSetRequired',
+          'Drug concept set required for this strategy'
+        ),
+        severity: 'warning',
       })
     }
   }
@@ -271,32 +315,45 @@ function validateFields() {
 let _syncingFromProps = false
 
 // Watch for changes and emit updates (but skip if we're syncing from props)
-watch([selectedStrategy, fixedDurationDateField, fixedDurationOffset, drugConceptSetId, persistenceWindow, surveillanceWindow], () => {
-  if (!_syncingFromProps) {
-    emitUpdate()
+watch(
+  [
+    selectedStrategy,
+    fixedDurationDateField,
+    fixedDurationOffset,
+    drugConceptSetId,
+    persistenceWindow,
+    surveillanceWindow,
+  ],
+  () => {
+    if (!_syncingFromProps) {
+      emitUpdate()
+    }
   }
-})
+)
 
 // Watch for external changes - only sync when strategy actually changes to prevent infinite loop
 // This prevents the bidirectional watcher loop that was causing "Maximum recursive updates exceeded"
-watch(() => props.modelValue.strategy, (newStrategy, oldStrategy) => {
-  if (newStrategy !== oldStrategy) {
-    _syncingFromProps = true
-    selectedStrategy.value = newStrategy
+watch(
+  () => props.modelValue.strategy,
+  (newStrategy, oldStrategy) => {
+    if (newStrategy !== oldStrategy) {
+      _syncingFromProps = true
+      selectedStrategy.value = newStrategy
 
-    // Sync strategy-specific fields
-    if (newStrategy === 'FIXED_DURATION') {
-      fixedDurationDateField.value = props.modelValue.dateField || 'START_DATE'
-      fixedDurationOffset.value = props.modelValue.offset || 0
-    } else if (newStrategy === 'CONTINUOUS_DRUG') {
-      drugConceptSetId.value = props.modelValue.conceptSet?.id.toString() || null
-      persistenceWindow.value = props.modelValue.persistenceWindow || 30
-      surveillanceWindow.value = props.modelValue.surveillanceWindow || 7
+      // Sync strategy-specific fields
+      if (newStrategy === 'FIXED_DURATION') {
+        fixedDurationDateField.value = props.modelValue.dateField || 'START_DATE'
+        fixedDurationOffset.value = props.modelValue.offset || 0
+      } else if (newStrategy === 'CONTINUOUS_DRUG') {
+        drugConceptSetId.value = props.modelValue.conceptSet?.id.toString() || null
+        persistenceWindow.value = props.modelValue.persistenceWindow || 30
+        surveillanceWindow.value = props.modelValue.surveillanceWindow || 7
+      }
+
+      _syncingFromProps = false
     }
-
-    _syncingFromProps = false
   }
-})
+)
 </script>
 
 <style scoped>

@@ -97,7 +97,8 @@
           rounded
         />
         <div class="cohorts-view__filtering-text">
-          {{ t('common.filtering', 'Filtering').value }} {{ cohorts.length.toLocaleString() }} {{ t('cohortDefinitions.cohortsLower', 'cohorts').value }}…
+          {{ t('common.filtering', 'Filtering').value }} {{ cohorts.length.toLocaleString() }}
+          {{ t('cohortDefinitions.cohortsLower', 'cohorts').value }}…
         </div>
       </div>
 
@@ -159,7 +160,12 @@
           </v-card-title>
           <v-card-text>
             <p class="cohorts-view__import-hint">
-              {{ t('cohortDefinitions.importHint', 'Paste an Atlas cohort JSON or upload a .json file. The expression is validated before saving.').value }}
+              {{
+                t(
+                  'cohortDefinitions.importHint',
+                  'Paste an Atlas cohort JSON or upload a .json file. The expression is validated before saving.'
+                ).value
+              }}
             </p>
 
             <v-text-field
@@ -241,7 +247,12 @@
           </v-card-title>
           <v-card-text>
             <p class="mb-2">
-              {{ t('cohortDefinitions.cohortDefinitionManager.confirms.delete', 'Delete cohort definition? Warning: deletion can not be undone!') }}
+              {{
+                t(
+                  'cohortDefinitions.cohortDefinitionManager.confirms.delete',
+                  'Delete cohort definition? Warning: deletion can not be undone!'
+                )
+              }}
             </p>
             <p class="mb-2">
               <strong>{{ selectedCohort?.name }}</strong>
@@ -320,11 +331,15 @@
           <div class="cohort-info__header">
             <div class="cohort-info__title-block">
               <div class="cohort-info__eyebrow-row">
-                <span class="text-eyebrow">{{ t('common.cohortDefinition', 'Cohort definition').value }}</span>
+                <span class="text-eyebrow">{{
+                  t('common.cohortDefinition', 'Cohort definition').value
+                }}</span>
                 <span class="cohort-info__accent-rule" />
               </div>
               <h2 class="cohort-info__title">
-                {{ selectedCohort?.name || t('common.cohortInformation', 'Cohort information').value }}
+                {{
+                  selectedCohort?.name || t('common.cohortInformation', 'Cohort information').value
+                }}
               </h2>
             </div>
             <v-btn
@@ -337,7 +352,7 @@
           <v-divider />
           <v-card-text
             v-if="cohortInfoHtml"
-            style="max-height: 600px;"
+            style="max-height: 600px"
             class="cohort-info-content"
           >
             <!-- eslint-disable-next-line vue/no-v-html -- trusted server content -->
@@ -359,7 +374,12 @@
             v-else
             class="text-center pa-6 text-error"
           >
-            {{ t('cs.manager.concept.tabs.recordCounts.failedToLoadData', 'Failed to load cohort information') }}
+            {{
+              t(
+                'cs.manager.concept.tabs.recordCounts.failedToLoadData',
+                'Failed to load cohort information'
+              )
+            }}
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -374,7 +394,12 @@ import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
 import { usePagination } from '@/composables/usePagination'
 import { usePermissions } from '@/composables/usePermissions'
-import { deleteCohort, getCohortDefinition, getCohortPrintFriendly, saveCohortDefinition } from '@/services/webapi'
+import {
+  deleteCohort,
+  getCohortDefinition,
+  getCohortPrintFriendly,
+  saveCohortDefinition,
+} from '@/services/webapi'
 import { logger } from '@/utils/logger'
 import PageShell from '@/components/shared/PageShell.vue'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
@@ -388,25 +413,22 @@ const { t } = useI18n()
 const { hasPermission } = usePermissions()
 const canCreateCohort = computed(() => hasPermission('create:cohort-definition'))
 
-const pageTitle = computed(() =>
-  t('cohortDefinitions.cohortDefinitions', 'Cohort Definitions').value
+const pageTitle = computed(
+  () => t('cohortDefinitions.cohortDefinitions', 'Cohort Definitions').value
 )
-const pageSubtitle = computed(() =>
-  t(
-    'cohortDefinitions.pageSubtitle',
-    'Browse, filter, and manage cohort definitions.'
-  ).value
+const pageSubtitle = computed(
+  () => t('cohortDefinitions.pageSubtitle', 'Browse, filter, and manage cohort definitions.').value
 )
 
 // View mode (tile vs table) — persisted to localStorage so the choice
 // survives across navigations and reloads.
 const VIEW_MODE_KEY = 'cohorts-view-mode'
 type CohortsViewMode = 'tile' | 'table'
-const persistedViewMode = (typeof localStorage !== 'undefined'
-  ? localStorage.getItem(VIEW_MODE_KEY)
-  : null) as CohortsViewMode | null
+const persistedViewMode = (
+  typeof localStorage !== 'undefined' ? localStorage.getItem(VIEW_MODE_KEY) : null
+) as CohortsViewMode | null
 const viewMode = ref<CohortsViewMode>(persistedViewMode === 'table' ? 'table' : 'tile')
-watch(viewMode, (mode) => {
+watch(viewMode, mode => {
   if (typeof localStorage !== 'undefined') localStorage.setItem(VIEW_MODE_KEY, mode)
 })
 
@@ -448,14 +470,8 @@ const {
 // Pagination state management
 const totalItems = computed(() => filteredCohorts.value.length)
 
-const {
-  page,
-  itemsPerPage,
-  itemsPerPageOptions,
-  rangeDisplay,
-  setPage,
-  setItemsPerPage,
-} = usePagination(totalItems)
+const { page, itemsPerPage, itemsPerPageOptions, rangeDisplay, setPage, setItemsPerPage } =
+  usePagination(totalItems)
 
 /**
  * Paginated cohorts (current page slice)
@@ -528,14 +544,17 @@ async function onImportFileSelected(value: File | File[] | null) {
     }
   } catch (err) {
     logger.error('CohortsView', 'Failed to read import file', err)
-    importError.value = t('cohortDefinitions.importFileReadError', 'Failed to read the selected file.').value
+    importError.value = t(
+      'cohortDefinitions.importFileReadError',
+      'Failed to read the selected file.'
+    ).value
   }
 }
 
 const canImport = computed(() => {
-  return importName.value.trim().length > 0
-    && importJson.value.trim().length > 0
-    && !importing.value
+  return (
+    importName.value.trim().length > 0 && importJson.value.trim().length > 0 && !importing.value
+  )
 })
 
 async function confirmImport() {
@@ -544,12 +563,18 @@ async function confirmImport() {
   try {
     parsed = JSON.parse(importJson.value)
   } catch {
-    importError.value = t('cohortDefinitions.importInvalidJson', 'Expression JSON is not valid JSON.').value
+    importError.value = t(
+      'cohortDefinitions.importInvalidJson',
+      'Expression JSON is not valid JSON.'
+    ).value
     return
   }
 
   if (!parsed || typeof parsed !== 'object') {
-    importError.value = t('cohortDefinitions.importInvalidShape', 'Expression must be a JSON object.').value
+    importError.value = t(
+      'cohortDefinitions.importInvalidShape',
+      'Expression must be a JSON object.'
+    ).value
     return
   }
 
@@ -562,7 +587,10 @@ async function confirmImport() {
     })
 
     if (!result || !result.id) {
-      importError.value = t('cohortDefinitions.importFailed', 'Import failed. Check the JSON and try again.').value
+      importError.value = t(
+        'cohortDefinitions.importFailed',
+        'Import failed. Check the JSON and try again.'
+      ).value
       return
     }
 
@@ -571,7 +599,10 @@ async function confirmImport() {
     router.push(`/cohorts/${result.id}`)
   } catch (err) {
     logger.error('CohortsView', 'Failed to import cohort', err)
-    importError.value = t('cohortDefinitions.importFailed', 'Import failed. Check the JSON and try again.').value
+    importError.value = t(
+      'cohortDefinitions.importFailed',
+      'Import failed. Check the JSON and try again.'
+    ).value
   } finally {
     importing.value = false
   }
@@ -762,10 +793,18 @@ onMounted(() => {
   margin: 1.25rem 0 0.5rem;
   color: rgb(var(--v-theme-primary));
 }
-.cohort-info-content :deep(h1) { font-size: 1.25rem; }
-.cohort-info-content :deep(h2) { font-size: 1.1rem; }
-.cohort-info-content :deep(h3) { font-size: 1rem; }
-.cohort-info-content :deep(h4) { font-size: 0.95rem; }
+.cohort-info-content :deep(h1) {
+  font-size: 1.25rem;
+}
+.cohort-info-content :deep(h2) {
+  font-size: 1.1rem;
+}
+.cohort-info-content :deep(h3) {
+  font-size: 1rem;
+}
+.cohort-info-content :deep(h4) {
+  font-size: 0.95rem;
+}
 .cohort-info-content :deep(p),
 .cohort-info-content :deep(li) {
   line-height: 1.6;
@@ -799,7 +838,9 @@ onMounted(() => {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.85em;
 }
-.cohort-info-content :deep(code) { padding: 0.1rem 0.3rem; }
+.cohort-info-content :deep(code) {
+  padding: 0.1rem 0.3rem;
+}
 .cohort-info-content :deep(pre) {
   padding: 0.75rem;
   overflow-x: auto;

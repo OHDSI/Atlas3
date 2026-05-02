@@ -177,9 +177,12 @@ export function useTemporalWindows() {
    */
   function formatReference(startWindow: Window, endWindow: Window): string {
     // Determine the common direction
-    const direction = startWindow.beforeAfter === 'AFTER' && endWindow.beforeAfter === 'AFTER' ? 'days after' :
-                     startWindow.beforeAfter === 'BEFORE' && endWindow.beforeAfter === 'BEFORE' ? 'days before' :
-                     'days' // mixed directions
+    const direction =
+      startWindow.beforeAfter === 'AFTER' && endWindow.beforeAfter === 'AFTER'
+        ? 'days after'
+        : startWindow.beforeAfter === 'BEFORE' && endWindow.beforeAfter === 'BEFORE'
+          ? 'days before'
+          : 'days' // mixed directions
 
     // If both use same reference, show it once
     if (startWindow.referencePoint === endWindow.referencePoint) {

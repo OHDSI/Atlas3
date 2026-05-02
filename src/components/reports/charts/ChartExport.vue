@@ -74,7 +74,7 @@ async function handleExportPNG() {
     const dataURL = props.chartInstance.getDataURL({
       type: 'png',
       pixelRatio: 2, // Higher resolution for better quality
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
     })
 
     // Trigger download

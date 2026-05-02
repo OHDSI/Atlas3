@@ -63,9 +63,7 @@ export async function fetchPermissions(
  * Fetch single permission by ID
  * GET /permission/{permissionId}
  */
-export async function fetchPermissionById(
-  permissionId: number
-): Promise<ApiResult<Permission>> {
+export async function fetchPermissionById(permissionId: number): Promise<ApiResult<Permission>> {
   try {
     const data = await fetchJSON<unknown>(`/permission/${permissionId}`)
     const parsed = PermissionSchema.safeParse(data)

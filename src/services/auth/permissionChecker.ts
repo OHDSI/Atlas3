@@ -13,7 +13,7 @@ export class PermissionChecker {
       const grantedParts = grantedLevels[i]?.split(',') || []
       const reqParts = reqLevels[i]?.split(',') || []
 
-      if (!grantedParts.includes('*') && !reqParts.every((p) => grantedParts.includes(p))) {
+      if (!grantedParts.includes('*') && !reqParts.every(p => grantedParts.includes(p))) {
         return false
       }
     }
@@ -53,11 +53,11 @@ export class PermissionChecker {
   }
 
   hasAnyPermission(required: string[], permissionIdx: PermissionIndex): boolean {
-    return required.some((perm) => this.hasPermission(perm, permissionIdx).granted)
+    return required.some(perm => this.hasPermission(perm, permissionIdx).granted)
   }
 
   hasAllPermissions(required: string[], permissionIdx: PermissionIndex): boolean {
-    return required.every((perm) => this.hasPermission(perm, permissionIdx).granted)
+    return required.every(perm => this.hasPermission(perm, permissionIdx).granted)
   }
 
   buildPermissionIndex(permissions: string[]): PermissionIndex {

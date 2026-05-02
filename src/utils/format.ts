@@ -44,40 +44,31 @@ export function formatDate(
 /**
  * Format date and time according to locale
  */
-export function formatDateTime(
-  value: Date | string | number,
-  locale: LocaleCode = 'en'
-): string {
+export function formatDateTime(value: Date | string | number, locale: LocaleCode = 'en'): string {
   return formatDate(value, locale, {
     dateStyle: 'medium',
-    timeStyle: 'short'
+    timeStyle: 'short',
   })
 }
 
 /**
  * Format date only (no time) according to locale
  */
-export function formatDateOnly(
-  value: Date | string | number,
-  locale: LocaleCode = 'en'
-): string {
+export function formatDateOnly(value: Date | string | number, locale: LocaleCode = 'en'): string {
   return formatDate(value, locale, {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
 /**
  * Format time only (no date) according to locale
  */
-export function formatTimeOnly(
-  value: Date | string | number,
-  locale: LocaleCode = 'en'
-): string {
+export function formatTimeOnly(value: Date | string | number, locale: LocaleCode = 'en'): string {
   return formatDate(value, locale, {
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -92,7 +83,7 @@ export function formatCurrency(
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency
+      currency,
     }).format(value)
   } catch (error) {
     logger.error('Format', 'Error formatting currency', error)
@@ -112,7 +103,7 @@ export function formatPercent(
     return new Intl.NumberFormat(locale, {
       style: 'percent',
       minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
+      maximumFractionDigits: decimals,
     }).format(value)
   } catch (error) {
     logger.error('Format', 'Error formatting percent', error)

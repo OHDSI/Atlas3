@@ -48,15 +48,30 @@ export const PersonProfileSchema = z.object({
 export type PersonProfile = z.infer<typeof PersonProfileSchema>
 
 export const HIGHLIGHT_PALETTE = [
-  '#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99', '#e31a1c',
+  '#a6cee3',
+  '#1f78b4',
+  '#b2df8a',
+  '#33a02c',
+  '#fb9a99',
+  '#e31a1c',
 ] as const
-export type HighlightColor = typeof HIGHLIGHT_PALETTE[number] | 'none'
+export type HighlightColor = (typeof HIGHLIGHT_PALETTE)[number] | 'none'
 
 export const DEFAULT_HIGHLIGHT_COLOR = '#888888'
 
 export const OMOP_DOMAINS = [
-  'Drug', 'Condition', 'Visit', 'Procedure', 'Observation', 'Measurement',
-  'Device', 'Specimen', 'ConditionEra', 'DrugEra', 'DoseEra', 'Death',
+  'Drug',
+  'Condition',
+  'Visit',
+  'Procedure',
+  'Observation',
+  'Measurement',
+  'Device',
+  'Specimen',
+  'ConditionEra',
+  'DrugEra',
+  'DoseEra',
+  'Death',
 ] as const
 
 export const CohortConceptSetSchema = z.object({

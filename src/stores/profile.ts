@@ -11,10 +11,7 @@ import {
   type HighlightColor,
   type CohortConceptSet,
 } from '@/models/profile.types'
-import {
-  getPerson,
-  getCohortConceptSets,
-} from '@/services/profile.service'
+import { getPerson, getCohortConceptSets } from '@/services/profile.service'
 
 interface RouteParams {
   sourceKey: string | null
@@ -99,7 +96,11 @@ export const useProfileStore = defineStore('profile', () => {
     loading.value = true
     error.value = null
     try {
-      const result = await getPerson(sourceKey.value, personId.value, cohortDefinitionId.value ?? undefined)
+      const result = await getPerson(
+        sourceKey.value,
+        personId.value,
+        cohortDefinitionId.value ?? undefined
+      )
       if (result.success) {
         person.value = result.data
         if (cohortDefinitionId.value !== null) {
@@ -150,14 +151,17 @@ export const useProfileStore = defineStore('profile', () => {
     // The WebAPI sometimes omits startDays/endDays — defensively
     // skip those rows rather than blow up the timeline plot.
     return (person.value?.observationPeriods ?? [])
-      .filter((p): p is typeof p & { startDays: number; endDays: number } =>
-        typeof p.startDays === 'number' && typeof p.endDays === 'number'
+      .filter(
+        (p): p is typeof p & { startDays: number; endDays: number } =>
+          typeof p.startDays === 'number' && typeof p.endDays === 'number'
       )
       .map(p => ({ x1: p.startDays, x2: p.endDays }))
   })
 
   const indexDate = computed<number | null>(() => {
-    const cohort = person.value?.cohorts.find(c => c.cohortDefinitionId === cohortDefinitionId.value)
+    const cohort = person.value?.cohorts.find(
+      c => c.cohortDefinitionId === cohortDefinitionId.value
+    )
     if (cohort?.startDate != null) return cohort.startDate
     // records[].startDate can be null on Eunomia (which uses
     // startDay offsets). Pick the smallest defined startDate, or

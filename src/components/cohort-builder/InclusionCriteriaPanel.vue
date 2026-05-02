@@ -19,7 +19,12 @@
         class="inclusion-criteria-panel__empty-icon"
       />
       <span class="inclusion-criteria-panel__empty-text">
-        {{ t('components.cohortExpressionEditor.inclusionCriteriaTextShort', 'No inclusion rules — adding one narrows which patients qualify beyond the entry events.').value }}
+        {{
+          t(
+            'components.cohortExpressionEditor.inclusionCriteriaTextShort',
+            'No inclusion rules — adding one narrows which patients qualify beyond the entry events.'
+          ).value
+        }}
       </span>
     </div>
 
@@ -97,7 +102,9 @@
             size="small"
             @click="addGroup(index)"
           >
-            {{ t('components.cohortExpressionEditor.addCriteriaGroup', 'Add criteria group').value }}
+            {{
+              t('components.cohortExpressionEditor.addCriteriaGroup', 'Add criteria group').value
+            }}
           </v-btn>
         </v-expansion-panel-text>
       </v-expansion-panel>
@@ -113,7 +120,10 @@
         <div class="inclusion-criteria-panel__dialog-header">
           <div class="inclusion-criteria-panel__dialog-title-block">
             <div class="inclusion-criteria-panel__dialog-eyebrow-row">
-              <span class="text-eyebrow">{{ t('components.cohortExpressionEditor.inclusionCriteriaTitle', 'Inclusion criteria').value }}</span>
+              <span class="text-eyebrow">{{
+                t('components.cohortExpressionEditor.inclusionCriteriaTitle', 'Inclusion criteria')
+                  .value
+              }}</span>
               <span class="inclusion-criteria-panel__dialog-accent-rule" />
             </div>
             <h2 class="inclusion-criteria-panel__dialog-title">
@@ -175,7 +185,15 @@ const emit = defineEmits<{
   'update:modelValue': [value: InclusionRule[]]
   'update:qualifyingLimit': [value: QualifyingLimit]
   'select-concept-set': [context: { ruleIndex: number; groupIndex: number; eventIndex: number }]
-  'select-concept': [context: { ruleIndex: number; groupIndex: number; eventIndex: number; attributeIndex: number; domainFilter: string | undefined }]
+  'select-concept': [
+    context: {
+      ruleIndex: number
+      groupIndex: number
+      eventIndex: number
+      attributeIndex: number
+      domainFilter: string | undefined
+    },
+  ]
   'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
@@ -297,12 +315,21 @@ function updateRuleDescription(index: number, event: Event) {
   }
 }
 
-function handleSelectConceptSet(ruleIndex: number, groupIndex: number, eventIndexOrContext: number | { eventIndex: number; eventId: string }) {
-  const eventIndex = typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
+function handleSelectConceptSet(
+  ruleIndex: number,
+  groupIndex: number,
+  eventIndexOrContext: number | { eventIndex: number; eventId: string }
+) {
+  const eventIndex =
+    typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
   emit('select-concept-set', { ruleIndex, groupIndex, eventIndex })
 }
 
-function handleSelectConcept(ruleIndex: number, groupIndex: number, context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined }) {
+function handleSelectConcept(
+  ruleIndex: number,
+  groupIndex: number,
+  context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined }
+) {
   emit('select-concept', { ruleIndex, groupIndex, ...context })
 }
 

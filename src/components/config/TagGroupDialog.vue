@@ -144,7 +144,7 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'save': [tagGroup: TagGroup]
+  save: [tagGroup: TagGroup]
 }>()
 
 const formRef = ref()
@@ -161,7 +161,7 @@ const form = ref<Partial<TagGroup>>({
   multiSelection: false,
   allowCustom: false,
   description: '',
-  groups: []
+  groups: [],
 })
 
 const isEditMode = computed(() => !!props.tagGroup?.id)
@@ -172,30 +172,34 @@ const isValidIcon = computed(() => {
 
 const nameRules = [
   (v: string) => !!v || 'Name is required',
-  (v: string) => (v?.length <= 255) || 'Name must be less than 255 characters'
+  (v: string) => v?.length <= 255 || 'Name must be less than 255 characters',
 ]
 
 // Watch for tag group changes to populate form
-watch(() => props.tagGroup, (tagGroup) => {
-  if (tagGroup) {
-    // Edit mode: populate form with tag group data
-    form.value = { ...tagGroup }
-  } else {
-    // Create mode: reset form
-    form.value = {
-      name: '',
-      color: '#1976D2',
-      icon: '',
-      mandatory: false,
-      showGroup: true,
-      multiSelection: false,
-      allowCustom: false,
-      description: '',
-      groups: []
+watch(
+  () => props.tagGroup,
+  tagGroup => {
+    if (tagGroup) {
+      // Edit mode: populate form with tag group data
+      form.value = { ...tagGroup }
+    } else {
+      // Create mode: reset form
+      form.value = {
+        name: '',
+        color: '#1976D2',
+        icon: '',
+        mandatory: false,
+        showGroup: true,
+        multiSelection: false,
+        allowCustom: false,
+        description: '',
+        groups: [],
+      }
     }
-  }
-  errors.value = {}
-}, { immediate: true })
+    errors.value = {}
+  },
+  { immediate: true }
+)
 
 async function handleSubmit() {
   errors.value = {}
@@ -205,7 +209,7 @@ async function handleSubmit() {
 
   if (!result.success) {
     // Map Zod errors to form fields
-    result.error.errors.forEach((err) => {
+    result.error.errors.forEach(err => {
       const field = err.path[0] as string
       errors.value[field] = err.message
     })

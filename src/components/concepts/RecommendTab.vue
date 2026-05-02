@@ -7,10 +7,12 @@
       class="mb-4"
       data-testid="recommend-not-available"
     >
-      {{ t(
-        'cs.conceptSet.recommend.notAvailable',
-        'Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.',
-      ) }}
+      {{
+        t(
+          'cs.conceptSet.recommend.notAvailable',
+          'Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.'
+        )
+      }}
     </v-alert>
 
     <v-alert
@@ -31,10 +33,12 @@
       class="mb-4"
       data-testid="recommend-no-seed"
     >
-      {{ t(
-        'cs.conceptSet.recommend.noSeed',
-        'Add concepts to the set first — recommendations are based on what is already included.',
-      ) }}
+      {{
+        t(
+          'cs.conceptSet.recommend.noSeed',
+          'Add concepts to the set first — recommendations are based on what is already included.'
+        )
+      }}
     </v-alert>
 
     <div
@@ -109,11 +113,17 @@
         size="32"
         class="mr-3"
       />
-      <span>{{ t('cs.conceptSet.loadingRecommendedConcepts', 'Loading Recommended Concepts') }}</span>
+      <span>{{
+        t('cs.conceptSet.loadingRecommendedConcepts', 'Loading Recommended Concepts')
+      }}</span>
     </div>
 
     <ConceptTable
-      v-if="hasSeed && store.isRecommendedAvailable && !(store.loadingRecommended && store.recommendedConcepts.length === 0)"
+      v-if="
+        hasSeed &&
+          store.isRecommendedAvailable &&
+          !(store.loadingRecommended && store.recommendedConcepts.length === 0)
+      "
       v-model:selected="selected"
       :concepts="store.recommendedConcepts"
       :loading="store.loadingRecommended"
@@ -122,7 +132,12 @@
       :items-per-page="itemsPerPage"
       :selectable="true"
       @update:page="page = $event"
-      @update:items-per-page="(n: number) => { itemsPerPage = n; page = 1 }"
+      @update:items-per-page="
+        (n: number) => {
+          itemsPerPage = n
+          page = 1
+        }
+      "
     />
   </div>
 </template>
@@ -192,7 +207,7 @@ watch(
       void store.loadRecommendedConcepts(key)
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 function onRefresh() {
@@ -222,9 +237,7 @@ function onAddSelected() {
 
   selected.value = []
   if (added > 0) {
-    store.recommendedConcepts = store.recommendedConcepts.filter(
-      c => !ids.has(c.conceptId),
-    )
+    store.recommendedConcepts = store.recommendedConcepts.filter(c => !ids.has(c.conceptId))
     emit('concepts-added', added)
   }
 }

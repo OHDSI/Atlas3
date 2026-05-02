@@ -47,17 +47,13 @@ export const useJobsStore = defineStore('jobs', () => {
     })
   })
 
-  const runningJobsCount = computed(() =>
-    jobs.value.filter(job => isJobRunning(job.status)).length
+  const runningJobsCount = computed(() => jobs.value.filter(job => isJobRunning(job.status)).length)
+
+  const completedJobsCount = computed(
+    () => jobs.value.filter(job => isJobCompleted(job.status)).length
   )
 
-  const completedJobsCount = computed(() =>
-    jobs.value.filter(job => isJobCompleted(job.status)).length
-  )
-
-  const failedJobsCount = computed(() =>
-    jobs.value.filter(job => isJobFailed(job.status)).length
-  )
+  const failedJobsCount = computed(() => jobs.value.filter(job => isJobFailed(job.status)).length)
 
   const hasJobs = computed(() => jobs.value.length > 0)
 
@@ -162,6 +158,6 @@ export const useJobsStore = defineStore('jobs', () => {
     setStatusFilter,
     getJobById,
     clearJobs,
-    dispose
+    dispose,
   }
 })

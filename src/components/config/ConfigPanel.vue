@@ -173,7 +173,7 @@ const hasAnyAdminTab = computed(
     canSeeSources.value ||
     canSeeTags.value ||
     canSeePermissions.value ||
-    canSeeJobs.value,
+    canSeeJobs.value
 )
 
 // Reactive state from UI store
@@ -185,16 +185,19 @@ const isOpen = computed({
     } else {
       uiStore.closeConfigPanel()
     }
-  }
+  },
 })
 
 const activeSection = computed({
-  get: () => uiStore.configPanelState.activeSection === 'vocabulary' ? 'sources' : uiStore.configPanelState.activeSection,
+  get: () =>
+    uiStore.configPanelState.activeSection === 'vocabulary'
+      ? 'sources'
+      : uiStore.configPanelState.activeSection,
   set: (value: 'cache' | 'sources' | 'tags' | 'permissions' | 'jobs') => {
     // Map 'sources' to 'vocabulary' for the store
     const storeValue = value === 'sources' ? 'vocabulary' : value
     uiStore.setConfigPanelSection(storeValue)
-  }
+  },
 })
 
 // Window width for responsive drawer sizing
@@ -242,7 +245,7 @@ function handleClose() {
 /**
  * Restore scroll position when panel opens
  */
-watch(isOpen, async (value) => {
+watch(isOpen, async value => {
   if (value && scrollContainer.value) {
     await nextTick()
     scrollContainer.value.scrollTop = uiStore.configPanelState.scrollPosition

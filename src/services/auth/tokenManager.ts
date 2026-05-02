@@ -28,7 +28,7 @@ export class TokenManager {
   isValidJWT(token: string): boolean {
     try {
       const parts = token.split('.')
-      return parts.length === 3 && parts.every((p) => p.length > 0)
+      return parts.length === 3 && parts.every(p => p.length > 0)
     } catch {
       return false
     }

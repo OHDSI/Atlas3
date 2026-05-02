@@ -139,7 +139,9 @@ function apply(conceptId: number, color: HighlightColor) {
   background: transparent;
   cursor: pointer;
   padding: 0;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 .color-dot:hover {
   transform: scale(1.1);
@@ -173,7 +175,9 @@ function apply(conceptId: number, color: HighlightColor) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: box-shadow 0.12s ease, transform 0.12s ease;
+  transition:
+    box-shadow 0.12s ease,
+    transform 0.12s ease;
 }
 .swatch:hover {
   box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.12);

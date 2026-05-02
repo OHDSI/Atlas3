@@ -15,7 +15,7 @@ import type {
   ConditionErasReport,
   ConditionReport,
   DrugErasReport,
-  CohortSpecificReport
+  CohortSpecificReport,
 } from '@/models/report.types'
 import {
   getPersonReport,
@@ -43,7 +43,7 @@ import {
   getProceduresByIndexReport,
   getDataCompletenessReport,
   getEntropyReport,
-  getTornadoReport
+  getTornadoReport,
 } from '@/services/webapi'
 import {
   mapPersonReport,
@@ -66,7 +66,7 @@ import {
   mapProceduresByIndexReport,
   mapDataCompletenessReport,
   mapEntropyReport,
-  mapTornadoReport
+  mapTornadoReport,
 } from '@/services/report-mapper'
 
 export const useReportsStore = defineStore('reports', () => {
@@ -81,7 +81,7 @@ export const useReportsStore = defineStore('reports', () => {
   // Request controller for cancellation
   const currentRequest = ref<RequestController>({
     controller: null,
-    requestId: null
+    requestId: null,
   })
 
   // Loading states
@@ -148,7 +148,18 @@ export const useReportsStore = defineStore('reports', () => {
 
     try {
       // Fetch specific report data based on type and map to internal format
-      let mappedData: PersonReport | ConditionErasReport | ConditionReport | DrugErasReport | CohortSpecificReport | import('@/models/report.types').PersonsExposureReport | import('@/models/report.types').VisitsReport | import('@/models/report.types').VisitDatesReport | import('@/models/report.types').CareSiteVisitDatesReport | import('@/models/report.types').DrugUtilizationReport | import('@/models/report.types').HeraclesHeelReport
+      let mappedData:
+        | PersonReport
+        | ConditionErasReport
+        | ConditionReport
+        | DrugErasReport
+        | CohortSpecificReport
+        | import('@/models/report.types').PersonsExposureReport
+        | import('@/models/report.types').VisitsReport
+        | import('@/models/report.types').VisitDatesReport
+        | import('@/models/report.types').CareSiteVisitDatesReport
+        | import('@/models/report.types').DrugUtilizationReport
+        | import('@/models/report.types').HeraclesHeelReport
 
       switch (reportType) {
         case 'person': {
@@ -207,7 +218,8 @@ export const useReportsStore = defineStore('reports', () => {
         }
         case 'care-site-visit-dates-baseline': {
           const rawData = await getCareSiteVisitDatesBaselineReport(cohortId, sourceKey)
-          if (!rawData) throw new Error('Failed to fetch care site visit dates baseline report data')
+          if (!rawData)
+            throw new Error('Failed to fetch care site visit dates baseline report data')
           mappedData = mapCareSiteVisitDatesReport(rawData)
           break
         }
@@ -323,7 +335,7 @@ export const useReportsStore = defineStore('reports', () => {
         cohortId,
         sourceKey,
         fetchedAt: new Date(),
-        data: mappedData
+        data: mappedData,
       })
 
       // Update current selection
@@ -459,7 +471,7 @@ export const useReportsStore = defineStore('reports', () => {
    */
   const cacheStats = computed(() => ({
     totalCached: reportData.value.size,
-    cacheKeys: Array.from(reportData.value.keys())
+    cacheKeys: Array.from(reportData.value.keys()),
   }))
 
   return {
@@ -489,6 +501,6 @@ export const useReportsStore = defineStore('reports', () => {
     hasError,
     errorMessage,
     isReportCached,
-    cacheStats
+    cacheStats,
   }
 })

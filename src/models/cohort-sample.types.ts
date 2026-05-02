@@ -138,14 +138,20 @@ export function validateSampleParameters(p: SampleParameters): string[] {
       a.mode === 'equalTo'
     const range = a.mode === 'between' || a.mode === 'notBetween'
     if (single) {
-      if (a.value === undefined || a.value === null) errors.push('Age value is required for this comparison mode.')
-      if (a.min !== undefined || a.max !== undefined) errors.push('Age range cannot be used with a single-value comparison mode.')
+      if (a.value === undefined || a.value === null)
+        errors.push('Age value is required for this comparison mode.')
+      if (a.min !== undefined || a.max !== undefined)
+        errors.push('Age range cannot be used with a single-value comparison mode.')
     }
     if (range) {
-      if (a.min === undefined || a.max === undefined) errors.push('Both minimum and maximum age are required for between/notBetween.')
-      if (a.value !== undefined) errors.push('Single age value cannot be used with between/notBetween.')
-      if (a.min !== undefined && a.max !== undefined && a.min > a.max) errors.push('Minimum age may not exceed maximum age.')
-      if (a.max !== undefined && a.max >= SAMPLE_AGE_MAX) errors.push(`Maximum age must be smaller than ${SAMPLE_AGE_MAX}.`)
+      if (a.min === undefined || a.max === undefined)
+        errors.push('Both minimum and maximum age are required for between/notBetween.')
+      if (a.value !== undefined)
+        errors.push('Single age value cannot be used with between/notBetween.')
+      if (a.min !== undefined && a.max !== undefined && a.min > a.max)
+        errors.push('Minimum age may not exceed maximum age.')
+      if (a.max !== undefined && a.max >= SAMPLE_AGE_MAX)
+        errors.push(`Maximum age must be smaller than ${SAMPLE_AGE_MAX}.`)
     }
   }
   if (p.gender) {

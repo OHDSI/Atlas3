@@ -4,7 +4,7 @@
     color="orange"
     variant="outlined"
     :closable="closable"
-    style="cursor: pointer;"
+    style="cursor: pointer"
     data-testid="temporal-filter-chip"
     @click:close="$emit('close')"
   >

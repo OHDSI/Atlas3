@@ -64,7 +64,12 @@
     class="attrition-table__empty text-center py-6 text-grey-darken-1"
     data-testid="inclusion-attrition-empty"
   >
-    {{ t('components.expressionCartoonBindings.noInclusionRules', 'This cohort has no inclusion rules to report.').value }}
+    {{
+      t(
+        'components.expressionCartoonBindings.noInclusionRules',
+        'This cohort has no inclusion rules to report.'
+      ).value
+    }}
   </div>
 </template>
 
@@ -92,11 +97,7 @@ function formatPercent(s: string): string {
 function barStyle(percentSatisfying: string): Record<string, string> {
   const n = Math.max(0, Math.min(100, Number.parseFloat(percentSatisfying) || 0))
   const color =
-    n < 10 ? '#FF3D19' :
-    n < 25 ? '#E77F13' :
-    n < 50 ? '#C9C40D' :
-    n < 75 ? '#95B90A' :
-    '#7BB209'
+    n < 10 ? '#FF3D19' : n < 25 ? '#E77F13' : n < 50 ? '#C9C40D' : n < 75 ? '#95B90A' : '#7BB209'
   return { width: `${n}%`, background: color }
 }
 </script>
@@ -118,9 +119,19 @@ function barStyle(percentSatisfying: string): Record<string, string> {
   font-weight: 600;
   color: rgba(0, 0, 0, 0.74);
 }
-.attrition-table__col-idx { width: 36px; text-align: right; color: rgba(0, 0, 0, 0.54); }
-.attrition-table__col-num { width: 130px; text-align: right; font-variant-numeric: tabular-nums; }
-.attrition-table__col-bar { width: 200px; }
+.attrition-table__col-idx {
+  width: 36px;
+  text-align: right;
+  color: rgba(0, 0, 0, 0.54);
+}
+.attrition-table__col-num {
+  width: 130px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.attrition-table__col-bar {
+  width: 200px;
+}
 
 .attrition-table__bar-track {
   width: 100%;
@@ -132,6 +143,8 @@ function barStyle(percentSatisfying: string): Record<string, string> {
 .attrition-table__bar-fill {
   height: 100%;
   border-radius: 6px;
-  transition: width 0.3s ease, background 0.3s ease;
+  transition:
+    width 0.3s ease,
+    background 0.3s ease;
 }
 </style>

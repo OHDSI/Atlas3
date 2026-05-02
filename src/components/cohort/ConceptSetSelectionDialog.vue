@@ -136,9 +136,14 @@
               class="cs-picker__empty-icon"
             />
             <p class="cs-picker__empty-text">
-              {{ searchTerm
-                ? t('search.noResultsFoundFor', 'No concept sets match your search.').value
-                : t('cohortDefinitions.noConceptSets', 'No concept sets yet — create one to get started.').value }}
+              {{
+                searchTerm
+                  ? t('search.noResultsFoundFor', 'No concept sets match your search.').value
+                  : t(
+                    'cohortDefinitions.noConceptSets',
+                    'No concept sets yet — create one to get started.'
+                  ).value
+              }}
             </p>
             <v-btn
               v-if="!searchTerm"
@@ -213,19 +218,32 @@ const countLabel = computed(() => {
 const headers = [
   { title: t('columns.id', 'ID').value, key: 'id', sortable: true, width: '80px' },
   { title: t('columns.name', 'Name').value, key: 'name', sortable: true },
-  { title: t('columns.created', 'Created').value, key: 'createdDate', sortable: true, width: '120px' },
-  { title: t('columns.updated', 'Updated').value, key: 'modifiedDate', sortable: true, width: '120px' },
+  {
+    title: t('columns.created', 'Created').value,
+    key: 'createdDate',
+    sortable: true,
+    width: '120px',
+  },
+  {
+    title: t('columns.updated', 'Updated').value,
+    key: 'modifiedDate',
+    sortable: true,
+    width: '120px',
+  },
   { title: '', key: 'actions', sortable: false, width: '56px', align: 'end' as const },
 ]
 
-watch(() => props.modelValue, async (isOpen) => {
-  if (isOpen && conceptSetsStore.conceptSets.length === 0) {
-    await conceptSetsStore.fetchAll()
+watch(
+  () => props.modelValue,
+  async isOpen => {
+    if (isOpen && conceptSetsStore.conceptSets.length === 0) {
+      await conceptSetsStore.fetchAll()
+    }
+    if (!isOpen) {
+      searchTerm.value = ''
+    }
   }
-  if (!isOpen) {
-    searchTerm.value = ''
-  }
-})
+)
 
 function onRowClick(_event: Event, payload: { item: ConceptSetListItem }) {
   if (payload?.item) {

@@ -20,7 +20,7 @@
           type="number"
           density="compact"
           hide-details
-          style="max-width:120px"
+          style="max-width: 120px"
           @update:model-value="(v: string) => updateStart('Offset', Number(v))"
         />
         <span class="d">{{ t('common.days', 'days') }}</span>
@@ -40,7 +40,7 @@
           type="number"
           density="compact"
           hide-details
-          style="max-width:120px"
+          style="max-width: 120px"
           @update:model-value="(v: string) => updateEnd('Offset', Number(v))"
         />
         <span class="d">{{ t('common.days', 'days') }}</span>
@@ -67,17 +67,20 @@ const { t } = useI18n()
 const store = useIncidenceRateStore()
 const DATE_FIELD_OPTIONS = ['StartDate', 'EndDate'] as const
 
-const tar = computed<TimeAtRisk>(() => store.currentIR?.expression.timeAtRisk ?? {
-  start: { DateField: 'StartDate', Offset: 0 },
-  end: { DateField: 'EndDate', Offset: 0 },
-})
+const tar = computed<TimeAtRisk>(
+  () =>
+    store.currentIR?.expression.timeAtRisk ?? {
+      start: { DateField: 'StartDate', Offset: 0 },
+      end: { DateField: 'EndDate', Offset: 0 },
+    }
+)
 
 const errorText = computed<string | null>(() => {
   const v = tar.value
   if (v.start.DateField === v.end.DateField && v.end.Offset <= v.start.Offset) {
     return t(
       'ir.editor.timeAtRiskWarningMessage',
-      'Time-at-risk end must be after start when both reference the same date',
+      'Time-at-risk end must be after start when both reference the same date'
     ).value
   }
   return null
@@ -92,8 +95,20 @@ function updateEnd<K extends keyof TimeAtRisk['end']>(key: K, value: TimeAtRisk[
 </script>
 
 <style scoped>
-.tar-card { margin-bottom: 12px; }
-.row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.lbl { width: 60px; font-weight: 500; }
-.d { color: #666; }
+.tar-card {
+  margin-bottom: 12px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.lbl {
+  width: 60px;
+  font-weight: 500;
+}
+.d {
+  color: #666;
+}
 </style>

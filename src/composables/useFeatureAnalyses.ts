@@ -15,14 +15,8 @@ import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 
 export function useFeatureAnalyses() {
   const store = useFeatureAnalysesStore()
-  const {
-    featureAnalyses,
-    loading,
-    error,
-    filterTerm,
-    filteredFeatureAnalyses,
-    isEmpty,
-  } = storeToRefs(store)
+  const { featureAnalyses, loading, error, filterTerm, filteredFeatureAnalyses, isEmpty } =
+    storeToRefs(store)
 
   // Pagination over filtered results
   const totalItems = computed<number>(() => filteredFeatureAnalyses.value.length)

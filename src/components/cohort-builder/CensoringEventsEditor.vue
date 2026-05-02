@@ -6,11 +6,18 @@
            Eyebrow + a one-line description carries the same meaning
            with less vertical weight. -->
       <div class="censoring-events-editor__heading">
-        <span class="text-eyebrow">{{ t('components.cohortExpressionEditor.censoringEvents', 'Censoring events').value }}</span>
+        <span class="text-eyebrow">{{
+          t('components.cohortExpressionEditor.censoringEvents', 'Censoring events').value
+        }}</span>
         <span class="censoring-events-editor__heading-rule" />
       </div>
       <p class="censoring-events-editor__lede">
-        {{ t('components.cohortExpressionEditor.censoringEventsDescription', 'Exit cohort when any of these events occur.').value }}
+        {{
+          t(
+            'components.cohortExpressionEditor.censoringEventsDescription',
+            'Exit cohort when any of these events occur.'
+          ).value
+        }}
       </p>
 
       <div>
@@ -25,7 +32,8 @@
             size="16"
             class="censoring-events__hint-icon"
           />
-          <span>No censoring events defined. Cohort membership will not be affected by additional events.</span>
+          <span>No censoring events defined. Cohort membership will not be affected by additional
+            events.</span>
         </div>
 
         <!-- Event list -->
@@ -72,7 +80,12 @@
                       density="compact"
                       class="mt-2"
                     >
-                      {{ t('exitCriteria.validation.conceptSetNotFound', 'Concept set not found in this cohort').value }}
+                      {{
+                        t(
+                          'exitCriteria.validation.conceptSetNotFound',
+                          'Concept set not found in this cohort'
+                        ).value
+                      }}
                     </v-alert>
                   </div>
                 </v-col>
@@ -102,7 +115,9 @@
           :disabled="disabled"
           @click="addEvent"
         >
-          {{ t('components.cohortExpressionEditor.addCensoringEvent', 'Add Censoring Event...').value }}
+          {{
+            t('components.cohortExpressionEditor.addCensoringEvent', 'Add Censoring Event...').value
+          }}
         </v-btn>
       </div>
     </div>
@@ -153,7 +168,7 @@ function formatCriteriaType(type: CriteriaType): string {
     Death: 'Death',
     Specimen: 'Specimen',
     PayerPlanPeriod: 'Payer Plan Period',
-    LocationRegion: 'Location Region'
+    LocationRegion: 'Location Region',
   }
   return typeMap[type] || type
 }
@@ -164,8 +179,8 @@ function hasInvalidConceptSet(event: CohortEvent): boolean {
     return false
   }
   // Check if concept set exists in available concept sets
-  return !props.conceptSets.some(cs =>
-    cs.id === event.conceptSet?.id || cs.name === event.conceptSet?.name
+  return !props.conceptSets.some(
+    cs => cs.id === event.conceptSet?.id || cs.name === event.conceptSet?.name
   )
 }
 
@@ -191,8 +206,11 @@ function validateEvents() {
     if (hasInvalidConceptSet(event)) {
       errors.push({
         field: `censoringEvents[${index}].conceptSet`,
-        message: t('exitCriteria.validation.conceptSetNotFound', 'Concept set not found in this cohort').value,
-        severity: 'warning'
+        message: t(
+          'exitCriteria.validation.conceptSetNotFound',
+          'Concept set not found in this cohort'
+        ).value,
+        severity: 'warning',
       })
     }
   })
@@ -202,10 +220,13 @@ function validateEvents() {
 
 // Watch for external changes (shallow watch to prevent reactive loops)
 // Deep watching is unnecessary here since we're copying the entire array
-watch(() => props.modelValue, (newValue) => {
-  localEvents.value = [...newValue]
-  validateEvents()
-})
+watch(
+  () => props.modelValue,
+  newValue => {
+    localEvents.value = [...newValue]
+    validateEvents()
+  }
+)
 
 // Initial validation
 validateEvents()

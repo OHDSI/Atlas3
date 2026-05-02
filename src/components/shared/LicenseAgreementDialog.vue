@@ -12,7 +12,12 @@
 
       <v-card-text class="pt-4">
         <p class="text-body-1 mb-4">
-          {{ t('licenseAgreement.description', 'In order to use the SNOMED International SNOMED CT Browser and HemOnc, please accept the following license agreement:') }}
+          {{
+            t(
+              'licenseAgreement.description',
+              'In order to use the SNOMED International SNOMED CT Browser and HemOnc, please accept the following license agreement:'
+            )
+          }}
         </p>
 
         <div class="license-content">
@@ -41,9 +46,9 @@
               <ol>
                 <li>
                   The meaning of the terms "Affiliate", or "Data Analysis System", "Data Creation
-                  System", "Derivative", "End User", "Extension", "Member", "Non-Member
-                  Territory", "SNOMED CT" and "SNOMED CT Content" are as defined in the SNOMED
-                  International Affiliate License Agreement (see
+                  System", "Derivative", "End User", "Extension", "Member", "Non-Member Territory",
+                  "SNOMED CT" and "SNOMED CT Content" are as defined in the SNOMED International
+                  Affiliate License Agreement (see
                   <a
                     href="http://www.snomed.org/resource/resource/117"
                     target="_blank"
@@ -62,8 +67,7 @@
                     href="https://mlds.ihtsdotools.org"
                     target="_blank"
                     rel="noopener noreferrer"
-                  >mlds.ihtsdotools.org</a>, subject to
-                  acceptance of the Affiliate License Agreement (see
+                  >mlds.ihtsdotools.org</a>, subject to acceptance of the Affiliate License Agreement (see
                   <a
                     href="http://www.snomed.org/resource/resource/117"
                     target="_blank"
@@ -76,37 +80,34 @@
                     href="http://www.snomed.org/members"
                     target="_blank"
                     rel="noopener noreferrer"
-                  >www.snomed.org/members</a>. Countries
-                  not included in that list are "Non-Member Territories".
+                  >www.snomed.org/members</a>. Countries not included in that list are "Non-Member Territories".
                 </li>
                 <li>
-                  End Users, that do not hold the SNOMED International Affiliate License, may
-                  access SNOMED CT® using
+                  End Users, that do not hold the SNOMED International Affiliate License, may access
+                  SNOMED CT® using
                   <strong>SNOMED International SNOMED CT Browser</strong> subject to acceptance of
                   and adherence to the following sub-license limitations:
 
                   <ol type="a">
                     <li>
-                      The sub-licensee is only permitted to access SNOMED CT® using this
-                      software (or service) for the purpose of exploring and evaluating the
-                      terminology.
+                      The sub-licensee is only permitted to access SNOMED CT® using this software
+                      (or service) for the purpose of exploring and evaluating the terminology.
                     </li>
                     <li>
-                      The sub-licensee is not permitted the use of this software as part of a
-                      system that constitutes a SNOMED CT "Data Creation System" or "Data
-                      Analysis System", as defined in the SNOMED International Affiliate
-                      License. This means that the sub-licensee must not use
-                      <strong>SNOMED International SNOMED CT Browser</strong> to add or copy
-                      SNOMED CT identifiers into any type of record system, database or
-                      document.
+                      The sub-licensee is not permitted the use of this software as part of a system
+                      that constitutes a SNOMED CT "Data Creation System" or "Data Analysis System",
+                      as defined in the SNOMED International Affiliate License. This means that the
+                      sub-licensee must not use
+                      <strong>SNOMED International SNOMED CT Browser</strong> to add or copy SNOMED
+                      CT identifiers into any type of record system, database or document.
                     </li>
                     <li>
-                      The sub-licensee is not permitted to translate or modify SNOMED CT
-                      Content or Derivatives.
+                      The sub-licensee is not permitted to translate or modify SNOMED CT Content or
+                      Derivatives.
                     </li>
                     <li>
-                      The sub-licensee is not permitted to distribute or share SNOMED CT
-                      Content or Derivatives.
+                      The sub-licensee is not permitted to distribute or share SNOMED CT Content or
+                      Derivatives.
                     </li>
                   </ol>
                 </li>
@@ -119,19 +120,19 @@
                     <li>
                       The SNOMED International Affiliate, using
                       <strong>SNOMED International SNOMED CT Browser</strong> must accept full
-                      responsibility for any reporting and fees due for use or deployment of
-                      such a system in a Non-Member Territory.
+                      responsibility for any reporting and fees due for use or deployment of such a
+                      system in a Non-Member Territory.
                     </li>
                     <li>
                       The SNOMED International Affiliate must not use
-                      <strong>SNOMED International SNOMED CT Browser</strong> to access or
-                      interact with SNOMED CT in any way that is not permitted by the
-                      Affiliate License Agreement.
+                      <strong>SNOMED International SNOMED CT Browser</strong> to access or interact
+                      with SNOMED CT in any way that is not permitted by the Affiliate License
+                      Agreement.
                     </li>
                     <li>
-                      In the event of termination of the Affiliate License Agreement, the use
-                      of <strong>SNOMED International SNOMED CT Browser</strong> will be
-                      subject to the End User limitations noted in 4.
+                      In the event of termination of the Affiliate License Agreement, the use of
+                      <strong>SNOMED International SNOMED CT Browser</strong> will be subject to the
+                      End User limitations noted in 4.
                     </li>
                   </ol>
                 </li>
@@ -156,42 +157,41 @@
                   "License" is defined below.
                 </li>
                 <li>
-                  If you are already holding a HemOnc ontology License, you are subject to the
-                  terms and conditions of the License for the version of the HemOnc Vocabulary
-                  which was provided to you. If you wish to obtain this version of the HemOnc
-                  Vocabulary, you are subject to the following limitations.
+                  If you are already holding a HemOnc ontology License, you are subject to the terms
+                  and conditions of the License for the version of the HemOnc Vocabulary which was
+                  provided to you. If you wish to obtain this version of the HemOnc Vocabulary, you
+                  are subject to the following limitations.
                 </li>
                 <li>
-                  If you currently do not hold a HemOnc ontology License, you may access the
-                  HemOnc Vocabulary subject to acceptance of and adherence to the following
-                  limitations:
+                  If you currently do not hold a HemOnc ontology License, you may access the HemOnc
+                  Vocabulary subject to acceptance of and adherence to the following limitations:
 
                   <ol type="a">
                     <li>
-                      You are permitted to access HemOnc using this software for the purpose
-                      of exploring and evaluating the terminology.
+                      You are permitted to access HemOnc using this software for the purpose of
+                      exploring and evaluating the terminology.
                     </li>
                     <li>
-                      You are permitted to use HemOnc as part of a system that constitutes a
-                      Data Analysis System, as defined below.
+                      You are permitted to use HemOnc as part of a system that constitutes a Data
+                      Analysis System, as defined below.
                     </li>
                     <li>
-                      You are not permitted the use of HemOnc as part of a system that
-                      constitutes a Data Creation System, as defined below. This means that
-                      you must not use HemOnc identifiers in any type of system intended for
-                      direct or indirect patient care.
+                      You are not permitted the use of HemOnc as part of a system that constitutes a
+                      Data Creation System, as defined below. This means that you must not use
+                      HemOnc identifiers in any type of system intended for direct or indirect
+                      patient care.
                     </li>
                     <li>
-                      If you share the Licensed Material with a third party, attribution of
-                      the HemOnc vocabulary must be given to HemOnc.org LLC, with a URI or
-                      hyperlink to HemOnc.org provided if reasonably possible. Use of HemOnc
-                      by a third party would be limited to a Data Analysis System and a copy
-                      of this License Agreement must be supplied to the third party.
+                      If you share the Licensed Material with a third party, attribution of the
+                      HemOnc vocabulary must be given to HemOnc.org LLC, with a URI or hyperlink to
+                      HemOnc.org provided if reasonably possible. Use of HemOnc by a third party
+                      would be limited to a Data Analysis System and a copy of this License
+                      Agreement must be supplied to the third party.
                     </li>
                     <li>
-                      You may not use HemOnc as a substitute for formal medical training,
-                      substitute it for independent clinical judgment, and construe it as
-                      offering medical advice.
+                      You may not use HemOnc as a substitute for formal medical training, substitute
+                      it for independent clinical judgment, and construe it as offering medical
+                      advice.
                     </li>
                   </ol>
                 </li>
@@ -200,9 +200,7 @@
               <p>
                 If you wish to utilize the vocabulary for purposes other than specified here,
                 contact us by emailing
-                <a
-                  href="mailto:licensing@hemonc.org"
-                >licensing@hemonc.org</a>.
+                <a href="mailto:licensing@hemonc.org">licensing@hemonc.org</a>.
               </p>
               <p>
                 You agree to indemnify and hold HemOnc.org LLC and all parties who have contributed
@@ -277,7 +275,7 @@ const { t } = useI18n()
 
 const showDialog = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 
 function handleAccept() {

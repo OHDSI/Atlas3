@@ -53,11 +53,14 @@ function handleInput(value: string | null) {
 }
 
 // Cleanup on unmount
-watch(() => debounceTimer.value, (newTimer, oldTimer) => {
-  if (oldTimer !== null && oldTimer !== newTimer) {
-    clearTimeout(oldTimer)
+watch(
+  () => debounceTimer.value,
+  (newTimer, oldTimer) => {
+    if (oldTimer !== null && oldTimer !== newTimer) {
+      clearTimeout(oldTimer)
+    }
   }
-})
+)
 </script>
 
 <style scoped>

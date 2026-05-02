@@ -82,7 +82,12 @@
       class="mb-4"
       data-testid="compare-no-current"
     >
-      {{ t('cs.browser.compare.headingMessage', 'Use this utility to compare the contents of two concept sets to see which concepts they may share') }}
+      {{
+        t(
+          'cs.browser.compare.headingMessage',
+          'Use this utility to compare the contents of two concept sets to see which concepts they may share'
+        )
+      }}
     </v-alert>
 
     <div
@@ -170,12 +175,12 @@ const sourceKey = computed<string>(() => {
 
 watch(
   () => props.active,
-  (active) => {
+  active => {
     if (active && webapiStore.sources.length === 0 && !webapiStore.isLoadingSources) {
       void webapiStore.fetchSources()
     }
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 const showChooser = ref(false)
@@ -194,22 +199,16 @@ const canCompare = computed(() => {
 const leftLabel = computed(() => store.currentSet?.name || 'CS1')
 const rightLabel = computed(() => store.comparisonOtherSet?.name || 'CS2')
 
-const leftOnly = computed(
-  () => store.comparison.filter((r) => r.conceptIn1Only === 1).length,
-)
-const rightOnly = computed(
-  () => store.comparison.filter((r) => r.conceptIn2Only === 1).length,
-)
-const bothCount = computed(
-  () => store.comparison.filter((r) => r.conceptIn1And2 === 1).length,
-)
+const leftOnly = computed(() => store.comparison.filter(r => r.conceptIn1Only === 1).length)
+const rightOnly = computed(() => store.comparison.filter(r => r.conceptIn2Only === 1).length)
+const bothCount = computed(() => store.comparison.filter(r => r.conceptIn1And2 === 1).length)
 
 interface Row extends ComparisonResultItem {
   match: string
 }
 
 const rows = computed<Row[]>(() =>
-  store.comparison.map((r) => ({
+  store.comparison.map(r => ({
     ...r,
     match:
       r.conceptIn1And2 === 1
@@ -217,17 +216,37 @@ const rows = computed<Row[]>(() =>
         : r.conceptIn1Only === 1
           ? leftLabel.value
           : rightLabel.value,
-  })),
+  }))
 )
 
 const headers = computed(() => [
   { title: t('common.match', 'Match').value, key: 'match', sortable: true, width: '120px' },
-  { title: t('columns.conceptId', 'Concept Id').value, key: 'conceptId', sortable: true, width: '110px' },
-  { title: t('columns.conceptCode', 'Concept Code').value, key: 'conceptCode', sortable: true, width: '130px' },
+  {
+    title: t('columns.conceptId', 'Concept Id').value,
+    key: 'conceptId',
+    sortable: true,
+    width: '110px',
+  },
+  {
+    title: t('columns.conceptCode', 'Concept Code').value,
+    key: 'conceptCode',
+    sortable: true,
+    width: '130px',
+  },
   { title: t('columns.conceptName', 'Concept Name').value, key: 'conceptName', sortable: true },
   { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true, width: '120px' },
-  { title: t('columns.vocabulary', 'Vocabulary').value, key: 'vocabularyId', sortable: true, width: '120px' },
-  { title: t('columns.class', 'Class').value, key: 'conceptClassId', sortable: true, width: '140px' },
+  {
+    title: t('columns.vocabulary', 'Vocabulary').value,
+    key: 'vocabularyId',
+    sortable: true,
+    width: '120px',
+  },
+  {
+    title: t('columns.class', 'Class').value,
+    key: 'conceptClassId',
+    sortable: true,
+    width: '140px',
+  },
 ])
 
 function matchColor(label: string): string {

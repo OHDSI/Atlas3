@@ -69,7 +69,10 @@
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
-import type { ClinicalDomainReport as ClinicalDomainReportData, ReportType } from '@/models/datasource.types'
+import type {
+  ClinicalDomainReport as ClinicalDomainReportData,
+  ReportType,
+} from '@/models/datasource.types'
 import type { DrilldownReport } from '@/models/report.types'
 import type { Domain } from '@/config/drilldown-config'
 import { getMetricLabel } from '@/utils/datasource-formatters'
@@ -104,7 +107,7 @@ const drilldownDomain = computed<Domain>(() => {
     measurement: 'measurement',
     observation: 'observation',
     procedure: 'procedure',
-    visit: 'visit'
+    visit: 'visit',
   }
   return map[props.reportType] ?? 'condition'
 })
@@ -123,7 +126,7 @@ function getDomainFromReportType(reportType: ReportType): string {
     drugExposure: 'drug',
     drugEra: 'drugera',
     measurement: 'measurement',
-    observation: 'observation'
+    observation: 'observation',
   }
   return domainMap[reportType] || reportType
 }
@@ -145,13 +148,7 @@ async function handleNodeClick(conceptId: number, conceptName: string, conceptPa
     const rawData = await getCDMDrilldown(selectedSource.sourceKey, domain, conceptId)
 
     if (rawData) {
-      drilldownData.value = mapDrilldownReport(
-        rawData,
-        conceptId,
-        conceptName,
-        conceptPath,
-        domain
-      )
+      drilldownData.value = mapDrilldownReport(rawData, conceptId, conceptName, conceptPath, domain)
     }
   } catch (error) {
     logger.error('ClinicalDomainReport', 'Failed to fetch drill-down data', error)

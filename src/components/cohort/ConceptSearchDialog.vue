@@ -99,7 +99,8 @@
 
                 <v-list-item-title>{{ item.conceptName }}</v-list-item-title>
                 <v-list-item-subtitle>
-                  ID: {{ item.conceptId }} | Code: {{ item.conceptCode }} | Domain: {{ item.domainId }}
+                  ID: {{ item.conceptId }} | Code: {{ item.conceptCode }} | Domain:
+                  {{ item.domainId }}
                 </v-list-item-subtitle>
               </v-list-item>
             </template>
@@ -204,10 +205,7 @@ async function performSearch() {
 
   try {
     // Don't pass domain to API - we filter client-side instead
-    await conceptPickerStore.searchConcepts(
-      vocabularySource,
-      searchQuery.value
-    )
+    await conceptPickerStore.searchConcepts(vocabularySource, searchQuery.value)
   } catch (error) {
     logger.error('ConceptSearchDialog', 'Search failed', error)
   }
@@ -244,14 +242,20 @@ function close() {
 }
 
 // Watch for domainFilter changes when dialog opens
-watch(() => props.domainFilter, (newDomain) => {
-  selectedDomain.value = newDomain || null
-})
+watch(
+  () => props.domainFilter,
+  newDomain => {
+    selectedDomain.value = newDomain || null
+  }
+)
 
 // Watch for dialog opening to pre-populate selected concepts
-watch(() => props.modelValue, (isOpen) => {
-  if (isOpen && props.preSelectedConcepts) {
-    selectedConcepts.value = [...props.preSelectedConcepts]
+watch(
+  () => props.modelValue,
+  isOpen => {
+    if (isOpen && props.preSelectedConcepts) {
+      selectedConcepts.value = [...props.preSelectedConcepts]
+    }
   }
-})
+)
 </script>

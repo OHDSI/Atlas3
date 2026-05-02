@@ -28,9 +28,7 @@ export async function listCharacterizations(): Promise<CharacterizationListItem[
 /**
  * Get the full design of a characterization.
  */
-export async function getCharacterization(
-  id: number
-): Promise<CharacterizationDefinition | null> {
+export async function getCharacterization(id: number): Promise<CharacterizationDefinition | null> {
   try {
     return await webapi.getCharacterization(id)
   } catch (error) {
@@ -86,9 +84,7 @@ export async function deleteCharacterization(id: number): Promise<void> {
 /**
  * Server-side copy of a characterization.
  */
-export async function copyCharacterization(
-  id: number
-): Promise<CharacterizationDefinition> {
+export async function copyCharacterization(id: number): Promise<CharacterizationDefinition> {
   try {
     return await webapi.copyCharacterization(id)
   } catch (error) {
@@ -100,10 +96,7 @@ export async function copyCharacterization(
 /**
  * Whether a characterization with the given name already exists.
  */
-export async function characterizationNameExists(
-  id: number,
-  name: string
-): Promise<boolean> {
+export async function characterizationNameExists(id: number, name: string): Promise<boolean> {
   try {
     return await webapi.characterizationNameExists(id, name)
   } catch (error) {
@@ -131,9 +124,7 @@ export async function exportCharacterization(id: number): Promise<unknown> {
 /**
  * Import a characterization design.
  */
-export async function importCharacterization(
-  design: unknown
-): Promise<CharacterizationDefinition> {
+export async function importCharacterization(design: unknown): Promise<CharacterizationDefinition> {
   try {
     return await webapi.importCharacterization(design)
   } catch (error) {
@@ -169,11 +160,7 @@ export async function getCharacterizationExecution(
   try {
     return await webapi.getCharacterizationExecution(generationId)
   } catch (error) {
-    logger.error(
-      'CharacterizationService',
-      `Failed to load execution ${generationId}`,
-      error
-    )
+    logger.error('CharacterizationService', `Failed to load execution ${generationId}`, error)
     throw error
   }
 }
@@ -188,11 +175,7 @@ export async function generateCharacterization(
   try {
     return await webapi.generateCharacterization(id, sourceKey)
   } catch (error) {
-    logger.error(
-      'CharacterizationService',
-      `Failed to start generation ${id}/${sourceKey}`,
-      error
-    )
+    logger.error('CharacterizationService', `Failed to start generation ${id}/${sourceKey}`, error)
     throw error
   }
 }
@@ -207,11 +190,7 @@ export async function cancelCharacterizationGeneration(
   try {
     await webapi.cancelCharacterizationGeneration(id, sourceKey)
   } catch (error) {
-    logger.error(
-      'CharacterizationService',
-      `Failed to cancel generation ${id}/${sourceKey}`,
-      error
-    )
+    logger.error('CharacterizationService', `Failed to cancel generation ${id}/${sourceKey}`, error)
     throw error
   }
 }
@@ -219,9 +198,7 @@ export async function cancelCharacterizationGeneration(
 /**
  * Fetch the design that was active at the time a generation was created.
  */
-export async function getCharacterizationDesignSnapshot(
-  generationId: number
-): Promise<unknown> {
+export async function getCharacterizationDesignSnapshot(generationId: number): Promise<unknown> {
   try {
     return await webapi.getCharacterizationDesignSnapshot(generationId)
   } catch (error) {
@@ -237,9 +214,7 @@ export async function getCharacterizationDesignSnapshot(
 /**
  * Get the total count of result rows for a generation.
  */
-export async function getCharacterizationResultCount(
-  generationId: number
-): Promise<number> {
+export async function getCharacterizationResultCount(generationId: number): Promise<number> {
   try {
     return await webapi.getCharacterizationResultCount(generationId)
   } catch (error) {
@@ -262,11 +237,7 @@ export async function getCharacterizationResults(
   try {
     return await webapi.getCharacterizationResults(generationId, body)
   } catch (error) {
-    logger.error(
-      'CharacterizationService',
-      `Failed to load results for ${generationId}`,
-      error
-    )
+    logger.error('CharacterizationService', `Failed to load results for ${generationId}`, error)
     throw error
   }
 }

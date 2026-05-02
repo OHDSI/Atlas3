@@ -16,7 +16,12 @@
 
       <v-card-text>
         <p class="text-body-1 mb-4">
-          {{ t('trexsql.cacheDescription', 'Build and manage patient caches for fast cohort counting. Each data source can have its own cache.') }}
+          {{
+            t(
+              'trexsql.cacheDescription',
+              'Build and manage patient caches for fast cohort counting. Each data source can have its own cache.'
+            )
+          }}
         </p>
 
         <!-- Loading State -->
@@ -68,7 +73,11 @@
                 </v-chip>
 
                 <!-- Cache Stats -->
-                <template v-if="source.cacheStatus?.status === 'ready' || source.cacheStatus?.status === 'stale'">
+                <template
+                  v-if="
+                    source.cacheStatus?.status === 'ready' || source.cacheStatus?.status === 'stale'
+                  "
+                >
                   <span
                     v-if="source.cacheStatus?.totalPatientCount"
                     class="text-body-2 text-grey-darken-1"
@@ -88,7 +97,8 @@
                   v-if="source.cacheStatus?.lastBuiltAt"
                   class="text-caption text-grey"
                 >
-                  {{ t('trexsql.lastBuilt', 'Built') }}: {{ formatDate(source.cacheStatus.lastBuiltAt) }}
+                  {{ t('trexsql.lastBuilt', 'Built') }}:
+                  {{ formatDate(source.cacheStatus.lastBuiltAt) }}
                 </span>
 
                 <!-- Error Message -->
@@ -114,11 +124,17 @@
                   @click="handleBuildCache(source.sourceKey)"
                 >
                   <v-icon start>
-                    {{ source.cacheStatus?.status === 'ready' || source.cacheStatus?.status === 'stale' ? 'mdi-refresh' : 'mdi-hammer' }}
+                    {{
+                      source.cacheStatus?.status === 'ready' ||
+                        source.cacheStatus?.status === 'stale'
+                        ? 'mdi-refresh'
+                        : 'mdi-hammer'
+                    }}
                   </v-icon>
-                  {{ source.cacheStatus?.status === 'ready' || source.cacheStatus?.status === 'stale'
-                    ? t('trexsql.rebuild', 'Rebuild')
-                    : t('trexsql.build', 'Build Cache')
+                  {{
+                    source.cacheStatus?.status === 'ready' || source.cacheStatus?.status === 'stale'
+                      ? t('trexsql.rebuild', 'Rebuild')
+                      : t('trexsql.build', 'Build Cache')
                   }}
                 </v-btn>
 
@@ -213,14 +229,18 @@ async function loadDataSources(): Promise<void> {
           return {
             sourceKey: source.sourceKey,
             sourceName: source.sourceName,
-            cacheStatus
+            cacheStatus,
           }
         } catch (error) {
-          logger.warn('TrexSQLCacheSection', `Failed to get cache status for ${source.sourceKey}`, error)
+          logger.warn(
+            'TrexSQLCacheSection',
+            `Failed to get cache status for ${source.sourceKey}`,
+            error
+          )
           return {
             sourceKey: source.sourceKey,
             sourceName: source.sourceName,
-            cacheStatus: null
+            cacheStatus: null,
           }
         }
       })
@@ -257,7 +277,7 @@ async function handleBuildCache(sourceKey: string): Promise<void> {
         totalPatientCount: source.cacheStatus?.totalPatientCount ?? null,
         lastBuiltAt: source.cacheStatus?.lastBuiltAt ?? null,
         sizeBytes: source.cacheStatus?.sizeBytes ?? null,
-        errorMessage: null
+        errorMessage: null,
       }
     }
 
@@ -381,7 +401,7 @@ function formatDate(dateString: string): string {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   } catch {
     return dateString
@@ -394,12 +414,15 @@ onMounted(async () => {
 })
 
 // Re-initialize TrexSQL and reload data sources when user becomes authenticated
-watch(() => auth.isAuthenticated.value, async (isAuth, wasAuth) => {
-  if (isAuth && !wasAuth) {
-    await initTrexSQL()
-    loadDataSources()
+watch(
+  () => auth.isAuthenticated.value,
+  async (isAuth, wasAuth) => {
+    if (isAuth && !wasAuth) {
+      await initTrexSQL()
+      loadDataSources()
+    }
   }
-})
+)
 </script>
 
 <style scoped>

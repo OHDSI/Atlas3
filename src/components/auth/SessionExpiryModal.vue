@@ -56,74 +56,77 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onUnmounted } from 'vue';
-import type { SessionExpiryModalProps } from './types';
+import { computed, ref, watch, onUnmounted } from 'vue'
+import type { SessionExpiryModalProps } from './types'
 
-const props = defineProps<SessionExpiryModalProps>();
+const props = defineProps<SessionExpiryModalProps>()
 const emit = defineEmits<{
-  extend: [];
-  logout: [];
-  dismiss: [];
-  expired: [];
-  'update:model-value': [value: boolean];
-}>();
+  extend: []
+  logout: []
+  dismiss: []
+  expired: []
+  'update:model-value': [value: boolean]
+}>()
 
-const localRemainingSeconds = ref(props.remainingSeconds);
-let countdownInterval: NodeJS.Timeout | null = null;
+const localRemainingSeconds = ref(props.remainingSeconds)
+let countdownInterval: NodeJS.Timeout | null = null
 
 // Update remaining time every second
-watch(() => props.modelValue, (isVisible) => {
-  if (isVisible) {
-    // Start countdown
-    countdownInterval = setInterval(() => {
-      const now = Date.now();
-      const remaining = Math.max(0, Math.floor((props.expiresAt.getTime() - now) / 1000));
-      localRemainingSeconds.value = remaining;
+watch(
+  () => props.modelValue,
+  isVisible => {
+    if (isVisible) {
+      // Start countdown
+      countdownInterval = setInterval(() => {
+        const now = Date.now()
+        const remaining = Math.max(0, Math.floor((props.expiresAt.getTime() - now) / 1000))
+        localRemainingSeconds.value = remaining
 
-      // Emit expired event when time runs out
-      if (remaining === 0) {
-        if (countdownInterval) {
-          clearInterval(countdownInterval);
-          countdownInterval = null;
+        // Emit expired event when time runs out
+        if (remaining === 0) {
+          if (countdownInterval) {
+            clearInterval(countdownInterval)
+            countdownInterval = null
+          }
+          emit('expired')
         }
-        emit('expired');
+      }, 1000)
+    } else {
+      // Stop countdown
+      if (countdownInterval) {
+        clearInterval(countdownInterval)
+        countdownInterval = null
       }
-    }, 1000);
-  } else {
-    // Stop countdown
-    if (countdownInterval) {
-      clearInterval(countdownInterval);
-      countdownInterval = null;
     }
   }
-});
+)
 
 onUnmounted(() => {
   if (countdownInterval) {
-    clearInterval(countdownInterval);
-    countdownInterval = null;
+    clearInterval(countdownInterval)
+    countdownInterval = null
   }
-});
+})
 
 // Format time display
 const formattedTime = computed(() => {
-  const seconds = localRemainingSeconds.value;
+  const seconds = localRemainingSeconds.value
   if (seconds >= 60) {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}m ${secs}s`;
+    const minutes = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${minutes}m ${secs}s`
   }
-  return `${seconds}s`;
-});
+  return `${seconds}s`
+})
 
 // Color class for countdown (warning when >60s, error when <60s)
 const countdownColorClass = computed(() => {
-  return localRemainingSeconds.value < 60 ? 'text-error' : 'text-warning';
-});
+  return localRemainingSeconds.value < 60 ? 'text-error' : 'text-warning'
+})
 
 // Handle dismiss (X button or ESC key)
 function handleDismiss(value: boolean) {
-  emit('update:model-value', value);
-  emit('dismiss');
+  emit('update:model-value', value)
+  emit('dismiss')
 }
 </script>

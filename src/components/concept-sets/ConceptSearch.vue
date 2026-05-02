@@ -49,7 +49,8 @@
               {{ item.conceptName }}
             </v-list-item-title>
             <v-list-item-subtitle>
-              ID: {{ item.conceptId }} | Domain: {{ item.domainId }} | Vocabulary: {{ item.vocabularyId }}
+              ID: {{ item.conceptId }} | Domain: {{ item.domainId }} | Vocabulary:
+              {{ item.vocabularyId }}
             </v-list-item-subtitle>
             <v-list-item-subtitle>
               Code: {{ item.conceptCode }} | Class: {{ item.conceptClassId }}

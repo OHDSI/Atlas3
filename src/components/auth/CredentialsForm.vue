@@ -21,7 +21,9 @@
     <v-text-field
       v-model="credentials.password"
       :label="provider.passwordPlaceholder || t('components.welcome.password', 'Password').value"
-      :placeholder="provider.passwordPlaceholder || t('components.welcome.password', 'Enter password').value"
+      :placeholder="
+        provider.passwordPlaceholder || t('components.welcome.password', 'Enter password').value
+      "
       type="password"
       variant="outlined"
       density="compact"

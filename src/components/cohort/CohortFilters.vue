@@ -315,32 +315,41 @@ const modifiedToDate = ref<Date | undefined>(props.filters.modifiedDateRange.to)
 
 // Search is shown directly in the bar — only render the active-chip
 // row for the rest, so the search query doesn't appear twice.
-const hasNonSearchFilters = computed(() =>
-  localFilters.value.selectedTags.length > 0
-  || !!localFilters.value.author
-  || !!localFilters.value.createdDateRange.from
-  || !!localFilters.value.createdDateRange.to
-  || !!localFilters.value.modifiedDateRange.from
-  || !!localFilters.value.modifiedDateRange.to
+const hasNonSearchFilters = computed(
+  () =>
+    localFilters.value.selectedTags.length > 0 ||
+    !!localFilters.value.author ||
+    !!localFilters.value.createdDateRange.from ||
+    !!localFilters.value.createdDateRange.to ||
+    !!localFilters.value.modifiedDateRange.from ||
+    !!localFilters.value.modifiedDateRange.to
 )
 
 let isInternalUpdate = false
 
-watch(() => props.filters, async (newFilters) => {
-  isInternalUpdate = true
-  localFilters.value = { ...newFilters }
-  createdFromDate.value = newFilters.createdDateRange.from
-  createdToDate.value = newFilters.createdDateRange.to
-  modifiedFromDate.value = newFilters.modifiedDateRange.from
-  modifiedToDate.value = newFilters.modifiedDateRange.to
-  await nextTick()
-  isInternalUpdate = false
-}, { deep: true })
+watch(
+  () => props.filters,
+  async newFilters => {
+    isInternalUpdate = true
+    localFilters.value = { ...newFilters }
+    createdFromDate.value = newFilters.createdDateRange.from
+    createdToDate.value = newFilters.createdDateRange.to
+    modifiedFromDate.value = newFilters.modifiedDateRange.from
+    modifiedToDate.value = newFilters.modifiedDateRange.to
+    await nextTick()
+    isInternalUpdate = false
+  },
+  { deep: true }
+)
 
-watch(localFilters, (newFilters) => {
-  if (isInternalUpdate) return
-  emit('update:filters', { ...newFilters })
-}, { deep: true })
+watch(
+  localFilters,
+  newFilters => {
+    if (isInternalUpdate) return
+    emit('update:filters', { ...newFilters })
+  },
+  { deep: true }
+)
 
 function formatDateForDisplay(date: Date | undefined): string {
   if (!date) return ''

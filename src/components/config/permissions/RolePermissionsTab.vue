@@ -12,7 +12,7 @@
           hide-details
           clearable
           class="role-permissions-tab__search"
-          style="max-width: 400px;"
+          style="max-width: 400px"
         />
 
         <div class="role-permissions-tab__actions">
@@ -74,7 +74,8 @@
             mdi-shield-check
           </v-icon>
           <span class="text-body-2">
-            <strong>{{ selectedPermissionIds.size }}</strong> of <strong>{{ filteredPermissions.length }}</strong> permissions assigned
+            <strong>{{ selectedPermissionIds.size }}</strong> of
+            <strong>{{ filteredPermissions.length }}</strong> permissions assigned
             <span v-if="debouncedSearchQuery">
               (filtered from {{ permissions.length }} total)
             </span>
@@ -169,9 +170,7 @@
             >
               {{ item.category }}
             </v-chip>
-            <span v-else>
-              —
-            </span>
+            <span v-else> — </span>
           </template>
         </v-data-table>
       </template>
@@ -232,7 +231,7 @@ const selectedCategory = ref<string>('all')
 
 // Debounce search input (300ms)
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
-watch(searchQuery, (newValue) => {
+watch(searchQuery, newValue => {
   if (searchDebounceTimer) {
     clearTimeout(searchDebounceTimer)
   }
@@ -428,7 +427,8 @@ async function handleSave() {
 
     successMessage.value = `Successfully updated ${changeCount.value} permission${changeCount.value !== 1 ? 's' : ''}`
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to save permission changes'
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Failed to save permission changes'
   } finally {
     isSaving.value = false
   }
@@ -456,9 +456,12 @@ onMounted(() => {
 })
 
 // Reload when role changes
-watch(() => props.roleId, () => {
-  loadData()
-})
+watch(
+  () => props.roleId,
+  () => {
+    loadData()
+  }
+)
 </script>
 
 <style scoped>

@@ -43,5 +43,7 @@ const defaultGroup = computed<CriteriaGroup>(() => ({
 </script>
 
 <style scoped>
-.rule-editor { padding: 8px 12px; }
+.rule-editor {
+  padding: 8px 12px;
+}
 </style>

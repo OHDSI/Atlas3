@@ -30,7 +30,16 @@ defineProps<{
 </script>
 
 <style scoped>
-.swatch { display: inline-block; width: 14px; height: 14px; border-radius: 2px; }
-.pathway-legend table { width: 100%; }
-.pathway-legend td { padding: 2px 8px; }
+.swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+}
+.pathway-legend table {
+  width: 100%;
+}
+.pathway-legend td {
+  padding: 2px 8px;
+}
 </style>

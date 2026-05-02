@@ -69,12 +69,8 @@ import { logger } from '@/utils/logger'
 const localeStore = useLocaleStore()
 const authStore = useAuthStore()
 const { t } = useI18n()
-const {
-  showLicenseDialog,
-  acceptLicense,
-  rejectLicense,
-  checkLicenseStatus
-} = useLicenseAgreement()
+const { showLicenseDialog, acceptLicense, rejectLicense, checkLicenseStatus } =
+  useLicenseAgreement()
 
 // Show overlay while initial translations are loading
 const isInitializing = computed(() => {

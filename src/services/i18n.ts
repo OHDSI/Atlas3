@@ -11,31 +11,38 @@ const API_BASE_URL = WEBAPI_BASE_URL
 
 // Zod schemas for runtime validation
 const LocaleSchema = z.object({
-  code: z.string().length(2).regex(/^[a-z]{2}$/),
-  name: z.string().min(1)
+  code: z
+    .string()
+    .length(2)
+    .regex(/^[a-z]{2}$/),
+  name: z.string().min(1),
 })
 
 const LocaleArraySchema = z.array(LocaleSchema)
 
 const TranslationsSchema = z.record(z.any())
 
-const LocaleFormatSchema = z.object({
-  date: z.object({
-    datetime: z.string(),
-    datetimeWithSeconds: z.string(),
-    dateOnly: z.string(),
-    timeOnly: z.string()
-  }),
-  number: z.object({
-    decimal: z.string(),
-    thousands: z.string(),
-    grouping: z.array(z.number())
-  }),
-  currency: z.object({
-    symbol: z.string(),
-    position: z.enum(['before', 'after'])
-  }).optional()
-}).optional()
+const LocaleFormatSchema = z
+  .object({
+    date: z.object({
+      datetime: z.string(),
+      datetimeWithSeconds: z.string(),
+      dateOnly: z.string(),
+      timeOnly: z.string(),
+    }),
+    number: z.object({
+      decimal: z.string(),
+      thousands: z.string(),
+      grouping: z.array(z.number()),
+    }),
+    currency: z
+      .object({
+        symbol: z.string(),
+        position: z.enum(['before', 'after']),
+      })
+      .optional(),
+  })
+  .optional()
 
 /**
  * Fetch available locales from WebAPI
@@ -62,7 +69,7 @@ export async function fetchLocales(): Promise<Locale[]> {
     }
 
     const rawLocales = (data as { data?: unknown }).data || data
-    
+
     // Validate with Zod
     const parsed = LocaleArraySchema.safeParse(rawLocales)
     if (!parsed.success) {
@@ -73,9 +80,7 @@ export async function fetchLocales(): Promise<Locale[]> {
     return parsed.data
   } catch (error) {
     logger.error('i18n', 'Error fetching locales', error)
-    return [
-      { code: 'en', name: 'English' }
-    ]
+    return [{ code: 'en', name: 'English' }]
   }
 }
 
@@ -99,7 +104,7 @@ export async function fetchTranslations(locale: LocaleCode): Promise<Translation
 
     // WebAPI returns translations directly, not wrapped in { data: ... }
     const rawTranslations = data
-    
+
     // Validate translations with Zod
     const translationsValidation = TranslationsSchema.safeParse(rawTranslations)
     if (!translationsValidation.success) {
@@ -128,7 +133,7 @@ export async function fetchTranslations(locale: LocaleCode): Promise<Translation
       locale,
       translations,
       format: validatedFormat,
-      fetchedAt: new Date()
+      fetchedAt: new Date(),
     }
   } catch (error) {
     logger.error('i18n', `Error fetching translations for ${locale}`, error)
@@ -138,5 +143,5 @@ export async function fetchTranslations(locale: LocaleCode): Promise<Translation
 
 export const i18nService = {
   fetchLocales,
-  fetchTranslations
+  fetchTranslations,
 }

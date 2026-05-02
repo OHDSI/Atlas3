@@ -47,9 +47,7 @@ export async function getPathwayVersion(
   versionNumber: number
 ): Promise<VersionedAsset<Pathway>> {
   try {
-    const data = await httpGet<unknown>(
-      `/pathway-analysis/${pathwayId}/version/${versionNumber}`
-    )
+    const data = await httpGet<unknown>(`/pathway-analysis/${pathwayId}/version/${versionNumber}`)
     const parsed = versionedAssetSchema(passthroughPathway).safeParse(data)
     if (!parsed.success) {
       logger.error('PathwayVersions', 'asset validation', parsed.error)

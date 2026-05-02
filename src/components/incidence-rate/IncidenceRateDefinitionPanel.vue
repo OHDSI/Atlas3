@@ -101,7 +101,18 @@ const outcomeCohorts = computed(() =>
 </script>
 
 <style scoped>
-.def-panel { display: flex; flex-direction: column; gap: 12px; padding: 8px; }
-.cohort-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.meta-card { margin-bottom: 0; }
+.def-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px;
+}
+.cohort-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.meta-card {
+  margin-bottom: 0;
+}
 </style>

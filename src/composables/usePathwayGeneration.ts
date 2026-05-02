@@ -1,9 +1,5 @@
 import { ref, onUnmounted } from 'vue'
-import {
-  generatePathway,
-  cancelPathwayGeneration,
-  getPathwayExecution,
-} from '@/services/webapi'
+import { generatePathway, cancelPathwayGeneration, getPathwayExecution } from '@/services/webapi'
 import type { PathwayExecution } from '@/models/pathway.types'
 import { PATHWAY_GENERATION_POLL_MS } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
@@ -17,7 +13,10 @@ export function usePathwayGeneration(pathwayId: number) {
   let timer: ReturnType<typeof setInterval> | null = null
 
   function stopPolling() {
-    if (timer) { clearInterval(timer); timer = null }
+    if (timer) {
+      clearInterval(timer)
+      timer = null
+    }
     polling.value = false
   }
 

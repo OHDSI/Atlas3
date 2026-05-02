@@ -12,7 +12,7 @@ import type {
   BarChartData,
   PieChartData,
   LineChartData,
-  ReportType
+  ReportType,
 } from '@/models/datasource.types'
 
 /**
@@ -21,40 +21,48 @@ import type {
 export function transformDashboardReport(raw: DashboardAPIResponse): DashboardReport {
   const summary = {
     sourceName: raw.summary.find(s => s.attributeName === 'Source name')?.attributeValue || '',
-    personCount: parseInt(raw.summary.find(s => s.attributeName === 'Number of persons')?.attributeValue || '0')
+    personCount: parseInt(
+      raw.summary.find(s => s.attributeName === 'Number of persons')?.attributeValue || '0'
+    ),
   }
 
   const genderDistribution: PieChartData[] = raw.gender.map(g => ({
     name: g.conceptName,
-    value: g.countValue
+    value: g.countValue,
   }))
 
   const ageDistribution: BarChartData = {
     categories: raw.ageAtFirstObservation.map(a => `${a.intervalIndex}`),
-    series: [{
-      name: 'Person Count',
-      data: raw.ageAtFirstObservation.map(a => a.countValue)
-    }]
+    series: [
+      {
+        name: 'Person Count',
+        data: raw.ageAtFirstObservation.map(a => a.countValue),
+      },
+    ],
   }
 
   const cumulativeObservation: LineChartData = {
     categories: raw.cumulativeObservation.map(c => c.xLengthOfObservation.toString()),
-    series: [{
-      name: 'Cumulative Observation',
-      data: raw.cumulativeObservation.map(c => c.yPercentPersons)
-    }],
+    series: [
+      {
+        name: 'Cumulative Observation',
+        data: raw.cumulativeObservation.map(c => c.yPercentPersons),
+      },
+    ],
     xAxisLabel: 'Days',
-    yAxisLabel: 'Percent of Persons'
+    yAxisLabel: 'Percent of Persons',
   }
 
   const observationByMonth: LineChartData = {
     categories: raw.observedByMonth.map(o => o.monthYear.toString()),
-    series: [{
-      name: 'Observation Count',
-      data: raw.observedByMonth.map(o => o.countValue)
-    }],
+    series: [
+      {
+        name: 'Observation Count',
+        data: raw.observedByMonth.map(o => o.countValue),
+      },
+    ],
     xAxisLabel: 'Month',
-    yAxisLabel: 'Count'
+    yAxisLabel: 'Count',
   }
 
   return {
@@ -62,7 +70,7 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
     genderDistribution,
     ageDistribution,
     cumulativeObservation,
-    observationByMonth
+    observationByMonth,
   }
 }
 
@@ -75,7 +83,7 @@ export function transformClinicalDomainReport(
 ): PrevalenceData {
   const isEra = isEraReport(reportType)
   const AGGREGATION_THRESHOLD = 10000
-  
+
   // For very large datasets, aggregate less significant entries
   let processedRaw = raw
   if (raw.length > AGGREGATION_THRESHOLD) {
@@ -84,44 +92,49 @@ export function transformClinicalDomainReport(
     const sorted = [...raw].sort((a, b) => b.percentPersons - a.percentPersons)
     const top = sorted.slice(0, 1000)
     const rest = sorted.slice(1000)
-    
+
     if (rest.length > 0) {
       const otherNode: ClinicalDomainAPIResponse = {
         conceptId: -1,
         conceptPath: `Other (${rest.length} concepts)`,
         numPersons: rest.reduce((sum, r) => sum + r.numPersons, 0),
         percentPersons: rest.reduce((sum, r) => sum + r.percentPersons, 0),
-        recordsPerPerson: isEra ? undefined : rest.reduce((sum, r) => sum + (r.recordsPerPerson || 0), 0) / rest.length,
-        lengthOfEra: isEra ? rest.reduce((sum, r) => sum + (r.lengthOfEra || 0), 0) / rest.length : undefined
+        recordsPerPerson: isEra
+          ? undefined
+          : rest.reduce((sum, r) => sum + (r.recordsPerPerson || 0), 0) / rest.length,
+        lengthOfEra: isEra
+          ? rest.reduce((sum, r) => sum + (r.lengthOfEra || 0), 0) / rest.length
+          : undefined,
       }
       processedRaw = [...top, otherNode]
     } else {
       processedRaw = top
     }
   }
-  
+
   const tableRows: PrevalenceTableRow[] = processedRaw.map(item => ({
     conceptId: item.conceptId,
     conceptName: item.conceptPath,
     personCount: item.numPersons,
     prevalence: item.percentPersons,
-    metric: isEra ? (item.lengthOfEra || 0) : (item.recordsPerPerson || 0)
+    metric: isEra ? item.lengthOfEra || 0 : item.recordsPerPerson || 0,
   }))
 
   // Atlas 2.15 treemap encoding (see js/components/reports/classes/Treemap.js
-   // and per-domain aggProperty in js/pages/data-sources/components/reports/*):
-   //   - rectangle area  → numPersons (size)
-   //   - rectangle colour → recordsPerPerson for non-era reports,
-   //                         lengthOfEra for era reports.
-   // We carry colour magnitude on TreemapNode.colorValue so the
-   // gradient shader (paintTreemapNodesByValue) can scale it
-   // independently of `value`. Drop the legacy colorAlpha — that
-   // was a (different) prevalence-based dimming hack.
+  // and per-domain aggProperty in js/pages/data-sources/components/reports/*):
+  //   - rectangle area  → numPersons (size)
+  //   - rectangle colour → recordsPerPerson for non-era reports,
+  //                         lengthOfEra for era reports.
+  // We carry colour magnitude on TreemapNode.colorValue so the
+  // gradient shader (paintTreemapNodesByValue) can scale it
+  // independently of `value`. Drop the legacy colorAlpha — that
+  // was a (different) prevalence-based dimming hack.
   const treemapNodes: TreemapNode[] = processedRaw.map(item => {
     const colorValueRaw = isEra ? item.lengthOfEra : item.recordsPerPerson
-    const colorValue = typeof colorValueRaw === 'number' && Number.isFinite(colorValueRaw)
-      ? colorValueRaw
-      : undefined
+    const colorValue =
+      typeof colorValueRaw === 'number' && Number.isFinite(colorValueRaw)
+        ? colorValueRaw
+        : undefined
     return {
       name: extractConceptDisplayName(item.conceptPath),
       value: item.numPersons,
@@ -134,7 +147,7 @@ export function transformClinicalDomainReport(
   return {
     treemapNodes,
     tableRows,
-    totalCount: raw.length  // Original count before aggregation
+    totalCount: raw.length, // Original count before aggregation
   }
 }
 
@@ -170,13 +183,15 @@ export function exportTableToCSV(rows: PrevalenceTableRow[], metricLabel: string
   const headers = ['Concept ID', 'Name', 'Person Count', 'Prevalence (%)', metricLabel]
   const csvRows = [
     headers.join(','),
-    ...rows.map(row => [
-      row.conceptId,
-      `"${row.conceptName.replace(/"/g, '""')}"`,
-      row.personCount,
-      row.prevalence.toFixed(2),
-      row.metric.toFixed(2)
-    ].join(','))
+    ...rows.map(row =>
+      [
+        row.conceptId,
+        `"${row.conceptName.replace(/"/g, '""')}"`,
+        row.personCount,
+        row.prevalence.toFixed(2),
+        row.metric.toFixed(2),
+      ].join(',')
+    ),
   ]
   return csvRows.join('\n')
 }
@@ -210,25 +225,27 @@ interface DataDensityRawItem {
 }
 
 interface DataDensityRaw {
-  totalRecords?: DataDensityRawItem[];
-  recordsPerPerson?: DataDensityRawItem[];
-  conceptsPerPerson?: DataDensityRawItem[];
+  totalRecords?: DataDensityRawItem[]
+  recordsPerPerson?: DataDensityRawItem[]
+  conceptsPerPerson?: DataDensityRawItem[]
 }
 
 /**
  * Transform Data Density API response to internal format
  */
-export function transformDataDensityReport(raw: DataDensityRaw): import('@/models/datasource.types').DataDensityReport {
+export function transformDataDensityReport(
+  raw: DataDensityRaw
+): import('@/models/datasource.types').DataDensityReport {
   // Transform total records time series
   const totalRecords: import('@/models/datasource.types').MultiLineChartData = {
-    categories: raw.totalRecords?.map((item) => item.xCalendarMonth?.toString() || '') || [],
-    series: []
+    categories: raw.totalRecords?.map(item => item.xCalendarMonth?.toString() || '') || [],
+    series: [],
   }
 
   // Group totalRecords by series name
   if (raw.totalRecords && raw.totalRecords.length > 0) {
     const groupedBySeriesName = new Map<string, number[]>()
-    raw.totalRecords.forEach((item) => {
+    raw.totalRecords.forEach(item => {
       const seriesName = item.seriesName || 'Total'
       if (!groupedBySeriesName.has(seriesName)) {
         groupedBySeriesName.set(seriesName, [])
@@ -238,20 +255,20 @@ export function transformDataDensityReport(raw: DataDensityRaw): import('@/model
 
     totalRecords.series = Array.from(groupedBySeriesName.entries()).map(([name, data]) => ({
       name,
-      data
+      data,
     }))
   }
 
   // Transform records per person time series
   const recordsPerPerson: import('@/models/datasource.types').MultiLineChartData = {
-    categories: raw.recordsPerPerson?.map((item) => item.xCalendarMonth?.toString() || '') || [],
-    series: []
+    categories: raw.recordsPerPerson?.map(item => item.xCalendarMonth?.toString() || '') || [],
+    series: [],
   }
 
   // Group recordsPerPerson by series name
   if (raw.recordsPerPerson && raw.recordsPerPerson.length > 0) {
     const groupedBySeriesName = new Map<string, number[]>()
-    raw.recordsPerPerson.forEach((item) => {
+    raw.recordsPerPerson.forEach(item => {
       const seriesName = item.seriesName || 'Records'
       if (!groupedBySeriesName.has(seriesName)) {
         groupedBySeriesName.set(seriesName, [])
@@ -261,11 +278,11 @@ export function transformDataDensityReport(raw: DataDensityRaw): import('@/model
 
     recordsPerPerson.series = Array.from(groupedBySeriesName.entries()).map(([name, data]) => ({
       name,
-      data
+      data,
     }))
   }
 
-  const conceptsPerPerson = (raw.conceptsPerPerson || []).map((item) => ({
+  const conceptsPerPerson = (raw.conceptsPerPerson || []).map(item => ({
     category: item.category || '',
     min: item.minValue ?? 0,
     p10: item.p10Value ?? 0,
@@ -273,77 +290,82 @@ export function transformDataDensityReport(raw: DataDensityRaw): import('@/model
     median: item.medianValue ?? 0,
     p75: item.p75Value ?? 0,
     p90: item.p90Value ?? 0,
-    max: item.maxValue ?? 0
+    max: item.maxValue ?? 0,
   }))
 
   return {
     totalRecords,
     recordsPerPerson,
-    conceptsPerPerson
+    conceptsPerPerson,
   }
 }
 
 interface PersonRawYearOfBirth {
-  year?: number;
-  yearOfBirth?: number;
-  count?: number;
-  countValue?: number;
+  year?: number
+  yearOfBirth?: number
+  count?: number
+  countValue?: number
 }
 
 interface PersonRawDistribution {
-  conceptName?: string;
-  name?: string;
-  countValue?: number;
-  count?: number;
+  conceptName?: string
+  name?: string
+  countValue?: number
+  count?: number
 }
 
 interface PersonRaw {
-  yearOfBirth?: PersonRawYearOfBirth[];
-  gender?: PersonRawDistribution[];
-  race?: PersonRawDistribution[];
-  ethnicity?: PersonRawDistribution[];
+  yearOfBirth?: PersonRawYearOfBirth[]
+  gender?: PersonRawDistribution[]
+  race?: PersonRawDistribution[]
+  ethnicity?: PersonRawDistribution[]
 }
 
 /**
  * Transform Person API response to internal format
  */
-export function transformPersonReport(raw: PersonRaw): import('@/models/datasource.types').PersonReport {
+export function transformPersonReport(
+  raw: PersonRaw
+): import('@/models/datasource.types').PersonReport {
   // Year of birth distribution
   const yearOfBirth: import('@/models/datasource.types').BarChartData = {
-    categories: raw.yearOfBirth?.map((y) => (y.year?.toString() || y.yearOfBirth?.toString() || '')) || [],
-    series: [{
-      name: 'Person Count',
-      data: raw.yearOfBirth?.map((y) => y.count || y.countValue || 0) || []
-    }],
-    unit: 'People'
+    categories:
+      raw.yearOfBirth?.map(y => y.year?.toString() || y.yearOfBirth?.toString() || '') || [],
+    series: [
+      {
+        name: 'Person Count',
+        data: raw.yearOfBirth?.map(y => y.count || y.countValue || 0) || [],
+      },
+    ],
+    unit: 'People',
   }
 
   // Gender distribution
   const gender: import('@/models/datasource.types').PieChartData[] =
-    raw.gender?.map((g) => ({
+    raw.gender?.map(g => ({
       name: g.conceptName || g.name || 'Unknown',
-      value: g.countValue || g.count || 0
+      value: g.countValue || g.count || 0,
     })) || []
 
   // Race distribution
   const race: import('@/models/datasource.types').PieChartData[] =
-    raw.race?.map((r) => ({
+    raw.race?.map(r => ({
       name: r.conceptName || r.name || 'Unknown',
-      value: r.countValue || r.count || 0
+      value: r.countValue || r.count || 0,
     })) || []
 
   // Ethnicity distribution
   const ethnicity: import('@/models/datasource.types').PieChartData[] =
-    raw.ethnicity?.map((e) => ({
+    raw.ethnicity?.map(e => ({
       name: e.conceptName || e.name || 'Unknown',
-      value: e.countValue || e.count || 0
+      value: e.countValue || e.count || 0,
     })) || []
 
   return {
     yearOfBirth,
     gender,
     race,
-    ethnicity
+    ethnicity,
   }
 }
 
@@ -358,9 +380,11 @@ interface RawBoxPlotItem {
   maxValue?: number
 }
 
-function mapBoxPlotArray(raw: RawBoxPlotItem[] | undefined): import('@/models/report.types').BoxPlotData[] | undefined {
+function mapBoxPlotArray(
+  raw: RawBoxPlotItem[] | undefined
+): import('@/models/report.types').BoxPlotData[] | undefined {
   if (!raw || raw.length === 0) return undefined
-  return raw.map((item) => ({
+  return raw.map(item => ({
     category: item.category || '',
     min: item.minValue ?? 0,
     p10: item.p10Value ?? 0,
@@ -368,7 +392,7 @@ function mapBoxPlotArray(raw: RawBoxPlotItem[] | undefined): import('@/models/re
     median: item.medianValue ?? 0,
     p75: item.p75Value ?? 0,
     p90: item.p90Value ?? 0,
-    max: item.maxValue ?? 0
+    max: item.maxValue ?? 0,
   }))
 }
 
@@ -414,44 +438,55 @@ export function transformObservationPeriodReport(
 ): import('@/models/datasource.types').ObservationPeriodReport {
   const ageAtFirst = raw.ageAtFirst
     ? {
-        categories: raw.ageAtFirst.map((i) => i.intervalIndex?.toString() || ''),
-        values: raw.ageAtFirst.map((i) => i.countValue || 0)
+        categories: raw.ageAtFirst.map(i => i.intervalIndex?.toString() || ''),
+        values: raw.ageAtFirst.map(i => i.countValue || 0),
       }
     : undefined
 
   const observationLength = raw.observationLength
     ? {
-        categories: raw.observationLength.map((i) => i.intervalIndex?.toString() || ''),
-        values: raw.observationLength.map((i) => i.countValue || 0)
+        categories: raw.observationLength.map(i => i.intervalIndex?.toString() || ''),
+        values: raw.observationLength.map(i => i.countValue || 0),
       }
     : undefined
 
-  const cumulativeObservation: import('@/models/datasource.types').MultiLineChartData | undefined = raw.cumulativeObservation
-    ? {
-        categories: raw.cumulativeObservation.map((i) => i.xLengthOfObservation?.toString() || ''),
-        series: [{ name: 'Cumulative %', data: raw.cumulativeObservation.map((i) => i.yPercentPersons || 0) }]
-      }
-    : undefined
+  const cumulativeObservation: import('@/models/datasource.types').MultiLineChartData | undefined =
+    raw.cumulativeObservation
+      ? {
+          categories: raw.cumulativeObservation.map(i => i.xLengthOfObservation?.toString() || ''),
+          series: [
+            {
+              name: 'Cumulative %',
+              data: raw.cumulativeObservation.map(i => i.yPercentPersons || 0),
+            },
+          ],
+        }
+      : undefined
 
-  const observedByMonth: import('@/models/datasource.types').MultiLineChartData | undefined = raw.observedByMonth
-    ? {
-        categories: raw.observedByMonth.map((i) => i.monthYear?.toString() || ''),
-        series: [{ name: 'Persons', data: raw.observedByMonth.map((i) => i.countValue || 0) }]
-      }
-    : undefined
+  const observedByMonth: import('@/models/datasource.types').MultiLineChartData | undefined =
+    raw.observedByMonth
+      ? {
+          categories: raw.observedByMonth.map(i => i.monthYear?.toString() || ''),
+          series: [{ name: 'Persons', data: raw.observedByMonth.map(i => i.countValue || 0) }],
+        }
+      : undefined
 
   const personsWithContinuousObsByYear = raw.personsWithContinuousObservationsByYear
     ? {
-        categories: raw.personsWithContinuousObservationsByYear.map((i) => i.intervalIndex?.toString() || ''),
-        values: raw.personsWithContinuousObservationsByYear.map((i) => i.countValue || 0)
+        categories: raw.personsWithContinuousObservationsByYear.map(
+          i => i.intervalIndex?.toString() || ''
+        ),
+        values: raw.personsWithContinuousObservationsByYear.map(i => i.countValue || 0),
       }
     : undefined
 
-  const observationPeriodsPerPerson: import('@/models/datasource.types').PieChartData[] | undefined =
+  const observationPeriodsPerPerson:
+    | import('@/models/datasource.types').PieChartData[]
+    | undefined =
     raw.observationPeriodsPerPerson && raw.observationPeriodsPerPerson.length > 0
-      ? raw.observationPeriodsPerPerson.map((i) => ({
+      ? raw.observationPeriodsPerPerson.map(i => ({
           name: i.conceptName || 'Unknown',
-          value: i.countValue || 0
+          value: i.countValue || 0,
         }))
       : undefined
 
@@ -465,18 +500,18 @@ export function transformObservationPeriodReport(
     durationByAgeDecile: mapBoxPlotArray(raw.durationByAgeDecile),
     personsWithContinuousObsByYear,
     observationPeriodsPerPerson,
-    observationLengthStats: raw.observationLengthStats
+    observationLengthStats: raw.observationLengthStats,
   }
 }
 
 interface DeathRawDeathByType {
-  conceptName?: string;
-  countValue?: number;
+  conceptName?: string
+  countValue?: number
 }
 
 interface DeathRawPrevalenceByMonth {
-  xCalendarMonth?: number;
-  yPrevalence1000Pp?: number;
+  xCalendarMonth?: number
+  yPrevalence1000Pp?: number
 }
 
 interface DeathRawPrevalenceByGenderAgeYear {
@@ -497,28 +532,36 @@ interface DeathRaw {
   prevalenceByGenderAgeYear?: DeathRawPrevalenceByGenderAgeYear[]
 }
 
-export function transformDeathReport(raw: DeathRaw): import('@/models/datasource.types').DeathReport {
+export function transformDeathReport(
+  raw: DeathRaw
+): import('@/models/datasource.types').DeathReport {
   const ageAtDeath = mapBoxPlotArray(raw.ageAtDeath) || []
 
   const deathByType: import('@/models/datasource.types').PieChartData[] =
-    raw.deathByType?.map((item) => ({
+    raw.deathByType?.map(item => ({
       name: item.conceptName || 'Unknown',
-      value: item.countValue || 0
+      value: item.countValue || 0,
     })) || []
 
-  const prevalenceByMonth: import('@/models/datasource.types').MultiLineChartData | undefined = raw.prevalenceByMonth
-    ? {
-        categories: raw.prevalenceByMonth.map((i) => i.xCalendarMonth?.toString() || ''),
-        series: [{ name: 'Prevalence per 1000', data: raw.prevalenceByMonth.map((i) => i.yPrevalence1000Pp || 0) }]
-      }
-    : undefined
+  const prevalenceByMonth: import('@/models/datasource.types').MultiLineChartData | undefined =
+    raw.prevalenceByMonth
+      ? {
+          categories: raw.prevalenceByMonth.map(i => i.xCalendarMonth?.toString() || ''),
+          series: [
+            {
+              name: 'Prevalence per 1000',
+              data: raw.prevalenceByMonth.map(i => i.yPrevalence1000Pp || 0),
+            },
+          ],
+        }
+      : undefined
 
   let prevalenceByGenderAgeYear: import('@/models/report.types').TrellisChartData | undefined
   if (raw.prevalenceByGenderAgeYear && raw.prevalenceByGenderAgeYear.length > 0) {
     const groupedData = new Map<string, Map<string, { x: number; y: number }[]>>()
     const categories = new Set<string>()
 
-    raw.prevalenceByGenderAgeYear.forEach((item) => {
+    raw.prevalenceByGenderAgeYear.forEach(item => {
       const trellisName = item.trellisName || 'Unknown'
       const seriesName = item.seriesName || 'Total'
       const year = item.xCalendarYear || 0
@@ -543,4 +586,3 @@ export function transformDeathReport(raw: DeathRaw): import('@/models/datasource
 
   return { ageAtDeath, deathByType, prevalenceByMonth, prevalenceByGenderAgeYear }
 }
-

@@ -45,7 +45,7 @@ export function useConfigUndo<T = unknown>() {
       timestamp: Date.now(),
       previousValue: previous,
       newValue: current,
-      field
+      field,
     }
 
     undoStack.value.unshift(operation)
@@ -109,6 +109,6 @@ export function useConfigUndo<T = unknown>() {
     pushUndo,
     performUndo,
     removeOperation,
-    clearUndoStack
+    clearUndoStack,
   }
 }

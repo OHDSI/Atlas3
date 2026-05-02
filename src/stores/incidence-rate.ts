@@ -89,8 +89,12 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     selectedSourceKey.value = null
   }
 
-  function markDirty() { isDirty.value = true }
-  function markClean() { isDirty.value = false }
+  function markDirty() {
+    isDirty.value = true
+  }
+  function markClean() {
+    isDirty.value = false
+  }
 
   function updateExpression(partial: Partial<IncidenceRateExpression>) {
     if (!currentIR.value) return
@@ -114,8 +118,9 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
 
   function removeTargetCohortId(id: number) {
     if (!currentIR.value) return
-    currentIR.value.expression.targetIds =
-      currentIR.value.expression.targetIds.filter(x => x !== id)
+    currentIR.value.expression.targetIds = currentIR.value.expression.targetIds.filter(
+      x => x !== id
+    )
     markDirty()
   }
 
@@ -129,8 +134,9 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
 
   function removeOutcomeCohortId(id: number) {
     if (!currentIR.value) return
-    currentIR.value.expression.outcomeIds =
-      currentIR.value.expression.outcomeIds.filter(x => x !== id)
+    currentIR.value.expression.outcomeIds = currentIR.value.expression.outcomeIds.filter(
+      x => x !== id
+    )
     markDirty()
   }
 
@@ -222,11 +228,14 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
   function saveToDraft() {
     if (!currentIR.value) return
     try {
-      sessionStorage.setItem(STORAGE_KEY_INCIDENCE_RATE_DRAFT, JSON.stringify({
-        ir: currentIR.value,
-        cohortNames: Array.from(cohortNameById.value.entries()),
-        timestamp: new Date().toISOString(),
-      }))
+      sessionStorage.setItem(
+        STORAGE_KEY_INCIDENCE_RATE_DRAFT,
+        JSON.stringify({
+          ir: currentIR.value,
+          cohortNames: Array.from(cohortNameById.value.entries()),
+          timestamp: new Date().toISOString(),
+        })
+      )
       lastAutoSave.value = new Date()
     } catch (err) {
       logger.error('IncidenceRate', 'saveToDraft failed', err)
@@ -249,12 +258,18 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
   }
 
   function clearDraft() {
-    try { sessionStorage.removeItem(STORAGE_KEY_INCIDENCE_RATE_DRAFT) }
-    catch (err) { logger.error('IncidenceRate', 'clearDraft failed', err) }
+    try {
+      sessionStorage.removeItem(STORAGE_KEY_INCIDENCE_RATE_DRAFT)
+    } catch (err) {
+      logger.error('IncidenceRate', 'clearDraft failed', err)
+    }
   }
 
   function stopAutoSave() {
-    if (autoSaveTimer) { clearInterval(autoSaveTimer); autoSaveTimer = null }
+    if (autoSaveTimer) {
+      clearInterval(autoSaveTimer)
+      autoSaveTimer = null
+    }
   }
 
   function startAutoSave() {
@@ -267,15 +282,26 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
   async function validateIR() {
     const errors: IncidenceRateValidationError[] = []
     const ir = currentIR.value
-    if (!ir) { validationErrors.value = errors; return }
+    if (!ir) {
+      validationErrors.value = errors
+      return
+    }
     if (!ir.name || ir.name.trim() === '') {
       errors.push({ field: 'name', message: 'Name is required', severity: 'error' })
     }
     if (ir.expression.targetIds.length === 0) {
-      errors.push({ field: 'targetIds', message: 'At least one target cohort is required', severity: 'error' })
+      errors.push({
+        field: 'targetIds',
+        message: 'At least one target cohort is required',
+        severity: 'error',
+      })
     }
     if (ir.expression.outcomeIds.length === 0) {
-      errors.push({ field: 'outcomeIds', message: 'At least one outcome cohort is required', severity: 'error' })
+      errors.push({
+        field: 'outcomeIds',
+        message: 'At least one outcome cohort is required',
+        severity: 'error',
+      })
     }
     const tar = ir.expression.timeAtRisk
     if (tar.start.DateField === tar.end.DateField && tar.end.Offset <= tar.start.Offset) {
@@ -332,40 +358,80 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     }
   }
 
-  function setSelectedSource(sourceKey: string | null) { selectedSourceKey.value = sourceKey }
+  function setSelectedSource(sourceKey: string | null) {
+    selectedSourceKey.value = sourceKey
+  }
   function setSelectedTargetOutcome(target: number | null, outcome: number | null) {
     selectedTargetId.value = target
     selectedOutcomeId.value = outcome
   }
-  function setRateMultiplier(m: RateMultiplier) { rateMultiplier.value = m }
+  function setRateMultiplier(m: RateMultiplier) {
+    rateMultiplier.value = m
+  }
 
-  const canSave = computed(() =>
-    isDirty.value && !hasErrors.value && !isPreviewMode.value
-  )
-  const canGenerate = computed(() =>
-    !isDirty.value && !hasErrors.value && currentIR.value?.id !== undefined && !isPreviewMode.value
+  const canSave = computed(() => isDirty.value && !hasErrors.value && !isPreviewMode.value)
+  const canGenerate = computed(
+    () =>
+      !isDirty.value &&
+      !hasErrors.value &&
+      currentIR.value?.id !== undefined &&
+      !isPreviewMode.value
   )
 
   return {
     // state
-    currentIR, isDirty, lastAutoSave, previewVersion, validationErrors, isReadOnly,
-    cohortNameById, executionInfoBySourceKey,
-    selectedTargetId, selectedOutcomeId, selectedSourceKey, rateMultiplier,
+    currentIR,
+    isDirty,
+    lastAutoSave,
+    previewVersion,
+    validationErrors,
+    isReadOnly,
+    cohortNameById,
+    executionInfoBySourceKey,
+    selectedTargetId,
+    selectedOutcomeId,
+    selectedSourceKey,
+    rateMultiplier,
     // computed
-    isPreviewMode, hasErrors, canSave, canGenerate,
+    isPreviewMode,
+    hasErrors,
+    canSave,
+    canGenerate,
     // mutators
-    setIR, createNewIR, markDirty, markClean,
-    updateExpression, updateMeta,
-    addTargetCohortId, removeTargetCohortId,
-    addOutcomeCohortId, removeOutcomeCohortId,
-    updateTimeAtRisk, setStudyWindow, clearStudyWindow,
-    addStratifyRule, updateStratifyRule, removeStratifyRule, moveStratifyRule,
+    setIR,
+    createNewIR,
+    markDirty,
+    markClean,
+    updateExpression,
+    updateMeta,
+    addTargetCohortId,
+    removeTargetCohortId,
+    addOutcomeCohortId,
+    removeOutcomeCohortId,
+    updateTimeAtRisk,
+    setStudyWindow,
+    clearStudyWindow,
+    addStratifyRule,
+    updateStratifyRule,
+    removeStratifyRule,
+    moveStratifyRule,
     // lifecycle
-    loadIR, loadVersionPreview, clearPreviewVersion,
-    saveToDraft, restoreFromDraft, clearDraft, startAutoSave, stopAutoSave,
+    loadIR,
+    loadVersionPreview,
+    clearPreviewVersion,
+    saveToDraft,
+    restoreFromDraft,
+    clearDraft,
+    startAutoSave,
+    stopAutoSave,
     validateIR,
-    addTag, removeTag, syncTags,
-    setExecutionInfo, setSelectedSource, setSelectedTargetOutcome, setRateMultiplier,
+    addTag,
+    removeTag,
+    syncTags,
+    setExecutionInfo,
+    setSelectedSource,
+    setSelectedTargetOutcome,
+    setRateMultiplier,
     // re-export options for convenience
     RATE_MULTIPLIER_OPTIONS,
   }

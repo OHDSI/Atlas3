@@ -12,16 +12,16 @@ export interface Concept {
   conceptId: number
   conceptName: string
   conceptCode: string
-  domainId: string           // e.g., "Condition", "Drug", "Measurement"
-  vocabularyId: string       // e.g., "SNOMED", "RxNorm", "LOINC"
-  conceptClassId: string     // e.g., "Clinical Finding", "Ingredient"
-  standardConcept: string | null    // "S" = Standard, "C" = Classification, null = Non-standard
-  invalidReason: string | null      // null = Valid, otherwise invalid
+  domainId: string // e.g., "Condition", "Drug", "Measurement"
+  vocabularyId: string // e.g., "SNOMED", "RxNorm", "LOINC"
+  conceptClassId: string // e.g., "Clinical Finding", "Ingredient"
+  standardConcept: string | null // "S" = Standard, "C" = Classification, null = Non-standard
+  invalidReason: string | null // null = Valid, otherwise invalid
   // Record counts from cdmresults
-  recordCount?: number       // RC - Record Count
-  descendantRecordCount?: number   // DRC - Descendant Record Count
-  personCount?: number       // PC - Person Count
-  descendantPersonCount?: number   // DPC - Descendant Person Count
+  recordCount?: number // RC - Record Count
+  descendantRecordCount?: number // DRC - Descendant Record Count
+  personCount?: number // PC - Person Count
+  descendantPersonCount?: number // DPC - Descendant Person Count
   relationships?: string[]
 }
 
@@ -67,9 +67,9 @@ export interface ConceptSetItem {
   conceptClassId: string
   standardConcept: string | null
   invalidReason: string | null
-  isExcluded: boolean           // Exclude from cohort criteria
-  includeDescendants: boolean   // Include child concepts in hierarchy
-  includeMapped: boolean        // Include mapped concepts from other vocabularies
+  isExcluded: boolean // Exclude from cohort criteria
+  includeDescendants: boolean // Include child concepts in hierarchy
+  includeMapped: boolean // Include mapped concepts from other vocabularies
 }
 
 export const ConceptSetItemSchema = z.object({
@@ -91,15 +91,15 @@ export const ConceptSetItemSchema = z.object({
 // ============================================================================
 
 export interface ConceptSet {
-  id?: number | string          // Optional for creation, required after save
+  id?: number | string // Optional for creation, required after save
   name: string
-  description?: string          // Optional description
+  description?: string // Optional description
   createdDate?: string | number // ISO 8601 datetime or Unix timestamp
-  createdBy?: string            // Username
+  createdBy?: string // Username
   modifiedDate?: string | number // ISO 8601 datetime or Unix timestamp
-  modifiedBy?: string           // Username
-  shared?: boolean              // Visible to other users
-  items: ConceptSetItem[]       // Concepts in this set
+  modifiedBy?: string // Username
+  shared?: boolean // Visible to other users
+  items: ConceptSetItem[] // Concepts in this set
 }
 
 export const ConceptSetSchema = z.object({
@@ -143,23 +143,27 @@ export const ConceptSetListItemSchema = z.object({
   id: z.number(),
   name: z.string(),
   createdDate: z.union([z.string(), z.number()]).optional(), // Can be timestamp number or ISO string
-  createdBy: z.union([
-    z.string(),
-    z.object({
-      id: z.number(),
-      name: z.string().nullable(),
-      login: z.string(),
-    })
-  ]).optional(),
+  createdBy: z
+    .union([
+      z.string(),
+      z.object({
+        id: z.number(),
+        name: z.string().nullable(),
+        login: z.string(),
+      }),
+    ])
+    .optional(),
   modifiedDate: z.union([z.string(), z.number()]).optional(), // Can be timestamp number or ISO string
-  modifiedBy: z.union([
-    z.string(),
-    z.object({
-      id: z.number(),
-      name: z.string().nullable(),
-      login: z.string(),
-    })
-  ]).optional(),
+  modifiedBy: z
+    .union([
+      z.string(),
+      z.object({
+        id: z.number(),
+        name: z.string().nullable(),
+        login: z.string(),
+      }),
+    ])
+    .optional(),
 })
 
 export type ConceptSetListItem = z.infer<typeof ConceptSetListItemSchema>
@@ -228,14 +232,29 @@ export const ComparisonResultItemSchema = z.object({
   conceptClassId: z.string(),
   domainId: z.string(),
   vocabularyId: z.string(),
-  standardConcept: z.string().nullable().optional().transform((v) => v ?? null),
-  invalidReason: z.string().nullable().optional().transform((v) => v ?? null),
-  validStartDate: z.union([z.string(), z.number()]).nullable().optional().transform((v) => v ?? null),
-  validEndDate: z.union([z.string(), z.number()]).nullable().optional().transform((v) => v ?? null),
+  standardConcept: z
+    .string()
+    .nullable()
+    .optional()
+    .transform(v => v ?? null),
+  invalidReason: z
+    .string()
+    .nullable()
+    .optional()
+    .transform(v => v ?? null),
+  validStartDate: z
+    .union([z.string(), z.number()])
+    .nullable()
+    .optional()
+    .transform(v => v ?? null),
+  validEndDate: z
+    .union([z.string(), z.number()])
+    .nullable()
+    .optional()
+    .transform(v => v ?? null),
   nameMismatch: z.boolean().optional().default(false),
 })
 
 export const ComparisonResultSchema = z.array(ComparisonResultItemSchema)
 
 export type ComparisonResultResponse = z.infer<typeof ComparisonResultSchema>
-

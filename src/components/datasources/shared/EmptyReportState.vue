@@ -29,7 +29,7 @@ withDefaults(
   }>(),
   {
     subtitle: undefined,
-    icon: 'mdi-database-off'
+    icon: 'mdi-database-off',
   }
 )
 </script>

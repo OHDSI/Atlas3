@@ -15,13 +15,7 @@ import { z } from 'zod'
 /**
  * Possible cache status values
  */
-export const CacheStatusTypeSchema = z.enum([
-  'ready',
-  'building',
-  'not_built',
-  'error',
-  'stale'
-])
+export const CacheStatusTypeSchema = z.enum(['ready', 'building', 'not_built', 'error', 'stale'])
 
 export type CacheStatusType = z.infer<typeof CacheStatusTypeSchema>
 
@@ -45,7 +39,7 @@ export const TrexSQLCacheStatusSchema = z.object({
   sizeBytes: z.number().int().nonnegative().nullable(),
 
   /** Error message if status is 'error' */
-  errorMessage: z.string().nullable()
+  errorMessage: z.string().nullable(),
 })
 
 export type TrexSQLCacheStatus = z.infer<typeof TrexSQLCacheStatusSchema>
@@ -57,19 +51,20 @@ export type TrexSQLCacheStatus = z.infer<typeof TrexSQLCacheStatusSchema>
 /**
  * Response from the patient count endpoint
  */
-export const PatientCountResultSchema = z.object({
-  /** Number of patients matching the cohort criteria */
-  cohortPatientCount: z.number().int().nonnegative(),
+export const PatientCountResultSchema = z
+  .object({
+    /** Number of patients matching the cohort criteria */
+    cohortPatientCount: z.number().int().nonnegative(),
 
-  /** Total patients in the dataset */
-  totalPatientCount: z.number().int().nonnegative(),
+    /** Total patients in the dataset */
+    totalPatientCount: z.number().int().nonnegative(),
 
-  /** Query execution time in milliseconds */
-  executionTimeMs: z.number().int().nonnegative()
-}).refine(
-  data => data.cohortPatientCount <= data.totalPatientCount,
-  { message: 'cohortPatientCount cannot exceed totalPatientCount' }
-)
+    /** Query execution time in milliseconds */
+    executionTimeMs: z.number().int().nonnegative(),
+  })
+  .refine(data => data.cohortPatientCount <= data.totalPatientCount, {
+    message: 'cohortPatientCount cannot exceed totalPatientCount',
+  })
 
 export type PatientCountResult = z.infer<typeof PatientCountResultSchema>
 
@@ -78,7 +73,7 @@ export type PatientCountResult = z.infer<typeof PatientCountResultSchema>
  */
 export const CountRequestSchema = z.object({
   /** Cohort expression in Atlas format */
-  expression: z.record(z.unknown())
+  expression: z.record(z.unknown()),
 })
 
 export type CountRequest = z.infer<typeof CountRequestSchema>
@@ -95,7 +90,7 @@ export const BuildCacheResponseSchema = z.object({
   message: z.string(),
 
   /** Estimated time to complete in seconds (if available) */
-  estimatedTimeSeconds: z.number().int().nonnegative().nullable().optional()
+  estimatedTimeSeconds: z.number().int().nonnegative().nullable().optional(),
 })
 
 export type BuildCacheResponse = z.infer<typeof BuildCacheResponseSchema>

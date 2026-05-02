@@ -1,7 +1,11 @@
 <template>
   <v-card variant="outlined">
     <v-card-title class="text-subtitle-1">
-      {{ singleSelect ? t('components.conceptPicker.selectConcept', 'Select Concept') : t('components.conceptAddBox.selectConceptSet', 'Select Concept Set') }}
+      {{
+        singleSelect
+          ? t('components.conceptPicker.selectConcept', 'Select Concept')
+          : t('components.conceptAddBox.selectConceptSet', 'Select Concept Set')
+      }}
     </v-card-title>
     <v-card-text>
       <!-- Single Concept Selection Mode -->
@@ -61,13 +65,24 @@
               <template #prepend>
                 <v-icon>mdi-magnify</v-icon>
               </template>
-              <v-list-item-title>{{ t('components.conceptSet.import.sourceCodes.searchConcepts', 'Search for concepts...') }}</v-list-item-title>
+              <v-list-item-title>
+                {{
+                  t(
+                    'components.conceptSet.import.sourceCodes.searchConcepts',
+                    'Search for concepts...'
+                  )
+                }}
+              </v-list-item-title>
             </v-list-item>
             <v-list-item @click="showCreateNew = true">
               <template #prepend>
                 <v-icon>mdi-plus</v-icon>
               </template>
-              <v-list-item-title>{{ t('common.create', 'Create new concept set...') }}</v-list-item-title>
+              <v-list-item-title>
+                {{
+                  t('common.create', 'Create new concept set...')
+                }}
+              </v-list-item-title>
             </v-list-item>
             <v-divider class="my-2" />
           </template>
@@ -150,7 +165,9 @@ const {
 
 // State for concept set mode
 const selectedConceptSetId = ref<number | string | undefined>(
-  !props.singleSelect && props.modelValue && 'id' in props.modelValue ? props.modelValue.id : undefined
+  !props.singleSelect && props.modelValue && 'id' in props.modelValue
+    ? props.modelValue.id
+    : undefined
 )
 const selectedConceptSet = ref<ConceptSet | null>(null)
 
@@ -170,7 +187,7 @@ const newConceptSet = ref<ConceptSet>({
 })
 
 const conceptSetItems = computed(() => {
-  return conceptSetsList.value.map((cs) => ({
+  return conceptSetsList.value.map(cs => ({
     label: `${cs.name} (ID: ${cs.id})`,
     value: cs.id,
   }))
@@ -234,7 +251,7 @@ function openSearchFromEditor() {
 async function handleSaveNew() {
   // Add selected concepts to the new concept set
   if (selectedConcepts.value.length > 0) {
-    newConceptSet.value.items = selectedConcepts.value.map((concept) => ({
+    newConceptSet.value.items = selectedConcepts.value.map(concept => ({
       conceptId: concept.conceptId,
       conceptName: concept.conceptName,
       conceptCode: concept.conceptCode,
@@ -288,7 +305,7 @@ onMounted(async () => {
 // Watch for external changes to modelValue
 watch(
   () => props.modelValue,
-  (newValue) => {
+  newValue => {
     if (props.singleSelect) {
       // Handle single concept mode
       if (newValue && 'CONCEPT_ID' in newValue) {

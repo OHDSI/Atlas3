@@ -17,43 +17,49 @@ export const LogicTypeSchema = z.enum(['ALL', 'ANY', 'AT_LEAST', 'AT_MOST'])
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const NestedCriteriaSchema: z.ZodType<any> = z.lazy(() =>
-  z.object({
-    id: z.string().uuid('Invalid UUID format for nested criteria ID'),
-    logicType: LogicTypeSchema,
-    count: z.number().int().positive('Count must be a positive integer').optional(),
-    events: z.array(CohortEventSchema).min(0, 'Events array is required')
-  }).refine(
-    (data) => {
-      // Count is required for AT_LEAST and AT_MOST
-      const needsCount = data.logicType === 'AT_LEAST' || data.logicType === 'AT_MOST'
-      return needsCount ? data.count !== undefined : data.count === undefined
-    },
-    {
-      message: 'count is required for AT_LEAST/AT_MOST logic types, must be undefined for ALL/ANY',
-      path: ['count']
-    }
-  ).refine(
-    (data) => {
-      // If count is specified, it must be <= events.length
-      if (data.count !== undefined) {
-        return data.count <= data.events.length
+  z
+    .object({
+      id: z.string().uuid('Invalid UUID format for nested criteria ID'),
+      logicType: LogicTypeSchema,
+      count: z.number().int().positive('Count must be a positive integer').optional(),
+      events: z.array(CohortEventSchema).min(0, 'Events array is required'),
+    })
+    .refine(
+      data => {
+        // Count is required for AT_LEAST and AT_MOST
+        const needsCount = data.logicType === 'AT_LEAST' || data.logicType === 'AT_MOST'
+        return needsCount ? data.count !== undefined : data.count === undefined
+      },
+      {
+        message:
+          'count is required for AT_LEAST/AT_MOST logic types, must be undefined for ALL/ANY',
+        path: ['count'],
       }
-      return true
-    },
-    {
-      message: 'count cannot exceed the number of events',
-      path: ['count']
-    }
-  )
+    )
+    .refine(
+      data => {
+        // If count is specified, it must be <= events.length
+        if (data.count !== undefined) {
+          return data.count <= data.events.length
+        }
+        return true
+      },
+      {
+        message: 'count cannot exceed the number of events',
+        path: ['count'],
+      }
+    )
 )
 
 /**
  * Schema for concept set reference (simplified)
  */
-const ConceptSetReferenceSchema = z.object({
-  id: z.number().int(),
-  name: z.string()
-}).optional()
+const ConceptSetReferenceSchema = z
+  .object({
+    id: z.number().int(),
+    name: z.string(),
+  })
+  .optional()
 
 /**
  * Cardinality type enumeration
@@ -67,31 +73,33 @@ const CountingMethodSchema = z.enum([
   'ALL',
   'DISTINCT_CONCEPT',
   'DISTINCT_START_DATE',
-  'DISTINCT_VISIT'
+  'DISTINCT_VISIT',
 ])
 
 /**
  * Cardinality schema - validates occurrence count constraints
  */
-const CardinalitySchema = z.object({
-  type: CardinalityTypeSchema,
-  count: z.number().int().min(0, 'Count must be >= 0'),
-  countingMethod: CountingMethodSchema,
-  isDistinct: z.boolean().optional(),
-  countColumn: z.string().optional()
-}).refine(
-  (data) => {
-    // AT_LEAST requires count >= 1
-    if (data.type === 'AT_LEAST') {
-      return data.count >= 1
+const CardinalitySchema = z
+  .object({
+    type: CardinalityTypeSchema,
+    count: z.number().int().min(0, 'Count must be >= 0'),
+    countingMethod: CountingMethodSchema,
+    isDistinct: z.boolean().optional(),
+    countColumn: z.string().optional(),
+  })
+  .refine(
+    data => {
+      // AT_LEAST requires count >= 1
+      if (data.type === 'AT_LEAST') {
+        return data.count >= 1
+      }
+      return true
+    },
+    {
+      message: 'AT_LEAST cardinality requires count >= 1',
+      path: ['count'],
     }
-    return true
-  },
-  {
-    message: 'AT_LEAST cardinality requires count >= 1',
-    path: ['count']
-  }
-)
+  )
 
 /**
  * Window reference point enumeration
@@ -109,7 +117,7 @@ const BeforeAfterSchema = z.enum(['BEFORE', 'AFTER'])
 const WindowSchema = z.object({
   days: z.number().int().nullable(), // null means "all time"
   beforeAfter: BeforeAfterSchema,
-  referencePoint: ReferencePointSchema
+  referencePoint: ReferencePointSchema,
 })
 
 /**
@@ -117,7 +125,7 @@ const WindowSchema = z.object({
  */
 const TemporalWindowSchema = z.object({
   startWindow: WindowSchema.optional(),
-  endWindow: WindowSchema.optional()
+  endWindow: WindowSchema.optional(),
 })
 
 /**
@@ -132,7 +140,7 @@ const DateAdjustmentSchema = z.object({
   startWith: DateFieldSchema,
   startOffset: z.number().int(),
   endWith: DateFieldSchema,
-  endOffset: z.number().int()
+  endOffset: z.number().int(),
 })
 
 /**
@@ -179,7 +187,7 @@ const NumericRangeAttributeBaseSchema = AttributeBaseSchema.extend({
  * Numeric range attribute schema with refinements
  */
 const NumericRangeAttributeSchema = NumericRangeAttributeBaseSchema.refine(
-  (data) => {
+  data => {
     // BETWEEN/NOT_BETWEEN requires extent
     if (data.operator === 'BETWEEN' || data.operator === 'NOT_BETWEEN') {
       return data.extent !== undefined
@@ -197,23 +205,19 @@ const NumericRangeAttributeSchema = NumericRangeAttributeBaseSchema.refine(
  */
 const DateRangeAttributeBaseSchema = AttributeBaseSchema.extend({
   type: z.literal('dateRange'),
-  operator: z.enum([
-    'GREATER_THAN',
-    'LESS_THAN',
-    'EQUAL',
-    'NOT_EQUAL',
-    'BETWEEN',
-    'NOT_BETWEEN',
-  ]),
+  operator: z.enum(['GREATER_THAN', 'LESS_THAN', 'EQUAL', 'NOT_EQUAL', 'BETWEEN', 'NOT_BETWEEN']),
   value: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)'),
-  extent: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)').optional(),
+  extent: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid ISO date format (YYYY-MM-DD)')
+    .optional(),
 })
 
 /**
  * Date range attribute schema with refinements
  */
 const DateRangeAttributeSchema = DateRangeAttributeBaseSchema.refine(
-  (data) => {
+  data => {
     // BETWEEN requires both value and extent
     if (data.operator === 'BETWEEN') {
       return data.value && data.extent
@@ -292,13 +296,13 @@ const UserDefinedPeriodBaseSchema = z.object({
  * User defined period schema with refinements
  */
 const UserDefinedPeriodSchema = UserDefinedPeriodBaseSchema.refine(
-  (data) => {
+  data => {
     // Ensure end date is after or equal to start date
     return data.endDate >= data.startDate
   },
   {
     message: 'End date must be after or equal to start date',
-    path: ['endDate']
+    path: ['endDate'],
   }
 )
 
@@ -366,7 +370,7 @@ export const CohortEventSchema: z.ZodType<any> = z.lazy(() =>
     nestedCriteria: NestedCriteriaSchema.optional(),
     restrictVisit: z.boolean().optional(),
     ignoreObservationPeriod: z.boolean().optional(),
-    dateAdjustment: DateAdjustmentSchema.optional()
+    dateAdjustment: DateAdjustmentSchema.optional(),
   })
 )
 
@@ -408,7 +412,10 @@ export function validateDateAdjustment(data: unknown) {
 /**
  * Custom validation: Check for circular references in nested criteria
  */
-export function validateNoCircularReferences(event: CohortEvent, ancestors: Set<string> = new Set()): {
+export function validateNoCircularReferences(
+  event: CohortEvent,
+  ancestors: Set<string> = new Set()
+): {
   valid: boolean
   circularEventId?: string
   path?: string[]
@@ -417,7 +424,7 @@ export function validateNoCircularReferences(event: CohortEvent, ancestors: Set<
     return {
       valid: false,
       circularEventId: event.id,
-      path: Array.from(ancestors)
+      path: Array.from(ancestors),
     }
   }
 
@@ -440,7 +447,11 @@ export function validateNoCircularReferences(event: CohortEvent, ancestors: Set<
 /**
  * Custom validation: Check nesting depth doesn't exceed limit
  */
-export function validateDepthLimit(event: CohortEvent, maxDepth = 10, currentDepth = 0): {
+export function validateDepthLimit(
+  event: CohortEvent,
+  maxDepth = 10,
+  currentDepth = 0
+): {
   valid: boolean
   actualDepth: number
   exceedsLimit: boolean
@@ -449,7 +460,7 @@ export function validateDepthLimit(event: CohortEvent, maxDepth = 10, currentDep
     return {
       valid: currentDepth <= maxDepth,
       actualDepth: currentDepth,
-      exceedsLimit: currentDepth > maxDepth
+      exceedsLimit: currentDepth > maxDepth,
     }
   }
 
@@ -465,6 +476,6 @@ export function validateDepthLimit(event: CohortEvent, maxDepth = 10, currentDep
   return {
     valid: maxChildDepth <= maxDepth,
     actualDepth: maxChildDepth,
-    exceedsLimit: maxChildDepth > maxDepth
+    exceedsLimit: maxChildDepth > maxDepth,
   }
 }

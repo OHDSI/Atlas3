@@ -25,7 +25,7 @@
         closable
         color="primary"
         data-testid="selected-concept-set"
-        style="cursor: pointer;"
+        style="cursor: pointer"
         @click="emit('edit', conceptSet)"
         @click:close="emit('clear')"
       >
@@ -45,7 +45,7 @@ withDefaults(
   {
     conceptSet: undefined,
     label: 'Concept Set',
-    selectLabel: 'Select Concept Set'
+    selectLabel: 'Select Concept Set',
   }
 )
 

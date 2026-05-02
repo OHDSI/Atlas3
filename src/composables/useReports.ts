@@ -26,7 +26,7 @@ export function useReports() {
     isLoading,
     hasError,
     errorMessage,
-    cacheStats
+    cacheStats,
   } = storeToRefs(store)
 
   /**
@@ -65,21 +65,13 @@ export function useReports() {
     store.clearReport(currentCohortId.value, currentSourceKey.value, currentReportType.value)
 
     // Fetch fresh data
-    await store.fetchReport(
-      currentCohortId.value,
-      currentSourceKey.value,
-      currentReportType.value
-    )
+    await store.fetchReport(currentCohortId.value, currentSourceKey.value, currentReportType.value)
   }
 
   /**
    * Check if specific report is available in cache
    */
-  function isReportAvailable(
-    cohortId: number,
-    sourceKey: string,
-    reportType: ReportType
-  ): boolean {
+  function isReportAvailable(cohortId: number, sourceKey: string, reportType: ReportType): boolean {
     return store.isReportCached(cohortId, sourceKey, reportType)
   }
 
@@ -160,6 +152,6 @@ export function useReports() {
     clearCurrent,
     clearAll,
     clearSpecific,
-    setContext
+    setContext,
   }
 }

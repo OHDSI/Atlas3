@@ -103,7 +103,7 @@ const props = defineProps<Props>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'select': [conceptSetId: number]
+  select: [conceptSetId: number]
 }>()
 
 const { t } = useI18n()
@@ -111,8 +111,8 @@ const store = useConceptSetsStore()
 
 const searchTerm = ref<string>('')
 
-const dialogTitle = computed(() =>
-  props.title ?? t('cs.browser.compare.modalTitle', 'Choose a concept set').value
+const dialogTitle = computed(
+  () => props.title ?? t('cs.browser.compare.modalTitle', 'Choose a concept set').value
 )
 
 const headers = [
@@ -124,7 +124,7 @@ const headers = [
 
 const filteredRows = computed<ConceptSetListItem[]>(() => {
   const term = searchTerm.value?.toLowerCase().trim() ?? ''
-  return store.conceptSets.filter((row) => {
+  return store.conceptSets.filter(row => {
     if (props.excludeId !== undefined && row.id === props.excludeId) return false
     if (!term) return true
     return row.name.toLowerCase().includes(term)
@@ -133,7 +133,7 @@ const filteredRows = computed<ConceptSetListItem[]>(() => {
 
 watch(
   () => props.modelValue,
-  (open) => {
+  open => {
     if (open && store.conceptSets.length === 0 && !store.loading) {
       void store.fetchAll()
     }

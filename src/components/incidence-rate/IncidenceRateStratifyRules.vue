@@ -23,7 +23,9 @@
           @click="activeIndex = idx"
         >
           <span class="rule-num">{{ idx + 1 }}.</span>
-          <span class="rule-name">{{ rule.name || t('incidenceRate.untitled', 'Untitled rule') }}</span>
+          <span class="rule-name">{{
+            rule.name || t('incidenceRate.untitled', 'Untitled rule')
+          }}</span>
           <v-spacer />
           <v-btn
             size="x-small"
@@ -100,21 +102,50 @@ function addRule() {
 
 function onRemove(idx: number) {
   store.removeStratifyRule(idx)
-  if (activeIndex.value >= rules.value.length) activeIndex.value = Math.max(0, rules.value.length - 1)
+  if (activeIndex.value >= rules.value.length)
+    activeIndex.value = Math.max(0, rules.value.length - 1)
 }
 </script>
 
 <style scoped>
-.strat-card { margin-bottom: 12px; }
-.strat-body { display: grid; grid-template-columns: 280px 1fr; gap: 12px; }
-.rule-list { border-right: 1px solid #eee; padding-right: 8px; }
-.rule-item {
-  display: flex; align-items: center; gap: 4px;
-  padding: 4px 8px; cursor: pointer; border-radius: 4px;
+.strat-card {
+  margin-bottom: 12px;
 }
-.rule-item.active { background: rgba(25, 118, 210, .08); }
-.rule-num { font-weight: 600; }
-.rule-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
-.empty { color: #888; padding: 8px; }
-.empty.pad { padding: 24px; text-align: center; }
+.strat-body {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 12px;
+}
+.rule-list {
+  border-right: 1px solid #eee;
+  padding-right: 8px;
+}
+.rule-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.rule-item.active {
+  background: rgba(25, 118, 210, 0.08);
+}
+.rule-num {
+  font-weight: 600;
+}
+.rule-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+.empty {
+  color: #888;
+  padding: 8px;
+}
+.empty.pad {
+  padding: 24px;
+  text-align: center;
+}
 </style>

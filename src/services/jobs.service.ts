@@ -12,7 +12,7 @@ import {
   JobExecutionListSchema,
   type Job,
   type JobExecution,
-  transformJobExecution
+  transformJobExecution,
 } from '@/models/jobs.types'
 
 /**
@@ -21,7 +21,12 @@ import {
  */
 function extractExecutions(data: unknown): JobExecution[] {
   // Check if it's a paginated response with 'content' array
-  if (data && typeof data === 'object' && 'content' in data && Array.isArray((data as { content: unknown }).content)) {
+  if (
+    data &&
+    typeof data === 'object' &&
+    'content' in data &&
+    Array.isArray((data as { content: unknown }).content)
+  ) {
     return (data as { content: JobExecution[] }).content
   }
   // Otherwise treat as plain array
@@ -75,5 +80,5 @@ export async function getJobs(): Promise<ApiResult<Job[]>> {
  * Export the service as a singleton object
  */
 export const jobsService = {
-  getJobs
+  getJobs,
 }

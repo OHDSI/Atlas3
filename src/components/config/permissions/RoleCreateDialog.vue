@@ -89,7 +89,7 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'success': [role: Role]
+  success: [role: Role]
 }>()
 
 const { createRole, updateRole, roles } = useRoles()
@@ -119,35 +119,39 @@ const nameRules = [
     if (!v) return true // Let required rule handle empty
 
     const trimmedName = v.trim().toLowerCase()
-    const isDuplicate = roles.value.some(r =>
-      r.name.toLowerCase() === trimmedName && r.id !== props.role?.id
+    const isDuplicate = roles.value.some(
+      r => r.name.toLowerCase() === trimmedName && r.id !== props.role?.id
     )
 
     return !isDuplicate || 'A role with this name already exists'
-  }
+  },
 ]
 
 const errors = ref<Record<string, string>>({})
 
 // Watch for role changes to populate form
-watch(() => props.role, (role) => {
-  serverError.value = null
-  errors.value = {}
+watch(
+  () => props.role,
+  role => {
+    serverError.value = null
+    errors.value = {}
 
-  if (role) {
-    // Edit mode: populate form with role data
-    form.value = {
-      name: role.name,
-      description: role.description || '',
+    if (role) {
+      // Edit mode: populate form with role data
+      form.value = {
+        name: role.name,
+        description: role.description || '',
+      }
+    } else {
+      // Create mode: reset form
+      form.value = {
+        name: '',
+        description: '',
+      }
     }
-  } else {
-    // Create mode: reset form
-    form.value = {
-      name: '',
-      description: '',
-    }
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 async function handleSubmit() {
   serverError.value = null

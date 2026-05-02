@@ -12,10 +12,10 @@ import type { ReportType } from '@/models/report.types'
  */
 export const REPORT_ANALYSIS_REQUIREMENTS: Record<ReportType, number[]> = {
   // Person demographics
-  'person': [0, 1, 2, 3, 4, 5],
+  person: [0, 1, 2, 3, 4, 5],
 
   // Condition reports
-  'condition': [116, 117, 400, 401, 402, 404, 405, 406, 1],
+  condition: [116, 117, 400, 401, 402, 404, 405, 406, 1],
   'condition-eras': [1, 1000, 1002, 1004, 1006, 1007],
   'conditions-by-index': [405, 406],
 
@@ -25,12 +25,12 @@ export const REPORT_ANALYSIS_REQUIREMENTS: Record<ReportType, number[]> = {
   'drugs-by-index': [705, 706],
 
   // Procedure reports
-  'procedure': [606, 604, 116, 602, 117, 605, 600, 601, 1],
+  procedure: [606, 604, 116, 602, 117, 605, 600, 601, 1],
   'procedures-by-index': [605, 606],
 
   // Observation and health system
   'observation-periods': [101, 104, 106, 107, 108, 109, 110, 113, 1],
-  'death': [501, 506, 505, 504, 502, 116, 117],
+  death: [501, 506, 505, 504, 502, 116, 117],
 
   // Cohort-specific analytics
   'cohort-specific': [0, 1, 2, 3, 4],
@@ -54,17 +54,14 @@ export const REPORT_ANALYSIS_REQUIREMENTS: Record<ReportType, number[]> = {
 
   // Data quality reports
   'data-completeness': [117],
-  'entropy': [117],
-  'tornado': [117]
+  entropy: [117],
+  tornado: [117],
 }
 
 /**
  * Check if a report type has all required analyses completed
  */
-export function isReportAvailable(
-  reportType: ReportType,
-  completedAnalyses: number[]
-): boolean {
+export function isReportAvailable(reportType: ReportType, completedAnalyses: number[]): boolean {
   // Heracles Heel should never appear in standard report selector
   // It has its own dedicated endpoint and handling
   if (reportType === 'heracles-heel') {
@@ -85,11 +82,8 @@ export function isReportAvailable(
 /**
  * Filter report types to only those with completed data
  */
-export function getAvailableReportTypes(
-  completedAnalyses: number[]
-): ReportType[] {
-  return Object.keys(REPORT_ANALYSIS_REQUIREMENTS)
-    .filter(reportType =>
-      isReportAvailable(reportType as ReportType, completedAnalyses)
-    ) as ReportType[]
+export function getAvailableReportTypes(completedAnalyses: number[]): ReportType[] {
+  return Object.keys(REPORT_ANALYSIS_REQUIREMENTS).filter(reportType =>
+    isReportAvailable(reportType as ReportType, completedAnalyses)
+  ) as ReportType[]
 }

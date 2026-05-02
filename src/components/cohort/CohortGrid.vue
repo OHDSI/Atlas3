@@ -130,8 +130,8 @@ defineEmits<Emits>()
 
 const skeletonCount = 12 // Show 12 skeleton loaders while loading
 
-const isFiltered = computed(() =>
-  Boolean(props.searchQuery) || (props.selectedTags?.length ?? 0) > 0
+const isFiltered = computed(
+  () => Boolean(props.searchQuery) || (props.selectedTags?.length ?? 0) > 0
 )
 
 /**

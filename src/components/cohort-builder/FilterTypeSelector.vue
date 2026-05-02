@@ -81,7 +81,7 @@ const { availableFilters } = useFilterConfig(sectionRef)
  * Transform FilterInfo objects into v-select items
  */
 const filterItems = computed(() => {
-  return availableFilters.value.map((filter) => ({
+  return availableFilters.value.map(filter => ({
     key: filter.key,
     criteriaType: filter.criteriaType,
     name: filter.name,

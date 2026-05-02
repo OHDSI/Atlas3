@@ -30,10 +30,13 @@ export function useIncidenceRateBuilder() {
     await store.validateIR()
     if (store.hasErrors) {
       const messages = store.validationErrors
-        .filter((e) => e.severity === 'error')
-        .map((e) => e.message)
+        .filter(e => e.severity === 'error')
+        .map(e => e.message)
         .join(' · ')
-      notify(messages ? `Cannot save: ${messages}` : 'Cannot save — fix validation errors first', 'error')
+      notify(
+        messages ? `Cannot save: ${messages}` : 'Cannot save — fix validation errors first',
+        'error'
+      )
       return false
     }
 
@@ -44,9 +47,8 @@ export function useIncidenceRateBuilder() {
       return false
     }
 
-    const result = ir.id !== undefined
-      ? await saveIncidenceRate(ir.id, ir)
-      : await createIncidenceRate(ir)
+    const result =
+      ir.id !== undefined ? await saveIncidenceRate(ir.id, ir) : await createIncidenceRate(ir)
     if (!result.success) {
       notify(result.error, 'error')
       return false
@@ -63,7 +65,10 @@ export function useIncidenceRateBuilder() {
   async function copy(): Promise<boolean> {
     if (!store.currentIR?.id) return false
     const result = await copyIncidenceRate(store.currentIR.id)
-    if (!result.success) { notify(result.error, 'error'); return false }
+    if (!result.success) {
+      notify(result.error, 'error')
+      return false
+    }
     store.setIR(result.data)
     notify('Copied', 'success')
     if (result.data.id !== undefined) {
@@ -75,7 +80,10 @@ export function useIncidenceRateBuilder() {
   async function remove(): Promise<boolean> {
     if (!store.currentIR?.id) return false
     const ok = await deleteIncidenceRate(store.currentIR.id)
-    if (!ok) { notify('Delete failed', 'error'); return false }
+    if (!ok) {
+      notify('Delete failed', 'error')
+      return false
+    }
     notify('Deleted', 'success')
     router.push('/incidence-rates')
     return true

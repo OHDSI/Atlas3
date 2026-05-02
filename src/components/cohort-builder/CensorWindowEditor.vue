@@ -106,23 +106,26 @@ const emit = defineEmits<{
   'validation-error': [errors: ValidationError[]]
 }>()
 
-const eraGapLabel = computed(() =>
-  t('components.cohortExpressionEditor.cohortErasText_1', 'Specify era collapse gap size:').value
+const eraGapLabel = computed(
+  () =>
+    t('components.cohortExpressionEditor.cohortErasText_1', 'Specify era collapse gap size:').value
 )
-const daysLabel = computed(() =>
-  t('components.cohortExpressionEditor.days', 'days').value
+const daysLabel = computed(() => t('components.cohortExpressionEditor.days', 'days').value)
+const addTrimmingLabel = computed(
+  () => t('components.cohortExpressionEditor.addTrimmingOptions', 'add trimming options...').value
 )
-const addTrimmingLabel = computed(() =>
-  t('components.cohortExpressionEditor.addTrimmingOptions', 'add trimming options...').value
+const leftCensorLabel = computed(
+  () =>
+    t('components.cohortExpressionEditor.cohortErasText_2', 'Left censor cohort start dates to')
+      .value
 )
-const leftCensorLabel = computed(() =>
-  t('components.cohortExpressionEditor.cohortErasText_2', 'Left censor cohort start dates to').value
+const rightCensorLabel = computed(
+  () =>
+    t('components.cohortExpressionEditor.cohortErasText_3', 'Right censor cohort end dates to')
+      .value
 )
-const rightCensorLabel = computed(() =>
-  t('components.cohortExpressionEditor.cohortErasText_3', 'Right censor cohort end dates to').value
-)
-const noCensoringLabel = computed(() =>
-  t('components.cohortExpressionEditor.noCensoring', 'No Censoring').value
+const noCensoringLabel = computed(
+  () => t('components.cohortExpressionEditor.noCensoring', 'No Censoring').value
 )
 
 const eraPadModel = ref<number>(props.collapseSettings?.eraPad ?? 0)
@@ -134,7 +137,7 @@ const showTrimOptions = ref<boolean>(
 
 watch(
   () => props.collapseSettings,
-  (value) => {
+  value => {
     eraPadModel.value = value?.eraPad ?? 0
   },
   { deep: true }
@@ -142,7 +145,7 @@ watch(
 
 watch(
   () => props.censorWindow,
-  (value) => {
+  value => {
     startDateModel.value = value?.startDate ?? null
     endDateModel.value = value?.endDate ?? null
     if (value?.startDate || value?.endDate) {
@@ -163,9 +166,8 @@ const dateOrderWarning = computed(() => {
 })
 
 function emitCollapseSettings() {
-  const eraPad = Number.isFinite(eraPadModel.value) && eraPadModel.value >= 0
-    ? Math.floor(eraPadModel.value)
-    : 0
+  const eraPad =
+    Number.isFinite(eraPadModel.value) && eraPadModel.value >= 0 ? Math.floor(eraPadModel.value) : 0
   eraPadModel.value = eraPad
   emit('update:collapseSettings', {
     collapseType: props.collapseSettings?.collapseType ?? 'ERA',

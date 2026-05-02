@@ -34,45 +34,40 @@ export type AttributeType = z.infer<typeof AttributeTypeSchema>
  * Defines metadata for a single filter type (e.g., Condition Occurrence, Drug Exposure).
  * Supports both i18n keys and plain text values for backward compatibility.
  */
-export const FilterTypeConfigSchema = z.object({
-  /** i18n locale key for filter display name (e.g., "criteria.conditionOccurrence.name") */
-  nameKey: z.string().min(1, 'Filter nameKey cannot be empty').optional(),
+export const FilterTypeConfigSchema = z
+  .object({
+    /** i18n locale key for filter display name (e.g., "criteria.conditionOccurrence.name") */
+    nameKey: z.string().min(1, 'Filter nameKey cannot be empty').optional(),
 
-  /** Plain text display name (legacy format, use nameKey for i18n) */
-  name: z.string().min(1, 'Filter name cannot be empty').optional(),
+    /** Plain text display name (legacy format, use nameKey for i18n) */
+    name: z.string().min(1, 'Filter name cannot be empty').optional(),
 
-  /**
-   * Context-specific i18n locale keys for descriptions
-   * Keys: 'initial', 'censoring', 'group', or 'all'
-   * Values: i18n locale keys (e.g., "criteria.conditionOccurrence.description.initial")
-   */
-  descriptionKeys: z.record(
-    z.string(),
-    z.string().min(1, 'Description key cannot be empty')
-  ).optional(),
+    /**
+     * Context-specific i18n locale keys for descriptions
+     * Keys: 'initial', 'censoring', 'group', or 'all'
+     * Values: i18n locale keys (e.g., "criteria.conditionOccurrence.description.initial")
+     */
+    descriptionKeys: z
+      .record(z.string(), z.string().min(1, 'Description key cannot be empty'))
+      .optional(),
 
-  /**
-   * Context-specific plain text descriptions (legacy format, use descriptionKeys for i18n)
-   * Keys: 'initial', 'censoring', 'group', or 'all'
-   * Values: Plain text descriptions
-   */
-  descriptions: z.record(
-    z.string(),
-    z.string().min(1, 'Description cannot be empty')
-  ).optional(),
+    /**
+     * Context-specific plain text descriptions (legacy format, use descriptionKeys for i18n)
+     * Keys: 'initial', 'censoring', 'group', or 'all'
+     * Values: Plain text descriptions
+     */
+    descriptions: z.record(z.string(), z.string().min(1, 'Description cannot be empty')).optional(),
 
-  /** If false, concept set selector is hidden in UI (default: true) */
-  requiresConceptSet: z.boolean().default(true).optional(),
+    /** If false, concept set selector is hidden in UI (default: true) */
+    requiresConceptSet: z.boolean().default(true).optional(),
 
-  /** If true, filter only available in criteria groups, not initial/censoring events (default: false) */
-  groupOnly: z.boolean().default(false).optional(),
-}).refine(
-  (data) => data.nameKey || data.name,
-  { message: 'Either nameKey or name must be provided' }
-).refine(
-  (data) => data.descriptionKeys || data.descriptions,
-  { message: 'Either descriptionKeys or descriptions must be provided' }
-)
+    /** If true, filter only available in criteria groups, not initial/censoring events (default: false) */
+    groupOnly: z.boolean().default(false).optional(),
+  })
+  .refine(data => data.nameKey || data.name, { message: 'Either nameKey or name must be provided' })
+  .refine(data => data.descriptionKeys || data.descriptions, {
+    message: 'Either descriptionKeys or descriptions must be provided',
+  })
 
 export type FilterTypeConfig = z.infer<typeof FilterTypeConfigSchema>
 
@@ -84,9 +79,7 @@ export type FilterTypeConfig = z.infer<typeof FilterTypeConfigSchema>
  */
 export const AttributeConfigSchema = z.object({
   /** Attribute identifier (camelCase, must match attribute keys in cohort definition) */
-  id: z
-    .string()
-    .regex(/^[a-z][a-zA-Z0-9]*$/, 'Attribute id must be camelCase'),
+  id: z.string().regex(/^[a-z][a-zA-Z0-9]*$/, 'Attribute id must be camelCase'),
 
   /** i18n locale key for attribute display label (e.g., "attributes.age.name") */
   nameKey: z.string().min(1, 'Attribute nameKey cannot be empty').optional(),
@@ -176,9 +169,7 @@ export const OccurrenceOperatorConfigSchema = z.object({
   symbol: z.string(),
 })
 
-export type OccurrenceOperatorConfig = z.infer<
-  typeof OccurrenceOperatorConfigSchema
->
+export type OccurrenceOperatorConfig = z.infer<typeof OccurrenceOperatorConfigSchema>
 
 /**
  * Root Atlas Configuration Schema
@@ -190,10 +181,7 @@ export const AtlasConfigSchema = z.object({
   criteriaTypes: z.record(FilterTypeConfigSchema),
 
   /** Section definitions (sections can be object or array - handle both) */
-  sections: z.union([
-    z.array(SectionConfigSchema),
-    z.record(SectionConfigSchema),
-  ]),
+  sections: z.union([z.array(SectionConfigSchema), z.record(SectionConfigSchema)]),
 
   /** Map of filter type key to array of attribute configurations */
   attributeMapping: z.record(z.array(AttributeConfigSchema)),
@@ -329,10 +317,9 @@ export interface ConfigPanelState {
  */
 export const tagSchema = z.object({
   id: z.number().optional(),
-  name: z.string()
-    .min(1, 'Name is required')
-    .max(255, 'Name must be less than 255 characters'),
-  color: z.string()
+  name: z.string().min(1, 'Name is required').max(255, 'Name must be less than 255 characters'),
+  color: z
+    .string()
     .regex(/^(#[0-9A-F]{6})?$/i, 'Invalid color format (must be hex: #RRGGBB)')
     .optional(),
   icon: z.string().max(50, 'Icon name too long').optional(),
@@ -350,7 +337,7 @@ export const tagSchema = z.object({
   readAccess: z.boolean().optional(),
   groups: z.array(z.any()).default([]),
   count: z.number().optional(),
-  permissionProtected: z.boolean().optional()
+  permissionProtected: z.boolean().optional(),
 })
 
 /**
@@ -362,10 +349,14 @@ export const tagGroupSchema = tagSchema
  * Zod schema for Vocabulary Schema configuration
  */
 export const vocabularySchemaSchema = z.object({
-  schema: z.string()
+  schema: z
+    .string()
     .min(1, 'Schema name is required')
-    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'Schema must start with letter/underscore and contain only alphanumeric characters and underscores')
-    .max(63, 'Schema name too long (max 63 characters)')
+    .regex(
+      /^[a-zA-Z_][a-zA-Z0-9_]*$/,
+      'Schema must start with letter/underscore and contain only alphanumeric characters and underscores'
+    )
+    .max(63, 'Schema name too long (max 63 characters)'),
 })
 
 /**

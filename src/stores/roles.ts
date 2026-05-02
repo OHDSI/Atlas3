@@ -12,13 +12,7 @@ import { ref, computed } from 'vue'
 import * as roleService from '@/services/role.service'
 import * as permissionService from '@/services/permission.service'
 import * as userService from '@/services/user.service'
-import type {
-  Role,
-  RoleCreate,
-  RoleUpdate,
-  Permission,
-  User
-} from '@/models/role.types'
+import type { Role, RoleCreate, RoleUpdate, Permission, User } from '@/models/role.types'
 import { logger } from '@/utils/logger'
 
 export const useRolesStore = defineStore('roles', () => {
@@ -56,14 +50,12 @@ export const useRolesStore = defineStore('roles', () => {
   const hasPermissions = computed(() => permissions.value.length > 0)
   const hasUsers = computed(() => users.value.length > 0)
 
-  const isLoading = computed(() =>
-    isLoadingRoles.value || isLoadingPermissions.value || isLoadingUsers.value
+  const isLoading = computed(
+    () => isLoadingRoles.value || isLoadingPermissions.value || isLoadingUsers.value
   )
 
-  const hasError = computed(() =>
-    rolesError.value !== null ||
-    permissionsError.value !== null ||
-    usersError.value !== null
+  const hasError = computed(
+    () => rolesError.value !== null || permissionsError.value !== null || usersError.value !== null
   )
 
   // ============================================================================
@@ -87,7 +79,7 @@ export const useRolesStore = defineStore('roles', () => {
       } else {
         rolesError.value = result.message
         logger.error('RolesStore', 'Failed to fetch roles', result.message)
-          return false
+        return false
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch roles'
@@ -116,7 +108,7 @@ export const useRolesStore = defineStore('roles', () => {
       } else {
         rolesError.value = result.message
         logger.error('RolesStore', `Failed to fetch role ${roleId}`, result.message)
-          return false
+        return false
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch role'
@@ -148,7 +140,7 @@ export const useRolesStore = defineStore('roles', () => {
       } else {
         rolesError.value = result.message
         logger.error('RolesStore', 'Failed to create role', result.message)
-          return null
+        return null
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create role'
@@ -186,7 +178,7 @@ export const useRolesStore = defineStore('roles', () => {
       } else {
         rolesError.value = result.message
         logger.error('RolesStore', `Failed to update role ${roleId}`, result.message)
-          return false
+        return false
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update role'
@@ -225,7 +217,7 @@ export const useRolesStore = defineStore('roles', () => {
       } else {
         rolesError.value = result.message
         logger.error('RolesStore', `Failed to delete role ${roleId}`, result.message)
-          return false
+        return false
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to delete role'
@@ -258,7 +250,7 @@ export const useRolesStore = defineStore('roles', () => {
       } else {
         permissionsError.value = result.message
         logger.error('RolesStore', 'Failed to fetch permissions', result.message)
-          return false
+        return false
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch permissions'
@@ -287,7 +279,7 @@ export const useRolesStore = defineStore('roles', () => {
       } else {
         permissionsError.value = result.message
         logger.error('RolesStore', `Failed to fetch permissions for role ${roleId}`, result.message)
-          return false
+        return false
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch role permissions'
@@ -318,11 +310,19 @@ export const useRolesStore = defineStore('roles', () => {
         logger.info('RolesStore', `Assigned permission ${permissionId} to role ${roleId}`)
         return true
       } else {
-        logger.error('RolesStore', `Failed to assign permission ${permissionId} to role ${roleId}`, result.message)
-          return false
+        logger.error(
+          'RolesStore',
+          `Failed to assign permission ${permissionId} to role ${roleId}`,
+          result.message
+        )
+        return false
       }
     } catch (error) {
-      logger.error('RolesStore', `Failed to assign permission ${permissionId} to role ${roleId}`, error)
+      logger.error(
+        'RolesStore',
+        `Failed to assign permission ${permissionId} to role ${roleId}`,
+        error
+      )
       return false
     } finally {
       isSaving.value = false
@@ -348,11 +348,19 @@ export const useRolesStore = defineStore('roles', () => {
         logger.info('RolesStore', `Removed permission ${permissionId} from role ${roleId}`)
         return true
       } else {
-        logger.error('RolesStore', `Failed to remove permission ${permissionId} from role ${roleId}`, result.message)
-          return false
+        logger.error(
+          'RolesStore',
+          `Failed to remove permission ${permissionId} from role ${roleId}`,
+          result.message
+        )
+        return false
       }
     } catch (error) {
-      logger.error('RolesStore', `Failed to remove permission ${permissionId} from role ${roleId}`, error)
+      logger.error(
+        'RolesStore',
+        `Failed to remove permission ${permissionId} from role ${roleId}`,
+        error
+      )
       return false
     } finally {
       isSaving.value = false
@@ -380,7 +388,7 @@ export const useRolesStore = defineStore('roles', () => {
       } else {
         usersError.value = result.message
         logger.error('RolesStore', 'Failed to fetch users', result.message)
-          return false
+        return false
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch users'
@@ -409,7 +417,7 @@ export const useRolesStore = defineStore('roles', () => {
       } else {
         usersError.value = result.message
         logger.error('RolesStore', `Failed to fetch users for role ${roleId}`, result.message)
-          return false
+        return false
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch role users'
@@ -440,8 +448,12 @@ export const useRolesStore = defineStore('roles', () => {
         logger.info('RolesStore', `Assigned user ${userId} to role ${roleId}`)
         return true
       } else {
-        logger.error('RolesStore', `Failed to assign user ${userId} to role ${roleId}`, result.message)
-          return false
+        logger.error(
+          'RolesStore',
+          `Failed to assign user ${userId} to role ${roleId}`,
+          result.message
+        )
+        return false
       }
     } catch (error) {
       logger.error('RolesStore', `Failed to assign user ${userId} to role ${roleId}`, error)
@@ -470,8 +482,12 @@ export const useRolesStore = defineStore('roles', () => {
         logger.info('RolesStore', `Removed user ${userId} from role ${roleId}`)
         return true
       } else {
-        logger.error('RolesStore', `Failed to remove user ${userId} from role ${roleId}`, result.message)
-          return false
+        logger.error(
+          'RolesStore',
+          `Failed to remove user ${userId} from role ${roleId}`,
+          result.message
+        )
+        return false
       }
     } catch (error) {
       logger.error('RolesStore', `Failed to remove user ${userId} from role ${roleId}`, error)
@@ -497,7 +513,7 @@ export const useRolesStore = defineStore('roles', () => {
         return result.data
       } else {
         logger.error('RolesStore', `Failed to export role ${roleId}`, result.message)
-          return null
+        return null
       }
     } catch (error) {
       logger.error('RolesStore', `Failed to export role ${roleId}`, error)
@@ -522,7 +538,7 @@ export const useRolesStore = defineStore('roles', () => {
         return result.data
       } else {
         logger.error('RolesStore', 'Failed to import role', result.message)
-          return null
+        return null
       }
     } catch (error) {
       logger.error('RolesStore', 'Failed to import role', error)

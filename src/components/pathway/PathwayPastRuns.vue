@@ -52,14 +52,22 @@ function onClick(r: PathwayExecution) {
 </script>
 
 <style scoped>
-.past-runs { padding: 0; background: transparent; }
-.past-run { min-height: 36px; }
+.past-runs {
+  padding: 0;
+  background: transparent;
+}
+.past-run {
+  min-height: 36px;
+}
 .past-run__id {
-  font-family: ui-monospace, "SF Mono", monospace;
+  font-family: ui-monospace, 'SF Mono', monospace;
   font-size: 11px;
   color: rgba(var(--v-theme-on-surface), 0.62);
 }
-.past-run__src { font-size: 12px; font-weight: 600; }
+.past-run__src {
+  font-size: 12px;
+  font-weight: 600;
+}
 .past-run__status {
   width: 8px;
   height: 8px;
@@ -67,11 +75,17 @@ function onClick(r: PathwayExecution) {
   background: rgba(var(--v-theme-on-surface), 0.2);
   display: inline-block;
 }
-.past-run__status--completed { background: rgb(22, 163, 74); }
+.past-run__status--completed {
+  background: rgb(22, 163, 74);
+}
 .past-run__status--failed,
-.past-run__status--canceled { background: rgb(220, 38, 38); }
+.past-run__status--canceled {
+  background: rgb(220, 38, 38);
+}
 .past-run__status--starting,
-.past-run__status--started { background: rgb(var(--v-theme-orange)); }
+.past-run__status--started {
+  background: rgb(var(--v-theme-orange));
+}
 .past-runs__empty {
   font-size: 12px;
   color: rgba(var(--v-theme-on-surface), 0.62);

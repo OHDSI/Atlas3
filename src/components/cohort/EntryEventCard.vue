@@ -65,7 +65,9 @@
         <div class="concept-set-section">
           <EventConceptSetField
             :concept-set="event.conceptSet"
-            :select-label="t('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set').value"
+            :select-label="
+              t('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set').value
+            "
             @select="emit('select-concept-set')"
             @edit="emit('edit-concept-set', $event)"
             @clear="removeConceptSet"
@@ -85,8 +87,13 @@
             @update:cardinality="updateCardinality"
             @update:temporal-window="updateTemporalWindows"
             @add-nested-criteria="addNestedCriteria"
-            @select-concept-set-for-attribute="(attributeIndex) => $emit('select-concept-set-for-attribute', attributeIndex)"
-            @select-concept-for-attribute="(attributeIndex, domainFilter) => $emit('select-concept-for-attribute', attributeIndex, domainFilter)"
+            @select-concept-set-for-attribute="
+              attributeIndex => $emit('select-concept-set-for-attribute', attributeIndex)
+            "
+            @select-concept-for-attribute="
+              (attributeIndex, domainFilter) =>
+                $emit('select-concept-for-attribute', attributeIndex, domainFilter)
+            "
           />
         </div>
 
@@ -139,8 +146,8 @@ const props = defineProps<Props>()
 const { t } = useI18n()
 
 const emit = defineEmits<{
-  'update': [event: CohortEvent]
-  'remove': []
+  update: [event: CohortEvent]
+  remove: []
   'select-concept-set': []
   'select-concept-set-for-attribute': [attributeIndex: number]
   'select-concept-for-attribute': [attributeIndex: number, domainFilter: string | undefined]
@@ -153,7 +160,7 @@ const { availableFilters } = useFilterConfig(ref('initialEvents'))
 const eventTypeOptions = computed(() => {
   return availableFilters.value.map(filter => ({
     label: filter.name,
-    value: filter.criteriaType as CriteriaType
+    value: filter.criteriaType as CriteriaType,
   }))
 })
 
@@ -170,9 +177,9 @@ const cardinalityType = computed(() => {
 const cardinalityDisplay = computed(() => {
   if (!props.event.cardinality) return `${t('options.atLeast', 'At least').value} 1`
   const typeMap: Record<string, string> = {
-    'AT_LEAST': t('options.atLeast', 'At least').value,
-    'EXACTLY': t('options.exactly', 'Exactly').value,
-    'AT_MOST': t('options.atMost', 'At most').value
+    AT_LEAST: t('options.atLeast', 'At least').value,
+    EXACTLY: t('options.exactly', 'Exactly').value,
+    AT_MOST: t('options.atMost', 'At most').value,
   }
   const type = typeMap[props.event.cardinality.type] || t('options.atLeast', 'At least').value
   return `${type} ${props.event.cardinality.count ?? 1}`
@@ -187,7 +194,6 @@ const toCamelCase = (str: string): string => {
 const criteriaTypeKey = computed(() => toCamelCase(props.event.criteriaType))
 const sectionRef = ref('initialEvents')
 const { attributes: availableAttributes } = useAttributeConfig(criteriaTypeKey, sectionRef)
-
 
 function removeConceptSet() {
   emit('update', {
@@ -223,15 +229,15 @@ function addNestedCriteria() {
     nestedCriteria: {
       id: uuidv4(),
       logicType: 'ALL',
-      events: []
-    }
+      events: [],
+    },
   })
 }
 
 function updateNestedCriteria(nested: NestedCriteria) {
   emit('update', {
     ...props.event,
-    nestedCriteria: nested
+    nestedCriteria: nested,
   })
 }
 
@@ -295,7 +301,7 @@ function addAttribute(attributeKey: string, attributeType: string) {
       attributeKey: attributeKey as TemporalAttributeKey,
       temporalWindow: {
         startWindow: undefined,
-        endWindow: undefined
+        endWindow: undefined,
       },
     }
   } else if (attributeType === 'dateAdjustment') {
@@ -306,7 +312,7 @@ function addAttribute(attributeKey: string, attributeType: string) {
         startWith: 'START_DATE',
         startOffset: 0,
         endWith: 'END_DATE',
-        endOffset: 0
+        endOffset: 0,
       },
     }
   } else if (attributeType === 'userDefinedPeriod') {
@@ -327,7 +333,7 @@ function addAttribute(attributeKey: string, attributeType: string) {
   const currentAttributes = props.event.attributes || []
   emit('update', {
     ...props.event,
-    attributes: [...currentAttributes, newAttribute]
+    attributes: [...currentAttributes, newAttribute],
   })
 }
 </script>

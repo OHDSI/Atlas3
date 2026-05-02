@@ -103,7 +103,9 @@
           >
             mdi-information-outline
           </v-icon>
-          <span>{{ t('trexsql.selectDatasetPrompt', 'Select a dataset to view patient count') }}</span>
+          <span>{{
+            t('trexsql.selectDatasetPrompt', 'Select a dataset to view patient count')
+          }}</span>
         </div>
 
         <!-- Cache Not Ready -->
@@ -159,7 +161,9 @@
             />
           </div>
           <div class="patient-count-bar__count-display">
-            <span class="patient-count-bar__cohort-count">{{ animatedCohortCount.toLocaleString() }}</span>
+            <span class="patient-count-bar__cohort-count">{{
+              animatedCohortCount.toLocaleString()
+            }}</span>
             <span class="patient-count-bar__separator">/</span>
             <span class="patient-count-bar__total-count">{{ totalPatientCountFormatted }}</span>
             <span class="patient-count-bar__label">{{ t('trexsql.patients', 'patients') }}</span>
@@ -185,7 +189,8 @@
                   v-if="selectedCacheStatus?.lastBuiltAt"
                   class="text-caption"
                 >
-                  {{ t('trexsql.lastBuilt', 'Last built') }}: {{ formatDate(selectedCacheStatus.lastBuiltAt) }}
+                  {{ t('trexsql.lastBuilt', 'Last built') }}:
+                  {{ formatDate(selectedCacheStatus.lastBuiltAt) }}
                 </div>
               </div>
             </v-tooltip>
@@ -197,7 +202,9 @@
           v-else
           class="patient-count-bar__waiting"
         >
-          <span class="text-grey">{{ t('trexsql.addCriteria', 'Add criteria to see patient count') }}</span>
+          <span class="text-grey">{{
+            t('trexsql.addCriteria', 'Add criteria to see patient count')
+          }}</span>
         </div>
       </div>
     </div>
@@ -238,7 +245,7 @@ const {
   initialize,
   selectDataSource,
   getPatientCount,
-  clearCount
+  clearCount,
 } = useTrexSQLCache()
 
 const previousPercentage = ref(0)
@@ -278,7 +285,7 @@ function animateToValue(targetPercentage: number, targetCount: number) {
 
 watch(
   () => patientCount.value,
-  (newCount) => {
+  newCount => {
     if (newCount && !isCountLoading.value) {
       previousPercentage.value = cohortPercentage.value
       previousCohortCount.value = cohortPatientCountFormatted.value
@@ -301,7 +308,7 @@ watch(
 // Initialize animated values on mount
 watch(
   () => cohortPercentage.value,
-  (newPercentage) => {
+  newPercentage => {
     if (animatedPercentage.value === 0 && newPercentage > 0 && !isCountLoading.value) {
       animatedPercentage.value = newPercentage
       animatedCohortCount.value = patientCount.value?.cohortPatientCount || 0
@@ -320,14 +327,14 @@ const selectedSource = computed({
         getPatientCount(props.expression)
       }
     }
-  }
+  },
 })
 
 const dataSourceItems = computed(() => {
   return dataSources.value.map(source => ({
     text: source.sourceName,
     value: source.sourceKey,
-    cacheStatus: source.cacheStatus?.status
+    cacheStatus: source.cacheStatus?.status,
   }))
 })
 
@@ -376,7 +383,7 @@ function formatDate(dateString: string): string {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   } catch {
     return dateString
@@ -392,8 +399,13 @@ function handleRetry(): void {
 
 watch(
   () => props.expression,
-  (newExpression) => {
-    if (newExpression && Object.keys(newExpression).length > 0 && selectedSourceKey.value && isCacheReady.value) {
+  newExpression => {
+    if (
+      newExpression &&
+      Object.keys(newExpression).length > 0 &&
+      selectedSourceKey.value &&
+      isCacheReady.value
+    ) {
       getPatientCount(newExpression)
     }
   },
@@ -402,7 +414,7 @@ watch(
 
 watch(
   () => isCacheReady.value,
-  (isReady) => {
+  isReady => {
     if (isReady && props.expression && Object.keys(props.expression).length > 0) {
       getPatientCount(props.expression)
     }
@@ -504,7 +516,8 @@ onBeforeUnmount(() => {
 }
 
 @keyframes colorPulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.6;
     filter: brightness(0.8);
   }

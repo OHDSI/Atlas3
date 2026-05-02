@@ -46,7 +46,9 @@
                 @update:model-value="updateAttributeValue(index, $event)"
               />
 
-              <template v-if="attribute.type === 'numericRange' && (attribute.operator === 'BETWEEN')">
+              <template
+                v-if="attribute.type === 'numericRange' && attribute.operator === 'BETWEEN'"
+              >
                 <span class="and-text">{{ t('common.and') }}</span>
                 <v-text-field
                   :model-value="attribute.extent"
@@ -81,7 +83,7 @@
                 closable
                 color="primary"
                 data-testid="attribute-selected-concept-set"
-                style="cursor: pointer;"
+                style="cursor: pointer"
                 @click="openConceptSetPickerForAttribute(index)"
                 @click:close="clearConceptSetAttribute(index)"
               >
@@ -114,7 +116,10 @@
               />
 
               <v-text-field
-                v-if="attribute.type === 'dateRange' && (attribute.operator === 'BETWEEN' || attribute.operator === 'AFTER')"
+                v-if="
+                  attribute.type === 'dateRange' &&
+                    (attribute.operator === 'BETWEEN' || attribute.operator === 'AFTER')
+                "
                 :model-value="attribute.value"
                 type="date"
                 density="compact"
@@ -239,7 +244,10 @@
             <!-- Temporal Relationship Attributes -->
             <template v-else-if="attribute.type === 'temporalRelationship'">
               <TemporalFilterChip
-                v-if="attribute.temporalWindow && (attribute.temporalWindow.startWindow || attribute.temporalWindow.endWindow)"
+                v-if="
+                  attribute.temporalWindow &&
+                    (attribute.temporalWindow.startWindow || attribute.temporalWindow.endWindow)
+                "
                 :label="getTemporalWindowSummary(attribute.temporalWindow)"
                 :closable="false"
                 data-testid="attribute-temporal-chip"
@@ -266,7 +274,7 @@
                 variant="outlined"
                 size="small"
                 data-testid="attribute-date-adjustment-chip"
-                style="cursor: pointer;"
+                style="cursor: pointer"
                 @click="openDateAdjustmentEditor(index)"
               >
                 <v-icon
@@ -368,11 +376,7 @@ import { useAttributeConfig } from '@/composables/useAttributeConfig'
 import TemporalWindowEditor from '@/components/cohort-builder/TemporalWindowEditor.vue'
 import DateAdjustmentEditor from '@/components/cohort-builder/DateAdjustmentEditor.vue'
 import TemporalFilterChip from '@/components/cohort-builder/TemporalFilterChip.vue'
-import {
-  TEXT_OPERATORS,
-  NUMERIC_OPERATORS,
-  DATE_OPERATORS,
-} from '@/constants/attribute-operators'
+import { TEXT_OPERATORS, NUMERIC_OPERATORS, DATE_OPERATORS } from '@/constants/attribute-operators'
 import type {
   EventAttribute,
   TemporalWindow,
@@ -396,7 +400,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   section: 'criteriaGroup', // Default to criteria group context
-  hasNestedCriteria: false
+  hasNestedCriteria: false,
 })
 
 const emit = defineEmits<{
@@ -415,62 +419,66 @@ const toCamelCase = (str: string): string => {
 // Use attribute configuration composable
 const criteriaTypeKey = ref(toCamelCase(props.criteriaType))
 const sectionRef = ref(props.section)
-const { getAttributeLabel, getAttribute } = useAttributeConfig(
-  criteriaTypeKey,
-  sectionRef
-)
+const { getAttributeLabel, getAttribute } = useAttributeConfig(criteriaTypeKey, sectionRef)
 
 // Watch for criteriaType changes and update the key
-watch(() => props.criteriaType, (newType) => {
-  criteriaTypeKey.value = toCamelCase(newType)
-})
+watch(
+  () => props.criteriaType,
+  newType => {
+    criteriaTypeKey.value = toCamelCase(newType)
+  }
+)
 
 // Watch for undefined values in modelValue and clean them up
 // Also validate operators and apply defaults if missing
-watch(() => props.modelValue, (newValue) => {
-  let needsUpdate = false
-  const cleaned: EventAttribute[] = []
+watch(
+  () => props.modelValue,
+  newValue => {
+    let needsUpdate = false
+    const cleaned: EventAttribute[] = []
 
-  for (const attr of newValue) {
-    if (attr === undefined || attr === null) {
-      needsUpdate = true
-      continue
+    for (const attr of newValue) {
+      if (attr === undefined || attr === null) {
+        needsUpdate = true
+        continue
+      }
+
+      // Validate and apply default operators if missing
+      if (attr.type === 'numericRange') {
+        if (!attr.operator) {
+          needsUpdate = true
+          const numAttr = attr as NumericRangeAttribute
+          cleaned.push({ ...numAttr, operator: 'GREATER_THAN_OR_EQUAL' })
+        } else {
+          cleaned.push(attr)
+        }
+      } else if (attr.type === 'dateRange') {
+        if (!attr.operator) {
+          needsUpdate = true
+          const dateAttr = attr as DateRangeAttribute
+          cleaned.push({ ...dateAttr, operator: 'BETWEEN' })
+        } else {
+          cleaned.push(attr)
+        }
+      } else if (attr.type === 'text') {
+        if (!attr.operator) {
+          needsUpdate = true
+          const textAttr = attr as TextAttribute
+          cleaned.push({ ...textAttr, operator: 'CONTAINS' })
+        } else {
+          cleaned.push(attr)
+        }
+      } else {
+        cleaned.push(attr)
+      }
     }
 
-    // Validate and apply default operators if missing
-    if (attr.type === 'numericRange') {
-      if (!attr.operator) {
-        needsUpdate = true
-        const numAttr = attr as NumericRangeAttribute
-        cleaned.push({ ...numAttr, operator: 'GREATER_THAN_OR_EQUAL' })
-      } else {
-        cleaned.push(attr)
-      }
-    } else if (attr.type === 'dateRange') {
-      if (!attr.operator) {
-        needsUpdate = true
-        const dateAttr = attr as DateRangeAttribute
-        cleaned.push({ ...dateAttr, operator: 'BETWEEN' })
-      } else {
-        cleaned.push(attr)
-      }
-    } else if (attr.type === 'text') {
-      if (!attr.operator) {
-        needsUpdate = true
-        const textAttr = attr as TextAttribute
-        cleaned.push({ ...textAttr, operator: 'CONTAINS' })
-      } else {
-        cleaned.push(attr)
-      }
-    } else {
-      cleaned.push(attr)
+    if (needsUpdate) {
+      emit('update:modelValue', cleaned)
     }
-  }
-
-  if (needsUpdate) {
-    emit('update:modelValue', cleaned)
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 // Operator lists - imported from constants for consistency
 const numericOperators = NUMERIC_OPERATORS
@@ -719,7 +727,7 @@ function updatePeriodStartDate(index: number, startDate: string) {
 
   newAttributes[index] = {
     ...attr,
-    period: { ...attr.period, startDate }
+    period: { ...attr.period, startDate },
   }
   emit('update:modelValue', newAttributes)
 }
@@ -731,7 +739,7 @@ function updatePeriodEndDate(index: number, endDate: string) {
 
   newAttributes[index] = {
     ...attr,
-    period: { ...attr.period, endDate }
+    period: { ...attr.period, endDate },
   }
   emit('update:modelValue', newAttributes)
 }

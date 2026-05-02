@@ -1,8 +1,20 @@
 <template>
-  <div class="char-empty" data-testid="char-empty-state">
-    <div class="char-empty__icon">{{ icon }}</div>
-    <h3 class="char-empty__title">{{ title }}</h3>
-    <p v-if="hint" class="char-empty__hint">{{ hint }}</p>
+  <div
+    class="char-empty"
+    data-testid="char-empty-state"
+  >
+    <div class="char-empty__icon">
+      {{ icon }}
+    </div>
+    <h3 class="char-empty__title">
+      {{ title }}
+    </h3>
+    <p
+      v-if="hint"
+      class="char-empty__hint"
+    >
+      {{ hint }}
+    </p>
     <v-btn
       v-if="variant === 'no-runs'"
       color="primary"

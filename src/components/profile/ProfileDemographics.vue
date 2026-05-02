@@ -83,9 +83,12 @@ const { tv } = useI18n()
 
 const genderIcon = computed<string>(() => {
   switch ((store.person?.gender ?? '').toUpperCase()) {
-    case 'FEMALE': return 'mdi-gender-female'
-    case 'MALE': return 'mdi-gender-male'
-    default: return 'mdi-help-circle-outline'
+    case 'FEMALE':
+      return 'mdi-gender-female'
+    case 'MALE':
+      return 'mdi-gender-male'
+    default:
+      return 'mdi-help-circle-outline'
   }
 })
 

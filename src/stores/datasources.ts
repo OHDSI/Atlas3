@@ -3,12 +3,12 @@
  */
 import { defineStore } from 'pinia'
 import { ref, computed, triggerRef } from 'vue'
-import type {
-  DataSource,
-  ReportType,
-  ReportData
-} from '@/models/datasource.types'
-import { listDataSources, getDashboardReport, getClinicalDomainReport } from '@/services/datasource.service'
+import type { DataSource, ReportType, ReportData } from '@/models/datasource.types'
+import {
+  listDataSources,
+  getDashboardReport,
+  getClinicalDomainReport,
+} from '@/services/datasource.service'
 import { logger } from '@/utils/logger'
 
 export const useDataSourcesStore = defineStore('datasources', () => {
@@ -17,15 +17,15 @@ export const useDataSourcesStore = defineStore('datasources', () => {
   const selectedSourceId = ref<number | null>(null)
   const selectedReportType = ref<ReportType | null>(null)
   const reportCache = ref<Map<string, ReportData>>(new Map())
-  
+
   const loading = ref({
     sources: false,
-    report: false
+    report: false,
   })
-  
+
   const error = ref({
     sources: null as string | null,
-    report: null as string | null
+    report: null as string | null,
   })
 
   // Getters
@@ -38,7 +38,11 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     if (!selectedSourceId.value || !selectedReportType.value) return null
     const cacheKey = `${selectedSourceId.value}-${selectedReportType.value}`
     const report = reportCache.value.get(cacheKey) || null
-    logger.debug('DataSourcesStore', 'currentReport computed', { cacheKey, hasReport: !!report, reportType: report?.type })
+    logger.debug('DataSourcesStore', 'currentReport computed', {
+      cacheKey,
+      hasReport: !!report,
+      reportType: report?.type,
+    })
     return report
   })
 
@@ -48,10 +52,10 @@ export const useDataSourcesStore = defineStore('datasources', () => {
   async function fetchDataSources() {
     loading.value.sources = true
     error.value.sources = null
-    
+
     try {
       sources.value = await listDataSources()
-      
+
       // Auto-select first source if none selected
       if (sources.value.length > 0 && selectedSourceId.value === null) {
         selectedSourceId.value = sources.value[0]?.sourceId || null
@@ -66,7 +70,7 @@ export const useDataSourcesStore = defineStore('datasources', () => {
 
   async function selectDataSource(sourceId: number) {
     selectedSourceId.value = sourceId
-    
+
     // If a report type is selected, fetch the report for the new source
     if (selectedReportType.value) {
       await fetchReport(selectedReportType.value)
@@ -75,7 +79,7 @@ export const useDataSourcesStore = defineStore('datasources', () => {
 
   async function selectReportType(reportType: ReportType) {
     selectedReportType.value = reportType
-    
+
     // Fetch report if source is selected
     if (selectedSourceId.value) {
       await fetchReport(reportType)
@@ -84,12 +88,12 @@ export const useDataSourcesStore = defineStore('datasources', () => {
 
   async function fetchReport(reportType: ReportType) {
     if (!selectedSourceId.value) return
-    
+
     const source = selectedSource.value
     if (!source) return
-    
+
     const cacheKey = `${selectedSourceId.value}-${reportType}`
-    
+
     // Return cached if available
     if (reportCache.value.has(cacheKey)) {
       logger.debug('DataSourcesStore', 'Using cached report', cacheKey)
@@ -101,10 +105,10 @@ export const useDataSourcesStore = defineStore('datasources', () => {
       logger.debug('DataSourcesStore', 'Already loading a report, skipping', cacheKey)
       return
     }
-    
+
     loading.value.report = true
     error.value.report = null
-    
+
     try {
       if (reportType === 'dashboard') {
         const data = await getDashboardReport(source.sourceKey)
@@ -148,7 +152,11 @@ export const useDataSourcesStore = defineStore('datasources', () => {
       }
 
       error.value.report = err instanceof Error ? err.message : 'Failed to load report'
-      logger.error('DataSourcesStore', 'Error fetching report', { reportType, sourceKey: source.sourceKey, error: err })
+      logger.error('DataSourcesStore', 'Error fetching report', {
+        reportType,
+        sourceKey: source.sourceKey,
+        error: err,
+      })
     } finally {
       loading.value.report = false
     }
@@ -182,12 +190,12 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     reportCache,
     loading,
     error,
-    
+
     // Getters
     selectedSource,
     currentReport,
     isLoading,
-    
+
     // Actions
     fetchDataSources,
     selectDataSource,
@@ -196,6 +204,6 @@ export const useDataSourcesStore = defineStore('datasources', () => {
     cacheReport,
     clearCache,
     retryFetchSources,
-    retryFetchReport
+    retryFetchReport,
   }
 })

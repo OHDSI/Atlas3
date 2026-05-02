@@ -90,14 +90,14 @@ export interface DemographicData {
 // Zod schemas for validation
 export const YearOfBirthDataSchema = z.object({
   year: z.number(),
-  count: z.number()
+  count: z.number(),
 })
 
 export const DemographicDataSchema = z.object({
   conceptId: z.number(),
   conceptName: z.string(),
   count: z.number(),
-  percentage: z.number()
+  percentage: z.number(),
 })
 
 export const PersonReportSchema = z.object({
@@ -105,8 +105,8 @@ export const PersonReportSchema = z.object({
   demographics: z.object({
     gender: z.array(DemographicDataSchema),
     race: z.array(DemographicDataSchema),
-    ethnicity: z.array(DemographicDataSchema)
-  })
+    ethnicity: z.array(DemographicDataSchema),
+  }),
 })
 
 // ============================================================================
@@ -121,11 +121,11 @@ export interface ConditionErasReport {
 export interface ConditionEraData {
   conceptId: number
   conceptName: string
-  soc?: string  // System Organ Class
-  hlt?: string  // High Level Term
+  soc?: string // System Organ Class
+  hlt?: string // High Level Term
   personCount: number
-  prevalence: number  // Percentage (0-100)
-  averageDuration: number  // Days
+  prevalence: number // Percentage (0-100)
+  averageDuration: number // Days
 }
 
 export const ConditionEraDataSchema = z.object({
@@ -135,12 +135,12 @@ export const ConditionEraDataSchema = z.object({
   hlt: z.string().optional(),
   personCount: z.number(),
   prevalence: z.number(),
-  averageDuration: z.number()
+  averageDuration: z.number(),
 })
 
 export const ConditionErasReportSchema = z.object({
   prevalence: z.array(ConditionEraDataSchema),
-  treemapData: z.array(z.any()).optional()
+  treemapData: z.array(z.any()).optional(),
 })
 
 // ============================================================================
@@ -156,7 +156,7 @@ export interface ConditionData {
   conceptName: string
   recordsPerPerson?: number
   personCount: number
-  prevalence: number  // Percentage (0-100)
+  prevalence: number // Percentage (0-100)
 }
 
 export const ConditionDataSchema = z.object({
@@ -164,11 +164,11 @@ export const ConditionDataSchema = z.object({
   conceptName: z.string(),
   recordsPerPerson: z.number().optional(),
   personCount: z.number(),
-  prevalence: z.number()
+  prevalence: z.number(),
 })
 
 export const ConditionReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -182,7 +182,7 @@ export interface ConditionsByIndexReport {
 export type WebAPIConditionsByIndexRaw = WebAPIConditionRaw
 
 export const ConditionsByIndexReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -196,7 +196,7 @@ export interface DeathReport {
 export type WebAPIDeathRaw = WebAPIConditionRaw
 
 export const DeathReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -210,7 +210,7 @@ export interface DrugExposureReport {
 export type WebAPIDrugExposureRaw = WebAPIConditionRaw
 
 export const DrugExposureReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -224,7 +224,7 @@ export interface DrugsByIndexReport {
 export type WebAPIDrugsByIndexRaw = WebAPIConditionRaw
 
 export const DrugsByIndexReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -238,7 +238,7 @@ export interface ObservationPeriodsReport {
 export type WebAPIObservationPeriodsRaw = WebAPIConditionRaw
 
 export const ObservationPeriodsReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -252,7 +252,7 @@ export interface ProcedureReport {
 export type WebAPIProcedureRaw = WebAPIConditionRaw
 
 export const ProcedureReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -266,7 +266,7 @@ export interface ProceduresByIndexReport {
 export type WebAPIProceduresByIndexRaw = WebAPIConditionRaw
 
 export const ProceduresByIndexReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -280,7 +280,7 @@ export interface DataCompletenessReport {
 export type WebAPIDataCompletenessRaw = WebAPIConditionRaw
 
 export const DataCompletenessReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -294,7 +294,7 @@ export interface EntropyReport {
 export type WebAPIEntropyRaw = WebAPIConditionRaw
 
 export const EntropyReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -308,7 +308,7 @@ export interface TornadoReport {
 export type WebAPITornadoRaw = WebAPIConditionRaw
 
 export const TornadoReportSchema = z.object({
-  prevalence: z.array(ConditionDataSchema)
+  prevalence: z.array(ConditionDataSchema),
 })
 
 // ============================================================================
@@ -323,8 +323,8 @@ export interface DrugErasReport {
 export interface DrugEraData {
   conceptId: number
   conceptName: string
-  atc1?: string  // ATC Level 1
-  atc4?: string  // ATC Level 4
+  atc1?: string // ATC Level 1
+  atc4?: string // ATC Level 4
   ingredient: string
   personCount: number
   prevalence: number
@@ -339,12 +339,12 @@ export const DrugEraDataSchema = z.object({
   ingredient: z.string(),
   personCount: z.number(),
   prevalence: z.number(),
-  averageDuration: z.number()
+  averageDuration: z.number(),
 })
 
 export const DrugErasReportSchema = z.object({
   prevalence: z.array(DrugEraDataSchema),
-  treemapData: z.array(z.any()).optional()
+  treemapData: z.array(z.any()).optional(),
 })
 
 // ============================================================================
@@ -360,8 +360,8 @@ export interface CohortSpecificReport {
 }
 
 export interface PrevalenceByMonthData {
-  date: string  // YYYY-MM format
-  prevalence: number  // Per 1000 people
+  date: string // YYYY-MM format
+  prevalence: number // Per 1000 people
 }
 
 export interface CohortStartData {
@@ -371,7 +371,7 @@ export interface CohortStartData {
 }
 
 export interface PersonsInCohortData {
-  dayOffset: number  // Days from cohort start (30-day increments)
+  dayOffset: number // Days from cohort start (30-day increments)
   personCount: number
 }
 
@@ -391,9 +391,9 @@ export interface AgeDistributionData {
 // ============================================================================
 
 export interface BarChartData {
-  categories: string[]  // X-axis labels
-  values: number[]      // Y-axis values
-  unit?: string         // Unit label (e.g., "People", "Count")
+  categories: string[] // X-axis labels
+  values: number[] // Y-axis values
+  unit?: string // Unit label (e.g., "People", "Count")
 }
 
 export interface PieChartData {
@@ -492,7 +492,12 @@ export interface WebAPIDrilldownRaw {
    * components/reports/reportDrilldown.js → parseFrequencyDistribution.
    * Both fields are optional so we tolerate older WebAPI builds.
    */
-  frequencyDistribution?: Array<{ xCount?: number; yNumPersons?: number; intervalIndex?: number; countValue?: number }>
+  frequencyDistribution?: Array<{
+    xCount?: number
+    yNumPersons?: number
+    intervalIndex?: number
+    countValue?: number
+  }>
   prevalenceByGenderAgeYear?: WebAPIPrevalenceByDemographic[]
   prevalenceByMonth?: WebAPIPrevalenceByMonth[]
 }
@@ -563,7 +568,7 @@ export interface ConditionErasTableRow {
   hlt: string
   snomed: string
   personCount: number
-  prevalence: string  // Formatted percentage
+  prevalence: string // Formatted percentage
   lengthOfEra: number
 }
 
@@ -592,7 +597,7 @@ export interface PersonsExposureData {
   conceptId: number
   conceptName: string
   personCount: number
-  prevalence: number  // Percentage (0-100)
+  prevalence: number // Percentage (0-100)
   recordsPerPerson?: number
 }
 
@@ -622,7 +627,7 @@ export interface VisitsData {
   conceptId: number
   conceptName: string
   personCount: number
-  prevalence: number  // Percentage (0-100)
+  prevalence: number // Percentage (0-100)
   recordsPerPerson?: number
 }
 
@@ -696,7 +701,7 @@ export interface DrugUtilizationData {
   conceptId: number
   conceptName: string
   personCount: number
-  prevalence: number  // Percentage (0-100)
+  prevalence: number // Percentage (0-100)
   recordsPerPerson?: number
 }
 
@@ -752,7 +757,7 @@ export interface ChartExportOptions {
   type: 'png' | 'svg'
   filename: string
   backgroundColor?: string
-  pixelRatio?: number  // For PNG export (2x for high-DPI)
+  pixelRatio?: number // For PNG export (2x for high-DPI)
 }
 
 // ============================================================================
@@ -928,75 +933,103 @@ export interface WebAPIReportResponse {
 
 // Zod schema for WebAPI response validation
 export const WebAPIReportResponseSchema = z.object({
-  summary: z.object({
-    cohortId: z.number(),
-    sourceKey: z.string(),
-    totalPersons: z.number(),
-    generatedDate: z.string()
-  }).optional(),
-  person: z.object({
-    yearOfBirth: z.array(z.object({
-      year: z.number(),
-      count: z.number()
-    })),
-    gender: z.array(z.object({
-      conceptId: z.number(),
-      conceptName: z.string(),
-      count: z.number(),
-      percentage: z.number()
-    })),
-    race: z.array(z.object({
-      conceptId: z.number(),
-      conceptName: z.string(),
-      count: z.number(),
-      percentage: z.number()
-    })),
-    ethnicity: z.array(z.object({
-      conceptId: z.number(),
-      conceptName: z.string(),
-      count: z.number(),
-      percentage: z.number()
-    }))
-  }).optional(),
-  conditionEra: z.object({
-    prevalence: z.array(z.object({
-      conceptId: z.number(),
-      conceptName: z.string(),
-      soc: z.string().optional(),
-      hlt: z.string().optional(),
-      personCount: z.number(),
-      prevalence: z.number(),
-      averageDuration: z.number()
-    }))
-  }).optional(),
-  drugEra: z.object({
-    prevalence: z.array(z.object({
-      conceptId: z.number(),
-      conceptName: z.string(),
-      ingredientConceptId: z.number(),
-      ingredient: z.string(),
-      atc1: z.string().optional(),
-      atc4: z.string().optional(),
-      personCount: z.number(),
-      prevalence: z.number(),
-      averageDuration: z.number()
-    }))
-  }).optional(),
-  cohortSpecific: z.object({
-    prevalenceByMonth: z.array(z.object({
-      date: z.string(),
-      prevalence: z.number()
-    })),
-    ageDistribution: z.array(z.object({
-      age: z.number(),
-      count: z.number(),
-      gender: z.string().optional()
-    })),
-    durationDistribution: z.array(z.object({
-      days: z.number(),
-      count: z.number()
-    }))
-  }).optional()
+  summary: z
+    .object({
+      cohortId: z.number(),
+      sourceKey: z.string(),
+      totalPersons: z.number(),
+      generatedDate: z.string(),
+    })
+    .optional(),
+  person: z
+    .object({
+      yearOfBirth: z.array(
+        z.object({
+          year: z.number(),
+          count: z.number(),
+        })
+      ),
+      gender: z.array(
+        z.object({
+          conceptId: z.number(),
+          conceptName: z.string(),
+          count: z.number(),
+          percentage: z.number(),
+        })
+      ),
+      race: z.array(
+        z.object({
+          conceptId: z.number(),
+          conceptName: z.string(),
+          count: z.number(),
+          percentage: z.number(),
+        })
+      ),
+      ethnicity: z.array(
+        z.object({
+          conceptId: z.number(),
+          conceptName: z.string(),
+          count: z.number(),
+          percentage: z.number(),
+        })
+      ),
+    })
+    .optional(),
+  conditionEra: z
+    .object({
+      prevalence: z.array(
+        z.object({
+          conceptId: z.number(),
+          conceptName: z.string(),
+          soc: z.string().optional(),
+          hlt: z.string().optional(),
+          personCount: z.number(),
+          prevalence: z.number(),
+          averageDuration: z.number(),
+        })
+      ),
+    })
+    .optional(),
+  drugEra: z
+    .object({
+      prevalence: z.array(
+        z.object({
+          conceptId: z.number(),
+          conceptName: z.string(),
+          ingredientConceptId: z.number(),
+          ingredient: z.string(),
+          atc1: z.string().optional(),
+          atc4: z.string().optional(),
+          personCount: z.number(),
+          prevalence: z.number(),
+          averageDuration: z.number(),
+        })
+      ),
+    })
+    .optional(),
+  cohortSpecific: z
+    .object({
+      prevalenceByMonth: z.array(
+        z.object({
+          date: z.string(),
+          prevalence: z.number(),
+        })
+      ),
+      ageDistribution: z.array(
+        z.object({
+          age: z.number(),
+          count: z.number(),
+          gender: z.string().optional(),
+        })
+      ),
+      durationDistribution: z.array(
+        z.object({
+          days: z.number(),
+          count: z.number(),
+        })
+      ),
+    })
+    .optional(),
 })
 
 // ============================================================================
@@ -1035,7 +1068,28 @@ export interface ReportData {
   cohortId: number
   sourceKey: string
   fetchedAt: Date
-  data: PersonReport | ConditionErasReport | ConditionReport | DrugErasReport | CohortSpecificReport | PersonsExposureReport | VisitsReport | VisitDatesReport | CareSiteVisitDatesReport | DrugUtilizationReport | HeraclesHeelReport | ConditionsByIndexReport | DeathReport | DrugExposureReport | DrugsByIndexReport | ObservationPeriodsReport | ProcedureReport | ProceduresByIndexReport | DataCompletenessReport | EntropyReport | TornadoReport
+  data:
+    | PersonReport
+    | ConditionErasReport
+    | ConditionReport
+    | DrugErasReport
+    | CohortSpecificReport
+    | PersonsExposureReport
+    | VisitsReport
+    | VisitDatesReport
+    | CareSiteVisitDatesReport
+    | DrugUtilizationReport
+    | HeraclesHeelReport
+    | ConditionsByIndexReport
+    | DeathReport
+    | DrugExposureReport
+    | DrugsByIndexReport
+    | ObservationPeriodsReport
+    | ProcedureReport
+    | ProceduresByIndexReport
+    | DataCompletenessReport
+    | EntropyReport
+    | TornadoReport
 }
 
 // ============================================================================
@@ -1078,8 +1132,11 @@ export function hasPrevalence(data: unknown): data is PrevalenceReport {
  * Type guard: check if report is a ConditionEras report
  */
 export function isConditionErasReportData(data: unknown): data is ConditionErasReport {
-  return hasPrevalence(data) && (data as ConditionErasReport).prevalence?.every?.(
-    (item) => 'averageDuration' in item && ('soc' in item || 'hlt' in item || true)
+  return (
+    hasPrevalence(data) &&
+    (data as ConditionErasReport).prevalence?.every?.(
+      item => 'averageDuration' in item && ('soc' in item || 'hlt' in item || true)
+    )
   )
 }
 
@@ -1087,8 +1144,9 @@ export function isConditionErasReportData(data: unknown): data is ConditionErasR
  * Type guard: check if report is a DrugEras report
  */
 export function isDrugErasReportData(data: unknown): data is DrugErasReport {
-  return hasPrevalence(data) && (data as DrugErasReport).prevalence?.every?.(
-    (item) => 'ingredient' in item
+  return (
+    hasPrevalence(data) &&
+    (data as DrugErasReport).prevalence?.every?.(item => 'ingredient' in item)
   )
 }
 
@@ -1125,7 +1183,7 @@ export function isCareSiteVisitDatesReportData(data: unknown): data is CareSiteV
     typeof data === 'object' &&
     'data' in data &&
     Array.isArray((data as CareSiteVisitDatesReport).data) &&
-    (data as CareSiteVisitDatesReport).data?.every?.((item) => 'careSiteId' in item)
+    (data as CareSiteVisitDatesReport).data?.every?.(item => 'careSiteId' in item)
   )
 }
 

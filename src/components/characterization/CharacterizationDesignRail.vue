@@ -4,7 +4,7 @@
       :model-value="modelValue"
       :available-cohorts="availableCohorts"
       :available-feature-analyses="availableFeatureAnalyses"
-      @update:model-value="(v) => $emit('update:modelValue', v)"
+      @update:model-value="v => $emit('update:modelValue', v)"
     />
 
     <template v-if="showPastRuns">
@@ -14,7 +14,7 @@
       <CharacterizationPastRuns
         :runs="runs"
         :active-id="activeRunId"
-        @select="(id) => $emit('select-run', id)"
+        @select="id => $emit('select-run', id)"
       />
     </template>
   </aside>
@@ -51,11 +51,15 @@ const { t } = useI18n()
 <style scoped>
 .char-design-rail {
   padding: 14px;
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   overflow-y: auto;
 }
 .char-design-rail__sec-label {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgb(var(--v-theme-on-surface));
   margin: 14px 0 6px;

@@ -15,7 +15,9 @@
       @click="onClick(r)"
     >
       <template #prepend>
-        <span :class="['char-past-run__status', `char-past-run__status--${r.status.toLowerCase()}`]" />
+        <span
+          :class="['char-past-run__status', `char-past-run__status--${r.status.toLowerCase()}`]"
+        />
       </template>
       <v-list-item-title class="char-past-run__src">
         {{ r.sourceKey }}
@@ -52,25 +54,41 @@ function onClick(r: CharacterizationExecution) {
 </script>
 
 <style scoped>
-.char-past-runs { padding: 0; background: transparent; }
-.char-past-run { min-height: 36px; }
+.char-past-runs {
+  padding: 0;
+  background: transparent;
+}
+.char-past-run {
+  min-height: 36px;
+}
 .char-past-run__id {
-  font-family: ui-monospace, "SF Mono", monospace;
+  font-family: ui-monospace, 'SF Mono', monospace;
   font-size: 11px;
   color: rgba(var(--v-theme-on-surface), 0.62);
 }
-.char-past-run__src { font-size: 12px; font-weight: 600; }
+.char-past-run__src {
+  font-size: 12px;
+  font-weight: 600;
+}
 .char-past-run__status {
-  width: 8px; height: 8px; border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   background: rgba(var(--v-theme-on-surface), 0.2);
   display: inline-block;
 }
-.char-past-run__status--completed { background: rgb(22, 163, 74); }
+.char-past-run__status--completed {
+  background: rgb(22, 163, 74);
+}
 .char-past-run__status--failed,
-.char-past-run__status--canceled { background: rgb(220, 38, 38); }
+.char-past-run__status--canceled {
+  background: rgb(220, 38, 38);
+}
 .char-past-run__status--starting,
 .char-past-run__status--started,
-.char-past-run__status--running { background: rgb(var(--v-theme-orange)); }
+.char-past-run__status--running {
+  background: rgb(var(--v-theme-orange));
+}
 .char-past-runs__empty {
   font-size: 12px;
   color: rgba(var(--v-theme-on-surface), 0.62);

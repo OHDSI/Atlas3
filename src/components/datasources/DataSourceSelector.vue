@@ -34,7 +34,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
-  disabled: false
+  disabled: false,
 })
 
 defineEmits<{
@@ -44,7 +44,7 @@ defineEmits<{
 const dataSourceItems = computed(() => {
   return props.dataSources.map(source => ({
     label: source.sourceName,
-    value: source.sourceId
+    value: source.sourceId,
   }))
 })
 </script>

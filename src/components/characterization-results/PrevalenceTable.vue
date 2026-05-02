@@ -130,7 +130,7 @@ function pickStratumKey(rec: Record<string, Record<string, number>>): string | n
 }
 
 const tableRows = computed<FlattenedRow[]>(() =>
-  props.rows.map((row) => {
+  props.rows.map(row => {
     const flat: FlattenedRow = {
       covariateId: row.covariateId,
       covariateName: row.covariateName,
@@ -141,19 +141,20 @@ const tableRows = computed<FlattenedRow[]>(() =>
     const countKey = pickStratumKey(row.count)
     const pctKey = pickStratumKey(row.pct)
     for (const cohort of props.cohorts) {
-      flat[`count_${cohort.id}`] = countKey
-        ? row.count[countKey]?.[String(cohort.id)]
-        : undefined
-      flat[`pct_${cohort.id}`] = pctKey
-        ? row.pct[pctKey]?.[String(cohort.id)]
-        : undefined
+      flat[`count_${cohort.id}`] = countKey ? row.count[countKey]?.[String(cohort.id)] : undefined
+      flat[`pct_${cohort.id}`] = pctKey ? row.pct[pctKey]?.[String(cohort.id)] : undefined
     }
     return flat
   })
 )
 
 const headers = computed(() => {
-  const out: { title: string; key: string; sortable?: boolean; align?: 'start' | 'end' | 'center' }[] = [
+  const out: {
+    title: string
+    key: string
+    sortable?: boolean
+    align?: 'start' | 'end' | 'center'
+  }[] = [
     {
       title: tv('columns.covariate', 'Covariate'),
       key: 'covariateName',

@@ -3,7 +3,12 @@
  * Validation rules for cohort definitions and events
  */
 import type { CohortDefinition, CohortEvent } from '@/models/cohort.types'
-import type { Cardinality, EventAttribute, NumericRangeAttribute, DateRangeAttribute } from '@/models/event.types'
+import type {
+  Cardinality,
+  EventAttribute,
+  NumericRangeAttribute,
+  DateRangeAttribute,
+} from '@/models/event.types'
 
 export interface ValidationError {
   field: string
@@ -109,9 +114,13 @@ export function validateAttribute(attribute: EventAttribute): ValidationError[] 
 
     // Note: NumericOperator doesn't include BETWEEN or NOT_BETWEEN per type definition
     // If extent is provided, validate the range
-    if (numAttr.extent !== null && numAttr.extent !== undefined &&
-        numAttr.value !== null && numAttr.value !== undefined &&
-        numAttr.value >= numAttr.extent) {
+    if (
+      numAttr.extent !== null &&
+      numAttr.extent !== undefined &&
+      numAttr.value !== null &&
+      numAttr.value !== undefined &&
+      numAttr.value >= numAttr.extent
+    ) {
       errors.push({
         field: 'attribute.extent',
         message: 'Extent value must be greater than value',
@@ -142,9 +151,13 @@ export function validateAttribute(attribute: EventAttribute): ValidationError[] 
 
     // Date range uses value and extent (not startDate/endDate)
     // DateOperator includes: GREATER_THAN, LESS_THAN, EQUAL, NOT_EQUAL, BETWEEN, NOT_BETWEEN
-    if ((dateAttr.operator === 'GREATER_THAN' || dateAttr.operator === 'LESS_THAN' ||
-         dateAttr.operator === 'EQUAL' || dateAttr.operator === 'NOT_EQUAL') &&
-        !dateAttr.value) {
+    if (
+      (dateAttr.operator === 'GREATER_THAN' ||
+        dateAttr.operator === 'LESS_THAN' ||
+        dateAttr.operator === 'EQUAL' ||
+        dateAttr.operator === 'NOT_EQUAL') &&
+      !dateAttr.value
+    ) {
       errors.push({
         field: 'attribute.value',
         message: 'Date value is required for comparison operators',
@@ -152,8 +165,10 @@ export function validateAttribute(attribute: EventAttribute): ValidationError[] 
     }
 
     // BETWEEN and NOT_BETWEEN require both value and extent
-    if ((dateAttr.operator === 'BETWEEN' || dateAttr.operator === 'NOT_BETWEEN') &&
-        (!dateAttr.value || !dateAttr.extent)) {
+    if (
+      (dateAttr.operator === 'BETWEEN' || dateAttr.operator === 'NOT_BETWEEN') &&
+      (!dateAttr.value || !dateAttr.extent)
+    ) {
       errors.push({
         field: 'attribute.dates',
         message: 'Both value and extent dates required for BETWEEN/NOT_BETWEEN operators',
@@ -161,8 +176,11 @@ export function validateAttribute(attribute: EventAttribute): ValidationError[] 
     }
 
     // Validate date range is valid (value < extent)
-    if (dateAttr.value && dateAttr.extent &&
-        new Date(dateAttr.value) >= new Date(dateAttr.extent)) {
+    if (
+      dateAttr.value &&
+      dateAttr.extent &&
+      new Date(dateAttr.value) >= new Date(dateAttr.extent)
+    ) {
       errors.push({
         field: 'attribute.dates',
         message: 'Extent date must be after value date',

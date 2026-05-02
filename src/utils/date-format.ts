@@ -17,7 +17,7 @@ export function formatDate(isoDate: string | number | undefined | null): string 
 
   try {
     const date = new Date(isoDate)
-    
+
     // Check if date is valid
     if (isNaN(date.getTime())) {
       return '—' // em dash for invalid dates

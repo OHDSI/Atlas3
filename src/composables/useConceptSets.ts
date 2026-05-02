@@ -58,7 +58,11 @@ export function useConceptSets() {
 
       return created
     } catch (error) {
-      logger.error('ConceptSets', 'Failed to create concept set', error instanceof Error ? error.message : String(error))
+      logger.error(
+        'ConceptSets',
+        'Failed to create concept set',
+        error instanceof Error ? error.message : String(error)
+      )
       throw error
     }
   }
@@ -74,7 +78,11 @@ export function useConceptSets() {
         store.updateConceptSet(updated.id, updated)
       }
     } catch (error) {
-      logger.error('ConceptSets', 'Failed to update concept set', error instanceof Error ? error.message : String(error))
+      logger.error(
+        'ConceptSets',
+        'Failed to update concept set',
+        error instanceof Error ? error.message : String(error)
+      )
       throw error
     }
   }
@@ -90,7 +98,11 @@ export function useConceptSets() {
         store.removeConceptSet(id)
       }
     } catch (error) {
-      logger.error('ConceptSets', 'Failed to delete concept set', error instanceof Error ? error.message : String(error))
+      logger.error(
+        'ConceptSets',
+        'Failed to delete concept set',
+        error instanceof Error ? error.message : String(error)
+      )
       throw error
     }
   }
@@ -115,7 +127,11 @@ export function useConceptSets() {
 
       return conceptSet
     } catch (error) {
-      logger.error('ConceptSets', 'Failed to get concept set', error instanceof Error ? error.message : String(error))
+      logger.error(
+        'ConceptSets',
+        'Failed to get concept set',
+        error instanceof Error ? error.message : String(error)
+      )
       throw error
     }
   }
@@ -128,14 +144,18 @@ export function useConceptSets() {
       const result = await webapi.getAllConceptSets()
 
       if (result.success) {
-        result.data.forEach((cs) => {
+        result.data.forEach(cs => {
           store.addConceptSet(cs)
         })
       } else {
         logger.error('ConceptSets', 'Failed to load concept sets', result.error)
       }
     } catch (error) {
-      logger.error('ConceptSets', 'Failed to load concept sets', error instanceof Error ? error.message : String(error))
+      logger.error(
+        'ConceptSets',
+        'Failed to load concept sets',
+        error instanceof Error ? error.message : String(error)
+      )
       throw error
     }
   }
@@ -144,7 +164,7 @@ export function useConceptSets() {
    * Toggle concept selection (for multi-select in search results)
    */
   function toggleConceptSelection(concept: Concept): void {
-    const index = selectedConcepts.value.findIndex((c) => c.conceptId === concept.conceptId)
+    const index = selectedConcepts.value.findIndex(c => c.conceptId === concept.conceptId)
 
     if (index >= 0) {
       // Already selected, remove it
@@ -159,7 +179,7 @@ export function useConceptSets() {
    * Check if a concept is selected
    */
   function isConceptSelected(conceptId: number): boolean {
-    return selectedConcepts.value.some((c) => c.conceptId === conceptId)
+    return selectedConcepts.value.some(c => c.conceptId === conceptId)
   }
 
   /**

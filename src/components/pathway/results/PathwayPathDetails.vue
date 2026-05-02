@@ -1,7 +1,14 @@
 <template>
   <table class="path-details">
     <thead>
-      <tr><th /><th>Event</th><th>Remain</th><th>%</th><th>Diff</th><th>%</th></tr>
+      <tr>
+        <th />
+        <th>Event</th>
+        <th>Remain</th>
+        <th>%</th>
+        <th>Diff</th>
+        <th>%</th>
+      </tr>
     </thead>
     <tbody>
       <tr
@@ -55,7 +62,19 @@ const rows = computed(() =>
 </script>
 
 <style scoped>
-.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; }
-.path-details { width: 100%; border-collapse: collapse; }
-.path-details th, .path-details td { padding: 4px 8px; border-bottom: 1px solid #eee; }
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+.path-details {
+  width: 100%;
+  border-collapse: collapse;
+}
+.path-details th,
+.path-details td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #eee;
+}
 </style>

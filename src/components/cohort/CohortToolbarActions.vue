@@ -59,7 +59,9 @@
       <v-icon class="d-md-none">
         mdi-database-cog-outline
       </v-icon>
-      <span class="d-none d-md-inline">{{ t('components.analysisExecution.buttons.generate') }}</span>
+      <span class="d-none d-md-inline">{{
+        t('components.analysisExecution.buttons.generate')
+      }}</span>
     </v-btn>
 
     <v-btn

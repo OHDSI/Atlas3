@@ -4,8 +4,8 @@
       <v-card-title>Vocabulary Schema</v-card-title>
       <v-card-text>
         <p class="text-body-1 mb-4">
-          Configure the database schema name for vocabulary lookups.
-          This setting controls which PostgreSQL schema is used when querying the OMOP vocabulary tables.
+          Configure the database schema name for vocabulary lookups. This setting controls which
+          PostgreSQL schema is used when querying the OMOP vocabulary tables.
         </p>
 
         <!-- Schema Input Field -->
@@ -114,7 +114,7 @@ const validationRules = [
     }
     validationError.value = result
     return result
-  }
+  },
 ]
 
 /**
@@ -138,7 +138,7 @@ onMounted(async () => {
 /**
  * Optimistic update: Update UI immediately when user types
  */
-watch(localSchema, (newValue) => {
+watch(localSchema, newValue => {
   // Only update store if valid
   const validation = validateSchemaName(newValue)
   if (validation === true) {
@@ -184,7 +184,8 @@ watchDebounced(
       localSchema.value = previousSchema.value
       configStore.vocabularySchema = previousSchema.value
 
-      errorMessage.value = error instanceof Error ? error.message : 'Failed to update schema. Please try again.'
+      errorMessage.value =
+        error instanceof Error ? error.message : 'Failed to update schema. Please try again.'
       showErrorToast.value = true
     } finally {
       isSaving.value = false
@@ -216,7 +217,8 @@ async function handleUndo() {
       showToast.value = true
     })
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to undo. Please try again.'
+    errorMessage.value =
+      error instanceof Error ? error.message : 'Failed to undo. Please try again.'
     showErrorToast.value = true
   }
 }

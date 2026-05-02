@@ -1,7 +1,11 @@
 <template>
   <component
     :is="tag"
-    :class="['surface-card', interactive && 'surface-card--interactive', `surface-card--padding-${padding}`]"
+    :class="[
+      'surface-card',
+      interactive && 'surface-card--interactive',
+      `surface-card--padding-${padding}`,
+    ]"
   >
     <slot />
   </component>
@@ -68,7 +72,9 @@ void computed(() => props)
   box-sizing: border-box;
   text-decoration: none;
   color: inherit;
-  transition: box-shadow 160ms ease, transform 160ms ease;
+  transition:
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .surface-card--padding-none {
@@ -90,7 +96,7 @@ void computed(() => props)
 
 .surface-card--interactive:hover {
   box-shadow:
-    0 2px 6px rgba(15, 23, 42, 0.10),
+    0 2px 6px rgba(15, 23, 42, 0.1),
     0 12px 32px rgba(15, 23, 42, 0.12);
   transform: translateY(-2px);
 }

@@ -2,7 +2,8 @@
   <v-card class="role-utilities-tab">
     <v-card-text>
       <p class="text-body-1 mb-6">
-        Import and export role configurations for backup, deployment, or sharing across environments.
+        Import and export role configurations for backup, deployment, or sharing across
+        environments.
       </p>
 
       <!-- Export Section -->
@@ -20,7 +21,8 @@
               Export Role
             </h3>
             <p class="text-body-2 text-medium-emphasis">
-              Download this role's configuration as a JSON file, including all permissions and user assignments.
+              Download this role's configuration as a JSON file, including all permissions and user
+              assignments.
             </p>
           </div>
         </div>
@@ -31,7 +33,8 @@
             variant="tonal"
             class="mb-4"
           >
-            The exported file will be compatible with Atlas 2.x and can be imported into any Atlas instance.
+            The exported file will be compatible with Atlas 2.x and can be imported into any Atlas
+            instance.
           </v-alert>
 
           <v-btn
@@ -62,7 +65,8 @@
               Import Role
             </h3>
             <p class="text-body-2 text-medium-emphasis">
-              Import a role configuration from a JSON file. This will create a new role with the specified permissions and users.
+              Import a role configuration from a JSON file. This will create a new role with the
+              specified permissions and users.
             </p>
           </div>
         </div>
@@ -73,7 +77,8 @@
             variant="tonal"
             class="mb-4"
           >
-            <strong>Note:</strong> Importing a role will create a new role. If a role with the same name exists, you will be prompted to rename it.
+            <strong>Note:</strong> Importing a role will create a new role. If a role with the same
+            name exists, you will be prompted to rename it.
           </v-alert>
 
           <v-btn

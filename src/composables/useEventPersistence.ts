@@ -14,14 +14,14 @@ const DEFAULT_STATE: EventPersistenceState = {
   strategy: 'CONTINUOUS_OBSERVATION',
   fixedDuration: {
     dateField: 'START_DATE',
-    offset: 0
+    offset: 0,
   },
   drugExposure: {
     conceptSetId: null,
     persistenceWindow: 30,
-    surveillanceWindow: 7
+    surveillanceWindow: 7,
   },
-  validationErrors: new Map()
+  validationErrors: new Map(),
 }
 
 /**
@@ -30,9 +30,7 @@ const DEFAULT_STATE: EventPersistenceState = {
  */
 export function useEventPersistence(initialCriteria?: ExitCriteria) {
   // Initialize state from existing ExitCriteria or use defaults
-  const state = reactive<EventPersistenceState>(
-    initializeState(initialCriteria)
-  )
+  const state = reactive<EventPersistenceState>(initializeState(initialCriteria))
 
   /**
    * Initialize state from ExitCriteria
@@ -42,27 +40,27 @@ export function useEventPersistence(initialCriteria?: ExitCriteria) {
       return {
         ...DEFAULT_STATE,
         // Create new Map instance to avoid sharing across instances
-        validationErrors: new Map()
+        validationErrors: new Map(),
       }
     }
 
     const newState = {
       ...DEFAULT_STATE,
       // Create new Map instance to avoid sharing across instances
-      validationErrors: new Map()
+      validationErrors: new Map(),
     }
     newState.strategy = criteria.strategy
 
     if (criteria.strategy === 'FIXED_DURATION') {
       newState.fixedDuration = {
         dateField: criteria.dateField || 'START_DATE',
-        offset: criteria.offset || 0
+        offset: criteria.offset || 0,
       }
     } else if (criteria.strategy === 'CONTINUOUS_DRUG') {
       newState.drugExposure = {
         conceptSetId: criteria.conceptSet?.id?.toString() || null,
         persistenceWindow: criteria.persistenceWindow || 30,
-        surveillanceWindow: criteria.surveillanceWindow || 7
+        surveillanceWindow: criteria.surveillanceWindow || 7,
       }
     }
 
@@ -80,13 +78,13 @@ export function useEventPersistence(initialCriteria?: ExitCriteria) {
     if (newStrategy === 'FIXED_DURATION') {
       state.fixedDuration = {
         dateField: 'START_DATE',
-        offset: 0
+        offset: 0,
       }
     } else if (newStrategy === 'CONTINUOUS_DRUG') {
       state.drugExposure = {
         conceptSetId: null,
         persistenceWindow: 30,
-        surveillanceWindow: 7
+        surveillanceWindow: 7,
       }
     }
   }
@@ -96,7 +94,7 @@ export function useEventPersistence(initialCriteria?: ExitCriteria) {
    */
   function toExitCriteria(conceptSets: ConceptSetReference[]): ExitCriteria {
     const baseCriteria: ExitCriteria = {
-      strategy: state.strategy
+      strategy: state.strategy,
     }
 
     if (state.strategy === 'FIXED_DURATION') {
@@ -105,7 +103,7 @@ export function useEventPersistence(initialCriteria?: ExitCriteria) {
     } else if (state.strategy === 'CONTINUOUS_DRUG') {
       if (state.drugExposure.conceptSetId) {
         const conceptSet = conceptSets.find(
-          (cs) => cs.id.toString() === state.drugExposure.conceptSetId
+          cs => cs.id.toString() === state.drugExposure.conceptSetId
         )
         if (conceptSet) {
           baseCriteria.conceptSet = conceptSet
@@ -159,6 +157,6 @@ export function useEventPersistence(initialCriteria?: ExitCriteria) {
     clearValidationError,
     clearAllValidationErrors,
     hasErrors,
-    getError
+    getError,
   }
 }

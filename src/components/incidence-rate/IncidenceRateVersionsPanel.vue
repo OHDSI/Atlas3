@@ -28,9 +28,12 @@ const versionsConfig = computed<VersionsConfig | null>(() => {
     version: 0,
     assetId: ir.id,
     createdBy: { id: 0, name: '' },
-    createdDate: typeof ir.createdDate === 'string'
-      ? ir.createdDate
-      : (typeof ir.createdDate === 'number' ? new Date(ir.createdDate).toISOString() : ''),
+    createdDate:
+      typeof ir.createdDate === 'string'
+        ? ir.createdDate
+        : typeof ir.createdDate === 'number'
+          ? new Date(ir.createdDate).toISOString()
+          : '',
     comment: null,
     archived: false,
     displayVersion: 'Current',

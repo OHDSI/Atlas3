@@ -6,7 +6,7 @@ import { z } from 'zod'
 export const userSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1),
-  email: z.string().email().optional()
+  email: z.string().email().optional(),
 })
 
 /**
@@ -20,7 +20,7 @@ export const versionSchema = z.object({
   createdBy: userSchema.optional(),
   createdDate: z.union([z.string().datetime(), z.number()]),
   comment: z.string().max(500).nullable().optional(),
-  archived: z.boolean()
+  archived: z.boolean(),
 })
 
 /**
@@ -33,17 +33,19 @@ export const versionArraySchema = z.array(versionSchema)
  * @param entitySchema - Zod schema for the entity type (e.g., cohortDefinitionSchema)
  */
 export const versionedAssetSchema = <T extends z.ZodTypeAny>(entitySchema: T) =>
-  z.object({
-    versionDTO: versionSchema,
-    entityDTO: entitySchema
-  }).strict()
+  z
+    .object({
+      versionDTO: versionSchema,
+      entityDTO: entitySchema,
+    })
+    .strict()
 
 /**
  * Zod schema for comment update payload
  */
 export const commentUpdateSchema = z.object({
   comment: z.string().max(500),
-  archived: z.boolean()
+  archived: z.boolean(),
 })
 
 // Export types inferred from schemas for convenience

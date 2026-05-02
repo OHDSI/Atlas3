@@ -18,7 +18,8 @@
           class="mb-4"
         >
           <div class="text-body-1">
-            This role is assigned to <strong>{{ userCount }} user{{ userCount !== 1 ? 's' : '' }}</strong>.
+            This role is assigned to
+            <strong>{{ userCount }} user{{ userCount !== 1 ? 's' : '' }}</strong>.
           </div>
           <div class="text-body-2 mt-2">
             Deleting this role will remove it from all assigned users.
@@ -78,7 +79,7 @@ import type { Role } from '@/models/role.types'
 interface Props {
   modelValue: boolean
   role: Role | null
-  userCount?: number  // FR-005: Show number of assigned users
+  userCount?: number // FR-005: Show number of assigned users
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -87,7 +88,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  'success': []
+  success: []
 }>()
 
 const { deleteRole } = useRoles()
@@ -96,11 +97,14 @@ const deleting = ref(false)
 const serverError = ref<string | null>(null)
 
 // Watch for dialog open to reset error state
-watch(() => props.modelValue, (isOpen) => {
-  if (isOpen) {
-    serverError.value = null
+watch(
+  () => props.modelValue,
+  isOpen => {
+    if (isOpen) {
+      serverError.value = null
+    }
   }
-})
+)
 
 async function handleDelete() {
   if (!props.role) return

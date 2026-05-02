@@ -57,7 +57,7 @@ const props = withDefaults(
     loading: false,
     height: 600,
     showExport: true,
-    exportFilename: 'trellis-chart'
+    exportFilename: 'trellis-chart',
   }
 )
 

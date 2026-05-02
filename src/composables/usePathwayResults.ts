@@ -4,11 +4,7 @@ import {
   getPathwayDesignByGeneration,
   getPathwayResults,
 } from '@/services/webapi'
-import type {
-  Pathway,
-  PathwayExecution,
-  PathwayResults,
-} from '@/models/pathway.types'
+import type { Pathway, PathwayExecution, PathwayResults } from '@/models/pathway.types'
 import { logger } from '@/utils/logger'
 
 export function usePathwayResults() {

@@ -68,6 +68,11 @@ function update(field: 'startDate' | 'endDate', v: string) {
 </script>
 
 <style scoped>
-.sw-card { margin-bottom: 12px; }
-.row { display: flex; gap: 12px; }
+.sw-card {
+  margin-bottom: 12px;
+}
+.row {
+  display: flex;
+  gap: 12px;
+}
 </style>

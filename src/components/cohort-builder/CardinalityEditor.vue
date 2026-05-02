@@ -31,11 +31,15 @@ const countModel = ref(cardinality.value.count)
 const isUserEditing = ref(false)
 
 // Sync countModel when prop changes from parent (but not during user editing)
-watch(() => props.modelValue?.count, (newCount) => {
-  if (newCount !== undefined && !isUserEditing.value) {
-    countModel.value = newCount
-  }
-}, { immediate: true })
+watch(
+  () => props.modelValue?.count,
+  newCount => {
+    if (newCount !== undefined && !isUserEditing.value) {
+      countModel.value = newCount
+    }
+  },
+  { immediate: true }
+)
 
 // Computed for count with local state and emit
 const count = computed({
@@ -143,8 +147,13 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
             min="0"
             data-testid="count-input"
             class="v-input__control"
-            style="width: 100%; padding: 8px; border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)); border-radius: 4px;"
-            @input="(e) => count = Number((e.target as HTMLInputElement).value)"
+            style="
+              width: 100%;
+              padding: 8px;
+              border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+              border-radius: 4px;
+            "
+            @input="e => (count = Number((e.target as HTMLInputElement).value))"
           >
         </v-col>
 

@@ -42,7 +42,7 @@ export function useLicenseAgreement() {
    * Handle license rejection
    */
   function rejectLicense() {
-    const message = 'Without accepting this terms & conditions you can\'t use Atlas'
+    const message = "Without accepting this terms & conditions you can't use Atlas"
     alert(message)
     // Keep the dialog open - user must accept to continue
   }
@@ -72,6 +72,6 @@ export function useLicenseAgreement() {
     acceptLicense,
     rejectLicense,
     checkLicenseStatus,
-    clearLicenseAcceptance
+    clearLicenseAcceptance,
   }
 }

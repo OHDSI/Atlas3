@@ -38,8 +38,8 @@
       :items-per-page="itemsPerPage"
       :empty-text="t('common.noData', 'No characterizations yet.').value"
       testid="characterizations-table"
-      :can-copy-item="(item) => canCopy && !!item.id"
-      :can-delete-item="(item) => entityAccess.canDelete(item.id)"
+      :can-copy-item="item => canCopy && !!item.id"
+      :can-delete-item="item => entityAccess.canDelete(item.id)"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleDeleteClick"
@@ -159,8 +159,16 @@ const searchInput = ref<string>('')
 const headers = computed(() => [
   { title: t('columns.name', 'Name').value, key: 'name' },
   { title: t('columns.description', 'Description').value, key: 'description' },
-  { title: t('cc.viewEdit.results.filters.cohorts', 'Cohorts').value, key: 'cohorts', sortable: false },
-  { title: t('cc.tabs.featureAnalyses.title', 'Feature Analyses').value, key: 'featureAnalyses', sortable: false },
+  {
+    title: t('cc.viewEdit.results.filters.cohorts', 'Cohorts').value,
+    key: 'cohorts',
+    sortable: false,
+  },
+  {
+    title: t('cc.tabs.featureAnalyses.title', 'Feature Analyses').value,
+    key: 'featureAnalyses',
+    sortable: false,
+  },
   { title: t('columns.createdBy', 'Created By').value, key: 'createdBy' },
   { title: t('columns.modified', 'Modified').value, key: 'modifiedDate' },
   { title: t('columns.actions', 'Actions').value, key: 'actions', sortable: false },

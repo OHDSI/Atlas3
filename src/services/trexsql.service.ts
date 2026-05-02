@@ -5,7 +5,7 @@ import {
   BuildCacheResponseSchema,
   type TrexSQLCacheStatus,
   type PatientCountResult,
-  type BuildCacheResponse
+  type BuildCacheResponse,
 } from '@/models/trexsql.types'
 
 const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
@@ -40,7 +40,10 @@ async function getAuthHeader(): Promise<Record<string, string>> {
   return {}
 }
 
-export async function buildCache(sourceKey: string, schemaName?: string): Promise<BuildCacheResponse> {
+export async function buildCache(
+  sourceKey: string,
+  schemaName?: string
+): Promise<BuildCacheResponse> {
   const url = `${BASE_URL}/trexsql/${sourceKey}/cache`
 
   try {
@@ -51,9 +54,9 @@ export async function buildCache(sourceKey: string, schemaName?: string): Promis
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeader
+        ...authHeader,
       },
-      body: JSON.stringify({ schemaName: schemaName || sourceKey.toLowerCase() })
+      body: JSON.stringify({ schemaName: schemaName || sourceKey.toLowerCase() }),
     })
 
     if (!response.ok) {
@@ -89,7 +92,10 @@ export async function buildCache(sourceKey: string, schemaName?: string): Promis
   }
 }
 
-function mapCacheStatusResponse(sourceKey: string, data: Record<string, unknown>): TrexSQLCacheStatus {
+function mapCacheStatusResponse(
+  sourceKey: string,
+  data: Record<string, unknown>
+): TrexSQLCacheStatus {
   let status: 'ready' | 'building' | 'not_built' | 'error' | 'stale' = 'not_built'
 
   if (data.activeJob) {
@@ -113,7 +119,7 @@ function mapCacheStatusResponse(sourceKey: string, data: Record<string, unknown>
     totalPatientCount: typeof data.totalPatientCount === 'number' ? data.totalPatientCount : null,
     lastBuiltAt,
     sizeBytes: typeof data.cacheSizeBytes === 'number' ? data.cacheSizeBytes : null,
-    errorMessage: typeof data.errorMessage === 'string' ? data.errorMessage : null
+    errorMessage: typeof data.errorMessage === 'string' ? data.errorMessage : null,
   }
 }
 
@@ -128,8 +134,8 @@ export async function getCacheStatus(sourceKey: string): Promise<TrexSQLCacheSta
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeader
-      }
+        ...authHeader,
+      },
     })
 
     if (!response.ok) {
@@ -142,7 +148,7 @@ export async function getCacheStatus(sourceKey: string): Promise<TrexSQLCacheSta
           totalPatientCount: null,
           lastBuiltAt: null,
           sizeBytes: null,
-          errorMessage: null
+          errorMessage: null,
         }
       }
 
@@ -187,12 +193,12 @@ export async function getPatientCount(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeader
+        ...authHeader,
       },
       body: JSON.stringify({
-        expression: JSON.stringify(expression)
+        expression: JSON.stringify(expression),
       }),
-      signal: controller.signal
+      signal: controller.signal,
     })
 
     if (!response.ok) {
@@ -219,7 +225,7 @@ export async function getPatientCount(
       const patientCount: PatientCountResult = {
         cohortPatientCount: data.cohortPatientCount ?? 0,
         totalPatientCount: data.totalPatientCount ?? 0,
-        executionTimeMs: data.executionTimeMs ?? 0
+        executionTimeMs: data.executionTimeMs ?? 0,
       }
       return patientCount
     }
@@ -250,7 +256,7 @@ export async function getAllCacheStatuses(): Promise<TrexSQLCacheStatus[]> {
           totalPatientCount: null,
           lastBuiltAt: null,
           sizeBytes: null,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error'
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
         }
       })
     )

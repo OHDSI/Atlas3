@@ -113,9 +113,18 @@ export function useCardinality() {
   function getCountingMethodOptions(): Array<{ value: CountingMethod; label: string }> {
     return [
       { value: 'ALL', label: tv('options.all') },
-      { value: 'DISTINCT_CONCEPT', label: tv('cohortDefinitions.designTab.countingOptions.distinctConcept') },
-      { value: 'DISTINCT_START_DATE', label: tv('cohortDefinitions.designTab.countingOptions.distinctDate') },
-      { value: 'DISTINCT_VISIT', label: tv('cohortDefinitions.designTab.countingOptions.distinctVisit') },
+      {
+        value: 'DISTINCT_CONCEPT',
+        label: tv('cohortDefinitions.designTab.countingOptions.distinctConcept'),
+      },
+      {
+        value: 'DISTINCT_START_DATE',
+        label: tv('cohortDefinitions.designTab.countingOptions.distinctDate'),
+      },
+      {
+        value: 'DISTINCT_VISIT',
+        label: tv('cohortDefinitions.designTab.countingOptions.distinctVisit'),
+      },
     ]
   }
 

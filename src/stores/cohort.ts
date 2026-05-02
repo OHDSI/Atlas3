@@ -6,14 +6,8 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch, type WatchStopHandle } from 'vue'
 import type { CohortDefinition, CohortEvent } from '@/models/cohort.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
-import {
-  saveCohortToCache,
-  getCohortFromCache,
-  deleteCohortFromCache,
-} from '@/utils/cohort-cache'
-import {
-  getVersion as getVersionAPI,
-} from '@/services/cohort-definition-versions.service'
+import { saveCohortToCache, getCohortFromCache, deleteCohortFromCache } from '@/utils/cohort-cache'
+import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
 import { logger } from '@/utils/logger'
 
 const STORAGE_KEY = 'atlas3_cohort_draft'
@@ -78,7 +72,7 @@ export const useCohortStore = defineStore('cohort', () => {
   })
 
   const hasValidationErrors = computed(() => {
-    return validationErrors.value.some((err) => err.severity === 'error')
+    return validationErrors.value.some(err => err.severity === 'error')
   })
 
   const canSave = computed(() => {
@@ -205,7 +199,7 @@ export const useCohortStore = defineStore('cohort', () => {
   }
 
   // Watch for changes and trigger auto-save timer
-  watchHandle = watch(isDirty, (dirty) => {
+  watchHandle = watch(isDirty, dirty => {
     if (dirty) {
       startAutoSave()
     }
@@ -264,7 +258,7 @@ export const useCohortStore = defineStore('cohort', () => {
     }
 
     validationErrors.value = errors
-    isReadOnly.value = errors.some((err) => err.severity === 'error')
+    isReadOnly.value = errors.some(err => err.severity === 'error')
   }
 
   // Calculate exponential backoff delay
@@ -376,7 +370,7 @@ export const useCohortStore = defineStore('cohort', () => {
         )
 
         // Schedule retry
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
           if (retryTimer) {
             clearTimeout(retryTimer)
           }
@@ -438,7 +432,10 @@ export const useCohortStore = defineStore('cohort', () => {
 
     try {
       const cohortId = currentCohort.value.id
-      const versionedAsset: VersionedAsset<CohortDefinition> = await getVersionAPI(cohortId, versionNumber)
+      const versionedAsset: VersionedAsset<CohortDefinition> = await getVersionAPI(
+        cohortId,
+        versionNumber
+      )
 
       // Set preview version metadata
       previewVersion.value = versionedAsset.versionDTO

@@ -34,7 +34,11 @@ export async function getVersions(conceptSetId: number): Promise<Version[]> {
 
     return parsed.data
   } catch (error) {
-    logger.error('ConceptSetVersionsService', `Failed to fetch versions for concept set ${conceptSetId}`, error)
+    logger.error(
+      'ConceptSetVersionsService',
+      `Failed to fetch versions for concept set ${conceptSetId}`,
+      error
+    )
     throw error
   }
 }
@@ -50,9 +54,7 @@ export async function getVersion(
   versionNumber: number
 ): Promise<VersionedAsset<ConceptSet>> {
   try {
-    const data = await httpGet<unknown>(
-      `/conceptset/${conceptSetId}/version/${versionNumber}`
-    )
+    const data = await httpGet<unknown>(`/conceptset/${conceptSetId}/version/${versionNumber}`)
 
     const parsed = versionedAssetSchema(conceptSetSchema).safeParse(data)
 

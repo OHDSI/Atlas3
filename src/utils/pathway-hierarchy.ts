@@ -15,7 +15,10 @@ const END = 'end'
 export function isComboCode(code: number): boolean {
   let count = 0
   let n = code
-  while (n) { count += n & 1; n >>>= 1 }
+  while (n) {
+    count += n & 1
+    n >>>= 1
+  }
   return count > 1
 }
 

@@ -34,7 +34,7 @@ function openDatabase(): Promise<IDBDatabase> {
       resolve(request.result)
     }
 
-    request.onupgradeneeded = (event) => {
+    request.onupgradeneeded = event => {
       const db = (event.target as IDBOpenDBRequest).result
 
       // Create object store if it doesn't exist
@@ -100,7 +100,9 @@ export async function saveCohortToCache(
  * @param cohortId - ID of the cohort to retrieve
  * @returns Cached cohort or null if not found/expired
  */
-export async function getCohortFromCache(cohortId: number | string): Promise<CohortDefinition | null> {
+export async function getCohortFromCache(
+  cohortId: number | string
+): Promise<CohortDefinition | null> {
   try {
     const db = await openDatabase()
     const transaction = db.transaction(STORE_NAME, 'readonly')
@@ -121,13 +123,19 @@ export async function getCohortFromCache(cohortId: number | string): Promise<Coh
         // Check if cache is expired
         const age = Date.now() - cachedData.timestamp
         if (age > CACHE_DURATION_MS) {
-          logger.debug('CohortCache', `Cohort ${cohortId} cache expired (${Math.round(age / 1000 / 60)} minutes old)`)
+          logger.debug(
+            'CohortCache',
+            `Cohort ${cohortId} cache expired (${Math.round(age / 1000 / 60)} minutes old)`
+          )
           // Don't delete here - let clearExpiredCache handle it
           resolve(null)
           return
         }
 
-        logger.debug('CohortCache', `Cohort ${cohortId} retrieved from cache (${Math.round(age / 1000)} seconds old)`)
+        logger.debug(
+          'CohortCache',
+          `Cohort ${cohortId} retrieved from cache (${Math.round(age / 1000)} seconds old)`
+        )
         resolve(cachedData.cohort)
       }
 
@@ -225,7 +233,7 @@ export async function clearExpiredCache(): Promise<void> {
     const expiredKeys: IDBValidKey[] = []
 
     return new Promise((resolve, reject) => {
-      request.onsuccess = (event) => {
+      request.onsuccess = event => {
         const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result
 
         if (cursor) {
@@ -239,7 +247,7 @@ export async function clearExpiredCache(): Promise<void> {
           cursor.continue()
         } else {
           // Cursor iteration complete, delete expired entries
-          expiredKeys.forEach((key) => {
+          expiredKeys.forEach(key => {
             store.delete(key)
           })
 
@@ -294,7 +302,7 @@ export async function getCacheStats(): Promise<{
         allRequest.onsuccess = () => {
           const allData: CachedCohort[] = allRequest.result
 
-          allData.forEach((cachedData) => {
+          allData.forEach(cachedData => {
             const age = Date.now() - cachedData.timestamp
             if (age > CACHE_DURATION_MS) {
               expiredCohorts++

@@ -11,9 +11,8 @@
         class="domain-prevalence-table__hint-icon"
       />
       <span>
-        Large dataset detected ({{ formatNumber(props.data.length) }} entries).
-        Displaying top 1,000 entries by prevalence for performance —
-        use search or export CSV for the full dataset.
+        Large dataset detected ({{ formatNumber(props.data.length) }} entries). Displaying top 1,000
+        entries by prevalence for performance — use search or export CSV for the full dataset.
       </span>
     </div>
 
@@ -108,7 +107,7 @@
       <template #item.metric="{ item }">
         {{ item.metric.toFixed(2) }}
       </template>
-      
+
       <!-- Table status text -->
       <template #bottom>
         <div class="table-status-footer pa-3 d-flex justify-space-between align-center">
@@ -160,7 +159,7 @@ const headers = ref<TableHeader[]>([
   { title: 'Name', key: 'conceptName', sortable: true },
   { title: 'Person Count', key: 'personCount', sortable: true },
   { title: 'Prevalence (%)', key: 'prevalence', sortable: true },
-  { title: props.metricLabel, key: 'metric', sortable: true }
+  { title: props.metricLabel, key: 'metric', sortable: true },
 ])
 
 const visibleHeaders = computed(() => {
@@ -177,22 +176,24 @@ const aggregatedData = computed(() => {
   if (!needsVirtualization.value) return props.data
 
   // For datasets > 10k rows, show top 1000 by prevalence
-  logger.info('DomainPrevalenceTable', 'Large dataset detected, showing top 1000 entries by prevalence')
-  return [...props.data]
-    .sort((a, b) => b.prevalence - a.prevalence)
-    .slice(0, 1000)
+  logger.info(
+    'DomainPrevalenceTable',
+    'Large dataset detected, showing top 1000 entries by prevalence'
+  )
+  return [...props.data].sort((a, b) => b.prevalence - a.prevalence).slice(0, 1000)
 })
 
 // Filtered data based on search (uses aggregated data for large sets)
 const filteredData = computed(() => {
   const dataToFilter = needsVirtualization.value ? aggregatedData.value : props.data
-  
+
   if (!search.value) return dataToFilter
-  
+
   const searchLower = search.value.toLowerCase()
-  return dataToFilter.filter(row => 
-    row.conceptName.toLowerCase().includes(searchLower) ||
-    row.conceptId.toString().includes(searchLower)
+  return dataToFilter.filter(
+    row =>
+      row.conceptName.toLowerCase().includes(searchLower) ||
+      row.conceptId.toString().includes(searchLower)
   )
 })
 
@@ -221,11 +222,11 @@ const tableStatusText = computed(() => {
   if (totalItems.value === 0) {
     return 'No entries found'
   }
-  
+
   if (itemsPerPage.value === -1) {
     return `Showing all ${formatNumber(totalItems.value)} entries`
   }
-  
+
   return `Showing ${formatNumber(startItem.value)} to ${formatNumber(endItem.value)} of ${formatNumber(totalItems.value)} entries`
 })
 

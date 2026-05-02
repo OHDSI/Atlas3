@@ -92,7 +92,7 @@ const showEditDialog = ref(false)
 const editingName = ref('')
 
 // Initialize editing name when dialog opens
-watch(showEditDialog, (isOpen) => {
+watch(showEditDialog, isOpen => {
   if (isOpen) {
     editingName.value = props.modelValue
   }

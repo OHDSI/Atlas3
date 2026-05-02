@@ -21,7 +21,9 @@
         size="18"
         class="cohort-builder__preview-banner-icon"
       />
-      <span>{{ t('versions.previewingVersion', { version: cohortStore.previewVersion?.version || '' }) }}</span>
+      <span>{{
+        t('versions.previewingVersion', { version: cohortStore.previewVersion?.version || '' })
+      }}</span>
       <v-spacer />
       <v-btn
         color="primary"
@@ -111,7 +113,12 @@
             <v-spacer />
             <div class="section-controls">
               <span class="section-controls__label">
-                {{ t('components.cohortExpressionEditor.entryQualifyingLimitLabel', 'Cohort entry on').value }}
+                {{
+                  t(
+                    'components.cohortExpressionEditor.entryQualifyingLimitLabel',
+                    'Cohort entry on'
+                  ).value
+                }}
                 <v-tooltip
                   location="top"
                   max-width="320"
@@ -124,7 +131,12 @@
                       class="section-controls__help"
                     />
                   </template>
-                  <span>{{ t('components.cohortExpressionEditor.entryQualifyingLimitHelp', 'Which qualifying event marks a person’s cohort entry: their first, every occurrence, or their last.').value }}</span>
+                  <span>{{
+                    t(
+                      'components.cohortExpressionEditor.entryQualifyingLimitHelp',
+                      'Which qualifying event marks a person’s cohort entry: their first, every occurrence, or their last.'
+                    ).value
+                  }}</span>
                 </v-tooltip>
               </span>
               <v-btn-toggle
@@ -232,11 +244,18 @@
               size="small"
               @click="addAdditionalCriteria"
             >
-              {{ t('components.cohortExpressionEditor.addInclusionCriteria', 'Add inclusion criteria').value }}
+              {{
+                t(
+                  'components.cohortExpressionEditor.addInclusionCriteria',
+                  'Add inclusion criteria'
+                ).value
+              }}
             </v-btn>
           </div>
-        </div><!-- /.section-wrapper -->
-      </div><!-- /.section-step (1) -->
+        </div>
+        <!-- /.section-wrapper -->
+      </div>
+      <!-- /.section-step (1) -->
 
       <!-- Inclusion Criteria — Step 2 -->
       <div
@@ -249,7 +268,9 @@
             <h3 class="section-title">
               {{ t('components.cohortExpressionEditor.inclusionCriteriaTitle') }}
             </h3>
-            <span :class="['section-state-chip', `section-state-chip--${inclusionRulesState.tone}`]">
+            <span
+              :class="['section-state-chip', `section-state-chip--${inclusionRulesState.tone}`]"
+            >
               {{ inclusionRulesState.label }}
             </span>
             <v-spacer />
@@ -265,7 +286,12 @@
                 {{ t('components.cohortExpressionEditor.addRule', 'Add rule').value }}
               </v-btn>
               <span class="section-controls__label">
-                {{ t('components.cohortExpressionEditor.inclusionQualifyingLimitLabel', 'Apply rules to').value }}
+                {{
+                  t(
+                    'components.cohortExpressionEditor.inclusionQualifyingLimitLabel',
+                    'Apply rules to'
+                  ).value
+                }}
                 <v-tooltip
                   location="top"
                   max-width="320"
@@ -278,7 +304,12 @@
                       class="section-controls__help"
                     />
                   </template>
-                  <span>{{ t('components.cohortExpressionEditor.inclusionQualifyingLimitHelp', 'Which qualifying event each rule is evaluated against: a person’s first, every, or their last.').value }}</span>
+                  <span>{{
+                    t(
+                      'components.cohortExpressionEditor.inclusionQualifyingLimitHelp',
+                      'Which qualifying event each rule is evaluated against: a person’s first, every, or their last.'
+                    ).value
+                  }}</span>
                 </v-tooltip>
               </span>
               <v-btn-toggle
@@ -318,8 +349,10 @@
             @select-concept="handleSelectConceptForCriteria"
             @edit-concept-set="handleEditConceptSet"
           />
-        </div><!-- /.section-wrapper -->
-      </div><!-- /.section-step (2) -->
+        </div>
+        <!-- /.section-wrapper -->
+      </div>
+      <!-- /.section-step (2) -->
 
       <!-- Exit & Eras — Step 3 -->
       <div
@@ -340,7 +373,9 @@
             </span>
             <v-spacer />
             <div class="section-controls">
-              <span class="section-controls__label">{{ t('components.cohortExpressionEditor.exitStrategyLabel', 'Strategy').value }}</span>
+              <span class="section-controls__label">{{
+                t('components.cohortExpressionEditor.exitStrategyLabel', 'Strategy').value
+              }}</span>
               <v-btn-toggle
                 v-model="exitCriteria.strategy"
                 mandatory
@@ -349,7 +384,10 @@
                 divided
               >
                 <v-tooltip
-                  :text="t('options.endOfContinuousObservation', 'End of continuous observation period').value"
+                  :text="
+                    t('options.endOfContinuousObservation', 'End of continuous observation period')
+                      .value
+                  "
                   location="top"
                 >
                   <template #activator="{ props: tooltipProps }">
@@ -363,7 +401,12 @@
                   </template>
                 </v-tooltip>
                 <v-tooltip
-                  :text="t('options.fixedDurationRelativeToInitialEvent', 'Fixed duration relative to initial event').value"
+                  :text="
+                    t(
+                      'options.fixedDurationRelativeToInitialEvent',
+                      'Fixed duration relative to initial event'
+                    ).value
+                  "
                   location="top"
                 >
                   <template #activator="{ props: tooltipProps }">
@@ -377,7 +420,10 @@
                   </template>
                 </v-tooltip>
                 <v-tooltip
-                  :text="t('options.endOfContinuousDrugExposure', 'End of continuous drug exposure').value"
+                  :text="
+                    t('options.endOfContinuousDrugExposure', 'End of continuous drug exposure')
+                      .value
+                  "
                   location="top"
                 >
                   <template #activator="{ props: tooltipProps }">
@@ -403,7 +449,9 @@
           />
 
           <div class="section-subheader">
-            <span class="text-eyebrow">{{ t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras').value }}</span>
+            <span class="text-eyebrow">{{
+              t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras').value
+            }}</span>
             <span class="section-subheader__rule" />
           </div>
           <censor-window-editor
@@ -413,9 +461,12 @@
             @update:collapse-settings="collapseSettings = $event"
             @validation-error="handleCensorWindowValidation"
           />
-        </div><!-- /.section-wrapper -->
-      </div><!-- /.section-step (3) -->
-    </div><!-- /.cohort-builder__steps -->
+        </div>
+        <!-- /.section-wrapper -->
+      </div>
+      <!-- /.section-step (3) -->
+    </div>
+    <!-- /.cohort-builder__steps -->
 
     <!-- Concept Set Selection Dialog (shows all system concept sets) -->
     <concept-set-selection-dialog
@@ -438,7 +489,11 @@
       v-if="conceptSetsStore.editorOpen"
       :model-value="conceptSetsStore.editorOpen"
       :concept-set="conceptSetsStore.currentSet"
-      @update:model-value="(value) => { if (!value) conceptSetsStore.closeEditor() }"
+      @update:model-value="
+        value => {
+          if (!value) conceptSetsStore.closeEditor()
+        }
+      "
       @save="handleConceptSetSaved"
     />
 
@@ -495,7 +550,9 @@
         <div class="cohort-builder__dialog-header">
           <div class="cohort-builder__dialog-title-block">
             <div class="cohort-builder__dialog-eyebrow-row">
-              <span class="text-eyebrow">{{ t('common.cohortDefinition', 'Cohort definition').value }}</span>
+              <span class="text-eyebrow">{{
+                t('common.cohortDefinition', 'Cohort definition').value
+              }}</span>
               <span class="cohort-builder__dialog-accent-rule" />
             </div>
             <h2 class="cohort-builder__dialog-title">
@@ -530,7 +587,12 @@
           {{ t('common.unsavedChanges', 'Unsaved changes').value }}
         </v-card-title>
         <v-card-text>
-          {{ t('common.unsavedWarning', 'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.').value }}
+          {{
+            t(
+              'common.unsavedWarning',
+              'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.'
+            ).value
+          }}
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -592,7 +654,7 @@ import type {
   CollapseSettings,
   ObservationPeriod,
   QualifyingLimit,
-  CriteriaGroup
+  CriteriaGroup,
 } from '@/models/cohort.types'
 // ValidationSeverity type is provided by useCohortValidation composable
 import type { EventAttribute } from '@/models/event.types'
@@ -688,7 +750,6 @@ const isGenerationPanelOpen = ref(false)
 const showUnsavedDialog = ref(false)
 let pendingNavigation: (() => void) | null = null
 
-
 // UI state
 // If we have an ID prop, start with loading=true to prevent UI from rendering before data loads
 const isLoadingCohort = ref(!!props.id)
@@ -720,7 +781,7 @@ const inclusionPanelRef = ref<InstanceType<typeof InclusionCriteriaPanel> | null
 const selectedSourceKey = ref<string | null>(null)
 const generationError = ref<string | null>(null)
 
-const cohortId = computed(() => props.id ? Number(props.id) : null)
+const cohortId = computed(() => (props.id ? Number(props.id) : null))
 
 // ============================================================================
 // Section-state chips
@@ -743,9 +804,7 @@ const entryEventsState = computed<SectionState>(() => {
   }
   const allHaveConceptSet = events.every(e => !!e.conceptSet)
   const count = `${events.length} event${events.length === 1 ? '' : 's'}`
-  return allHaveConceptSet
-    ? { label: count, tone: 'success' }
-    : { label: count, tone: 'warning' }
+  return allHaveConceptSet ? { label: count, tone: 'success' } : { label: count, tone: 'warning' }
 })
 
 const inclusionRulesState = computed<SectionState>(() => {
@@ -786,26 +845,26 @@ const exitCriteriaState = computed<SectionState>(() => {
 // both ends agree on the new value.
 watch(
   () => props.name,
-  (incoming) => {
+  incoming => {
     if (incoming !== undefined && incoming !== cohortName.value) {
       cohortName.value = incoming
     }
   }
 )
-watch(cohortName, (val) => {
+watch(cohortName, val => {
   if (props.name !== undefined && val !== props.name) {
     emit('update:name', val)
   }
 })
 watch(
   () => props.description,
-  (incoming) => {
+  incoming => {
     if (incoming !== undefined && incoming !== cohortDescription.value) {
       cohortDescription.value = incoming
     }
   }
 )
-watch(cohortDescription, (val) => {
+watch(cohortDescription, val => {
   if (props.description !== undefined && val !== props.description) {
     emit('update:description', val)
   }
@@ -840,16 +899,12 @@ const {
 const { hasPermission } = usePermissions()
 const { canWrite: canWriteCohort } = useEntityAccess('cohortDefinition', cohortId)
 const canSavePermission = computed(() =>
-  cohortId.value === null
-    ? hasPermission('create:cohort-definition')
-    : canWriteCohort.value,
+  cohortId.value === null ? hasPermission('create:cohort-definition') : canWriteCohort.value
 )
 
 const canSave = computed(() => {
   return (
-    cohortName.value.trim().length > 0 &&
-    entryEvents.value.length > 0 &&
-    canSavePermission.value
+    cohortName.value.trim().length > 0 && entryEvents.value.length > 0 && canSavePermission.value
   )
 })
 
@@ -889,7 +944,7 @@ async function buildCohortExpression() {
   try {
     // Fetch full concept set items for all used concept sets
     const conceptSetsWithItems: ConceptSetReference[] = await Promise.all(
-      usedConceptSets.value.map(async (ref) => {
+      usedConceptSets.value.map(async ref => {
         // Skip if items are already populated
         if (ref.items && ref.items.length > 0) {
           return ref
@@ -901,7 +956,7 @@ async function buildCohortExpression() {
           if (fullConceptSet && fullConceptSet.items) {
             return {
               ...ref,
-              items: fullConceptSet.items as ConceptSetItem[]
+              items: fullConceptSet.items as ConceptSetItem[],
             }
           }
         }
@@ -977,7 +1032,10 @@ const hasUnsavedChanges = computed(() => {
  * Get the currently selected concepts for the attribute being edited
  */
 const currentlySelectedConcepts = computed(() => {
-  if (!selectedCriteriaContext.value || selectedCriteriaContext.value.attributeIndex === undefined) {
+  if (
+    !selectedCriteriaContext.value ||
+    selectedCriteriaContext.value.attributeIndex === undefined
+  ) {
     return []
   }
 
@@ -992,7 +1050,12 @@ const currentlySelectedConcepts = computed(() => {
     }
   }
   // Handle inclusion criteria
-  else if (context.ruleIndex >= 0 && context.groupIndex >= 0 && context.eventIndex !== undefined && context.attributeIndex !== undefined) {
+  else if (
+    context.ruleIndex >= 0 &&
+    context.groupIndex >= 0 &&
+    context.eventIndex !== undefined &&
+    context.attributeIndex !== undefined
+  ) {
     const rule = inclusionRules.value[context.ruleIndex]
     if (rule && rule.criteriaGroups) {
       const group = rule.criteriaGroups[context.groupIndex]
@@ -1005,7 +1068,12 @@ const currentlySelectedConcepts = computed(() => {
     }
   }
   // Handle additional criteria
-  else if (context.ruleIndex === -2 && additionalCriteria.value && context.eventIndex !== undefined && context.attributeIndex !== undefined) {
+  else if (
+    context.ruleIndex === -2 &&
+    additionalCriteria.value &&
+    context.eventIndex !== undefined &&
+    context.attributeIndex !== undefined
+  ) {
     const event = additionalCriteria.value.events[context.eventIndex]
     if (event && event.attributes && event.attributes[context.attributeIndex]) {
       attribute = event.attributes[context.attributeIndex] ?? null
@@ -1024,7 +1092,7 @@ const currentlySelectedConcepts = computed(() => {
       vocabularyId: c.VOCABULARY_ID ?? '',
       conceptClassId: c.CONCEPT_CLASS_ID ?? '',
       standardConcept: c.STANDARD_CONCEPT ?? null,
-      invalidReason: c.INVALID_REASON ?? null
+      invalidReason: c.INVALID_REASON ?? null,
     }))
   }
 
@@ -1037,68 +1105,79 @@ const versionsConfig = computed<VersionsConfig>(() => {
     assetType: 'cohortdefinition',
     assetId: cohortId.value ?? 0,
     currentVersion: () => {
-    const cohort = cohortStore.currentCohort
-    if (!cohort) {
+      const cohort = cohortStore.currentCohort
+      if (!cohort) {
+        return {
+          version: -1,
+          displayVersion: 'Current',
+          assetId: 0,
+          createdBy: { id: 0, name: 'Unknown' },
+          createdDate: new Date().toISOString(),
+          comment: null,
+          archived: false,
+          isCurrent: true,
+          isPreviewing: false,
+          formattedDate: '',
+        }
+      }
+
+      const dateStr = cohort.modifiedDate || cohort.createdDate
+      // Handle createdBy/modifiedBy which may be null or have different structure
+      const userInfo = cohort.modifiedBy || cohort.createdBy
+      const createdBy: User =
+        userInfo && typeof userInfo === 'object' && 'name' in userInfo
+          ? (userInfo as User)
+          : { id: 0, name: 'Unknown' }
+
       return {
         version: -1,
         displayVersion: 'Current',
-        assetId: 0,
-        createdBy: { id: 0, name: 'Unknown' },
-        createdDate: new Date().toISOString(),
+        assetId: cohort.id ?? 0,
+        createdBy,
+        createdDate:
+          typeof dateStr === 'number'
+            ? new Date(dateStr).toISOString()
+            : dateStr || new Date().toISOString(),
         comment: null,
         archived: false,
         isCurrent: true,
         isPreviewing: false,
-        formattedDate: '',
+        formattedDate: dateStr
+          ? format(typeof dateStr === 'number' ? new Date(dateStr) : parseISO(dateStr), 'PPpp')
+          : '',
       }
-    }
-
-    const dateStr = cohort.modifiedDate || cohort.createdDate
-    // Handle createdBy/modifiedBy which may be null or have different structure
-    const userInfo = cohort.modifiedBy || cohort.createdBy
-    const createdBy: User = userInfo && typeof userInfo === 'object' && 'name' in userInfo
-      ? userInfo as User
-      : { id: 0, name: 'Unknown' }
-
-    return {
-      version: -1,
-      displayVersion: 'Current',
-      assetId: cohort.id ?? 0,
-      createdBy,
-      createdDate: typeof dateStr === 'number' ? new Date(dateStr).toISOString() : (dateStr || new Date().toISOString()),
-      comment: null,
-      archived: false,
-      isCurrent: true,
-      isPreviewing: false,
-      formattedDate: dateStr ? format(typeof dateStr === 'number' ? new Date(dateStr) : parseISO(dateStr), 'PPpp') : '',
-    }
-  },
-  previewVersion: toRef(cohortStore, 'previewVersion'),
-  canEdit: computed(() => true), // TODO: Add actual permission check
-  isDirty: toRef(cohortStore, 'isDirty'),
-  clearPreview: () => cohortStore.clearPreviewVersion(),
-}})
+    },
+    previewVersion: toRef(cohortStore, 'previewVersion'),
+    canEdit: computed(() => true), // TODO: Add actual permission check
+    isDirty: toRef(cohortStore, 'isDirty'),
+    clearPreview: () => cohortStore.clearPreviewVersion(),
+  }
+})
 
 // Version count for badge display
 const versionCount = ref(0)
 
 // Load version count when cohort is loaded
-watch(cohortId, async (id) => {
-  if (id) {
-    try {
-      logger.debug('CohortBuilder', 'Fetching versions for cohort ID', id)
-      const versions = await cohortDefinitionVersionsService.getVersions(id)
-      logger.debug('CohortBuilder', 'Retrieved versions', versions)
-      versionCount.value = versions.length
-      logger.debug('CohortBuilder', 'Version count set to', versionCount.value)
-    } catch (err) {
-      logger.error('CohortBuilder', 'Failed to load version count', err)
+watch(
+  cohortId,
+  async id => {
+    if (id) {
+      try {
+        logger.debug('CohortBuilder', 'Fetching versions for cohort ID', id)
+        const versions = await cohortDefinitionVersionsService.getVersions(id)
+        logger.debug('CohortBuilder', 'Retrieved versions', versions)
+        versionCount.value = versions.length
+        logger.debug('CohortBuilder', 'Version count set to', versionCount.value)
+      } catch (err) {
+        logger.error('CohortBuilder', 'Failed to load version count', err)
+        versionCount.value = 0
+      }
+    } else {
       versionCount.value = 0
     }
-  } else {
-    versionCount.value = 0
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+)
 
 // Tags
 const cohortTags = computed(() => cohortStore.currentCohort?.tags || [])
@@ -1142,7 +1221,7 @@ onMounted(async () => {
       if (webapiStore.sourcesList.length > 0 && !selectedSourceKey.value) {
         selectedSourceKey.value = webapiStore.sourcesList[0]?.sourceKey || null
       }
-    })
+    }),
   ])
 
   // Check if we should open the generation panel (from cohort overview)
@@ -1215,7 +1294,7 @@ onBeforeUnmount(() => {
 
 watch(
   () => props.id,
-  (newId) => {
+  newId => {
     if (newId) {
       isLoadingCohort.value = true
       loadCohort(newId)
@@ -1325,13 +1404,20 @@ function handleSelectConceptSet(eventId: string) {
   isConceptSetDialogOpen.value = true
 }
 
-function handleSelectConceptSetForCriteria(context: { ruleIndex: number; groupIndex: number; eventIndex: number }) {
+function handleSelectConceptSetForCriteria(context: {
+  ruleIndex: number
+  groupIndex: number
+  eventIndex: number
+}) {
   selectedCriteriaContext.value = { ...context, eventId: null }
   isConceptSetDialogOpen.value = true
 }
 
-function handleSelectConceptSetForAdditionalCriteria(eventIndexOrContext: number | { eventIndex: number; eventId: string }) {
-  const eventIndex = typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
+function handleSelectConceptSetForAdditionalCriteria(
+  eventIndexOrContext: number | { eventIndex: number; eventId: string }
+) {
+  const eventIndex =
+    typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
   selectedCriteriaContext.value = { eventId: null, ruleIndex: -2, groupIndex: 0, eventIndex }
   isConceptSetDialogOpen.value = true
 }
@@ -1352,40 +1438,64 @@ function handleSelectCensoringConceptSet() {
 }
 
 // Concept attribute selection handlers
-function handleSelectConceptForEntryEvent(eventId: string, attributeIndex: number, domainFilter: string | undefined) {
+function handleSelectConceptForEntryEvent(
+  eventId: string,
+  attributeIndex: number,
+  domainFilter: string | undefined
+) {
   selectedCriteriaContext.value = {
     eventId,
     ruleIndex: -1, // Entry events
     groupIndex: 0,
     eventIndex: 0,
-    attributeIndex
+    attributeIndex,
   }
   selectedConceptDomainFilter.value = domainFilter
   isConceptSearchDialogOpen.value = true
 }
 
-function handleSelectConceptForAdditionalCriteria(context: { eventIndex: number; domainFilter: string | undefined }) {
+function handleSelectConceptForAdditionalCriteria(context: {
+  eventIndex: number
+  domainFilter: string | undefined
+}) {
   selectedCriteriaContext.value = {
     eventId: null,
     ruleIndex: -2,
     groupIndex: 0,
     eventIndex: context.eventIndex,
-    attributeIndex: -1 // Will be set by CriteriaGroupEditor
+    attributeIndex: -1, // Will be set by CriteriaGroupEditor
   }
   selectedConceptDomainFilter.value = context.domainFilter
   isConceptSearchDialogOpen.value = true
 }
 
-function handleSelectConceptForCriteria(context: { ruleIndex: number; groupIndex: number; eventIndex: number; attributeIndex: number; domainFilter: string | undefined }) {
+function handleSelectConceptForCriteria(context: {
+  ruleIndex: number
+  groupIndex: number
+  eventIndex: number
+  attributeIndex: number
+  domainFilter: string | undefined
+}) {
   selectedCriteriaContext.value = {
     ...context,
-    eventId: null
+    eventId: null,
   }
   selectedConceptDomainFilter.value = context.domainFilter
   isConceptSearchDialogOpen.value = true
 }
 
-function handleConceptsSelected(concepts: Array<{ conceptId: number; conceptName: string; conceptCode: string; domainId: string; vocabularyId: string; conceptClassId: string; standardConcept: string | null; invalidReason: string | null }>) {
+function handleConceptsSelected(
+  concepts: Array<{
+    conceptId: number
+    conceptName: string
+    conceptCode: string
+    domainId: string
+    vocabularyId: string
+    conceptClassId: string
+    standardConcept: string | null
+    invalidReason: string | null
+  }>
+) {
   if (concepts.length === 0 || !selectedCriteriaContext.value) {
     isConceptSearchDialogOpen.value = false
     return
@@ -1400,7 +1510,7 @@ function handleConceptsSelected(concepts: Array<{ conceptId: number; conceptName
     VOCABULARY_ID: c.vocabularyId,
     CONCEPT_CLASS_ID: c.conceptClassId,
     STANDARD_CONCEPT: c.standardConcept,
-    INVALID_REASON: c.invalidReason
+    INVALID_REASON: c.invalidReason,
   }))
 
   const context = selectedCriteriaContext.value
@@ -1416,7 +1526,7 @@ function handleConceptsSelected(concepts: Array<{ conceptId: number; conceptName
         const newConcepts = [...existingConcepts, ...convertedConcepts]
         event.attributes[context.attributeIndex] = {
           ...attr,
-          concepts: newConcepts
+          concepts: newConcepts,
         }
       }
     }
@@ -1427,7 +1537,12 @@ function handleConceptsSelected(concepts: Array<{ conceptId: number; conceptName
     additionalCriteriaRef.value.updateConceptAttribute(context.eventIndex, convertedConcepts)
   }
   // Handle inclusion criteria
-  else if (context.ruleIndex >= 0 && context.groupIndex >= 0 && context.eventIndex !== undefined && context.attributeIndex !== undefined) {
+  else if (
+    context.ruleIndex >= 0 &&
+    context.groupIndex >= 0 &&
+    context.eventIndex !== undefined &&
+    context.attributeIndex !== undefined
+  ) {
     // Update the inclusion criteria data directly
     const rule = inclusionRules.value[context.ruleIndex]
     if (rule && rule.criteriaGroups) {
@@ -1442,7 +1557,7 @@ function handleConceptsSelected(concepts: Array<{ conceptId: number; conceptName
             const newConcepts = [...existingConcepts, ...convertedConcepts]
             event.attributes[context.attributeIndex] = {
               ...attr,
-              concepts: newConcepts
+              concepts: newConcepts,
             }
           }
         }
@@ -1478,7 +1593,11 @@ function removeAdditionalCriteria() {
 /**
  * Called when user selects an existing concept set from the dialog
  */
-async function handleConceptSetSelected(conceptSet: { id: number | string; name: string; items?: unknown[] }) {
+async function handleConceptSetSelected(conceptSet: {
+  id: number | string
+  name: string
+  items?: unknown[]
+}) {
   if (!conceptSet || !selectedCriteriaContext.value) return
 
   // Fetch the full concept set with items if we only have a reference
@@ -1489,7 +1608,7 @@ async function handleConceptSetSelected(conceptSet: { id: number | string; name:
       fullConceptSet = {
         id: conceptSetsStore.currentSet.id,
         name: conceptSetsStore.currentSet.name,
-        items: conceptSetsStore.currentSet.items
+        items: conceptSetsStore.currentSet.items,
       }
     }
   }
@@ -1508,7 +1627,11 @@ async function handleConceptSetSelected(conceptSet: { id: number | string; name:
 /**
  * Called when user clicks "Edit" on a concept set (from chip or dialog)
  */
-async function handleEditConceptSet(conceptSet: { id: number | string; name: string; items?: unknown[] }) {
+async function handleEditConceptSet(conceptSet: {
+  id: number | string
+  name: string
+  items?: unknown[]
+}) {
   // Close dialog if it's open
   isConceptSetDialogOpen.value = false
 
@@ -1517,7 +1640,7 @@ async function handleEditConceptSet(conceptSet: { id: number | string; name: str
   conceptSetsStore.currentSet = {
     id: conceptSet.id,
     name: conceptSet.name,
-    items: (conceptSet.items || []) as ConceptSetItem[]
+    items: (conceptSet.items || []) as ConceptSetItem[],
   }
   conceptSetsStore.editorOpen = true
 }
@@ -1525,7 +1648,11 @@ async function handleEditConceptSet(conceptSet: { id: number | string; name: str
 /**
  * Open concept set editor from the concept sets dialog
  */
-function handleViewConceptSet(conceptSet: { id: number | string; name: string; items?: unknown[] }) {
+function handleViewConceptSet(conceptSet: {
+  id: number | string
+  name: string
+  items?: unknown[]
+}) {
   // Close the concept sets dialog
   showConceptSetsDialog.value = false
 
@@ -1569,7 +1696,9 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
 
   // Handle entry event selection
   if (selectedCriteriaContext.value.eventId) {
-    const eventIndex = entryEvents.value.findIndex(e => e.id === selectedCriteriaContext.value!.eventId)
+    const eventIndex = entryEvents.value.findIndex(
+      e => e.id === selectedCriteriaContext.value!.eventId
+    )
     if (eventIndex === -1) return
 
     const currentEvent = entryEvents.value[eventIndex]
@@ -1619,7 +1748,7 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
       // Set concept set for drug exposure strategy
       exitCriteria.value = {
         ...exitCriteria.value,
-        conceptSet: conceptSetRef
+        conceptSet: conceptSetRef,
       }
     } else if (exitCriteriaSelectionType.value === 'CENSORING_EVENT') {
       // Create new censoring event with this concept set
@@ -1627,7 +1756,7 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
         id: `censoring_${Date.now()}`,
         criteriaType: 'DrugExposure', // Default, user might need to change
         attributes: [],
-        conceptSet: conceptSetRef
+        conceptSet: conceptSetRef,
       }
       censoringCriteria.value = [...censoringCriteria.value, newEvent]
     }
@@ -1647,7 +1776,7 @@ async function handleSave() {
   // expression then references CodesetIds that don't exist, and the WebAPI
   // generator returns 0 patients on the next run.
   const conceptSetsForSave: ConceptSetReference[] = await Promise.all(
-    usedConceptSets.value.map(async (ref) => {
+    usedConceptSets.value.map(async ref => {
       if (ref.items && ref.items.length > 0) {
         return ref
       }
@@ -1678,7 +1807,9 @@ async function handleSave() {
 
   // Convert to Atlas format and save to WebAPI
   const { convertInternalToAtlas } = await import('@/services/atlas-converter')
-  const { saveCohortDefinition, assignTagToCohort, unassignTagFromCohort } = await import('@/services/webapi')
+  const { saveCohortDefinition, assignTagToCohort, unassignTagFromCohort } = await import(
+    '@/services/webapi'
+  )
 
   const atlasExpression = convertInternalToAtlas(cohortDefinition)
   const atlasDefinition = {
@@ -1953,10 +2084,18 @@ defineExpose({
   // Actions state
   canSave,
   // Methods invoked by toolbar buttons
-  openConceptSetsDialog: () => { showConceptSetsDialog.value = true },
-  openValidationDialog: () => { showValidationDialog.value = true },
-  openVersionsDialog: () => { showVersionsDialog.value = true },
-  openTagsDialog: () => { showTagsDialog.value = true },
+  openConceptSetsDialog: () => {
+    showConceptSetsDialog.value = true
+  },
+  openValidationDialog: () => {
+    showValidationDialog.value = true
+  },
+  openVersionsDialog: () => {
+    showVersionsDialog.value = true
+  },
+  openTagsDialog: () => {
+    showTagsDialog.value = true
+  },
   handleCancel,
   handleSave,
   openGenerationPanel,
@@ -2007,7 +2146,9 @@ defineExpose({
   margin-left: 8px;
   color: #666;
   cursor: pointer;
-  transition: color 0.2s, transform 0.2s;
+  transition:
+    color 0.2s,
+    transform 0.2s;
   opacity: 0.7;
 }
 
@@ -2310,7 +2451,7 @@ defineExpose({
 .section-controls :deep(.v-btn-toggle .v-btn--active) {
   background: rgb(var(--v-theme-surface)) !important;
   color: rgb(var(--v-theme-primary)) !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.10);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
 }
 
 .section-obs-period {
@@ -2417,7 +2558,7 @@ defineExpose({
   height: 22px;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(var(--v-theme-primary), 0.10);
+  background: rgba(var(--v-theme-primary), 0.1);
   color: rgb(var(--v-theme-primary));
   font-size: 11px;
   font-weight: 700;

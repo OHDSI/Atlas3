@@ -37,14 +37,14 @@ export function useChartExport() {
       const {
         filename = `chart-${Date.now()}.png`,
         backgroundColor = '#ffffff',
-        pixelRatio = 2
+        pixelRatio = 2,
       } = options
 
       // Get data URL from chart
       const dataURL = chart.getDataURL({
         type: 'png',
         pixelRatio,
-        backgroundColor
+        backgroundColor,
       })
 
       // Trigger download
@@ -72,15 +72,12 @@ export function useChartExport() {
     exportError.value = null
 
     try {
-      const {
-        filename = `chart-${Date.now()}.svg`,
-        backgroundColor = '#ffffff'
-      } = options
+      const { filename = `chart-${Date.now()}.svg`, backgroundColor = '#ffffff' } = options
 
       // Get SVG string from chart
       // The backgroundColor option may not be in all ECharts type definitions
       const svg = chart.renderToSVGString({
-        backgroundColor
+        backgroundColor,
       } as SVGRenderOptions)
 
       // Create blob and download
@@ -117,7 +114,7 @@ export function useChartExport() {
       const csv = Papa.unparse(csvData, {
         quotes: true,
         delimiter: ',',
-        newline: '\n'
+        newline: '\n',
       })
 
       // Create blob and download
@@ -154,7 +151,7 @@ export function useChartExport() {
       const tsv = Papa.unparse(csvData, {
         quotes: false,
         delimiter: '\t',
-        newline: '\n'
+        newline: '\n',
       })
 
       // Try modern Clipboard API first
@@ -245,6 +242,6 @@ export function useChartExport() {
     exportToSVG,
     exportToCSV,
     copyToClipboard,
-    clearError
+    clearError,
   }
 }

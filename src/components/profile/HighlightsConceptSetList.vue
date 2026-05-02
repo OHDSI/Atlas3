@@ -24,7 +24,12 @@
                to its concept-id list before this dot can drive a real
                highlight. Until then the dot is inert. -->
           <v-tooltip
-            :text="tv('profiles.conceptSetHighlightingComingSoon', 'Concept-set highlighting coming soon')"
+            :text="
+              tv(
+                'profiles.conceptSetHighlightingComingSoon',
+                'Concept-set highlighting coming soon'
+              )
+            "
             location="top"
           >
             <template #activator="{ props: tipProps }">

@@ -141,7 +141,7 @@ const props = withDefaults(
     showColumnToggle: true,
     showCopyButton: true,
     showExportButton: true,
-    exportFilename: 'data-export'
+    exportFilename: 'data-export',
   }
 )
 
@@ -158,7 +158,7 @@ const itemsPerPage = ref(25)
  */
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
-watch(searchQuery, (newValue) => {
+watch(searchQuery, newValue => {
   if (searchDebounceTimer) {
     clearTimeout(searchDebounceTimer)
   }
@@ -176,7 +176,7 @@ const itemsPerPageOptions = [
   { value: 25, title: '25' },
   { value: 50, title: '50' },
   { value: 100, title: '100' },
-  { value: -1, title: 'All' }
+  { value: -1, title: 'All' },
 ]
 
 /**

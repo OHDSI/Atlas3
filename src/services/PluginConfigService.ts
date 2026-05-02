@@ -1,28 +1,28 @@
 import {
   PluginManifest,
   PluginManifestSchema,
-  DEFAULT_MANIFEST_SETTINGS
-} from '@/models/PluginModels';
-import { logger } from '@/utils/logger';
+  DEFAULT_MANIFEST_SETTINGS,
+} from '@/models/PluginModels'
+import { logger } from '@/utils/logger'
 
 export class PluginConfigService {
-  private manifest: PluginManifest | null = null;
-  private listeners: Array<(manifest: PluginManifest) => void> = [];
+  private manifest: PluginManifest | null = null
+  private listeners: Array<(manifest: PluginManifest) => void> = []
 
   async loadConfig(): Promise<PluginManifest> {
     try {
-      const pluginsUrl = `${import.meta.env.BASE_URL}/config/plugins.json`.replace('//', '/');
-      const response = await fetch(pluginsUrl);
+      const pluginsUrl = `${import.meta.env.BASE_URL}/config/plugins.json`.replace('//', '/')
+      const response = await fetch(pluginsUrl)
 
       // If plugins.json doesn't exist (404), return empty manifest with defaults
       if (response.status === 404) {
-        logger.warn('PluginConfig', 'plugins.json not found, using default configuration');
-        this.manifest = this.createDefaultManifest();
-        return this.manifest;
+        logger.warn('PluginConfig', 'plugins.json not found, using default configuration')
+        this.manifest = this.createDefaultManifest()
+        return this.manifest
       }
 
       if (!response.ok) {
-        throw new Error(`Failed to load plugins.json: ${response.statusText}`);
+        throw new Error(`Failed to load plugins.json: ${response.statusText}`)
       }
 
       let data: unknown
@@ -48,50 +48,50 @@ export class PluginConfigService {
           ...DEFAULT_MANIFEST_SETTINGS,
           ...validated.settings,
         },
-      };
+      }
 
       // Validate plugin IDs are unique
-      const ids = new Set<string>();
+      const ids = new Set<string>()
       for (const plugin of this.manifest.plugins) {
         if (ids.has(plugin.id)) {
-          throw new Error(`Duplicate plugin ID: ${plugin.id}`);
+          throw new Error(`Duplicate plugin ID: ${plugin.id}`)
         }
-        ids.add(plugin.id);
+        ids.add(plugin.id)
 
         // Validate routes start with /plugins/{pluginId}/
         for (const menuItem of plugin.menuItems) {
           if (!menuItem.route.startsWith(`/plugins/${plugin.id}/`)) {
             throw new Error(
               `Invalid route "${menuItem.route}" for plugin "${plugin.id}". ` +
-              `Must start with "/plugins/${plugin.id}/"`
-            );
+                `Must start with "/plugins/${plugin.id}/"`
+            )
           }
         }
       }
 
       // Validate no route conflicts
-      const routes = new Set<string>();
+      const routes = new Set<string>()
       for (const plugin of this.manifest.plugins) {
         for (const menuItem of plugin.menuItems) {
           if (routes.has(menuItem.route)) {
-            throw new Error(`Duplicate route: ${menuItem.route}`);
+            throw new Error(`Duplicate route: ${menuItem.route}`)
           }
-          routes.add(menuItem.route);
+          routes.add(menuItem.route)
         }
       }
 
-      return this.manifest;
+      return this.manifest
     } catch (error) {
-      logger.error('PluginConfig', 'Failed to load config', error);
+      logger.error('PluginConfig', 'Failed to load config', error)
 
       // If parsing/validation failed, use default manifest as fallback
       if (error instanceof Error && !error.message.includes('Failed to load plugins.json')) {
-        logger.warn('PluginConfig', 'Using default configuration due to validation error');
-        this.manifest = this.createDefaultManifest();
-        return this.manifest;
+        logger.warn('PluginConfig', 'Using default configuration due to validation error')
+        this.manifest = this.createDefaultManifest()
+        return this.manifest
       }
 
-      throw error;
+      throw error
     }
   }
 
@@ -102,140 +102,157 @@ export class PluginConfigService {
       settings: {
         ...DEFAULT_MANIFEST_SETTINGS,
       },
-    };
+    }
   }
 
   getManifest(): PluginManifest | null {
-    return this.manifest;
+    return this.manifest
   }
 
-  getNavigationSettings(): { enabledCoreItems?: string[], disabledCoreItems?: string[] } | null {
-    return this.manifest?.settings?.navigation || null;
+  getNavigationSettings(): { enabledCoreItems?: string[]; disabledCoreItems?: string[] } | null {
+    return this.manifest?.settings?.navigation || null
   }
 
   getPrimaryColor(): string | null {
-    return this.manifest?.settings?.theme?.primaryColor || null;
+    return this.manifest?.settings?.theme?.primaryColor || null
   }
 
   getLogoUrl(): string | null {
-    const logoUrl = this.manifest?.settings?.theme?.logoUrl || null;
-    logger.debug('PluginConfig', 'getLogoUrl called, returning', logoUrl);
-    return logoUrl;
+    const logoUrl = this.manifest?.settings?.theme?.logoUrl || null
+    logger.debug('PluginConfig', 'getLogoUrl called, returning', logoUrl)
+    return logoUrl
   }
 
   getLogoNavigateTo(): string {
-    return this.manifest?.settings?.theme?.logoNavigateTo || '/';
+    return this.manifest?.settings?.theme?.logoNavigateTo || '/'
   }
 
   isCoreNavigationItemEnabled(itemId: string): boolean {
-    const navSettings = this.getNavigationSettings();
+    const navSettings = this.getNavigationSettings()
 
     // If no navigation settings, all items are enabled by default
     if (!navSettings) {
-      return true;
+      return true
     }
 
     // If item is in disabledCoreItems, it's disabled (takes precedence)
     if (navSettings.disabledCoreItems?.includes(itemId)) {
-      return false;
+      return false
     }
 
     // If enabledCoreItems is specified and item is not in it, it's disabled
     if (navSettings.enabledCoreItems && !navSettings.enabledCoreItems.includes(itemId)) {
-      return false;
+      return false
     }
 
     // Otherwise, enabled
-    return true;
+    return true
   }
 
-  getHeaderSettings(): { showFeedbackButton?: boolean; showLanguageSelector?: boolean; showConfigButton?: boolean; feedbackUrl?: string } {
-    return this.manifest?.settings?.header || {};
+  getHeaderSettings(): {
+    showFeedbackButton?: boolean
+    showLanguageSelector?: boolean
+    showConfigButton?: boolean
+    feedbackUrl?: string
+  } {
+    return this.manifest?.settings?.header || {}
   }
 
   showNavBar(): boolean {
-    return this.manifest?.settings?.header?.showNavBar ?? true;
+    return this.manifest?.settings?.header?.showNavBar ?? true
   }
 
   showUserMenu(): boolean {
-    return this.manifest?.settings?.header?.showUserMenu ?? true;
+    return this.manifest?.settings?.header?.showUserMenu ?? true
   }
 
   showFeedbackButton(): boolean {
-    return this.manifest?.settings?.header?.showFeedbackButton ?? true;
+    return this.manifest?.settings?.header?.showFeedbackButton ?? true
   }
 
   showLanguageSelector(): boolean {
-    return this.manifest?.settings?.header?.showLanguageSelector ?? true;
+    return this.manifest?.settings?.header?.showLanguageSelector ?? true
   }
 
   showConfigButton(): boolean {
-    return this.manifest?.settings?.header?.showConfigButton ?? true;
+    return this.manifest?.settings?.header?.showConfigButton ?? true
   }
 
   getFeedbackUrl(): string {
-    return this.manifest?.settings?.header?.feedbackUrl || 'https://forms.office.com/r/2JzrYy1yDP';
+    return this.manifest?.settings?.header?.feedbackUrl || 'https://forms.office.com/r/2JzrYy1yDP'
   }
 
   onChange(callback: (manifest: PluginManifest) => void): () => void {
-    this.listeners.push(callback);
+    this.listeners.push(callback)
     return () => {
-      this.listeners = this.listeners.filter(cb => cb !== callback);
-    };
+      this.listeners = this.listeners.filter(cb => cb !== callback)
+    }
   }
 
   private notifyListeners(): void {
     if (this.manifest) {
-      this.listeners.forEach(cb => cb(this.manifest!));
+      this.listeners.forEach(cb => cb(this.manifest!))
     }
   }
 
   setupHotReload(): void {
     if (import.meta.hot && this.manifest?.settings?.enableHotReload) {
-      const pluginsUrl = `${import.meta.env.BASE_URL}/config/plugins.json`.replace('//', '/');
+      const pluginsUrl = `${import.meta.env.BASE_URL}/config/plugins.json`.replace('//', '/')
       import.meta.hot.accept(pluginsUrl, async () => {
         try {
-          const oldManifest = this.manifest;
-          await this.loadConfig();
-          
+          const oldManifest = this.manifest
+          await this.loadConfig()
+
           if (oldManifest) {
-            this.handleConfigChange(oldManifest, this.manifest!);
+            this.handleConfigChange(oldManifest, this.manifest!)
           }
-          
-          this.notifyListeners();
-          logger.info('PluginConfig', 'Hot reload: Config updated');
+
+          this.notifyListeners()
+          logger.info('PluginConfig', 'Hot reload: Config updated')
         } catch (error) {
-          logger.error('PluginConfig', 'Hot reload failed', error);
+          logger.error('PluginConfig', 'Hot reload failed', error)
         }
-      });
+      })
     }
   }
 
   private handleConfigChange(oldManifest: PluginManifest, newManifest: PluginManifest): void {
-    const oldIds = new Set(oldManifest.plugins.map(p => p.id));
-    const newIds = new Set(newManifest.plugins.map(p => p.id));
+    const oldIds = new Set(oldManifest.plugins.map(p => p.id))
+    const newIds = new Set(newManifest.plugins.map(p => p.id))
 
     // Detect added plugins
-    const added = newManifest.plugins.filter(p => !oldIds.has(p.id));
+    const added = newManifest.plugins.filter(p => !oldIds.has(p.id))
     if (added.length > 0) {
-      logger.info('PluginConfig', 'Added plugins', added.map(p => p.id));
+      logger.info(
+        'PluginConfig',
+        'Added plugins',
+        added.map(p => p.id)
+      )
     }
 
     // Detect removed plugins
-    const removed = oldManifest.plugins.filter(p => !newIds.has(p.id));
+    const removed = oldManifest.plugins.filter(p => !newIds.has(p.id))
     if (removed.length > 0) {
-      logger.info('PluginConfig', 'Removed plugins', removed.map(p => p.id));
+      logger.info(
+        'PluginConfig',
+        'Removed plugins',
+        removed.map(p => p.id)
+      )
     }
 
     // Detect updated plugins (warn only, don't reload)
     const updated = newManifest.plugins.filter(p => {
-      const oldPlugin = oldManifest.plugins.find(op => op.id === p.id);
-      return oldPlugin && JSON.stringify(oldPlugin) !== JSON.stringify(p);
-    });
+      const oldPlugin = oldManifest.plugins.find(op => op.id === p.id)
+      return oldPlugin && JSON.stringify(oldPlugin) !== JSON.stringify(p)
+    })
     if (updated.length > 0) {
-      logger.warn('PluginConfig', 'Updated plugins (reload required)', updated.map(p => p.id));
+      logger.warn(
+        'PluginConfig',
+        'Updated plugins (reload required)',
+        updated.map(p => p.id)
+      )
     }
   }
 }
 
-export const pluginConfigService = new PluginConfigService();
+export const pluginConfigService = new PluginConfigService()

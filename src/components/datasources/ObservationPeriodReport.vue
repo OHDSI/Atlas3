@@ -2,14 +2,25 @@
   <div class="observation-period-report">
     <EmptyReportState
       v-if="!hasData"
-      :title="t('dataSources.observationPeriodReport.noDataTitle', 'No observation period data available').value"
-      :subtitle="t('dataSources.observationPeriodReport.noDataSubtitle', 'This data source has no observation period records to report on.').value"
+      :title="
+        t('dataSources.observationPeriodReport.noDataTitle', 'No observation period data available')
+          .value
+      "
+      :subtitle="
+        t(
+          'dataSources.observationPeriodReport.noDataSubtitle',
+          'This data source has no observation period records to report on.'
+        ).value
+      "
     />
 
     <!-- Age at First Observation -->
     <ChartSection
       v-if="data.ageAtFirst"
-      :title="t('dataSources.observationPeriodReport.ageAtFirstObservation', 'Age at First Observation').value"
+      :title="
+        t('dataSources.observationPeriodReport.ageAtFirstObservation', 'Age at First Observation')
+          .value
+      "
     >
       <BarChart
         :data="data.ageAtFirst"
@@ -22,7 +33,9 @@
     <!-- Observation Length Distribution -->
     <ChartSection
       v-if="data.observationLength"
-      :title="t('dataSources.observationPeriodReport.observationLength', 'Observation Length').value"
+      :title="
+        t('dataSources.observationPeriodReport.observationLength', 'Observation Length').value
+      "
     >
       <BarChart
         :data="data.observationLength"
@@ -35,12 +48,18 @@
     <!-- Cumulative Observation -->
     <ChartSection
       v-if="data.cumulativeObservation"
-      :title="t('dataSources.observationPeriodReport.cumulativeObservation', 'Cumulative Observation').value"
+      :title="
+        t('dataSources.observationPeriodReport.cumulativeObservation', 'Cumulative Observation')
+          .value
+      "
     >
       <MultiLineChart
         :data="data.cumulativeObservation"
         :x-axis-label="t('dataSources.observationPeriodReport.days', 'Days').value"
-        :y-axis-label="t('dataSources.observationPeriodReport.percentOfPopulation', 'Percent of Population').value"
+        :y-axis-label="
+          t('dataSources.observationPeriodReport.percentOfPopulation', 'Percent of Population')
+            .value
+        "
         data-testid="cumulative-observation-chart"
       />
     </ChartSection>
@@ -48,7 +67,12 @@
     <!-- Persons With Continuous Observation By Month -->
     <ChartSection
       v-if="data.observedByMonth"
-      :title="t('dataSources.observationPeriodReport.personsWithContinuousObservationByMonth', 'Persons With Continuous Observation By Month').value"
+      :title="
+        t(
+          'dataSources.observationPeriodReport.personsWithContinuousObservationByMonth',
+          'Persons With Continuous Observation By Month'
+        ).value
+      "
     >
       <MultiLineChart
         :data="data.observedByMonth"
@@ -85,7 +109,9 @@
     <!-- Duration by Age Decile (Boxplot) -->
     <ChartSection
       v-if="data.durationByAgeDecile && data.durationByAgeDecile.length > 0"
-      :title="t('dataSources.observationPeriodReport.durationByAgeDecile', 'Duration By Age Decile').value"
+      :title="
+        t('dataSources.observationPeriodReport.durationByAgeDecile', 'Duration By Age Decile').value
+      "
     >
       <BoxPlotChart
         :data="data.durationByAgeDecile"
@@ -97,7 +123,12 @@
     <!-- Persons With Continuous Observation By Year -->
     <ChartSection
       v-if="data.personsWithContinuousObsByYear"
-      :title="t('dataSources.observationPeriodReport.personsWithContinuousObservationByYear', 'Persons With Continuous Observation By Year').value"
+      :title="
+        t(
+          'dataSources.observationPeriodReport.personsWithContinuousObservationByYear',
+          'Persons With Continuous Observation By Year'
+        ).value
+      "
     >
       <BarChart
         :data="data.personsWithContinuousObsByYear"
@@ -110,7 +141,12 @@
     <!-- Observation Periods per Person (Donut) -->
     <ChartSection
       v-if="data.observationPeriodsPerPerson && data.observationPeriodsPerPerson.length > 0"
-      :title="t('dataSources.observationPeriodReport.observationPeriodsPerPerson', 'Observation Periods per Person').value"
+      :title="
+        t(
+          'dataSources.observationPeriodReport.observationPeriodsPerPerson',
+          'Observation Periods per Person'
+        ).value
+      "
     >
       <PieChart
         :data="data.observationPeriodsPerPerson"
@@ -148,9 +184,9 @@ const hasData = computed(() => {
     d.durationByGender?.length,
     d.durationByAgeDecile?.length,
     d.personsWithContinuousObsByYear?.values?.length,
-    d.observationPeriodsPerPerson?.length
+    d.observationPeriodsPerPerson?.length,
   ]
-  return sectionLengths.some((n) => Boolean(n))
+  return sectionLengths.some(n => Boolean(n))
 })
 </script>
 

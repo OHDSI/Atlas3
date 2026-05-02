@@ -30,7 +30,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  disabled: false
+  disabled: false,
 })
 
 defineEmits<{
@@ -40,7 +40,7 @@ defineEmits<{
 const reportTypeItems = computed(() => {
   return Object.entries(REPORT_TYPE_LABELS).map(([value, label]) => ({
     label,
-    value: value as ReportType
+    value: value as ReportType,
   }))
 })
 </script>

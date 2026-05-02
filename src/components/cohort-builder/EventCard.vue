@@ -11,14 +11,17 @@ import AttributesEditor from './AttributesEditor.vue'
 import TemporalFilterChip from './TemporalFilterChip.vue'
 import SurfaceCard from '@/components/shared/SurfaceCard.vue'
 
-const props = withDefaults(defineProps<{
-  event: CohortEvent
-  index?: number
-  section?: string
-}>(), {
-  index: 0,
-  section: 'criteriaGroup' // Default section context
-})
+const props = withDefaults(
+  defineProps<{
+    event: CohortEvent
+    index?: number
+    section?: string
+  }>(),
+  {
+    index: 0,
+    section: 'criteriaGroup', // Default section context
+  }
+)
 
 const emit = defineEmits<{
   remove: []

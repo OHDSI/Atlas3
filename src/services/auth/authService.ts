@@ -1,9 +1,4 @@
-import type {
-  LoginCredentials,
-  UserInfo,
-  AuthProvider,
-  EntityAccess,
-} from '@/models/auth.types'
+import type { LoginCredentials, UserInfo, AuthProvider, EntityAccess } from '@/models/auth.types'
 import { emptyEntityAccess } from '@/models/auth.types'
 import { useAuthStore } from '@/stores/auth'
 import { authConfig } from '@/config/auth.config'
@@ -52,7 +47,8 @@ export function parseUserInfo(data: Record<string, unknown>): UserInfo {
   const accessSource = (Object.keys(authz).length > 0 ? authz : data) as Record<string, unknown>
   const entityAccess: EntityAccess = {
     ...emptyEntityAccess(),
-    cohortDefinition: (accessSource.cohortDefinitionAccess as EntityAccess['cohortDefinition']) ?? {},
+    cohortDefinition:
+      (accessSource.cohortDefinitionAccess as EntityAccess['cohortDefinition']) ?? {},
     conceptSet: (accessSource.conceptSetAccess as EntityAccess['conceptSet']) ?? {},
     cohortCharacterization:
       (accessSource.cohortCharacterizationAccess as EntityAccess['cohortCharacterization']) ?? {},
@@ -68,7 +64,7 @@ export function parseUserInfo(data: Record<string, unknown>): UserInfo {
   const trexsqlCacheEnabled =
     typeof data.trexsqlCacheEnabled === 'boolean'
       ? (data.trexsqlCacheEnabled as boolean)
-      : flatPerms.some((p) => p.startsWith('trexsql:'))
+      : flatPerms.some(p => p.startsWith('trexsql:'))
 
   return {
     login,
@@ -95,7 +91,7 @@ class AuthService implements IAuthService {
       const response = await fetch(`${baseUrl}info`, {
         method: 'HEAD',
       })
-      
+
       // IAP sets x-goog-iap-jwt-assertion header
       return response.headers.has('x-goog-iap-jwt-assertion')
     } catch (error) {
@@ -179,7 +175,9 @@ class AuthService implements IAuthService {
         const loginUrl = `${baseUrl}${provider}`
 
         // Redirect with optional redirectUrl parameter for hash routes
-        window.location.href = hashRoute ? `${loginUrl}?redirectUrl=${encodeURIComponent(hashRoute)}` : loginUrl
+        window.location.href = hashRoute
+          ? `${loginUrl}?redirectUrl=${encodeURIComponent(hashRoute)}`
+          : loginUrl
         return
       }
 
@@ -189,7 +187,7 @@ class AuthService implements IAuthService {
         logger.error('Auth', 'Login failed', {
           status: response.status,
           errorHeader,
-          errorBody
+          errorBody,
         })
         throw new Error(errorHeader || errorBody || 'Authentication failed')
       }
@@ -218,11 +216,13 @@ class AuthService implements IAuthService {
       const userInfo = await this.fetchUserInfo()
       authStore.setUser(userInfo)
 
-      import('@/stores/locale').then(({ useLocaleStore }) => {
-        useLocaleStore().fetchAvailableLocales()
-      }).catch((err) => {
-        logger.warn('Auth', 'Failed to refresh locales after login', err)
-      })
+      import('@/stores/locale')
+        .then(({ useLocaleStore }) => {
+          useLocaleStore().fetchAvailableLocales()
+        })
+        .catch(err => {
+          logger.warn('Auth', 'Failed to refresh locales after login', err)
+        })
 
       authStore.closeLoginModal()
     } catch (error) {
@@ -252,7 +252,7 @@ class AuthService implements IAuthService {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }).catch((e) => logger.warn('Auth', 'WebAPI logout call failed', e))
+      }).catch(e => logger.warn('Auth', 'WebAPI logout call failed', e))
 
       if (authClient === 'IAP') {
         // Google IAP logout - clear auth then redirect
@@ -448,7 +448,7 @@ class AuthService implements IAuthService {
       }
       // Map WebAPI field names to frontend field names
       // WebAPI returns 'useCredentialsForm', frontend expects 'isUseCredentialsForm'
-      return rawProviders.map((p) => ({
+      return rawProviders.map(p => ({
         name: p.name as string,
         url: p.url as string,
         ajax: p.ajax as boolean,

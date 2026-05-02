@@ -4,7 +4,7 @@
     v-if="isIAPEnabled"
     ref="iapFrame"
     src="/_gcp_iap/session_refresher"
-    style="display: none;"
+    style="display: none"
     @load="handleIframeLoad"
   />
 </template>
@@ -30,7 +30,7 @@ function handleIframeLoad() {
 function scheduleRefresh() {
   // Google IAP recommends refreshing every 45 minutes
   const refreshIntervalMs = 45 * 60 * 1000
-  
+
   refreshInterval.value = window.setInterval(() => {
     logger.debug('IAP', 'Refreshing IAP session')
     if (iapFrame.value) {

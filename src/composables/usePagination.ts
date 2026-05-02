@@ -12,10 +12,7 @@ interface UsePaginationOptions {
 }
 
 export function usePagination(totalItems: Ref<number>, options: UsePaginationOptions = {}) {
-  const {
-    defaultItemsPerPage = 60,
-    itemsPerPageOptions = [60, 120, 240],
-  } = options
+  const { defaultItemsPerPage = 60, itemsPerPageOptions = [60, 120, 240] } = options
 
   const router = useRouter()
   const route = useRoute()
@@ -121,7 +118,7 @@ export function usePagination(totalItems: Ref<number>, options: UsePaginationOpt
    * Reset pagination when total items changes significantly
    * (e.g., search filters results)
    */
-  watch(totalItems, (newTotal) => {
+  watch(totalItems, newTotal => {
     // If current page is beyond new total pages, reset to page 1
     const newTotalPages = Math.ceil(newTotal / itemsPerPage.value)
     if (page.value > newTotalPages && newTotalPages > 0) {
@@ -133,18 +130,21 @@ export function usePagination(totalItems: Ref<number>, options: UsePaginationOpt
   /**
    * Watch for external route changes (browser back/forward)
    */
-  watch(() => route.query, (newQuery) => {
-    const newPage = parseInt(newQuery.page as string) || 1
-    const newPerPage = parseInt(newQuery.perPage as string) || defaultItemsPerPage
+  watch(
+    () => route.query,
+    newQuery => {
+      const newPage = parseInt(newQuery.page as string) || 1
+      const newPerPage = parseInt(newQuery.perPage as string) || defaultItemsPerPage
 
-    if (newPage !== page.value) {
-      page.value = newPage
-    }
+      if (newPage !== page.value) {
+        page.value = newPage
+      }
 
-    if (newPerPage !== itemsPerPage.value) {
-      itemsPerPage.value = newPerPage
+      if (newPerPage !== itemsPerPage.value) {
+        itemsPerPage.value = newPerPage
+      }
     }
-  })
+  )
 
   return {
     // State

@@ -38,8 +38,8 @@
       :items-per-page="itemsPerPage"
       :empty-text="t('common.noData', 'No feature analyses yet.').value"
       testid="feature-analyses-table"
-      :can-copy-item="(item) => canCopy && !!item.id"
-      :can-delete-item="(item) => entityAccess.canDelete(item.id)"
+      :can-copy-item="item => canCopy && !!item.id"
+      :can-delete-item="item => entityAccess.canDelete(item.id)"
       @open="handleOpen"
       @copy="handleCopy"
       @delete="handleDeleteClick"
@@ -231,10 +231,14 @@ async function confirmDelete() {
 
 function typeChipColor(type: FeatureAnalysisType): string {
   switch (type) {
-    case 'PRESET': return 'primary'
-    case 'CRITERIA_SET': return 'info'
-    case 'CUSTOM_FE': return 'warning'
-    default: return 'default'
+    case 'PRESET':
+      return 'primary'
+    case 'CRITERIA_SET':
+      return 'info'
+    case 'CUSTOM_FE':
+      return 'warning'
+    default:
+      return 'default'
   }
 }
 

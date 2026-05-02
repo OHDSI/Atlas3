@@ -18,7 +18,9 @@
         >
           mdi-database-cog
         </v-icon>
-        <span class="text-h6">{{ t('cohortDefinitions.cohortDefinitionManager.tabs.generation', 'Generation') }}</span>
+        <span class="text-h6">{{
+          t('cohortDefinitions.cohortDefinitionManager.tabs.generation', 'Generation')
+        }}</span>
         <v-spacer />
         <v-btn
           icon="mdi-close"
@@ -36,7 +38,9 @@
           variant="tonal"
           class="mb-4"
         >
-          {{ t('cohortDefinitions.saveDefinitionBefore', 'Please save the cohort before generating.') }}
+          {{
+            t('cohortDefinitions.saveDefinitionBefore', 'Please save the cohort before generating.')
+          }}
         </v-alert>
 
         <!-- No sources message -->
@@ -189,17 +193,20 @@ function handleDataSourceClick(sourceKey: string) {
 }
 
 // Polling lifecycle
-watch(() => props.modelValue, async (isOpen, wasOpen) => {
-  if (isOpen && !wasOpen && props.cohortId) {
-    // Panel just opened - fetch existing generation info
-    await webapiStore.fetchCohortGenerationInfo(props.cohortId)
-  } else if (!isOpen && wasOpen && props.cohortId) {
-    // Panel just closed - stop polling and clear report state
-    webapiStore.stopPolling(props.cohortId)
-    showReports.value = false
-    selectedSourceKey.value = null
+watch(
+  () => props.modelValue,
+  async (isOpen, wasOpen) => {
+    if (isOpen && !wasOpen && props.cohortId) {
+      // Panel just opened - fetch existing generation info
+      await webapiStore.fetchCohortGenerationInfo(props.cohortId)
+    } else if (!isOpen && wasOpen && props.cohortId) {
+      // Panel just closed - stop polling and clear report state
+      webapiStore.stopPolling(props.cohortId)
+      showReports.value = false
+      selectedSourceKey.value = null
+    }
   }
-})
+)
 
 onMounted(async () => {
   await webapiStore.fetchSources()

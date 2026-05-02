@@ -95,14 +95,16 @@ const chartOption = computed(() => {
     tooltip: {
       formatter: (info: { name: string; value: number }) => buildTooltip(info, props.ruleCount),
     },
-    series: [{
-      type: 'treemap',
-      roam: false,
-      nodeClick: false,
-      breadcrumb: { show: false },
-      label: { show: true, formatter: '{b}' },
-      data: root.children?.map(decorate) ?? [],
-    }],
+    series: [
+      {
+        type: 'treemap',
+        roam: false,
+        nodeClick: false,
+        breadcrumb: { show: false },
+        label: { show: true, formatter: '{b}' },
+        data: root.children?.map(decorate) ?? [],
+      },
+    ],
   }
 })
 
