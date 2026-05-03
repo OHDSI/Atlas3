@@ -66,6 +66,7 @@ module.exports = {
       { element: 'v-dialog',       message: 'Use <AtlasDialog> from @/components/ui' },
       { element: 'v-alert',        message: 'Use <AtlasAlert> from @/components/ui' },
       { element: 'v-snackbar',     message: 'Use <AtlasSnackbar> from @/components/ui' },
+      { element: 'v-data-table',   message: 'Use <AtlasDataTable> from @/components/ui' },
     ],
 
     'no-restricted-imports': ['off', {
