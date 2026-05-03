@@ -143,19 +143,17 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="showEditDialog = false"
           >
             {{ t('common.cancel', 'Cancel').value }}
-          </v-btn>
-          <v-btn
-            color="primary"
-            variant="flat"
+          </AtlasButton>
+          <AtlasButton
             @click="saveEditedName"
           >
             {{ t('common.save', 'Save').value }}
-          </v-btn>
+          </AtlasButton>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -163,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasIcon, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, nextTick } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

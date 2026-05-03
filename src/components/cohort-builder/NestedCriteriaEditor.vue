@@ -79,20 +79,19 @@
           </v-card-text>
           <v-card-actions class="pa-2">
             <AtlasSpacer />
-            <v-btn
-              variant="text"
-              size="small"
+            <AtlasButton
+              variant="ghost"
+              size="sm"
               @click="showLogicTypeMenu = false"
             >
               {{ t('common.cancel', 'Cancel') }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              size="small"
+            </AtlasButton>
+            <AtlasButton
+              size="sm"
               @click="confirmLogicType"
             >
               {{ t('common.apply', 'OK') }}
-            </v-btn>
+            </AtlasButton>
           </v-card-actions>
         </v-card>
       </AtlasMenu>
@@ -122,15 +121,15 @@
         <div class="group-header d-flex align-center mb-2">
           <AtlasMenu>
             <template #activator="{ props: slotProps }">
-              <v-btn
+              <AtlasButton
                 v-bind="slotProps"
-                variant="outlined"
-                prepend-icon="mdi-plus"
-                size="small"
+                variant="secondary"
+                size="sm"
+                icon="mdi-plus"
                 data-testid="add-criteria-to-nested-group"
               >
                 {{ t('components.criteriaGroup.addCriteria', 'Add Criteria') }}
-              </v-btn>
+              </AtlasButton>
             </template>
             <AtlasList>
               <AtlasListItem
@@ -206,10 +205,10 @@
 
                   <!-- Concept Set Picker -->
                   <div class="mb-2">
-                    <v-btn
-                      variant="outlined"
-                      size="small"
-                      prepend-icon="mdi-text-box-search"
+                    <AtlasButton
+                      variant="secondary"
+                      size="sm"
+                      icon="mdi-text-box-search"
                       block
                       @click="selectConceptSet(index, event.id)"
                     >
@@ -217,7 +216,7 @@
                         event.conceptSet?.name ||
                           t('components.conceptAddBox.selectConceptSet', 'Select concept set...')
                       }}
-                    </v-btn>
+                    </AtlasButton>
                   </div>
 
                   <!-- Cardinality -->
@@ -314,7 +313,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, defineOptions } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

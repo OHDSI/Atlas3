@@ -55,15 +55,15 @@
       >
         <!-- Concept Set Selection Button/Chip -->
         <div class="mb-4">
-          <v-btn
+          <AtlasButton
             v-if="!selectedConceptSet"
-            variant="outlined"
-            prepend-icon="mdi-plus"
+            variant="secondary"
+            icon="mdi-plus"
             :disabled="disabled"
             @click="openConceptSetDialog"
           >
             {{ t('components.customEraStrategy.selectDrugConceptSet', 'Select Drug Concept Set') }}
-          </v-btn>
+          </AtlasButton>
           <AtlasChip
             v-else
             :closable="!disabled"
@@ -169,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasCol, AtlasIcon, AtlasRow, AtlasSelect, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasCol, AtlasIcon, AtlasRow, AtlasSelect, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useEventPersistence } from '@/composables/useEventPersistence'

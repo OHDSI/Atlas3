@@ -9,7 +9,7 @@ import CardinalityEditor from './CardinalityEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalFilterChip from './TemporalFilterChip.vue'
-import { AtlasCard, AtlasChip, AtlasDivider, AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasDivider, AtlasIcon } from '@/components/ui'
 
 const props = withDefaults(
   defineProps<{
@@ -223,33 +223,33 @@ const removeEvent = () => {
         <v-card-text>
           <!-- Action Buttons -->
           <div class="d-flex flex-wrap ga-2 mb-4">
-            <v-btn
+            <AtlasButton
               v-if="!hasCardinality"
-              size="small"
-              variant="outlined"
-              prepend-icon="mdi-counter"
+              variant="secondary"
+              size="sm"
+              icon="mdi-counter"
               @click="addCardinality"
             >
               Add Cardinality
-            </v-btn>
-            <v-btn
+            </AtlasButton>
+            <AtlasButton
               v-if="!hasTemporalWindows"
-              size="small"
-              variant="outlined"
-              prepend-icon="mdi-calendar-range"
+              variant="secondary"
+              size="sm"
+              icon="mdi-calendar-range"
               @click="addTemporalWindow"
             >
               Add Temporal Window
-            </v-btn>
-            <v-btn
+            </AtlasButton>
+            <AtlasButton
               v-if="!hasAttributes"
-              size="small"
-              variant="outlined"
-              prepend-icon="mdi-filter"
+              variant="secondary"
+              size="sm"
+              icon="mdi-filter"
               @click="addAttributes"
             >
               Add Attributes
-            </v-btn>
+            </AtlasButton>
           </div>
 
           <!-- Cardinality Editor -->

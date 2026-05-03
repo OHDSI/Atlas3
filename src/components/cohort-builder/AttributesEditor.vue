@@ -62,11 +62,10 @@
 
             <!-- Concept Set Attributes -->
             <template v-else-if="attribute.type === 'conceptSet'">
-              <v-btn
+              <AtlasButton
                 v-if="!attribute.conceptSet || !attribute.conceptSet.id"
-                color="primary"
-                variant="outlined"
-                size="small"
+                variant="secondary"
+                size="sm"
                 data-testid="attribute-concept-set-picker"
                 @click="openConceptSetPickerForAttribute(index)"
               >
@@ -74,7 +73,7 @@
                   mdi-plus
                 </AtlasIcon>
                 Select Concept Set
-              </v-btn>
+              </AtlasButton>
               <AtlasChip
                 v-else
                 closable
@@ -210,10 +209,9 @@
                 >
                   {{ concept.CONCEPT_NAME }}
                 </AtlasChip>
-                <v-btn
-                  color="primary"
-                  variant="outlined"
-                  size="small"
+                <AtlasButton
+                  variant="secondary"
+                  size="sm"
                   data-testid="attribute-concept-picker"
                   @click="openConceptPickerForAttribute(index)"
                 >
@@ -221,7 +219,7 @@
                     mdi-plus
                   </AtlasIcon>
                   {{ attribute.concepts.length > 0 ? 'Edit' : 'Select Concept' }}
-                </v-btn>
+                </AtlasButton>
                 <AtlasCheckbox
                   :model-value="attribute.isExclusion ?? false"
                   hide-details
@@ -245,17 +243,16 @@
                 data-testid="attribute-temporal-chip"
                 @click="openTemporalEditor(index)"
               />
-              <v-btn
+              <AtlasButton
                 v-else
-                color="primary"
-                variant="outlined"
-                size="small"
-                prepend-icon="mdi-clock-plus-outline"
+                variant="secondary"
+                size="sm"
+                icon="mdi-clock-plus-outline"
                 data-testid="attribute-temporal-add-button"
                 @click="openTemporalEditor(index)"
               >
                 Add Temporal Window
-              </v-btn>
+              </AtlasButton>
             </template>
 
             <!-- Date Adjustment Attributes -->
@@ -277,17 +274,16 @@
                 </AtlasIcon>
                 {{ getDateAdjustmentSummary(attribute.dateAdjustment) }}
               </v-chip>
-              <v-btn
+              <AtlasButton
                 v-else
-                color="primary"
-                variant="outlined"
-                size="small"
-                prepend-icon="mdi-calendar-plus"
+                variant="secondary"
+                size="sm"
+                icon="mdi-calendar-plus"
                 data-testid="attribute-date-adjustment-add-button"
                 @click="openDateAdjustmentEditor(index)"
               >
                 Add Date Adjustment
-              </v-btn>
+              </AtlasButton>
             </template>
 
             <!-- User Defined Period Attributes -->
@@ -362,7 +358,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasChip, AtlasIcon, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasChip, AtlasIcon, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'

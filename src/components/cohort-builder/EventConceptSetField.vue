@@ -7,11 +7,10 @@
       {{ label }}
     </div>
     <div class="event-concept-set-field__input">
-      <v-btn
+      <AtlasButton
         v-if="!conceptSet || !conceptSet.id"
-        color="primary"
-        variant="outlined"
-        size="small"
+        variant="secondary"
+        size="sm"
         data-testid="concept-set-picker"
         @click="emit('select')"
       >
@@ -19,7 +18,7 @@
           mdi-plus
         </AtlasIcon>
         {{ selectLabel }}
-      </v-btn>
+      </AtlasButton>
       <AtlasChip
         v-else
         closable
@@ -36,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasIcon } from '@/components/ui'
 withDefaults(
   defineProps<{
     conceptSet: { id: number | string; name: string } | undefined | null

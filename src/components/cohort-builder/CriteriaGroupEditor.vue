@@ -76,20 +76,19 @@
           </v-card-text>
           <v-card-actions class="pa-2">
             <AtlasSpacer />
-            <v-btn
-              variant="text"
-              size="small"
+            <AtlasButton
+              variant="ghost"
+              size="sm"
               @click="showMatchTypeDialog = false"
             >
               {{ t('common.cancel', 'Cancel') }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              size="small"
+            </AtlasButton>
+            <AtlasButton
+              size="sm"
               @click="confirmMatchType"
             >
               {{ t('common.apply', 'OK') }}
-            </v-btn>
+            </AtlasButton>
           </v-card-actions>
         </v-card>
       </AtlasMenu>
@@ -100,15 +99,15 @@
         <div class="group-header">
           <AtlasMenu>
             <template #activator="{ props: slotProps }">
-              <v-btn
+              <AtlasButton
                 v-bind="slotProps"
-                variant="outlined"
-                prepend-icon="mdi-plus"
-                size="small"
+                variant="secondary"
+                size="sm"
+                icon="mdi-plus"
                 data-testid="add-event-to-group"
               >
                 {{ t('components.criteriaGroup.addCriteria') }}
-              </v-btn>
+              </AtlasButton>
             </template>
             <AtlasList
               density="compact"
@@ -428,7 +427,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, watch, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

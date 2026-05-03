@@ -108,23 +108,23 @@
       </div>
 
       <div class="mt-4">
-        <v-btn
-          variant="outlined"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          variant="secondary"
+          icon="mdi-plus"
           :disabled="disabled"
           @click="addEvent"
         >
           {{
             t('components.cohortExpressionEditor.addCensoringEvent', 'Add Censoring Event...').value
           }}
-        </v-btn>
+        </AtlasButton>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasCol, AtlasIcon, AtlasRow } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasCol, AtlasIcon, AtlasRow } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent, ConceptSetReference, CriteriaType } from '@/models/cohort.types'
