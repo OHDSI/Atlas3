@@ -37,14 +37,13 @@
             instance.
           </v-alert>
 
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-download"
+          <AtlasButton
+            icon="mdi-download"
             :loading="isExporting"
             @click="handleExport"
           >
             Export Role as JSON
-          </v-btn>
+          </AtlasButton>
         </div>
       </div>
 
@@ -81,13 +80,12 @@
             name exists, you will be prompted to rename it.
           </v-alert>
 
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-upload"
+          <AtlasButton
+            icon="mdi-upload"
             @click="importDialogOpen = true"
           >
             Import Role from JSON
-          </v-btn>
+          </AtlasButton>
         </div>
       </div>
 
@@ -125,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon } from '@/components/ui'
 import { ref } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import RoleImportDialog from './RoleImportDialog.vue'

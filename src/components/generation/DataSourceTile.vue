@@ -20,16 +20,14 @@
         v-if="tileStatus === 'idle'"
         class="tile-status"
       >
-        <v-btn
-          color="primary"
-          variant="flat"
-          size="small"
+        <AtlasButton
+          size="sm"
           :disabled="!cohortId || !canWriteSource"
           block
           @click.stop="handleGenerate"
         >
           {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
-        </v-btn>
+        </AtlasButton>
       </div>
 
       <div
@@ -95,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasProgressCircular } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasProgressCircular } from '@/components/ui'
 import { computed, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'

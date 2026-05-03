@@ -19,25 +19,24 @@
       <pre v-if="error?.stack">{{ error.stack }}</pre>
     </div>
     <div class="actions">
-      <v-btn
+      <AtlasButton
         v-if="error?.recoverable"
-        color="primary"
         @click="$emit('retry')"
       >
         Retry
-      </v-btn>
-      <v-btn
-        variant="text"
+      </AtlasButton>
+      <AtlasButton
+        variant="ghost"
         @click="showDetails = !showDetails"
       >
         {{ showDetails ? 'Hide' : 'Show' }} Details
-      </v-btn>
+      </AtlasButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { ref } from 'vue'
 
 defineProps<{

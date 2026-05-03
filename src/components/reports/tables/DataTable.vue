@@ -27,14 +27,14 @@
           location="bottom end"
         >
           <template #activator="{ props: menuProps }">
-            <v-btn
+            <AtlasButton
               v-bind="menuProps"
-              variant="outlined"
-              prepend-icon="mdi-view-column"
-              size="small"
+              variant="secondary"
+              icon="mdi-view-column"
+              size="sm"
             >
               {{ t('datatable.language.buttons.changeColumns') }}
-            </v-btn>
+            </AtlasButton>
           </template>
           <AtlasList>
             <AtlasListItem
@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasList, AtlasListItem, AtlasMenu, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TableHeader, TableRow } from '@/models/report.types'

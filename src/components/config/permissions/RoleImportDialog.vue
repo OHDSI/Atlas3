@@ -148,43 +148,40 @@
 
       <v-card-actions>
         <AtlasSpacer />
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           :disabled="importing"
           @click="handleClose"
         >
           Cancel
-        </v-btn>
-        <v-btn
+        </AtlasButton>
+        <AtlasButton
           v-if="!jsonData"
-          color="primary"
           disabled
         >
           Next
-        </v-btn>
-        <v-btn
+        </AtlasButton>
+        <AtlasButton
           v-else-if="hasConflict"
-          color="primary"
           :disabled="conflictResolution === 'rename' && !isNewNameValid"
           @click="handleConflictResolution"
         >
           Continue
-        </v-btn>
-        <v-btn
+        </AtlasButton>
+        <AtlasButton
           v-else-if="validationComplete"
-          color="primary"
           :loading="importing"
           @click="handleImport"
         >
           Import Role
-        </v-btn>
+        </AtlasButton>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasProgressCircular, AtlasRadio, AtlasRadioGroup, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasProgressCircular, AtlasRadio, AtlasRadioGroup, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 

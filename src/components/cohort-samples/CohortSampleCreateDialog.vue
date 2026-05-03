@@ -133,12 +133,12 @@
       </v-card-text>
       <v-card-actions>
         <AtlasSpacer />
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="cancel"
         >
           Cancel
-        </v-btn>
+        </AtlasButton>
         <v-btn
           color="primary"
           variant="elevated"
@@ -155,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed, reactive, ref, watch } from 'vue'
 import {
   GENDER_FEMALE_CONCEPT_ID,

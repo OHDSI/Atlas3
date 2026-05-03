@@ -48,28 +48,26 @@
 
       <v-card-actions>
         <AtlasSpacer />
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="handleClose"
         >
           {{ t('common.cancel') }}
-        </v-btn>
-        <v-btn
-          color="primary"
-          variant="flat"
+        </AtlasButton>
+        <AtlasButton
           :loading="saving"
           :disabled="!isCommentChanged || saving"
           @click="handleSave"
         >
           {{ t('common.save') }}
-        </v-btn>
+        </AtlasButton>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'

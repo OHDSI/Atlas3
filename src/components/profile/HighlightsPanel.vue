@@ -46,21 +46,21 @@
     <AtlasDivider class="my-2" />
 
     <div class="highlights-panel__footer">
-      <v-btn
-        size="small"
-        variant="text"
-        prepend-icon="mdi-close-circle-outline"
+      <AtlasButton
+        variant="ghost"
+        size="sm"
+        icon="mdi-close-circle-outline"
         data-test="highlight-clear-all"
         @click="store.clearHighlights()"
       >
         {{ tv('profiles.clearAllHighlights', 'Clear all highlights') }}
-      </v-btn>
+      </AtlasButton>
     </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasTab, AtlasTabs } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref } from 'vue'
 import HighlightsConceptList from '@/components/profile/HighlightsConceptList.vue'
 import HighlightsConceptSetList from '@/components/profile/HighlightsConceptSetList.vue'

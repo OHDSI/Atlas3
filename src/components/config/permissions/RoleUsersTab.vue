@@ -24,14 +24,13 @@
             {{ changeCount }} change{{ changeCount !== 1 ? 's' : '' }}
           </AtlasChip>
 
-          <v-btn
-            color="primary"
+          <AtlasButton
             :disabled="!hasChanges || isSaving"
             :loading="isSaving"
             @click="handleSave"
           >
             Save Changes
-          </v-btn>
+          </AtlasButton>
         </div>
       </div>
 
@@ -164,7 +163,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasChip, AtlasIcon, AtlasProgressCircular, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasChip, AtlasIcon, AtlasProgressCircular, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 

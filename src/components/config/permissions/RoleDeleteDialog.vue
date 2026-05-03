@@ -50,13 +50,13 @@
 
       <v-card-actions>
         <AtlasSpacer />
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           :disabled="deleting"
           @click="handleClose"
         >
           Cancel
-        </v-btn>
+        </AtlasButton>
         <v-btn
           color="error"
           variant="elevated"
@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasSpacer } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

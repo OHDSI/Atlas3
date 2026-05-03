@@ -44,16 +44,18 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn @click="saveConfirmDialogOpen = false">
+          <AtlasButton
+            variant="ghost"
+            @click="saveConfirmDialogOpen = false"
+          >
             {{ t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="primary"
+          </AtlasButton>
+          <AtlasButton
             :loading="savingPreview"
             @click="handleSavePreviewAsCurrent"
           >
             {{ t('common.save') }}
-          </v-btn>
+          </AtlasButton>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -61,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasSpacer } from '@/components/ui'
 import { logger } from '@/utils/logger'
 import { onMounted, ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'

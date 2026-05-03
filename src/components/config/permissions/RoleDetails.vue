@@ -40,23 +40,22 @@
               @keyup.esc="cancelEditName"
             />
             <div class="role-details__edit-actions">
-              <v-btn
-                color="primary"
-                size="small"
+              <AtlasButton
+                size="sm"
                 :disabled="!isNameValid"
                 :loading="isSaving"
                 @click="saveName"
               >
                 Save
-              </v-btn>
-              <v-btn
-                variant="text"
-                size="small"
+              </AtlasButton>
+              <AtlasButton
+                variant="ghost"
+                size="sm"
                 :disabled="isSaving"
                 @click="cancelEditName"
               >
                 Cancel
-              </v-btn>
+              </AtlasButton>
             </div>
           </div>
         </div>
@@ -102,22 +101,21 @@
               autofocus
             />
             <div class="role-details__edit-actions">
-              <v-btn
-                color="primary"
-                size="small"
+              <AtlasButton
+                size="sm"
                 :loading="isSaving"
                 @click="saveDescription"
               >
                 Save
-              </v-btn>
-              <v-btn
-                variant="text"
-                size="small"
+              </AtlasButton>
+              <AtlasButton
+                variant="ghost"
+                size="sm"
                 :disabled="isSaving"
                 @click="cancelEditDescription"
               >
                 Cancel
-              </v-btn>
+              </AtlasButton>
             </div>
           </div>
         </div>
@@ -169,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

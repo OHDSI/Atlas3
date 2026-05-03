@@ -57,28 +57,27 @@
 
       <v-card-actions>
         <AtlasSpacer />
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           :disabled="saving"
           @click="handleClose"
         >
           Cancel
-        </v-btn>
-        <v-btn
-          color="primary"
+        </AtlasButton>
+        <AtlasButton
           :disabled="!formValid || saving"
           :loading="saving"
           @click="handleSubmit"
         >
           {{ isEditMode ? 'Save' : 'Create' }}
-        </v-btn>
+        </AtlasButton>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

@@ -36,13 +36,13 @@
     >
       {{ toastMessage }}
       <template #actions>
-        <v-btn
-          variant="text"
-          size="small"
+        <AtlasButton
+          variant="ghost"
+          size="sm"
           @click="showToast = false"
         >
           Close
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
   </div>
@@ -50,6 +50,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { AtlasButton } from '@/components/ui'
 import * as Papa from 'papaparse'
 import { logger } from '@/utils/logger'
 

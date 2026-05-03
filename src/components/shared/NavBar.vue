@@ -67,16 +67,17 @@
       <div class="nav-bar__nav-dropdown d-md-none">
         <AtlasMenu>
           <template #activator="{ props: menuProps }">
-            <v-btn
+            <AtlasButton
               v-bind="menuProps"
-              variant="text"
-              append-icon="mdi-menu-down"
+              variant="ghost"
+              icon="mdi-menu-down"
+              icon-position="end"
             >
               <AtlasIcon start>
                 mdi-menu
               </AtlasIcon>
               {{ t('common.menu', 'Menu') }}
-            </v-btn>
+            </AtlasButton>
           </template>
           <AtlasList>
             <template
@@ -133,13 +134,13 @@
           v-if="!auth.isAuthenticated.value"
           class="nav-bar__auth"
         >
-          <v-btn
-            variant="text"
-            prepend-icon="mdi-login"
+          <AtlasButton
+            variant="ghost"
+            icon="mdi-login"
             @click="auth.openLoginModal()"
           >
             {{ signInLabel }}
-          </v-btn>
+          </AtlasButton>
         </div>
         <div
           v-else-if="showUserMenu"
@@ -147,16 +148,17 @@
         >
           <AtlasMenu>
             <template #activator="{ props }">
-              <v-btn
-                variant="text"
+              <AtlasButton
+                variant="ghost"
                 v-bind="props"
-                append-icon="mdi-menu-down"
+                icon="mdi-menu-down"
+                icon-position="end"
               >
                 <AtlasIcon left>
                   mdi-account-circle
                 </AtlasIcon>
                 {{ auth.userDisplayName.value }}
-              </v-btn>
+              </AtlasButton>
             </template>
             <AtlasList>
               <AtlasListItem @click="handleLogout">
@@ -179,7 +181,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'

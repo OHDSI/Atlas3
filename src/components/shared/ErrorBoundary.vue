@@ -50,21 +50,20 @@
               </v-expansion-panels>
             </v-card-text>
             <v-card-actions>
-              <v-btn
-                color="primary"
-                variant="outlined"
-                prepend-icon="mdi-refresh"
+              <AtlasButton
+                variant="secondary"
+                icon="mdi-refresh"
                 @click="handleReset"
               >
                 {{ t('common.refresh', 'Reload Page') }}
-              </v-btn>
-              <v-btn
-                variant="text"
-                prepend-icon="mdi-arrow-left"
+              </AtlasButton>
+              <AtlasButton
+                variant="ghost"
+                icon="mdi-arrow-left"
                 @click="handleGoBack"
               >
                 {{ t('common.goBack', 'Go Back') }}
-              </v-btn>
+              </AtlasButton>
             </v-card-actions>
           </v-card>
         </AtlasCol>
@@ -75,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCol, AtlasContainer, AtlasIcon, AtlasRow } from '@/components/ui'
+import { AtlasButton, AtlasCol, AtlasContainer, AtlasIcon, AtlasRow } from '@/components/ui'
 import { ref, onErrorCaptured } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
