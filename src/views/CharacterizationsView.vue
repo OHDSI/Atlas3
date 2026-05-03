@@ -71,49 +71,34 @@
     </template>
   </AnalysisListLayout>
 
-  <!-- Delete confirmation dialog -->
-  <v-dialog
+  <AtlasDialog
     v-model="showDeleteDialog"
+    eyebrow="CONFIRM"
+    :title="t('common.delete', 'Delete').value"
     max-width="500"
+    @close="showDeleteDialog = false"
   >
-    <v-card>
-      <div class="confirm-dialog__header">
-        <div class="confirm-dialog__title-block">
-          <div class="confirm-dialog__eyebrow-row">
-            <span class="text-eyebrow">{{ t('cc.entity', 'Characterization').value }}</span>
-            <span class="confirm-dialog__accent-rule" />
-          </div>
-          <h2 class="confirm-dialog__title">
-            {{ t('common.delete', 'Delete').value }}
-          </h2>
-        </div>
-      </div>
-      <AtlasDivider />
-      <v-card-text v-if="selectedCC">
-        {{ deleteMessage }}
-      </v-card-text>
-      <v-card-actions>
-        <AtlasSpacer />
-        <AtlasButton
-          variant="ghost"
-          @click="showDeleteDialog = false"
-        >
-          {{ t('common.cancel', 'Cancel') }}
-        </AtlasButton>
-        <AtlasButton
-          variant="danger"
-          :loading="deleting"
-          @click="confirmDelete"
-        >
-          {{ t('common.delete', 'Delete') }}
-        </AtlasButton>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <span v-if="selectedCC">{{ deleteMessage }}</span>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="showDeleteDialog = false"
+      >
+        {{ t('common.cancel', 'Cancel') }}
+      </AtlasButton>
+      <AtlasButton
+        variant="danger"
+        :loading="deleting"
+        @click="confirmDelete"
+      >
+        {{ t('common.delete', 'Delete') }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -243,30 +228,4 @@ onMounted(() => {
   padding: 0 12px;
 }
 
-.confirm-dialog__header {
-  padding: 20px 24px 14px;
-}
-.confirm-dialog__title-block {
-  flex: 1;
-}
-.confirm-dialog__eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.confirm-dialog__accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-.confirm-dialog__title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-}
 </style>

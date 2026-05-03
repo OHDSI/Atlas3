@@ -110,58 +110,39 @@
       </v-expansion-panel>
     </v-expansion-panels>
 
-    <!-- Edit Name Dialog: refreshed header (eyebrow + accent rule
-         + clean title), matching the rest of the modernised dialogs. -->
-    <v-dialog
+    <AtlasDialog
       v-model="showEditDialog"
+      eyebrow="EDIT"
+      :title="t('common.editName', 'Rename rule').value"
       max-width="500"
+      @close="showEditDialog = false"
     >
-      <v-card>
-        <div class="inclusion-criteria-panel__dialog-header">
-          <div class="inclusion-criteria-panel__dialog-title-block">
-            <div class="inclusion-criteria-panel__dialog-eyebrow-row">
-              <span class="text-eyebrow">{{
-                t('components.cohortExpressionEditor.inclusionCriteriaTitle', 'Inclusion criteria')
-                  .value
-              }}</span>
-              <span class="inclusion-criteria-panel__dialog-accent-rule" />
-            </div>
-            <h2 class="inclusion-criteria-panel__dialog-title">
-              {{ t('common.editName', 'Rename rule').value }}
-            </h2>
-          </div>
-        </div>
-        <AtlasDivider />
-        <v-card-text>
-          <AtlasTextField
-            v-model="editingName"
-            :label="t('cohortDefinitions.ruleName', 'Rule name').value"
-            variant="outlined"
-            autofocus
-            @keyup.enter="saveEditedName"
-          />
-        </v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            @click="showEditDialog = false"
-          >
-            {{ t('common.cancel', 'Cancel').value }}
-          </AtlasButton>
-          <AtlasButton
-            @click="saveEditedName"
-          >
-            {{ t('common.save', 'Save').value }}
-          </AtlasButton>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <AtlasTextField
+        v-model="editingName"
+        :label="t('cohortDefinitions.ruleName', 'Rule name').value"
+        variant="outlined"
+        autofocus
+        @keyup.enter="saveEditedName"
+      />
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showEditDialog = false"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </AtlasButton>
+        <AtlasButton
+          @click="saveEditedName"
+        >
+          {{ t('common.save', 'Save').value }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasTextField } from '@/components/ui'
 import { ref, nextTick } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
@@ -449,31 +430,4 @@ defineExpose({ addNewRule })
   padding: 8px 16px 12px;
 }
 
-/* Modernised rename-rule dialog header. */
-.inclusion-criteria-panel__dialog-header {
-  padding: 20px 24px 14px;
-}
-.inclusion-criteria-panel__dialog-title-block {
-  flex: 1;
-}
-.inclusion-criteria-panel__dialog-eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.inclusion-criteria-panel__dialog-accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-.inclusion-criteria-panel__dialog-title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-}
 </style>

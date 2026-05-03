@@ -69,48 +69,34 @@
     </template>
   </AnalysisListLayout>
 
-  <v-dialog
+  <AtlasDialog
     v-model="showDelete"
+    eyebrow="CONFIRM"
+    :title="t('common.delete', 'Delete').value"
     max-width="400"
+    @close="showDelete = false"
   >
-    <v-card>
-      <div class="confirm-dialog__header">
-        <div class="confirm-dialog__title-block">
-          <div class="confirm-dialog__eyebrow-row">
-            <span class="text-eyebrow">{{ t('ir.entity', 'Incidence rate').value }}</span>
-            <span class="confirm-dialog__accent-rule" />
-          </div>
-          <h2 class="confirm-dialog__title">
-            {{ t('common.delete', 'Delete').value }}
-          </h2>
-        </div>
-      </div>
-      <AtlasDivider />
-      <v-card-text>
-        {{
-          t(
-            'ir.deleteConfirmation',
-            'Delete incidence rate analysis? Warning: deletion can not be undone!'
-          )
-        }}
-      </v-card-text>
-      <v-card-actions>
-        <AtlasSpacer />
-        <AtlasButton
-          variant="ghost"
-          @click="showDelete = false"
-        >
-          {{ t('common.cancel', 'Cancel') }}
-        </AtlasButton>
-        <AtlasButton
-          variant="danger"
-          @click="confirmDelete"
-        >
-          {{ t('common.delete', 'Delete') }}
-        </AtlasButton>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    {{
+      t(
+        'ir.deleteConfirmation',
+        'Delete incidence rate analysis? Warning: deletion can not be undone!'
+      )
+    }}
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="showDelete = false"
+      >
+        {{ t('common.cancel', 'Cancel') }}
+      </AtlasButton>
+      <AtlasButton
+        variant="danger"
+        @click="confirmDelete"
+      >
+        {{ t('common.delete', 'Delete') }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 
   <AtlasSnackbar
     :model-value="!!feedback"
@@ -122,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasSnackbar, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -247,30 +233,4 @@ async function confirmDelete() {
   padding: 0 12px;
 }
 
-.confirm-dialog__header {
-  padding: 20px 24px 14px;
-}
-.confirm-dialog__title-block {
-  flex: 1;
-}
-.confirm-dialog__eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.confirm-dialog__accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-.confirm-dialog__title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-}
 </style>

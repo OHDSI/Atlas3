@@ -250,46 +250,31 @@
       </v-card-text>
     </v-card>
 
-    <!-- Delete confirmation dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showDeleteDialog"
+      eyebrow="CONFIRM"
+      :title="t('common.delete', 'Delete').value"
       max-width="500"
+      @close="showDeleteDialog = false"
     >
-      <v-card>
-        <div class="confirm-dialog__header">
-          <div class="confirm-dialog__title-block">
-            <div class="confirm-dialog__eyebrow-row">
-              <span class="text-eyebrow">{{ t('cc.fa.title', 'Feature analysis').value }}</span>
-              <span class="confirm-dialog__accent-rule" />
-            </div>
-            <h2 class="confirm-dialog__title">
-              {{ t('common.delete', 'Delete').value }}
-            </h2>
-          </div>
-        </div>
-        <AtlasDivider />
-        <v-card-text>
-          {{ deleteMessage }}
-        </v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            @click="showDeleteDialog = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </AtlasButton>
-          <AtlasButton
-            variant="danger"
-            :loading="loading"
-            data-testid="feature-analysis-editor-delete-confirm"
-            @click="confirmDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </AtlasButton>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{ deleteMessage }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showDeleteDialog = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="loading"
+          data-testid="feature-analysis-editor-delete-confirm"
+          @click="confirmDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <AtlasSnackbar
       v-model="snackbar.show"
@@ -302,7 +287,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasSnackbar, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasCol, AtlasDialog, AtlasRow, AtlasSelect, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
@@ -813,34 +798,4 @@ onBeforeRouteLeave((_to, _from, next) => {
   white-space: pre;
 }
 
-.confirm-dialog__header {
-  padding: 20px 24px 14px;
-}
-
-.confirm-dialog__title-block {
-  flex: 1;
-}
-
-.confirm-dialog__eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.confirm-dialog__accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-
-.confirm-dialog__title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-}
 </style>

@@ -269,46 +269,31 @@
       />
     </AtlasDialog>
 
-    <!-- Delete confirmation dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showDeleteDialog"
+      eyebrow="CONFIRM"
+      :title="t('common.delete', 'Delete').value"
       max-width="500"
+      @close="showDeleteDialog = false"
     >
-      <v-card>
-        <div class="confirm-dialog__header">
-          <div class="confirm-dialog__title-block">
-            <div class="confirm-dialog__eyebrow-row">
-              <span class="text-eyebrow">{{ t('cc.title', 'Characterization').value }}</span>
-              <span class="confirm-dialog__accent-rule" />
-            </div>
-            <h2 class="confirm-dialog__title">
-              {{ t('common.delete', 'Delete').value }}
-            </h2>
-          </div>
-        </div>
-        <AtlasDivider />
-        <v-card-text>
-          {{ deleteMessage }}
-        </v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            @click="showDeleteDialog = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </AtlasButton>
-          <AtlasButton
-            variant="danger"
-            :loading="loading"
-            data-testid="char-builder-delete-confirm"
-            @click="confirmDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </AtlasButton>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{ deleteMessage }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showDeleteDialog = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="loading"
+          data-testid="char-builder-delete-confirm"
+          @click="confirmDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <AtlasSnackbar
       v-model="snackbar.show"
@@ -335,7 +320,7 @@ import { logger } from '@/utils/logger'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasDivider, AtlasIconButton, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'

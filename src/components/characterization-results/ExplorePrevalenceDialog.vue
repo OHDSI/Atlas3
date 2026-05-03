@@ -8,83 +8,67 @@
   feature-analysis backing the data.
 -->
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="EXPLORE"
+    :title="titleText"
     max-width="900"
-    scrollable
+    data-testid="char-results-explore-dialog"
+    @close="close"
     @update:model-value="onUpdateModel"
   >
-    <v-card data-testid="char-results-explore-dialog">
-      <div class="explore-dialog__header">
-        <div class="explore-dialog__title-block">
-          <div class="explore-dialog__eyebrow-row">
-            <span class="text-eyebrow">{{ tv('columns.explore', 'Explore') }}</span>
-            <span class="explore-dialog__accent-rule" />
-          </div>
-          <h2 class="explore-dialog__title">
-            {{ titleText }}
-          </h2>
-        </div>
-      </div>
-      <AtlasDivider />
+    <div
+      v-if="loading"
+      class="explore-dialog__loading"
+    >
+      <AtlasSkeleton
+        v-for="n in 4"
+        :key="n"
+        type="table-row"
+      />
+    </div>
 
-      <v-card-text class="explore-dialog__body">
-        <div
-          v-if="loading"
-          class="explore-dialog__loading"
-        >
-          <AtlasSkeleton
-            v-for="n in 4"
-            :key="n"
-            type="table-row"
-          />
-        </div>
+    <AtlasAlert
+      v-else-if="error"
+      severity="danger"
+      class="mb-2"
+    >
+      {{ error }}
+    </AtlasAlert>
 
-        <AtlasAlert
-          v-else-if="error"
-          severity="danger"
-          class="mb-2"
-        >
-          {{ error }}
-        </AtlasAlert>
+    <div
+      v-else-if="!rows.length"
+      class="explore-dialog__empty"
+    >
+      <AtlasIcon
+        icon="mdi-database-off-outline"
+        size="32"
+        class="explore-dialog__empty-icon"
+      />
+      <p class="explore-dialog__empty-text">
+        {{ tv('common.noData', 'No related concepts.') }}
+      </p>
+    </div>
 
-        <div
-          v-else-if="!rows.length"
-          class="explore-dialog__empty"
-        >
-          <AtlasIcon
-            icon="mdi-database-off-outline"
-            size="32"
-            class="explore-dialog__empty-icon"
-          />
-          <p class="explore-dialog__empty-text">
-            {{ tv('common.noData', 'No related concepts.') }}
-          </p>
-        </div>
-
-        <AtlasDataTable
-          v-else
-          :items="rows"
-          :headers="headers"
-          :items-per-page="25"
-        />
-      </v-card-text>
-
-      <v-card-actions>
-        <AtlasSpacer />
-        <AtlasButton
-          variant="ghost"
-          @click="close"
-        >
-          {{ tv('common.close', 'Close') }}
-        </AtlasButton>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <AtlasDataTable
+      v-else
+      :items="rows"
+      :headers="headers"
+      :items-per-page="25"
+    />
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="close"
+      >
+        {{ tv('common.close', 'Close') }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasDivider, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasSkeleton } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
@@ -194,41 +178,6 @@ function onUpdateModel(value: boolean): void {
 </script>
 
 <style scoped>
-.explore-dialog__header {
-  padding: 20px 24px 14px;
-}
-
-.explore-dialog__title-block {
-  flex: 1;
-}
-
-.explore-dialog__eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.explore-dialog__accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-
-.explore-dialog__title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-}
-
-.explore-dialog__body {
-  min-height: 200px;
-}
-
 .explore-dialog__loading {
   display: flex;
   flex-direction: column;

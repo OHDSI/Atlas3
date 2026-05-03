@@ -525,43 +525,18 @@
       </div>
     </v-overlay>
 
-    <!-- Versions Dialog: refreshed header (eyebrow + accent rule
-         + clean title; close button on the right). -->
-    <v-dialog
+    <AtlasDialog
       v-model="showVersionsDialog"
+      eyebrow="VERSIONS"
+      :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
       max-width="1200"
-      scrollable
+      @close="showVersionsDialog = false"
     >
-      <v-card>
-        <div class="cohort-builder__dialog-header">
-          <div class="cohort-builder__dialog-title-block">
-            <div class="cohort-builder__dialog-eyebrow-row">
-              <span class="text-eyebrow">{{
-                t('common.cohortDefinition', 'Cohort definition').value
-              }}</span>
-              <span class="cohort-builder__dialog-accent-rule" />
-            </div>
-            <h2 class="cohort-builder__dialog-title">
-              {{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }}
-            </h2>
-          </div>
-          <AtlasIconButton
-            icon="mdi-close"
-            v-bind="{ ariaLabel: t('common.close', 'Close').value }"
-            variant="text"
-            size="sm"
-            @click="showVersionsDialog = false"
-          />
-        </div>
-        <AtlasDivider />
-        <v-card-text class="pa-0">
-          <versions-tab-content
-            v-if="cohortId"
-            :config="versionsConfig"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <versions-tab-content
+        v-if="cohortId"
+        :config="versionsConfig"
+      />
+    </AtlasDialog>
 
     <!-- Unsaved-changes confirmation dialog -->
     <AtlasDialog
@@ -609,7 +584,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
@@ -2582,38 +2557,4 @@ defineExpose({
   opacity: 0.8;
 }
 
-/* Versions / unsaved-changes dialog header — eyebrow + accent rule
- * + clean title, matching the cohort-info dialog and the rest of
- * the modernised dialogs. */
-.cohort-builder__dialog-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 20px 24px 16px;
-}
-.cohort-builder__dialog-title-block {
-  flex: 1;
-  min-width: 0;
-}
-.cohort-builder__dialog-eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.cohort-builder__dialog-accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-.cohort-builder__dialog-title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-  word-break: break-word;
-}
 </style>

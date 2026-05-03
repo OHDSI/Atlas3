@@ -413,10 +413,9 @@ describe('ConceptSearchDialog', () => {
 
       await nextTick()
 
-      // Close dialog
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const closeButton = buttons.find(btn => btn.props('icon') === true)
-      await closeButton?.trigger('click')
+      // Close dialog by emitting close event
+      const dialog = wrapper.findComponent({ name: 'AtlasDialog' })
+      await dialog.vm.$emit('close')
       await nextTick()
 
       // State should be reset

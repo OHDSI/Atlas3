@@ -20,17 +20,19 @@
           data-testid="single-concept-display"
         >
           <template #append>
-            <v-btn
+            <AtlasIconButton
               icon="mdi-magnify"
-              size="small"
+              size="sm"
               variant="text"
+              v-bind="{ ariaLabel: 'Search concepts' }"
               @click="showSearch = true"
             />
-            <v-btn
+            <AtlasIconButton
               v-if="selectedConcept"
               icon="mdi-close"
-              size="small"
+              size="sm"
               variant="text"
+              v-bind="{ ariaLabel: 'Clear selection' }"
               @click="clearSingleConceptSelection"
             />
           </template>
@@ -127,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasDivider, AtlasIcon, AtlasListItem, AtlasSelect } from '@/components/ui'
+import { AtlasChip, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasListItem, AtlasSelect } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

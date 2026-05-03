@@ -213,15 +213,18 @@
       @open-generate="generateMenu = true"
     />
 
-    <v-dialog
+    <AtlasDialog
       v-model="showVersions"
+      eyebrow="VERSIONS"
+      title="Version history"
       max-width="900"
+      @close="showVersions = false"
     >
       <VersionsTabContent
         v-if="versionsConfig"
         :config="versionsConfig"
       />
-    </v-dialog>
+    </AtlasDialog>
 
     <TagSelectionDialog
       v-if="currentPathway?.id"
@@ -241,7 +244,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasBadge, AtlasIconButton, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'

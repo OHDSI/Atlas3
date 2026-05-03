@@ -292,70 +292,45 @@
         </template>
       </AtlasDialog>
 
-      <!-- Cohort Info Dialog: refreshed header (eyebrow + accent rule
-           + clean title) and tightened typography in the body. -->
-      <v-dialog
+      <AtlasDialog
         v-model="showCohortInfoDialog"
+        eyebrow="COHORT"
+        :title="selectedCohort?.name || t('common.cohortInformation', 'Cohort information').value"
         max-width="900"
-        scrollable
+        @close="showCohortInfoDialog = false"
       >
-        <v-card>
-          <div class="cohort-info__header">
-            <div class="cohort-info__title-block">
-              <div class="cohort-info__eyebrow-row">
-                <span class="text-eyebrow">{{
-                  t('common.cohortDefinition', 'Cohort definition').value
-                }}</span>
-                <span class="cohort-info__accent-rule" />
-              </div>
-              <h2 class="cohort-info__title">
-                {{
-                  selectedCohort?.name || t('common.cohortInformation', 'Cohort information').value
-                }}
-              </h2>
-            </div>
-            <AtlasIconButton
-              icon="mdi-close"
-              v-bind="{ ariaLabel: t('common.close', 'Close').value }"
-              variant="text"
-              size="sm"
-              @click="showCohortInfoDialog = false"
-            />
+        <div
+          v-if="cohortInfoHtml"
+          style="max-height: 600px; overflow-y: auto"
+          class="cohort-info-content"
+        >
+          <!-- eslint-disable-next-line vue/no-v-html -- trusted server content -->
+          <div v-html="cohortInfoHtml" />
+        </div>
+        <div
+          v-else-if="loadingCohortInfo"
+          class="text-center pa-6"
+        >
+          <AtlasProgressCircular
+            indeterminate
+            color="primary"
+          />
+          <div class="mt-4">
+            {{ t('common.loading', 'Loading') }}…
           </div>
-          <AtlasDivider />
-          <v-card-text
-            v-if="cohortInfoHtml"
-            style="max-height: 600px"
-            class="cohort-info-content"
-          >
-            <!-- eslint-disable-next-line vue/no-v-html -- trusted server content -->
-            <div v-html="cohortInfoHtml" />
-          </v-card-text>
-          <v-card-text
-            v-else-if="loadingCohortInfo"
-            class="text-center pa-6"
-          >
-            <AtlasProgressCircular
-              indeterminate
-              color="primary"
-            />
-            <div class="mt-4">
-              {{ t('common.loading', 'Loading') }}…
-            </div>
-          </v-card-text>
-          <v-card-text
-            v-else
-            class="text-center pa-6 text-error"
-          >
-            {{
-              t(
-                'cs.manager.concept.tabs.recordCounts.failedToLoadData',
-                'Failed to load cohort information'
-              )
-            }}
-          </v-card-text>
-        </v-card>
-      </v-dialog>
+        </div>
+        <div
+          v-else
+          class="text-center pa-6 text-error"
+        >
+          {{
+            t(
+              'cs.manager.concept.tabs.recordCounts.failedToLoadData',
+              'Failed to load cohort information'
+            )
+          }}
+        </div>
+      </AtlasDialog>
     </div>
   </AtlasPageShell>
 </template>
@@ -374,7 +349,7 @@ import {
   saveCohortDefinition,
 } from '@/services/webapi'
 import { logger } from '@/utils/logger'
-import { AtlasAlert, AtlasButton, AtlasChip, AtlasDivider, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
@@ -721,38 +696,6 @@ onMounted(() => {
   font-size: 12px;
 }
 
-/* Cohort Info Dialog header */
-.cohort-info__header {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 20px 24px 16px;
-}
-.cohort-info__title-block {
-  flex: 1;
-  min-width: 0;
-}
-.cohort-info__eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.cohort-info__accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-.cohort-info__title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-  word-break: break-word;
-}
 
 /* Cohort Info body — quieter, token-driven typography (replaces the
  * old block of bespoke heading/list/table CSS). The print-friendly
