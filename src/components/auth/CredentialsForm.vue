@@ -33,22 +33,21 @@
       class="mb-4"
     />
 
-    <v-btn
+    <AtlasButton
       type="submit"
-      color="primary"
+      size="lg"
       block
-      size="large"
       :loading="loading"
       class="credentials-form__submit"
     >
       {{ t('components.userBar.signin', 'Sign in') }}
-    </v-btn>
+    </AtlasButton>
   </v-form>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { AuthProvider, LoginCredentials } from '@/models/auth.types'
 

@@ -35,13 +35,12 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-btn
-          color="primary"
+        <AtlasButton
           :loading="isExtending"
           @click="$emit('extend')"
         >
           Extend Session
-        </v-btn>
+        </AtlasButton>
         <v-btn
           color="error"
           variant="outlined"
@@ -56,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { computed, ref, watch, onUnmounted } from 'vue'
 import type { SessionExpiryModalProps } from './types'
 

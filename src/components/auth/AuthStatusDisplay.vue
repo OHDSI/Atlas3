@@ -23,20 +23,20 @@
       v-if="isExpiringSoon"
       #append
     >
-      <v-btn
-        size="small"
-        variant="outlined"
+      <AtlasButton
+        variant="secondary"
+        size="sm"
         :loading="isRefreshing"
         @click="handleRefresh"
       >
         {{ t('auth.extendSession') }}
-      </v-btn>
+      </AtlasButton>
     </template>
   </v-alert>
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

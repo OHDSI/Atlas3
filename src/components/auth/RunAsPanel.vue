@@ -36,17 +36,14 @@
               {{ t('auth.originalUser', { username: originalUsername }) }}
             </div>
           </div>
-          <v-btn
-            color="primary"
-            variant="outlined"
+          <AtlasButton
+            variant="secondary"
+            icon="mdi-exit-run"
             :loading="isExiting"
             @click="handleExitRunAs"
           >
-            <AtlasIcon left>
-              mdi-exit-run
-            </AtlasIcon>
             {{ t('auth.exitRunAs') }}
-          </v-btn>
+          </AtlasButton>
         </div>
       </v-alert>
 
@@ -61,19 +58,16 @@
         @keyup.enter="handleRunAs"
       />
 
-      <v-btn
-        color="primary"
+      <AtlasButton
+        size="lg"
         block
-        size="large"
+        icon="mdi-account-switch"
         :loading="isLoading"
         :disabled="!targetUser.trim() || isRunningAs"
         @click="handleRunAs"
       >
-        <AtlasIcon left>
-          mdi-account-switch
-        </AtlasIcon>
         {{ t('components.welcome.runas') }}
-      </v-btn>
+      </AtlasButton>
 
       <v-alert
         type="warning"
@@ -89,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
