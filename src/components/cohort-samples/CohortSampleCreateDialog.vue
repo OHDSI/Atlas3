@@ -12,16 +12,15 @@
         New cohort sample
       </v-card-title>
       <v-card-text>
-        <v-text-field
+        <AtlasTextField
           v-model="form.name"
           label="Sample name"
           variant="outlined"
-          density="compact"
           autofocus
           data-testid="sample-name"
           required
         />
-        <v-text-field
+        <AtlasTextField
           v-model.number="form.size"
           type="number"
           label="Number of persons"
@@ -30,7 +29,6 @@
           :hint="`Maximum ${SAMPLE_SIZE_MAX}`"
           persistent-hint
           variant="outlined"
-          density="compact"
           data-testid="sample-size"
         />
 
@@ -38,24 +36,21 @@
           Gender (optional)
         </div>
         <div class="d-flex flex-wrap ga-3">
-          <v-checkbox
+          <AtlasCheckbox
             v-model="genderMale"
             label="Male"
-            density="compact"
             hide-details
             data-testid="sample-gender-male"
           />
-          <v-checkbox
+          <AtlasCheckbox
             v-model="genderFemale"
             label="Female"
-            density="compact"
             hide-details
             data-testid="sample-gender-female"
           />
-          <v-checkbox
+          <AtlasCheckbox
             v-model="genderOther"
             label="Other / non-binary"
-            density="compact"
             hide-details
             data-testid="sample-gender-other"
           />
@@ -65,53 +60,52 @@
           Age (optional)
         </div>
         <div class="d-flex ga-2 align-start">
-          <v-select
+          <AtlasSelect
             v-model="ageMode"
             :items="ageModeOptions"
             item-title="label"
             item-value="value"
             label="Comparator"
             variant="outlined"
-            density="compact"
             clearable
             data-testid="sample-age-mode"
             style="min-width: 180px"
           />
           <template v-if="ageMode && !isRangeMode">
-            <v-text-field
-              v-model.number="ageValue"
+            <AtlasTextField
+              :model-value="ageValue ?? undefined"
               type="number"
               :min="0"
               :max="SAMPLE_AGE_MAX - 1"
               label="Age"
               variant="outlined"
-              density="compact"
               data-testid="sample-age-value"
               style="max-width: 120px"
+              @update:model-value="(v) => { ageValue = v !== '' && v != null ? Number(v) : null }"
             />
           </template>
           <template v-else-if="isRangeMode">
-            <v-text-field
-              v-model.number="ageMin"
+            <AtlasTextField
+              :model-value="ageMin ?? undefined"
               type="number"
               :min="0"
               :max="SAMPLE_AGE_MAX - 1"
               label="Min age"
               variant="outlined"
-              density="compact"
               data-testid="sample-age-min"
               style="max-width: 120px"
+              @update:model-value="(v) => { ageMin = v !== '' && v != null ? Number(v) : null }"
             />
-            <v-text-field
-              v-model.number="ageMax"
+            <AtlasTextField
+              :model-value="ageMax ?? undefined"
               type="number"
               :min="0"
               :max="SAMPLE_AGE_MAX - 1"
               label="Max age"
               variant="outlined"
-              density="compact"
               data-testid="sample-age-max"
               style="max-width: 120px"
+              @update:model-value="(v) => { ageMax = v !== '' && v != null ? Number(v) : null }"
             />
           </template>
         </div>
@@ -161,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed, reactive, ref, watch } from 'vue'
 import {
   GENDER_FEMALE_CONCEPT_ID,

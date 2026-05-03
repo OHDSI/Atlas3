@@ -52,12 +52,11 @@
 
         <!-- Add new tag -->
         <div class="metadata-tags__add">
-          <v-text-field
+          <AtlasTextField
             v-model="newTagName"
             :label="t('common.addTag', 'Add tag').value"
             :placeholder="t('components.tags.tagNamePlaceholder', 'Tag name').value"
             variant="outlined"
-            density="compact"
             hide-details
             class="metadata-tags__input"
             @keyup.enter="addTag"
@@ -98,7 +97,7 @@
                 <AtlasIcon>mdi-plus</AtlasIcon>
               </v-btn>
             </template>
-          </v-text-field>
+          </AtlasTextField>
         </div>
       </div>
     </v-card-text>

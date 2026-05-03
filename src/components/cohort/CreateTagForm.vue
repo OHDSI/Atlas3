@@ -5,14 +5,14 @@
     @submit.prevent="handleSubmit"
   >
     <!-- Tag Group Selector -->
-    <v-select
+    <AtlasSelect
       v-model="form.selectedGroup"
       :items="tagGroups"
       item-title="name"
       item-value="id"
       label="Tag Group *"
       :rules="groupRules"
-      :error-messages="errors.groups"
+      :error="errors.groups"
       variant="outlined"
       return-object
       required
@@ -21,7 +21,7 @@
       <template #prepend-inner>
         <AtlasIcon>mdi-folder</AtlasIcon>
       </template>
-    </v-select>
+    </AtlasSelect>
 
     <!-- Tag Name -->
     <AtlasTextField
@@ -156,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasIcon, AtlasTextField } from '@/components/ui'
+import { AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { tagSchema, type Tag as ConfigTag, type TagGroup } from '@/models/config.types'
 import type { Tag } from '@/models/cohort.types'
