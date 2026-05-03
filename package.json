@@ -23,7 +23,9 @@
     "tokens:build": "tsx scripts/build-tokens.ts",
     "tokens:check": "tsx scripts/build-tokens.ts && git diff --exit-code src/ui/tokens.css",
     "predev": "npm run tokens:build",
-    "prebuild": "npm run tokens:build"
+    "prebuild": "npm run tokens:build",
+    "ui:dev": "histoire dev",
+    "ui:build": "histoire build"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -47,6 +49,7 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@histoire/plugin-vue": "^1.0.0-beta.1",
     "@playwright/test": "^1.40.0",
     "@types/d3": "^7.4.3",
     "@types/echarts": "^4.9.22",
@@ -63,6 +66,7 @@
     "eslint-plugin-unused-imports": "^4.3.0",
     "eslint-plugin-vue": "^9.19.0",
     "fake-indexeddb": "^6.2.5",
+    "histoire": "^1.0.0-beta.1",
     "husky": "^9.1.7",
     "jsdom": "^27.1.0",
     "prettier": "^3.1.0",
