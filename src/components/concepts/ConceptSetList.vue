@@ -36,16 +36,15 @@
     </div>
 
     <!-- Error Alert -->
-    <v-alert
+    <AtlasAlert
       v-if="store.error"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="mb-4"
-      @click:close="store.clearError()"
+      @close="store.clearError()"
     >
       {{ store.error }}
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Concept Sets Table -->
     <AtlasCard
@@ -199,7 +198,7 @@ import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
-import { AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()

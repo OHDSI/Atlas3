@@ -61,21 +61,19 @@
       </div>
     </div>
 
-    <v-alert
+    <AtlasAlert
       v-if="store.comparisonError"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="mb-4"
-      @click:close="store.comparisonError = null"
+      @close="store.comparisonError = null"
     >
       {{ store.comparisonError }}
-    </v-alert>
+    </AtlasAlert>
 
-    <v-alert
+    <AtlasAlert
       v-else-if="!hasOwnItems"
-      type="info"
-      variant="tonal"
+      severity="info"
       class="mb-4"
       data-testid="compare-no-current"
     >
@@ -85,7 +83,7 @@
           'Use this utility to compare the contents of two concept sets to see which concepts they may share'
         )
       }}
-    </v-alert>
+    </AtlasAlert>
 
     <div
       v-if="store.loadingComparison && store.comparison.length === 0"
@@ -149,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasProgressCircular } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'

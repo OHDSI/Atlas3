@@ -1,14 +1,12 @@
 <template>
-  <v-alert
+  <AtlasAlert
     v-if="validationResult && validationResult.invalidFilterTypes.length > 0"
-    type="warning"
-    variant="tonal"
+    severity="warning"
+    title="Configuration Validation Warnings"
     prominent
-    closable
+    :closable="true"
     class="configuration-warning-banner"
   >
-    <v-alert-title> Configuration Validation Warnings </v-alert-title>
-
     <div class="mt-2">
       <p class="mb-2">
         Some filter types in the configuration are invalid or misconfigured. These filters will not
@@ -47,11 +45,11 @@
         Contact your administrator to update the configuration file (atlas-config.json).
       </p>
     </div>
-  </v-alert>
+  </AtlasAlert>
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
+import { AtlasAlert, AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
 /**
  * ConfigurationWarningBanner Component
  *

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AtlasCol, AtlasRow, AtlasSelect } from '@/components/ui'
+import { AtlasAlert, AtlasCol, AtlasRow, AtlasSelect } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Cardinality } from '@/models/event.types'
@@ -182,9 +182,8 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
         dense
       >
         <AtlasCol cols="12">
-          <v-alert
-            type="error"
-            variant="tonal"
+          <AtlasAlert
+            severity="danger"
             density="compact"
             class="mt-2"
           >
@@ -196,7 +195,7 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
                 {{ error }}
               </li>
             </ul>
-          </v-alert>
+          </AtlasAlert>
         </AtlasCol>
       </AtlasRow>
 

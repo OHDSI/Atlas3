@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { DateAdjustment } from '@/models/event.types'
@@ -152,9 +152,8 @@ const updateEndOffset = (value: number) => {
       </div>
 
       <!-- Explanation -->
-      <v-alert
-        type="info"
-        variant="tonal"
+      <AtlasAlert
+        severity="info"
         density="compact"
         class="mt-4"
       >
@@ -166,7 +165,7 @@ const updateEndOffset = (value: number) => {
             ).value
           }}
         </div>
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>

@@ -99,10 +99,9 @@
       <!-- Main Content -->
       <div class="flex-grow-1">
         <!-- Depth Warning -->
-        <v-alert
+        <AtlasAlert
           v-if="depth > 10"
-          type="warning"
-          variant="tonal"
+          severity="warning"
           density="compact"
           class="mb-2"
         >
@@ -115,7 +114,7 @@
               'Consider simplifying your criteria structure.'
             )
           }}
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Header with Add Criteria and Delete buttons -->
         <div class="group-header d-flex align-center mb-2">
@@ -155,10 +154,9 @@
         </div>
 
         <!-- Empty State -->
-        <v-alert
+        <AtlasAlert
           v-if="localNested.events.length === 0"
-          type="info"
-          variant="tonal"
+          severity="info"
           density="compact"
           class="mb-2"
         >
@@ -168,7 +166,7 @@
               'No events in this group. Click "Add Criteria" to begin.'
             )
           }}
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Events List -->
         <div
@@ -313,7 +311,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, defineOptions } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

@@ -72,10 +72,9 @@
                       </AtlasChip>
                     </div>
                     <!-- Warning for invalid concept set reference -->
-                    <v-alert
+                    <AtlasAlert
                       v-if="hasInvalidConceptSet(event)"
-                      type="warning"
-                      variant="tonal"
+                      severity="warning"
                       density="compact"
                       class="mt-2"
                     >
@@ -85,7 +84,7 @@
                           'Concept set not found in this cohort'
                         ).value
                       }}
-                    </v-alert>
+                    </AtlasAlert>
                   </div>
                 </AtlasCol>
                 <AtlasCol
@@ -124,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasCol, AtlasIcon, AtlasRow } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasCol, AtlasIcon, AtlasRow } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent, ConceptSetReference, CriteriaType } from '@/models/cohort.types'

@@ -4,15 +4,14 @@
     :style="{ marginLeft: `${depth * 24}px` }"
   >
     <!-- Depth Warning -->
-    <v-alert
+    <AtlasAlert
       v-if="depth > 10"
-      type="warning"
-      variant="tonal"
+      severity="warning"
       class="mb-2"
     >
       <AtlasIcon>mdi-alert</AtlasIcon>
       Deep nesting detected ({{ depth }} levels). Consider simplifying your criteria structure.
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Logic Type Display -->
     <div class="logic-header">
@@ -67,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
+import { AtlasAlert, AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
 import { ref } from 'vue'
 import type { NestedCriteria, CriteriaType } from '@/models/cohort.types'
 import { useI18n } from '@/composables/useI18n'

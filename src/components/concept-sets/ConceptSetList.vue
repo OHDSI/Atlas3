@@ -75,10 +75,9 @@
       </AtlasList>
 
       <!-- Empty State -->
-      <v-alert
+      <AtlasAlert
         v-else
-        type="info"
-        variant="tonal"
+        severity="info"
         data-testid="empty-concept-sets"
       >
         <template v-if="searchFilter">
@@ -87,7 +86,7 @@
         <template v-else>
           {{ t('cohortDefinitions.noConceptSets') }}
         </template>
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
 
     <!-- Delete Confirmation Dialog -->
@@ -122,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasBadge, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasBadge, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'

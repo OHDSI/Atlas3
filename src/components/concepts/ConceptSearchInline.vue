@@ -27,16 +27,15 @@
     </AtlasTextField>
 
     <!-- Error Message -->
-    <v-alert
+    <AtlasAlert
       v-if="store.error"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="mb-4"
-      @click:close="store.error = null"
+      @close="store.error = null"
     >
       {{ store.error }}
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Results Table with Add/Remove buttons -->
     <ConceptTable
@@ -57,7 +56,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { AtlasButton, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'

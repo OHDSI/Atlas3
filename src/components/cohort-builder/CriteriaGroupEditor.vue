@@ -146,13 +146,13 @@
         </div>
 
         <!-- Validation Error -->
-        <v-alert
+        <AtlasAlert
           v-if="validationError"
-          type="error"
+          severity="danger"
           class="mb-2"
         >
           {{ validationError }}
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Events in Group -->
         <div>
@@ -427,7 +427,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, watch, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

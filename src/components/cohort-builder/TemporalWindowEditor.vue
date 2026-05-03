@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasCheckbox, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TemporalWindow, Window } from '@/models/event.types'
@@ -355,9 +355,8 @@ watch(
         dense
       >
         <AtlasCol cols="12">
-          <v-alert
-            type="error"
-            variant="tonal"
+          <AtlasAlert
+            severity="danger"
             density="compact"
             class="mt-2"
           >
@@ -369,7 +368,7 @@ watch(
                 {{ error }}
               </li>
             </ul>
-          </v-alert>
+          </AtlasAlert>
         </AtlasCol>
       </AtlasRow>
     </v-card-text>

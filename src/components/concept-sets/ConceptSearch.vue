@@ -61,29 +61,27 @@
       </v-virtual-scroll>
 
       <!-- No Results Message -->
-      <v-alert
+      <AtlasAlert
         v-if="searchQuery && !isSearching && searchResults && searchResults.length === 0"
-        type="info"
-        variant="tonal"
+        severity="info"
         data-testid="no-results-message"
       >
         {{ t('search.noResultsFoundFor') }} "{{ searchQuery }}"
-      </v-alert>
+      </AtlasAlert>
 
-      <!-- Instructions -->
-      <v-alert
+      <AtlasAlert
         v-if="!searchQuery && (!searchResults || searchResults.length === 0)"
-        type="info"
-        variant="text"
+        severity="info"
+        variant="flat"
       >
         Enter a search term to find concepts
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasListItem, AtlasProgressLinear, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasDivider, AtlasListItem, AtlasProgressLinear, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

@@ -1,9 +1,8 @@
 <template>
   <div class="recommend-tab">
-    <v-alert
+    <AtlasAlert
       v-if="!store.isRecommendedAvailable"
-      type="info"
-      variant="tonal"
+      severity="info"
       class="mb-4"
       data-testid="recommend-not-available"
     >
@@ -13,23 +12,21 @@
           'Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.'
         )
       }}
-    </v-alert>
+    </AtlasAlert>
 
-    <v-alert
+    <AtlasAlert
       v-else-if="store.recommendedError"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="mb-4"
-      @click:close="store.recommendedError = null"
+      @close="store.recommendedError = null"
     >
       {{ store.recommendedError }}
-    </v-alert>
+    </AtlasAlert>
 
-    <v-alert
+    <AtlasAlert
       v-else-if="!hasSeed"
-      type="info"
-      variant="tonal"
+      severity="info"
       class="mb-4"
       data-testid="recommend-no-seed"
     >
@@ -39,7 +36,7 @@
           'Add concepts to the set first — recommendations are based on what is already included.'
         )
       }}
-    </v-alert>
+    </AtlasAlert>
 
     <div
       v-if="hasSeed && store.isRecommendedAvailable"
@@ -141,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasProgressCircular } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'

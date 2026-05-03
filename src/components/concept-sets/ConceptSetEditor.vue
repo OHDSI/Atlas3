@@ -70,13 +70,13 @@
             </AtlasListItem>
           </AtlasList>
 
-          <v-alert
+          <AtlasAlert
             v-else
-            type="info"
-            variant="text"
+            severity="info"
+            variant="flat"
           >
             {{ t('common.noData') }}
-          </v-alert>
+          </AtlasAlert>
 
           <!-- Add Concept Button -->
           <AtlasButton
@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'
