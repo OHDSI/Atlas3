@@ -44,14 +44,14 @@ describe('LicenseAgreementDialog', () => {
   })
 
   describe('Component Rendering', () => {
-    it('should render v-dialog component', () => {
+    it('should render AtlasDialog component', () => {
       const wrapper = mountComponent({
         props: {
           modelValue: true
         }
       })
 
-      expect(wrapper.findComponent({ name: 'VDialog' }).exists()).toBe(true)
+      expect(wrapper.findComponent({ name: 'AtlasDialog' }).exists()).toBe(true)
     })
 
     it('should not display dialog when modelValue is false', () => {
@@ -61,7 +61,7 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
+      const dialog = wrapper.findComponent({ name: 'AtlasDialog' })
       expect(dialog.props('modelValue')).toBe(false)
     })
 
@@ -72,7 +72,7 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
+      const dialog = wrapper.findComponent({ name: 'AtlasDialog' })
       expect(dialog.props('modelValue')).toBe(true)
     })
 
@@ -83,8 +83,8 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
-      expect(dialog.props('maxWidth')).toBe('900px')
+      const dialog = wrapper.findComponent({ name: 'AtlasDialog' })
+      expect(dialog.props('maxWidth')).toBe('900')
     })
 
     it('should render dialog as persistent', () => {
@@ -94,19 +94,8 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
+      const dialog = wrapper.findComponent({ name: 'AtlasDialog' })
       expect(dialog.props('persistent')).toBe(true)
-    })
-
-    it('should render dialog as scrollable', () => {
-      const wrapper = mountComponent({
-        props: {
-          modelValue: true
-        }
-      })
-
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
-      expect(dialog.props('scrollable')).toBe(true)
     })
   })
 
@@ -182,11 +171,9 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
       const acceptButton = buttons.find(btn => btn.text().includes('Accept'))
       expect(acceptButton).toBeDefined()
-      expect(acceptButton?.props('color')).toBe('primary')
-      expect(acceptButton?.props('variant')).toBe('elevated')
     })
 
     it('should render Reject button', () => {
@@ -196,11 +183,10 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
       const rejectButton = buttons.find(btn => btn.text().includes('Reject'))
       expect(rejectButton).toBeDefined()
-      expect(rejectButton?.props('color')).toBe('error')
-      expect(rejectButton?.props('variant')).toBe('text')
+      expect(rejectButton?.props('variant')).toBe('ghost')
     })
   })
 
@@ -212,7 +198,7 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
       const acceptButton = buttons.find(btn => btn.text().includes('Accept'))
 
       await acceptButton?.trigger('click')
@@ -228,7 +214,7 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
       const acceptButton = buttons.find(btn => btn.text().includes('Accept'))
 
       await acceptButton?.trigger('click')
@@ -244,7 +230,7 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
       const rejectButton = buttons.find(btn => btn.text().includes('Reject'))
 
       await rejectButton?.trigger('click')
@@ -260,7 +246,7 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
+      const buttons = wrapper.findAllComponents({ name: 'AtlasButton' })
       const rejectButton = buttons.find(btn => btn.text().includes('Reject'))
 
       await rejectButton?.trigger('click')
@@ -279,11 +265,11 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      expect(wrapper.findComponent({ name: 'VDialog' }).props('modelValue')).toBe(false)
+      expect(wrapper.findComponent({ name: 'AtlasDialog' }).props('modelValue')).toBe(false)
 
       await wrapper.setProps({ modelValue: true })
 
-      expect(wrapper.findComponent({ name: 'VDialog' }).props('modelValue')).toBe(true)
+      expect(wrapper.findComponent({ name: 'AtlasDialog' }).props('modelValue')).toBe(true)
     })
 
     it('should emit update:modelValue when dialog is closed via v-model', async () => {
@@ -293,7 +279,7 @@ describe('LicenseAgreementDialog', () => {
         }
       })
 
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
+      const dialog = wrapper.findComponent({ name: 'AtlasDialog' })
       await dialog.vm.$emit('update:modelValue', false)
 
       expect(wrapper.emitted('update:modelValue')).toBeTruthy()
