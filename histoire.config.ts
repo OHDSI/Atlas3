@@ -18,6 +18,7 @@ const fixHistoireVendorsVue = {
     if (id === histoireVendorsVueFileUrl) {
       return { id: fileURLToPath(id), external: false }
     }
+    return null
   },
 }
 

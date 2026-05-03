@@ -1,6 +1,6 @@
 // histoire.setup.ts
-import '@/ui/tokens.css'
 import 'vuetify/styles'
+import '@/ui/tokens.css'
 import { defineSetupVue3 } from '@histoire/plugin-vue'
 import { createVuetifyInstance } from '@/plugins/vuetify'
 
