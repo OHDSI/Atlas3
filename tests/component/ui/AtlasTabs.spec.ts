@@ -15,7 +15,7 @@ describe('AtlasTabs', () => {
   it('renders v-tabs', () => {
     const wrapper = mount(AtlasTabs, {
       global: { plugins: [vuetify] },
-      slots: { default: '<v-tab value="a">A</v-tab>' },
+      slots: { default: '<AtlasTab value="a">A</AtlasTab>' },
     })
     expect(wrapper.findComponent({ name: 'VTabs' }).exists()).toBe(true)
   })
@@ -24,7 +24,7 @@ describe('AtlasTabs', () => {
     const wrapper = mount(AtlasTabs, {
       global: { plugins: [vuetify] },
       attrs: { density: 'comfortable' },
-      slots: { default: '<v-tab value="a">A</v-tab>' },
+      slots: { default: '<AtlasTab value="a">A</AtlasTab>' },
     })
     expect(wrapper.findComponent({ name: 'VTabs' }).props('density')).toBe('compact')
   })

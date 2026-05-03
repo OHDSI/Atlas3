@@ -15,7 +15,7 @@ describe('AtlasRow', () => {
   it('renders v-row', () => {
     const wrapper = mount(AtlasRow, {
       global: { plugins: [vuetify] },
-      slots: { default: '<v-col>content</v-col>' },
+      slots: { default: '<AtlasCol>content</AtlasCol>' },
     })
     expect(wrapper.findComponent({ name: 'VRow' }).exists()).toBe(true)
   })

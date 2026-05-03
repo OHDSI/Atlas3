@@ -15,7 +15,7 @@ describe('AtlasList', () => {
   it('renders v-list', () => {
     const wrapper = mount(AtlasList, {
       global: { plugins: [vuetify] },
-      slots: { default: '<v-list-item>x</v-list-item>' },
+      slots: { default: '<AtlasListItem>x</AtlasListItem>' },
     })
     expect(wrapper.findComponent({ name: 'VList' }).exists()).toBe(true)
   })
@@ -24,7 +24,7 @@ describe('AtlasList', () => {
     const wrapper = mount(AtlasList, {
       global: { plugins: [vuetify] },
       attrs: { density: 'comfortable' },
-      slots: { default: '<v-list-item>x</v-list-item>' },
+      slots: { default: '<AtlasListItem>x</AtlasListItem>' },
     })
     expect(wrapper.findComponent({ name: 'VList' }).props('density')).toBe('compact')
   })
