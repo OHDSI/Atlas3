@@ -16,14 +16,13 @@
       @keyup.enter="onSearch"
     >
       <template #append>
-        <v-btn
-          color="primary"
+        <AtlasButton
           :disabled="!isSearchValid || loading"
           :loading="loading"
           @click="onSearch"
         >
           {{ t('common.search') }}
-        </v-btn>
+        </AtlasButton>
       </template>
     </AtlasTextField>
 
@@ -58,7 +57,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'

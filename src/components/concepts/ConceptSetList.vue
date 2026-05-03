@@ -26,15 +26,13 @@
 
       <AtlasSpacer />
 
-      <v-btn
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-plus"
+      <AtlasButton
+        icon="mdi-plus"
         :disabled="!canCreate"
         @click="onAddClick"
       >
         {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Error Alert -->
@@ -131,15 +129,13 @@
             )
         }}
       </p>
-      <v-btn
+      <AtlasButton
         v-if="!store.filterTerm"
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-plus"
+        icon="mdi-plus"
         @click="onAddClick"
       >
         {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Delete Confirmation Dialog -->
@@ -161,20 +157,19 @@
 
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="deleteDialog = false"
           >
             {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
+          </AtlasButton>
+          <AtlasButton
+            variant="danger"
             :loading="store.loading"
             @click="confirmDelete"
           >
             {{ t('common.delete', 'Delete') }}
-          </v-btn>
+          </AtlasButton>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -204,7 +199,7 @@ import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
-import { AtlasCard, AtlasChip, AtlasIcon, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()

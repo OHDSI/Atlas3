@@ -62,15 +62,15 @@
 
       <AtlasSpacer />
 
-      <v-btn
+      <AtlasButton
         v-if="hasActiveFilters"
-        size="small"
-        variant="text"
-        prepend-icon="mdi-close"
+        variant="ghost"
+        size="sm"
+        icon="mdi-close"
         @click="resetFilters"
       >
         {{ t('common.reset', 'Reset').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <AtlasCard
@@ -230,7 +230,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import { AtlasCard, AtlasCheckbox, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 
 const { t } = useI18n()

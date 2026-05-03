@@ -49,15 +49,13 @@
             <td>{{ item.name }}</td>
             <td>{{ getAuthorName(item.createdBy) }}</td>
             <td class="text-right">
-              <v-btn
-                size="small"
-                variant="flat"
-                color="primary"
+              <AtlasButton
+                size="sm"
                 :data-testid="`chooser-select-${item.id}`"
                 @click="onSelect(item.id)"
               >
                 {{ t('common.select', 'Select').value }}
-              </v-btn>
+              </AtlasButton>
             </td>
           </tr>
         </template>
@@ -65,13 +63,13 @@
     </div>
 
     <template #actions>
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         data-testid="chooser-cancel"
         @click="onCancel"
       >
         {{ t('common.cancel', 'Cancel').value }}
-      </v-btn>
+      </AtlasButton>
     </template>
   </AtlasDialog>
 </template>
@@ -81,7 +79,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasDialog, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
 
 interface Props {
   modelValue: boolean

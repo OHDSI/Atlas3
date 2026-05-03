@@ -25,41 +25,39 @@
         >
           {{ store.comparisonOtherSet.name }}
         </v-chip>
-        <v-btn
+        <AtlasButton
           v-else
-          size="small"
-          variant="outlined"
-          prepend-icon="mdi-folder-open-outline"
+          variant="secondary"
+          size="sm"
+          icon="mdi-folder-open-outline"
           data-testid="compare-pick-other"
           @click="showChooser = true"
         >
           {{ t('common.choose', 'Choose').value }}
-        </v-btn>
+        </AtlasButton>
       </div>
 
       <div class="compare-tab__bar-right">
-        <v-btn
-          size="small"
-          variant="text"
-          prepend-icon="mdi-download"
+        <AtlasButton
+          variant="ghost"
+          size="sm"
+          icon="mdi-download"
           :disabled="store.comparison.length === 0 || store.loadingComparison"
           data-testid="compare-export"
           @click="onExport"
         >
           {{ t('common.export', 'Export').value }}
-        </v-btn>
-        <v-btn
-          color="primary"
-          variant="flat"
-          size="small"
-          prepend-icon="mdi-compare"
+        </AtlasButton>
+        <AtlasButton
+          size="sm"
+          icon="mdi-compare"
           :disabled="!canCompare || store.loadingComparison"
           :loading="store.loadingComparison"
           data-testid="compare-run"
           @click="onCompare"
         >
           {{ t('cs.browser.compare.compareConceptSets', 'Compare Concept Sets') }}
-        </v-btn>
+        </AtlasButton>
       </div>
     </div>
 
@@ -151,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasProgressCircular } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'

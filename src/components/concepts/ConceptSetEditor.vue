@@ -82,15 +82,13 @@
               {{ t('common.delete', 'Delete') }}
             </v-btn>
 
-            <v-btn
-              color="primary"
-              variant="flat"
+            <AtlasButton
               :disabled="!formValid || loading || !canSubmit"
               :loading="loading"
               @click="onSave"
             >
               {{ isEditMode ? t('common.save', 'Save') : t('common.create', 'Create') }}
-            </v-btn>
+            </AtlasButton>
 
             <v-btn
               icon="mdi-close"
@@ -151,15 +149,15 @@
 
           <AtlasSpacer />
 
-          <v-btn
-            variant="text"
-            size="small"
-            prepend-icon="mdi-clipboard-text-outline"
+          <AtlasButton
+            variant="ghost"
+            size="sm"
+            icon="mdi-clipboard-text-outline"
             class="cs-editor__paste-btn"
             @click="showPasteDialog = true"
           >
             {{ t('cs.manager.pasteIds', 'Paste IDs') }}
-          </v-btn>
+          </AtlasButton>
         </nav>
 
         <div class="cs-editor__body">
@@ -233,19 +231,18 @@
       ).value
     }}
     <template #actions>
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         @click="showCloseConfirm = false"
       >
         {{ t('common.cancel', 'Cancel').value }}
-      </v-btn>
-      <v-btn
-        color="error"
-        variant="flat"
+      </AtlasButton>
+      <AtlasButton
+        variant="danger"
         @click="confirmClose"
       >
         {{ t('common.discard', 'Discard changes').value }}
-      </v-btn>
+      </AtlasButton>
     </template>
   </AtlasDialog>
 
@@ -307,32 +304,28 @@
     </div>
 
     <template #actions>
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         :disabled="pasteResolving"
         @click="closePasteDialog"
       >
         {{ t('common.cancel', 'Cancel').value }}
-      </v-btn>
-      <v-btn
+      </AtlasButton>
+      <AtlasButton
         v-if="!pasteResolved.length && !pasteUnresolved.length"
-        color="primary"
-        variant="flat"
         :loading="pasteResolving"
         :disabled="!pasteInput.trim()"
         @click="resolvePastedIds"
       >
         {{ t('cs.manager.pasteIdsResolveBtn', 'Resolve').value }}
-      </v-btn>
-      <v-btn
+      </AtlasButton>
+      <AtlasButton
         v-else
-        color="primary"
-        variant="flat"
         :disabled="!pasteResolved.length"
         @click="applyPastedConcepts"
       >
         {{ t('cs.manager.pasteIdsAddBtn', 'Add').value }} {{ pasteResolved.length || '' }}
-      </v-btn>
+      </AtlasButton>
     </template>
   </AtlasDialog>
 
@@ -349,19 +342,18 @@
     }}
     "{{ props.conceptSet?.name }}"?
     <template #actions>
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         @click="showDeleteConfirm = false"
       >
         {{ t('common.cancel', 'Cancel').value }}
-      </v-btn>
-      <v-btn
-        color="error"
-        variant="flat"
+      </AtlasButton>
+      <AtlasButton
+        variant="danger"
         @click="confirmDelete"
       >
         {{ t('common.delete', 'Delete').value }}
-      </v-btn>
+      </AtlasButton>
     </template>
   </AtlasDialog>
 </template>
@@ -379,7 +371,7 @@ import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
-import { AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getConceptById } from '@/services/concept-search.service'

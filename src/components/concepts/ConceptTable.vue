@@ -136,16 +136,15 @@
         #item.actions="{ item }"
       >
         <div class="d-flex justify-center">
-          <v-btn
+          <AtlasButton
             v-if="!conceptsInSet.has(item.conceptId)"
-            color="primary"
-            variant="outlined"
-            size="small"
-            prepend-icon="mdi-plus"
+            variant="secondary"
+            size="sm"
+            icon="mdi-plus"
             @click="onAddConcept(item)"
           >
             Add
-          </v-btn>
+          </AtlasButton>
           <v-btn
             v-else
             color="error"
@@ -214,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'

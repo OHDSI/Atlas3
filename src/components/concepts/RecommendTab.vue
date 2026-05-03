@@ -46,15 +46,15 @@
       class="recommend-tab__bar mb-4"
     >
       <div class="recommend-tab__bar-left">
-        <v-btn
-          variant="text"
-          size="small"
-          prepend-icon="mdi-refresh"
+        <AtlasButton
+          variant="ghost"
+          size="sm"
+          icon="mdi-refresh"
           :disabled="store.loadingRecommended"
           @click="onRefresh"
         >
           {{ t('common.refresh', 'Refresh') }}
-        </v-btn>
+        </AtlasButton>
 
         <span
           v-if="store.recommendedConcepts.length > 0"
@@ -84,11 +84,9 @@
           density="compact"
           hide-details
         />
-        <v-btn
-          color="primary"
-          variant="flat"
-          size="small"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          size="sm"
+          icon="mdi-plus"
           :disabled="selected.length === 0 || store.loadingRecommended"
           data-testid="recommend-add-selected"
           @click="onAddSelected"
@@ -98,7 +96,7 @@
             v-if="selected.length > 0"
             class="ml-1"
           >({{ selected.length }})</span>
-        </v-btn>
+        </AtlasButton>
       </div>
     </div>
 
@@ -143,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasProgressCircular } from '@/components/ui'
+import { AtlasButton, AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
