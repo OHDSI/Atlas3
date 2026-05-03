@@ -67,6 +67,27 @@ module.exports = {
       { element: 'v-alert',        message: 'Use <AtlasAlert> from @/components/ui' },
       { element: 'v-snackbar',     message: 'Use <AtlasSnackbar> from @/components/ui' },
       { element: 'v-data-table',   message: 'Use <AtlasDataTable> from @/components/ui' },
+      // Tier B canonical wrappers — added as a regression guard. After Sweep 1
+      // there should be near-zero raw usages of these in the codebase.
+      { element: 'v-tooltip',           message: 'Use <AtlasTooltip> from @/components/ui' },
+      { element: 'v-menu',              message: 'Use <AtlasMenu> from @/components/ui' },
+      { element: 'v-tabs',              message: 'Use <AtlasTabs> from @/components/ui' },
+      { element: 'v-tab',               message: 'Use <AtlasTab> from @/components/ui' },
+      { element: 'v-list',              message: 'Use <AtlasList> from @/components/ui' },
+      { element: 'v-list-item',         message: 'Use <AtlasListItem> from @/components/ui' },
+      { element: 'v-divider',           message: 'Use <AtlasDivider> from @/components/ui' },
+      { element: 'v-progress-linear',   message: 'Use <AtlasProgressLinear> from @/components/ui' },
+      { element: 'v-progress-circular', message: 'Use <AtlasProgressCircular> from @/components/ui' },
+      { element: 'v-skeleton-loader',   message: 'Use <AtlasSkeleton> from @/components/ui' },
+      { element: 'v-pagination',        message: 'Use <AtlasPagination> from @/components/ui' },
+      { element: 'v-avatar',            message: 'Use <AtlasAvatar> from @/components/ui' },
+      { element: 'v-badge',             message: 'Use <AtlasBadge> from @/components/ui' },
+      { element: 'v-banner',            message: 'Use <AtlasBanner> from @/components/ui' },
+      { element: 'v-spacer',            message: 'Use <AtlasSpacer> from @/components/ui' },
+      { element: 'v-row',               message: 'Use <AtlasRow> from @/components/ui' },
+      { element: 'v-col',               message: 'Use <AtlasCol> from @/components/ui' },
+      { element: 'v-container',         message: 'Use <AtlasContainer> from @/components/ui' },
+      { element: 'v-icon',              message: 'Use <AtlasIcon> from @/components/ui' },
     ],
 
     'no-restricted-imports': ['off', {
