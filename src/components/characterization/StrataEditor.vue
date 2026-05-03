@@ -34,17 +34,15 @@
       {{ t('cc.viewEdit.design.subgroups.noSubgroups', 'No subgroups defined').value }}
     </div>
 
-    <v-switch
+    <AtlasSwitch
       v-if="modelValue.length > 0"
       :model-value="strataOnly"
       :label="
         t('cc.viewEdit.design.subgroups.subgroupOnly', 'Calculate subgroup analyses only').value
       "
-      density="compact"
-      color="primary"
       hide-details
       data-testid="strata-editor-only"
-      @update:model-value="(v: boolean | null) => $emit('update:strataOnly', !!v)"
+      @update:model-value="(v) => $emit('update:strataOnly', !!v)"
     />
 
     <div
@@ -54,19 +52,17 @@
       :data-testid="`strata-editor-card-${index}`"
     >
       <div class="strata-editor__card-header">
-        <v-text-field
+        <AtlasTextField
           :model-value="stratum.name"
           :label="
             t('cc.viewEdit.design.subgroups.namePlaceholder', 'Subgroup name').value
           "
-          :error="!stratum.name.trim() || isDuplicate(stratum.name)"
-          :error-messages="nameErrors(stratum.name)"
-          density="compact"
+          :error="nameErrors(stratum.name)?.[0]"
           variant="outlined"
           hide-details="auto"
           class="strata-editor__name"
           :data-testid="`strata-editor-name-${index}`"
-          @update:model-value="(value: string) => updateName(index, value)"
+          @update:model-value="(v) => updateName(index, String(v))"
         />
         <v-btn
           icon="mdi-delete"
@@ -147,7 +143,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
-import { AtlasDialog } from '@/components/ui'
+import { AtlasDialog, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'

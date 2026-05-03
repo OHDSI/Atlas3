@@ -1,16 +1,15 @@
 <template>
   <div class="ir-gen">
-    <v-select
+    <AtlasSelect
       :model-value="selectedSource"
       :items="sourceItems"
       item-title="sourceName"
       item-value="sourceKey"
       :label="t('profiles.selectADataSource', 'Data source').value"
-      density="compact"
       variant="outlined"
       hide-details
       class="mb-2"
-      @update:model-value="(v: string | null) => (selectedSource = v ?? null)"
+      @update:model-value="(v) => (selectedSource = v as string | null)"
     />
 
     <div class="ir-gen__actions">
@@ -47,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSelect } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'

@@ -11,12 +11,11 @@
     data-testid="char-results-filters"
   >
     <div class="results-filter__row">
-      <v-select
+      <AtlasSelect
         :model-value="selectedDomains"
         :items="availableDomains"
         :label="tv('columns.domain', 'Domain')"
         variant="outlined"
-        density="compact"
         multiple
         chips
         closable-chips
@@ -24,16 +23,15 @@
         hide-details
         class="results-filter__select"
         data-testid="char-results-filter-domain"
-        @update:model-value="onDomainChange"
+        @update:model-value="(v) => onDomainChange(v as string[])"
       />
-      <v-select
+      <AtlasSelect
         :model-value="selectedAnalysisIds"
         :items="analysisItems"
         item-title="title"
         item-value="value"
         :label="tv('columns.analysis', 'Analysis')"
         variant="outlined"
-        density="compact"
         multiple
         chips
         closable-chips
@@ -41,21 +39,20 @@
         hide-details
         class="results-filter__select"
         data-testid="char-results-filter-analysis"
-        @update:model-value="onAnalysisChange"
+        @update:model-value="(v) => onAnalysisChange(v as number[])"
       />
-      <v-select
+      <AtlasSelect
         :model-value="selectedCohortId"
         :items="cohortItems"
         item-title="title"
         item-value="value"
         :label="tv('common.cohort', 'Cohort')"
         variant="outlined"
-        density="compact"
         clearable
         hide-details
         class="results-filter__select"
         data-testid="char-results-filter-cohort"
-        @update:model-value="onCohortChange"
+        @update:model-value="(v) => onCohortChange(v as number | null)"
       />
     </div>
   </AtlasCard>
@@ -66,7 +63,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import type { LinkedCohort } from '@/models/characterization.types'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasSelect } from '@/components/ui'
 
 interface AnalysisOption {
   id: number

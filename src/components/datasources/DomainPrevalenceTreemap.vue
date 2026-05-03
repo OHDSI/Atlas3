@@ -20,11 +20,9 @@
 
       <AtlasSpacer />
 
-      <v-switch
+      <AtlasSwitch
         v-if="hasHierarchy"
         v-model="hierarchicalView"
-        color="primary"
-        density="compact"
         hide-details
         label="Group by hierarchy"
         class="treemap-controls__switch"
@@ -41,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasIcon, AtlasSpacer, AtlasSwitch } from '@/components/ui'
 import { ref, computed } from 'vue'
 import type { TreemapNode } from '@/models/datasource.types'
 import TreemapChart from '@/components/reports/charts/TreemapChart.vue'

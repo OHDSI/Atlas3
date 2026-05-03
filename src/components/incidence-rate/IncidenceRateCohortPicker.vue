@@ -7,10 +7,9 @@
     <v-card>
       <v-card-title>Select cohorts</v-card-title>
       <v-card-text>
-        <v-text-field
+        <AtlasTextField
           v-model="search"
           :label="tv('common.search', 'Search')"
-          density="compact"
         />
         <AtlasList
           v-model:selected="selected"
@@ -43,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
+import { AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { getCohorts } from '@/services/webapi'
 import { logger } from '@/utils/logger'

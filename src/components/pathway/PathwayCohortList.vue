@@ -14,12 +14,11 @@
       >
         <td>{{ c.id }}</td>
         <td>
-          <v-text-field
+          <AtlasTextField
             :model-value="c.name"
-            density="compact"
             hide-details
             :readonly="readonly"
-            @update:model-value="(v: string) => emit('rename', c.id, v)"
+            @update:model-value="(v) => emit('rename', c.id, String(v))"
           />
         </td>
         <td>
@@ -37,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasTextField } from '@/components/ui'
 import type { PathwayCohortRef } from '@/models/pathway.types'
 import { useI18n } from '@/composables/useI18n'
 

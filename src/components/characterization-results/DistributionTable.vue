@@ -23,14 +23,13 @@
         </h3>
       </div>
       <AtlasSpacer />
-      <v-select
+      <AtlasSelect
         v-if="cohorts.length > 1"
         v-model="selectedCohortId"
         :items="cohortItems"
         item-title="title"
         item-value="value"
         variant="outlined"
-        density="compact"
         hide-details
         class="distribution-table__cohort-select"
         :data-testid="`char-results-distribution-cohort-${analysisId}`"
@@ -60,7 +59,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
-import { AtlasCard, AtlasSpacer } from '@/components/ui'
+import { AtlasCard, AtlasSelect, AtlasSpacer } from '@/components/ui'
 
 interface Props {
   analysisId: number

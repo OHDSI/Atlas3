@@ -22,12 +22,11 @@
           cols="12"
           md="6"
         >
-          <v-text-field
+          <AtlasTextField
             v-model="search"
             label="Search"
-            prepend-inner-icon="mdi-magnify"
+            prepend-icon="mdi-magnify"
             variant="outlined"
-            density="compact"
             hide-details
             clearable
           />
@@ -68,10 +67,9 @@
                 @click="toggleColumn(header.key)"
               >
                 <template #prepend>
-                  <v-checkbox
+                  <AtlasCheckbox
                     :model-value="!header.hidden"
                     hide-details
-                    density="compact"
                   />
                 </template>
                 <v-list-item-title>
@@ -130,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCol, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasPagination, AtlasRow } from '@/components/ui'
+import { AtlasCheckbox, AtlasCol, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasPagination, AtlasRow, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import type { PrevalenceTableRow } from '@/models/datasource.types'
 import { formatNumber, formatPercentage, exportTableToCSV } from '@/utils/datasource-formatters'

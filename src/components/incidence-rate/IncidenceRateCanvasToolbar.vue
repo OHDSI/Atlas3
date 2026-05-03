@@ -1,16 +1,15 @@
 <template>
   <div class="ir-toolbar">
-    <v-chip
+    <AtlasChip
       v-if="activeRun"
-      size="small"
-      variant="tonal"
+      size="sm"
       class="ir-toolbar__chip"
       data-testid="ir-toolbar-run-chip"
     >
       <span class="ir-toolbar__dot" />
       <strong>#{{ activeRun.id }}</strong>
       <span class="muted">· {{ activeRun.sourceKey }}</span>
-    </v-chip>
+    </AtlasChip>
     <v-chip
       v-else
       size="small"
@@ -157,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer } from '@/components/ui'
+import { AtlasChip, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { RATE_MULTIPLIER_OPTIONS, type RateMultiplier } from '@/models/incidence-rate.types'

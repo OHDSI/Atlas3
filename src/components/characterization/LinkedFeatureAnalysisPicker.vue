@@ -57,27 +57,21 @@
 
         <template #append>
           <div class="linked-fa-picker__row-actions">
-            <v-checkbox
+            <AtlasCheckbox
               v-if="fa.supportsAnnual"
               :model-value="fa.includeAnnual ?? false"
               :label="tv('columns.supportsAnnual', 'Annual')"
-              density="compact"
               hide-details
               :data-testid="`linked-fa-picker-annual-${fa.id}`"
-              @update:model-value="
-                (value: boolean | null) => updateFlag(fa.id, 'includeAnnual', !!value)
-              "
+              @update:model-value="(value) => updateFlag(fa.id, 'includeAnnual', !!value)"
             />
-            <v-checkbox
+            <AtlasCheckbox
               v-if="fa.supportsTemporal"
               :model-value="fa.includeTemporal ?? false"
               :label="tv('columns.temporal', 'Temporal')"
-              density="compact"
               hide-details
               :data-testid="`linked-fa-picker-temporal-${fa.id}`"
-              @update:model-value="
-                (value: boolean | null) => updateFlag(fa.id, 'includeTemporal', !!value)
-              "
+              @update:model-value="(value) => updateFlag(fa.id, 'includeTemporal', !!value)"
             />
             <v-btn
               icon="mdi-close"
@@ -136,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
+import { AtlasCheckbox, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

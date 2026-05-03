@@ -4,61 +4,58 @@
       <label class="pathway-settings__label">{{
         t('pathway.combinationWindow', 'Collapse window (days)')
       }}</label>
-      <v-select
+      <AtlasSelect
         :model-value="modelValue.combinationWindow as (typeof combinationWindowOptions)[number]"
         :items="combinationWindowOptions"
-        density="compact"
         variant="underlined"
         hide-details
         :readonly="readonly"
-        @update:model-value="(v: number | null) => v !== null && update('combinationWindow', v)"
+        @update:model-value="(v) => v !== null && update('combinationWindow', v as number)"
       />
     </div>
     <div class="pathway-settings__row">
       <label class="pathway-settings__label">{{
         t('pathway.minCellCount', 'Minimum cell count')
       }}</label>
-      <v-select
+      <AtlasSelect
         :model-value="modelValue.minCellCount as (typeof minCellCountOptions)[number]"
         :items="minCellCountOptions"
-        density="compact"
         variant="underlined"
         hide-details
         :readonly="readonly"
-        @update:model-value="(v: number | null) => v !== null && update('minCellCount', v)"
+        @update:model-value="(v) => v !== null && update('minCellCount', v as number)"
       />
     </div>
     <div class="pathway-settings__row">
       <label class="pathway-settings__label">{{
         t('pathway.maxDepth', 'Maximum path length')
       }}</label>
-      <v-select
+      <AtlasSelect
         :model-value="modelValue.maxDepth as (typeof maxDepthOptions)[number]"
         :items="maxDepthOptions"
-        density="compact"
         variant="underlined"
         hide-details
         :readonly="readonly"
-        @update:model-value="(v: number | null) => v !== null && update('maxDepth', v)"
+        @update:model-value="(v) => v !== null && update('maxDepth', v as number)"
       />
     </div>
     <div class="pathway-settings__row">
       <label class="pathway-settings__label">{{
         t('pathway.allowRepeats', 'Allow repeats')
       }}</label>
-      <v-switch
+      <AtlasSwitch
         :model-value="modelValue.allowRepeats"
-        density="compact"
         hide-details
         inset
         :readonly="readonly"
-        @update:model-value="(v: boolean | null) => v !== null && update('allowRepeats', v)"
+        @update:model-value="(v) => v !== null && update('allowRepeats', v)"
       />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasSelect, AtlasSwitch } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { PathwayDesign } from '@/models/pathway.types'
 import {

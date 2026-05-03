@@ -28,7 +28,7 @@
         >
           {{ errorMessage }}
         </v-alert>
-        <v-select
+        <AtlasSelect
           v-model="selectedSourceKey"
           :items="sourceItems"
           item-title="title"
@@ -36,9 +36,8 @@
           :label="t('columns.sourceName', 'Data source').value"
           :loading="loadingSources"
           :disabled="loadingSources"
-          :error-messages="sourceError"
+          :error="sourceError"
           variant="outlined"
-          density="compact"
           data-testid="run-execution-dialog-source"
         />
       </v-card-text>
@@ -72,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSpacer } from '@/components/ui'
+import { AtlasSpacer, AtlasSelect } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
