@@ -42,17 +42,15 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
-      <v-btn
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-content-save-outline"
+      <AtlasButton
+        icon="mdi-content-save-outline"
         :disabled="!canSave"
         :loading="saving"
         data-testid="feature-analysis-editor-save"
         @click="handleSave"
       >
         {{ t('common.save', 'Save') }}
-      </v-btn>
+      </AtlasButton>
     </template>
 
     <!-- Main editor card -->
@@ -275,21 +273,20 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="showDeleteDialog = false"
           >
             {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
+          </AtlasButton>
+          <AtlasButton
+            variant="danger"
             :loading="loading"
             data-testid="feature-analysis-editor-delete-confirm"
             @click="confirmDelete"
           >
             {{ t('common.delete', 'Delete') }}
-          </v-btn>
+          </AtlasButton>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -303,19 +300,19 @@
     >
       {{ snackbar.message }}
       <template #actions>
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="snackbar.show = false"
         >
           {{ t('common.close', 'Close') }}
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
   </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 

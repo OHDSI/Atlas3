@@ -40,16 +40,14 @@
            toggle on the right. Sits flush on the page card surface
            with no inner v-card wrapper. -->
       <div class="cohorts-view__toolbar">
-        <v-btn
-          color="primary"
-          variant="flat"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          icon="mdi-plus"
           :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
           :disabled="!canCreateCohort"
           @click="handleCreateCohort"
         >
           {{ t('cohortDefinitions.newDefinition', 'New cohort') }}
-        </v-btn>
+        </AtlasButton>
 
         <v-btn
           variant="tonal"
@@ -213,23 +211,21 @@
             </v-alert>
           </v-card-text>
           <v-card-actions>
-            <v-btn
-              variant="text"
+            <AtlasButton
+              variant="ghost"
               :disabled="importing"
               @click="closeImportDialog"
             >
               {{ t('common.cancel', 'Cancel').value }}
-            </v-btn>
+            </AtlasButton>
             <AtlasSpacer />
-            <v-btn
-              color="primary"
-              variant="flat"
+            <AtlasButton
               :loading="importing"
               :disabled="!canImport"
               @click="confirmImport"
             >
               {{ t('common.import', 'Import').value }}
-            </v-btn>
+            </AtlasButton>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -261,20 +257,19 @@
           </v-card-text>
           <v-card-actions>
             <AtlasSpacer />
-            <v-btn
-              variant="text"
+            <AtlasButton
+              variant="ghost"
               @click="showDeleteDialog = false"
             >
               {{ t('common.cancel', 'Cancel') }}
-            </v-btn>
-            <v-btn
-              color="error"
-              variant="flat"
+            </AtlasButton>
+            <AtlasButton
+              variant="danger"
               :loading="deleting"
               @click="confirmDelete"
             >
               {{ t('common.delete', 'Delete') }}
-            </v-btn>
+            </AtlasButton>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -299,20 +294,18 @@
           </v-card-text>
           <v-card-actions>
             <AtlasSpacer />
-            <v-btn
-              variant="text"
+            <AtlasButton
+              variant="ghost"
               @click="showNewCohortDialog = false"
             >
               {{ t('common.cancel', 'Cancel') }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              variant="flat"
+            </AtlasButton>
+            <AtlasButton
               :disabled="!newCohortName.trim()"
               @click="confirmCreateCohort"
             >
               {{ t('common.create', 'Create') }}
-            </v-btn>
+            </AtlasButton>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -398,7 +391,7 @@ import {
   saveCohortDefinition,
 } from '@/services/webapi'
 import { logger } from '@/utils/logger'
-import { AtlasChip, AtlasDivider, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasDivider, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'

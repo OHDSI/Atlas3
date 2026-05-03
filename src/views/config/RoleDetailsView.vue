@@ -43,14 +43,14 @@
             <AtlasCol cols="12">
               <!-- Header with Back Button -->
               <div class="role-details-view__header">
-                <v-btn
-                  variant="text"
-                  prepend-icon="mdi-arrow-left"
+                <AtlasButton
+                  variant="ghost"
+                  icon="mdi-arrow-left"
                   class="mb-4"
                   @click="handleBack"
                 >
                   Back to Roles
-                </v-btn>
+                </AtlasButton>
 
                 <div class="role-details-view__title-section">
                   <h1 class="text-h4">
@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCol, AtlasContainer, AtlasProgressCircular, AtlasRow, AtlasTab, AtlasTabs } from '@/components/ui'
+import { AtlasButton, AtlasCol, AtlasContainer, AtlasProgressCircular, AtlasRow, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useRoles } from '@/composables/useRoles'

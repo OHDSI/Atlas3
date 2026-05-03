@@ -19,21 +19,19 @@
             <p v-html="descriptionHtml" />
           </div>
           <div class="landing__actions">
-            <v-btn
-              color="primary"
-              size="large"
+            <AtlasButton
+              size="lg"
               @click="handleNewCohort"
             >
               {{ t('home.gettingStarted.newCohort.button', 'Define a new cohort') }}
-            </v-btn>
-            <v-btn
-              variant="outlined"
-              color="primary"
-              size="large"
+            </AtlasButton>
+            <AtlasButton
+              variant="secondary"
+              size="lg"
               @click="handleSearchConcepts"
             >
               {{ t('home.gettingStarted.vocabulary.button', 'Search the vocabulary') }}
-            </v-btn>
+            </AtlasButton>
           </div>
         </div>
         <div class="landing__illustration">
@@ -87,7 +85,7 @@
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import atlasLogo from '@/assets/icons/atlas-loading.svg'
-import { AtlasCard, AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasIcon } from '@/components/ui'
 
 interface FeatureTile {
   id: string

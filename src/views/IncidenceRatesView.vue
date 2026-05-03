@@ -16,16 +16,14 @@
         @update:model-value="(v: string | number) => handleSearchInput(v != null ? String(v) : null)"
       />
       <AtlasSpacer />
-      <v-btn
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-plus"
+      <AtlasButton
+        icon="mdi-plus"
         data-testid="incidence-rates-create"
         :disabled="!canCreate"
         @click="handleNew"
       >
         {{ t('home.newEntityNames.incidenceRate', 'New incidence rate') }}
-      </v-btn>
+      </AtlasButton>
     </template>
 
     <AnalysisDataTable
@@ -53,21 +51,21 @@
       v-if="!loading && totalPages > 1"
       #pagination
     >
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         :disabled="page === 0"
         @click="updatePage(page - 1)"
       >
         {{ t('datatable.language.paginate.previous', 'Previous') }}
-      </v-btn>
+      </AtlasButton>
       <span class="incidence-rates-view__range">{{ page + 1 }} / {{ totalPages }}</span>
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         :disabled="page + 1 >= totalPages"
         @click="updatePage(page + 1)"
       >
         {{ t('configuration.userImport.wizard.buttons.next', 'Next') }}
-      </v-btn>
+      </AtlasButton>
     </template>
   </AnalysisListLayout>
 
@@ -98,19 +96,18 @@
       </v-card-text>
       <v-card-actions>
         <AtlasSpacer />
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="showDelete = false"
         >
           {{ t('common.cancel', 'Cancel') }}
-        </v-btn>
-        <v-btn
-          color="error"
-          variant="flat"
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
           @click="confirmDelete"
         >
           {{ t('common.delete', 'Delete') }}
-        </v-btn>
+        </AtlasButton>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -130,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useIncidenceRates } from '@/composables/useIncidenceRates'

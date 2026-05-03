@@ -192,17 +192,15 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
-      <v-btn
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-content-save-outline"
+      <AtlasButton
+        icon="mdi-content-save-outline"
         :disabled="!canSave"
         :loading="saving"
         data-testid="char-builder-save"
         @click="handleSave"
       >
         {{ t('common.save', 'Save') }}
-      </v-btn>
+      </AtlasButton>
     </template>
 
     <CharacterizationWorkbench
@@ -298,21 +296,20 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="showDeleteDialog = false"
           >
             {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
+          </AtlasButton>
+          <AtlasButton
+            variant="danger"
             :loading="loading"
             data-testid="char-builder-delete-confirm"
             @click="confirmDelete"
           >
             {{ t('common.delete', 'Delete') }}
-          </v-btn>
+          </AtlasButton>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -326,12 +323,12 @@
     >
       {{ snackbar.message }}
       <template #actions>
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="snackbar.show = false"
         >
           {{ t('common.close', 'Close') }}
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
   </AnalysisBuilderShell>
@@ -352,7 +349,7 @@ import { logger } from '@/utils/logger'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
-import { AtlasBadge, AtlasDialog, AtlasDivider, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasDivider, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
