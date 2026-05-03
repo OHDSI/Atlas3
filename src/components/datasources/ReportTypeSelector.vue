@@ -9,7 +9,7 @@
     variant="outlined"
     hide-details
     prepend-inner-icon="mdi-chart-bar"
-    @update:model-value="$emit('update:modelValue', $event)"
+    @update:model-value="$emit('update:modelValue', $event as ReportType | null)"
   />
 </template>
 

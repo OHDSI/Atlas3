@@ -9,7 +9,7 @@
         <span class="lbl">{{ t('ir.editor.timeAtRiskStartDate', 'Start') }}</span>
         <AtlasSelect
           :model-value="tar.start.DateField"
-          :items="DATE_FIELD_OPTIONS"
+          :items="[...DATE_FIELD_OPTIONS]"
           hide-details
           @update:model-value="(v) => updateStart('DateField', v as 'StartDate' | 'EndDate')"
         />
@@ -27,7 +27,7 @@
         <span class="lbl">{{ t('ir.editor.timeAtRiskEndDate', 'End') }}</span>
         <AtlasSelect
           :model-value="tar.end.DateField"
-          :items="DATE_FIELD_OPTIONS"
+          :items="[...DATE_FIELD_OPTIONS]"
           hide-details
           @update:model-value="(v) => updateEnd('DateField', v as 'StartDate' | 'EndDate')"
         />

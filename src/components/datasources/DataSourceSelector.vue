@@ -10,7 +10,7 @@
     variant="outlined"
     hide-details
     prepend-inner-icon="mdi-database"
-    @update:model-value="$emit('update:modelValue', $event)"
+    @update:model-value="$emit('update:modelValue', $event as number | null)"
   />
 </template>
 
