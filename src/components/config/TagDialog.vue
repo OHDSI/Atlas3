@@ -71,20 +71,19 @@
     </v-form>
 
     <template #actions>
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         @click="handleClose"
       >
         Cancel
-      </v-btn>
-      <v-btn
-        color="primary"
+      </AtlasButton>
+      <AtlasButton
         :disabled="!formValid"
         :loading="saving"
         @click="handleSubmit"
       >
         {{ isEditMode ? 'Save' : 'Create' }}
-      </v-btn>
+      </AtlasButton>
     </template>
   </AtlasDialog>
 </template>
@@ -92,7 +91,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { tagSchema, type Tag, type TagGroup } from '@/models/config.types'
-import { AtlasCheckbox, AtlasDialog, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasDialog, AtlasTextField } from '@/components/ui'
 
 interface Props {
   modelValue: boolean

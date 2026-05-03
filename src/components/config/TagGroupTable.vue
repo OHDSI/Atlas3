@@ -124,13 +124,13 @@
 
     <!-- Show Tags Button -->
     <template #item.showTagsBtn="{ item }">
-      <v-btn
-        variant="text"
-        size="small"
+      <AtlasButton
+        variant="ghost"
+        size="sm"
         @click="$emit('showTags', item)"
       >
         Show Tags
-      </v-btn>
+      </AtlasButton>
     </template>
 
     <!-- Actions -->
@@ -173,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasIcon } from '@/components/ui'
 import type { TagGroup } from '@/models/config.types'
 
 interface Props {

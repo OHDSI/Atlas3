@@ -48,12 +48,12 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="showConfirmDialog = false"
           >
             Cancel
-          </v-btn>
+          </AtlasButton>
           <v-btn
             color="warning"
             variant="flat"
@@ -75,12 +75,12 @@
     >
       {{ toastMessage }}
       <template #actions>
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="showToast = false"
         >
           Close
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
 
@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { ref, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { logger } from '@/utils/logger'

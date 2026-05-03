@@ -79,15 +79,15 @@
           </v-alert>
 
           <!-- Add Concept Button -->
-          <v-btn
-            prepend-icon="mdi-plus"
-            variant="outlined"
+          <AtlasButton
+            variant="secondary"
+            icon="mdi-plus"
             class="mt-2"
             data-testid="add-concept-btn"
             @click="$emit('add-concepts')"
           >
             {{ t('components.conceptSet.addConcepts') }}
-          </v-btn>
+          </AtlasButton>
         </v-card-text>
       </v-card>
     </v-card-text>
@@ -95,13 +95,13 @@
     <!-- Actions -->
     <v-card-actions>
       <AtlasSpacer />
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         data-testid="cancel-edit"
         @click="$emit('cancel')"
       >
         {{ t('common.cancel') }}
-      </v-btn>
+      </AtlasButton>
       <v-btn
         color="primary"
         variant="elevated"
@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'

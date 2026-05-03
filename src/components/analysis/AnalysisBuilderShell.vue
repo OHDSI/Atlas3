@@ -19,17 +19,16 @@
       <slot name="subtitle" />
     </template>
     <template #actions>
-      <v-btn
+      <AtlasButton
         v-if="showBack"
-        variant="text"
-        size="small"
-        density="comfortable"
-        prepend-icon="mdi-arrow-left"
+        variant="ghost"
+        size="sm"
+        icon="mdi-arrow-left"
         :data-testid="testid ? `${testid}-back` : undefined"
         @click="$emit('back')"
       >
         {{ backLabel ?? t('common.back', 'Back').value }}
-      </v-btn>
+      </AtlasButton>
       <slot name="actions" />
     </template>
 
@@ -63,7 +62,7 @@
 
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
-import { AtlasPageShell } from '@/components/ui'
+import { AtlasButton, AtlasPageShell } from '@/components/ui'
 
 interface Props {
   title?: string

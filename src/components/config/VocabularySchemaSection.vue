@@ -43,19 +43,19 @@
     >
       {{ toastMessage }}
       <template #actions>
-        <v-btn
+        <AtlasButton
           v-if="canUndo"
-          variant="text"
+          variant="ghost"
           @click="handleUndo"
         >
           Undo
-        </v-btn>
-        <v-btn
-          variant="text"
+        </AtlasButton>
+        <AtlasButton
+          variant="ghost"
           @click="showToast = false"
         >
           Close
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
 
@@ -68,19 +68,19 @@
     >
       {{ errorMessage }}
       <template #actions>
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="showErrorToast = false"
         >
           Close
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useConfigStore } from '@/stores/config'

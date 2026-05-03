@@ -254,12 +254,12 @@
           {{ t('common.delete') }}
         </v-btn>
         <AtlasSpacer />
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="handleClose"
         >
           {{ t('common.cancel') }}
-        </v-btn>
+        </AtlasButton>
         <v-btn
           color="primary"
           variant="elevated"
@@ -282,12 +282,12 @@
         <v-card-text>{{ t('configuration.viewEdit.source.confirms.delete') }}</v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="showDeleteConfirm = false"
           >
             {{ t('common.cancel') }}
-          </v-btn>
+          </AtlasButton>
           <v-btn
             color="error"
             variant="elevated"
@@ -303,7 +303,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasCol, AtlasDivider, AtlasIcon, AtlasRadio, AtlasRadioGroup, AtlasRow, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasCol, AtlasDivider, AtlasIcon, AtlasRadio, AtlasRadioGroup, AtlasRow, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, reactive } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import {

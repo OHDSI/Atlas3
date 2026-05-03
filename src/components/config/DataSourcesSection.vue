@@ -26,13 +26,12 @@
     <v-card>
       <v-card-title class="d-flex align-center justify-space-between">
         <span>{{ t('navigation.datasources') }}</span>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          icon="mdi-plus"
           @click="openCreateDialog"
         >
           {{ t('configuration.newSource') }}
-        </v-btn>
+        </AtlasButton>
       </v-card-title>
       <v-card-text>
         <v-table>
@@ -163,20 +162,18 @@
       <v-card-title>{{ t('configuration.title') }}</v-card-title>
       <v-card-text>
         <div class="d-flex flex-wrap gap-2">
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-delete-sweep"
+          <AtlasButton
+            icon="mdi-delete-sweep"
             @click="clearLocalCache"
           >
             {{ t('configuration.buttons.clearConfigurationCache') }}
-          </v-btn>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-server"
+          </AtlasButton>
+          <AtlasButton
+            icon="mdi-server"
             @click="clearServerCache"
           >
             {{ t('configuration.buttons.clearServerCache') }}
-          </v-btn>
+          </AtlasButton>
         </div>
       </v-card-text>
     </v-card>
@@ -190,12 +187,12 @@
     >
       {{ toastMessage }}
       <template #actions>
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="showToast = false"
         >
           Close
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
 
@@ -208,12 +205,12 @@
     >
       {{ errorMessage }}
       <template #actions>
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="showErrorToast = false"
         >
           {{ t('common.close') }}
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
 
@@ -236,12 +233,12 @@
         <v-card-text>{{ t('configuration.viewEdit.source.confirms.delete') }}</v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="showDeleteConfirm = false"
           >
             {{ t('common.cancel') }}
-          </v-btn>
+          </AtlasButton>
           <v-btn
             color="error"
             variant="elevated"
@@ -257,7 +254,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { deleteSource } from '@/services/source.service'

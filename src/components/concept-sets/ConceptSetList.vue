@@ -3,14 +3,13 @@
     <v-card-title>
       <div class="d-flex justify-space-between align-center">
         <span>{{ t('cs.browser.caption') }}</span>
-        <v-btn
-          prepend-icon="mdi-plus"
-          color="primary"
+        <AtlasButton
+          icon="mdi-plus"
           data-testid="create-concept-set"
           @click="$emit('create')"
         >
           {{ t('components.conceptSetBuilder.newConceptSet') }}
-        </v-btn>
+        </AtlasButton>
       </div>
     </v-card-title>
 
@@ -103,12 +102,12 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="showDeleteDialog = false"
           >
             {{ t('common.cancel') }}
-          </v-btn>
+          </AtlasButton>
           <v-btn
             color="error"
             variant="elevated"
@@ -123,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasBadge, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'

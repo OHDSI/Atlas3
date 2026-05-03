@@ -93,16 +93,14 @@
       class="permissions-section__details"
     >
       <!-- Back Button -->
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
+        icon="mdi-arrow-left"
         class="mb-4"
         @click="selectedRoleId = null"
       >
-        <AtlasIcon start>
-          mdi-arrow-left
-        </AtlasIcon>
         Back to Roles
-      </v-btn>
+      </AtlasButton>
 
       <!-- Role Header -->
       <div class="permissions-section__role-header">
@@ -178,7 +176,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import { useAuth } from '@/composables/useAuth'

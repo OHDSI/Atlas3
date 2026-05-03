@@ -3,13 +3,12 @@
     <v-card>
       <v-card-title class="d-flex align-center justify-space-between">
         <span>Tag Management</span>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          icon="mdi-plus"
           @click="openCreateGroupDialog"
         >
           Create Tag Group
-        </v-btn>
+        </AtlasButton>
       </v-card-title>
 
       <v-card-text>
@@ -37,14 +36,14 @@
               <h3 class="text-h6">
                 Tags in "{{ selectedGroup.name }}"
               </h3>
-              <v-btn
-                variant="text"
-                size="small"
-                prepend-icon="mdi-arrow-left"
+              <AtlasButton
+                variant="ghost"
+                size="sm"
+                icon="mdi-arrow-left"
                 @click="selectedGroup = null"
               >
                 Back to Tag Groups
-              </v-btn>
+              </AtlasButton>
             </div>
             <AtlasTooltip
               :disabled="selectedGroup.allowCustom"
@@ -53,15 +52,14 @@
             >
               <template #activator="{ props: tooltipProps }">
                 <span v-bind="tooltipProps">
-                  <v-btn
-                    color="primary"
-                    prepend-icon="mdi-plus"
-                    size="small"
+                  <AtlasButton
+                    size="sm"
+                    icon="mdi-plus"
                     :disabled="!selectedGroup.allowCustom"
                     @click="openCreateTagDialog"
                   >
                     Create Tag
-                  </v-btn>
+                  </AtlasButton>
                 </span>
               </template>
             </AtlasTooltip>
@@ -124,20 +122,19 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="showDeleteGroupDialog = false"
           >
             Cancel
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
+          </AtlasButton>
+          <AtlasButton
+            variant="danger"
             :loading="isDeleting"
             @click="handleDeleteGroup"
           >
             Delete
-          </v-btn>
+          </AtlasButton>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -155,20 +152,19 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="showDeleteTagDialog = false"
           >
             Cancel
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
+          </AtlasButton>
+          <AtlasButton
+            variant="danger"
             :loading="isDeleting"
             @click="handleDeleteTag"
           >
             Delete
-          </v-btn>
+          </AtlasButton>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -182,12 +178,12 @@
     >
       {{ toastMessage }}
       <template #actions>
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="showToast = false"
         >
           Close
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
 
@@ -200,19 +196,19 @@
     >
       {{ errorMessage }}
       <template #actions>
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="showErrorToast = false"
         >
           Close
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag, TagGroup } from '@/models/config.types'

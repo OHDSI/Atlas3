@@ -176,19 +176,19 @@
     >
       {{ toastMessage }}
       <template #actions>
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="showToast = false"
         >
           {{ t('common.close', 'Close') }}
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasAvatar, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressCircular } from '@/components/ui'
+import { AtlasButton, AtlasAvatar, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressCircular } from '@/components/ui'
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAuth } from '@/composables/useAuth'

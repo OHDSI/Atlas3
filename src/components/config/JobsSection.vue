@@ -122,13 +122,13 @@
         >
           {{ error }}
           <template #append>
-            <v-btn
-              variant="text"
-              size="small"
+            <AtlasButton
+              variant="ghost"
+              size="sm"
               @click="refresh"
             >
               {{ t('configuration.jobs.actions.retry') }}
-            </v-btn>
+            </AtlasButton>
           </template>
         </v-alert>
 
@@ -268,7 +268,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useJobs } from '@/composables/useJobs'
