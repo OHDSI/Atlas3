@@ -38,39 +38,36 @@
               cols="12"
               md="6"
             >
-              <v-text-field
+              <AtlasTextField
                 v-model="form.name"
                 :label="tv('columns.name')"
                 :rules="[rules.required]"
                 variant="outlined"
-                density="comfortable"
               />
             </AtlasCol>
             <AtlasCol
               cols="12"
               md="6"
             >
-              <v-text-field
+              <AtlasTextField
                 v-model="form.key"
                 :label="tv('configuration.viewEdit.source.label')"
                 :rules="[rules.required, rules.validKey]"
                 :disabled="isEditing"
                 persistent-hint
                 variant="outlined"
-                density="comfortable"
               />
             </AtlasCol>
           </AtlasRow>
 
           <AtlasRow>
             <AtlasCol cols="12">
-              <v-select
+              <AtlasSelect
                 v-model="form.dialect"
                 :label="tv('configuration.viewEdit.dialect.label')"
                 :items="dialectItems"
                 :rules="[rules.required]"
                 variant="outlined"
-                density="comfortable"
               />
             </AtlasCol>
           </AtlasRow>
@@ -82,13 +79,13 @@
 
           <AtlasRow>
             <AtlasCol cols="12">
-              <v-textarea
+              <AtlasTextField
                 v-model="form.connectionString"
                 :label="tv('configuration.viewEdit.connectionString.label')"
                 :rules="[rules.required]"
                 variant="outlined"
-                density="comfortable"
-                rows="3"
+                :rows="3"
+                multiline
                 auto-grow
               />
             </AtlasCol>
@@ -99,23 +96,21 @@
               cols="12"
               md="6"
             >
-              <v-text-field
+              <AtlasTextField
                 v-model="form.username"
                 :label="tv('configuration.viewEdit.username.label')"
                 variant="outlined"
-                density="comfortable"
               />
             </AtlasCol>
             <AtlasCol
               cols="12"
               md="6"
             >
-              <v-text-field
+              <AtlasTextField
                 v-model="form.password"
                 :label="tv('configuration.viewEdit.password.label')"
                 type="password"
                 variant="outlined"
-                density="comfortable"
               />
             </AtlasCol>
           </AtlasRow>
@@ -127,30 +122,29 @@
                 {{ t('configuration.viewEdit.krb.authenticationMethod.label') }}
               </div>
 
-              <v-radio-group
+              <AtlasRadioGroup
                 v-model="form.krbAuthMethod"
                 inline
               >
-                <v-radio
+                <AtlasRadio
                   :label="tv('configuration.viewEdit.krb.keytab.label')"
                   value="KEYTAB"
                 />
-                <v-radio
+                <AtlasRadio
                   :label="tv('configuration.viewEdit.krb.userPassword.label')"
                   value="PASSWORD"
                 />
-              </v-radio-group>
+              </AtlasRadioGroup>
 
               <AtlasRow>
                 <AtlasCol
                   cols="12"
                   md="6"
                 >
-                  <v-text-field
+                  <AtlasTextField
                     v-model="form.krbAdminServer"
                     :label="tv('configuration.viewEdit.krb.adminServer.label')"
                     variant="outlined"
-                    density="comfortable"
                   />
                 </AtlasCol>
                 <AtlasCol
@@ -219,19 +213,17 @@
                 :key="daimonType"
               >
                 <td>
-                  <v-checkbox
+                  <AtlasCheckbox
                     v-model="daimonEnabled[daimonType]"
                     hide-details
-                    density="compact"
                   />
                 </td>
                 <td>{{ daimonType }}</td>
                 <td>
-                  <v-text-field
+                  <AtlasTextField
                     v-model="daimonSchemas[daimonType]"
                     :disabled="!daimonEnabled[daimonType]"
                     variant="outlined"
-                    density="compact"
                     hide-details
                   />
                 </td>
@@ -241,7 +233,7 @@
 
           <!-- Options Section -->
           <div class="mt-4">
-            <v-checkbox
+            <AtlasCheckbox
               v-model="form.checkConnection"
               :label="tv('columns.checkConnection')"
               hide-details
@@ -311,7 +303,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCol, AtlasDivider, AtlasIcon, AtlasRow, AtlasSpacer } from '@/components/ui'
+import { AtlasCheckbox, AtlasCol, AtlasDivider, AtlasIcon, AtlasRadio, AtlasRadioGroup, AtlasRow, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, reactive } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import {

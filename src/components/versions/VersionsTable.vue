@@ -9,14 +9,13 @@
         cols="12"
         md="10"
       >
-        <v-select
+        <AtlasSelect
           v-model="selectedAuthor"
           :items="authorOptions"
           :label="tv('facets.caption.author')"
           clearable
-          density="compact"
           variant="outlined"
-          @update:model-value="handleAuthorFilter"
+          @update:model-value="(v) => handleAuthorFilter(v as string | null)"
         />
       </AtlasCol>
       <AtlasCol
@@ -64,14 +63,13 @@
     >
       <!-- Version Column -->
       <template #item.displayVersion="{ item }">
-        <v-chip
+        <AtlasChip
           v-if="item.isCurrent"
-          color="primary"
-          size="small"
-          variant="flat"
+          tone="primary"
+          size="sm"
         >
           {{ t('components.versions.current') }}
-        </v-chip>
+        </AtlasChip>
         <span
           v-else
           class="font-weight-medium"
@@ -177,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAvatar, AtlasCol, AtlasIcon, AtlasProgressLinear, AtlasRow } from '@/components/ui'
+import { AtlasAvatar, AtlasChip, AtlasCol, AtlasIcon, AtlasProgressLinear, AtlasRow, AtlasSelect } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { VersionsConfig, VersionsTableItem } from './types'

@@ -30,14 +30,13 @@
 
     <!-- Permission Protected -->
     <template #item.permissionProtected="{ item }">
-      <v-chip
+      <AtlasChip
         v-if="item.permissionProtected"
-        size="small"
-        color="warning"
-        variant="flat"
+        size="sm"
+        tone="warning"
       >
         Protected
-      </v-chip>
+      </AtlasChip>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -126,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasChip, AtlasIcon } from '@/components/ui'
 import type { Tag } from '@/models/config.types'
 
 interface Props {

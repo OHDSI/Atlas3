@@ -9,7 +9,7 @@
         </p>
 
         <!-- Schema Input Field -->
-        <v-text-field
+        <AtlasTextField
           v-model="localSchema"
           label="Vocabulary Schema"
           hint="PostgreSQL schema name (e.g., 'public', 'vocab_v5')"
@@ -18,12 +18,9 @@
           :disabled="isSaving"
           :loading="isSaving"
           variant="outlined"
+          prepend-icon="mdi-database-outline"
           class="mb-2"
-        >
-          <template #prepend-inner>
-            <AtlasIcon>mdi-database-outline</AtlasIcon>
-          </template>
-        </v-text-field>
+        />
 
         <v-alert
           v-if="validationError"
@@ -83,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useConfigStore } from '@/stores/config'

@@ -13,11 +13,11 @@
       v-model="formValid"
       @submit.prevent="handleSubmit"
     >
-      <v-text-field
+      <AtlasTextField
         v-model="form.name"
         label="Name *"
         :rules="nameRules"
-        :error-messages="errors.name"
+        :error="errors.name"
         variant="outlined"
         required
         class="mb-2"
@@ -42,59 +42,50 @@
         </template>
       </v-text-field>
 
-      <v-text-field
+      <AtlasTextField
         v-model="form.icon"
         label="Icon"
         hint="Material Design Icon name (e.g., mdi-tag, mdi-folder)"
         persistent-hint
-        :error-messages="errors.icon"
+        :error="errors.icon"
         variant="outlined"
         class="mb-2"
-      >
-        <template #prepend-inner>
-          <AtlasIcon v-if="form.icon && isValidIcon">
-            {{ form.icon }}
-          </AtlasIcon>
-        </template>
-      </v-text-field>
+      />
 
-      <v-checkbox
+      <AtlasCheckbox
         v-model="form.mandatory"
         label="Mandatory"
         hint="Tags from this group are required on all assets"
         persistent-hint
-        density="compact"
       />
 
-      <v-checkbox
+      <AtlasCheckbox
         v-model="form.showGroup"
         label="Show as Column"
         hint="Display as a column in asset tables"
         persistent-hint
-        density="compact"
       />
 
-      <v-checkbox
+      <AtlasCheckbox
         v-model="form.multiSelection"
         label="Allow Multiple"
         hint="Allow multiple tags from this group per asset"
         persistent-hint
-        density="compact"
       />
 
-      <v-checkbox
+      <AtlasCheckbox
         v-model="form.allowCustom"
         label="Free-form"
         hint="Allow users to create custom tags in this group"
         persistent-hint
-        density="compact"
       />
 
-      <v-textarea
+      <AtlasTextField
         v-model="form.description"
         label="Description"
-        rows="3"
-        :error-messages="errors.description"
+        :rows="3"
+        multiline
+        :error="errors.description"
         variant="outlined"
         class="mt-2"
       />
@@ -122,7 +113,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { tagGroupSchema, type TagGroup } from '@/models/config.types'
-import { AtlasDialog, AtlasIcon } from '@/components/ui'
+import { AtlasCheckbox, AtlasDialog, AtlasTextField } from '@/components/ui'
 
 interface Props {
   modelValue: boolean
@@ -154,9 +145,6 @@ const form = ref<Partial<TagGroup>>({
 
 const isEditMode = computed(() => !!props.tagGroup?.id)
 
-const isValidIcon = computed(() => {
-  return form.value.icon?.startsWith('mdi-')
-})
 
 const nameRules = [
   (v: string) => !!v || 'Name is required',

@@ -13,11 +13,11 @@
       v-model="formValid"
       @submit.prevent="handleSubmit"
     >
-      <v-text-field
+      <AtlasTextField
         v-model="form.name"
         label="Name *"
         :rules="nameRules"
-        :error-messages="errors.name"
+        :error="errors.name"
         variant="outlined"
         required
         class="mb-2"
@@ -42,35 +42,29 @@
         </template>
       </v-text-field>
 
-      <v-text-field
+      <AtlasTextField
         v-model="form.icon"
         label="Icon (optional)"
         hint="Material Design Icon name or leave empty to inherit from group"
         persistent-hint
-        :error-messages="errors.icon"
+        :error="errors.icon"
         variant="outlined"
         class="mb-2"
-      >
-        <template #prepend-inner>
-          <AtlasIcon v-if="form.icon && isValidIcon">
-            {{ form.icon }}
-          </AtlasIcon>
-        </template>
-      </v-text-field>
+      />
 
-      <v-checkbox
+      <AtlasCheckbox
         v-model="form.permissionProtected"
         label="Permission Protected"
         hint="Require special permissions to assign/unassign this tag"
         persistent-hint
-        density="compact"
       />
 
-      <v-textarea
+      <AtlasTextField
         v-model="form.description"
         label="Description"
-        rows="3"
-        :error-messages="errors.description"
+        :rows="3"
+        multiline
+        :error="errors.description"
         variant="outlined"
         class="mt-2"
       />
@@ -98,7 +92,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { tagSchema, type Tag, type TagGroup } from '@/models/config.types'
-import { AtlasDialog, AtlasIcon } from '@/components/ui'
+import { AtlasCheckbox, AtlasDialog, AtlasTextField } from '@/components/ui'
 
 interface Props {
   modelValue: boolean
@@ -128,9 +122,6 @@ const form = ref<Partial<Tag>>({
 
 const isEditMode = computed(() => !!props.tag?.id)
 
-const isValidIcon = computed(() => {
-  return !form.value.icon || form.value.icon.startsWith('mdi-') || form.value.icon.startsWith('fa ')
-})
 
 const nameRules = [
   (v: string) => !!v || 'Name is required',

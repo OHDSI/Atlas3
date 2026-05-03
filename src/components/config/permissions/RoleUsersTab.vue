@@ -3,12 +3,11 @@
     <v-card-text>
       <!-- Header with Search and Save Button -->
       <div class="role-users-tab__header">
-        <v-text-field
+        <AtlasTextField
           v-model="searchQuery"
           placeholder="Search users by login or email..."
-          prepend-inner-icon="mdi-magnify"
+          prepend-icon="mdi-magnify"
           variant="outlined"
-          density="compact"
           hide-details
           clearable
           class="role-users-tab__search"
@@ -16,14 +15,14 @@
         />
 
         <div class="role-users-tab__actions">
-          <v-chip
+          <AtlasChip
             v-if="hasChanges"
-            color="warning"
-            size="small"
+            tone="warning"
+            size="sm"
             class="mr-2"
           >
             {{ changeCount }} change{{ changeCount !== 1 ? 's' : '' }}
-          </v-chip>
+          </AtlasChip>
 
           <v-btn
             color="primary"
@@ -91,10 +90,9 @@
         >
           <!-- Checkbox Column -->
           <template #item.selected="{ item }">
-            <v-checkbox
+            <AtlasCheckbox
               :model-value="isUserSelected(item.id)"
               hide-details
-              density="compact"
               @update:model-value="toggleUser(item.id)"
             />
           </template>
@@ -166,7 +164,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasProgressCircular } from '@/components/ui'
+import { AtlasCheckbox, AtlasChip, AtlasIcon, AtlasProgressCircular, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 

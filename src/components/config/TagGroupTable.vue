@@ -35,14 +35,13 @@
 
     <!-- Boolean Flags as Chips -->
     <template #item.mandatory="{ item }">
-      <v-chip
+      <AtlasChip
         v-if="item.mandatory"
-        size="small"
-        color="error"
-        variant="flat"
+        size="sm"
+        tone="danger"
       >
         Required
-      </v-chip>
+      </AtlasChip>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -50,14 +49,13 @@
     </template>
 
     <template #item.showGroup="{ item }">
-      <v-chip
+      <AtlasChip
         v-if="item.showGroup"
-        size="small"
-        color="primary"
-        variant="tonal"
+        size="sm"
+        tone="primary"
       >
         Column
-      </v-chip>
+      </AtlasChip>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -65,14 +63,13 @@
     </template>
 
     <template #item.multiSelection="{ item }">
-      <v-chip
+      <AtlasChip
         v-if="item.multiSelection"
-        size="small"
-        color="info"
-        variant="tonal"
+        size="sm"
+        tone="info"
       >
         Multiple
-      </v-chip>
+      </AtlasChip>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -80,14 +77,13 @@
     </template>
 
     <template #item.allowCustom="{ item }">
-      <v-chip
+      <AtlasChip
         v-if="item.allowCustom"
-        size="small"
-        color="success"
-        variant="tonal"
+        size="sm"
+        tone="success"
       >
         Free-form
-      </v-chip>
+      </AtlasChip>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -177,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasChip, AtlasIcon } from '@/components/ui'
 import type { TagGroup } from '@/models/config.types'
 
 interface Props {

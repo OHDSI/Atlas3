@@ -47,21 +47,21 @@
             How would you like to proceed?
           </p>
 
-          <v-radio-group
+          <AtlasRadioGroup
             v-model="conflictResolution"
             class="mb-4"
           >
-            <v-radio
+            <AtlasRadio
               value="skip"
               label="Skip - Cancel the import"
             />
-            <v-radio
+            <AtlasRadio
               value="rename"
               label="Rename - Import with a new name"
             />
-          </v-radio-group>
+          </AtlasRadioGroup>
 
-          <v-text-field
+          <AtlasTextField
             v-if="conflictResolution === 'rename'"
             v-model="newRoleName"
             label="New Role Name"
@@ -184,7 +184,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
+import { AtlasProgressCircular, AtlasRadio, AtlasRadioGroup, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 

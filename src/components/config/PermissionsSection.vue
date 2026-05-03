@@ -7,12 +7,11 @@
     >
       <!-- Header -->
       <div class="permissions-section__header">
-        <v-text-field
+        <AtlasTextField
           v-model="searchQuery"
           placeholder="Search roles..."
-          prepend-inner-icon="mdi-magnify"
+          prepend-icon="mdi-magnify"
           variant="outlined"
-          density="compact"
           hide-details
           clearable
           class="permissions-section__search"
@@ -179,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs } from '@/components/ui'
+import { AtlasIcon, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import { useAuth } from '@/composables/useAuth'

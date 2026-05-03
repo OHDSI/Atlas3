@@ -50,12 +50,12 @@
         </div>
       </v-alert>
 
-      <v-text-field
+      <AtlasTextField
         v-model="targetUser"
         :label="tv('components.welcome.username')"
         :placeholder="tv('components.welcome.username')"
         variant="outlined"
-        prepend-inner-icon="mdi-account"
+        prepend-icon="mdi-account"
         :disabled="isRunningAs || isLoading"
         class="mb-3"
         @keyup.enter="handleRunAs"
@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasIcon, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

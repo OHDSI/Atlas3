@@ -17,11 +17,11 @@
           @submit.prevent="handleSubmit"
         >
           <!-- Name Field -->
-          <v-text-field
+          <AtlasTextField
             v-model="form.name"
             label="Role Name *"
             :rules="nameRules"
-            :error-messages="errors.name"
+            :error="errors.name"
             variant="outlined"
             required
             class="mb-2"
@@ -30,11 +30,12 @@
           />
 
           <!-- Description Field -->
-          <v-textarea
+          <AtlasTextField
             v-model="form.description"
             label="Description"
-            rows="3"
-            :error-messages="errors.description"
+            :rows="3"
+            multiline
+            :error="errors.description"
             variant="outlined"
             class="mt-2"
             :disabled="saving"
@@ -77,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSpacer } from '@/components/ui'
+import { AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

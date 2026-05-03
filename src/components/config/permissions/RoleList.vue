@@ -6,12 +6,11 @@
         <h2 class="text-h5">
           Roles
         </h2>
-        <v-text-field
+        <AtlasTextField
           v-model="searchQuery"
           placeholder="Search roles..."
-          prepend-inner-icon="mdi-magnify"
+          prepend-icon="mdi-magnify"
           variant="outlined"
-          density="compact"
           hide-details
           clearable
           class="role-list__search"
@@ -193,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasTooltip } from '@/components/ui'
+import { AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRoles } from '@/composables/useRoles'

@@ -30,11 +30,10 @@
             v-else
             class="role-details__edit"
           >
-            <v-text-field
+            <AtlasTextField
               v-model="editedName"
               :rules="nameRules"
               variant="outlined"
-              density="compact"
               hide-details="auto"
               autofocus
               @keyup.enter="saveName"
@@ -94,11 +93,11 @@
             v-else
             class="role-details__edit"
           >
-            <v-textarea
+            <AtlasTextField
               v-model="editedDescription"
               variant="outlined"
-              density="compact"
-              rows="3"
+              :rows="3"
+              multiline
               hide-details="auto"
               autofocus
             />
@@ -170,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasTooltip } from '@/components/ui'
+import { AtlasIcon, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

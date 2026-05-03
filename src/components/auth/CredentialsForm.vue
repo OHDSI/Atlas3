@@ -4,13 +4,12 @@
     class="credentials-form"
     @submit.prevent="handleSubmit"
   >
-    <v-text-field
+    <AtlasTextField
       v-model="credentials.username"
       :label="provider.loginPlaceholder || t('columns.login', 'Username').value"
       :placeholder="provider.loginPlaceholder || t('columns.login', 'Enter username').value"
       variant="outlined"
-      density="compact"
-      prepend-inner-icon="mdi-account-outline"
+      prepend-icon="mdi-account-outline"
       autocomplete="username"
       :disabled="loading"
       :rules="[required]"
@@ -18,7 +17,7 @@
       class="mb-3"
     />
 
-    <v-text-field
+    <AtlasTextField
       v-model="credentials.password"
       :label="provider.passwordPlaceholder || t('components.welcome.password', 'Password').value"
       :placeholder="
@@ -26,8 +25,7 @@
       "
       type="password"
       variant="outlined"
-      density="compact"
-      prepend-inner-icon="mdi-lock-outline"
+      prepend-icon="mdi-lock-outline"
       autocomplete="current-password"
       :disabled="loading"
       :rules="[required]"
@@ -50,6 +48,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { AuthProvider, LoginCredentials } from '@/models/auth.types'
 

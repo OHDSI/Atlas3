@@ -20,13 +20,14 @@
           ref="formRef"
           @submit.prevent="handleSave"
         >
-          <v-textarea
+          <AtlasTextField
             v-model="commentText"
             :label="tv('columns.comment', 'Comment')"
             :placeholder="tv('components.versions.commentPlaceholder')"
             :rules="[commentMaxLengthRule]"
             :counter="500"
-            rows="4"
+            :rows="4"
+            multiline
             variant="outlined"
             autofocus
             class="mt-4"
@@ -68,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSpacer } from '@/components/ui'
+import { AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
