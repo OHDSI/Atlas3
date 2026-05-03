@@ -27,7 +27,7 @@ const sampleAsset = {
   } },
 }
 
-beforeEach(() => vi.clearAllMocks())
+beforeEach(() => vi.resetAllMocks())
 
 describe('IR versions service', () => {
   it('lists versions at /ir/{id}/version/', async () => {
