@@ -43,6 +43,33 @@ module.exports = {
     // Allow flexibility in Vue component organization
     'vue/component-api-style': 'off',
     'vue/one-component-per-file': 'off',
+
+    // Atlas UI library — wrappers exist but lint is parked at 'off' until Phase 1.
+    // Severity is intentionally 'off' so the rule shape is reviewed and version-controlled
+    // without yet failing CI on the existing 152 raw-Vuetify callsites.
+    'vue/no-restricted-component-names': ['off', {
+      'v-btn':          { message: 'Use <AtlasButton> from @/components/ui' },
+      'v-text-field':   { message: 'Use <AtlasTextField> from @/components/ui' },
+      'v-select':       { message: 'Use <AtlasSelect> from @/components/ui' },
+      'v-autocomplete': { message: 'Use <AtlasAutocomplete> from @/components/ui' },
+      'v-checkbox':     { message: 'Use <AtlasCheckbox> from @/components/ui' },
+      'v-switch':       { message: 'Use <AtlasSwitch> from @/components/ui' },
+      'v-radio':        { message: 'Use <AtlasRadio> from @/components/ui' },
+      'v-radio-group':  { message: 'Use <AtlasRadioGroup> from @/components/ui' },
+      'v-chip':         { message: 'Use <AtlasChip> from @/components/ui' },
+      'v-dialog':       { message: 'Use <AtlasDialog> from @/components/ui' },
+      'v-card':         { message: 'Use <AtlasCard> from @/components/ui' },
+      'v-alert':        { message: 'Use <AtlasAlert> from @/components/ui' },
+      'v-snackbar':     { message: 'Use <AtlasSnackbar> from @/components/ui' },
+      'v-data-table':   { message: 'Use <AtlasDataTable> from @/components/ui' },
+    }],
+
+    'no-restricted-imports': ['off', {
+      patterns: [{
+        group: ['@/components/ui/*', '!@/components/ui/index'],
+        message: 'Import Atlas* components from @/components/ui (the barrel), not deep paths',
+      }],
+    }],
   },
   overrides: [
     {
@@ -52,6 +79,13 @@ module.exports = {
         'no-console': 'off',
         // Allow any in tests for mocking purposes
         '@typescript-eslint/no-explicit-any': 'off',
+      },
+    },
+    {
+      files: ['src/components/ui/**/*.{vue,ts}'],
+      rules: {
+        'vue/no-restricted-component-names': 'off',
+        'no-restricted-imports': 'off',
       },
     },
   ],
