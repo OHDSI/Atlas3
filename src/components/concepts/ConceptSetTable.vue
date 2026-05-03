@@ -60,7 +60,7 @@
         {{ t('columns.exclude', 'Excluded').value }}
       </v-chip>
 
-      <v-spacer />
+      <AtlasSpacer />
 
       <v-btn
         v-if="hasActiveFilters"
@@ -185,7 +185,7 @@
 
         <!-- Loading skeleton -->
         <template #loading>
-          <v-skeleton-loader
+          <AtlasSkeleton
             v-for="i in 5"
             :key="i"
             type="table-row"
@@ -200,7 +200,7 @@
       v-else
       class="concept-set-table__empty"
     >
-      <v-icon
+      <AtlasIcon
         :icon="hasActiveFilters ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
         size="36"
         class="concept-set-table__empty-icon"
@@ -232,7 +232,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 
 const { t } = useI18n()

@@ -48,13 +48,13 @@
           </div>
 
           <div class="cs-editor__actions">
-            <v-tooltip
+            <AtlasTooltip
               v-if="isEditMode && props.conceptSet?.id"
               :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
               location="bottom"
             >
               <template #activator="{ props: tooltipProps }">
-                <v-badge
+                <AtlasBadge
                   v-bind="tooltipProps"
                   :content="versionCount"
                   :model-value="versionCount > 0"
@@ -68,9 +68,9 @@
                     variant="text"
                     @click="showVersionsDialog = true"
                   />
-                </v-badge>
+                </AtlasBadge>
               </template>
-            </v-tooltip>
+            </AtlasTooltip>
 
             <v-btn
               v-if="isEditMode"
@@ -103,7 +103,7 @@
 
         <!-- Tabs rail: same shared treatment as the outer page tabs. -->
         <nav class="page-tabs-rail cs-editor__tabs-rail">
-          <v-tabs
+          <AtlasTabs
             v-model="activeTab"
             align-tabs="start"
             density="comfortable"
@@ -112,8 +112,8 @@
             bg-color="transparent"
             class="page-tabs"
           >
-            <v-tab value="selected">
-              <v-icon
+            <AtlasTab value="selected">
+              <AtlasIcon
                 start
                 icon="mdi-checkbox-marked-circle-outline"
               />
@@ -126,31 +126,31 @@
               >
                 {{ itemCount }}
               </v-chip>
-            </v-tab>
-            <v-tab value="search">
-              <v-icon
+            </AtlasTab>
+            <AtlasTab value="search">
+              <AtlasIcon
                 start
                 icon="mdi-magnify"
               />
               {{ t('search.tabs.search', 'Search') }}
-            </v-tab>
-            <v-tab value="recommend">
-              <v-icon
+            </AtlasTab>
+            <AtlasTab value="recommend">
+              <AtlasIcon
                 start
                 icon="mdi-lightbulb-on-outline"
               />
               {{ t('cs.manager.tabs.recommend', 'Recommend') }}
-            </v-tab>
-            <v-tab value="compare">
-              <v-icon
+            </AtlasTab>
+            <AtlasTab value="compare">
+              <AtlasIcon
                 start
                 icon="mdi-compare"
               />
               {{ t('cs.browser.compare.compare', 'Compare') }}
-            </v-tab>
-          </v-tabs>
+            </AtlasTab>
+          </AtlasTabs>
 
-          <v-spacer />
+          <AtlasSpacer />
 
           <v-btn
             variant="text"
@@ -287,7 +287,7 @@
         v-if="pasteResolved.length"
         class="cs-paste__summary-row cs-paste__summary-row--ok"
       >
-        <v-icon
+        <AtlasIcon
           icon="mdi-check-circle-outline"
           size="18"
         />
@@ -298,7 +298,7 @@
         v-if="pasteUnresolved.length"
         class="cs-paste__summary-row cs-paste__summary-row--err"
       >
-        <v-icon
+        <AtlasIcon
           icon="mdi-alert-circle-outline"
           size="18"
         />
@@ -380,7 +380,7 @@ import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
-import { AtlasDialog } from '@/components/ui'
+import { AtlasBadge, AtlasDialog, AtlasIcon, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getConceptById } from '@/services/concept-search.service'

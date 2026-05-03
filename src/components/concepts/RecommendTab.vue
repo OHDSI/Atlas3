@@ -107,7 +107,7 @@
       class="d-flex align-center justify-center py-12"
       data-testid="recommend-loading"
     >
-      <v-progress-circular
+      <AtlasProgressCircular
         indeterminate
         color="primary"
         size="32"
@@ -143,6 +143,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'

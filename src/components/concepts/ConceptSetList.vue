@@ -26,7 +26,7 @@
         {{ countLabel }}
       </v-chip>
 
-      <v-spacer />
+      <AtlasSpacer />
 
       <v-btn
         color="primary"
@@ -102,7 +102,7 @@
 
         <!-- Loading skeleton -->
         <template #loading>
-          <v-skeleton-loader
+          <AtlasSkeleton
             v-for="i in 5"
             :key="i"
             type="table-row"
@@ -118,7 +118,7 @@
       v-else
       class="concept-set-list__empty"
     >
-      <v-icon
+      <AtlasIcon
         icon="mdi-bookmark-multiple-outline"
         size="36"
         class="concept-set-list__empty-icon"
@@ -162,7 +162,7 @@
         </v-card-text>
 
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="deleteDialog = false"
@@ -206,7 +206,7 @@ import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()

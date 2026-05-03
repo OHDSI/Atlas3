@@ -26,11 +26,11 @@
           {{ t('conceptSetEditor.conceptsCount', { count: conceptCount }) }}
         </v-card-title>
         <v-card-text>
-          <v-list
+          <AtlasList
             v-if="concepts.length > 0"
             data-testid="concept-list"
           >
-            <v-list-item
+            <AtlasListItem
               v-for="(item, index) in concepts"
               :key="item.conceptId"
             >
@@ -68,8 +68,8 @@
                   @click="removeConcept(index)"
                 />
               </template>
-            </v-list-item>
-          </v-list>
+            </AtlasListItem>
+          </AtlasList>
 
           <v-alert
             v-else
@@ -95,7 +95,7 @@
 
     <!-- Actions -->
     <v-card-actions>
-      <v-spacer />
+      <AtlasSpacer />
       <v-btn
         variant="text"
         data-testid="cancel-edit"
@@ -117,6 +117,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'

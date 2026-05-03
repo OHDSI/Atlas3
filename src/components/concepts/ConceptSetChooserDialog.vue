@@ -8,7 +8,7 @@
     @update:model-value="onDialogUpdate"
     @close="onCancel"
   >
-    <v-progress-linear
+    <AtlasProgressLinear
       v-if="store.loading"
       indeterminate
       color="primary"
@@ -82,7 +82,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasDialog } from '@/components/ui'
+import { AtlasDialog, AtlasProgressLinear } from '@/components/ui'
 
 interface Props {
   modelValue: boolean

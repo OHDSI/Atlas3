@@ -27,11 +27,11 @@
       />
 
       <!-- Concept Sets List -->
-      <v-list
+      <AtlasList
         v-if="filteredConceptSets.length > 0"
         data-testid="concept-set-list"
       >
-        <v-list-item
+        <AtlasListItem
           v-for="conceptSet in filteredConceptSets"
           :key="conceptSet.id"
           :title="conceptSet.name"
@@ -65,16 +65,16 @@
 
           <!-- Concept Count Badge -->
           <template #prepend>
-            <v-badge
+            <AtlasBadge
               :content="getConceptCount(conceptSet)"
               color="primary"
               :data-testid="`concept-count-${conceptSet.id}`"
             >
-              <v-icon>mdi-set-center</v-icon>
-            </v-badge>
+              <AtlasIcon>mdi-set-center</AtlasIcon>
+            </AtlasBadge>
           </template>
-        </v-list-item>
-      </v-list>
+        </AtlasListItem>
+      </AtlasList>
 
       <!-- Empty State -->
       <v-alert
@@ -103,7 +103,7 @@
           {{ t('cs.manager.csDeleteConfirmMessage') }}
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="showDeleteDialog = false"
@@ -124,6 +124,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasBadge, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'

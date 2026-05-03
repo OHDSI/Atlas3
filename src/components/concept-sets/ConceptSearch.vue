@@ -25,7 +25,7 @@
       />
 
       <!-- Loading Indicator -->
-      <v-progress-linear
+      <AtlasProgressLinear
         v-if="isSearching"
         indeterminate
         color="primary"
@@ -41,7 +41,7 @@
         data-testid="search-results-list"
       >
         <template #default="{ item }">
-          <v-list-item
+          <AtlasListItem
             :data-testid="`concept-item-${item.conceptId}`"
             @click="$emit('select-concept', item)"
           >
@@ -55,8 +55,8 @@
             <v-list-item-subtitle>
               Code: {{ item.conceptCode }} | Class: {{ item.conceptClassId }}
             </v-list-item-subtitle>
-          </v-list-item>
-          <v-divider />
+          </AtlasListItem>
+          <AtlasDivider />
         </template>
       </v-virtual-scroll>
 
@@ -83,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasListItem, AtlasProgressLinear } from '@/components/ui'
 import { ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

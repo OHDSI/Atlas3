@@ -68,7 +68,7 @@
       <!-- Record Count Columns - Format with commas or dash if undefined, show spinner while loading -->
       <template #item.recordCount="{ item }">
         <div class="d-flex align-center justify-end">
-          <v-progress-circular
+          <AtlasProgressCircular
             v-if="loadingRecordCounts && item.recordCount === undefined"
             indeterminate
             size="16"
@@ -84,7 +84,7 @@
 
       <template #item.descendantRecordCount="{ item }">
         <div class="d-flex align-center justify-end">
-          <v-progress-circular
+          <AtlasProgressCircular
             v-if="loadingRecordCounts && item.descendantRecordCount === undefined"
             indeterminate
             size="16"
@@ -100,7 +100,7 @@
 
       <template #item.personCount="{ item }">
         <div class="d-flex align-center justify-end">
-          <v-progress-circular
+          <AtlasProgressCircular
             v-if="loadingRecordCounts && item.personCount === undefined"
             indeterminate
             size="16"
@@ -116,7 +116,7 @@
 
       <template #item.descendantPersonCount="{ item }">
         <div class="d-flex align-center justify-end">
-          <v-progress-circular
+          <AtlasProgressCircular
             v-if="loadingRecordCounts && item.descendantPersonCount === undefined"
             indeterminate
             size="16"
@@ -162,12 +162,12 @@
       <!-- No data message -->
       <template #no-data>
         <div class="text-center py-8">
-          <v-icon
+          <AtlasIcon
             size="64"
             color="grey-lighten-1"
           >
             mdi-database-search
-          </v-icon>
+          </AtlasIcon>
           <p class="text-body-1 mt-4 text-grey">
             {{ loading ? 'Loading...' : 'No records to display' }}
           </p>
@@ -176,7 +176,7 @@
 
       <!-- Loading skeleton -->
       <template #loading>
-        <v-skeleton-loader
+        <AtlasSkeleton
           v-for="i in 5"
           :key="i"
           type="table-row"
@@ -204,7 +204,7 @@
         />
       </div>
 
-      <v-pagination
+      <AtlasPagination
         :model-value="page"
         :length="totalPages"
         :total-visible="7"
@@ -215,6 +215,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSkeleton } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
