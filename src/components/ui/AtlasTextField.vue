@@ -18,7 +18,17 @@
     @update:model-value="(v: string | number) => $emit('update:modelValue', v)"
     @blur="$emit('blur', $event)"
     @focus="$emit('focus', $event)"
-  />
+  >
+    <template
+      v-for="(_, name) in $slots"
+      #[name]="slotProps"
+    >
+      <slot
+        :name="name"
+        v-bind="slotProps ?? {}"
+      />
+    </template>
+  </component>
 </template>
 
 <script setup lang="ts">

@@ -15,7 +15,7 @@
     >
       <AtlasTextField
         v-model="form.name"
-        label="Name *"
+        label="Name"
         :rules="nameRules"
         :error="errors.name"
         variant="outlined"
