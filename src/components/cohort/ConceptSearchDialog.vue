@@ -43,30 +43,28 @@
         />
 
         <div class="d-flex align-center gap-2 mt-3">
-          <v-btn
-            color="primary"
+          <AtlasButton
             :loading="isSearching"
             :disabled="!searchQuery || searchQuery.length < 2"
             @click="performSearch"
           >
             {{ t('common.search') }}
-          </v-btn>
+          </AtlasButton>
 
           <AtlasSpacer />
 
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="close"
           >
             {{ t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="primary"
+          </AtlasButton>
+          <AtlasButton
             :disabled="selectedConcepts.length === 0"
             @click="addSelectedConcepts"
           >
             {{ t('common.add') }} ({{ selectedConcepts.length }})
-          </v-btn>
+          </AtlasButton>
         </div>
 
         <AtlasDivider class="my-4" />
@@ -138,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasIcon, AtlasListItem, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasListItem, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'

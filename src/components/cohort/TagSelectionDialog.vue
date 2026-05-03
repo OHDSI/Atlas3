@@ -211,25 +211,24 @@
 
       <v-card-actions>
         <AtlasSpacer />
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="cancel"
         >
           Cancel
-        </v-btn>
-        <v-btn
-          color="primary"
+        </AtlasButton>
+        <AtlasButton
           @click="apply"
         >
           Apply
-        </v-btn>
+        </AtlasButton>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasBadge, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag } from '@/models/cohort.types'

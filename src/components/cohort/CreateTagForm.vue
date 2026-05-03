@@ -111,21 +111,20 @@
 
     <!-- Action Buttons -->
     <div class="d-flex justify-end gap-2">
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         :disabled="saving"
         @click="handleCancel"
       >
         Cancel
-      </v-btn>
-      <v-btn
+      </AtlasButton>
+      <AtlasButton
         type="submit"
-        color="primary"
         :disabled="!formValid"
         :loading="saving"
       >
         Create Tag
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Success/Error Messages -->
@@ -156,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { tagSchema, type Tag as ConfigTag, type TagGroup } from '@/models/config.types'
 import type { Tag } from '@/models/cohort.types'

@@ -6,17 +6,14 @@
       </AtlasIcon>
       <span>{{ t('cs.browser.caption') }}</span>
       <AtlasSpacer />
-      <v-btn
-        color="primary"
-        variant="outlined"
-        size="small"
+      <AtlasButton
+        variant="secondary"
+        size="sm"
+        icon="mdi-plus"
         @click="createNewConceptSet"
       >
-        <AtlasIcon class="mr-2">
-          mdi-plus
-        </AtlasIcon>
         {{ t('components.conceptSetBuilder.newConceptSet') }}
-      </v-btn>
+      </AtlasButton>
     </v-card-title>
 
     <v-card-text>
@@ -72,17 +69,14 @@
             </div>
 
             <div class="mt-3 d-flex gap-2">
-              <v-btn
-                color="primary"
-                variant="outlined"
-                size="small"
+              <AtlasButton
+                variant="secondary"
+                size="sm"
+                icon="mdi-plus"
                 @click="conceptSet.id && openSearchDialog(conceptSet.id)"
               >
-                <AtlasIcon class="mr-2">
-                  mdi-plus
-                </AtlasIcon>
                 {{ t('components.conceptSet.addConcepts') }}
-              </v-btn>
+              </AtlasButton>
 
               <v-btn
                 color="error"
@@ -109,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasIcon, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasIcon, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

@@ -1,14 +1,14 @@
 <template>
   <div class="cohort-toolbar-actions">
-    <v-btn
-      variant="text"
+    <AtlasButton
+      variant="ghost"
       @click="$emit('cancel')"
     >
       <AtlasIcon class="d-md-none">
         mdi-close
       </AtlasIcon>
       <span class="d-none d-md-inline">{{ t('common.cancel') }}</span>
-    </v-btn>
+    </AtlasButton>
 
     <AtlasMenu>
       <template #activator="{ props: menuProps }">
@@ -64,9 +64,7 @@
       }}</span>
     </v-btn>
 
-    <v-btn
-      color="primary"
-      variant="flat"
+    <AtlasButton
       :disabled="!canSave || isPreviewingVersion"
       @click="$emit('save')"
     >
@@ -74,12 +72,12 @@
         mdi-content-save-outline
       </AtlasIcon>
       <span class="d-none d-md-inline">{{ t('common.save') }}</span>
-    </v-btn>
+    </AtlasButton>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 interface Props {

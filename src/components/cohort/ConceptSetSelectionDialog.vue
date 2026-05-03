@@ -53,14 +53,12 @@
 
             <AtlasSpacer />
 
-            <v-btn
-              color="primary"
-              variant="flat"
-              prepend-icon="mdi-plus"
+            <AtlasButton
+              icon="mdi-plus"
               @click="onCreateNew"
             >
               {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
-            </v-btn>
+            </AtlasButton>
           </div>
 
           <!-- Loading -->
@@ -143,15 +141,13 @@
                   ).value
               }}
             </p>
-            <v-btn
+            <AtlasButton
               v-if="!searchTerm"
-              color="primary"
-              variant="flat"
-              prepend-icon="mdi-plus"
+              icon="mdi-plus"
               @click="onCreateNew"
             >
               {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
-            </v-btn>
+            </AtlasButton>
             <v-btn
               v-else
               size="small"
@@ -173,7 +169,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasCard, AtlasChip, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
 
 interface Props {

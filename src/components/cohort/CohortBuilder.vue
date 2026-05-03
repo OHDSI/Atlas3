@@ -25,15 +25,13 @@
         t('versions.previewingVersion', { version: cohortStore.previewVersion?.version || '' })
       }}</span>
       <AtlasSpacer />
-      <v-btn
-        color="primary"
-        variant="flat"
-        size="small"
-        prepend-icon="mdi-arrow-left"
+      <AtlasButton
+        size="sm"
+        icon="mdi-arrow-left"
         @click="handleBackToCurrent"
       >
         {{ t('common.backToCurrent', 'Back to current') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Patient Count Bar (TrexSQL) -->
@@ -505,12 +503,12 @@
     >
       {{ errorMessage }}
       <template #actions>
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="showError = false"
         >
           {{ t('common.close') }}
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
 
@@ -596,19 +594,18 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             @click="cancelLeaveUnsaved"
           >
             {{ t('common.cancel', 'Cancel').value }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
+          </AtlasButton>
+          <AtlasButton
+            variant="danger"
             @click="confirmLeaveUnsaved"
           >
             {{ t('common.discard', 'Discard changes').value }}
-          </v-btn>
+          </AtlasButton>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -629,7 +626,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'

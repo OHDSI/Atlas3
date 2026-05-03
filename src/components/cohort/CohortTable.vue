@@ -57,15 +57,13 @@
       >
         {{ t('search.clearAllSelections', 'Clear filters').value }}
       </v-btn>
-      <v-btn
+      <AtlasButton
         v-else
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-plus"
+        icon="mdi-plus"
         @click="$emit('create-cohort')"
       >
         {{ t('cohortDefinitions.newDefinition', 'New cohort').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Table -->
@@ -194,7 +192,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import { AtlasCard, AtlasIcon, AtlasSkeleton } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasIcon, AtlasSkeleton } from '@/components/ui'
 
 const { t, locale } = useI18n()
 const router = useRouter()

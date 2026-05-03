@@ -48,14 +48,14 @@
           <div class="cohort-filters__menu-header">
             <span class="text-eyebrow">{{ filtersLabel }}</span>
             <AtlasSpacer />
-            <v-btn
+            <AtlasButton
               :disabled="activeFilterCount === 0"
-              variant="text"
-              size="small"
+              variant="ghost"
+              size="sm"
               @click="handleClearAll"
             >
               {{ clearAllLabel }}
-            </v-btn>
+            </AtlasButton>
           </div>
 
           <div class="cohort-filters__menu-body">
@@ -238,15 +238,15 @@
       >
         {{ modifiedToLabel }}: {{ formatDateForDisplay(localFilters.modifiedDateRange.to) }}
       </AtlasChip>
-      <v-btn
+      <AtlasButton
         v-if="activeFilterCount > 0"
-        size="small"
-        variant="text"
-        prepend-icon="mdi-close"
+        variant="ghost"
+        size="sm"
+        icon="mdi-close"
         @click="handleClearAll"
       >
         {{ clearAllLabel }}
-      </v-btn>
+      </AtlasButton>
     </div>
   </div>
 </template>
@@ -255,7 +255,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { FilterState } from '@/composables/useCohorts'
-import { AtlasAutocomplete, AtlasCard, AtlasChip, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasAutocomplete, AtlasCard, AtlasChip, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
 
 interface Props {
   filters: FilterState

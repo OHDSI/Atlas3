@@ -61,19 +61,18 @@
       </v-card-text>
       <v-card-actions>
         <AtlasSpacer />
-        <v-btn
-          color="primary"
+        <AtlasButton
           @click="$emit('update:modelValue', false)"
         >
           {{ t('common.close') }}
-        </v-btn>
+        </AtlasButton>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 

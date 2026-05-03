@@ -101,9 +101,9 @@
           </v-card-text>
           <v-card-actions>
             <AtlasSpacer />
-            <v-btn @click="showObsPeriodDialog = false">
+            <AtlasButton @click="showObsPeriodDialog = false">
               {{ t('common.close', 'Close') }}
-            </v-btn>
+            </AtlasButton>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -129,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

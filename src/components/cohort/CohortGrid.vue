@@ -62,15 +62,13 @@
       >
         {{ t('search.clearAllSelections', 'Clear filters').value }}
       </v-btn>
-      <v-btn
+      <AtlasButton
         v-else
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-plus"
+        icon="mdi-plus"
         @click="$emit('create-cohort')"
       >
         {{ t('cohortDefinitions.newDefinition', 'New cohort').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Cohorts Grid -->
@@ -94,7 +92,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSkeleton } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasSkeleton } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import CohortCard from './CohortCard.vue'
