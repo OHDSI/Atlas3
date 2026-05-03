@@ -9,17 +9,16 @@
         </p>
 
         <!-- Cache Statistics -->
-        <v-alert
+        <AtlasAlert
           v-if="cacheStats"
-          type="info"
-          variant="tonal"
+          severity="info"
           class="mb-4"
         >
           <strong>Cache Status:</strong>
           {{ cacheStats.itemCount }} item{{ cacheStats.itemCount !== 1 ? 's' : '' }} cached ({{
             formatBytes(cacheStats.estimatedSize)
           }})
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Clear Cache Button -->
         <v-btn
@@ -67,22 +66,13 @@
     </v-dialog>
 
     <!-- Toast Notification -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showToast"
+      :severity="toastSeverity"
+      :text="toastMessage"
       :timeout="5000"
-      :color="toastColor"
       location="bottom"
-    >
-      {{ toastMessage }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="showToast = false"
-        >
-          Close
-        </AtlasButton>
-      </template>
-    </v-snackbar>
+    />
 
     <!-- TrexSQL Cache Section -->
     <TrexSQLCacheSection />
@@ -90,7 +80,8 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { logger } from '@/utils/logger'
@@ -104,7 +95,7 @@ const isLoading = ref(false)
 const showConfirmDialog = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
-const toastColor = ref<'success' | 'error'>('success')
+const toastSeverity = ref<AtlasSnackbarSeverity>('success')
 
 /**
  * Load cache statistics on mount
@@ -136,7 +127,7 @@ async function handleClearCache() {
     // Success: update stats and show toast
     await loadCacheStats()
     toastMessage.value = 'Configuration cache cleared successfully'
-    toastColor.value = 'success'
+    toastSeverity.value = 'success'
     showToast.value = true
     showConfirmDialog.value = false
   } catch (error: unknown) {
@@ -144,7 +135,7 @@ async function handleClearCache() {
     const errorMessage =
       error instanceof Error ? error.message : 'Failed to clear cache. Please try again.'
     toastMessage.value = errorMessage
-    toastColor.value = 'error'
+    toastSeverity.value = 'danger'
     showToast.value = true
   } finally {
     isLoading.value = false

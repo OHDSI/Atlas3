@@ -41,20 +41,19 @@
         />
         <span class="d">{{ t('common.days', 'days') }}</span>
       </div>
-      <v-alert
+      <AtlasAlert
         v-if="errorText"
-        type="error"
+        severity="danger"
         density="compact"
-        variant="tonal"
       >
         {{ errorText }}
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'

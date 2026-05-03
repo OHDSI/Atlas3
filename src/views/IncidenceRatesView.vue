@@ -112,22 +112,18 @@
     </v-card>
   </v-dialog>
 
-  <v-snackbar
+  <AtlasSnackbar
     :model-value="!!feedback"
-    :color="feedback?.color ?? 'info'"
+    :severity="feedbackSeverity"
+    :text="feedback?.message ?? ''"
     :timeout="3000"
-    @update:model-value="
-      (open: boolean) => {
-        if (!open) feedback = null
-      }
-    "
-  >
-    {{ feedback?.message }}
-  </v-snackbar>
+    @update:model-value="(open: boolean) => { if (!open) feedback = null }"
+  />
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasSnackbar, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useIncidenceRates } from '@/composables/useIncidenceRates'
@@ -162,6 +158,9 @@ const { t } = useI18n()
 const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)
 const feedback = ref<{ message: string; color: 'success' | 'error' | 'info' } | null>(null)
+const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
+  feedback.value?.color === 'error' ? 'danger' : (feedback.value?.color ?? 'info')
+)
 const searchInput = ref('')
 
 const headers = computed(() => [

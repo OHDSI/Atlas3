@@ -8,20 +8,19 @@
     </v-card-title>
 
     <v-card-text>
-      <v-alert
+      <AtlasAlert
         v-if="errorMessage"
-        type="error"
+        severity="danger"
         class="mb-4"
-        closable
-        @click:close="errorMessage = null"
+        :closable="true"
+        @close="errorMessage = null"
       >
         {{ errorMessage }}
-      </v-alert>
+      </AtlasAlert>
 
-      <v-alert
+      <AtlasAlert
         v-if="isRunningAs"
-        type="info"
-        variant="tonal"
+        severity="info"
         class="mb-4"
       >
         <div class="d-flex align-center justify-space-between">
@@ -45,7 +44,7 @@
             {{ t('auth.exitRunAs') }}
           </AtlasButton>
         </div>
-      </v-alert>
+      </AtlasAlert>
 
       <AtlasTextField
         v-model="targetUser"
@@ -69,21 +68,20 @@
         {{ t('components.welcome.runas') }}
       </AtlasButton>
 
-      <v-alert
-        type="warning"
-        variant="tonal"
+      <AtlasAlert
+        severity="warning"
         class="mt-4"
       >
         <div class="text-caption">
           <strong>{{ t('facets.values.warning') }}:</strong> {{ t('auth.runAsWarning') }}
         </div>
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

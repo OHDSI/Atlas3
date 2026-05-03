@@ -114,14 +114,13 @@
         </div>
 
         <!-- Error State -->
-        <v-alert
+        <AtlasAlert
           v-else-if="error"
-          type="error"
-          variant="tonal"
+          severity="danger"
           class="ma-4"
         >
-          {{ error }}
-          <template #append>
+          <div class="d-flex align-center justify-space-between">
+            <span>{{ error }}</span>
             <AtlasButton
               variant="ghost"
               size="sm"
@@ -129,8 +128,8 @@
             >
               {{ t('configuration.jobs.actions.retry') }}
             </AtlasButton>
-          </template>
-        </v-alert>
+          </div>
+        </AtlasAlert>
 
         <!-- Empty State -->
         <div
@@ -268,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useJobs } from '@/composables/useJobs'

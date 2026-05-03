@@ -20,10 +20,9 @@
 
       <div class="datasources-view__main">
         <!-- Error State: Sources -->
-        <v-alert
+        <AtlasAlert
           v-if="store.error.sources"
-          type="error"
-          variant="tonal"
+          severity="danger"
           density="compact"
           class="datasources-view__alert"
         >
@@ -38,13 +37,11 @@
               {{ t('common.retry', 'Retry') }}
             </v-btn>
           </div>
-        </v-alert>
+        </AtlasAlert>
 
-        <!-- Error State: Report -->
-        <v-alert
+        <AtlasAlert
           v-if="store.error.report"
-          type="error"
-          variant="tonal"
+          severity="danger"
           density="compact"
           class="datasources-view__alert"
         >
@@ -59,7 +56,7 @@
               {{ t('common.retry', 'Retry') }}
             </v-btn>
           </div>
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Loading State -->
         <AtlasSkeleton
@@ -178,7 +175,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { logger } from '@/utils/logger'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
-import { AtlasCard, AtlasIcon, AtlasPageShell, AtlasSkeleton } from '@/components/ui'
+import { AtlasAlert, AtlasCard, AtlasIcon, AtlasPageShell, AtlasSkeleton } from '@/components/ui'
 import DataSourceSelector from '@/components/datasources/DataSourceSelector.vue'
 import DataSourceSidebar from '@/components/datasources/DataSourceSidebar.vue'
 import DashboardReport from '@/components/datasources/DashboardReport.vue'

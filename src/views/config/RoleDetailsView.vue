@@ -18,24 +18,21 @@
         </div>
 
         <!-- Error State -->
-        <v-alert
+        <AtlasAlert
           v-else-if="rolesError"
-          type="error"
-          variant="tonal"
+          severity="danger"
           class="mb-4"
         >
           {{ rolesError }}
-        </v-alert>
+        </AtlasAlert>
 
-        <!-- Role Not Found -->
-        <v-alert
+        <AtlasAlert
           v-else-if="!currentRole"
-          type="warning"
-          variant="tonal"
+          severity="warning"
           class="mb-4"
         >
           Role not found
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Role Details -->
         <template v-else>
@@ -125,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCol, AtlasContainer, AtlasProgressCircular, AtlasRow, AtlasTab, AtlasTabs } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCol, AtlasContainer, AtlasProgressCircular, AtlasRow, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useRoles } from '@/composables/useRoles'

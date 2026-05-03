@@ -167,28 +167,19 @@
       </v-card-text>
     </v-card>
 
-    <!-- Toast Notification -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showToast"
+      :severity="toastSeverity"
+      :text="toastMessage"
       :timeout="5000"
-      :color="toastColor"
       location="bottom"
-    >
-      {{ toastMessage }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="showToast = false"
-        >
-          {{ t('common.close', 'Close') }}
-        </AtlasButton>
-      </template>
-    </v-snackbar>
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasAvatar, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressCircular } from '@/components/ui'
+import { AtlasAvatar, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressCircular, AtlasSnackbar } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAuth } from '@/composables/useAuth'
@@ -209,7 +200,7 @@ const dataSourcesInfo = ref<Map<string, DataSource>>(new Map())
 const buildingSource = ref<string | null>(null)
 const showToast = ref(false)
 const toastMessage = ref('')
-const toastColor = ref<'success' | 'error' | 'info'>('success')
+const toastSeverity = ref<AtlasSnackbarSeverity>('success')
 
 async function loadDataSources(): Promise<void> {
   if (!isTrexSQLEnabled.value) return
@@ -328,7 +319,7 @@ async function pollCacheStatus(sourceKey: string): Promise<void> {
 
 function showNotification(message: string, color: 'success' | 'error' | 'info'): void {
   toastMessage.value = message
-  toastColor.value = color
+  toastSeverity.value = color === 'error' ? 'danger' : color
   showToast.value = true
 }
 

@@ -146,14 +146,13 @@
           </tbody>
         </v-table>
 
-        <v-alert
+        <AtlasAlert
           v-if="dataSources.length === 0"
-          type="info"
-          variant="tonal"
+          severity="info"
           class="mt-4"
         >
           {{ t('commonErrors.noSources') }}
-        </v-alert>
+        </AtlasAlert>
       </v-card-text>
     </v-card>
 
@@ -178,41 +177,21 @@
       </v-card-text>
     </v-card>
 
-    <!-- Success Toast -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showToast"
+      severity="success"
+      :text="toastMessage"
       :timeout="5000"
-      color="success"
       location="bottom"
-    >
-      {{ toastMessage }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="showToast = false"
-        >
-          Close
-        </AtlasButton>
-      </template>
-    </v-snackbar>
+    />
 
-    <!-- Error Toast -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showErrorToast"
+      severity="danger"
+      :text="errorMessage"
       :timeout="5000"
-      color="error"
       location="bottom"
-    >
-      {{ errorMessage }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="showErrorToast = false"
-        >
-          {{ t('common.close') }}
-        </AtlasButton>
-      </template>
-    </v-snackbar>
+    />
 
     <!-- Data Source Dialog -->
     <DataSourceDialog
@@ -254,7 +233,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { deleteSource } from '@/services/source.service'

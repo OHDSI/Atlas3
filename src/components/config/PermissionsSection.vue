@@ -35,15 +35,14 @@
       />
 
       <!-- Error (hidden for 401 when not authenticated) -->
-      <v-alert
+      <AtlasAlert
         v-if="visibleError"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="my-4"
-        closable
+        :closable="true"
       >
         {{ visibleError }}
-      </v-alert>
+      </AtlasAlert>
 
       <!-- Empty State -->
       <div
@@ -176,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import { useAuth } from '@/composables/useAuth'

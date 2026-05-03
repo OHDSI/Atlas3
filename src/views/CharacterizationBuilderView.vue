@@ -314,23 +314,13 @@
       </v-card>
     </v-dialog>
 
-    <!-- Snackbar -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="snackbar.show"
-      :color="snackbar.color"
+      :severity="snackbar.severity"
+      :text="snackbar.message"
       :timeout="snackbar.timeout"
       data-testid="char-builder-snackbar"
-    >
-      {{ snackbar.message }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="snackbar.show = false"
-        >
-          {{ t('common.close', 'Close') }}
-        </AtlasButton>
-      </template>
-    </v-snackbar>
+    />
   </AnalysisBuilderShell>
 </template>
 
@@ -349,7 +339,8 @@ import { logger } from '@/utils/logger'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasDivider, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasDivider, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
@@ -395,18 +386,18 @@ const availableFeatureAnalyses = ref<FeatureAnalysisListItem[]>([])
 const snackbar = reactive<{
   show: boolean
   message: string
-  color: 'success' | 'error' | 'info'
+  severity: AtlasSnackbarSeverity
   timeout: number
 }>({
   show: false,
   message: '',
-  color: 'success',
+  severity: 'success',
   timeout: 3000,
 })
 
 function showSnackbar(message: string, color: 'success' | 'error' | 'info' = 'success') {
   snackbar.message = message
-  snackbar.color = color
+  snackbar.severity = color === 'error' ? 'danger' : color
   snackbar.timeout = color === 'error' ? 5000 : 3000
   snackbar.show = true
 }

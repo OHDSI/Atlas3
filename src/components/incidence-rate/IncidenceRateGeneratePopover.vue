@@ -31,20 +31,19 @@
       </AtlasButton>
     </div>
 
-    <v-alert
+    <AtlasAlert
       v-if="generation.error.value"
-      type="error"
-      variant="tonal"
+      severity="danger"
       density="compact"
       class="mb-0"
     >
       {{ generation.error.value }}
-    </v-alert>
+    </AtlasAlert>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasSelect } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasSelect } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'

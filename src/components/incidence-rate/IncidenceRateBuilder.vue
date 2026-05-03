@@ -282,18 +282,13 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar
+    <AtlasSnackbar
       :model-value="!!feedback"
-      :color="feedback?.color ?? 'info'"
+      :severity="feedbackSeverity"
+      :text="feedback?.message ?? ''"
       :timeout="3000"
-      @update:model-value="
-        (open: boolean) => {
-          if (!open) feedback = null
-        }
-      "
-    >
-      {{ feedback?.message }}
-    </v-snackbar>
+      @update:model-value="(open: boolean) => { if (!open) feedback = null }"
+    />
   </AnalysisBuilderShell>
 </template>
 
@@ -306,7 +301,8 @@ import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasMenu, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasMenu, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import IncidenceRateGeneratePopover from '@/components/incidence-rate/IncidenceRateGeneratePopover.vue'
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'
@@ -320,6 +316,9 @@ const { t } = useI18n()
 const store = useIncidenceRateStore()
 const router = useRouter()
 const { save, copy, remove, feedback } = useIncidenceRateBuilder()
+const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
+  feedback.value?.color === 'error' ? 'danger' : (feedback.value?.color ?? 'info')
+)
 const saving = ref(false)
 const askDelete = ref(false)
 const showConceptSetsDialog = ref(false)

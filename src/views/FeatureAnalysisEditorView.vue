@@ -291,28 +291,19 @@
       </v-card>
     </v-dialog>
 
-    <!-- Error snackbar -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="snackbar.show"
-      :color="snackbar.color"
+      :severity="snackbar.severity"
+      :text="snackbar.message"
       :timeout="snackbar.timeout"
       data-testid="feature-analysis-editor-snackbar"
-    >
-      {{ snackbar.message }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="snackbar.show = false"
-        >
-          {{ t('common.close', 'Close') }}
-        </AtlasButton>
-      </template>
-    </v-snackbar>
+    />
   </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasSnackbar, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 
@@ -378,18 +369,18 @@ const dirty = ref<boolean>(false)
 const snackbar = reactive<{
   show: boolean
   message: string
-  color: 'success' | 'error' | 'info'
+  severity: AtlasSnackbarSeverity
   timeout: number
 }>({
   show: false,
   message: '',
-  color: 'success',
+  severity: 'success',
   timeout: 3000,
 })
 
 function showSnackbar(message: string, color: 'success' | 'error' | 'info' = 'success') {
   snackbar.message = message
-  snackbar.color = color
+  snackbar.severity = color === 'error' ? 'danger' : color
   snackbar.timeout = color === 'error' ? 5000 : 3000
   snackbar.show = true
 }

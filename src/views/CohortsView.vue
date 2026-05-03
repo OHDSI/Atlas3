@@ -200,15 +200,14 @@
               class="cohorts-view__import-json"
             />
 
-            <v-alert
+            <AtlasAlert
               v-if="importError"
-              type="error"
-              variant="tonal"
+              severity="danger"
               density="compact"
               class="mt-3"
             >
               {{ importError }}
-            </v-alert>
+            </AtlasAlert>
           </v-card-text>
           <v-card-actions>
             <AtlasButton
@@ -391,7 +390,7 @@ import {
   saveCohortDefinition,
 } from '@/services/webapi'
 import { logger } from '@/utils/logger'
-import { AtlasButton, AtlasChip, AtlasDivider, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasDivider, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'

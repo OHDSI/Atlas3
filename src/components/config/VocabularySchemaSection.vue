@@ -22,15 +22,14 @@
           class="mb-2"
         />
 
-        <v-alert
+        <AtlasAlert
           v-if="validationError"
-          type="error"
-          variant="tonal"
+          severity="danger"
           density="compact"
           class="mt-2"
         >
           {{ validationError }}
-        </v-alert>
+        </AtlasAlert>
       </v-card-text>
     </v-card>
 
@@ -59,28 +58,18 @@
       </template>
     </v-snackbar>
 
-    <!-- Error Toast -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showErrorToast"
+      severity="danger"
+      :text="errorMessage"
       :timeout="5000"
-      color="error"
       location="bottom"
-    >
-      {{ errorMessage }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="showErrorToast = false"
-        >
-          Close
-        </AtlasButton>
-      </template>
-    </v-snackbar>
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useConfigStore } from '@/stores/config'

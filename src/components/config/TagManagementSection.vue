@@ -65,16 +65,15 @@
             </AtlasTooltip>
           </div>
 
-          <v-alert
+          <AtlasAlert
             v-if="!selectedGroup.allowCustom"
-            type="info"
-            variant="tonal"
+            severity="info"
             density="compact"
             class="mb-3"
           >
             This tag group does not allow custom tags. Edit the group and enable
             <strong>Free-form</strong> to add tags here.
-          </v-alert>
+          </AtlasAlert>
 
           <TagTable
             :items="groupTags"
@@ -111,14 +110,13 @@
         <v-card-title>Delete Tag Group</v-card-title>
         <v-card-text>
           Are you sure you want to delete "{{ selectedTagGroup?.name }}"?
-          <v-alert
+          <AtlasAlert
             v-if="deleteError"
-            type="error"
-            variant="tonal"
+            severity="danger"
             class="mt-3"
           >
             {{ deleteError }}
-          </v-alert>
+          </AtlasAlert>
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
@@ -169,46 +167,26 @@
       </v-card>
     </v-dialog>
 
-    <!-- Success Toast -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showToast"
+      severity="success"
+      :text="toastMessage"
       :timeout="5000"
-      color="success"
       location="bottom"
-    >
-      {{ toastMessage }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="showToast = false"
-        >
-          Close
-        </AtlasButton>
-      </template>
-    </v-snackbar>
+    />
 
-    <!-- Error Toast -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showErrorToast"
+      severity="danger"
+      :text="errorMessage"
       :timeout="5000"
-      color="error"
       location="bottom"
-    >
-      {{ errorMessage }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="showErrorToast = false"
-        >
-          Close
-        </AtlasButton>
-      </template>
-    </v-snackbar>
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag, TagGroup } from '@/models/config.types'

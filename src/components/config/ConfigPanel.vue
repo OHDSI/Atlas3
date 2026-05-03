@@ -131,13 +131,9 @@
             v-if="!hasAnyAdminTab"
             class="config-section"
           >
-            <v-alert
-              type="info"
-              variant="tonal"
-              density="comfortable"
-            >
+            <AtlasAlert severity="info">
               You don't have access to any administrative settings.
-            </v-alert>
+            </AtlasAlert>
           </div>
         </v-card-text>
       </div>
@@ -146,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasIcon, AtlasTab, AtlasTabs } from '@/components/ui'
+import { AtlasAlert, AtlasDivider, AtlasIcon, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useUIStore } from '@/stores/ui'
 import { usePermissions } from '@/composables/usePermissions'

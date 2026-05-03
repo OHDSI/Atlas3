@@ -234,19 +234,19 @@
       @update:selected-tags="handleTagsUpdate"
     />
 
-    <v-snackbar
+    <AtlasSnackbar
       :model-value="!!feedback"
-      :color="feedback?.color ?? 'info'"
+      :severity="feedbackSeverity"
+      :text="feedback?.message ?? ''"
       :timeout="3000"
       @update:model-value="onSnackbarUpdate"
-    >
-      {{ feedback?.message }}
-    </v-snackbar>
+    />
   </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasBadge, AtlasMenu, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -270,6 +270,10 @@ const { currentPathway, previewVersion, isDirty, isPreviewMode, canSave } = stor
 const { save, copy, remove, feedback } = usePathwayBuilder()
 const { hasPermission } = usePermissions()
 const { t } = useI18n()
+
+const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
+  feedback.value?.color === 'error' ? 'danger' : (feedback.value?.color ?? 'info')
+)
 
 const showVersions = ref(false)
 const showTags = ref(false)
