@@ -218,47 +218,31 @@
       @open-generate="generateMenu = true"
     />
 
-    <v-dialog
+    <AtlasDialog
       v-model="showConceptSetsDialog"
+      :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
+      :title="t('ir.tabs.conceptSets', 'Concept Sets').value"
+      :close-label="t('common.close', 'Close').value"
       max-width="1200"
-      scrollable
+      @close="showConceptSetsDialog = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
-          :title="t('ir.tabs.conceptSets', 'Concept Sets').value"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="showConceptSetsDialog = false"
-        />
-        <v-card-text class="pa-4">
-          <IncidenceRateConceptSetsPanel data-testid="ir-builder-conceptsets-panel" />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <IncidenceRateConceptSetsPanel data-testid="ir-builder-conceptsets-panel" />
+    </AtlasDialog>
 
-    <v-dialog
+    <AtlasDialog
       v-model="showVersionsDialog"
+      :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
+      :title="t('ir.tabs.versions', 'Versions').value"
+      :close-label="t('common.close', 'Close').value"
       max-width="1000"
-      scrollable
+      @close="showVersionsDialog = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
-          :title="t('ir.tabs.versions', 'Versions').value"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="showVersionsDialog = false"
-        />
-        <v-card-text class="pa-4">
-          <IncidenceRateVersionsPanel
-            v-if="store.currentIR?.id"
-            :ir-id="store.currentIR.id"
-            data-testid="ir-builder-versions-panel"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <IncidenceRateVersionsPanel
+        v-if="store.currentIR?.id"
+        :ir-id="store.currentIR.id"
+        data-testid="ir-builder-versions-panel"
+      />
+    </AtlasDialog>
 
     <TagSelectionDialog
       v-if="store.currentIR?.id"
@@ -320,7 +304,7 @@ import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasDialog } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import IncidenceRateGeneratePopover from '@/components/incidence-rate/IncidenceRateGeneratePopover.vue'
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'

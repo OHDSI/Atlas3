@@ -1,140 +1,128 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="Tag Group"
+    :title="`${isEditMode ? 'Edit' : 'Create'} Tag Group`"
     max-width="600"
     persistent
+    :show-close="false"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <v-card>
-      <AppDialogHeader
-        eyebrow="Tag Group"
-        :title="`${isEditMode ? 'Edit' : 'Create'} Tag Group`"
+    <v-form
+      ref="formRef"
+      v-model="formValid"
+      @submit.prevent="handleSubmit"
+    >
+      <v-text-field
+        v-model="form.name"
+        label="Name *"
+        :rules="nameRules"
+        :error-messages="errors.name"
+        variant="outlined"
+        required
+        class="mb-2"
       />
 
-      <v-card-text>
-        <v-form
-          ref="formRef"
-          v-model="formValid"
-          @submit.prevent="handleSubmit"
-        >
-          <!-- Name Field -->
-          <v-text-field
-            v-model="form.name"
-            label="Name *"
-            :rules="nameRules"
-            :error-messages="errors.name"
-            variant="outlined"
-            required
-            class="mb-2"
+      <v-text-field
+        v-model="form.color"
+        label="Color"
+        type="color"
+        hint="Hex color code for visual identification"
+        persistent-hint
+        :error-messages="errors.color"
+        variant="outlined"
+        class="mb-2"
+      >
+        <template #prepend-inner>
+          <div
+            v-if="form.color"
+            class="color-preview"
+            :style="{ backgroundColor: form.color }"
           />
+        </template>
+      </v-text-field>
 
-          <!-- Color Field -->
-          <v-text-field
-            v-model="form.color"
-            label="Color"
-            type="color"
-            hint="Hex color code for visual identification"
-            persistent-hint
-            :error-messages="errors.color"
-            variant="outlined"
-            class="mb-2"
-          >
-            <template #prepend-inner>
-              <div
-                v-if="form.color"
-                class="color-preview"
-                :style="{ backgroundColor: form.color }"
-              />
-            </template>
-          </v-text-field>
+      <v-text-field
+        v-model="form.icon"
+        label="Icon"
+        hint="Material Design Icon name (e.g., mdi-tag, mdi-folder)"
+        persistent-hint
+        :error-messages="errors.icon"
+        variant="outlined"
+        class="mb-2"
+      >
+        <template #prepend-inner>
+          <v-icon v-if="form.icon && isValidIcon">
+            {{ form.icon }}
+          </v-icon>
+        </template>
+      </v-text-field>
 
-          <!-- Icon Field -->
-          <v-text-field
-            v-model="form.icon"
-            label="Icon"
-            hint="Material Design Icon name (e.g., mdi-tag, mdi-folder)"
-            persistent-hint
-            :error-messages="errors.icon"
-            variant="outlined"
-            class="mb-2"
-          >
-            <template #prepend-inner>
-              <v-icon v-if="form.icon && isValidIcon">
-                {{ form.icon }}
-              </v-icon>
-            </template>
-          </v-text-field>
+      <v-checkbox
+        v-model="form.mandatory"
+        label="Mandatory"
+        hint="Tags from this group are required on all assets"
+        persistent-hint
+        density="compact"
+      />
 
-          <!-- Boolean Flags -->
-          <v-checkbox
-            v-model="form.mandatory"
-            label="Mandatory"
-            hint="Tags from this group are required on all assets"
-            persistent-hint
-            density="compact"
-          />
+      <v-checkbox
+        v-model="form.showGroup"
+        label="Show as Column"
+        hint="Display as a column in asset tables"
+        persistent-hint
+        density="compact"
+      />
 
-          <v-checkbox
-            v-model="form.showGroup"
-            label="Show as Column"
-            hint="Display as a column in asset tables"
-            persistent-hint
-            density="compact"
-          />
+      <v-checkbox
+        v-model="form.multiSelection"
+        label="Allow Multiple"
+        hint="Allow multiple tags from this group per asset"
+        persistent-hint
+        density="compact"
+      />
 
-          <v-checkbox
-            v-model="form.multiSelection"
-            label="Allow Multiple"
-            hint="Allow multiple tags from this group per asset"
-            persistent-hint
-            density="compact"
-          />
+      <v-checkbox
+        v-model="form.allowCustom"
+        label="Free-form"
+        hint="Allow users to create custom tags in this group"
+        persistent-hint
+        density="compact"
+      />
 
-          <v-checkbox
-            v-model="form.allowCustom"
-            label="Free-form"
-            hint="Allow users to create custom tags in this group"
-            persistent-hint
-            density="compact"
-          />
+      <v-textarea
+        v-model="form.description"
+        label="Description"
+        rows="3"
+        :error-messages="errors.description"
+        variant="outlined"
+        class="mt-2"
+      />
+    </v-form>
 
-          <!-- Description Field -->
-          <v-textarea
-            v-model="form.description"
-            label="Description"
-            rows="3"
-            :error-messages="errors.description"
-            variant="outlined"
-            class="mt-2"
-          />
-        </v-form>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          variant="text"
-          @click="handleClose"
-        >
-          Cancel
-        </v-btn>
-        <v-btn
-          color="primary"
-          :disabled="!formValid"
-          :loading="saving"
-          @click="handleSubmit"
-        >
-          {{ isEditMode ? 'Save' : 'Create' }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <template #actions>
+      <v-btn
+        variant="text"
+        @click="handleClose"
+      >
+        Cancel
+      </v-btn>
+      <v-btn
+        color="primary"
+        :disabled="!formValid"
+        :loading="saving"
+        @click="handleSubmit"
+      >
+        {{ isEditMode ? 'Save' : 'Create' }}
+      </v-btn>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { tagGroupSchema, type TagGroup } from '@/models/config.types'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasDialog } from '@/components/ui'
 
 interface Props {
   modelValue: boolean

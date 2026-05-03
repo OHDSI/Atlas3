@@ -40,7 +40,10 @@ function mountEditor(initial: Stratum[] = []) {
       plugins: [vuetify],
       stubs: {
         CriteriaGroupEditor: true,
-        AppDialogHeader: true,
+        AtlasDialog: {
+          name: 'AtlasDialog',
+          template: '<div><slot /><slot name="actions" /></div>',
+        },
         ConceptSetSelectionDialog: true,
         ConceptSearchDialog: true,
       },

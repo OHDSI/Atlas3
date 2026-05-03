@@ -224,80 +224,56 @@
       :covariate-name="exploreCovariateName"
     />
 
-    <v-dialog
+    <AtlasDialog
       v-model="showConceptSetsDialog"
+      :eyebrow="t('cc.title', 'Characterization').value"
+      :title="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
+      :close-label="t('common.close', 'Close').value"
       max-width="1200"
-      scrollable
+      @close="showConceptSetsDialog = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('cc.title', 'Characterization').value"
-          :title="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="showConceptSetsDialog = false"
-        />
-        <v-card-text class="pa-4">
-          <CharacterizationConceptSetsTab
-            :characterization="draft"
-            data-testid="char-builder-conceptsets-tab"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <CharacterizationConceptSetsTab
+        :characterization="draft"
+        data-testid="char-builder-conceptsets-tab"
+      />
+    </AtlasDialog>
 
-    <v-dialog
+    <AtlasDialog
       v-model="showVersionsDialog"
+      :eyebrow="t('cc.title', 'Characterization').value"
+      :title="t('cc.viewEdit.tabs.versions', 'Versions').value"
+      :close-label="t('common.close', 'Close').value"
       max-width="1000"
-      scrollable
+      @close="showVersionsDialog = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('cc.title', 'Characterization').value"
-          :title="t('cc.viewEdit.tabs.versions', 'Versions').value"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="showVersionsDialog = false"
-        />
-        <v-card-text class="pa-4">
-          <div
-            class="char-builder__versions-stub"
-            data-testid="char-builder-versions-tab"
-          >
-            <p>
-              {{
-                t(
-                  'characterizations.editor.versionsTodo',
-                  'Versions integration TODO — wires into characterization-versions.service in a follow-up.'
-                )
-              }}
-            </p>
-          </div>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <div
+        class="char-builder__versions-stub"
+        data-testid="char-builder-versions-tab"
+      >
+        <p>
+          {{
+            t(
+              'characterizations.editor.versionsTodo',
+              'Versions integration TODO — wires into characterization-versions.service in a follow-up.'
+            )
+          }}
+        </p>
+      </div>
+    </AtlasDialog>
 
-    <v-dialog
+    <AtlasDialog
       v-model="showValidationDialog"
+      :eyebrow="t('cc.title', 'Characterization').value"
+      :title="t('cc.viewEdit.tabs.messages', 'Validation').value"
+      :close-label="t('common.close', 'Close').value"
       max-width="800"
-      scrollable
+      @close="showValidationDialog = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('cc.title', 'Characterization').value"
-          :title="t('cc.viewEdit.tabs.messages', 'Validation').value"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="showValidationDialog = false"
-        />
-        <v-card-text class="pa-4">
-          <CharacterizationMessagesTab
-            :characterization="draft"
-            data-testid="char-builder-validation-tab"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <CharacterizationMessagesTab
+        :characterization="draft"
+        data-testid="char-builder-validation-tab"
+      />
+    </AtlasDialog>
 
     <!-- Delete confirmation dialog -->
     <v-dialog
@@ -376,7 +352,7 @@ import { logger } from '@/utils/logger'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasDialog } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'

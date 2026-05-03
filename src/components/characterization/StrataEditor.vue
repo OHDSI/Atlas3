@@ -100,42 +100,33 @@
       </div>
     </div>
 
-    <v-dialog
+    <AtlasDialog
       v-model="dialogOpen"
+      :eyebrow="t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value"
+      :title="dialogTitle"
+      :close-label="t('common.close', 'Close').value"
       max-width="1100"
-      scrollable
-      :persistent="true"
+      persistent
+      @close="dialogOpen = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value"
-          :title="dialogTitle"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="dialogOpen = false"
-        />
-        <v-card-text class="strata-editor__dialog-body">
-          <CriteriaGroupEditor
-            v-if="dialogStratum"
-            :model-value="dialogGroup"
-            @update:model-value="onDialogGroupUpdate"
-            @select-concept-set="onSelectConceptSet"
-            @select-concept="onSelectConcept"
-          />
-        </v-card-text>
-        <v-card-actions class="strata-editor__dialog-actions">
-          <v-spacer />
-          <v-btn
-            variant="text"
-            size="small"
-            density="compact"
-            @click="dialogOpen = false"
-          >
-            {{ t('common.close', 'Close').value }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <CriteriaGroupEditor
+        v-if="dialogStratum"
+        :model-value="dialogGroup"
+        @update:model-value="onDialogGroupUpdate"
+        @select-concept-set="onSelectConceptSet"
+        @select-concept="onSelectConcept"
+      />
+      <template #actions>
+        <v-btn
+          variant="text"
+          size="small"
+          density="compact"
+          @click="dialogOpen = false"
+        >
+          {{ t('common.close', 'Close').value }}
+        </v-btn>
+      </template>
+    </AtlasDialog>
 
     <ConceptSetSelectionDialog
       v-model="conceptSetDialogOpen"
@@ -156,7 +147,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasDialog } from '@/components/ui'
 import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
@@ -467,11 +458,4 @@ function removeStratum(index: number) {
 
 .strata-editor__criteria-chip { font-size: 11px; }
 
-.strata-editor__dialog-body {
-  padding: 16px 20px;
-}
-
-.strata-editor__dialog-actions {
-  padding: 8px 16px 12px;
-}
 </style>
