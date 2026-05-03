@@ -18,16 +18,15 @@
         {{ t('cc.viewEdit.executions.title', 'Run characterization') }}
       </v-card-title>
       <v-card-text class="run-dialog__body">
-        <v-alert
+        <AtlasAlert
           v-if="errorMessage"
-          type="error"
-          variant="tonal"
+          severity="danger"
           density="compact"
           class="mb-3"
           data-testid="run-execution-dialog-error"
         >
           {{ errorMessage }}
-        </v-alert>
+        </AtlasAlert>
         <AtlasSelect
           v-model="selectedSourceKey"
           :items="sourceItems"
@@ -67,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasSpacer, AtlasSelect } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasSpacer, AtlasSelect } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

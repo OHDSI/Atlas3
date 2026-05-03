@@ -33,16 +33,15 @@
             class="mt-4"
           />
 
-          <v-alert
+          <AtlasAlert
             v-if="error"
-            type="error"
-            variant="tonal"
-            closable
+            severity="danger"
+            :closable="true"
             class="mt-2"
-            @click:close="error = null"
+            @close="error = null"
           >
             {{ error }}
-          </v-alert>
+          </AtlasAlert>
         </v-form>
       </v-card-text>
 
@@ -67,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'

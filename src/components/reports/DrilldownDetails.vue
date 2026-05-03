@@ -253,19 +253,16 @@
         v-if="!hasAnyData"
         cols="12"
       >
-        <v-alert
-          type="info"
-          variant="tonal"
-        >
+        <AtlasAlert severity="info">
           No detailed data available for this concept.
-        </v-alert>
+        </AtlasAlert>
       </AtlasCol>
     </AtlasRow>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasCol, AtlasProgressCircular, AtlasRow } from '@/components/ui'
+import { AtlasAlert, AtlasCol, AtlasProgressCircular, AtlasRow } from '@/components/ui'
 import { computed } from 'vue'
 import type { DrilldownReport, TimeSeriesData, LineChartData } from '@/models/report.types'
 import {

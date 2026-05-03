@@ -33,24 +33,21 @@
     </div>
 
     <!-- Error -->
-    <v-alert
+    <AtlasAlert
       v-else-if="error"
-      type="error"
-      variant="tonal"
+      severity="danger"
       data-testid="inclusion-rule-report-error"
     >
       {{ error }}
-    </v-alert>
+    </AtlasAlert>
 
-    <!-- Empty (no generation yet) -->
-    <v-alert
+    <AtlasAlert
       v-else-if="!report"
-      type="info"
-      variant="tonal"
+      severity="info"
       data-testid="inclusion-rule-report-empty"
     >
       No generation results found for this cohort and source. Generate the cohort first.
-    </v-alert>
+    </AtlasAlert>
 
     <template v-else>
       <!-- Summary stats -->
@@ -100,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSkeleton, AtlasTab, AtlasTabs } from '@/components/ui'
+import { AtlasAlert, AtlasSkeleton, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { getInclusionRuleReport } from '@/services/webapi'
 import type { InclusionRuleReport, InclusionRuleReportMode } from '@/models/report.types'

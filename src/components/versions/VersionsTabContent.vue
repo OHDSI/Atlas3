@@ -22,14 +22,12 @@
       @saved="handleCommentSaved"
     />
 
-    <!-- Success/Error Snackbar -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="snackbar.show"
-      :color="snackbar.color"
+      :severity="snackbar.severity"
+      :text="snackbar.message"
       :timeout="3000"
-    >
-      {{ snackbar.message }}
-    </v-snackbar>
+    />
 
     <!-- Save Preview as Current Confirmation Dialog (T064) -->
     <v-dialog
@@ -63,7 +61,8 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasSpacer, AtlasSnackbar } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { logger } from '@/utils/logger'
 import { onMounted, ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
@@ -94,7 +93,7 @@ const savingPreview = ref(false)
 const snackbar = reactive({
   show: false,
   message: '',
-  color: 'success',
+  severity: 'success' as AtlasSnackbarSeverity,
 })
 
 // Get appropriate API service for copy
@@ -262,7 +261,7 @@ async function savePreviewAsCurrent(): Promise<boolean> {
  */
 function showSnackbar(message: string, color: 'success' | 'error'): void {
   snackbar.message = message
-  snackbar.color = color
+  snackbar.severity = color === 'error' ? 'danger' : color
   snackbar.show = true
 }
 </script>

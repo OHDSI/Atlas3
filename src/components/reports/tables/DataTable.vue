@@ -84,13 +84,12 @@
 
       <!-- No data slot -->
       <template #no-data>
-        <v-alert
-          type="info"
-          variant="tonal"
+        <AtlasAlert
+          severity="info"
           class="ma-4"
         >
           {{ t('common.noData') }}
-        </v-alert>
+        </AtlasAlert>
       </template>
 
       <!-- Custom cell formatting -->
@@ -112,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TableHeader, TableRow } from '@/models/report.types'

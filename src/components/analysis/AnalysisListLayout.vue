@@ -50,18 +50,17 @@
       </div>
 
       <!-- Error banner -->
-      <v-alert
+      <AtlasAlert
         v-if="error"
-        type="error"
-        variant="tonal"
-        closable
+        severity="danger"
+        :closable="true"
         density="compact"
         class="analysis-list__error"
         :data-testid="testid ? `${testid}-error` : undefined"
-        @click:close="$emit('clear-error')"
+        @close="$emit('clear-error')"
       >
         {{ error }}
-      </v-alert>
+      </AtlasAlert>
 
       <!-- Body -->
       <div class="analysis-list__body">
@@ -80,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 export type AnalysisViewMode = 'tile' | 'table'

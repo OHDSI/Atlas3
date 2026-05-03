@@ -24,14 +24,14 @@
           Would you like to extend your session?
         </p>
 
-        <v-alert
+        <AtlasAlert
           v-if="extensionError"
-          type="error"
+          severity="danger"
           density="compact"
           class="mt-4"
         >
           {{ extensionError }}
-        </v-alert>
+        </AtlasAlert>
       </v-card-text>
 
       <v-card-actions>
@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon } from '@/components/ui'
 import { computed, ref, watch, onUnmounted } from 'vue'
 import type { SessionExpiryModalProps } from './types'
 

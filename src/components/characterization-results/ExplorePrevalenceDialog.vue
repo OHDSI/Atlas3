@@ -40,14 +40,13 @@
           />
         </div>
 
-        <v-alert
+        <AtlasAlert
           v-else-if="error"
-          type="error"
-          variant="tonal"
+          severity="danger"
           class="mb-2"
         >
           {{ error }}
-        </v-alert>
+        </AtlasAlert>
 
         <div
           v-else-if="!rows.length"
@@ -86,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDivider, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

@@ -13,13 +13,12 @@
         height="300"
       />
 
-      <v-alert
+      <AtlasAlert
         v-else-if="error"
-        type="error"
-        variant="tonal"
+        severity="danger"
       >
         {{ error }}
-      </v-alert>
+      </AtlasAlert>
 
       <div
         v-else
@@ -32,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCard, AtlasSkeleton } from '@/components/ui'
+import { AtlasAlert, AtlasCard, AtlasSkeleton } from '@/components/ui'
 
 interface Props {
   title: string

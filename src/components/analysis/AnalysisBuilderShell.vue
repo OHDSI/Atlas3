@@ -40,18 +40,17 @@
         <slot name="banner" />
       </div>
 
-      <v-alert
+      <AtlasAlert
         v-if="error"
-        type="error"
-        variant="tonal"
-        closable
+        severity="danger"
+        :closable="true"
         density="compact"
         class="builder-shell__error"
         :data-testid="testid ? `${testid}-error` : undefined"
-        @click:close="$emit('clear-error')"
+        @close="$emit('clear-error')"
       >
         {{ error }}
-      </v-alert>
+      </AtlasAlert>
 
       <div class="builder-shell__body">
         <slot />
@@ -62,7 +61,7 @@
 
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
-import { AtlasButton, AtlasPageShell } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasPageShell } from '@/components/ui'
 
 interface Props {
   title?: string
