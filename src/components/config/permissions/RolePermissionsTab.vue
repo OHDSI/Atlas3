@@ -109,13 +109,12 @@
         </div>
 
         <!-- Permissions Table -->
-        <v-data-table
+        <AtlasDataTable
           :headers="headers"
           :items="filteredPermissions"
           :items-per-page="50"
           :items-per-page-options="[25, 50, 100, 200]"
           class="role-permissions-tab__table mt-4 elevation-1"
-          density="comfortable"
         >
           <!-- Checkbox Column -->
           <template #item.selected="{ item }">
@@ -168,7 +167,7 @@
             </v-chip>
             <span v-else> — </span>
           </template>
-        </v-data-table>
+        </AtlasDataTable>
       </template>
 
       <!-- Success Message -->
@@ -196,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasChip, AtlasIcon, AtlasProgressCircular, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasProgressCircular, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Permission } from '@/models/role.types'

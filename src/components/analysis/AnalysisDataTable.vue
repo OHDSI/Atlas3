@@ -1,12 +1,11 @@
 <template>
-  <v-data-table
+  <AtlasDataTable
     :headers="headers"
     :items="items"
     :loading="loading"
     :items-per-page="itemsPerPage"
     :sort-by="sortBy"
     hide-default-footer
-    density="comfortable"
     class="analysis-data-table"
     :data-testid="testid"
   >
@@ -134,11 +133,11 @@
         class="analysis-data-table__skeleton"
       />
     </template>
-  </v-data-table>
+  </AtlasDataTable>
 </template>
 
 <script setup lang="ts" generic="T extends { id?: number }">
-import { AtlasIcon, AtlasSkeleton } from '@/components/ui'
+import { AtlasDataTable, AtlasIcon, AtlasSkeleton } from '@/components/ui'
 import { computed, useSlots } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { formatDate, formatRelativeTime } from '@/utils/date-format'

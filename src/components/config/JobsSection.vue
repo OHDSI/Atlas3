@@ -151,7 +151,7 @@
         </div>
 
         <!-- Jobs Table -->
-        <v-data-table
+        <AtlasDataTable
           v-else
           :headers="tableHeaders"
           :items="filteredJobs"
@@ -233,7 +233,7 @@
           <template #item.duration="{ item }">
             <span class="text-body-2 text-mono">{{ formatJobDuration(item.duration) }}</span>
           </template>
-        </v-data-table>
+        </AtlasDataTable>
       </v-card-text>
 
       <!-- Last Updated Footer -->
@@ -267,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useJobs } from '@/composables/useJobs'

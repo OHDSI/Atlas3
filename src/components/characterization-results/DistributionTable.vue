@@ -36,12 +36,11 @@
       />
     </div>
 
-    <v-data-table
+    <AtlasDataTable
       :items="tableRows"
       :headers="headers"
       :items-per-page="25"
       :items-per-page-options="[10, 25, 50, 100, -1]"
-      density="compact"
       :data-testid="`char-results-distribution-table-${analysisId}`"
     >
       <template #no-data>
@@ -49,7 +48,7 @@
           {{ tv('common.noData', 'No rows match the current filter.') }}
         </div>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
   </AtlasCard>
 </template>
 
@@ -59,7 +58,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
-import { AtlasCard, AtlasSelect, AtlasSpacer } from '@/components/ui'
+import { AtlasCard, AtlasDataTable, AtlasSelect, AtlasSpacer } from '@/components/ui'
 
 interface Props {
   analysisId: number

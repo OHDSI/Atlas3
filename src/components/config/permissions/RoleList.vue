@@ -76,7 +76,7 @@
     </div>
 
     <!-- Roles Data Table -->
-    <v-data-table
+    <AtlasDataTable
       v-else
       :headers="headers"
       :items="filteredRoles"
@@ -171,7 +171,7 @@
           </div>
         </div>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
 
     <!-- Create/Edit Dialog -->
     <role-create-dialog
@@ -191,7 +191,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasDataTable, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRoles } from '@/composables/useRoles'

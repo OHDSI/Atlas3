@@ -82,7 +82,7 @@
       </AtlasRow>
     </div>
 
-    <v-data-table
+    <AtlasDataTable
       v-model:page="currentPage"
       :headers="visibleHeaders"
       :items="filteredData"
@@ -123,12 +123,12 @@
           />
         </div>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasCol, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasPagination, AtlasRow, AtlasTextField } from '@/components/ui'
+import { AtlasCheckbox, AtlasCol, AtlasDataTable, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasPagination, AtlasRow, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import type { PrevalenceTableRow } from '@/models/datasource.types'
 import { formatNumber, formatPercentage, exportTableToCSV } from '@/utils/datasource-formatters'

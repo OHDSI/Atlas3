@@ -77,7 +77,7 @@
       v-if="loading || filteredItems.length > 0"
       padding="none"
     >
-      <v-data-table
+      <AtlasDataTable
         v-model:sort-by="sortBy"
         :headers="headers"
         :items="filteredItems"
@@ -190,7 +190,7 @@
             class="mx-2"
           />
         </template>
-      </v-data-table>
+      </AtlasDataTable>
     </AtlasCard>
 
     <!-- Empty / filtered-empty state -->
@@ -230,7 +230,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasDataTable, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 
 const { t } = useI18n()

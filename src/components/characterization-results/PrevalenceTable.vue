@@ -27,12 +27,11 @@
       </h3>
     </div>
 
-    <v-data-table
+    <AtlasDataTable
       :items="tableRows"
       :headers="headers"
       :items-per-page="25"
       :items-per-page-options="[10, 25, 50, 100, -1]"
-      density="compact"
       class="prevalence-table__table"
       :data-testid="`char-results-prevalence-table-${analysisId}`"
     >
@@ -86,7 +85,7 @@
           {{ tv('common.noData', 'No rows match the current filter.') }}
         </div>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
   </AtlasCard>
 </template>
 
@@ -96,7 +95,7 @@ import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasDataTable } from '@/components/ui'
 
 interface Props {
   analysisId: number

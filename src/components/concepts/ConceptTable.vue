@@ -1,6 +1,6 @@
 <template>
   <div class="concept-table">
-    <v-data-table
+    <AtlasDataTable
       v-model:sort-by="sortBy"
       :headers="headers"
       :items="concepts"
@@ -182,7 +182,7 @@
           class="mx-2"
         />
       </template>
-    </v-data-table>
+    </AtlasDataTable>
 
     <!-- Custom pagination -->
     <div class="d-flex align-center justify-space-between pa-4">
@@ -213,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
+import { AtlasButton, AtlasDataTable, AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'

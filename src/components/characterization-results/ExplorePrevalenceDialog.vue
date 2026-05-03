@@ -62,11 +62,10 @@
           </p>
         </div>
 
-        <v-data-table
+        <AtlasDataTable
           v-else
           :items="rows"
           :headers="headers"
-          density="compact"
           :items-per-page="25"
         />
       </v-card-text>
@@ -85,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasDivider, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasDivider, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

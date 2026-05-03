@@ -51,7 +51,7 @@
     </AtlasAlert>
 
     <!-- Versions Table (T025, T030 with virtualization) -->
-    <v-data-table
+    <AtlasDataTable
       :headers="headers"
       :items="filteredVersions"
       :loading="loading"
@@ -169,12 +169,12 @@
           </p>
         </div>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasAvatar, AtlasChip, AtlasCol, AtlasIcon, AtlasProgressLinear, AtlasRow, AtlasSelect } from '@/components/ui'
+import { AtlasAlert, AtlasAvatar, AtlasChip, AtlasCol, AtlasDataTable, AtlasIcon, AtlasProgressLinear, AtlasRow, AtlasSelect } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { VersionsConfig, VersionsTableItem } from './types'

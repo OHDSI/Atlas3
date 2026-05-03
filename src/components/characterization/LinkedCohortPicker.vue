@@ -70,13 +70,12 @@
           {{ t('ir.editor.chooseACohort', 'Select cohorts to link') }}
         </v-card-title>
         <v-card-text class="linked-cohort-picker__dialog-body">
-          <v-data-table
+          <AtlasDataTable
             v-model="selectedIds"
             :headers="dialogHeaders"
             :items="selectableItems"
             item-value="id"
             show-select
-            density="compact"
             data-testid="linked-cohort-picker-table"
           />
         </v-card-text>
@@ -105,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasDataTable, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

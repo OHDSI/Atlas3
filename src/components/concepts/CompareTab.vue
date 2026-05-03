@@ -119,11 +119,10 @@
         </v-card-text>
       </v-card>
 
-      <v-data-table
+      <AtlasDataTable
         :headers="headers"
         :items="rows"
         :items-per-page="25"
-        density="compact"
         class="compare-tab__table"
       >
         <template #item.match="{ item }">
@@ -135,7 +134,7 @@
             {{ item.match }}
           </v-chip>
         </template>
-      </v-data-table>
+      </AtlasDataTable>
     </template>
 
     <ConceptSetChooserDialog
@@ -147,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasChip, AtlasProgressCircular } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasDataTable, AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'

@@ -66,15 +66,14 @@
     </v-card-text>
 
     <!-- Data table -->
-    <v-data-table
-      :headers="visibleHeaders"
+    <AtlasDataTable
+      :headers="visibleHeaders as never"
       :items="filteredItems"
       :loading="loading"
       :items-per-page="itemsPerPage"
       :items-per-page-options="itemsPerPageOptions"
       :search="debouncedSearchQuery"
       :custom-filter="customFilter"
-      density="comfortable"
       class="elevation-0"
     >
       <!-- Loading slot -->
@@ -106,12 +105,12 @@
           {{ formatCell(item[header.key], header) }}
         </slot>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasList, AtlasListItem, AtlasMenu, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TableHeader, TableRow } from '@/models/report.types'

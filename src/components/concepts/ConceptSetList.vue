@@ -51,7 +51,7 @@
       v-if="store.loading || store.filteredSets.length > 0"
       padding="none"
     >
-      <v-data-table
+      <AtlasDataTable
         v-model:sort-by="sortBy"
         :headers="headers"
         :items="store.filteredSets"
@@ -104,7 +104,7 @@
             class="mx-2"
           />
         </template>
-      </v-data-table>
+      </AtlasDataTable>
     </AtlasCard>
 
     <!-- Empty state: filled MD3 container, no border. Sits where the
@@ -198,7 +198,7 @@ import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
-import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()

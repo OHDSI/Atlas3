@@ -34,12 +34,11 @@
         {{ t('cs.browser.compare.noMatches', 'No concept sets match').value }}
       </div>
 
-      <v-data-table
+      <AtlasDataTable
         v-else-if="filteredRows.length > 0"
         :headers="headers"
         :items="filteredRows"
         :items-per-page="10"
-        density="compact"
         hover
         class="chooser-table"
       >
@@ -59,7 +58,7 @@
             </td>
           </tr>
         </template>
-      </v-data-table>
+      </AtlasDataTable>
     </div>
 
     <template #actions>
@@ -79,7 +78,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasButton, AtlasDialog, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDataTable, AtlasDialog, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
 
 interface Props {
   modelValue: boolean

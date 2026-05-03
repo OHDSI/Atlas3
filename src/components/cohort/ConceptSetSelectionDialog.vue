@@ -75,7 +75,7 @@
             v-if="loading || filteredSets.length > 0"
             padding="none"
           >
-            <v-data-table
+            <AtlasDataTable
               v-model:sort-by="sortBy"
               :headers="headers"
               :items="filteredSets"
@@ -118,7 +118,7 @@
                   class="mx-2"
                 />
               </template>
-            </v-data-table>
+            </AtlasDataTable>
           </AtlasCard>
 
           <!-- Empty / filtered-empty state -->
@@ -169,7 +169,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
 
 interface Props {

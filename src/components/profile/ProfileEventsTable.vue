@@ -24,17 +24,16 @@
       class="profile-events-table section-body"
       data-test="profile-events-table"
     >
-      <v-data-table
+      <AtlasDataTable
         :headers="headers"
         :items="store.filteredRecords"
         :items-per-page="25"
-        density="compact"
         data-test="profile-table"
       >
         <template #item.endDay="{ item }">
           {{ item.endDay ?? '—' }}
         </template>
-      </v-data-table>
+      </AtlasDataTable>
     </div>
   </AtlasCard>
 </template>
@@ -42,7 +41,7 @@
 <script setup lang="ts">
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
-import { AtlasCard, AtlasTextField } from '@/components/ui'
+import { AtlasCard, AtlasDataTable, AtlasTextField } from '@/components/ui'
 
 const store = useProfileStore()
 const { tv } = useI18n()

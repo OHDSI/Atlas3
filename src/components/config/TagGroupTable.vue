@@ -1,5 +1,5 @@
 <template>
-  <v-data-table
+  <AtlasDataTable
     :headers="headers"
     :items="items"
     :loading="loading"
@@ -169,11 +169,11 @@
         </p>
       </div>
     </template>
-  </v-data-table>
+  </AtlasDataTable>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasDataTable, AtlasIcon } from '@/components/ui'
 import type { TagGroup } from '@/models/config.types'
 
 interface Props {
@@ -202,7 +202,7 @@ const headers = [
   { title: 'Description', key: 'description', sortable: false, width: '200px' },
   { title: '', key: 'showTagsBtn', sortable: false, width: '100px' },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
-] as const
+]
 
 /**
  * Format ISO date string to readable format
