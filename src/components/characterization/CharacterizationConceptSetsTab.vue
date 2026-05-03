@@ -27,31 +27,34 @@
     >
       {{ t('common.noData', 'No concept sets.') }}
     </div>
-    <v-list
+    <AtlasList
       v-else
       density="comfortable"
       class="char-conceptsets-tab__list"
       data-testid="char-conceptsets-list"
     >
-      <v-list-item
+      <AtlasListItem
         v-for="cs in conceptSets"
         :key="String(cs.id)"
       >
         <template #prepend>
-          <v-icon size="small">
+          <AtlasIcon size="small">
             mdi-tag-multiple
-          </v-icon>
+          </AtlasIcon>
         </template>
-        <v-list-item-title>{{ cs.name }}</v-list-item-title>
+        <v-list-item-title>
+          {{ cs.name }}
+        </v-list-item-title>
         <v-list-item-subtitle v-if="cs.conceptCount !== undefined">
           {{ cs.conceptCount }}
         </v-list-item-subtitle>
-      </v-list-item>
-    </v-list>
+      </AtlasListItem>
+    </AtlasList>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

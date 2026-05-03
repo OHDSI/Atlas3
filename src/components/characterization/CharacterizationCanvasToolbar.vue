@@ -55,7 +55,7 @@
       @update:model-value="(v: string) => $emit('update:threshold', Number(v) || 0)"
     />
 
-    <v-spacer />
+    <AtlasSpacer />
 
     <v-btn
       size="small"
@@ -80,6 +80,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSpacer } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 export type ViewMode = 'table1' | 'perAnalysis'

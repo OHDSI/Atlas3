@@ -30,23 +30,25 @@
       {{ t('common.noData', 'No cohorts linked.') }}
     </div>
 
-    <v-list
+    <AtlasList
       v-else
       density="compact"
       class="linked-cohort-picker__list"
       data-testid="linked-cohort-picker-list"
     >
-      <v-list-item
+      <AtlasListItem
         v-for="cohort in modelValue"
         :key="cohort.id"
         :data-testid="`linked-cohort-picker-row-${cohort.id}`"
       >
         <template #prepend>
-          <v-icon size="small">
+          <AtlasIcon size="small">
             mdi-account-group
-          </v-icon>
+          </AtlasIcon>
         </template>
-        <v-list-item-title>{{ cohort.name }}</v-list-item-title>
+        <v-list-item-title>
+          {{ cohort.name }}
+        </v-list-item-title>
         <template #append>
           <v-btn
             icon="mdi-close"
@@ -57,8 +59,8 @@
             @click="removeCohort(cohort.id)"
           />
         </template>
-      </v-list-item>
-    </v-list>
+      </AtlasListItem>
+    </AtlasList>
 
     <v-dialog
       v-model="dialogOpen"
@@ -80,7 +82,7 @@
           />
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             data-testid="linked-cohort-picker-cancel"
@@ -104,6 +106,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

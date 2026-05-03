@@ -6,7 +6,7 @@
       @update:model-value="v => updateField('cohorts', v)"
     />
 
-    <v-divider class="my-3" />
+    <AtlasDivider class="my-3" />
 
     <LinkedFeatureAnalysisPicker
       :model-value="draft.featureAnalyses"
@@ -14,7 +14,7 @@
       @update:model-value="v => updateField('featureAnalyses', v)"
     />
 
-    <v-divider class="my-3" />
+    <AtlasDivider class="my-3" />
 
     <StrataEditor
       :model-value="draft.stratas"
@@ -26,6 +26,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider } from '@/components/ui'
 import { computed } from 'vue'
 import LinkedCohortPicker from './LinkedCohortPicker.vue'
 import LinkedFeatureAnalysisPicker from './LinkedFeatureAnalysisPicker.vue'

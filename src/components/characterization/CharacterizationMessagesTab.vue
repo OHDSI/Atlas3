@@ -18,13 +18,13 @@
       class="char-messages-tab__empty"
       data-testid="char-messages-empty"
     >
-      <v-icon
+      <AtlasIcon
         color="success"
         size="small"
         class="me-2"
       >
         mdi-check-circle
-      </v-icon>
+      </AtlasIcon>
       {{ t('common.noData', 'No issues. Design is valid.') }}
     </div>
 
@@ -38,27 +38,31 @@
           {{ t('characterizations.editor.validation.headers.errors', 'Errors') }}
           ({{ errors.length }})
         </h3>
-        <v-list
+        <AtlasList
           density="comfortable"
           class="char-messages-tab__list"
         >
-          <v-list-item
+          <AtlasListItem
             v-for="(msg, idx) in errors"
             :key="`error-${idx}`"
             data-testid="char-messages-item-error"
           >
             <template #prepend>
-              <v-icon
+              <AtlasIcon
                 color="error"
                 size="small"
               >
                 mdi-alert-circle
-              </v-icon>
+              </AtlasIcon>
             </template>
-            <v-list-item-title>{{ formatMessage(msg) }}</v-list-item-title>
-            <v-list-item-subtitle>{{ msg.field }}</v-list-item-subtitle>
-          </v-list-item>
-        </v-list>
+            <v-list-item-title>
+              {{ formatMessage(msg) }}
+            </v-list-item-title>
+            <v-list-item-subtitle>
+              {{ msg.field }}
+            </v-list-item-subtitle>
+          </AtlasListItem>
+        </AtlasList>
       </section>
 
       <section
@@ -70,27 +74,31 @@
           {{ t('facets.values.warning', 'Warnings') }}
           ({{ warnings.length }})
         </h3>
-        <v-list
+        <AtlasList
           density="comfortable"
           class="char-messages-tab__list"
         >
-          <v-list-item
+          <AtlasListItem
             v-for="(msg, idx) in warnings"
             :key="`warning-${idx}`"
             data-testid="char-messages-item-warning"
           >
             <template #prepend>
-              <v-icon
+              <AtlasIcon
                 color="warning"
                 size="small"
               >
                 mdi-alert
-              </v-icon>
+              </AtlasIcon>
             </template>
-            <v-list-item-title>{{ formatMessage(msg) }}</v-list-item-title>
-            <v-list-item-subtitle>{{ msg.field }}</v-list-item-subtitle>
-          </v-list-item>
-        </v-list>
+            <v-list-item-title>
+              {{ formatMessage(msg) }}
+            </v-list-item-title>
+            <v-list-item-subtitle>
+              {{ msg.field }}
+            </v-list-item-subtitle>
+          </AtlasListItem>
+        </AtlasList>
       </section>
 
       <section
@@ -102,33 +110,38 @@
           {{ t('facets.values.info', 'Notes') }}
           ({{ infos.length }})
         </h3>
-        <v-list
+        <AtlasList
           density="comfortable"
           class="char-messages-tab__list"
         >
-          <v-list-item
+          <AtlasListItem
             v-for="(msg, idx) in infos"
             :key="`info-${idx}`"
             data-testid="char-messages-item-info"
           >
             <template #prepend>
-              <v-icon
+              <AtlasIcon
                 color="info"
                 size="small"
               >
                 mdi-information-outline
-              </v-icon>
+              </AtlasIcon>
             </template>
-            <v-list-item-title>{{ formatMessage(msg) }}</v-list-item-title>
-            <v-list-item-subtitle>{{ msg.field }}</v-list-item-subtitle>
-          </v-list-item>
-        </v-list>
+            <v-list-item-title>
+              {{ formatMessage(msg) }}
+            </v-list-item-title>
+            <v-list-item-subtitle>
+              {{ msg.field }}
+            </v-list-item-subtitle>
+          </AtlasListItem>
+        </AtlasList>
       </section>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

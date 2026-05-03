@@ -11,12 +11,12 @@
     :data-testid="`execution-row-${execution.id}`"
   >
     <div class="execution-row__cell execution-row__source">
-      <v-icon
+      <AtlasIcon
         size="small"
         class="me-2"
       >
         mdi-database
-      </v-icon>
+      </AtlasIcon>
       <span>{{ execution.sourceKey }}</span>
     </div>
 
@@ -67,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

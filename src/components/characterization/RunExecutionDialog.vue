@@ -43,7 +43,7 @@
         />
       </v-card-text>
       <v-card-actions class="run-dialog__actions">
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           variant="text"
           size="small"
@@ -72,6 +72,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSpacer } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

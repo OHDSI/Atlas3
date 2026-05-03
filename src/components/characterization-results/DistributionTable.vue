@@ -22,7 +22,7 @@
           <span class="distribution-table__count">({{ rows.length }})</span>
         </h3>
       </div>
-      <v-spacer />
+      <AtlasSpacer />
       <v-select
         v-if="cohorts.length > 1"
         v-model="selectedCohortId"
@@ -60,7 +60,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasSpacer } from '@/components/ui'
 
 interface Props {
   analysisId: number

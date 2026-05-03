@@ -1,11 +1,11 @@
 <template>
-  <v-list
+  <AtlasList
     v-if="runs.length > 0"
     density="compact"
     class="char-past-runs"
     nav
   >
-    <v-list-item
+    <AtlasListItem
       v-for="r in runs"
       :key="r.id"
       :class="['char-past-run', { 'char-past-run--active': r.id === activeId }]"
@@ -25,8 +25,8 @@
       <v-list-item-subtitle class="char-past-run__id">
         #{{ r.id }}
       </v-list-item-subtitle>
-    </v-list-item>
-  </v-list>
+    </AtlasListItem>
+  </AtlasList>
   <div
     v-else
     class="char-past-runs__empty"
@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasList, AtlasListItem } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { CharacterizationExecution } from '@/models/characterization.types'
 

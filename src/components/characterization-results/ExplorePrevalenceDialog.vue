@@ -26,14 +26,14 @@
           </h2>
         </div>
       </div>
-      <v-divider />
+      <AtlasDivider />
 
       <v-card-text class="explore-dialog__body">
         <div
           v-if="loading"
           class="explore-dialog__loading"
         >
-          <v-skeleton-loader
+          <AtlasSkeleton
             v-for="n in 4"
             :key="n"
             type="table-row"
@@ -53,7 +53,7 @@
           v-else-if="!rows.length"
           class="explore-dialog__empty"
         >
-          <v-icon
+          <AtlasIcon
             icon="mdi-database-off-outline"
             size="32"
             class="explore-dialog__empty-icon"
@@ -73,7 +73,7 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           variant="text"
           @click="close"
@@ -86,6 +86,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

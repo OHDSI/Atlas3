@@ -32,23 +32,25 @@
       {{ t('common.noData', 'No feature analyses linked.') }}
     </div>
 
-    <v-list
+    <AtlasList
       v-else
       density="compact"
       class="linked-fa-picker__list"
       data-testid="linked-fa-picker-list"
     >
-      <v-list-item
+      <AtlasListItem
         v-for="fa in modelValue"
         :key="fa.id"
         :data-testid="`linked-fa-picker-row-${fa.id}`"
       >
         <template #prepend>
-          <v-icon size="small">
+          <AtlasIcon size="small">
             mdi-chart-box
-          </v-icon>
+          </AtlasIcon>
         </template>
-        <v-list-item-title>{{ displayName(fa) }}</v-list-item-title>
+        <v-list-item-title>
+          {{ displayName(fa) }}
+        </v-list-item-title>
         <v-list-item-subtitle v-if="displaySubtitle(fa)">
           {{ displaySubtitle(fa) }}
         </v-list-item-subtitle>
@@ -87,8 +89,8 @@
             />
           </div>
         </template>
-      </v-list-item>
-    </v-list>
+      </AtlasListItem>
+    </AtlasList>
 
     <v-dialog
       v-model="dialogOpen"
@@ -110,7 +112,7 @@
           />
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             data-testid="linked-fa-picker-cancel"
@@ -134,6 +136,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
