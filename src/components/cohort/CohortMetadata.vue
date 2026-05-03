@@ -64,7 +64,7 @@
             @keyup.enter="addTag"
           >
             <template #append>
-              <v-menu
+              <AtlasMenu
                 v-model="showColorPicker"
                 :close-on-content-click="false"
               >
@@ -75,7 +75,7 @@
                     size="small"
                     variant="text"
                   >
-                    <v-icon>mdi-palette</v-icon>
+                    <AtlasIcon>mdi-palette</AtlasIcon>
                   </v-btn>
                 </template>
                 <v-card>
@@ -88,7 +88,7 @@
                     />
                   </v-card-text>
                 </v-card>
-              </v-menu>
+              </AtlasMenu>
               <v-btn
                 icon
                 size="small"
@@ -96,7 +96,7 @@
                 :disabled="!newTagName.trim()"
                 @click="addTag"
               >
-                <v-icon>mdi-plus</v-icon>
+                <AtlasIcon>mdi-plus</AtlasIcon>
               </v-btn>
             </template>
           </v-text-field>
@@ -107,6 +107,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasMenu } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Tag } from '@/models/cohort.types'

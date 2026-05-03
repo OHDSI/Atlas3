@@ -5,7 +5,7 @@
       v-if="loading"
       class="cohort-table__loading"
     >
-      <v-skeleton-loader type="table" />
+      <AtlasSkeleton type="table" />
     </div>
 
     <!-- Error -->
@@ -26,9 +26,9 @@
           class="mt-3"
           @click="$emit('retry')"
         >
-          <v-icon start>
+          <AtlasIcon start>
             mdi-refresh
-          </v-icon>
+          </AtlasIcon>
           {{ t('common.refresh', 'Retry').value }}
         </v-btn>
       </div>
@@ -40,7 +40,7 @@
       v-else-if="cohorts.length === 0"
       class="cohort-table__empty"
     >
-      <v-icon
+      <AtlasIcon
         :icon="isFiltered ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
         size="36"
         class="cohort-table__empty-icon"
@@ -194,7 +194,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIcon, AtlasSkeleton } from '@/components/ui'
 
 const { t, locale } = useI18n()
 const router = useRouter()

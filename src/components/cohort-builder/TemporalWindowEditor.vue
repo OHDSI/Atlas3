@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AtlasCol, AtlasDivider, AtlasRow } from '@/components/ui'
 import { computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TemporalWindow, Window } from '@/models/event.types'
@@ -169,8 +170,8 @@ watch(
     </v-card-title>
     <v-card-text>
       <!-- Presets -->
-      <v-row dense>
-        <v-col cols="12">
+      <AtlasRow dense>
+        <AtlasCol cols="12">
           <v-select
             :label="t('common.presets', 'Quick Presets').value"
             :items="presetOptions"
@@ -182,18 +183,18 @@ watch(
             clearable
             @update:model-value="v => v && applyPreset(v)"
           />
-        </v-col>
-      </v-row>
+        </AtlasCol>
+      </AtlasRow>
 
-      <v-divider class="my-4" />
+      <AtlasDivider class="my-4" />
 
       <!-- Start Window -->
       <div class="mb-4">
         <div class="text-subtitle-2 mb-2">
           {{ t('common.startWindow', 'Start Window') }}
         </div>
-        <v-row dense>
-          <v-col
+        <AtlasRow dense>
+          <AtlasCol
             cols="12"
             md="4"
           >
@@ -209,8 +210,8 @@ watch(
               hide-details
               @update:model-value="v => updateStartDays(Number(v))"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="4"
           >
@@ -229,8 +230,8 @@ watch(
               hide-details
               @update:model-value="updateStartDirection"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="4"
           >
@@ -246,13 +247,13 @@ watch(
               hide-details
               @update:model-value="updateStartAllTime"
             />
-          </v-col>
-        </v-row>
-        <v-row
+          </AtlasCol>
+        </AtlasRow>
+        <AtlasRow
           dense
           class="mt-2"
         >
-          <v-col cols="12">
+          <AtlasCol cols="12">
             <v-select
               :model-value="startReferencePoint"
               :items="referencePointOptions"
@@ -265,19 +266,19 @@ watch(
               hide-details
               @update:model-value="updateStartReferencePoint"
             />
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
       </div>
 
-      <v-divider class="my-4" />
+      <AtlasDivider class="my-4" />
 
       <!-- End Window -->
       <div>
         <div class="text-subtitle-2 mb-2">
           {{ t('common.endWindow', 'End Window') }}
         </div>
-        <v-row dense>
-          <v-col
+        <AtlasRow dense>
+          <AtlasCol
             cols="12"
             md="4"
           >
@@ -297,8 +298,8 @@ watch(
               hide-details
               @update:model-value="v => updateEndDays(Number(v))"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="4"
           >
@@ -317,8 +318,8 @@ watch(
               hide-details
               @update:model-value="updateEndDirection"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="4"
           >
@@ -334,13 +335,13 @@ watch(
               hide-details
               @update:model-value="updateEndAllTime"
             />
-          </v-col>
-        </v-row>
-        <v-row
+          </AtlasCol>
+        </AtlasRow>
+        <AtlasRow
           dense
           class="mt-2"
         >
-          <v-col cols="12">
+          <AtlasCol cols="12">
             <v-select
               :model-value="endReferencePoint"
               :items="referencePointOptions"
@@ -353,16 +354,16 @@ watch(
               hide-details
               @update:model-value="updateEndReferencePoint"
             />
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
       </div>
 
       <!-- Validation Error Messages -->
-      <v-row
+      <AtlasRow
         v-if="!validation.isValid"
         dense
       >
-        <v-col cols="12">
+        <AtlasCol cols="12">
           <v-alert
             type="error"
             variant="tonal"
@@ -378,8 +379,8 @@ watch(
               </li>
             </ul>
           </v-alert>
-        </v-col>
-      </v-row>
+        </AtlasCol>
+      </AtlasRow>
     </v-card-text>
   </v-card>
 </template>

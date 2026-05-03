@@ -6,7 +6,7 @@
   >
     <v-card-text class="d-flex">
       <!-- Vertical Logic Type Label -->
-      <v-menu
+      <AtlasMenu
         v-model="showLogicTypeMenu"
         :close-on-content-click="false"
         location="end"
@@ -79,7 +79,7 @@
             />
           </v-card-text>
           <v-card-actions class="pa-2">
-            <v-spacer />
+            <AtlasSpacer />
             <v-btn
               variant="text"
               size="small"
@@ -96,7 +96,7 @@
             </v-btn>
           </v-card-actions>
         </v-card>
-      </v-menu>
+      </AtlasMenu>
 
       <!-- Main Content -->
       <div class="flex-grow-1">
@@ -108,7 +108,7 @@
           density="compact"
           class="mb-2"
         >
-          <v-icon>mdi-alert</v-icon>
+          <AtlasIcon>mdi-alert</AtlasIcon>
           {{ t('components.nestedCriteria.depthWarning', 'Deep nesting detected') }} ({{ depth }}
           {{ t('common.levels', 'levels') }}).
           {{
@@ -121,7 +121,7 @@
 
         <!-- Header with Add Criteria and Delete buttons -->
         <div class="group-header d-flex align-center mb-2">
-          <v-menu>
+          <AtlasMenu>
             <template #activator="{ props: slotProps }">
               <v-btn
                 v-bind="slotProps"
@@ -133,18 +133,18 @@
                 {{ t('components.criteriaGroup.addCriteria', 'Add Criteria') }}
               </v-btn>
             </template>
-            <v-list>
-              <v-list-item
+            <AtlasList>
+              <AtlasListItem
                 v-for="criteriaType in criteriaTypes"
                 :key="criteriaType.value"
                 :title="criteriaType.label"
                 :subtitle="criteriaType.description"
                 @click="addCriteria(criteriaType.value as CriteriaType)"
               />
-            </v-list>
-          </v-menu>
+            </AtlasList>
+          </AtlasMenu>
 
-          <v-spacer />
+          <AtlasSpacer />
 
           <v-btn
             icon="mdi-delete"
@@ -197,7 +197,7 @@
                     >
                       {{ formatEventType(event.criteriaType) }}
                     </v-chip>
-                    <v-spacer />
+                    <AtlasSpacer />
                     <v-btn
                       icon="mdi-close"
                       size="x-small"
@@ -324,6 +324,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer } from '@/components/ui'
 import { ref, computed, watch, defineOptions } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

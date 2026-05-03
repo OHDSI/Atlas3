@@ -13,7 +13,7 @@
       v-if="modelValue.length === 0"
       class="inclusion-criteria-panel__empty"
     >
-      <v-icon
+      <AtlasIcon
         icon="mdi-filter-variant-plus"
         size="20"
         class="inclusion-criteria-panel__empty-icon"
@@ -131,7 +131,7 @@
             </h2>
           </div>
         </div>
-        <v-divider />
+        <AtlasDivider />
         <v-card-text>
           <v-text-field
             v-model="editingName"
@@ -143,7 +143,7 @@
           />
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="showEditDialog = false"
@@ -164,6 +164,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { ref, nextTick } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

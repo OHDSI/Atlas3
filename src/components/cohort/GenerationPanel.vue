@@ -12,16 +12,16 @@
     >
       <!-- Header -->
       <v-card-title class="d-flex align-center pa-4 border-b">
-        <v-icon
+        <AtlasIcon
           class="mr-2"
           color="primary"
         >
           mdi-database-cog
-        </v-icon>
+        </AtlasIcon>
         <span class="text-h6">{{
           t('cohortDefinitions.cohortDefinitionManager.tabs.generation', 'Generation')
         }}</span>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           icon="mdi-close"
           variant="text"
@@ -77,31 +77,31 @@
                 key="reports"
                 class="h-100"
               >
-                <v-tabs
+                <AtlasTabs
                   v-model="activeTab"
                   density="compact"
                   color="primary"
                   class="generation-layout__tabs"
                 >
-                  <v-tab
+                  <AtlasTab
                     value="inclusion-rules"
                     data-testid="generation-tab-inclusion-rules"
                   >
-                    <v-icon class="mr-2">
+                    <AtlasIcon class="mr-2">
                       mdi-filter-variant
-                    </v-icon>
+                    </AtlasIcon>
                     Inclusion Rules
-                  </v-tab>
-                  <v-tab
+                  </AtlasTab>
+                  <AtlasTab
                     value="samples"
                     data-testid="generation-tab-samples"
                   >
-                    <v-icon class="mr-2">
+                    <AtlasIcon class="mr-2">
                       mdi-shuffle-variant
-                    </v-icon>
+                    </AtlasIcon>
                     Samples
-                  </v-tab>
-                </v-tabs>
+                  </AtlasTab>
+                </AtlasTabs>
                 <v-window
                   v-model="activeTab"
                   class="mt-2"
@@ -154,6 +154,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasSpacer, AtlasTab, AtlasTabs } from '@/components/ui'
 import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'

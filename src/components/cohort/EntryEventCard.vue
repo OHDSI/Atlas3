@@ -23,7 +23,7 @@
           </div>
         </div>
         <div class="event-header__right">
-          <v-menu>
+          <AtlasMenu>
             <template #activator="{ props: menuProps }">
               <v-btn
                 v-bind="menuProps"
@@ -36,8 +36,8 @@
                 {{ t('components.common.addAttribute') }}
               </v-btn>
             </template>
-            <v-list>
-              <v-list-item
+            <AtlasList>
+              <AtlasListItem
                 v-for="attr in availableAttributes"
                 :key="attr.key"
                 :title="attr.label"
@@ -45,8 +45,8 @@
                 :disabled="attr.type === 'nested' && !!props.event.nestedCriteria"
                 @click="addAttribute(attr.key, attr.type)"
               />
-            </v-list>
-          </v-menu>
+            </AtlasList>
+          </AtlasMenu>
           <v-btn
             icon
             size="small"
@@ -54,7 +54,7 @@
             color="primary"
             @click="emit('remove')"
           >
-            <v-icon>mdi-delete</v-icon>
+            <AtlasIcon>mdi-delete</AtlasIcon>
           </v-btn>
         </div>
       </div>
@@ -116,6 +116,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

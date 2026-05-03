@@ -7,18 +7,18 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">
+        <AtlasIcon class="mr-2">
           mdi-magnify
-        </v-icon>
+        </AtlasIcon>
         <span>{{ tv('search.headingTitle') }}</span>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           icon
           size="small"
           variant="text"
           @click="close"
         >
-          <v-icon>mdi-close</v-icon>
+          <AtlasIcon>mdi-close</AtlasIcon>
         </v-btn>
       </v-card-title>
 
@@ -54,7 +54,7 @@
             {{ t('common.search') }}
           </v-btn>
 
-          <v-spacer />
+          <AtlasSpacer />
 
           <v-btn
             variant="text"
@@ -71,7 +71,7 @@
           </v-btn>
         </div>
 
-        <v-divider class="my-4" />
+        <AtlasDivider class="my-4" />
 
         <loading-spinner
           v-if="isSearching"
@@ -89,7 +89,7 @@
             item-height="72"
           >
             <template #default="{ item }">
-              <v-list-item
+              <AtlasListItem
                 :key="item.conceptId"
                 @click="selectConcept(item)"
               >
@@ -97,12 +97,14 @@
                   <v-checkbox-btn :model-value="isSelected(item.conceptId)" />
                 </template>
 
-                <v-list-item-title>{{ item.conceptName }}</v-list-item-title>
+                <v-list-item-title>
+                  {{ item.conceptName }}
+                </v-list-item-title>
                 <v-list-item-subtitle>
                   ID: {{ item.conceptId }} | Code: {{ item.conceptCode }} | Domain:
                   {{ item.domainId }}
                 </v-list-item-subtitle>
-              </v-list-item>
+              </AtlasListItem>
             </template>
           </v-virtual-scroll>
         </div>
@@ -111,12 +113,12 @@
           v-else-if="hasSearched"
           class="text-center text-medium-emphasis py-4"
         >
-          <v-icon
+          <AtlasIcon
             size="48"
             class="mb-2"
           >
             mdi-magnify-remove-outline
-          </v-icon>
+          </AtlasIcon>
           <p>{{ t('search.noResultsFoundFor', { query: searchQuery }) }}</p>
         </div>
 
@@ -124,12 +126,12 @@
           v-else
           class="text-center text-medium-emphasis py-4"
         >
-          <v-icon
+          <AtlasIcon
             size="48"
             class="mb-2"
           >
             mdi-magnify
-          </v-icon>
+          </AtlasIcon>
           <p>{{ t('conceptSearch.instructions') }}</p>
         </div>
       </v-card-text>
@@ -138,6 +140,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasIcon, AtlasListItem, AtlasSpacer } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'

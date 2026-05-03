@@ -6,12 +6,12 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon
+        <AtlasIcon
           :color="severityColor"
           class="mr-2"
         >
           mdi-message-text
-        </v-icon>
+        </AtlasIcon>
         {{ t('cc.viewEdit.tabs.messages') }}
       </v-card-title>
       <v-card-text>
@@ -60,7 +60,7 @@
         </v-table>
       </v-card-text>
       <v-card-actions>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           color="primary"
           @click="$emit('update:modelValue', false)"
@@ -73,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 

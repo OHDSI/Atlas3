@@ -8,13 +8,13 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">
+        <AtlasIcon class="mr-2">
           mdi-tag-multiple
-        </v-icon>
+        </AtlasIcon>
         Manage Tags
       </v-card-title>
 
-      <v-divider />
+      <AtlasDivider />
 
       <v-card-text class="pt-4">
         <!-- Search Bar -->
@@ -63,7 +63,7 @@
           </div>
         </div>
 
-        <v-divider
+        <AtlasDivider
           v-if="localSelectedTags.length > 0"
           class="mb-4"
         />
@@ -73,7 +73,7 @@
           v-if="loading"
           class="text-center py-8"
         >
-          <v-progress-circular
+          <AtlasProgressCircular
             indeterminate
             color="primary"
           />
@@ -116,7 +116,7 @@
             <v-expansion-panel-title>
               <div class="d-flex align-center justify-space-between w-100 mr-4">
                 <div class="d-flex align-center">
-                  <v-icon
+                  <AtlasIcon
                     v-if="group.icon"
                     :icon="group.icon"
                     :color="group.color"
@@ -129,7 +129,7 @@
                   />
                   <span>{{ group.name }}</span>
                 </div>
-                <v-badge
+                <AtlasBadge
                   v-if="getGroupSelectionCount(group) > 0"
                   :content="getGroupSelectionCount(group)"
                   color="primary"
@@ -159,20 +159,20 @@
                   class="ma-1"
                   @click="toggleTag(tag)"
                 >
-                  <v-icon
+                  <AtlasIcon
                     v-if="isSelected(tag)"
                     start
                     size="small"
                   >
                     mdi-check
-                  </v-icon>
-                  <v-icon
+                  </AtlasIcon>
+                  <AtlasIcon
                     v-if="tag.icon"
                     :start="!isSelected(tag)"
                     size="small"
                   >
                     {{ tag.icon }}
-                  </v-icon>
+                  </AtlasIcon>
                   <span
                     :style="{
                       color: isSelected(tag) ? getContrastColor(tag.color || '#1976D2') : 'inherit',
@@ -186,15 +186,15 @@
           </v-expansion-panel>
         </v-expansion-panels>
 
-        <v-divider class="my-4" />
+        <AtlasDivider class="my-4" />
 
         <!-- Create New Tag Section -->
         <v-expansion-panels v-model="showCreateForm">
           <v-expansion-panel>
             <v-expansion-panel-title>
-              <v-icon start>
+              <AtlasIcon start>
                 mdi-plus
-              </v-icon>
+              </AtlasIcon>
               Create New Tag
             </v-expansion-panel-title>
             <v-expansion-panel-text>
@@ -208,10 +208,10 @@
         </v-expansion-panels>
       </v-card-text>
 
-      <v-divider />
+      <AtlasDivider />
 
       <v-card-actions>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           variant="text"
           @click="cancel"
@@ -230,6 +230,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasBadge, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag } from '@/models/cohort.types'

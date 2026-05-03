@@ -8,7 +8,7 @@
       <!-- Strategy-specific help text — quiet inline hint, not a
            full-width tonal alert. -->
       <div class="event-persistence__hint">
-        <v-icon
+        <AtlasIcon
           icon="mdi-information-outline"
           size="16"
           class="event-persistence__hint-icon"
@@ -21,8 +21,8 @@
         v-if="selectedStrategy === 'FIXED_DURATION'"
         class="strategy-fields"
       >
-        <v-row>
-          <v-col cols="6">
+        <AtlasRow>
+          <AtlasCol cols="6">
             <v-select
               v-model="fixedDurationDateField"
               :items="dateFieldOptions"
@@ -33,8 +33,8 @@
               variant="outlined"
               density="compact"
             />
-          </v-col>
-          <v-col cols="6">
+          </AtlasCol>
+          <AtlasCol cols="6">
             <v-text-field
               v-model.number="fixedDurationOffset"
               type="number"
@@ -46,8 +46,8 @@
               variant="outlined"
               density="compact"
             />
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
       </div>
 
       <!-- Conditional Fields for Drug Exposure -->
@@ -78,8 +78,8 @@
         </div>
 
         <!-- Persistence Window and Surveillance Window -->
-        <v-row v-if="selectedConceptSet">
-          <v-col cols="6">
+        <AtlasRow v-if="selectedConceptSet">
+          <AtlasCol cols="6">
             <v-text-field
               v-model.number="persistenceWindow"
               type="number"
@@ -95,9 +95,9 @@
               density="compact"
             >
               <template #append-inner>
-                <v-tooltip location="top">
+                <AtlasTooltip location="top">
                   <template #activator="{ props: tooltipProps }">
-                    <v-icon
+                    <AtlasIcon
                       v-bind="tooltipProps"
                       icon="mdi-information-outline"
                       size="small"
@@ -110,11 +110,11 @@
                       'Maximum gap days between exposures'
                     )
                   }}</span>
-                </v-tooltip>
+                </AtlasTooltip>
               </template>
             </v-text-field>
-          </v-col>
-          <v-col cols="6">
+          </AtlasCol>
+          <AtlasCol cols="6">
             <v-text-field
               v-model.number="surveillanceWindow"
               type="number"
@@ -130,9 +130,9 @@
               density="compact"
             >
               <template #append-inner>
-                <v-tooltip location="top">
+                <AtlasTooltip location="top">
                   <template #activator="{ props: tooltipProps }">
-                    <v-icon
+                    <AtlasIcon
                       v-bind="tooltipProps"
                       icon="mdi-information-outline"
                       size="small"
@@ -145,18 +145,18 @@
                       'Additional days after final exposure before cohort exit'
                     )
                   }}</span>
-                </v-tooltip>
+                </AtlasTooltip>
               </template>
             </v-text-field>
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
 
         <!-- Help text about missing days supply -->
         <div
           v-if="selectedConceptSet"
           class="event-persistence__hint event-persistence__hint--mt"
         >
-          <v-icon
+          <AtlasIcon
             icon="mdi-information-outline"
             size="16"
             class="event-persistence__hint-icon"
@@ -174,6 +174,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasIcon, AtlasRow, AtlasTooltip } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useEventPersistence } from '@/composables/useEventPersistence'

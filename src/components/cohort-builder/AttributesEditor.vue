@@ -73,9 +73,9 @@
                 data-testid="attribute-concept-set-picker"
                 @click="openConceptSetPickerForAttribute(index)"
               >
-                <v-icon class="mr-2">
+                <AtlasIcon class="mr-2">
                   mdi-plus
-                </v-icon>
+                </AtlasIcon>
                 Select Concept Set
               </v-btn>
               <v-chip
@@ -193,12 +193,12 @@
                 size="small"
                 data-testid="attribute-boolean-chip"
               >
-                <v-icon
+                <AtlasIcon
                   start
                   size="small"
                 >
                   mdi-check-circle
-                </v-icon>
+                </AtlasIcon>
                 {{ getAttributeLabel(attribute.attributeKey) }}
               </v-chip>
             </template>
@@ -224,9 +224,9 @@
                   data-testid="attribute-concept-picker"
                   @click="openConceptPickerForAttribute(index)"
                 >
-                  <v-icon class="mr-2">
+                  <AtlasIcon class="mr-2">
                     mdi-plus
-                  </v-icon>
+                  </AtlasIcon>
                   {{ attribute.concepts.length > 0 ? 'Edit' : 'Select Concept' }}
                 </v-btn>
                 <v-checkbox
@@ -277,12 +277,12 @@
                 style="cursor: pointer"
                 @click="openDateAdjustmentEditor(index)"
               >
-                <v-icon
+                <AtlasIcon
                   start
                   size="small"
                 >
                   mdi-calendar-edit
-                </v-icon>
+                </AtlasIcon>
                 {{ getDateAdjustmentSummary(attribute.dateAdjustment) }}
               </v-chip>
               <v-btn
@@ -370,6 +370,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'

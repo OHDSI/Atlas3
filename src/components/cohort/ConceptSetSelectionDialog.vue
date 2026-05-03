@@ -53,7 +53,7 @@
               {{ countLabel }}
             </v-chip>
 
-            <v-spacer />
+            <AtlasSpacer />
 
             <v-btn
               color="primary"
@@ -66,7 +66,7 @@
           </div>
 
           <!-- Loading -->
-          <v-progress-linear
+          <AtlasProgressLinear
             v-if="loading"
             indeterminate
             class="cs-picker__loading"
@@ -115,7 +115,7 @@
               </template>
 
               <template #loading>
-                <v-skeleton-loader
+                <AtlasSkeleton
                   v-for="i in 5"
                   :key="i"
                   type="table-row"
@@ -130,7 +130,7 @@
             v-else
             class="cs-picker__empty"
           >
-            <v-icon
+            <AtlasIcon
               :icon="searchTerm ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
               size="36"
               class="cs-picker__empty-icon"
@@ -175,7 +175,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
 
 interface Props {

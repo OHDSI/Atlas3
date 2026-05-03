@@ -6,12 +6,12 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon
+        <AtlasIcon
           color="primary"
           class="mr-2"
         >
           mdi-shape
-        </v-icon>
+        </AtlasIcon>
         {{ t('navigation.conceptsets', 'Concept Sets') }}
       </v-card-title>
       <v-card-text>
@@ -47,9 +47,9 @@
                   variant="text"
                   @click="$emit('view', conceptSet)"
                 >
-                  <v-icon size="small">
+                  <AtlasIcon size="small">
                     mdi-eye
-                  </v-icon>
+                  </AtlasIcon>
                 </v-btn>
               </td>
             </tr>
@@ -63,7 +63,7 @@
         </div>
       </v-card-text>
       <v-card-actions>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           color="primary"
           @click="$emit('update:modelValue', false)"
@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetReference } from '@/models/cohort.types'
 

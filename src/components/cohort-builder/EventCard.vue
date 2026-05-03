@@ -9,7 +9,7 @@ import CardinalityEditor from './CardinalityEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalFilterChip from './TemporalFilterChip.vue'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasDivider, AtlasIcon } from '@/components/ui'
 
 const props = withDefaults(
   defineProps<{
@@ -187,12 +187,12 @@ const removeEvent = () => {
           color="primary"
           variant="tonal"
         >
-          <v-icon
+          <AtlasIcon
             start
             size="small"
           >
             mdi-counter
-          </v-icon>
+          </AtlasIcon>
           {{ cardinalityDisplay }}
         </v-chip>
         <TemporalFilterChip
@@ -206,12 +206,12 @@ const removeEvent = () => {
           color="accent"
           variant="tonal"
         >
-          <v-icon
+          <AtlasIcon
             start
             size="small"
           >
             mdi-filter
-          </v-icon>
+          </AtlasIcon>
           {{ event.attributes!.length }} attribute{{ event.attributes!.length > 1 ? 's' : '' }}
         </v-chip>
       </div>
@@ -220,7 +220,7 @@ const removeEvent = () => {
     <!-- Expanded Details -->
     <v-expand-transition>
       <div v-show="expanded">
-        <v-divider />
+        <AtlasDivider />
         <v-card-text>
           <!-- Action Buttons -->
           <div class="d-flex flex-wrap ga-2 mb-4">
@@ -313,7 +313,7 @@ const removeEvent = () => {
           </div>
 
           <!-- Event Details -->
-          <v-divider class="my-4" />
+          <AtlasDivider class="my-4" />
           <div class="text-caption text-medium-emphasis">
             <div class="mb-1">
               <strong>Event ID:</strong> {{ event.id }}
@@ -328,24 +328,24 @@ const removeEvent = () => {
               v-if="event.restrictVisit"
               class="mb-1"
             >
-              <v-icon
+              <AtlasIcon
                 size="small"
                 color="info"
               >
                 mdi-information
-              </v-icon>
+              </AtlasIcon>
               Event must occur in same visit as index
             </div>
             <div
               v-if="event.ignoreObservationPeriod"
               class="mb-1"
             >
-              <v-icon
+              <AtlasIcon
                 size="small"
                 color="warning"
               >
                 mdi-alert
-              </v-icon>
+              </AtlasIcon>
               Event can occur outside observation period
             </div>
           </div>

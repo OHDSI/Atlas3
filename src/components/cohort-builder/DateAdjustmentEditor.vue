@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AtlasCol, AtlasDivider, AtlasRow } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { DateAdjustment } from '@/models/event.types'
@@ -77,8 +78,8 @@ const updateEndOffset = (value: number) => {
         <div class="text-subtitle-2 mb-2">
           {{ t('common.startDateAdjustment', 'Start Date Adjustment') }}
         </div>
-        <v-row dense>
-          <v-col
+        <AtlasRow dense>
+          <AtlasCol
             cols="12"
             md="6"
           >
@@ -93,8 +94,8 @@ const updateEndOffset = (value: number) => {
               hide-details
               @update:model-value="updateStartWith"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="6"
           >
@@ -108,19 +109,19 @@ const updateEndOffset = (value: number) => {
               suffix="days"
               @update:model-value="v => updateStartOffset(Number(v))"
             />
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
       </div>
 
-      <v-divider class="my-4" />
+      <AtlasDivider class="my-4" />
 
       <!-- End Date Adjustment -->
       <div>
         <div class="text-subtitle-2 mb-2">
           {{ t('common.endDateAdjustment', 'End Date Adjustment') }}
         </div>
-        <v-row dense>
-          <v-col
+        <AtlasRow dense>
+          <AtlasCol
             cols="12"
             md="6"
           >
@@ -135,8 +136,8 @@ const updateEndOffset = (value: number) => {
               hide-details
               @update:model-value="updateEndWith"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="6"
           >
@@ -150,8 +151,8 @@ const updateEndOffset = (value: number) => {
               suffix="days"
               @update:model-value="v => updateEndOffset(Number(v))"
             />
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
       </div>
 
       <!-- Explanation -->

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AtlasCol, AtlasRow } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Cardinality } from '@/models/event.types'
@@ -110,9 +111,9 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
       {{ t('components.cardinalityInput.title') }}
     </v-card-title>
     <v-card-text>
-      <v-row dense>
+      <AtlasRow dense>
         <!-- Cardinality Type Dropdown -->
-        <v-col
+        <AtlasCol
           cols="12"
           md="4"
         >
@@ -128,10 +129,10 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
             hide-details="auto"
             @update:model-value="updateType"
           />
-        </v-col>
+        </AtlasCol>
 
         <!-- Count Input - Using native input for Playwright compatibility -->
-        <v-col
+        <AtlasCol
           cols="12"
           md="4"
         >
@@ -155,10 +156,10 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
             "
             @input="e => (count = Number((e.target as HTMLInputElement).value))"
           >
-        </v-col>
+        </AtlasCol>
 
         <!-- Counting Method Dropdown -->
-        <v-col
+        <AtlasCol
           cols="12"
           md="4"
         >
@@ -174,15 +175,15 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
             hide-details="auto"
             @update:model-value="updateCountingMethod"
           />
-        </v-col>
-      </v-row>
+        </AtlasCol>
+      </AtlasRow>
 
       <!-- Validation Error Messages -->
-      <v-row
+      <AtlasRow
         v-if="!validation.isValid"
         dense
       >
-        <v-col cols="12">
+        <AtlasCol cols="12">
           <v-alert
             type="error"
             variant="tonal"
@@ -198,12 +199,12 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
               </li>
             </ul>
           </v-alert>
-        </v-col>
-      </v-row>
+        </AtlasCol>
+      </AtlasRow>
 
       <!-- Help Text -->
-      <v-row dense>
-        <v-col cols="12">
+      <AtlasRow dense>
+        <AtlasCol cols="12">
           <div class="text-caption text-medium-emphasis mt-2">
             <template v-if="cardinality.type === 'AT_LEAST'">
               {{ t('options.atLeast', { count }) }}
@@ -221,8 +222,8 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
               {{ t('options.atMost', { count }) }}
             </template>
           </div>
-        </v-col>
-      </v-row>
+        </AtlasCol>
+      </AtlasRow>
     </v-card-text>
   </v-card>
 </template>

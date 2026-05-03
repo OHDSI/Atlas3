@@ -5,7 +5,7 @@
   >
     <v-card-text class="d-flex">
       <!-- Vertical Match Type Label -->
-      <v-menu
+      <AtlasMenu
         v-model="showMatchTypeDialog"
         :close-on-content-click="false"
         location="end"
@@ -76,7 +76,7 @@
             />
           </v-card-text>
           <v-card-actions class="pa-2">
-            <v-spacer />
+            <AtlasSpacer />
             <v-btn
               variant="text"
               size="small"
@@ -93,13 +93,13 @@
             </v-btn>
           </v-card-actions>
         </v-card>
-      </v-menu>
+      </AtlasMenu>
 
       <!-- Main Content -->
       <div class="flex-grow-1">
         <!-- Header with Add Filter and Delete buttons -->
         <div class="group-header">
-          <v-menu>
+          <AtlasMenu>
             <template #activator="{ props: slotProps }">
               <v-btn
                 v-bind="slotProps"
@@ -111,12 +111,12 @@
                 {{ t('components.criteriaGroup.addCriteria') }}
               </v-btn>
             </template>
-            <v-list
+            <AtlasList
               density="compact"
               min-width="280"
               max-height="60vh"
             >
-              <v-tooltip
+              <AtlasTooltip
                 v-for="criteriaType in criteriaTypes"
                 :key="criteriaType.value"
                 :text="criteriaType.description"
@@ -124,7 +124,7 @@
                 open-delay="500"
               >
                 <template #activator="{ props: tipProps }">
-                  <v-list-item
+                  <AtlasListItem
                     v-bind="tipProps"
                     :title="criteriaType.label"
                     @click="
@@ -134,9 +134,9 @@
                     "
                   />
                 </template>
-              </v-tooltip>
-            </v-list>
-          </v-menu>
+              </AtlasTooltip>
+            </AtlasList>
+          </AtlasMenu>
 
           <v-btn
             icon="mdi-delete"
@@ -172,7 +172,7 @@
                   data-testid="group-event-item"
                 >
                   <!-- Cardinality Sidebar with Menu -->
-                  <v-menu
+                  <AtlasMenu
                     :close-on-content-click="false"
                     location="end"
                   >
@@ -256,7 +256,7 @@
                         />
                       </v-card-text>
                     </v-card>
-                  </v-menu>
+                  </AtlasMenu>
 
                   <!-- Event Content -->
                   <div class="event-content">
@@ -266,7 +266,7 @@
                         {{ getEventTypeLabel(event.criteriaType) }}
                       </div>
                       <div class="event-header-actions">
-                        <v-menu>
+                        <AtlasMenu>
                           <template #activator="{ props: menuProps }">
                             <v-btn
                               v-bind="menuProps"
@@ -279,8 +279,8 @@
                               {{ t('components.common.addAttribute') }}
                             </v-btn>
                           </template>
-                          <v-list>
-                            <v-list-item
+                          <AtlasList>
+                            <AtlasListItem
                               v-for="attr in getAvailableAttributesForEvent(event)"
                               :key="attr.key"
                               :title="attr.label"
@@ -288,8 +288,8 @@
                               :disabled="attr.type === 'nested' && !!event.nestedCriteria"
                               @click="addAttributeToEvent(index, attr.key, attr.type)"
                             />
-                          </v-list>
-                        </v-menu>
+                          </AtlasList>
+                        </AtlasMenu>
                         <v-btn
                           icon="mdi-delete"
                           size="small"
@@ -321,7 +321,7 @@
 
                         <!-- Temporal Window Display/Editor -->
                         <div class="temporal-window-section">
-                          <v-menu
+                          <AtlasMenu
                             v-if="event.temporalWindow"
                             :close-on-content-click="false"
                             location="end"
@@ -344,7 +344,7 @@
                                 />
                               </v-card-text>
                             </v-card>
-                          </v-menu>
+                          </AtlasMenu>
                           <v-btn
                             v-else
                             size="small"
@@ -430,6 +430,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, watch, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

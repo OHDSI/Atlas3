@@ -5,7 +5,7 @@
     <div class="events-container__body">
       <!-- Toolbar: add-criteria menu + observation-period pill -->
       <div class="add-filter-wrapper">
-        <v-menu>
+        <AtlasMenu>
           <template #activator="{ props: slotProps }">
             <v-btn
               v-bind="slotProps"
@@ -18,16 +18,16 @@
               {{ t('components.criteriaGroup.addCriteria') }}
             </v-btn>
           </template>
-          <v-list>
-            <v-list-item
+          <AtlasList>
+            <AtlasListItem
               v-for="filter in availableFilters"
               :key="filter.criteriaType"
               :title="filter.name"
               :subtitle="filter.description"
               @click="handleFilterTypeSelected(filter.criteriaType)"
             />
-          </v-list>
-        </v-menu>
+          </AtlasList>
+        </AtlasMenu>
 
         <!-- Observation Period chip — was orange-outlined which read
              as alarm; tonal primary keeps it informative. -->
@@ -38,12 +38,12 @@
           size="small"
           @click="showObsPeriodDialog = true"
         >
-          <v-icon
+          <AtlasIcon
             start
             size="small"
           >
             mdi-clock-outline
-          </v-icon>
+          </AtlasIcon>
           <!-- Short version for small screens -->
           <span class="d-md-none">
             {{ observationPeriod.priorDays }} {{ t('options.before', 'before') }}
@@ -103,7 +103,7 @@
             </div>
           </v-card-text>
           <v-card-actions>
-            <v-spacer />
+            <AtlasSpacer />
             <v-btn @click="showObsPeriodDialog = false">
               {{ t('common.close', 'Close') }}
             </v-btn>
@@ -132,6 +132,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer } from '@/components/ui'
 import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

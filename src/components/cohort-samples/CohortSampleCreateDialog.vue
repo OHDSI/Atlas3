@@ -6,9 +6,9 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">
+        <AtlasIcon class="mr-2">
           mdi-shuffle-variant
-        </v-icon>
+        </AtlasIcon>
         New cohort sample
       </v-card-title>
       <v-card-text>
@@ -138,7 +138,7 @@
         </v-alert>
       </v-card-text>
       <v-card-actions>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           variant="text"
           @click="cancel"
@@ -161,6 +161,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { computed, reactive, ref, watch } from 'vue'
 import {
   GENDER_FEMALE_CONCEPT_ID,

@@ -19,7 +19,7 @@
       class="mb-2"
     >
       <template #prepend-inner>
-        <v-icon>mdi-folder</v-icon>
+        <AtlasIcon>mdi-folder</AtlasIcon>
       </template>
     </v-select>
 
@@ -64,9 +64,9 @@
     >
       <v-expansion-panel>
         <v-expansion-panel-title>
-          <v-icon start>
+          <AtlasIcon start>
             mdi-cog
-          </v-icon>
+          </AtlasIcon>
           Show Advanced Options
         </v-expansion-panel-title>
         <v-expansion-panel-text>
@@ -81,9 +81,9 @@
             class="mb-2"
           >
             <template #prepend-inner>
-              <v-icon v-if="form.icon && isValidIcon">
+              <AtlasIcon v-if="form.icon && isValidIcon">
                 {{ form.icon }}
-              </v-icon>
+              </AtlasIcon>
             </template>
           </v-text-field>
 
@@ -156,6 +156,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { tagSchema, type Tag as ConfigTag, type TagGroup } from '@/models/config.types'
 import type { Tag } from '@/models/cohort.types'

@@ -8,21 +8,21 @@
     <span class="cohort-breadcrumb__item cohort-breadcrumb__item--active">
       {{ modelValue || t('cohortDefinitions.newDefinition') }}
     </span>
-    <v-tooltip
+    <AtlasTooltip
       :text="t('columns.name', 'Name').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
-        <v-icon
+        <AtlasIcon
           v-bind="tooltipProps"
           size="small"
           class="cohort-breadcrumb__edit-icon"
           @click="showEditDialog = true"
         >
           mdi-pencil
-        </v-icon>
+        </AtlasIcon>
       </template>
-    </v-tooltip>
+    </AtlasTooltip>
 
     <!-- Edit Name Dialog -->
     <v-dialog
@@ -31,12 +31,12 @@
     >
       <v-card>
         <v-card-title class="d-flex align-center">
-          <v-icon
+          <AtlasIcon
             color="primary"
             class="mr-2"
           >
             mdi-pencil
-          </v-icon>
+          </AtlasIcon>
           {{ t('columns.name', 'Edit Cohort Name') }}
         </v-card-title>
         <v-card-text>
@@ -50,7 +50,7 @@
           />
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             color="grey"
             variant="text"
@@ -72,6 +72,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 

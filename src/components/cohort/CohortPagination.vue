@@ -27,7 +27,7 @@
       {{ rangeDisplay }}
     </div>
 
-    <v-pagination
+    <AtlasPagination
       v-if="totalPages > 1"
       :model-value="page"
       :length="totalPages"
@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasPagination } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 

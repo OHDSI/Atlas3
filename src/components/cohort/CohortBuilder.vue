@@ -16,7 +16,7 @@
       v-if="isPreviewingVersion"
       class="cohort-builder__preview-banner"
     >
-      <v-icon
+      <AtlasIcon
         icon="mdi-history"
         size="18"
         class="cohort-builder__preview-banner-icon"
@@ -24,7 +24,7 @@
       <span>{{
         t('versions.previewingVersion', { version: cohortStore.previewVersion?.version || '' })
       }}</span>
-      <v-spacer />
+      <AtlasSpacer />
       <v-btn
         color="primary"
         variant="flat"
@@ -49,7 +49,7 @@
       v-if="!hideInternalToolbar"
       class="cohort-builder__toolbar"
     >
-      <v-spacer />
+      <AtlasSpacer />
 
       <cohort-toolbar-status
         :concept-set-count="usedConceptSets.length"
@@ -110,7 +110,7 @@
             <span :class="['section-state-chip', `section-state-chip--${entryEventsState.tone}`]">
               {{ entryEventsState.label }}
             </span>
-            <v-spacer />
+            <AtlasSpacer />
             <div class="section-controls">
               <span class="section-controls__label">
                 {{
@@ -119,12 +119,12 @@
                     'Cohort entry on'
                   ).value
                 }}
-                <v-tooltip
+                <AtlasTooltip
                   location="top"
                   max-width="320"
                 >
                   <template #activator="{ props: tooltipProps }">
-                    <v-icon
+                    <AtlasIcon
                       v-bind="tooltipProps"
                       icon="mdi-help-circle-outline"
                       size="14"
@@ -137,7 +137,7 @@
                       'Which qualifying event marks a person’s cohort entry: their first, every occurrence, or their last.'
                     ).value
                   }}</span>
-                </v-tooltip>
+                </AtlasTooltip>
               </span>
               <v-btn-toggle
                 v-model="qualifyingLimit"
@@ -214,7 +214,7 @@
                   {{ t('options.latestEvents', 'Latest') }}
                 </v-btn>
               </v-btn-toggle>
-              <v-spacer />
+              <AtlasSpacer />
               <v-btn
                 variant="text"
                 size="small"
@@ -273,7 +273,7 @@
             >
               {{ inclusionRulesState.label }}
             </span>
-            <v-spacer />
+            <AtlasSpacer />
             <div class="section-controls">
               <v-btn
                 color="primary"
@@ -292,12 +292,12 @@
                     'Apply rules to'
                   ).value
                 }}
-                <v-tooltip
+                <AtlasTooltip
                   location="top"
                   max-width="320"
                 >
                   <template #activator="{ props: tooltipProps }">
-                    <v-icon
+                    <AtlasIcon
                       v-bind="tooltipProps"
                       icon="mdi-help-circle-outline"
                       size="14"
@@ -310,7 +310,7 @@
                       'Which qualifying event each rule is evaluated against: a person’s first, every, or their last.'
                     ).value
                   }}</span>
-                </v-tooltip>
+                </AtlasTooltip>
               </span>
               <v-btn-toggle
                 v-model="inclusionQualifyingLimit"
@@ -371,7 +371,7 @@
             >
               {{ exitCriteriaState.label }}
             </span>
-            <v-spacer />
+            <AtlasSpacer />
             <div class="section-controls">
               <span class="section-controls__label">{{
                 t('components.cohortExpressionEditor.exitStrategyLabel', 'Strategy').value
@@ -383,7 +383,7 @@
                 variant="outlined"
                 divided
               >
-                <v-tooltip
+                <AtlasTooltip
                   :text="
                     t('options.endOfContinuousObservation', 'End of continuous observation period')
                       .value
@@ -399,8 +399,8 @@
                       {{ t('options.endOfContinuousObservationShort', 'Observation').value }}
                     </v-btn>
                   </template>
-                </v-tooltip>
-                <v-tooltip
+                </AtlasTooltip>
+                <AtlasTooltip
                   :text="
                     t(
                       'options.fixedDurationRelativeToInitialEvent',
@@ -418,8 +418,8 @@
                       {{ t('options.fixedDurationShort', 'Fixed duration').value }}
                     </v-btn>
                   </template>
-                </v-tooltip>
-                <v-tooltip
+                </AtlasTooltip>
+                <AtlasTooltip
                   :text="
                     t('options.endOfContinuousDrugExposure', 'End of continuous drug exposure')
                       .value
@@ -435,7 +435,7 @@
                       {{ t('options.endOfContinuousDrugExposureShort', 'Drug exposure').value }}
                     </v-btn>
                   </template>
-                </v-tooltip>
+                </AtlasTooltip>
               </v-btn-toggle>
             </div>
           </div>
@@ -529,7 +529,7 @@
       class="align-center justify-center"
       persistent
     >
-      <v-progress-circular
+      <AtlasProgressCircular
         indeterminate
         size="64"
         color="primary"
@@ -566,7 +566,7 @@
             @click="showVersionsDialog = false"
           />
         </div>
-        <v-divider />
+        <AtlasDivider />
         <v-card-text class="pa-0">
           <versions-tab-content
             v-if="cohortId"
@@ -595,7 +595,7 @@
           }}
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="cancelLeaveUnsaved"
@@ -629,6 +629,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'

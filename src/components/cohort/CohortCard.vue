@@ -6,7 +6,7 @@
     @click="handleCardClick"
   >
     <div class="cohort-card__body">
-      <v-tooltip
+      <AtlasTooltip
         :text="cohort.name"
         location="top"
       >
@@ -18,9 +18,9 @@
             {{ cohort.name }}
           </h3>
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         v-if="cohort.description"
         :text="cohort.description"
         location="bottom"
@@ -33,7 +33,7 @@
             {{ cohort.description }}
           </p>
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
       <dl class="cohort-card__meta">
         <div class="cohort-card__meta-row">
@@ -69,9 +69,9 @@
         </v-chip>
       </div>
 
-      <v-spacer />
+      <AtlasSpacer />
 
-      <v-tooltip
+      <AtlasTooltip
         :text="infoTooltip"
         location="top"
       >
@@ -86,9 +86,9 @@
             @click.stop="$emit('show-info', cohort)"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         :text="generateTooltipText"
         location="top"
       >
@@ -104,9 +104,9 @@
             @click.stop="handleGenerate"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         :text="deleteTooltipText"
         location="top"
       >
@@ -122,7 +122,7 @@
             @click.stop="$emit('delete', cohort)"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
     </div>
   </AtlasCard>
 </template>
@@ -133,7 +133,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 
 interface Props {
   cohort: CohortDefinitionSummary

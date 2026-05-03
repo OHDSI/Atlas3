@@ -15,9 +15,9 @@
         data-testid="concept-set-picker"
         @click="emit('select')"
       >
-        <v-icon class="mr-2">
+        <AtlasIcon class="mr-2">
           mdi-plus
-        </v-icon>
+        </AtlasIcon>
         {{ selectLabel }}
       </v-btn>
       <v-chip
@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 withDefaults(
   defineProps<{
     conceptSet: { id: number | string; name: string } | undefined | null

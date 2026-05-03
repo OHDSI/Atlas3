@@ -11,7 +11,7 @@
     @update:model-value="onFilterSelect"
   >
     <template #item="{ props: slotProps, item }">
-      <v-list-item
+      <AtlasListItem
         v-bind="slotProps"
         :title="item.raw.name"
         :subtitle="item.raw.description"
@@ -32,12 +32,13 @@
             No Concept Set
           </v-chip>
         </template>
-      </v-list-item>
+      </AtlasListItem>
     </template>
   </v-select>
 </template>
 
 <script setup lang="ts">
+import { AtlasListItem } from '@/components/ui'
 /**
  * FilterTypeSelector Component
  *

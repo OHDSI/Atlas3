@@ -61,9 +61,9 @@
           @update:model-value="handleSelect"
         >
           <template #prepend-item>
-            <v-list-item @click="showSearch = true">
+            <AtlasListItem @click="showSearch = true">
               <template #prepend>
-                <v-icon>mdi-magnify</v-icon>
+                <AtlasIcon>mdi-magnify</AtlasIcon>
               </template>
               <v-list-item-title>
                 {{
@@ -73,18 +73,18 @@
                   )
                 }}
               </v-list-item-title>
-            </v-list-item>
-            <v-list-item @click="showCreateNew = true">
+            </AtlasListItem>
+            <AtlasListItem @click="showCreateNew = true">
               <template #prepend>
-                <v-icon>mdi-plus</v-icon>
+                <AtlasIcon>mdi-plus</AtlasIcon>
               </template>
               <v-list-item-title>
                 {{
                   t('common.create', 'Create new concept set...')
                 }}
               </v-list-item-title>
-            </v-list-item>
-            <v-divider class="my-2" />
+            </AtlasListItem>
+            <AtlasDivider class="my-2" />
           </template>
         </v-select>
 
@@ -127,6 +127,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasIcon, AtlasListItem } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

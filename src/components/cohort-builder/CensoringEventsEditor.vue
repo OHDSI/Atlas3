@@ -27,7 +27,7 @@
           v-if="localEvents.length === 0"
           class="censoring-events__hint"
         >
-          <v-icon
+          <AtlasIcon
             icon="mdi-information-outline"
             size="16"
             class="censoring-events__hint-icon"
@@ -48,14 +48,14 @@
             variant="outlined"
           >
             <v-card-text>
-              <v-row align="center">
-                <v-col
+              <AtlasRow align="center">
+                <AtlasCol
                   cols="1"
                   class="text-center"
                 >
                   <span class="text-h6 text-medium-emphasis">{{ index + 1 }}</span>
-                </v-col>
-                <v-col cols="10">
+                </AtlasCol>
+                <AtlasCol cols="10">
                   <div class="event-info">
                     <div class="event-type text-subtitle-1">
                       {{ formatCriteriaType(event.criteriaType) }}
@@ -88,8 +88,8 @@
                       }}
                     </v-alert>
                   </div>
-                </v-col>
-                <v-col
+                </AtlasCol>
+                <AtlasCol
                   cols="1"
                   class="text-right"
                 >
@@ -101,8 +101,8 @@
                     :disabled="disabled"
                     @click="removeEvent(index)"
                   />
-                </v-col>
-              </v-row>
+                </AtlasCol>
+              </AtlasRow>
             </v-card-text>
           </v-card>
         </div>
@@ -125,6 +125,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasIcon, AtlasRow } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent, ConceptSetReference, CriteriaType } from '@/models/cohort.types'

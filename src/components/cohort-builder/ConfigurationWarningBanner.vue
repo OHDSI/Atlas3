@@ -24,19 +24,21 @@
             </span>
           </v-expansion-panel-title>
           <v-expansion-panel-text>
-            <v-list dense>
-              <v-list-item
+            <AtlasList dense>
+              <AtlasListItem
                 v-for="filterType in validationResult.invalidFilterTypes"
                 :key="filterType"
               >
                 <template #prepend>
-                  <v-icon size="small">
+                  <AtlasIcon size="small">
                     mdi-close-circle
-                  </v-icon>
+                  </AtlasIcon>
                 </template>
-                <v-list-item-title>{{ filterType }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
+                <v-list-item-title>
+                  {{ filterType }}
+                </v-list-item-title>
+              </AtlasListItem>
+            </AtlasList>
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
@@ -49,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
 /**
  * ConfigurationWarningBanner Component
  *

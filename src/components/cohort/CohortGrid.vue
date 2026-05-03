@@ -5,7 +5,7 @@
       v-if="loading"
       class="cohort-grid__container"
     >
-      <v-skeleton-loader
+      <AtlasSkeleton
         v-for="i in skeletonCount"
         :key="i"
         type="card"
@@ -31,9 +31,9 @@
           class="mt-4"
           @click="$emit('retry')"
         >
-          <v-icon start>
+          <AtlasIcon start>
             mdi-refresh
-          </v-icon>
+          </AtlasIcon>
           {{ t('common.refresh', 'Retry') }}
         </v-btn>
       </div>
@@ -45,7 +45,7 @@
       v-else-if="cohorts.length === 0"
       class="cohort-grid__empty"
     >
-      <v-icon
+      <AtlasIcon
         :icon="isFiltered ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
         size="36"
         class="cohort-grid__empty-icon"
@@ -94,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasSkeleton } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import CohortCard from './CohortCard.vue'

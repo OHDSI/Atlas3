@@ -16,7 +16,7 @@
         class="cohort-filters__search"
       />
 
-      <v-menu
+      <AtlasMenu
         v-model="filtersMenuOpen"
         :close-on-content-click="false"
         location="bottom end"
@@ -48,7 +48,7 @@
         >
           <div class="cohort-filters__menu-header">
             <span class="text-eyebrow">{{ filtersLabel }}</span>
-            <v-spacer />
+            <AtlasSpacer />
             <v-btn
               :disabled="activeFilterCount === 0"
               variant="text"
@@ -188,7 +188,7 @@
             </div>
           </div>
         </AtlasCard>
-      </v-menu>
+      </AtlasMenu>
     </div>
 
     <!-- Active filter chips (shown below the bar so they don't crowd it). -->
@@ -268,7 +268,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { FilterState } from '@/composables/useCohorts'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasMenu, AtlasSpacer } from '@/components/ui'
 
 interface Props {
   filters: FilterState

@@ -6,19 +6,19 @@
          versions / tags. -->
 
     <!-- Concept Sets Icon -->
-    <v-tooltip
+    <AtlasTooltip
       v-if="conceptSetCount > 0"
       :text="t('cohortDefinitions.cohortDefinitionManager.tabs.conceptSets', 'Concept Sets').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
-        <v-badge
+        <AtlasBadge
           v-bind="tooltipProps"
           :content="conceptSetCount"
           color="primary"
           class="cohort-toolbar-status__badge"
         >
-          <v-icon
+          <AtlasIcon
             color="primary"
             icon="mdi-shape"
             size="small"
@@ -26,24 +26,24 @@
             style="cursor: pointer"
             @click="$emit('show-concept-sets')"
           />
-        </v-badge>
+        </AtlasBadge>
       </template>
-    </v-tooltip>
+    </AtlasTooltip>
 
     <!-- Versions Icon -->
-    <v-tooltip
+    <AtlasTooltip
       v-if="cohortId && !isPreviewingVersion"
       :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
-        <v-badge
+        <AtlasBadge
           v-bind="tooltipProps"
           :content="versionCount"
           color="primary"
           class="cohort-toolbar-status__badge"
         >
-          <v-icon
+          <AtlasIcon
             color="primary"
             icon="mdi-history"
             size="small"
@@ -51,24 +51,24 @@
             style="cursor: pointer"
             @click="$emit('show-versions')"
           />
-        </v-badge>
+        </AtlasBadge>
       </template>
-    </v-tooltip>
+    </AtlasTooltip>
 
     <!-- Tags Icon -->
-    <v-tooltip
+    <AtlasTooltip
       v-if="!isPreviewingVersion"
       :text="t('configuration.buttons.tagManagement', 'Manage Tags').value"
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
-        <v-badge
+        <AtlasBadge
           v-bind="tooltipProps"
           :content="tagCount || 0"
           :color="tagCount && tagCount > 0 ? 'primary' : 'grey'"
           class="cohort-toolbar-status__badge"
         >
-          <v-icon
+          <AtlasIcon
             color="primary"
             icon="mdi-tag-multiple"
             size="small"
@@ -76,12 +76,12 @@
             style="cursor: pointer"
             @click="$emit('show-tags')"
           />
-        </v-badge>
+        </AtlasBadge>
       </template>
-    </v-tooltip>
+    </AtlasTooltip>
 
     <!-- Validation Notification Icon -->
-    <v-tooltip
+    <AtlasTooltip
       :text="
         isValidating
           ? t('common.loadingWithDots', 'Loading...').value
@@ -90,20 +90,20 @@
       location="bottom"
     >
       <template #activator="{ props: tooltipProps }">
-        <v-badge
+        <AtlasBadge
           v-bind="tooltipProps"
           :content="validationCount"
           :color="validationCount > 0 ? validationColor : 'success'"
           class="cohort-toolbar-status__badge"
         >
-          <v-icon
+          <AtlasIcon
             v-if="isValidating"
             color="primary"
             icon="mdi-loading mdi-spin"
             size="small"
             data-testid="validation-icon-loading"
           />
-          <v-icon
+          <AtlasIcon
             v-else
             color="primary"
             icon="mdi-message-text"
@@ -112,13 +112,14 @@
             style="cursor: pointer"
             @click="$emit('show-validation')"
           />
-        </v-badge>
+        </AtlasBadge>
       </template>
-    </v-tooltip>
+    </AtlasTooltip>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasBadge, AtlasIcon, AtlasTooltip } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 interface Props {

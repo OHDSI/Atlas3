@@ -1,20 +1,20 @@
 <template>
   <v-card>
     <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">
+      <AtlasIcon class="mr-2">
         mdi-book-open-variant
-      </v-icon>
+      </AtlasIcon>
       <span>{{ t('cs.browser.caption') }}</span>
-      <v-spacer />
+      <AtlasSpacer />
       <v-btn
         color="primary"
         variant="outlined"
         size="small"
         @click="createNewConceptSet"
       >
-        <v-icon class="mr-2">
+        <AtlasIcon class="mr-2">
           mdi-plus
-        </v-icon>
+        </AtlasIcon>
         {{ t('components.conceptSetBuilder.newConceptSet') }}
       </v-btn>
     </v-card-title>
@@ -35,7 +35,7 @@
           <v-expansion-panel-title>
             <div class="d-flex align-center w-100">
               <span class="font-weight-medium">{{ conceptSet.name }}</span>
-              <v-spacer />
+              <AtlasSpacer />
               <v-chip
                 size="small"
                 class="mr-2"
@@ -79,9 +79,9 @@
                 size="small"
                 @click="conceptSet.id && openSearchDialog(conceptSet.id)"
               >
-                <v-icon class="mr-2">
+                <AtlasIcon class="mr-2">
                   mdi-plus
-                </v-icon>
+                </AtlasIcon>
                 {{ t('components.conceptSet.addConcepts') }}
               </v-btn>
 
@@ -91,9 +91,9 @@
                 size="small"
                 @click="conceptSet.id && deleteConceptSet(conceptSet.id)"
               >
-                <v-icon class="mr-2">
+                <AtlasIcon class="mr-2">
                   mdi-delete
-                </v-icon>
+                </AtlasIcon>
                 {{ t('common.delete') }}
               </v-btn>
             </div>
@@ -110,6 +110,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
