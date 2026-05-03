@@ -43,16 +43,15 @@
         </v-form>
 
         <!-- Server Error Message -->
-        <v-alert
+        <AtlasAlert
           v-if="serverError"
-          type="error"
-          variant="tonal"
+          severity="danger"
           class="mt-4"
-          closable
-          @click:close="serverError = null"
+          :closable="true"
+          @close="serverError = null"
         >
           {{ serverError }}
-        </v-alert>
+        </AtlasAlert>
       </v-card-text>
 
       <v-card-actions>
@@ -77,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

@@ -50,16 +50,15 @@
       </div>
 
       <!-- Error State -->
-      <v-alert
+      <AtlasAlert
         v-else-if="permissionsError"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="mt-4"
-        closable
-        @click:close="permissionsError = null"
+        :closable="true"
+        @close="permissionsError = null"
       >
         {{ permissionsError }}
-      </v-alert>
+      </AtlasAlert>
 
       <!-- Permissions List -->
       <template v-else>
@@ -173,34 +172,31 @@
       </template>
 
       <!-- Success Message -->
-      <v-alert
+      <AtlasAlert
         v-if="successMessage"
-        type="success"
-        variant="tonal"
+        severity="success"
         class="mt-4"
-        closable
-        @click:close="successMessage = null"
+        :closable="true"
+        @close="successMessage = null"
       >
         {{ successMessage }}
-      </v-alert>
+      </AtlasAlert>
 
-      <!-- Error Message -->
-      <v-alert
+      <AtlasAlert
         v-if="errorMessage"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="mt-4"
-        closable
-        @click:close="errorMessage = null"
+        :closable="true"
+        @close="errorMessage = null"
       >
         {{ errorMessage }}
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasChip, AtlasIcon, AtlasProgressCircular, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasChip, AtlasIcon, AtlasProgressCircular, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Permission } from '@/models/role.types'

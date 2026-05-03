@@ -128,34 +128,32 @@
     </div>
 
     <!-- Success/Error Messages -->
-    <v-alert
+    <AtlasAlert
       v-if="successMessage"
-      type="success"
-      variant="tonal"
+      severity="success"
       density="compact"
-      closable
+      :closable="true"
       class="mt-4"
-      @click:close="successMessage = ''"
+      @close="successMessage = ''"
     >
       {{ successMessage }}
-    </v-alert>
+    </AtlasAlert>
 
-    <v-alert
+    <AtlasAlert
       v-if="errorMessage"
-      type="error"
-      variant="tonal"
+      severity="danger"
       density="compact"
-      closable
+      :closable="true"
       class="mt-4"
-      @click:close="errorMessage = ''"
+      @close="errorMessage = ''"
     >
       {{ errorMessage }}
-    </v-alert>
+    </AtlasAlert>
   </v-form>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { tagSchema, type Tag as ConfigTag, type TagGroup } from '@/models/config.types'
 import type { Tag } from '@/models/cohort.types'

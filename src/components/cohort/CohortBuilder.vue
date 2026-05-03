@@ -495,31 +495,19 @@
       @save="handleConceptSetSaved"
     />
 
-    <!-- Error Snackbar -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showError"
-      color="error"
+      severity="danger"
+      :text="errorMessage"
       :timeout="5000"
-    >
-      {{ errorMessage }}
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="showError = false"
-        >
-          {{ t('common.close') }}
-        </AtlasButton>
-      </template>
-    </v-snackbar>
+    />
 
-    <!-- Success Snackbar -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showSuccess"
-      color="success"
+      severity="success"
+      :text="successMessage"
       :timeout="3000"
-    >
-      {{ successMessage }}
-    </v-snackbar>
+    />
 
     <!-- Loading Overlay -->
     <v-overlay
@@ -626,7 +614,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'

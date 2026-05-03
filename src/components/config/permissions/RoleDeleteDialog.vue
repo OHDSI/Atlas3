@@ -11,10 +11,9 @@
       </v-card-title>
 
       <v-card-text>
-        <v-alert
+        <AtlasAlert
           v-if="userCount > 0"
-          type="warning"
-          variant="tonal"
+          severity="warning"
           class="mb-4"
         >
           <div class="text-body-1">
@@ -24,7 +23,7 @@
           <div class="text-body-2 mt-2">
             Deleting this role will remove it from all assigned users.
           </div>
-        </v-alert>
+        </AtlasAlert>
 
         <p class="text-body-1">
           Are you sure you want to delete the role
@@ -36,16 +35,15 @@
         </p>
 
         <!-- Server Error Message -->
-        <v-alert
+        <AtlasAlert
           v-if="serverError"
-          type="error"
-          variant="tonal"
+          severity="danger"
           class="mt-4"
-          closable
-          @click:close="serverError = null"
+          :closable="true"
+          @close="serverError = null"
         >
           {{ serverError }}
-        </v-alert>
+        </AtlasAlert>
       </v-card-text>
 
       <v-card-actions>
@@ -72,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasSpacer } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

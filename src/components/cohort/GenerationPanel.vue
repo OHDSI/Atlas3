@@ -32,25 +32,22 @@
       <!-- Content -->
       <v-card-text class="flex-grow-1 overflow-y-auto pa-6">
         <!-- Unsaved cohort message -->
-        <v-alert
+        <AtlasAlert
           v-if="!cohortId"
-          type="warning"
-          variant="tonal"
+          severity="warning"
           class="mb-4"
         >
           {{
             t('cohortDefinitions.saveDefinitionBefore', 'Please save the cohort before generating.')
           }}
-        </v-alert>
+        </AtlasAlert>
 
-        <!-- No sources message -->
-        <v-alert
+        <AtlasAlert
           v-else-if="sources.length === 0"
-          type="info"
-          variant="tonal"
+          severity="info"
         >
           {{ t('components.generation.pickAtLeastOneSourceAlert', 'No data sources configured.') }}
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Layout: Data sources on left, reports on right -->
         <div class="generation-layout">
@@ -154,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSpacer, AtlasTab, AtlasTabs } from '@/components/ui'
+import { AtlasAlert, AtlasIcon, AtlasSpacer, AtlasTab, AtlasTabs } from '@/components/ui'
 import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'

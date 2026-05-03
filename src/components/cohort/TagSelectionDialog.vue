@@ -82,24 +82,21 @@
         </div>
 
         <!-- No Tag Groups Message -->
-        <v-alert
+        <AtlasAlert
           v-else-if="filteredTagGroups.length === 0 && !searchQuery"
-          type="info"
-          variant="tonal"
+          severity="info"
           class="mb-4"
         >
           No tag groups found. Please create tag groups in the configuration panel first.
-        </v-alert>
+        </AtlasAlert>
 
-        <!-- No Search Results -->
-        <v-alert
+        <AtlasAlert
           v-else-if="filteredTagGroups.length === 0 && searchQuery"
-          type="info"
-          variant="tonal"
+          severity="info"
           class="mb-4"
         >
           No tags found matching "{{ searchQuery }}"
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Tag Groups -->
         <v-expansion-panels
@@ -228,7 +225,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasBadge, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasBadge, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag } from '@/models/cohort.types'

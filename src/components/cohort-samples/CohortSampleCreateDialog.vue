@@ -110,10 +110,9 @@
           </template>
         </div>
 
-        <v-alert
+        <AtlasAlert
           v-if="errors.length > 0"
-          type="error"
-          variant="tonal"
+          severity="danger"
           density="compact"
           class="mt-3"
           data-testid="sample-form-errors"
@@ -129,7 +128,7 @@
               {{ err }}
             </li>
           </ul>
-        </v-alert>
+        </AtlasAlert>
       </v-card-text>
       <v-card-actions>
         <AtlasSpacer />
@@ -155,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed, reactive, ref, watch } from 'vue'
 import {
   GENDER_FEMALE_CONCEPT_ID,

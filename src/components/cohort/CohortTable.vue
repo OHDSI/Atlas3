@@ -9,11 +9,10 @@
     </div>
 
     <!-- Error -->
-    <v-alert
+    <AtlasAlert
       v-else-if="error"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="cohort-table__alert"
     >
       <div class="cohort-table__error">
@@ -32,7 +31,7 @@
           {{ t('common.refresh', 'Retry').value }}
         </v-btn>
       </div>
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Empty: branch between "filtered → no matches" and "no
          cohorts at all" so the CTA actually helps. -->
@@ -192,7 +191,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import { AtlasButton, AtlasCard, AtlasIcon, AtlasSkeleton } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasIcon, AtlasSkeleton } from '@/components/ui'
 
 const { t, locale } = useI18n()
 const router = useRouter()

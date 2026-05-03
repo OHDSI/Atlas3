@@ -28,14 +28,13 @@
         </div>
 
         <div class="role-utilities-tab__section-content">
-          <v-alert
-            type="info"
-            variant="tonal"
+          <AtlasAlert
+            severity="info"
             class="mb-4"
           >
             The exported file will be compatible with Atlas 2.x and can be imported into any Atlas
             instance.
-          </v-alert>
+          </AtlasAlert>
 
           <AtlasButton
             icon="mdi-download"
@@ -71,14 +70,13 @@
         </div>
 
         <div class="role-utilities-tab__section-content">
-          <v-alert
-            type="warning"
-            variant="tonal"
+          <AtlasAlert
+            severity="warning"
             class="mb-4"
           >
             <strong>Note:</strong> Importing a role will create a new role. If a role with the same
             name exists, you will be prompted to rename it.
-          </v-alert>
+          </AtlasAlert>
 
           <AtlasButton
             icon="mdi-upload"
@@ -90,28 +88,25 @@
       </div>
 
       <!-- Success Message -->
-      <v-alert
+      <AtlasAlert
         v-if="successMessage"
-        type="success"
-        variant="tonal"
+        severity="success"
         class="mt-6"
-        closable
-        @click:close="successMessage = null"
+        :closable="true"
+        @close="successMessage = null"
       >
         {{ successMessage }}
-      </v-alert>
+      </AtlasAlert>
 
-      <!-- Error Message -->
-      <v-alert
+      <AtlasAlert
         v-if="errorMessage"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="mt-6"
-        closable
-        @click:close="errorMessage = null"
+        :closable="true"
+        @close="errorMessage = null"
       >
         {{ errorMessage }}
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
 
     <!-- Import Dialog -->
@@ -123,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasIcon } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDivider, AtlasIcon } from '@/components/ui'
 import { ref } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import RoleImportDialog from './RoleImportDialog.vue'

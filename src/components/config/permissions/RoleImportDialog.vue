@@ -30,9 +30,8 @@
 
         <!-- Conflict Resolution -->
         <div v-else-if="hasConflict">
-          <v-alert
-            type="warning"
-            variant="tonal"
+          <AtlasAlert
+            severity="warning"
             class="mb-4"
           >
             <div class="text-h6 mb-2">
@@ -41,7 +40,7 @@
             <p class="text-body-2">
               A role with the name <strong>"{{ parsedRoleName }}"</strong> already exists.
             </p>
-          </v-alert>
+          </AtlasAlert>
 
           <p class="text-body-2 mb-4">
             How would you like to proceed?
@@ -82,9 +81,8 @@
         </div>
 
         <div v-else-if="validationComplete">
-          <v-alert
-            type="info"
-            variant="tonal"
+          <AtlasAlert
+            severity="info"
             class="mb-4"
           >
             <div class="text-h6 mb-2">
@@ -93,7 +91,7 @@
             <p class="text-body-2">
               The following role configuration will be imported:
             </p>
-          </v-alert>
+          </AtlasAlert>
 
           <div class="import-preview">
             <div class="import-preview__item">
@@ -113,10 +111,9 @@
             </div>
           </div>
 
-          <v-alert
+          <AtlasAlert
             v-if="validationWarnings.length > 0"
-            type="warning"
-            variant="tonal"
+            severity="warning"
             class="mt-4"
           >
             <div class="text-body-2 font-weight-bold mb-2">
@@ -130,20 +127,19 @@
                 {{ warning }}
               </li>
             </ul>
-          </v-alert>
+          </AtlasAlert>
         </div>
 
         <!-- Error Message -->
-        <v-alert
+        <AtlasAlert
           v-if="errorMessage"
-          type="error"
-          variant="tonal"
+          severity="danger"
           class="mt-4"
-          closable
-          @click:close="errorMessage = null"
+          :closable="true"
+          @close="errorMessage = null"
         >
           {{ errorMessage }}
-        </v-alert>
+        </AtlasAlert>
       </v-card-text>
 
       <v-card-actions>
@@ -181,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasProgressCircular, AtlasRadio, AtlasRadioGroup, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasProgressCircular, AtlasRadio, AtlasRadioGroup, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 

@@ -36,16 +36,15 @@
     />
 
     <!-- Error State -->
-    <v-alert
+    <AtlasAlert
       v-if="rolesError"
-      type="error"
-      variant="tonal"
+      severity="danger"
       class="mb-4"
-      closable
-      @click:close="rolesError = null"
+      :closable="true"
+      @close="rolesError = null"
     >
       {{ rolesError }}
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Empty State -->
     <div
@@ -192,7 +191,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRoles } from '@/composables/useRoles'

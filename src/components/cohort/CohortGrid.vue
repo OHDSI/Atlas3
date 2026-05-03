@@ -14,12 +14,11 @@
     </div>
 
     <!-- Error State -->
-    <v-alert
+    <AtlasAlert
       v-else-if="error"
-      type="error"
-      variant="tonal"
+      severity="danger"
       class="cohort-grid__alert"
-      closable
+      :closable="true"
     >
       <div class="cohort-grid__error">
         <div class="cohort-grid__error-message">
@@ -37,7 +36,7 @@
           {{ t('common.refresh', 'Retry') }}
         </v-btn>
       </div>
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Empty State: same MD3 filled container as concept-set list,
          with a context-aware CTA (clear filters vs. create new). -->
@@ -92,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasSkeleton } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasSkeleton } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import CohortCard from './CohortCard.vue'
