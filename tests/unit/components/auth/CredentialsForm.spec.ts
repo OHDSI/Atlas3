@@ -95,7 +95,7 @@ describe('CredentialsForm', () => {
 
       const textFields = wrapper.findAllComponents({ name: 'VTextField' })
       const usernameField = textFields[0]
-      expect(usernameField.props('label')).toBe('Custom Username')
+      expect(usernameField.props('label')).toBe('Custom Username *')
     })
 
     it('should use custom password placeholder from provider', () => {
@@ -108,7 +108,7 @@ describe('CredentialsForm', () => {
 
       const textFields = wrapper.findAllComponents({ name: 'VTextField' })
       const passwordField = textFields[1]
-      expect(passwordField.props('label')).toBe('Custom Password')
+      expect(passwordField.props('label')).toBe('Custom Password *')
     })
 
     it('should disable fields when loading', () => {
