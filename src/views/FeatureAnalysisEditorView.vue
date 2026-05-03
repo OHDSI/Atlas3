@@ -83,8 +83,8 @@
             data-testid="feature-analysis-editor-description"
           />
 
-          <v-row>
-            <v-col
+          <AtlasRow>
+            <AtlasCol
               cols="12"
               md="4"
             >
@@ -99,8 +99,8 @@
                 variant="outlined"
                 data-testid="feature-analysis-editor-type"
               />
-            </v-col>
-            <v-col
+            </AtlasCol>
+            <AtlasCol
               cols="12"
               md="4"
             >
@@ -113,8 +113,8 @@
                 variant="outlined"
                 data-testid="feature-analysis-editor-domain"
               />
-            </v-col>
-            <v-col
+            </AtlasCol>
+            <AtlasCol
               cols="12"
               md="4"
             >
@@ -127,8 +127,8 @@
                 variant="outlined"
                 data-testid="feature-analysis-editor-statType"
               />
-            </v-col>
-          </v-row>
+            </AtlasCol>
+          </AtlasRow>
         </div>
 
         <!-- PRESET design -->
@@ -274,12 +274,12 @@
             </h2>
           </div>
         </div>
-        <v-divider />
+        <AtlasDivider />
         <v-card-text>
           {{ deleteMessage }}
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="showDeleteDialog = false"
@@ -320,6 +320,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasDivider, AtlasRow, AtlasSpacer } from '@/components/ui'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 

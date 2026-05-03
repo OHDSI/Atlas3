@@ -17,7 +17,7 @@
         data-testid="characterizations-search"
         @update:model-value="handleSearchInput"
       />
-      <v-spacer />
+      <AtlasSpacer />
       <v-btn
         color="primary"
         variant="flat"
@@ -91,12 +91,12 @@
           </h2>
         </div>
       </div>
-      <v-divider />
+      <AtlasDivider />
       <v-card-text v-if="selectedCC">
         {{ deleteMessage }}
       </v-card-text>
       <v-card-actions>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           variant="text"
           @click="showDeleteDialog = false"
@@ -117,6 +117,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasSpacer } from '@/components/ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 

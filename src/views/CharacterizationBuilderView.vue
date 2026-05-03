@@ -43,7 +43,7 @@
       >
     </template>
     <template #actions>
-      <v-tooltip
+      <AtlasTooltip
         :text="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
         location="bottom"
       >
@@ -58,9 +58,9 @@
             @click="showConceptSetsDialog = true"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         v-if="isEditing"
         :text="t('cc.viewEdit.tabs.versions', 'Versions').value"
         location="bottom"
@@ -76,14 +76,14 @@
             @click="showVersionsDialog = true"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         :text="t('cc.viewEdit.tabs.messages', 'Validation').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-badge
+          <AtlasBadge
             v-bind="tipProps"
             :color="validationBadge?.color || 'default'"
             :content="validationBadge?.count ?? 0"
@@ -99,11 +99,11 @@
               data-testid="char-builder-validation-icon"
               @click="showValidationDialog = true"
             />
-          </v-badge>
+          </AtlasBadge>
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         :text="t('common.import', 'Import design').value"
         location="bottom"
       >
@@ -119,9 +119,9 @@
             @click="handleImportClick"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         v-if="isEditing"
         :text="t('common.export', 'Export design').value"
         location="bottom"
@@ -139,7 +139,7 @@
             @click="handleExport"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
       <input
         ref="importFileInput"
@@ -150,7 +150,7 @@
         @change="handleImportFileChange"
       >
 
-      <v-tooltip
+      <AtlasTooltip
         location="top"
         :text="runDisabledReason"
         :disabled="!runDisabledReason"
@@ -169,7 +169,7 @@
             </v-btn>
           </div>
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
       <v-btn
         v-if="isEditing"
         variant="tonal"
@@ -292,12 +292,12 @@
             </h2>
           </div>
         </div>
-        <v-divider />
+        <AtlasDivider />
         <v-card-text>
           {{ deleteMessage }}
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="showDeleteDialog = false"
@@ -352,7 +352,7 @@ import { logger } from '@/utils/logger'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
-import { AtlasDialog } from '@/components/ui'
+import { AtlasBadge, AtlasDialog, AtlasDivider, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'

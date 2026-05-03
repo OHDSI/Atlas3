@@ -89,7 +89,7 @@
           class="profile-error"
           data-test="profile-error"
         >
-          <v-icon
+          <AtlasIcon
             icon="mdi-alert-circle-outline"
             size="20"
             class="profile-error__icon"
@@ -102,7 +102,7 @@
         v-else-if="store.loading"
         class="profile-loading"
       >
-        <v-progress-circular
+        <AtlasProgressCircular
           indeterminate
           size="32"
         />
@@ -113,7 +113,7 @@
         class="profile-empty"
         data-test="profile-empty"
       >
-        <v-icon
+        <AtlasIcon
           icon="mdi-account-search-outline"
           size="48"
           class="profile-empty__icon"
@@ -144,7 +144,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { AtlasPageShell, AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIcon, AtlasPageShell, AtlasProgressCircular } from '@/components/ui'
 import ProfileDemographics from '@/components/profile/ProfileDemographics.vue'
 import ProfileTimeline from '@/components/profile/ProfileTimeline.vue'
 import ProfileObservationBand from '@/components/profile/ProfileObservationBand.vue'

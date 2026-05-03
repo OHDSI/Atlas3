@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <AtlasContainer fluid>
     <div
       v-if="loadingError"
       class="state error"
@@ -13,10 +13,11 @@
     >
       {{ t('common.loading', 'Loading incidence rate…') }}
     </div>
-  </v-container>
+  </AtlasContainer>
 </template>
 
 <script setup lang="ts">
+import { AtlasContainer } from '@/components/ui'
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'

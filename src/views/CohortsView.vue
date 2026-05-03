@@ -22,7 +22,7 @@
           :aria-label="t('common.tileView', 'Tile view').value"
           data-testid="cohorts-view-toggle-tile"
         >
-          <v-icon>mdi-view-grid-outline</v-icon>
+          <AtlasIcon>mdi-view-grid-outline</AtlasIcon>
         </v-btn>
         <v-btn
           value="table"
@@ -30,7 +30,7 @@
           :aria-label="t('dataSources.table.tableTab', 'Table view').value"
           data-testid="cohorts-view-toggle-table"
         >
-          <v-icon>mdi-view-list-outline</v-icon>
+          <AtlasIcon>mdi-view-list-outline</AtlasIcon>
         </v-btn>
       </v-btn-toggle>
     </template>
@@ -71,7 +71,7 @@
           {{ countLabel }}
         </v-chip>
 
-        <v-spacer />
+        <AtlasSpacer />
       </div>
 
       <!-- Filters -->
@@ -90,7 +90,7 @@
         v-if="filtering"
         class="cohorts-view__filtering"
       >
-        <v-progress-linear
+        <AtlasProgressLinear
           indeterminate
           color="primary"
           height="2"
@@ -222,7 +222,7 @@
             >
               {{ t('common.cancel', 'Cancel').value }}
             </v-btn>
-            <v-spacer />
+            <AtlasSpacer />
             <v-btn
               color="primary"
               variant="flat"
@@ -262,7 +262,7 @@
             </p>
           </v-card-text>
           <v-card-actions>
-            <v-spacer />
+            <AtlasSpacer />
             <v-btn
               variant="text"
               @click="showDeleteDialog = false"
@@ -301,7 +301,7 @@
             />
           </v-card-text>
           <v-card-actions>
-            <v-spacer />
+            <AtlasSpacer />
             <v-btn
               variant="text"
               @click="showNewCohortDialog = false"
@@ -349,7 +349,7 @@
               @click="showCohortInfoDialog = false"
             />
           </div>
-          <v-divider />
+          <AtlasDivider />
           <v-card-text
             v-if="cohortInfoHtml"
             style="max-height: 600px"
@@ -362,7 +362,7 @@
             v-else-if="loadingCohortInfo"
             class="text-center pa-6"
           >
-            <v-progress-circular
+            <AtlasProgressCircular
               indeterminate
               color="primary"
             />
@@ -401,7 +401,7 @@ import {
   saveCohortDefinition,
 } from '@/services/webapi'
 import { logger } from '@/utils/logger'
-import { AtlasPageShell } from '@/components/ui'
+import { AtlasDivider, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSpacer } from '@/components/ui'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'

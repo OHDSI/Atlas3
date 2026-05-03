@@ -56,7 +56,7 @@
         :to="feature.route"
         class="landing__feature"
       >
-        <v-icon
+        <AtlasIcon
           :icon="feature.icon"
           size="24"
           class="landing__feature-icon"
@@ -87,7 +87,7 @@
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import atlasLogo from '@/assets/icons/atlas-loading.svg'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIcon } from '@/components/ui'
 
 interface FeatureTile {
   id: string

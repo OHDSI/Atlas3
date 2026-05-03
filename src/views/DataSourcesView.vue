@@ -62,7 +62,7 @@
         </v-alert>
 
         <!-- Loading State -->
-        <v-skeleton-loader
+        <AtlasSkeleton
           v-if="store.loading.report"
           type="card"
           class="datasources-view__skeleton"
@@ -115,7 +115,7 @@
             v-else
             class="datasources-view__empty"
           >
-            <v-icon
+            <AtlasIcon
               icon="mdi-information-outline"
               size="36"
               class="datasources-view__empty-icon"
@@ -131,7 +131,7 @@
           v-else-if="!store.loading.sources && store.sources.length === 0 && !store.error.sources"
           class="datasources-view__empty"
         >
-          <v-icon
+          <AtlasIcon
             icon="mdi-database-off"
             size="36"
             class="datasources-view__empty-icon"
@@ -146,7 +146,7 @@
           v-else-if="!store.loading.sources && store.sources.length > 0 && !store.selectedSource"
           class="datasources-view__empty"
         >
-          <v-icon
+          <AtlasIcon
             icon="mdi-database-arrow-down-outline"
             size="36"
             class="datasources-view__empty-icon"
@@ -178,7 +178,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { logger } from '@/utils/logger'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
-import { AtlasPageShell, AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIcon, AtlasPageShell, AtlasSkeleton } from '@/components/ui'
 import DataSourceSelector from '@/components/datasources/DataSourceSelector.vue'
 import DataSourceSidebar from '@/components/datasources/DataSourceSidebar.vue'
 import DashboardReport from '@/components/datasources/DashboardReport.vue'

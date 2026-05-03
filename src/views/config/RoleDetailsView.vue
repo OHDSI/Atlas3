@@ -1,7 +1,7 @@
 <template>
   <div class="page-wrapper">
     <div class="page-card">
-      <v-container
+      <AtlasContainer
         fluid
         class="role-details-view"
       >
@@ -10,7 +10,7 @@
           v-if="isLoadingRoles"
           class="role-details-view__loading"
         >
-          <v-progress-circular
+          <AtlasProgressCircular
             indeterminate
             color="primary"
             size="64"
@@ -39,8 +39,8 @@
 
         <!-- Role Details -->
         <template v-else>
-          <v-row>
-            <v-col cols="12">
+          <AtlasRow>
+            <AtlasCol cols="12">
               <!-- Header with Back Button -->
               <div class="role-details-view__header">
                 <v-btn
@@ -64,37 +64,37 @@
                   </p>
                 </div>
               </div>
-            </v-col>
-          </v-row>
+            </AtlasCol>
+          </AtlasRow>
 
-          <v-row>
-            <v-col cols="12">
+          <AtlasRow>
+            <AtlasCol cols="12">
               <!-- Role Details Card -->
               <role-details
                 :role="currentRole"
                 class="mb-4"
               />
-            </v-col>
-          </v-row>
+            </AtlasCol>
+          </AtlasRow>
 
-          <v-row>
-            <v-col cols="12">
+          <AtlasRow>
+            <AtlasCol cols="12">
               <!-- Tabs for Users, Permissions, and Utilities -->
-              <v-tabs
+              <AtlasTabs
                 v-model="activeTab"
                 color="primary"
                 class="mb-4"
               >
-                <v-tab value="users">
+                <AtlasTab value="users">
                   Users
-                </v-tab>
-                <v-tab value="permissions">
+                </AtlasTab>
+                <AtlasTab value="permissions">
                   Permissions
-                </v-tab>
-                <v-tab value="utilities">
+                </AtlasTab>
+                <AtlasTab value="utilities">
                   Utilities
-                </v-tab>
-              </v-tabs>
+                </AtlasTab>
+              </AtlasTabs>
 
               <!-- Tab Content -->
               <v-window v-model="activeTab">
@@ -116,15 +116,16 @@
                   />
                 </v-window-item>
               </v-window>
-            </v-col>
-          </v-row>
+            </AtlasCol>
+          </AtlasRow>
         </template>
-      </v-container>
+      </AtlasContainer>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasContainer, AtlasProgressCircular, AtlasRow, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useRoles } from '@/composables/useRoles'
