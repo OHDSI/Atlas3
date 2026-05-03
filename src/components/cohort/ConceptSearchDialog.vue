@@ -23,23 +23,21 @@
       </v-card-title>
 
       <v-card-text>
-        <v-text-field
+        <AtlasTextField
           v-model="searchQuery"
           :label="tv('common.search')"
           :placeholder="tv('search.placeholder')"
           variant="outlined"
-          density="comfortable"
-          prepend-inner-icon="mdi-magnify"
+          prepend-icon="mdi-magnify"
           clearable
           @keyup.enter="performSearch"
         />
 
-        <v-select
+        <AtlasSelect
           v-model="selectedDomain"
           :label="tv('search.domains')"
           :items="domainOptions"
           variant="outlined"
-          density="comfortable"
           clearable
           class="mt-3"
         />
@@ -140,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasIcon, AtlasListItem, AtlasSpacer } from '@/components/ui'
+import { AtlasDivider, AtlasIcon, AtlasListItem, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'

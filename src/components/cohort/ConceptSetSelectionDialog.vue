@@ -32,26 +32,24 @@
           <!-- Toolbar: search + count chip + create-new button.
                Mirrors the toolbar on the /concepts list page. -->
           <div class="cs-picker__toolbar">
-            <v-text-field
+            <AtlasTextField
               v-model="searchTerm"
               :placeholder="t('common.search', 'Search concept sets…').value"
-              prepend-inner-icon="mdi-magnify"
+              prepend-icon="mdi-magnify"
               clearable
               variant="outlined"
-              density="comfortable"
               hide-details
               class="cs-picker__search"
             />
 
-            <v-chip
+            <AtlasChip
               v-if="!loading && filteredSets.length > 0"
-              size="small"
-              variant="tonal"
-              color="primary"
+              size="sm"
+              tone="primary"
               class="cs-picker__count"
             >
               {{ countLabel }}
-            </v-chip>
+            </AtlasChip>
 
             <AtlasSpacer />
 
@@ -175,7 +173,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasCard, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasCard, AtlasChip, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
 
 interface Props {

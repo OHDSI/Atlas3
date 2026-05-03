@@ -6,28 +6,27 @@
       }}
     </v-card-title>
     <v-card-text>
-      <v-text-field
+      <AtlasTextField
         v-model="localName"
         :label="t('columns.name', 'Name').value"
         :placeholder="
           t('components.atlasCohortEditor.enterCohortPlaceholder', 'Enter cohort name').value
         "
         variant="outlined"
-        density="comfortable"
         :rules="[rules.required]"
-        @update:model-value="emit('update:name', $event)"
+        @update:model-value="(v) => emit('update:name', String(v))"
       />
 
-      <v-textarea
+      <AtlasTextField
         v-model="localDescription"
         :label="t('columns.description', 'Description').value"
         :placeholder="
           t('common.enterCohortDescription', 'Enter cohort description (optional)').value
         "
         variant="outlined"
-        density="comfortable"
-        rows="3"
-        @update:model-value="emit('update:description', $event)"
+        :rows="3"
+        multiline
+        @update:model-value="(v) => emit('update:description', String(v))"
       />
 
       <!-- Tags Editor -->
@@ -107,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasMenu } from '@/components/ui'
+import { AtlasIcon, AtlasMenu, AtlasTextField } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Tag } from '@/models/cohort.types'

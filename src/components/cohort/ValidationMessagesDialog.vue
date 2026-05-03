@@ -40,19 +40,19 @@
               }"
             >
               <td>
-                <v-chip
-                  :color="
+                <AtlasChip
+                  :tone="
                     warning.severity === 'CRITICAL'
-                      ? 'error'
+                      ? 'danger'
                       : warning.severity === 'WARNING'
                         ? 'warning'
                         : 'info'
                   "
-                  size="small"
+                  size="sm"
                   label
                 >
                   {{ warning.severity }}
-                </v-chip>
+                </AtlasChip>
               </td>
               <td>{{ warning.message }}</td>
             </tr>
@@ -73,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasChip, AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { ValidationWarning } from '@/models/cohort-validation.types'
 

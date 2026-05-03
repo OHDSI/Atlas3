@@ -40,7 +40,7 @@
           {{ t('columns.name', 'Edit Cohort Name') }}
         </v-card-title>
         <v-card-text>
-          <v-text-field
+          <AtlasTextField
             v-model="editingName"
             :label="t('columns.name', 'Name').value"
             :placeholder="tv('cohortDefinitions.newDefinitionTitle')"
@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasIcon, AtlasSpacer, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 

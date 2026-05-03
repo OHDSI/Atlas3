@@ -36,22 +36,21 @@
             <div class="d-flex align-center w-100">
               <span class="font-weight-medium">{{ conceptSet.name }}</span>
               <AtlasSpacer />
-              <v-chip
-                size="small"
+              <AtlasChip
+                size="sm"
                 class="mr-2"
               >
                 {{ t('conceptSets.conceptCount', { count: conceptSet.items.length }) }}
-              </v-chip>
+              </AtlasChip>
             </div>
           </v-expansion-panel-title>
 
           <v-expansion-panel-text>
-            <v-text-field
+            <AtlasTextField
               :model-value="conceptSet.name"
               :label="tv('columns.name')"
               variant="outlined"
-              density="compact"
-              @update:model-value="conceptSet.id && updateConceptSetName(conceptSet.id, $event)"
+              @update:model-value="(v) => conceptSet.id && updateConceptSetName(conceptSet.id, String(v))"
             />
 
             <div
@@ -61,15 +60,15 @@
               <p class="text-subtitle-2 mb-2">
                 {{ t('conceptSets.concepts') }}
               </p>
-              <v-chip
+              <AtlasChip
                 v-for="concept in conceptSet.items"
                 :key="concept.conceptId"
                 closable
                 class="mr-2 mb-2"
-                @click:close="conceptSet.id && removeConcept(conceptSet.id, concept.conceptId)"
+                @close="conceptSet.id && removeConcept(conceptSet.id, concept.conceptId)"
               >
                 {{ concept.conceptName }}
-              </v-chip>
+              </AtlasChip>
             </div>
 
             <div class="mt-3 d-flex gap-2">
@@ -110,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasChip, AtlasIcon, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

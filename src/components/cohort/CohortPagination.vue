@@ -7,15 +7,14 @@
       <span class="cohort-pagination__label">{{
         t('datatable.itemsPerPage', 'Rows per page:').value
       }}</span>
-      <v-select
+      <AtlasSelect
         :model-value="itemsPerPage"
         :items="itemsPerPageOptions"
-        density="compact"
         variant="outlined"
         hide-details
         class="cohort-pagination__select"
         :aria-label="t('common.selectItemsPerPage', 'Select number of items per page').value"
-        @update:model-value="$emit('update:items-per-page', $event)"
+        @update:model-value="(v) => $emit('update:items-per-page', v as number)"
       />
     </div>
 
@@ -40,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasPagination } from '@/components/ui'
+import { AtlasPagination, AtlasSelect } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 

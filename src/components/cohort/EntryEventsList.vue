@@ -31,11 +31,10 @@
 
         <!-- Observation Period chip — was orange-outlined which read
              as alarm; tonal primary keeps it informative. -->
-        <v-chip
+        <AtlasChip
           class="obs-period-chip"
-          color="primary"
-          variant="tonal"
-          size="small"
+          tone="primary"
+          size="sm"
           @click="showObsPeriodDialog = true"
         >
           <AtlasIcon
@@ -57,7 +56,7 @@
             {{ t('options.after', 'after') }}
             {{ t('components.cohortExpressionEditor.eventIndexDate', 'the event index date') }}
           </span>
-        </v-chip>
+        </AtlasChip>
       </div>
 
       <!-- Observation Period Dialog -->
@@ -75,10 +74,9 @@
             <div class="obs-period-dialog-content">
               <div class="obs-period-field">
                 <label>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_3') }}</label>
-                <v-text-field
+                <AtlasTextField
                   :model-value="observationPeriod.priorDays"
                   type="number"
-                  density="compact"
                   variant="outlined"
                   hide-details
                   min="0"
@@ -87,10 +85,9 @@
               </div>
               <div class="obs-period-field">
                 <label>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_4') }}</label>
-                <v-text-field
+                <AtlasTextField
                   :model-value="observationPeriod.postDays"
                   type="number"
-                  density="compact"
                   variant="outlined"
                   hide-details
                   min="0"
@@ -132,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer } from '@/components/ui'
+import { AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

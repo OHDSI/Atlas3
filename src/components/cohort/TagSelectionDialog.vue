@@ -18,13 +18,12 @@
 
       <v-card-text class="pt-4">
         <!-- Search Bar -->
-        <v-text-field
+        <AtlasTextField
           v-model="searchQuery"
-          prepend-inner-icon="mdi-magnify"
+          prepend-icon="mdi-magnify"
           placeholder="Search tags..."
           clearable
           variant="outlined"
-          density="compact"
           class="mb-4"
           hide-details
         />
@@ -230,7 +229,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasBadge, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
+import { AtlasBadge, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag } from '@/models/cohort.types'

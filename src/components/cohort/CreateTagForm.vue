@@ -24,11 +24,11 @@
     </v-select>
 
     <!-- Tag Name -->
-    <v-text-field
+    <AtlasTextField
       v-model="form.name"
       label="Tag Name *"
       :rules="nameRules"
-      :error-messages="errors.name"
+      :error="errors.name"
       variant="outlined"
       required
       class="mb-2"
@@ -88,21 +88,21 @@
           </v-text-field>
 
           <!-- Permission Protected -->
-          <v-checkbox
+          <AtlasCheckbox
             v-model="form.permissionProtected"
             label="Permission Protected"
             hint="Require special permissions to assign/unassign this tag"
             persistent-hint
-            density="compact"
             class="mb-2"
           />
 
           <!-- Description Field -->
-          <v-textarea
+          <AtlasTextField
             v-model="form.description"
             label="Description"
-            rows="2"
-            :error-messages="errors.description"
+            :rows="2"
+            multiline
+            :error="errors.description"
             variant="outlined"
           />
         </v-expansion-panel-text>
@@ -156,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasCheckbox, AtlasIcon, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { tagSchema, type Tag as ConfigTag, type TagGroup } from '@/models/config.types'
 import type { Tag } from '@/models/cohort.types'

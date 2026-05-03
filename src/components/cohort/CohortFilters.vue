@@ -5,13 +5,12 @@
          - "Filters" button opens a wide menu with the rest
          - active filter values render as removable chips on the bar -->
     <div class="cohort-filters__bar">
-      <v-text-field
+      <AtlasTextField
         v-model="localFilters.searchQuery"
         :placeholder="searchLabel"
-        prepend-inner-icon="mdi-magnify"
+        prepend-icon="mdi-magnify"
         clearable
         variant="outlined"
-        density="comfortable"
         hide-details
         class="cohort-filters__search"
       />
@@ -60,7 +59,7 @@
           </div>
 
           <div class="cohort-filters__menu-body">
-            <v-autocomplete
+            <AtlasAutocomplete
               v-model="localFilters.selectedTags"
               :items="availableTags"
               :label="tagsLabel"
@@ -70,18 +69,16 @@
               multiple
               clearable
               variant="outlined"
-              density="comfortable"
               hide-details
             />
 
-            <v-autocomplete
+            <AtlasAutocomplete
               v-model="localFilters.author"
               :items="availableAuthors"
               :label="authorLabel"
               prepend-inner-icon="mdi-account-outline"
               clearable
               variant="outlined"
-              density="comfortable"
               hide-details
             />
 
@@ -89,14 +86,13 @@
               {{ createdLabel }}
             </div>
             <div class="cohort-filters__date-range">
-              <v-text-field
+              <AtlasTextField
                 :model-value="formatDateForDisplay(localFilters.createdDateRange.from)"
                 :label="fromLabel"
-                prepend-inner-icon="mdi-calendar-outline"
+                prepend-icon="mdi-calendar-outline"
                 readonly
                 clearable
                 variant="outlined"
-                density="comfortable"
                 hide-details
                 @click:clear="localFilters.createdDateRange.from = undefined"
                 @click="showCreatedFromPicker = true"
@@ -112,14 +108,13 @@
                 />
               </v-dialog>
 
-              <v-text-field
+              <AtlasTextField
                 :model-value="formatDateForDisplay(localFilters.createdDateRange.to)"
                 :label="toLabel"
-                prepend-inner-icon="mdi-calendar-outline"
+                prepend-icon="mdi-calendar-outline"
                 readonly
                 clearable
                 variant="outlined"
-                density="comfortable"
                 hide-details
                 @click:clear="localFilters.createdDateRange.to = undefined"
                 @click="showCreatedToPicker = true"
@@ -140,14 +135,13 @@
               {{ modifiedLabel }}
             </div>
             <div class="cohort-filters__date-range">
-              <v-text-field
+              <AtlasTextField
                 :model-value="formatDateForDisplay(localFilters.modifiedDateRange.from)"
                 :label="fromLabel"
-                prepend-inner-icon="mdi-calendar-outline"
+                prepend-icon="mdi-calendar-outline"
                 readonly
                 clearable
                 variant="outlined"
-                density="comfortable"
                 hide-details
                 @click:clear="localFilters.modifiedDateRange.from = undefined"
                 @click="showModifiedFromPicker = true"
@@ -163,14 +157,13 @@
                 />
               </v-dialog>
 
-              <v-text-field
+              <AtlasTextField
                 :model-value="formatDateForDisplay(localFilters.modifiedDateRange.to)"
                 :label="toLabel"
-                prepend-inner-icon="mdi-calendar-outline"
+                prepend-icon="mdi-calendar-outline"
                 readonly
                 clearable
                 variant="outlined"
-                density="comfortable"
                 hide-details
                 @click:clear="localFilters.modifiedDateRange.to = undefined"
                 @click="showModifiedToPicker = true"
@@ -196,61 +189,55 @@
       v-if="hasNonSearchFilters"
       class="cohort-filters__active"
     >
-      <v-chip
+      <AtlasChip
         v-for="tag in localFilters.selectedTags"
         :key="`tag-${tag}`"
-        size="small"
-        variant="tonal"
+        size="sm"
         closable
-        @click:close="removeTag(tag)"
+        @close="removeTag(tag)"
       >
         {{ tagsLabel }}: {{ tag }}
-      </v-chip>
-      <v-chip
+      </AtlasChip>
+      <AtlasChip
         v-if="localFilters.author"
-        size="small"
-        variant="tonal"
+        size="sm"
         closable
-        @click:close="localFilters.author = ''"
+        @close="localFilters.author = ''"
       >
         {{ authorLabel }}: {{ localFilters.author }}
-      </v-chip>
-      <v-chip
+      </AtlasChip>
+      <AtlasChip
         v-if="localFilters.createdDateRange.from"
-        size="small"
-        variant="tonal"
+        size="sm"
         closable
-        @click:close="localFilters.createdDateRange.from = undefined"
+        @close="localFilters.createdDateRange.from = undefined"
       >
         {{ createdFromLabel }}: {{ formatDateForDisplay(localFilters.createdDateRange.from) }}
-      </v-chip>
-      <v-chip
+      </AtlasChip>
+      <AtlasChip
         v-if="localFilters.createdDateRange.to"
-        size="small"
-        variant="tonal"
+        size="sm"
         closable
-        @click:close="localFilters.createdDateRange.to = undefined"
+        @close="localFilters.createdDateRange.to = undefined"
       >
         {{ createdToLabel }}: {{ formatDateForDisplay(localFilters.createdDateRange.to) }}
-      </v-chip>
-      <v-chip
+      </AtlasChip>
+      <AtlasChip
         v-if="localFilters.modifiedDateRange.from"
-        size="small"
-        variant="tonal"
+        size="sm"
         closable
-        @click:close="localFilters.modifiedDateRange.from = undefined"
+        @close="localFilters.modifiedDateRange.from = undefined"
       >
         {{ modifiedFromLabel }}: {{ formatDateForDisplay(localFilters.modifiedDateRange.from) }}
-      </v-chip>
-      <v-chip
+      </AtlasChip>
+      <AtlasChip
         v-if="localFilters.modifiedDateRange.to"
-        size="small"
-        variant="tonal"
+        size="sm"
         closable
-        @click:close="localFilters.modifiedDateRange.to = undefined"
+        @close="localFilters.modifiedDateRange.to = undefined"
       >
         {{ modifiedToLabel }}: {{ formatDateForDisplay(localFilters.modifiedDateRange.to) }}
-      </v-chip>
+      </AtlasChip>
       <v-btn
         v-if="activeFilterCount > 0"
         size="small"
@@ -268,7 +255,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { FilterState } from '@/composables/useCohorts'
-import { AtlasCard, AtlasMenu, AtlasSpacer } from '@/components/ui'
+import { AtlasAutocomplete, AtlasCard, AtlasChip, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
 
 interface Props {
   filters: FilterState
