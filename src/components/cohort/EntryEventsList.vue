@@ -60,53 +60,46 @@
       </div>
 
       <!-- Observation Period Dialog -->
-      <v-dialog
+      <AtlasDialog
         v-model="showObsPeriodDialog"
+        eyebrow="COHORT"
+        :title="t('components.cohortExpressionEditor.cohortEntryEventsText_6', 'Observation Period').value"
         max-width="500"
+        @close="showObsPeriodDialog = false"
       >
-        <v-card>
-          <v-card-title>
-            {{
-              t('components.cohortExpressionEditor.cohortEntryEventsText_6', 'Observation Period')
-            }}
-          </v-card-title>
-          <v-card-text>
-            <div class="obs-period-dialog-content">
-              <div class="obs-period-field">
-                <label>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_3') }}</label>
-                <AtlasTextField
-                  :model-value="observationPeriod.priorDays"
-                  type="number"
-                  variant="outlined"
-                  hide-details
-                  min="0"
-                  @update:model-value="updateObservationPeriod('priorDays', $event)"
-                />
-              </div>
-              <div class="obs-period-field">
-                <label>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_4') }}</label>
-                <AtlasTextField
-                  :model-value="observationPeriod.postDays"
-                  type="number"
-                  variant="outlined"
-                  hide-details
-                  min="0"
-                  @update:model-value="updateObservationPeriod('postDays', $event)"
-                />
-              </div>
-              <div class="obs-period-info">
-                {{ t('components.cohortExpressionEditor.cohortEntryEventsText_5') }}
-              </div>
-            </div>
-          </v-card-text>
-          <v-card-actions>
-            <AtlasSpacer />
-            <AtlasButton @click="showObsPeriodDialog = false">
-              {{ t('common.close', 'Close') }}
-            </AtlasButton>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+        <div class="obs-period-dialog-content">
+          <div class="obs-period-field">
+            <label>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_3') }}</label>
+            <AtlasTextField
+              :model-value="observationPeriod.priorDays"
+              type="number"
+              variant="outlined"
+              hide-details
+              min="0"
+              @update:model-value="updateObservationPeriod('priorDays', $event)"
+            />
+          </div>
+          <div class="obs-period-field">
+            <label>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_4') }}</label>
+            <AtlasTextField
+              :model-value="observationPeriod.postDays"
+              type="number"
+              variant="outlined"
+              hide-details
+              min="0"
+              @update:model-value="updateObservationPeriod('postDays', $event)"
+            />
+          </div>
+          <div class="obs-period-info">
+            {{ t('components.cohortExpressionEditor.cohortEntryEventsText_5') }}
+          </div>
+        </div>
+        <template #actions>
+          <AtlasButton @click="showObsPeriodDialog = false">
+            {{ t('common.close', 'Close') }}
+          </AtlasButton>
+        </template>
+      </AtlasDialog>
 
       <entry-event-card
         v-for="event in events"
@@ -129,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasTextField } from '@/components/ui'
 import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

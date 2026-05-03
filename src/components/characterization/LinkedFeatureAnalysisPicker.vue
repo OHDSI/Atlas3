@@ -72,11 +72,11 @@
               :data-testid="`linked-fa-picker-temporal-${fa.id}`"
               @update:model-value="(value) => updateFlag(fa.id, 'includeTemporal', !!value)"
             />
-            <v-btn
+            <AtlasIconButton
               icon="mdi-close"
-              size="x-small"
-              variant="text"
               :aria-label="tv('columns.remove', 'Remove')"
+              variant="text"
+              size="sm"
               :data-testid="`linked-fa-picker-remove-${fa.id}`"
               @click="removeFa(fa.id)"
             />
@@ -85,50 +85,45 @@
       </AtlasListItem>
     </AtlasList>
 
-    <v-dialog
+    <AtlasDialog
       v-model="dialogOpen"
+      eyebrow="DETAILS"
+      :title="t('cc.modals.chooseAFeatureAnalyses', 'Select feature analyses to link').value"
       max-width="800"
+      @close="dialogOpen = false"
     >
-      <v-card>
-        <v-card-title>
-          {{ t('cc.modals.chooseAFeatureAnalyses', 'Select feature analyses to link') }}
-        </v-card-title>
-        <v-card-text class="linked-fa-picker__dialog-body">
-          <AtlasDataTable
-            v-model="selectedIds"
-            :headers="dialogHeaders"
-            :items="selectableItems"
-            item-value="id"
-            show-select
-            data-testid="linked-fa-picker-table"
-          />
-        </v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            data-testid="linked-fa-picker-cancel"
-            @click="dialogOpen = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </AtlasButton>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            :disabled="selectedIds.length === 0"
-            data-testid="linked-fa-picker-confirm"
-            @click="confirmAdd"
-          >
-            {{ t('common.add', 'Add feature analysis') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <div class="linked-fa-picker__dialog-body">
+        <AtlasDataTable
+          v-model="selectedIds"
+          :headers="dialogHeaders"
+          :items="selectableItems"
+          item-value="id"
+          show-select
+          data-testid="linked-fa-picker-table"
+        />
+      </div>
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          data-testid="linked-fa-picker-cancel"
+          @click="dialogOpen = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          :disabled="selectedIds.length === 0"
+          data-testid="linked-fa-picker-confirm"
+          @click="confirmAdd"
+        >
+          {{ t('common.add', 'Add feature analysis') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

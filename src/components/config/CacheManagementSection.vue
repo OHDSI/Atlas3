@@ -36,34 +36,29 @@
     </v-card>
 
     <!-- Confirmation Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showConfirmDialog"
+      eyebrow="CONFIRM"
+      title="Clear Cache"
       max-width="400"
+      @close="showConfirmDialog = false"
     >
-      <v-card>
-        <v-card-title>Clear Cache</v-card-title>
-        <v-card-text>
-          Are you sure you want to clear the configuration cache? This action cannot be undone.
-        </v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            @click="showConfirmDialog = false"
-          >
-            Cancel
-          </AtlasButton>
-          <v-btn
-            color="warning"
-            variant="flat"
-            :loading="isLoading"
-            @click="handleClearCache"
-          >
-            Clear Cache
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      Are you sure you want to clear the configuration cache? This action cannot be undone.
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showConfirmDialog = false"
+        >
+          Cancel
+        </AtlasButton>
+        <AtlasButton
+          :loading="isLoading"
+          @click="handleClearCache"
+        >
+          Clear Cache
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <!-- Toast Notification -->
     <AtlasSnackbar
@@ -80,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasIcon, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasSnackbar } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'

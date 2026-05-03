@@ -250,37 +250,34 @@
       @update:selected-tags="handleTagsUpdate"
     />
 
-    <v-dialog
+    <AtlasDialog
       v-model="askDelete"
+      eyebrow="CONFIRM"
+      :title="t('common.delete', 'Delete incidence rate').value"
       max-width="400"
+      @close="askDelete = false"
     >
-      <v-card>
-        <v-card-title>{{ t('common.delete', 'Delete incidence rate') }}</v-card-title>
-        <v-card-text>
-          {{
-            t(
-              'ir.deleteConfirmation',
-              'Delete incidence rate analysis? Warning: deletion can not be undone!'
-            )
-          }}
-        </v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            @click="askDelete = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </AtlasButton>
-          <AtlasButton
-            variant="danger"
-            @click="onDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </AtlasButton>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{
+        t(
+          'ir.deleteConfirmation',
+          'Delete incidence rate analysis? Warning: deletion can not be undone!'
+        )
+      }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="askDelete = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          @click="onDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <AtlasSnackbar
       :model-value="!!feedback"
@@ -301,7 +298,7 @@ import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasMenu, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import IncidenceRateGeneratePopover from '@/components/incidence-rate/IncidenceRateGeneratePopover.vue'

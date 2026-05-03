@@ -545,10 +545,11 @@
               {{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }}
             </h2>
           </div>
-          <v-btn
+          <AtlasIconButton
             icon="mdi-close"
-            variant="text"
             :aria-label="t('common.close', 'Close').value"
+            variant="text"
+            size="sm"
             @click="showVersionsDialog = false"
           />
         </div>
@@ -562,41 +563,35 @@
       </v-card>
     </v-dialog>
 
-    <!-- Unsaved-changes confirmation dialog: replaces the native
-         window.confirm() that fired on route leave with no styling. -->
-    <v-dialog
+    <!-- Unsaved-changes confirmation dialog -->
+    <AtlasDialog
       v-model="showUnsavedDialog"
+      eyebrow="COHORT"
+      :title="t('common.unsavedChanges', 'Unsaved changes').value"
       max-width="440"
+      @close="cancelLeaveUnsaved"
     >
-      <v-card>
-        <v-card-title class="text-h6">
-          {{ t('common.unsavedChanges', 'Unsaved changes').value }}
-        </v-card-title>
-        <v-card-text>
-          {{
-            t(
-              'common.unsavedWarning',
-              'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.'
-            ).value
-          }}
-        </v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            @click="cancelLeaveUnsaved"
-          >
-            {{ t('common.cancel', 'Cancel').value }}
-          </AtlasButton>
-          <AtlasButton
-            variant="danger"
-            @click="confirmLeaveUnsaved"
-          >
-            {{ t('common.discard', 'Discard changes').value }}
-          </AtlasButton>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{
+        t(
+          'common.unsavedWarning',
+          'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.'
+        ).value
+      }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="cancelLeaveUnsaved"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          @click="confirmLeaveUnsaved"
+        >
+          {{ t('common.discard', 'Discard changes').value }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <!-- Tags Dialog -->
     <tag-selection-dialog
@@ -614,7 +609,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'

@@ -1,231 +1,218 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
-    max-width="900px"
-    scrollable
+    eyebrow="TAGS"
+    title="Manage Tags"
+    max-width="900"
     persistent
     @update:model-value="$emit('update:modelValue', $event)"
+    @close="cancel"
   >
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <AtlasIcon class="mr-2">
-          mdi-tag-multiple
-        </AtlasIcon>
-        Manage Tags
-      </v-card-title>
+    <div class="pt-4">
+      <!-- Search Bar -->
+      <AtlasTextField
+        v-model="searchQuery"
+        prepend-icon="mdi-magnify"
+        placeholder="Search tags..."
+        clearable
+        variant="outlined"
+        class="mb-4"
+        hide-details
+      />
 
-      <AtlasDivider />
-
-      <v-card-text class="pt-4">
-        <!-- Search Bar -->
-        <AtlasTextField
-          v-model="searchQuery"
-          prepend-icon="mdi-magnify"
-          placeholder="Search tags..."
-          clearable
-          variant="outlined"
-          class="mb-4"
-          hide-details
-        />
-
-        <!-- Selected Tags Preview -->
-        <div
-          v-if="localSelectedTags.length > 0"
-          class="selected-tags-section mb-4"
-        >
-          <div class="d-flex align-center justify-space-between mb-2">
-            <h4 class="text-subtitle-1">
-              Selected Tags ({{ localSelectedTags.length }})
-            </h4>
-            <v-btn
-              size="small"
-              variant="text"
-              color="error"
-              @click="clearAll"
-            >
-              Clear All
-            </v-btn>
-          </div>
-          <div class="selected-tags-chips">
-            <v-chip
-              v-for="tag in localSelectedTags"
-              :key="tag.id || tag.name"
-              :style="{ backgroundColor: tag.color || '#1976D2' }"
-              closable
-              class="ma-1"
-              @click:close="deselectTag(tag)"
-            >
-              <span :style="{ color: getContrastColor(tag.color || '#1976D2') }">
-                {{ tag.name }}
-              </span>
-            </v-chip>
-          </div>
-        </div>
-
-        <AtlasDivider
-          v-if="localSelectedTags.length > 0"
-          class="mb-4"
-        />
-
-        <!-- Loading State -->
-        <div
-          v-if="loading"
-          class="text-center py-8"
-        >
-          <AtlasProgressCircular
-            indeterminate
-            color="primary"
-          />
-          <p class="text-body-2 mt-2">
-            Loading tags...
-          </p>
-        </div>
-
-        <!-- No Tag Groups Message -->
-        <AtlasAlert
-          v-else-if="filteredTagGroups.length === 0 && !searchQuery"
-          severity="info"
-          class="mb-4"
-        >
-          No tag groups found. Please create tag groups in the configuration panel first.
-        </AtlasAlert>
-
-        <AtlasAlert
-          v-else-if="filteredTagGroups.length === 0 && searchQuery"
-          severity="info"
-          class="mb-4"
-        >
-          No tags found matching "{{ searchQuery }}"
-        </AtlasAlert>
-
-        <!-- Tag Groups -->
-        <v-expansion-panels
-          v-else
-          v-model="expandedPanels"
-          multiple
-        >
-          <v-expansion-panel
-            v-for="group in filteredTagGroups"
-            :key="group.id"
-            :value="group.id"
+      <!-- Selected Tags Preview -->
+      <div
+        v-if="localSelectedTags.length > 0"
+        class="selected-tags-section mb-4"
+      >
+        <div class="d-flex align-center justify-space-between mb-2">
+          <h4 class="text-subtitle-1">
+            Selected Tags ({{ localSelectedTags.length }})
+          </h4>
+          <v-btn
+            size="small"
+            variant="text"
+            color="error"
+            @click="clearAll"
           >
-            <v-expansion-panel-title>
-              <div class="d-flex align-center justify-space-between w-100 mr-4">
-                <div class="d-flex align-center">
-                  <AtlasIcon
-                    v-if="group.icon"
-                    :icon="group.icon"
-                    :color="group.color"
-                    class="mr-2"
-                  />
-                  <div
-                    v-else-if="group.color"
-                    class="color-dot mr-2"
-                    :style="{ backgroundColor: group.color }"
-                  />
-                  <span>{{ group.name }}</span>
-                </div>
-                <AtlasBadge
-                  v-if="getGroupSelectionCount(group) > 0"
-                  :content="getGroupSelectionCount(group)"
-                  color="primary"
-                  inline
+            Clear All
+          </v-btn>
+        </div>
+        <div class="selected-tags-chips">
+          <v-chip
+            v-for="tag in localSelectedTags"
+            :key="tag.id || tag.name"
+            :style="{ backgroundColor: tag.color || '#1976D2' }"
+            closable
+            class="ma-1"
+            @click:close="deselectTag(tag)"
+          >
+            <span :style="{ color: getContrastColor(tag.color || '#1976D2') }">
+              {{ tag.name }}
+            </span>
+          </v-chip>
+        </div>
+      </div>
+
+      <AtlasDivider
+        v-if="localSelectedTags.length > 0"
+        class="mb-4"
+      />
+
+      <!-- Loading State -->
+      <div
+        v-if="loading"
+        class="text-center py-8"
+      >
+        <AtlasProgressCircular
+          indeterminate
+          color="primary"
+        />
+        <p class="text-body-2 mt-2">
+          Loading tags...
+        </p>
+      </div>
+
+      <!-- No Tag Groups Message -->
+      <AtlasAlert
+        v-else-if="filteredTagGroups.length === 0 && !searchQuery"
+        severity="info"
+        class="mb-4"
+      >
+        No tag groups found. Please create tag groups in the configuration panel first.
+      </AtlasAlert>
+
+      <AtlasAlert
+        v-else-if="filteredTagGroups.length === 0 && searchQuery"
+        severity="info"
+        class="mb-4"
+      >
+        No tags found matching "{{ searchQuery }}"
+      </AtlasAlert>
+
+      <!-- Tag Groups -->
+      <v-expansion-panels
+        v-else
+        v-model="expandedPanels"
+        multiple
+      >
+        <v-expansion-panel
+          v-for="group in filteredTagGroups"
+          :key="group.id"
+          :value="group.id"
+        >
+          <v-expansion-panel-title>
+            <div class="d-flex align-center justify-space-between w-100 mr-4">
+              <div class="d-flex align-center">
+                <AtlasIcon
+                  v-if="group.icon"
+                  :icon="group.icon"
+                  :color="group.color"
+                  class="mr-2"
                 />
+                <div
+                  v-else-if="group.color"
+                  class="color-dot mr-2"
+                  :style="{ backgroundColor: group.color }"
+                />
+                <span>{{ group.name }}</span>
               </div>
-            </v-expansion-panel-title>
-            <v-expansion-panel-text>
-              <div
-                v-if="getGroupTags(group).length === 0"
-                class="text-body-2 text-disabled pa-2"
-              >
-                No tags in this group yet.
-              </div>
-              <div
-                v-else
-                class="tag-chips-grid"
-              >
-                <v-chip
-                  v-for="tag in getGroupTags(group)"
-                  :key="tag.id"
-                  :style="{
-                    backgroundColor: isSelected(tag) ? tag.color || '#1976D2' : 'transparent',
-                    borderColor: tag.color || '#1976D2',
-                  }"
-                  :variant="isSelected(tag) ? 'elevated' : 'outlined'"
-                  class="ma-1"
-                  @click="toggleTag(tag)"
-                >
-                  <AtlasIcon
-                    v-if="isSelected(tag)"
-                    start
-                    size="small"
-                  >
-                    mdi-check
-                  </AtlasIcon>
-                  <AtlasIcon
-                    v-if="tag.icon"
-                    :start="!isSelected(tag)"
-                    size="small"
-                  >
-                    {{ tag.icon }}
-                  </AtlasIcon>
-                  <span
-                    :style="{
-                      color: isSelected(tag) ? getContrastColor(tag.color || '#1976D2') : 'inherit',
-                    }"
-                  >
-                    {{ tag.name }}
-                  </span>
-                </v-chip>
-              </div>
-            </v-expansion-panel-text>
-          </v-expansion-panel>
-        </v-expansion-panels>
-
-        <AtlasDivider class="my-4" />
-
-        <!-- Create New Tag Section -->
-        <v-expansion-panels v-model="showCreateForm">
-          <v-expansion-panel>
-            <v-expansion-panel-title>
-              <AtlasIcon start>
-                mdi-plus
-              </AtlasIcon>
-              Create New Tag
-            </v-expansion-panel-title>
-            <v-expansion-panel-text>
-              <create-tag-form
-                :tag-groups="configStore.tagGroups"
-                @created="handleTagCreated"
-                @cancel="showCreateForm = undefined"
+              <AtlasBadge
+                v-if="getGroupSelectionCount(group) > 0"
+                :content="getGroupSelectionCount(group)"
+                color="primary"
+                inline
               />
-            </v-expansion-panel-text>
-          </v-expansion-panel>
-        </v-expansion-panels>
-      </v-card-text>
+            </div>
+          </v-expansion-panel-title>
+          <v-expansion-panel-text>
+            <div
+              v-if="getGroupTags(group).length === 0"
+              class="text-body-2 text-disabled pa-2"
+            >
+              No tags in this group yet.
+            </div>
+            <div
+              v-else
+              class="tag-chips-grid"
+            >
+              <v-chip
+                v-for="tag in getGroupTags(group)"
+                :key="tag.id"
+                :style="{
+                  backgroundColor: isSelected(tag) ? tag.color || '#1976D2' : 'transparent',
+                  borderColor: tag.color || '#1976D2',
+                }"
+                :variant="isSelected(tag) ? 'elevated' : 'outlined'"
+                class="ma-1"
+                @click="toggleTag(tag)"
+              >
+                <AtlasIcon
+                  v-if="isSelected(tag)"
+                  start
+                  size="small"
+                >
+                  mdi-check
+                </AtlasIcon>
+                <AtlasIcon
+                  v-if="tag.icon"
+                  :start="!isSelected(tag)"
+                  size="small"
+                >
+                  {{ tag.icon }}
+                </AtlasIcon>
+                <span
+                  :style="{
+                    color: isSelected(tag) ? getContrastColor(tag.color || '#1976D2') : 'inherit',
+                  }"
+                >
+                  {{ tag.name }}
+                </span>
+              </v-chip>
+            </div>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
 
-      <AtlasDivider />
+      <AtlasDivider class="my-4" />
 
-      <v-card-actions>
-        <AtlasSpacer />
-        <AtlasButton
-          variant="ghost"
-          @click="cancel"
-        >
-          Cancel
-        </AtlasButton>
-        <AtlasButton
-          @click="apply"
-        >
-          Apply
-        </AtlasButton>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+      <!-- Create New Tag Section -->
+      <v-expansion-panels v-model="showCreateForm">
+        <v-expansion-panel>
+          <v-expansion-panel-title>
+            <AtlasIcon start>
+              mdi-plus
+            </AtlasIcon>
+            Create New Tag
+          </v-expansion-panel-title>
+          <v-expansion-panel-text>
+            <create-tag-form
+              :tag-groups="configStore.tagGroups"
+              @created="handleTagCreated"
+              @cancel="showCreateForm = undefined"
+            />
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </div>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="cancel"
+      >
+        Cancel
+      </AtlasButton>
+      <AtlasButton
+        @click="apply"
+      >
+        Apply
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasBadge, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasBadge, AtlasDialog, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag } from '@/models/cohort.types'

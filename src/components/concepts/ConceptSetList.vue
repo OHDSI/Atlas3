@@ -85,10 +85,11 @@
         <!-- Actions Column — hover-only for a quieter list. -->
         <template #item.actions="{ item }">
           <div class="concept-set-list__actions">
-            <v-btn
+            <AtlasIconButton
               icon="mdi-pencil-outline"
-              size="small"
+              aria-label="Edit"
               variant="text"
+              size="sm"
               :disabled="!access.canWrite(item.id)"
               @click.stop="onEditClick(item.id)"
             />
@@ -138,40 +139,33 @@
     </div>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="deleteDialog"
+      eyebrow="CONFIRM"
+      :title="`${t('common.delete', 'Delete').value} ${t('common.conceptSet', 'Concept Set').value}`"
       max-width="500"
+      @close="deleteDialog = false"
     >
-      <v-card>
-        <v-card-title class="text-h6">
-          {{ t('common.delete', 'Delete') }} {{ t('common.conceptSet', 'Concept Set') }}
-        </v-card-title>
-
-        <v-card-text>
-          {{
-            t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete')
-          }}
-          "{{ deleteTarget?.name }}"?
-        </v-card-text>
-
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            @click="deleteDialog = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </AtlasButton>
-          <AtlasButton
-            variant="danger"
-            :loading="store.loading"
-            @click="confirmDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </AtlasButton>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{
+        t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete')
+      }}
+      "{{ deleteTarget?.name }}"?
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="deleteDialog = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="store.loading"
+          @click="confirmDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <!-- Concept Set Editor (Side Panel) -->
     <ConceptSetEditor
@@ -198,7 +192,7 @@ import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
-import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()

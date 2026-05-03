@@ -42,19 +42,21 @@
         >
           <template #append>
             <div class="d-flex gap-2">
-              <v-btn
+              <AtlasIconButton
                 icon="mdi-pencil"
-                size="small"
+                aria-label="Edit"
                 variant="text"
-                color="primary"
+                tone="primary"
+                size="sm"
                 :data-testid="`edit-concept-set-${conceptSet.id}`"
                 @click="conceptSet.id && $emit('edit', conceptSet.id)"
               />
-              <v-btn
+              <AtlasIconButton
                 icon="mdi-delete"
-                size="small"
+                aria-label="Delete"
                 variant="text"
-                color="error"
+                tone="danger"
+                size="sm"
                 :data-testid="`delete-concept-set-${conceptSet.id}`"
                 @click="conceptSet.id && handleDelete(conceptSet.id)"
               />
@@ -90,38 +92,34 @@
     </v-card-text>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showDeleteDialog"
+      eyebrow="CONFIRM"
+      :title="t('conceptSetList.confirmDeleteTitle').value"
       max-width="400"
+      @close="showDeleteDialog = false"
     >
-      <v-card>
-        <v-card-title>{{ t('conceptSetList.confirmDeleteTitle') }}</v-card-title>
-        <v-card-text>
-          {{ t('cs.manager.csDeleteConfirmMessage') }}
-        </v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            @click="showDeleteDialog = false"
-          >
-            {{ t('common.cancel') }}
-          </AtlasButton>
-          <v-btn
-            color="error"
-            variant="elevated"
-            @click="confirmDelete"
-          >
-            {{ t('common.delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{ t('cs.manager.csDeleteConfirmMessage') }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showDeleteDialog = false"
+        >
+          {{ t('common.cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          @click="confirmDelete"
+        >
+          {{ t('common.delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasBadge, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'

@@ -1,142 +1,127 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="CONCEPTS"
+    :title="tv('search.headingTitle')"
     max-width="800"
     persistent
     @update:model-value="emit('update:modelValue', $event)"
+    @close="close"
   >
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <AtlasIcon class="mr-2">
-          mdi-magnify
-        </AtlasIcon>
-        <span>{{ tv('search.headingTitle') }}</span>
+    <div>
+      <AtlasTextField
+        v-model="searchQuery"
+        :label="tv('common.search')"
+        :placeholder="tv('search.placeholder')"
+        variant="outlined"
+        prepend-icon="mdi-magnify"
+        clearable
+        @keyup.enter="performSearch"
+      />
+
+      <AtlasSelect
+        v-model="selectedDomain"
+        :label="tv('search.domains')"
+        :items="domainOptions"
+        variant="outlined"
+        clearable
+        class="mt-3"
+      />
+
+      <div class="d-flex align-center gap-2 mt-3">
+        <AtlasButton
+          :loading="isSearching"
+          :disabled="!searchQuery || searchQuery.length < 2"
+          @click="performSearch"
+        >
+          {{ t('common.search') }}
+        </AtlasButton>
+
         <AtlasSpacer />
-        <v-btn
-          icon
-          size="small"
-          variant="text"
+
+        <AtlasButton
+          variant="ghost"
           @click="close"
         >
-          <AtlasIcon>mdi-close</AtlasIcon>
-        </v-btn>
-      </v-card-title>
-
-      <v-card-text>
-        <AtlasTextField
-          v-model="searchQuery"
-          :label="tv('common.search')"
-          :placeholder="tv('search.placeholder')"
-          variant="outlined"
-          prepend-icon="mdi-magnify"
-          clearable
-          @keyup.enter="performSearch"
-        />
-
-        <AtlasSelect
-          v-model="selectedDomain"
-          :label="tv('search.domains')"
-          :items="domainOptions"
-          variant="outlined"
-          clearable
-          class="mt-3"
-        />
-
-        <div class="d-flex align-center gap-2 mt-3">
-          <AtlasButton
-            :loading="isSearching"
-            :disabled="!searchQuery || searchQuery.length < 2"
-            @click="performSearch"
-          >
-            {{ t('common.search') }}
-          </AtlasButton>
-
-          <AtlasSpacer />
-
-          <AtlasButton
-            variant="ghost"
-            @click="close"
-          >
-            {{ t('common.cancel') }}
-          </AtlasButton>
-          <AtlasButton
-            :disabled="selectedConcepts.length === 0"
-            @click="addSelectedConcepts"
-          >
-            {{ t('common.add') }} ({{ selectedConcepts.length }})
-          </AtlasButton>
-        </div>
-
-        <AtlasDivider class="my-4" />
-
-        <loading-spinner
-          v-if="isSearching"
-          message="Searching concepts..."
-        />
-
-        <div v-else-if="searchResults && searchResults.length > 0">
-          <p class="text-subtitle-2 mb-2">
-            Found {{ searchResults.length }} results
-          </p>
-
-          <v-virtual-scroll
-            :items="searchResults"
-            height="400"
-            item-height="72"
-          >
-            <template #default="{ item }">
-              <AtlasListItem
-                :key="item.conceptId"
-                @click="selectConcept(item)"
-              >
-                <template #prepend>
-                  <v-checkbox-btn :model-value="isSelected(item.conceptId)" />
-                </template>
-
-                <v-list-item-title>
-                  {{ item.conceptName }}
-                </v-list-item-title>
-                <v-list-item-subtitle>
-                  ID: {{ item.conceptId }} | Code: {{ item.conceptCode }} | Domain:
-                  {{ item.domainId }}
-                </v-list-item-subtitle>
-              </AtlasListItem>
-            </template>
-          </v-virtual-scroll>
-        </div>
-
-        <div
-          v-else-if="hasSearched"
-          class="text-center text-medium-emphasis py-4"
+          {{ t('common.cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          :disabled="selectedConcepts.length === 0"
+          @click="addSelectedConcepts"
         >
-          <AtlasIcon
-            size="48"
-            class="mb-2"
-          >
-            mdi-magnify-remove-outline
-          </AtlasIcon>
-          <p>{{ t('search.noResultsFoundFor', { query: searchQuery }) }}</p>
-        </div>
+          {{ t('common.add') }} ({{ selectedConcepts.length }})
+        </AtlasButton>
+      </div>
 
-        <div
-          v-else
-          class="text-center text-medium-emphasis py-4"
+      <AtlasDivider class="my-4" />
+
+      <loading-spinner
+        v-if="isSearching"
+        message="Searching concepts..."
+      />
+
+      <div v-else-if="searchResults && searchResults.length > 0">
+        <p class="text-subtitle-2 mb-2">
+          Found {{ searchResults.length }} results
+        </p>
+
+        <v-virtual-scroll
+          :items="searchResults"
+          height="400"
+          item-height="72"
         >
-          <AtlasIcon
-            size="48"
-            class="mb-2"
-          >
-            mdi-magnify
-          </AtlasIcon>
-          <p>{{ t('conceptSearch.instructions') }}</p>
-        </div>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+          <template #default="{ item }">
+            <AtlasListItem
+              :key="item.conceptId"
+              @click="selectConcept(item)"
+            >
+              <template #prepend>
+                <v-checkbox-btn :model-value="isSelected(item.conceptId)" />
+              </template>
+
+              <v-list-item-title>
+                {{ item.conceptName }}
+              </v-list-item-title>
+              <v-list-item-subtitle>
+                ID: {{ item.conceptId }} | Code: {{ item.conceptCode }} | Domain:
+                {{ item.domainId }}
+              </v-list-item-subtitle>
+            </AtlasListItem>
+          </template>
+        </v-virtual-scroll>
+      </div>
+
+      <div
+        v-else-if="hasSearched"
+        class="text-center text-medium-emphasis py-4"
+      >
+        <AtlasIcon
+          size="48"
+          class="mb-2"
+        >
+          mdi-magnify-remove-outline
+        </AtlasIcon>
+        <p>{{ t('search.noResultsFoundFor', { query: searchQuery }) }}</p>
+      </div>
+
+      <div
+        v-else
+        class="text-center text-medium-emphasis py-4"
+      >
+        <AtlasIcon
+          size="48"
+          class="mb-2"
+        >
+          mdi-magnify
+        </AtlasIcon>
+        <p>{{ t('conceptSearch.instructions') }}</p>
+      </div>
+    </div>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasIcon, AtlasListItem, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasDialog, AtlasListItem, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'

@@ -1,72 +1,59 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     v-model="isOpen"
-    max-width="600px"
+    eyebrow="VERSIONS"
+    :title="t('components.versions.editComment').value"
+    max-width="600"
     persistent
+    @close="handleClose"
   >
-    <v-card>
-      <v-card-title class="d-flex justify-space-between align-center">
-        <span>{{ t('components.versions.editComment') }}</span>
-        <v-btn
-          icon="mdi-close"
-          variant="text"
-          size="small"
-          @click="handleClose"
-        />
-      </v-card-title>
+    <v-form
+      ref="formRef"
+      @submit.prevent="handleSave"
+    >
+      <AtlasTextField
+        v-model="commentText"
+        :label="tv('columns.comment', 'Comment')"
+        :placeholder="tv('components.versions.commentPlaceholder')"
+        :rules="[commentMaxLengthRule]"
+        :counter="500"
+        :rows="4"
+        multiline
+        variant="outlined"
+        autofocus
+        class="mt-4"
+      />
 
-      <v-card-text>
-        <v-form
-          ref="formRef"
-          @submit.prevent="handleSave"
-        >
-          <AtlasTextField
-            v-model="commentText"
-            :label="tv('columns.comment', 'Comment')"
-            :placeholder="tv('components.versions.commentPlaceholder')"
-            :rules="[commentMaxLengthRule]"
-            :counter="500"
-            :rows="4"
-            multiline
-            variant="outlined"
-            autofocus
-            class="mt-4"
-          />
-
-          <AtlasAlert
-            v-if="error"
-            severity="danger"
-            :closable="true"
-            class="mt-2"
-            @close="error = null"
-          >
-            {{ error }}
-          </AtlasAlert>
-        </v-form>
-      </v-card-text>
-
-      <v-card-actions>
-        <AtlasSpacer />
-        <AtlasButton
-          variant="ghost"
-          @click="handleClose"
-        >
-          {{ t('common.cancel') }}
-        </AtlasButton>
-        <AtlasButton
-          :loading="saving"
-          :disabled="!isCommentChanged || saving"
-          @click="handleSave"
-        >
-          {{ t('common.save') }}
-        </AtlasButton>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+      <AtlasAlert
+        v-if="error"
+        severity="danger"
+        :closable="true"
+        class="mt-2"
+        @close="error = null"
+      >
+        {{ error }}
+      </AtlasAlert>
+    </v-form>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="handleClose"
+      >
+        {{ t('common.cancel') }}
+      </AtlasButton>
+      <AtlasButton
+        :loading="saving"
+        :disabled="!isCommentChanged || saving"
+        @click="handleSave"
+      >
+        {{ t('common.save') }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
@@ -197,6 +184,3 @@ function handleClose(): void {
 }
 </script>
 
-<style scoped>
-/* Additional styles if needed */
-</style>

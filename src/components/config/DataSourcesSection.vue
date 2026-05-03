@@ -94,52 +94,32 @@
               </td>
               <td>
                 <div class="d-flex gap-2">
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    icon
-                    :title="tv('configuration.tagManagement.edit')"
+                  <AtlasIconButton
+                    icon="mdi-pencil"
+                    :aria-label="tv('configuration.tagManagement.edit')"
+                    size="sm"
                     @click="openEditDialog(source)"
-                  >
-                    <AtlasIcon size="small">
-                      mdi-pencil
-                    </AtlasIcon>
-                  </v-btn>
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    icon
-                    :title="tv('columns.checkConnection')"
+                  />
+                  <AtlasIconButton
+                    icon="mdi-connection"
+                    :aria-label="tv('columns.checkConnection')"
+                    size="sm"
                     @click="checkConnection(source)"
-                  >
-                    <AtlasIcon size="small">
-                      mdi-connection
-                    </AtlasIcon>
-                  </v-btn>
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    icon
+                  />
+                  <AtlasIconButton
+                    icon="mdi-refresh"
+                    :aria-label="tv('columns.refreshCache')"
+                    size="sm"
                     :disabled="!source.hasResults"
-                    :title="tv('columns.refreshCache')"
                     @click="refreshCache(source)"
-                  >
-                    <AtlasIcon size="small">
-                      mdi-refresh
-                    </AtlasIcon>
-                  </v-btn>
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    icon
-                    color="error"
-                    :title="tv('common.delete')"
+                  />
+                  <AtlasIconButton
+                    icon="mdi-delete"
+                    :aria-label="tv('common.delete')"
+                    size="sm"
+                    tone="danger"
                     @click="confirmDeleteSource(source)"
-                  >
-                    <AtlasIcon size="small">
-                      mdi-delete
-                    </AtlasIcon>
-                  </v-btn>
+                  />
                 </div>
               </td>
             </tr>
@@ -203,37 +183,35 @@
     />
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showDeleteConfirm"
+      eyebrow="CONFIRM"
+      :title="t('common.delete').value"
       max-width="400"
+      @close="showDeleteConfirm = false"
     >
-      <v-card>
-        <v-card-title>{{ t('common.delete') }}</v-card-title>
-        <v-card-text>{{ t('configuration.viewEdit.source.confirms.delete') }}</v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            @click="showDeleteConfirm = false"
-          >
-            {{ t('common.cancel') }}
-          </AtlasButton>
-          <v-btn
-            color="error"
-            variant="elevated"
-            :loading="isDeleting"
-            @click="executeDelete"
-          >
-            {{ t('common.delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{ t('configuration.viewEdit.source.confirms.delete') }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showDeleteConfirm = false"
+        >
+          {{ t('common.cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="isDeleting"
+          @click="executeDelete"
+        >
+          {{ t('common.delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasIcon, AtlasSnackbar, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar } from '@/components/ui'
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { deleteSource } from '@/services/source.service'

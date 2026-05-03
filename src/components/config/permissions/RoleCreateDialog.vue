@@ -1,82 +1,72 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="SETTINGS"
+    :title="isEditMode ? 'Edit Role' : 'Create New Role'"
     max-width="600"
     persistent
     @update:model-value="$emit('update:modelValue', $event)"
+    @close="handleClose"
   >
-    <v-card>
-      <v-card-title>
-        {{ isEditMode ? 'Edit Role' : 'Create New Role' }}
-      </v-card-title>
+    <v-form
+      ref="formRef"
+      v-model="formValid"
+      @submit.prevent="handleSubmit"
+    >
+      <AtlasTextField
+        v-model="form.name"
+        label="Role Name *"
+        :rules="nameRules"
+        :error="errors.name"
+        variant="outlined"
+        required
+        class="mb-2"
+        autofocus
+        :disabled="saving"
+      />
 
-      <v-card-text>
-        <v-form
-          ref="formRef"
-          v-model="formValid"
-          @submit.prevent="handleSubmit"
-        >
-          <!-- Name Field -->
-          <AtlasTextField
-            v-model="form.name"
-            label="Role Name *"
-            :rules="nameRules"
-            :error="errors.name"
-            variant="outlined"
-            required
-            class="mb-2"
-            autofocus
-            :disabled="saving"
-          />
+      <AtlasTextField
+        v-model="form.description"
+        label="Description"
+        :rows="3"
+        multiline
+        :error="errors.description"
+        variant="outlined"
+        class="mt-2"
+        :disabled="saving"
+      />
+    </v-form>
 
-          <!-- Description Field -->
-          <AtlasTextField
-            v-model="form.description"
-            label="Description"
-            :rows="3"
-            multiline
-            :error="errors.description"
-            variant="outlined"
-            class="mt-2"
-            :disabled="saving"
-          />
-        </v-form>
-
-        <!-- Server Error Message -->
-        <AtlasAlert
-          v-if="serverError"
-          severity="danger"
-          class="mt-4"
-          :closable="true"
-          @close="serverError = null"
-        >
-          {{ serverError }}
-        </AtlasAlert>
-      </v-card-text>
-
-      <v-card-actions>
-        <AtlasSpacer />
-        <AtlasButton
-          variant="ghost"
-          :disabled="saving"
-          @click="handleClose"
-        >
-          Cancel
-        </AtlasButton>
-        <AtlasButton
-          :disabled="!formValid || saving"
-          :loading="saving"
-          @click="handleSubmit"
-        >
-          {{ isEditMode ? 'Save' : 'Create' }}
-        </AtlasButton>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <AtlasAlert
+      v-if="serverError"
+      severity="danger"
+      class="mt-4"
+      :closable="true"
+      @close="serverError = null"
+    >
+      {{ serverError }}
+    </AtlasAlert>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        :disabled="saving"
+        @click="handleClose"
+      >
+        Cancel
+      </AtlasButton>
+      <AtlasButton
+        :disabled="!formValid || saving"
+        :loading="saving"
+        @click="handleSubmit"
+      >
+        {{ isEditMode ? 'Save' : 'Create' }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

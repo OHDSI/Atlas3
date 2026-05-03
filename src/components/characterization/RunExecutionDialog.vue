@@ -6,67 +6,62 @@
   caller so it can kick off polling.
 -->
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="SETTINGS"
+    :title="t('cc.viewEdit.executions.title', 'Run characterization').value"
     max-width="460"
     persistent
     data-testid="run-execution-dialog"
     @update:model-value="onModelUpdate"
+    @close="close"
   >
-    <v-card density="compact">
-      <v-card-title class="run-dialog__title">
-        {{ t('cc.viewEdit.executions.title', 'Run characterization') }}
-      </v-card-title>
-      <v-card-text class="run-dialog__body">
-        <AtlasAlert
-          v-if="errorMessage"
-          severity="danger"
-          density="compact"
-          class="mb-3"
-          data-testid="run-execution-dialog-error"
-        >
-          {{ errorMessage }}
-        </AtlasAlert>
-        <AtlasSelect
-          v-model="selectedSourceKey"
-          :items="sourceItems"
-          item-title="title"
-          item-value="value"
-          :label="t('columns.sourceName', 'Data source').value"
-          :loading="loadingSources"
-          :disabled="loadingSources"
-          :error="sourceError"
-          variant="outlined"
-          data-testid="run-execution-dialog-source"
-        />
-      </v-card-text>
-      <v-card-actions class="run-dialog__actions">
-        <AtlasSpacer />
-        <AtlasButton
-          variant="ghost"
-          size="sm"
-          :disabled="running"
-          data-testid="run-execution-dialog-cancel"
-          @click="close"
-        >
-          {{ t('common.cancel', 'Cancel') }}
-        </AtlasButton>
-        <AtlasButton
-          size="sm"
-          :loading="running"
-          :disabled="!canRun"
-          data-testid="run-execution-dialog-run"
-          @click="onRun"
-        >
-          {{ t('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run') }}
-        </AtlasButton>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <AtlasAlert
+      v-if="errorMessage"
+      severity="danger"
+      density="compact"
+      class="mb-3"
+      data-testid="run-execution-dialog-error"
+    >
+      {{ errorMessage }}
+    </AtlasAlert>
+    <AtlasSelect
+      v-model="selectedSourceKey"
+      :items="sourceItems"
+      item-title="title"
+      item-value="value"
+      :label="t('columns.sourceName', 'Data source').value"
+      :loading="loadingSources"
+      :disabled="loadingSources"
+      :error="sourceError"
+      variant="outlined"
+      data-testid="run-execution-dialog-source"
+    />
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        size="sm"
+        :disabled="running"
+        data-testid="run-execution-dialog-cancel"
+        @click="close"
+      >
+        {{ t('common.cancel', 'Cancel') }}
+      </AtlasButton>
+      <AtlasButton
+        size="sm"
+        :loading="running"
+        :disabled="!canRun"
+        data-testid="run-execution-dialog-run"
+        @click="onRun"
+      >
+        {{ t('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run') }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasSpacer, AtlasSelect } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasSelect } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

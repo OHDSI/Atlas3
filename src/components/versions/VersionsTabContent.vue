@@ -30,38 +30,35 @@
     />
 
     <!-- Save Preview as Current Confirmation Dialog (T064) -->
-    <v-dialog
+    <AtlasDialog
       v-model="saveConfirmDialogOpen"
-      max-width="500px"
+      eyebrow="VERSIONS"
+      :title="t('common.saveAsCurrentVersion').value"
+      max-width="500"
       persistent
+      @close="saveConfirmDialogOpen = false"
     >
-      <v-card>
-        <v-card-title>{{ t('common.saveAsCurrentVersion') }}</v-card-title>
-        <v-card-text>
-          {{ t('common.savePreviewWarning') }}
-        </v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <AtlasButton
-            variant="ghost"
-            @click="saveConfirmDialogOpen = false"
-          >
-            {{ t('common.cancel') }}
-          </AtlasButton>
-          <AtlasButton
-            :loading="savingPreview"
-            @click="handleSavePreviewAsCurrent"
-          >
-            {{ t('common.save') }}
-          </AtlasButton>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{ t('common.savePreviewWarning') }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="saveConfirmDialogOpen = false"
+        >
+          {{ t('common.cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          :loading="savingPreview"
+          @click="handleSavePreviewAsCurrent"
+        >
+          {{ t('common.save') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasSpacer, AtlasSnackbar } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasSnackbar } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { logger } from '@/utils/logger'
 import { onMounted, ref, reactive } from 'vue'

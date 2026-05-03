@@ -25,54 +25,40 @@
     </AtlasTooltip>
 
     <!-- Edit Name Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showEditDialog"
-      max-width="600px"
+      eyebrow="COHORT"
+      :title="t('columns.name', 'Edit Cohort Name').value"
+      max-width="600"
+      @close="showEditDialog = false"
     >
-      <v-card>
-        <v-card-title class="d-flex align-center">
-          <AtlasIcon
-            color="primary"
-            class="mr-2"
-          >
-            mdi-pencil
-          </AtlasIcon>
-          {{ t('columns.name', 'Edit Cohort Name') }}
-        </v-card-title>
-        <v-card-text>
-          <AtlasTextField
-            v-model="editingName"
-            :label="t('columns.name', 'Name').value"
-            :placeholder="tv('cohortDefinitions.newDefinitionTitle')"
-            variant="outlined"
-            autofocus
-            @keyup.enter="saveEditedName"
-          />
-        </v-card-text>
-        <v-card-actions>
-          <AtlasSpacer />
-          <v-btn
-            color="grey"
-            variant="text"
-            @click="showEditDialog = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            @click="saveEditedName"
-          >
-            {{ t('common.save', 'Save') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <AtlasTextField
+        v-model="editingName"
+        :label="t('columns.name', 'Name').value"
+        :placeholder="tv('cohortDefinitions.newDefinitionTitle')"
+        variant="outlined"
+        autofocus
+        @keyup.enter="saveEditedName"
+      />
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showEditDialog = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          @click="saveEditedName"
+        >
+          {{ t('common.save', 'Save') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </nav>
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasSpacer, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasIcon, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 

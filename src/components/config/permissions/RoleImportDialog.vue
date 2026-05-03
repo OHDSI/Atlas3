@@ -1,183 +1,180 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="IMPORT"
+    title="Import Role"
     max-width="600"
     persistent
     @update:model-value="$emit('update:modelValue', $event)"
+    @close="handleClose"
   >
-    <v-card>
-      <v-card-title> Import Role </v-card-title>
+    <div>
+      <!-- File Upload -->
+      <div v-if="!jsonData">
+        <p class="text-body-2 mb-4">
+          Select a JSON file to import a role configuration. The file should be in Atlas 2.x
+          compatible format.
+        </p>
 
-      <v-card-text>
-        <!-- File Upload -->
-        <div v-if="!jsonData">
-          <p class="text-body-2 mb-4">
-            Select a JSON file to import a role configuration. The file should be in Atlas 2.x
-            compatible format.
-          </p>
+        <v-file-input
+          v-model="selectedFile"
+          label="Select JSON file"
+          accept=".json,application/json"
+          prepend-icon="mdi-file-upload"
+          variant="outlined"
+          :error-messages="fileError"
+          show-size
+          @update:model-value="handleFileSelect"
+        />
+      </div>
 
-          <v-file-input
-            v-model="selectedFile"
-            label="Select JSON file"
-            accept=".json,application/json"
-            prepend-icon="mdi-file-upload"
-            variant="outlined"
-            :error-messages="fileError"
-            show-size
-            @update:model-value="handleFileSelect"
-          />
-        </div>
-
-        <!-- Conflict Resolution -->
-        <div v-else-if="hasConflict">
-          <AtlasAlert
-            severity="warning"
-            class="mb-4"
-          >
-            <div class="text-h6 mb-2">
-              Role Name Conflict
-            </div>
-            <p class="text-body-2">
-              A role with the name <strong>"{{ parsedRoleName }}"</strong> already exists.
-            </p>
-          </AtlasAlert>
-
-          <p class="text-body-2 mb-4">
-            How would you like to proceed?
-          </p>
-
-          <AtlasRadioGroup
-            v-model="conflictResolution"
-            class="mb-4"
-          >
-            <AtlasRadio
-              value="skip"
-              label="Skip - Cancel the import"
-            />
-            <AtlasRadio
-              value="rename"
-              label="Rename - Import with a new name"
-            />
-          </AtlasRadioGroup>
-
-          <AtlasTextField
-            v-if="conflictResolution === 'rename'"
-            v-model="newRoleName"
-            label="New Role Name"
-            variant="outlined"
-            :rules="nameRules"
-            hint="Enter a unique name for the imported role"
-            persistent-hint
-          />
-        </div>
-
-        <!-- Preview -->
-        <div v-else-if="isValidating">
-          <AtlasProgressCircular
-            indeterminate
-            color="primary"
-          />
-          <span class="ml-2">Validating import data...</span>
-        </div>
-
-        <div v-else-if="validationComplete">
-          <AtlasAlert
-            severity="info"
-            class="mb-4"
-          >
-            <div class="text-h6 mb-2">
-              Ready to Import
-            </div>
-            <p class="text-body-2">
-              The following role configuration will be imported:
-            </p>
-          </AtlasAlert>
-
-          <div class="import-preview">
-            <div class="import-preview__item">
-              <strong>Role Name:</strong> {{ displayRoleName }}
-            </div>
-            <div
-              v-if="parsedDescription"
-              class="import-preview__item"
-            >
-              <strong>Description:</strong> {{ parsedDescription }}
-            </div>
-            <div class="import-preview__item">
-              <strong>Permissions:</strong> {{ permissionCount }}
-            </div>
-            <div class="import-preview__item">
-              <strong>Users:</strong> {{ userCount }}
-            </div>
-          </div>
-
-          <AtlasAlert
-            v-if="validationWarnings.length > 0"
-            severity="warning"
-            class="mt-4"
-          >
-            <div class="text-body-2 font-weight-bold mb-2">
-              Warnings:
-            </div>
-            <ul class="text-body-2">
-              <li
-                v-for="(warning, index) in validationWarnings"
-                :key="index"
-              >
-                {{ warning }}
-              </li>
-            </ul>
-          </AtlasAlert>
-        </div>
-
-        <!-- Error Message -->
+      <!-- Conflict Resolution -->
+      <div v-else-if="hasConflict">
         <AtlasAlert
-          v-if="errorMessage"
-          severity="danger"
-          class="mt-4"
-          :closable="true"
-          @close="errorMessage = null"
+          severity="warning"
+          class="mb-4"
         >
-          {{ errorMessage }}
+          <div class="text-h6 mb-2">
+            Role Name Conflict
+          </div>
+          <p class="text-body-2">
+            A role with the name <strong>"{{ parsedRoleName }}"</strong> already exists.
+          </p>
         </AtlasAlert>
-      </v-card-text>
 
-      <v-card-actions>
-        <AtlasSpacer />
-        <AtlasButton
-          variant="ghost"
-          :disabled="importing"
-          @click="handleClose"
+        <p class="text-body-2 mb-4">
+          How would you like to proceed?
+        </p>
+
+        <AtlasRadioGroup
+          v-model="conflictResolution"
+          class="mb-4"
         >
-          Cancel
-        </AtlasButton>
-        <AtlasButton
-          v-if="!jsonData"
-          disabled
+          <AtlasRadio
+            value="skip"
+            label="Skip - Cancel the import"
+          />
+          <AtlasRadio
+            value="rename"
+            label="Rename - Import with a new name"
+          />
+        </AtlasRadioGroup>
+
+        <AtlasTextField
+          v-if="conflictResolution === 'rename'"
+          v-model="newRoleName"
+          label="New Role Name"
+          variant="outlined"
+          :rules="nameRules"
+          hint="Enter a unique name for the imported role"
+          persistent-hint
+        />
+      </div>
+
+      <!-- Preview -->
+      <div v-else-if="isValidating">
+        <AtlasProgressCircular
+          indeterminate
+          color="primary"
+        />
+        <span class="ml-2">Validating import data...</span>
+      </div>
+
+      <div v-else-if="validationComplete">
+        <AtlasAlert
+          severity="info"
+          class="mb-4"
         >
-          Next
-        </AtlasButton>
-        <AtlasButton
-          v-else-if="hasConflict"
-          :disabled="conflictResolution === 'rename' && !isNewNameValid"
-          @click="handleConflictResolution"
+          <div class="text-h6 mb-2">
+            Ready to Import
+          </div>
+          <p class="text-body-2">
+            The following role configuration will be imported:
+          </p>
+        </AtlasAlert>
+
+        <div class="import-preview">
+          <div class="import-preview__item">
+            <strong>Role Name:</strong> {{ displayRoleName }}
+          </div>
+          <div
+            v-if="parsedDescription"
+            class="import-preview__item"
+          >
+            <strong>Description:</strong> {{ parsedDescription }}
+          </div>
+          <div class="import-preview__item">
+            <strong>Permissions:</strong> {{ permissionCount }}
+          </div>
+          <div class="import-preview__item">
+            <strong>Users:</strong> {{ userCount }}
+          </div>
+        </div>
+
+        <AtlasAlert
+          v-if="validationWarnings.length > 0"
+          severity="warning"
+          class="mt-4"
         >
-          Continue
-        </AtlasButton>
-        <AtlasButton
-          v-else-if="validationComplete"
-          :loading="importing"
-          @click="handleImport"
-        >
-          Import Role
-        </AtlasButton>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+          <div class="text-body-2 font-weight-bold mb-2">
+            Warnings:
+          </div>
+          <ul class="text-body-2">
+            <li
+              v-for="(warning, index) in validationWarnings"
+              :key="index"
+            >
+              {{ warning }}
+            </li>
+          </ul>
+        </AtlasAlert>
+      </div>
+
+      <!-- Error Message -->
+      <AtlasAlert
+        v-if="errorMessage"
+        severity="danger"
+        class="mt-4"
+        :closable="true"
+        @close="errorMessage = null"
+      >
+        {{ errorMessage }}
+      </AtlasAlert>
+    </div>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        :disabled="importing"
+        @click="handleClose"
+      >
+        Cancel
+      </AtlasButton>
+      <AtlasButton
+        v-if="!jsonData"
+        disabled
+      >
+        Next
+      </AtlasButton>
+      <AtlasButton
+        v-else-if="hasConflict"
+        :disabled="conflictResolution === 'rename' && !isNewNameValid"
+        @click="handleConflictResolution"
+      >
+        Continue
+      </AtlasButton>
+      <AtlasButton
+        v-else-if="validationComplete"
+        :loading="importing"
+        @click="handleImport"
+      >
+        Import Role
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasProgressCircular, AtlasRadio, AtlasRadioGroup, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasProgressCircular, AtlasRadio, AtlasRadioGroup, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 
