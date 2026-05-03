@@ -37,7 +37,7 @@
       </span>
     </v-chip>
 
-    <v-spacer />
+    <AtlasSpacer />
 
     <v-btn-toggle
       :model-value="mode"
@@ -66,6 +66,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSpacer } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 

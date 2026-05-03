@@ -49,7 +49,7 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           variant="text"
           :disabled="deleting"
@@ -72,6 +72,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSpacer } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

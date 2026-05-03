@@ -28,9 +28,9 @@
           :disabled="isLoading"
           @click="showConfirmDialog = true"
         >
-          <v-icon start>
+          <AtlasIcon start>
             mdi-trash-can-outline
-          </v-icon>
+          </AtlasIcon>
           Clear Configuration Cache
         </v-btn>
       </v-card-text>
@@ -47,7 +47,7 @@
           Are you sure you want to clear the configuration cache? This action cannot be undone.
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="showConfirmDialog = false"
@@ -90,6 +90,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { ref, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { logger } from '@/utils/logger'

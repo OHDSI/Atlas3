@@ -12,12 +12,12 @@
           class="tag-badge__swatch"
           :style="{ backgroundColor: item.color || item.groups[0]?.color || '#cecece' }"
         >
-          <v-icon
+          <AtlasIcon
             size="small"
             color="white"
           >
             {{ item.icon || item.groups[0]?.icon || 'mdi-tag' }}
-          </v-icon>
+          </AtlasIcon>
         </span>
         <span
           class="tag-badge__name"
@@ -108,12 +108,12 @@
     <!-- Empty State -->
     <template #no-data>
       <div class="text-center pa-4">
-        <v-icon
+        <AtlasIcon
           size="64"
           color="grey-lighten-1"
         >
           mdi-tag-off-outline
-        </v-icon>
+        </AtlasIcon>
         <p class="text-h6 mt-2">
           No tags in this group
         </p>
@@ -126,6 +126,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import type { Tag } from '@/models/config.types'
 
 interface Props {

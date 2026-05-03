@@ -3,7 +3,7 @@
     <v-card>
       <v-card-title class="d-flex align-center flex-wrap ga-2">
         <span>{{ t('navigation.jobs') }}</span>
-        <v-spacer />
+        <AtlasSpacer />
 
         <!-- Status Filter -->
         <v-btn-toggle
@@ -30,13 +30,13 @@
             value="running"
             size="small"
           >
-            <v-icon
+            <AtlasIcon
               start
               size="small"
               color="blue"
             >
               mdi-play-circle
-            </v-icon>
+            </AtlasIcon>
             {{ t('ir.results.running') }}
             <v-chip
               v-if="runningJobsCount > 0"
@@ -52,26 +52,26 @@
             value="completed"
             size="small"
           >
-            <v-icon
+            <AtlasIcon
               start
               size="small"
               color="green"
             >
               mdi-check-circle
-            </v-icon>
+            </AtlasIcon>
             {{ t('executionStatus.values.COMPLETED') }}
           </v-btn>
           <v-btn
             value="failed"
             size="small"
           >
-            <v-icon
+            <AtlasIcon
               start
               size="small"
               color="red"
             >
               mdi-alert-circle
-            </v-icon>
+            </AtlasIcon>
             {{ t('ir.results.failed') }}
           </v-btn>
         </v-btn-toggle>
@@ -99,7 +99,7 @@
         />
       </v-card-title>
 
-      <v-divider />
+      <AtlasDivider />
 
       <v-card-text class="pa-0">
         <!-- Loading State -->
@@ -107,7 +107,7 @@
           v-if="isLoading && !hasJobs"
           class="d-flex justify-center align-center pa-8"
         >
-          <v-progress-circular
+          <AtlasProgressCircular
             indeterminate
             color="primary"
           />
@@ -137,12 +137,12 @@
           v-else-if="!hasJobs"
           class="d-flex flex-column justify-center align-center pa-8 text-medium-emphasis"
         >
-          <v-icon
+          <AtlasIcon
             size="64"
             class="mb-4"
           >
             mdi-briefcase-off-outline
-          </v-icon>
+          </AtlasIcon>
           <p class="text-h6">
             {{ t('configuration.jobs.empty.title') }}
           </p>
@@ -169,7 +169,7 @@
           <!-- Type Column -->
           <template #item.type="{ item }">
             <div class="d-flex align-center">
-              <v-icon
+              <AtlasIcon
                 :icon="getTypeIcon(item.type)"
                 size="small"
                 class="mr-2"
@@ -198,12 +198,12 @@
               size="small"
               variant="tonal"
             >
-              <v-icon
+              <AtlasIcon
                 start
                 size="small"
               >
                 {{ getStatusDisplay(item.status).icon }}
-              </v-icon>
+              </AtlasIcon>
               {{ getStatusDisplay(item.status).label }}
             </v-chip>
           </template>
@@ -238,28 +238,28 @@
       </v-card-text>
 
       <!-- Last Updated Footer -->
-      <v-divider v-if="lastFetched" />
+      <AtlasDivider v-if="lastFetched" />
       <v-card-actions
         v-if="lastFetched"
         class="text-caption text-disabled"
       >
-        <v-icon
+        <AtlasIcon
           size="small"
           class="mr-1"
         >
           mdi-clock-outline
-        </v-icon>
+        </AtlasIcon>
         {{ t('configuration.jobs.lastUpdated') }}: {{ formatDate(lastFetched) }}
-        <v-spacer />
+        <AtlasSpacer />
         <span
           v-if="pollingEnabled"
           class="d-flex align-center"
         >
-          <v-icon
+          <AtlasIcon
             size="small"
             color="primary"
             class="mr-1 rotating"
-          > mdi-sync </v-icon>
+          > mdi-sync </AtlasIcon>
           {{ t('configuration.jobs.autoRefreshOn') }}
         </span>
       </v-card-actions>
@@ -268,6 +268,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useJobs } from '@/composables/useJobs'

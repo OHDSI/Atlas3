@@ -5,12 +5,12 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon
+        <AtlasIcon
           start
           color="primary"
         >
           mdi-lightning-bolt
-        </v-icon>
+        </AtlasIcon>
         {{ t('trexsql.cacheTitle', 'Patient Cache') }}
       </v-card-title>
 
@@ -29,7 +29,7 @@
           v-if="isLoading"
           class="d-flex align-center justify-center py-8"
         >
-          <v-progress-circular
+          <AtlasProgressCircular
             indeterminate
             color="primary"
           />
@@ -37,25 +37,25 @@
         </div>
 
         <!-- Data Sources List -->
-        <v-list
+        <AtlasList
           v-else
           lines="two"
           class="trexsql-cache-section__list"
         >
-          <v-list-item
+          <AtlasListItem
             v-for="source in dataSourcesWithStatus"
             :key="source.sourceKey"
             class="trexsql-cache-section__item"
           >
             <template #prepend>
-              <v-avatar
+              <AtlasAvatar
                 :color="getStatusColor(source.cacheStatus?.status)"
                 size="40"
               >
-                <v-icon color="white">
+                <AtlasIcon color="white">
                   {{ getStatusIcon(source.cacheStatus?.status) }}
-                </v-icon>
-              </v-avatar>
+                </AtlasIcon>
+              </AtlasAvatar>
             </template>
 
             <v-list-item-title class="font-weight-medium">
@@ -123,14 +123,14 @@
                   :disabled="buildingSource !== null"
                   @click="handleBuildCache(source.sourceKey)"
                 >
-                  <v-icon start>
+                  <AtlasIcon start>
                     {{
                       source.cacheStatus?.status === 'ready' ||
                         source.cacheStatus?.status === 'stale'
                         ? 'mdi-refresh'
                         : 'mdi-hammer'
                     }}
-                  </v-icon>
+                  </AtlasIcon>
                   {{
                     source.cacheStatus?.status === 'ready' || source.cacheStatus?.status === 'stale'
                       ? t('trexsql.rebuild', 'Rebuild')
@@ -143,7 +143,7 @@
                   v-else
                   class="d-flex align-center"
                 >
-                  <v-progress-circular
+                  <AtlasProgressCircular
                     indeterminate
                     size="24"
                     width="2"
@@ -155,15 +155,15 @@
                 </div>
               </div>
             </template>
-          </v-list-item>
+          </AtlasListItem>
 
           <!-- Empty State -->
-          <v-list-item v-if="dataSourcesWithStatus.length === 0">
+          <AtlasListItem v-if="dataSourcesWithStatus.length === 0">
             <v-list-item-title class="text-grey">
               {{ t('trexsql.noDataSources', 'No data sources available') }}
             </v-list-item-title>
-          </v-list-item>
-        </v-list>
+          </AtlasListItem>
+        </AtlasList>
       </v-card-text>
     </v-card>
 
@@ -188,6 +188,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAvatar, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressCircular } from '@/components/ui'
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAuth } from '@/composables/useAuth'

@@ -46,7 +46,7 @@
                 Back to Tag Groups
               </v-btn>
             </div>
-            <v-tooltip
+            <AtlasTooltip
               :disabled="selectedGroup.allowCustom"
               location="bottom"
               text="Enable 'Free-form' on this tag group to allow custom tags."
@@ -64,7 +64,7 @@
                   </v-btn>
                 </span>
               </template>
-            </v-tooltip>
+            </AtlasTooltip>
           </div>
 
           <v-alert
@@ -123,7 +123,7 @@
           </v-alert>
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="showDeleteGroupDialog = false"
@@ -154,7 +154,7 @@
           all assets.
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="showDeleteTagDialog = false"
@@ -212,6 +212,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag, TagGroup } from '@/models/config.types'

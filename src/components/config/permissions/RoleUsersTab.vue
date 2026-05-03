@@ -41,7 +41,7 @@
         v-if="isLoadingUsers"
         class="role-users-tab__loading"
       >
-        <v-progress-circular
+        <AtlasProgressCircular
           indeterminate
           color="primary"
           size="64"
@@ -67,12 +67,12 @@
       <template v-else>
         <!-- Summary -->
         <div class="role-users-tab__summary mt-4">
-          <v-icon
+          <AtlasIcon
             size="small"
             class="mr-2"
           >
             mdi-account-multiple
-          </v-icon>
+          </AtlasIcon>
           <span class="text-body-2">
             <strong>{{ selectedUserIds.size }}</strong> of
             <strong>{{ filteredUsers.length }}</strong> users assigned
@@ -102,21 +102,21 @@
           <!-- Login Column -->
           <template #item.login="{ item }">
             <div class="role-users-tab__login">
-              <v-icon
+              <AtlasIcon
                 size="small"
                 class="mr-2"
               >
                 mdi-account
-              </v-icon>
+              </AtlasIcon>
               <strong>{{ item.login }}</strong>
-              <v-icon
+              <AtlasIcon
                 v-if="hasUserChanged(item.id)"
                 size="small"
                 color="warning"
                 class="ml-2"
               >
                 mdi-circle-small
-              </v-icon>
+              </AtlasIcon>
             </div>
           </template>
 
@@ -166,6 +166,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 

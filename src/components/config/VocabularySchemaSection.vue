@@ -21,7 +21,7 @@
           class="mb-2"
         >
           <template #prepend-inner>
-            <v-icon>mdi-database-outline</v-icon>
+            <AtlasIcon>mdi-database-outline</AtlasIcon>
           </template>
         </v-text-field>
 
@@ -83,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useConfigStore } from '@/stores/config'

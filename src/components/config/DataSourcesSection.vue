@@ -53,13 +53,13 @@
             >
               <td>
                 <div class="d-flex align-center">
-                  <v-icon
+                  <AtlasIcon
                     :color="source.initialized ? 'success' : 'error'"
                     size="small"
                     class="mr-2"
                   >
                     {{ source.initialized ? 'mdi-check-circle' : 'mdi-alert-circle' }}
-                  </v-icon>
+                  </AtlasIcon>
                   {{ source.sourceName }}
                   <span class="text-grey ml-1">[{{ source.sourceKey }}]</span>
                 </div>
@@ -102,9 +102,9 @@
                     :title="tv('configuration.tagManagement.edit')"
                     @click="openEditDialog(source)"
                   >
-                    <v-icon size="small">
+                    <AtlasIcon size="small">
                       mdi-pencil
-                    </v-icon>
+                    </AtlasIcon>
                   </v-btn>
                   <v-btn
                     size="small"
@@ -113,9 +113,9 @@
                     :title="tv('columns.checkConnection')"
                     @click="checkConnection(source)"
                   >
-                    <v-icon size="small">
+                    <AtlasIcon size="small">
                       mdi-connection
-                    </v-icon>
+                    </AtlasIcon>
                   </v-btn>
                   <v-btn
                     size="small"
@@ -125,9 +125,9 @@
                     :title="tv('columns.refreshCache')"
                     @click="refreshCache(source)"
                   >
-                    <v-icon size="small">
+                    <AtlasIcon size="small">
                       mdi-refresh
-                    </v-icon>
+                    </AtlasIcon>
                   </v-btn>
                   <v-btn
                     size="small"
@@ -137,9 +137,9 @@
                     :title="tv('common.delete')"
                     @click="confirmDeleteSource(source)"
                   >
-                    <v-icon size="small">
+                    <AtlasIcon size="small">
                       mdi-delete
-                    </v-icon>
+                    </AtlasIcon>
                   </v-btn>
                 </div>
               </td>
@@ -235,7 +235,7 @@
         <v-card-title>{{ t('common.delete') }}</v-card-title>
         <v-card-text>{{ t('configuration.viewEdit.source.confirms.delete') }}</v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="showDeleteConfirm = false"
@@ -257,6 +257,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { deleteSource } from '@/services/source.service'

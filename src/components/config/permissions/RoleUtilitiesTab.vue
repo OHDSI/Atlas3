@@ -9,13 +9,13 @@
       <!-- Export Section -->
       <div class="role-utilities-tab__section">
         <div class="role-utilities-tab__section-header">
-          <v-icon
+          <AtlasIcon
             size="large"
             color="primary"
             class="mr-3"
           >
             mdi-download
-          </v-icon>
+          </AtlasIcon>
           <div>
             <h3 class="text-h6">
               Export Role
@@ -48,18 +48,18 @@
         </div>
       </div>
 
-      <v-divider class="my-6" />
+      <AtlasDivider class="my-6" />
 
       <!-- Import Section -->
       <div class="role-utilities-tab__section">
         <div class="role-utilities-tab__section-header">
-          <v-icon
+          <AtlasIcon
             size="large"
             color="primary"
             class="mr-3"
           >
             mdi-upload
-          </v-icon>
+          </AtlasIcon>
           <div>
             <h3 class="text-h6">
               Import Role
@@ -125,6 +125,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasIcon } from '@/components/ui'
 import { ref } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import RoleImportDialog from './RoleImportDialog.vue'

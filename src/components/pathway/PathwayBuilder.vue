@@ -36,7 +36,7 @@
       >
     </template>
     <template #actions>
-      <v-tooltip
+      <AtlasTooltip
         v-if="currentPathway?.id"
         :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
         location="bottom"
@@ -52,14 +52,14 @@
             @click="showVersions = true"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="currentPathway?.id"
         :text="t('common.tags', 'Tags').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-badge
+          <AtlasBadge
             v-bind="tipProps"
             :content="pathwayTags.length || 0"
             :model-value="pathwayTags.length > 0"
@@ -76,10 +76,10 @@
               data-testid="pathway-builder-tags"
               @click="showTags = true"
             />
-          </v-badge>
+          </AtlasBadge>
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="previewVersion"
         :text="t('common.backToCurrent', 'Back to current version').value"
         location="bottom"
@@ -95,8 +95,8 @@
             @click="store.clearPreviewVersion()"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         :text="t('common.import', 'Import design').value"
         location="bottom"
       >
@@ -112,8 +112,8 @@
             @click="handleImportClick"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="currentPathway?.id"
         :text="t('common.export', 'Export design').value"
         location="bottom"
@@ -130,7 +130,7 @@
             @click="handleExport"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
       <input
         ref="importFileInput"
         type="file"
@@ -160,7 +160,7 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
-      <v-menu
+      <AtlasMenu
         v-if="currentPathway?.id"
         v-model="generateMenu"
         :close-on-content-click="false"
@@ -183,7 +183,7 @@
           :pathway-id="currentPathway.id"
           @generated="generateMenu = false"
         />
-      </v-menu>
+      </AtlasMenu>
       <v-btn
         color="primary"
         variant="elevated"
@@ -247,6 +247,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasBadge, AtlasMenu, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'

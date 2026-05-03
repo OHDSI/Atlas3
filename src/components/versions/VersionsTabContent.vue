@@ -43,7 +43,7 @@
           {{ t('common.savePreviewWarning') }}
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn @click="saveConfirmDialogOpen = false">
             {{ t('common.cancel') }}
           </v-btn>
@@ -61,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSpacer } from '@/components/ui'
 import { logger } from '@/utils/logger'
 import { onMounted, ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'

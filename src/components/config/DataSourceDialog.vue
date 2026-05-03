@@ -16,11 +16,11 @@
           variant="text"
           @click="handleClose"
         >
-          <v-icon>mdi-close</v-icon>
+          <AtlasIcon>mdi-close</AtlasIcon>
         </v-btn>
       </v-card-title>
 
-      <v-divider />
+      <AtlasDivider />
 
       <v-card-text class="pa-4">
         <v-form
@@ -33,8 +33,8 @@
             {{ t('columns.name') }}
           </div>
 
-          <v-row>
-            <v-col
+          <AtlasRow>
+            <AtlasCol
               cols="12"
               md="6"
             >
@@ -45,8 +45,8 @@
                 variant="outlined"
                 density="comfortable"
               />
-            </v-col>
-            <v-col
+            </AtlasCol>
+            <AtlasCol
               cols="12"
               md="6"
             >
@@ -59,11 +59,11 @@
                 variant="outlined"
                 density="comfortable"
               />
-            </v-col>
-          </v-row>
+            </AtlasCol>
+          </AtlasRow>
 
-          <v-row>
-            <v-col cols="12">
+          <AtlasRow>
+            <AtlasCol cols="12">
               <v-select
                 v-model="form.dialect"
                 :label="tv('configuration.viewEdit.dialect.label')"
@@ -72,16 +72,16 @@
                 variant="outlined"
                 density="comfortable"
               />
-            </v-col>
-          </v-row>
+            </AtlasCol>
+          </AtlasRow>
 
           <!-- Connection Section -->
           <div class="text-subtitle-1 font-weight-medium mb-2 mt-4">
             {{ t('configuration.viewEdit.connectionString.title') }}
           </div>
 
-          <v-row>
-            <v-col cols="12">
+          <AtlasRow>
+            <AtlasCol cols="12">
               <v-textarea
                 v-model="form.connectionString"
                 :label="tv('configuration.viewEdit.connectionString.label')"
@@ -91,11 +91,11 @@
                 rows="3"
                 auto-grow
               />
-            </v-col>
-          </v-row>
+            </AtlasCol>
+          </AtlasRow>
 
-          <v-row v-if="showCredentials">
-            <v-col
+          <AtlasRow v-if="showCredentials">
+            <AtlasCol
               cols="12"
               md="6"
             >
@@ -105,8 +105,8 @@
                 variant="outlined"
                 density="comfortable"
               />
-            </v-col>
-            <v-col
+            </AtlasCol>
+            <AtlasCol
               cols="12"
               md="6"
             >
@@ -117,8 +117,8 @@
                 variant="outlined"
                 density="comfortable"
               />
-            </v-col>
-          </v-row>
+            </AtlasCol>
+          </AtlasRow>
 
           <!-- Kerberos Settings (for Impala) -->
           <v-expand-transition>
@@ -141,8 +141,8 @@
                 />
               </v-radio-group>
 
-              <v-row>
-                <v-col
+              <AtlasRow>
+                <AtlasCol
                   cols="12"
                   md="6"
                 >
@@ -152,8 +152,8 @@
                     variant="outlined"
                     density="comfortable"
                   />
-                </v-col>
-                <v-col
+                </AtlasCol>
+                <AtlasCol
                   v-if="form.krbAuthMethod === 'KEYTAB'"
                   cols="12"
                   md="6"
@@ -167,8 +167,8 @@
                     prepend-inner-icon="mdi-file-key"
                     accept=".keytab"
                   />
-                </v-col>
-              </v-row>
+                </AtlasCol>
+              </AtlasRow>
             </div>
           </v-expand-transition>
 
@@ -179,8 +179,8 @@
                 {{ t('configuration.viewEdit.bigQuery.password.label') }}
               </div>
 
-              <v-row>
-                <v-col cols="12">
+              <AtlasRow>
+                <AtlasCol cols="12">
                   <v-file-input
                     v-model="keyfile"
                     :label="tv('configuration.viewEdit.bigQuery.password.label')"
@@ -191,8 +191,8 @@
                     accept=".json"
                     persistent-hint
                   />
-                </v-col>
-              </v-row>
+                </AtlasCol>
+              </AtlasRow>
             </div>
           </v-expand-transition>
 
@@ -250,7 +250,7 @@
         </v-form>
       </v-card-text>
 
-      <v-divider />
+      <AtlasDivider />
 
       <v-card-actions class="pa-4">
         <v-btn
@@ -261,7 +261,7 @@
         >
           {{ t('common.delete') }}
         </v-btn>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           variant="text"
           @click="handleClose"
@@ -289,7 +289,7 @@
         <v-card-title>{{ t('common.delete') }}</v-card-title>
         <v-card-text>{{ t('configuration.viewEdit.source.confirms.delete') }}</v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn
             variant="text"
             @click="showDeleteConfirm = false"
@@ -311,6 +311,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasDivider, AtlasIcon, AtlasRow, AtlasSpacer } from '@/components/ui'
 import { ref, computed, watch, reactive } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import {

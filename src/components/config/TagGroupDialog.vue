@@ -52,9 +52,9 @@
         class="mb-2"
       >
         <template #prepend-inner>
-          <v-icon v-if="form.icon && isValidIcon">
+          <AtlasIcon v-if="form.icon && isValidIcon">
             {{ form.icon }}
-          </v-icon>
+          </AtlasIcon>
         </template>
       </v-text-field>
 
@@ -122,7 +122,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { tagGroupSchema, type TagGroup } from '@/models/config.types'
-import { AtlasDialog } from '@/components/ui'
+import { AtlasDialog, AtlasIcon } from '@/components/ui'
 
 interface Props {
   modelValue: boolean

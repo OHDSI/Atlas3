@@ -41,7 +41,7 @@
         v-if="isLoadingPermissions"
         class="role-permissions-tab__loading"
       >
-        <v-progress-circular
+        <AtlasProgressCircular
           indeterminate
           color="primary"
           size="64"
@@ -67,12 +67,12 @@
       <template v-else>
         <!-- Summary -->
         <div class="role-permissions-tab__summary mt-4">
-          <v-icon
+          <AtlasIcon
             size="small"
             class="mr-2"
           >
             mdi-shield-check
-          </v-icon>
+          </AtlasIcon>
           <span class="text-body-2">
             <strong>{{ selectedPermissionIds.size }}</strong> of
             <strong>{{ filteredPermissions.length }}</strong> permissions assigned
@@ -136,14 +136,14 @@
               <code class="role-permissions-tab__permission-code">
                 {{ getPermissionString(item) }}
               </code>
-              <v-icon
+              <AtlasIcon
                 v-if="hasPermissionChanged(item.id)"
                 size="small"
                 color="warning"
                 class="ml-2"
               >
                 mdi-circle-small
-              </v-icon>
+              </AtlasIcon>
             </div>
           </template>
 
@@ -151,13 +151,13 @@
           <template #item.description="{ item }">
             <div class="role-permissions-tab__description">
               <span>{{ item.description || '—' }}</span>
-              <v-tooltip
+              <AtlasTooltip
                 v-if="item.description"
                 activator="parent"
                 location="top"
               >
                 {{ item.description }}
-              </v-tooltip>
+              </AtlasTooltip>
             </div>
           </template>
 
@@ -203,6 +203,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasProgressCircular, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Permission } from '@/models/role.types'

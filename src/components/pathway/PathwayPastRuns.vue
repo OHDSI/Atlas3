@@ -1,11 +1,11 @@
 <template>
-  <v-list
+  <AtlasList
     v-if="runs.length > 0"
     density="compact"
     class="past-runs"
     nav
   >
-    <v-list-item
+    <AtlasListItem
       v-for="r in runs"
       :key="r.id"
       :class="['past-run', { 'past-run--active': r.id === activeId }]"
@@ -23,8 +23,8 @@
       <v-list-item-subtitle class="past-run__id">
         #{{ r.id }}
       </v-list-item-subtitle>
-    </v-list-item>
-  </v-list>
+    </AtlasListItem>
+  </AtlasList>
   <div
     v-else
     class="past-runs__empty"
@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasList, AtlasListItem } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { PathwayExecution } from '@/models/pathway.types'
 

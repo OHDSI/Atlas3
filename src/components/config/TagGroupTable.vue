@@ -21,12 +21,12 @@
 
     <!-- Icon Preview -->
     <template #item.icon="{ item }">
-      <v-icon
+      <AtlasIcon
         v-if="item.icon"
         :title="item.icon"
       >
         {{ item.icon }}
-      </v-icon>
+      </AtlasIcon>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -159,12 +159,12 @@
     <!-- Empty State -->
     <template #no-data>
       <div class="text-center pa-4">
-        <v-icon
+        <AtlasIcon
           size="64"
           color="grey-lighten-1"
         >
           mdi-tag-off-outline
-        </v-icon>
+        </AtlasIcon>
         <p class="text-h6 mt-2">
           No tag groups found
         </p>
@@ -177,6 +177,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import type { TagGroup } from '@/models/config.types'
 
 interface Props {

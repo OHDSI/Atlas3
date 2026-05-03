@@ -12,21 +12,21 @@
           :label="tv('common.search', 'Search')"
           density="compact"
         />
-        <v-list
+        <AtlasList
           v-model:selected="selected"
           density="compact"
           select-strategy="independent"
         >
-          <v-list-item
+          <AtlasListItem
             v-for="c in filtered"
             :key="c.id"
             :value="c.id"
             :title="c.name"
           />
-        </v-list>
+        </AtlasList>
       </v-card-text>
       <v-card-actions>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn @click="close">
           {{ t('common.cancel', 'Cancel') }}
         </v-btn>
@@ -43,6 +43,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { getCohorts } from '@/services/webapi'
 import { logger } from '@/utils/logger'

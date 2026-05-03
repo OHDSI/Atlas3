@@ -74,7 +74,7 @@
 
         <!-- Preview -->
         <div v-else-if="isValidating">
-          <v-progress-circular
+          <AtlasProgressCircular
             indeterminate
             color="primary"
           />
@@ -147,7 +147,7 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           variant="text"
           :disabled="importing"
@@ -184,6 +184,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 

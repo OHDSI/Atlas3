@@ -112,12 +112,12 @@
     <template #no-data>
       <slot name="empty">
         <div class="analysis-data-table__empty">
-          <v-icon
+          <AtlasIcon
             size="48"
             class="analysis-data-table__empty-icon"
           >
             mdi-database-off-outline
-          </v-icon>
+          </AtlasIcon>
           <div class="analysis-data-table__empty-title">
             {{ emptyText ?? t('common.noData', 'No items yet.').value }}
           </div>
@@ -127,7 +127,7 @@
     </template>
 
     <template #loading>
-      <v-skeleton-loader
+      <AtlasSkeleton
         v-for="n in 5"
         :key="n"
         type="table-row"
@@ -138,6 +138,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends { id?: number }">
+import { AtlasIcon, AtlasSkeleton } from '@/components/ui'
 import { computed, useSlots } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { formatDate, formatRelativeTime } from '@/utils/date-format'

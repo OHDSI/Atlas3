@@ -18,12 +18,12 @@
               variant="text"
               @click="startEditName"
             >
-              <v-icon size="small">
+              <AtlasIcon size="small">
                 mdi-pencil
-              </v-icon>
-              <v-tooltip activator="parent">
+              </AtlasIcon>
+              <AtlasTooltip activator="parent">
                 Edit Role Name
-              </v-tooltip>
+              </AtlasTooltip>
             </v-btn>
           </div>
           <div
@@ -82,12 +82,12 @@
               variant="text"
               @click="startEditDescription"
             >
-              <v-icon size="small">
+              <AtlasIcon size="small">
                 mdi-pencil
-              </v-icon>
-              <v-tooltip activator="parent">
+              </AtlasIcon>
+              <AtlasTooltip activator="parent">
                 Edit Description
-              </v-tooltip>
+              </AtlasTooltip>
             </v-btn>
           </div>
           <div
@@ -131,24 +131,24 @@
             v-if="role.createdDate"
             class="role-details__metadata-item"
           >
-            <v-icon
+            <AtlasIcon
               size="small"
               class="mr-2"
             >
               mdi-calendar-plus
-            </v-icon>
+            </AtlasIcon>
             <span class="text-caption"> Created: {{ formatDate(role.createdDate) }} </span>
           </div>
           <div
             v-if="role.modifiedDate"
             class="role-details__metadata-item"
           >
-            <v-icon
+            <AtlasIcon
               size="small"
               class="mr-2"
             >
               mdi-calendar-edit
-            </v-icon>
+            </AtlasIcon>
             <span class="text-caption"> Modified: {{ formatDate(role.modifiedDate) }} </span>
           </div>
         </div>
@@ -170,6 +170,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasTooltip } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

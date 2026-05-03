@@ -36,7 +36,7 @@
       >
     </template>
     <template #actions>
-      <v-tooltip
+      <AtlasTooltip
         :text="t('ir.tabs.conceptSets', 'Concept Sets').value"
         location="bottom"
       >
@@ -51,8 +51,8 @@
             @click="showConceptSetsDialog = true"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="store.currentIR?.id"
         :text="t('ir.tabs.versions', 'Versions').value"
         location="bottom"
@@ -68,14 +68,14 @@
             @click="showVersionsDialog = true"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="store.currentIR?.id"
         :text="t('common.tags', 'Tags').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-badge
+          <AtlasBadge
             v-bind="tipProps"
             :content="irTags.length || 0"
             :model-value="irTags.length > 0"
@@ -92,10 +92,10 @@
               data-testid="ir-builder-tags-icon"
               @click="showTagsDialog = true"
             />
-          </v-badge>
+          </AtlasBadge>
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         :text="t('common.import', 'Import design').value"
         location="bottom"
       >
@@ -111,8 +111,8 @@
             @click="handleImportClick"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="store.currentIR?.id"
         :text="t('common.export', 'Export design').value"
         location="bottom"
@@ -129,7 +129,7 @@
             @click="handleExport"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
       <input
         ref="importFileInput"
         type="file"
@@ -138,7 +138,7 @@
         data-testid="ir-builder-import-input"
         @change="handleImportFileChange"
       >
-      <v-tooltip
+      <AtlasTooltip
         v-if="store.isPreviewMode"
         :text="t('common.backToCurrent', 'Back to current version').value"
         location="bottom"
@@ -154,7 +154,7 @@
             @click="store.clearPreviewVersion()"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
       <v-btn
         v-if="store.currentIR?.id"
         variant="outlined"
@@ -176,7 +176,7 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
-      <v-menu
+      <AtlasMenu
         v-if="store.currentIR?.id"
         v-model="generateMenu"
         :close-on-content-click="false"
@@ -199,7 +199,7 @@
           :ir-id="store.currentIR.id"
           @generated="generateMenu = false"
         />
-      </v-menu>
+      </AtlasMenu>
       <v-btn
         color="primary"
         variant="elevated"
@@ -266,7 +266,7 @@
           }}
         </v-card-text>
         <v-card-actions>
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn @click="askDelete = false">
             {{ t('common.cancel', 'Cancel') }}
           </v-btn>
@@ -304,7 +304,7 @@ import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import { AtlasDialog } from '@/components/ui'
+import { AtlasBadge, AtlasDialog, AtlasMenu, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import IncidenceRateGeneratePopover from '@/components/incidence-rate/IncidenceRateGeneratePopover.vue'
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'

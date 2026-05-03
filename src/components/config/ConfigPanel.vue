@@ -19,66 +19,66 @@
           aria-label="Close configuration panel"
           @click="handleClose"
         >
-          <v-icon>mdi-close</v-icon>
+          <AtlasIcon>mdi-close</AtlasIcon>
         </v-btn>
       </v-card-title>
 
-      <v-divider />
+      <AtlasDivider />
 
       <!-- Content Area -->
       <div class="config-panel__content d-flex flex-column flex-grow-1">
         <!-- Section Navigation - Tabs -->
-        <v-tabs
+        <AtlasTabs
           v-model="activeSection"
           color="primary"
           class="config-panel__nav"
         >
-          <v-tab
+          <AtlasTab
             v-if="canSeeCache"
             value="cache"
           >
-            <v-icon start>
+            <AtlasIcon start>
               mdi-database
-            </v-icon>
+            </AtlasIcon>
             Cache
-          </v-tab>
-          <v-tab
+          </AtlasTab>
+          <AtlasTab
             v-if="canSeeSources"
             value="sources"
           >
-            <v-icon start>
+            <AtlasIcon start>
               mdi-database-cog
-            </v-icon>
+            </AtlasIcon>
             Data Sources
-          </v-tab>
-          <v-tab
+          </AtlasTab>
+          <AtlasTab
             v-if="canSeeTags"
             value="tags"
           >
-            <v-icon start>
+            <AtlasIcon start>
               mdi-tag-multiple
-            </v-icon>
+            </AtlasIcon>
             Tags
-          </v-tab>
-          <v-tab
+          </AtlasTab>
+          <AtlasTab
             v-if="canSeePermissions"
             value="permissions"
           >
-            <v-icon start>
+            <AtlasIcon start>
               mdi-shield-account
-            </v-icon>
+            </AtlasIcon>
             Permissions
-          </v-tab>
-          <v-tab
+          </AtlasTab>
+          <AtlasTab
             v-if="canSeeJobs"
             value="jobs"
           >
-            <v-icon start>
+            <AtlasIcon start>
               mdi-run
-            </v-icon>
+            </AtlasIcon>
             Jobs
-          </v-tab>
-        </v-tabs>
+          </AtlasTab>
+        </AtlasTabs>
 
         <!-- Scrollable Content -->
         <v-card-text
@@ -146,6 +146,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasIcon, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useUIStore } from '@/stores/ui'
 import { usePermissions } from '@/composables/usePermissions'

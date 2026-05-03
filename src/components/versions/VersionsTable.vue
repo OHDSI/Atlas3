@@ -1,11 +1,11 @@
 <template>
   <div class="versions-table">
     <!-- Filters Section (T026) -->
-    <v-row
+    <AtlasRow
       class="mb-4"
       align="center"
     >
-      <v-col
+      <AtlasCol
         cols="12"
         md="10"
       >
@@ -18,8 +18,8 @@
           variant="outlined"
           @update:model-value="handleAuthorFilter"
         />
-      </v-col>
-      <v-col
+      </AtlasCol>
+      <AtlasCol
         cols="12"
         md="2"
       >
@@ -30,11 +30,11 @@
         >
           {{ t('components.filterPanel.buttons.clear') }}
         </v-btn>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
 
     <!-- Loading State (T031) -->
-    <v-progress-linear
+    <AtlasProgressLinear
       v-if="loading"
       indeterminate
       color="primary"
@@ -83,7 +83,7 @@
       <!-- Author Column -->
       <template #item.createdBy="{ item }">
         <div class="d-flex align-center">
-          <v-avatar
+          <AtlasAvatar
             size="24"
             color="primary"
             class="mr-2"
@@ -91,7 +91,7 @@
             <span class="text-caption">
               {{ getInitials(item.createdBy.name) }}
             </span>
-          </v-avatar>
+          </AtlasAvatar>
           <span>{{ item.createdBy.name }}</span>
         </div>
       </template>
@@ -160,13 +160,13 @@
       <!-- No data slot -->
       <template #no-data>
         <div class="text-center pa-4">
-          <v-icon
+          <AtlasIcon
             size="48"
             color="grey-lighten-1"
             class="mb-2"
           >
             mdi-history
-          </v-icon>
+          </AtlasIcon>
           <p class="text-body-1 text-medium-emphasis">
             {{ t('common.noData', 'No data available') }}
           </p>
@@ -177,6 +177,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAvatar, AtlasCol, AtlasIcon, AtlasProgressLinear, AtlasRow } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { VersionsConfig, VersionsTableItem } from './types'

@@ -26,7 +26,7 @@
             >
               {{ t('common.add', 'Add').value }}
             </v-btn>
-            <v-icon>{{ expanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+            <AtlasIcon>{{ expanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</AtlasIcon>
           </template>
         </v-expansion-panel-title>
         <v-expansion-panel-text>
@@ -58,7 +58,7 @@
             >
               {{ t('common.add', 'Add').value }}
             </v-btn>
-            <v-icon>{{ expanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+            <AtlasIcon>{{ expanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</AtlasIcon>
           </template>
         </v-expansion-panel-title>
         <v-expansion-panel-text>
@@ -142,6 +142,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'

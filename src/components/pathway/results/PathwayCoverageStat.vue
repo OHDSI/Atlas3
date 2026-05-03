@@ -17,7 +17,7 @@
     >
       {{ targetCohortName }}
     </div>
-    <v-progress-linear
+    <AtlasProgressLinear
       :model-value="clampedPct"
       color="orange"
       height="6"
@@ -29,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasProgressLinear } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 
