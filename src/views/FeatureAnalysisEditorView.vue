@@ -63,22 +63,21 @@
           <h2 class="feature-analysis-editor__section-title">
             {{ t('columns.name', 'Name') }}
           </h2>
-          <v-text-field
+          <AtlasTextField
             v-model="draft.name"
             :label="t('columns.name', 'Name').value"
-            :error-messages="nameError"
-            density="compact"
+            :error="nameError ?? undefined"
             variant="outlined"
             required
             data-testid="feature-analysis-editor-name"
           />
 
-          <v-textarea
+          <AtlasTextField
             v-model="draft.description"
             :label="t('columns.description', 'Description').value"
-            density="compact"
             variant="outlined"
-            rows="2"
+            :rows="2"
+            multiline
             auto-grow
             data-testid="feature-analysis-editor-description"
           />
@@ -88,14 +87,13 @@
               cols="12"
               md="4"
             >
-              <v-select
+              <AtlasSelect
                 v-model="draft.type"
                 :label="t('cc.fa.analysisType', 'Type').value"
                 :items="typeOptions"
                 item-title="label"
                 item-value="value"
                 :disabled="isEditing"
-                density="compact"
                 variant="outlined"
                 data-testid="feature-analysis-editor-type"
               />
@@ -104,12 +102,11 @@
               cols="12"
               md="4"
             >
-              <v-select
+              <AtlasSelect
                 v-model="draft.domain"
                 :label="t('cc.fa.domain', 'Domain').value"
                 :items="domainOptions"
                 clearable
-                density="compact"
                 variant="outlined"
                 data-testid="feature-analysis-editor-domain"
               />
@@ -118,12 +115,11 @@
               cols="12"
               md="4"
             >
-              <v-select
+              <AtlasSelect
                 v-model="draft.statType"
                 :label="t('cc.fa.analysisType', 'Stat Type').value"
                 :items="statTypeOptions"
                 clearable
-                density="compact"
                 variant="outlined"
                 data-testid="feature-analysis-editor-statType"
               />
@@ -168,22 +164,21 @@
                 )
               }}
             </v-btn>
-            <v-chip
+            <AtlasChip
               v-if="presetJsonError"
-              color="error"
-              size="small"
-              variant="tonal"
+              tone="danger"
+              size="sm"
               data-testid="feature-analysis-editor-preset-invalid"
             >
               {{ t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON') }}
-            </v-chip>
+            </AtlasChip>
           </div>
-          <v-textarea
+          <AtlasTextField
             v-model="presetDesignJson"
             :label="t('cc.fa.design', 'Covariate settings (JSON)').value"
-            density="compact"
             variant="outlined"
-            rows="14"
+            :rows="14"
+            multiline
             auto-grow
             class="feature-analysis-editor__json"
             data-testid="feature-analysis-editor-preset-json"
@@ -208,25 +203,25 @@
               )
             }}
           </p>
-          <v-textarea
+          <AtlasTextField
             v-model="criteriaConceptSetsJson"
             :label="t('cc.fa.tabs.conceptSets', 'Concept sets (JSON array)').value"
-            :error-messages="criteriaConceptSetsError"
-            density="compact"
+            :error="criteriaConceptSetsError ?? undefined"
             variant="outlined"
-            rows="6"
+            :rows="6"
+            multiline
             auto-grow
             class="feature-analysis-editor__json"
             data-testid="feature-analysis-editor-criteria-conceptsets-json"
             @blur="validateCriteriaConceptSetsJson"
           />
-          <v-textarea
+          <AtlasTextField
             v-model="criteriaCriteriaJson"
             :label="t('cc.fa.criteria', 'Criteria group (JSON)').value"
-            :error-messages="criteriaCriteriaError"
-            density="compact"
+            :error="criteriaCriteriaError ?? undefined"
             variant="outlined"
-            rows="10"
+            :rows="10"
+            multiline
             auto-grow
             class="feature-analysis-editor__json"
             data-testid="feature-analysis-editor-criteria-criteria-json"
@@ -243,12 +238,12 @@
           <h2 class="feature-analysis-editor__section-title">
             {{ t('cc.fa.analysisSql', 'Custom SQL') }}
           </h2>
-          <v-textarea
+          <AtlasTextField
             v-model="customFeSql"
             :label="t('cc.fa.analysisSql', 'Custom SQL').value"
-            density="compact"
             variant="outlined"
-            rows="14"
+            :rows="14"
+            multiline
             auto-grow
             class="feature-analysis-editor__json feature-analysis-editor__sql"
             data-testid="feature-analysis-editor-custom-sql"
@@ -320,7 +315,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCol, AtlasDivider, AtlasRow, AtlasSpacer } from '@/components/ui'
+import { AtlasChip, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 

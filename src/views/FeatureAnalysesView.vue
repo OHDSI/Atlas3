@@ -5,17 +5,16 @@
     @clear-error="store.clearError()"
   >
     <template #actions>
-      <v-text-field
+      <AtlasTextField
         :model-value="searchInput"
         :label="t('datatable.language.searchPlaceholder', 'Search feature analyses…').value"
-        prepend-inner-icon="mdi-magnify"
-        density="compact"
+        prepend-icon="mdi-magnify"
         variant="outlined"
         hide-details
         clearable
         class="feature-analyses-view__search"
         data-testid="feature-analyses-search"
-        @update:model-value="handleSearchInput"
+        @update:model-value="(v: string | number) => handleSearchInput(v != null ? String(v) : null)"
       />
       <AtlasSpacer />
       <v-btn
@@ -126,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasSpacer } from '@/components/ui'
+import { AtlasDivider, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 

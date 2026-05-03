@@ -61,15 +61,14 @@
           {{ t('common.import', 'Import') }}
         </v-btn>
 
-        <v-chip
+        <AtlasChip
           v-if="!loading && filteredCohorts.length > 0"
-          size="small"
-          variant="tonal"
-          color="primary"
+          size="sm"
+          tone="primary"
           class="cohorts-view__count"
         >
           {{ countLabel }}
-        </v-chip>
+        </AtlasChip>
 
         <AtlasSpacer />
       </div>
@@ -168,11 +167,10 @@
               }}
             </p>
 
-            <v-text-field
+            <AtlasTextField
               v-model="importName"
               :label="t('columns.name', 'Cohort name').value"
               variant="outlined"
-              density="comfortable"
               :disabled="importing"
               class="mb-3"
             />
@@ -192,13 +190,13 @@
               @update:model-value="onImportFileSelected"
             />
 
-            <v-textarea
+            <AtlasTextField
               v-model="importJson"
               :label="t('cohortDefinitions.expressionJsonLabel', 'Expression JSON').value"
               :placeholder="'{ &quot;ConceptSets&quot;: [], &quot;PrimaryCriteria&quot;: { … } }'"
-              rows="8"
+              :rows="8"
+              multiline
               variant="outlined"
-              density="comfortable"
               hide-details
               :disabled="importing"
               class="cohorts-view__import-json"
@@ -291,11 +289,10 @@
             {{ t('cohortDefinitions.newDefinitionTitle', 'Create new cohort') }}
           </v-card-title>
           <v-card-text>
-            <v-text-field
+            <AtlasTextField
               v-model="newCohortName"
               :label="t('columns.name', 'Cohort name').value"
               variant="outlined"
-              density="comfortable"
               autofocus
               @keyup.enter="confirmCreateCohort"
             />
@@ -401,7 +398,7 @@ import {
   saveCohortDefinition,
 } from '@/services/webapi'
 import { logger } from '@/utils/logger'
-import { AtlasDivider, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSpacer } from '@/components/ui'
+import { AtlasChip, AtlasDivider, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
