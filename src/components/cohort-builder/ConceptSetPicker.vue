@@ -37,15 +37,15 @@
         </v-text-field>
 
         <!-- Selected Concept Chip -->
-        <v-chip
+        <AtlasChip
           v-if="selectedConcept"
           closable
-          color="primary"
+          tone="primary"
           class="mt-2"
-          @click:close="clearSingleConceptSelection"
+          @close="clearSingleConceptSelection"
         >
           {{ selectedConcept?.CONCEPT_NAME }} (ID: {{ selectedConcept?.CONCEPT_ID }})
-        </v-chip>
+        </AtlasChip>
       </template>
 
       <!-- Concept Set Selection Mode (Default) -->
@@ -89,15 +89,15 @@
         </v-select>
 
         <!-- Selected Concept Set Display -->
-        <v-chip
+        <AtlasChip
           v-if="selectedConceptSet"
           closable
-          color="primary"
+          tone="primary"
           class="mt-2"
-          @click:close="clearSelection"
+          @close="clearSelection"
         >
           {{ selectedConceptSet.name }} ({{ getConceptCount(selectedConceptSet) }} concepts)
-        </v-chip>
+        </AtlasChip>
       </template>
     </v-card-text>
 
@@ -127,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasIcon, AtlasListItem } from '@/components/ui'
+import { AtlasChip, AtlasDivider, AtlasIcon, AtlasListItem } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

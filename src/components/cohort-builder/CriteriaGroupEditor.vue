@@ -65,13 +65,12 @@
                 {{ t('options.atMost', 'At most') }}
               </v-btn>
             </div>
-            <v-text-field
+            <AtlasTextField
               v-if="matchTypeTemp === 'AT_LEAST' || matchTypeTemp === 'AT_MOST'"
               v-model.number="matchTypeCount"
               type="number"
               :label="t('columns.count', 'Count').value"
               min="1"
-              density="compact"
               class="mt-3"
             />
           </v-card-text>
@@ -245,14 +244,13 @@
                             At most
                           </v-btn>
                         </div>
-                        <v-text-field
+                        <AtlasTextField
                           :model-value="event.cardinality?.count || 1"
                           type="number"
                           label="Count"
                           min="1"
-                          density="compact"
                           class="mt-3"
-                          @update:model-value="updateEventCardinalityCount(index, Number($event))"
+                          @update:model-value="(v) => updateEventCardinalityCount(index, Number(v))"
                         />
                       </v-card-text>
                     </v-card>
@@ -430,7 +428,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, watch, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

@@ -23,7 +23,7 @@
       >
         <AtlasRow>
           <AtlasCol cols="6">
-            <v-select
+            <AtlasSelect
               v-model="fixedDurationDateField"
               :items="dateFieldOptions"
               :label="
@@ -31,11 +31,10 @@
               "
               :disabled="disabled"
               variant="outlined"
-              density="compact"
             />
           </AtlasCol>
           <AtlasCol cols="6">
-            <v-text-field
+            <AtlasTextField
               v-model.number="fixedDurationOffset"
               type="number"
               :label="
@@ -44,7 +43,6 @@
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
-              density="compact"
             />
           </AtlasCol>
         </AtlasRow>
@@ -66,15 +64,14 @@
           >
             {{ t('components.customEraStrategy.selectDrugConceptSet', 'Select Drug Concept Set') }}
           </v-btn>
-          <v-chip
+          <AtlasChip
             v-else
             :closable="!disabled"
-            color="primary"
-            variant="tonal"
-            @click:close="clearConceptSet"
+            tone="primary"
+            @close="clearConceptSet"
           >
             {{ selectedConceptSet.name }}
-          </v-chip>
+          </AtlasChip>
         </div>
 
         <!-- Persistence Window and Surveillance Window -->
@@ -174,7 +171,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCol, AtlasIcon, AtlasRow, AtlasTooltip } from '@/components/ui'
+import { AtlasChip, AtlasCol, AtlasIcon, AtlasRow, AtlasSelect, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useEventPersistence } from '@/composables/useEventPersistence'

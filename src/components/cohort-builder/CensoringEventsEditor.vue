@@ -64,13 +64,12 @@
                       v-if="event.conceptSet"
                       class="event-concept-set text-body-2"
                     >
-                      <v-chip
-                        size="small"
-                        variant="tonal"
-                        color="primary"
+                      <AtlasChip
+                        size="sm"
+                        tone="primary"
                       >
                         {{ event.conceptSet.name }}
-                      </v-chip>
+                      </AtlasChip>
                     </div>
                     <!-- Warning for invalid concept set reference -->
                     <v-alert
@@ -125,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCol, AtlasIcon, AtlasRow } from '@/components/ui'
+import { AtlasChip, AtlasCol, AtlasIcon, AtlasRow } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent, ConceptSetReference, CriteriaType } from '@/models/cohort.types'

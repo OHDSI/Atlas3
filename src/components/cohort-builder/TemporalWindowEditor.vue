@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AtlasCol, AtlasDivider, AtlasRow } from '@/components/ui'
+import { AtlasCheckbox, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TemporalWindow, Window } from '@/models/event.types'
@@ -172,16 +172,15 @@ watch(
       <!-- Presets -->
       <AtlasRow dense>
         <AtlasCol cols="12">
-          <v-select
+          <AtlasSelect
             :label="t('common.presets', 'Quick Presets').value"
             :items="presetOptions"
             item-title="label"
             item-value="value"
-            density="compact"
             variant="outlined"
             hide-details
             clearable
-            @update:model-value="v => v && applyPreset(v)"
+            @update:model-value="(v) => v && applyPreset(v as TemporalWindow)"
           />
         </AtlasCol>
       </AtlasRow>
@@ -198,12 +197,11 @@ watch(
             cols="12"
             md="4"
           >
-            <v-text-field
+            <AtlasTextField
               :model-value="startDays"
               type="number"
               :label="t('common.startDays', 'Start Days').value"
               :aria-label="t('common.startDays', 'Start Days').value"
-              density="compact"
               variant="outlined"
               min="0"
               :disabled="startAllTime"
@@ -215,7 +213,7 @@ watch(
             cols="12"
             md="4"
           >
-            <v-select
+            <AtlasSelect
               :model-value="startDirection"
               :items="[
                 { value: 'before', label: t('options.before', 'Before').value },
@@ -225,17 +223,16 @@ watch(
               item-value="value"
               :label="t('common.startDirection', 'Start Direction').value"
               :aria-label="t('common.startDirection', 'Start Direction').value"
-              density="compact"
               variant="outlined"
               hide-details
-              @update:model-value="updateStartDirection"
+              @update:model-value="(v) => updateStartDirection(v as string)"
             />
           </AtlasCol>
           <AtlasCol
             cols="12"
             md="4"
           >
-            <v-checkbox
+            <AtlasCheckbox
               :model-value="startAllTime"
               :label="
                 t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
@@ -243,9 +240,8 @@ watch(
               :aria-label="
                 t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
               "
-              density="compact"
               hide-details
-              @update:model-value="updateStartAllTime"
+              @update:model-value="(v) => updateStartAllTime(v)"
             />
           </AtlasCol>
         </AtlasRow>
@@ -254,17 +250,16 @@ watch(
           class="mt-2"
         >
           <AtlasCol cols="12">
-            <v-select
+            <AtlasSelect
               :model-value="startReferencePoint"
               :items="referencePointOptions"
               item-title="label"
               item-value="value"
               label="Reference Point"
               aria-label="Start Reference Point"
-              density="compact"
               variant="outlined"
               hide-details
-              @update:model-value="updateStartReferencePoint"
+              @update:model-value="(v) => updateStartReferencePoint(v as Window['referencePoint'])"
             />
           </AtlasCol>
         </AtlasRow>
@@ -282,7 +277,7 @@ watch(
             cols="12"
             md="4"
           >
-            <v-text-field
+            <AtlasTextField
               :model-value="endDays"
               type="number"
               :label="
@@ -291,7 +286,6 @@ watch(
               :aria-label="
                 t('components.featureextraction.covariateSettingsEditor.endDays', 'End Days').value
               "
-              density="compact"
               variant="outlined"
               min="0"
               :disabled="endAllTime"
@@ -303,7 +297,7 @@ watch(
             cols="12"
             md="4"
           >
-            <v-select
+            <AtlasSelect
               :model-value="endDirection"
               :items="[
                 { value: 'before', label: t('options.before', 'Before').value },
@@ -313,17 +307,16 @@ watch(
               item-value="value"
               :label="t('common.endDirection', 'End Direction').value"
               :aria-label="t('common.endDirection', 'End Direction').value"
-              density="compact"
               variant="outlined"
               hide-details
-              @update:model-value="updateEndDirection"
+              @update:model-value="(v) => updateEndDirection(v as string)"
             />
           </AtlasCol>
           <AtlasCol
             cols="12"
             md="4"
           >
-            <v-checkbox
+            <AtlasCheckbox
               :model-value="endAllTime"
               :label="
                 t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
@@ -331,9 +324,8 @@ watch(
               :aria-label="
                 t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
               "
-              density="compact"
               hide-details
-              @update:model-value="updateEndAllTime"
+              @update:model-value="(v) => updateEndAllTime(v)"
             />
           </AtlasCol>
         </AtlasRow>
@@ -342,17 +334,16 @@ watch(
           class="mt-2"
         >
           <AtlasCol cols="12">
-            <v-select
+            <AtlasSelect
               :model-value="endReferencePoint"
               :items="referencePointOptions"
               item-title="label"
               item-value="value"
               label="Reference Point"
               aria-label="End Reference Point"
-              density="compact"
               variant="outlined"
               hide-details
-              @update:model-value="updateEndReferencePoint"
+              @update:model-value="(v) => updateEndReferencePoint(v as Window['referencePoint'])"
             />
           </AtlasCol>
         </AtlasRow>

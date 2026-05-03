@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AtlasCol, AtlasRow } from '@/components/ui'
+import { AtlasCol, AtlasRow, AtlasSelect } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Cardinality } from '@/models/event.types'
@@ -117,17 +117,16 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
           cols="12"
           md="4"
         >
-          <v-select
+          <AtlasSelect
             :model-value="cardinality.type"
             :items="typeOptions"
             item-title="label"
             item-value="value"
             :label="tv('columns.type')"
             aria-label="Cardinality Type"
-            density="compact"
             variant="outlined"
             hide-details="auto"
-            @update:model-value="updateType"
+            @update:model-value="(v) => updateType(v as Cardinality['type'])"
           />
         </AtlasCol>
 
@@ -163,17 +162,16 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
           cols="12"
           md="4"
         >
-          <v-select
+          <AtlasSelect
             :model-value="cardinality.countingMethod"
             :items="countingMethodOptions"
             item-title="label"
             item-value="value"
             :label="tv('components.cardinalityInput.countingMethod')"
             aria-label="Counting Method"
-            density="compact"
             variant="outlined"
             hide-details="auto"
-            @update:model-value="updateCountingMethod"
+            @update:model-value="(v) => updateCountingMethod(v as Cardinality['countingMethod'])"
           />
         </AtlasCol>
       </AtlasRow>

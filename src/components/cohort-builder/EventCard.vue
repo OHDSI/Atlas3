@@ -9,7 +9,7 @@ import CardinalityEditor from './CardinalityEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalFilterChip from './TemporalFilterChip.vue'
-import { AtlasCard, AtlasDivider, AtlasIcon } from '@/components/ui'
+import { AtlasCard, AtlasChip, AtlasDivider, AtlasIcon } from '@/components/ui'
 
 const props = withDefaults(
   defineProps<{
@@ -181,11 +181,10 @@ const removeEvent = () => {
       class="pt-0 pb-2"
     >
       <div class="d-flex flex-wrap ga-2">
-        <v-chip
+        <AtlasChip
           v-if="hasCardinality"
-          size="small"
-          color="primary"
-          variant="tonal"
+          size="sm"
+          tone="primary"
         >
           <AtlasIcon
             start
@@ -194,7 +193,7 @@ const removeEvent = () => {
             mdi-counter
           </AtlasIcon>
           {{ cardinalityDisplay }}
-        </v-chip>
+        </AtlasChip>
         <TemporalFilterChip
           v-if="hasTemporalWindows"
           :label="temporalWindowDisplay ?? ''"

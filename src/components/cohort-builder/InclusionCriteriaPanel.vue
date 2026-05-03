@@ -133,11 +133,10 @@
         </div>
         <AtlasDivider />
         <v-card-text>
-          <v-text-field
+          <AtlasTextField
             v-model="editingName"
             :label="t('cohortDefinitions.ruleName', 'Rule name').value"
             variant="outlined"
-            density="comfortable"
             autofocus
             @keyup.enter="saveEditedName"
           />
@@ -164,7 +163,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasDivider, AtlasIcon, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, nextTick } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

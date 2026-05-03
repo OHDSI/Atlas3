@@ -68,13 +68,12 @@
                 {{ t('options.atMost', 'At most') }}
               </v-btn>
             </div>
-            <v-text-field
+            <AtlasTextField
               v-if="tempLogicType === 'AT_LEAST' || tempLogicType === 'AT_MOST'"
               v-model.number="tempCount"
               type="number"
               :label="t('columns.count', 'Count').value"
               min="1"
-              density="compact"
               class="mt-3"
             />
           </v-card-text>
@@ -190,13 +189,12 @@
                 <div class="flex-grow-1">
                   <!-- Event Type Header -->
                   <div class="d-flex align-center mb-2">
-                    <v-chip
-                      size="small"
-                      color="primary"
-                      variant="tonal"
+                    <AtlasChip
+                      size="sm"
+                      tone="primary"
                     >
                       {{ formatEventType(event.criteriaType) }}
-                    </v-chip>
+                    </AtlasChip>
                     <AtlasSpacer />
                     <v-btn
                       icon="mdi-close"
@@ -224,37 +222,33 @@
 
                   <!-- Cardinality -->
                   <div class="mb-2">
-                    <v-select
+                    <AtlasSelect
                       :model-value="event.cardinality?.type || 'AT_LEAST'"
                       :label="t('components.nestedCriteria.occurrences', 'Occurrences').value"
                       :items="cardinalityTypes"
-                      density="compact"
-                      @update:model-value="updateCardinality(index, $event)"
+                      @update:model-value="(v) => updateCardinality(index, v as CardinalityType)"
                     />
-                    <v-text-field
+                    <AtlasTextField
                       v-if="event.cardinality?.type !== 'EXACTLY' || true"
                       :model-value="event.cardinality?.count || 1"
                       type="number"
                       :label="t('columns.count', 'Count').value"
-                      density="compact"
                       min="1"
                       class="mt-1"
-                      @update:model-value="updateCardinalityCount(index, parseInt($event))"
+                      @update:model-value="(v) => updateCardinalityCount(index, parseInt(String(v)))"
                     />
                   </div>
 
                   <!-- Temporal Window Toggle -->
                   <div class="mb-2">
-                    <v-switch
+                    <AtlasSwitch
                       :model-value="!!event.temporalWindow"
                       :label="
                         t('components.nestedCriteria.addTemporalWindow', 'Add temporal window')
                           .value
                       "
-                      density="compact"
-                      color="primary"
                       hide-details
-                      @update:model-value="toggleTemporalWindow(index, !!$event)"
+                      @update:model-value="(v) => toggleTemporalWindow(index, !!v)"
                     />
                   </div>
 
@@ -268,13 +262,11 @@
 
                   <!-- Attributes Toggle -->
                   <div class="mb-2">
-                    <v-switch
+                    <AtlasSwitch
                       :model-value="event.attributes && event.attributes.length > 0"
                       :label="t('components.common.addAttribute', 'Add attributes').value"
-                      density="compact"
-                      color="primary"
                       hide-details
-                      @update:model-value="toggleAttributes(index, !!$event)"
+                      @update:model-value="(v) => toggleAttributes(index, !!v)"
                     />
                   </div>
 
@@ -289,16 +281,14 @@
 
                   <!-- Nested Criteria Toggle -->
                   <div class="mb-2">
-                    <v-switch
+                    <AtlasSwitch
                       :model-value="!!event.nestedCriteria"
                       :label="
                         t('components.nestedCriteria.addNestedGroup', 'Add nested group').value
                       "
-                      density="compact"
-                      color="primary"
                       hide-details
                       :disabled="depth >= 10"
-                      @update:model-value="toggleNestedCriteria(index, !!$event)"
+                      @update:model-value="(v) => toggleNestedCriteria(index, !!v)"
                     />
                   </div>
 
@@ -324,7 +314,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer } from '@/components/ui'
+import { AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, defineOptions } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

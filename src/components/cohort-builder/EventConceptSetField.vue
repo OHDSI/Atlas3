@@ -20,23 +20,23 @@
         </AtlasIcon>
         {{ selectLabel }}
       </v-btn>
-      <v-chip
+      <AtlasChip
         v-else
         closable
-        color="primary"
+        tone="primary"
         data-testid="selected-concept-set"
         style="cursor: pointer"
         @click="emit('edit', conceptSet)"
-        @click:close="emit('clear')"
+        @close="emit('clear')"
       >
         {{ conceptSet.name }}
-      </v-chip>
+      </AtlasChip>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasChip, AtlasIcon } from '@/components/ui'
 withDefaults(
   defineProps<{
     conceptSet: { id: number | string; name: string } | undefined | null

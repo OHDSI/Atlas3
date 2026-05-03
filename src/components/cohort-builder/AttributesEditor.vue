@@ -20,45 +20,42 @@
           <div class="attribute-input">
             <!-- Numeric Range Attributes -->
             <template v-if="attribute.type === 'numericRange'">
-              <v-select
+              <AtlasSelect
                 :model-value="attribute.operator"
-                :items="numericOperators"
+                :items="[...numericOperators]"
                 item-title="label"
                 item-value="value"
-                density="compact"
                 variant="outlined"
                 hide-details
                 class="operator-select"
                 data-testid="attribute-operator-selector"
-                @update:model-value="updateAttributeOperator(index, $event)"
+                @update:model-value="(v) => updateAttributeOperator(index, v as string)"
               />
 
-              <v-text-field
+              <AtlasTextField
                 :model-value="attribute.value"
-                :error-messages="attributeErrors[index] || undefined"
+                :error="attributeErrors[index] || undefined"
                 type="number"
-                density="compact"
                 variant="outlined"
                 hide-details="auto"
                 class="value-input"
                 data-testid="attribute-value-input"
                 @blur="validateNumericAttribute(index)"
-                @update:model-value="updateAttributeValue(index, $event)"
+                @update:model-value="(v) => updateAttributeValue(index, v as string | number)"
               />
 
               <template
                 v-if="attribute.type === 'numericRange' && attribute.operator === 'BETWEEN'"
               >
                 <span class="and-text">{{ t('common.and') }}</span>
-                <v-text-field
+                <AtlasTextField
                   :model-value="attribute.extent"
                   type="number"
-                  density="compact"
                   variant="outlined"
                   hide-details
                   class="value-input"
                   data-testid="attribute-extent-input"
-                  @update:model-value="updateAttributeExtent(index, $event)"
+                  @update:model-value="(v) => updateAttributeExtent(index, v as string | number)"
                 />
               </template>
             </template>
@@ -78,41 +75,39 @@
                 </AtlasIcon>
                 Select Concept Set
               </v-btn>
-              <v-chip
+              <AtlasChip
                 v-else
                 closable
-                color="primary"
+                tone="primary"
                 data-testid="attribute-selected-concept-set"
                 style="cursor: pointer"
                 @click="openConceptSetPickerForAttribute(index)"
-                @click:close="clearConceptSetAttribute(index)"
+                @close="clearConceptSetAttribute(index)"
               >
                 {{ attribute.conceptSet.name }}
-              </v-chip>
-              <v-checkbox
+              </AtlasChip>
+              <AtlasCheckbox
                 :model-value="attribute.isExclusion ?? false"
-                density="compact"
                 hide-details
                 label="Exclude"
                 class="ml-2"
                 data-testid="attribute-exclude-checkbox"
-                @update:model-value="updateAttributeExclude(index, $event)"
+                @update:model-value="(v) => updateAttributeExclude(index, v)"
               />
             </template>
 
             <!-- Date Range Attributes -->
             <template v-else-if="attribute.type === 'dateRange'">
-              <v-select
+              <AtlasSelect
                 :model-value="attribute.operator"
-                :items="dateOperators"
+                :items="[...dateOperators]"
                 item-title="label"
                 item-value="value"
-                density="compact"
                 variant="outlined"
                 hide-details
                 class="operator-select"
                 data-testid="attribute-operator-selector"
-                @update:model-value="updateAttributeOperator(index, $event)"
+                @update:model-value="(v) => updateAttributeOperator(index, v as string)"
               />
 
               <v-text-field
@@ -159,29 +154,27 @@
 
             <!-- Text Attributes -->
             <template v-else-if="attribute.type === 'text'">
-              <v-select
+              <AtlasSelect
                 :model-value="attribute.operator"
-                :items="textOperators"
+                :items="[...textOperators]"
                 item-title="label"
                 item-value="value"
-                density="compact"
                 variant="outlined"
                 hide-details
                 class="operator-select"
                 data-testid="attribute-text-operator-selector"
-                @update:model-value="updateAttributeOperator(index, $event)"
+                @update:model-value="(v) => updateAttributeOperator(index, v as string)"
               />
 
-              <v-text-field
+              <AtlasTextField
                 :model-value="attribute.value"
-                :error-messages="attributeErrors[index] || undefined"
-                density="compact"
+                :error="attributeErrors[index] || undefined"
                 variant="outlined"
                 class="value-input"
                 placeholder="Enter text value..."
                 data-testid="attribute-text-value-input"
                 @blur="validateTextAttribute(index)"
-                @update:model-value="updateAttributeValue(index, $event)"
+                @update:model-value="(v) => updateAttributeValue(index, v as string)"
               />
             </template>
 
@@ -206,17 +199,17 @@
             <!-- Concept Attributes (Multiple Concepts) -->
             <template v-else-if="attribute.type === 'concept'">
               <div class="d-flex flex-wrap gap-2 align-center">
-                <v-chip
+                <AtlasChip
                   v-for="(concept, conceptIndex) in attribute.concepts"
                   :key="concept.CONCEPT_ID"
                   closable
-                  color="primary"
-                  size="small"
+                  tone="primary"
+                  size="sm"
                   data-testid="attribute-selected-concept"
-                  @click:close="removeConceptFromAttribute(index, conceptIndex)"
+                  @close="removeConceptFromAttribute(index, conceptIndex)"
                 >
                   {{ concept.CONCEPT_NAME }}
-                </v-chip>
+                </AtlasChip>
                 <v-btn
                   color="primary"
                   variant="outlined"
@@ -229,14 +222,13 @@
                   </AtlasIcon>
                   {{ attribute.concepts.length > 0 ? 'Edit' : 'Select Concept' }}
                 </v-btn>
-                <v-checkbox
+                <AtlasCheckbox
                   :model-value="attribute.isExclusion ?? false"
-                  density="compact"
                   hide-details
                   label="Exclude"
                   class="ml-2"
                   data-testid="attribute-exclude-checkbox"
-                  @update:model-value="updateAttributeExclude(index, $event)"
+                  @update:model-value="(v) => updateAttributeExclude(index, v)"
                 />
               </div>
             </template>
@@ -370,7 +362,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasCheckbox, AtlasChip, AtlasIcon, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
