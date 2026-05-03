@@ -7,3 +7,4 @@ export type { AtlasIconButtonVariant, AtlasIconButtonSize, AtlasIconButtonTone }
 export { default as AtlasTextField } from './AtlasTextField.vue'
 export { default as AtlasSelect } from './AtlasSelect.vue'
 export { default as AtlasAutocomplete } from './AtlasAutocomplete.vue'
+export { default as AtlasCheckbox } from './AtlasCheckbox.vue'
