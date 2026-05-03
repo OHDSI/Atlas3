@@ -6,13 +6,13 @@
     <v-card-title>
       {{ t('incidenceRate.studyWindow', 'Study Window') }}
       <AtlasSpacer />
-      <v-btn
+      <AtlasButton
         v-if="!hasWindow"
-        size="small"
+        size="sm"
         @click="enable"
       >
         {{ t('common.add', 'Add') }}
-      </v-btn>
+      </AtlasButton>
       <v-btn
         v-else
         size="small"
@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasSpacer } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'

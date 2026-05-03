@@ -13,24 +13,22 @@
     />
 
     <div class="ir-gen__actions">
-      <v-btn
-        color="primary"
-        size="small"
-        variant="flat"
+      <AtlasButton
+        size="sm"
         :disabled="!selectedSource || generation.polling.value"
         data-testid="ir-generate-btn"
         @click="onStart"
       >
         {{ t('components.generation.generate', 'Generate').value }}
-      </v-btn>
-      <v-btn
-        size="small"
-        variant="text"
+      </AtlasButton>
+      <AtlasButton
+        variant="ghost"
+        size="sm"
         :disabled="!generation.polling.value"
         @click="onCancel"
       >
         {{ t('common.cancel', 'Cancel').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <v-alert
@@ -46,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSelect } from '@/components/ui'
+import { AtlasButton, AtlasSelect } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'

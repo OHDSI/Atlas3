@@ -26,23 +26,25 @@
       </v-card-text>
       <v-card-actions>
         <AtlasSpacer />
-        <v-btn @click="close">
+        <AtlasButton
+          variant="ghost"
+          @click="close"
+        >
           {{ t('common.cancel', 'Cancel') }}
-        </v-btn>
-        <v-btn
-          color="primary"
+        </AtlasButton>
+        <AtlasButton
           :disabled="selected.length === 0"
           @click="confirm"
         >
           {{ t('common.add', 'Add cohort') }}
-        </v-btn>
+        </AtlasButton>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { getCohorts } from '@/services/webapi'
 import { logger } from '@/utils/logger'

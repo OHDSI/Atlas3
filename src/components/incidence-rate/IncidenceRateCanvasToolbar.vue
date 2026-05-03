@@ -123,16 +123,16 @@
 
     <AtlasMenu offset="6">
       <template #activator="{ props: ap }">
-        <v-btn
+        <AtlasButton
           v-bind="ap"
-          size="small"
-          variant="text"
-          prepend-icon="mdi-download-outline"
+          variant="ghost"
+          size="sm"
+          icon="mdi-download-outline"
           :disabled="!hasResults"
           data-testid="ir-toolbar-export"
         >
           {{ t('cc.viewEdit.results.exportAll', 'Export').value }}
-        </v-btn>
+        </AtlasButton>
       </template>
       <AtlasList density="compact">
         <AtlasListItem @click="$emit('export', 'csv')">
@@ -156,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { RATE_MULTIPLIER_OPTIONS, type RateMultiplier } from '@/models/incidence-rate.types'

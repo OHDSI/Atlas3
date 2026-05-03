@@ -155,16 +155,16 @@
           />
         </template>
       </AtlasTooltip>
-      <v-btn
+      <AtlasButton
         v-if="store.currentIR?.id"
-        variant="outlined"
-        prepend-icon="mdi-content-copy"
+        variant="secondary"
+        icon="mdi-content-copy"
         :disabled="!store.currentIR?.id || !canCopy"
         data-testid="ir-builder-copy"
         @click="onCopy"
       >
         {{ t('common.duplicate', 'Duplicate') }}
-      </v-btn>
+      </AtlasButton>
       <v-btn
         v-if="store.currentIR?.id"
         variant="outlined"
@@ -184,15 +184,14 @@
         location="bottom end"
       >
         <template #activator="{ props: menuProps }">
-          <v-btn
+          <AtlasButton
             v-bind="menuProps"
-            color="primary"
-            variant="outlined"
-            prepend-icon="mdi-play"
+            variant="secondary"
+            icon="mdi-play"
             data-testid="ir-builder-generate"
           >
             {{ t('components.generation.generate', 'Generate') }}
-          </v-btn>
+          </AtlasButton>
         </template>
         <IncidenceRateGeneratePopover
           v-if="store.currentIR?.id"
@@ -267,15 +266,18 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn @click="askDelete = false">
+          <AtlasButton
+            variant="ghost"
+            @click="askDelete = false"
+          >
             {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
+          </AtlasButton>
+          <AtlasButton
+            variant="danger"
             @click="onDelete"
           >
             {{ t('common.delete', 'Delete') }}
-          </v-btn>
+          </AtlasButton>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -304,7 +306,7 @@ import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import { AtlasBadge, AtlasDialog, AtlasMenu, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasMenu, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import IncidenceRateGeneratePopover from '@/components/incidence-rate/IncidenceRateGeneratePopover.vue'
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'
