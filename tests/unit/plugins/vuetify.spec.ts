@@ -61,21 +61,21 @@ describe('Vuetify Plugin', () => {
       const vuetify = createVuetifyInstance()
 
       const theme = vuetify.theme.themes.value.light
-      expect(theme.colors.error).toBe('#FF5252')
+      expect(theme.colors.error).toBe('#ff5252')
     })
 
     it('should include success color', () => {
       const vuetify = createVuetifyInstance()
 
       const theme = vuetify.theme.themes.value.light
-      expect(theme.colors.success).toBe('#4CAF50')
+      expect(theme.colors.success).toBe('#4caf50')
     })
 
     it('should include warning color', () => {
       const vuetify = createVuetifyInstance()
 
       const theme = vuetify.theme.themes.value.light
-      expect(theme.colors.warning).toBe('#FB8C00')
+      expect(theme.colors.warning).toBe('#fb8c00')
     })
 
     it('should include orange accent color', () => {
