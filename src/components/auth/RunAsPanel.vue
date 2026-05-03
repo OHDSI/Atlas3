@@ -1,9 +1,9 @@
 <template>
   <v-card>
     <v-card-title class="text-h6">
-      <v-icon left>
+      <AtlasIcon left>
         mdi-account-switch
-      </v-icon>
+      </AtlasIcon>
       {{ t('components.welcome.runas') }}
     </v-card-title>
 
@@ -42,9 +42,9 @@
             :loading="isExiting"
             @click="handleExitRunAs"
           >
-            <v-icon left>
+            <AtlasIcon left>
               mdi-exit-run
-            </v-icon>
+            </AtlasIcon>
             {{ t('auth.exitRunAs') }}
           </v-btn>
         </div>
@@ -69,9 +69,9 @@
         :disabled="!targetUser.trim() || isRunningAs"
         @click="handleRunAs"
       >
-        <v-icon left>
+        <AtlasIcon left>
           mdi-account-switch
-        </v-icon>
+        </AtlasIcon>
         {{ t('components.welcome.runas') }}
       </v-btn>
 
@@ -89,6 +89,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

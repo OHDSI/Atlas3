@@ -1,11 +1,11 @@
 <template>
   <div class="plugin-error-ui">
-    <v-icon
+    <AtlasIcon
       size="64"
       color="error"
     >
       mdi-alert-circle
-    </v-icon>
+    </AtlasIcon>
     <h2>Plugin Failed to Load</h2>
     <p class="error-message">
       {{ error?.message || 'Unknown error occurred' }}
@@ -37,6 +37,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { ref } from 'vue'
 
 defineProps<{

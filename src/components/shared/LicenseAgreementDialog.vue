@@ -234,10 +234,10 @@
         </div>
       </v-card-text>
 
-      <v-divider />
+      <AtlasDivider />
 
       <v-card-actions class="pa-4">
-        <v-spacer />
+        <AtlasSpacer />
         <v-btn
           color="error"
           variant="text"
@@ -258,6 +258,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasSpacer } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 

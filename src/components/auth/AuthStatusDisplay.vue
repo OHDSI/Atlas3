@@ -8,7 +8,7 @@
     @click:close="dismissed = true"
   >
     <template #prepend>
-      <v-icon>{{ isExpiringSoon ? 'mdi-alert' : 'mdi-information' }}</v-icon>
+      <AtlasIcon>{{ isExpiringSoon ? 'mdi-alert' : 'mdi-information' }}</AtlasIcon>
     </template>
 
     <div>
@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

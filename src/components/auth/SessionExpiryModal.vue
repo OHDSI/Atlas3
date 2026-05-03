@@ -7,7 +7,7 @@
   >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon
+        <AtlasIcon
           icon="mdi-alert-circle"
           color="warning"
           class="mr-2"
@@ -56,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { computed, ref, watch, onUnmounted } from 'vue'
 import type { SessionExpiryModalProps } from './types'
 

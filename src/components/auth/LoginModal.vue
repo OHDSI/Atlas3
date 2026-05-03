@@ -29,13 +29,13 @@
           class="login-card__error"
           role="alert"
         >
-          <v-icon
+          <AtlasIcon
             size="18"
             color="error"
             class="mr-2"
           >
             mdi-alert-circle-outline
-          </v-icon>
+          </AtlasIcon>
           <span>{{ errorMessage }}</span>
           <v-btn
             icon="mdi-close"
@@ -112,6 +112,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

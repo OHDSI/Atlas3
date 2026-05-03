@@ -65,34 +65,36 @@
 
       <!-- Dropdown menu for smaller screens -->
       <div class="nav-bar__nav-dropdown d-md-none">
-        <v-menu>
+        <AtlasMenu>
           <template #activator="{ props: menuProps }">
             <v-btn
               v-bind="menuProps"
               variant="text"
               append-icon="mdi-menu-down"
             >
-              <v-icon start>
+              <AtlasIcon start>
                 mdi-menu
-              </v-icon>
+              </AtlasIcon>
               {{ t('common.menu', 'Menu') }}
             </v-btn>
           </template>
-          <v-list>
+          <AtlasList>
             <template
               v-for="item in navigationItems"
               :key="item.id"
             >
-              <v-list-item
+              <AtlasListItem
                 v-if="item.visible"
                 :active="item.active"
                 @click="handleNavClick(item)"
               >
-                <v-list-item-title>{{ getNavTitle(item.titleKey) }}</v-list-item-title>
-              </v-list-item>
+                <v-list-item-title>
+                  {{ getNavTitle(item.titleKey) }}
+                </v-list-item-title>
+              </AtlasListItem>
             </template>
-          </v-list>
-        </v-menu>
+          </AtlasList>
+        </AtlasMenu>
       </div>
       <div
         class="nav-bar__right"
@@ -123,7 +125,7 @@
           aria-label="Open configuration panel"
           @click="handleConfigClick"
         >
-          <v-icon>mdi-cog</v-icon>
+          <AtlasIcon>mdi-cog</AtlasIcon>
         </v-btn>
 
         <!-- Authentication UI -->
@@ -143,28 +145,30 @@
           v-else-if="showUserMenu"
           class="nav-bar__user"
         >
-          <v-menu>
+          <AtlasMenu>
             <template #activator="{ props }">
               <v-btn
                 variant="text"
                 v-bind="props"
                 append-icon="mdi-menu-down"
               >
-                <v-icon left>
+                <AtlasIcon left>
                   mdi-account-circle
-                </v-icon>
+                </AtlasIcon>
                 {{ auth.userDisplayName.value }}
               </v-btn>
             </template>
-            <v-list>
-              <v-list-item @click="handleLogout">
+            <AtlasList>
+              <AtlasListItem @click="handleLogout">
                 <template #prepend>
-                  <v-icon>mdi-logout</v-icon>
+                  <AtlasIcon>mdi-logout</AtlasIcon>
                 </template>
-                <v-list-item-title>{{ signOutLabel }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
+                <v-list-item-title>
+                  {{ signOutLabel }}
+                </v-list-item-title>
+              </AtlasListItem>
+            </AtlasList>
+          </AtlasMenu>
         </div>
       </div>
     </div>
@@ -175,6 +179,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'

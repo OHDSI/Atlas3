@@ -1,6 +1,6 @@
 <template>
   <div class="loading-spinner">
-    <v-progress-circular
+    <AtlasProgressCircular
       :size="size"
       :width="width"
       color="primary"
@@ -16,6 +16,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasProgressCircular } from '@/components/ui'
 /**
  * LoadingSpinner - Vuetify v-progress-circular wrapper
  */

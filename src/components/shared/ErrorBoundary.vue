@@ -3,9 +3,9 @@
     v-if="hasError"
     class="error-boundary"
   >
-    <v-container>
-      <v-row justify="center">
-        <v-col
+    <AtlasContainer>
+      <AtlasRow justify="center">
+        <AtlasCol
           cols="12"
           md="8"
           lg="6"
@@ -15,7 +15,7 @@
             variant="tonal"
           >
             <v-card-title class="d-flex align-center">
-              <v-icon
+              <AtlasIcon
                 icon="mdi-alert-circle"
                 class="mr-2"
               />
@@ -37,7 +37,7 @@
               >
                 <v-expansion-panel>
                   <v-expansion-panel-title>
-                    <v-icon
+                    <AtlasIcon
                       icon="mdi-information-outline"
                       class="mr-2"
                     />
@@ -67,14 +67,15 @@
               </v-btn>
             </v-card-actions>
           </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
+        </AtlasCol>
+      </AtlasRow>
+    </AtlasContainer>
   </div>
   <slot v-else />
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasContainer, AtlasIcon, AtlasRow } from '@/components/ui'
 import { ref, onErrorCaptured } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'

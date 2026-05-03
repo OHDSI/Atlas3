@@ -1,6 +1,6 @@
 <template>
   <div class="plugin-loading-state">
-    <v-progress-circular
+    <AtlasProgressCircular
       indeterminate
       color="primary"
       size="64"
@@ -9,7 +9,9 @@
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { AtlasProgressCircular } from '@/components/ui'
+</script>
 
 <style scoped>
 .plugin-loading-state {
