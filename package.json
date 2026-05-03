@@ -19,7 +19,11 @@
     "test:e2e:report": "playwright show-report playwright-report",
     "test:visual": "playwright test tests/e2e/visual-comparison.spec.ts",
     "check-all": "npm run type-check && npm run lint && npm run test:unit && npm run build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "tokens:build": "tsx scripts/build-tokens.ts",
+    "tokens:check": "tsx scripts/build-tokens.ts && git diff --exit-code src/ui/tokens.css",
+    "predev": "npm run tokens:build",
+    "prebuild": "npm run tokens:build"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -62,6 +66,7 @@
     "husky": "^9.1.7",
     "jsdom": "^27.1.0",
     "prettier": "^3.1.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "^5.4.21",
     "vitest": "^1.6.1",
