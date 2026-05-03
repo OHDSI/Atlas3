@@ -58,6 +58,8 @@ export default defineConfig({
         'src/plugins/vuetify.ts',
         // Router configuration - tested via integration/e2e tests
         'src/router/index.ts',
+        // Histoire story files - dev-time visual docs, not runtime code
+        'src/components/ui/**/*.story.vue',
       ],
       thresholds: {
         lines: 90,
