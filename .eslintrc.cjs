@@ -44,14 +44,15 @@ module.exports = {
     'vue/component-api-style': 'off',
     'vue/one-component-per-file': 'off',
 
-    // Atlas UI library — Phase 1 wrappers shipped, severity flipped to 'warn'.
+    // Atlas UI library — Phase 1 + 2 wrappers shipped, severity at 'warn'.
     // Uses vue/no-restricted-html-elements (NOT no-restricted-component-names) because
     // Vuetify components are globally auto-imported via vite-plugin-vuetify and appear
     // in templates as elements, not as locally-registered component names.
     // Names without a corresponding Atlas* wrapper yet are NOT listed (they get added
-    // back as their wrappers ship): v-dialog, v-card, v-alert, v-snackbar (Phase 2);
-    // v-data-table (Phase 4). Existing raw-Vuetify callsites surface as warnings;
-    // CI does not fail on warnings — migration is opportunistic.
+    // back as their wrappers ship): v-card (no semantic gap — AtlasCard exists but is
+    // a styled composite, not a 1:1 v-card replacement), v-data-table (Phase 4).
+    // Existing raw-Vuetify callsites surface as warnings; CI does not fail on warnings —
+    // migration is opportunistic.
     'vue/no-restricted-html-elements': ['warn',
       { element: 'v-btn',          message: 'Use <AtlasButton> from @/components/ui' },
       { element: 'v-text-field',   message: 'Use <AtlasTextField> from @/components/ui' },
@@ -62,6 +63,9 @@ module.exports = {
       { element: 'v-radio',        message: 'Use <AtlasRadio> from @/components/ui' },
       { element: 'v-radio-group',  message: 'Use <AtlasRadioGroup> from @/components/ui' },
       { element: 'v-chip',         message: 'Use <AtlasChip> from @/components/ui' },
+      { element: 'v-dialog',       message: 'Use <AtlasDialog> from @/components/ui' },
+      { element: 'v-alert',        message: 'Use <AtlasAlert> from @/components/ui' },
+      { element: 'v-snackbar',     message: 'Use <AtlasSnackbar> from @/components/ui' },
     ],
 
     'no-restricted-imports': ['off', {
