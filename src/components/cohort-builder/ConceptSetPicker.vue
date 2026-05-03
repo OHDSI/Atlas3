@@ -10,12 +10,13 @@
     <v-card-text>
       <!-- Single Concept Selection Mode -->
       <template v-if="singleSelect">
-        <AtlasTextField
+        <v-text-field
           :model-value="selectedConcept?.CONCEPT_NAME || ''"
           readonly
           :label="tv('components.conceptPicker.selectConcept', 'Selected Concept')"
           :placeholder="tv('search.placeholder', 'Click search to select...')"
           variant="outlined"
+          density="compact"
           data-testid="single-concept-display"
         >
           <template #append>
@@ -33,7 +34,7 @@
               @click="clearSingleConceptSelection"
             />
           </template>
-        </AtlasTextField>
+        </v-text-field>
 
         <!-- Selected Concept Chip -->
         <AtlasChip
@@ -126,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasDivider, AtlasIcon, AtlasListItem, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasChip, AtlasDivider, AtlasIcon, AtlasListItem, AtlasSelect } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

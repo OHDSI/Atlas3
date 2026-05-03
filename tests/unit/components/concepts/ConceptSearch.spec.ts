@@ -141,10 +141,10 @@ describe('ConceptSearch', () => {
       expect(textField.props('variant')).toBe('outlined')
     })
 
-    it('should have comfortable density', () => {
+    it('should have compact density (Atlas locks compact)', () => {
       wrapper = mountComponent()
       const textField = wrapper.findComponent({ name: 'VTextField' })
-      expect(textField.props('density')).toBe('comfortable')
+      expect(textField.props('density')).toBe('compact')
     })
   })
 
