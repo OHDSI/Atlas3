@@ -143,12 +143,12 @@
 
           <AtlasSpacer />
 
-          <v-btn
+          <AtlasIconButton
             icon="mdi-delete"
-            size="small"
+            v-bind="{ ariaLabel: t('components.criteriaGroup.deleteGroup', 'Delete nested group').value }"
             variant="text"
-            color="error"
-            :title="t('components.criteriaGroup.deleteGroup', 'Delete nested group').value"
+            tone="danger"
+            size="sm"
             @click="$emit('remove')"
           />
         </div>
@@ -311,7 +311,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, defineOptions } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

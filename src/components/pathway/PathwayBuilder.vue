@@ -42,12 +42,11 @@
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
             icon="mdi-history"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             data-testid="pathway-builder-versions"
             @click="showVersions = true"
           />
@@ -67,11 +66,11 @@
             offset-x="6"
             offset-y="6"
           >
-            <v-btn
+            <AtlasIconButton
+              v-bind="{ ariaLabel: 'Tags' }"
               icon="mdi-tag-outline"
               variant="text"
-              size="small"
-              density="compact"
+              size="sm"
               :disabled="isPreviewMode"
               data-testid="pathway-builder-tags"
               @click="showTags = true"
@@ -85,12 +84,11 @@
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Back to current version' }"
             icon="mdi-undo"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             data-testid="pathway-builder-back-to-current"
             @click="store.clearPreviewVersion()"
           />
@@ -101,12 +99,11 @@
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
             icon="mdi-upload"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             :loading="importing"
             data-testid="pathway-builder-import"
             @click="handleImportClick"
@@ -119,12 +116,11 @@
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
             icon="mdi-download"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             :loading="exporting"
             data-testid="pathway-builder-export"
             @click="handleExport"
@@ -245,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasBadge, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasIconButton, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'

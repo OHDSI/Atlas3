@@ -59,11 +59,11 @@
         data-test="profile-source-select"
         @update:model-value="(v: unknown) => onSourceChange(v != null ? String(v) : null)"
       />
-      <v-btn
+      <AtlasIconButton
         icon="mdi-refresh"
+        v-bind="{ ariaLabel: tv('cohortDefinitions.cohortDefinitionManager.panels.reload', 'Reload') }"
         variant="text"
-        :title="tv('cohortDefinitions.cohortDefinitionManager.panels.reload', 'Reload')"
-        :aria-label="tv('cohortDefinitions.cohortDefinitionManager.panels.reload', 'Reload')"
+        size="sm"
         data-test="profile-refresh"
         :disabled="!store.sourceKey || !store.personId"
         @click="onReload"
@@ -141,7 +141,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { AtlasCard, AtlasChip, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasCard, AtlasChip, AtlasIcon, AtlasIconButton, AtlasPageShell, AtlasProgressCircular, AtlasSelect, AtlasTextField } from '@/components/ui'
 import ProfileDemographics from '@/components/profile/ProfileDemographics.vue'
 import ProfileTimeline from '@/components/profile/ProfileTimeline.vue'
 import ProfileObservationBand from '@/components/profile/ProfileObservationBand.vue'

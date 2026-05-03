@@ -213,12 +213,12 @@
                 </v-btn>
               </v-btn-toggle>
               <AtlasSpacer />
-              <v-btn
-                variant="text"
-                size="small"
-                color="error"
+              <AtlasIconButton
                 icon="mdi-close"
-                :aria-label="t('common.remove', 'Remove').value"
+                v-bind="{ ariaLabel: t('common.remove', 'Remove').value }"
+                variant="text"
+                tone="danger"
+                size="sm"
                 @click="removeAdditionalCriteria"
               />
             </div>
@@ -547,7 +547,7 @@
           </div>
           <AtlasIconButton
             icon="mdi-close"
-            :aria-label="t('common.close', 'Close').value"
+            v-bind="{ ariaLabel: t('common.close', 'Close').value }"
             variant="text"
             size="sm"
             @click="showVersionsDialog = false"

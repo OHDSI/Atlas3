@@ -44,7 +44,7 @@
             <div class="d-flex gap-2">
               <AtlasIconButton
                 icon="mdi-pencil"
-                aria-label="Edit"
+                v-bind="{ ariaLabel: 'Edit' }"
                 variant="text"
                 tone="primary"
                 size="sm"
@@ -53,7 +53,7 @@
               />
               <AtlasIconButton
                 icon="mdi-delete"
-                aria-label="Delete"
+                v-bind="{ ariaLabel: 'Delete' }"
                 variant="text"
                 tone="danger"
                 size="sm"

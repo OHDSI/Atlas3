@@ -76,12 +76,11 @@
         location="top"
       >
         <template #activator="{ props: tooltipProps }">
-          <v-btn
-            v-bind="tooltipProps"
+          <AtlasIconButton
+            v-bind="{ ...tooltipProps, ariaLabel: infoTooltip }"
             icon="mdi-information-outline"
-            size="small"
             variant="text"
-            :aria-label="infoTooltip"
+            size="sm"
             class="cohort-card__action-btn"
             @click.stop="$emit('show-info', cohort)"
           />
@@ -93,12 +92,11 @@
         location="top"
       >
         <template #activator="{ props: tooltipProps }">
-          <v-btn
-            v-bind="tooltipProps"
+          <AtlasIconButton
+            v-bind="{ ...tooltipProps, ariaLabel: 'Generate cohort' }"
             icon="mdi-account-multiple"
-            size="small"
             variant="text"
-            aria-label="Generate cohort"
+            size="sm"
             class="cohort-card__action-btn"
             :disabled="!canWrite"
             @click.stop="handleGenerate"
@@ -111,12 +109,11 @@
         location="top"
       >
         <template #activator="{ props: tooltipProps }">
-          <v-btn
-            v-bind="tooltipProps"
+          <AtlasIconButton
+            v-bind="{ ...tooltipProps, ariaLabel: deleteTooltip }"
             icon="mdi-delete-outline"
-            size="small"
             variant="text"
-            :aria-label="deleteTooltip"
+            size="sm"
             class="cohort-card__action-btn"
             :disabled="!canDelete"
             @click.stop="$emit('delete', cohort)"
@@ -133,7 +130,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import { AtlasCard, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasCard, AtlasIconButton, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 
 interface Props {
   cohort: CohortDefinitionSummary

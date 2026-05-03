@@ -316,7 +316,7 @@
             </div>
             <AtlasIconButton
               icon="mdi-close"
-              :aria-label="t('common.close', 'Close').value"
+              v-bind="{ ariaLabel: t('common.close', 'Close').value }"
               variant="text"
               size="sm"
               @click="showCohortInfoDialog = false"

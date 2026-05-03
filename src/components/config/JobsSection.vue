@@ -90,11 +90,11 @@
         />
 
         <!-- Manual Refresh -->
-        <v-btn
+        <AtlasIconButton
           icon="mdi-refresh"
+          v-bind="{ ariaLabel: tv('jobs.refreshJobs') }"
           variant="text"
           :loading="isLoading"
-          :title="tv('jobs.refreshJobs')"
           @click="refresh"
         />
       </v-card-title>
@@ -267,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useJobs } from '@/composables/useJobs'

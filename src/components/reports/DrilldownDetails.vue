@@ -31,9 +31,11 @@
             {{ conceptPath }}
           </p>
         </div>
-        <v-btn
+        <AtlasIconButton
           icon="mdi-close"
+          v-bind="{ ariaLabel: 'Close' }"
           variant="text"
+          size="sm"
           @click="$emit('close')"
         />
       </v-card-title>
@@ -262,7 +264,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasCol, AtlasProgressCircular, AtlasRow } from '@/components/ui'
+import { AtlasAlert, AtlasCol, AtlasIconButton, AtlasProgressCircular, AtlasRow } from '@/components/ui'
 import { computed } from 'vue'
 import type { DrilldownReport, TimeSeriesData, LineChartData } from '@/models/report.types'
 import {

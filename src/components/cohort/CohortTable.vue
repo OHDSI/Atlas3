@@ -150,28 +150,28 @@
             </td>
             <td class="cohort-table__col-actions">
               <div class="cohort-table__actions">
-                <v-btn
+                <AtlasIconButton
                   icon="mdi-information-outline"
-                  size="small"
+                  v-bind="{ ariaLabel: t('common.cohortInformation', 'Cohort Information').value }"
                   variant="text"
-                  :aria-label="t('common.cohortInformation', 'Cohort Information').value"
+                  size="sm"
                   data-testid="cohort-table-info"
                   @click.stop="$emit('show-info', cohort)"
                 />
-                <v-btn
+                <AtlasIconButton
                   icon="mdi-account-multiple"
-                  size="small"
+                  v-bind="{ ariaLabel: t('components.analysisExecution.buttons.generate', 'Generate').value }"
                   variant="text"
-                  :aria-label="t('components.analysisExecution.buttons.generate', 'Generate').value"
+                  size="sm"
                   data-testid="cohort-table-generate"
                   :disabled="!access.canWrite(cohort.id)"
                   @click.stop="$emit('generate', cohort)"
                 />
-                <v-btn
+                <AtlasIconButton
                   icon="mdi-delete-outline"
-                  size="small"
+                  v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
                   variant="text"
-                  :aria-label="t('common.delete', 'Delete').value"
+                  size="sm"
                   data-testid="cohort-table-delete"
                   :disabled="!access.canDelete(cohort.id)"
                   @click.stop="$emit('delete', cohort)"
@@ -191,7 +191,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import { AtlasAlert, AtlasButton, AtlasCard, AtlasIcon, AtlasSkeleton } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 
 const { t, locale } = useI18n()
 const router = useRouter()

@@ -119,15 +119,14 @@
         <LanguageSelector v-if="showLanguageSelector" />
 
         <!-- Configuration Panel Icon: hidden when user has no admin perms -->
-        <v-btn
+        <AtlasIconButton
           v-if="showConfigButton && hasAnyAdminAccess"
-          icon
+          icon="mdi-cog"
+          v-bind="{ ariaLabel: 'Open configuration panel' }"
           variant="text"
-          aria-label="Open configuration panel"
+          size="sm"
           @click="handleConfigClick"
-        >
-          <AtlasIcon>mdi-cog</AtlasIcon>
-        </v-btn>
+        />
 
         <!-- Authentication UI -->
         <div
@@ -181,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'

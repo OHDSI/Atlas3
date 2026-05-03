@@ -47,20 +47,20 @@
           <div class="rule-title-container">
             <span class="rule-title-display">{{ rule.name }}</span>
             <div class="rule-actions">
-              <v-btn
+              <AtlasIconButton
                 icon="mdi-pencil-outline"
-                size="small"
+                v-bind="{ ariaLabel: t('common.edit', 'Edit').value }"
                 variant="text"
-                :aria-label="t('common.edit', 'Edit').value"
+                size="sm"
                 @click.stop="openEditDialog(index)"
               />
-              <v-btn
+              <AtlasIconButton
                 icon="mdi-delete-outline"
-                size="small"
+                v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
                 variant="text"
-                color="error"
+                tone="danger"
+                size="sm"
                 data-testid="remove-inclusion-rule"
-                :aria-label="t('common.delete', 'Delete').value"
                 @click.stop="removeRule(index)"
               />
             </div>
@@ -161,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasIcon, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, nextTick } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

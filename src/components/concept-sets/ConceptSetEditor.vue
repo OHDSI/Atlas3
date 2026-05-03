@@ -58,11 +58,12 @@
                 />
 
                 <!-- Remove Button -->
-                <v-btn
+                <AtlasIconButton
                   icon="mdi-delete"
-                  size="small"
+                  v-bind="{ ariaLabel: 'Remove concept' }"
                   variant="text"
-                  color="error"
+                  tone="danger"
+                  size="sm"
                   :data-testid="`remove-concept-${index}`"
                   @click="removeConcept(index)"
                 />
@@ -116,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasIconButton, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'

@@ -53,19 +53,19 @@
         <td>{{ formatUser(sample.createdBy) }}</td>
         <td>{{ formatDate(sample.createdDate) }}</td>
         <td class="text-right">
-          <v-btn
+          <AtlasIconButton
             icon="mdi-refresh"
-            size="small"
+            v-bind="{ ariaLabel: 'Refresh sample' }"
             variant="text"
-            aria-label="Refresh sample"
+            size="sm"
             data-testid="cohort-samples-list-refresh"
             @click.stop="$emit('refresh', sample)"
           />
-          <v-btn
+          <AtlasIconButton
             icon="mdi-delete"
-            size="small"
+            v-bind="{ ariaLabel: 'Delete sample' }"
             variant="text"
-            aria-label="Delete sample"
+            size="sm"
             data-testid="cohort-samples-list-delete"
             @click.stop="$emit('delete', sample)"
           />
@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIconButton } from '@/components/ui'
 import type { CohortSample } from '@/models/cohort-sample.types'
 import { GENDER_FEMALE_CONCEPT_ID, GENDER_MALE_CONCEPT_ID } from '@/models/cohort-sample.types'
 

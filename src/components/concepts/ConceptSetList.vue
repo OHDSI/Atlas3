@@ -87,7 +87,7 @@
           <div class="concept-set-list__actions">
             <AtlasIconButton
               icon="mdi-pencil-outline"
-              aria-label="Edit"
+              v-bind="{ ariaLabel: 'Edit' }"
               variant="text"
               size="sm"
               :disabled="!access.canWrite(item.id)"

@@ -22,9 +22,11 @@
           t('cohortDefinitions.cohortDefinitionManager.tabs.generation', 'Generation')
         }}</span>
         <AtlasSpacer />
-        <v-btn
+        <AtlasIconButton
           icon="mdi-close"
+          v-bind="{ ariaLabel: 'Close' }"
           variant="text"
+          size="sm"
           @click="close"
         />
       </v-card-title>
@@ -151,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasIcon, AtlasSpacer, AtlasTab, AtlasTabs } from '@/components/ui'
+import { AtlasAlert, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTab, AtlasTabs } from '@/components/ui'
 import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'

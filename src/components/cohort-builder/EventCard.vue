@@ -9,7 +9,7 @@ import CardinalityEditor from './CardinalityEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalFilterChip from './TemporalFilterChip.vue'
-import { AtlasButton, AtlasCard, AtlasChip, AtlasDivider, AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasDivider, AtlasIcon, AtlasIconButton } from '@/components/ui'
 
 const props = withDefaults(
   defineProps<{
@@ -157,20 +157,20 @@ const removeEvent = () => {
           </template>
         </div>
       </div>
-      <v-btn
+      <AtlasIconButton
         icon="mdi-chevron-down"
+        v-bind="{ ariaLabel: expanded ? 'Collapse' : 'Expand' }"
         variant="text"
-        size="small"
+        size="sm"
         :class="{ 'rotate-180': expanded }"
-        :aria-label="expanded ? 'Collapse' : 'Expand'"
         @click="toggleExpanded"
       />
-      <v-btn
+      <AtlasIconButton
         icon="mdi-delete-outline"
+        v-bind="{ ariaLabel: 'Remove event' }"
         variant="text"
-        size="small"
-        color="error"
-        :aria-label="'Remove event'"
+        tone="danger"
+        size="sm"
         @click="removeEvent"
       />
     </div>

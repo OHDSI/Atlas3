@@ -96,26 +96,26 @@
                 <div class="d-flex gap-2">
                   <AtlasIconButton
                     icon="mdi-pencil"
-                    :aria-label="tv('configuration.tagManagement.edit')"
+                    v-bind="{ ariaLabel: tv('configuration.tagManagement.edit') }"
                     size="sm"
                     @click="openEditDialog(source)"
                   />
                   <AtlasIconButton
                     icon="mdi-connection"
-                    :aria-label="tv('columns.checkConnection')"
+                    v-bind="{ ariaLabel: tv('columns.checkConnection') }"
                     size="sm"
                     @click="checkConnection(source)"
                   />
                   <AtlasIconButton
                     icon="mdi-refresh"
-                    :aria-label="tv('columns.refreshCache')"
+                    v-bind="{ ariaLabel: tv('columns.refreshCache') }"
                     size="sm"
                     :disabled="!source.hasResults"
                     @click="refreshCache(source)"
                   />
                   <AtlasIconButton
                     icon="mdi-delete"
-                    :aria-label="tv('common.delete')"
+                    v-bind="{ ariaLabel: tv('common.delete') }"
                     size="sm"
                     tone="danger"
                     @click="confirmDeleteSource(source)"

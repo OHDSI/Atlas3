@@ -62,12 +62,12 @@
           :data-testid="`strata-editor-name-${index}`"
           @update:model-value="(v) => updateName(index, String(v))"
         />
-        <v-btn
+        <AtlasIconButton
           icon="mdi-delete"
-          size="small"
+          v-bind="{ ariaLabel: t('columns.remove', 'Remove').value }"
           variant="text"
-          color="error"
-          :aria-label="t('columns.remove', 'Remove').value"
+          tone="danger"
+          size="sm"
           :data-testid="`strata-editor-remove-${index}`"
           @click="removeStratum(index)"
         />
@@ -141,7 +141,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
-import { AtlasButton, AtlasDialog, AtlasSwitch, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'

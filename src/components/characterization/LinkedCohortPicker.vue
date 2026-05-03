@@ -51,7 +51,7 @@
         <template #append>
           <AtlasIconButton
             icon="mdi-close"
-            :aria-label="t('columns.remove', 'Remove').value"
+            v-bind="{ ariaLabel: t('columns.remove', 'Remove').value }"
             variant="text"
             size="sm"
             :data-testid="`linked-cohort-picker-remove-${cohort.id}`"

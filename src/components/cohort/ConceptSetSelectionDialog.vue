@@ -20,10 +20,11 @@
               {{ t('components.conceptSetBuilder.selectConceptSet', 'Select concept set').value }}
             </h2>
           </div>
-          <v-btn
+          <AtlasIconButton
             icon="mdi-close"
+            v-bind="{ ariaLabel: t('common.close', 'Close').value }"
             variant="text"
-            :aria-label="t('common.close', 'Close').value"
+            size="sm"
             @click="close"
           />
         </header>
@@ -100,11 +101,11 @@
 
               <template #item.actions="{ item }">
                 <div class="cs-picker__actions">
-                  <v-btn
+                  <AtlasIconButton
                     icon="mdi-pencil-outline"
-                    size="small"
+                    v-bind="{ ariaLabel: t('common.edit', 'Edit').value }"
                     variant="text"
-                    :aria-label="t('common.edit', 'Edit').value"
+                    size="sm"
                     @click.stop="onEditClick(item)"
                   />
                 </div>
@@ -169,7 +170,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
 
 interface Props {

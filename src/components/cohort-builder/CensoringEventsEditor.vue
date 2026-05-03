@@ -91,11 +91,12 @@
                   cols="1"
                   class="text-right"
                 >
-                  <v-btn
+                  <AtlasIconButton
                     icon="mdi-close"
-                    size="small"
+                    v-bind="{ ariaLabel: 'Remove event' }"
                     variant="text"
-                    color="error"
+                    tone="danger"
+                    size="sm"
                     :disabled="disabled"
                     @click="removeEvent(index)"
                   />
@@ -123,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasChip, AtlasCol, AtlasIcon, AtlasRow } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasCol, AtlasIcon, AtlasIconButton, AtlasRow } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent, ConceptSetReference, CriteriaType } from '@/models/cohort.types'

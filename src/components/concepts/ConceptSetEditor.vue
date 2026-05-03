@@ -62,10 +62,11 @@
                   offset-x="6"
                   offset-y="6"
                 >
-                  <v-btn
+                  <AtlasIconButton
                     icon="mdi-history"
-                    size="small"
+                    v-bind="{ ariaLabel: 'Version history' }"
                     variant="text"
+                    size="sm"
                     @click="showVersionsDialog = true"
                   />
                 </AtlasBadge>
@@ -90,10 +91,11 @@
               {{ isEditMode ? t('common.save', 'Save') : t('common.create', 'Create') }}
             </AtlasButton>
 
-            <v-btn
+            <AtlasIconButton
               icon="mdi-close"
+              v-bind="{ ariaLabel: t('common.close', 'Close').value }"
               variant="text"
-              :aria-label="t('common.close', 'Close').value"
+              size="sm"
               @click="onClose"
             />
           </div>
@@ -371,7 +373,7 @@ import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
-import { AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getConceptById } from '@/services/concept-search.service'

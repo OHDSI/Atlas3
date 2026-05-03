@@ -13,14 +13,13 @@
       <!-- Header -->
       <v-card-title class="config-panel__header d-flex align-center justify-space-between">
         <span class="config-panel-title">Configuration</span>
-        <v-btn
-          icon
+        <AtlasIconButton
+          icon="mdi-close"
+          v-bind="{ ariaLabel: 'Close configuration panel' }"
           variant="text"
-          aria-label="Close configuration panel"
+          size="sm"
           @click="handleClose"
-        >
-          <AtlasIcon>mdi-close</AtlasIcon>
-        </v-btn>
+        />
       </v-card-title>
 
       <AtlasDivider />
@@ -142,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasDivider, AtlasIcon, AtlasTab, AtlasTabs } from '@/components/ui'
+import { AtlasAlert, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useUIStore } from '@/stores/ui'
 import { usePermissions } from '@/composables/usePermissions'

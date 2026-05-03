@@ -74,7 +74,7 @@
             />
             <AtlasIconButton
               icon="mdi-close"
-              :aria-label="tv('columns.remove', 'Remove')"
+              v-bind="{ ariaLabel: tv('columns.remove', 'Remove') }"
               variant="text"
               size="sm"
               :data-testid="`linked-fa-picker-remove-${fa.id}`"

@@ -136,11 +136,12 @@
             </AtlasList>
           </AtlasMenu>
 
-          <v-btn
+          <AtlasIconButton
             icon="mdi-delete"
-            size="small"
+            v-bind="{ ariaLabel: 'Remove group' }"
             variant="text"
-            color="primary"
+            tone="primary"
+            size="sm"
             @click="$emit('remove')"
           />
         </div>
@@ -287,11 +288,12 @@
                             />
                           </AtlasList>
                         </AtlasMenu>
-                        <v-btn
+                        <AtlasIconButton
                           icon="mdi-delete"
-                          size="small"
+                          v-bind="{ ariaLabel: 'Remove event' }"
                           variant="text"
-                          color="primary"
+                          tone="primary"
+                          size="sm"
                           data-testid="remove-event-from-group"
                           @click="removeEvent(index)"
                         />
@@ -427,7 +429,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, watch, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

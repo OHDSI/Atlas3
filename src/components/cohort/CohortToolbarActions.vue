@@ -12,12 +12,11 @@
 
     <AtlasMenu>
       <template #activator="{ props: menuProps }">
-        <v-btn
-          v-bind="menuProps"
-          variant="text"
+        <AtlasIconButton
+          v-bind="{ ...menuProps, ariaLabel: t('common.export', 'Export').value }"
           icon="mdi-export-variant"
-          size="small"
-          :aria-label="t('common.export', 'Export').value"
+          variant="text"
+          size="sm"
           data-testid="export-btn"
         />
       </template>
@@ -77,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 interface Props {

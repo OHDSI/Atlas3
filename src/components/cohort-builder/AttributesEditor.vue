@@ -317,10 +317,11 @@
 
           <!-- Delete Button (Right Side) -->
           <div class="attribute-actions">
-            <v-btn
+            <AtlasIconButton
               icon="mdi-delete"
-              size="small"
+              v-bind="{ ariaLabel: 'Remove attribute' }"
               variant="text"
+              size="sm"
               data-testid="remove-attribute-button"
               @click="removeAttribute(index)"
             />
@@ -358,7 +359,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasChip, AtlasIcon, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasChip, AtlasIcon, AtlasIconButton, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'

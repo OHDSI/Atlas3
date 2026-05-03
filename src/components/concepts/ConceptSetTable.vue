@@ -171,11 +171,12 @@
              list reads as data first. -->
         <template #item.actions="{ item }">
           <div class="concept-set-table__actions">
-            <v-btn
+            <AtlasIconButton
               icon="mdi-delete-outline"
-              size="small"
+              v-bind="{ ariaLabel: 'Remove' }"
               variant="text"
-              color="error"
+              tone="danger"
+              size="sm"
               @click="onRemove(item)"
             />
           </div>
@@ -230,7 +231,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasDataTable, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 
 const { t } = useI18n()

@@ -48,12 +48,11 @@
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Concept sets' }"
             icon="mdi-bookmark-multiple-outline"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             data-testid="char-builder-conceptsets-icon"
             @click="showConceptSetsDialog = true"
           />
@@ -66,12 +65,11 @@
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
             icon="mdi-history"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             data-testid="char-builder-versions-icon"
             @click="showVersionsDialog = true"
           />
@@ -91,11 +89,11 @@
             offset-x="6"
             offset-y="6"
           >
-            <v-btn
+            <AtlasIconButton
               icon="mdi-message-text"
+              v-bind="{ ariaLabel: 'Validation messages' }"
               variant="text"
-              size="small"
-              density="compact"
+              size="sm"
               data-testid="char-builder-validation-icon"
               @click="showValidationDialog = true"
             />
@@ -108,12 +106,11 @@
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
             icon="mdi-upload"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             :loading="importing"
             data-testid="char-builder-import-icon"
             @click="handleImportClick"
@@ -127,12 +124,11 @@
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
             icon="mdi-download"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             :loading="exporting"
             :disabled="!canExport"
             data-testid="char-builder-export-icon"
@@ -339,7 +335,7 @@ import { logger } from '@/utils/logger'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasDivider, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasDivider, AtlasIconButton, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'

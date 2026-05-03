@@ -87,19 +87,19 @@
 
     <!-- Actions -->
     <template #item.actions="{ item }">
-      <v-btn
+      <AtlasIconButton
         icon="mdi-pencil"
-        size="small"
+        v-bind="{ ariaLabel: 'Edit tag' }"
         variant="text"
-        aria-label="Edit tag"
+        size="sm"
         @click="$emit('edit', item)"
       />
-      <v-btn
+      <AtlasIconButton
         icon="mdi-delete"
-        size="small"
+        v-bind="{ ariaLabel: 'Delete tag' }"
         variant="text"
-        color="error"
-        aria-label="Delete tag"
+        tone="danger"
+        size="sm"
         @click="$emit('delete', item)"
       />
     </template>
@@ -125,7 +125,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasDataTable, AtlasIcon } from '@/components/ui'
+import { AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton } from '@/components/ui'
 import type { Tag } from '@/models/config.types'
 
 interface Props {

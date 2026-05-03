@@ -35,7 +35,7 @@
           <td>
             <AtlasIconButton
               icon="mdi-eye"
-              aria-label="View"
+              v-bind="{ ariaLabel: 'View' }"
               variant="text"
               size="sm"
               @click="$emit('view', conceptSet)"
