@@ -2,7 +2,9 @@
 import type { VuetifyOptions } from 'vuetify'
 import { tokens } from './tokens'
 
-export function buildVuetifyOptions(primaryOverride?: string | null): VuetifyOptions {
+type ThemeOptions = Pick<VuetifyOptions, 'theme' | 'defaults'>
+
+export function buildVuetifyOptions(primaryOverride?: string | null): ThemeOptions {
   return {
     theme: {
       defaultTheme: 'light',
