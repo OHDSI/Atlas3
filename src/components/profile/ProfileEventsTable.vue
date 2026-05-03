@@ -9,15 +9,14 @@
         </h2>
       </div>
       <div class="section-header__actions">
-        <v-text-field
+        <AtlasTextField
           :model-value="store.textFilter"
           :label="tv('profiles.searchEvents', 'Search events')"
-          density="compact"
           hide-details
           clearable
           data-test="profile-search"
           style="min-width: 220px; max-width: 280px"
-          @update:model-value="(v: string) => store.setTextFilter(v ?? '')"
+          @update:model-value="(v: string | number) => store.setTextFilter(String(v ?? ''))"
         />
       </div>
     </div>
@@ -43,7 +42,7 @@
 <script setup lang="ts">
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasTextField } from '@/components/ui'
 
 const store = useProfileStore()
 const { tv } = useI18n()

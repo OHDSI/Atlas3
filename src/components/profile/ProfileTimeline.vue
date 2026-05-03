@@ -12,17 +12,16 @@
     <div class="section-body">
       <div class="profile-timeline__filters">
         <ProfileFilterChips />
-        <v-chip
+        <AtlasChip
           v-if="store.dateRange"
           closable
-          variant="tonal"
-          color="primary"
-          size="small"
+          tone="primary"
+          size="sm"
           data-test="profile-daterange-chip"
-          @click:close="store.setDateRange(null)"
+          @close="store.setDateRange(null)"
         >
           Day {{ store.dateRange[0] }} → {{ store.dateRange[1] }}
-        </v-chip>
+        </AtlasChip>
       </div>
       <div
         class="profile-timeline"
@@ -44,7 +43,7 @@ import { computed } from 'vue'
 import { useTimelineFilters } from '@/composables/useTimelineFilters'
 import { useProfileStore } from '@/stores/profile'
 import { DEFAULT_HIGHLIGHT_COLOR, OMOP_DOMAINS } from '@/models/profile.types'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasChip } from '@/components/ui'
 import ProfileFilterChips from '@/components/profile/ProfileFilterChips.vue'
 
 const store = useProfileStore()

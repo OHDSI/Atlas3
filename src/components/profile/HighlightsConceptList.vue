@@ -1,9 +1,8 @@
 <template>
   <div class="highlights-concept-list">
-    <v-text-field
+    <AtlasTextField
       v-model="search"
       :label="tv('profiles.searchConceptsToHighlight', 'Search concepts to highlight')"
-      density="compact"
       hide-details
       clearable
     />
@@ -86,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasTooltip } from '@/components/ui'
+import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useTimelineFilters } from '@/composables/useTimelineFilters'
 import { useProfileStore } from '@/stores/profile'

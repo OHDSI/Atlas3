@@ -6,13 +6,12 @@
     <!-- Toolbar -->
     <v-card-text class="d-flex align-center justify-space-between px-0 pb-2">
       <!-- Search -->
-      <v-text-field
+      <AtlasTextField
         v-if="searchable"
         v-model="searchQuery"
-        density="compact"
         variant="outlined"
         :label="tv('common.search')"
-        prepend-inner-icon="mdi-magnify"
+        prepend-icon="mdi-magnify"
         hide-details
         clearable
         :style="{ maxWidth: '400px' }"
@@ -113,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasList, AtlasListItem, AtlasMenu, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasList, AtlasListItem, AtlasMenu, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TableHeader, TableRow } from '@/models/report.types'

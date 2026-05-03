@@ -1,18 +1,17 @@
 <template>
   <div class="concept-search-inline">
     <!-- Search Input -->
-    <v-text-field
+    <AtlasTextField
       v-model="searchInput"
       :label="tv('common.search')"
       :placeholder="tv('search.placeholder')"
-      prepend-inner-icon="mdi-magnify"
+      prepend-icon="mdi-magnify"
       clearable
       variant="outlined"
-      density="comfortable"
-      :error-messages="validationError"
+      :error="validationError"
       :disabled="loading"
       class="mb-4"
-      @update:model-value="onSearchInput"
+      @update:model-value="(v: string | number) => onSearchInput(v != null ? String(v) : null)"
       @click:clear="onClear"
       @keyup.enter="onSearch"
     >
@@ -26,7 +25,7 @@
           {{ t('common.search') }}
         </v-btn>
       </template>
-    </v-text-field>
+    </AtlasTextField>
 
     <!-- Error Message -->
     <v-alert
@@ -59,6 +58,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'
