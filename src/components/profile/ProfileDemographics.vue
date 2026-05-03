@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     padding="md"
     class="profile-demographics"
     data-test="profile-demographics"
@@ -69,14 +69,14 @@
         </div>
       </div>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 const store = useProfileStore()
 const { tv } = useI18n()

@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     interactive
     padding="none"
     class="cohort-card"
@@ -124,7 +124,7 @@
         </template>
       </v-tooltip>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
@@ -133,7 +133,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 interface Props {
   cohort: CohortDefinitionSummary

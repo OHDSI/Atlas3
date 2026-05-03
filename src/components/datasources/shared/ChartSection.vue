@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     class="chart-section"
     padding="none"
   >
@@ -28,11 +28,11 @@
         <slot />
       </div>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 interface Props {
   title: string

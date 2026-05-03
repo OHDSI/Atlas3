@@ -47,7 +47,7 @@
     </v-card>
 
     <div class="landing__features">
-      <SurfaceCard
+      <AtlasCard
         v-for="feature in features"
         :key="feature.id"
         tag="router-link"
@@ -67,10 +67,10 @@
         <div class="landing__feature-description">
           {{ feature.description }}
         </div>
-      </SurfaceCard>
+      </AtlasCard>
     </div>
 
-    <SurfaceCard
+    <AtlasCard
       class="landing__documentation"
       padding="md"
     >
@@ -79,7 +79,7 @@
       </h2>
       <!-- eslint-disable-next-line vue/no-v-html -- trusted i18n content -->
       <p v-html="documentationHtml" />
-    </SurfaceCard>
+    </AtlasCard>
   </div>
 </template>
 
@@ -87,7 +87,7 @@
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import atlasLogo from '@/assets/icons/atlas-loading.svg'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 interface FeatureTile {
   id: string

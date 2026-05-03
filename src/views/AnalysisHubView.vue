@@ -1,5 +1,5 @@
 <template>
-  <page-shell
+  <AtlasPageShell
     hero
     compact
     :eyebrow="eyebrow"
@@ -52,14 +52,14 @@
         </v-window-item>
       </v-window>
     </div>
-  </page-shell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
-import PageShell from '@/components/shared/PageShell.vue'
+import { AtlasPageShell } from '@/components/ui'
 import CharacterizationsView from '@/views/CharacterizationsView.vue'
 import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
 import PathwaysView from '@/views/PathwaysView.vue'

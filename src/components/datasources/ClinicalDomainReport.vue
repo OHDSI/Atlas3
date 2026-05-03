@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     class="clinical-domain-report"
     padding="none"
   >
@@ -62,7 +62,7 @@
         </v-window-item>
       </v-window>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
@@ -79,7 +79,7 @@ import { getMetricLabel } from '@/utils/datasource-formatters'
 import { getCDMDrilldown } from '@/services/webapi'
 import { mapDrilldownReport } from '@/services/report-mapper'
 import { logger } from '@/utils/logger'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 import DomainPrevalenceTreemap from '@/components/datasources/DomainPrevalenceTreemap.vue'
 import DomainPrevalenceTable from '@/components/datasources/DomainPrevalenceTable.vue'
 import DrilldownDetails from '@/components/reports/DrilldownDetails.vue'

@@ -1,5 +1,5 @@
 <template>
-  <page-shell
+  <AtlasPageShell
     hero
     compact
     eyebrow="OHDSI · CDM"
@@ -69,7 +69,7 @@
         />
 
         <!-- Report Content -->
-        <SurfaceCard
+        <AtlasCard
           v-else-if="store.selectedSource && store.selectedReportType && !store.error.report"
           class="datasources-view__report"
           padding="md"
@@ -124,7 +124,7 @@
               Report type "{{ reportTypeLabel }}" is not yet implemented.
             </p>
           </div>
-        </SurfaceCard>
+        </AtlasCard>
 
         <!-- Empty State: no sources -->
         <div
@@ -168,7 +168,7 @@
         @update:model-value="handleSourceChange"
       />
     </template>
-  </page-shell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
@@ -178,8 +178,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { logger } from '@/utils/logger'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
-import PageShell from '@/components/shared/PageShell.vue'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasPageShell, AtlasCard } from '@/components/ui'
 import DataSourceSelector from '@/components/datasources/DataSourceSelector.vue'
 import DataSourceSidebar from '@/components/datasources/DataSourceSidebar.vue'
 import DashboardReport from '@/components/datasources/DashboardReport.vue'

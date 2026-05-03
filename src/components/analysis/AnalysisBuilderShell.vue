@@ -1,5 +1,5 @@
 <template>
-  <page-shell
+  <AtlasPageShell
     hero
     compact
     :eyebrow="eyebrow"
@@ -58,12 +58,12 @@
         <slot />
       </div>
     </div>
-  </page-shell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
-import PageShell from '@/components/shared/PageShell.vue'
+import { AtlasPageShell } from '@/components/ui'
 
 interface Props {
   title?: string

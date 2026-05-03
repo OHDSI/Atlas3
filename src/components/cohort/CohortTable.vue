@@ -69,7 +69,7 @@
     </div>
 
     <!-- Table -->
-    <SurfaceCard
+    <AtlasCard
       v-else
       padding="none"
     >
@@ -184,7 +184,7 @@
           </tr>
         </tbody>
       </v-table>
-    </SurfaceCard>
+    </AtlasCard>
   </div>
 </template>
 
@@ -194,7 +194,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 const { t, locale } = useI18n()
 const router = useRouter()

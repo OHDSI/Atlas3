@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard padding="md">
+  <AtlasCard padding="md">
     <div class="section-header">
       <div class="section-header__title-row">
         <span class="text-eyebrow">EVENTS</span>
@@ -37,13 +37,13 @@
         </template>
       </v-data-table>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 const store = useProfileStore()
 const { tv } = useI18n()

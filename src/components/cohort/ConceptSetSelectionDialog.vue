@@ -75,7 +75,7 @@
           <!-- Concept-set table — same visual treatment as
                /concepts: SurfaceCard, hover rows, click-to-select,
                hover-only edit icon. -->
-          <SurfaceCard
+          <AtlasCard
             v-if="loading || filteredSets.length > 0"
             padding="none"
           >
@@ -123,7 +123,7 @@
                 />
               </template>
             </v-data-table>
-          </SurfaceCard>
+          </AtlasCard>
 
           <!-- Empty / filtered-empty state -->
           <div
@@ -175,7 +175,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
 
 interface Props {

@@ -1,5 +1,5 @@
 <template>
-  <page-shell
+  <AtlasPageShell
     hero
     compact
     eyebrow="OHDSI · Vocabulary"
@@ -44,14 +44,14 @@
         </v-window-item>
       </v-window>
     </div>
-  </page-shell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, provide, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
-import PageShell from '@/components/shared/PageShell.vue'
+import { AtlasPageShell } from '@/components/ui'
 import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
 import ConceptSetList from '@/components/concepts/ConceptSetList.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'

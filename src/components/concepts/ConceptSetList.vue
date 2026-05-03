@@ -52,7 +52,7 @@
     </v-alert>
 
     <!-- Concept Sets Table -->
-    <SurfaceCard
+    <AtlasCard
       v-if="store.loading || store.filteredSets.length > 0"
       padding="none"
     >
@@ -110,7 +110,7 @@
           />
         </template>
       </v-data-table>
-    </SurfaceCard>
+    </AtlasCard>
 
     <!-- Empty state: filled MD3 container, no border. Sits where the
          table would have been so the toolbar above stays the focus. -->
@@ -206,7 +206,7 @@ import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()

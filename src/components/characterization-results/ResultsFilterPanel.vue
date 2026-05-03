@@ -5,7 +5,7 @@
   Pure controlled component — emits update:* for each binding.
 -->
 <template>
-  <SurfaceCard
+  <AtlasCard
     padding="md"
     class="results-filter"
     data-testid="char-results-filters"
@@ -58,7 +58,7 @@
         @update:model-value="onCohortChange"
       />
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
@@ -66,7 +66,7 @@ import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
 import type { LinkedCohort } from '@/models/characterization.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 interface AnalysisOption {
   id: number

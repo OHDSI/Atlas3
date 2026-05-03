@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard padding="md">
+  <AtlasCard padding="md">
     <div class="section-header">
       <div class="section-header__title-row">
         <span class="text-eyebrow">OBSERVATION</span>
@@ -44,13 +44,13 @@
         </div>
       </div>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useProfileStore } from '@/stores/profile'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 const store = useProfileStore()
 const viewWidth = 1000

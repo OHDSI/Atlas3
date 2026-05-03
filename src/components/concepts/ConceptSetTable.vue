@@ -73,7 +73,7 @@
       </v-btn>
     </div>
 
-    <SurfaceCard
+    <AtlasCard
       v-if="loading || filteredItems.length > 0"
       padding="none"
     >
@@ -193,7 +193,7 @@
           />
         </template>
       </v-data-table>
-    </SurfaceCard>
+    </AtlasCard>
 
     <!-- Empty / filtered-empty state -->
     <div
@@ -232,7 +232,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 
 const { t } = useI18n()

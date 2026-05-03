@@ -1,5 +1,5 @@
 <template>
-  <page-shell
+  <AtlasPageShell
     hero
     compact
     eyebrow="OHDSI · Cohorts"
@@ -384,7 +384,7 @@
         </v-card>
       </v-dialog>
     </div>
-  </page-shell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
@@ -401,7 +401,7 @@ import {
   saveCohortDefinition,
 } from '@/services/webapi'
 import { logger } from '@/utils/logger'
-import PageShell from '@/components/shared/PageShell.vue'
+import { AtlasPageShell } from '@/components/ui'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'

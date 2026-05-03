@@ -6,12 +6,12 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import PageShell from '@/components/shared/PageShell.vue'
+import { AtlasPageShell } from '@/components/ui'
 
 const vuetify = createVuetify({ components, directives })
 
 function mountShell(props: Record<string, unknown> = {}, slots: Record<string, string> = {}) {
-  return mount(PageShell, {
+  return mount(AtlasPageShell, {
     props,
     slots: {
       default: '<div class="body-marker">body content</div>',

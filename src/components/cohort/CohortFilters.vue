@@ -42,7 +42,7 @@
           </v-btn>
         </template>
 
-        <SurfaceCard
+        <AtlasCard
           padding="none"
           class="cohort-filters__menu-card"
         >
@@ -187,7 +187,7 @@
               </v-dialog>
             </div>
           </div>
-        </SurfaceCard>
+        </AtlasCard>
       </v-menu>
     </div>
 
@@ -268,7 +268,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { FilterState } from '@/composables/useCohorts'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 interface Props {
   filters: FilterState

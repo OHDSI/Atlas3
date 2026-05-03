@@ -1,5 +1,5 @@
 <template>
-  <PageShell
+  <AtlasPageShell
     hero
     compact
     eyebrow="PROFILE"
@@ -81,7 +81,7 @@
 
       <ProfileObservationBand v-if="store.person" />
 
-      <SurfaceCard
+      <AtlasCard
         v-if="store.error"
         padding="md"
       >
@@ -96,7 +96,7 @@
           />
           <span>{{ store.error }}</span>
         </div>
-      </SurfaceCard>
+      </AtlasCard>
 
       <div
         v-else-if="store.loading"
@@ -138,14 +138,13 @@
         </div>
       </div>
     </div>
-  </PageShell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import PageShell from '@/components/shared/PageShell.vue'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasPageShell, AtlasCard } from '@/components/ui'
 import ProfileDemographics from '@/components/profile/ProfileDemographics.vue'
 import ProfileTimeline from '@/components/profile/ProfileTimeline.vue'
 import ProfileObservationBand from '@/components/profile/ProfileObservationBand.vue'

@@ -6,7 +6,7 @@
   time — keeps the table readable.
 -->
 <template>
-  <SurfaceCard
+  <AtlasCard
     padding="none"
     class="distribution-table"
     :data-testid="`char-results-distribution-${analysisId}`"
@@ -51,7 +51,7 @@
         </div>
       </template>
     </v-data-table>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
@@ -60,7 +60,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 interface Props {
   analysisId: number

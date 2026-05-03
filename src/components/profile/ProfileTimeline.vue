@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard padding="md">
+  <AtlasCard padding="md">
     <div class="section-header">
       <div class="section-header__title-row">
         <span class="text-eyebrow">TIMELINE</span>
@@ -36,7 +36,7 @@
         />
       </div>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
@@ -44,7 +44,7 @@ import { computed } from 'vue'
 import { useTimelineFilters } from '@/composables/useTimelineFilters'
 import { useProfileStore } from '@/stores/profile'
 import { DEFAULT_HIGHLIGHT_COLOR, OMOP_DOMAINS } from '@/models/profile.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 import ProfileFilterChips from '@/components/profile/ProfileFilterChips.vue'
 
 const store = useProfileStore()

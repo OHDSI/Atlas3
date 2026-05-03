@@ -9,7 +9,7 @@ import CardinalityEditor from './CardinalityEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalFilterChip from './TemporalFilterChip.vue'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 const props = withDefaults(
   defineProps<{
@@ -130,7 +130,7 @@ const removeEvent = () => {
 </script>
 
 <template>
-  <SurfaceCard
+  <AtlasCard
     class="event-card mb-2"
     padding="none"
   >
@@ -352,7 +352,7 @@ const removeEvent = () => {
         </v-card-text>
       </div>
     </v-expand-transition>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <style scoped>

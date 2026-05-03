@@ -144,7 +144,7 @@ describe('EventCard', () => {
       // Refresh: replaced bespoke v-card elevation hover styles
       // with SurfaceCard (single source of truth for card chrome).
       const wrapper = mountComponent()
-      expect(wrapper.find('.surface-card').exists()).toBe(true)
+      expect(wrapper.find('.atlas-card').exists()).toBe(true)
     })
 
     it('should display event criteria type label', () => {
