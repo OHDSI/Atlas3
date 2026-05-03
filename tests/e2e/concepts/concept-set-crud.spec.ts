@@ -147,7 +147,7 @@ test.describe('Concept Set CRUD Operations', () => {
     }
     await editButton.click()
 
-    const drawer = page.locator('.v-navigation-drawer')
+    const drawer = page.locator('.v-navigation-drawer').first()
     await expect(drawer).toBeVisible()
 
     // Click Delete button
