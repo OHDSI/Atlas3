@@ -64,21 +64,21 @@
     >
       {{ t('cc.viewEdit.workbench.configure', 'Configure').value }}
     </v-btn>
-    <v-btn
-      size="small"
-      variant="text"
-      prepend-icon="mdi-download-outline"
+    <AtlasButton
+      variant="ghost"
+      size="sm"
+      icon="mdi-download-outline"
       :disabled="!hasResults"
       data-testid="char-toolbar-export"
       @click="$emit('export')"
     >
       {{ t('cc.viewEdit.results.exportAll', 'Export CSV').value }}
-    </v-btn>
+    </AtlasButton>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 export type ViewMode = 'table1' | 'perAnalysis'

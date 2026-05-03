@@ -10,16 +10,15 @@
       <h2 class="linked-cohort-picker__title">
         {{ t('cc.viewEdit.results.filters.cohorts', 'Linked Cohorts') }}
       </h2>
-      <v-btn
-        variant="outlined"
-        color="primary"
-        prepend-icon="mdi-plus"
-        size="small"
+      <AtlasButton
+        variant="secondary"
+        size="sm"
+        icon="mdi-plus"
         data-testid="linked-cohort-picker-add"
         @click="openDialog"
       >
         {{ t('common.add', 'Add cohort') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <div
@@ -83,13 +82,13 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             data-testid="linked-cohort-picker-cancel"
             @click="dialogOpen = false"
           >
             {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
+          </AtlasButton>
           <v-btn
             color="primary"
             variant="elevated"
@@ -106,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

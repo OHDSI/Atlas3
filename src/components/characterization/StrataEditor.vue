@@ -13,17 +13,15 @@
       <h2 class="strata-editor__title">
         {{ t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value }}
       </h2>
-      <v-btn
-        variant="outlined"
-        color="primary"
-        size="small"
-        density="compact"
-        prepend-icon="mdi-plus"
+      <AtlasButton
+        variant="secondary"
+        size="sm"
+        icon="mdi-plus"
         data-testid="strata-editor-add"
         @click="addStratum"
       >
         {{ t('cc.viewEdit.design.subgroups.newSubgroup', 'New subgroup').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <div
@@ -143,7 +141,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
-import { AtlasDialog, AtlasSwitch, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'

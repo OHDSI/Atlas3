@@ -43,35 +43,31 @@
       </v-card-text>
       <v-card-actions class="run-dialog__actions">
         <AtlasSpacer />
-        <v-btn
-          variant="text"
-          size="small"
-          density="compact"
+        <AtlasButton
+          variant="ghost"
+          size="sm"
           :disabled="running"
           data-testid="run-execution-dialog-cancel"
           @click="close"
         >
           {{ t('common.cancel', 'Cancel') }}
-        </v-btn>
-        <v-btn
-          color="primary"
-          variant="flat"
-          size="small"
-          density="compact"
+        </AtlasButton>
+        <AtlasButton
+          size="sm"
           :loading="running"
           :disabled="!canRun"
           data-testid="run-execution-dialog-run"
           @click="onRun"
         >
           {{ t('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run') }}
-        </v-btn>
+        </AtlasButton>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasSpacer, AtlasSelect } from '@/components/ui'
+import { AtlasButton, AtlasSpacer, AtlasSelect } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

@@ -12,16 +12,15 @@
       <h2 class="linked-fa-picker__title">
         {{ t('cc.viewEdit.design.fa.title', 'Linked Feature Analyses') }}
       </h2>
-      <v-btn
-        variant="outlined"
-        color="primary"
-        prepend-icon="mdi-plus"
-        size="small"
+      <AtlasButton
+        variant="secondary"
+        size="sm"
+        icon="mdi-plus"
         data-testid="linked-fa-picker-add"
         @click="openDialog"
       >
         {{ t('common.add', 'Add feature analysis') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <div
@@ -107,13 +106,13 @@
         </v-card-text>
         <v-card-actions>
           <AtlasSpacer />
-          <v-btn
-            variant="text"
+          <AtlasButton
+            variant="ghost"
             data-testid="linked-fa-picker-cancel"
             @click="dialogOpen = false"
           >
             {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
+          </AtlasButton>
           <v-btn
             color="primary"
             variant="elevated"
@@ -130,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

@@ -74,19 +74,19 @@
 
       <v-card-actions>
         <AtlasSpacer />
-        <v-btn
-          variant="text"
+        <AtlasButton
+          variant="ghost"
           @click="close"
         >
           {{ tv('common.close', 'Close') }}
-        </v-btn>
+        </AtlasButton>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { computed, ref, watch } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

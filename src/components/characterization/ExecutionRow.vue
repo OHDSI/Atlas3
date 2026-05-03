@@ -51,23 +51,22 @@
       >
         {{ t('common.cancel', 'Cancel') }}
       </v-btn>
-      <v-btn
+      <AtlasButton
         v-if="isCompleted"
-        size="small"
-        variant="outlined"
-        color="primary"
-        prepend-icon="mdi-chart-bar"
+        variant="secondary"
+        size="sm"
+        icon="mdi-chart-bar"
         :data-testid="`execution-row-results-${execution.id}`"
         @click="onViewResults"
       >
         {{ t('cohortDefinitions.cohortDefinitionManager.panels.viewReports', 'View results') }}
-      </v-btn>
+      </AtlasButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
