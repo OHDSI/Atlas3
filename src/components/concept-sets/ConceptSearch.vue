@@ -3,19 +3,19 @@
     <v-card-title>{{ t('components.conceptPicker.selectConcept') }}</v-card-title>
     <v-card-text>
       <!-- Search Input -->
-      <v-text-field
+      <AtlasTextField
         v-model="searchQuery"
         :label="tv('components.conceptPicker.search')"
         :placeholder="tv('search.placeholder')"
-        prepend-inner-icon="mdi-magnify"
+        prepend-icon="mdi-magnify"
         clearable
         data-testid="concept-search-input"
-        @update:model-value="handleSearch"
+        @update:model-value="(v) => handleSearch(v as string | null)"
         @click:clear="handleClear"
       />
 
       <!-- Domain Filter -->
-      <v-select
+      <AtlasSelect
         v-model="selectedDomain"
         :items="domains"
         :label="tv('search.domains')"
@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasDivider, AtlasListItem, AtlasProgressLinear } from '@/components/ui'
+import { AtlasDivider, AtlasListItem, AtlasProgressLinear, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

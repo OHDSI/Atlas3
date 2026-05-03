@@ -88,20 +88,18 @@
       >
         <!-- Descendants Toggle -->
         <template #item.includeDescendants="{ item }">
-          <v-checkbox
+          <AtlasCheckbox
             :model-value="item.includeDescendants"
             hide-details
-            density="compact"
             @update:model-value="onToggleDescendants(item)"
           />
         </template>
 
         <!-- Mapped Toggle -->
         <template #item.includeMapped="{ item }">
-          <v-checkbox
+          <AtlasCheckbox
             :model-value="item.includeMapped"
             hide-details
-            density="compact"
             @update:model-value="onToggleMapped(item)"
           />
         </template>
@@ -232,7 +230,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import { AtlasCard, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasCard, AtlasCheckbox, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 
 const { t } = useI18n()

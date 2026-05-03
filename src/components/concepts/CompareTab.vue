@@ -5,13 +5,12 @@
         <span class="text-body-2 text-medium-emphasis">
           {{ t('cs.browser.compare.conceptSet1', 'Concept Set 1:') }}
         </span>
-        <v-chip
-          size="small"
-          color="primary"
-          variant="tonal"
+        <AtlasChip
+          size="sm"
+          tone="primary"
         >
           {{ store.currentSet?.name || t('common.untitled', 'Untitled').value }}
-        </v-chip>
+        </AtlasChip>
 
         <span class="text-body-2 text-medium-emphasis ml-4">
           {{ t('cs.browser.compare.conceptSet2', 'Concept Set 2:') }}
@@ -152,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasProgressCircular } from '@/components/ui'
+import { AtlasChip, AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'

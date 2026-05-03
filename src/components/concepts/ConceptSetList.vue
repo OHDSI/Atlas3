@@ -3,28 +3,26 @@
     <!-- Toolbar: search + status chip + primary action.
          Sits directly on the page card surface — no inner v-card. -->
     <div class="concept-set-list__toolbar">
-      <v-text-field
+      <AtlasTextField
         :model-value="store.filterTerm"
         :placeholder="t('common.search', 'Search concept sets…').value"
-        prepend-inner-icon="mdi-magnify"
+        prepend-icon="mdi-magnify"
         clearable
         variant="outlined"
-        density="comfortable"
         hide-details
         class="concept-set-list__search"
-        @update:model-value="onFilterChange"
+        @update:model-value="(v) => onFilterChange(v as string | null)"
         @click:clear="onFilterClear"
       />
 
-      <v-chip
+      <AtlasChip
         v-if="!store.loading && store.filteredSets.length > 0"
-        size="small"
-        variant="tonal"
-        color="primary"
+        size="sm"
+        tone="primary"
         class="concept-set-list__count"
       >
         {{ countLabel }}
-      </v-chip>
+      </AtlasChip>
 
       <AtlasSpacer />
 
@@ -206,7 +204,7 @@ import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
-import { AtlasCard, AtlasIcon, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasCard, AtlasChip, AtlasIcon, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()

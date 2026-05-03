@@ -118,14 +118,13 @@
                 icon="mdi-checkbox-marked-circle-outline"
               />
               {{ t('cs.manager.tabs.includedConcepts', 'Selected') }}
-              <v-chip
-                size="x-small"
-                variant="tonal"
-                color="primary"
+              <AtlasChip
+                size="sm"
+                tone="primary"
                 class="cs-editor__tab-count"
               >
                 {{ itemCount }}
-              </v-chip>
+              </AtlasChip>
             </AtlasTab>
             <AtlasTab value="search">
               <AtlasIcon
@@ -268,13 +267,13 @@
         ).value
       }}
     </p>
-    <v-textarea
+    <AtlasTextField
       v-model="pasteInput"
       :placeholder="'201826\n313217, 4329847\n443238'"
       :disabled="pasteResolving"
-      rows="6"
+      :rows="6"
+      multiline
       variant="outlined"
-      density="comfortable"
       hide-details
       class="cs-paste__textarea"
     />
@@ -380,7 +379,7 @@ import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
-import { AtlasBadge, AtlasDialog, AtlasIcon, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTooltip } from '@/components/ui'
+import { AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getConceptById } from '@/services/concept-search.service'

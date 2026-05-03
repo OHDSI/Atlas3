@@ -9,12 +9,12 @@
     </v-card-title>
     <v-card-text>
       <!-- Concept Set Name -->
-      <v-text-field
+      <AtlasTextField
         :model-value="modelValue?.name || ''"
         :label="tv('components.conceptSet.name')"
         :placeholder="tv('conceptSetEditor.namePlaceholder')"
         data-testid="concept-set-name"
-        @update:model-value="updateName"
+        @update:model-value="(v) => updateName(String(v))"
       />
 
       <!-- Concept List -->
@@ -49,11 +49,10 @@
 
               <template #append>
                 <!-- Include Descendants Checkbox -->
-                <v-checkbox
+                <AtlasCheckbox
                   :model-value="item.includeDescendants"
                   :label="tv('columns.descendants')"
                   hide-details
-                  density="compact"
                   :data-testid="`include-descendants-${index}`"
                   @update:model-value="val => updateIncludeDescendants(index, val ?? false)"
                 />
@@ -117,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
+import { AtlasCheckbox, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'

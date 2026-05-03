@@ -193,14 +193,13 @@
 
       <div class="d-flex align-center gap-2">
         <span class="text-body-2">Items per page:</span>
-        <v-select
+        <AtlasSelect
           :model-value="itemsPerPage"
           :items="[60, 120, 240]"
-          density="compact"
           variant="outlined"
           hide-details
           style="width: 80px"
-          @update:model-value="onItemsPerPageChange"
+          @update:model-value="(v) => onItemsPerPageChange(v as number)"
         />
       </div>
 
@@ -215,7 +214,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSkeleton } from '@/components/ui'
+import { AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'

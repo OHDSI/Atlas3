@@ -16,12 +16,11 @@
 
     <v-card-text>
       <!-- Search Filter -->
-      <v-text-field
+      <AtlasTextField
         v-model="searchFilter"
         :label="tv('common.search')"
-        prepend-inner-icon="mdi-magnify"
+        prepend-icon="mdi-magnify"
         clearable
-        density="compact"
         data-testid="search-concept-sets"
         class="mb-4"
       />
@@ -124,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasBadge, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer } from '@/components/ui'
+import { AtlasBadge, AtlasIcon, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'

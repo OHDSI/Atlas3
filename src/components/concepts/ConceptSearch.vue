@@ -4,20 +4,19 @@
          wrapper. Enter triggers the search; minimum 3 characters
          enforced via validation. -->
     <div class="concept-search__hero">
-      <v-text-field
+      <AtlasTextField
         v-model="searchInput"
         :placeholder="
           t('search.placeholder', 'Search SNOMED, ICD, RxNorm, LOINC… (Enter to search)').value
         "
-        prepend-inner-icon="mdi-magnify"
+        prepend-icon="mdi-magnify"
         clearable
         variant="outlined"
-        density="comfortable"
         hide-details
         :disabled="loading"
         :loading="loading"
         class="concept-search__input"
-        @update:model-value="onSearchInput"
+        @update:model-value="(v) => onSearchInput(v as string | null)"
         @click:clear="onClear"
         @keyup.enter="onSearch"
       />
@@ -61,6 +60,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import ConceptTable from './ConceptTable.vue'

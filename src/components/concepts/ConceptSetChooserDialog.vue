@@ -15,12 +15,11 @@
     />
 
     <div class="chooser-body">
-      <v-text-field
+      <AtlasTextField
         v-model="searchTerm"
         :placeholder="t('common.search', 'Search…').value"
-        prepend-inner-icon="mdi-magnify"
+        prepend-icon="mdi-magnify"
         variant="outlined"
-        density="comfortable"
         hide-details
         clearable
         data-testid="chooser-search"
@@ -82,7 +81,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasDialog, AtlasProgressLinear } from '@/components/ui'
+import { AtlasDialog, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
 
 interface Props {
   modelValue: boolean
