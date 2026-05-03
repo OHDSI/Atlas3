@@ -10,13 +10,12 @@
     <v-card-text>
       <!-- Single Concept Selection Mode -->
       <template v-if="singleSelect">
-        <v-text-field
+        <AtlasTextField
           :model-value="selectedConcept?.CONCEPT_NAME || ''"
           readonly
           :label="tv('components.conceptPicker.selectConcept', 'Selected Concept')"
           :placeholder="tv('search.placeholder', 'Click search to select...')"
           variant="outlined"
-          density="compact"
           data-testid="single-concept-display"
         >
           <template #append>
@@ -34,7 +33,7 @@
               @click="clearSingleConceptSelection"
             />
           </template>
-        </v-text-field>
+        </AtlasTextField>
 
         <!-- Selected Concept Chip -->
         <AtlasChip
@@ -50,7 +49,7 @@
 
       <!-- Concept Set Selection Mode (Default) -->
       <template v-else>
-        <v-select
+        <AtlasSelect
           v-model="selectedConceptSetId"
           :items="conceptSetItems"
           item-title="label"
@@ -58,7 +57,7 @@
           :label="tv('components.conceptAddBox.selectConceptSet', 'Choose Concept Set')"
           clearable
           data-testid="concept-set-selector"
-          @update:model-value="handleSelect"
+          @update:model-value="(v: unknown) => handleSelect(v as number | string | undefined)"
         >
           <template #prepend-item>
             <AtlasListItem @click="showSearch = true">
@@ -86,7 +85,7 @@
             </AtlasListItem>
             <AtlasDivider class="my-2" />
           </template>
-        </v-select>
+        </AtlasSelect>
 
         <!-- Selected Concept Set Display -->
         <AtlasChip
@@ -127,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasDivider, AtlasIcon, AtlasListItem } from '@/components/ui'
+import { AtlasChip, AtlasDivider, AtlasIcon, AtlasListItem, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

@@ -6,14 +6,13 @@
     <div class="patient-count-bar__content">
       <!-- Dataset Selector -->
       <div class="patient-count-bar__selector">
-        <v-select
+        <AtlasSelect
           v-model="selectedSource"
           :items="dataSourceItems"
           :loading="isLoadingDataSources"
           :disabled="isLoadingDataSources"
           item-title="text"
           item-value="value"
-          density="compact"
           variant="outlined"
           hide-details
           class="patient-count-bar__select"
@@ -42,7 +41,7 @@
               </template>
             </AtlasListItem>
           </template>
-        </v-select>
+        </AtlasSelect>
       </div>
 
       <!-- Patient Count Display -->
@@ -212,7 +211,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasListItem, AtlasProgressLinear, AtlasTooltip } from '@/components/ui'
+import { AtlasIcon, AtlasListItem, AtlasProgressLinear, AtlasSelect, AtlasTooltip } from '@/components/ui'
 import { computed, watch, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'

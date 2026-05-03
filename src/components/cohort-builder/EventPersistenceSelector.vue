@@ -77,7 +77,7 @@
         <!-- Persistence Window and Surveillance Window -->
         <AtlasRow v-if="selectedConceptSet">
           <AtlasCol cols="6">
-            <v-text-field
+            <AtlasTextField
               v-model.number="persistenceWindow"
               type="number"
               :label="
@@ -89,7 +89,6 @@
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
-              density="compact"
             >
               <template #append-inner>
                 <AtlasTooltip location="top">
@@ -109,10 +108,10 @@
                   }}</span>
                 </AtlasTooltip>
               </template>
-            </v-text-field>
+            </AtlasTextField>
           </AtlasCol>
           <AtlasCol cols="6">
-            <v-text-field
+            <AtlasTextField
               v-model.number="surveillanceWindow"
               type="number"
               :label="
@@ -124,7 +123,6 @@
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
-              density="compact"
             >
               <template #append-inner>
                 <AtlasTooltip location="top">
@@ -144,7 +142,7 @@
                   }}</span>
                 </AtlasTooltip>
               </template>
-            </v-text-field>
+            </AtlasTextField>
           </AtlasCol>
         </AtlasRow>
 
