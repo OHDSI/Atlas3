@@ -13,11 +13,9 @@
     />
 
     <div class="generate-popover__actions">
-      <v-btn
+      <AtlasButton
         data-testid="generate-btn"
-        color="primary"
-        size="small"
-        variant="flat"
+        size="sm"
         :disabled="
           !canGenerate ||
             !selectedSource ||
@@ -27,15 +25,15 @@
         @click="onStart"
       >
         {{ t('components.generation.generate', 'Generate') }}
-      </v-btn>
-      <v-btn
-        size="small"
-        variant="text"
+      </AtlasButton>
+      <AtlasButton
+        variant="ghost"
+        size="sm"
         :disabled="!generation.polling.value || !canCancelForSource(selectedSource)"
         @click="onCancel"
       >
         {{ t('common.cancel', 'Cancel') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <div
@@ -57,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSelect } from '@/components/ui'
+import { AtlasButton, AtlasSelect } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'

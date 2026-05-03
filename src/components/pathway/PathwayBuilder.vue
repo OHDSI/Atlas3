@@ -139,16 +139,16 @@
         data-testid="pathway-builder-import-input"
         @change="handleImportFileChange"
       >
-      <v-btn
+      <AtlasButton
         v-if="currentPathway?.id"
-        variant="outlined"
-        prepend-icon="mdi-content-copy"
+        variant="secondary"
+        icon="mdi-content-copy"
         :disabled="!currentPathway?.id || !canCopy"
         data-testid="pathway-builder-copy"
         @click="onCopy"
       >
         {{ t('common.duplicate', 'Duplicate') }}
-      </v-btn>
+      </AtlasButton>
       <v-btn
         v-if="currentPathway?.id"
         variant="outlined"
@@ -168,15 +168,14 @@
         location="bottom end"
       >
         <template #activator="{ props: menuProps }">
-          <v-btn
+          <AtlasButton
             v-bind="menuProps"
-            color="primary"
-            variant="outlined"
-            prepend-icon="mdi-play"
+            variant="secondary"
+            icon="mdi-play"
             data-testid="pathway-builder-generate"
           >
             {{ t('components.generation.generate', 'Generate') }}
-          </v-btn>
+          </AtlasButton>
         </template>
         <PathwayGeneratePopover
           v-if="currentPathway?.id"
@@ -247,7 +246,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasBadge, AtlasMenu, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasMenu, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
