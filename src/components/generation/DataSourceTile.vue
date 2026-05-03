@@ -36,7 +36,7 @@
         v-else-if="tileStatus === 'generating'"
         class="tile-status tile-status--generating"
       >
-        <v-progress-circular
+        <AtlasProgressCircular
           indeterminate
           size="20"
           width="2"
@@ -69,12 +69,12 @@
         v-else-if="tileStatus === 'failed'"
         class="tile-status tile-status--failed"
       >
-        <v-icon
+        <AtlasIcon
           color="error"
           size="small"
         >
           mdi-alert-circle
-        </v-icon>
+        </AtlasIcon>
         <span class="ml-2 text-error text-caption">{{
           failMessage || t('ir.results.failed', 'Failed').value
         }}</span>
@@ -95,6 +95,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasProgressCircular } from '@/components/ui'
 import { computed, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'

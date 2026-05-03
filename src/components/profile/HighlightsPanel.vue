@@ -15,24 +15,24 @@
       </div>
     </div>
 
-    <v-tabs
+    <AtlasTabs
       v-model="tab"
       density="compact"
     >
-      <v-tab
+      <AtlasTab
         value="concepts"
         data-test="highlights-tab-concepts"
       >
         {{ tv('profiles.highlightTabConcepts', 'concepts') }}
-      </v-tab>
-      <v-tab
+      </AtlasTab>
+      <AtlasTab
         value="sets"
         data-test="highlights-tab-sets"
         :disabled="!store.hasCohortContext"
       >
         {{ tv('profiles.highlightTabSets', 'sets') }}
-      </v-tab>
-    </v-tabs>
+      </AtlasTab>
+    </AtlasTabs>
 
     <v-window v-model="tab">
       <v-window-item value="concepts">
@@ -43,7 +43,7 @@
       </v-window-item>
     </v-window>
 
-    <v-divider class="my-2" />
+    <AtlasDivider class="my-2" />
 
     <div class="highlights-panel__footer">
       <v-btn
@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasDivider, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref } from 'vue'
 import HighlightsConceptList from '@/components/profile/HighlightsConceptList.vue'
 import HighlightsConceptSetList from '@/components/profile/HighlightsConceptSetList.vue'

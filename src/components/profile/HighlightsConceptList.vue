@@ -7,19 +7,23 @@
       hide-details
       clearable
     />
-    <v-list
+    <AtlasList
       density="compact"
       class="overflow-auto"
       max-height="320"
     >
-      <v-list-item
+      <AtlasListItem
         v-for="c in items"
         :key="c.conceptId"
       >
-        <v-list-item-title>{{ c.conceptName }}</v-list-item-title>
-        <v-list-item-subtitle>{{ c.domain }} — {{ c.count }}</v-list-item-subtitle>
+        <v-list-item-title>
+          {{ c.conceptName }}
+        </v-list-item-title>
+        <v-list-item-subtitle>
+          {{ c.domain }} — {{ c.count }}
+        </v-list-item-subtitle>
         <template #append>
-          <v-menu :close-on-content-click="true">
+          <AtlasMenu :close-on-content-click="true">
             <template #activator="{ props: activatorProps }">
               <button
                 v-bind="activatorProps"
@@ -33,7 +37,7 @@
             </template>
             <div class="color-popover">
               <div class="color-popover__swatches">
-                <v-tooltip
+                <AtlasTooltip
                   v-for="entry in paletteEntries"
                   :key="entry.color"
                   :text="entry.label"
@@ -51,8 +55,8 @@
                       @click="apply(c.conceptId, entry.color)"
                     />
                   </template>
-                </v-tooltip>
-                <v-tooltip
+                </AtlasTooltip>
+                <AtlasTooltip
                   :text="tv('profiles.highlightNone', 'None')"
                   location="top"
                 >
@@ -65,23 +69,24 @@
                       :aria-label="tv('profiles.highlightNone', 'None')"
                       @click="apply(c.conceptId, 'none')"
                     >
-                      <v-icon
+                      <AtlasIcon
                         size="18"
                         icon="mdi-close-circle-outline"
                       />
                     </button>
                   </template>
-                </v-tooltip>
+                </AtlasTooltip>
               </div>
             </div>
-          </v-menu>
+          </AtlasMenu>
         </template>
-      </v-list-item>
-    </v-list>
+      </AtlasListItem>
+    </AtlasList>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasTooltip } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useTimelineFilters } from '@/composables/useTimelineFilters'
 import { useProfileStore } from '@/stores/profile'

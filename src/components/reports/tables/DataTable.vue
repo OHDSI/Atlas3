@@ -18,12 +18,12 @@
         :style="{ maxWidth: '400px' }"
       />
 
-      <v-spacer v-if="searchable" />
+      <AtlasSpacer v-if="searchable" />
 
       <!-- Actions -->
       <div class="d-flex gap-2">
         <!-- Column visibility toggle -->
-        <v-menu
+        <AtlasMenu
           v-if="showColumnToggle"
           location="bottom end"
         >
@@ -37,8 +37,8 @@
               {{ t('datatable.language.buttons.changeColumns') }}
             </v-btn>
           </template>
-          <v-list>
-            <v-list-item
+          <AtlasList>
+            <AtlasListItem
               v-for="header in headers"
               :key="header.key"
               @click="toggleColumn(header.key)"
@@ -49,10 +49,12 @@
                   hide-details
                 />
               </template>
-              <v-list-item-title>{{ header.title }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
+              <v-list-item-title>
+                {{ header.title }}
+              </v-list-item-title>
+            </AtlasListItem>
+          </AtlasList>
+        </AtlasMenu>
 
         <!-- TableExport component -->
         <TableExport
@@ -78,7 +80,7 @@
     >
       <!-- Loading slot -->
       <template #loading>
-        <v-skeleton-loader type="table-row@10" />
+        <AtlasSkeleton type="table-row@10" />
       </template>
 
       <!-- No data slot -->
@@ -111,6 +113,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasList, AtlasListItem, AtlasMenu, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TableHeader, TableRow } from '@/models/report.types'

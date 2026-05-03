@@ -4,7 +4,7 @@
          the icon + tone, not a full-bleed colored alert background. -->
     <div class="treemap-controls">
       <div class="treemap-controls__hint">
-        <v-icon
+        <AtlasIcon
           icon="mdi-cursor-default-click-outline"
           size="16"
           class="treemap-controls__hint-icon"
@@ -18,7 +18,7 @@
         </span>
       </div>
 
-      <v-spacer />
+      <AtlasSpacer />
 
       <v-switch
         v-if="hasHierarchy"
@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { ref, computed } from 'vue'
 import type { TreemapNode } from '@/models/datasource.types'
 import TreemapChart from '@/components/reports/charts/TreemapChart.vue'

@@ -11,7 +11,7 @@
       contained
       class="align-center justify-center"
     >
-      <v-progress-circular
+      <AtlasProgressCircular
         indeterminate
         size="64"
         color="primary"
@@ -39,7 +39,7 @@
       </v-card-title>
     </v-card>
 
-    <v-row
+    <AtlasRow
       v-if="!loading && data"
       class="drilldown-details__chart-grid"
     >
@@ -47,7 +47,7 @@
         v-for="field in fieldsForDomain"
         :key="field"
       >
-        <v-col
+        <AtlasCol
           v-if="field === 'prevalenceByGenderAgeYear' && data.prevalenceByGenderAgeYear"
           cols="12"
         >
@@ -63,9 +63,9 @@
               />
             </v-card-text>
           </v-card>
-        </v-col>
+        </AtlasCol>
 
-        <v-col
+        <AtlasCol
           v-else-if="
             field === 'prevalenceByMonth' &&
               data.prevalenceByMonth &&
@@ -86,9 +86,9 @@
               />
             </v-card-text>
           </v-card>
-        </v-col>
+        </AtlasCol>
 
-        <v-col
+        <AtlasCol
           v-else-if="
             field === 'ageAtFirstOccurrence' &&
               data.ageAtFirstOccurrence &&
@@ -109,9 +109,9 @@
               />
             </v-card-text>
           </v-card>
-        </v-col>
+        </AtlasCol>
 
-        <v-col
+        <AtlasCol
           v-else-if="field === 'lengthOfEra' && data.lengthOfEra && data.lengthOfEra.length > 0"
           cols="12"
           md="6"
@@ -128,9 +128,9 @@
               />
             </v-card-text>
           </v-card>
-        </v-col>
+        </AtlasCol>
 
-        <v-col
+        <AtlasCol
           v-else-if="field === 'byType' && data.byType && data.byType.length > 0"
           cols="12"
           md="6"
@@ -147,9 +147,9 @@
               />
             </v-card-text>
           </v-card>
-        </v-col>
+        </AtlasCol>
 
-        <v-col
+        <AtlasCol
           v-else-if="field === 'byUnit' && data.byUnit && data.byUnit.length > 0"
           cols="12"
           md="6"
@@ -166,9 +166,9 @@
               />
             </v-card-text>
           </v-card>
-        </v-col>
+        </AtlasCol>
 
-        <v-col
+        <AtlasCol
           v-else-if="
             field === 'byValueAsConcept' &&
               data.byValueAsConcept &&
@@ -189,9 +189,9 @@
               />
             </v-card-text>
           </v-card>
-        </v-col>
+        </AtlasCol>
 
-        <v-col
+        <AtlasCol
           v-else-if="field === 'byOperator' && data.byOperator && data.byOperator.length > 0"
           cols="12"
           md="6"
@@ -208,9 +208,9 @@
               />
             </v-card-text>
           </v-card>
-        </v-col>
+        </AtlasCol>
 
-        <v-col
+        <AtlasCol
           v-else-if="field === 'byQualifier' && data.byQualifier && data.byQualifier.length > 0"
           cols="12"
           md="6"
@@ -227,9 +227,9 @@
               />
             </v-card-text>
           </v-card>
-        </v-col>
+        </AtlasCol>
 
-        <v-col
+        <AtlasCol
           v-else-if="field === 'byFrequency' && data.byFrequency"
           cols="12"
           md="6"
@@ -246,10 +246,10 @@
               />
             </v-card-text>
           </v-card>
-        </v-col>
+        </AtlasCol>
       </template>
 
-      <v-col
+      <AtlasCol
         v-if="!hasAnyData"
         cols="12"
       >
@@ -259,12 +259,13 @@
         >
           No detailed data available for this concept.
         </v-alert>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasProgressCircular, AtlasRow } from '@/components/ui'
 import { computed } from 'vue'
 import type { DrilldownReport, TimeSeriesData, LineChartData } from '@/models/report.types'
 import {

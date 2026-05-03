@@ -3,7 +3,7 @@
     class="empty-report-state text-center py-8"
     data-testid="empty-report-state"
   >
-    <v-icon
+    <AtlasIcon
       :icon="icon"
       size="48"
       class="mb-4 text-grey"
@@ -21,6 +21,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 withDefaults(
   defineProps<{
     title: string

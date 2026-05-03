@@ -1,18 +1,18 @@
 <template>
   <div class="person-report">
-    <v-row>
-      <v-col cols="12">
+    <AtlasRow>
+      <AtlasCol cols="12">
         <ChartSection :title="t('dataSources.personReport.yearOfBirth', 'Year of Birth').value">
           <BarChart
             :data="yearOfBirthBarChartData"
             :height="350"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
 
-    <v-row>
-      <v-col
+    <AtlasRow>
+      <AtlasCol
         cols="12"
         md="4"
       >
@@ -22,9 +22,9 @@
             :height="300"
           />
         </ChartSection>
-      </v-col>
+      </AtlasCol>
 
-      <v-col
+      <AtlasCol
         cols="12"
         md="4"
       >
@@ -34,9 +34,9 @@
             :height="300"
           />
         </ChartSection>
-      </v-col>
+      </AtlasCol>
 
-      <v-col
+      <AtlasCol
         cols="12"
         md="4"
       >
@@ -46,12 +46,13 @@
             :height="300"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasRow } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { PersonReport as PersonReportData } from '@/models/datasource.types'

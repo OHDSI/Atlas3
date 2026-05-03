@@ -1,5 +1,5 @@
 <template>
-  <v-list
+  <AtlasList
     nav
     density="compact"
     class="datasource-sidebar"
@@ -17,7 +17,7 @@
       >
         {{ group.label }}
       </v-list-subheader>
-      <v-list-item
+      <AtlasListItem
         v-for="item in group.items"
         :key="item.value"
         :prepend-icon="item.icon"
@@ -30,10 +30,11 @@
         @click="select(item.value)"
       />
     </template>
-  </v-list>
+  </AtlasList>
 </template>
 
 <script setup lang="ts">
+import { AtlasList, AtlasListItem } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ReportType } from '@/models/datasource.types'

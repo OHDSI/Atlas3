@@ -12,12 +12,13 @@
     @update:model-value="$emit('update:modelValue', $event)"
   >
     <template #prepend-inner>
-      <v-icon icon="mdi-chart-bar" />
+      <AtlasIcon icon="mdi-chart-bar" />
     </template>
   </v-select>
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'

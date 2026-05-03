@@ -4,32 +4,32 @@
     data-testid="inclusion-rule-report"
   >
     <!-- Mode tabs (mirrors Atlas 2.15 By-Person / By-Event tabs) -->
-    <v-tabs
+    <AtlasTabs
       v-model="mode"
       density="compact"
       color="primary"
       class="inclusion-rule-report__tabs mb-3"
     >
-      <v-tab
+      <AtlasTab
         :value="1"
         data-testid="inclusion-mode-by-person"
       >
         By Person
-      </v-tab>
-      <v-tab
+      </AtlasTab>
+      <AtlasTab
         :value="0"
         data-testid="inclusion-mode-by-event"
       >
         By Event
-      </v-tab>
-    </v-tabs>
+      </AtlasTab>
+    </AtlasTabs>
 
     <!-- Loading -->
     <div
       v-if="loading"
       class="py-6"
     >
-      <v-skeleton-loader type="table-tbody" />
+      <AtlasSkeleton type="table-tbody" />
     </div>
 
     <!-- Error -->
@@ -100,6 +100,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSkeleton, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { getInclusionRuleReport } from '@/services/webapi'
 import type { InclusionRuleReport, InclusionRuleReportMode } from '@/models/report.types'

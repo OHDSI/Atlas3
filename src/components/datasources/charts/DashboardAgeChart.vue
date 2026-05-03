@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-age-chart">
-    <v-skeleton-loader
+    <AtlasSkeleton
       v-if="loading"
       type="image"
       :height="height"
@@ -16,6 +16,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { BarChartData } from '@/models/datasource.types'
 import { dashboardAgeBarOptions, createResizeHandler } from '@/utils/chart-config'

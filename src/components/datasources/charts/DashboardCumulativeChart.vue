@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-cumulative-chart">
-    <v-skeleton-loader
+    <AtlasSkeleton
       v-if="loading"
       type="image"
       :height="height"
@@ -16,6 +16,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { LineChartData } from '@/models/datasource.types'
 import { dashboardCumulativeLineOptions, createResizeHandler } from '@/utils/chart-config'

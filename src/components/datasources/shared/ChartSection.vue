@@ -7,7 +7,7 @@
       {{ title }}
     </div>
     <div class="chart-section__body">
-      <v-skeleton-loader
+      <AtlasSkeleton
         v-if="loading"
         type="image"
         height="300"
@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasSkeleton } from '@/components/ui'
 
 interface Props {
   title: string

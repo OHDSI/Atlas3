@@ -36,7 +36,7 @@
           class="profile-obs-band__empty"
           data-test="profile-obs-band-empty"
         >
-          <v-icon
+          <AtlasIcon
             icon="mdi-information-outline"
             size="14"
           />
@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useProfileStore } from '@/stores/profile'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIcon } from '@/components/ui'
 
 const store = useProfileStore()
 const viewWidth = 1000
