@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { ref, nextTick } from 'vue'
 
 vi.mock('@/services/webapi', () => ({
@@ -11,8 +11,14 @@ vi.mock('@/services/webapi', () => ({
   }),
 }))
 
-import { useIncidenceRateReport } from '@/composables/useIncidenceRateReport'
-import * as webapi from '@/services/webapi'
+let webapi: typeof import('@/services/webapi')
+let useIncidenceRateReport: typeof import('@/composables/useIncidenceRateReport').useIncidenceRateReport
+
+beforeAll(async () => {
+  vi.resetModules()
+  webapi = await import('@/services/webapi')
+  ;({ useIncidenceRateReport } = await import('@/composables/useIncidenceRateReport'))
+})
 
 beforeEach(() => vi.clearAllMocks())
 

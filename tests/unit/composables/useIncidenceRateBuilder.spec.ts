@@ -1,7 +1,4 @@
-/**
- * Unit tests for useIncidenceRateBuilder composable
- */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
 const pushMock = vi.fn()
@@ -16,7 +13,6 @@ vi.mock('@/services/webapi', () => ({
   copyIncidenceRate: vi.fn(),
   deleteIncidenceRate: vi.fn(),
   existsIncidenceRate: vi.fn(),
-  // Also referenced indirectly by store imports
   getIncidenceRate: vi.fn(),
   assignIncidenceRateTag: vi.fn(),
   unassignIncidenceRateTag: vi.fn(),
@@ -35,9 +31,17 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
-import { useIncidenceRateStore } from '@/stores/incidence-rate'
-import * as webapi from '@/services/webapi'
+let webapi: typeof import('@/services/webapi')
+let useIncidenceRateBuilder: typeof import('@/composables/useIncidenceRateBuilder').useIncidenceRateBuilder
+let useIncidenceRateStore: typeof import('@/stores/incidence-rate').useIncidenceRateStore
+
+beforeAll(async () => {
+  vi.resetModules()
+  webapi = await import('@/services/webapi')
+  ;({ useIncidenceRateBuilder } = await import('@/composables/useIncidenceRateBuilder'))
+  ;({ useIncidenceRateStore } = await import('@/stores/incidence-rate'))
+})
+
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 
 function makeValidIR(overrides: Partial<IncidenceRate> = {}): IncidenceRate {
@@ -76,7 +80,6 @@ describe('useIncidenceRateBuilder', () => {
 
     it('returns false and notifies error when validation fails', async () => {
       const store = useIncidenceRateStore()
-      // IR missing name and target/outcome ids — will fail validation
       store.setIR({
         name: '',
         description: '',
@@ -153,7 +156,6 @@ describe('useIncidenceRateBuilder', () => {
       expect(ok).toBe(true)
       expect(webapi.saveIncidenceRate).toHaveBeenCalledWith(5, expect.any(Object))
       expect(webapi.createIncidenceRate).not.toHaveBeenCalled()
-      // id unchanged → no router push
       expect(pushMock).not.toHaveBeenCalled()
     })
 
