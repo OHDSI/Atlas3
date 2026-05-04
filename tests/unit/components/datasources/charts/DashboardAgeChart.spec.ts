@@ -1,16 +1,10 @@
-/**
- * DashboardAgeChart Component Tests
- */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import DashboardAgeChart from '@/components/datasources/charts/DashboardAgeChart.vue'
 import type { BarChartData } from '@/models/datasource.types'
-import * as chartConfig from '@/utils/chart-config'
 
-// Mock chart utilities
 vi.mock('@/utils/chart-config', () => ({
   dashboardAgeBarOptions: vi.fn((data) => ({
     xAxis: { data: data.categories },
@@ -18,6 +12,15 @@ vi.mock('@/utils/chart-config', () => ({
   })),
   createResizeHandler: vi.fn(() => vi.fn())
 }))
+
+let chartConfig: typeof import('@/utils/chart-config')
+let DashboardAgeChart: typeof import('@/components/datasources/charts/DashboardAgeChart.vue').default
+
+beforeAll(async () => {
+  vi.resetModules()
+  chartConfig = await import('@/utils/chart-config')
+  DashboardAgeChart = (await import('@/components/datasources/charts/DashboardAgeChart.vue')).default
+})
 
 const vuetify = createVuetify({ components, directives })
 
@@ -73,9 +76,7 @@ describe('DashboardAgeChart', () => {
 
   it('should apply default height prop', () => {
     const wrapper = mountComponent()
-    const _loader = wrapper.findComponent({ name: 'VSkeletonLoader' })
 
-    // Default height should be 300
     expect(wrapper.vm.$props.height).toBe(300)
   })
 
@@ -98,7 +99,6 @@ describe('DashboardAgeChart', () => {
     }
     const wrapper = mountComponent({ data: emptyData })
 
-    // Should still render but with empty options
     expect(wrapper.find('.v-chart-stub').exists()).toBe(true)
   })
 
@@ -139,7 +139,6 @@ describe('DashboardAgeChart', () => {
   it('should return empty chart options when data is null', () => {
     const wrapper = mountComponent({ data: { categories: [], series: [] } })
 
-    // Component should handle null/empty data gracefully
     expect(wrapper.find('.v-chart-stub').exists()).toBe(true)
   })
 
@@ -147,7 +146,6 @@ describe('DashboardAgeChart', () => {
     const wrapper = mountComponent()
     const chart = wrapper.find('.v-chart-stub')
 
-    // VChart stub should have autoresize prop
     expect(chart.exists()).toBe(true)
   })
 })

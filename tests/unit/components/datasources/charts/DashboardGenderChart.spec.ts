@@ -1,16 +1,10 @@
-/**
- * DashboardGenderChart Component Tests
- */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import DashboardGenderChart from '@/components/datasources/charts/DashboardGenderChart.vue'
 import type { PieChartData } from '@/models/datasource.types'
-import * as chartConfig from '@/utils/chart-config'
 
-// Mock chart utilities
 vi.mock('@/utils/chart-config', () => ({
   dashboardGenderPieOptions: vi.fn((data) => ({
     series: [{
@@ -20,6 +14,15 @@ vi.mock('@/utils/chart-config', () => ({
   })),
   createResizeHandler: vi.fn(() => vi.fn())
 }))
+
+let chartConfig: typeof import('@/utils/chart-config')
+let DashboardGenderChart: typeof import('@/components/datasources/charts/DashboardGenderChart.vue').default
+
+beforeAll(async () => {
+  vi.resetModules()
+  chartConfig = await import('@/utils/chart-config')
+  DashboardGenderChart = (await import('@/components/datasources/charts/DashboardGenderChart.vue')).default
+})
 
 const vuetify = createVuetify({ components, directives })
 

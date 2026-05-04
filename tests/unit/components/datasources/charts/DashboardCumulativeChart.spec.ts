@@ -1,16 +1,10 @@
-/**
- * DashboardCumulativeChart Component Tests
- */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import DashboardCumulativeChart from '@/components/datasources/charts/DashboardCumulativeChart.vue'
 import type { LineChartData } from '@/models/datasource.types'
-import * as chartConfig from '@/utils/chart-config'
 
-// Mock chart utilities
 vi.mock('@/utils/chart-config', () => ({
   dashboardCumulativeLineOptions: vi.fn((data) => ({
     xAxis: { data: data.categories },
@@ -18,6 +12,15 @@ vi.mock('@/utils/chart-config', () => ({
   })),
   createResizeHandler: vi.fn(() => vi.fn())
 }))
+
+let chartConfig: typeof import('@/utils/chart-config')
+let DashboardCumulativeChart: typeof import('@/components/datasources/charts/DashboardCumulativeChart.vue').default
+
+beforeAll(async () => {
+  vi.resetModules()
+  chartConfig = await import('@/utils/chart-config')
+  DashboardCumulativeChart = (await import('@/components/datasources/charts/DashboardCumulativeChart.vue')).default
+})
 
 const vuetify = createVuetify({ components, directives })
 
