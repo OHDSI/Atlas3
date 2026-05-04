@@ -25,10 +25,17 @@ vi.mock('@/services/auth/permissionChecker', () => ({
   },
 }))
 
+vi.mock('@/services/auth/storageManager', () => ({
+  storageManager: {
+    saveLogoutUrl: vi.fn(),
+  },
+}))
+
 import { useAuth } from '@/composables/useAuth'
 import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/auth/authService'
 import { permissionChecker } from '@/services/auth/permissionChecker'
+import { storageManager } from '@/services/auth/storageManager'
 
 describe('useAuth', () => {
   beforeEach(() => {
@@ -303,6 +310,14 @@ describe('useAuth', () => {
       setError(null)
 
       expect(authStore.errorMessage).toBeNull()
+    })
+  })
+
+  describe('saveLogoutUrl', () => {
+    it('should delegate to storageManager', () => {
+      const { saveLogoutUrl } = useAuth()
+      saveLogoutUrl('https://example.com/logout')
+      expect(storageManager.saveLogoutUrl).toHaveBeenCalledWith('https://example.com/logout')
     })
   })
 })

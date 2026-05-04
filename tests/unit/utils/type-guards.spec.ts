@@ -10,6 +10,7 @@ import {
   isTextAttribute,
   isBooleanAttribute,
   isWebAPIId,
+  isClientSideId,
 } from '@/utils/type-guards'
 import type {
   NumericRangeAttribute,
@@ -147,6 +148,19 @@ describe('Type Guards', () => {
       expect(isWebAPIId('uuid-123')).toBe(false)
       expect(isWebAPIId('test')).toBe(false)
       expect(isWebAPIId('')).toBe(false)
+    })
+  })
+
+  describe('isClientSideId', () => {
+    it('should return true for string IDs', () => {
+      expect(isClientSideId('uuid-123')).toBe(true)
+      expect(isClientSideId('test')).toBe(true)
+      expect(isClientSideId('')).toBe(true)
+    })
+
+    it('should return false for numeric IDs', () => {
+      expect(isClientSideId(123)).toBe(false)
+      expect(isClientSideId(0)).toBe(false)
     })
   })
 })

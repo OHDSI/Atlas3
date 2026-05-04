@@ -53,6 +53,10 @@ vi.mock('@/utils/api-mappers', () => ({
   })),
 }))
 
+vi.mock('@/services/concept-set-versions.service', () => ({
+  getVersion: vi.fn(),
+}))
+
 vi.mock('@/utils/logger', () => ({
   logger: {
     debug: vi.fn(),
@@ -62,6 +66,7 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
+import { getVersion as mockGetConceptSetVersion } from '@/services/concept-set-versions.service'
 import {
   getAllConceptSets,
   getConceptSetById,
@@ -1003,6 +1008,90 @@ describe('Concept Sets Store', () => {
       await inFlight
 
       expect(store.loadingComparison).toBe(false)
+    })
+  })
+
+  describe('Version Preview', () => {
+    it('loadVersionPreview throws when no current concept set', async () => {
+      const store = useConceptSetsStore()
+      await expect(store.loadVersionPreview(1)).rejects.toThrow()
+    })
+
+    it('loadVersionPreview throws when concept set id is not a number', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = { ...mockConceptSet, id: 'client-side-id' }
+      await expect(store.loadVersionPreview(1)).rejects.toThrow('must be a number')
+    })
+
+    it('loadVersionPreview sets previewVersion and replaces concept set data', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = mockConceptSet
+
+      const versionDTO = {
+        version: 3,
+        assetId: 1,
+        createdBy: { id: 1, name: 'User', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+      const historicalSet = { ...mockConceptSet, name: 'Historical Set' }
+      vi.mocked(mockGetConceptSetVersion).mockResolvedValueOnce({
+        versionDTO,
+        entityDTO: historicalSet,
+      })
+
+      await store.loadVersionPreview(3)
+
+      expect(store.previewVersion).toEqual(versionDTO)
+      expect(store.currentSet?.name).toBe('Historical Set')
+      expect(store.isDirty).toBe(false)
+    })
+
+    it('loadVersionPreview rethrows on service error', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = mockConceptSet
+      vi.mocked(mockGetConceptSetVersion).mockRejectedValueOnce(new Error('Not found'))
+      await expect(store.loadVersionPreview(99)).rejects.toThrow('Not found')
+    })
+
+    it('clearPreviewVersion clears preview state', async () => {
+      const store = useConceptSetsStore()
+      store.currentSet = mockConceptSet
+      store.previewVersion = {
+        version: 1,
+        assetId: 1,
+        createdBy: { id: 1, name: 'U', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+      vi.mocked(getAllConceptSets).mockResolvedValueOnce([])
+      vi.mocked(getConceptSetById).mockResolvedValueOnce(mockConceptSet)
+
+      await store.clearPreviewVersion()
+
+      expect(store.previewVersion).toBeNull()
+    })
+
+    it('savePreviewAsCurrent returns false when not in preview mode', async () => {
+      const store = useConceptSetsStore()
+      const result = await store.savePreviewAsCurrent()
+      expect(result).toBe(false)
+    })
+
+    it('savePreviewAsCurrent returns false when no concept set data', async () => {
+      const store = useConceptSetsStore()
+      store.previewVersion = {
+        version: 1,
+        assetId: 1,
+        createdBy: { id: 1, name: 'U', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+      const result = await store.savePreviewAsCurrent()
+      expect(result).toBe(false)
     })
   })
 })

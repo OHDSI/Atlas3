@@ -783,4 +783,52 @@ describe('WebAPI Store', () => {
       expect(store.POLL_TIMEOUT_MS).toBe(300000)
     })
   })
+
+  describe('getValidVocabularySource', () => {
+    const vocabSource: import('@/models/webapi.types').CDMSource = {
+      sourceId: 1,
+      sourceName: 'Vocab',
+      sourceKey: 'VOCAB',
+      sourceDialect: 'postgresql',
+      daimons: [{ daimonType: 'Vocabulary', tableQualifier: 'vocab', priority: 1 }],
+    }
+
+    it('returns stored source key when valid', () => {
+      const store = useWebAPIStore()
+      store.setSources([vocabSource])
+      localStorage.setItem('selectedVocabulary', 'VOCAB')
+      expect(store.getValidVocabularySource()).toBe('VOCAB')
+      localStorage.removeItem('selectedVocabulary')
+    })
+
+    it('falls back to first vocab source when stored key is invalid', () => {
+      const store = useWebAPIStore()
+      store.setSources([vocabSource])
+      localStorage.setItem('selectedVocabulary', 'MISSING')
+      expect(store.getValidVocabularySource()).toBe('VOCAB')
+      localStorage.removeItem('selectedVocabulary')
+    })
+
+    it('returns null when no vocab sources exist', () => {
+      const store = useWebAPIStore()
+      store.setSources([])
+      localStorage.removeItem('selectedVocabulary')
+      expect(store.getValidVocabularySource()).toBeNull()
+    })
+
+    it('ignores invalid stored values like "null" string', () => {
+      const store = useWebAPIStore()
+      store.setSources([vocabSource])
+      localStorage.setItem('selectedVocabulary', 'null')
+      expect(store.getValidVocabularySource()).toBe('VOCAB')
+      localStorage.removeItem('selectedVocabulary')
+    })
+  })
+
+  describe('dispose', () => {
+    it('does not throw and clears polling timers', () => {
+      const store = useWebAPIStore()
+      expect(() => store.dispose()).not.toThrow()
+    })
+  })
 })

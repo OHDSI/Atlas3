@@ -135,6 +135,17 @@ describe('useVersionPreview', () => {
     })
   })
 
+  describe('handlePreviewClick', () => {
+    it('should navigate to the given version number', async () => {
+      const config = { ...mockConfig, isDirty: ref(false) }
+      const { handlePreviewClick } = useVersionPreview(config)
+
+      await handlePreviewClick(3)
+
+      expect(mockPush).toHaveBeenCalledWith({ path: '/cohortdefinition/123/version/3' })
+    })
+  })
+
   describe('previewVersionNumber', () => {
     it('should return null when not previewing', () => {
       const config = { ...mockConfig, previewVersion: ref(null) }

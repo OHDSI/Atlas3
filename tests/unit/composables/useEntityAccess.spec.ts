@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { useEntityAccess, useSourceAccess } from '@/composables/useEntityAccess'
+import { useEntityAccess, useEntityAccessFor, useSourceAccess } from '@/composables/useEntityAccess'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
 
@@ -116,5 +116,52 @@ describe('useSourceAccess', () => {
     const { canRead, canWrite } = useSourceAccess('any')
     expect(canRead.value).toBe(true)
     expect(canWrite.value).toBe(true)
+  })
+})
+
+describe('useEntityAccessFor', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('canRead returns true via global read permission', () => {
+    setupUser({ permissionIdx: { read: ['read:cohort-definition'] } })
+    const { canRead } = useEntityAccessFor('cohortDefinition')
+    expect(canRead(5)).toBe(true)
+  })
+
+  it('canWrite returns true via global write permission', () => {
+    setupUser({ permissionIdx: { write: ['write:cohort-definition'] } })
+    const { canWrite, canDelete } = useEntityAccessFor('cohortDefinition')
+    expect(canWrite(5)).toBe(true)
+    expect(canDelete(5)).toBe(true)
+  })
+
+  it('canRead returns false when no grant and no global permission', () => {
+    setupUser({})
+    const { canRead } = useEntityAccessFor('cohortDefinition')
+    expect(canRead(99)).toBe(false)
+  })
+
+  it('canRead returns false for null/undefined id', () => {
+    setupUser({})
+    const { canRead } = useEntityAccessFor('cohortDefinition')
+    expect(canRead(null)).toBe(false)
+    expect(canRead(undefined)).toBe(false)
+  })
+
+  it('canRead returns true via ownership grant', () => {
+    setupUser({
+      entityAccess: { cohortDefinition: { '7': { accessTypes: [], isOwner: true } } },
+    })
+    const { canRead } = useEntityAccessFor('cohortDefinition')
+    expect(canRead(7)).toBe(true)
+  })
+
+  it('admin:security grants canRead and canWrite', () => {
+    setupUser({ permissionIdx: { admin: ['admin:security'] } })
+    const { canRead, canWrite } = useEntityAccessFor('cohortDefinition')
+    expect(canRead(1)).toBe(true)
+    expect(canWrite(1)).toBe(true)
   })
 })

@@ -435,6 +435,14 @@ describe('PluginConfigService', () => {
   })
 
   describe('Header Settings', () => {
+    it('showNavBar should return true by default', () => {
+      expect(service.showNavBar()).toBe(true)
+    })
+
+    it('showUserMenu should return true by default', () => {
+      expect(service.showUserMenu()).toBe(true)
+    })
+
     it('showFeedbackButton should return true by default', () => {
       expect(service.showFeedbackButton()).toBe(true)
     })

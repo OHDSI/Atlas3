@@ -16,9 +16,11 @@ import {
   dashboardCumulativeLineOptions,
   dashboardObservationMonthLineOptions,
   multiLineChartOptions,
-  clinicalDomainTreemapOptions
+  clinicalDomainTreemapOptions,
+  trellisChartOptions,
+  boxPlotChartOptions,
 } from '@/utils/chart-config'
-import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
+import type { BarChartData, PieChartData, LineChartData, TreemapNode, TrellisChartData, BoxPlotData } from '@/models/report.types'
 import type {
   BarChartData as DatasourceBarChartData,
   PieChartData as DatasourcePieChartData,
@@ -426,6 +428,20 @@ describe('chart-config', () => {
 
       expect(seriesData).toEqual([])
     })
+
+    it('calls the tooltip formatter with and without conceptPath', () => {
+      const data: TreemapNode[] = [{ name: 'Root', value: 500 }]
+      const options = defaultTreemapOptions(data)
+      const formatter = (options.tooltip as any).formatter
+
+      const plain = formatter({ name: 'Root', value: 500, data: {} })
+      expect(plain).toContain('Root')
+      expect(plain).toContain('500')
+
+      const withPath = formatter({ name: 'Leaf', value: 100, data: { conceptPath: 'A||B||Leaf' } })
+      expect(withPath).toContain('A')
+      expect(withPath).toContain('B')
+    })
   })
 
   describe('createResizeHandler', () => {
@@ -589,6 +605,16 @@ describe('chart-config', () => {
 
       expect((options.series as ChartSeriesItem[])[0].center).toEqual(['50%', '45%'])
     })
+
+    it('calls the tooltip formatter', () => {
+      const data: DatasourcePieChartData[] = [{ name: 'Male', value: 3000 }]
+      const options = dashboardGenderPieOptions(data)
+      const formatter = (options.tooltip as any).formatter
+      const result = formatter({ name: 'Male', value: 3000, percent: 60.0 })
+      expect(result).toContain('Male')
+      expect(result).toContain('3,000')
+      expect(result).toContain('60.0%')
+    })
   })
 
   describe('dashboardAgeBarOptions', () => {
@@ -673,6 +699,19 @@ describe('chart-config', () => {
       const options = dashboardAgeBarOptions(data)
 
       expect((options.series as ChartSeriesItem[])[0].itemStyle?.borderRadius).toEqual([4, 4, 0, 0])
+    })
+
+    it('calls the tooltip formatter', () => {
+      const data: DatasourceBarChartData = {
+        categories: ['10-19'],
+        series: [{ name: 'Count', data: [250] }],
+        unit: 'Persons'
+      }
+      const options = dashboardAgeBarOptions(data)
+      const formatter = (options.tooltip as any).formatter
+      const result = formatter([{ name: '10-19', value: 250 }])
+      expect(result).toContain('10-19')
+      expect(result).toContain('Persons')
     })
   })
 
@@ -766,6 +805,22 @@ describe('chart-config', () => {
       const options = dashboardCumulativeLineOptions(data)
 
       expect((options.series as ChartSeriesItem[])).toEqual([])
+    })
+
+    it('calls the tooltip formatter', () => {
+      const data: DatasourceLineChartData = {
+        categories: ['2020'],
+        series: [{ name: 'Cumulative', data: [45.7] }],
+        yAxisLabel: 'Percent'
+      }
+      const options = dashboardCumulativeLineOptions(data)
+      const formatter = (options.tooltip as any).formatter
+      const result = formatter([{ name: '2020', value: 45.7 }])
+      expect(result).toContain('2020')
+      expect(result).toContain('45.7%')
+
+      const resultStr = formatter([{ name: '2021', value: '30.0' }])
+      expect(resultStr).toContain('30.0%')
     })
   })
 
@@ -872,6 +927,18 @@ describe('chart-config', () => {
       const interval = (options.xAxis as ChartAxisOption).axisLabel?.interval
 
       expect(interval).toBeGreaterThanOrEqual(0)
+    })
+
+    it('calls the tooltip formatter using default label when no yAxisLabel', () => {
+      const data: DatasourceLineChartData = {
+        categories: ['2020-01'],
+        series: [{ name: 'Data', data: [500] }]
+      }
+      const options = dashboardObservationMonthLineOptions(data)
+      const formatter = (options.tooltip as ChartTooltipOption).formatter as (params: unknown) => string
+      const result = formatter([{ name: '2020-01', value: 500 }])
+      expect(result).toContain('2020-01')
+      expect(result).toContain('Observations')
     })
   })
 
@@ -1114,6 +1181,20 @@ describe('chart-config', () => {
       expect((options.tooltip as ChartTooltipOption).trigger).toBe('item')
       expect((options.tooltip as ChartTooltipOption).formatter).toBeDefined()
     })
+
+    it('calls tooltip formatter with prevalence, metric, and plain value', () => {
+      const data: TreemapNode[] = [{ name: 'Condition', value: 400 }]
+      const options = clinicalDomainTreemapOptions(data)
+      const formatter = (options.tooltip as any).formatter
+
+      const withBoth = formatter({ name: 'X', value: 100, data: { prevalence: 5.5, metric: 1.2 } })
+      expect(withBoth).toContain('X')
+      expect(withBoth).toContain('5.50%')
+      expect(withBoth).toContain('1.20')
+
+      const withNone = formatter({ name: 'Y', value: 50, data: {} })
+      expect(withNone).toContain('Y')
+    })
   })
 })
 
@@ -1287,6 +1368,19 @@ describe('Dashboard-specific Chart Configurations', () => {
       expect(dataZoom[0].type).toBe('inside')
       expect(dataZoom[1].type).toBe('slider')
     })
+
+    it('calls the tooltip formatter', () => {
+      const data = {
+        categories: ['2020-01'],
+        series: [{ name: 'Observations', data: [1500] }],
+        yAxisLabel: 'Count'
+      }
+      const options = dashboardObservationMonthLineOptions(data)
+      const formatter = (options.tooltip as any).formatter
+      const result = formatter([{ name: '2020-01', value: 1500 }])
+      expect(result).toContain('2020-01')
+      expect(result).toContain('Count')
+    })
   })
 
   describe('multiLineChartOptions', () => {
@@ -1405,5 +1499,212 @@ describe('Dashboard-specific Chart Configurations', () => {
       expect(series.roam).toBe(true)
       expect(series.nodeClick).toBe('zoomToNode')
     })
+
+    it('calls the tooltip formatter with prevalence and metric', () => {
+      const data = [{ name: 'Condition', value: 100 }]
+      const options = clinicalDomainTreemapOptions(data)
+      const formatter = (options.tooltip as any).formatter
+
+      const resultFull = formatter({
+        name: 'Hypertension',
+        value: 500,
+        data: { prevalence: 12.5, metric: 0.8 },
+      })
+      expect(resultFull).toContain('Hypertension')
+      expect(resultFull).toContain('12.50%')
+      expect(resultFull).toContain('0.80')
+
+      const resultNoExtras = formatter({
+        name: 'Diabetes',
+        value: 200,
+        data: {},
+      })
+      expect(resultNoExtras).toContain('Diabetes')
+    })
+  })
+})
+
+describe('trellisChartOptions', () => {
+  const mockTrellisData: TrellisChartData = {
+    categories: ['20-29', '30-39', '10-19'],
+    series: [
+      {
+        name: 'Male',
+        category: '20-29',
+        data: [{ x: 2015, y: 12.5 }, { x: 2016, y: 13.2 }],
+      },
+      {
+        name: 'Female',
+        category: '20-29',
+        data: [{ x: 2015, y: 11.8 }, { x: 2016, y: 12.6 }],
+      },
+      {
+        name: 'Male',
+        category: '30-39',
+        data: [{ x: 2015, y: 18.3 }, { x: 2016, y: 19.1 }],
+      },
+      {
+        name: 'Male',
+        category: '10-19',
+        data: [{ x: 2015, y: 5.2 }, { x: 2016, y: 5.7 }],
+      },
+    ],
+  }
+
+  it('returns a valid ECharts option object', () => {
+    const options = trellisChartOptions(mockTrellisData)
+    expect(options).toBeDefined()
+    expect(options.grid).toBeDefined()
+    expect(options.xAxis).toBeDefined()
+    expect(options.yAxis).toBeDefined()
+    expect(options.series).toBeDefined()
+  })
+
+  it('sorts categories by leading numeric prefix', () => {
+    const options = trellisChartOptions(mockTrellisData)
+    const titles = (options.title as any[])
+    const categoryTitles = titles.filter((t: any) => !t.text?.includes('/') && /\d/.test(t.text || ''))
+    const texts = categoryTitles.map((t: any) => t.text)
+    expect(texts.indexOf('10-19')).toBeLessThan(texts.indexOf('20-29'))
+    expect(texts.indexOf('20-29')).toBeLessThan(texts.indexOf('30-39'))
+  })
+
+  it('creates one grid per category', () => {
+    const options = trellisChartOptions(mockTrellisData)
+    expect((options.grid as any[]).length).toBe(3)
+  })
+
+  it('includes a title when provided', () => {
+    const options = trellisChartOptions(mockTrellisData, 'Test Title')
+    const titles = (options.title as any[])
+    expect(titles.some((t: any) => t.text === 'Test Title')).toBe(true)
+  })
+
+  it('produces series entries for each category-series combination', () => {
+    const options = trellisChartOptions(mockTrellisData)
+    expect((options.series as any[]).length).toBeGreaterThan(0)
+  })
+
+  it('respects maxPlotsPerRow parameter', () => {
+    const options = trellisChartOptions(mockTrellisData, undefined, 2)
+    expect((options.grid as any[]).length).toBe(3)
+  })
+
+  it('handles single-category data', () => {
+    const single: TrellisChartData = {
+      categories: ['0-9'],
+      series: [{ name: 'Male', category: '0-9', data: [{ x: 2020, y: 3.1 }] }],
+    }
+    const options = trellisChartOptions(single)
+    expect((options.grid as any[]).length).toBe(1)
+  })
+
+  it('sorts non-numeric categories alphabetically', () => {
+    const alphaData: TrellisChartData = {
+      categories: ['Zebra', 'Apple', 'Mango'],
+      series: [
+        { name: 'S', category: 'Zebra', data: [{ x: 2020, y: 1 }] },
+        { name: 'S', category: 'Apple', data: [{ x: 2020, y: 2 }] },
+        { name: 'S', category: 'Mango', data: [{ x: 2020, y: 3 }] },
+      ],
+    }
+    const options = trellisChartOptions(alphaData)
+    const titles = (options.title as any[])
+    const categoryTitles = titles
+      .filter((t: any) => ['Zebra', 'Apple', 'Mango'].includes(t.text))
+      .map((t: any) => t.text)
+    expect(categoryTitles.indexOf('Apple')).toBeLessThan(categoryTitles.indexOf('Mango'))
+    expect(categoryTitles.indexOf('Mango')).toBeLessThan(categoryTitles.indexOf('Zebra'))
+  })
+})
+
+describe('boxPlotChartOptions', () => {
+  const mockBoxData: BoxPlotData[] = [
+    { category: 'A', min: 10, p10: 15, p25: 20, median: 30, p75: 40, p90: 45, max: 50 },
+    { category: 'B', min: 5, p10: 8, p25: 12, median: 18, p75: 25, p90: 30, max: 35 },
+  ]
+
+  it('returns a valid ECharts option object', () => {
+    const options = boxPlotChartOptions(mockBoxData)
+    expect(options).toBeDefined()
+    expect(options.xAxis).toBeDefined()
+    expect(options.yAxis).toBeDefined()
+    expect(options.series).toBeDefined()
+  })
+
+  it('creates boxplot and scatter series', () => {
+    const options = boxPlotChartOptions(mockBoxData)
+    const series = options.series as any[]
+    expect(series.length).toBeGreaterThan(0)
+    expect(series.some((s: any) => s.type === 'boxplot')).toBe(true)
+  })
+
+  it('maps category names to xAxis', () => {
+    const options = boxPlotChartOptions(mockBoxData)
+    const xAxis = options.xAxis as any
+    expect(xAxis.data).toEqual(['A', 'B'])
+  })
+
+  it('includes a title when provided', () => {
+    const options = boxPlotChartOptions(mockBoxData, 'Box Plot Title')
+    const title = options.title as any
+    expect(title.text).toBe('Box Plot Title')
+  })
+
+  it('has no title when not provided', () => {
+    const options = boxPlotChartOptions(mockBoxData)
+    expect(options.title).toBeUndefined()
+  })
+
+  it('includes tooltip configuration', () => {
+    const options = boxPlotChartOptions(mockBoxData)
+    expect(options.tooltip).toBeDefined()
+    expect((options.tooltip as any).trigger).toBe('item')
+  })
+
+  it('calls the tooltip formatter for boxplot params', () => {
+    const options = boxPlotChartOptions(mockBoxData)
+    const formatter = (options.tooltip as any).formatter
+    const result = formatter({ seriesType: 'boxplot', name: 'A', value: [0, 10, 20, 30, 40, 50], dataIndex: 0 })
+    expect(result).toContain('A')
+  })
+
+  it('calls the tooltip formatter for non-boxplot params', () => {
+    const options = boxPlotChartOptions(mockBoxData)
+    const formatter = (options.tooltip as any).formatter
+    const result = formatter({ seriesType: 'scatter', name: 'B', value: [1, 5] })
+    expect(result).toBe('B')
+  })
+
+  it('handles empty data array', () => {
+    const options = boxPlotChartOptions([])
+    expect((options.xAxis as any).data).toEqual([])
+  })
+
+  it('adds outlier point when p90 exceeds max', () => {
+    const dataWithOutlier: BoxPlotData[] = [
+      { category: 'X', min: 10, p10: 12, p25: 20, median: 30, p75: 40, p90: 60, max: 50 },
+    ]
+    const options = boxPlotChartOptions(dataWithOutlier)
+    const scatterSeries = (options.series as any[]).find((s: any) => s.type === 'scatter')
+    expect(scatterSeries.data.length).toBeGreaterThan(0)
+  })
+
+  it('adds outlier point when p10 is below min', () => {
+    const dataWithLowOutlier: BoxPlotData[] = [
+      { category: 'Y', min: 10, p10: 5, p25: 20, median: 30, p75: 40, p90: 45, max: 50 },
+    ]
+    const options = boxPlotChartOptions(dataWithLowOutlier)
+    const scatterSeries = (options.series as any[]).find((s: any) => s.type === 'scatter')
+    expect(scatterSeries.data.length).toBeGreaterThan(0)
+  })
+
+  it('calls the series-level tooltip formatter', () => {
+    const options = boxPlotChartOptions(mockBoxData)
+    const boxplotSeries = (options.series as any[]).find((s: any) => s.type === 'boxplot')
+    const formatter = boxplotSeries.tooltip.formatter
+    const result = formatter({ name: 'A', value: [0, 10, 20, 30, 40, 50] })
+    expect(result).toContain('A')
+    expect(result).toContain('50')
   })
 })

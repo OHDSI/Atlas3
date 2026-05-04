@@ -221,6 +221,58 @@ describe('StorageManager', () => {
     })
   })
 
+  describe('Logout URL Management', () => {
+    describe('saveLogoutUrl', () => {
+      it('should save logout URL to localStorage', () => {
+        manager.saveLogoutUrl('https://example.com/logout')
+        expect(localStorage.setItem).toHaveBeenCalledWith('auth-logout-url', 'https://example.com/logout')
+      })
+
+      it('should handle localStorage error', () => {
+        vi.mocked(localStorage.setItem).mockImplementationOnce(() => {
+          throw new Error('Storage error')
+        })
+        manager.saveLogoutUrl('https://example.com/logout')
+        expect(logger.error).toHaveBeenCalledWith('StorageManager', 'Failed to save logout URL', expect.any(Error))
+      })
+    })
+
+    describe('getLogoutUrl', () => {
+      it('should retrieve logout URL from localStorage', () => {
+        localStorageMock['auth-logout-url'] = 'https://example.com/logout'
+        expect(manager.getLogoutUrl()).toBe('https://example.com/logout')
+      })
+
+      it('should return null if no logout URL', () => {
+        expect(manager.getLogoutUrl()).toBeNull()
+      })
+
+      it('should handle localStorage error', () => {
+        vi.mocked(localStorage.getItem).mockImplementationOnce(() => {
+          throw new Error('Storage error')
+        })
+        expect(manager.getLogoutUrl()).toBeNull()
+        expect(logger.error).toHaveBeenCalledWith('StorageManager', 'Failed to get logout URL', expect.any(Error))
+      })
+    })
+
+    describe('clearLogoutUrl', () => {
+      it('should remove logout URL from localStorage', () => {
+        localStorageMock['auth-logout-url'] = 'https://example.com/logout'
+        manager.clearLogoutUrl()
+        expect(localStorage.removeItem).toHaveBeenCalledWith('auth-logout-url')
+      })
+
+      it('should handle localStorage error', () => {
+        vi.mocked(localStorage.removeItem).mockImplementationOnce(() => {
+          throw new Error('Storage error')
+        })
+        manager.clearLogoutUrl()
+        expect(logger.error).toHaveBeenCalledWith('StorageManager', 'Failed to clear logout URL', expect.any(Error))
+      })
+    })
+  })
+
   describe('clearAll', () => {
     it('should clear both token and auth client', () => {
       localStorageMock['bearerToken'] = 'token'

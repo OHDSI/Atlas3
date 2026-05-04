@@ -1567,4 +1567,65 @@ describe('WebAPI Service', () => {
       expect(result).toBeNull()
     })
   })
+
+  describe('Cohort Sample Endpoints', () => {
+    it('listCohortSamples returns null on network error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+      const result = await webapi.listCohortSamples(1, 'SYNPUF1K')
+      expect(result).toBeNull()
+    })
+
+    it('hasCohortSamples returns false on error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+      const result = await webapi.hasCohortSamples(1)
+      expect(result).toBe(false)
+    })
+
+    it('getCohortSample returns null on error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+      const result = await webapi.getCohortSample(1, 'SYNPUF1K', 42)
+      expect(result).toBeNull()
+    })
+
+    it('createCohortSample throws on error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+      await expect(webapi.createCohortSample(1, 'SYNPUF1K', { size: 100 } as never)).rejects.toThrow()
+    })
+
+    it('refreshCohortSample returns null on error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+      const result = await webapi.refreshCohortSample(1, 'SYNPUF1K', 42)
+      expect(result).toBeNull()
+    })
+
+    it('deleteCohortSample returns false on error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+      const result = await webapi.deleteCohortSample(1, 'SYNPUF1K', 42)
+      expect(result).toBe(false)
+    })
+
+    it('getInclusionRuleReport returns null on error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+      const result = await webapi.getInclusionRuleReport(1, 'SYNPUF1K')
+      expect(result).toBeNull()
+    })
+
+    it('getCohortSpecificReport returns null on error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+      const result = await webapi.getCohortSpecificReport(1, 'SYNPUF1K', 'person')
+      expect(result).toBeNull()
+    })
+
+    it('assignTagToCohort returns false on error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+      const result = await webapi.assignTagToCohort(1, 10)
+      expect(result).toBe(false)
+    })
+
+    it('unassignTagFromCohort returns false on error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('network error'))
+      const result = await webapi.unassignTagFromCohort(1, 10)
+      expect(result).toBe(false)
+    })
+  })
 })
