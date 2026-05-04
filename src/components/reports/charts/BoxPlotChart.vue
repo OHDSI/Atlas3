@@ -18,7 +18,7 @@
       />
     </div>
 
-    <v-skeleton-loader
+    <AtlasSkeleton
       v-if="loading"
       type="image"
       :height="height"
@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import type { BoxPlotData } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'

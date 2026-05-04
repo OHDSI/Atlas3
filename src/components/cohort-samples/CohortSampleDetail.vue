@@ -14,7 +14,7 @@
       v-if="loading"
       class="py-4"
     >
-      <v-skeleton-loader type="table-tbody" />
+      <AtlasSkeleton type="table-tbody" />
     </div>
     <v-table
       v-else-if="sample.elements && sample.elements.length > 0"
@@ -78,6 +78,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSkeleton } from '@/components/ui'
 import { computed } from 'vue'
 import {
   GENDER_FEMALE_CONCEPT_ID,

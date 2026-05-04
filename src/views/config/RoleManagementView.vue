@@ -1,12 +1,12 @@
 <template>
   <div class="page-wrapper">
     <div class="page-card">
-      <v-container
+      <AtlasContainer
         fluid
         class="role-management-view"
       >
-        <v-row>
-          <v-col cols="12">
+        <AtlasRow>
+          <AtlasCol cols="12">
             <!-- Page Header -->
             <div class="role-management-view__header">
               <div>
@@ -18,21 +18,22 @@
                 </p>
               </div>
             </div>
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
 
-        <v-row>
-          <v-col cols="12">
+        <AtlasRow>
+          <AtlasCol cols="12">
             <!-- Role List Component -->
             <role-list />
-          </v-col>
-        </v-row>
-      </v-container>
+          </AtlasCol>
+        </AtlasRow>
+      </AtlasContainer>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasContainer, AtlasRow } from '@/components/ui'
 import RoleList from '@/components/config/permissions/RoleList.vue'
 </script>
 

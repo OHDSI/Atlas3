@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AtlasAlert, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { DateAdjustment } from '@/models/event.types'
@@ -77,87 +78,82 @@ const updateEndOffset = (value: number) => {
         <div class="text-subtitle-2 mb-2">
           {{ t('common.startDateAdjustment', 'Start Date Adjustment') }}
         </div>
-        <v-row dense>
-          <v-col
+        <AtlasRow dense>
+          <AtlasCol
             cols="12"
             md="6"
           >
-            <v-select
+            <AtlasSelect
               :model-value="dateAdjustment.startWith"
               :items="dateReferenceOptions"
               item-title="label"
               item-value="value"
               :label="t('common.startWith', 'Start With').value"
-              density="compact"
               variant="outlined"
               hide-details
-              @update:model-value="updateStartWith"
+              @update:model-value="(v) => updateStartWith(v as 'START_DATE' | 'END_DATE')"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="6"
           >
-            <v-text-field
+            <AtlasTextField
               :model-value="dateAdjustment.startOffset"
               type="number"
               :label="t('common.offsetDays', 'Offset (Days)').value"
-              density="compact"
               variant="outlined"
               hide-details
               suffix="days"
               @update:model-value="v => updateStartOffset(Number(v))"
             />
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
       </div>
 
-      <v-divider class="my-4" />
+      <AtlasDivider class="my-4" />
 
       <!-- End Date Adjustment -->
       <div>
         <div class="text-subtitle-2 mb-2">
           {{ t('common.endDateAdjustment', 'End Date Adjustment') }}
         </div>
-        <v-row dense>
-          <v-col
+        <AtlasRow dense>
+          <AtlasCol
             cols="12"
             md="6"
           >
-            <v-select
+            <AtlasSelect
               :model-value="dateAdjustment.endWith"
               :items="dateReferenceOptions"
               item-title="label"
               item-value="value"
               :label="t('common.endWith', 'End With').value"
-              density="compact"
               variant="outlined"
               hide-details
-              @update:model-value="updateEndWith"
+              @update:model-value="(v) => updateEndWith(v as 'START_DATE' | 'END_DATE')"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="6"
           >
-            <v-text-field
+            <AtlasTextField
               :model-value="dateAdjustment.endOffset"
               type="number"
               :label="t('common.offsetDays', 'Offset (Days)').value"
-              density="compact"
               variant="outlined"
               hide-details
               suffix="days"
               @update:model-value="v => updateEndOffset(Number(v))"
             />
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
       </div>
 
       <!-- Explanation -->
-      <v-alert
-        type="info"
-        variant="tonal"
+      <AtlasAlert
+        severity="info"
         density="compact"
         class="mt-4"
       >
@@ -169,7 +165,7 @@ const updateEndOffset = (value: number) => {
             ).value
           }}
         </div>
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>

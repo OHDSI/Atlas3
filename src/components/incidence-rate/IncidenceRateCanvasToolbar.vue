@@ -1,16 +1,15 @@
 <template>
   <div class="ir-toolbar">
-    <v-chip
+    <AtlasChip
       v-if="activeRun"
-      size="small"
-      variant="tonal"
+      size="sm"
       class="ir-toolbar__chip"
       data-testid="ir-toolbar-run-chip"
     >
       <span class="ir-toolbar__dot" />
       <strong>#{{ activeRun.id }}</strong>
       <span class="muted">· {{ activeRun.sourceKey }}</span>
-    </v-chip>
+    </AtlasChip>
     <v-chip
       v-else
       size="small"
@@ -21,7 +20,7 @@
       {{ t('ir.workbench.noRunsYet', 'No runs yet').value }}
     </v-chip>
 
-    <v-menu offset="6">
+    <AtlasMenu offset="6">
       <template #activator="{ props: ap }">
         <v-chip
           v-bind="ap"
@@ -33,18 +32,20 @@
           <span class="muted">&nbsp;{{ targetLabel }}</span>
         </v-chip>
       </template>
-      <v-list density="compact">
-        <v-list-item
+      <AtlasList density="compact">
+        <AtlasListItem
           v-for="opt in availableTargets"
           :key="opt.id"
           @click="$emit('update:selectedTargetId', opt.id)"
         >
-          <v-list-item-title>{{ opt.name }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
+          <v-list-item-title>
+            {{ opt.name }}
+          </v-list-item-title>
+        </AtlasListItem>
+      </AtlasList>
+    </AtlasMenu>
 
-    <v-menu offset="6">
+    <AtlasMenu offset="6">
       <template #activator="{ props: ap }">
         <v-chip
           v-bind="ap"
@@ -56,18 +57,20 @@
           <span class="muted">&nbsp;{{ outcomeLabel }}</span>
         </v-chip>
       </template>
-      <v-list density="compact">
-        <v-list-item
+      <AtlasList density="compact">
+        <AtlasListItem
           v-for="o in availableOutcomes"
           :key="o.id"
           @click="$emit('update:selectedOutcomeId', o.id)"
         >
-          <v-list-item-title>{{ o.name }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
+          <v-list-item-title>
+            {{ o.name }}
+          </v-list-item-title>
+        </AtlasListItem>
+      </AtlasList>
+    </AtlasMenu>
 
-    <v-menu offset="6">
+    <AtlasMenu offset="6">
       <template #activator="{ props: ap }">
         <v-chip
           v-bind="ap"
@@ -79,18 +82,20 @@
           <span class="muted">&nbsp;{{ multiplier.toLocaleString() }}</span>
         </v-chip>
       </template>
-      <v-list density="compact">
-        <v-list-item
+      <AtlasList density="compact">
+        <AtlasListItem
           v-for="m in MULTIPLIER_OPTIONS"
           :key="m"
           @click="$emit('update:multiplier', m)"
         >
-          <v-list-item-title>× {{ m.toLocaleString() }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
+          <v-list-item-title>
+            × {{ m.toLocaleString() }}
+          </v-list-item-title>
+        </AtlasListItem>
+      </AtlasList>
+    </AtlasMenu>
 
-    <v-spacer />
+    <AtlasSpacer />
 
     <v-btn-toggle
       :model-value="mode"
@@ -116,35 +121,42 @@
       </v-btn>
     </v-btn-toggle>
 
-    <v-menu offset="6">
+    <AtlasMenu offset="6">
       <template #activator="{ props: ap }">
-        <v-btn
+        <AtlasButton
           v-bind="ap"
-          size="small"
-          variant="text"
-          prepend-icon="mdi-download-outline"
+          variant="ghost"
+          size="sm"
+          icon="mdi-download-outline"
           :disabled="!hasResults"
           data-testid="ir-toolbar-export"
         >
           {{ t('cc.viewEdit.results.exportAll', 'Export').value }}
-        </v-btn>
+        </AtlasButton>
       </template>
-      <v-list density="compact">
-        <v-list-item @click="$emit('export', 'csv')">
-          <v-list-item-title>CSV</v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="$emit('export', 'svg')">
-          <v-list-item-title>SVG</v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="$emit('export', 'png')">
-          <v-list-item-title>PNG</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
+      <AtlasList density="compact">
+        <AtlasListItem @click="$emit('export', 'csv')">
+          <v-list-item-title>
+            CSV
+          </v-list-item-title>
+        </AtlasListItem>
+        <AtlasListItem @click="$emit('export', 'svg')">
+          <v-list-item-title>
+            SVG
+          </v-list-item-title>
+        </AtlasListItem>
+        <AtlasListItem @click="$emit('export', 'png')">
+          <v-list-item-title>
+            PNG
+          </v-list-item-title>
+        </AtlasListItem>
+      </AtlasList>
+    </AtlasMenu>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasChip, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { RATE_MULTIPLIER_OPTIONS, type RateMultiplier } from '@/models/incidence-rate.types'

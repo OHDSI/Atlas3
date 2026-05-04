@@ -1,77 +1,67 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="CONFIRM"
+    title="Delete Role?"
     max-width="500"
     persistent
     @update:model-value="$emit('update:modelValue', $event)"
+    @close="handleClose"
   >
-    <v-card>
-      <v-card-title class="text-h5">
-        Delete Role?
-      </v-card-title>
+    <AtlasAlert
+      v-if="userCount > 0"
+      severity="warning"
+      class="mb-4"
+    >
+      <div class="text-body-1">
+        This role is assigned to
+        <strong>{{ userCount }} user{{ userCount !== 1 ? 's' : '' }}</strong>.
+      </div>
+      <div class="text-body-2 mt-2">
+        Deleting this role will remove it from all assigned users.
+      </div>
+    </AtlasAlert>
 
-      <v-card-text>
-        <v-alert
-          v-if="userCount > 0"
-          type="warning"
-          variant="tonal"
-          class="mb-4"
-        >
-          <div class="text-body-1">
-            This role is assigned to
-            <strong>{{ userCount }} user{{ userCount !== 1 ? 's' : '' }}</strong>.
-          </div>
-          <div class="text-body-2 mt-2">
-            Deleting this role will remove it from all assigned users.
-          </div>
-        </v-alert>
+    <p class="text-body-1">
+      Are you sure you want to delete the role
+      <strong>"{{ role?.name }}"</strong>?
+    </p>
 
-        <p class="text-body-1">
-          Are you sure you want to delete the role
-          <strong>"{{ role?.name }}"</strong>?
-        </p>
+    <p class="text-body-2 text-medium-emphasis mt-2">
+      This action cannot be undone.
+    </p>
 
-        <p class="text-body-2 text-medium-emphasis mt-2">
-          This action cannot be undone.
-        </p>
-
-        <!-- Server Error Message -->
-        <v-alert
-          v-if="serverError"
-          type="error"
-          variant="tonal"
-          class="mt-4"
-          closable
-          @click:close="serverError = null"
-        >
-          {{ serverError }}
-        </v-alert>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          variant="text"
-          :disabled="deleting"
-          @click="handleClose"
-        >
-          Cancel
-        </v-btn>
-        <v-btn
-          color="error"
-          variant="elevated"
-          :disabled="deleting"
-          :loading="deleting"
-          @click="handleDelete"
-        >
-          Delete Role
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <AtlasAlert
+      v-if="serverError"
+      severity="danger"
+      class="mt-4"
+      :closable="true"
+      @close="serverError = null"
+    >
+      {{ serverError }}
+    </AtlasAlert>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        :disabled="deleting"
+        @click="handleClose"
+      >
+        Cancel
+      </AtlasButton>
+      <AtlasButton
+        variant="danger"
+        :disabled="deleting"
+        :loading="deleting"
+        @click="handleDelete"
+      >
+        Delete Role
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasDialog } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

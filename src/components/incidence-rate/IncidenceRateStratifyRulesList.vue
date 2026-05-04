@@ -51,21 +51,21 @@
         @click="$emit('remove', idx)"
       />
     </div>
-    <v-btn
-      size="small"
-      density="compact"
-      variant="text"
-      prepend-icon="mdi-plus"
+    <AtlasButton
+      variant="ghost"
+      size="sm"
+      icon="mdi-plus"
       :disabled="readonly"
       data-testid="ir-strata-add"
       @click="$emit('add')"
     >
       {{ t('common.add', 'Add').value }}
-    </v-btn>
+    </AtlasButton>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { StratifyRule } from '@/models/incidence-rate.types'
 

@@ -39,7 +39,7 @@ const stubs = [
   'TagSelectionDialog',
   'IncidenceRateConceptSetsPanel',
   'IncidenceRateVersionsPanel',
-  'AppDialogHeader',
+  'AtlasDialog',
 ]
 
 const router = createRouter({

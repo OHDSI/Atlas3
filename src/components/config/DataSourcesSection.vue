@@ -26,13 +26,12 @@
     <v-card>
       <v-card-title class="d-flex align-center justify-space-between">
         <span>{{ t('navigation.datasources') }}</span>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          icon="mdi-plus"
           @click="openCreateDialog"
         >
           {{ t('configuration.newSource') }}
-        </v-btn>
+        </AtlasButton>
       </v-card-title>
       <v-card-text>
         <v-table>
@@ -53,13 +52,13 @@
             >
               <td>
                 <div class="d-flex align-center">
-                  <v-icon
+                  <AtlasIcon
                     :color="source.initialized ? 'success' : 'error'"
                     size="small"
                     class="mr-2"
                   >
                     {{ source.initialized ? 'mdi-check-circle' : 'mdi-alert-circle' }}
-                  </v-icon>
+                  </AtlasIcon>
                   {{ source.sourceName }}
                   <span class="text-grey ml-1">[{{ source.sourceKey }}]</span>
                 </div>
@@ -95,66 +94,45 @@
               </td>
               <td>
                 <div class="d-flex gap-2">
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    icon
-                    :title="tv('configuration.tagManagement.edit')"
+                  <AtlasIconButton
+                    icon="mdi-pencil"
+                    v-bind="{ ariaLabel: tv('configuration.tagManagement.edit') }"
+                    size="sm"
                     @click="openEditDialog(source)"
-                  >
-                    <v-icon size="small">
-                      mdi-pencil
-                    </v-icon>
-                  </v-btn>
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    icon
-                    :title="tv('columns.checkConnection')"
+                  />
+                  <AtlasIconButton
+                    icon="mdi-connection"
+                    v-bind="{ ariaLabel: tv('columns.checkConnection') }"
+                    size="sm"
                     @click="checkConnection(source)"
-                  >
-                    <v-icon size="small">
-                      mdi-connection
-                    </v-icon>
-                  </v-btn>
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    icon
+                  />
+                  <AtlasIconButton
+                    icon="mdi-refresh"
+                    v-bind="{ ariaLabel: tv('columns.refreshCache') }"
+                    size="sm"
                     :disabled="!source.hasResults"
-                    :title="tv('columns.refreshCache')"
                     @click="refreshCache(source)"
-                  >
-                    <v-icon size="small">
-                      mdi-refresh
-                    </v-icon>
-                  </v-btn>
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    icon
-                    color="error"
-                    :title="tv('common.delete')"
+                  />
+                  <AtlasIconButton
+                    icon="mdi-delete"
+                    v-bind="{ ariaLabel: tv('common.delete') }"
+                    size="sm"
+                    tone="danger"
                     @click="confirmDeleteSource(source)"
-                  >
-                    <v-icon size="small">
-                      mdi-delete
-                    </v-icon>
-                  </v-btn>
+                  />
                 </div>
               </td>
             </tr>
           </tbody>
         </v-table>
 
-        <v-alert
+        <AtlasAlert
           v-if="dataSources.length === 0"
-          type="info"
-          variant="tonal"
+          severity="info"
           class="mt-4"
         >
           {{ t('commonErrors.noSources') }}
-        </v-alert>
+        </AtlasAlert>
       </v-card-text>
     </v-card>
 
@@ -163,59 +141,37 @@
       <v-card-title>{{ t('configuration.title') }}</v-card-title>
       <v-card-text>
         <div class="d-flex flex-wrap gap-2">
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-delete-sweep"
+          <AtlasButton
+            icon="mdi-delete-sweep"
             @click="clearLocalCache"
           >
             {{ t('configuration.buttons.clearConfigurationCache') }}
-          </v-btn>
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-server"
+          </AtlasButton>
+          <AtlasButton
+            icon="mdi-server"
             @click="clearServerCache"
           >
             {{ t('configuration.buttons.clearServerCache') }}
-          </v-btn>
+          </AtlasButton>
         </div>
       </v-card-text>
     </v-card>
 
-    <!-- Success Toast -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showToast"
+      severity="success"
+      :text="toastMessage"
       :timeout="5000"
-      color="success"
       location="bottom"
-    >
-      {{ toastMessage }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          @click="showToast = false"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
+    />
 
-    <!-- Error Toast -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showErrorToast"
+      severity="danger"
+      :text="errorMessage"
       :timeout="5000"
-      color="error"
       location="bottom"
-    >
-      {{ errorMessage }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          @click="showErrorToast = false"
-        >
-          {{ t('common.close') }}
-        </v-btn>
-      </template>
-    </v-snackbar>
+    />
 
     <!-- Data Source Dialog -->
     <DataSourceDialog
@@ -227,36 +183,35 @@
     />
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showDeleteConfirm"
+      eyebrow="CONFIRM"
+      :title="t('common.delete').value"
       max-width="400"
+      @close="showDeleteConfirm = false"
     >
-      <v-card>
-        <v-card-title>{{ t('common.delete') }}</v-card-title>
-        <v-card-text>{{ t('configuration.viewEdit.source.confirms.delete') }}</v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteConfirm = false"
-          >
-            {{ t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="elevated"
-            :loading="isDeleting"
-            @click="executeDelete"
-          >
-            {{ t('common.delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{ t('configuration.viewEdit.source.confirms.delete') }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showDeleteConfirm = false"
+        >
+          {{ t('common.cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="isDeleting"
+          @click="executeDelete"
+        >
+          {{ t('common.delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar } from '@/components/ui'
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { deleteSource } from '@/services/source.service'

@@ -6,30 +6,29 @@
     <div class="patient-count-bar__content">
       <!-- Dataset Selector -->
       <div class="patient-count-bar__selector">
-        <v-select
+        <AtlasSelect
           v-model="selectedSource"
           :items="dataSourceItems"
           :loading="isLoadingDataSources"
           :disabled="isLoadingDataSources"
           item-title="text"
           item-value="value"
-          density="compact"
           variant="outlined"
           hide-details
           class="patient-count-bar__select"
           :placeholder="t('trexsql.selectDataset', 'Select dataset').value"
         >
           <template #prepend-inner>
-            <v-icon
+            <AtlasIcon
               size="small"
               color="grey-darken-1"
             >
               mdi-database
-            </v-icon>
+            </AtlasIcon>
           </template>
 
           <template #item="{ item, props: itemProps }">
-            <v-list-item v-bind="itemProps">
+            <AtlasListItem v-bind="itemProps">
               <template #append>
                 <v-chip
                   v-if="item.raw.cacheStatus"
@@ -40,9 +39,9 @@
                   {{ getCacheStatusLabel(item.raw.cacheStatus) }}
                 </v-chip>
               </template>
-            </v-list-item>
+            </AtlasListItem>
           </template>
-        </v-select>
+        </AtlasSelect>
       </div>
 
       <!-- Patient Count Display -->
@@ -53,7 +52,7 @@
           class="patient-count-bar__bar-layout"
         >
           <div class="patient-count-bar__bar-container">
-            <v-progress-linear
+            <AtlasProgressLinear
               :model-value="previousPercentage"
               :color="getProgressColor(previousPercentage)"
               height="8"
@@ -75,12 +74,12 @@
           v-else-if="countError"
           class="patient-count-bar__error"
         >
-          <v-icon
+          <AtlasIcon
             size="small"
             color="error"
           >
             mdi-alert-circle
-          </v-icon>
+          </AtlasIcon>
           <span class="patient-count-bar__error-text">{{ countError }}</span>
           <v-btn
             size="x-small"
@@ -97,12 +96,12 @@
           v-else-if="!selectedSource"
           class="patient-count-bar__prompt"
         >
-          <v-icon
+          <AtlasIcon
             size="small"
             color="grey"
           >
             mdi-information-outline
-          </v-icon>
+          </AtlasIcon>
           <span>{{
             t('trexsql.selectDatasetPrompt', 'Select a dataset to view patient count')
           }}</span>
@@ -113,12 +112,12 @@
           v-else-if="!isCacheReady"
           class="patient-count-bar__cache-warning"
         >
-          <v-icon
+          <AtlasIcon
             size="small"
             color="warning"
           >
             mdi-alert
-          </v-icon>
+          </AtlasIcon>
           <span>{{ cacheStatusMessage }}</span>
         </div>
 
@@ -128,7 +127,7 @@
           class="patient-count-bar__bar-layout"
         >
           <div class="patient-count-bar__bar-container">
-            <v-progress-linear
+            <AtlasProgressLinear
               :model-value="0"
               color="grey"
               height="8"
@@ -151,7 +150,7 @@
           class="patient-count-bar__bar-layout"
         >
           <div class="patient-count-bar__bar-container">
-            <v-progress-linear
+            <AtlasProgressLinear
               :model-value="animatedPercentage"
               :color="getProgressColor(animatedPercentage)"
               height="8"
@@ -167,19 +166,19 @@
             <span class="patient-count-bar__separator">/</span>
             <span class="patient-count-bar__total-count">{{ totalPatientCountFormatted }}</span>
             <span class="patient-count-bar__label">{{ t('trexsql.patients', 'patients') }}</span>
-            <v-tooltip
+            <AtlasTooltip
               v-if="selectedCacheStatus?.status === 'stale'"
               location="bottom"
             >
               <template #activator="{ props: tooltipProps }">
-                <v-icon
+                <AtlasIcon
                   v-bind="tooltipProps"
                   size="small"
                   color="warning"
                   class="patient-count-bar__stale-icon"
                 >
                   mdi-clock-alert
-                </v-icon>
+                </AtlasIcon>
               </template>
               <div class="patient-count-bar__tooltip">
                 <div class="font-weight-medium">
@@ -193,7 +192,7 @@
                   {{ formatDate(selectedCacheStatus.lastBuiltAt) }}
                 </div>
               </div>
-            </v-tooltip>
+            </AtlasTooltip>
           </div>
         </div>
 
@@ -212,6 +211,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasListItem, AtlasProgressLinear, AtlasSelect, AtlasTooltip } from '@/components/ui'
 import { computed, watch, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'

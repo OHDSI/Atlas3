@@ -168,7 +168,7 @@ describe('DataTable', () => {
     })
 
     afterEach(() => {
-      vi.restoreAllMocks()
+      vi.useRealTimers()
     })
 
     it('should render search field when searchable is true', () => {
@@ -628,7 +628,7 @@ describe('DataTable', () => {
       // Export should only include filtered items
       expect(exportData.length).toBeLessThan(mockItems.length)
 
-      vi.restoreAllMocks()
+      vi.useRealTimers()
     })
   })
 
@@ -1004,7 +1004,7 @@ describe('DataTable', () => {
     })
 
     afterEach(() => {
-      vi.restoreAllMocks()
+      vi.useRealTimers()
     })
 
     it('should work with all features enabled', () => {

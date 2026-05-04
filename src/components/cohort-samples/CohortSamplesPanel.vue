@@ -25,22 +25,21 @@
       </v-btn>
     </div>
 
-    <v-divider class="my-3" />
+    <AtlasDivider class="my-3" />
 
     <div
       v-if="loading"
       class="py-4"
     >
-      <v-skeleton-loader type="table" />
+      <AtlasSkeleton type="table" />
     </div>
-    <v-alert
+    <AtlasAlert
       v-else-if="error"
-      type="error"
-      variant="tonal"
+      severity="danger"
       data-testid="cohort-samples-error"
     >
       {{ error }}
-    </v-alert>
+    </AtlasAlert>
     <template v-else>
       <CohortSamplesList
         :samples="samples"
@@ -70,6 +69,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasDivider, AtlasSkeleton } from '@/components/ui'
 import { ref, watch } from 'vue'
 import {
   listCohortSamples,

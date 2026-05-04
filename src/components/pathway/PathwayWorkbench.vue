@@ -60,13 +60,11 @@
             ).value
           }}
         </p>
-        <v-btn
-          color="primary"
-          variant="flat"
+        <AtlasButton
           @click="$emit('open-generate')"
         >
           {{ t('components.generation.generate', 'Generate') }}
-        </v-btn>
+        </AtlasButton>
       </div>
 
       <div
@@ -144,6 +142,7 @@ import { useI18n } from '@/composables/useI18n'
 import { usePathwayResults } from '@/composables/usePathwayResults'
 import { computePathStats } from '@/utils/pathway-path-stats'
 import PathwayDesignForm from './PathwayDesignForm.vue'
+import { AtlasButton } from '@/components/ui'
 import PathwaySunburst from './results/PathwaySunburst.vue'
 import PathwayTableView from './results/PathwayTableView.vue'
 import PathwayCanvasToolbar from './PathwayCanvasToolbar.vue'

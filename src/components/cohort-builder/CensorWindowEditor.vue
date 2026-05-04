@@ -2,11 +2,10 @@
   <div class="censor-window-editor">
     <div class="era-pad-row">
       <span class="era-pad-row__label">{{ eraGapLabel }}</span>
-      <v-text-field
+      <AtlasTextField
         v-model.number="eraPadModel"
         type="number"
         min="0"
-        density="compact"
         variant="outlined"
         hide-details
         class="era-pad-row__input"
@@ -66,15 +65,14 @@
           />
         </div>
 
-        <v-alert
+        <AtlasAlert
           v-if="dateOrderWarning"
-          type="warning"
-          variant="tonal"
+          severity="warning"
           density="compact"
           class="mt-2"
         >
           {{ dateOrderWarning }}
-        </v-alert>
+        </AtlasAlert>
       </div>
     </div>
   </div>
@@ -82,6 +80,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { AtlasAlert, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { CensorWindow, CollapseSettings } from '@/models/cohort.types'
 import type { ValidationError } from '@/models/validation.types'

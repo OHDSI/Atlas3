@@ -1,20 +1,13 @@
-/**
- * WebAPI Store Tests
- */
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useWebAPIStore } from '@/stores/webapi'
 import type { CDMSource, GenerationJob, CohortGenerationInfo } from '@/models/webapi.types'
-import * as webapi from '@/services/webapi'
 
-// Mock the webapi service
 vi.mock('@/services/webapi', () => ({
   fetchCDMSources: vi.fn(),
   generateCohort: vi.fn(),
   getCohortGenerationInfo: vi.fn(),
 }))
 
-// Mock logger to prevent console output during tests
 vi.mock('@/utils/logger', () => ({
   logger: {
     debug: vi.fn(),
@@ -23,6 +16,15 @@ vi.mock('@/utils/logger', () => ({
     error: vi.fn(),
   },
 }))
+
+let webapi: typeof import('@/services/webapi')
+let useWebAPIStore: typeof import('@/stores/webapi').useWebAPIStore
+
+beforeAll(async () => {
+  vi.resetModules()
+  webapi = await import('@/services/webapi')
+  ;({ useWebAPIStore } = await import('@/stores/webapi'))
+})
 
 describe('WebAPI Store', () => {
   beforeEach(() => {
@@ -196,7 +198,7 @@ describe('WebAPI Store', () => {
       store.setSources(sources)
 
       expect(store.sources).toEqual(sources)
-      expect(store.selectedSource).toBe('source1') // Auto-selects first
+      expect(store.selectedSource).toBe('source1')
     })
 
     it('should not auto-select if source already selected', () => {
@@ -404,7 +406,6 @@ describe('WebAPI Store', () => {
 
         await store.generateCohort(123, 'SYNPUF1K')
 
-        // Should have updated the existing job to PENDING first
         expect(store.getJobById(1)?.status).toBe('PENDING')
       })
 
@@ -501,7 +502,7 @@ describe('WebAPI Store', () => {
         const store = useWebAPIStore()
         const mockInfo: CohortGenerationInfo[] = [
           {
-            id: { cohortDefinitionId: 123, sourceId: 999 }, // Unknown source
+            id: { cohortDefinitionId: 123, sourceId: 999 },
             status: 'COMPLETE',
             startTime: 1000000,
           },
@@ -569,7 +570,6 @@ describe('WebAPI Store', () => {
           const pollPromise = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
 
-          // Job should be updated to RUNNING
           expect(store.getJobById(1)?.status).toBe('RUNNING')
 
           store.stopPolling(123)
@@ -701,11 +701,9 @@ describe('WebAPI Store', () => {
             },
           ])
 
-          // Start first poll
           const poll1 = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
 
-          // Start second poll (should clear first)
           const poll2 = store.pollGenerationStatus(123)
           await vi.runOnlyPendingTimersAsync()
 
@@ -744,7 +742,6 @@ describe('WebAPI Store', () => {
         it('should handle stopping non-existent poll', () => {
           const store = useWebAPIStore()
 
-          // Should not throw
           expect(() => store.stopPolling(999)).not.toThrow()
         })
       })
@@ -769,7 +766,6 @@ describe('WebAPI Store', () => {
         it('should handle stopping when no polls are active', () => {
           const store = useWebAPIStore()
 
-          // Should not throw
           expect(() => store.stopAllPolling()).not.toThrow()
         })
       })

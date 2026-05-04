@@ -1,20 +1,20 @@
 <template>
-  <v-text-field
+  <AtlasTextField
     :model-value="modelValue"
     class="cohort-search"
     :placeholder="t('datatable.language.searchPlaceholder', 'Filter cohorts...').value"
-    prepend-inner-icon="mdi-magnify"
+    prepend-icon="mdi-magnify"
     clearable
     variant="outlined"
-    density="comfortable"
     hide-details
     :aria-label="t('datatable.language.search', 'Search cohorts by name').value"
-    @update:model-value="handleInput"
+    @update:model-value="(v) => handleInput(v as string | null)"
   />
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 const { t } = useI18n()

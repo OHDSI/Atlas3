@@ -7,13 +7,17 @@ vi.mock('@/components/incidence-rate/IncidenceRateStratifyRuleEditor.vue', () =>
   default: { name: 'IncidenceRateStratifyRuleEditor', template: '<div data-testid="stub-editor" />' },
 }))
 
-vi.mock('@/components/shared/AppDialogHeader.vue', () => ({
-  default: {
-    name: 'AppDialogHeader',
-    emits: ['close'],
-    template: '<header><button data-testid="ir-strata-inspector-close" @click="$emit(\'close\')">x</button></header>',
-  },
-}))
+vi.mock('@/components/ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/components/ui')>()
+  return {
+    ...actual,
+    AtlasDialog: {
+      name: 'AtlasDialog',
+      emits: ['update:modelValue', 'close'],
+      template: '<div><slot /><button data-testid="ir-strata-inspector-close" @click="$emit(\'update:modelValue\', false)">x</button></div>',
+    },
+  }
+})
 
 const rule = { name: 'Age band', description: '', expression: { id: 'a', logicType: 'ALL', events: [] } }
 

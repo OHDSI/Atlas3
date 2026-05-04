@@ -1,17 +1,31 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 
 vi.mock('@/services/http-client', () => ({
   httpGet: vi.fn(),
   httpPut: vi.fn(),
 }))
 
-import * as http from '@/services/http-client'
-import {
-  getIncidenceRateVersions,
-  getIncidenceRateVersion,
-  updateIncidenceRateVersion,
-  copyIncidenceRateVersion,
-} from '@/services/incidence-rate-versions.service'
+// Dynamic imports re-evaluated once per file to guard against module-cache
+// pollution from vi.resetModules() in sibling test files (singleFork pool).
+let http: typeof import('@/services/http-client')
+let getIncidenceRateVersions: typeof import('@/services/incidence-rate-versions.service').getIncidenceRateVersions
+let getIncidenceRateVersion: typeof import('@/services/incidence-rate-versions.service').getIncidenceRateVersion
+let updateIncidenceRateVersion: typeof import('@/services/incidence-rate-versions.service').updateIncidenceRateVersion
+let copyIncidenceRateVersion: typeof import('@/services/incidence-rate-versions.service').copyIncidenceRateVersion
+
+beforeAll(async () => {
+  vi.resetModules()
+  http = await import('@/services/http-client')
+  const svc = await import('@/services/incidence-rate-versions.service')
+  getIncidenceRateVersions = svc.getIncidenceRateVersions
+  getIncidenceRateVersion = svc.getIncidenceRateVersion
+  updateIncidenceRateVersion = svc.updateIncidenceRateVersion
+  copyIncidenceRateVersion = svc.copyIncidenceRateVersion
+})
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 const sampleVersion = {
   assetId: 1, version: 3, comment: 'note', archived: false,
@@ -26,8 +40,6 @@ const sampleAsset = {
     strata: [],
   } },
 }
-
-beforeEach(() => vi.clearAllMocks())
 
 describe('IR versions service', () => {
   it('lists versions at /ir/{id}/version/', async () => {

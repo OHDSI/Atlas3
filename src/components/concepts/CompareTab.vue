@@ -5,13 +5,12 @@
         <span class="text-body-2 text-medium-emphasis">
           {{ t('cs.browser.compare.conceptSet1', 'Concept Set 1:') }}
         </span>
-        <v-chip
-          size="small"
-          color="primary"
-          variant="tonal"
+        <AtlasChip
+          size="sm"
+          tone="primary"
         >
           {{ store.currentSet?.name || t('common.untitled', 'Untitled').value }}
-        </v-chip>
+        </AtlasChip>
 
         <span class="text-body-2 text-medium-emphasis ml-4">
           {{ t('cs.browser.compare.conceptSet2', 'Concept Set 2:') }}
@@ -26,59 +25,55 @@
         >
           {{ store.comparisonOtherSet.name }}
         </v-chip>
-        <v-btn
+        <AtlasButton
           v-else
-          size="small"
-          variant="outlined"
-          prepend-icon="mdi-folder-open-outline"
+          variant="secondary"
+          size="sm"
+          icon="mdi-folder-open-outline"
           data-testid="compare-pick-other"
           @click="showChooser = true"
         >
           {{ t('common.choose', 'Choose').value }}
-        </v-btn>
+        </AtlasButton>
       </div>
 
       <div class="compare-tab__bar-right">
-        <v-btn
-          size="small"
-          variant="text"
-          prepend-icon="mdi-download"
+        <AtlasButton
+          variant="ghost"
+          size="sm"
+          icon="mdi-download"
           :disabled="store.comparison.length === 0 || store.loadingComparison"
           data-testid="compare-export"
           @click="onExport"
         >
           {{ t('common.export', 'Export').value }}
-        </v-btn>
-        <v-btn
-          color="primary"
-          variant="flat"
-          size="small"
-          prepend-icon="mdi-compare"
+        </AtlasButton>
+        <AtlasButton
+          size="sm"
+          icon="mdi-compare"
           :disabled="!canCompare || store.loadingComparison"
           :loading="store.loadingComparison"
           data-testid="compare-run"
           @click="onCompare"
         >
           {{ t('cs.browser.compare.compareConceptSets', 'Compare Concept Sets') }}
-        </v-btn>
+        </AtlasButton>
       </div>
     </div>
 
-    <v-alert
+    <AtlasAlert
       v-if="store.comparisonError"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="mb-4"
-      @click:close="store.comparisonError = null"
+      @close="store.comparisonError = null"
     >
       {{ store.comparisonError }}
-    </v-alert>
+    </AtlasAlert>
 
-    <v-alert
+    <AtlasAlert
       v-else-if="!hasOwnItems"
-      type="info"
-      variant="tonal"
+      severity="info"
       class="mb-4"
       data-testid="compare-no-current"
     >
@@ -88,14 +83,14 @@
           'Use this utility to compare the contents of two concept sets to see which concepts they may share'
         )
       }}
-    </v-alert>
+    </AtlasAlert>
 
     <div
       v-if="store.loadingComparison && store.comparison.length === 0"
       class="d-flex align-center justify-center py-12"
       data-testid="compare-loading"
     >
-      <v-progress-circular
+      <AtlasProgressCircular
         indeterminate
         color="primary"
         size="32"
@@ -124,11 +119,10 @@
         </v-card-text>
       </v-card>
 
-      <v-data-table
+      <AtlasDataTable
         :headers="headers"
         :items="rows"
         :items-per-page="25"
-        density="compact"
         class="compare-tab__table"
       >
         <template #item.match="{ item }">
@@ -140,7 +134,7 @@
             {{ item.match }}
           </v-chip>
         </template>
-      </v-data-table>
+      </AtlasDataTable>
     </template>
 
     <ConceptSetChooserDialog
@@ -152,6 +146,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasDataTable, AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'

@@ -12,8 +12,8 @@
     />
 
     <!-- Age at Death by Gender -->
-    <v-row v-if="data.ageAtDeath && data.ageAtDeath.length > 0">
-      <v-col cols="12">
+    <AtlasRow v-if="data.ageAtDeath && data.ageAtDeath.length > 0">
+      <AtlasCol cols="12">
         <ChartSection :title="t('dataSources.deathReport.ageAtDeath', 'Age at Death').value">
           <BoxPlotChart
             :data="data.ageAtDeath"
@@ -24,24 +24,24 @@
             data-testid="age-at-death-chart"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
 
     <!-- Death by Type -->
-    <v-row v-if="data.deathByType && data.deathByType.length > 0">
-      <v-col cols="12">
+    <AtlasRow v-if="data.deathByType && data.deathByType.length > 0">
+      <AtlasCol cols="12">
         <ChartSection :title="t('dataSources.deathReport.deathByType', 'Death by Type').value">
           <PieChart
             :data="data.deathByType"
             data-testid="death-by-type-chart"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
 
     <!-- Prevalence by Month -->
-    <v-row v-if="data.prevalenceByMonth && data.prevalenceByMonth.categories.length > 0">
-      <v-col cols="12">
+    <AtlasRow v-if="data.prevalenceByMonth && data.prevalenceByMonth.categories.length > 0">
+      <AtlasCol cols="12">
         <ChartSection
           :title="
             t('dataSources.deathReport.deathPrevalenceByMonth', 'Death Prevalence by Month').value
@@ -57,14 +57,14 @@
             data-testid="prevalence-by-month-chart"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
 
     <!-- Prevalence by Gender, Age, Year (Trellis) -->
-    <v-row
+    <AtlasRow
       v-if="data.prevalenceByGenderAgeYear && data.prevalenceByGenderAgeYear.series.length > 0"
     >
-      <v-col cols="12">
+      <AtlasCol cols="12">
         <ChartSection
           :title="
             t(
@@ -79,12 +79,13 @@
             data-testid="prevalence-by-gender-age-year-chart"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasRow } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { DeathReport } from '@/models/datasource.types'

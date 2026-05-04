@@ -26,6 +26,9 @@ dist/
 build/
 .vite/
 *.local
+.histoire/
+.histoire-dist/
+histoire-dist/
 
 # Testing
 coverage/

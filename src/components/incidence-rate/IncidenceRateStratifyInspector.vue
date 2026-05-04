@@ -1,31 +1,23 @@
 <template>
-  <v-dialog
+  <AtlasDialog
+    v-if="rule"
     :model-value="modelValue"
+    :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
+    :title="rule.name || t('incidenceRate.untitled', 'Untitled rule').value"
+    :close-label="t('common.close', 'Close').value"
     max-width="900"
-    scrollable
     @update:model-value="(v: boolean) => $emit('update:modelValue', v)"
   >
-    <v-card v-if="rule">
-      <AppDialogHeader
-        :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
-        :title="rule.name || t('incidenceRate.untitled', 'Untitled rule').value"
-        :show-close="true"
-        :close-label="t('common.close', 'Close').value"
-        @close="$emit('update:modelValue', false)"
-      />
-      <v-card-text class="pa-4">
-        <IncidenceRateStratifyRuleEditor
-          :rule="rule"
-          @update="(p: Partial<StratifyRule>) => $emit('update', p)"
-        />
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+    <IncidenceRateStratifyRuleEditor
+      :rule="rule"
+      @update="(p: Partial<StratifyRule>) => $emit('update', p)"
+    />
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasDialog } from '@/components/ui'
 import IncidenceRateStratifyRuleEditor from '@/components/incidence-rate/IncidenceRateStratifyRuleEditor.vue'
 import type { StratifyRule } from '@/models/incidence-rate.types'
 

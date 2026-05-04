@@ -9,7 +9,7 @@
         </p>
 
         <!-- Schema Input Field -->
-        <v-text-field
+        <AtlasTextField
           v-model="localSchema"
           label="Vocabulary Schema"
           hint="PostgreSQL schema name (e.g., 'public', 'vocab_v5')"
@@ -18,22 +18,18 @@
           :disabled="isSaving"
           :loading="isSaving"
           variant="outlined"
+          prepend-icon="mdi-database-outline"
           class="mb-2"
-        >
-          <template #prepend-inner>
-            <v-icon>mdi-database-outline</v-icon>
-          </template>
-        </v-text-field>
+        />
 
-        <v-alert
+        <AtlasAlert
           v-if="validationError"
-          type="error"
-          variant="tonal"
+          severity="danger"
           density="compact"
           class="mt-2"
         >
           {{ validationError }}
-        </v-alert>
+        </AtlasAlert>
       </v-card-text>
     </v-card>
 
@@ -46,43 +42,34 @@
     >
       {{ toastMessage }}
       <template #actions>
-        <v-btn
+        <AtlasButton
           v-if="canUndo"
-          variant="text"
+          variant="ghost"
           @click="handleUndo"
         >
           Undo
-        </v-btn>
-        <v-btn
-          variant="text"
+        </AtlasButton>
+        <AtlasButton
+          variant="ghost"
           @click="showToast = false"
         >
           Close
-        </v-btn>
+        </AtlasButton>
       </template>
     </v-snackbar>
 
-    <!-- Error Toast -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showErrorToast"
+      severity="danger"
+      :text="errorMessage"
       :timeout="5000"
-      color="error"
       location="bottom"
-    >
-      {{ errorMessage }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          @click="showErrorToast = false"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useConfigStore } from '@/stores/config'

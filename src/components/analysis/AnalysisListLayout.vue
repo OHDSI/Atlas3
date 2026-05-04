@@ -9,7 +9,7 @@
       <div class="analysis-list__toolbar">
         <div class="analysis-list__actions">
           <slot name="actions" />
-          <v-spacer />
+          <AtlasSpacer />
           <v-btn-toggle
             v-if="showViewToggle"
             :model-value="viewMode"
@@ -27,7 +27,7 @@
               :aria-label="t('common.tileView', 'Tile view').value"
               :data-testid="testid ? `${testid}-view-toggle-tile` : undefined"
             >
-              <v-icon>mdi-view-grid</v-icon>
+              <AtlasIcon>mdi-view-grid</AtlasIcon>
             </v-btn>
             <v-btn
               value="table"
@@ -35,7 +35,7 @@
               :aria-label="t('dataSources.table.tableTab', 'Table view').value"
               :data-testid="testid ? `${testid}-view-toggle-table` : undefined"
             >
-              <v-icon>mdi-view-list</v-icon>
+              <AtlasIcon>mdi-view-list</AtlasIcon>
             </v-btn>
           </v-btn-toggle>
         </div>
@@ -50,18 +50,17 @@
       </div>
 
       <!-- Error banner -->
-      <v-alert
+      <AtlasAlert
         v-if="error"
-        type="error"
-        variant="tonal"
-        closable
+        severity="danger"
+        :closable="true"
         density="compact"
         class="analysis-list__error"
         :data-testid="testid ? `${testid}-error` : undefined"
-        @click:close="$emit('clear-error')"
+        @close="$emit('clear-error')"
       >
         {{ error }}
-      </v-alert>
+      </AtlasAlert>
 
       <!-- Body -->
       <div class="analysis-list__body">
@@ -80,6 +79,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 export type AnalysisViewMode = 'tile' | 'table'

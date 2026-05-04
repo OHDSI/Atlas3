@@ -1,9 +1,8 @@
 <template>
   <div class="recommend-tab">
-    <v-alert
+    <AtlasAlert
       v-if="!store.isRecommendedAvailable"
-      type="info"
-      variant="tonal"
+      severity="info"
       class="mb-4"
       data-testid="recommend-not-available"
     >
@@ -13,23 +12,21 @@
           'Recommendations are not available. The PHOEBE 2.0 vocabulary tables are required to generate recommendations.'
         )
       }}
-    </v-alert>
+    </AtlasAlert>
 
-    <v-alert
+    <AtlasAlert
       v-else-if="store.recommendedError"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="mb-4"
-      @click:close="store.recommendedError = null"
+      @close="store.recommendedError = null"
     >
       {{ store.recommendedError }}
-    </v-alert>
+    </AtlasAlert>
 
-    <v-alert
+    <AtlasAlert
       v-else-if="!hasSeed"
-      type="info"
-      variant="tonal"
+      severity="info"
       class="mb-4"
       data-testid="recommend-no-seed"
     >
@@ -39,22 +36,22 @@
           'Add concepts to the set first — recommendations are based on what is already included.'
         )
       }}
-    </v-alert>
+    </AtlasAlert>
 
     <div
       v-if="hasSeed && store.isRecommendedAvailable"
       class="recommend-tab__bar mb-4"
     >
       <div class="recommend-tab__bar-left">
-        <v-btn
-          variant="text"
-          size="small"
-          prepend-icon="mdi-refresh"
+        <AtlasButton
+          variant="ghost"
+          size="sm"
+          icon="mdi-refresh"
           :disabled="store.loadingRecommended"
           @click="onRefresh"
         >
           {{ t('common.refresh', 'Refresh') }}
-        </v-btn>
+        </AtlasButton>
 
         <span
           v-if="store.recommendedConcepts.length > 0"
@@ -84,11 +81,9 @@
           density="compact"
           hide-details
         />
-        <v-btn
-          color="primary"
-          variant="flat"
-          size="small"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          size="sm"
+          icon="mdi-plus"
           :disabled="selected.length === 0 || store.loadingRecommended"
           data-testid="recommend-add-selected"
           @click="onAddSelected"
@@ -98,7 +93,7 @@
             v-if="selected.length > 0"
             class="ml-1"
           >({{ selected.length }})</span>
-        </v-btn>
+        </AtlasButton>
       </div>
     </div>
 
@@ -107,7 +102,7 @@
       class="d-flex align-center justify-center py-12"
       data-testid="recommend-loading"
     >
-      <v-progress-circular
+      <AtlasProgressCircular
         indeterminate
         color="primary"
         size="32"
@@ -143,6 +138,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasProgressCircular } from '@/components/ui'
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'

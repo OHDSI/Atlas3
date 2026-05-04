@@ -1,5 +1,5 @@
 <template>
-  <page-shell
+  <AtlasPageShell
     hero
     compact
     :eyebrow="eyebrow"
@@ -19,17 +19,16 @@
       <slot name="subtitle" />
     </template>
     <template #actions>
-      <v-btn
+      <AtlasButton
         v-if="showBack"
-        variant="text"
-        size="small"
-        density="comfortable"
-        prepend-icon="mdi-arrow-left"
+        variant="ghost"
+        size="sm"
+        icon="mdi-arrow-left"
         :data-testid="testid ? `${testid}-back` : undefined"
         @click="$emit('back')"
       >
         {{ backLabel ?? t('common.back', 'Back').value }}
-      </v-btn>
+      </AtlasButton>
       <slot name="actions" />
     </template>
 
@@ -41,29 +40,28 @@
         <slot name="banner" />
       </div>
 
-      <v-alert
+      <AtlasAlert
         v-if="error"
-        type="error"
-        variant="tonal"
-        closable
+        severity="danger"
+        :closable="true"
         density="compact"
         class="builder-shell__error"
         :data-testid="testid ? `${testid}-error` : undefined"
-        @click:close="$emit('clear-error')"
+        @close="$emit('clear-error')"
       >
         {{ error }}
-      </v-alert>
+      </AtlasAlert>
 
       <div class="builder-shell__body">
         <slot />
       </div>
     </div>
-  </page-shell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
-import PageShell from '@/components/shared/PageShell.vue'
+import { AtlasAlert, AtlasButton, AtlasPageShell } from '@/components/ui'
 
 interface Props {
   title?: string

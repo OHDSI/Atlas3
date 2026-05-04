@@ -1,12 +1,12 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     interactive
     padding="none"
     class="cohort-card"
     @click="handleCardClick"
   >
     <div class="cohort-card__body">
-      <v-tooltip
+      <AtlasTooltip
         :text="cohort.name"
         location="top"
       >
@@ -18,9 +18,9 @@
             {{ cohort.name }}
           </h3>
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         v-if="cohort.description"
         :text="cohort.description"
         location="bottom"
@@ -33,7 +33,7 @@
             {{ cohort.description }}
           </p>
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
       <dl class="cohort-card__meta">
         <div class="cohort-card__meta-row">
@@ -69,62 +69,59 @@
         </v-chip>
       </div>
 
-      <v-spacer />
+      <AtlasSpacer />
 
-      <v-tooltip
+      <AtlasTooltip
         :text="infoTooltip"
         location="top"
       >
         <template #activator="{ props: tooltipProps }">
-          <v-btn
-            v-bind="tooltipProps"
+          <AtlasIconButton
+            v-bind="{ ...tooltipProps, ariaLabel: infoTooltip }"
             icon="mdi-information-outline"
-            size="small"
             variant="text"
-            :aria-label="infoTooltip"
+            size="sm"
             class="cohort-card__action-btn"
             @click.stop="$emit('show-info', cohort)"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         :text="generateTooltipText"
         location="top"
       >
         <template #activator="{ props: tooltipProps }">
-          <v-btn
-            v-bind="tooltipProps"
+          <AtlasIconButton
+            v-bind="{ ...tooltipProps, ariaLabel: 'Generate cohort' }"
             icon="mdi-account-multiple"
-            size="small"
             variant="text"
-            aria-label="Generate cohort"
+            size="sm"
             class="cohort-card__action-btn"
             :disabled="!canWrite"
             @click.stop="handleGenerate"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         :text="deleteTooltipText"
         location="top"
       >
         <template #activator="{ props: tooltipProps }">
-          <v-btn
-            v-bind="tooltipProps"
+          <AtlasIconButton
+            v-bind="{ ...tooltipProps, ariaLabel: deleteTooltip }"
             icon="mdi-delete-outline"
-            size="small"
             variant="text"
-            :aria-label="deleteTooltip"
+            size="sm"
             class="cohort-card__action-btn"
             :disabled="!canDelete"
             @click.stop="$emit('delete', cohort)"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
@@ -133,7 +130,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard, AtlasIconButton, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 
 interface Props {
   cohort: CohortDefinitionSummary

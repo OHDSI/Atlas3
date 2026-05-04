@@ -6,7 +6,7 @@
   component just emits `update:threshold`.
 -->
 <template>
-  <SurfaceCard
+  <AtlasCard
     padding="md"
     class="results-header"
     data-testid="char-results-header"
@@ -92,7 +92,7 @@
         </v-slider>
       </div>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
@@ -101,7 +101,7 @@ import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { CharacterizationExecution } from '@/models/characterization.types'
 import { formatDateTime } from '@/utils/format'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 interface Props {
   execution: CharacterizationExecution | null

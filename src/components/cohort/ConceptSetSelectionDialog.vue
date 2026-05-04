@@ -20,10 +20,11 @@
               {{ t('components.conceptSetBuilder.selectConceptSet', 'Select concept set').value }}
             </h2>
           </div>
-          <v-btn
+          <AtlasIconButton
             icon="mdi-close"
+            v-bind="{ ariaLabel: t('common.close', 'Close').value }"
             variant="text"
-            :aria-label="t('common.close', 'Close').value"
+            size="sm"
             @click="close"
           />
         </header>
@@ -32,41 +33,37 @@
           <!-- Toolbar: search + count chip + create-new button.
                Mirrors the toolbar on the /concepts list page. -->
           <div class="cs-picker__toolbar">
-            <v-text-field
+            <AtlasTextField
               v-model="searchTerm"
               :placeholder="t('common.search', 'Search concept sets…').value"
-              prepend-inner-icon="mdi-magnify"
+              prepend-icon="mdi-magnify"
               clearable
               variant="outlined"
-              density="comfortable"
               hide-details
               class="cs-picker__search"
             />
 
-            <v-chip
+            <AtlasChip
               v-if="!loading && filteredSets.length > 0"
-              size="small"
-              variant="tonal"
-              color="primary"
+              size="sm"
+              tone="primary"
               class="cs-picker__count"
             >
               {{ countLabel }}
-            </v-chip>
+            </AtlasChip>
 
-            <v-spacer />
+            <AtlasSpacer />
 
-            <v-btn
-              color="primary"
-              variant="flat"
-              prepend-icon="mdi-plus"
+            <AtlasButton
+              icon="mdi-plus"
               @click="onCreateNew"
             >
               {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
-            </v-btn>
+            </AtlasButton>
           </div>
 
           <!-- Loading -->
-          <v-progress-linear
+          <AtlasProgressLinear
             v-if="loading"
             indeterminate
             class="cs-picker__loading"
@@ -75,11 +72,11 @@
           <!-- Concept-set table — same visual treatment as
                /concepts: SurfaceCard, hover rows, click-to-select,
                hover-only edit icon. -->
-          <SurfaceCard
+          <AtlasCard
             v-if="loading || filteredSets.length > 0"
             padding="none"
           >
-            <v-data-table
+            <AtlasDataTable
               v-model:sort-by="sortBy"
               :headers="headers"
               :items="filteredSets"
@@ -104,33 +101,33 @@
 
               <template #item.actions="{ item }">
                 <div class="cs-picker__actions">
-                  <v-btn
+                  <AtlasIconButton
                     icon="mdi-pencil-outline"
-                    size="small"
+                    v-bind="{ ariaLabel: t('common.edit', 'Edit').value }"
                     variant="text"
-                    :aria-label="t('common.edit', 'Edit').value"
+                    size="sm"
                     @click.stop="onEditClick(item)"
                   />
                 </div>
               </template>
 
               <template #loading>
-                <v-skeleton-loader
+                <AtlasSkeleton
                   v-for="i in 5"
                   :key="i"
                   type="table-row"
                   class="mx-2"
                 />
               </template>
-            </v-data-table>
-          </SurfaceCard>
+            </AtlasDataTable>
+          </AtlasCard>
 
           <!-- Empty / filtered-empty state -->
           <div
             v-else
             class="cs-picker__empty"
           >
-            <v-icon
+            <AtlasIcon
               :icon="searchTerm ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
               size="36"
               class="cs-picker__empty-icon"
@@ -145,15 +142,13 @@
                   ).value
               }}
             </p>
-            <v-btn
+            <AtlasButton
               v-if="!searchTerm"
-              color="primary"
-              variant="flat"
-              prepend-icon="mdi-plus"
+              icon="mdi-plus"
               @click="onCreateNew"
             >
               {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
-            </v-btn>
+            </AtlasButton>
             <v-btn
               v-else
               size="small"
@@ -175,7 +170,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
 
 interface Props {

@@ -1,27 +1,26 @@
 <template>
   <v-card>
     <v-card-title class="text-h6">
-      <v-icon left>
+      <AtlasIcon left>
         mdi-account-switch
-      </v-icon>
+      </AtlasIcon>
       {{ t('components.welcome.runas') }}
     </v-card-title>
 
     <v-card-text>
-      <v-alert
+      <AtlasAlert
         v-if="errorMessage"
-        type="error"
+        severity="danger"
         class="mb-4"
-        closable
-        @click:close="errorMessage = null"
+        :closable="true"
+        @close="errorMessage = null"
       >
         {{ errorMessage }}
-      </v-alert>
+      </AtlasAlert>
 
-      <v-alert
+      <AtlasAlert
         v-if="isRunningAs"
-        type="info"
-        variant="tonal"
+        severity="info"
         class="mb-4"
       >
         <div class="d-flex align-center justify-space-between">
@@ -36,59 +35,53 @@
               {{ t('auth.originalUser', { username: originalUsername }) }}
             </div>
           </div>
-          <v-btn
-            color="primary"
-            variant="outlined"
+          <AtlasButton
+            variant="secondary"
+            icon="mdi-exit-run"
             :loading="isExiting"
             @click="handleExitRunAs"
           >
-            <v-icon left>
-              mdi-exit-run
-            </v-icon>
             {{ t('auth.exitRunAs') }}
-          </v-btn>
+          </AtlasButton>
         </div>
-      </v-alert>
+      </AtlasAlert>
 
-      <v-text-field
+      <AtlasTextField
         v-model="targetUser"
         :label="tv('components.welcome.username')"
         :placeholder="tv('components.welcome.username')"
         variant="outlined"
-        prepend-inner-icon="mdi-account"
+        prepend-icon="mdi-account"
         :disabled="isRunningAs || isLoading"
         class="mb-3"
         @keyup.enter="handleRunAs"
       />
 
-      <v-btn
-        color="primary"
+      <AtlasButton
+        size="lg"
         block
-        size="large"
+        icon="mdi-account-switch"
         :loading="isLoading"
         :disabled="!targetUser.trim() || isRunningAs"
         @click="handleRunAs"
       >
-        <v-icon left>
-          mdi-account-switch
-        </v-icon>
         {{ t('components.welcome.runas') }}
-      </v-btn>
+      </AtlasButton>
 
-      <v-alert
-        type="warning"
-        variant="tonal"
+      <AtlasAlert
+        severity="warning"
         class="mt-4"
       >
         <div class="text-caption">
           <strong>{{ t('facets.values.warning') }}:</strong> {{ t('auth.runAsWarning') }}
         </div>
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

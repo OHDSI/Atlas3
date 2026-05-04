@@ -1,17 +1,18 @@
 <template>
-  <v-btn
-    :prepend-icon="provider.icon"
-    variant="outlined"
+  <AtlasButton
+    :icon="provider.icon"
+    variant="secondary"
+    size="lg"
     block
-    size="large"
     class="mb-2"
     @click="handleClick"
   >
     {{ provider.name }}
-  </v-btn>
+  </AtlasButton>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton } from '@/components/ui'
 import type { AuthProvider } from '@/models/auth.types'
 
 interface Props {

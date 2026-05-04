@@ -1,44 +1,41 @@
 <template>
   <div class="concept-search-inline">
     <!-- Search Input -->
-    <v-text-field
+    <AtlasTextField
       v-model="searchInput"
       :label="tv('common.search')"
       :placeholder="tv('search.placeholder')"
-      prepend-inner-icon="mdi-magnify"
+      prepend-icon="mdi-magnify"
       clearable
       variant="outlined"
-      density="comfortable"
-      :error-messages="validationError"
+      :error="validationError"
       :disabled="loading"
       class="mb-4"
-      @update:model-value="onSearchInput"
+      @update:model-value="(v: string | number) => onSearchInput(v != null ? String(v) : null)"
       @click:clear="onClear"
       @keyup.enter="onSearch"
     >
       <template #append>
-        <v-btn
-          color="primary"
+        <AtlasButton
           :disabled="!isSearchValid || loading"
           :loading="loading"
           @click="onSearch"
         >
           {{ t('common.search') }}
-        </v-btn>
+        </AtlasButton>
       </template>
-    </v-text-field>
+    </AtlasTextField>
 
     <!-- Error Message -->
-    <v-alert
+    <AtlasAlert
       v-if="store.error"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="mb-4"
-      @click:close="store.error = null"
+      @close="store.error = null"
     >
       {{ store.error }}
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Results Table with Add/Remove buttons -->
     <ConceptTable
@@ -59,6 +56,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { AtlasAlert, AtlasButton, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'

@@ -1,11 +1,7 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useConceptSets } from '@/composables/useConceptSets'
-import { useConceptPickerStore } from '@/stores/concept-picker'
 import type { Concept, ConceptSet } from '@/models/concept-set.types'
-import * as webapi from '@/services/webapi'
 
-// Mock the webapi service
 vi.mock('@/services/webapi', () => ({
   searchConcepts: vi.fn(),
   getConceptSet: vi.fn(),
@@ -15,7 +11,6 @@ vi.mock('@/services/webapi', () => ({
   deleteConceptSet: vi.fn(),
 }))
 
-// Mock logger to avoid console output during tests
 vi.mock('@/utils/logger', () => ({
   logger: {
     error: vi.fn(),
@@ -24,6 +19,17 @@ vi.mock('@/utils/logger', () => ({
     debug: vi.fn(),
   },
 }))
+
+let webapi: typeof import('@/services/webapi')
+let useConceptSets: typeof import('@/composables/useConceptSets').useConceptSets
+let useConceptPickerStore: typeof import('@/stores/concept-picker').useConceptPickerStore
+
+beforeAll(async () => {
+  vi.resetModules()
+  webapi = await import('@/services/webapi')
+  ;({ useConceptSets } = await import('@/composables/useConceptSets'))
+  ;({ useConceptPickerStore } = await import('@/stores/concept-picker'))
+})
 
 describe('useConceptSets', () => {
   const mockConcept: Concept = {
@@ -84,21 +90,17 @@ describe('useConceptSets', () => {
       vi.mocked(webapi.searchConcepts).mockResolvedValue({ success: true, data: [mockConcept] })
       const { searchConcepts } = useConceptSets()
 
-      // Call search multiple times rapidly
       searchConcepts('dia')
       searchConcepts('diab')
       searchConcepts('diabet')
       searchConcepts('diabetes')
 
-      // Advance timer by less than 300ms - should not trigger
       vi.advanceTimersByTime(200)
       expect(webapi.searchConcepts).not.toHaveBeenCalled()
 
-      // Advance timer to complete 300ms debounce
       vi.advanceTimersByTime(100)
       await vi.runAllTimersAsync()
 
-      // Only the last search should be executed
       expect(webapi.searchConcepts).toHaveBeenCalledTimes(1)
       expect(webapi.searchConcepts).toHaveBeenCalledWith('SYNPUF1K', 'diabetes', undefined)
     })
@@ -182,7 +184,6 @@ describe('useConceptSets', () => {
       searchConcepts('diabetes')
       vi.advanceTimersByTime(300)
 
-      // Check that isSearching is set before promise resolves
       const searchPromise = vi.runAllTimersAsync()
       expect(store.isSearching).toBe(true)
 
@@ -191,7 +192,6 @@ describe('useConceptSets', () => {
     })
 
     it('should handle API returning error result', async () => {
-      // Test the case where API returns { success: false } instead of throwing
       vi.mocked(webapi.searchConcepts).mockResolvedValue({ success: false, data: [], error: 'Search failed' })
 
       const { searchConcepts, searchResults, isSearching } = useConceptSets()
@@ -567,7 +567,6 @@ describe('useConceptSets', () => {
 
       instance1.toggleConceptSelection(mockConcept)
 
-      // Each instance has its own selectedConcepts ref (not shared)
       expect(instance1.selectedConcepts.value).toHaveLength(1)
       expect(instance2.selectedConcepts.value).toHaveLength(0)
     })

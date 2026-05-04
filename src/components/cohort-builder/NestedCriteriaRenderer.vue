@@ -4,15 +4,14 @@
     :style="{ marginLeft: `${depth * 24}px` }"
   >
     <!-- Depth Warning -->
-    <v-alert
+    <AtlasAlert
       v-if="depth > 10"
-      type="warning"
-      variant="tonal"
+      severity="warning"
       class="mb-2"
     >
-      <v-icon>mdi-alert</v-icon>
+      <AtlasIcon>mdi-alert</AtlasIcon>
       Deep nesting detected ({{ depth }} levels). Consider simplifying your criteria structure.
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Logic Type Display -->
     <div class="logic-header">
@@ -25,27 +24,27 @@
     </div>
 
     <!-- Events List -->
-    <v-list
+    <AtlasList
       v-if="nested.events.length > 0"
       density="compact"
       class="mt-2"
     >
-      <v-list-item
+      <AtlasListItem
         v-for="event in nested.events"
         :key="event.id"
       >
         <template #prepend>
-          <v-icon size="small">
+          <AtlasIcon size="small">
             mdi-chevron-right
-          </v-icon>
+          </AtlasIcon>
         </template>
 
         <v-list-item-title class="text-caption">
           {{ formatEventType(event.criteriaType) }}:
           {{ event.conceptSet?.name || 'No concept set' }}
         </v-list-item-title>
-      </v-list-item>
-    </v-list>
+      </AtlasListItem>
+    </AtlasList>
 
     <!-- Recursive Nested Criteria -->
     <div
@@ -67,6 +66,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
 import { ref } from 'vue'
 import type { NestedCriteria, CriteriaType } from '@/models/cohort.types'
 import { useI18n } from '@/composables/useI18n'

@@ -48,13 +48,13 @@
           </div>
 
           <div class="cs-editor__actions">
-            <v-tooltip
+            <AtlasTooltip
               v-if="isEditMode && props.conceptSet?.id"
               :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
               location="bottom"
             >
               <template #activator="{ props: tooltipProps }">
-                <v-badge
+                <AtlasBadge
                   v-bind="tooltipProps"
                   :content="versionCount"
                   :model-value="versionCount > 0"
@@ -62,15 +62,16 @@
                   offset-x="6"
                   offset-y="6"
                 >
-                  <v-btn
+                  <AtlasIconButton
                     icon="mdi-history"
-                    size="small"
+                    v-bind="{ ariaLabel: 'Version history' }"
                     variant="text"
+                    size="sm"
                     @click="showVersionsDialog = true"
                   />
-                </v-badge>
+                </AtlasBadge>
               </template>
-            </v-tooltip>
+            </AtlasTooltip>
 
             <v-btn
               v-if="isEditMode"
@@ -82,20 +83,19 @@
               {{ t('common.delete', 'Delete') }}
             </v-btn>
 
-            <v-btn
-              color="primary"
-              variant="flat"
+            <AtlasButton
               :disabled="!formValid || loading || !canSubmit"
               :loading="loading"
               @click="onSave"
             >
               {{ isEditMode ? t('common.save', 'Save') : t('common.create', 'Create') }}
-            </v-btn>
+            </AtlasButton>
 
-            <v-btn
+            <AtlasIconButton
               icon="mdi-close"
+              v-bind="{ ariaLabel: t('common.close', 'Close').value }"
               variant="text"
-              :aria-label="t('common.close', 'Close').value"
+              size="sm"
               @click="onClose"
             />
           </div>
@@ -103,7 +103,7 @@
 
         <!-- Tabs rail: same shared treatment as the outer page tabs. -->
         <nav class="page-tabs-rail cs-editor__tabs-rail">
-          <v-tabs
+          <AtlasTabs
             v-model="activeTab"
             align-tabs="start"
             density="comfortable"
@@ -112,55 +112,54 @@
             bg-color="transparent"
             class="page-tabs"
           >
-            <v-tab value="selected">
-              <v-icon
+            <AtlasTab value="selected">
+              <AtlasIcon
                 start
                 icon="mdi-checkbox-marked-circle-outline"
               />
               {{ t('cs.manager.tabs.includedConcepts', 'Selected') }}
-              <v-chip
-                size="x-small"
-                variant="tonal"
-                color="primary"
+              <AtlasChip
+                size="sm"
+                tone="primary"
                 class="cs-editor__tab-count"
               >
                 {{ itemCount }}
-              </v-chip>
-            </v-tab>
-            <v-tab value="search">
-              <v-icon
+              </AtlasChip>
+            </AtlasTab>
+            <AtlasTab value="search">
+              <AtlasIcon
                 start
                 icon="mdi-magnify"
               />
               {{ t('search.tabs.search', 'Search') }}
-            </v-tab>
-            <v-tab value="recommend">
-              <v-icon
+            </AtlasTab>
+            <AtlasTab value="recommend">
+              <AtlasIcon
                 start
                 icon="mdi-lightbulb-on-outline"
               />
               {{ t('cs.manager.tabs.recommend', 'Recommend') }}
-            </v-tab>
-            <v-tab value="compare">
-              <v-icon
+            </AtlasTab>
+            <AtlasTab value="compare">
+              <AtlasIcon
                 start
                 icon="mdi-compare"
               />
               {{ t('cs.browser.compare.compare', 'Compare') }}
-            </v-tab>
-          </v-tabs>
+            </AtlasTab>
+          </AtlasTabs>
 
-          <v-spacer />
+          <AtlasSpacer />
 
-          <v-btn
-            variant="text"
-            size="small"
-            prepend-icon="mdi-clipboard-text-outline"
+          <AtlasButton
+            variant="ghost"
+            size="sm"
+            icon="mdi-clipboard-text-outline"
             class="cs-editor__paste-btn"
             @click="showPasteDialog = true"
           >
             {{ t('cs.manager.pasteIds', 'Paste IDs') }}
-          </v-btn>
+          </AtlasButton>
         </nav>
 
         <div class="cs-editor__body">
@@ -201,195 +200,164 @@
       </div>
 
       <!-- Versions Dialog -->
-      <v-dialog
+      <AtlasDialog
         v-model="showVersionsDialog"
-        max-width="1200px"
-        scrollable
+        :eyebrow="t('common.history', 'History').value"
+        :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+        :close-label="t('common.close', 'Close').value"
+        max-width="1200"
+        @close="showVersionsDialog = false"
       >
-        <v-card>
-          <AppDialogHeader
-            :eyebrow="t('common.history', 'History').value"
-            :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
-            :show-close="true"
-            :close-label="t('common.close', 'Close').value"
-            @close="showVersionsDialog = false"
-          />
-          <v-card-text class="pa-0">
-            <VersionsTabContent
-              v-if="showVersionsDialog && props.conceptSet?.id"
-              :config="versionsConfig"
-            />
-          </v-card-text>
-        </v-card>
-      </v-dialog>
+        <VersionsTabContent
+          v-if="showVersionsDialog && props.conceptSet?.id"
+          :config="versionsConfig"
+        />
+      </AtlasDialog>
     </v-navigation-drawer>
   </Teleport>
 
   <!-- Confirmation dialogs — kept outside the drawer Teleport so they
        remain in the component's normal render tree but are themselves
        v-dialogs (which Vuetify already teleports to body). -->
-  <v-dialog
+  <AtlasDialog
     v-model="showCloseConfirm"
+    :eyebrow="t('common.confirm', 'Confirm').value"
+    :title="t('common.unsavedChanges', 'Unsaved changes').value"
     max-width="440"
+    @close="showCloseConfirm = false"
   >
-    <v-card>
-      <AppDialogHeader
-        :eyebrow="t('common.confirm', 'Confirm').value"
-        :title="t('common.unsavedChanges', 'Unsaved changes').value"
-      />
-      <v-card-text>
-        {{
-          t(
-            'common.unsavedChangesMessage',
-            'You have unsaved changes. Are you sure you want to close?'
-          ).value
-        }}
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          variant="text"
-          @click="showCloseConfirm = false"
-        >
-          {{ t('common.cancel', 'Cancel').value }}
-        </v-btn>
-        <v-btn
-          color="error"
-          variant="flat"
-          @click="confirmClose"
-        >
-          {{ t('common.discard', 'Discard changes').value }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    {{
+      t(
+        'common.unsavedChangesMessage',
+        'You have unsaved changes. Are you sure you want to close?'
+      ).value
+    }}
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="showCloseConfirm = false"
+      >
+        {{ t('common.cancel', 'Cancel').value }}
+      </AtlasButton>
+      <AtlasButton
+        variant="danger"
+        @click="confirmClose"
+      >
+        {{ t('common.discard', 'Discard changes').value }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 
   <!-- Bulk paste IDs dialog. Resolves IDs against the vocabulary
        and shows a matched / unmatched summary before adding to the
        set. -->
-  <v-dialog
+  <AtlasDialog
     v-model="showPasteDialog"
+    :eyebrow="t('cs.manager.pasteIds', 'Paste IDs').value"
+    :title="t('cs.manager.pasteIdsTitle', 'Paste concept IDs').value"
     max-width="640"
+    @close="closePasteDialog"
   >
-    <v-card>
-      <AppDialogHeader
-        :eyebrow="t('cs.manager.pasteIds', 'Paste IDs').value"
-        :title="t('cs.manager.pasteIdsTitle', 'Paste concept IDs').value"
-      />
-      <v-card-text>
-        <p class="cs-paste__hint">
-          {{
-            t(
-              'cs.manager.pasteIdsHint',
-              'Separate IDs with spaces, commas, semicolons, or newlines. We resolve each ID against the vocabulary before adding.'
-            ).value
-          }}
-        </p>
-        <v-textarea
-          v-model="pasteInput"
-          :placeholder="'201826\n313217, 4329847\n443238'"
-          :disabled="pasteResolving"
-          rows="6"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          class="cs-paste__textarea"
+    <p class="cs-paste__hint">
+      {{
+        t(
+          'cs.manager.pasteIdsHint',
+          'Separate IDs with spaces, commas, semicolons, or newlines. We resolve each ID against the vocabulary before adding.'
+        ).value
+      }}
+    </p>
+    <AtlasTextField
+      v-model="pasteInput"
+      :placeholder="'201826\n313217, 4329847\n443238'"
+      :disabled="pasteResolving"
+      :rows="6"
+      multiline
+      variant="outlined"
+      hide-details
+      class="cs-paste__textarea"
+    />
+
+    <div
+      v-if="pasteResolved.length || pasteUnresolved.length"
+      class="cs-paste__summary"
+    >
+      <div
+        v-if="pasteResolved.length"
+        class="cs-paste__summary-row cs-paste__summary-row--ok"
+      >
+        <AtlasIcon
+          icon="mdi-check-circle-outline"
+          size="18"
         />
+        <span>{{ t('cs.manager.pasteIdsResolved', 'Resolved').value }}:
+          {{ pasteResolved.length }}</span>
+      </div>
+      <div
+        v-if="pasteUnresolved.length"
+        class="cs-paste__summary-row cs-paste__summary-row--err"
+      >
+        <AtlasIcon
+          icon="mdi-alert-circle-outline"
+          size="18"
+        />
+        <span>{{ t('cs.manager.pasteIdsUnresolved', 'Not found').value }}:
+          {{ pasteUnresolved.join(', ') }}</span>
+      </div>
+    </div>
 
-        <div
-          v-if="pasteResolved.length || pasteUnresolved.length"
-          class="cs-paste__summary"
-        >
-          <div
-            v-if="pasteResolved.length"
-            class="cs-paste__summary-row cs-paste__summary-row--ok"
-          >
-            <v-icon
-              icon="mdi-check-circle-outline"
-              size="18"
-            />
-            <span>{{ t('cs.manager.pasteIdsResolved', 'Resolved').value }}:
-              {{ pasteResolved.length }}</span>
-          </div>
-          <div
-            v-if="pasteUnresolved.length"
-            class="cs-paste__summary-row cs-paste__summary-row--err"
-          >
-            <v-icon
-              icon="mdi-alert-circle-outline"
-              size="18"
-            />
-            <span>{{ t('cs.manager.pasteIdsUnresolved', 'Not found').value }}:
-              {{ pasteUnresolved.join(', ') }}</span>
-          </div>
-        </div>
-      </v-card-text>
-      <v-card-actions>
-        <v-btn
-          variant="text"
-          :disabled="pasteResolving"
-          @click="closePasteDialog"
-        >
-          {{ t('common.cancel', 'Cancel').value }}
-        </v-btn>
-        <v-spacer />
-        <v-btn
-          v-if="!pasteResolved.length && !pasteUnresolved.length"
-          color="primary"
-          variant="flat"
-          :loading="pasteResolving"
-          :disabled="!pasteInput.trim()"
-          @click="resolvePastedIds"
-        >
-          {{ t('cs.manager.pasteIdsResolveBtn', 'Resolve').value }}
-        </v-btn>
-        <v-btn
-          v-else
-          color="primary"
-          variant="flat"
-          :disabled="!pasteResolved.length"
-          @click="applyPastedConcepts"
-        >
-          {{ t('cs.manager.pasteIdsAddBtn', 'Add').value }} {{ pasteResolved.length || '' }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        :disabled="pasteResolving"
+        @click="closePasteDialog"
+      >
+        {{ t('common.cancel', 'Cancel').value }}
+      </AtlasButton>
+      <AtlasButton
+        v-if="!pasteResolved.length && !pasteUnresolved.length"
+        :loading="pasteResolving"
+        :disabled="!pasteInput.trim()"
+        @click="resolvePastedIds"
+      >
+        {{ t('cs.manager.pasteIdsResolveBtn', 'Resolve').value }}
+      </AtlasButton>
+      <AtlasButton
+        v-else
+        :disabled="!pasteResolved.length"
+        @click="applyPastedConcepts"
+      >
+        {{ t('cs.manager.pasteIdsAddBtn', 'Add').value }} {{ pasteResolved.length || '' }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 
-  <v-dialog
+  <AtlasDialog
     v-model="showDeleteConfirm"
+    :eyebrow="t('common.confirm', 'Confirm').value"
+    :title="`${t('common.delete', 'Delete').value} ${t('common.conceptSet', 'Concept Set').value}`"
     max-width="440"
+    @close="showDeleteConfirm = false"
   >
-    <v-card>
-      <AppDialogHeader
-        :eyebrow="t('common.confirm', 'Confirm').value"
-        :title="`${t('common.delete', 'Delete').value} ${t('common.conceptSet', 'Concept Set').value}`"
-      />
-      <v-card-text>
-        {{
-          t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete')
-            .value
-        }}
-        "{{ props.conceptSet?.name }}"?
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          variant="text"
-          @click="showDeleteConfirm = false"
-        >
-          {{ t('common.cancel', 'Cancel').value }}
-        </v-btn>
-        <v-btn
-          color="error"
-          variant="flat"
-          @click="confirmDelete"
-        >
-          {{ t('common.delete', 'Delete').value }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    {{
+      t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete')
+        .value
+    }}
+    "{{ props.conceptSet?.name }}"?
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="showDeleteConfirm = false"
+      >
+        {{ t('common.cancel', 'Cancel').value }}
+      </AtlasButton>
+      <AtlasButton
+        variant="danger"
+        @click="confirmDelete"
+      >
+        {{ t('common.delete', 'Delete').value }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
@@ -405,7 +373,7 @@ import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
 import { getConceptById } from '@/services/concept-search.service'

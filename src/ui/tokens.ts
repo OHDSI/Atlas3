@@ -1,0 +1,28 @@
+export const tokens = {
+  color: {
+    primary:        '#1f425a',
+    primaryDarken:  '#163349',
+    accent:         '#eb6622',
+    surface:        '#ffffff',
+    surfaceVariant: '#f6f7f9',
+    onSurface:        'rgba(0,0,0,.87)',
+    onSurfaceVariant: 'rgba(0,0,0,.62)',
+    outline:        'rgba(0,0,0,.12)',
+    outlineVariant: 'rgba(0,0,0,.06)',
+    info:    '#2196f3',
+    success: '#4caf50',
+    warning: '#fb8c00',
+    danger:  '#ff5252',
+  },
+  radius:  { sm: '4px', md: '8px', lg: '12px', xl: '16px' },
+  spacing: { xs: '4px', sm: '8px', md: '16px', lg: '24px', xl: '32px' },
+  density: { default: 'compact' as const },
+  elevation: {
+    ambient: '0 1px 3px rgba(15,23,42,.08)',
+    diffuse: '0 8px 24px rgba(15,23,42,.08)',
+  },
+  motion:  { fast: '120ms ease', med: '160ms ease', slow: '240ms ease' },
+  z:       { dropdown: 1000, dialog: 2000, snackbar: 3000 },
+} as const
+
+export type AtlasTokens = typeof tokens

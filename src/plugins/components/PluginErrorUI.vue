@@ -1,11 +1,11 @@
 <template>
   <div class="plugin-error-ui">
-    <v-icon
+    <AtlasIcon
       size="64"
       color="error"
     >
       mdi-alert-circle
-    </v-icon>
+    </AtlasIcon>
     <h2>Plugin Failed to Load</h2>
     <p class="error-message">
       {{ error?.message || 'Unknown error occurred' }}
@@ -19,24 +19,24 @@
       <pre v-if="error?.stack">{{ error.stack }}</pre>
     </div>
     <div class="actions">
-      <v-btn
+      <AtlasButton
         v-if="error?.recoverable"
-        color="primary"
         @click="$emit('retry')"
       >
         Retry
-      </v-btn>
-      <v-btn
-        variant="text"
+      </AtlasButton>
+      <AtlasButton
+        variant="ghost"
         @click="showDetails = !showDetails"
       >
         {{ showDetails ? 'Hide' : 'Show' }} Details
-      </v-btn>
+      </AtlasButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { ref } from 'vue'
 
 defineProps<{

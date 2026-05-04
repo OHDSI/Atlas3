@@ -10,16 +10,15 @@
       <h2 class="linked-cohort-picker__title">
         {{ t('cc.viewEdit.results.filters.cohorts', 'Linked Cohorts') }}
       </h2>
-      <v-btn
-        variant="outlined"
-        color="primary"
-        prepend-icon="mdi-plus"
-        size="small"
+      <AtlasButton
+        variant="secondary"
+        size="sm"
+        icon="mdi-plus"
         data-testid="linked-cohort-picker-add"
         @click="openDialog"
       >
         {{ t('common.add', 'Add cohort') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <div
@@ -30,80 +29,77 @@
       {{ t('common.noData', 'No cohorts linked.') }}
     </div>
 
-    <v-list
+    <AtlasList
       v-else
       density="compact"
       class="linked-cohort-picker__list"
       data-testid="linked-cohort-picker-list"
     >
-      <v-list-item
+      <AtlasListItem
         v-for="cohort in modelValue"
         :key="cohort.id"
         :data-testid="`linked-cohort-picker-row-${cohort.id}`"
       >
         <template #prepend>
-          <v-icon size="small">
+          <AtlasIcon size="small">
             mdi-account-group
-          </v-icon>
+          </AtlasIcon>
         </template>
-        <v-list-item-title>{{ cohort.name }}</v-list-item-title>
+        <v-list-item-title>
+          {{ cohort.name }}
+        </v-list-item-title>
         <template #append>
-          <v-btn
+          <AtlasIconButton
             icon="mdi-close"
-            size="x-small"
+            v-bind="{ ariaLabel: t('columns.remove', 'Remove').value }"
             variant="text"
-            :aria-label="t('columns.remove', 'Remove').value"
+            size="sm"
             :data-testid="`linked-cohort-picker-remove-${cohort.id}`"
             @click="removeCohort(cohort.id)"
           />
         </template>
-      </v-list-item>
-    </v-list>
+      </AtlasListItem>
+    </AtlasList>
 
-    <v-dialog
+    <AtlasDialog
       v-model="dialogOpen"
+      eyebrow="COHORT"
+      :title="t('ir.editor.chooseACohort', 'Select cohorts to link').value"
       max-width="700"
+      @close="dialogOpen = false"
     >
-      <v-card>
-        <v-card-title>
-          {{ t('ir.editor.chooseACohort', 'Select cohorts to link') }}
-        </v-card-title>
-        <v-card-text class="linked-cohort-picker__dialog-body">
-          <v-data-table
-            v-model="selectedIds"
-            :headers="dialogHeaders"
-            :items="selectableItems"
-            item-value="id"
-            show-select
-            density="compact"
-            data-testid="linked-cohort-picker-table"
-          />
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            data-testid="linked-cohort-picker-cancel"
-            @click="dialogOpen = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            :disabled="selectedIds.length === 0"
-            data-testid="linked-cohort-picker-confirm"
-            @click="confirmAdd"
-          >
-            {{ t('common.add', 'Add cohort') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <div class="linked-cohort-picker__dialog-body">
+        <AtlasDataTable
+          v-model="selectedIds"
+          :headers="dialogHeaders"
+          :items="selectableItems"
+          item-value="id"
+          show-select
+          data-testid="linked-cohort-picker-table"
+        />
+      </div>
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          data-testid="linked-cohort-picker-cancel"
+          @click="dialogOpen = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          :disabled="selectedIds.length === 0"
+          data-testid="linked-cohort-picker-confirm"
+          @click="confirmAdd"
+        >
+          {{ t('common.add', 'Add cohort') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'

@@ -1,14 +1,7 @@
-/**
- * Cohort Store Tests
- * Tests for cohort state management
- */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useCohortStore } from '@/stores/cohort'
 import type { CohortEvent, CohortDefinition } from '@/models/cohort.types'
-import * as cohortCache from '@/utils/cohort-cache'
 
-// Mock the cohort-cache module to avoid IndexedDB timing issues in CI
 vi.mock('@/utils/cohort-cache', () => {
   const mockCache = new Map<number | string, CohortDefinition>()
 
@@ -27,19 +20,25 @@ vi.mock('@/utils/cohort-cache', () => {
     clearCache: vi.fn(async () => {
       mockCache.clear()
     }),
-    // Export for test access
     _mockCache: mockCache,
   }
 })
 
+let cohortCache: typeof import('@/utils/cohort-cache') & { _mockCache: Map<number | string, CohortDefinition> }
+let useCohortStore: typeof import('@/stores/cohort').useCohortStore
+
+beforeAll(async () => {
+  vi.resetModules()
+  cohortCache = await import('@/utils/cohort-cache') as typeof cohortCache
+  ;({ useCohortStore } = await import('@/stores/cohort'))
+})
+
 describe('Cohort Store', () => {
-  // Get access to the internal mock cache
-  const getMockCache = () => (cohortCache as any)._mockCache as Map<number | string, CohortDefinition>
+  const getMockCache = () => cohortCache._mockCache
 
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    // Clear the mock cache
     getMockCache().clear()
   })
 
@@ -352,10 +351,8 @@ describe('Cohort Store', () => {
         conceptSets: [],
       }
 
-      // Save to cache first
       await cohortCache.saveCohortToCache(mockCohort)
 
-      // Load from cache
       const result = await store.loadCohort(123)
 
       expect(result).not.toBeNull()
@@ -380,10 +377,8 @@ describe('Cohort Store', () => {
         conceptSets: [],
       }
 
-      // Save to cache
       await cohortCache.saveCohortToCache(mockCohort)
 
-      // Use fallback method
       const result = await store.getCachedCohort(456)
 
       expect(result).not.toBeNull()
@@ -450,7 +445,7 @@ describe('Cohort Store', () => {
     it('should not save when in read-only mode', async () => {
       const store = useCohortStore()
       const invalidCohort: CohortDefinition = {
-        name: '  ', // Whitespace only
+        name: '  ',
         entryEvents: [
           {
             id: 'event-1',
@@ -494,31 +489,27 @@ describe('Cohort Store', () => {
 
       store.setCohort(cohort)
 
-      // Mock saveCohortToCache to fail twice, then succeed
       let attempts = 0
       vi.mocked(cohortCache.saveCohortToCache).mockImplementation(async (coh) => {
         attempts++
         if (attempts < 3) {
           throw new Error('Network error')
         }
-        // Succeed on third attempt - store in mock cache
         if (coh.id) {
           getMockCache().set(coh.id, { ...coh })
         }
       })
 
-      // Start save (don't await yet)
       const savePromise = store.saveCohort()
 
-      // Advance timers for retry delays (1s + 2s = 3s total)
-      await vi.advanceTimersByTimeAsync(1000) // First retry delay
-      await vi.advanceTimersByTimeAsync(2000) // Second retry delay
+      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(2000)
 
       const result = await savePromise
 
       expect(result).toBe(true)
       expect(attempts).toBe(3)
-      expect(store.retryState.attempt).toBe(0) // Reset after success
+      expect(store.retryState.attempt).toBe(0)
 
       vi.useRealTimers()
     })
@@ -542,7 +533,6 @@ describe('Cohort Store', () => {
 
       store.setCohort(cohort)
 
-      // Mock saveCohortToCache to always fail
       let attempts = 0
       vi.mocked(cohortCache.saveCohortToCache).mockImplementation(async () => {
         attempts++
@@ -552,9 +542,9 @@ describe('Cohort Store', () => {
       const result = await store.saveCohort()
 
       expect(result).toBe(false)
-      expect(attempts).toBe(5) // Max attempts
+      expect(attempts).toBe(5)
       expect(store.retryState.isRetrying).toBe(false)
-    }, 60000) // Longer timeout for exponential backoff
+    }, 60000)
 
     it('should cancel retry', async () => {
       const store = useCohortStore()
@@ -585,18 +575,14 @@ describe('Cohort Store', () => {
 
       store.setCohort(cohort)
 
-      // Mock to always fail
       vi.mocked(cohortCache.saveCohortToCache).mockRejectedValue(new Error('Network error'))
 
-      // Start save (will retry)
       const savePromise = store.saveCohort()
 
-      // Cancel immediately
       store.cancelRetry()
 
       await savePromise
 
-      // Should have stopped retrying
       expect(store.retryState.attempt).toBe(0)
       expect(store.retryState.isRetrying).toBe(false)
     })
@@ -701,7 +687,6 @@ describe('Cohort Store', () => {
 
       store.setCohort(cohort)
 
-      // Should not have censorWindow errors when only startDate is provided
       expect(store.validationErrors.some((err) => err.field === 'censorWindow')).toBe(false)
     })
 
@@ -828,7 +813,6 @@ describe('Cohort Store', () => {
 
       store.setCohort(cohort)
 
-      // Has warnings but no errors
       expect(store.validationErrors.some((err) => err.severity === 'warning')).toBe(true)
       expect(store.hasValidationErrors).toBe(false)
       expect(store.canSave).toBe(true)
@@ -862,17 +846,14 @@ describe('Cohort Store', () => {
         conceptSets: [],
       }
 
-      // Save to cache
       await cohortCache.saveCohortToCache(mockCohort)
 
-      // Mock getCohortFromCache to fail first time
       let callCount = 0
       vi.mocked(cohortCache.getCohortFromCache).mockImplementation(async (_id) => {
         callCount++
         if (callCount === 1) {
           throw new Error('Cache error')
         }
-        // Second call (fallback) should succeed
         return mockCohort
       })
 
@@ -880,13 +861,12 @@ describe('Cohort Store', () => {
 
       expect(result).not.toBeNull()
       expect(result?.id).toBe(555)
-      expect(callCount).toBe(2) // Called twice (initial + fallback)
+      expect(callCount).toBe(2)
     })
 
     it('should return null when getCachedCohort fails', async () => {
       const store = useCohortStore()
 
-      // Mock to throw error
       vi.mocked(cohortCache.getCohortFromCache).mockRejectedValue(new Error('Cache error'))
 
       const result = await store.getCachedCohort(999)
@@ -911,13 +891,10 @@ describe('Cohort Store', () => {
         conceptSets: [],
       }
 
-      // Save to cache
       await cohortCache.saveCohortToCache(mockCohort)
 
-      // Delete it
       await store.deleteCachedCohort(666)
 
-      // Verify it's deleted
       const result = await cohortCache.getCohortFromCache(666)
       expect(result).toBeNull()
     })
@@ -925,12 +902,10 @@ describe('Cohort Store', () => {
     it('should handle deleteCachedCohort with error gracefully', async () => {
       const store = useCohortStore()
 
-      // Mock to throw error
       vi.mocked(cohortCache.deleteCohortFromCache).mockRejectedValue(
         new Error('Delete failed')
       )
 
-      // Should not throw
       await expect(store.deleteCachedCohort(777)).resolves.toBeUndefined()
     })
   })
@@ -1016,11 +991,9 @@ describe('Cohort Store', () => {
     it('should preserve state through multiple operations', () => {
       const store = useCohortStore()
 
-      // Create cohort
       store.createNewCohort()
       expect(store.isDirty).toBe(false)
 
-      // Add event
       store.addEntryEvent({
         id: 'event-1',
         criteriaType: 'ConditionOccurrence',
@@ -1029,7 +1002,6 @@ describe('Cohort Store', () => {
       expect(store.isDirty).toBe(true)
       expect(store.entryEventCount).toBe(1)
 
-      // Update event
       store.updateEntryEvent('event-1', {
         id: 'event-1',
         criteriaType: 'DrugExposure',
@@ -1038,11 +1010,9 @@ describe('Cohort Store', () => {
       expect(store.isDirty).toBe(true)
       expect(store.currentCohort?.entryEvents[0]?.criteriaType).toBe('DrugExposure')
 
-      // Mark clean
       store.markClean()
       expect(store.isDirty).toBe(false)
 
-      // Remove event
       store.removeEntryEvent('event-1')
       expect(store.isDirty).toBe(true)
       expect(store.entryEventCount).toBe(0)

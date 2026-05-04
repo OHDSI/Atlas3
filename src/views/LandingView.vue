@@ -19,21 +19,19 @@
             <p v-html="descriptionHtml" />
           </div>
           <div class="landing__actions">
-            <v-btn
-              color="primary"
-              size="large"
+            <AtlasButton
+              size="lg"
               @click="handleNewCohort"
             >
               {{ t('home.gettingStarted.newCohort.button', 'Define a new cohort') }}
-            </v-btn>
-            <v-btn
-              variant="outlined"
-              color="primary"
-              size="large"
+            </AtlasButton>
+            <AtlasButton
+              variant="secondary"
+              size="lg"
               @click="handleSearchConcepts"
             >
               {{ t('home.gettingStarted.vocabulary.button', 'Search the vocabulary') }}
-            </v-btn>
+            </AtlasButton>
           </div>
         </div>
         <div class="landing__illustration">
@@ -47,7 +45,7 @@
     </v-card>
 
     <div class="landing__features">
-      <SurfaceCard
+      <AtlasCard
         v-for="feature in features"
         :key="feature.id"
         tag="router-link"
@@ -56,7 +54,7 @@
         :to="feature.route"
         class="landing__feature"
       >
-        <v-icon
+        <AtlasIcon
           :icon="feature.icon"
           size="24"
           class="landing__feature-icon"
@@ -67,10 +65,10 @@
         <div class="landing__feature-description">
           {{ feature.description }}
         </div>
-      </SurfaceCard>
+      </AtlasCard>
     </div>
 
-    <SurfaceCard
+    <AtlasCard
       class="landing__documentation"
       padding="md"
     >
@@ -79,7 +77,7 @@
       </h2>
       <!-- eslint-disable-next-line vue/no-v-html -- trusted i18n content -->
       <p v-html="documentationHtml" />
-    </SurfaceCard>
+    </AtlasCard>
   </div>
 </template>
 
@@ -87,7 +85,7 @@
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import atlasLogo from '@/assets/icons/atlas-loading.svg'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasButton, AtlasCard, AtlasIcon } from '@/components/ui'
 
 interface FeatureTile {
   id: string

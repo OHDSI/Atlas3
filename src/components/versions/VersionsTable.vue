@@ -1,25 +1,24 @@
 <template>
   <div class="versions-table">
     <!-- Filters Section (T026) -->
-    <v-row
+    <AtlasRow
       class="mb-4"
       align="center"
     >
-      <v-col
+      <AtlasCol
         cols="12"
         md="10"
       >
-        <v-select
+        <AtlasSelect
           v-model="selectedAuthor"
           :items="authorOptions"
           :label="tv('facets.caption.author')"
           clearable
-          density="compact"
           variant="outlined"
-          @update:model-value="handleAuthorFilter"
+          @update:model-value="(v) => handleAuthorFilter(v as string | null)"
         />
-      </v-col>
-      <v-col
+      </AtlasCol>
+      <AtlasCol
         cols="12"
         md="2"
       >
@@ -30,11 +29,11 @@
         >
           {{ t('components.filterPanel.buttons.clear') }}
         </v-btn>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
 
     <!-- Loading State (T031) -->
-    <v-progress-linear
+    <AtlasProgressLinear
       v-if="loading"
       indeterminate
       color="primary"
@@ -42,18 +41,17 @@
     />
 
     <!-- Error State -->
-    <v-alert
+    <AtlasAlert
       v-if="error"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="mb-4"
     >
       {{ error }}
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Versions Table (T025, T030 with virtualization) -->
-    <v-data-table
+    <AtlasDataTable
       :headers="headers"
       :items="filteredVersions"
       :loading="loading"
@@ -64,14 +62,13 @@
     >
       <!-- Version Column -->
       <template #item.displayVersion="{ item }">
-        <v-chip
+        <AtlasChip
           v-if="item.isCurrent"
-          color="primary"
-          size="small"
-          variant="flat"
+          tone="primary"
+          size="sm"
         >
           {{ t('components.versions.current') }}
-        </v-chip>
+        </AtlasChip>
         <span
           v-else
           class="font-weight-medium"
@@ -83,7 +80,7 @@
       <!-- Author Column -->
       <template #item.createdBy="{ item }">
         <div class="d-flex align-center">
-          <v-avatar
+          <AtlasAvatar
             size="24"
             color="primary"
             class="mr-2"
@@ -91,7 +88,7 @@
             <span class="text-caption">
               {{ getInitials(item.createdBy.name) }}
             </span>
-          </v-avatar>
+          </AtlasAvatar>
           <span>{{ item.createdBy.name }}</span>
         </div>
       </template>
@@ -160,23 +157,24 @@
       <!-- No data slot -->
       <template #no-data>
         <div class="text-center pa-4">
-          <v-icon
+          <AtlasIcon
             size="48"
             color="grey-lighten-1"
             class="mb-2"
           >
             mdi-history
-          </v-icon>
+          </AtlasIcon>
           <p class="text-body-1 text-medium-emphasis">
             {{ t('common.noData', 'No data available') }}
           </p>
         </div>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasAvatar, AtlasChip, AtlasCol, AtlasDataTable, AtlasIcon, AtlasProgressLinear, AtlasRow, AtlasSelect } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { VersionsConfig, VersionsTableItem } from './types'

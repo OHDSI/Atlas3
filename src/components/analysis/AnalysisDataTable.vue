@@ -1,12 +1,11 @@
 <template>
-  <v-data-table
+  <AtlasDataTable
     :headers="headers"
     :items="items"
     :loading="loading"
     :items-per-page="itemsPerPage"
     :sort-by="sortBy"
     hide-default-footer
-    density="comfortable"
     class="analysis-data-table"
     :data-testid="testid"
   >
@@ -69,28 +68,28 @@
 
     <template #[`item.actions`]="{ item }">
       <div class="analysis-data-table__row-actions">
-        <v-btn
+        <AtlasIconButton
           icon="mdi-pencil"
-          size="small"
+          v-bind="{ ariaLabel: t('configuration.tagManagement.edit', 'Edit').value }"
           variant="text"
-          :aria-label="t('configuration.tagManagement.edit', 'Edit').value"
+          size="sm"
           @click.stop="$emit('open', item)"
         />
-        <v-btn
+        <AtlasIconButton
           v-if="enableCopy"
           icon="mdi-content-copy"
-          size="small"
+          v-bind="{ ariaLabel: t('common.copy', 'Copy').value }"
           variant="text"
-          :aria-label="t('common.copy', 'Copy').value"
+          size="sm"
           :disabled="!canCopyItem(item)"
           @click.stop="$emit('copy', item)"
         />
-        <v-btn
+        <AtlasIconButton
           icon="mdi-delete"
-          size="small"
+          v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
           variant="text"
-          color="error"
-          :aria-label="t('common.delete', 'Delete').value"
+          tone="danger"
+          size="sm"
           :disabled="!canDeleteItem(item)"
           @click.stop="$emit('delete', item)"
         />
@@ -112,12 +111,12 @@
     <template #no-data>
       <slot name="empty">
         <div class="analysis-data-table__empty">
-          <v-icon
+          <AtlasIcon
             size="48"
             class="analysis-data-table__empty-icon"
           >
             mdi-database-off-outline
-          </v-icon>
+          </AtlasIcon>
           <div class="analysis-data-table__empty-title">
             {{ emptyText ?? t('common.noData', 'No items yet.').value }}
           </div>
@@ -127,17 +126,18 @@
     </template>
 
     <template #loading>
-      <v-skeleton-loader
+      <AtlasSkeleton
         v-for="n in 5"
         :key="n"
         type="table-row"
         class="analysis-data-table__skeleton"
       />
     </template>
-  </v-data-table>
+  </AtlasDataTable>
 </template>
 
 <script setup lang="ts" generic="T extends { id?: number }">
+import { AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 import { computed, useSlots } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { formatDate, formatRelativeTime } from '@/utils/date-format'

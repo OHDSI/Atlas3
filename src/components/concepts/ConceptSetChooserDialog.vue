@@ -1,89 +1,76 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    :eyebrow="t('cs.browser.compare.compare', 'Compare').value"
+    :title="dialogTitle"
+    :close-label="t('common.close', 'Close').value"
     max-width="720"
-    scrollable
-    :persistent="false"
     @update:model-value="onDialogUpdate"
+    @close="onCancel"
   >
-    <v-card>
-      <AppDialogHeader
-        :eyebrow="t('cs.browser.compare.compare', 'Compare').value"
-        :title="dialogTitle"
-        :show-close="true"
-        :close-label="t('common.close', 'Close').value"
-        @close="onCancel"
+    <AtlasProgressLinear
+      v-if="store.loading"
+      indeterminate
+      color="primary"
+    />
+
+    <div class="chooser-body">
+      <AtlasTextField
+        v-model="searchTerm"
+        :placeholder="t('common.search', 'Search…').value"
+        prepend-icon="mdi-magnify"
+        variant="outlined"
+        hide-details
+        clearable
+        data-testid="chooser-search"
+        class="mb-3"
       />
 
-      <v-progress-linear
-        v-if="store.loading"
-        indeterminate
-        color="primary"
-      />
+      <div
+        v-if="filteredRows.length === 0 && !store.loading"
+        class="chooser-empty"
+        data-testid="chooser-empty"
+      >
+        {{ t('cs.browser.compare.noMatches', 'No concept sets match').value }}
+      </div>
 
-      <v-card-text class="chooser-body">
-        <v-text-field
-          v-model="searchTerm"
-          :placeholder="t('common.search', 'Search…').value"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          density="comfortable"
-          hide-details
-          clearable
-          data-testid="chooser-search"
-          class="mb-3"
-        />
+      <AtlasDataTable
+        v-else-if="filteredRows.length > 0"
+        :headers="headers"
+        :items="filteredRows"
+        :items-per-page="10"
+        hover
+        class="chooser-table"
+      >
+        <template #item="{ item }">
+          <tr :data-testid="`chooser-row-${item.id}`">
+            <td>{{ item.id }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ getAuthorName(item.createdBy) }}</td>
+            <td class="text-right">
+              <AtlasButton
+                size="sm"
+                :data-testid="`chooser-select-${item.id}`"
+                @click="onSelect(item.id)"
+              >
+                {{ t('common.select', 'Select').value }}
+              </AtlasButton>
+            </td>
+          </tr>
+        </template>
+      </AtlasDataTable>
+    </div>
 
-        <div
-          v-if="filteredRows.length === 0 && !store.loading"
-          class="chooser-empty"
-          data-testid="chooser-empty"
-        >
-          {{ t('cs.browser.compare.noMatches', 'No concept sets match').value }}
-        </div>
-
-        <v-data-table
-          v-else-if="filteredRows.length > 0"
-          :headers="headers"
-          :items="filteredRows"
-          :items-per-page="10"
-          density="compact"
-          hover
-          class="chooser-table"
-        >
-          <template #item="{ item }">
-            <tr :data-testid="`chooser-row-${item.id}`">
-              <td>{{ item.id }}</td>
-              <td>{{ item.name }}</td>
-              <td>{{ getAuthorName(item.createdBy) }}</td>
-              <td class="text-right">
-                <v-btn
-                  size="small"
-                  variant="flat"
-                  color="primary"
-                  :data-testid="`chooser-select-${item.id}`"
-                  @click="onSelect(item.id)"
-                >
-                  {{ t('common.select', 'Select').value }}
-                </v-btn>
-              </td>
-            </tr>
-          </template>
-        </v-data-table>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          variant="text"
-          data-testid="chooser-cancel"
-          @click="onCancel"
-        >
-          {{ t('common.cancel', 'Cancel').value }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        data-testid="chooser-cancel"
+        @click="onCancel"
+      >
+        {{ t('common.cancel', 'Cancel').value }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
@@ -91,7 +78,7 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasButton, AtlasDataTable, AtlasDialog, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
 
 interface Props {
   modelValue: boolean

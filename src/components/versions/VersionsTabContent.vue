@@ -22,45 +22,44 @@
       @saved="handleCommentSaved"
     />
 
-    <!-- Success/Error Snackbar -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="snackbar.show"
-      :color="snackbar.color"
+      :severity="snackbar.severity"
+      :text="snackbar.message"
       :timeout="3000"
-    >
-      {{ snackbar.message }}
-    </v-snackbar>
+    />
 
     <!-- Save Preview as Current Confirmation Dialog (T064) -->
-    <v-dialog
+    <AtlasDialog
       v-model="saveConfirmDialogOpen"
-      max-width="500px"
+      eyebrow="VERSIONS"
+      :title="t('common.saveAsCurrentVersion').value"
+      max-width="500"
       persistent
+      @close="saveConfirmDialogOpen = false"
     >
-      <v-card>
-        <v-card-title>{{ t('common.saveAsCurrentVersion') }}</v-card-title>
-        <v-card-text>
-          {{ t('common.savePreviewWarning') }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="saveConfirmDialogOpen = false">
-            {{ t('common.cancel') }}
-          </v-btn>
-          <v-btn
-            color="primary"
-            :loading="savingPreview"
-            @click="handleSavePreviewAsCurrent"
-          >
-            {{ t('common.save') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{ t('common.savePreviewWarning') }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="saveConfirmDialogOpen = false"
+        >
+          {{ t('common.cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          :loading="savingPreview"
+          @click="handleSavePreviewAsCurrent"
+        >
+          {{ t('common.save') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasDialog, AtlasSnackbar } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { logger } from '@/utils/logger'
 import { onMounted, ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
@@ -91,7 +90,7 @@ const savingPreview = ref(false)
 const snackbar = reactive({
   show: false,
   message: '',
-  color: 'success',
+  severity: 'success' as AtlasSnackbarSeverity,
 })
 
 // Get appropriate API service for copy
@@ -259,7 +258,7 @@ async function savePreviewAsCurrent(): Promise<boolean> {
  */
 function showSnackbar(message: string, color: 'success' | 'error'): void {
   snackbar.message = message
-  snackbar.color = color
+  snackbar.severity = color === 'error' ? 'danger' : color
   snackbar.show = true
 }
 </script>

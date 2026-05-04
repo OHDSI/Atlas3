@@ -1,166 +1,152 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="COHORT"
+    title="New cohort sample"
     max-width="560"
     @update:model-value="$emit('update:modelValue', $event)"
+    @close="cancel"
   >
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">
-          mdi-shuffle-variant
-        </v-icon>
-        New cohort sample
-      </v-card-title>
-      <v-card-text>
-        <v-text-field
-          v-model="form.name"
-          label="Sample name"
-          variant="outlined"
-          density="compact"
-          autofocus
-          data-testid="sample-name"
-          required
-        />
-        <v-text-field
-          v-model.number="form.size"
-          type="number"
-          label="Number of persons"
-          :min="1"
-          :max="SAMPLE_SIZE_MAX"
-          :hint="`Maximum ${SAMPLE_SIZE_MAX}`"
-          persistent-hint
-          variant="outlined"
-          density="compact"
-          data-testid="sample-size"
-        />
+    <div>
+      <AtlasTextField
+        v-model="form.name"
+        label="Sample name"
+        variant="outlined"
+        autofocus
+        data-testid="sample-name"
+        required
+      />
+      <AtlasTextField
+        v-model.number="form.size"
+        type="number"
+        label="Number of persons"
+        :min="1"
+        :max="SAMPLE_SIZE_MAX"
+        :hint="`Maximum ${SAMPLE_SIZE_MAX}`"
+        persistent-hint
+        variant="outlined"
+        data-testid="sample-size"
+      />
 
-        <div class="text-subtitle-2 mt-4 mb-1">
-          Gender (optional)
-        </div>
-        <div class="d-flex flex-wrap ga-3">
-          <v-checkbox
-            v-model="genderMale"
-            label="Male"
-            density="compact"
-            hide-details
-            data-testid="sample-gender-male"
-          />
-          <v-checkbox
-            v-model="genderFemale"
-            label="Female"
-            density="compact"
-            hide-details
-            data-testid="sample-gender-female"
-          />
-          <v-checkbox
-            v-model="genderOther"
-            label="Other / non-binary"
-            density="compact"
-            hide-details
-            data-testid="sample-gender-other"
-          />
-        </div>
+      <div class="text-subtitle-2 mt-4 mb-1">
+        Gender (optional)
+      </div>
+      <div class="d-flex flex-wrap ga-3">
+        <AtlasCheckbox
+          v-model="genderMale"
+          label="Male"
+          hide-details
+          data-testid="sample-gender-male"
+        />
+        <AtlasCheckbox
+          v-model="genderFemale"
+          label="Female"
+          hide-details
+          data-testid="sample-gender-female"
+        />
+        <AtlasCheckbox
+          v-model="genderOther"
+          label="Other / non-binary"
+          hide-details
+          data-testid="sample-gender-other"
+        />
+      </div>
 
-        <div class="text-subtitle-2 mt-4 mb-1">
-          Age (optional)
-        </div>
-        <div class="d-flex ga-2 align-start">
-          <v-select
-            v-model="ageMode"
-            :items="ageModeOptions"
-            item-title="label"
-            item-value="value"
-            label="Comparator"
+      <div class="text-subtitle-2 mt-4 mb-1">
+        Age (optional)
+      </div>
+      <div class="d-flex ga-2 align-start">
+        <AtlasSelect
+          v-model="ageMode"
+          :items="ageModeOptions"
+          item-title="label"
+          item-value="value"
+          label="Comparator"
+          variant="outlined"
+          clearable
+          data-testid="sample-age-mode"
+          style="min-width: 180px"
+        />
+        <template v-if="ageMode && !isRangeMode">
+          <AtlasTextField
+            :model-value="ageValue ?? undefined"
+            type="number"
+            :min="0"
+            :max="SAMPLE_AGE_MAX - 1"
+            label="Age"
             variant="outlined"
-            density="compact"
-            clearable
-            data-testid="sample-age-mode"
-            style="min-width: 180px"
+            data-testid="sample-age-value"
+            style="max-width: 120px"
+            @update:model-value="(v) => { ageValue = v !== '' && v != null ? Number(v) : null }"
           />
-          <template v-if="ageMode && !isRangeMode">
-            <v-text-field
-              v-model.number="ageValue"
-              type="number"
-              :min="0"
-              :max="SAMPLE_AGE_MAX - 1"
-              label="Age"
-              variant="outlined"
-              density="compact"
-              data-testid="sample-age-value"
-              style="max-width: 120px"
-            />
-          </template>
-          <template v-else-if="isRangeMode">
-            <v-text-field
-              v-model.number="ageMin"
-              type="number"
-              :min="0"
-              :max="SAMPLE_AGE_MAX - 1"
-              label="Min age"
-              variant="outlined"
-              density="compact"
-              data-testid="sample-age-min"
-              style="max-width: 120px"
-            />
-            <v-text-field
-              v-model.number="ageMax"
-              type="number"
-              :min="0"
-              :max="SAMPLE_AGE_MAX - 1"
-              label="Max age"
-              variant="outlined"
-              density="compact"
-              data-testid="sample-age-max"
-              style="max-width: 120px"
-            />
-          </template>
-        </div>
+        </template>
+        <template v-else-if="isRangeMode">
+          <AtlasTextField
+            :model-value="ageMin ?? undefined"
+            type="number"
+            :min="0"
+            :max="SAMPLE_AGE_MAX - 1"
+            label="Min age"
+            variant="outlined"
+            data-testid="sample-age-min"
+            style="max-width: 120px"
+            @update:model-value="(v) => { ageMin = v !== '' && v != null ? Number(v) : null }"
+          />
+          <AtlasTextField
+            :model-value="ageMax ?? undefined"
+            type="number"
+            :min="0"
+            :max="SAMPLE_AGE_MAX - 1"
+            label="Max age"
+            variant="outlined"
+            data-testid="sample-age-max"
+            style="max-width: 120px"
+            @update:model-value="(v) => { ageMax = v !== '' && v != null ? Number(v) : null }"
+          />
+        </template>
+      </div>
 
-        <v-alert
-          v-if="errors.length > 0"
-          type="error"
-          variant="tonal"
-          density="compact"
-          class="mt-3"
-          data-testid="sample-form-errors"
+      <AtlasAlert
+        v-if="errors.length > 0"
+        severity="danger"
+        density="compact"
+        class="mt-3"
+        data-testid="sample-form-errors"
+      >
+        <ul
+          class="ma-0 pa-0"
+          style="list-style: none"
         >
-          <ul
-            class="ma-0 pa-0"
-            style="list-style: none"
+          <li
+            v-for="(err, i) in errors"
+            :key="i"
           >
-            <li
-              v-for="(err, i) in errors"
-              :key="i"
-            >
-              {{ err }}
-            </li>
-          </ul>
-        </v-alert>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          variant="text"
-          @click="cancel"
-        >
-          Cancel
-        </v-btn>
-        <v-btn
-          color="primary"
-          variant="elevated"
-          :disabled="errors.length > 0 || submitting"
-          :loading="submitting"
-          data-testid="sample-submit"
-          @click="submit"
-        >
-          Create sample
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+            {{ err }}
+          </li>
+        </ul>
+      </AtlasAlert>
+    </div>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="cancel"
+      >
+        Cancel
+      </AtlasButton>
+      <AtlasButton
+        :disabled="errors.length > 0 || submitting"
+        :loading="submitting"
+        data-testid="sample-submit"
+        @click="submit"
+      >
+        Create sample
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasDialog, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed, reactive, ref, watch } from 'vue'
 import {
   GENDER_FEMALE_CONCEPT_ID,

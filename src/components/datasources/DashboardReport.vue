@@ -1,13 +1,13 @@
 <template>
   <div class="dashboard-report">
-    <v-row>
-      <v-col cols="12">
+    <AtlasRow>
+      <AtlasCol cols="12">
         <CDMSummaryTable :data="data.summary" />
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
 
-    <v-row>
-      <v-col
+    <AtlasRow>
+      <AtlasCol
         cols="12"
         md="6"
       >
@@ -19,9 +19,9 @@
             :height="300"
           />
         </ChartSection>
-      </v-col>
+      </AtlasCol>
 
-      <v-col
+      <AtlasCol
         cols="12"
         md="6"
       >
@@ -35,11 +35,11 @@
             :height="300"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
 
-    <v-row>
-      <v-col
+    <AtlasRow>
+      <AtlasCol
         cols="12"
         md="6"
       >
@@ -53,9 +53,9 @@
             :height="300"
           />
         </ChartSection>
-      </v-col>
+      </AtlasCol>
 
-      <v-col
+      <AtlasCol
         cols="12"
         md="6"
       >
@@ -72,12 +72,13 @@
             :height="300"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasRow } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { DashboardReport as DashboardReportData } from '@/models/datasource.types'
 import CDMSummaryTable from '@/components/datasources/shared/CDMSummaryTable.vue'

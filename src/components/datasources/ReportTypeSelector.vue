@@ -1,5 +1,5 @@
 <template>
-  <v-select
+  <AtlasSelect
     :model-value="modelValue"
     :items="reportTypeItems"
     :disabled="disabled"
@@ -7,17 +7,14 @@
     item-title="label"
     item-value="value"
     variant="outlined"
-    density="comfortable"
     hide-details
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
-    <template #prepend-inner>
-      <v-icon icon="mdi-chart-bar" />
-    </template>
-  </v-select>
+    prepend-inner-icon="mdi-chart-bar"
+    @update:model-value="$emit('update:modelValue', $event as ReportType | null)"
+  />
 </template>
 
 <script setup lang="ts">
+import { AtlasSelect } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'

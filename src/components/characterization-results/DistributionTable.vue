@@ -6,7 +6,7 @@
   time — keeps the table readable.
 -->
 <template>
-  <SurfaceCard
+  <AtlasCard
     padding="none"
     class="distribution-table"
     :data-testid="`char-results-distribution-${analysisId}`"
@@ -22,27 +22,25 @@
           <span class="distribution-table__count">({{ rows.length }})</span>
         </h3>
       </div>
-      <v-spacer />
-      <v-select
+      <AtlasSpacer />
+      <AtlasSelect
         v-if="cohorts.length > 1"
         v-model="selectedCohortId"
         :items="cohortItems"
         item-title="title"
         item-value="value"
         variant="outlined"
-        density="compact"
         hide-details
         class="distribution-table__cohort-select"
         :data-testid="`char-results-distribution-cohort-${analysisId}`"
       />
     </div>
 
-    <v-data-table
+    <AtlasDataTable
       :items="tableRows"
       :headers="headers"
       :items-per-page="25"
       :items-per-page-options="[10, 25, 50, 100, -1]"
-      density="compact"
       :data-testid="`char-results-distribution-table-${analysisId}`"
     >
       <template #no-data>
@@ -50,8 +48,8 @@
           {{ tv('common.noData', 'No rows match the current filter.') }}
         </div>
       </template>
-    </v-data-table>
-  </SurfaceCard>
+    </AtlasDataTable>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
@@ -60,7 +58,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { DistributionStat, LinkedCohort } from '@/models/characterization.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard, AtlasDataTable, AtlasSelect, AtlasSpacer } from '@/components/ui'
 
 interface Props {
   analysisId: number

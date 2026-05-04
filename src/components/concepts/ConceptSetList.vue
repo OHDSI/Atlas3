@@ -3,60 +3,55 @@
     <!-- Toolbar: search + status chip + primary action.
          Sits directly on the page card surface — no inner v-card. -->
     <div class="concept-set-list__toolbar">
-      <v-text-field
+      <AtlasTextField
         :model-value="store.filterTerm"
         :placeholder="t('common.search', 'Search concept sets…').value"
-        prepend-inner-icon="mdi-magnify"
+        prepend-icon="mdi-magnify"
         clearable
         variant="outlined"
-        density="comfortable"
         hide-details
         class="concept-set-list__search"
-        @update:model-value="onFilterChange"
+        @update:model-value="(v) => onFilterChange(v as string | null)"
         @click:clear="onFilterClear"
       />
 
-      <v-chip
+      <AtlasChip
         v-if="!store.loading && store.filteredSets.length > 0"
-        size="small"
-        variant="tonal"
-        color="primary"
+        size="sm"
+        tone="primary"
         class="concept-set-list__count"
       >
         {{ countLabel }}
-      </v-chip>
+      </AtlasChip>
 
-      <v-spacer />
+      <AtlasSpacer />
 
-      <v-btn
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-plus"
+      <AtlasButton
+        icon="mdi-plus"
         :disabled="!canCreate"
         @click="onAddClick"
       >
         {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Error Alert -->
-    <v-alert
+    <AtlasAlert
       v-if="store.error"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="mb-4"
-      @click:close="store.clearError()"
+      @close="store.clearError()"
     >
       {{ store.error }}
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Concept Sets Table -->
-    <SurfaceCard
+    <AtlasCard
       v-if="store.loading || store.filteredSets.length > 0"
       padding="none"
     >
-      <v-data-table
+      <AtlasDataTable
         v-model:sort-by="sortBy"
         :headers="headers"
         :items="store.filteredSets"
@@ -90,10 +85,11 @@
         <!-- Actions Column — hover-only for a quieter list. -->
         <template #item.actions="{ item }">
           <div class="concept-set-list__actions">
-            <v-btn
+            <AtlasIconButton
               icon="mdi-pencil-outline"
-              size="small"
+              v-bind="{ ariaLabel: 'Edit' }"
               variant="text"
+              size="sm"
               :disabled="!access.canWrite(item.id)"
               @click.stop="onEditClick(item.id)"
             />
@@ -102,15 +98,15 @@
 
         <!-- Loading skeleton -->
         <template #loading>
-          <v-skeleton-loader
+          <AtlasSkeleton
             v-for="i in 5"
             :key="i"
             type="table-row"
             class="mx-2"
           />
         </template>
-      </v-data-table>
-    </SurfaceCard>
+      </AtlasDataTable>
+    </AtlasCard>
 
     <!-- Empty state: filled MD3 container, no border. Sits where the
          table would have been so the toolbar above stays the focus. -->
@@ -118,7 +114,7 @@
       v-else
       class="concept-set-list__empty"
     >
-      <v-icon
+      <AtlasIcon
         icon="mdi-bookmark-multiple-outline"
         size="36"
         class="concept-set-list__empty-icon"
@@ -133,53 +129,43 @@
             )
         }}
       </p>
-      <v-btn
+      <AtlasButton
         v-if="!store.filterTerm"
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-plus"
+        icon="mdi-plus"
         @click="onAddClick"
       >
         {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="deleteDialog"
+      eyebrow="CONFIRM"
+      :title="`${t('common.delete', 'Delete').value} ${t('common.conceptSet', 'Concept Set').value}`"
       max-width="500"
+      @close="deleteDialog = false"
     >
-      <v-card>
-        <v-card-title class="text-h6">
-          {{ t('common.delete', 'Delete') }} {{ t('common.conceptSet', 'Concept Set') }}
-        </v-card-title>
-
-        <v-card-text>
-          {{
-            t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete')
-          }}
-          "{{ deleteTarget?.name }}"?
-        </v-card-text>
-
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="deleteDialog = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            :loading="store.loading"
-            @click="confirmDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{
+        t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete')
+      }}
+      "{{ deleteTarget?.name }}"?
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="deleteDialog = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="store.loading"
+          @click="confirmDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <!-- Concept Set Editor (Side Panel) -->
     <ConceptSetEditor
@@ -206,7 +192,7 @@ import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetEditor from './ConceptSetEditor.vue'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()

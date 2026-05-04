@@ -20,18 +20,18 @@
           value="visual"
           size="small"
         >
-          <v-icon start>
+          <AtlasIcon start>
             mdi-chart-donut
-          </v-icon>
+          </AtlasIcon>
           {{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}
         </v-btn>
         <v-btn
           value="tabular"
           size="small"
         >
-          <v-icon start>
+          <AtlasIcon start>
             mdi-table
-          </v-icon>
+          </AtlasIcon>
           {{ t('pathway.results.tabular', 'Tabular') }}
         </v-btn>
       </v-btn-toggle>
@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePathwayResults } from '@/composables/usePathwayResults'

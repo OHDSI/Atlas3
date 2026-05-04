@@ -1,5 +1,5 @@
 <template>
-  <page-shell
+  <AtlasPageShell
     hero
     compact
     :eyebrow="eyebrow"
@@ -73,12 +73,12 @@
       @update:name="onUpdateName"
       @update:description="onUpdateDescription"
     />
-  </page-shell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import PageShell from '@/components/shared/PageShell.vue'
+import { AtlasPageShell } from '@/components/ui'
 import CohortBuilder from '@/components/cohort/CohortBuilder.vue'
 import CohortToolbarStatus from '@/components/cohort/CohortToolbarStatus.vue'
 import CohortToolbarActions from '@/components/cohort/CohortToolbarActions.vue'

@@ -1,5 +1,5 @@
 <template>
-  <v-select
+  <AtlasSelect
     :model-value="modelValue"
     :items="filterItems"
     :label="label"
@@ -7,11 +7,10 @@
     item-title="name"
     item-value="criteriaType"
     variant="outlined"
-    density="comfortable"
-    @update:model-value="onFilterSelect"
+    @update:model-value="(v: unknown) => onFilterSelect(v != null ? String(v) : null)"
   >
     <template #item="{ props: slotProps, item }">
-      <v-list-item
+      <AtlasListItem
         v-bind="slotProps"
         :title="item.raw.name"
         :subtitle="item.raw.description"
@@ -32,12 +31,13 @@
             No Concept Set
           </v-chip>
         </template>
-      </v-list-item>
+      </AtlasListItem>
     </template>
-  </v-select>
+  </AtlasSelect>
 </template>
 
 <script setup lang="ts">
+import { AtlasListItem, AtlasSelect } from '@/components/ui'
 /**
  * FilterTypeSelector Component
  *

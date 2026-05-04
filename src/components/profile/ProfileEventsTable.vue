@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard padding="md">
+  <AtlasCard padding="md">
     <div class="section-header">
       <div class="section-header__title-row">
         <span class="text-eyebrow">EVENTS</span>
@@ -9,15 +9,14 @@
         </h2>
       </div>
       <div class="section-header__actions">
-        <v-text-field
+        <AtlasTextField
           :model-value="store.textFilter"
           :label="tv('profiles.searchEvents', 'Search events')"
-          density="compact"
           hide-details
           clearable
           data-test="profile-search"
           style="min-width: 220px; max-width: 280px"
-          @update:model-value="(v: string) => store.setTextFilter(v ?? '')"
+          @update:model-value="(v: string | number) => store.setTextFilter(String(v ?? ''))"
         />
       </div>
     </div>
@@ -25,25 +24,24 @@
       class="profile-events-table section-body"
       data-test="profile-events-table"
     >
-      <v-data-table
+      <AtlasDataTable
         :headers="headers"
         :items="store.filteredRecords"
         :items-per-page="25"
-        density="compact"
         data-test="profile-table"
       >
         <template #item.endDay="{ item }">
           {{ item.endDay ?? '—' }}
         </template>
-      </v-data-table>
+      </AtlasDataTable>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard, AtlasDataTable, AtlasTextField } from '@/components/ui'
 
 const store = useProfileStore()
 const { tv } = useI18n()

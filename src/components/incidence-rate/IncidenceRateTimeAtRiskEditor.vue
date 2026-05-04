@@ -7,57 +7,53 @@
     <v-card-text>
       <div class="row">
         <span class="lbl">{{ t('ir.editor.timeAtRiskStartDate', 'Start') }}</span>
-        <v-select
+        <AtlasSelect
           :model-value="tar.start.DateField"
-          :items="DATE_FIELD_OPTIONS"
-          density="compact"
+          :items="[...DATE_FIELD_OPTIONS]"
           hide-details
-          @update:model-value="(v: 'StartDate' | 'EndDate') => updateStart('DateField', v)"
+          @update:model-value="(v) => updateStart('DateField', v as 'StartDate' | 'EndDate')"
         />
         <span>+</span>
-        <v-text-field
+        <AtlasTextField
           :model-value="tar.start.Offset"
           type="number"
-          density="compact"
           hide-details
           style="max-width: 120px"
-          @update:model-value="(v: string) => updateStart('Offset', Number(v))"
+          @update:model-value="(v) => updateStart('Offset', Number(v))"
         />
         <span class="d">{{ t('common.days', 'days') }}</span>
       </div>
       <div class="row">
         <span class="lbl">{{ t('ir.editor.timeAtRiskEndDate', 'End') }}</span>
-        <v-select
+        <AtlasSelect
           :model-value="tar.end.DateField"
-          :items="DATE_FIELD_OPTIONS"
-          density="compact"
+          :items="[...DATE_FIELD_OPTIONS]"
           hide-details
-          @update:model-value="(v: 'StartDate' | 'EndDate') => updateEnd('DateField', v)"
+          @update:model-value="(v) => updateEnd('DateField', v as 'StartDate' | 'EndDate')"
         />
         <span>+</span>
-        <v-text-field
+        <AtlasTextField
           :model-value="tar.end.Offset"
           type="number"
-          density="compact"
           hide-details
           style="max-width: 120px"
-          @update:model-value="(v: string) => updateEnd('Offset', Number(v))"
+          @update:model-value="(v) => updateEnd('Offset', Number(v))"
         />
         <span class="d">{{ t('common.days', 'days') }}</span>
       </div>
-      <v-alert
+      <AtlasAlert
         v-if="errorText"
-        type="error"
+        severity="danger"
         density="compact"
-        variant="tonal"
       >
         {{ errorText }}
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'

@@ -29,13 +29,13 @@
           class="login-card__error"
           role="alert"
         >
-          <v-icon
+          <AtlasIcon
             size="18"
             color="error"
             class="mr-2"
           >
             mdi-alert-circle-outline
-          </v-icon>
+          </AtlasIcon>
           <span>{{ errorMessage }}</span>
           <v-btn
             icon="mdi-close"
@@ -71,16 +71,16 @@
         </div>
 
         <div v-else>
-          <v-btn
+          <AtlasButton
             v-if="providers.length > 1"
-            variant="text"
-            size="small"
+            variant="ghost"
+            size="sm"
+            icon="mdi-arrow-left"
             class="login-card__back-btn"
-            prepend-icon="mdi-arrow-left"
             @click="backToProviders"
           >
             {{ t('common.back', 'Back') }}
-          </v-btn>
+          </AtlasButton>
 
           <CredentialsForm
             v-if="selectedProvider.isUseCredentialsForm"
@@ -94,13 +94,13 @@
           v-if="!authConfig.userAuthenticationEnabled"
           class="login-card__skip"
         >
-          <v-btn
-            variant="text"
-            size="small"
+          <AtlasButton
+            variant="ghost"
+            size="sm"
             @click="close"
           >
             {{ t('components.authProviderSelect.skipLogin', 'Skip Login') }}
-          </v-btn>
+          </AtlasButton>
         </div>
       </div>
 
@@ -112,6 +112,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

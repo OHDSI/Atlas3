@@ -1,16 +1,15 @@
 <template>
-  <PageShell
+  <AtlasPageShell
     hero
     compact
     eyebrow="PROFILE"
   >
     <template #title>
-      <v-text-field
+      <AtlasTextField
         v-model="personIdInput"
         class="hero-person-id"
         :placeholder="tv('profiles.findAPerson', 'Find a person')"
         :aria-label="tv('profiles.personId', 'Person Id')"
-        density="compact"
         hide-details
         variant="plain"
         single-line
@@ -28,16 +27,15 @@
         <span>{{ sourceName }}</span>
         <template v-if="store.cohortDefinitionId !== null">
           <span class="profile-subtitle-dot">·</span>
-          <v-chip
-            size="small"
-            color="primary"
-            variant="tonal"
+          <AtlasChip
+            size="sm"
+            tone="primary"
             closable
             data-test="profile-cohort-badge"
-            @click:close="clearCohort"
+            @close="clearCohort"
           >
             Cohort #{{ store.cohortDefinitionId }}
-          </v-chip>
+          </AtlasChip>
         </template>
       </div>
       <div
@@ -49,24 +47,23 @@
     </template>
 
     <template #actions>
-      <v-select
+      <AtlasSelect
         v-model="selectedSource"
         :items="sourceItems"
         item-title="title"
         item-value="value"
         :label="tv('profiles.dataSource', 'Data source')"
-        density="compact"
         hide-details
         variant="outlined"
         style="min-width: 220px; max-width: 260px"
         data-test="profile-source-select"
-        @update:model-value="onSourceChange"
+        @update:model-value="(v: unknown) => onSourceChange(v != null ? String(v) : null)"
       />
-      <v-btn
+      <AtlasIconButton
         icon="mdi-refresh"
+        v-bind="{ ariaLabel: tv('cohortDefinitions.cohortDefinitionManager.panels.reload', 'Reload') }"
         variant="text"
-        :title="tv('cohortDefinitions.cohortDefinitionManager.panels.reload', 'Reload')"
-        :aria-label="tv('cohortDefinitions.cohortDefinitionManager.panels.reload', 'Reload')"
+        size="sm"
         data-test="profile-refresh"
         :disabled="!store.sourceKey || !store.personId"
         @click="onReload"
@@ -81,7 +78,7 @@
 
       <ProfileObservationBand v-if="store.person" />
 
-      <SurfaceCard
+      <AtlasCard
         v-if="store.error"
         padding="md"
       >
@@ -89,20 +86,20 @@
           class="profile-error"
           data-test="profile-error"
         >
-          <v-icon
+          <AtlasIcon
             icon="mdi-alert-circle-outline"
             size="20"
             class="profile-error__icon"
           />
           <span>{{ store.error }}</span>
         </div>
-      </SurfaceCard>
+      </AtlasCard>
 
       <div
         v-else-if="store.loading"
         class="profile-loading"
       >
-        <v-progress-circular
+        <AtlasProgressCircular
           indeterminate
           size="32"
         />
@@ -113,7 +110,7 @@
         class="profile-empty"
         data-test="profile-empty"
       >
-        <v-icon
+        <AtlasIcon
           icon="mdi-account-search-outline"
           size="48"
           class="profile-empty__icon"
@@ -138,14 +135,13 @@
         </div>
       </div>
     </div>
-  </PageShell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import PageShell from '@/components/shared/PageShell.vue'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard, AtlasChip, AtlasIcon, AtlasIconButton, AtlasPageShell, AtlasProgressCircular, AtlasSelect, AtlasTextField } from '@/components/ui'
 import ProfileDemographics from '@/components/profile/ProfileDemographics.vue'
 import ProfileTimeline from '@/components/profile/ProfileTimeline.vue'
 import ProfileObservationBand from '@/components/profile/ProfileObservationBand.vue'

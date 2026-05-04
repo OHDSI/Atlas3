@@ -1,61 +1,49 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="SESSION"
+    title="Session Expiring Soon"
     :persistent="true"
     max-width="480"
+    @close="handleDismiss(false)"
     @update:model-value="handleDismiss"
   >
-    <v-card>
-      <v-card-title class="d-flex align-center">
-        <v-icon
-          icon="mdi-alert-circle"
-          color="warning"
-          class="mr-2"
-        />
-        Session Expiring Soon
-      </v-card-title>
+    <p class="text-body-1 mb-4">
+      Your session will expire in
+      <strong :class="countdownColorClass">{{ formattedTime }}</strong>.
+    </p>
+    <p class="text-body-2">
+      Would you like to extend your session?
+    </p>
 
-      <v-card-text>
-        <p class="text-body-1 mb-4">
-          Your session will expire in
-          <strong :class="countdownColorClass">{{ formattedTime }}</strong>.
-        </p>
-        <p class="text-body-2">
-          Would you like to extend your session?
-        </p>
-
-        <v-alert
-          v-if="extensionError"
-          type="error"
-          density="compact"
-          class="mt-4"
-        >
-          {{ extensionError }}
-        </v-alert>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-btn
-          color="primary"
-          :loading="isExtending"
-          @click="$emit('extend')"
-        >
-          Extend Session
-        </v-btn>
-        <v-btn
-          color="error"
-          variant="outlined"
-          :disabled="isExtending"
-          @click="$emit('logout')"
-        >
-          Logout
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <AtlasAlert
+      v-if="extensionError"
+      severity="danger"
+      density="compact"
+      class="mt-4"
+    >
+      {{ extensionError }}
+    </AtlasAlert>
+    <template #actions>
+      <AtlasButton
+        :loading="isExtending"
+        @click="$emit('extend')"
+      >
+        Extend Session
+      </AtlasButton>
+      <AtlasButton
+        variant="danger"
+        :disabled="isExtending"
+        @click="$emit('logout')"
+      >
+        Logout
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasDialog } from '@/components/ui'
 import { computed, ref, watch, onUnmounted } from 'vue'
 import type { SessionExpiryModalProps } from './types'
 

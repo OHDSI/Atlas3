@@ -8,7 +8,7 @@
     @click:close="dismissed = true"
   >
     <template #prepend>
-      <v-icon>{{ isExpiringSoon ? 'mdi-alert' : 'mdi-information' }}</v-icon>
+      <AtlasIcon>{{ isExpiringSoon ? 'mdi-alert' : 'mdi-information' }}</AtlasIcon>
     </template>
 
     <div>
@@ -23,19 +23,20 @@
       v-if="isExpiringSoon"
       #append
     >
-      <v-btn
-        size="small"
-        variant="outlined"
+      <AtlasButton
+        variant="secondary"
+        size="sm"
         :loading="isRefreshing"
         @click="handleRefresh"
       >
         {{ t('auth.extendSession') }}
-      </v-btn>
+      </AtlasButton>
     </template>
   </v-alert>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

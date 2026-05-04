@@ -5,7 +5,7 @@
       v-if="loading"
       class="cohort-grid__container"
     >
-      <v-skeleton-loader
+      <AtlasSkeleton
         v-for="i in skeletonCount"
         :key="i"
         type="card"
@@ -14,12 +14,11 @@
     </div>
 
     <!-- Error State -->
-    <v-alert
+    <AtlasAlert
       v-else-if="error"
-      type="error"
-      variant="tonal"
+      severity="danger"
       class="cohort-grid__alert"
-      closable
+      :closable="true"
     >
       <div class="cohort-grid__error">
         <div class="cohort-grid__error-message">
@@ -31,13 +30,13 @@
           class="mt-4"
           @click="$emit('retry')"
         >
-          <v-icon start>
+          <AtlasIcon start>
             mdi-refresh
-          </v-icon>
+          </AtlasIcon>
           {{ t('common.refresh', 'Retry') }}
         </v-btn>
       </div>
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Empty State: same MD3 filled container as concept-set list,
          with a context-aware CTA (clear filters vs. create new). -->
@@ -45,7 +44,7 @@
       v-else-if="cohorts.length === 0"
       class="cohort-grid__empty"
     >
-      <v-icon
+      <AtlasIcon
         :icon="isFiltered ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
         size="36"
         class="cohort-grid__empty-icon"
@@ -62,15 +61,13 @@
       >
         {{ t('search.clearAllSelections', 'Clear filters').value }}
       </v-btn>
-      <v-btn
+      <AtlasButton
         v-else
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-plus"
+        icon="mdi-plus"
         @click="$emit('create-cohort')"
       >
         {{ t('cohortDefinitions.newDefinition', 'New cohort').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Cohorts Grid -->
@@ -94,6 +91,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasSkeleton } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import CohortCard from './CohortCard.vue'

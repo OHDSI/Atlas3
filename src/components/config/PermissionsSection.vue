@@ -7,12 +7,11 @@
     >
       <!-- Header -->
       <div class="permissions-section__header">
-        <v-text-field
+        <AtlasTextField
           v-model="searchQuery"
           placeholder="Search roles..."
-          prepend-inner-icon="mdi-magnify"
+          prepend-icon="mdi-magnify"
           variant="outlined"
-          density="compact"
           hide-details
           clearable
           class="permissions-section__search"
@@ -28,7 +27,7 @@
       </div>
 
       <!-- Loading -->
-      <v-progress-linear
+      <AtlasProgressLinear
         v-if="isLoadingRoles"
         indeterminate
         color="primary"
@@ -36,38 +35,37 @@
       />
 
       <!-- Error (hidden for 401 when not authenticated) -->
-      <v-alert
+      <AtlasAlert
         v-if="visibleError"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="my-4"
-        closable
+        :closable="true"
       >
         {{ visibleError }}
-      </v-alert>
+      </AtlasAlert>
 
       <!-- Empty State -->
       <div
         v-if="!isLoadingRoles && roles.length === 0"
         class="permissions-section__empty"
       >
-        <v-icon
+        <AtlasIcon
           size="64"
           color="grey-lighten-1"
         >
           mdi-shield-account-outline
-        </v-icon>
+        </AtlasIcon>
         <p class="text-body-2 text-medium-emphasis mt-4">
           No roles found. Create your first role to get started.
         </p>
       </div>
 
       <!-- Role List -->
-      <v-list
+      <AtlasList
         v-else
         class="permissions-section__role-list"
       >
-        <v-list-item
+        <AtlasListItem
           v-for="role in filteredRoles"
           :key="role.id"
           :title="role.name"
@@ -75,17 +73,17 @@
           @click="selectRole(role.id)"
         >
           <template #prepend>
-            <v-icon color="primary">
+            <AtlasIcon color="primary">
               mdi-shield-account
-            </v-icon>
+            </AtlasIcon>
           </template>
           <template #append>
-            <v-icon size="small">
+            <AtlasIcon size="small">
               mdi-chevron-right
-            </v-icon>
+            </AtlasIcon>
           </template>
-        </v-list-item>
-      </v-list>
+        </AtlasListItem>
+      </AtlasList>
     </div>
 
     <!-- Role Details View -->
@@ -94,16 +92,14 @@
       class="permissions-section__details"
     >
       <!-- Back Button -->
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
+        icon="mdi-arrow-left"
         class="mb-4"
         @click="selectedRoleId = null"
       >
-        <v-icon start>
-          mdi-arrow-left
-        </v-icon>
         Back to Roles
-      </v-btn>
+      </AtlasButton>
 
       <!-- Role Header -->
       <div class="permissions-section__role-header">
@@ -122,7 +118,7 @@
             size="small"
             @click="handleEditRole"
           >
-            <v-icon>mdi-pencil</v-icon>
+            <AtlasIcon>mdi-pencil</AtlasIcon>
           </v-btn>
           <v-btn
             icon
@@ -131,23 +127,23 @@
             color="error"
             @click="showDeleteDialog = true"
           >
-            <v-icon>mdi-delete</v-icon>
+            <AtlasIcon>mdi-delete</AtlasIcon>
           </v-btn>
         </div>
       </div>
 
       <!-- Tabs for Users/Permissions -->
-      <v-tabs
+      <AtlasTabs
         v-model="detailsTab"
         class="mt-4"
       >
-        <v-tab value="users">
+        <AtlasTab value="users">
           Users
-        </v-tab>
-        <v-tab value="permissions">
+        </AtlasTab>
+        <AtlasTab value="permissions">
           Permissions
-        </v-tab>
-      </v-tabs>
+        </AtlasTab>
+      </AtlasTabs>
 
       <v-window
         v-model="detailsTab"
@@ -179,6 +175,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import { useAuth } from '@/composables/useAuth'

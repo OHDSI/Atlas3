@@ -255,13 +255,12 @@ describe('SessionExpiryModal.vue', () => {
         }
       });
 
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' });
+      const buttons = wrapper.findAllComponents({ name: 'AtlasButton' });
       const logoutButton = buttons.find(btn =>
         btn.text().includes('Logout')
       );
 
-      expect(logoutButton?.props('color')).toBe('error');
-      expect(logoutButton?.props('variant')).toBe('outlined');
+      expect(logoutButton?.props('variant')).toBe('danger');
     });
   });
 

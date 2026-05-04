@@ -6,39 +6,38 @@
     <!-- Toolbar -->
     <v-card-text class="d-flex align-center justify-space-between px-0 pb-2">
       <!-- Search -->
-      <v-text-field
+      <AtlasTextField
         v-if="searchable"
         v-model="searchQuery"
-        density="compact"
         variant="outlined"
         :label="tv('common.search')"
-        prepend-inner-icon="mdi-magnify"
+        prepend-icon="mdi-magnify"
         hide-details
         clearable
         :style="{ maxWidth: '400px' }"
       />
 
-      <v-spacer v-if="searchable" />
+      <AtlasSpacer v-if="searchable" />
 
       <!-- Actions -->
       <div class="d-flex gap-2">
         <!-- Column visibility toggle -->
-        <v-menu
+        <AtlasMenu
           v-if="showColumnToggle"
           location="bottom end"
         >
           <template #activator="{ props: menuProps }">
-            <v-btn
+            <AtlasButton
               v-bind="menuProps"
-              variant="outlined"
-              prepend-icon="mdi-view-column"
-              size="small"
+              variant="secondary"
+              icon="mdi-view-column"
+              size="sm"
             >
               {{ t('datatable.language.buttons.changeColumns') }}
-            </v-btn>
+            </AtlasButton>
           </template>
-          <v-list>
-            <v-list-item
+          <AtlasList>
+            <AtlasListItem
               v-for="header in headers"
               :key="header.key"
               @click="toggleColumn(header.key)"
@@ -49,10 +48,12 @@
                   hide-details
                 />
               </template>
-              <v-list-item-title>{{ header.title }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
+              <v-list-item-title>
+                {{ header.title }}
+              </v-list-item-title>
+            </AtlasListItem>
+          </AtlasList>
+        </AtlasMenu>
 
         <!-- TableExport component -->
         <TableExport
@@ -65,31 +66,29 @@
     </v-card-text>
 
     <!-- Data table -->
-    <v-data-table
-      :headers="visibleHeaders"
+    <AtlasDataTable
+      :headers="visibleHeaders as never"
       :items="filteredItems"
       :loading="loading"
       :items-per-page="itemsPerPage"
       :items-per-page-options="itemsPerPageOptions"
       :search="debouncedSearchQuery"
       :custom-filter="customFilter"
-      density="comfortable"
       class="elevation-0"
     >
       <!-- Loading slot -->
       <template #loading>
-        <v-skeleton-loader type="table-row@10" />
+        <AtlasSkeleton type="table-row@10" />
       </template>
 
       <!-- No data slot -->
       <template #no-data>
-        <v-alert
-          type="info"
-          variant="tonal"
+        <AtlasAlert
+          severity="info"
           class="ma-4"
         >
           {{ t('common.noData') }}
-        </v-alert>
+        </AtlasAlert>
       </template>
 
       <!-- Custom cell formatting -->
@@ -106,11 +105,12 @@
           {{ formatCell(item[header.key], header) }}
         </slot>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasList, AtlasListItem, AtlasMenu, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TableHeader, TableRow } from '@/models/report.types'

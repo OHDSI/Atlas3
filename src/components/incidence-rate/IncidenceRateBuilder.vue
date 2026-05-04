@@ -36,46 +36,44 @@
       >
     </template>
     <template #actions>
-      <v-tooltip
+      <AtlasTooltip
         :text="t('ir.tabs.conceptSets', 'Concept Sets').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Concept sets' }"
             icon="mdi-bookmark-multiple-outline"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             data-testid="ir-builder-conceptsets-icon"
             @click="showConceptSetsDialog = true"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="store.currentIR?.id"
         :text="t('ir.tabs.versions', 'Versions').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
             icon="mdi-history"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             data-testid="ir-builder-versions-icon"
             @click="showVersionsDialog = true"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="store.currentIR?.id"
         :text="t('common.tags', 'Tags').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-badge
+          <AtlasBadge
             v-bind="tipProps"
             :content="irTags.length || 0"
             :model-value="irTags.length > 0"
@@ -83,53 +81,51 @@
             offset-x="6"
             offset-y="6"
           >
-            <v-btn
+            <AtlasIconButton
+              v-bind="{ ariaLabel: 'Tags' }"
               icon="mdi-tag-outline"
               variant="text"
-              size="small"
-              density="compact"
+              size="sm"
               :disabled="store.isPreviewMode"
               data-testid="ir-builder-tags-icon"
               @click="showTagsDialog = true"
             />
-          </v-badge>
+          </AtlasBadge>
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         :text="t('common.import', 'Import design').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
             icon="mdi-upload"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             :loading="importing"
             data-testid="ir-builder-import-icon"
             @click="handleImportClick"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="store.currentIR?.id"
         :text="t('common.export', 'Export design').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
             icon="mdi-download"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             :loading="exporting"
             data-testid="ir-builder-export-icon"
             @click="handleExport"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
       <input
         ref="importFileInput"
         type="file"
@@ -138,7 +134,7 @@
         data-testid="ir-builder-import-input"
         @change="handleImportFileChange"
       >
-      <v-tooltip
+      <AtlasTooltip
         v-if="store.isPreviewMode"
         :text="t('common.backToCurrent', 'Back to current version').value"
         location="bottom"
@@ -154,17 +150,17 @@
             @click="store.clearPreviewVersion()"
           />
         </template>
-      </v-tooltip>
-      <v-btn
+      </AtlasTooltip>
+      <AtlasButton
         v-if="store.currentIR?.id"
-        variant="outlined"
-        prepend-icon="mdi-content-copy"
+        variant="secondary"
+        icon="mdi-content-copy"
         :disabled="!store.currentIR?.id || !canCopy"
         data-testid="ir-builder-copy"
         @click="onCopy"
       >
         {{ t('common.duplicate', 'Duplicate') }}
-      </v-btn>
+      </AtlasButton>
       <v-btn
         v-if="store.currentIR?.id"
         variant="outlined"
@@ -176,7 +172,7 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
-      <v-menu
+      <AtlasMenu
         v-if="store.currentIR?.id"
         v-model="generateMenu"
         :close-on-content-click="false"
@@ -184,22 +180,21 @@
         location="bottom end"
       >
         <template #activator="{ props: menuProps }">
-          <v-btn
+          <AtlasButton
             v-bind="menuProps"
-            color="primary"
-            variant="outlined"
-            prepend-icon="mdi-play"
+            variant="secondary"
+            icon="mdi-play"
             data-testid="ir-builder-generate"
           >
             {{ t('components.generation.generate', 'Generate') }}
-          </v-btn>
+          </AtlasButton>
         </template>
         <IncidenceRateGeneratePopover
           v-if="store.currentIR?.id"
           :ir-id="store.currentIR.id"
           @generated="generateMenu = false"
         />
-      </v-menu>
+      </AtlasMenu>
       <v-btn
         color="primary"
         variant="elevated"
@@ -218,47 +213,31 @@
       @open-generate="generateMenu = true"
     />
 
-    <v-dialog
+    <AtlasDialog
       v-model="showConceptSetsDialog"
+      :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
+      :title="t('ir.tabs.conceptSets', 'Concept Sets').value"
+      :close-label="t('common.close', 'Close').value"
       max-width="1200"
-      scrollable
+      @close="showConceptSetsDialog = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
-          :title="t('ir.tabs.conceptSets', 'Concept Sets').value"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="showConceptSetsDialog = false"
-        />
-        <v-card-text class="pa-4">
-          <IncidenceRateConceptSetsPanel data-testid="ir-builder-conceptsets-panel" />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <IncidenceRateConceptSetsPanel data-testid="ir-builder-conceptsets-panel" />
+    </AtlasDialog>
 
-    <v-dialog
+    <AtlasDialog
       v-model="showVersionsDialog"
+      :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
+      :title="t('ir.tabs.versions', 'Versions').value"
+      :close-label="t('common.close', 'Close').value"
       max-width="1000"
-      scrollable
+      @close="showVersionsDialog = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('navigation.incidenceRates', 'Incidence rate').value"
-          :title="t('ir.tabs.versions', 'Versions').value"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="showVersionsDialog = false"
-        />
-        <v-card-text class="pa-4">
-          <IncidenceRateVersionsPanel
-            v-if="store.currentIR?.id"
-            :ir-id="store.currentIR.id"
-            data-testid="ir-builder-versions-panel"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <IncidenceRateVersionsPanel
+        v-if="store.currentIR?.id"
+        :ir-id="store.currentIR.id"
+        data-testid="ir-builder-versions-panel"
+      />
+    </AtlasDialog>
 
     <TagSelectionDialog
       v-if="store.currentIR?.id"
@@ -267,47 +246,42 @@
       @update:selected-tags="handleTagsUpdate"
     />
 
-    <v-dialog
+    <AtlasDialog
       v-model="askDelete"
+      eyebrow="CONFIRM"
+      :title="t('common.delete', 'Delete incidence rate').value"
       max-width="400"
+      @close="askDelete = false"
     >
-      <v-card>
-        <v-card-title>{{ t('common.delete', 'Delete incidence rate') }}</v-card-title>
-        <v-card-text>
-          {{
-            t(
-              'ir.deleteConfirmation',
-              'Delete incidence rate analysis? Warning: deletion can not be undone!'
-            )
-          }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn @click="askDelete = false">
-            {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            @click="onDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{
+        t(
+          'ir.deleteConfirmation',
+          'Delete incidence rate analysis? Warning: deletion can not be undone!'
+        )
+      }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="askDelete = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          @click="onDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
-    <v-snackbar
+    <AtlasSnackbar
       :model-value="!!feedback"
-      :color="feedback?.color ?? 'info'"
+      :severity="feedbackSeverity"
+      :text="feedback?.message ?? ''"
       :timeout="3000"
-      @update:model-value="
-        (open: boolean) => {
-          if (!open) feedback = null
-        }
-      "
-    >
-      {{ feedback?.message }}
-    </v-snackbar>
+      @update:model-value="(open: boolean) => { if (!open) feedback = null }"
+    />
   </AnalysisBuilderShell>
 </template>
 
@@ -320,7 +294,8 @@ import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import IncidenceRateGeneratePopover from '@/components/incidence-rate/IncidenceRateGeneratePopover.vue'
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'
@@ -334,6 +309,9 @@ const { t } = useI18n()
 const store = useIncidenceRateStore()
 const router = useRouter()
 const { save, copy, remove, feedback } = useIncidenceRateBuilder()
+const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
+  feedback.value?.color === 'error' ? 'danger' : (feedback.value?.color ?? 'info')
+)
 const saving = ref(false)
 const askDelete = ref(false)
 const showConceptSetsDialog = ref(false)

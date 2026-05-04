@@ -18,46 +18,44 @@
               variant="text"
               @click="startEditName"
             >
-              <v-icon size="small">
+              <AtlasIcon size="small">
                 mdi-pencil
-              </v-icon>
-              <v-tooltip activator="parent">
+              </AtlasIcon>
+              <AtlasTooltip activator="parent">
                 Edit Role Name
-              </v-tooltip>
+              </AtlasTooltip>
             </v-btn>
           </div>
           <div
             v-else
             class="role-details__edit"
           >
-            <v-text-field
+            <AtlasTextField
               v-model="editedName"
               :rules="nameRules"
               variant="outlined"
-              density="compact"
               hide-details="auto"
               autofocus
               @keyup.enter="saveName"
               @keyup.esc="cancelEditName"
             />
             <div class="role-details__edit-actions">
-              <v-btn
-                color="primary"
-                size="small"
+              <AtlasButton
+                size="sm"
                 :disabled="!isNameValid"
                 :loading="isSaving"
                 @click="saveName"
               >
                 Save
-              </v-btn>
-              <v-btn
-                variant="text"
-                size="small"
+              </AtlasButton>
+              <AtlasButton
+                variant="ghost"
+                size="sm"
                 :disabled="isSaving"
                 @click="cancelEditName"
               >
                 Cancel
-              </v-btn>
+              </AtlasButton>
             </div>
           </div>
         </div>
@@ -82,43 +80,42 @@
               variant="text"
               @click="startEditDescription"
             >
-              <v-icon size="small">
+              <AtlasIcon size="small">
                 mdi-pencil
-              </v-icon>
-              <v-tooltip activator="parent">
+              </AtlasIcon>
+              <AtlasTooltip activator="parent">
                 Edit Description
-              </v-tooltip>
+              </AtlasTooltip>
             </v-btn>
           </div>
           <div
             v-else
             class="role-details__edit"
           >
-            <v-textarea
+            <AtlasTextField
               v-model="editedDescription"
               variant="outlined"
-              density="compact"
-              rows="3"
+              :rows="3"
+              multiline
               hide-details="auto"
               autofocus
             />
             <div class="role-details__edit-actions">
-              <v-btn
-                color="primary"
-                size="small"
+              <AtlasButton
+                size="sm"
                 :loading="isSaving"
                 @click="saveDescription"
               >
                 Save
-              </v-btn>
-              <v-btn
-                variant="text"
-                size="small"
+              </AtlasButton>
+              <AtlasButton
+                variant="ghost"
+                size="sm"
                 :disabled="isSaving"
                 @click="cancelEditDescription"
               >
                 Cancel
-              </v-btn>
+              </AtlasButton>
             </div>
           </div>
         </div>
@@ -131,45 +128,45 @@
             v-if="role.createdDate"
             class="role-details__metadata-item"
           >
-            <v-icon
+            <AtlasIcon
               size="small"
               class="mr-2"
             >
               mdi-calendar-plus
-            </v-icon>
+            </AtlasIcon>
             <span class="text-caption"> Created: {{ formatDate(role.createdDate) }} </span>
           </div>
           <div
             v-if="role.modifiedDate"
             class="role-details__metadata-item"
           >
-            <v-icon
+            <AtlasIcon
               size="small"
               class="mr-2"
             >
               mdi-calendar-edit
-            </v-icon>
+            </AtlasIcon>
             <span class="text-caption"> Modified: {{ formatDate(role.modifiedDate) }} </span>
           </div>
         </div>
       </div>
 
       <!-- Error Message -->
-      <v-alert
+      <AtlasAlert
         v-if="errorMessage"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="mt-4"
-        closable
-        @click:close="errorMessage = null"
+        :closable="true"
+        @close="errorMessage = null"
       >
         {{ errorMessage }}
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

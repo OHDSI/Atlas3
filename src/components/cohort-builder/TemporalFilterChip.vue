@@ -8,17 +8,18 @@
     data-testid="temporal-filter-chip"
     @click:close="$emit('close')"
   >
-    <v-icon
+    <AtlasIcon
       start
       size="small"
     >
       mdi-clock-outline
-    </v-icon>
+    </AtlasIcon>
     <slot>{{ label }}</slot>
   </v-chip>
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 interface Props {
   label?: string
   closable?: boolean

@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     padding="md"
     class="profile-demographics"
     data-test="profile-demographics"
@@ -10,7 +10,7 @@
           {{ tv('profiles.gender', 'Gender') }}
         </div>
         <div class="stat-strip__value stat-strip__value--with-icon">
-          <v-icon
+          <AtlasIcon
             :icon="genderIcon"
             size="20"
             data-test="profile-gender-icon"
@@ -39,7 +39,7 @@
         <div class="stat-strip__label">
           {{ tv('profiles.age', 'Age') }}
         </div>
-        <v-tooltip
+        <AtlasTooltip
           location="bottom"
           :text="ageTooltip"
         >
@@ -52,7 +52,7 @@
               {{ ageValue }}
             </div>
           </template>
-        </v-tooltip>
+        </AtlasTooltip>
       </div>
 
       <div class="stat-strip__separator" />
@@ -69,14 +69,14 @@
         </div>
       </div>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard, AtlasIcon, AtlasTooltip } from '@/components/ui'
 
 const store = useProfileStore()
 const { tv } = useI18n()

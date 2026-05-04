@@ -1,20 +1,18 @@
 <template>
   <div class="rule-editor">
-    <v-text-field
+    <AtlasTextField
       :model-value="rule.name"
       :label="t('incidenceRate.stratifyName', 'Rule name').value"
-      density="compact"
       hide-details
       class="mb-2"
-      @update:model-value="(v: string) => emit('update', { name: v })"
+      @update:model-value="(v) => emit('update', { name: String(v) })"
     />
-    <v-text-field
+    <AtlasTextField
       :model-value="rule.description ?? ''"
       :label="t('columns.description', 'Description').value"
-      density="compact"
       hide-details
       class="mb-3"
-      @update:model-value="(v: string) => emit('update', { description: v })"
+      @update:model-value="(v) => emit('update', { description: String(v) })"
     />
     <CriteriaGroupEditor
       :model-value="(rule.expression as CriteriaGroup) ?? defaultGroup"
@@ -24,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

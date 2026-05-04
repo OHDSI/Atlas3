@@ -27,7 +27,7 @@
           v-if="localEvents.length === 0"
           class="censoring-events__hint"
         >
-          <v-icon
+          <AtlasIcon
             icon="mdi-information-outline"
             size="16"
             class="censoring-events__hint-icon"
@@ -48,14 +48,14 @@
             variant="outlined"
           >
             <v-card-text>
-              <v-row align="center">
-                <v-col
+              <AtlasRow align="center">
+                <AtlasCol
                   cols="1"
                   class="text-center"
                 >
                   <span class="text-h6 text-medium-emphasis">{{ index + 1 }}</span>
-                </v-col>
-                <v-col cols="10">
+                </AtlasCol>
+                <AtlasCol cols="10">
                   <div class="event-info">
                     <div class="event-type text-subtitle-1">
                       {{ formatCriteriaType(event.criteriaType) }}
@@ -64,19 +64,17 @@
                       v-if="event.conceptSet"
                       class="event-concept-set text-body-2"
                     >
-                      <v-chip
-                        size="small"
-                        variant="tonal"
-                        color="primary"
+                      <AtlasChip
+                        size="sm"
+                        tone="primary"
                       >
                         {{ event.conceptSet.name }}
-                      </v-chip>
+                      </AtlasChip>
                     </div>
                     <!-- Warning for invalid concept set reference -->
-                    <v-alert
+                    <AtlasAlert
                       v-if="hasInvalidConceptSet(event)"
-                      type="warning"
-                      variant="tonal"
+                      severity="warning"
                       density="compact"
                       class="mt-2"
                     >
@@ -86,45 +84,47 @@
                           'Concept set not found in this cohort'
                         ).value
                       }}
-                    </v-alert>
+                    </AtlasAlert>
                   </div>
-                </v-col>
-                <v-col
+                </AtlasCol>
+                <AtlasCol
                   cols="1"
                   class="text-right"
                 >
-                  <v-btn
+                  <AtlasIconButton
                     icon="mdi-close"
-                    size="small"
+                    v-bind="{ ariaLabel: 'Remove event' }"
                     variant="text"
-                    color="error"
+                    tone="danger"
+                    size="sm"
                     :disabled="disabled"
                     @click="removeEvent(index)"
                   />
-                </v-col>
-              </v-row>
+                </AtlasCol>
+              </AtlasRow>
             </v-card-text>
           </v-card>
         </div>
       </div>
 
       <div class="mt-4">
-        <v-btn
-          variant="outlined"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          variant="secondary"
+          icon="mdi-plus"
           :disabled="disabled"
           @click="addEvent"
         >
           {{
             t('components.cohortExpressionEditor.addCensoringEvent', 'Add Censoring Event...').value
           }}
-        </v-btn>
+        </AtlasButton>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasCol, AtlasIcon, AtlasIconButton, AtlasRow } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent, ConceptSetReference, CriteriaType } from '@/models/cohort.types'

@@ -1,52 +1,49 @@
 <template>
   <div class="ir-gen">
-    <v-select
+    <AtlasSelect
       :model-value="selectedSource"
       :items="sourceItems"
       item-title="sourceName"
       item-value="sourceKey"
       :label="t('profiles.selectADataSource', 'Data source').value"
-      density="compact"
       variant="outlined"
       hide-details
       class="mb-2"
-      @update:model-value="(v: string | null) => (selectedSource = v ?? null)"
+      @update:model-value="(v) => (selectedSource = v as string | null)"
     />
 
     <div class="ir-gen__actions">
-      <v-btn
-        color="primary"
-        size="small"
-        variant="flat"
+      <AtlasButton
+        size="sm"
         :disabled="!selectedSource || generation.polling.value"
         data-testid="ir-generate-btn"
         @click="onStart"
       >
         {{ t('components.generation.generate', 'Generate').value }}
-      </v-btn>
-      <v-btn
-        size="small"
-        variant="text"
+      </AtlasButton>
+      <AtlasButton
+        variant="ghost"
+        size="sm"
         :disabled="!generation.polling.value"
         @click="onCancel"
       >
         {{ t('common.cancel', 'Cancel').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
-    <v-alert
+    <AtlasAlert
       v-if="generation.error.value"
-      type="error"
-      variant="tonal"
+      severity="danger"
       density="compact"
       class="mb-0"
     >
       {{ generation.error.value }}
-    </v-alert>
+    </AtlasAlert>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasSelect } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'

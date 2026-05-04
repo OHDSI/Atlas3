@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     v-if="execution"
     padding="md"
     class="char-run-meta"
@@ -47,14 +47,14 @@
         </div>
       </div>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { formatDateTime } from '@/utils/format'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 import type { CharacterizationExecution } from '@/models/characterization.types'
 
 const props = defineProps<{

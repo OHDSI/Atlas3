@@ -17,13 +17,13 @@
             />
             {{ c.name }}
           </v-chip>
-          <v-icon
+          <AtlasIcon
             v-if="i < stats.summary.chips.length - 1"
             size="x-small"
             class="path-stats__arrow"
           >
             mdi-arrow-right
-          </v-icon>
+          </AtlasIcon>
         </template>
       </div>
       <div class="path-stats__persons">
@@ -44,11 +44,11 @@
     <div class="path-stats__section-label">
       {{ t('pathway.workbench.stepBreakdown', 'Step breakdown').value }}
     </div>
-    <v-list
+    <AtlasList
       density="compact"
       class="path-stats__steps"
     >
-      <v-list-item
+      <AtlasListItem
         v-for="(s, i) in stats.steps"
         :key="i"
         class="path-stats__step"
@@ -73,8 +73,8 @@
             >({{ Math.round(s.retentionPct) }}%)</span>
           </span>
         </template>
-      </v-list-item>
-    </v-list>
+      </AtlasListItem>
+    </AtlasList>
 
     <div class="path-stats__section-label">
       {{ t('pathway.workbench.pathStats', 'Path stats').value }}
@@ -119,6 +119,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
 import type { PathStatsOutput } from '@/utils/pathway-path-stats'
 import { useI18n } from '@/composables/useI18n'
 

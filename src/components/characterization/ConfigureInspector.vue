@@ -20,36 +20,31 @@
       <div class="configure-inspector__sec-label">
         {{ t('cc.viewEdit.workbench.configurator.rows', 'Rows').value }}
       </div>
-      <v-switch
+      <AtlasSwitch
         :model-value="config.groupByAnalysis"
         :label="t('cc.viewEdit.workbench.configurator.groupByAnalysis', 'Group by analysis').value"
-        density="compact"
-        color="primary"
         hide-details
         data-testid="configure-group-by-analysis"
         @update:model-value="(v: boolean | null) => patch({ groupByAnalysis: !!v })"
       />
-      <v-switch
+      <AtlasSwitch
         :model-value="config.pinTopK.enabled"
         :label="t('cc.viewEdit.workbench.configurator.pinTopK', 'Pin top-K by Std Diff').value"
         :disabled="cohortCount !== 2"
-        density="compact"
-        color="primary"
         hide-details
         data-testid="configure-pin-topk"
         @update:model-value="(v: boolean | null) => patch({ pinTopK: { ...config.pinTopK, enabled: !!v } })"
       />
-      <v-text-field
+      <AtlasTextField
         v-if="config.pinTopK.enabled"
         :model-value="config.pinTopK.k"
         type="number"
         :label="t('cc.viewEdit.workbench.configurator.pinTopKCount', 'K').value"
-        density="compact"
         variant="outlined"
         hide-details
         :min="1"
         :max="100"
-        @update:model-value="(v: string) => patch({ pinTopK: { ...config.pinTopK, k: Math.max(1, Number(v) || 1) } })"
+        @update:model-value="(v) => patch({ pinTopK: { ...config.pinTopK, k: Math.max(1, Number(v) || 1) } })"
       />
     </section>
 
@@ -57,25 +52,23 @@
       <div class="configure-inspector__sec-label">
         {{ t('cc.viewEdit.workbench.configurator.cells', 'Cells').value }}
       </div>
-      <v-select
+      <AtlasSelect
         :model-value="config.binaryFormat"
         :items="binaryFormatItems"
         :label="t('cc.viewEdit.workbench.configurator.binaryFormat', 'Binary format').value"
-        density="compact"
         variant="outlined"
         hide-details
         data-testid="configure-binary-format"
-        @update:model-value="(v: string) => patch({ binaryFormat: v as Table1Config['binaryFormat'] })"
+        @update:model-value="(v) => patch({ binaryFormat: v as Table1Config['binaryFormat'] })"
       />
-      <v-select
+      <AtlasSelect
         :model-value="config.continuousFormat"
         :items="continuousFormatItems"
         :label="t('cc.viewEdit.workbench.configurator.continuousFormat', 'Continuous format').value"
-        density="compact"
         variant="outlined"
         hide-details
         data-testid="configure-continuous-format"
-        @update:model-value="(v: string) => patch({ continuousFormat: v as Table1Config['continuousFormat'] })"
+        @update:model-value="(v) => patch({ continuousFormat: v as Table1Config['continuousFormat'] })"
       />
     </section>
 
@@ -83,50 +76,40 @@
       <div class="configure-inspector__sec-label">
         {{ t('cc.viewEdit.workbench.configurator.columns', 'Columns').value }}
       </div>
-      <v-switch
+      <AtlasSwitch
         :model-value="config.showCounts"
         :label="t('cc.viewEdit.workbench.configurator.showCounts', 'Show counts').value"
-        density="compact"
-        color="primary"
         hide-details
         data-testid="configure-show-counts"
         @update:model-value="(v: boolean | null) => patch({ showCounts: !!v })"
       />
-      <v-switch
+      <AtlasSwitch
         :model-value="config.showPercent"
         :label="t('cc.viewEdit.workbench.configurator.showPercent', 'Show percent').value"
-        density="compact"
-        color="primary"
         hide-details
         data-testid="configure-show-percent"
         @update:model-value="(v: boolean | null) => patch({ showPercent: !!v })"
       />
-      <v-switch
+      <AtlasSwitch
         :model-value="config.showStdDiff"
         :label="t('cc.viewEdit.workbench.configurator.showStdDiff', 'Std Diff').value"
         :disabled="cohortCount !== 2"
-        density="compact"
-        color="primary"
         hide-details
         data-testid="configure-stddiff"
         @update:model-value="(v: boolean | null) => patch({ showStdDiff: !!v })"
       />
-      <v-switch
+      <AtlasSwitch
         :model-value="config.showStdDiffCI"
         :label="t('cc.viewEdit.workbench.configurator.showStdDiffCI', '95% CI on Std Diff').value"
         :disabled="cohortCount !== 2 || !config.showStdDiff"
-        density="compact"
-        color="primary"
         hide-details
         data-testid="configure-stddiff-ci"
         @update:model-value="(v: boolean | null) => patch({ showStdDiffCI: !!v })"
       />
-      <v-switch
+      <AtlasSwitch
         :model-value="config.strataAsCols"
         :label="t('cc.viewEdit.workbench.configurator.strataAsCols', 'Strata as columns').value"
         :disabled="!hasStrata"
-        density="compact"
-        color="primary"
         hide-details
         data-testid="configure-strata-as-cols"
         @update:model-value="(v: boolean | null) => patch({ strataAsCols: !!v })"
@@ -136,6 +119,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Table1Config } from '@/models/characterization.types'

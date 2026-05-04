@@ -1,48 +1,47 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="COHORT"
+    title="Select cohorts"
     max-width="600"
     @update:model-value="(v: boolean) => emit('update:modelValue', v)"
+    @close="close"
   >
-    <v-card>
-      <v-card-title>Select cohorts</v-card-title>
-      <v-card-text>
-        <v-text-field
-          v-model="search"
-          :label="tv('common.search', 'Search')"
-          density="compact"
-        />
-        <v-list
-          v-model:selected="selected"
-          density="compact"
-          select-strategy="independent"
-        >
-          <v-list-item
-            v-for="c in filtered"
-            :key="c.id"
-            :value="c.id"
-            :title="c.name"
-          />
-        </v-list>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn @click="close">
-          {{ t('common.cancel', 'Cancel') }}
-        </v-btn>
-        <v-btn
-          color="primary"
-          :disabled="selected.length === 0"
-          @click="confirm"
-        >
-          {{ t('common.add', 'Add cohort') }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <AtlasTextField
+      v-model="search"
+      :label="tv('common.search', 'Search')"
+    />
+    <AtlasList
+      v-model:selected="selected"
+      density="compact"
+      select-strategy="independent"
+    >
+      <AtlasListItem
+        v-for="c in filtered"
+        :key="c.id"
+        :value="c.id"
+        :title="c.name"
+      />
+    </AtlasList>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="close"
+      >
+        {{ t('common.cancel', 'Cancel') }}
+      </AtlasButton>
+      <AtlasButton
+        :disabled="selected.length === 0"
+        @click="confirm"
+      >
+        {{ t('common.add', 'Add cohort') }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasDialog, AtlasList, AtlasListItem, AtlasTextField } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { getCohorts } from '@/services/webapi'
 import { logger } from '@/utils/logger'

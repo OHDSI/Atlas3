@@ -215,7 +215,7 @@ describe('CacheManagementSection.vue', () => {
       const allButtons = wrapper.findAllComponents({ name: 'VBtn' })
       const confirmButton = allButtons.find(btn => {
         const text = btn.text()
-        return text === 'Clear Cache' && btn.props('color') === 'warning'
+        return text === 'Clear Cache'
       })
 
       await confirmButton!.trigger('click')
@@ -243,7 +243,7 @@ describe('CacheManagementSection.vue', () => {
       const allButtons = wrapper.findAllComponents({ name: 'VBtn' })
       const confirmButton = allButtons.find(btn => {
         const text = btn.text()
-        return text === 'Clear Cache' && btn.props('color') === 'warning'
+        return text === 'Clear Cache'
       })
 
       await confirmButton!.trigger('click')
@@ -274,7 +274,7 @@ describe('CacheManagementSection.vue', () => {
       const allButtons = wrapper.findAllComponents({ name: 'VBtn' })
       const confirmButton = allButtons.find(btn => {
         const text = btn.text()
-        return text === 'Clear Cache' && btn.props('color') === 'warning'
+        return text === 'Clear Cache'
       })
 
       await confirmButton!.trigger('click')
@@ -306,7 +306,7 @@ describe('CacheManagementSection.vue', () => {
       const allButtons = wrapper.findAllComponents({ name: 'VBtn' })
       const confirmButton = allButtons.find(btn => {
         const text = btn.text()
-        return text === 'Clear Cache' && btn.props('color') === 'warning'
+        return text === 'Clear Cache'
       })
 
       await confirmButton!.trigger('click')
@@ -338,7 +338,7 @@ describe('CacheManagementSection.vue', () => {
       const allButtons = wrapper.findAllComponents({ name: 'VBtn' })
       const confirmButton = allButtons.find(btn => {
         const text = btn.text()
-        return text === 'Clear Cache' && btn.props('color') === 'warning'
+        return text === 'Clear Cache'
       })
 
       await confirmButton!.trigger('click')
@@ -366,7 +366,7 @@ describe('CacheManagementSection.vue', () => {
       const allButtons = wrapper.findAllComponents({ name: 'VBtn' })
       const confirmButton = allButtons.find(btn => {
         const text = btn.text()
-        return text === 'Clear Cache' && btn.props('color') === 'warning'
+        return text === 'Clear Cache'
       })
 
       await confirmButton!.trigger('click')

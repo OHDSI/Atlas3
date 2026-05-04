@@ -9,7 +9,7 @@ import CardinalityEditor from './CardinalityEditor.vue'
 import TemporalWindowEditor from './TemporalWindowEditor.vue'
 import AttributesEditor from './AttributesEditor.vue'
 import TemporalFilterChip from './TemporalFilterChip.vue'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasDivider, AtlasIcon, AtlasIconButton } from '@/components/ui'
 
 const props = withDefaults(
   defineProps<{
@@ -130,7 +130,7 @@ const removeEvent = () => {
 </script>
 
 <template>
-  <SurfaceCard
+  <AtlasCard
     class="event-card mb-2"
     padding="none"
   >
@@ -157,20 +157,20 @@ const removeEvent = () => {
           </template>
         </div>
       </div>
-      <v-btn
+      <AtlasIconButton
         icon="mdi-chevron-down"
+        v-bind="{ ariaLabel: expanded ? 'Collapse' : 'Expand' }"
         variant="text"
-        size="small"
+        size="sm"
         :class="{ 'rotate-180': expanded }"
-        :aria-label="expanded ? 'Collapse' : 'Expand'"
         @click="toggleExpanded"
       />
-      <v-btn
+      <AtlasIconButton
         icon="mdi-delete-outline"
+        v-bind="{ ariaLabel: 'Remove event' }"
         variant="text"
-        size="small"
-        color="error"
-        :aria-label="'Remove event'"
+        tone="danger"
+        size="sm"
         @click="removeEvent"
       />
     </div>
@@ -181,20 +181,19 @@ const removeEvent = () => {
       class="pt-0 pb-2"
     >
       <div class="d-flex flex-wrap ga-2">
-        <v-chip
+        <AtlasChip
           v-if="hasCardinality"
-          size="small"
-          color="primary"
-          variant="tonal"
+          size="sm"
+          tone="primary"
         >
-          <v-icon
+          <AtlasIcon
             start
             size="small"
           >
             mdi-counter
-          </v-icon>
+          </AtlasIcon>
           {{ cardinalityDisplay }}
-        </v-chip>
+        </AtlasChip>
         <TemporalFilterChip
           v-if="hasTemporalWindows"
           :label="temporalWindowDisplay ?? ''"
@@ -206,12 +205,12 @@ const removeEvent = () => {
           color="accent"
           variant="tonal"
         >
-          <v-icon
+          <AtlasIcon
             start
             size="small"
           >
             mdi-filter
-          </v-icon>
+          </AtlasIcon>
           {{ event.attributes!.length }} attribute{{ event.attributes!.length > 1 ? 's' : '' }}
         </v-chip>
       </div>
@@ -220,37 +219,37 @@ const removeEvent = () => {
     <!-- Expanded Details -->
     <v-expand-transition>
       <div v-show="expanded">
-        <v-divider />
+        <AtlasDivider />
         <v-card-text>
           <!-- Action Buttons -->
           <div class="d-flex flex-wrap ga-2 mb-4">
-            <v-btn
+            <AtlasButton
               v-if="!hasCardinality"
-              size="small"
-              variant="outlined"
-              prepend-icon="mdi-counter"
+              variant="secondary"
+              size="sm"
+              icon="mdi-counter"
               @click="addCardinality"
             >
               Add Cardinality
-            </v-btn>
-            <v-btn
+            </AtlasButton>
+            <AtlasButton
               v-if="!hasTemporalWindows"
-              size="small"
-              variant="outlined"
-              prepend-icon="mdi-calendar-range"
+              variant="secondary"
+              size="sm"
+              icon="mdi-calendar-range"
               @click="addTemporalWindow"
             >
               Add Temporal Window
-            </v-btn>
-            <v-btn
+            </AtlasButton>
+            <AtlasButton
               v-if="!hasAttributes"
-              size="small"
-              variant="outlined"
-              prepend-icon="mdi-filter"
+              variant="secondary"
+              size="sm"
+              icon="mdi-filter"
               @click="addAttributes"
             >
               Add Attributes
-            </v-btn>
+            </AtlasButton>
           </div>
 
           <!-- Cardinality Editor -->
@@ -313,7 +312,7 @@ const removeEvent = () => {
           </div>
 
           <!-- Event Details -->
-          <v-divider class="my-4" />
+          <AtlasDivider class="my-4" />
           <div class="text-caption text-medium-emphasis">
             <div class="mb-1">
               <strong>Event ID:</strong> {{ event.id }}
@@ -328,31 +327,31 @@ const removeEvent = () => {
               v-if="event.restrictVisit"
               class="mb-1"
             >
-              <v-icon
+              <AtlasIcon
                 size="small"
                 color="info"
               >
                 mdi-information
-              </v-icon>
+              </AtlasIcon>
               Event must occur in same visit as index
             </div>
             <div
               v-if="event.ignoreObservationPeriod"
               class="mb-1"
             >
-              <v-icon
+              <AtlasIcon
                 size="small"
                 color="warning"
               >
                 mdi-alert
-              </v-icon>
+              </AtlasIcon>
               Event can occur outside observation period
             </div>
           </div>
         </v-card-text>
       </div>
     </v-expand-transition>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <style scoped>

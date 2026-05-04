@@ -3,19 +3,19 @@
     <v-card-title>{{ t('components.conceptPicker.selectConcept') }}</v-card-title>
     <v-card-text>
       <!-- Search Input -->
-      <v-text-field
+      <AtlasTextField
         v-model="searchQuery"
         :label="tv('components.conceptPicker.search')"
         :placeholder="tv('search.placeholder')"
-        prepend-inner-icon="mdi-magnify"
+        prepend-icon="mdi-magnify"
         clearable
         data-testid="concept-search-input"
-        @update:model-value="handleSearch"
+        @update:model-value="(v) => handleSearch(v as string | null)"
         @click:clear="handleClear"
       />
 
       <!-- Domain Filter -->
-      <v-select
+      <AtlasSelect
         v-model="selectedDomain"
         :items="domains"
         :label="tv('search.domains')"
@@ -25,7 +25,7 @@
       />
 
       <!-- Loading Indicator -->
-      <v-progress-linear
+      <AtlasProgressLinear
         v-if="isSearching"
         indeterminate
         color="primary"
@@ -41,7 +41,7 @@
         data-testid="search-results-list"
       >
         <template #default="{ item }">
-          <v-list-item
+          <AtlasListItem
             :data-testid="`concept-item-${item.conceptId}`"
             @click="$emit('select-concept', item)"
           >
@@ -55,34 +55,33 @@
             <v-list-item-subtitle>
               Code: {{ item.conceptCode }} | Class: {{ item.conceptClassId }}
             </v-list-item-subtitle>
-          </v-list-item>
-          <v-divider />
+          </AtlasListItem>
+          <AtlasDivider />
         </template>
       </v-virtual-scroll>
 
       <!-- No Results Message -->
-      <v-alert
+      <AtlasAlert
         v-if="searchQuery && !isSearching && searchResults && searchResults.length === 0"
-        type="info"
-        variant="tonal"
+        severity="info"
         data-testid="no-results-message"
       >
         {{ t('search.noResultsFoundFor') }} "{{ searchQuery }}"
-      </v-alert>
+      </AtlasAlert>
 
-      <!-- Instructions -->
-      <v-alert
+      <AtlasAlert
         v-if="!searchQuery && (!searchResults || searchResults.length === 0)"
-        type="info"
-        variant="text"
+        severity="info"
+        variant="flat"
       >
         Enter a search term to find concepts
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasDivider, AtlasListItem, AtlasProgressLinear, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

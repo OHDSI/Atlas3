@@ -9,17 +9,16 @@
         </p>
 
         <!-- Cache Statistics -->
-        <v-alert
+        <AtlasAlert
           v-if="cacheStats"
-          type="info"
-          variant="tonal"
+          severity="info"
           class="mb-4"
         >
           <strong>Cache Status:</strong>
           {{ cacheStats.itemCount }} item{{ cacheStats.itemCount !== 1 ? 's' : '' }} cached ({{
             formatBytes(cacheStats.estimatedSize)
           }})
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Clear Cache Button -->
         <v-btn
@@ -28,61 +27,47 @@
           :disabled="isLoading"
           @click="showConfirmDialog = true"
         >
-          <v-icon start>
+          <AtlasIcon start>
             mdi-trash-can-outline
-          </v-icon>
+          </AtlasIcon>
           Clear Configuration Cache
         </v-btn>
       </v-card-text>
     </v-card>
 
     <!-- Confirmation Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showConfirmDialog"
+      eyebrow="CONFIRM"
+      title="Clear Cache"
       max-width="400"
+      @close="showConfirmDialog = false"
     >
-      <v-card>
-        <v-card-title>Clear Cache</v-card-title>
-        <v-card-text>
-          Are you sure you want to clear the configuration cache? This action cannot be undone.
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showConfirmDialog = false"
-          >
-            Cancel
-          </v-btn>
-          <v-btn
-            color="warning"
-            variant="flat"
-            :loading="isLoading"
-            @click="handleClearCache"
-          >
-            Clear Cache
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      Are you sure you want to clear the configuration cache? This action cannot be undone.
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showConfirmDialog = false"
+        >
+          Cancel
+        </AtlasButton>
+        <AtlasButton
+          :loading="isLoading"
+          @click="handleClearCache"
+        >
+          Clear Cache
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <!-- Toast Notification -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showToast"
+      :severity="toastSeverity"
+      :text="toastMessage"
       :timeout="5000"
-      :color="toastColor"
       location="bottom"
-    >
-      {{ toastMessage }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          @click="showToast = false"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
+    />
 
     <!-- TrexSQL Cache Section -->
     <TrexSQLCacheSection />
@@ -90,6 +75,8 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasSnackbar } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { logger } from '@/utils/logger'
@@ -103,7 +90,7 @@ const isLoading = ref(false)
 const showConfirmDialog = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
-const toastColor = ref<'success' | 'error'>('success')
+const toastSeverity = ref<AtlasSnackbarSeverity>('success')
 
 /**
  * Load cache statistics on mount
@@ -135,7 +122,7 @@ async function handleClearCache() {
     // Success: update stats and show toast
     await loadCacheStats()
     toastMessage.value = 'Configuration cache cleared successfully'
-    toastColor.value = 'success'
+    toastSeverity.value = 'success'
     showToast.value = true
     showConfirmDialog.value = false
   } catch (error: unknown) {
@@ -143,7 +130,7 @@ async function handleClearCache() {
     const errorMessage =
       error instanceof Error ? error.message : 'Failed to clear cache. Please try again.'
     toastMessage.value = errorMessage
-    toastColor.value = 'error'
+    toastSeverity.value = 'danger'
     showToast.value = true
   } finally {
     isLoading.value = false

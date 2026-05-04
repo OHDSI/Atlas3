@@ -13,17 +13,15 @@
       <h2 class="strata-editor__title">
         {{ t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value }}
       </h2>
-      <v-btn
-        variant="outlined"
-        color="primary"
-        size="small"
-        density="compact"
-        prepend-icon="mdi-plus"
+      <AtlasButton
+        variant="secondary"
+        size="sm"
+        icon="mdi-plus"
         data-testid="strata-editor-add"
         @click="addStratum"
       >
         {{ t('cc.viewEdit.design.subgroups.newSubgroup', 'New subgroup').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <div
@@ -34,17 +32,15 @@
       {{ t('cc.viewEdit.design.subgroups.noSubgroups', 'No subgroups defined').value }}
     </div>
 
-    <v-switch
+    <AtlasSwitch
       v-if="modelValue.length > 0"
       :model-value="strataOnly"
       :label="
         t('cc.viewEdit.design.subgroups.subgroupOnly', 'Calculate subgroup analyses only').value
       "
-      density="compact"
-      color="primary"
       hide-details
       data-testid="strata-editor-only"
-      @update:model-value="(v: boolean | null) => $emit('update:strataOnly', !!v)"
+      @update:model-value="(v) => $emit('update:strataOnly', !!v)"
     />
 
     <div
@@ -54,26 +50,24 @@
       :data-testid="`strata-editor-card-${index}`"
     >
       <div class="strata-editor__card-header">
-        <v-text-field
+        <AtlasTextField
           :model-value="stratum.name"
           :label="
             t('cc.viewEdit.design.subgroups.namePlaceholder', 'Subgroup name').value
           "
-          :error="!stratum.name.trim() || isDuplicate(stratum.name)"
-          :error-messages="nameErrors(stratum.name)"
-          density="compact"
+          :error="nameErrors(stratum.name)?.[0]"
           variant="outlined"
           hide-details="auto"
           class="strata-editor__name"
           :data-testid="`strata-editor-name-${index}`"
-          @update:model-value="(value: string) => updateName(index, value)"
+          @update:model-value="(v) => updateName(index, String(v))"
         />
-        <v-btn
+        <AtlasIconButton
           icon="mdi-delete"
-          size="small"
+          v-bind="{ ariaLabel: t('columns.remove', 'Remove').value }"
           variant="text"
-          color="error"
-          :aria-label="t('columns.remove', 'Remove').value"
+          tone="danger"
+          size="sm"
           :data-testid="`strata-editor-remove-${index}`"
           @click="removeStratum(index)"
         />
@@ -100,42 +94,33 @@
       </div>
     </div>
 
-    <v-dialog
+    <AtlasDialog
       v-model="dialogOpen"
+      :eyebrow="t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value"
+      :title="dialogTitle"
+      :close-label="t('common.close', 'Close').value"
       max-width="1100"
-      scrollable
-      :persistent="true"
+      persistent
+      @close="dialogOpen = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('cc.viewEdit.design.subgroups.title', 'Subgroup analyses').value"
-          :title="dialogTitle"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="dialogOpen = false"
-        />
-        <v-card-text class="strata-editor__dialog-body">
-          <CriteriaGroupEditor
-            v-if="dialogStratum"
-            :model-value="dialogGroup"
-            @update:model-value="onDialogGroupUpdate"
-            @select-concept-set="onSelectConceptSet"
-            @select-concept="onSelectConcept"
-          />
-        </v-card-text>
-        <v-card-actions class="strata-editor__dialog-actions">
-          <v-spacer />
-          <v-btn
-            variant="text"
-            size="small"
-            density="compact"
-            @click="dialogOpen = false"
-          >
-            {{ t('common.close', 'Close').value }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <CriteriaGroupEditor
+        v-if="dialogStratum"
+        :model-value="dialogGroup"
+        @update:model-value="onDialogGroupUpdate"
+        @select-concept-set="onSelectConceptSet"
+        @select-concept="onSelectConcept"
+      />
+      <template #actions>
+        <v-btn
+          variant="text"
+          size="small"
+          density="compact"
+          @click="dialogOpen = false"
+        >
+          {{ t('common.close', 'Close').value }}
+        </v-btn>
+      </template>
+    </AtlasDialog>
 
     <ConceptSetSelectionDialog
       v-model="conceptSetDialogOpen"
@@ -156,7 +141,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasButton, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
@@ -467,11 +452,4 @@ function removeStratum(index: number) {
 
 .strata-editor__criteria-chip { font-size: 11px; }
 
-.strata-editor__dialog-body {
-  padding: 16px 20px;
-}
-
-.strata-editor__dialog-actions {
-  padding: 8px 16px 12px;
-}
 </style>

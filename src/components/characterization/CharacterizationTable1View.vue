@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     padding="none"
     class="char-t1"
     data-testid="char-t1"
@@ -149,13 +149,13 @@
         </tbody>
       </table>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 import { buildTable1 } from '@/utils/characterization-table1'
 import type {
   DistributionStat,

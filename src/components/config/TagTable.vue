@@ -1,5 +1,5 @@
 <template>
-  <v-data-table
+  <AtlasDataTable
     :headers="headers"
     :items="items"
     :loading="loading"
@@ -12,12 +12,12 @@
           class="tag-badge__swatch"
           :style="{ backgroundColor: item.color || item.groups[0]?.color || '#cecece' }"
         >
-          <v-icon
+          <AtlasIcon
             size="small"
             color="white"
           >
             {{ item.icon || item.groups[0]?.icon || 'mdi-tag' }}
-          </v-icon>
+          </AtlasIcon>
         </span>
         <span
           class="tag-badge__name"
@@ -30,14 +30,13 @@
 
     <!-- Permission Protected -->
     <template #item.permissionProtected="{ item }">
-      <v-chip
+      <AtlasChip
         v-if="item.permissionProtected"
-        size="small"
-        color="warning"
-        variant="flat"
+        size="sm"
+        tone="warning"
       >
         Protected
-      </v-chip>
+      </AtlasChip>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -88,19 +87,19 @@
 
     <!-- Actions -->
     <template #item.actions="{ item }">
-      <v-btn
+      <AtlasIconButton
         icon="mdi-pencil"
-        size="small"
+        v-bind="{ ariaLabel: 'Edit tag' }"
         variant="text"
-        aria-label="Edit tag"
+        size="sm"
         @click="$emit('edit', item)"
       />
-      <v-btn
+      <AtlasIconButton
         icon="mdi-delete"
-        size="small"
+        v-bind="{ ariaLabel: 'Delete tag' }"
         variant="text"
-        color="error"
-        aria-label="Delete tag"
+        tone="danger"
+        size="sm"
         @click="$emit('delete', item)"
       />
     </template>
@@ -108,12 +107,12 @@
     <!-- Empty State -->
     <template #no-data>
       <div class="text-center pa-4">
-        <v-icon
+        <AtlasIcon
           size="64"
           color="grey-lighten-1"
         >
           mdi-tag-off-outline
-        </v-icon>
+        </AtlasIcon>
         <p class="text-h6 mt-2">
           No tags in this group
         </p>
@@ -122,10 +121,11 @@
         </p>
       </div>
     </template>
-  </v-data-table>
+  </AtlasDataTable>
 </template>
 
 <script setup lang="ts">
+import { AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton } from '@/components/ui'
 import type { Tag } from '@/models/config.types'
 
 interface Props {
@@ -148,7 +148,7 @@ const headers = [
   { title: 'Description', key: 'description', sortable: false, width: '250px' },
   { title: 'Usage', key: 'count', sortable: true, width: '80px' },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
-] as const
+]
 
 /**
  * Format ISO date string to readable format

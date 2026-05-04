@@ -1,6 +1,6 @@
 <template>
   <div class="concept-table">
-    <v-data-table
+    <AtlasDataTable
       v-model:sort-by="sortBy"
       :headers="headers"
       :items="concepts"
@@ -68,7 +68,7 @@
       <!-- Record Count Columns - Format with commas or dash if undefined, show spinner while loading -->
       <template #item.recordCount="{ item }">
         <div class="d-flex align-center justify-end">
-          <v-progress-circular
+          <AtlasProgressCircular
             v-if="loadingRecordCounts && item.recordCount === undefined"
             indeterminate
             size="16"
@@ -84,7 +84,7 @@
 
       <template #item.descendantRecordCount="{ item }">
         <div class="d-flex align-center justify-end">
-          <v-progress-circular
+          <AtlasProgressCircular
             v-if="loadingRecordCounts && item.descendantRecordCount === undefined"
             indeterminate
             size="16"
@@ -100,7 +100,7 @@
 
       <template #item.personCount="{ item }">
         <div class="d-flex align-center justify-end">
-          <v-progress-circular
+          <AtlasProgressCircular
             v-if="loadingRecordCounts && item.personCount === undefined"
             indeterminate
             size="16"
@@ -116,7 +116,7 @@
 
       <template #item.descendantPersonCount="{ item }">
         <div class="d-flex align-center justify-end">
-          <v-progress-circular
+          <AtlasProgressCircular
             v-if="loadingRecordCounts && item.descendantPersonCount === undefined"
             indeterminate
             size="16"
@@ -136,16 +136,15 @@
         #item.actions="{ item }"
       >
         <div class="d-flex justify-center">
-          <v-btn
+          <AtlasButton
             v-if="!conceptsInSet.has(item.conceptId)"
-            color="primary"
-            variant="outlined"
-            size="small"
-            prepend-icon="mdi-plus"
+            variant="secondary"
+            size="sm"
+            icon="mdi-plus"
             @click="onAddConcept(item)"
           >
             Add
-          </v-btn>
+          </AtlasButton>
           <v-btn
             v-else
             color="error"
@@ -162,12 +161,12 @@
       <!-- No data message -->
       <template #no-data>
         <div class="text-center py-8">
-          <v-icon
+          <AtlasIcon
             size="64"
             color="grey-lighten-1"
           >
             mdi-database-search
-          </v-icon>
+          </AtlasIcon>
           <p class="text-body-1 mt-4 text-grey">
             {{ loading ? 'Loading...' : 'No records to display' }}
           </p>
@@ -176,14 +175,14 @@
 
       <!-- Loading skeleton -->
       <template #loading>
-        <v-skeleton-loader
+        <AtlasSkeleton
           v-for="i in 5"
           :key="i"
           type="table-row"
           class="mx-2"
         />
       </template>
-    </v-data-table>
+    </AtlasDataTable>
 
     <!-- Custom pagination -->
     <div class="d-flex align-center justify-space-between pa-4">
@@ -193,18 +192,17 @@
 
       <div class="d-flex align-center gap-2">
         <span class="text-body-2">Items per page:</span>
-        <v-select
+        <AtlasSelect
           :model-value="itemsPerPage"
           :items="[60, 120, 240]"
-          density="compact"
           variant="outlined"
           hide-details
           style="width: 80px"
-          @update:model-value="onItemsPerPageChange"
+          @update:model-value="(v) => onItemsPerPageChange(v as number)"
         />
       </div>
 
-      <v-pagination
+      <AtlasPagination
         :model-value="page"
         :length="totalPages"
         :total-visible="7"
@@ -215,6 +213,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasDataTable, AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'

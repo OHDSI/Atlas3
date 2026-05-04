@@ -1,9 +1,8 @@
 <template>
   <div class="canvas-toolbar">
-    <v-chip
+    <AtlasChip
       v-if="activeRun"
-      size="small"
-      variant="tonal"
+      size="sm"
       class="canvas-toolbar__chip"
     >
       <span class="canvas-toolbar__dot" />
@@ -13,7 +12,7 @@
         v-if="activeRun.age"
         class="canvas-toolbar__age"
       >· {{ activeRun.age }}</span>
-    </v-chip>
+    </AtlasChip>
     <v-chip
       v-else
       size="small"
@@ -23,10 +22,9 @@
       {{ t('pathway.workbench.noRunsYet', 'No runs yet').value }}
     </v-chip>
 
-    <v-chip
+    <AtlasChip
       v-if="activeRun"
-      size="small"
-      variant="tonal"
+      size="sm"
       class="canvas-toolbar__chip"
     >
       <strong>{{ coverage.totalPathwaysCount.toLocaleString() }}</strong>
@@ -35,9 +33,9 @@
           coveragePct.toFixed(1)
         }}%)
       </span>
-    </v-chip>
+    </AtlasChip>
 
-    <v-spacer />
+    <AtlasSpacer />
 
     <v-btn-toggle
       :model-value="mode"
@@ -66,6 +64,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasChip, AtlasSpacer } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 

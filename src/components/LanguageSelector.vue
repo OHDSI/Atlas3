@@ -1,5 +1,5 @@
 <template>
-  <v-menu>
+  <AtlasMenu>
     <template #activator="{ props }">
       <v-btn
         v-bind="props"
@@ -10,12 +10,12 @@
         data-testid="language-selector"
         @click.shift.exact="handleShiftClick"
       >
-        <v-icon>mdi-translate</v-icon>
+        <AtlasIcon>mdi-translate</AtlasIcon>
       </v-btn>
     </template>
 
-    <v-list>
-      <v-list-item
+    <AtlasList>
+      <AtlasListItem
         v-for="locale in availableLocales"
         :key="locale.code"
         :active="currentLocale === locale.code"
@@ -23,13 +23,16 @@
         :data-locale="locale.code"
         @click="handleLocaleChange(locale.code)"
       >
-        <v-list-item-title>{{ locale.name }}</v-list-item-title>
-      </v-list-item>
-    </v-list>
-  </v-menu>
+        <v-list-item-title>
+          {{ locale.name }}
+        </v-list-item-title>
+      </AtlasListItem>
+    </AtlasList>
+  </AtlasMenu>
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useLocaleStore } from '@/stores/locale'
 import { logger } from '@/utils/logger'

@@ -1,5 +1,5 @@
 <template>
-  <v-data-table
+  <AtlasDataTable
     :headers="headers"
     :items="items"
     :loading="loading"
@@ -21,12 +21,12 @@
 
     <!-- Icon Preview -->
     <template #item.icon="{ item }">
-      <v-icon
+      <AtlasIcon
         v-if="item.icon"
         :title="item.icon"
       >
         {{ item.icon }}
-      </v-icon>
+      </AtlasIcon>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -35,14 +35,13 @@
 
     <!-- Boolean Flags as Chips -->
     <template #item.mandatory="{ item }">
-      <v-chip
+      <AtlasChip
         v-if="item.mandatory"
-        size="small"
-        color="error"
-        variant="flat"
+        size="sm"
+        tone="danger"
       >
         Required
-      </v-chip>
+      </AtlasChip>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -50,14 +49,13 @@
     </template>
 
     <template #item.showGroup="{ item }">
-      <v-chip
+      <AtlasChip
         v-if="item.showGroup"
-        size="small"
-        color="primary"
-        variant="tonal"
+        size="sm"
+        tone="primary"
       >
         Column
-      </v-chip>
+      </AtlasChip>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -65,14 +63,13 @@
     </template>
 
     <template #item.multiSelection="{ item }">
-      <v-chip
+      <AtlasChip
         v-if="item.multiSelection"
-        size="small"
-        color="info"
-        variant="tonal"
+        size="sm"
+        tone="info"
       >
         Multiple
-      </v-chip>
+      </AtlasChip>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -80,14 +77,13 @@
     </template>
 
     <template #item.allowCustom="{ item }">
-      <v-chip
+      <AtlasChip
         v-if="item.allowCustom"
-        size="small"
-        color="success"
-        variant="tonal"
+        size="sm"
+        tone="success"
       >
         Free-form
-      </v-chip>
+      </AtlasChip>
       <span
         v-else
         class="text-grey-lighten-1"
@@ -128,30 +124,30 @@
 
     <!-- Show Tags Button -->
     <template #item.showTagsBtn="{ item }">
-      <v-btn
-        variant="text"
-        size="small"
+      <AtlasButton
+        variant="ghost"
+        size="sm"
         @click="$emit('showTags', item)"
       >
         Show Tags
-      </v-btn>
+      </AtlasButton>
     </template>
 
     <!-- Actions -->
     <template #item.actions="{ item }">
-      <v-btn
+      <AtlasIconButton
         icon="mdi-pencil"
-        size="small"
+        v-bind="{ ariaLabel: 'Edit tag group' }"
         variant="text"
-        aria-label="Edit tag group"
+        size="sm"
         @click="$emit('edit', item)"
       />
-      <v-btn
+      <AtlasIconButton
         icon="mdi-delete"
-        size="small"
+        v-bind="{ ariaLabel: 'Delete tag group' }"
         variant="text"
-        color="error"
-        aria-label="Delete tag group"
+        tone="danger"
+        size="sm"
         @click="$emit('delete', item)"
       />
     </template>
@@ -159,12 +155,12 @@
     <!-- Empty State -->
     <template #no-data>
       <div class="text-center pa-4">
-        <v-icon
+        <AtlasIcon
           size="64"
           color="grey-lighten-1"
         >
           mdi-tag-off-outline
-        </v-icon>
+        </AtlasIcon>
         <p class="text-h6 mt-2">
           No tag groups found
         </p>
@@ -173,10 +169,11 @@
         </p>
       </div>
     </template>
-  </v-data-table>
+  </AtlasDataTable>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton } from '@/components/ui'
 import type { TagGroup } from '@/models/config.types'
 
 interface Props {
@@ -205,7 +202,7 @@ const headers = [
   { title: 'Description', key: 'description', sortable: false, width: '200px' },
   { title: '', key: 'showTagsBtn', sortable: false, width: '100px' },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
-] as const
+]
 
 /**
  * Format ISO date string to readable format

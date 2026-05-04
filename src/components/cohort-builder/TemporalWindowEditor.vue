@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AtlasAlert, AtlasCheckbox, AtlasCol, AtlasDivider, AtlasRow, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { TemporalWindow, Window } from '@/models/event.types'
@@ -169,52 +170,50 @@ watch(
     </v-card-title>
     <v-card-text>
       <!-- Presets -->
-      <v-row dense>
-        <v-col cols="12">
-          <v-select
+      <AtlasRow dense>
+        <AtlasCol cols="12">
+          <AtlasSelect
             :label="t('common.presets', 'Quick Presets').value"
             :items="presetOptions"
             item-title="label"
             item-value="value"
-            density="compact"
             variant="outlined"
             hide-details
             clearable
-            @update:model-value="v => v && applyPreset(v)"
+            @update:model-value="(v) => v && applyPreset(v as TemporalWindow)"
           />
-        </v-col>
-      </v-row>
+        </AtlasCol>
+      </AtlasRow>
 
-      <v-divider class="my-4" />
+      <AtlasDivider class="my-4" />
 
       <!-- Start Window -->
       <div class="mb-4">
         <div class="text-subtitle-2 mb-2">
           {{ t('common.startWindow', 'Start Window') }}
         </div>
-        <v-row dense>
-          <v-col
+        <AtlasRow dense>
+          <AtlasCol
             cols="12"
             md="4"
           >
-            <v-text-field
+            <AtlasTextField
               :model-value="startDays"
               type="number"
               :label="t('common.startDays', 'Start Days').value"
               :aria-label="t('common.startDays', 'Start Days').value"
-              density="compact"
               variant="outlined"
               min="0"
               :disabled="startAllTime"
               hide-details
               @update:model-value="v => updateStartDays(Number(v))"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="4"
           >
-            <v-select
+            <AtlasSelect
               :model-value="startDirection"
               :items="[
                 { value: 'before', label: t('options.before', 'Before').value },
@@ -224,17 +223,16 @@ watch(
               item-value="value"
               :label="t('common.startDirection', 'Start Direction').value"
               :aria-label="t('common.startDirection', 'Start Direction').value"
-              density="compact"
               variant="outlined"
               hide-details
-              @update:model-value="updateStartDirection"
+              @update:model-value="(v) => updateStartDirection(v as string)"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="4"
           >
-            <v-checkbox
+            <AtlasCheckbox
               :model-value="startAllTime"
               :label="
                 t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
@@ -242,46 +240,44 @@ watch(
               :aria-label="
                 t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
               "
-              density="compact"
               hide-details
-              @update:model-value="updateStartAllTime"
+              @update:model-value="(v) => updateStartAllTime(v)"
             />
-          </v-col>
-        </v-row>
-        <v-row
+          </AtlasCol>
+        </AtlasRow>
+        <AtlasRow
           dense
           class="mt-2"
         >
-          <v-col cols="12">
-            <v-select
+          <AtlasCol cols="12">
+            <AtlasSelect
               :model-value="startReferencePoint"
               :items="referencePointOptions"
               item-title="label"
               item-value="value"
               label="Reference Point"
               aria-label="Start Reference Point"
-              density="compact"
               variant="outlined"
               hide-details
-              @update:model-value="updateStartReferencePoint"
+              @update:model-value="(v) => updateStartReferencePoint(v as Window['referencePoint'])"
             />
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
       </div>
 
-      <v-divider class="my-4" />
+      <AtlasDivider class="my-4" />
 
       <!-- End Window -->
       <div>
         <div class="text-subtitle-2 mb-2">
           {{ t('common.endWindow', 'End Window') }}
         </div>
-        <v-row dense>
-          <v-col
+        <AtlasRow dense>
+          <AtlasCol
             cols="12"
             md="4"
           >
-            <v-text-field
+            <AtlasTextField
               :model-value="endDays"
               type="number"
               :label="
@@ -290,19 +286,18 @@ watch(
               :aria-label="
                 t('components.featureextraction.covariateSettingsEditor.endDays', 'End Days').value
               "
-              density="compact"
               variant="outlined"
               min="0"
               :disabled="endAllTime"
               hide-details
               @update:model-value="v => updateEndDays(Number(v))"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="4"
           >
-            <v-select
+            <AtlasSelect
               :model-value="endDirection"
               :items="[
                 { value: 'before', label: t('options.before', 'Before').value },
@@ -312,17 +307,16 @@ watch(
               item-value="value"
               :label="t('common.endDirection', 'End Direction').value"
               :aria-label="t('common.endDirection', 'End Direction').value"
-              density="compact"
               variant="outlined"
               hide-details
-              @update:model-value="updateEndDirection"
+              @update:model-value="(v) => updateEndDirection(v as string)"
             />
-          </v-col>
-          <v-col
+          </AtlasCol>
+          <AtlasCol
             cols="12"
             md="4"
           >
-            <v-checkbox
+            <AtlasCheckbox
               :model-value="endAllTime"
               :label="
                 t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
@@ -330,42 +324,39 @@ watch(
               :aria-label="
                 t('components.featureextraction.covariateSettingsEditor.allTime', 'All time').value
               "
-              density="compact"
               hide-details
-              @update:model-value="updateEndAllTime"
+              @update:model-value="(v) => updateEndAllTime(v)"
             />
-          </v-col>
-        </v-row>
-        <v-row
+          </AtlasCol>
+        </AtlasRow>
+        <AtlasRow
           dense
           class="mt-2"
         >
-          <v-col cols="12">
-            <v-select
+          <AtlasCol cols="12">
+            <AtlasSelect
               :model-value="endReferencePoint"
               :items="referencePointOptions"
               item-title="label"
               item-value="value"
               label="Reference Point"
               aria-label="End Reference Point"
-              density="compact"
               variant="outlined"
               hide-details
-              @update:model-value="updateEndReferencePoint"
+              @update:model-value="(v) => updateEndReferencePoint(v as Window['referencePoint'])"
             />
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
       </div>
 
       <!-- Validation Error Messages -->
-      <v-row
+      <AtlasRow
         v-if="!validation.isValid"
         dense
       >
-        <v-col cols="12">
-          <v-alert
-            type="error"
-            variant="tonal"
+        <AtlasCol cols="12">
+          <AtlasAlert
+            severity="danger"
             density="compact"
             class="mt-2"
           >
@@ -377,9 +368,9 @@ watch(
                 {{ error }}
               </li>
             </ul>
-          </v-alert>
-        </v-col>
-      </v-row>
+          </AtlasAlert>
+        </AtlasCol>
+      </AtlasRow>
     </v-card-text>
   </v-card>
 </template>

@@ -9,12 +9,12 @@
     </v-card-title>
     <v-card-text>
       <!-- Concept Set Name -->
-      <v-text-field
+      <AtlasTextField
         :model-value="modelValue?.name || ''"
         :label="tv('components.conceptSet.name')"
         :placeholder="tv('conceptSetEditor.namePlaceholder')"
         data-testid="concept-set-name"
-        @update:model-value="updateName"
+        @update:model-value="(v) => updateName(String(v))"
       />
 
       <!-- Concept List -->
@@ -26,11 +26,11 @@
           {{ t('conceptSetEditor.conceptsCount', { count: conceptCount }) }}
         </v-card-title>
         <v-card-text>
-          <v-list
+          <AtlasList
             v-if="concepts.length > 0"
             data-testid="concept-list"
           >
-            <v-list-item
+            <AtlasListItem
               v-for="(item, index) in concepts"
               :key="item.conceptId"
             >
@@ -49,60 +49,60 @@
 
               <template #append>
                 <!-- Include Descendants Checkbox -->
-                <v-checkbox
+                <AtlasCheckbox
                   :model-value="item.includeDescendants"
                   :label="tv('columns.descendants')"
                   hide-details
-                  density="compact"
                   :data-testid="`include-descendants-${index}`"
                   @update:model-value="val => updateIncludeDescendants(index, val ?? false)"
                 />
 
                 <!-- Remove Button -->
-                <v-btn
+                <AtlasIconButton
                   icon="mdi-delete"
-                  size="small"
+                  v-bind="{ ariaLabel: 'Remove concept' }"
                   variant="text"
-                  color="error"
+                  tone="danger"
+                  size="sm"
                   :data-testid="`remove-concept-${index}`"
                   @click="removeConcept(index)"
                 />
               </template>
-            </v-list-item>
-          </v-list>
+            </AtlasListItem>
+          </AtlasList>
 
-          <v-alert
+          <AtlasAlert
             v-else
-            type="info"
-            variant="text"
+            severity="info"
+            variant="flat"
           >
             {{ t('common.noData') }}
-          </v-alert>
+          </AtlasAlert>
 
           <!-- Add Concept Button -->
-          <v-btn
-            prepend-icon="mdi-plus"
-            variant="outlined"
+          <AtlasButton
+            variant="secondary"
+            icon="mdi-plus"
             class="mt-2"
             data-testid="add-concept-btn"
             @click="$emit('add-concepts')"
           >
             {{ t('components.conceptSet.addConcepts') }}
-          </v-btn>
+          </AtlasButton>
         </v-card-text>
       </v-card>
     </v-card-text>
 
     <!-- Actions -->
     <v-card-actions>
-      <v-spacer />
-      <v-btn
-        variant="text"
+      <AtlasSpacer />
+      <AtlasButton
+        variant="ghost"
         data-testid="cancel-edit"
         @click="$emit('cancel')"
       >
         {{ t('common.cancel') }}
-      </v-btn>
+      </AtlasButton>
       <v-btn
         color="primary"
         variant="elevated"
@@ -117,6 +117,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasIconButton, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSet } from '@/models/concept-set.types'

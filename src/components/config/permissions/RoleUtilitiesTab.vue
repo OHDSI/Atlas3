@@ -9,13 +9,13 @@
       <!-- Export Section -->
       <div class="role-utilities-tab__section">
         <div class="role-utilities-tab__section-header">
-          <v-icon
+          <AtlasIcon
             size="large"
             color="primary"
             class="mr-3"
           >
             mdi-download
-          </v-icon>
+          </AtlasIcon>
           <div>
             <h3 class="text-h6">
               Export Role
@@ -28,38 +28,36 @@
         </div>
 
         <div class="role-utilities-tab__section-content">
-          <v-alert
-            type="info"
-            variant="tonal"
+          <AtlasAlert
+            severity="info"
             class="mb-4"
           >
             The exported file will be compatible with Atlas 2.x and can be imported into any Atlas
             instance.
-          </v-alert>
+          </AtlasAlert>
 
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-download"
+          <AtlasButton
+            icon="mdi-download"
             :loading="isExporting"
             @click="handleExport"
           >
             Export Role as JSON
-          </v-btn>
+          </AtlasButton>
         </div>
       </div>
 
-      <v-divider class="my-6" />
+      <AtlasDivider class="my-6" />
 
       <!-- Import Section -->
       <div class="role-utilities-tab__section">
         <div class="role-utilities-tab__section-header">
-          <v-icon
+          <AtlasIcon
             size="large"
             color="primary"
             class="mr-3"
           >
             mdi-upload
-          </v-icon>
+          </AtlasIcon>
           <div>
             <h3 class="text-h6">
               Import Role
@@ -72,48 +70,43 @@
         </div>
 
         <div class="role-utilities-tab__section-content">
-          <v-alert
-            type="warning"
-            variant="tonal"
+          <AtlasAlert
+            severity="warning"
             class="mb-4"
           >
             <strong>Note:</strong> Importing a role will create a new role. If a role with the same
             name exists, you will be prompted to rename it.
-          </v-alert>
+          </AtlasAlert>
 
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-upload"
+          <AtlasButton
+            icon="mdi-upload"
             @click="importDialogOpen = true"
           >
             Import Role from JSON
-          </v-btn>
+          </AtlasButton>
         </div>
       </div>
 
       <!-- Success Message -->
-      <v-alert
+      <AtlasAlert
         v-if="successMessage"
-        type="success"
-        variant="tonal"
+        severity="success"
         class="mt-6"
-        closable
-        @click:close="successMessage = null"
+        :closable="true"
+        @close="successMessage = null"
       >
         {{ successMessage }}
-      </v-alert>
+      </AtlasAlert>
 
-      <!-- Error Message -->
-      <v-alert
+      <AtlasAlert
         v-if="errorMessage"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="mt-6"
-        closable
-        @click:close="errorMessage = null"
+        :closable="true"
+        @close="errorMessage = null"
       >
         {{ errorMessage }}
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
 
     <!-- Import Dialog -->
@@ -125,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasDivider, AtlasIcon } from '@/components/ui'
 import { ref } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import RoleImportDialog from './RoleImportDialog.vue'

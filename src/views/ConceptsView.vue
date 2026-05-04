@@ -1,5 +1,5 @@
 <template>
-  <page-shell
+  <AtlasPageShell
     hero
     compact
     eyebrow="OHDSI · Vocabulary"
@@ -8,7 +8,7 @@
   >
     <div class="concepts-view">
       <nav class="page-tabs-rail concepts-view__tabs-rail">
-        <v-tabs
+        <AtlasTabs
           v-model="activeTab"
           align-tabs="start"
           density="comfortable"
@@ -17,21 +17,21 @@
           bg-color="transparent"
           class="page-tabs"
         >
-          <v-tab value="sets">
-            <v-icon
+          <AtlasTab value="sets">
+            <AtlasIcon
               start
               icon="mdi-bookmark-multiple-outline"
             />
             {{ t('cs.browser.caption', 'Concept Sets') }}
-          </v-tab>
-          <v-tab value="search">
-            <v-icon
+          </AtlasTab>
+          <AtlasTab value="search">
+            <AtlasIcon
               start
               icon="mdi-magnify"
             />
             {{ t('search.tabs.search', 'Concept Search') }}
-          </v-tab>
-        </v-tabs>
+          </AtlasTab>
+        </AtlasTabs>
       </nav>
 
       <v-window v-model="activeTab">
@@ -44,14 +44,14 @@
         </v-window-item>
       </v-window>
     </div>
-  </page-shell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, provide, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
-import PageShell from '@/components/shared/PageShell.vue'
+import { AtlasIcon, AtlasPageShell, AtlasTab, AtlasTabs } from '@/components/ui'
 import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
 import ConceptSetList from '@/components/concepts/ConceptSetList.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'

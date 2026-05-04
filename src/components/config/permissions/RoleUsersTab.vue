@@ -3,12 +3,11 @@
     <v-card-text>
       <!-- Header with Search and Save Button -->
       <div class="role-users-tab__header">
-        <v-text-field
+        <AtlasTextField
           v-model="searchQuery"
           placeholder="Search users by login or email..."
-          prepend-inner-icon="mdi-magnify"
+          prepend-icon="mdi-magnify"
           variant="outlined"
-          density="compact"
           hide-details
           clearable
           class="role-users-tab__search"
@@ -16,23 +15,22 @@
         />
 
         <div class="role-users-tab__actions">
-          <v-chip
+          <AtlasChip
             v-if="hasChanges"
-            color="warning"
-            size="small"
+            tone="warning"
+            size="sm"
             class="mr-2"
           >
             {{ changeCount }} change{{ changeCount !== 1 ? 's' : '' }}
-          </v-chip>
+          </AtlasChip>
 
-          <v-btn
-            color="primary"
+          <AtlasButton
             :disabled="!hasChanges || isSaving"
             :loading="isSaving"
             @click="handleSave"
           >
             Save Changes
-          </v-btn>
+          </AtlasButton>
         </div>
       </div>
 
@@ -41,7 +39,7 @@
         v-if="isLoadingUsers"
         class="role-users-tab__loading"
       >
-        <v-progress-circular
+        <AtlasProgressCircular
           indeterminate
           color="primary"
           size="64"
@@ -52,27 +50,26 @@
       </div>
 
       <!-- Error State -->
-      <v-alert
+      <AtlasAlert
         v-else-if="usersError"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="mt-4"
-        closable
-        @click:close="usersError = null"
+        :closable="true"
+        @close="usersError = null"
       >
         {{ usersError }}
-      </v-alert>
+      </AtlasAlert>
 
       <!-- Users List -->
       <template v-else>
         <!-- Summary -->
         <div class="role-users-tab__summary mt-4">
-          <v-icon
+          <AtlasIcon
             size="small"
             class="mr-2"
           >
             mdi-account-multiple
-          </v-icon>
+          </AtlasIcon>
           <span class="text-body-2">
             <strong>{{ selectedUserIds.size }}</strong> of
             <strong>{{ filteredUsers.length }}</strong> users assigned
@@ -81,20 +78,18 @@
         </div>
 
         <!-- Users Table -->
-        <v-data-table
+        <AtlasDataTable
           :headers="headers"
           :items="filteredUsers"
           :items-per-page="50"
           :items-per-page-options="[25, 50, 100, 200]"
           class="role-users-tab__table mt-4 elevation-1"
-          density="comfortable"
         >
           <!-- Checkbox Column -->
           <template #item.selected="{ item }">
-            <v-checkbox
+            <AtlasCheckbox
               :model-value="isUserSelected(item.id)"
               hide-details
-              density="compact"
               @update:model-value="toggleUser(item.id)"
             />
           </template>
@@ -102,21 +97,21 @@
           <!-- Login Column -->
           <template #item.login="{ item }">
             <div class="role-users-tab__login">
-              <v-icon
+              <AtlasIcon
                 size="small"
                 class="mr-2"
               >
                 mdi-account
-              </v-icon>
+              </AtlasIcon>
               <strong>{{ item.login }}</strong>
-              <v-icon
+              <AtlasIcon
                 v-if="hasUserChanged(item.id)"
                 size="small"
                 color="warning"
                 class="ml-2"
               >
                 mdi-circle-small
-              </v-icon>
+              </AtlasIcon>
             </div>
           </template>
 
@@ -135,37 +130,35 @@
             </div>
             <span v-else> — </span>
           </template>
-        </v-data-table>
+        </AtlasDataTable>
       </template>
 
       <!-- Success Message -->
-      <v-alert
+      <AtlasAlert
         v-if="successMessage"
-        type="success"
-        variant="tonal"
+        severity="success"
         class="mt-4"
-        closable
-        @click:close="successMessage = null"
+        :closable="true"
+        @close="successMessage = null"
       >
         {{ successMessage }}
-      </v-alert>
+      </AtlasAlert>
 
-      <!-- Error Message -->
-      <v-alert
+      <AtlasAlert
         v-if="errorMessage"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="mt-4"
-        closable
-        @click:close="errorMessage = null"
+        :closable="true"
+        @close="errorMessage = null"
       >
         {{ errorMessage }}
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasProgressCircular, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 

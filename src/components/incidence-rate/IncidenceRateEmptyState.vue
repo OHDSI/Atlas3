@@ -14,21 +14,19 @@
     >
       {{ errorMessage }}
     </p>
-    <v-btn
+    <AtlasButton
       v-if="ctaLabel"
-      color="primary"
-      variant="flat"
-      density="compact"
       data-testid="ir-empty-cta"
       @click="$emit('run')"
     >
       {{ ctaLabel }}
-    </v-btn>
+    </AtlasButton>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { AtlasButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 type Variant = 'no-id' | 'no-runs' | 'run-pending' | 'run-failed' | 'select-to'

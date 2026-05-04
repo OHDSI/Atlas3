@@ -5,30 +5,27 @@
     @clear-error="store.clearError()"
   >
     <template #actions>
-      <v-text-field
+      <AtlasTextField
         :model-value="searchInput"
         :label="t('datatable.language.searchPlaceholder', 'Search feature analyses…').value"
-        prepend-inner-icon="mdi-magnify"
-        density="compact"
+        prepend-icon="mdi-magnify"
         variant="outlined"
         hide-details
         clearable
         class="feature-analyses-view__search"
         data-testid="feature-analyses-search"
-        @update:model-value="handleSearchInput"
+        @update:model-value="(v: string | number) => handleSearchInput(v != null ? String(v) : null)"
       />
-      <v-spacer />
-      <v-btn
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-plus"
+      <AtlasSpacer />
+      <AtlasButton
+        icon="mdi-plus"
         :aria-label="t('cc.tabs.featureAnalyses.newLabel', 'New Feature Analysis').value"
         data-testid="feature-analyses-create"
         :disabled="!canCreate"
         @click="handleCreate"
       >
         {{ t('home.newEntityNames.featureAnalysis', 'New feature analysis') }}
-      </v-btn>
+      </AtlasButton>
     </template>
 
     <AnalysisDataTable
@@ -65,67 +62,52 @@
       v-if="!loading && totalItems > itemsPerPage"
       #pagination
     >
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         :disabled="!canGoPrevious"
         @click="previousPage"
       >
         {{ t('datatable.language.paginate.previous', 'Previous') }}
-      </v-btn>
+      </AtlasButton>
       <span class="feature-analyses-view__range">{{ rangeDisplay }}</span>
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         :disabled="!canGoNext"
         @click="nextPage"
       >
         {{ t('configuration.userImport.wizard.buttons.next', 'Next') }}
-      </v-btn>
+      </AtlasButton>
     </template>
   </AnalysisListLayout>
 
-  <!-- Delete confirmation dialog -->
-  <v-dialog
+  <AtlasDialog
     v-model="showDeleteDialog"
+    eyebrow="CONFIRM"
+    :title="t('common.delete', 'Delete').value"
     max-width="500"
+    @close="showDeleteDialog = false"
   >
-    <v-card>
-      <div class="confirm-dialog__header">
-        <div class="confirm-dialog__title-block">
-          <div class="confirm-dialog__eyebrow-row">
-            <span class="text-eyebrow">{{ t('fa.entity', 'Feature analysis').value }}</span>
-            <span class="confirm-dialog__accent-rule" />
-          </div>
-          <h2 class="confirm-dialog__title">
-            {{ t('common.delete', 'Delete').value }}
-          </h2>
-        </div>
-      </div>
-      <v-divider />
-      <v-card-text v-if="selectedFA">
-        {{ deleteMessage }}
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          variant="text"
-          @click="showDeleteDialog = false"
-        >
-          {{ t('common.cancel', 'Cancel') }}
-        </v-btn>
-        <v-btn
-          color="error"
-          variant="flat"
-          :loading="deleting"
-          @click="confirmDelete"
-        >
-          {{ t('common.delete', 'Delete') }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <span v-if="selectedFA">{{ deleteMessage }}</span>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="showDeleteDialog = false"
+      >
+        {{ t('common.cancel', 'Cancel') }}
+      </AtlasButton>
+      <AtlasButton
+        variant="danger"
+        :loading="deleting"
+        @click="confirmDelete"
+      >
+        {{ t('common.delete', 'Delete') }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasDialog, AtlasTextField } from '@/components/ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -259,30 +241,4 @@ onMounted(() => {
   padding: 0 12px;
 }
 
-.confirm-dialog__header {
-  padding: 20px 24px 14px;
-}
-.confirm-dialog__title-block {
-  flex: 1;
-}
-.confirm-dialog__eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.confirm-dialog__accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-.confirm-dialog__title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-}
 </style>

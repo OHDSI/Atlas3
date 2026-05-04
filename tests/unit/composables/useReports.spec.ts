@@ -1,27 +1,29 @@
-/**
- * Unit Test: useReports Composable
- * Tests composable wrapper for reports store
- */
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useReports } from '@/composables/useReports'
-import { useReportsStore } from '@/stores/reports'
 import type { PersonReport } from '@/models/report.types'
-import * as webapi from '@/services/webapi'
-import * as mapper from '@/services/report-mapper'
 
-// Mock the dependencies
 vi.mock('@/services/webapi')
 vi.mock('@/services/report-mapper')
+
+let webapi: typeof import('@/services/webapi')
+let mapper: typeof import('@/services/report-mapper')
+let useReports: typeof import('@/composables/useReports').useReports
+let useReportsStore: typeof import('@/stores/reports').useReportsStore
+
+beforeAll(async () => {
+  vi.resetModules()
+  webapi = await import('@/services/webapi')
+  mapper = await import('@/services/report-mapper')
+  ;({ useReports } = await import('@/composables/useReports'))
+  ;({ useReportsStore } = await import('@/stores/reports'))
+})
 
 describe('useReports Composable', () => {
   let consoleWarnSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
-    // Create a fresh pinia instance for each test
     setActivePinia(createPinia())
 
-    // Spy on console.warn
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     vi.spyOn(console, 'log').mockImplementation(() => {})
     vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -37,7 +39,6 @@ describe('useReports Composable', () => {
     it('should expose reactive state from store via storeToRefs', () => {
       const composable = useReports()
 
-      // Verify all state properties are exposed
       expect(composable.currentReportType).toBeDefined()
       expect(composable.currentSourceKey).toBeDefined()
       expect(composable.currentCohortId).toBeDefined()
@@ -56,15 +57,12 @@ describe('useReports Composable', () => {
       const composable = useReports()
       const store = useReportsStore()
 
-      // Initially null/false
       expect(composable.currentReportType.value).toBeNull()
       expect(composable.loading.value).toBe(false)
 
-      // Change store state
       store.currentReportType = 'person'
       store.loading = true
 
-      // State should reflect changes
       expect(composable.currentReportType.value).toBe('person')
       expect(composable.loading.value).toBe(true)
     })
@@ -136,7 +134,6 @@ describe('useReports Composable', () => {
       const composable = useReports()
       const store = useReportsStore()
 
-      // Set current context
       store.setCurrentReport(123, 'SYNPUF', 'person')
 
       vi.mocked(webapi.getDrugErasReport).mockResolvedValue([])
@@ -155,7 +152,6 @@ describe('useReports Composable', () => {
       const composable = useReports()
       const store = useReportsStore()
 
-      // Missing cohortId
       store.currentSourceKey = 'SYNPUF'
 
       await composable.switchReportType('person')
@@ -170,7 +166,6 @@ describe('useReports Composable', () => {
       const composable = useReports()
       const store = useReportsStore()
 
-      // Missing sourceKey
       store.currentCohortId = 123
 
       await composable.switchReportType('person')
@@ -196,7 +191,6 @@ describe('useReports Composable', () => {
       const composable = useReports()
       const store = useReportsStore()
 
-      // Set current context and add cached data
       const mockData: PersonReport = {
         yearOfBirth: [],
         demographics: { gender: [], race: [], ethnicity: [] }
@@ -220,12 +214,10 @@ describe('useReports Composable', () => {
       })
       vi.mocked(mapper.mapPersonReport).mockReturnValue(mockData)
 
-      // Verify cache exists
       expect(store.reportData.has('123-SYNPUF-person')).toBe(true)
 
       await composable.refreshReport()
 
-      // Should have called API (cache was cleared)
       expect(webapi.getPersonReport).toHaveBeenCalledWith(123, 'SYNPUF')
     })
 
@@ -611,7 +603,6 @@ describe('useReports Composable', () => {
       const composable = useReports()
       const store = useReportsStore()
 
-      // Mock data
       vi.mocked(webapi.getPersonReport).mockResolvedValue({
         yearOfBirth: [],
         gender: [],
@@ -623,11 +614,9 @@ describe('useReports Composable', () => {
         demographics: { gender: [], race: [], ethnicity: [] }
       })
 
-      // 1. Load initial report
       await composable.loadReport(123, 'SYNPUF', 'person')
       expect(store.currentReportType).toBe('person')
 
-      // 2. Switch report type
       vi.mocked(webapi.getDrugErasReport).mockResolvedValue([])
       vi.mocked(mapper.mapDrugErasReport).mockReturnValue({
         prevalence: [],
@@ -637,11 +626,9 @@ describe('useReports Composable', () => {
       await composable.switchReportType('drug-eras')
       expect(store.currentReportType).toBe('drug-eras')
 
-      // 3. Refresh current report
       await composable.refreshReport()
       expect(webapi.getDrugErasReport).toHaveBeenCalled()
 
-      // 4. Clear specific report
       composable.clearSpecific(123, 'SYNPUF', 'drug-eras')
       expect(store.reportData.has('123-SYNPUF-drug-eras')).toBe(false)
     })
@@ -663,11 +650,9 @@ describe('useReports Composable', () => {
         data: mockData
       })
 
-      // Check availability
       const isAvailable = composable.isReportAvailable(123, 'SYNPUF', 'person')
       expect(isAvailable).toBe(true)
 
-      // Get the data
       const data = composable.getReportData(123, 'SYNPUF', 'person')
       expect(data).toBeDefined()
       expect(data?.type).toBe('person')
@@ -677,15 +662,12 @@ describe('useReports Composable', () => {
       const composable = useReports()
       const store = useReportsStore()
 
-      // Set context
       composable.setContext(123, 'SYNPUF', 'person')
       expect(store.currentCohortId).toBe(123)
 
-      // Clear current
       composable.clearCurrent()
       expect(store.currentCohortId).toBeNull()
 
-      // Clear all
       store.reportData.set('test', {
         type: 'person',
         cohortId: 1,
@@ -707,10 +689,8 @@ describe('useReports Composable', () => {
       store.currentCohortId = 0
       store.currentSourceKey = 'SYNPUF'
 
-      // 0 is falsy but should still work
       await composable.switchReportType('person')
 
-      // This should warn because 0 is falsy
       expect(consoleWarnSpy).toHaveBeenCalled()
       expect(webapi.getPersonReport).not.toHaveBeenCalled()
     })
@@ -725,7 +705,6 @@ describe('useReports Composable', () => {
 
       await composable.refreshReport()
 
-      // Should warn because 0 is falsy
       expect(consoleWarnSpy).toHaveBeenCalled()
     })
 
@@ -788,7 +767,6 @@ describe('useReports Composable', () => {
 
       await composable.switchReportType('person')
 
-      // Empty string is falsy, should warn
       expect(consoleWarnSpy).toHaveBeenCalled()
     })
   })

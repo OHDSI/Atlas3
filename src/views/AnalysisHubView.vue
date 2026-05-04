@@ -1,5 +1,5 @@
 <template>
-  <page-shell
+  <AtlasPageShell
     hero
     compact
     :eyebrow="eyebrow"
@@ -8,7 +8,7 @@
   >
     <div class="analysis-hub">
       <nav class="page-tabs-rail analysis-hub__tabs-rail">
-        <v-tabs
+        <AtlasTabs
           v-model="activeTabName"
           align-tabs="start"
           density="compact"
@@ -17,18 +17,18 @@
           bg-color="transparent"
           class="page-tabs"
         >
-          <v-tab
+          <AtlasTab
             v-for="tab in tabs"
             :key="tab.name"
             :value="tab.name"
           >
-            <v-icon
+            <AtlasIcon
               start
               :icon="tab.icon"
             />
             {{ getLabel(tab) }}
-          </v-tab>
-        </v-tabs>
+          </AtlasTab>
+        </AtlasTabs>
         <p
           v-if="activeTabHint"
           class="analysis-hub__tab-hint"
@@ -52,14 +52,14 @@
         </v-window-item>
       </v-window>
     </div>
-  </page-shell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
-import PageShell from '@/components/shared/PageShell.vue'
+import { AtlasIcon, AtlasPageShell, AtlasTab, AtlasTabs } from '@/components/ui'
 import CharacterizationsView from '@/views/CharacterizationsView.vue'
 import FeatureAnalysesView from '@/views/FeatureAnalysesView.vue'
 import PathwaysView from '@/views/PathwaysView.vue'

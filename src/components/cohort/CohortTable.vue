@@ -5,15 +5,14 @@
       v-if="loading"
       class="cohort-table__loading"
     >
-      <v-skeleton-loader type="table" />
+      <AtlasSkeleton type="table" />
     </div>
 
     <!-- Error -->
-    <v-alert
+    <AtlasAlert
       v-else-if="error"
-      type="error"
-      variant="tonal"
-      closable
+      severity="danger"
+      :closable="true"
       class="cohort-table__alert"
     >
       <div class="cohort-table__error">
@@ -26,13 +25,13 @@
           class="mt-3"
           @click="$emit('retry')"
         >
-          <v-icon start>
+          <AtlasIcon start>
             mdi-refresh
-          </v-icon>
+          </AtlasIcon>
           {{ t('common.refresh', 'Retry').value }}
         </v-btn>
       </div>
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Empty: branch between "filtered → no matches" and "no
          cohorts at all" so the CTA actually helps. -->
@@ -40,7 +39,7 @@
       v-else-if="cohorts.length === 0"
       class="cohort-table__empty"
     >
-      <v-icon
+      <AtlasIcon
         :icon="isFiltered ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
         size="36"
         class="cohort-table__empty-icon"
@@ -57,19 +56,17 @@
       >
         {{ t('search.clearAllSelections', 'Clear filters').value }}
       </v-btn>
-      <v-btn
+      <AtlasButton
         v-else
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-plus"
+        icon="mdi-plus"
         @click="$emit('create-cohort')"
       >
         {{ t('cohortDefinitions.newDefinition', 'New cohort').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Table -->
-    <SurfaceCard
+    <AtlasCard
       v-else
       padding="none"
     >
@@ -153,28 +150,28 @@
             </td>
             <td class="cohort-table__col-actions">
               <div class="cohort-table__actions">
-                <v-btn
+                <AtlasIconButton
                   icon="mdi-information-outline"
-                  size="small"
+                  v-bind="{ ariaLabel: t('common.cohortInformation', 'Cohort Information').value }"
                   variant="text"
-                  :aria-label="t('common.cohortInformation', 'Cohort Information').value"
+                  size="sm"
                   data-testid="cohort-table-info"
                   @click.stop="$emit('show-info', cohort)"
                 />
-                <v-btn
+                <AtlasIconButton
                   icon="mdi-account-multiple"
-                  size="small"
+                  v-bind="{ ariaLabel: t('components.analysisExecution.buttons.generate', 'Generate').value }"
                   variant="text"
-                  :aria-label="t('components.analysisExecution.buttons.generate', 'Generate').value"
+                  size="sm"
                   data-testid="cohort-table-generate"
                   :disabled="!access.canWrite(cohort.id)"
                   @click.stop="$emit('generate', cohort)"
                 />
-                <v-btn
+                <AtlasIconButton
                   icon="mdi-delete-outline"
-                  size="small"
+                  v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
                   variant="text"
-                  :aria-label="t('common.delete', 'Delete').value"
+                  size="sm"
                   data-testid="cohort-table-delete"
                   :disabled="!access.canDelete(cohort.id)"
                   @click.stop="$emit('delete', cohort)"
@@ -184,7 +181,7 @@
           </tr>
         </tbody>
       </v-table>
-    </SurfaceCard>
+    </AtlasCard>
   </div>
 </template>
 
@@ -194,7 +191,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 
 const { t, locale } = useI18n()
 const router = useRouter()

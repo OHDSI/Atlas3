@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     class="cdm-summary-table"
     padding="none"
   >
@@ -25,13 +25,13 @@
         </tr>
       </tbody>
     </v-table>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from '@/composables/useI18n'
 import { formatNumber } from '@/utils/datasource-formatters'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard } from '@/components/ui'
 
 const { t } = useI18n()
 

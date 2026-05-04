@@ -1,5 +1,5 @@
 <template>
-  <page-shell
+  <AtlasPageShell
     hero
     compact
     eyebrow="OHDSI · Cohorts"
@@ -22,7 +22,7 @@
           :aria-label="t('common.tileView', 'Tile view').value"
           data-testid="cohorts-view-toggle-tile"
         >
-          <v-icon>mdi-view-grid-outline</v-icon>
+          <AtlasIcon>mdi-view-grid-outline</AtlasIcon>
         </v-btn>
         <v-btn
           value="table"
@@ -30,7 +30,7 @@
           :aria-label="t('dataSources.table.tableTab', 'Table view').value"
           data-testid="cohorts-view-toggle-table"
         >
-          <v-icon>mdi-view-list-outline</v-icon>
+          <AtlasIcon>mdi-view-list-outline</AtlasIcon>
         </v-btn>
       </v-btn-toggle>
     </template>
@@ -40,16 +40,14 @@
            toggle on the right. Sits flush on the page card surface
            with no inner v-card wrapper. -->
       <div class="cohorts-view__toolbar">
-        <v-btn
-          color="primary"
-          variant="flat"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          icon="mdi-plus"
           :aria-label="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
           :disabled="!canCreateCohort"
           @click="handleCreateCohort"
         >
           {{ t('cohortDefinitions.newDefinition', 'New cohort') }}
-        </v-btn>
+        </AtlasButton>
 
         <v-btn
           variant="tonal"
@@ -61,17 +59,16 @@
           {{ t('common.import', 'Import') }}
         </v-btn>
 
-        <v-chip
+        <AtlasChip
           v-if="!loading && filteredCohorts.length > 0"
-          size="small"
-          variant="tonal"
-          color="primary"
+          size="sm"
+          tone="primary"
           class="cohorts-view__count"
         >
           {{ countLabel }}
-        </v-chip>
+        </AtlasChip>
 
-        <v-spacer />
+        <AtlasSpacer />
       </div>
 
       <!-- Filters -->
@@ -90,7 +87,7 @@
         v-if="filtering"
         class="cohorts-view__filtering"
       >
-        <v-progress-linear
+        <AtlasProgressLinear
           indeterminate
           color="primary"
           height="2"
@@ -147,244 +144,195 @@
         />
       </div>
 
-      <!-- Import Dialog: paste an Atlas cohort JSON expression or
-           upload a .json file. Posts to /cohortdefinition and
-           navigates to the new cohort on success. -->
-      <v-dialog
+      <!-- Import Dialog -->
+      <AtlasDialog
         v-model="showImportDialog"
+        eyebrow="IMPORT"
+        :title="t('common.importCohort', 'Import cohort definition').value"
         max-width="640"
+        @close="closeImportDialog"
       >
-        <v-card>
-          <v-card-title class="text-h6">
-            {{ t('common.importCohort', 'Import cohort definition').value }}
-          </v-card-title>
-          <v-card-text>
-            <p class="cohorts-view__import-hint">
-              {{
-                t(
-                  'cohortDefinitions.importHint',
-                  'Paste an Atlas cohort JSON or upload a .json file. The expression is validated before saving.'
-                ).value
-              }}
-            </p>
+        <p class="cohorts-view__import-hint">
+          {{
+            t(
+              'cohortDefinitions.importHint',
+              'Paste an Atlas cohort JSON or upload a .json file. The expression is validated before saving.'
+            ).value
+          }}
+        </p>
 
-            <v-text-field
-              v-model="importName"
-              :label="t('columns.name', 'Cohort name').value"
-              variant="outlined"
-              density="comfortable"
-              :disabled="importing"
-              class="mb-3"
-            />
+        <AtlasTextField
+          v-model="importName"
+          :label="t('columns.name', 'Cohort name').value"
+          variant="outlined"
+          :disabled="importing"
+          class="mb-3"
+        />
 
-            <v-file-input
-              v-model="importFile"
-              :label="t('cohortDefinitions.uploadJsonLabel', 'Upload JSON file').value"
-              accept="application/json,.json"
-              prepend-icon=""
-              prepend-inner-icon="mdi-paperclip"
-              variant="outlined"
-              density="comfortable"
-              show-size
-              hide-details
-              :disabled="importing"
-              class="mb-3"
-              @update:model-value="onImportFileSelected"
-            />
+        <v-file-input
+          v-model="importFile"
+          :label="t('cohortDefinitions.uploadJsonLabel', 'Upload JSON file').value"
+          accept="application/json,.json"
+          prepend-icon=""
+          prepend-inner-icon="mdi-paperclip"
+          variant="outlined"
+          density="comfortable"
+          show-size
+          hide-details
+          :disabled="importing"
+          class="mb-3"
+          @update:model-value="onImportFileSelected"
+        />
 
-            <v-textarea
-              v-model="importJson"
-              :label="t('cohortDefinitions.expressionJsonLabel', 'Expression JSON').value"
-              :placeholder="'{ &quot;ConceptSets&quot;: [], &quot;PrimaryCriteria&quot;: { … } }'"
-              rows="8"
-              variant="outlined"
-              density="comfortable"
-              hide-details
-              :disabled="importing"
-              class="cohorts-view__import-json"
-            />
+        <AtlasTextField
+          v-model="importJson"
+          :label="t('cohortDefinitions.expressionJsonLabel', 'Expression JSON').value"
+          :placeholder="'{ &quot;ConceptSets&quot;: [], &quot;PrimaryCriteria&quot;: { … } }'"
+          :rows="8"
+          multiline
+          variant="outlined"
+          hide-details
+          :disabled="importing"
+          class="cohorts-view__import-json"
+        />
 
-            <v-alert
-              v-if="importError"
-              type="error"
-              variant="tonal"
-              density="compact"
-              class="mt-3"
-            >
-              {{ importError }}
-            </v-alert>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn
-              variant="text"
-              :disabled="importing"
-              @click="closeImportDialog"
-            >
-              {{ t('common.cancel', 'Cancel').value }}
-            </v-btn>
-            <v-spacer />
-            <v-btn
-              color="primary"
-              variant="flat"
-              :loading="importing"
-              :disabled="!canImport"
-              @click="confirmImport"
-            >
-              {{ t('common.import', 'Import').value }}
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+        <AtlasAlert
+          v-if="importError"
+          severity="danger"
+          density="compact"
+          class="mt-3"
+        >
+          {{ importError }}
+        </AtlasAlert>
+        <template #actions>
+          <AtlasButton
+            variant="ghost"
+            :disabled="importing"
+            @click="closeImportDialog"
+          >
+            {{ t('common.cancel', 'Cancel').value }}
+          </AtlasButton>
+          <AtlasButton
+            :loading="importing"
+            :disabled="!canImport"
+            @click="confirmImport"
+          >
+            {{ t('common.import', 'Import').value }}
+          </AtlasButton>
+        </template>
+      </AtlasDialog>
 
       <!-- Delete Confirmation Dialog -->
-      <v-dialog
+      <AtlasDialog
         v-model="showDeleteDialog"
+        eyebrow="CONFIRM"
+        :title="t('common.deleteCohortTitle', 'Delete cohort?').value"
         max-width="500"
+        @close="showDeleteDialog = false"
       >
-        <v-card>
-          <v-card-title class="text-h6">
-            {{ t('common.deleteCohortTitle', 'Delete cohort?') }}
-          </v-card-title>
-          <v-card-text>
-            <p class="mb-2">
-              {{
-                t(
-                  'cohortDefinitions.cohortDefinitionManager.confirms.delete',
-                  'Delete cohort definition? Warning: deletion can not be undone!'
-                )
-              }}
-            </p>
-            <p class="mb-2">
-              <strong>{{ selectedCohort?.name }}</strong>
-            </p>
-            <p class="text-body-2 text-error">
-              {{ t('common.cannotUndo', 'This action cannot be undone.') }}
-            </p>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer />
-            <v-btn
-              variant="text"
-              @click="showDeleteDialog = false"
-            >
-              {{ t('common.cancel', 'Cancel') }}
-            </v-btn>
-            <v-btn
-              color="error"
-              variant="flat"
-              :loading="deleting"
-              @click="confirmDelete"
-            >
-              {{ t('common.delete', 'Delete') }}
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+        <p class="mb-2">
+          {{
+            t(
+              'cohortDefinitions.cohortDefinitionManager.confirms.delete',
+              'Delete cohort definition? Warning: deletion can not be undone!'
+            )
+          }}
+        </p>
+        <p class="mb-2">
+          <strong>{{ selectedCohort?.name }}</strong>
+        </p>
+        <p class="text-body-2 text-error">
+          {{ t('common.cannotUndo', 'This action cannot be undone.') }}
+        </p>
+        <template #actions>
+          <AtlasButton
+            variant="ghost"
+            @click="showDeleteDialog = false"
+          >
+            {{ t('common.cancel', 'Cancel') }}
+          </AtlasButton>
+          <AtlasButton
+            variant="danger"
+            :loading="deleting"
+            @click="confirmDelete"
+          >
+            {{ t('common.delete', 'Delete') }}
+          </AtlasButton>
+        </template>
+      </AtlasDialog>
 
       <!-- New Cohort Dialog -->
-      <v-dialog
+      <AtlasDialog
         v-model="showNewCohortDialog"
+        eyebrow="NEW"
+        :title="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
         max-width="500"
+        @close="showNewCohortDialog = false"
       >
-        <v-card>
-          <v-card-title class="text-h6">
-            {{ t('cohortDefinitions.newDefinitionTitle', 'Create new cohort') }}
-          </v-card-title>
-          <v-card-text>
-            <v-text-field
-              v-model="newCohortName"
-              :label="t('columns.name', 'Cohort name').value"
-              variant="outlined"
-              density="comfortable"
-              autofocus
-              @keyup.enter="confirmCreateCohort"
-            />
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer />
-            <v-btn
-              variant="text"
-              @click="showNewCohortDialog = false"
-            >
-              {{ t('common.cancel', 'Cancel') }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              variant="flat"
-              :disabled="!newCohortName.trim()"
-              @click="confirmCreateCohort"
-            >
-              {{ t('common.create', 'Create') }}
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+        <AtlasTextField
+          v-model="newCohortName"
+          :label="t('columns.name', 'Cohort name').value"
+          variant="outlined"
+          autofocus
+          @keyup.enter="confirmCreateCohort"
+        />
+        <template #actions>
+          <AtlasButton
+            variant="ghost"
+            @click="showNewCohortDialog = false"
+          >
+            {{ t('common.cancel', 'Cancel') }}
+          </AtlasButton>
+          <AtlasButton
+            :disabled="!newCohortName.trim()"
+            @click="confirmCreateCohort"
+          >
+            {{ t('common.create', 'Create') }}
+          </AtlasButton>
+        </template>
+      </AtlasDialog>
 
-      <!-- Cohort Info Dialog: refreshed header (eyebrow + accent rule
-           + clean title) and tightened typography in the body. -->
-      <v-dialog
+      <AtlasDialog
         v-model="showCohortInfoDialog"
+        eyebrow="COHORT"
+        :title="selectedCohort?.name || t('common.cohortInformation', 'Cohort information').value"
         max-width="900"
-        scrollable
+        @close="showCohortInfoDialog = false"
       >
-        <v-card>
-          <div class="cohort-info__header">
-            <div class="cohort-info__title-block">
-              <div class="cohort-info__eyebrow-row">
-                <span class="text-eyebrow">{{
-                  t('common.cohortDefinition', 'Cohort definition').value
-                }}</span>
-                <span class="cohort-info__accent-rule" />
-              </div>
-              <h2 class="cohort-info__title">
-                {{
-                  selectedCohort?.name || t('common.cohortInformation', 'Cohort information').value
-                }}
-              </h2>
-            </div>
-            <v-btn
-              icon="mdi-close"
-              variant="text"
-              :aria-label="t('common.close', 'Close').value"
-              @click="showCohortInfoDialog = false"
-            />
+        <div
+          v-if="cohortInfoHtml"
+          style="max-height: 600px; overflow-y: auto"
+          class="cohort-info-content"
+        >
+          <!-- eslint-disable-next-line vue/no-v-html -- trusted server content -->
+          <div v-html="cohortInfoHtml" />
+        </div>
+        <div
+          v-else-if="loadingCohortInfo"
+          class="text-center pa-6"
+        >
+          <AtlasProgressCircular
+            indeterminate
+            color="primary"
+          />
+          <div class="mt-4">
+            {{ t('common.loading', 'Loading') }}…
           </div>
-          <v-divider />
-          <v-card-text
-            v-if="cohortInfoHtml"
-            style="max-height: 600px"
-            class="cohort-info-content"
-          >
-            <!-- eslint-disable-next-line vue/no-v-html -- trusted server content -->
-            <div v-html="cohortInfoHtml" />
-          </v-card-text>
-          <v-card-text
-            v-else-if="loadingCohortInfo"
-            class="text-center pa-6"
-          >
-            <v-progress-circular
-              indeterminate
-              color="primary"
-            />
-            <div class="mt-4">
-              {{ t('common.loading', 'Loading') }}…
-            </div>
-          </v-card-text>
-          <v-card-text
-            v-else
-            class="text-center pa-6 text-error"
-          >
-            {{
-              t(
-                'cs.manager.concept.tabs.recordCounts.failedToLoadData',
-                'Failed to load cohort information'
-              )
-            }}
-          </v-card-text>
-        </v-card>
-      </v-dialog>
+        </div>
+        <div
+          v-else
+          class="text-center pa-6 text-error"
+        >
+          {{
+            t(
+              'cs.manager.concept.tabs.recordCounts.failedToLoadData',
+              'Failed to load cohort information'
+            )
+          }}
+        </div>
+      </AtlasDialog>
     </div>
-  </page-shell>
+  </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
@@ -401,7 +349,7 @@ import {
   saveCohortDefinition,
 } from '@/services/webapi'
 import { logger } from '@/utils/logger'
-import PageShell from '@/components/shared/PageShell.vue'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
@@ -748,38 +696,6 @@ onMounted(() => {
   font-size: 12px;
 }
 
-/* Cohort Info Dialog header */
-.cohort-info__header {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 20px 24px 16px;
-}
-.cohort-info__title-block {
-  flex: 1;
-  min-width: 0;
-}
-.cohort-info__eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.cohort-info__accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-.cohort-info__title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-  word-break: break-word;
-}
 
 /* Cohort Info body — quieter, token-driven typography (replaces the
  * old block of bespoke heading/list/table CSS). The print-friendly

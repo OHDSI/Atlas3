@@ -1,11 +1,19 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
-import { usePathwayStore } from '@/stores/pathway'
-import * as webapi from '@/services/webapi'
 
 vi.mock('@/services/webapi')
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
+
+let webapi: typeof import('@/services/webapi')
+let usePathwayBuilder: typeof import('@/composables/usePathwayBuilder').usePathwayBuilder
+let usePathwayStore: typeof import('@/stores/pathway').usePathwayStore
+
+beforeAll(async () => {
+  vi.resetModules()
+  webapi = await import('@/services/webapi')
+  ;({ usePathwayBuilder } = await import('@/composables/usePathwayBuilder'))
+  ;({ usePathwayStore } = await import('@/stores/pathway'))
+})
 
 describe('usePathwayBuilder', () => {
   beforeEach(() => {

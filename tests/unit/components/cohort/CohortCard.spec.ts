@@ -203,6 +203,6 @@ describe('CohortCard', () => {
     // SurfaceCard interactive (pure-CSS hover lift).
     const wrapper = mountComponent()
 
-    expect(wrapper.find('.surface-card.surface-card--interactive').exists()).toBe(true)
+    expect(wrapper.find('.atlas-card.atlas-card--interactive').exists()).toBe(true)
   })
 })

@@ -7,7 +7,7 @@
       class="align-center justify-center"
     >
       <div class="text-center">
-        <v-progress-circular
+        <AtlasProgressCircular
           indeterminate
           size="64"
           color="primary"
@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasProgressCircular } from '@/components/ui'
 import { computed, ref, onMounted } from 'vue'
 import NavBar from '@/components/shared/NavBar.vue'
 import SessionExpiryModal from '@/components/auth/SessionExpiryModal.vue'

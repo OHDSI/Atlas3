@@ -8,7 +8,7 @@
       <!-- Strategy-specific help text — quiet inline hint, not a
            full-width tonal alert. -->
       <div class="event-persistence__hint">
-        <v-icon
+        <AtlasIcon
           icon="mdi-information-outline"
           size="16"
           class="event-persistence__hint-icon"
@@ -21,9 +21,9 @@
         v-if="selectedStrategy === 'FIXED_DURATION'"
         class="strategy-fields"
       >
-        <v-row>
-          <v-col cols="6">
-            <v-select
+        <AtlasRow>
+          <AtlasCol cols="6">
+            <AtlasSelect
               v-model="fixedDurationDateField"
               :items="dateFieldOptions"
               :label="
@@ -31,11 +31,10 @@
               "
               :disabled="disabled"
               variant="outlined"
-              density="compact"
             />
-          </v-col>
-          <v-col cols="6">
-            <v-text-field
+          </AtlasCol>
+          <AtlasCol cols="6">
+            <AtlasTextField
               v-model.number="fixedDurationOffset"
               type="number"
               :label="
@@ -44,10 +43,9 @@
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
-              density="compact"
             />
-          </v-col>
-        </v-row>
+          </AtlasCol>
+        </AtlasRow>
       </div>
 
       <!-- Conditional Fields for Drug Exposure -->
@@ -57,30 +55,29 @@
       >
         <!-- Concept Set Selection Button/Chip -->
         <div class="mb-4">
-          <v-btn
+          <AtlasButton
             v-if="!selectedConceptSet"
-            variant="outlined"
-            prepend-icon="mdi-plus"
+            variant="secondary"
+            icon="mdi-plus"
             :disabled="disabled"
             @click="openConceptSetDialog"
           >
             {{ t('components.customEraStrategy.selectDrugConceptSet', 'Select Drug Concept Set') }}
-          </v-btn>
-          <v-chip
+          </AtlasButton>
+          <AtlasChip
             v-else
             :closable="!disabled"
-            color="primary"
-            variant="tonal"
-            @click:close="clearConceptSet"
+            tone="primary"
+            @close="clearConceptSet"
           >
             {{ selectedConceptSet.name }}
-          </v-chip>
+          </AtlasChip>
         </div>
 
         <!-- Persistence Window and Surveillance Window -->
-        <v-row v-if="selectedConceptSet">
-          <v-col cols="6">
-            <v-text-field
+        <AtlasRow v-if="selectedConceptSet">
+          <AtlasCol cols="6">
+            <AtlasTextField
               v-model.number="persistenceWindow"
               type="number"
               :label="
@@ -92,12 +89,11 @@
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
-              density="compact"
             >
               <template #append-inner>
-                <v-tooltip location="top">
+                <AtlasTooltip location="top">
                   <template #activator="{ props: tooltipProps }">
-                    <v-icon
+                    <AtlasIcon
                       v-bind="tooltipProps"
                       icon="mdi-information-outline"
                       size="small"
@@ -110,12 +106,12 @@
                       'Maximum gap days between exposures'
                     )
                   }}</span>
-                </v-tooltip>
+                </AtlasTooltip>
               </template>
-            </v-text-field>
-          </v-col>
-          <v-col cols="6">
-            <v-text-field
+            </AtlasTextField>
+          </AtlasCol>
+          <AtlasCol cols="6">
+            <AtlasTextField
               v-model.number="surveillanceWindow"
               type="number"
               :label="
@@ -127,12 +123,11 @@
               :disabled="disabled"
               :rules="[nonNegativeRule]"
               variant="outlined"
-              density="compact"
             >
               <template #append-inner>
-                <v-tooltip location="top">
+                <AtlasTooltip location="top">
                   <template #activator="{ props: tooltipProps }">
-                    <v-icon
+                    <AtlasIcon
                       v-bind="tooltipProps"
                       icon="mdi-information-outline"
                       size="small"
@@ -145,18 +140,18 @@
                       'Additional days after final exposure before cohort exit'
                     )
                   }}</span>
-                </v-tooltip>
+                </AtlasTooltip>
               </template>
-            </v-text-field>
-          </v-col>
-        </v-row>
+            </AtlasTextField>
+          </AtlasCol>
+        </AtlasRow>
 
         <!-- Help text about missing days supply -->
         <div
           v-if="selectedConceptSet"
           class="event-persistence__hint event-persistence__hint--mt"
         >
-          <v-icon
+          <AtlasIcon
             icon="mdi-information-outline"
             size="16"
             class="event-persistence__hint-icon"
@@ -174,6 +169,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasChip, AtlasCol, AtlasIcon, AtlasRow, AtlasSelect, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useEventPersistence } from '@/composables/useEventPersistence'

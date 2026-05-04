@@ -1,116 +1,97 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     :model-value="modelValue"
+    eyebrow="Tag"
+    :title="`${isEditMode ? 'Edit' : 'Create'} Tag`"
     max-width="600"
     persistent
+    :show-close="false"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <v-card>
-      <AppDialogHeader
-        eyebrow="Tag"
-        :title="`${isEditMode ? 'Edit' : 'Create'} Tag`"
+    <v-form
+      ref="formRef"
+      v-model="formValid"
+      @submit.prevent="handleSubmit"
+    >
+      <AtlasTextField
+        v-model="form.name"
+        label="Name"
+        :rules="nameRules"
+        :error="errors.name"
+        variant="outlined"
+        required
+        class="mb-2"
       />
 
-      <v-card-text>
-        <v-form
-          ref="formRef"
-          v-model="formValid"
-          @submit.prevent="handleSubmit"
-        >
-          <!-- Name Field -->
-          <v-text-field
-            v-model="form.name"
-            label="Name *"
-            :rules="nameRules"
-            :error-messages="errors.name"
-            variant="outlined"
-            required
-            class="mb-2"
+      <v-text-field
+        v-model="form.color"
+        label="Color (optional)"
+        type="color"
+        hint="Leave empty to inherit from group"
+        persistent-hint
+        :error-messages="errors.color"
+        variant="outlined"
+        class="mb-2"
+      >
+        <template #prepend-inner>
+          <div
+            v-if="form.color"
+            class="color-preview"
+            :style="{ backgroundColor: form.color }"
           />
+        </template>
+      </v-text-field>
 
-          <!-- Color Field (optional - inherits from group if not set) -->
-          <v-text-field
-            v-model="form.color"
-            label="Color (optional)"
-            type="color"
-            hint="Leave empty to inherit from group"
-            persistent-hint
-            :error-messages="errors.color"
-            variant="outlined"
-            class="mb-2"
-          >
-            <template #prepend-inner>
-              <div
-                v-if="form.color"
-                class="color-preview"
-                :style="{ backgroundColor: form.color }"
-              />
-            </template>
-          </v-text-field>
+      <AtlasTextField
+        v-model="form.icon"
+        label="Icon (optional)"
+        hint="Material Design Icon name or leave empty to inherit from group"
+        persistent-hint
+        :error="errors.icon"
+        variant="outlined"
+        class="mb-2"
+      />
 
-          <!-- Icon Field (optional - inherits from group if not set) -->
-          <v-text-field
-            v-model="form.icon"
-            label="Icon (optional)"
-            hint="Material Design Icon name or leave empty to inherit from group"
-            persistent-hint
-            :error-messages="errors.icon"
-            variant="outlined"
-            class="mb-2"
-          >
-            <template #prepend-inner>
-              <v-icon v-if="form.icon && isValidIcon">
-                {{ form.icon }}
-              </v-icon>
-            </template>
-          </v-text-field>
+      <AtlasCheckbox
+        v-model="form.permissionProtected"
+        label="Permission Protected"
+        hint="Require special permissions to assign/unassign this tag"
+        persistent-hint
+      />
 
-          <!-- Permission Protected -->
-          <v-checkbox
-            v-model="form.permissionProtected"
-            label="Permission Protected"
-            hint="Require special permissions to assign/unassign this tag"
-            persistent-hint
-            density="compact"
-          />
+      <AtlasTextField
+        v-model="form.description"
+        label="Description"
+        :rows="3"
+        multiline
+        :error="errors.description"
+        variant="outlined"
+        class="mt-2"
+      />
+    </v-form>
 
-          <!-- Description Field -->
-          <v-textarea
-            v-model="form.description"
-            label="Description"
-            rows="3"
-            :error-messages="errors.description"
-            variant="outlined"
-            class="mt-2"
-          />
-        </v-form>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-spacer />
-        <v-btn
-          variant="text"
-          @click="handleClose"
-        >
-          Cancel
-        </v-btn>
-        <v-btn
-          color="primary"
-          :disabled="!formValid"
-          :loading="saving"
-          @click="handleSubmit"
-        >
-          {{ isEditMode ? 'Save' : 'Create' }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="handleClose"
+      >
+        Cancel
+      </AtlasButton>
+      <AtlasButton
+        :disabled="!formValid"
+        :loading="saving"
+        @click="handleSubmit"
+      >
+        {{ isEditMode ? 'Save' : 'Create' }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { tagSchema, type Tag, type TagGroup } from '@/models/config.types'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasButton, AtlasCheckbox, AtlasDialog, AtlasTextField } from '@/components/ui'
 
 interface Props {
   modelValue: boolean
@@ -140,9 +121,6 @@ const form = ref<Partial<Tag>>({
 
 const isEditMode = computed(() => !!props.tag?.id)
 
-const isValidIcon = computed(() => {
-  return !form.value.icon || form.value.icon.startsWith('mdi-') || form.value.icon.startsWith('fa ')
-})
 
 const nameRules = [
   (v: string) => !!v || 'Name is required',

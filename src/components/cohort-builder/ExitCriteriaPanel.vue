@@ -6,7 +6,7 @@
       v-if="hasLegacyConflict"
       class="exit-criteria-panel__warning"
     >
-      <v-icon
+      <AtlasIcon
         icon="mdi-alert-outline"
         size="18"
         class="exit-criteria-panel__warning-icon"
@@ -53,7 +53,7 @@
       class="exit-criteria-panel__validation"
     >
       <div class="exit-criteria-panel__validation-header">
-        <v-icon
+        <AtlasIcon
           icon="mdi-alert-circle-outline"
           size="18"
           class="exit-criteria-panel__validation-icon"
@@ -75,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasIcon } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import EventPersistenceSelector from './EventPersistenceSelector.vue'

@@ -24,10 +24,9 @@
       </v-btn>
     </v-btn-toggle>
 
-    <v-chip
+    <AtlasChip
       v-if="activeRun"
-      size="small"
-      variant="tonal"
+      size="sm"
       class="char-toolbar__chip"
       data-testid="char-toolbar-run-chip"
     >
@@ -39,23 +38,22 @@
       >
         · {{ activeRun.personCount.toLocaleString() }} {{ tv('columns.results', 'rows').toLowerCase() }}
       </span>
-    </v-chip>
+    </AtlasChip>
 
-    <v-text-field
+    <AtlasTextField
       :model-value="threshold"
       :label="t('cc.viewEdit.results.thresholdLabel', 'Threshold ≥').value"
       type="number"
-      density="compact"
       variant="outlined"
       hide-details
       class="char-toolbar__threshold"
       :min="0"
       :max="100"
       data-testid="char-toolbar-threshold"
-      @update:model-value="(v: string) => $emit('update:threshold', Number(v) || 0)"
+      @update:model-value="(v) => $emit('update:threshold', Number(v) || 0)"
     />
 
-    <v-spacer />
+    <AtlasSpacer />
 
     <v-btn
       size="small"
@@ -66,20 +64,21 @@
     >
       {{ t('cc.viewEdit.workbench.configure', 'Configure').value }}
     </v-btn>
-    <v-btn
-      size="small"
-      variant="text"
-      prepend-icon="mdi-download-outline"
+    <AtlasButton
+      variant="ghost"
+      size="sm"
+      icon="mdi-download-outline"
       :disabled="!hasResults"
       data-testid="char-toolbar-export"
       @click="$emit('export')"
     >
       {{ t('cc.viewEdit.results.exportAll', 'Export CSV').value }}
-    </v-btn>
+    </AtlasButton>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasChip, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 export type ViewMode = 'table1' | 'perAnalysis'

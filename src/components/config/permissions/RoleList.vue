@@ -6,12 +6,11 @@
         <h2 class="text-h5">
           Roles
         </h2>
-        <v-text-field
+        <AtlasTextField
           v-model="searchQuery"
           placeholder="Search roles..."
-          prepend-inner-icon="mdi-magnify"
+          prepend-icon="mdi-magnify"
           variant="outlined"
-          density="compact"
           hide-details
           clearable
           class="role-list__search"
@@ -29,7 +28,7 @@
     </div>
 
     <!-- Loading State -->
-    <v-progress-linear
+    <AtlasProgressLinear
       v-if="isLoadingRoles"
       indeterminate
       color="primary"
@@ -37,28 +36,27 @@
     />
 
     <!-- Error State -->
-    <v-alert
+    <AtlasAlert
       v-if="rolesError"
-      type="error"
-      variant="tonal"
+      severity="danger"
       class="mb-4"
-      closable
-      @click:close="rolesError = null"
+      :closable="true"
+      @close="rolesError = null"
     >
       {{ rolesError }}
-    </v-alert>
+    </AtlasAlert>
 
     <!-- Empty State -->
     <div
       v-if="!isLoadingRoles && roles.length === 0"
       class="role-list__empty"
     >
-      <v-icon
+      <AtlasIcon
         size="80"
         color="grey-lighten-1"
       >
         mdi-shield-account-outline
-      </v-icon>
+      </AtlasIcon>
       <h3 class="text-h6 mt-4">
         No roles found
       </h3>
@@ -78,7 +76,7 @@
     </div>
 
     <!-- Roles Data Table -->
-    <v-data-table
+    <AtlasDataTable
       v-else
       :headers="headers"
       :items="filteredRoles"
@@ -92,13 +90,13 @@
       <!-- Name Column -->
       <template #item.name="{ item }">
         <div class="role-list__name">
-          <v-icon
+          <AtlasIcon
             size="small"
             class="mr-2"
             color="primary"
           >
             mdi-shield-account
-          </v-icon>
+          </AtlasIcon>
           <strong>{{ item.name }}</strong>
         </div>
       </template>
@@ -132,12 +130,12 @@
             variant="text"
             @click.stop="handleEdit(item)"
           >
-            <v-icon size="small">
+            <AtlasIcon size="small">
               mdi-pencil
-            </v-icon>
-            <v-tooltip activator="parent">
+            </AtlasIcon>
+            <AtlasTooltip activator="parent">
               Edit Role
-            </v-tooltip>
+            </AtlasTooltip>
           </v-btn>
 
           <v-btn
@@ -147,19 +145,19 @@
             color="error"
             @click.stop="handleDelete(item)"
           >
-            <v-icon size="small">
+            <AtlasIcon size="small">
               mdi-delete
-            </v-icon>
-            <v-tooltip activator="parent">
+            </AtlasIcon>
+            <AtlasTooltip activator="parent">
               Delete Role
-            </v-tooltip>
+            </AtlasTooltip>
           </v-btn>
         </div>
       </template>
 
       <!-- Loading State -->
       <template #loading>
-        <v-skeleton-loader type="table-row@5" />
+        <AtlasSkeleton type="table-row@5" />
       </template>
 
       <!-- Footer with item count -->
@@ -173,7 +171,7 @@
           </div>
         </div>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
 
     <!-- Create/Edit Dialog -->
     <role-create-dialog
@@ -193,6 +191,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasDataTable, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRoles } from '@/composables/useRoles'

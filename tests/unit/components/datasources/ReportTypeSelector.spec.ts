@@ -128,9 +128,9 @@ describe('ReportTypeSelector', () => {
     expect(select.props('variant')).toBe('outlined')
   })
 
-  it('should use comfortable density', () => {
+  it('should use compact density', () => {
     const select = wrapper.findComponent({ name: 'VSelect' })
-    expect(select.props('density')).toBe('comfortable')
+    expect(select.props('density')).toBe('compact')
   })
 
   it('should hide details', () => {

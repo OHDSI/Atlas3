@@ -1,18 +1,18 @@
 <template>
   <div class="data-density-report">
-    <v-row>
-      <v-col cols="12">
+    <AtlasRow>
+      <AtlasCol cols="12">
         <ChartSection :title="t('dataSources.datadensityReport.totalRows', 'Total Rows').value">
           <MultiLineChart
             :data="data.totalRecords"
             :height="350"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
 
-    <v-row>
-      <v-col cols="12">
+    <AtlasRow>
+      <AtlasCol cols="12">
         <ChartSection
           :title="t('dataSources.datadensityReport.recordsPerPerson', 'Records Per Person').value"
         >
@@ -21,11 +21,11 @@
             :height="350"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
 
-    <v-row v-if="data.conceptsPerPerson && data.conceptsPerPerson.length > 0">
-      <v-col cols="12">
+    <AtlasRow v-if="data.conceptsPerPerson && data.conceptsPerPerson.length > 0">
+      <AtlasCol cols="12">
         <ChartSection
           :title="t('dataSources.datadensityReport.conceptsPerPerson', 'Concepts per Person').value"
         >
@@ -35,12 +35,13 @@
             data-testid="concepts-per-person-chart"
           />
         </ChartSection>
-      </v-col>
-    </v-row>
+      </AtlasCol>
+    </AtlasRow>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasCol, AtlasRow } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { DataDensityReport as DataDensityReportData } from '@/models/datasource.types'
 import ChartSection from '@/components/datasources/shared/ChartSection.vue'

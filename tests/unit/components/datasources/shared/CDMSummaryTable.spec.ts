@@ -47,7 +47,7 @@ describe('CDMSummaryTable', () => {
   it('should render as a card', () => {
     const wrapper = mountComponent()
 
-    expect(wrapper.findComponent({ name: 'SurfaceCard' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'AtlasCard' }).exists()).toBe(true)
     expect(wrapper.find('.cdm-summary-table').exists()).toBe(true)
   })
 

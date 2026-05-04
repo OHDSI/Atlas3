@@ -279,10 +279,10 @@ describe('FilterTypeSelector', () => {
       expect(select.props('variant')).toBe('outlined')
     })
 
-    it('should use comfortable density', () => {
+    it('should use compact density (Atlas locks compact)', () => {
       const wrapper = mountComponent()
       const select = wrapper.findComponent({ name: 'VSelect' })
-      expect(select.props('density')).toBe('comfortable')
+      expect(select.props('density')).toBe('compact')
     })
   })
 

@@ -136,7 +136,7 @@ describe('CohortSampleCreateDialog', () => {
 
     // Cancel is the second-to-last v-btn in the action bar; click via DOM lookup.
     const cancelBtn = Array.from(
-      document.body.querySelectorAll('.v-card-actions button')
+      document.body.querySelectorAll('.atlas-dialog__actions button')
     ).find((b) => b.textContent?.toLowerCase().includes('cancel')) as HTMLButtonElement | undefined
     expect(cancelBtn).toBeDefined()
     cancelBtn!.click()

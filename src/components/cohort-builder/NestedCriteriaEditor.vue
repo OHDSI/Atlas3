@@ -6,7 +6,7 @@
   >
     <v-card-text class="d-flex">
       <!-- Vertical Logic Type Label -->
-      <v-menu
+      <AtlasMenu
         v-model="showLogicTypeMenu"
         :close-on-content-click="false"
         location="end"
@@ -68,47 +68,44 @@
                 {{ t('options.atMost', 'At most') }}
               </v-btn>
             </div>
-            <v-text-field
+            <AtlasTextField
               v-if="tempLogicType === 'AT_LEAST' || tempLogicType === 'AT_MOST'"
               v-model.number="tempCount"
               type="number"
               :label="t('columns.count', 'Count').value"
               min="1"
-              density="compact"
               class="mt-3"
             />
           </v-card-text>
           <v-card-actions class="pa-2">
-            <v-spacer />
-            <v-btn
-              variant="text"
-              size="small"
+            <AtlasSpacer />
+            <AtlasButton
+              variant="ghost"
+              size="sm"
               @click="showLogicTypeMenu = false"
             >
               {{ t('common.cancel', 'Cancel') }}
-            </v-btn>
-            <v-btn
-              color="primary"
-              size="small"
+            </AtlasButton>
+            <AtlasButton
+              size="sm"
               @click="confirmLogicType"
             >
               {{ t('common.apply', 'OK') }}
-            </v-btn>
+            </AtlasButton>
           </v-card-actions>
         </v-card>
-      </v-menu>
+      </AtlasMenu>
 
       <!-- Main Content -->
       <div class="flex-grow-1">
         <!-- Depth Warning -->
-        <v-alert
+        <AtlasAlert
           v-if="depth > 10"
-          type="warning"
-          variant="tonal"
+          severity="warning"
           density="compact"
           class="mb-2"
         >
-          <v-icon>mdi-alert</v-icon>
+          <AtlasIcon>mdi-alert</AtlasIcon>
           {{ t('components.nestedCriteria.depthWarning', 'Deep nesting detected') }} ({{ depth }}
           {{ t('common.levels', 'levels') }}).
           {{
@@ -117,50 +114,49 @@
               'Consider simplifying your criteria structure.'
             )
           }}
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Header with Add Criteria and Delete buttons -->
         <div class="group-header d-flex align-center mb-2">
-          <v-menu>
+          <AtlasMenu>
             <template #activator="{ props: slotProps }">
-              <v-btn
+              <AtlasButton
                 v-bind="slotProps"
-                variant="outlined"
-                prepend-icon="mdi-plus"
-                size="small"
+                variant="secondary"
+                size="sm"
+                icon="mdi-plus"
                 data-testid="add-criteria-to-nested-group"
               >
                 {{ t('components.criteriaGroup.addCriteria', 'Add Criteria') }}
-              </v-btn>
+              </AtlasButton>
             </template>
-            <v-list>
-              <v-list-item
+            <AtlasList>
+              <AtlasListItem
                 v-for="criteriaType in criteriaTypes"
                 :key="criteriaType.value"
                 :title="criteriaType.label"
                 :subtitle="criteriaType.description"
                 @click="addCriteria(criteriaType.value as CriteriaType)"
               />
-            </v-list>
-          </v-menu>
+            </AtlasList>
+          </AtlasMenu>
 
-          <v-spacer />
+          <AtlasSpacer />
 
-          <v-btn
+          <AtlasIconButton
             icon="mdi-delete"
-            size="small"
+            v-bind="{ ariaLabel: t('components.criteriaGroup.deleteGroup', 'Delete nested group').value }"
             variant="text"
-            color="error"
-            :title="t('components.criteriaGroup.deleteGroup', 'Delete nested group').value"
+            tone="danger"
+            size="sm"
             @click="$emit('remove')"
           />
         </div>
 
         <!-- Empty State -->
-        <v-alert
+        <AtlasAlert
           v-if="localNested.events.length === 0"
-          type="info"
-          variant="tonal"
+          severity="info"
           density="compact"
           class="mb-2"
         >
@@ -170,7 +166,7 @@
               'No events in this group. Click "Add Criteria" to begin.'
             )
           }}
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Events List -->
         <div
@@ -190,14 +186,13 @@
                 <div class="flex-grow-1">
                   <!-- Event Type Header -->
                   <div class="d-flex align-center mb-2">
-                    <v-chip
-                      size="small"
-                      color="primary"
-                      variant="tonal"
+                    <AtlasChip
+                      size="sm"
+                      tone="primary"
                     >
                       {{ formatEventType(event.criteriaType) }}
-                    </v-chip>
-                    <v-spacer />
+                    </AtlasChip>
+                    <AtlasSpacer />
                     <v-btn
                       icon="mdi-close"
                       size="x-small"
@@ -208,10 +203,10 @@
 
                   <!-- Concept Set Picker -->
                   <div class="mb-2">
-                    <v-btn
-                      variant="outlined"
-                      size="small"
-                      prepend-icon="mdi-text-box-search"
+                    <AtlasButton
+                      variant="secondary"
+                      size="sm"
+                      icon="mdi-text-box-search"
                       block
                       @click="selectConceptSet(index, event.id)"
                     >
@@ -219,42 +214,38 @@
                         event.conceptSet?.name ||
                           t('components.conceptAddBox.selectConceptSet', 'Select concept set...')
                       }}
-                    </v-btn>
+                    </AtlasButton>
                   </div>
 
                   <!-- Cardinality -->
                   <div class="mb-2">
-                    <v-select
+                    <AtlasSelect
                       :model-value="event.cardinality?.type || 'AT_LEAST'"
                       :label="t('components.nestedCriteria.occurrences', 'Occurrences').value"
                       :items="cardinalityTypes"
-                      density="compact"
-                      @update:model-value="updateCardinality(index, $event)"
+                      @update:model-value="(v) => updateCardinality(index, v as CardinalityType)"
                     />
-                    <v-text-field
+                    <AtlasTextField
                       v-if="event.cardinality?.type !== 'EXACTLY' || true"
                       :model-value="event.cardinality?.count || 1"
                       type="number"
                       :label="t('columns.count', 'Count').value"
-                      density="compact"
                       min="1"
                       class="mt-1"
-                      @update:model-value="updateCardinalityCount(index, parseInt($event))"
+                      @update:model-value="(v) => updateCardinalityCount(index, parseInt(String(v)))"
                     />
                   </div>
 
                   <!-- Temporal Window Toggle -->
                   <div class="mb-2">
-                    <v-switch
+                    <AtlasSwitch
                       :model-value="!!event.temporalWindow"
                       :label="
                         t('components.nestedCriteria.addTemporalWindow', 'Add temporal window')
                           .value
                       "
-                      density="compact"
-                      color="primary"
                       hide-details
-                      @update:model-value="toggleTemporalWindow(index, !!$event)"
+                      @update:model-value="(v) => toggleTemporalWindow(index, !!v)"
                     />
                   </div>
 
@@ -268,13 +259,11 @@
 
                   <!-- Attributes Toggle -->
                   <div class="mb-2">
-                    <v-switch
+                    <AtlasSwitch
                       :model-value="event.attributes && event.attributes.length > 0"
                       :label="t('components.common.addAttribute', 'Add attributes').value"
-                      density="compact"
-                      color="primary"
                       hide-details
-                      @update:model-value="toggleAttributes(index, !!$event)"
+                      @update:model-value="(v) => toggleAttributes(index, !!v)"
                     />
                   </div>
 
@@ -289,16 +278,14 @@
 
                   <!-- Nested Criteria Toggle -->
                   <div class="mb-2">
-                    <v-switch
+                    <AtlasSwitch
                       :model-value="!!event.nestedCriteria"
                       :label="
                         t('components.nestedCriteria.addNestedGroup', 'Add nested group').value
                       "
-                      density="compact"
-                      color="primary"
                       hide-details
                       :disabled="depth >= 10"
-                      @update:model-value="toggleNestedCriteria(index, !!$event)"
+                      @update:model-value="(v) => toggleNestedCriteria(index, !!v)"
                     />
                   </div>
 
@@ -324,6 +311,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSpacer, AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, defineOptions } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

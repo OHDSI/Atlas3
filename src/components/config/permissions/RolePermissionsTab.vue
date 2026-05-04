@@ -3,12 +3,11 @@
     <v-card-text>
       <!-- Header with Search and Save Button -->
       <div class="role-permissions-tab__header">
-        <v-text-field
+        <AtlasTextField
           v-model="searchQuery"
           placeholder="Search permissions..."
-          prepend-inner-icon="mdi-magnify"
+          prepend-icon="mdi-magnify"
           variant="outlined"
-          density="compact"
           hide-details
           clearable
           class="role-permissions-tab__search"
@@ -16,23 +15,22 @@
         />
 
         <div class="role-permissions-tab__actions">
-          <v-chip
+          <AtlasChip
             v-if="hasChanges"
-            color="warning"
-            size="small"
+            tone="warning"
+            size="sm"
             class="mr-2"
           >
             {{ changeCount }} change{{ changeCount !== 1 ? 's' : '' }}
-          </v-chip>
+          </AtlasChip>
 
-          <v-btn
-            color="primary"
+          <AtlasButton
             :disabled="!hasChanges || isSaving"
             :loading="isSaving"
             @click="handleSave"
           >
             Save Changes
-          </v-btn>
+          </AtlasButton>
         </div>
       </div>
 
@@ -41,7 +39,7 @@
         v-if="isLoadingPermissions"
         class="role-permissions-tab__loading"
       >
-        <v-progress-circular
+        <AtlasProgressCircular
           indeterminate
           color="primary"
           size="64"
@@ -52,27 +50,26 @@
       </div>
 
       <!-- Error State -->
-      <v-alert
+      <AtlasAlert
         v-else-if="permissionsError"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="mt-4"
-        closable
-        @click:close="permissionsError = null"
+        :closable="true"
+        @close="permissionsError = null"
       >
         {{ permissionsError }}
-      </v-alert>
+      </AtlasAlert>
 
       <!-- Permissions List -->
       <template v-else>
         <!-- Summary -->
         <div class="role-permissions-tab__summary mt-4">
-          <v-icon
+          <AtlasIcon
             size="small"
             class="mr-2"
           >
             mdi-shield-check
-          </v-icon>
+          </AtlasIcon>
           <span class="text-body-2">
             <strong>{{ selectedPermissionIds.size }}</strong> of
             <strong>{{ filteredPermissions.length }}</strong> permissions assigned
@@ -112,20 +109,18 @@
         </div>
 
         <!-- Permissions Table -->
-        <v-data-table
+        <AtlasDataTable
           :headers="headers"
           :items="filteredPermissions"
           :items-per-page="50"
           :items-per-page-options="[25, 50, 100, 200]"
           class="role-permissions-tab__table mt-4 elevation-1"
-          density="comfortable"
         >
           <!-- Checkbox Column -->
           <template #item.selected="{ item }">
-            <v-checkbox
+            <AtlasCheckbox
               :model-value="isPermissionSelected(item.id)"
               hide-details
-              density="compact"
               @update:model-value="togglePermission(item.id)"
             />
           </template>
@@ -136,14 +131,14 @@
               <code class="role-permissions-tab__permission-code">
                 {{ getPermissionString(item) }}
               </code>
-              <v-icon
+              <AtlasIcon
                 v-if="hasPermissionChanged(item.id)"
                 size="small"
                 color="warning"
                 class="ml-2"
               >
                 mdi-circle-small
-              </v-icon>
+              </AtlasIcon>
             </div>
           </template>
 
@@ -151,13 +146,13 @@
           <template #item.description="{ item }">
             <div class="role-permissions-tab__description">
               <span>{{ item.description || '—' }}</span>
-              <v-tooltip
+              <AtlasTooltip
                 v-if="item.description"
                 activator="parent"
                 location="top"
               >
                 {{ item.description }}
-              </v-tooltip>
+              </AtlasTooltip>
             </div>
           </template>
 
@@ -172,37 +167,35 @@
             </v-chip>
             <span v-else> — </span>
           </template>
-        </v-data-table>
+        </AtlasDataTable>
       </template>
 
       <!-- Success Message -->
-      <v-alert
+      <AtlasAlert
         v-if="successMessage"
-        type="success"
-        variant="tonal"
+        severity="success"
         class="mt-4"
-        closable
-        @click:close="successMessage = null"
+        :closable="true"
+        @close="successMessage = null"
       >
         {{ successMessage }}
-      </v-alert>
+      </AtlasAlert>
 
-      <!-- Error Message -->
-      <v-alert
+      <AtlasAlert
         v-if="errorMessage"
-        type="error"
-        variant="tonal"
+        severity="danger"
         class="mt-4"
-        closable
-        @click:close="errorMessage = null"
+        :closable="true"
+        @close="errorMessage = null"
       >
         {{ errorMessage }}
-      </v-alert>
+      </AtlasAlert>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasProgressCircular, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Permission } from '@/models/role.types'

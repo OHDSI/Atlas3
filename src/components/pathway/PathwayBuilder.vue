@@ -36,30 +36,29 @@
       >
     </template>
     <template #actions>
-      <v-tooltip
+      <AtlasTooltip
         v-if="currentPathway?.id"
         :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
             icon="mdi-history"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             data-testid="pathway-builder-versions"
             @click="showVersions = true"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="currentPathway?.id"
         :text="t('common.tags', 'Tags').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-badge
+          <AtlasBadge
             v-bind="tipProps"
             :content="pathwayTags.length || 0"
             :model-value="pathwayTags.length > 0"
@@ -67,70 +66,67 @@
             offset-x="6"
             offset-y="6"
           >
-            <v-btn
+            <AtlasIconButton
+              v-bind="{ ariaLabel: 'Tags' }"
               icon="mdi-tag-outline"
               variant="text"
-              size="small"
-              density="compact"
+              size="sm"
               :disabled="isPreviewMode"
               data-testid="pathway-builder-tags"
               @click="showTags = true"
             />
-          </v-badge>
+          </AtlasBadge>
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="previewVersion"
         :text="t('common.backToCurrent', 'Back to current version').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Back to current version' }"
             icon="mdi-undo"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             data-testid="pathway-builder-back-to-current"
             @click="store.clearPreviewVersion()"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         :text="t('common.import', 'Import design').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
             icon="mdi-upload"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             :loading="importing"
             data-testid="pathway-builder-import"
             @click="handleImportClick"
           />
         </template>
-      </v-tooltip>
-      <v-tooltip
+      </AtlasTooltip>
+      <AtlasTooltip
         v-if="currentPathway?.id"
         :text="t('common.export', 'Export design').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
             icon="mdi-download"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             :loading="exporting"
             data-testid="pathway-builder-export"
             @click="handleExport"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
       <input
         ref="importFileInput"
         type="file"
@@ -139,16 +135,16 @@
         data-testid="pathway-builder-import-input"
         @change="handleImportFileChange"
       >
-      <v-btn
+      <AtlasButton
         v-if="currentPathway?.id"
-        variant="outlined"
-        prepend-icon="mdi-content-copy"
+        variant="secondary"
+        icon="mdi-content-copy"
         :disabled="!currentPathway?.id || !canCopy"
         data-testid="pathway-builder-copy"
         @click="onCopy"
       >
         {{ t('common.duplicate', 'Duplicate') }}
-      </v-btn>
+      </AtlasButton>
       <v-btn
         v-if="currentPathway?.id"
         variant="outlined"
@@ -160,7 +156,7 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
-      <v-menu
+      <AtlasMenu
         v-if="currentPathway?.id"
         v-model="generateMenu"
         :close-on-content-click="false"
@@ -168,22 +164,21 @@
         location="bottom end"
       >
         <template #activator="{ props: menuProps }">
-          <v-btn
+          <AtlasButton
             v-bind="menuProps"
-            color="primary"
-            variant="outlined"
-            prepend-icon="mdi-play"
+            variant="secondary"
+            icon="mdi-play"
             data-testid="pathway-builder-generate"
           >
             {{ t('components.generation.generate', 'Generate') }}
-          </v-btn>
+          </AtlasButton>
         </template>
         <PathwayGeneratePopover
           v-if="currentPathway?.id"
           :pathway-id="currentPathway.id"
           @generated="generateMenu = false"
         />
-      </v-menu>
+      </AtlasMenu>
       <v-btn
         color="primary"
         variant="elevated"
@@ -218,15 +213,18 @@
       @open-generate="generateMenu = true"
     />
 
-    <v-dialog
+    <AtlasDialog
       v-model="showVersions"
+      eyebrow="VERSIONS"
+      title="Version history"
       max-width="900"
+      @close="showVersions = false"
     >
       <VersionsTabContent
         v-if="versionsConfig"
         :config="versionsConfig"
       />
-    </v-dialog>
+    </AtlasDialog>
 
     <TagSelectionDialog
       v-if="currentPathway?.id"
@@ -235,18 +233,19 @@
       @update:selected-tags="handleTagsUpdate"
     />
 
-    <v-snackbar
+    <AtlasSnackbar
       :model-value="!!feedback"
-      :color="feedback?.color ?? 'info'"
+      :severity="feedbackSeverity"
+      :text="feedback?.message ?? ''"
       :timeout="3000"
       @update:model-value="onSnackbarUpdate"
-    >
-      {{ feedback?.message }}
-    </v-snackbar>
+    />
   </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -270,6 +269,10 @@ const { currentPathway, previewVersion, isDirty, isPreviewMode, canSave } = stor
 const { save, copy, remove, feedback } = usePathwayBuilder()
 const { hasPermission } = usePermissions()
 const { t } = useI18n()
+
+const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
+  feedback.value?.color === 'error' ? 'danger' : (feedback.value?.color ?? 'info')
+)
 
 const showVersions = ref(false)
 const showTags = ref(false)

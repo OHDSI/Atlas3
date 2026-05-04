@@ -5,30 +5,30 @@
     @submit.prevent="handleSubmit"
   >
     <!-- Tag Group Selector -->
-    <v-select
+    <AtlasSelect
       v-model="form.selectedGroup"
       :items="tagGroups"
       item-title="name"
       item-value="id"
       label="Tag Group *"
       :rules="groupRules"
-      :error-messages="errors.groups"
+      :error="errors.groups"
       variant="outlined"
       return-object
       required
       class="mb-2"
     >
       <template #prepend-inner>
-        <v-icon>mdi-folder</v-icon>
+        <AtlasIcon>mdi-folder</AtlasIcon>
       </template>
-    </v-select>
+    </AtlasSelect>
 
     <!-- Tag Name -->
-    <v-text-field
+    <AtlasTextField
       v-model="form.name"
       label="Tag Name *"
       :rules="nameRules"
-      :error-messages="errors.name"
+      :error="errors.name"
       variant="outlined"
       required
       class="mb-2"
@@ -64,9 +64,9 @@
     >
       <v-expansion-panel>
         <v-expansion-panel-title>
-          <v-icon start>
+          <AtlasIcon start>
             mdi-cog
-          </v-icon>
+          </AtlasIcon>
           Show Advanced Options
         </v-expansion-panel-title>
         <v-expansion-panel-text>
@@ -81,28 +81,28 @@
             class="mb-2"
           >
             <template #prepend-inner>
-              <v-icon v-if="form.icon && isValidIcon">
+              <AtlasIcon v-if="form.icon && isValidIcon">
                 {{ form.icon }}
-              </v-icon>
+              </AtlasIcon>
             </template>
           </v-text-field>
 
           <!-- Permission Protected -->
-          <v-checkbox
+          <AtlasCheckbox
             v-model="form.permissionProtected"
             label="Permission Protected"
             hint="Require special permissions to assign/unassign this tag"
             persistent-hint
-            density="compact"
             class="mb-2"
           />
 
           <!-- Description Field -->
-          <v-textarea
+          <AtlasTextField
             v-model="form.description"
             label="Description"
-            rows="2"
-            :error-messages="errors.description"
+            :rows="2"
+            multiline
+            :error="errors.description"
             variant="outlined"
           />
         </v-expansion-panel-text>
@@ -111,51 +111,49 @@
 
     <!-- Action Buttons -->
     <div class="d-flex justify-end gap-2">
-      <v-btn
-        variant="text"
+      <AtlasButton
+        variant="ghost"
         :disabled="saving"
         @click="handleCancel"
       >
         Cancel
-      </v-btn>
-      <v-btn
+      </AtlasButton>
+      <AtlasButton
         type="submit"
-        color="primary"
         :disabled="!formValid"
         :loading="saving"
       >
         Create Tag
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Success/Error Messages -->
-    <v-alert
+    <AtlasAlert
       v-if="successMessage"
-      type="success"
-      variant="tonal"
+      severity="success"
       density="compact"
-      closable
+      :closable="true"
       class="mt-4"
-      @click:close="successMessage = ''"
+      @close="successMessage = ''"
     >
       {{ successMessage }}
-    </v-alert>
+    </AtlasAlert>
 
-    <v-alert
+    <AtlasAlert
       v-if="errorMessage"
-      type="error"
-      variant="tonal"
+      severity="danger"
       density="compact"
-      closable
+      :closable="true"
       class="mt-4"
-      @click:close="errorMessage = ''"
+      @close="errorMessage = ''"
     >
       {{ errorMessage }}
-    </v-alert>
+    </AtlasAlert>
   </v-form>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasIcon, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { tagSchema, type Tag as ConfigTag, type TagGroup } from '@/models/config.types'
 import type { Tag } from '@/models/cohort.types'

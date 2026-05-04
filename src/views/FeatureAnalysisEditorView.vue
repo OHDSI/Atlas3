@@ -42,17 +42,15 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
-      <v-btn
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-content-save-outline"
+      <AtlasButton
+        icon="mdi-content-save-outline"
         :disabled="!canSave"
         :loading="saving"
         data-testid="feature-analysis-editor-save"
         @click="handleSave"
       >
         {{ t('common.save', 'Save') }}
-      </v-btn>
+      </AtlasButton>
     </template>
 
     <!-- Main editor card -->
@@ -63,72 +61,68 @@
           <h2 class="feature-analysis-editor__section-title">
             {{ t('columns.name', 'Name') }}
           </h2>
-          <v-text-field
+          <AtlasTextField
             v-model="draft.name"
             :label="t('columns.name', 'Name').value"
-            :error-messages="nameError"
-            density="compact"
+            :error="nameError ?? undefined"
             variant="outlined"
             required
             data-testid="feature-analysis-editor-name"
           />
 
-          <v-textarea
+          <AtlasTextField
             v-model="draft.description"
             :label="t('columns.description', 'Description').value"
-            density="compact"
             variant="outlined"
-            rows="2"
+            :rows="2"
+            multiline
             auto-grow
             data-testid="feature-analysis-editor-description"
           />
 
-          <v-row>
-            <v-col
+          <AtlasRow>
+            <AtlasCol
               cols="12"
               md="4"
             >
-              <v-select
+              <AtlasSelect
                 v-model="draft.type"
                 :label="t('cc.fa.analysisType', 'Type').value"
                 :items="typeOptions"
                 item-title="label"
                 item-value="value"
                 :disabled="isEditing"
-                density="compact"
                 variant="outlined"
                 data-testid="feature-analysis-editor-type"
               />
-            </v-col>
-            <v-col
+            </AtlasCol>
+            <AtlasCol
               cols="12"
               md="4"
             >
-              <v-select
+              <AtlasSelect
                 v-model="draft.domain"
                 :label="t('cc.fa.domain', 'Domain').value"
                 :items="domainOptions"
                 clearable
-                density="compact"
                 variant="outlined"
                 data-testid="feature-analysis-editor-domain"
               />
-            </v-col>
-            <v-col
+            </AtlasCol>
+            <AtlasCol
               cols="12"
               md="4"
             >
-              <v-select
+              <AtlasSelect
                 v-model="draft.statType"
                 :label="t('cc.fa.analysisType', 'Stat Type').value"
                 :items="statTypeOptions"
                 clearable
-                density="compact"
                 variant="outlined"
                 data-testid="feature-analysis-editor-statType"
               />
-            </v-col>
-          </v-row>
+            </AtlasCol>
+          </AtlasRow>
         </div>
 
         <!-- PRESET design -->
@@ -168,22 +162,21 @@
                 )
               }}
             </v-btn>
-            <v-chip
+            <AtlasChip
               v-if="presetJsonError"
-              color="error"
-              size="small"
-              variant="tonal"
+              tone="danger"
+              size="sm"
               data-testid="feature-analysis-editor-preset-invalid"
             >
               {{ t('featureAnalyses.editor.preset.invalidJson', 'Invalid JSON') }}
-            </v-chip>
+            </AtlasChip>
           </div>
-          <v-textarea
+          <AtlasTextField
             v-model="presetDesignJson"
             :label="t('cc.fa.design', 'Covariate settings (JSON)').value"
-            density="compact"
             variant="outlined"
-            rows="14"
+            :rows="14"
+            multiline
             auto-grow
             class="feature-analysis-editor__json"
             data-testid="feature-analysis-editor-preset-json"
@@ -208,25 +201,25 @@
               )
             }}
           </p>
-          <v-textarea
+          <AtlasTextField
             v-model="criteriaConceptSetsJson"
             :label="t('cc.fa.tabs.conceptSets', 'Concept sets (JSON array)').value"
-            :error-messages="criteriaConceptSetsError"
-            density="compact"
+            :error="criteriaConceptSetsError ?? undefined"
             variant="outlined"
-            rows="6"
+            :rows="6"
+            multiline
             auto-grow
             class="feature-analysis-editor__json"
             data-testid="feature-analysis-editor-criteria-conceptsets-json"
             @blur="validateCriteriaConceptSetsJson"
           />
-          <v-textarea
+          <AtlasTextField
             v-model="criteriaCriteriaJson"
             :label="t('cc.fa.criteria', 'Criteria group (JSON)').value"
-            :error-messages="criteriaCriteriaError"
-            density="compact"
+            :error="criteriaCriteriaError ?? undefined"
             variant="outlined"
-            rows="10"
+            :rows="10"
+            multiline
             auto-grow
             class="feature-analysis-editor__json"
             data-testid="feature-analysis-editor-criteria-criteria-json"
@@ -243,12 +236,12 @@
           <h2 class="feature-analysis-editor__section-title">
             {{ t('cc.fa.analysisSql', 'Custom SQL') }}
           </h2>
-          <v-textarea
+          <AtlasTextField
             v-model="customFeSql"
             :label="t('cc.fa.analysisSql', 'Custom SQL').value"
-            density="compact"
             variant="outlined"
-            rows="14"
+            :rows="14"
+            multiline
             auto-grow
             class="feature-analysis-editor__json feature-analysis-editor__sql"
             data-testid="feature-analysis-editor-custom-sql"
@@ -257,69 +250,45 @@
       </v-card-text>
     </v-card>
 
-    <!-- Delete confirmation dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showDeleteDialog"
+      eyebrow="CONFIRM"
+      :title="t('common.delete', 'Delete').value"
       max-width="500"
+      @close="showDeleteDialog = false"
     >
-      <v-card>
-        <div class="confirm-dialog__header">
-          <div class="confirm-dialog__title-block">
-            <div class="confirm-dialog__eyebrow-row">
-              <span class="text-eyebrow">{{ t('cc.fa.title', 'Feature analysis').value }}</span>
-              <span class="confirm-dialog__accent-rule" />
-            </div>
-            <h2 class="confirm-dialog__title">
-              {{ t('common.delete', 'Delete').value }}
-            </h2>
-          </div>
-        </div>
-        <v-divider />
-        <v-card-text>
-          {{ deleteMessage }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteDialog = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            :loading="loading"
-            data-testid="feature-analysis-editor-delete-confirm"
-            @click="confirmDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{ deleteMessage }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showDeleteDialog = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="loading"
+          data-testid="feature-analysis-editor-delete-confirm"
+          @click="confirmDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
-    <!-- Error snackbar -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="snackbar.show"
-      :color="snackbar.color"
+      :severity="snackbar.severity"
+      :text="snackbar.message"
       :timeout="snackbar.timeout"
       data-testid="feature-analysis-editor-snackbar"
-    >
-      {{ snackbar.message }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          @click="snackbar.show = false"
-        >
-          {{ t('common.close', 'Close') }}
-        </v-btn>
-      </template>
-    </v-snackbar>
+    />
   </AnalysisBuilderShell>
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasChip, AtlasCol, AtlasDialog, AtlasRow, AtlasSelect, AtlasSnackbar, AtlasTextField } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 
@@ -385,18 +354,18 @@ const dirty = ref<boolean>(false)
 const snackbar = reactive<{
   show: boolean
   message: string
-  color: 'success' | 'error' | 'info'
+  severity: AtlasSnackbarSeverity
   timeout: number
 }>({
   show: false,
   message: '',
-  color: 'success',
+  severity: 'success',
   timeout: 3000,
 })
 
 function showSnackbar(message: string, color: 'success' | 'error' | 'info' = 'success') {
   snackbar.message = message
-  snackbar.color = color
+  snackbar.severity = color === 'error' ? 'danger' : color
   snackbar.timeout = color === 'error' ? 5000 : 3000
   snackbar.show = true
 }
@@ -829,34 +798,4 @@ onBeforeRouteLeave((_to, _from, next) => {
   white-space: pre;
 }
 
-.confirm-dialog__header {
-  padding: 20px 24px 14px;
-}
-
-.confirm-dialog__title-block {
-  flex: 1;
-}
-
-.confirm-dialog__eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.confirm-dialog__accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-
-.confirm-dialog__title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-}
 </style>

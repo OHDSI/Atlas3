@@ -7,23 +7,25 @@
     >
       {{ tv('profiles.clickHereToSelectACohort', 'No cohort selected') }}
     </div>
-    <v-list
+    <AtlasList
       v-else
       density="compact"
       class="overflow-auto"
       max-height="320"
     >
-      <v-list-item
+      <AtlasListItem
         v-for="cs in store.cohortConceptSets"
         :key="cs.id"
       >
-        <v-list-item-title>{{ cs.name }}</v-list-item-title>
+        <v-list-item-title>
+          {{ cs.name }}
+        </v-list-item-title>
         <template #append>
           <!-- TODO: wire up store.applyHighlight expansion for concept
                sets. The store needs a way to resolve a concept-set id
                to its concept-id list before this dot can drive a real
                highlight. Until then the dot is inert. -->
-          <v-tooltip
+          <AtlasTooltip
             :text="
               tv(
                 'profiles.conceptSetHighlightingComingSoon',
@@ -40,14 +42,15 @@
                 aria-disabled="true"
               />
             </template>
-          </v-tooltip>
+          </AtlasTooltip>
         </template>
-      </v-list-item>
-    </v-list>
+      </AtlasListItem>
+    </AtlasList>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasList, AtlasListItem, AtlasTooltip } from '@/components/ui'
 import { useProfileStore } from '@/stores/profile'
 import { useI18n } from '@/composables/useI18n'
 

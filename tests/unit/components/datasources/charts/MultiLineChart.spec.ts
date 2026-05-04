@@ -1,16 +1,10 @@
-/**
- * MultiLineChart Component Tests
- */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import MultiLineChart from '@/components/datasources/charts/MultiLineChart.vue'
 import type { MultiLineChartData } from '@/models/datasource.types'
-import * as chartConfig from '@/utils/chart-config'
 
-// Mock chart utilities
 vi.mock('@/utils/chart-config', () => ({
   multiLineChartOptions: vi.fn((data) => ({
     xAxis: { data: data.categories },
@@ -18,6 +12,15 @@ vi.mock('@/utils/chart-config', () => ({
   })),
   createResizeHandler: vi.fn(() => vi.fn())
 }))
+
+let chartConfig: typeof import('@/utils/chart-config')
+let MultiLineChart: typeof import('@/components/datasources/charts/MultiLineChart.vue').default
+
+beforeAll(async () => {
+  vi.resetModules()
+  chartConfig = await import('@/utils/chart-config')
+  MultiLineChart = (await import('@/components/datasources/charts/MultiLineChart.vue')).default
+})
 
 const vuetify = createVuetify({ components, directives })
 
@@ -79,7 +82,6 @@ describe('MultiLineChart', () => {
   it('should apply default height prop', () => {
     const wrapper = mountComponent()
 
-    // Default height for MultiLineChart is 350
     expect(wrapper.vm.$props.height).toBe(350)
   })
 
@@ -114,7 +116,6 @@ describe('MultiLineChart', () => {
   it('should handle multiple series', () => {
     mountComponent()
 
-    // Verify the function was called with data containing 3 series
     expect(chartConfig.multiLineChartOptions).toHaveBeenCalledWith(
       expect.objectContaining({
         series: expect.arrayContaining([

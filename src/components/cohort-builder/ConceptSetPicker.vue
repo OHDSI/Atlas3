@@ -20,37 +20,39 @@
           data-testid="single-concept-display"
         >
           <template #append>
-            <v-btn
+            <AtlasIconButton
               icon="mdi-magnify"
-              size="small"
+              size="sm"
               variant="text"
+              v-bind="{ ariaLabel: 'Search concepts' }"
               @click="showSearch = true"
             />
-            <v-btn
+            <AtlasIconButton
               v-if="selectedConcept"
               icon="mdi-close"
-              size="small"
+              size="sm"
               variant="text"
+              v-bind="{ ariaLabel: 'Clear selection' }"
               @click="clearSingleConceptSelection"
             />
           </template>
         </v-text-field>
 
         <!-- Selected Concept Chip -->
-        <v-chip
+        <AtlasChip
           v-if="selectedConcept"
           closable
-          color="primary"
+          tone="primary"
           class="mt-2"
-          @click:close="clearSingleConceptSelection"
+          @close="clearSingleConceptSelection"
         >
           {{ selectedConcept?.CONCEPT_NAME }} (ID: {{ selectedConcept?.CONCEPT_ID }})
-        </v-chip>
+        </AtlasChip>
       </template>
 
       <!-- Concept Set Selection Mode (Default) -->
       <template v-else>
-        <v-select
+        <AtlasSelect
           v-model="selectedConceptSetId"
           :items="conceptSetItems"
           item-title="label"
@@ -58,12 +60,12 @@
           :label="tv('components.conceptAddBox.selectConceptSet', 'Choose Concept Set')"
           clearable
           data-testid="concept-set-selector"
-          @update:model-value="handleSelect"
+          @update:model-value="(v: unknown) => handleSelect(v as number | string | undefined)"
         >
           <template #prepend-item>
-            <v-list-item @click="showSearch = true">
+            <AtlasListItem @click="showSearch = true">
               <template #prepend>
-                <v-icon>mdi-magnify</v-icon>
+                <AtlasIcon>mdi-magnify</AtlasIcon>
               </template>
               <v-list-item-title>
                 {{
@@ -73,31 +75,31 @@
                   )
                 }}
               </v-list-item-title>
-            </v-list-item>
-            <v-list-item @click="showCreateNew = true">
+            </AtlasListItem>
+            <AtlasListItem @click="showCreateNew = true">
               <template #prepend>
-                <v-icon>mdi-plus</v-icon>
+                <AtlasIcon>mdi-plus</AtlasIcon>
               </template>
               <v-list-item-title>
                 {{
                   t('common.create', 'Create new concept set...')
                 }}
               </v-list-item-title>
-            </v-list-item>
-            <v-divider class="my-2" />
+            </AtlasListItem>
+            <AtlasDivider class="my-2" />
           </template>
-        </v-select>
+        </AtlasSelect>
 
         <!-- Selected Concept Set Display -->
-        <v-chip
+        <AtlasChip
           v-if="selectedConceptSet"
           closable
-          color="primary"
+          tone="primary"
           class="mt-2"
-          @click:close="clearSelection"
+          @close="clearSelection"
         >
           {{ selectedConceptSet.name }} ({{ getConceptCount(selectedConceptSet) }} concepts)
-        </v-chip>
+        </AtlasChip>
       </template>
     </v-card-text>
 
@@ -127,6 +129,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasChip, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasListItem, AtlasSelect } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

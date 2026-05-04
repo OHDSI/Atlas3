@@ -16,7 +16,7 @@
       v-if="isPreviewingVersion"
       class="cohort-builder__preview-banner"
     >
-      <v-icon
+      <AtlasIcon
         icon="mdi-history"
         size="18"
         class="cohort-builder__preview-banner-icon"
@@ -24,16 +24,14 @@
       <span>{{
         t('versions.previewingVersion', { version: cohortStore.previewVersion?.version || '' })
       }}</span>
-      <v-spacer />
-      <v-btn
-        color="primary"
-        variant="flat"
-        size="small"
-        prepend-icon="mdi-arrow-left"
+      <AtlasSpacer />
+      <AtlasButton
+        size="sm"
+        icon="mdi-arrow-left"
         @click="handleBackToCurrent"
       >
         {{ t('common.backToCurrent', 'Back to current') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Patient Count Bar (TrexSQL) -->
@@ -49,7 +47,7 @@
       v-if="!hideInternalToolbar"
       class="cohort-builder__toolbar"
     >
-      <v-spacer />
+      <AtlasSpacer />
 
       <cohort-toolbar-status
         :concept-set-count="usedConceptSets.length"
@@ -110,7 +108,7 @@
             <span :class="['section-state-chip', `section-state-chip--${entryEventsState.tone}`]">
               {{ entryEventsState.label }}
             </span>
-            <v-spacer />
+            <AtlasSpacer />
             <div class="section-controls">
               <span class="section-controls__label">
                 {{
@@ -119,12 +117,12 @@
                     'Cohort entry on'
                   ).value
                 }}
-                <v-tooltip
+                <AtlasTooltip
                   location="top"
                   max-width="320"
                 >
                   <template #activator="{ props: tooltipProps }">
-                    <v-icon
+                    <AtlasIcon
                       v-bind="tooltipProps"
                       icon="mdi-help-circle-outline"
                       size="14"
@@ -137,7 +135,7 @@
                       'Which qualifying event marks a person’s cohort entry: their first, every occurrence, or their last.'
                     ).value
                   }}</span>
-                </v-tooltip>
+                </AtlasTooltip>
               </span>
               <v-btn-toggle
                 v-model="qualifyingLimit"
@@ -214,13 +212,13 @@
                   {{ t('options.latestEvents', 'Latest') }}
                 </v-btn>
               </v-btn-toggle>
-              <v-spacer />
-              <v-btn
-                variant="text"
-                size="small"
-                color="error"
+              <AtlasSpacer />
+              <AtlasIconButton
                 icon="mdi-close"
-                :aria-label="t('common.remove', 'Remove').value"
+                v-bind="{ ariaLabel: t('common.remove', 'Remove').value }"
+                variant="text"
+                tone="danger"
+                size="sm"
                 @click="removeAdditionalCriteria"
               />
             </div>
@@ -273,7 +271,7 @@
             >
               {{ inclusionRulesState.label }}
             </span>
-            <v-spacer />
+            <AtlasSpacer />
             <div class="section-controls">
               <v-btn
                 color="primary"
@@ -292,12 +290,12 @@
                     'Apply rules to'
                   ).value
                 }}
-                <v-tooltip
+                <AtlasTooltip
                   location="top"
                   max-width="320"
                 >
                   <template #activator="{ props: tooltipProps }">
-                    <v-icon
+                    <AtlasIcon
                       v-bind="tooltipProps"
                       icon="mdi-help-circle-outline"
                       size="14"
@@ -310,7 +308,7 @@
                       'Which qualifying event each rule is evaluated against: a person’s first, every, or their last.'
                     ).value
                   }}</span>
-                </v-tooltip>
+                </AtlasTooltip>
               </span>
               <v-btn-toggle
                 v-model="inclusionQualifyingLimit"
@@ -371,7 +369,7 @@
             >
               {{ exitCriteriaState.label }}
             </span>
-            <v-spacer />
+            <AtlasSpacer />
             <div class="section-controls">
               <span class="section-controls__label">{{
                 t('components.cohortExpressionEditor.exitStrategyLabel', 'Strategy').value
@@ -383,7 +381,7 @@
                 variant="outlined"
                 divided
               >
-                <v-tooltip
+                <AtlasTooltip
                   :text="
                     t('options.endOfContinuousObservation', 'End of continuous observation period')
                       .value
@@ -399,8 +397,8 @@
                       {{ t('options.endOfContinuousObservationShort', 'Observation').value }}
                     </v-btn>
                   </template>
-                </v-tooltip>
-                <v-tooltip
+                </AtlasTooltip>
+                <AtlasTooltip
                   :text="
                     t(
                       'options.fixedDurationRelativeToInitialEvent',
@@ -418,8 +416,8 @@
                       {{ t('options.fixedDurationShort', 'Fixed duration').value }}
                     </v-btn>
                   </template>
-                </v-tooltip>
-                <v-tooltip
+                </AtlasTooltip>
+                <AtlasTooltip
                   :text="
                     t('options.endOfContinuousDrugExposure', 'End of continuous drug exposure')
                       .value
@@ -435,7 +433,7 @@
                       {{ t('options.endOfContinuousDrugExposureShort', 'Drug exposure').value }}
                     </v-btn>
                   </template>
-                </v-tooltip>
+                </AtlasTooltip>
               </v-btn-toggle>
             </div>
           </div>
@@ -497,31 +495,19 @@
       @save="handleConceptSetSaved"
     />
 
-    <!-- Error Snackbar -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showError"
-      color="error"
+      severity="danger"
+      :text="errorMessage"
       :timeout="5000"
-    >
-      {{ errorMessage }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          @click="showError = false"
-        >
-          {{ t('common.close') }}
-        </v-btn>
-      </template>
-    </v-snackbar>
+    />
 
-    <!-- Success Snackbar -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showSuccess"
-      color="success"
+      severity="success"
+      :text="successMessage"
       :timeout="3000"
-    >
-      {{ successMessage }}
-    </v-snackbar>
+    />
 
     <!-- Loading Overlay -->
     <v-overlay
@@ -529,7 +515,7 @@
       class="align-center justify-center"
       persistent
     >
-      <v-progress-circular
+      <AtlasProgressCircular
         indeterminate
         size="64"
         color="primary"
@@ -539,79 +525,48 @@
       </div>
     </v-overlay>
 
-    <!-- Versions Dialog: refreshed header (eyebrow + accent rule
-         + clean title; close button on the right). -->
-    <v-dialog
+    <AtlasDialog
       v-model="showVersionsDialog"
+      eyebrow="VERSIONS"
+      :title="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
       max-width="1200"
-      scrollable
+      @close="showVersionsDialog = false"
     >
-      <v-card>
-        <div class="cohort-builder__dialog-header">
-          <div class="cohort-builder__dialog-title-block">
-            <div class="cohort-builder__dialog-eyebrow-row">
-              <span class="text-eyebrow">{{
-                t('common.cohortDefinition', 'Cohort definition').value
-              }}</span>
-              <span class="cohort-builder__dialog-accent-rule" />
-            </div>
-            <h2 class="cohort-builder__dialog-title">
-              {{ t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }}
-            </h2>
-          </div>
-          <v-btn
-            icon="mdi-close"
-            variant="text"
-            :aria-label="t('common.close', 'Close').value"
-            @click="showVersionsDialog = false"
-          />
-        </div>
-        <v-divider />
-        <v-card-text class="pa-0">
-          <versions-tab-content
-            v-if="cohortId"
-            :config="versionsConfig"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <versions-tab-content
+        v-if="cohortId"
+        :config="versionsConfig"
+      />
+    </AtlasDialog>
 
-    <!-- Unsaved-changes confirmation dialog: replaces the native
-         window.confirm() that fired on route leave with no styling. -->
-    <v-dialog
+    <!-- Unsaved-changes confirmation dialog -->
+    <AtlasDialog
       v-model="showUnsavedDialog"
+      eyebrow="COHORT"
+      :title="t('common.unsavedChanges', 'Unsaved changes').value"
       max-width="440"
+      @close="cancelLeaveUnsaved"
     >
-      <v-card>
-        <v-card-title class="text-h6">
-          {{ t('common.unsavedChanges', 'Unsaved changes').value }}
-        </v-card-title>
-        <v-card-text>
-          {{
-            t(
-              'common.unsavedWarning',
-              'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.'
-            ).value
-          }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="cancelLeaveUnsaved"
-          >
-            {{ t('common.cancel', 'Cancel').value }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            @click="confirmLeaveUnsaved"
-          >
-            {{ t('common.discard', 'Discard changes').value }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{
+        t(
+          'common.unsavedWarning',
+          'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.'
+        ).value
+      }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="cancelLeaveUnsaved"
+        >
+          {{ t('common.cancel', 'Cancel').value }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          @click="confirmLeaveUnsaved"
+        >
+          {{ t('common.discard', 'Discard changes').value }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <!-- Tags Dialog -->
     <tag-selection-dialog
@@ -629,6 +584,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
@@ -2601,38 +2557,4 @@ defineExpose({
   opacity: 0.8;
 }
 
-/* Versions / unsaved-changes dialog header — eyebrow + accent rule
- * + clean title, matching the cohort-info dialog and the rest of
- * the modernised dialogs. */
-.cohort-builder__dialog-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 20px 24px 16px;
-}
-.cohort-builder__dialog-title-block {
-  flex: 1;
-  min-width: 0;
-}
-.cohort-builder__dialog-eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.cohort-builder__dialog-accent-rule {
-  display: inline-block;
-  width: 28px;
-  height: 2px;
-  background-color: rgb(var(--v-theme-orange));
-  border-radius: 2px;
-}
-.cohort-builder__dialog-title {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.3;
-  margin: 0;
-  color: rgb(var(--v-theme-primary));
-  word-break: break-word;
-}
 </style>

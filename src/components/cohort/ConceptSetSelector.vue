@@ -1,22 +1,19 @@
 <template>
   <v-card>
     <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">
+      <AtlasIcon class="mr-2">
         mdi-book-open-variant
-      </v-icon>
+      </AtlasIcon>
       <span>{{ t('cs.browser.caption') }}</span>
-      <v-spacer />
-      <v-btn
-        color="primary"
-        variant="outlined"
-        size="small"
+      <AtlasSpacer />
+      <AtlasButton
+        variant="secondary"
+        size="sm"
+        icon="mdi-plus"
         @click="createNewConceptSet"
       >
-        <v-icon class="mr-2">
-          mdi-plus
-        </v-icon>
         {{ t('components.conceptSetBuilder.newConceptSet') }}
-      </v-btn>
+      </AtlasButton>
     </v-card-title>
 
     <v-card-text>
@@ -35,23 +32,22 @@
           <v-expansion-panel-title>
             <div class="d-flex align-center w-100">
               <span class="font-weight-medium">{{ conceptSet.name }}</span>
-              <v-spacer />
-              <v-chip
-                size="small"
+              <AtlasSpacer />
+              <AtlasChip
+                size="sm"
                 class="mr-2"
               >
                 {{ t('conceptSets.conceptCount', { count: conceptSet.items.length }) }}
-              </v-chip>
+              </AtlasChip>
             </div>
           </v-expansion-panel-title>
 
           <v-expansion-panel-text>
-            <v-text-field
+            <AtlasTextField
               :model-value="conceptSet.name"
               :label="tv('columns.name')"
               variant="outlined"
-              density="compact"
-              @update:model-value="conceptSet.id && updateConceptSetName(conceptSet.id, $event)"
+              @update:model-value="(v) => conceptSet.id && updateConceptSetName(conceptSet.id, String(v))"
             />
 
             <div
@@ -61,29 +57,26 @@
               <p class="text-subtitle-2 mb-2">
                 {{ t('conceptSets.concepts') }}
               </p>
-              <v-chip
+              <AtlasChip
                 v-for="concept in conceptSet.items"
                 :key="concept.conceptId"
                 closable
                 class="mr-2 mb-2"
-                @click:close="conceptSet.id && removeConcept(conceptSet.id, concept.conceptId)"
+                @close="conceptSet.id && removeConcept(conceptSet.id, concept.conceptId)"
               >
                 {{ concept.conceptName }}
-              </v-chip>
+              </AtlasChip>
             </div>
 
             <div class="mt-3 d-flex gap-2">
-              <v-btn
-                color="primary"
-                variant="outlined"
-                size="small"
+              <AtlasButton
+                variant="secondary"
+                size="sm"
+                icon="mdi-plus"
                 @click="conceptSet.id && openSearchDialog(conceptSet.id)"
               >
-                <v-icon class="mr-2">
-                  mdi-plus
-                </v-icon>
                 {{ t('components.conceptSet.addConcepts') }}
-              </v-btn>
+              </AtlasButton>
 
               <v-btn
                 color="error"
@@ -91,9 +84,9 @@
                 size="small"
                 @click="conceptSet.id && deleteConceptSet(conceptSet.id)"
               >
-                <v-icon class="mr-2">
+                <AtlasIcon class="mr-2">
                   mdi-delete
-                </v-icon>
+                </AtlasIcon>
                 {{ t('common.delete') }}
               </v-btn>
             </div>
@@ -110,6 +103,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasButton, AtlasChip, AtlasIcon, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

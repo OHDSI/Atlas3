@@ -43,47 +43,45 @@
       >
     </template>
     <template #actions>
-      <v-tooltip
+      <AtlasTooltip
         :text="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Concept sets' }"
             icon="mdi-bookmark-multiple-outline"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             data-testid="char-builder-conceptsets-icon"
             @click="showConceptSetsDialog = true"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         v-if="isEditing"
         :text="t('cc.viewEdit.tabs.versions', 'Versions').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
             icon="mdi-history"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             data-testid="char-builder-versions-icon"
             @click="showVersionsDialog = true"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         :text="t('cc.viewEdit.tabs.messages', 'Validation').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-badge
+          <AtlasBadge
             v-bind="tipProps"
             :color="validationBadge?.color || 'default'"
             :content="validationBadge?.count ?? 0"
@@ -91,55 +89,53 @@
             offset-x="6"
             offset-y="6"
           >
-            <v-btn
+            <AtlasIconButton
               icon="mdi-message-text"
+              v-bind="{ ariaLabel: 'Validation messages' }"
               variant="text"
-              size="small"
-              density="compact"
+              size="sm"
               data-testid="char-builder-validation-icon"
               @click="showValidationDialog = true"
             />
-          </v-badge>
+          </AtlasBadge>
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         :text="t('common.import', 'Import design').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
             icon="mdi-upload"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             :loading="importing"
             data-testid="char-builder-import-icon"
             @click="handleImportClick"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
-      <v-tooltip
+      <AtlasTooltip
         v-if="isEditing"
         :text="t('common.export', 'Export design').value"
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
             icon="mdi-download"
             variant="text"
-            size="small"
-            density="compact"
+            size="sm"
             :loading="exporting"
             :disabled="!canExport"
             data-testid="char-builder-export-icon"
             @click="handleExport"
           />
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
 
       <input
         ref="importFileInput"
@@ -150,7 +146,7 @@
         @change="handleImportFileChange"
       >
 
-      <v-tooltip
+      <AtlasTooltip
         location="top"
         :text="runDisabledReason"
         :disabled="!runDisabledReason"
@@ -169,7 +165,7 @@
             </v-btn>
           </div>
         </template>
-      </v-tooltip>
+      </AtlasTooltip>
       <v-btn
         v-if="isEditing"
         variant="tonal"
@@ -192,17 +188,15 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
-      <v-btn
-        color="primary"
-        variant="flat"
-        prepend-icon="mdi-content-save-outline"
+      <AtlasButton
+        icon="mdi-content-save-outline"
         :disabled="!canSave"
         :loading="saving"
         data-testid="char-builder-save"
         @click="handleSave"
       >
         {{ t('common.save', 'Save') }}
-      </v-btn>
+      </AtlasButton>
     </template>
 
     <CharacterizationWorkbench
@@ -224,140 +218,90 @@
       :covariate-name="exploreCovariateName"
     />
 
-    <v-dialog
+    <AtlasDialog
       v-model="showConceptSetsDialog"
+      :eyebrow="t('cc.title', 'Characterization').value"
+      :title="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
+      :close-label="t('common.close', 'Close').value"
       max-width="1200"
-      scrollable
+      @close="showConceptSetsDialog = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('cc.title', 'Characterization').value"
-          :title="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="showConceptSetsDialog = false"
-        />
-        <v-card-text class="pa-4">
-          <CharacterizationConceptSetsTab
-            :characterization="draft"
-            data-testid="char-builder-conceptsets-tab"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <CharacterizationConceptSetsTab
+        :characterization="draft"
+        data-testid="char-builder-conceptsets-tab"
+      />
+    </AtlasDialog>
 
-    <v-dialog
+    <AtlasDialog
       v-model="showVersionsDialog"
+      :eyebrow="t('cc.title', 'Characterization').value"
+      :title="t('cc.viewEdit.tabs.versions', 'Versions').value"
+      :close-label="t('common.close', 'Close').value"
       max-width="1000"
-      scrollable
+      @close="showVersionsDialog = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('cc.title', 'Characterization').value"
-          :title="t('cc.viewEdit.tabs.versions', 'Versions').value"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="showVersionsDialog = false"
-        />
-        <v-card-text class="pa-4">
-          <div
-            class="char-builder__versions-stub"
-            data-testid="char-builder-versions-tab"
-          >
-            <p>
-              {{
-                t(
-                  'characterizations.editor.versionsTodo',
-                  'Versions integration TODO — wires into characterization-versions.service in a follow-up.'
-                )
-              }}
-            </p>
-          </div>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <div
+        class="char-builder__versions-stub"
+        data-testid="char-builder-versions-tab"
+      >
+        <p>
+          {{
+            t(
+              'characterizations.editor.versionsTodo',
+              'Versions integration TODO — wires into characterization-versions.service in a follow-up.'
+            )
+          }}
+        </p>
+      </div>
+    </AtlasDialog>
 
-    <v-dialog
+    <AtlasDialog
       v-model="showValidationDialog"
+      :eyebrow="t('cc.title', 'Characterization').value"
+      :title="t('cc.viewEdit.tabs.messages', 'Validation').value"
+      :close-label="t('common.close', 'Close').value"
       max-width="800"
-      scrollable
+      @close="showValidationDialog = false"
     >
-      <v-card>
-        <AppDialogHeader
-          :eyebrow="t('cc.title', 'Characterization').value"
-          :title="t('cc.viewEdit.tabs.messages', 'Validation').value"
-          :show-close="true"
-          :close-label="t('common.close', 'Close').value"
-          @close="showValidationDialog = false"
-        />
-        <v-card-text class="pa-4">
-          <CharacterizationMessagesTab
-            :characterization="draft"
-            data-testid="char-builder-validation-tab"
-          />
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+      <CharacterizationMessagesTab
+        :characterization="draft"
+        data-testid="char-builder-validation-tab"
+      />
+    </AtlasDialog>
 
-    <!-- Delete confirmation dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showDeleteDialog"
+      eyebrow="CONFIRM"
+      :title="t('common.delete', 'Delete').value"
       max-width="500"
+      @close="showDeleteDialog = false"
     >
-      <v-card>
-        <div class="confirm-dialog__header">
-          <div class="confirm-dialog__title-block">
-            <div class="confirm-dialog__eyebrow-row">
-              <span class="text-eyebrow">{{ t('cc.title', 'Characterization').value }}</span>
-              <span class="confirm-dialog__accent-rule" />
-            </div>
-            <h2 class="confirm-dialog__title">
-              {{ t('common.delete', 'Delete').value }}
-            </h2>
-          </div>
-        </div>
-        <v-divider />
-        <v-card-text>
-          {{ deleteMessage }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteDialog = false"
-          >
-            {{ t('common.cancel', 'Cancel') }}
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            :loading="loading"
-            data-testid="char-builder-delete-confirm"
-            @click="confirmDelete"
-          >
-            {{ t('common.delete', 'Delete') }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      {{ deleteMessage }}
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showDeleteDialog = false"
+        >
+          {{ t('common.cancel', 'Cancel') }}
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="loading"
+          data-testid="char-builder-delete-confirm"
+          @click="confirmDelete"
+        >
+          {{ t('common.delete', 'Delete') }}
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
-    <!-- Snackbar -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="snackbar.show"
-      :color="snackbar.color"
+      :severity="snackbar.severity"
+      :text="snackbar.message"
       :timeout="snackbar.timeout"
       data-testid="char-builder-snackbar"
-    >
-      {{ snackbar.message }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          @click="snackbar.show = false"
-        >
-          {{ t('common.close', 'Close') }}
-        </v-btn>
-      </template>
-    </v-snackbar>
+    />
   </AnalysisBuilderShell>
 </template>
 
@@ -376,7 +320,8 @@ import { logger } from '@/utils/logger'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
-import AppDialogHeader from '@/components/shared/AppDialogHeader.vue'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
@@ -422,18 +367,18 @@ const availableFeatureAnalyses = ref<FeatureAnalysisListItem[]>([])
 const snackbar = reactive<{
   show: boolean
   message: string
-  color: 'success' | 'error' | 'info'
+  severity: AtlasSnackbarSeverity
   timeout: number
 }>({
   show: false,
   message: '',
-  color: 'success',
+  severity: 'success',
   timeout: 3000,
 })
 
 function showSnackbar(message: string, color: 'success' | 'error' | 'info' = 'success') {
   snackbar.message = message
-  snackbar.color = color
+  snackbar.severity = color === 'error' ? 'danger' : color
   snackbar.timeout = color === 'error' ? 5000 : 3000
   snackbar.show = true
 }

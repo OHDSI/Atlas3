@@ -1,10 +1,10 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     class="clinical-domain-report"
     padding="none"
   >
     <nav class="page-tabs-rail clinical-domain-report__tabs-rail">
-      <v-tabs
+      <AtlasTabs
         v-model="activeTab"
         align-tabs="start"
         density="comfortable"
@@ -13,21 +13,21 @@
         bg-color="transparent"
         class="page-tabs"
       >
-        <v-tab value="treemap">
-          <v-icon
+        <AtlasTab value="treemap">
+          <AtlasIcon
             start
             icon="mdi-chart-tree"
           />
           {{ t('dataSources.treemap.treemapTab', 'Treemap') }}
-        </v-tab>
-        <v-tab value="table">
-          <v-icon
+        </AtlasTab>
+        <AtlasTab value="table">
+          <AtlasIcon
             start
             icon="mdi-table"
           />
           {{ t('dataSources.table.tableTab', 'Table') }}
-        </v-tab>
-      </v-tabs>
+        </AtlasTab>
+      </AtlasTabs>
     </nav>
 
     <div class="clinical-domain-report__body">
@@ -62,7 +62,7 @@
         </v-window-item>
       </v-window>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
@@ -79,7 +79,7 @@ import { getMetricLabel } from '@/utils/datasource-formatters'
 import { getCDMDrilldown } from '@/services/webapi'
 import { mapDrilldownReport } from '@/services/report-mapper'
 import { logger } from '@/utils/logger'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasCard, AtlasIcon, AtlasTab, AtlasTabs } from '@/components/ui'
 import DomainPrevalenceTreemap from '@/components/datasources/DomainPrevalenceTreemap.vue'
 import DomainPrevalenceTable from '@/components/datasources/DomainPrevalenceTable.vue'
 import DrilldownDetails from '@/components/reports/DrilldownDetails.vue'

@@ -60,24 +60,24 @@
         {{ t('columns.exclude', 'Excluded').value }}
       </v-chip>
 
-      <v-spacer />
+      <AtlasSpacer />
 
-      <v-btn
+      <AtlasButton
         v-if="hasActiveFilters"
-        size="small"
-        variant="text"
-        prepend-icon="mdi-close"
+        variant="ghost"
+        size="sm"
+        icon="mdi-close"
         @click="resetFilters"
       >
         {{ t('common.reset', 'Reset').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
-    <SurfaceCard
+    <AtlasCard
       v-if="loading || filteredItems.length > 0"
       padding="none"
     >
-      <v-data-table
+      <AtlasDataTable
         v-model:sort-by="sortBy"
         :headers="headers"
         :items="filteredItems"
@@ -88,20 +88,18 @@
       >
         <!-- Descendants Toggle -->
         <template #item.includeDescendants="{ item }">
-          <v-checkbox
+          <AtlasCheckbox
             :model-value="item.includeDescendants"
             hide-details
-            density="compact"
             @update:model-value="onToggleDescendants(item)"
           />
         </template>
 
         <!-- Mapped Toggle -->
         <template #item.includeMapped="{ item }">
-          <v-checkbox
+          <AtlasCheckbox
             :model-value="item.includeMapped"
             hide-details
-            density="compact"
             @update:model-value="onToggleMapped(item)"
           />
         </template>
@@ -173,11 +171,12 @@
              list reads as data first. -->
         <template #item.actions="{ item }">
           <div class="concept-set-table__actions">
-            <v-btn
+            <AtlasIconButton
               icon="mdi-delete-outline"
-              size="small"
+              v-bind="{ ariaLabel: 'Remove' }"
               variant="text"
-              color="error"
+              tone="danger"
+              size="sm"
               @click="onRemove(item)"
             />
           </div>
@@ -185,22 +184,22 @@
 
         <!-- Loading skeleton -->
         <template #loading>
-          <v-skeleton-loader
+          <AtlasSkeleton
             v-for="i in 5"
             :key="i"
             type="table-row"
             class="mx-2"
           />
         </template>
-      </v-data-table>
-    </SurfaceCard>
+      </AtlasDataTable>
+    </AtlasCard>
 
     <!-- Empty / filtered-empty state -->
     <div
       v-else
       class="concept-set-table__empty"
     >
-      <v-icon
+      <AtlasIcon
         :icon="hasActiveFilters ? 'mdi-filter-off-outline' : 'mdi-bookmark-outline'"
         size="36"
         class="concept-set-table__empty-icon"
@@ -232,7 +231,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 
 const { t } = useI18n()

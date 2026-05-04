@@ -1,19 +1,46 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import {
-  listPathways,
-  getPathway,
-  createPathway,
-  savePathway,
-  deletePathway,
-  copyPathway,
-  existsPathway,
-  assignPathwayTag,
-  unassignPathwayTag,
-  runPathwayDiagnostics,
-} from '@/services/webapi'
-import * as httpClient from '@/services/http-client'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 
 vi.mock('@/services/http-client')
+
+let httpClient: typeof import('@/services/http-client')
+let listPathways: typeof import('@/services/webapi').listPathways
+let getPathway: typeof import('@/services/webapi').getPathway
+let createPathway: typeof import('@/services/webapi').createPathway
+let savePathway: typeof import('@/services/webapi').savePathway
+let deletePathway: typeof import('@/services/webapi').deletePathway
+let copyPathway: typeof import('@/services/webapi').copyPathway
+let existsPathway: typeof import('@/services/webapi').existsPathway
+let assignPathwayTag: typeof import('@/services/webapi').assignPathwayTag
+let unassignPathwayTag: typeof import('@/services/webapi').unassignPathwayTag
+let runPathwayDiagnostics: typeof import('@/services/webapi').runPathwayDiagnostics
+let listPathwayExecutions: typeof import('@/services/webapi').listPathwayExecutions
+let getPathwayExecution: typeof import('@/services/webapi').getPathwayExecution
+let getPathwayResults: typeof import('@/services/webapi').getPathwayResults
+let generatePathway: typeof import('@/services/webapi').generatePathway
+let cancelPathwayGeneration: typeof import('@/services/webapi').cancelPathwayGeneration
+let getPathwayDesignByGeneration: typeof import('@/services/webapi').getPathwayDesignByGeneration
+
+beforeAll(async () => {
+  vi.resetModules()
+  httpClient = await import('@/services/http-client')
+  const webapi = await import('@/services/webapi')
+  listPathways = webapi.listPathways
+  getPathway = webapi.getPathway
+  createPathway = webapi.createPathway
+  savePathway = webapi.savePathway
+  deletePathway = webapi.deletePathway
+  copyPathway = webapi.copyPathway
+  existsPathway = webapi.existsPathway
+  assignPathwayTag = webapi.assignPathwayTag
+  unassignPathwayTag = webapi.unassignPathwayTag
+  runPathwayDiagnostics = webapi.runPathwayDiagnostics
+  listPathwayExecutions = webapi.listPathwayExecutions
+  getPathwayExecution = webapi.getPathwayExecution
+  getPathwayResults = webapi.getPathwayResults
+  generatePathway = webapi.generatePathway
+  cancelPathwayGeneration = webapi.cancelPathwayGeneration
+  getPathwayDesignByGeneration = webapi.getPathwayDesignByGeneration
+})
 
 const samplePathway = {
   id: 1,
@@ -109,15 +136,6 @@ describe('webapi pathway tags + diagnostics', () => {
     expect(httpClient.httpPost).toHaveBeenCalledWith('/pathway-analysis/check', { design: {} })
   })
 })
-
-import {
-  listPathwayExecutions,
-  getPathwayExecution,
-  getPathwayResults,
-  generatePathway,
-  cancelPathwayGeneration,
-  getPathwayDesignByGeneration,
-} from '@/services/webapi'
 
 describe('webapi pathway executions', () => {
   beforeEach(() => vi.clearAllMocks())

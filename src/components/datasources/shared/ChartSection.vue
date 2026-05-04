@@ -1,5 +1,5 @@
 <template>
-  <SurfaceCard
+  <AtlasCard
     class="chart-section"
     padding="none"
   >
@@ -7,19 +7,18 @@
       {{ title }}
     </div>
     <div class="chart-section__body">
-      <v-skeleton-loader
+      <AtlasSkeleton
         v-if="loading"
         type="image"
         height="300"
       />
 
-      <v-alert
+      <AtlasAlert
         v-else-if="error"
-        type="error"
-        variant="tonal"
+        severity="danger"
       >
         {{ error }}
-      </v-alert>
+      </AtlasAlert>
 
       <div
         v-else
@@ -28,11 +27,11 @@
         <slot />
       </div>
     </div>
-  </SurfaceCard>
+  </AtlasCard>
 </template>
 
 <script setup lang="ts">
-import SurfaceCard from '@/components/shared/SurfaceCard.vue'
+import { AtlasAlert, AtlasCard, AtlasSkeleton } from '@/components/ui'
 
 interface Props {
   title: string

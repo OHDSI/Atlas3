@@ -1,24 +1,21 @@
 <template>
   <div class="generate-popover">
-    <v-select
+    <AtlasSelect
       :model-value="selectedSource"
       :items="sourceItems"
       item-title="sourceName"
       item-value="sourceKey"
       :label="t('profiles.selectADataSource', 'Data source').value"
-      density="compact"
       variant="outlined"
       hide-details
       class="mb-2"
-      @update:model-value="(v: string | null) => (selectedSource = v ?? null)"
+      @update:model-value="(v) => (selectedSource = v as string | null)"
     />
 
     <div class="generate-popover__actions">
-      <v-btn
+      <AtlasButton
         data-testid="generate-btn"
-        color="primary"
-        size="small"
-        variant="flat"
+        size="sm"
         :disabled="
           !canGenerate ||
             !selectedSource ||
@@ -28,15 +25,15 @@
         @click="onStart"
       >
         {{ t('components.generation.generate', 'Generate') }}
-      </v-btn>
-      <v-btn
-        size="small"
-        variant="text"
+      </AtlasButton>
+      <AtlasButton
+        variant="ghost"
+        size="sm"
         :disabled="!generation.polling.value || !canCancelForSource(selectedSource)"
         @click="onCancel"
       >
         {{ t('common.cancel', 'Cancel') }}
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <div
@@ -45,19 +42,19 @@
     >
       {{ t('columns.status', 'Status:') }} {{ generation.execution.value.status }}
     </div>
-    <v-alert
+    <AtlasAlert
       v-if="generation.error.value"
-      type="error"
-      variant="tonal"
+      severity="danger"
       density="compact"
       class="mb-0"
     >
       {{ generation.error.value }}
-    </v-alert>
+    </AtlasAlert>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasSelect } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'

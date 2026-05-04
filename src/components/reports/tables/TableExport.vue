@@ -27,29 +27,20 @@
       </v-btn>
     </v-btn-group>
 
-    <!-- Toast notifications -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showToast"
+      :severity="toastSeverity"
+      :text="toastMessage"
       :timeout="toastTimeout"
-      :color="toastColor"
-      location="top right"
-    >
-      {{ toastMessage }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          size="small"
-          @click="showToast = false"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
+      location="top"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { AtlasSnackbar } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import * as Papa from 'papaparse'
 import { logger } from '@/utils/logger'
 
@@ -73,7 +64,7 @@ const exporting = ref(false)
  */
 const showToast = ref(false)
 const toastMessage = ref('')
-const toastColor = ref<'success' | 'error' | 'info'>('info')
+const toastSeverity = ref<AtlasSnackbarSeverity>('info')
 const toastTimeout = ref(3000)
 
 /**
@@ -85,7 +76,7 @@ function showToastNotification(
   timeout = 3000
 ) {
   toastMessage.value = message
-  toastColor.value = color
+  toastSeverity.value = color === 'error' ? 'danger' : color
   toastTimeout.value = timeout
   showToast.value = true
 }

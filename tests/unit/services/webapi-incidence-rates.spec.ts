@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 
 vi.mock('@/services/http-client', () => ({
   httpGet: vi.fn(),
@@ -7,24 +7,43 @@ vi.mock('@/services/http-client', () => ({
   httpDelete: vi.fn(),
 }))
 
-import * as http from '@/services/http-client'
-import {
-  listIncidenceRates,
-  getIncidenceRate,
-  createIncidenceRate,
-  saveIncidenceRate,
-  copyIncidenceRate,
-  deleteIncidenceRate,
-  existsIncidenceRate,
-  assignIncidenceRateTag,
-  unassignIncidenceRateTag,
-  listIncidenceRateInfo,
-  getIncidenceRateInfoBySource,
-  generateIncidenceRate,
-  cancelIncidenceRateGeneration,
-  deleteIncidenceRateInfo,
-  getIncidenceRateReport,
-} from '@/services/webapi'
+let http: typeof import('@/services/http-client')
+let listIncidenceRates: typeof import('@/services/webapi').listIncidenceRates
+let getIncidenceRate: typeof import('@/services/webapi').getIncidenceRate
+let createIncidenceRate: typeof import('@/services/webapi').createIncidenceRate
+let saveIncidenceRate: typeof import('@/services/webapi').saveIncidenceRate
+let copyIncidenceRate: typeof import('@/services/webapi').copyIncidenceRate
+let deleteIncidenceRate: typeof import('@/services/webapi').deleteIncidenceRate
+let existsIncidenceRate: typeof import('@/services/webapi').existsIncidenceRate
+let assignIncidenceRateTag: typeof import('@/services/webapi').assignIncidenceRateTag
+let unassignIncidenceRateTag: typeof import('@/services/webapi').unassignIncidenceRateTag
+let listIncidenceRateInfo: typeof import('@/services/webapi').listIncidenceRateInfo
+let getIncidenceRateInfoBySource: typeof import('@/services/webapi').getIncidenceRateInfoBySource
+let generateIncidenceRate: typeof import('@/services/webapi').generateIncidenceRate
+let cancelIncidenceRateGeneration: typeof import('@/services/webapi').cancelIncidenceRateGeneration
+let deleteIncidenceRateInfo: typeof import('@/services/webapi').deleteIncidenceRateInfo
+let getIncidenceRateReport: typeof import('@/services/webapi').getIncidenceRateReport
+
+beforeAll(async () => {
+  vi.resetModules()
+  http = await import('@/services/http-client')
+  const webapi = await import('@/services/webapi')
+  listIncidenceRates = webapi.listIncidenceRates
+  getIncidenceRate = webapi.getIncidenceRate
+  createIncidenceRate = webapi.createIncidenceRate
+  saveIncidenceRate = webapi.saveIncidenceRate
+  copyIncidenceRate = webapi.copyIncidenceRate
+  deleteIncidenceRate = webapi.deleteIncidenceRate
+  existsIncidenceRate = webapi.existsIncidenceRate
+  assignIncidenceRateTag = webapi.assignIncidenceRateTag
+  unassignIncidenceRateTag = webapi.unassignIncidenceRateTag
+  listIncidenceRateInfo = webapi.listIncidenceRateInfo
+  getIncidenceRateInfoBySource = webapi.getIncidenceRateInfoBySource
+  generateIncidenceRate = webapi.generateIncidenceRate
+  cancelIncidenceRateGeneration = webapi.cancelIncidenceRateGeneration
+  deleteIncidenceRateInfo = webapi.deleteIncidenceRateInfo
+  getIncidenceRateReport = webapi.getIncidenceRateReport
+})
 
 const expressionObj = {
   ConceptSets: [], targetIds: [], outcomeIds: [],
@@ -35,15 +54,12 @@ const expressionObj = {
   strata: [],
 }
 
-// What the OHDSI WebAPI sends/accepts on the wire — `expression` is a
-// JSON string.
 const irWire = {
   id: 1, name: 'X',
   expression: JSON.stringify(expressionObj),
   tags: [],
 }
 
-// Internal IR shape used by stores/composables — `expression` is parsed.
 const irInternal = {
   id: 1, name: 'X',
   expression: expressionObj,

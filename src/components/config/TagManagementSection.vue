@@ -3,13 +3,12 @@
     <v-card>
       <v-card-title class="d-flex align-center justify-space-between">
         <span>Tag Management</span>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          icon="mdi-plus"
           @click="openCreateGroupDialog"
         >
           Create Tag Group
-        </v-btn>
+        </AtlasButton>
       </v-card-title>
 
       <v-card-text>
@@ -37,46 +36,44 @@
               <h3 class="text-h6">
                 Tags in "{{ selectedGroup.name }}"
               </h3>
-              <v-btn
-                variant="text"
-                size="small"
-                prepend-icon="mdi-arrow-left"
+              <AtlasButton
+                variant="ghost"
+                size="sm"
+                icon="mdi-arrow-left"
                 @click="selectedGroup = null"
               >
                 Back to Tag Groups
-              </v-btn>
+              </AtlasButton>
             </div>
-            <v-tooltip
+            <AtlasTooltip
               :disabled="selectedGroup.allowCustom"
               location="bottom"
               text="Enable 'Free-form' on this tag group to allow custom tags."
             >
               <template #activator="{ props: tooltipProps }">
                 <span v-bind="tooltipProps">
-                  <v-btn
-                    color="primary"
-                    prepend-icon="mdi-plus"
-                    size="small"
+                  <AtlasButton
+                    size="sm"
+                    icon="mdi-plus"
                     :disabled="!selectedGroup.allowCustom"
                     @click="openCreateTagDialog"
                   >
                     Create Tag
-                  </v-btn>
+                  </AtlasButton>
                 </span>
               </template>
-            </v-tooltip>
+            </AtlasTooltip>
           </div>
 
-          <v-alert
+          <AtlasAlert
             v-if="!selectedGroup.allowCustom"
-            type="info"
-            variant="tonal"
+            severity="info"
             density="compact"
             class="mb-3"
           >
             This tag group does not allow custom tags. Edit the group and enable
             <strong>Free-form</strong> to add tags here.
-          </v-alert>
+          </AtlasAlert>
 
           <TagTable
             :items="groupTags"
@@ -105,113 +102,85 @@
     />
 
     <!-- Delete Tag Group Confirmation Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showDeleteGroupDialog"
+      eyebrow="TAGS"
+      title="Delete Tag Group"
       max-width="400"
+      @close="showDeleteGroupDialog = false"
     >
-      <v-card>
-        <v-card-title>Delete Tag Group</v-card-title>
-        <v-card-text>
-          Are you sure you want to delete "{{ selectedTagGroup?.name }}"?
-          <v-alert
-            v-if="deleteError"
-            type="error"
-            variant="tonal"
-            class="mt-3"
-          >
-            {{ deleteError }}
-          </v-alert>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteGroupDialog = false"
-          >
-            Cancel
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            :loading="isDeleting"
-            @click="handleDeleteGroup"
-          >
-            Delete
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      Are you sure you want to delete "{{ selectedTagGroup?.name }}"?
+      <AtlasAlert
+        v-if="deleteError"
+        severity="danger"
+        class="mt-3"
+      >
+        {{ deleteError }}
+      </AtlasAlert>
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showDeleteGroupDialog = false"
+        >
+          Cancel
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="isDeleting"
+          @click="handleDeleteGroup"
+        >
+          Delete
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
     <!-- Delete Tag Confirmation Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showDeleteTagDialog"
+      eyebrow="TAGS"
+      title="Delete Tag"
       max-width="400"
+      @close="showDeleteTagDialog = false"
     >
-      <v-card>
-        <v-card-title>Delete Tag</v-card-title>
-        <v-card-text>
-          Are you sure you want to delete "{{ selectedTag?.name }}"? This will unassign the tag from
-          all assets.
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="showDeleteTagDialog = false"
-          >
-            Cancel
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            :loading="isDeleting"
-            @click="handleDeleteTag"
-          >
-            Delete
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      Are you sure you want to delete "{{ selectedTag?.name }}"? This will unassign the tag from
+      all assets.
+      <template #actions>
+        <AtlasButton
+          variant="ghost"
+          @click="showDeleteTagDialog = false"
+        >
+          Cancel
+        </AtlasButton>
+        <AtlasButton
+          variant="danger"
+          :loading="isDeleting"
+          @click="handleDeleteTag"
+        >
+          Delete
+        </AtlasButton>
+      </template>
+    </AtlasDialog>
 
-    <!-- Success Toast -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showToast"
+      severity="success"
+      :text="toastMessage"
       :timeout="5000"
-      color="success"
       location="bottom"
-    >
-      {{ toastMessage }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          @click="showToast = false"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
+    />
 
-    <!-- Error Toast -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showErrorToast"
+      severity="danger"
+      :text="errorMessage"
       :timeout="5000"
-      color="error"
       location="bottom"
-    >
-      {{ errorMessage }}
-      <template #actions>
-        <v-btn
-          variant="text"
-          @click="showErrorToast = false"
-        >
-          Close
-        </v-btn>
-      </template>
-    </v-snackbar>
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag, TagGroup } from '@/models/config.types'

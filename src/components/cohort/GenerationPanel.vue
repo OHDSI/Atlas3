@@ -12,19 +12,21 @@
     >
       <!-- Header -->
       <v-card-title class="d-flex align-center pa-4 border-b">
-        <v-icon
+        <AtlasIcon
           class="mr-2"
           color="primary"
         >
           mdi-database-cog
-        </v-icon>
+        </AtlasIcon>
         <span class="text-h6">{{
           t('cohortDefinitions.cohortDefinitionManager.tabs.generation', 'Generation')
         }}</span>
-        <v-spacer />
-        <v-btn
+        <AtlasSpacer />
+        <AtlasIconButton
           icon="mdi-close"
+          v-bind="{ ariaLabel: 'Close' }"
           variant="text"
+          size="sm"
           @click="close"
         />
       </v-card-title>
@@ -32,25 +34,22 @@
       <!-- Content -->
       <v-card-text class="flex-grow-1 overflow-y-auto pa-6">
         <!-- Unsaved cohort message -->
-        <v-alert
+        <AtlasAlert
           v-if="!cohortId"
-          type="warning"
-          variant="tonal"
+          severity="warning"
           class="mb-4"
         >
           {{
             t('cohortDefinitions.saveDefinitionBefore', 'Please save the cohort before generating.')
           }}
-        </v-alert>
+        </AtlasAlert>
 
-        <!-- No sources message -->
-        <v-alert
+        <AtlasAlert
           v-else-if="sources.length === 0"
-          type="info"
-          variant="tonal"
+          severity="info"
         >
           {{ t('components.generation.pickAtLeastOneSourceAlert', 'No data sources configured.') }}
-        </v-alert>
+        </AtlasAlert>
 
         <!-- Layout: Data sources on left, reports on right -->
         <div class="generation-layout">
@@ -77,31 +76,31 @@
                 key="reports"
                 class="h-100"
               >
-                <v-tabs
+                <AtlasTabs
                   v-model="activeTab"
                   density="compact"
                   color="primary"
                   class="generation-layout__tabs"
                 >
-                  <v-tab
+                  <AtlasTab
                     value="inclusion-rules"
                     data-testid="generation-tab-inclusion-rules"
                   >
-                    <v-icon class="mr-2">
+                    <AtlasIcon class="mr-2">
                       mdi-filter-variant
-                    </v-icon>
+                    </AtlasIcon>
                     Inclusion Rules
-                  </v-tab>
-                  <v-tab
+                  </AtlasTab>
+                  <AtlasTab
                     value="samples"
                     data-testid="generation-tab-samples"
                   >
-                    <v-icon class="mr-2">
+                    <AtlasIcon class="mr-2">
                       mdi-shuffle-variant
-                    </v-icon>
+                    </AtlasIcon>
                     Samples
-                  </v-tab>
-                </v-tabs>
+                  </AtlasTab>
+                </AtlasTabs>
                 <v-window
                   v-model="activeTab"
                   class="mt-2"
@@ -154,6 +153,7 @@
 </template>
 
 <script setup lang="ts">
+import { AtlasAlert, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTab, AtlasTabs } from '@/components/ui'
 import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'

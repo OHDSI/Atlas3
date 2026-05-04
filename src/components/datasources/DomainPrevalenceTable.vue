@@ -5,7 +5,7 @@
       v-if="needsVirtualization"
       class="domain-prevalence-table__hint"
     >
-      <v-icon
+      <AtlasIcon
         icon="mdi-information-outline"
         size="16"
         class="domain-prevalence-table__hint-icon"
@@ -17,22 +17,21 @@
     </div>
 
     <div class="table-controls mb-4">
-      <v-row>
-        <v-col
+      <AtlasRow>
+        <AtlasCol
           cols="12"
           md="6"
         >
-          <v-text-field
+          <AtlasTextField
             v-model="search"
             label="Search"
-            prepend-inner-icon="mdi-magnify"
+            prepend-icon="mdi-magnify"
             variant="outlined"
-            density="compact"
             hide-details
             clearable
           />
-        </v-col>
-        <v-col
+        </AtlasCol>
+        <AtlasCol
           cols="12"
           md="6"
           class="d-flex justify-end align-center gap-2"
@@ -51,7 +50,7 @@
           >
             CSV
           </v-btn>
-          <v-menu>
+          <AtlasMenu>
             <template #activator="{ props: menuProps }">
               <v-btn
                 variant="outlined"
@@ -61,28 +60,29 @@
                 Columns
               </v-btn>
             </template>
-            <v-list>
-              <v-list-item
+            <AtlasList>
+              <AtlasListItem
                 v-for="header in headers"
                 :key="header.key"
                 @click="toggleColumn(header.key)"
               >
                 <template #prepend>
-                  <v-checkbox
+                  <AtlasCheckbox
                     :model-value="!header.hidden"
                     hide-details
-                    density="compact"
                   />
                 </template>
-                <v-list-item-title>{{ header.title }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </v-col>
-      </v-row>
+                <v-list-item-title>
+                  {{ header.title }}
+                </v-list-item-title>
+              </AtlasListItem>
+            </AtlasList>
+          </AtlasMenu>
+        </AtlasCol>
+      </AtlasRow>
     </div>
 
-    <v-data-table
+    <AtlasDataTable
       v-model:page="currentPage"
       :headers="visibleHeaders"
       :items="filteredData"
@@ -114,7 +114,7 @@
           <div class="text-caption text-medium-emphasis">
             {{ tableStatusText }}
           </div>
-          <v-pagination
+          <AtlasPagination
             v-if="totalPages > 1"
             v-model="currentPage"
             :length="totalPages"
@@ -123,11 +123,12 @@
           />
         </div>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
   </div>
 </template>
 
 <script setup lang="ts">
+import { AtlasCheckbox, AtlasCol, AtlasDataTable, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasPagination, AtlasRow, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import type { PrevalenceTableRow } from '@/models/datasource.types'
 import { formatNumber, formatPercentage, exportTableToCSV } from '@/utils/datasource-formatters'

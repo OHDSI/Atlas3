@@ -1,5 +1,5 @@
 <template>
-  <v-select
+  <AtlasSelect
     :model-value="modelValue"
     :items="dataSourceItems"
     :loading="loading"
@@ -8,17 +8,14 @@
     item-title="label"
     item-value="value"
     variant="outlined"
-    density="comfortable"
     hide-details
-    @update:model-value="$emit('update:modelValue', $event)"
-  >
-    <template #prepend-inner>
-      <v-icon icon="mdi-database" />
-    </template>
-  </v-select>
+    prepend-inner-icon="mdi-database"
+    @update:model-value="$emit('update:modelValue', $event as number | null)"
+  />
 </template>
 
 <script setup lang="ts">
+import { AtlasSelect } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { DataSource } from '@/models/datasource.types'

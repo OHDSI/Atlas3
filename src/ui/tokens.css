@@ -1,0 +1,35 @@
+/* GENERATED — DO NOT EDIT.
+ * Source: src/ui/tokens.ts. Run `npm run tokens:build` to regenerate. */
+:root {
+  --atlas-color-primary: #1f425a;
+  --atlas-color-primary-darken: #163349;
+  --atlas-color-accent: #eb6622;
+  --atlas-color-surface: #ffffff;
+  --atlas-color-surface-variant: #f6f7f9;
+  --atlas-color-on-surface: rgba(0,0,0,.87);
+  --atlas-color-on-surface-variant: rgba(0,0,0,.62);
+  --atlas-color-outline: rgba(0,0,0,.12);
+  --atlas-color-outline-variant: rgba(0,0,0,.06);
+  --atlas-color-info: #2196f3;
+  --atlas-color-success: #4caf50;
+  --atlas-color-warning: #fb8c00;
+  --atlas-color-danger: #ff5252;
+  --atlas-radius-sm: 4px;
+  --atlas-radius-md: 8px;
+  --atlas-radius-lg: 12px;
+  --atlas-radius-xl: 16px;
+  --atlas-spacing-xs: 4px;
+  --atlas-spacing-sm: 8px;
+  --atlas-spacing-md: 16px;
+  --atlas-spacing-lg: 24px;
+  --atlas-spacing-xl: 32px;
+  --atlas-density-default: compact;
+  --atlas-elevation-ambient: 0 1px 3px rgba(15,23,42,.08);
+  --atlas-elevation-diffuse: 0 8px 24px rgba(15,23,42,.08);
+  --atlas-motion-fast: 120ms ease;
+  --atlas-motion-med: 160ms ease;
+  --atlas-motion-slow: 240ms ease;
+  --atlas-z-dropdown: 1000;
+  --atlas-z-dialog: 2000;
+  --atlas-z-snackbar: 3000;
+}
