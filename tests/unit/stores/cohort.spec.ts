@@ -2,6 +2,14 @@ import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vite
 import { setActivePinia, createPinia } from 'pinia'
 import type { CohortEvent, CohortDefinition } from '@/models/cohort.types'
 
+vi.mock('@/services/cohort-definition-versions.service', () => ({
+  getVersion: vi.fn(),
+}))
+
+vi.mock('@/utils/logger', () => ({
+  logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
+
 vi.mock('@/utils/cohort-cache', () => {
   const mockCache = new Map<number | string, CohortDefinition>()
 
@@ -23,6 +31,8 @@ vi.mock('@/utils/cohort-cache', () => {
     _mockCache: mockCache,
   }
 })
+
+import { getVersion as mockGetVersion } from '@/services/cohort-definition-versions.service'
 
 let cohortCache: typeof import('@/utils/cohort-cache') & { _mockCache: Map<number | string, CohortDefinition> }
 let useCohortStore: typeof import('@/stores/cohort').useCohortStore
@@ -1016,6 +1026,103 @@ describe('Cohort Store', () => {
       store.removeEntryEvent('event-1')
       expect(store.isDirty).toBe(true)
       expect(store.entryEventCount).toBe(0)
+    })
+  })
+
+  describe('Version Preview', () => {
+    const baseCohort: CohortDefinition = {
+      id: 10,
+      name: 'Test Cohort',
+      description: '',
+      entryEvents: [],
+      inclusionRules: [],
+      endStrategy: null,
+      censoringCriteria: [],
+      collapseSettings: { collapseType: 'ERA', eraPad: 0 },
+      censored: false,
+    }
+
+    it('loadVersionPreview throws when no current cohort', async () => {
+      const store = useCohortStore()
+      await expect(store.loadVersionPreview(1)).rejects.toThrow('No current cohort ID')
+    })
+
+    it('loadVersionPreview sets previewVersion and replaces cohort data', async () => {
+      const store = useCohortStore()
+      store.setCohort(baseCohort)
+
+      const versionDTO = {
+        version: 2,
+        assetId: 10,
+        createdBy: { id: 1, name: 'User', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+      const historicalCohort = { ...baseCohort, name: 'Historical Cohort' }
+      vi.mocked(mockGetVersion).mockResolvedValueOnce({
+        versionDTO,
+        entityDTO: historicalCohort,
+      })
+
+      await store.loadVersionPreview(2)
+
+      expect(store.previewVersion).toEqual(versionDTO)
+      expect(store.currentCohort?.name).toBe('Historical Cohort')
+      expect(store.isDirty).toBe(false)
+    })
+
+    it('loadVersionPreview rethrows on service error', async () => {
+      const store = useCohortStore()
+      store.setCohort(baseCohort)
+      vi.mocked(mockGetVersion).mockRejectedValueOnce(new Error('Not found'))
+      await expect(store.loadVersionPreview(99)).rejects.toThrow('Not found')
+    })
+
+    it('clearPreviewVersion clears preview state and reloads cohort', async () => {
+      const store = useCohortStore()
+      store.setCohort(baseCohort)
+      store.previewVersion = {
+        version: 1,
+        assetId: 10,
+        createdBy: { id: 1, name: 'U', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+
+      vi.mocked(cohortCache.getCohortFromCache).mockResolvedValueOnce(baseCohort)
+
+      await store.clearPreviewVersion()
+
+      expect(store.previewVersion).toBeNull()
+    })
+
+    it('savePreviewAsCurrent returns false when not in preview mode', async () => {
+      const store = useCohortStore()
+      const result = await store.savePreviewAsCurrent()
+      expect(result).toBe(false)
+    })
+
+    it('savePreviewAsCurrent returns false when no cohort data', async () => {
+      const store = useCohortStore()
+      store.previewVersion = {
+        version: 1,
+        assetId: 10,
+        createdBy: { id: 1, name: 'U', email: 'u@test.com' },
+        createdDate: '2024-01-01T00:00:00Z',
+        comment: null,
+        archived: false,
+      }
+      const result = await store.savePreviewAsCurrent()
+      expect(result).toBe(false)
+    })
+  })
+
+  describe('dispose', () => {
+    it('does not throw when called', () => {
+      const store = useCohortStore()
+      expect(() => store.dispose()).not.toThrow()
     })
   })
 })

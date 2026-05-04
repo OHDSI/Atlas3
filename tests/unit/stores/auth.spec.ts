@@ -595,4 +595,34 @@ describe('Auth Store', () => {
       expect(store.loginModalOpen).toBe(true)
     })
   })
+
+  describe('hydrateAuth', () => {
+    it('restores token from storage when present', () => {
+      const store = useAuthStore()
+      vi.mocked(storageManager.getToken).mockReturnValue('hydrated-token')
+      vi.mocked(storageManager.getAuthClient).mockReturnValue(null)
+      vi.mocked(tokenManager.parseToken).mockReturnValue({
+        expirationDate: new Date(Date.now() + 3600000),
+        isExpired: false,
+        payload: {},
+      })
+      store.hydrateAuth()
+      expect(store.token).toBe('hydrated-token')
+    })
+
+    it('does nothing when no token in storage', () => {
+      const store = useAuthStore()
+      vi.mocked(storageManager.getToken).mockReturnValue(null)
+      vi.mocked(storageManager.getAuthClient).mockReturnValue(null)
+      store.hydrateAuth()
+      expect(store.token).toBeNull()
+    })
+  })
+
+  describe('dispose', () => {
+    it('does not throw', () => {
+      const store = useAuthStore()
+      expect(() => store.dispose()).not.toThrow()
+    })
+  })
 })

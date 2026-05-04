@@ -220,6 +220,40 @@ describe('useConfigPanel', () => {
 
       expect(uiStore.configPanelState.activeSection).toBe('vocabulary')
     })
+
+    it('should update UI store scroll position', () => {
+      const uiStore = useUIStore()
+      uiStore.setConfigPanelScroll(300)
+      expect(uiStore.configPanelState.scrollPosition).toBe(300)
+    })
+
+    it('ui store panel and modal management works correctly', () => {
+      const uiStore = useUIStore()
+
+      uiStore.togglePanel('p1')
+      expect(uiStore.isPanelExpanded('p1')).toBe(true)
+      uiStore.expandPanel('p1')
+      uiStore.collapsePanel('p1')
+      expect(uiStore.isPanelExpanded('p1')).toBe(false)
+
+      uiStore.openModal('m1')
+      expect(uiStore.isModalOpen('m1')).toBe(true)
+      uiStore.closeModal('m1')
+      expect(uiStore.isModalOpen('m1')).toBe(false)
+
+      uiStore.toggleEventCard('e1')
+      expect(uiStore.isEventCardExpanded('e1')).toBe(true)
+      uiStore.toggleEventCard('e1')
+      expect(uiStore.isEventCardExpanded('e1')).toBe(false)
+
+      uiStore.expandPanel('p2')
+      uiStore.openModal('m2')
+      uiStore.toggleEventCard('e2')
+      uiStore.clearAll()
+      expect(uiStore.expandedPanels.size).toBe(0)
+      expect(uiStore.openModals.size).toBe(0)
+      expect(uiStore.expandedEventCards.size).toBe(0)
+    })
   })
 
   describe('localStorage errors', () => {
