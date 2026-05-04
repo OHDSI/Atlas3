@@ -1,9 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { usePathways } from '@/composables/usePathways'
-import * as webapi from '@/services/webapi'
 
 vi.mock('@/services/webapi')
+
+let webapi: typeof import('@/services/webapi')
+let usePathways: typeof import('@/composables/usePathways').usePathways
+
+beforeAll(async () => {
+  vi.resetModules()
+  webapi = await import('@/services/webapi')
+  ;({ usePathways } = await import('@/composables/usePathways'))
+})
 
 const mkPathway = (id: number, name: string, tags: { id: number; name: string }[] = []) => ({
   id, name, tags,
