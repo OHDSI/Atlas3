@@ -1,13 +1,22 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import {
-  getPathwayVersions,
-  getPathwayVersion,
-  updatePathwayVersion,
-  copyPathwayVersion,
-} from '@/services/pathway-versions.service'
-import * as httpClient from '@/services/http-client'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 
 vi.mock('@/services/http-client')
+
+let httpClient: typeof import('@/services/http-client')
+let getPathwayVersions: typeof import('@/services/pathway-versions.service').getPathwayVersions
+let getPathwayVersion: typeof import('@/services/pathway-versions.service').getPathwayVersion
+let updatePathwayVersion: typeof import('@/services/pathway-versions.service').updatePathwayVersion
+let copyPathwayVersion: typeof import('@/services/pathway-versions.service').copyPathwayVersion
+
+beforeAll(async () => {
+  vi.resetModules()
+  httpClient = await import('@/services/http-client')
+  const svc = await import('@/services/pathway-versions.service')
+  getPathwayVersions = svc.getPathwayVersions
+  getPathwayVersion = svc.getPathwayVersion
+  updatePathwayVersion = svc.updatePathwayVersion
+  copyPathwayVersion = svc.copyPathwayVersion
+})
 
 describe('pathway-versions.service', () => {
   beforeEach(() => vi.clearAllMocks())

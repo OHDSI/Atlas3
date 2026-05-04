@@ -1,26 +1,27 @@
-/**
- * Unit Test: Reports Store
- * Tests Pinia store for report management
- */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useReportsStore } from '@/stores/reports'
 import type { PersonReport, ReportType } from '@/models/report.types'
-import * as webapi from '@/services/webapi'
-import * as mapper from '@/services/report-mapper'
 
-// Type for generic mock report data in tests
 interface MockReportData {
   data: string
 }
 
-// Mock the webapi module
 vi.mock('@/services/webapi')
 vi.mock('@/services/report-mapper')
 
+let webapi: typeof import('@/services/webapi')
+let mapper: typeof import('@/services/report-mapper')
+let useReportsStore: typeof import('@/stores/reports').useReportsStore
+
+beforeAll(async () => {
+  vi.resetModules()
+  webapi = await import('@/services/webapi')
+  mapper = await import('@/services/report-mapper')
+  ;({ useReportsStore } = await import('@/stores/reports'))
+})
+
 describe('Reports Store', () => {
   beforeEach(() => {
-    // Create a fresh pinia instance for each test
     setActivePinia(createPinia())
     vi.clearAllMocks()
   })
@@ -54,11 +55,9 @@ describe('Reports Store', () => {
     it('should clear current report context', () => {
       const store = useReportsStore()
 
-      // Set some data first
       store.setCurrentReport(123, 'SYNPUF', 'person')
       store.error = 'Some error'
 
-      // Clear it
       store.clearCurrentReport()
 
       expect(store.currentCohortId).toBeNull()
@@ -72,7 +71,6 @@ describe('Reports Store', () => {
     it('should fetch and cache person report successfully', async () => {
       const store = useReportsStore()
 
-      // Mock API response
       const mockRawData = {
         yearOfBirth: [{ intervalIndex: 0, countValue: 100 }],
         gender: [{ conceptId: 8507, conceptName: 'Male', countValue: 60 }],
@@ -92,21 +90,17 @@ describe('Reports Store', () => {
       vi.mocked(webapi.getPersonReport).mockResolvedValue(mockRawData)
       vi.mocked(mapper.mapPersonReport).mockReturnValue(mockMappedData)
 
-      // Fetch report
       await store.fetchReport(123, 'SYNPUF', 'person')
 
-      // Verify API was called
       expect(webapi.getPersonReport).toHaveBeenCalledWith(123, 'SYNPUF')
       expect(mapper.mapPersonReport).toHaveBeenCalledWith(mockRawData)
 
-      // Verify state is updated
       expect(store.loading).toBe(false)
       expect(store.error).toBeNull()
       expect(store.currentReportType).toBe('person')
       expect(store.currentCohortId).toBe(123)
       expect(store.currentSourceKey).toBe('SYNPUF')
 
-      // Verify data is cached
       expect(store.reportData.size).toBe(1)
       const cachedReport = store.reportData.get('123-SYNPUF-person')
       expect(cachedReport).toBeDefined()
@@ -126,7 +120,6 @@ describe('Reports Store', () => {
         }
       }
 
-      // Manually set cache
       store.reportData.set('123-SYNPUF-person', {
         type: 'person',
         cohortId: 123,
@@ -135,13 +128,10 @@ describe('Reports Store', () => {
         data: mockMappedData
       })
 
-      // Fetch same report
       await store.fetchReport(123, 'SYNPUF', 'person')
 
-      // Verify API was NOT called (used cache)
       expect(webapi.getPersonReport).not.toHaveBeenCalled()
 
-      // Verify current report is set
       expect(store.currentReportType).toBe('person')
     })
 
@@ -172,7 +162,6 @@ describe('Reports Store', () => {
     it('should remove specific report from cache', () => {
       const store = useReportsStore()
 
-      // Add some cached data
       store.reportData.set('123-SYNPUF-person', {
         type: 'person',
         cohortId: 123,
@@ -183,7 +172,6 @@ describe('Reports Store', () => {
 
       expect(store.reportData.size).toBe(1)
 
-      // Clear specific report
       store.clearReport(123, 'SYNPUF', 'person')
 
       expect(store.reportData.size).toBe(0)
@@ -194,7 +182,6 @@ describe('Reports Store', () => {
     it('should remove all cached reports', () => {
       const store = useReportsStore()
 
-      // Add multiple cached items
       store.reportData.set('123-SYNPUF-person', {
         type: 'person',
         cohortId: 123,
@@ -213,7 +200,6 @@ describe('Reports Store', () => {
 
       expect(store.reportData.size).toBe(2)
 
-      // Clear all
       store.clearAllReports()
 
       expect(store.reportData.size).toBe(0)
@@ -239,12 +225,10 @@ describe('Reports Store', () => {
         }
       }
 
-      // Set current context
       store.currentCohortId = 123
       store.currentSourceKey = 'SYNPUF'
       store.currentReportType = 'person'
 
-      // Add cached data
       store.reportData.set('123-SYNPUF-person', {
         type: 'person',
         cohortId: 123,
@@ -336,7 +320,6 @@ describe('Reports Store', () => {
         }
       }
 
-      // Add cached data
       store.reportData.set('123-SYNPUF-person', {
         type: 'person',
         cohortId: 123,
@@ -365,7 +348,6 @@ describe('Reports Store', () => {
     it('currentReport should return null when cache does not contain data', () => {
       const store = useReportsStore()
 
-      // Set current context but don't add to cache
       store.currentCohortId = 123
       store.currentSourceKey = 'SYNPUF'
       store.currentReportType = 'person'
@@ -803,9 +785,8 @@ describe('Reports Store', () => {
     it('should refetch when cache is older than 5 minutes', async () => {
       const store = useReportsStore()
 
-      const oldDate = new Date(Date.now() - 6 * 60 * 1000) // 6 minutes ago
+      const oldDate = new Date(Date.now() - 6 * 60 * 1000)
 
-      // Set stale cache
       store.reportData.set('123-SYNPUF-person', {
         type: 'person',
         cohortId: 123,
@@ -829,10 +810,8 @@ describe('Reports Store', () => {
 
       await store.fetchReport(123, 'SYNPUF', 'person')
 
-      // Verify API was called (cache was stale)
       expect(webapi.getPersonReport).toHaveBeenCalled()
 
-      // Verify cache was updated with fresh timestamp
       const cached = store.reportData.get('123-SYNPUF-person')
       expect(cached?.fetchedAt.getTime()).toBeGreaterThan(oldDate.getTime())
     })
@@ -905,7 +884,6 @@ describe('Reports Store', () => {
     it('should clear error on successful fetch after previous error', async () => {
       const store = useReportsStore()
 
-      // Set an existing error
       store.error = 'Previous error'
 
       const mockRawData = { yearOfBirth: [{ intervalIndex: 0, countValue: 100 }] }
@@ -962,7 +940,6 @@ describe('Reports Store', () => {
 
       const mockConditionData = { data: 'condition' }
 
-      // Cache person report
       store.reportData.set('123-SYNPUF-person', {
         type: 'person',
         cohortId: 123,
@@ -971,7 +948,6 @@ describe('Reports Store', () => {
         data: mockPersonData as PersonReport
       })
 
-      // Cache condition report
       store.reportData.set('123-SYNPUF-condition', {
         type: 'condition',
         cohortId: 123,

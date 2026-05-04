@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
 vi.mock('@/services/webapi', () => ({
@@ -20,10 +20,18 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-import * as webapi from '@/services/webapi'
-import * as versions from '@/services/incidence-rate-versions.service'
-import { useIncidenceRateStore } from '@/stores/incidence-rate'
-import { IR_AUTO_SAVE_INTERVAL_MS } from '@/models/incidence-rate.types'
+let webapi: typeof import('@/services/webapi')
+let versions: typeof import('@/services/incidence-rate-versions.service')
+let useIncidenceRateStore: typeof import('@/stores/incidence-rate').useIncidenceRateStore
+let IR_AUTO_SAVE_INTERVAL_MS: typeof import('@/models/incidence-rate.types').IR_AUTO_SAVE_INTERVAL_MS
+
+beforeAll(async () => {
+  vi.resetModules()
+  webapi = await import('@/services/webapi')
+  versions = await import('@/services/incidence-rate-versions.service')
+  ;({ useIncidenceRateStore } = await import('@/stores/incidence-rate'))
+  ;({ IR_AUTO_SAVE_INTERVAL_MS } = await import('@/models/incidence-rate.types'))
+})
 
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -98,7 +106,6 @@ describe('incidence-rate store', () => {
     expect(fields).toContain('targetIds')
     expect(fields).toContain('outcomeIds')
 
-    // TAR same DateField + end <= start = error
     s.updateMeta({ name: 'X' })
     s.addTargetCohortId(1, 'A')
     s.addOutcomeCohortId(2, 'B')
@@ -239,7 +246,6 @@ describe('incidence-rate store — extended mutators', () => {
     s.createNewIR()
     s.addStratifyRule({ name: 'A', expression: { Type: 'ALL', CriteriaList: [] } } as never)
     s.markClean()
-    // Out of range
     s.moveStratifyRule(-1, 0)
     s.moveStratifyRule(0, 99)
     s.moveStratifyRule(99, 0)

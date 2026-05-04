@@ -1,17 +1,20 @@
-/**
- * Configuration Store Tests
- * Tests for configuration state management (cache, vocabulary schema, tag groups)
- */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useConfigStore } from '@/stores/config'
 import type { TagGroup, Tag } from '@/models/config.types'
-import * as configCache from '@/services/config-cache'
-import * as tagGroupsAPI from '@/services/tag-groups'
 
-// Mock the services
 vi.mock('@/services/config-cache')
 vi.mock('@/services/tag-groups')
+
+let configCache: typeof import('@/services/config-cache')
+let tagGroupsAPI: typeof import('@/services/tag-groups')
+let useConfigStore: typeof import('@/stores/config').useConfigStore
+
+beforeAll(async () => {
+  vi.resetModules()
+  configCache = await import('@/services/config-cache')
+  tagGroupsAPI = await import('@/services/tag-groups')
+  ;({ useConfigStore } = await import('@/stores/config'))
+})
 
 describe('Config Store', () => {
   beforeEach(() => {
@@ -128,7 +131,6 @@ describe('Config Store', () => {
 
       await expect(store.updateVocabularySchema(newSchema)).rejects.toThrow(errorMessage)
 
-      // Should rollback to old value
       expect(store.vocabularySchema).toBe(oldSchema)
       expect(store.error).toBe(errorMessage)
       expect(store.isLoadingVocabSchema).toBe(false)
@@ -233,14 +235,12 @@ describe('Config Store', () => {
 
         const promise = store.createTagGroup(newGroup)
 
-        // Optimistic update - should add immediately with temp ID
         expect(store.tagGroups).toHaveLength(1)
         expect(store.tagGroups[0].name).toBe('New Group')
-        expect(store.tagGroups[0].id).toBeLessThan(0) // Temp ID is negative
+        expect(store.tagGroups[0].id).toBeLessThan(0)
 
         await promise
 
-        // Should replace with real ID
         expect(store.tagGroups).toHaveLength(1)
         expect(store.tagGroups[0].id).toBe(2)
         expect(mockCreateTagGroup).toHaveBeenCalledWith(newGroup)
@@ -261,7 +261,6 @@ describe('Config Store', () => {
 
         await expect(store.createTagGroup(newGroup)).rejects.toThrow(errorMessage)
 
-        // Should rollback - no groups should exist
         expect(store.tagGroups).toHaveLength(0)
         expect(store.error).toBe(errorMessage)
       })
@@ -278,7 +277,6 @@ describe('Config Store', () => {
 
         const promise = store.updateTagGroup(updatedGroup)
 
-        // Optimistic update - should change immediately
         expect(store.tagGroups[0].name).toBe('Updated Group')
 
         await promise
@@ -298,7 +296,6 @@ describe('Config Store', () => {
 
         await expect(store.updateTagGroup(updatedGroup)).rejects.toThrow(errorMessage)
 
-        // Should rollback to original
         expect(store.tagGroups[0].name).toBe('Original Name')
         expect(store.error).toBe(errorMessage)
       })
@@ -318,12 +315,11 @@ describe('Config Store', () => {
 
         const mockGetTagGroupTags = vi.mocked(tagGroupsAPI.getTagGroupTags)
         const mockDeleteTagGroup = vi.mocked(tagGroupsAPI.deleteTagGroup)
-        mockGetTagGroupTags.mockResolvedValueOnce([]) // Empty group
+        mockGetTagGroupTags.mockResolvedValueOnce([])
         mockDeleteTagGroup.mockResolvedValueOnce(undefined)
 
         const promise = store.deleteTagGroup(1)
 
-        // Should wait for tags check before optimistic delete
         await promise
 
         expect(mockGetTagGroupTags).toHaveBeenCalledWith(1)
@@ -336,11 +332,10 @@ describe('Config Store', () => {
         store.tagGroups = [{ ...mockTagGroup }]
 
         const mockGetTagGroupTags = vi.mocked(tagGroupsAPI.getTagGroupTags)
-        mockGetTagGroupTags.mockResolvedValueOnce([mockTag]) // Has tags
+        mockGetTagGroupTags.mockResolvedValueOnce([mockTag])
 
         await expect(store.deleteTagGroup(1)).rejects.toThrow('Cannot delete tag group: the group contains tags')
 
-        // Should not delete
         expect(store.tagGroups).toHaveLength(1)
         expect(store.error).toContain('contains tags')
       })
@@ -351,13 +346,12 @@ describe('Config Store', () => {
 
         const mockGetTagGroupTags = vi.mocked(tagGroupsAPI.getTagGroupTags)
         const mockDeleteTagGroup = vi.mocked(tagGroupsAPI.deleteTagGroup)
-        mockGetTagGroupTags.mockResolvedValueOnce([]) // Empty group
+        mockGetTagGroupTags.mockResolvedValueOnce([])
         const errorMessage = 'Delete failed'
         mockDeleteTagGroup.mockRejectedValueOnce(new Error(errorMessage))
 
         await expect(store.deleteTagGroup(1)).rejects.toThrow(errorMessage)
 
-        // Should rollback - group should still exist
         expect(store.tagGroups).toHaveLength(1)
         expect(store.tagGroups[0].id).toBe(1)
         expect(store.error).toBe(errorMessage)

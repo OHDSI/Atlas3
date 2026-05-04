@@ -1,17 +1,18 @@
-/**
- * Concept Search Store Tests
- * Tests for concept search state management
- */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useConceptSearchStore } from '@/stores/concept-search'
-import * as conceptSearchService from '@/services/concept-search.service'
 import type { Concept } from '@/models/concept-set.types'
 
-// Mock the service
 vi.mock('@/services/concept-search.service')
 
-// Mock data
+let conceptSearchService: typeof import('@/services/concept-search.service')
+let useConceptSearchStore: typeof import('@/stores/concept-search').useConceptSearchStore
+
+beforeAll(async () => {
+  vi.resetModules()
+  conceptSearchService = await import('@/services/concept-search.service')
+  ;({ useConceptSearchStore } = await import('@/stores/concept-search'))
+})
+
 const mockConcepts: Concept[] = [
   {
     conceptId: 201826,
@@ -49,8 +50,7 @@ describe.skip('Concept Search Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    
-    // Mock getConceptRecordCounts to return empty map by default
+
     vi.mocked(conceptSearchService.getConceptRecordCounts).mockResolvedValue(new Map())
   })
 
@@ -99,7 +99,7 @@ describe.skip('Concept Search Store', () => {
 
     it('should handle search with less than 3 characters', async () => {
       const store = useConceptSearchStore()
-      
+
       await store.search('di')
 
       expect(store.allConcepts).toEqual([])
@@ -142,11 +142,9 @@ describe.skip('Concept Search Store', () => {
         total: mockConcepts.length,
       })
 
-      // Set to page 2
       store.updatePagination(2, 25)
       expect(store.page).toBe(2)
 
-      // New search should reset to page 1
       await store.search('diabetes')
       expect(store.page).toBe(1)
     })
@@ -160,17 +158,14 @@ describe.skip('Concept Search Store', () => {
         total: mockConcepts.length,
       })
 
-      // Call debounced search multiple times rapidly
       store.debouncedSearch('dia')
       store.debouncedSearch('diab')
       store.debouncedSearch('diabe')
       store.debouncedSearch('diabet')
       store.debouncedSearch('diabetes')
 
-      // Wait for debounce delay (300ms)
       await new Promise((resolve) => setTimeout(resolve, 350))
 
-      // Should only call the service once with the final value
       expect(conceptSearchService.searchConcepts).toHaveBeenCalledTimes(1)
       expect(store.searchTerm).toBe('diabetes')
     })
@@ -230,7 +225,6 @@ describe.skip('Concept Search Store', () => {
   describe('Pagination', () => {
     beforeEach(async () => {
       const store = useConceptSearchStore()
-      // Create 100 mock concepts for pagination testing
       const manyConcepts = Array.from({ length: 100 }, (_, i) => ({
         conceptId: i + 1,
         conceptName: `Concept ${i + 1}`,
@@ -252,7 +246,7 @@ describe.skip('Concept Search Store', () => {
     it('should paginate results with default page size', () => {
       const store = useConceptSearchStore()
 
-      expect(store.concepts.length).toBe(25) // Default page size
+      expect(store.concepts.length).toBe(25)
       expect(store.concepts[0].conceptId).toBe(1)
       expect(store.concepts[24].conceptId).toBe(25)
       expect(store.totalCount).toBe(100)
@@ -347,7 +341,6 @@ describe.skip('Concept Search Store', () => {
       await store.search('test')
       store.updateSort('conceptName', false)
 
-      // Null values should be sorted to the end
       const names = store.concepts.map((c) => c.conceptName)
       expect(names[0]).toBe('A Concept')
       expect(names[1]).toBe('Z Concept')
