@@ -4,18 +4,16 @@
  * For each phenotype from the OHDSI PhenotypeLibrary repo:
  * 1. Import the cohort JSON via the UI Import dialog
  * 2. Save immediately (no changes) → capture BASELINE expression
- *    (this normalises the raw JSON through the Atlas converter round-trip)
- * 3. Add one inclusion rule, save
- * 4. Remove that inclusion rule, save → capture FINAL expression
- * 5. Compare BASELINE vs FINAL — if they match, the frontend did not
- *    permanently mutate the cohort definition
+ * 3. Compare IMPORTED vs BASELINE — fidelity check: did import+save
+ *    preserve every field of the original phenotype definition?
+ * 4. Add one inclusion rule, save
+ * 5. Remove that inclusion rule, save → capture FINAL expression
+ * 6. Compare BASELINE vs FINAL — idempotence check: did the no-op
+ *    add/remove cycle leave the cohort untouched?
  *
- * Why save before modifying?
- * The raw phenotype JSON differs structurally from what convertInternalToAtlas
- * produces (key ordering, added defaults like AdditionalCriteria, expressionType
- * at the top level, etc.).  By capturing the baseline AFTER the first save, both
- * sides of the comparison have been through the same normalisation pass, so any
- * remaining delta is a genuine data-corruption bug.
+ * Sampling is controlled by PHENOTYPE_SAMPLE_SIZE (default 10) and
+ * PHENOTYPE_SAMPLE_SEED (default time-based). Set SAMPLE_SIZE=all to
+ * run every fixture.
  */
 
 import { test, expect } from '@playwright/test'
@@ -81,7 +79,25 @@ function diffExpressions(
   a: Record<string, unknown>,
   b: Record<string, unknown>,
 ): string[] {
-  const SKIP = new Set(['id', 'name', 'description', 'createdDate', 'modifiedDate', 'createdBy', 'modifiedBy'])
+  // Top-level keys ignored by the round-trip diff:
+  //  - id/name/description/audit fields: wrapper metadata, not part of the
+  //    cohort expression
+  //  - expressionType: serialiser injects "SIMPLE_EXPRESSION" when the source
+  //    omits it; semantically equivalent to absent
+  //  - AdditionalCriteria: serialiser injects an empty group object
+  //    ({CriteriaList:[],DemographicCriteriaList:[],Groups:[],Type:"ALL"}) when
+  //    the source omits it; semantically equivalent to absent
+  const SKIP = new Set([
+    'id',
+    'name',
+    'description',
+    'createdDate',
+    'modifiedDate',
+    'createdBy',
+    'modifiedBy',
+    'expressionType',
+    'AdditionalCriteria',
+  ])
   const filter = (o: Record<string, unknown>) =>
     Object.fromEntries(Object.entries(o).filter(([k]) => !SKIP.has(k)))
 
@@ -104,7 +120,38 @@ function diffExpressions(
 // Fixtures
 // ============================================================================
 
-const phenotypes = phenotypeFixtures
+function mulberry32(seed: number): () => number {
+  let s = seed >>> 0
+  return () => {
+    s = (s + 0x6D2B79F5) >>> 0
+    let t = s
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+function samplePhenotypes(all: PhenotypeDefinition[]): PhenotypeDefinition[] {
+  const rawSize = process.env.PHENOTYPE_SAMPLE_SIZE ?? '10'
+  if (rawSize === 'all') return all
+  const size = Math.max(0, Math.min(all.length, parseInt(rawSize, 10) || 0))
+  if (size >= all.length) return all
+  const seed = parseInt(process.env.PHENOTYPE_SAMPLE_SEED ?? '', 10) || Date.now() % 0xffffffff
+  const rand = mulberry32(seed)
+  const indices = all.map((_, i) => i)
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1))
+    ;[indices[i], indices[j]] = [indices[j], indices[i]]
+  }
+  const picked = indices.slice(0, size).map(i => all[i])
+  console.log(
+    `[phenotype-integration] sampled ${picked.length}/${all.length} fixtures ` +
+      `(seed=${seed}): ${picked.map(p => p.cohortId).join(', ')}`,
+  )
+  return picked
+}
+
+const phenotypes = samplePhenotypes(phenotypeFixtures)
 
 // ============================================================================
 // Test suite
@@ -175,12 +222,24 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
         return
       }
 
-      // ── Step 4: Save immediately → capture BASELINE (normalised) ─────
-      // This first save passes the raw phenotype JSON through the Atlas
-      // converter round-trip, establishing a stable baseline.
+      // ── Step 4: Save immediately → capture BASELINE ──────────────────
       const baselineExpression = await captureNextSaveExpression(page, async () => {
         await page.locator('[data-testid="save-cohort-btn"]').click()
       })
+
+      // ── Step 4a: Compare imported JSON vs BASELINE (fidelity check) ──
+      const importedExpression = JSON.parse(phenotype.json) as Record<string, unknown>
+      const importDiffs = diffExpressions(importedExpression, baselineExpression)
+      if (importDiffs.length > 0) {
+        console.error(
+          `[${phenotype.cohortId}] "${phenotype.name}" — import mutated ${importDiffs.length} field(s):\n` +
+            importDiffs.map(d => `  • ${d}`).join('\n'),
+        )
+      }
+      expect(
+        importDiffs,
+        `Import + save mutated cohort "${phenotype.name}" relative to original JSON`,
+      ).toHaveLength(0)
 
       // ── Step 5: Add one inclusion rule ────────────────────────────────
       const addRuleBtn = page.locator('[data-testid="add-inclusion-rule"]')

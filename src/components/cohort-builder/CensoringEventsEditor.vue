@@ -169,6 +169,7 @@ function formatCriteriaType(type: CriteriaType): string {
     Specimen: 'Specimen',
     PayerPlanPeriod: 'Payer Plan Period',
     LocationRegion: 'Location Region',
+    Demographic: 'Demographic',
   }
   return typeMap[type] || type
 }

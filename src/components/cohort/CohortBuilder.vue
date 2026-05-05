@@ -695,6 +695,7 @@ const collapseSettings = ref<CollapseSettings>({ collapseType: 'ERA', eraPad: 0 
 const censoringCriteria = ref<CohortEvent[]>([])
 const observationPeriod = ref<ObservationPeriod>({ priorDays: 0, postDays: 0 })
 const qualifyingLimit = ref<QualifyingLimit>('ALL') // For entry events
+const primaryCriteriaLimit = ref<QualifyingLimit | undefined>(undefined)
 const inclusionQualifyingLimit = ref<QualifyingLimit>('ALL') // For inclusion criteria
 
 // UI state
@@ -845,6 +846,7 @@ const {
   censoringCriteria,
   observationPeriod,
   qualifyingLimit,
+  primaryCriteriaLimit,
   inclusionQualifyingLimit,
 })
 
@@ -936,6 +938,7 @@ async function buildCohortExpression() {
       censoringCriteria: censoringCriteria.value,
       observationPeriod: observationPeriod.value,
       qualifyingLimit: qualifyingLimit.value,
+      primaryCriteriaLimit: primaryCriteriaLimit.value,
       inclusionQualifyingLimit: inclusionQualifyingLimit.value,
       conceptSets: conceptSetsWithItems, // Use concept sets with items populated
     }
@@ -965,6 +968,7 @@ function createStateSnapshot(): string {
     censoringCriteria: censoringCriteria.value,
     observationPeriod: observationPeriod.value,
     qualifyingLimit: qualifyingLimit.value,
+    primaryCriteriaLimit: primaryCriteriaLimit.value,
     inclusionQualifyingLimit: inclusionQualifyingLimit.value,
   })
 }
@@ -1268,6 +1272,7 @@ watch(
     censoringCriteria,
     observationPeriod,
     qualifyingLimit,
+    primaryCriteriaLimit,
     inclusionQualifyingLimit,
   ],
   () => {
@@ -1312,6 +1317,7 @@ async function loadCohort(id: string) {
       exitCriteria: converted.exitCriteria || { strategy: 'CONTINUOUS_OBSERVATION' },
       observationPeriod: converted.observationPeriod || { priorDays: 0, postDays: 0 },
       qualifyingLimit: converted.qualifyingLimit || 'ALL',
+      primaryCriteriaLimit: converted.primaryCriteriaLimit,
       inclusionQualifyingLimit: converted.inclusionQualifyingLimit || 'ALL',
       additionalCriteria: converted.additionalCriteria,
       conceptSets: converted.conceptSets || [],
@@ -1336,6 +1342,7 @@ async function loadCohort(id: string) {
     censoringCriteria.value = cohortDef.censoringCriteria ?? []
     observationPeriod.value = cohortDef.observationPeriod || { priorDays: 0, postDays: 0 }
     qualifyingLimit.value = cohortDef.qualifyingLimit
+    primaryCriteriaLimit.value = cohortDef.primaryCriteriaLimit
     inclusionQualifyingLimit.value = cohortDef.inclusionQualifyingLimit ?? 'ALL'
 
     loadedTags.value = [...(cohortDef.tags || [])]
@@ -1753,6 +1760,7 @@ async function handleSave() {
     tags: cohortTags.value,
     entryEvents: entryEvents.value,
     qualifyingLimit: qualifyingLimit.value,
+    primaryCriteriaLimit: primaryCriteriaLimit.value,
     inclusionQualifyingLimit: inclusionQualifyingLimit.value,
     additionalCriteria: additionalCriteria.value,
     inclusionRules: inclusionRules.value,
@@ -1883,6 +1891,7 @@ async function _handleFileImport(event: Event) {
     censoringCriteria.value = importedCohort.censoringCriteria ?? []
     observationPeriod.value = importedCohort.observationPeriod ?? { priorDays: 0, postDays: 0 }
     qualifyingLimit.value = importedCohort.qualifyingLimit || 'ALL'
+    primaryCriteriaLimit.value = importedCohort.primaryCriteriaLimit
     inclusionQualifyingLimit.value = importedCohort.inclusionQualifyingLimit || 'ALL'
 
     // Trigger validation (composable handles debouncing)
@@ -1905,6 +1914,7 @@ function buildExportCohort(): CohortDefinition {
     description: cohortDescription.value || undefined,
     entryEvents: entryEvents.value,
     qualifyingLimit: qualifyingLimit.value,
+    primaryCriteriaLimit: primaryCriteriaLimit.value,
     inclusionQualifyingLimit: inclusionQualifyingLimit.value,
     additionalCriteria: additionalCriteria.value,
     inclusionRules: inclusionRules.value,

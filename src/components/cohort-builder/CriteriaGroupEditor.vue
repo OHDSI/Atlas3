@@ -305,7 +305,10 @@
                       <!-- Concept Set and Temporal Window Row -->
                       <div class="concept-temporal-row">
                         <!-- Concept Set Picker -->
-                        <div class="concept-set-section">
+                        <div
+                          v-if="eventRequiresConceptSet(event.criteriaType)"
+                          class="concept-set-section"
+                        >
                           <EventConceptSetField
                             :concept-set="
                               event.conceptSet && event.conceptSet.id !== 0
@@ -538,6 +541,11 @@ const selectedConceptDomainFilter = ref<string | undefined>(undefined)
 function getEventTypeLabel(criteriaType: string): string {
   const type = criteriaTypes.value.find(t => t.value === criteriaType)
   return type?.label || criteriaType
+}
+
+function eventRequiresConceptSet(criteriaType: string): boolean {
+  const filter = availableFilters.value.find(f => f.criteriaType === criteriaType)
+  return filter?.requiresConceptSet ?? true
 }
 
 function addEvent(criteriaType: CriteriaType) {

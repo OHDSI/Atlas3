@@ -36,6 +36,8 @@ export interface CohortValidationOptions {
   observationPeriod: Ref<{ priorDays: number; postDays: number }>
   /** Qualifying limit ref */
   qualifyingLimit: Ref<QualifyingLimit>
+  /** Primary criteria limit ref */
+  primaryCriteriaLimit: Ref<QualifyingLimit | undefined>
   /** Inclusion qualifying limit ref */
   inclusionQualifyingLimit: Ref<QualifyingLimit>
   debounceDelay?: number
@@ -116,6 +118,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     censoringCriteria,
     observationPeriod,
     qualifyingLimit,
+    primaryCriteriaLimit,
     inclusionQualifyingLimit,
     debounceDelay = 2000,
   } = options
@@ -203,6 +206,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
         exitCriteria: exitCriteria.value,
         observationPeriod: observationPeriod.value,
         qualifyingLimit: qualifyingLimit.value,
+        primaryCriteriaLimit: primaryCriteriaLimit.value,
         inclusionQualifyingLimit: inclusionQualifyingLimit.value,
         conceptSets: conceptSetsWithItems,
       }
@@ -256,6 +260,7 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
       censoringCriteria,
       observationPeriod,
       qualifyingLimit,
+      primaryCriteriaLimit,
       inclusionQualifyingLimit,
     ],
     () => {
