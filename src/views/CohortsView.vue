@@ -54,6 +54,7 @@
           prepend-icon="mdi-upload-outline"
           :aria-label="t('common.import', 'Import cohort from JSON').value"
           :disabled="!canCreateCohort"
+          data-testid="import-cohort-btn"
           @click="handleImportCohort"
         >
           {{ t('common.import', 'Import') }}
@@ -167,6 +168,7 @@
           variant="outlined"
           :disabled="importing"
           class="mb-3"
+          data-testid="import-name-field"
         />
 
         <v-file-input
@@ -194,6 +196,7 @@
           hide-details
           :disabled="importing"
           class="cohorts-view__import-json"
+          data-testid="import-json-field"
         />
 
         <AtlasAlert
@@ -215,6 +218,7 @@
           <AtlasButton
             :loading="importing"
             :disabled="!canImport"
+            data-testid="import-confirm-btn"
             @click="confirmImport"
           >
             {{ t('common.import', 'Import').value }}

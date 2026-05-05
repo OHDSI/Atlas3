@@ -65,6 +65,7 @@
 
     <AtlasButton
       :disabled="!canSave || isPreviewingVersion"
+      data-testid="save-cohort-btn"
       @click="$emit('save')"
     >
       <AtlasIcon class="d-md-none">

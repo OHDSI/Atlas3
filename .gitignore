@@ -36,6 +36,9 @@ coverage/
 playwright-report/
 test-results/
 
+# Generated test fixtures
+tests/e2e/phenotype-library/fixtures/phenotypes.json
+
 # Environment variables
 .env
 .env.local

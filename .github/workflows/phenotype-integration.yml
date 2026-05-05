@@ -1,0 +1,122 @@
+name: PhenotypeLibrary Integration Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  PHENOTYPE_SAMPLE_SIZE: 0   # 0 = all phenotypes
+
+jobs:
+  # ── Job 1: Clone PhenotypeLibrary and generate the fixture once ───────────
+  generate-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Clone PhenotypeLibrary repo
+        run: git clone --depth 1 https://github.com/OHDSI/PhenotypeLibrary.git /tmp/PhenotypeLibrary
+
+      - name: Generate phenotype fixtures
+        run: |
+          mkdir -p tests/e2e/phenotype-library/fixtures
+          node << 'SCRIPT'
+          const fs = require('fs');
+          const path = require('path');
+
+          const cohortsDir = '/tmp/PhenotypeLibrary/inst/cohorts';
+          const sampleSize = parseInt(process.env.PHENOTYPE_SAMPLE_SIZE || '0', 10);
+          const allPhenotypes = [];
+
+          if (fs.existsSync(cohortsDir)) {
+            for (const file of fs.readdirSync(cohortsDir).sort()) {
+              if (!file.endsWith('.json')) continue;
+              const cohortId = file.replace('.json', '');
+              const rawJson = fs.readFileSync(path.join(cohortsDir, file), 'utf-8');
+              let name = cohortId;
+              try {
+                const parsed = JSON.parse(rawJson);
+                if (parsed.name) name = parsed.name;
+                else if (parsed.expression?.name) name = parsed.expression.name;
+              } catch { /* skip unparseable files */ }
+              allPhenotypes.push({ cohortId, name, json: rawJson });
+            }
+          }
+
+          let phenotypes = allPhenotypes;
+          if (sampleSize > 0 && sampleSize < allPhenotypes.length) {
+            for (let i = allPhenotypes.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [allPhenotypes[i], allPhenotypes[j]] = [allPhenotypes[j], allPhenotypes[i]];
+            }
+            phenotypes = allPhenotypes.slice(0, sampleSize);
+            phenotypes.sort((a, b) => a.cohortId.localeCompare(b.cohortId));
+          }
+
+          const outPath = 'tests/e2e/phenotype-library/fixtures/phenotypes.json';
+          fs.writeFileSync(outPath, JSON.stringify(phenotypes, null, 2));
+          console.log(`Written ${phenotypes.length} / ${allPhenotypes.length} phenotypes → ${outPath}`);
+          SCRIPT
+
+      - name: Upload fixtures artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: phenotype-fixtures
+          path: tests/e2e/phenotype-library/fixtures/phenotypes.json
+          retention-days: 1
+
+  # ── Job 2: Run all tests with 8 parallel workers ──────────────────────────
+  # 1000 tests × ~12 s/test ÷ 8 workers ≈ 25 min
+  phenotype-tests:
+    needs: generate-fixtures
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Download phenotype fixtures
+        uses: actions/download-artifact@v4
+        with:
+          name: phenotype-fixtures
+          path: tests/e2e/phenotype-library/fixtures/
+
+      - name: Run phenotype integration tests
+        run: |
+          npx playwright test tests/e2e/phenotype-library/ \
+            --project=chromium \
+            --workers=8 \
+            --reporter=list
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-phenotype-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-phenotype-results
+          path: test-results/
+          retention-days: 30
