@@ -132,26 +132,33 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
       await page.goto('/cohorts')
       await waitForPageReady(page)
 
-      await page.locator('[data-testid="import-cohort-btn"]').click()
-      await page.waitForSelector('.v-dialog', { timeout: 5000 })
-
-      // ── Step 2: Fill import form and submit ───────────────────────────
-      await page.locator('[data-testid="import-name-field"] input').fill(phenotype.name)
-      await page.locator('[data-testid="import-json-field"] textarea').first().fill(phenotype.json)
-
+      // Register the GET listener before any UI interaction so there is no
+      // window where the response could fire before the listener is attached.
       const cohortLoadedPromise = page.waitForResponse(
         resp =>
           resp.request().method() === 'GET' &&
           /cohortdefinition\/\d+$/.test(resp.url()) &&
           !resp.url().includes('/info') &&
           !resp.url().includes('/generate'),
-        { timeout: 15000 },
+        { timeout: 30000 },
       )
+
+      await page.locator('[data-testid="import-cohort-btn"]').click()
+
+      // Wait for the textarea itself to be editable rather than just waiting
+      // for the dialog container — Vuetify animates the dialog open and the
+      // inner inputs are not interactive until the animation settles.
+      const jsonTextarea = page.locator('[data-testid="import-json-field"] textarea').first()
+      await jsonTextarea.waitFor({ state: 'visible', timeout: 15000 })
+
+      // ── Step 2: Fill import form and submit ───────────────────────────
+      await page.locator('[data-testid="import-name-field"] input').fill(phenotype.name)
+      await jsonTextarea.fill(phenotype.json, { timeout: 30000 })
 
       await page.locator('[data-testid="import-confirm-btn"]').click()
 
       // ── Step 3: Wait for builder to load ──────────────────────────────
-      await page.waitForURL(/\/cohorts\/\d+/, { timeout: 15000 })
+      await page.waitForURL(/\/cohorts\/\d+/, { timeout: 30000 })
       await waitForPageReady(page)
       await cohortLoadedPromise  // ensure GET has completed
 
