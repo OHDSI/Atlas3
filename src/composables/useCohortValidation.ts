@@ -37,7 +37,7 @@ export interface CohortValidationOptions {
   /** Qualifying limit ref */
   qualifyingLimit: Ref<QualifyingLimit>
   /** Primary criteria limit ref */
-  primaryCriteriaLimit: Ref<QualifyingLimit | undefined>
+  primaryCriteriaLimit?: Ref<QualifyingLimit | undefined>
   /** Inclusion qualifying limit ref */
   inclusionQualifyingLimit: Ref<QualifyingLimit>
   debounceDelay?: number
@@ -118,10 +118,10 @@ export function useCohortValidation(options: CohortValidationOptions): CohortVal
     censoringCriteria,
     observationPeriod,
     qualifyingLimit,
-    primaryCriteriaLimit,
     inclusionQualifyingLimit,
     debounceDelay = 2000,
   } = options
+  const primaryCriteriaLimit = options.primaryCriteriaLimit ?? ref<QualifyingLimit | undefined>(undefined)
 
   const validationWarnings = ref<ValidationWarning[]>([])
   const _isValidatingInternal = ref(false)
