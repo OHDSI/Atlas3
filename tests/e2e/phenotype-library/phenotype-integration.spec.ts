@@ -21,7 +21,7 @@
 import { test, expect } from '@playwright/test'
 import { createRequire } from 'module'
 import { setupBasicMocks, clearCohortStore } from '../helpers/api-mocks'
-import { waitForPageReady } from '../helpers/wait-utils'
+import { waitForPageReady, waitForStableElement } from '../helpers/wait-utils'
 
 const require = createRequire(import.meta.url)
 const phenotypeFixtures = require('./fixtures/phenotypes.json') as PhenotypeDefinition[]
@@ -132,24 +132,14 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
       await page.goto('/cohorts')
       await waitForPageReady(page)
 
-      // Register the GET listener before any UI interaction so there is no
-      // window where the response could fire before the listener is attached.
-      const cohortLoadedPromise = page.waitForResponse(
-        resp =>
-          resp.request().method() === 'GET' &&
-          /cohortdefinition\/\d+$/.test(resp.url()) &&
-          !resp.url().includes('/info') &&
-          !resp.url().includes('/generate'),
-        { timeout: 30000 },
-      )
-
       await page.locator('[data-testid="import-cohort-btn"]').click()
 
-      // Wait for the textarea itself to be editable rather than just waiting
-      // for the dialog container — Vuetify animates the dialog open and the
-      // inner inputs are not interactive until the animation settles.
+      // Wait for the textarea to be visible AND for the dialog's entry
+      // animation to finish — Vuetify animates dialogs open, and the textarea
+      // stays non-editable until the animation settles.
       const jsonTextarea = page.locator('[data-testid="import-json-field"] textarea').first()
-      await jsonTextarea.waitFor({ state: 'visible', timeout: 15000 })
+      await waitForStableElement(jsonTextarea, 15000)
+      await expect(jsonTextarea).toBeEditable({ timeout: 15000 })
 
       // ── Step 2: Fill import form and submit ───────────────────────────
       await page.locator('[data-testid="import-name-field"] input').fill(phenotype.name)
@@ -160,10 +150,14 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
       // ── Step 3: Wait for builder to load ──────────────────────────────
       await page.waitForURL(/\/cohorts\/\d+/, { timeout: 30000 })
       await waitForPageReady(page)
-      await cohortLoadedPromise  // ensure GET has completed
-
+      // The cohort builder may or may not issue a GET /cohortdefinition/{id}
+      // (if the POST response data was stored in Pinia, no GET is made).
+      // Waiting for the save button is a more reliable signal that the
+      // builder has fully loaded the cohort.
+      await waitForPageReady(page)
       // Skip cohorts with no entry events — the Save button is disabled
       const saveBtn = page.locator('[data-testid="save-cohort-btn"]')
+      await expect(saveBtn).toBeVisible({ timeout: 15000 })
       const isSaveEnabled = await saveBtn.isEnabled().catch(() => false)
       if (!isSaveEnabled) {
         test.skip(true, `Cohort "${phenotype.name}" has no entry events; skipping`)
