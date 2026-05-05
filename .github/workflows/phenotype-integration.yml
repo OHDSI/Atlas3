@@ -71,14 +71,18 @@ jobs:
           path: tests/e2e/phenotype-library/fixtures/phenotypes.json
           retention-days: 1
 
-  # ── Job 2: Run all tests with 8 parallel workers ──────────────────────────
-  # 1000 tests × ~12 s/test ÷ 8 workers ≈ 25 min
+  # ── Job 2: Run all tests — 8 GHA shards × 2 Playwright workers ──────────
+  # 1104 tests ÷ 8 shards = ~138 tests/shard × ~6s ÷ 2 workers ≈ 7 min/shard
   phenotype-tests:
     needs: generate-fixtures
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
 
     steps:
       - name: Checkout code
@@ -102,25 +106,26 @@ jobs:
           name: phenotype-fixtures
           path: tests/e2e/phenotype-library/fixtures/
 
-      - name: Run phenotype integration tests
+      - name: Run phenotype integration tests (shard ${{ matrix.shard }}/8)
         run: |
           npx playwright test tests/e2e/phenotype-library/ \
             --project=chromium \
-            --workers=8 \
+            --workers=2 \
+            --shard=${{ matrix.shard }}/8 \
             --reporter=list
 
-      - name: Upload Playwright report
+      - name: Upload Playwright report (shard ${{ matrix.shard }})
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-phenotype-report
+          name: playwright-phenotype-report-shard-${{ matrix.shard }}
           path: playwright-report/
-          retention-days: 30
+          retention-days: 7
 
-      - name: Upload test results
+      - name: Upload test results (shard ${{ matrix.shard }})
         uses: actions/upload-artifact@v4
-        if: always()
+        if: failure()
         with:
-          name: playwright-phenotype-results
+          name: playwright-phenotype-results-shard-${{ matrix.shard }}
           path: test-results/
-          retention-days: 30
+          retention-days: 7
