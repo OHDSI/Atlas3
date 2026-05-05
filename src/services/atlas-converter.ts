@@ -45,6 +45,19 @@ interface AtlasJSON {
   CensorWindow?: Record<string, unknown>
 }
 
+const SOURCE_CONCEPT_KEYS: Partial<Record<CriteriaType, string>> = {
+  ConditionOccurrence: 'ConditionSourceConcept',
+  ProcedureOccurrence: 'ProcedureSourceConcept',
+  DrugExposure: 'DrugSourceConcept',
+  Measurement: 'MeasurementSourceConcept',
+  Observation: 'ObservationSourceConcept',
+  DeviceExposure: 'DeviceSourceConcept',
+  Death: 'DeathSourceConcept',
+  Specimen: 'SpecimenSourceConcept',
+  VisitOccurrence: 'VisitSourceConcept',
+  VisitDetail: 'VisitDetailSourceConcept',
+}
+
 // CRITICAL: Preserves zero-count cardinality using ?? operator
 export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
   return {
@@ -101,14 +114,24 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
             PostDays: cohort.observationPeriod.postDays,
           }
         : undefined,
-      PrimaryCriteriaLimit: { Type: cohort.additionalCriteria?.qualifyingLimit || 'All' },
+      PrimaryCriteriaLimit: {
+        Type: capitalizeFirst(
+          cohort.primaryCriteriaLimit ||
+            cohort.additionalCriteria?.qualifyingLimit ||
+            'All',
+        ),
+      },
     },
 
     AdditionalCriteria: cohort.additionalCriteria
       ? {
           Type: cohort.additionalCriteria.logicType || 'ALL',
-          CriteriaList: cohort.additionalCriteria.events.map(e => convertEventToAtlas(e, true)),
-          DemographicCriteriaList: [],
+          CriteriaList: cohort.additionalCriteria.events
+            .filter(e => e.criteriaType !== 'Demographic')
+            .map(e => convertEventToAtlas(e, true)),
+          DemographicCriteriaList: cohort.additionalCriteria.events
+            .filter(e => e.criteriaType === 'Demographic')
+            .map(convertDemographicEventToAtlas),
           Groups: [],
         }
       : {
@@ -120,13 +143,19 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
 
     InclusionRules: cohort.inclusionRules.map(rule => ({
       name: rule.name,
-      description: rule.description,
+      ...(rule.description ? { description: rule.description } : {}),
       expression: {
-        Type: 'ALL', // Simplified
+        Type: 'ALL',
         CriteriaList: rule.criteriaGroups.flatMap(g =>
-          g.events.map(e => convertEventToAtlas(e, true))
+          g.events
+            .filter(e => e.criteriaType !== 'Demographic')
+            .map(e => convertEventToAtlas(e, true)),
         ),
-        DemographicCriteriaList: [],
+        DemographicCriteriaList: rule.criteriaGroups.flatMap(g =>
+          g.events
+            .filter(e => e.criteriaType === 'Demographic')
+            .map(convertDemographicEventToAtlas),
+        ),
         Groups: [],
       },
     })),
@@ -153,11 +182,30 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
   }
 }
 
+function convertDemographicEventToAtlas(event: CohortEvent): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const attr of event.attributes ?? []) {
+    Object.assign(out, convertAttributeToAtlas(attr))
+  }
+  return out
+}
+
 // CRITICAL: Uses ?? for zero-count preservation
 function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false): AtlasCriteria {
-  const criteriaTypeObj: AtlasCriteriaTypeObject = {
-    CodesetId:
-      event.conceptSet && typeof event.conceptSet.id === 'number' ? event.conceptSet.id : null,
+  if (event.criteriaType === 'Demographic') {
+    throw new Error(
+      'convertEventToAtlas was called with a Demographic event; route via convertDemographicEventToAtlas instead',
+    )
+  }
+
+  const criteriaTypeObj: AtlasCriteriaTypeObject = {}
+  if (event.conceptSet && typeof event.conceptSet.id === 'number') {
+    criteriaTypeObj.CodesetId = event.conceptSet.id
+  } else if (typeof event.sourceConceptId === 'number') {
+    const sourceKey = SOURCE_CONCEPT_KEYS[event.criteriaType]
+    if (sourceKey) (criteriaTypeObj as Record<string, unknown>)[sourceKey] = event.sourceConceptId
+  } else {
+    criteriaTypeObj.CodesetId = null
   }
 
   switch (event.criteriaType) {
@@ -595,6 +643,8 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
         }
       : undefined,
     qualifyingLimit: (atlas.QualifiedLimit?.Type?.toUpperCase() || 'ALL') as QualifyingLimit,
+    primaryCriteriaLimit: (atlas.PrimaryCriteria?.PrimaryCriteriaLimit?.Type?.toUpperCase() ||
+      'ALL') as QualifyingLimit,
     inclusionQualifyingLimit: atlas.ExpressionLimit?.Type
       ? (atlas.ExpressionLimit.Type.toUpperCase() as QualifyingLimit)
       : undefined,
@@ -796,6 +846,11 @@ function convertAtlasToEvent(
 
   event.attributes = extractAttributesFromCriteria(criteriaObj)
 
+  const sourceKey = SOURCE_CONCEPT_KEYS[event.criteriaType]
+  if (sourceKey && typeof criteriaObj[sourceKey] === 'number') {
+    event.sourceConceptId = criteriaObj[sourceKey] as number
+  }
+
   interface AtlasEventWithStartWindow {
     StartWindow?: {
       Start?: { Days?: number; Coeff?: number }
@@ -891,17 +946,11 @@ function convertAtlasToEvent(
 function convertDemographicCriteriaToEvent(
   demographicCriteria: Record<string, unknown>
 ): CohortEvent {
-  const event: CohortEvent = {
+  return {
     id: generateId(),
-    criteriaType: 'ConditionOccurrence', // Use as placeholder
-    conceptSet: {
-      id: 0,
-      name: 'Demographics',
-    },
+    criteriaType: 'Demographic',
     attributes: extractAttributesFromCriteria(demographicCriteria),
   }
-
-  return event
 }
 
 function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): EventAttribute[] {

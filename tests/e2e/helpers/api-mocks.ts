@@ -17,6 +17,19 @@ import {
   createConceptSearchResponse
 } from '../fixtures'
 
+// In-memory store for cohorts — persists data between requests.
+// Used by the PhenotypeLibrary integration tests to simulate a real backend.
+// Clear this map between tests by calling clearCohortStore().
+const cohortStore = new Map<number, Record<string, unknown>>()
+
+/**
+ * Clear the in-memory cohort store. Call this in test.beforeEach
+ * to ensure each test starts with a clean slate.
+ */
+export function clearCohortStore(): void {
+  cohortStore.clear()
+}
+
 // Load the person profile fixture (JSON) at module load time. We avoid
 // `import x from '*.json'` because the test runner's ESM mode requires an
 // explicit `with { type: 'json' }` attribute; readFileSync sidesteps that.
@@ -151,17 +164,21 @@ export async function setupBasicMocks(page: Page) {
         body: JSON.stringify(mockCohorts)
       })
     } else if (url.match(/cohortdefinition$/) && route.request().method() === 'POST') {
-      // Mock cohort creation
+      // Mock cohort creation — assign a unique ID and persist so the
+      // subsequent GET /cohortdefinition/{id} can find it.
       const newCohort = JSON.parse(route.request().postData() || '{}')
+      const newId = 900 + cohortStore.size
+      const stored = {
+        ...newCohort,
+        id: newId,
+        createdDate: Date.now(),
+        modifiedDate: Date.now(),
+      }
+      cohortStore.set(newId, stored)
       await route.fulfill({
         status: 201,
         contentType: 'application/json',
-        body: JSON.stringify({
-          ...newCohort,
-          id: 999,
-          createdDate: Date.now(),
-          modifiedDate: Date.now()
-        })
+        body: JSON.stringify(stored),
       })
     } else {
       await route.continue()
@@ -175,6 +192,17 @@ export async function setupBasicMocks(page: Page) {
 
     if (match && route.request().method() === 'GET') {
       const cohortId = parseInt(match[1])
+      // Check in-memory store first (for round-trip tests)
+      const stored = cohortStore.get(cohortId)
+      if (stored) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(stored)
+         })
+        return
+       }
+      // Fall back to mockCohorts
       const cohort = mockCohorts.find(c => c.id === cohortId)
 
       if (cohort) {
@@ -203,13 +231,16 @@ export async function setupBasicMocks(page: Page) {
       } else {
         await route.fulfill({ status: 404, body: 'Not found' })
       }
-    } else if (match && route.request().method() === 'PUT') {
-      // Mock cohort update
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: route.request().postData() || '{}'
-      })
+      } else if (match && route.request().method() === "PUT") {
+        // Mock cohort update — also persist for round-trip tests
+        const putData = JSON.parse(route.request().postData() || "{}")
+        const putId = parseInt(match[1])
+        cohortStore.set(putId, putData)
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(putData)
+        })
     } else if (match && route.request().method() === 'DELETE') {
       // Mock cohort deletion
       await route.fulfill({ status: 204 })

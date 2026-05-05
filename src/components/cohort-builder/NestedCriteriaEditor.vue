@@ -202,7 +202,10 @@
                   </div>
 
                   <!-- Concept Set Picker -->
-                  <div class="mb-2">
+                  <div
+                    v-if="event.criteriaType !== 'Demographic'"
+                    class="mb-2"
+                  >
                     <AtlasButton
                       variant="secondary"
                       size="sm"

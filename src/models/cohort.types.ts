@@ -32,6 +32,7 @@ export interface CohortDefinition {
   tags?: Tag[]
   entryEvents: CohortEvent[]
   qualifyingLimit: QualifyingLimit
+  primaryCriteriaLimit?: QualifyingLimit
   inclusionQualifyingLimit?: QualifyingLimit
   observationPeriod?: ObservationPeriod
   additionalCriteria?: CriteriaGroup // Criteria that restrict/qualify entry events
@@ -50,6 +51,11 @@ export interface CohortEvent {
   id: string // UUIDv4 client-side ID
   criteriaType: CriteriaType
   conceptSet?: ConceptSetReference
+  /** Circe `<CriteriaType>SourceConcept` — concept id that resolves to a
+   *  source-concept set rather than a regular codeset. Mutually exclusive with
+   *  `conceptSet` in well-formed Atlas JSON, but both are allowed here so the
+   *  internal model can represent any input losslessly. */
+  sourceConceptId?: number
   cardinality?: Cardinality
   temporalWindow?: TemporalWindow
   attributes?: EventAttribute[]
@@ -125,6 +131,7 @@ export type CriteriaType =
   | 'Specimen'
   | 'PayerPlanPeriod'
   | 'LocationRegion'
+  | 'Demographic'
 
 // Import from event.types.ts (will be defined there)
 export type { Cardinality, TemporalWindow, EventAttribute, DateAdjustment } from './event.types'
