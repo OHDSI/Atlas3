@@ -143,7 +143,18 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
 
       // ── Step 2: Fill import form and submit ───────────────────────────
       await page.locator('[data-testid="import-name-field"] input').fill(phenotype.name)
-      await jsonTextarea.fill(phenotype.json, { timeout: 30000 })
+      // Vuetify's v-textarea flakes through Playwright's fill() actionability
+      // re-checks for very large JSON payloads — set the value directly via
+      // the DOM and dispatch input so v-model picks it up.
+      await jsonTextarea.evaluate((el, value) => {
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLTextAreaElement.prototype,
+          'value',
+        )?.set
+        setter?.call(el, value)
+        el.dispatchEvent(new Event('input', { bubbles: true }))
+        el.dispatchEvent(new Event('change', { bubbles: true }))
+      }, phenotype.json)
 
       await page.locator('[data-testid="import-confirm-btn"]').click()
 
