@@ -13,14 +13,14 @@
         class="canvas-toolbar__age"
       >· {{ activeRun.age }}</span>
     </AtlasChip>
-    <v-chip
+    <AtlasChip
       v-else
-      size="small"
+      size="sm"
       variant="outlined"
       class="canvas-toolbar__chip canvas-toolbar__chip--muted"
     >
       {{ t('pathway.workbench.noRunsYet', 'No runs yet').value }}
-    </v-chip>
+    </AtlasChip>
 
     <AtlasChip
       v-if="activeRun"
@@ -45,26 +45,28 @@
       divided
       @update:model-value="(v: 'visual' | 'tabular' | null) => v && $emit('update:mode', v)"
     >
-      <v-btn
+      <AtlasButton
+        toggle
         value="visual"
-        size="small"
+        size="sm"
         data-testid="toolbar-mode-visual"
       >
         {{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}
-      </v-btn>
-      <v-btn
+      </AtlasButton>
+      <AtlasButton
+        toggle
         value="tabular"
-        size="small"
+        size="sm"
         data-testid="toolbar-mode-tabular"
       >
         {{ t('pathway.results.tabular', 'Tabular') }}
-      </v-btn>
+      </AtlasButton>
     </v-btn-toggle>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasSpacer } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 

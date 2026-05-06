@@ -3,12 +3,12 @@
     v-if="domainEntries.length > 0"
     class="profile-filter-chips d-flex align-center flex-wrap ga-2"
   >
-    <v-chip
+    <AtlasChip
       v-for="entry in domainEntries"
       :key="entry.domain"
       :color="getDomainColor(entry.domain)"
       :variant="entry.active ? 'flat' : 'outlined'"
-      size="small"
+      size="sm"
       :data-test="entry.active ? 'profile-chip-active' : `profile-chip-${entry.domain}`"
       :data-test-domain="entry.domain"
       class="profile-filter-chips__pill"
@@ -16,12 +16,13 @@
     >
       <span>{{ entry.domain }}</span>
       <span class="profile-filter-chips__count">· {{ entry.count }}</span>
-    </v-chip>
+    </AtlasChip>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { AtlasChip } from '@/components/ui'
 import { useProfileStore } from '@/stores/profile'
 import { getDomainColor } from '@/utils/domain-colors'
 

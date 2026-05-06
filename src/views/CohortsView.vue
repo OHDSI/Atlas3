@@ -16,22 +16,24 @@
         class="cohorts-view__view-toggle"
         data-testid="cohorts-view-toggle"
       >
-        <v-btn
+        <AtlasButton
+          toggle
           value="tile"
-          size="small"
+          size="sm"
           :aria-label="t('common.tileView', 'Tile view').value"
           data-testid="cohorts-view-toggle-tile"
         >
           <AtlasIcon>mdi-view-grid-outline</AtlasIcon>
-        </v-btn>
-        <v-btn
+        </AtlasButton>
+        <AtlasButton
+          toggle
           value="table"
-          size="small"
+          size="sm"
           :aria-label="t('dataSources.table.tableTab', 'Table view').value"
           data-testid="cohorts-view-toggle-table"
         >
           <AtlasIcon>mdi-view-list-outline</AtlasIcon>
-        </v-btn>
+        </AtlasButton>
       </v-btn-toggle>
     </template>
 
@@ -49,16 +51,16 @@
           {{ t('cohortDefinitions.newDefinition', 'New cohort') }}
         </AtlasButton>
 
-        <v-btn
-          variant="tonal"
-          prepend-icon="mdi-upload-outline"
+        <AtlasButton
+          variant="secondary"
+          icon="mdi-upload-outline"
           :aria-label="t('common.import', 'Import cohort from JSON').value"
           :disabled="!canCreateCohort"
           data-testid="import-cohort-btn"
           @click="handleImportCohort"
         >
           {{ t('common.import', 'Import') }}
-        </v-btn>
+        </AtlasButton>
 
         <AtlasChip
           v-if="!loading && filteredCohorts.length > 0"

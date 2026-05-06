@@ -31,42 +31,42 @@
         <v-card class="match-type-menu">
           <v-card-text class="pa-3">
             <div class="segmented-buttons">
-              <v-btn
-                :variant="tempLogicType === 'ALL' ? 'tonal' : 'outlined'"
-                :color="tempLogicType === 'ALL' ? 'primary' : undefined"
-                size="small"
+              <AtlasButton
+                :variant="tempLogicType === 'ALL' ? 'tonal' : 'secondary'"
+                :tone="tempLogicType === 'ALL' ? undefined : 'neutral'"
+                size="sm"
                 class="flex-1"
                 @click="tempLogicType = 'ALL'"
               >
                 {{ t('options.all', 'All') }}
-              </v-btn>
-              <v-btn
-                :variant="tempLogicType === 'ANY' ? 'tonal' : 'outlined'"
-                :color="tempLogicType === 'ANY' ? 'primary' : undefined"
-                size="small"
+              </AtlasButton>
+              <AtlasButton
+                :variant="tempLogicType === 'ANY' ? 'tonal' : 'secondary'"
+                :tone="tempLogicType === 'ANY' ? undefined : 'neutral'"
+                size="sm"
                 class="flex-1"
                 @click="tempLogicType = 'ANY'"
               >
                 {{ t('options.any', 'Any') }}
-              </v-btn>
-              <v-btn
-                :variant="tempLogicType === 'AT_LEAST' ? 'tonal' : 'outlined'"
-                :color="tempLogicType === 'AT_LEAST' ? 'primary' : undefined"
-                size="small"
+              </AtlasButton>
+              <AtlasButton
+                :variant="tempLogicType === 'AT_LEAST' ? 'tonal' : 'secondary'"
+                :tone="tempLogicType === 'AT_LEAST' ? undefined : 'neutral'"
+                size="sm"
                 class="flex-1"
                 @click="tempLogicType = 'AT_LEAST'"
               >
                 {{ t('options.atLeast', 'At least') }}
-              </v-btn>
-              <v-btn
-                :variant="tempLogicType === 'AT_MOST' ? 'tonal' : 'outlined'"
-                :color="tempLogicType === 'AT_MOST' ? 'primary' : undefined"
-                size="small"
+              </AtlasButton>
+              <AtlasButton
+                :variant="tempLogicType === 'AT_MOST' ? 'tonal' : 'secondary'"
+                :tone="tempLogicType === 'AT_MOST' ? undefined : 'neutral'"
+                size="sm"
                 class="flex-1"
                 @click="tempLogicType = 'AT_MOST'"
               >
                 {{ t('options.atMost', 'At most') }}
-              </v-btn>
+              </AtlasButton>
             </div>
             <AtlasTextField
               v-if="tempLogicType === 'AT_LEAST' || tempLogicType === 'AT_MOST'"
@@ -193,10 +193,11 @@
                       {{ formatEventType(event.criteriaType) }}
                     </AtlasChip>
                     <AtlasSpacer />
-                    <v-btn
+                    <AtlasIconButton
                       icon="mdi-close"
-                      size="x-small"
+                      size="sm"
                       variant="text"
+                      v-bind="{ ariaLabel: 'Remove criteria' }"
                       @click="removeCriteria(index)"
                     />
                   </div>

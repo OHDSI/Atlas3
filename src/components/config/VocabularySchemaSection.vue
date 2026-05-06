@@ -34,10 +34,10 @@
     </v-card>
 
     <!-- Success Toast with Undo -->
-    <v-snackbar
+    <AtlasSnackbar
       v-model="showToast"
+      severity="success"
       :timeout="5000"
-      color="success"
       location="bottom"
     >
       {{ toastMessage }}
@@ -56,7 +56,7 @@
           Close
         </AtlasButton>
       </template>
-    </v-snackbar>
+    </AtlasSnackbar>
 
     <AtlasSnackbar
       v-model="showErrorToast"

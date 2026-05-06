@@ -22,30 +22,33 @@
       >
         {{ rule.name || t('incidenceRate.untitled', 'Untitled rule').value }}
       </button>
-      <v-btn
+      <AtlasIconButton
         icon="mdi-arrow-up"
-        size="x-small"
-        density="compact"
+        size="sm"
         variant="text"
+        density="compact"
+        v-bind="{ ariaLabel: 'Move up' }"
         :disabled="readonly || idx === 0"
         :data-testid="`ir-strata-up-${idx}`"
         @click="$emit('move', idx, idx - 1)"
       />
-      <v-btn
+      <AtlasIconButton
         icon="mdi-arrow-down"
-        size="x-small"
-        density="compact"
+        size="sm"
         variant="text"
+        density="compact"
+        v-bind="{ ariaLabel: 'Move down' }"
         :disabled="readonly || idx === rules.length - 1"
         :data-testid="`ir-strata-down-${idx}`"
         @click="$emit('move', idx, idx + 1)"
       />
-      <v-btn
+      <AtlasIconButton
         icon="mdi-delete"
-        size="x-small"
-        density="compact"
+        size="sm"
         variant="text"
-        color="error"
+        density="compact"
+        tone="danger"
+        v-bind="{ ariaLabel: 'Remove rule' }"
         :disabled="readonly"
         :data-testid="`ir-strata-remove-${idx}`"
         @click="$emit('remove', idx)"
@@ -65,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton } from '@/components/ui'
+import { AtlasButton, AtlasIconButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { StratifyRule } from '@/models/incidence-rate.types'
 

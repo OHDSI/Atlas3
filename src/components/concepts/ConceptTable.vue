@@ -41,20 +41,20 @@
 
       <!-- Concept Type Badge -->
       <template #item.standardConcept="{ item }">
-        <v-chip
+        <AtlasChip
           :color="getConceptTypeColor(item)"
-          size="small"
+          size="sm"
           label
         >
           {{ getConceptTypeLabel(item) }}
-        </v-chip>
+        </AtlasChip>
       </template>
 
       <!-- Validity Badge -->
       <template #item.invalidReason="{ item }">
-        <v-chip
+        <AtlasChip
           :color="item.invalidReason ? 'error' : 'success'"
-          size="small"
+          size="sm"
           label
         >
           {{
@@ -62,7 +62,7 @@
               ? t('commonErrors.invalid', 'Invalid').value
               : t('commonErrors.valid', 'Valid').value
           }}
-        </v-chip>
+        </AtlasChip>
       </template>
 
       <!-- Record Count Columns - Format with commas or dash if undefined, show spinner while loading -->
@@ -145,16 +145,16 @@
           >
             Add
           </AtlasButton>
-          <v-btn
+          <AtlasButton
             v-else
-            color="error"
-            variant="outlined"
-            size="small"
-            prepend-icon="mdi-minus"
+            variant="secondary"
+            tone="danger"
+            size="sm"
+            icon="mdi-minus"
             @click="onRemoveConcept(item)"
           >
             Remove
-          </v-btn>
+          </AtlasButton>
         </div>
       </template>
 
@@ -213,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDataTable, AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasDataTable, AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'

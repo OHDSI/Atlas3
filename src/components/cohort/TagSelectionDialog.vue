@@ -29,28 +29,27 @@
           <h4 class="text-subtitle-1">
             Selected Tags ({{ localSelectedTags.length }})
           </h4>
-          <v-btn
-            size="small"
-            variant="text"
-            color="error"
+          <AtlasButton
+            size="sm"
+            variant="ghost"
             @click="clearAll"
           >
             Clear All
-          </v-btn>
+          </AtlasButton>
         </div>
         <div class="selected-tags-chips">
-          <v-chip
+          <AtlasChip
             v-for="tag in localSelectedTags"
             :key="tag.id || tag.name"
             :style="{ backgroundColor: tag.color || '#1976D2' }"
             closable
             class="ma-1"
-            @click:close="deselectTag(tag)"
+            @close="deselectTag(tag)"
           >
             <span :style="{ color: getContrastColor(tag.color || '#1976D2') }">
               {{ tag.name }}
             </span>
-          </v-chip>
+          </AtlasChip>
         </div>
       </div>
 
@@ -136,7 +135,7 @@
               v-else
               class="tag-chips-grid"
             >
-              <v-chip
+              <AtlasChip
                 v-for="tag in getGroupTags(group)"
                 :key="tag.id"
                 :style="{
@@ -168,7 +167,7 @@
                 >
                   {{ tag.name }}
                 </span>
-              </v-chip>
+              </AtlasChip>
             </div>
           </v-expansion-panel-text>
         </v-expansion-panel>
@@ -212,7 +211,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasBadge, AtlasDialog, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasDivider, AtlasIcon, AtlasProgressCircular, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag } from '@/models/cohort.types'

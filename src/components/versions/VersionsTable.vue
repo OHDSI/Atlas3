@@ -22,13 +22,12 @@
         cols="12"
         md="2"
       >
-        <v-btn
-          variant="text"
-          color="primary"
+        <AtlasButton
+          variant="ghost"
           @click="handleClearFilters"
         >
           {{ t('components.filterPanel.buttons.clear') }}
-        </v-btn>
+        </AtlasButton>
       </AtlasCol>
     </AtlasRow>
 
@@ -119,38 +118,32 @@
       <!-- Actions Column -->
       <template #item.actions="{ item }">
         <div class="d-flex gap-2">
-          <!-- Preview Action (User Story 2) -->
-          <v-btn
+          <AtlasButton
             v-if="!item.isCurrent"
-            size="small"
-            variant="text"
-            color="primary"
+            size="sm"
+            variant="ghost"
             @click="$emit('preview', item.version)"
           >
             {{ t('components.versions.preview') }}
-          </v-btn>
+          </AtlasButton>
 
-          <!-- Comment Action (User Story 3) -->
-          <v-btn
+          <AtlasButton
             v-if="!item.isCurrent && config.canEdit.value"
-            size="small"
-            variant="text"
-            color="primary"
+            size="sm"
+            variant="ghost"
             @click="$emit('edit-comment', item)"
           >
             {{ item.comment ? t('components.versions.editComment') : t('common.add') }}
-          </v-btn>
+          </AtlasButton>
 
-          <!-- Copy Action (User Story 4) -->
-          <v-btn
+          <AtlasButton
             v-if="!item.isCurrent"
-            size="small"
-            variant="text"
-            color="primary"
+            size="sm"
+            variant="ghost"
             @click="$emit('copy', item.version)"
           >
             {{ t('components.versions.createACopy') }}
-          </v-btn>
+          </AtlasButton>
         </div>
       </template>
 
@@ -174,7 +167,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasAvatar, AtlasChip, AtlasCol, AtlasDataTable, AtlasIcon, AtlasProgressLinear, AtlasRow, AtlasSelect } from '@/components/ui'
+import { AtlasAlert, AtlasAvatar, AtlasButton, AtlasChip, AtlasCol, AtlasDataTable, AtlasIcon, AtlasProgressLinear, AtlasRow, AtlasSelect } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { VersionsConfig, VersionsTableItem } from './types'

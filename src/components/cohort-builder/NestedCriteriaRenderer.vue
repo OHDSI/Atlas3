@@ -15,12 +15,12 @@
 
     <!-- Logic Type Display -->
     <div class="logic-header">
-      <v-chip
-        size="small"
-        :color="getLogicColor(nested.logicType)"
+      <AtlasChip
+        size="sm"
+        :tone="getLogicTone(nested.logicType)"
       >
         {{ formatLogicType(nested.logicType, nested.count) }}
-      </v-chip>
+      </AtlasChip>
     </div>
 
     <!-- Events List -->
@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
+import { AtlasAlert, AtlasChip, AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
 import { ref } from 'vue'
 import type { NestedCriteria, CriteriaType } from '@/models/cohort.types'
 import { useI18n } from '@/composables/useI18n'
@@ -95,15 +95,14 @@ function formatLogicType(logicType: string, count?: number): string {
   return labels[logicType] || logicType
 }
 
-// Get color for logic type
-function getLogicColor(logicType: string): string {
-  const colors: Record<string, string> = {
+function getLogicTone(logicType: string): 'neutral' | 'primary' | 'info' | 'success' | 'warning' | 'danger' {
+  const tones: Record<string, 'neutral' | 'primary' | 'info' | 'success' | 'warning' | 'danger'> = {
     ALL: 'primary',
-    ANY: 'secondary',
+    ANY: 'info',
     AT_LEAST: 'success',
     AT_MOST: 'warning',
   }
-  return colors[logicType] || 'grey'
+  return tones[logicType] || 'neutral'
 }
 
 // Format event type using configuration-driven labels (supports all 16 filter types)

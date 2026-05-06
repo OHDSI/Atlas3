@@ -4,9 +4,17 @@
     :model-value="modelValue"
     :max-width="maxWidth"
     :persistent="persistent"
+    :width="width"
+    v-bind="forwardAttrs"
     @update:model-value="onModelValueUpdate"
   >
-    <v-card class="atlas-dialog__card">
+    <slot
+      v-if="chromeless"
+    />
+    <v-card
+      v-else
+      class="atlas-dialog__card"
+    >
       <header class="atlas-dialog__header">
         <div class="atlas-dialog__title-block">
           <div class="atlas-dialog__eyebrow-row">
@@ -54,27 +62,33 @@
 </template>
 
 <script setup lang="ts">
+import { computed, useAttrs } from 'vue'
 import { VDialog, VCard, VDivider } from 'vuetify/components'
 import AtlasIconButton from './AtlasIconButton.vue'
 
 interface Props {
   modelValue: boolean
-  eyebrow: string
+  eyebrow?: string
   title?: string
   subtitle?: string
   maxWidth?: number | string
+  width?: number | string
   persistent?: boolean
   showClose?: boolean
   closeLabel?: string
+  chromeless?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
+  eyebrow: '',
   title: undefined,
   subtitle: undefined,
   maxWidth: 560,
+  width: undefined,
   persistent: false,
   showClose: true,
   closeLabel: 'Close',
+  chromeless: false,
 })
 
 const emit = defineEmits<{
@@ -83,6 +97,13 @@ const emit = defineEmits<{
 }>()
 
 defineOptions({ inheritAttrs: false })
+
+const attrs = useAttrs()
+const forwardAttrs = computed(() => {
+  const { 'max-width': _mw, maxWidth: _mw2, persistent: _p, width: _w, ...rest } = attrs as Record<string, unknown>
+  void _mw; void _mw2; void _p; void _w
+  return rest
+})
 
 function onModelValueUpdate(open: boolean) {
   emit('update:modelValue', open)

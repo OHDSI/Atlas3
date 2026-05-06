@@ -21,17 +21,15 @@
         </AtlasAlert>
 
         <!-- Clear Cache Button -->
-        <v-btn
-          color="warning"
+        <AtlasButton
+          tone="warning"
+          icon="mdi-trash-can-outline"
           :loading="isLoading"
           :disabled="isLoading"
           @click="showConfirmDialog = true"
         >
-          <AtlasIcon start>
-            mdi-trash-can-outline
-          </AtlasIcon>
           Clear Configuration Cache
-        </v-btn>
+        </AtlasButton>
       </v-card-text>
     </v-card>
 
@@ -75,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasDialog, AtlasIcon, AtlasSnackbar } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDialog, AtlasSnackbar } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'

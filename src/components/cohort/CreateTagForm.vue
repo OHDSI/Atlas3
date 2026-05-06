@@ -34,8 +34,7 @@
       class="mb-2"
     />
 
-    <!-- Color Picker -->
-    <v-text-field
+    <AtlasTextField
       v-model="form.color"
       label="Color (optional)"
       type="color"
@@ -55,7 +54,7 @@
           :style="{ backgroundColor: effectiveColor }"
         />
       </template>
-    </v-text-field>
+    </AtlasTextField>
 
     <!-- Advanced Options -->
     <v-expansion-panels
@@ -71,7 +70,7 @@
         </v-expansion-panel-title>
         <v-expansion-panel-text>
           <!-- Icon Field -->
-          <v-text-field
+          <AtlasTextField
             v-model="form.icon"
             label="Icon (optional)"
             hint="Material Design Icon name (e.g., mdi-star)"
@@ -85,7 +84,7 @@
                 {{ form.icon }}
               </AtlasIcon>
             </template>
-          </v-text-field>
+          </AtlasTextField>
 
           <!-- Permission Protected -->
           <AtlasCheckbox

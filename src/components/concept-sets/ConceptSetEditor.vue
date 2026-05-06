@@ -103,15 +103,14 @@
       >
         {{ t('common.cancel') }}
       </AtlasButton>
-      <v-btn
-        color="primary"
-        variant="elevated"
+      <AtlasButton
+        variant="primary"
         data-testid="save-concept-set"
         :disabled="!canSave"
         @click="$emit('save')"
       >
         {{ t('common.save') }}
-      </v-btn>
+      </AtlasButton>
     </v-card-actions>
   </v-card>
 </template>

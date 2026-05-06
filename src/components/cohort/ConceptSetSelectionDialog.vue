@@ -149,15 +149,15 @@
             >
               {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
             </AtlasButton>
-            <v-btn
+            <AtlasButton
               v-else
-              size="small"
-              variant="tonal"
-              prepend-icon="mdi-close"
+              size="sm"
+              variant="secondary"
+              icon="mdi-close"
               @click="searchTerm = ''"
             >
               {{ t('common.reset', 'Clear search').value }}
-            </v-btn>
+            </AtlasButton>
           </div>
         </div>
       </div>

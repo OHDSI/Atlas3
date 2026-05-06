@@ -23,16 +23,15 @@
           v-if="hasTags(item)"
           class="analysis-data-table__tag-rail"
         >
-          <v-chip
+          <AtlasChip
             v-for="tag in visibleTags(item)"
             :key="tag.name"
-            size="x-small"
+            size="sm"
             variant="tonal"
-            density="compact"
             class="analysis-data-table__tag"
           >
             {{ tag.name }}
-          </v-chip>
+          </AtlasChip>
           <span
             v-if="overflowTagCount(item) > 0"
             class="analysis-data-table__tag-overflow"
@@ -137,7 +136,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends { id?: number }">
-import { AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
+import { AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 import { computed, useSlots } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { formatDate, formatRelativeTime } from '@/utils/date-format'

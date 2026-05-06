@@ -10,27 +10,27 @@
       <strong>#{{ activeRun.id }}</strong>
       <span class="muted">· {{ activeRun.sourceKey }}</span>
     </AtlasChip>
-    <v-chip
+    <AtlasChip
       v-else
-      size="small"
+      size="sm"
       variant="outlined"
       class="ir-toolbar__chip ir-toolbar__chip--muted"
       data-testid="ir-toolbar-run-chip"
     >
       {{ t('ir.workbench.noRunsYet', 'No runs yet').value }}
-    </v-chip>
+    </AtlasChip>
 
     <AtlasMenu offset="6">
       <template #activator="{ props: ap }">
-        <v-chip
+        <AtlasChip
           v-bind="ap"
-          size="small"
+          size="sm"
           variant="outlined"
           data-testid="ir-toolbar-target-chip"
         >
           <strong>T:</strong>
           <span class="muted">&nbsp;{{ targetLabel }}</span>
-        </v-chip>
+        </AtlasChip>
       </template>
       <AtlasList density="compact">
         <AtlasListItem
@@ -47,15 +47,15 @@
 
     <AtlasMenu offset="6">
       <template #activator="{ props: ap }">
-        <v-chip
+        <AtlasChip
           v-bind="ap"
-          size="small"
+          size="sm"
           variant="outlined"
           data-testid="ir-toolbar-outcome-chip"
         >
           <strong>O:</strong>
           <span class="muted">&nbsp;{{ outcomeLabel }}</span>
-        </v-chip>
+        </AtlasChip>
       </template>
       <AtlasList density="compact">
         <AtlasListItem
@@ -72,15 +72,15 @@
 
     <AtlasMenu offset="6">
       <template #activator="{ props: ap }">
-        <v-chip
+        <AtlasChip
           v-bind="ap"
-          size="small"
+          size="sm"
           variant="outlined"
           data-testid="ir-toolbar-mult-chip"
         >
           <strong>×</strong>
           <span class="muted">&nbsp;{{ multiplier.toLocaleString() }}</span>
-        </v-chip>
+        </AtlasChip>
       </template>
       <AtlasList density="compact">
         <AtlasListItem
@@ -105,20 +105,22 @@
       divided
       @update:model-value="(v: 'treemap' | 'table' | null) => v && $emit('update:mode', v)"
     >
-      <v-btn
+      <AtlasButton
+        toggle
         value="treemap"
-        size="small"
+        size="sm"
         data-testid="ir-toolbar-mode-treemap"
       >
         {{ t('ir.workbench.treemap', 'Treemap').value }}
-      </v-btn>
-      <v-btn
+      </AtlasButton>
+      <AtlasButton
+        toggle
         value="table"
-        size="small"
+        size="sm"
         data-testid="ir-toolbar-mode-table"
       >
         {{ t('pathway.results.tabular', 'Table').value }}
-      </v-btn>
+      </AtlasButton>
     </v-btn-toggle>
 
     <AtlasMenu offset="6">

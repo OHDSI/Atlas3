@@ -73,15 +73,15 @@
               </template>
             </AtlasTooltip>
 
-            <v-btn
+            <AtlasButton
               v-if="isEditMode"
-              color="error"
-              variant="text"
+              variant="ghost"
+              tone="danger"
               :disabled="loading || !canDelete"
               @click="onDelete"
             >
               {{ t('common.delete', 'Delete') }}
-            </v-btn>
+            </AtlasButton>
 
             <AtlasButton
               :disabled="!formValid || loading || !canSubmit"

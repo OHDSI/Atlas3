@@ -22,23 +22,23 @@
         offset="8"
       >
         <template #activator="{ props: activatorProps }">
-          <v-btn
+          <AtlasButton
             v-bind="activatorProps"
-            variant="tonal"
-            prepend-icon="mdi-filter-variant"
+            variant="secondary"
+            icon="mdi-filter-variant"
             class="cohort-filters__menu-btn"
           >
             {{ filtersLabel }}
-            <v-chip
+            <AtlasChip
               v-if="activeFilterCount > 0"
-              size="x-small"
+              size="sm"
               variant="flat"
-              color="primary"
+              tone="primary"
               class="cohort-filters__menu-count"
             >
               {{ activeFilterCount }}
-            </v-chip>
-          </v-btn>
+            </AtlasChip>
+          </AtlasButton>
         </template>
 
         <AtlasCard
@@ -97,8 +97,9 @@
                 @click:clear="localFilters.createdDateRange.from = undefined"
                 @click="showCreatedFromPicker = true"
               />
-              <v-dialog
+              <AtlasDialog
                 v-model="showCreatedFromPicker"
+                chromeless
                 width="auto"
               >
                 <v-date-picker
@@ -106,7 +107,7 @@
                   :title="createdFromLabel"
                   @update:model-value="handleCreatedFromChange"
                 />
-              </v-dialog>
+              </AtlasDialog>
 
               <AtlasTextField
                 :model-value="formatDateForDisplay(localFilters.createdDateRange.to)"
@@ -119,8 +120,9 @@
                 @click:clear="localFilters.createdDateRange.to = undefined"
                 @click="showCreatedToPicker = true"
               />
-              <v-dialog
+              <AtlasDialog
                 v-model="showCreatedToPicker"
+                chromeless
                 width="auto"
               >
                 <v-date-picker
@@ -128,7 +130,7 @@
                   :title="createdToLabel"
                   @update:model-value="handleCreatedToChange"
                 />
-              </v-dialog>
+              </AtlasDialog>
             </div>
 
             <div class="cohort-filters__menu-section-label">
@@ -146,8 +148,9 @@
                 @click:clear="localFilters.modifiedDateRange.from = undefined"
                 @click="showModifiedFromPicker = true"
               />
-              <v-dialog
+              <AtlasDialog
                 v-model="showModifiedFromPicker"
+                chromeless
                 width="auto"
               >
                 <v-date-picker
@@ -155,7 +158,7 @@
                   :title="modifiedFromLabel"
                   @update:model-value="handleModifiedFromChange"
                 />
-              </v-dialog>
+              </AtlasDialog>
 
               <AtlasTextField
                 :model-value="formatDateForDisplay(localFilters.modifiedDateRange.to)"
@@ -168,8 +171,9 @@
                 @click:clear="localFilters.modifiedDateRange.to = undefined"
                 @click="showModifiedToPicker = true"
               />
-              <v-dialog
+              <AtlasDialog
                 v-model="showModifiedToPicker"
+                chromeless
                 width="auto"
               >
                 <v-date-picker
@@ -177,7 +181,7 @@
                   :title="modifiedToLabel"
                   @update:model-value="handleModifiedToChange"
                 />
-              </v-dialog>
+              </AtlasDialog>
             </div>
           </div>
         </AtlasCard>
@@ -255,7 +259,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { FilterState } from '@/composables/useCohorts'
-import { AtlasButton, AtlasAutocomplete, AtlasCard, AtlasChip, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasAutocomplete, AtlasCard, AtlasChip, AtlasDialog, AtlasMenu, AtlasSpacer, AtlasTextField } from '@/components/ui'
 
 interface Props {
   filters: FilterState

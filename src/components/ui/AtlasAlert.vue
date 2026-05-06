@@ -9,6 +9,18 @@
     v-bind="forwardAttrs"
     @click:close="$emit('close')"
   >
+    <template
+      v-if="$slots.prepend"
+      #prepend
+    >
+      <slot name="prepend" />
+    </template>
+    <template
+      v-if="$slots.append"
+      #append
+    >
+      <slot name="append" />
+    </template>
     <slot />
   </v-alert>
 </template>

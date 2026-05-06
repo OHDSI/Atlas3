@@ -22,10 +22,11 @@
           />
         </td>
         <td>
-          <v-btn
+          <AtlasIconButton
             icon="mdi-close"
-            size="x-small"
+            size="sm"
             variant="text"
+            v-bind="{ ariaLabel: 'Remove cohort' }"
             :disabled="readonly"
             @click="emit('remove', c.id)"
           />
@@ -36,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasTextField } from '@/components/ui'
+import { AtlasIconButton, AtlasTextField } from '@/components/ui'
 import type { PathwayCohortRef } from '@/models/pathway.types'
 import { useI18n } from '@/composables/useI18n'
 

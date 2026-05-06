@@ -6,8 +6,8 @@
           v-for="(c, i) in stats.summary.chips"
           :key="i"
         >
-          <v-chip
-            size="x-small"
+          <AtlasChip
+            size="sm"
             variant="elevated"
             class="path-stats__chip"
           >
@@ -16,7 +16,7 @@
               :style="{ backgroundColor: colors(c.colorKey) }"
             />
             {{ c.name }}
-          </v-chip>
+          </AtlasChip>
           <AtlasIcon
             v-if="i < stats.summary.chips.length - 1"
             size="x-small"
@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
+import { AtlasChip, AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui'
 import type { PathStatsOutput } from '@/utils/pathway-path-stats'
 import { useI18n } from '@/composables/useI18n'
 

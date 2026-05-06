@@ -9,56 +9,56 @@
     >
       <span class="concept-set-table__filters-label">{{ t('cs.manager.filters', 'Filter').value }}:</span>
 
-      <v-chip
+      <AtlasChip
         v-for="domain in availableDomains"
         :key="`d-${domain}`"
         :color="getDomainColor(domain)"
         :variant="activeDomains.has(domain) ? 'flat' : 'tonal'"
-        size="small"
+        size="sm"
         class="concept-set-table__filter-chip"
         @click="toggleDomainFilter(domain)"
       >
         {{ domain }}
         <span class="concept-set-table__filter-count">{{ domainCounts.get(domain) }}</span>
-      </v-chip>
+      </AtlasChip>
 
       <span
         v-if="availableVocabularies.length"
         class="concept-set-table__filters-divider"
       />
 
-      <v-chip
+      <AtlasChip
         v-for="vocab in availableVocabularies"
         :key="`v-${vocab}`"
         :variant="activeVocabularies.has(vocab) ? 'flat' : 'tonal'"
-        color="primary"
-        size="small"
+        tone="primary"
+        size="sm"
         class="concept-set-table__filter-chip"
         @click="toggleVocabFilter(vocab)"
       >
         {{ vocab }}
-      </v-chip>
+      </AtlasChip>
 
       <span class="concept-set-table__filters-divider" />
 
-      <v-chip
+      <AtlasChip
         :variant="standardOnly ? 'flat' : 'tonal'"
-        color="primary"
-        size="small"
+        tone="primary"
+        size="sm"
         class="concept-set-table__filter-chip"
         @click="standardOnly = !standardOnly"
       >
         {{ t('search.standard', 'Standard').value }}
-      </v-chip>
-      <v-chip
+      </AtlasChip>
+      <AtlasChip
         :variant="excludedOnly ? 'flat' : 'tonal'"
-        color="error"
-        size="small"
+        tone="danger"
+        size="sm"
         class="concept-set-table__filter-chip"
         @click="excludedOnly = !excludedOnly"
       >
         {{ t('columns.exclude', 'Excluded').value }}
-      </v-chip>
+      </AtlasChip>
 
       <AtlasSpacer />
 
@@ -106,10 +106,9 @@
 
         <!-- Exclude Toggle -->
         <template #item.isExcluded="{ item }">
-          <v-checkbox
+          <AtlasCheckbox
             :model-value="item.isExcluded"
             hide-details
-            density="compact"
             color="error"
             @update:model-value="onToggleExclude(item)"
           />
@@ -118,53 +117,53 @@
         <!-- Domain chip — coloured by domain so a 200-row set can be
              scanned at a glance. -->
         <template #item.domainId="{ item }">
-          <v-chip
+          <AtlasChip
             v-if="item.domainId"
             :color="getDomainColor(item.domainId)"
-            size="x-small"
+            size="xs"
             variant="tonal"
             class="concept-set-table__chip"
           >
             {{ item.domainId }}
-          </v-chip>
+          </AtlasChip>
         </template>
 
         <!-- Vocabulary chip — neutral tonal so it doesn't fight with
              the domain colour. -->
         <template #item.vocabularyId="{ item }">
-          <v-chip
+          <AtlasChip
             v-if="item.vocabularyId"
-            size="x-small"
+            size="xs"
             variant="outlined"
             class="concept-set-table__chip"
           >
             {{ item.vocabularyId }}
-          </v-chip>
+          </AtlasChip>
         </template>
 
         <!-- Standard concept badge -->
         <template #item.standardConcept="{ item }">
-          <v-chip
+          <AtlasChip
             :color="getConceptTypeColor(item)"
-            size="x-small"
+            size="xs"
             variant="tonal"
             class="concept-set-table__chip"
           >
             {{ getConceptTypeLabel(item) }}
-          </v-chip>
+          </AtlasChip>
         </template>
 
         <!-- Validity Badge -->
         <template #item.invalidReason="{ item }">
-          <v-chip
+          <AtlasChip
             v-if="item.invalidReason"
-            color="error"
-            size="x-small"
+            tone="danger"
+            size="xs"
             variant="tonal"
             class="concept-set-table__chip"
           >
             {{ t('commonErrors.invalid', 'Invalid').value }}
-          </v-chip>
+          </AtlasChip>
         </template>
 
         <!-- Actions Column — visible only on row hover, so a long
@@ -214,15 +213,15 @@
             ).value
         }}
       </p>
-      <v-btn
+      <AtlasButton
         v-if="hasActiveFilters"
-        size="small"
-        variant="tonal"
-        prepend-icon="mdi-close"
+        size="sm"
+        variant="secondary"
+        icon="mdi-close"
         @click="resetFilters"
       >
         {{ t('common.reset', 'Reset').value }}
-      </v-btn>
+      </AtlasButton>
     </div>
   </div>
 </template>
@@ -231,7 +230,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
-import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 
 const { t } = useI18n()
