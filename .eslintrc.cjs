@@ -10,6 +10,7 @@ module.exports = {
     'eslint:recommended',
     'plugin:vue/vue3-recommended',
     'plugin:@typescript-eslint/recommended',
+    'plugin:vuejs-accessibility/recommended',
   ],
   parser: 'vue-eslint-parser',
   parserOptions: {
@@ -17,7 +18,7 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     sourceType: 'module',
   },
-  plugins: ['vue', '@typescript-eslint', 'unused-imports'],
+  plugins: ['vue', '@typescript-eslint', 'unused-imports', 'vuejs-accessibility'],
   rules: {
     // Vue-specific adjustments
     'vue/valid-v-slot': ['error', { allowModifiers: true }],

@@ -170,9 +170,10 @@ const { t } = useI18n()
     padding: 4px 8px;
     font-size: 14px;
     min-width: 200px;
-    outline: none;
 
-    &:focus {
+    &:focus-visible {
+      outline: 2px solid rgb(var(--v-theme-primary));
+      outline-offset: 2px;
       border-bottom-color: rgb(var(--v-theme-primary));
     }
   }

@@ -466,4 +466,24 @@ describe('ConceptTable', () => {
     expect(wrapper.emitted('update:page')).toBeTruthy()
     expect(wrapper.emitted('update:page')![0]).toEqual([1])
   })
+
+  describe('Accessibility', () => {
+    it('labels the select-all header checkbox', async () => {
+      const wrapper = mountComponent({ concepts: mockConcepts, selectable: true })
+      await wrapper.vm.$nextTick()
+
+      const html = wrapper.html()
+      expect(html).toContain('aria-label="Select all concepts"')
+    })
+
+    it('labels per-row checkboxes with the concept name', async () => {
+      const wrapper = mountComponent({ concepts: mockConcepts, selectable: true })
+      await wrapper.vm.$nextTick()
+
+      const html = wrapper.html()
+      expect(html).toContain('aria-label="Select Atrial fibrillation"')
+      expect(html).toContain('aria-label="Select Myocardial infarction"')
+      expect(html).toContain('aria-label="Select Glucose measurement"')
+    })
+  })
 })

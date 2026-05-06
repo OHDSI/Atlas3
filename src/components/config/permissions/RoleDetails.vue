@@ -30,7 +30,6 @@
               :rules="nameRules"
               variant="outlined"
               hide-details="auto"
-              autofocus
               @keyup.enter="saveName"
               @keyup.esc="cancelEditName"
             />
@@ -88,7 +87,6 @@
               :rows="3"
               multiline
               hide-details="auto"
-              autofocus
             />
             <div class="role-details__edit-actions">
               <AtlasButton

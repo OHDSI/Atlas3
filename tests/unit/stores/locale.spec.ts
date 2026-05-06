@@ -337,6 +337,33 @@ describe('Locale Store', () => {
 
       expect(store.locale).toBe('en')
     })
+
+    it('should set the document html lang attribute', async () => {
+      const store = useLocaleStore()
+      store.availableLocales = mockLocales
+      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
+
+      await store.changeLocale('es')
+
+      expect(document.documentElement.getAttribute('lang')).toBe('es')
+    })
+
+    it('should dispatch a locale-changed event on the window', async () => {
+      const store = useLocaleStore()
+      store.availableLocales = mockLocales
+      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
+
+      const listener = vi.fn()
+      window.addEventListener('locale-changed', listener)
+
+      await store.changeLocale('es')
+
+      expect(listener).toHaveBeenCalled()
+      const evt = listener.mock.calls[0]?.[0] as CustomEvent<{ locale: string }>
+      expect(evt.detail.locale).toBe('es')
+
+      window.removeEventListener('locale-changed', listener)
+    })
   })
 
   describe('detectBrowserLanguage Action', () => {

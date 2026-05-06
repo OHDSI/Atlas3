@@ -1,5 +1,12 @@
 <template>
   <v-app>
+    <a
+      href="#main"
+      class="skip-link"
+    >
+      {{ t('a11y.skipToMain', 'Skip to main content') }}
+    </a>
+
     <!-- Initial loading overlay while translations load -->
     <v-overlay
       v-model="isInitializing"
@@ -20,7 +27,10 @@
 
     <NavBar v-if="showNavBar" />
 
-    <v-main>
+    <v-main
+      id="main"
+      tabindex="-1"
+    >
       <!-- Configuration validation warnings -->
       <ConfigurationWarningBanner />
 
@@ -139,5 +149,28 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Global styles will be added in assets/styles/ during implementation */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 10000;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 1rem;
+  background-color: rgb(var(--v-theme-surface));
+  color: rgb(var(--v-theme-primary));
+  border: 2px solid rgb(var(--v-theme-primary));
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+  outline: none;
+}
 </style>

@@ -2,6 +2,8 @@
   <div
     v-if="hasError"
     class="error-boundary"
+    role="alert"
+    aria-live="assertive"
   >
     <AtlasContainer>
       <AtlasRow justify="center">
@@ -51,6 +53,7 @@
             </v-card-text>
             <v-card-actions>
               <AtlasButton
+                ref="reloadButtonRef"
                 variant="secondary"
                 icon="mdi-refresh"
                 @click="handleReset"
@@ -75,7 +78,8 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasCol, AtlasContainer, AtlasIcon, AtlasRow } from '@/components/ui'
-import { ref, onErrorCaptured } from 'vue'
+import { ref, onErrorCaptured, nextTick } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
@@ -85,9 +89,22 @@ const { t } = useI18n()
 
 const hasError = ref(false)
 const errorDetails = ref<string | null>(null)
+const reloadButtonRef = ref<ComponentPublicInstance | null>(null)
 
 onErrorCaptured((err: Error, instance, info) => {
   hasError.value = true
+
+  void nextTick(() => {
+    const el = reloadButtonRef.value?.$el as HTMLElement | undefined
+    const focusTarget = el?.matches?.('button') ? el : el?.querySelector?.('button')
+    if (focusTarget instanceof HTMLElement) {
+      try {
+        focusTarget.focus()
+      } catch {
+        void 0
+      }
+    }
+  })
 
   // Build error details
   errorDetails.value = [

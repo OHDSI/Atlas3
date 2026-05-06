@@ -6,6 +6,9 @@
     :disabled="disabled"
     :error-messages="errorMessages"
     :indeterminate="indeterminate"
+    :aria-required="required ? 'true' : undefined"
+    :aria-invalid="hasError ? 'true' : undefined"
+    :aria-checked="indeterminate ? 'mixed' : undefined"
     density="compact"
     v-bind="forwardAttrs"
     @update:model-value="(v: boolean | null) => $emit('update:modelValue', !!v)"
@@ -21,6 +24,7 @@ interface Props {
   disabled?: boolean
   error?: string
   indeterminate?: boolean
+  required?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,12 +33,15 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   error: undefined,
   indeterminate: false,
+  required: false,
 })
 
 defineEmits<{ 'update:modelValue': [value: boolean] }>()
 defineOptions({ inheritAttrs: false })
 
 const errorMessages = computed(() => (props.error ? [props.error] : undefined))
+
+const hasError = computed(() => !!props.error)
 
 const attrs = useAttrs()
 const forwardAttrs = computed(() => {

@@ -6,6 +6,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
+import { useLocaleStore } from '@/stores/locale'
 import { authConfig } from '@/config/auth.config'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
@@ -263,6 +264,49 @@ router.beforeEach(
     next()
   }
 )
+
+const APP_TITLE = 'ATLAS'
+
+function applyDocumentTitle(route: RouteLocationNormalized): void {
+  if (typeof document === 'undefined') return
+  const titleKey = (route.meta as { titleKey?: string }).titleKey
+  if (!titleKey) {
+    document.title = APP_TITLE
+    return
+  }
+  let label: string = titleKey
+  try {
+    const localeStore = useLocaleStore()
+    const translations = localeStore.translations as Record<string, unknown>
+    const segments = titleKey.split('.')
+    let value: unknown = translations
+    for (const seg of segments) {
+      if (value && typeof value === 'object') {
+        value = (value as Record<string, unknown>)[seg]
+      } else {
+        value = undefined
+        break
+      }
+    }
+    if (typeof value === 'string' && value.length > 0) {
+      label = value
+    }
+  } catch {
+    // Pinia not yet installed (e.g. early in bootstrap or in isolated tests);
+    // fall back to the title key itself.
+  }
+  document.title = `${label} | ${APP_TITLE}`
+}
+
+router.afterEach((to: RouteLocationNormalized) => {
+  applyDocumentTitle(to)
+})
+
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('locale-changed', () => {
+    applyDocumentTitle(router.currentRoute.value)
+  })
+}
 
 /**
  * Get token from cookie

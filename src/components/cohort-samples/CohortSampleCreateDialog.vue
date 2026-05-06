@@ -12,7 +12,6 @@
         v-model="form.name"
         label="Sample name"
         variant="outlined"
-        autofocus
         data-testid="sample-name"
         required
       />

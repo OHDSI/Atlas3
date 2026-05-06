@@ -89,6 +89,30 @@ describe('CohortBreadcrumb', () => {
     })
   })
 
+  describe('Accessibility', () => {
+    it('should label the breadcrumb nav landmark', () => {
+      const wrapper = mountComponent()
+
+      const nav = wrapper.find('nav.cohort-breadcrumb')
+      expect(nav.exists()).toBe(true)
+      expect(nav.attributes('aria-label')).toBe('Breadcrumb')
+    })
+
+    it('should mark the active item with aria-current="page"', () => {
+      const wrapper = mountComponent({ modelValue: 'Active Cohort' })
+
+      const activeItem = wrapper.find('.cohort-breadcrumb__item--active')
+      expect(activeItem.attributes('aria-current')).toBe('page')
+    })
+
+    it('should not put aria-current on non-active items', () => {
+      const wrapper = mountComponent()
+
+      const link = wrapper.find('.cohort-breadcrumb__item--link')
+      expect(link.attributes('aria-current')).toBeUndefined()
+    })
+  })
+
   describe('Navigation', () => {
     it('should emit navigate-back when link is clicked', async () => {
       const wrapper = mountComponent()

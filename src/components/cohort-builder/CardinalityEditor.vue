@@ -138,23 +138,25 @@ const updateCountingMethod = (countingMethod: Cardinality['countingMethod']) => 
           <label
             class="v-label"
             for="count-input"
-          >{{ t('columns.count') }}</label>
-          <input
-            id="count-input"
-            :value="count"
-            type="number"
-            aria-label="Count"
-            min="0"
-            data-testid="count-input"
-            class="v-input__control"
-            style="
-              width: 100%;
-              padding: 8px;
-              border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-              border-radius: 4px;
-            "
-            @input="e => (count = Number((e.target as HTMLInputElement).value))"
           >
+            {{ t('columns.count') }}
+            <input
+              id="count-input"
+              :value="count"
+              type="number"
+              aria-label="Count"
+              min="0"
+              data-testid="count-input"
+              class="v-input__control"
+              style="
+                width: 100%;
+                padding: 8px;
+                border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+                border-radius: 4px;
+              "
+              @input="e => (count = Number((e.target as HTMLInputElement).value))"
+            >
+          </label>
         </AtlasCol>
 
         <!-- Counting Method Dropdown -->

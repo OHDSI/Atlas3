@@ -49,4 +49,34 @@ describe('AtlasCheckbox', () => {
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     expect(wrapper.emitted('update:modelValue')![0]).toEqual([true])
   })
+
+  it('sets aria-required on the input when required=true', () => {
+    const wrapper = mountWith({ required: true })
+    expect(wrapper.find('input').attributes('aria-required')).toBe('true')
+  })
+
+  it('does not set aria-required when required=false', () => {
+    const wrapper = mountWith()
+    expect(wrapper.find('input').attributes('aria-required')).toBeUndefined()
+  })
+
+  it('sets aria-invalid on the input when error is present', () => {
+    const wrapper = mountWith({ error: 'Bad' })
+    expect(wrapper.find('input').attributes('aria-invalid')).toBe('true')
+  })
+
+  it('does not set aria-invalid when no error', () => {
+    const wrapper = mountWith()
+    expect(wrapper.find('input').attributes('aria-invalid')).toBeUndefined()
+  })
+
+  it('sets aria-checked="mixed" on the input when indeterminate=true', () => {
+    const wrapper = mountWith({ indeterminate: true })
+    expect(wrapper.find('input').attributes('aria-checked')).toBe('mixed')
+  })
+
+  it('does not set aria-checked when not indeterminate', () => {
+    const wrapper = mountWith()
+    expect(wrapper.find('input').attributes('aria-checked')).toBeUndefined()
+  })
 })

@@ -131,6 +131,7 @@
         ref="importFileInput"
         type="file"
         accept="application/json,.json"
+        aria-label="Import pathway design"
         style="display: none"
         data-testid="pathway-builder-import-input"
         @change="handleImportFileChange"
@@ -458,7 +459,6 @@ onBeforeUnmount(() => {
   padding: 0 0 2px;
   margin: 0;
   font-family: inherit;
-  outline: none;
 }
 .pathway-builder__title-input::placeholder {
   color: rgba(var(--v-theme-on-surface), 0.32);
@@ -467,7 +467,9 @@ onBeforeUnmount(() => {
 .pathway-builder__title-input:hover:not(:read-only) {
   border-bottom-color: rgba(var(--v-theme-on-surface), 0.16);
 }
-.pathway-builder__title-input:focus {
+.pathway-builder__title-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
   border-bottom-color: rgb(var(--v-theme-orange));
 }
 
@@ -482,7 +484,6 @@ onBeforeUnmount(() => {
   padding: 0 0 2px;
   margin: 0;
   font-family: inherit;
-  outline: none;
 }
 .pathway-builder__subtitle-input::placeholder {
   color: rgba(var(--v-theme-on-surface), 0.32);
@@ -490,7 +491,9 @@ onBeforeUnmount(() => {
 .pathway-builder__subtitle-input:hover:not(:read-only) {
   border-bottom-color: rgba(var(--v-theme-on-surface), 0.12);
 }
-.pathway-builder__subtitle-input:focus {
+.pathway-builder__subtitle-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
   border-bottom-color: rgb(var(--v-theme-orange));
 }
 </style>

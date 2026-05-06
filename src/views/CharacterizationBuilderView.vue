@@ -141,6 +141,7 @@
         ref="importFileInput"
         type="file"
         accept="application/json,.json"
+        aria-label="Import characterization design"
         style="display: none"
         data-testid="char-builder-import-input"
         @change="handleImportFileChange"
@@ -772,7 +773,6 @@ onBeforeRouteLeave((_to, _from, next) => {
   padding: 0 0 2px;
   margin: 0;
   font-family: inherit;
-  outline: none;
 }
 .char-builder__title-input::placeholder {
   color: rgba(var(--v-theme-on-surface), 0.32);
@@ -781,7 +781,9 @@ onBeforeRouteLeave((_to, _from, next) => {
 .char-builder__title-input:hover {
   border-bottom-color: rgba(var(--v-theme-on-surface), 0.16);
 }
-.char-builder__title-input:focus {
+.char-builder__title-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
   border-bottom-color: rgb(var(--v-theme-orange));
 }
 
@@ -796,7 +798,6 @@ onBeforeRouteLeave((_to, _from, next) => {
   padding: 0 0 2px;
   margin: 0;
   font-family: inherit;
-  outline: none;
 }
 .char-builder__subtitle-input::placeholder {
   color: rgba(var(--v-theme-on-surface), 0.32);
@@ -804,7 +805,9 @@ onBeforeRouteLeave((_to, _from, next) => {
 .char-builder__subtitle-input:hover {
   border-bottom-color: rgba(var(--v-theme-on-surface), 0.12);
 }
-.char-builder__subtitle-input:focus {
+.char-builder__subtitle-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
   border-bottom-color: rgb(var(--v-theme-orange));
 }
 </style>

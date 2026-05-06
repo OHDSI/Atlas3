@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, DOMWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia, setActivePinia } from 'pinia'
 import AtlasDialog from '@/components/ui/AtlasDialog.vue'
 
 const vuetify = createVuetify({ components, directives })
@@ -10,6 +11,10 @@ const vuetify = createVuetify({ components, directives })
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn(),
 }))
+
+beforeEach(() => {
+  setActivePinia(createPinia())
+})
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -68,12 +73,12 @@ describe('AtlasDialog', () => {
 
   it('shows close button by default', async () => {
     await mountOpen({})
-    expect(document.body.querySelector('button[aria-label="Close"]')).not.toBeNull()
+    expect(document.body.querySelector('button[aria-label="Close dialog"]')).not.toBeNull()
   })
 
   it('hides close button when show-close=false', async () => {
     await mountOpen({ showClose: false })
-    expect(document.body.querySelector('button[aria-label="Close"]')).toBeNull()
+    expect(document.body.querySelector('button[aria-label="Close dialog"]')).toBeNull()
   })
 
   it('uses custom closeLabel as aria-label', async () => {
@@ -83,10 +88,46 @@ describe('AtlasDialog', () => {
 
   it('emits close + update:modelValue(false) when close button clicked', async () => {
     const wrapper = await mountOpen({})
-    const closeBtn = document.body.querySelector('button[aria-label="Close"]') as HTMLButtonElement
+    const closeBtn = document.body.querySelector('button[aria-label="Close dialog"]') as HTMLButtonElement
     closeBtn.click()
     await new Promise(r => setTimeout(r, 0))
     expect(wrapper.emitted('close')).toBeTruthy()
     expect(wrapper.emitted('update:modelValue')).toEqual([[false]])
+  })
+
+  it('sets role="dialog" and aria-modal on the dialog overlay', async () => {
+    await mountOpen({ title: 'Confirm' })
+    const dialog = document.body.querySelector('[role="dialog"][aria-modal="true"]')
+    expect(dialog).not.toBeNull()
+  })
+
+  it('links aria-labelledby to the title heading id', async () => {
+    await mountOpen({ title: 'Confirm action' })
+    const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement
+    const labelledBy = dialog.getAttribute('aria-labelledby')
+    expect(labelledBy).toBeTruthy()
+    const heading = document.body.querySelector(`#${labelledBy}`)
+    expect(heading?.textContent).toBe('Confirm action')
+  })
+
+  it('restores focus to the previously focused element when closed', async () => {
+    const trigger = document.createElement('button')
+    trigger.textContent = 'open'
+    document.body.appendChild(trigger)
+    trigger.focus()
+    expect(document.activeElement).toBe(trigger)
+
+    const wrapper = mount(AtlasDialog, {
+      global: { plugins: [vuetify] },
+      attachTo: document.body,
+      props: { modelValue: true, eyebrow: 'TEST', title: 'X' },
+    })
+    await new Promise(r => setTimeout(r, 50))
+
+    await wrapper.setProps({ modelValue: false })
+    await new Promise(r => setTimeout(r, 50))
+
+    expect(document.activeElement).toBe(trigger)
+    wrapper.unmount()
   })
 })

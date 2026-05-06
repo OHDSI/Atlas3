@@ -130,6 +130,7 @@
         ref="importFileInput"
         type="file"
         accept="application/json,.json"
+        aria-label="Import incidence rate design"
         style="display: none"
         data-testid="ir-builder-import-input"
         @change="handleImportFileChange"
@@ -448,7 +449,6 @@ async function onDelete() {
   padding: 0 0 2px;
   margin: 0;
   font-family: inherit;
-  outline: none;
 }
 .ir-builder__title-input::placeholder {
   color: rgba(var(--v-theme-on-surface), 0.32);
@@ -457,7 +457,9 @@ async function onDelete() {
 .ir-builder__title-input:hover:not(:read-only) {
   border-bottom-color: rgba(var(--v-theme-on-surface), 0.16);
 }
-.ir-builder__title-input:focus {
+.ir-builder__title-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
   border-bottom-color: rgb(var(--v-theme-orange));
 }
 
@@ -472,7 +474,6 @@ async function onDelete() {
   padding: 0 0 2px;
   margin: 0;
   font-family: inherit;
-  outline: none;
 }
 .ir-builder__subtitle-input::placeholder {
   color: rgba(var(--v-theme-on-surface), 0.32);
@@ -480,7 +481,9 @@ async function onDelete() {
 .ir-builder__subtitle-input:hover:not(:read-only) {
   border-bottom-color: rgba(var(--v-theme-on-surface), 0.12);
 }
-.ir-builder__subtitle-input:focus {
+.ir-builder__subtitle-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
   border-bottom-color: rgb(var(--v-theme-orange));
 }
 </style>

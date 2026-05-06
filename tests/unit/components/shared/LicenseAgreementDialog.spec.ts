@@ -12,7 +12,8 @@ import LicenseAgreementDialog from '@/components/shared/LicenseAgreementDialog.v
 // Mock useI18n composable
 vi.mock('@/composables/useI18n', () => ({
   useI18n: () => ({
-    t: (key: string, fallback: string) => ref(fallback)
+    t: (key: string, fallback: string) => ref(fallback),
+    tv: (key: string, fallback: string) => fallback
   })
 }))
 

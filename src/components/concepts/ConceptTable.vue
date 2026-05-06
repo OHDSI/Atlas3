@@ -18,6 +18,7 @@
           <v-checkbox-btn
             :model-value="allVisibleSelected"
             :indeterminate="someVisibleSelected && !allVisibleSelected"
+            aria-label="Select all concepts"
             density="compact"
             hide-details
             @update:model-value="onToggleSelectAll"
@@ -32,6 +33,7 @@
         <div :data-testid="`concept-table-row-checkbox-${item.conceptId}`">
           <v-checkbox-btn
             :model-value="isSelected(item.conceptId)"
+            :aria-label="`Select ${item.conceptName}`"
             density="compact"
             hide-details
             @update:model-value="(v: boolean | null) => onToggleRow(item.conceptId, v)"
