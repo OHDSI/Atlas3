@@ -1,45 +1,47 @@
 <template>
-  <v-card
-    variant="outlined"
-    class="tar-card"
-  >
-    <v-card-title>{{ t('ir.results.timeAtRisk', 'Time at Risk') }}</v-card-title>
-    <v-card-text>
+  <div class="tar-editor">
+    <div>
       <div class="row">
-        <span class="lbl">{{ t('ir.editor.timeAtRiskStartDate', 'Start') }}</span>
+        <span class="lbl">{{ t('common.start', 'Start').value }}</span>
         <AtlasSelect
           :model-value="tar.start.DateField"
-          :items="[...DATE_FIELD_OPTIONS]"
+          :items="dateFieldItems"
+          item-title="title"
+          item-value="value"
           hide-details
+          class="row__select"
           @update:model-value="(v) => updateStart('DateField', v as 'StartDate' | 'EndDate')"
         />
-        <span>+</span>
+        <span class="op">+</span>
         <AtlasTextField
           :model-value="tar.start.Offset"
           type="number"
           hide-details
-          style="max-width: 120px"
+          class="row__offset"
           @update:model-value="(v) => updateStart('Offset', Number(v))"
         />
-        <span class="d">{{ t('common.days', 'days') }}</span>
+        <span class="d">d</span>
       </div>
       <div class="row">
-        <span class="lbl">{{ t('ir.editor.timeAtRiskEndDate', 'End') }}</span>
+        <span class="lbl">{{ t('common.end', 'End').value }}</span>
         <AtlasSelect
           :model-value="tar.end.DateField"
-          :items="[...DATE_FIELD_OPTIONS]"
+          :items="dateFieldItems"
+          item-title="title"
+          item-value="value"
           hide-details
+          class="row__select"
           @update:model-value="(v) => updateEnd('DateField', v as 'StartDate' | 'EndDate')"
         />
-        <span>+</span>
+        <span class="op">+</span>
         <AtlasTextField
           :model-value="tar.end.Offset"
           type="number"
           hide-details
-          style="max-width: 120px"
+          class="row__offset"
           @update:model-value="(v) => updateEnd('Offset', Number(v))"
         />
-        <span class="d">{{ t('common.days', 'days') }}</span>
+        <span class="d">d</span>
       </div>
       <AtlasAlert
         v-if="errorText"
@@ -48,8 +50,8 @@
       >
         {{ errorText }}
       </AtlasAlert>
-    </v-card-text>
-  </v-card>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -59,9 +61,13 @@ import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import type { TimeAtRisk } from '@/models/incidence-rate.types'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const store = useIncidenceRateStore()
-const DATE_FIELD_OPTIONS = ['StartDate', 'EndDate'] as const
+
+const dateFieldItems = computed(() => [
+  { title: tv('ir.editor.timeAtRiskCohortStart', 'Cohort start'), value: 'StartDate' as const },
+  { title: tv('ir.editor.timeAtRiskCohortEnd', 'Cohort end'), value: 'EndDate' as const },
+])
 
 const tar = computed<TimeAtRisk>(
   () =>
@@ -91,20 +97,37 @@ function updateEnd<K extends keyof TimeAtRisk['end']>(key: K, value: TimeAtRisk[
 </script>
 
 <style scoped>
-.tar-card {
-  margin-bottom: 12px;
+.tar-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  min-width: 0;
+}
+.row__select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.row__offset {
+  flex: 0 0 60px;
 }
 .lbl {
-  width: 60px;
+  flex: 0 0 36px;
+  font-size: 12px;
   font-weight: 500;
+  color: rgba(var(--v-theme-on-surface), 0.72);
+}
+.op {
+  font-size: 12px;
+  color: rgba(var(--v-theme-on-surface), 0.62);
 }
 .d {
-  color: #666;
+  font-size: 12px;
+  color: rgba(var(--v-theme-on-surface), 0.62);
+  flex: 0 0 auto;
 }
 </style>

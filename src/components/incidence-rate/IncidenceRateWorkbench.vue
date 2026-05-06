@@ -6,8 +6,6 @@
     <IncidenceRateDesignRail
       class="ir-workbench__rail"
       data-testid="ir-workbench-rail"
-      :active-run-id="selectedExecutionId"
-      @select-run="onSelectRun"
       @strata:add="onStrataAdd"
       @strata:edit="onStrataEdit"
     />
@@ -21,6 +19,17 @@
       </template>
 
       <template v-else>
+        <DataSourceRunTable
+          :sources="runTableSources"
+          :executions="runTableExecutions"
+          :loading="ds.isLoading"
+          :run-disabled="!store.canGenerate"
+          :run-disabled-reason="runDisabledReason"
+          @run="onRunSource"
+          @cancel="onCancelSource"
+          @show-history="onShowHistory"
+        />
+
         <IncidenceRateCanvasToolbar
           :mode="mode"
           :active-run="activeRun"
@@ -46,7 +55,6 @@
           <IncidenceRateEmptyState
             :variant="emptyVariant"
             :error-message="activeRun?.message ?? undefined"
-            @run="$emit('open-generate')"
           />
         </template>
         <template v-else-if="report">
@@ -62,6 +70,14 @@
           />
         </template>
       </template>
+
+      <PreviousRunsDialog
+        v-model="historyOpen"
+        :source-name="historySourceName"
+        :source-key="historySourceKey ?? ''"
+        :executions="runTableExecutions"
+        @select="onSelectFromHistory"
+      />
     </main>
 
     <aside
@@ -84,12 +100,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { v4 as uuidv4 } from 'uuid'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { useIncidenceRateReport } from '@/composables/useIncidenceRateReport'
 import { useIncidenceRateGeneration } from '@/composables/useIncidenceRateGeneration'
+import { useDataSourcesStore } from '@/stores/datasources'
+import { useI18n } from '@/composables/useI18n'
 import IncidenceRateDesignRail from './IncidenceRateDesignRail.vue'
 import IncidenceRateCanvasToolbar, { type ViewMode } from './IncidenceRateCanvasToolbar.vue'
 import IncidenceRateRunMeta from './IncidenceRateRunMeta.vue'
@@ -98,17 +116,23 @@ import IncidenceRateRatesTable from './IncidenceRateRatesTable.vue'
 import IncidenceRateInsightsRail from './IncidenceRateInsightsRail.vue'
 import IncidenceRateEmptyState from './IncidenceRateEmptyState.vue'
 import IncidenceRateStratifyInspector from './IncidenceRateStratifyInspector.vue'
+import DataSourceRunTable, {
+  type RunTableSource,
+  type RunTableExecution,
+} from '@/components/generation/DataSourceRunTable.vue'
+import PreviousRunsDialog from '@/components/generation/PreviousRunsDialog.vue'
 import { IR_TERMINAL_STATUSES } from '@/models/incidence-rate.types'
 import { downloadPNG, downloadSVG } from '@/utils/treemap-export'
 import { arrayToCsv, downloadCsv } from '@/utils/csv'
 import type { CriteriaGroup } from '@/models/cohort.types'
 import type { StratifyRule } from '@/models/incidence-rate.types'
+import type { GenerationStatus } from '@/models/characterization.types'
 
-defineEmits<{ 'open-generate': [] }>()
-
+const { tv } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const store = useIncidenceRateStore()
+const ds = useDataSourcesStore()
 
 const mode = ref<ViewMode>('treemap')
 const treemapRef = ref<InstanceType<typeof IncidenceRateTreemap> | null>(null)
@@ -152,9 +176,8 @@ const availableOutcomes = computed(() =>
   }))
 )
 
-const emptyVariant = computed<'no-runs' | 'run-pending' | 'run-failed' | 'select-to' | null>(() => {
+const emptyVariant = computed<'run-pending' | 'run-failed' | 'select-to' | null>(() => {
   if (!store.currentIR?.id) return null
-  if (store.executions.length === 0) return 'no-runs'
   if (selectedExecutionId.value === null) return null
   if (activeRun.value && !IR_TERMINAL_STATUSES.has(activeRun.value.status)) return 'run-pending'
   if (activeRun.value?.status === 'FAILED') return 'run-failed'
@@ -180,6 +203,68 @@ watch(
 
 function onSelectRun(id: number) {
   void router.replace({ query: { ...route.query, run: String(id) } })
+}
+
+onMounted(async () => {
+  if (ds.sources.length === 0 && !ds.isLoading) await ds.fetchDataSources()
+})
+
+const runTableSources = computed<RunTableSource[]>(() =>
+  ds.sources.map(s => ({ sourceKey: s.sourceKey, sourceName: s.sourceName }))
+)
+
+function mapStatus(raw: string): GenerationStatus {
+  return raw === 'COMPLETE' ? 'COMPLETED' : (raw as GenerationStatus)
+}
+
+const runTableExecutions = computed<RunTableExecution[]>(() =>
+  store.executions.map(e => ({
+    id: e.id,
+    sourceKey: e.sourceKey,
+    status: mapStatus(e.status),
+    startTime: e.startTime ?? undefined,
+    duration: e.duration ?? undefined,
+  }))
+)
+
+const runDisabledReason = computed(() => {
+  if (store.isPreviewMode) return tv('common.previewMode', 'Preview mode')
+  if (store.isDirty) return tv('components.generation.unsavedChanges', 'Save changes before running')
+  if (store.hasErrors) return tv('components.generation.fixErrors', 'Resolve validation errors before running')
+  return ''
+})
+
+async function onRunSource(sourceKey: string) {
+  const id = store.currentIR?.id
+  if (id == null) return
+  await useIncidenceRateGeneration(id).start(sourceKey)
+}
+
+async function onCancelSource(sourceKey: string) {
+  const id = store.currentIR?.id
+  if (id == null) return
+  await useIncidenceRateGeneration(id).cancel(sourceKey)
+}
+
+const historyOpen = ref(false)
+const historySourceKey = ref<string | null>(null)
+const historySourceName = computed(() => {
+  if (!historySourceKey.value) return ''
+  return ds.sources.find(s => s.sourceKey === historySourceKey.value)?.sourceName ?? historySourceKey.value
+})
+
+function onShowHistory(sourceKey: string) {
+  historySourceKey.value = sourceKey
+  historyOpen.value = true
+}
+
+function onSelectFromHistory(id: number | string) {
+  historyOpen.value = false
+  if (typeof id === 'number') onSelectRun(id)
+  else {
+    const n = Number(id)
+    if (Number.isFinite(n)) onSelectRun(n)
+  }
 }
 
 function onStrataAdd() {
@@ -233,7 +318,7 @@ function onExport(format: 'csv' | 'svg' | 'png') {
 <style scoped>
 .ir-workbench {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  grid-template-columns: 320px minmax(0, 1fr) 280px;
   background: rgb(var(--v-theme-surface));
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
   border-radius: 12px;
@@ -249,7 +334,7 @@ function onExport(format: 'csv' | 'svg' | 'png') {
   min-height: 540px; min-width: 0; position: relative;
 }
 @media (max-width: 1280px) {
-  .ir-workbench { grid-template-columns: 240px minmax(0, 1fr); }
+  .ir-workbench { grid-template-columns: 320px minmax(0, 1fr); }
   .ir-workbench__insights { display: none; }
 }
 @media (max-width: 1024px) {

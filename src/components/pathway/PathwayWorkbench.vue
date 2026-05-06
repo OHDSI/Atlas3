@@ -4,11 +4,7 @@
       class="workbench__design"
       data-testid="workbench-design-rail"
     >
-      <PathwayDesignForm
-        :pathway-id="pathwayId ?? undefined"
-        :active-run-id="selectedExecutionId ?? null"
-        @execution:select="id => $emit('execution:select', id)"
-      />
+      <PathwayDesignForm />
     </aside>
 
     <main
@@ -20,6 +16,18 @@
         :active-run="activeRunSummary"
         :coverage="coverageProps"
         @update:mode="v => (mode = v)"
+      />
+
+      <DataSourceRunTable
+        v-if="pathwayId"
+        :sources="runTableSources"
+        :executions="runTableExecutions"
+        :loading="executionsLoading"
+        :run-disabled="!canGenerate"
+        :run-disabled-reason="runDisabledReason"
+        @run="onRun"
+        @cancel="onCancel"
+        @show-history="onShowHistory"
       />
 
       <div
@@ -60,11 +68,6 @@
             ).value
           }}
         </p>
-        <AtlasButton
-          @click="$emit('open-generate')"
-        >
-          {{ t('components.generation.generate', 'Generate') }}
-        </AtlasButton>
       </div>
 
       <div
@@ -133,22 +136,43 @@
         {{ t('pathway.workbench.insightsEmptyHint', 'Insights appear after the first run.').value }}
       </div>
     </aside>
+
+    <PreviousRunsDialog
+      v-model="historyOpen"
+      :source-name="historySourceName"
+      :source-key="historySourceKey"
+      :executions="runTableExecutions"
+      :selected-id="selectedExecutionId ?? null"
+      @select="onHistorySelect"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, shallowRef, watch, onMounted, onBeforeUnmount } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useI18n } from '@/composables/useI18n'
 import { usePathwayResults } from '@/composables/usePathwayResults'
+import { usePathwayGeneration } from '@/composables/usePathwayGeneration'
+import { usePathwayStore } from '@/stores/pathway'
+import { useDataSourcesStore } from '@/stores/datasources'
 import { computePathStats } from '@/utils/pathway-path-stats'
+import { listPathwayExecutions } from '@/services/webapi'
+import { logger } from '@/utils/logger'
 import PathwayDesignForm from './PathwayDesignForm.vue'
-import { AtlasButton } from '@/components/ui'
 import PathwaySunburst from './results/PathwaySunburst.vue'
 import PathwayTableView from './results/PathwayTableView.vue'
 import PathwayCanvasToolbar from './PathwayCanvasToolbar.vue'
 import PathwayCoverageStat from './results/PathwayCoverageStat.vue'
 import PathwayLegend from './results/PathwayLegend.vue'
 import PathwayPathStats from './results/PathwayPathStats.vue'
+import DataSourceRunTable from '@/components/generation/DataSourceRunTable.vue'
+import PreviousRunsDialog from '@/components/generation/PreviousRunsDialog.vue'
+import type {
+  RunTableSource,
+  RunTableExecution,
+} from '@/components/generation/DataSourceRunTable.vue'
+import type { PathwayExecution } from '@/models/pathway.types'
 
 const PALETTE_20 = [
   '#1f77b4',
@@ -178,16 +202,39 @@ const props = defineProps<{
   selectedExecutionId?: number | null
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'execution:select': [id: number]
-  'open-generate': []
 }>()
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const { design, results, load } = usePathwayResults()
+const pathwayStore = usePathwayStore()
+const dsStore = useDataSourcesStore()
+const { canGenerate } = storeToRefs(pathwayStore)
+
+type Generation = ReturnType<typeof usePathwayGeneration>
+const generation = shallowRef<Generation | null>(null)
+
+watch(
+  () => props.pathwayId,
+  id => {
+    generation.value?.stopPolling()
+    generation.value = id ? usePathwayGeneration(id) : null
+  },
+  { immediate: true }
+)
 
 const mode = ref<'visual' | 'tabular'>('visual')
 const selectedPath = ref<{ path: string } | null>(null)
+const executions = ref<PathwayExecution[]>([])
+const executionsLoading = ref(false)
+const historyOpen = ref(false)
+const historySourceKey = ref('')
+
+const runDisabledReason = tv(
+  'pathway.workbench.runDisabledReason',
+  'Save the design before generating'
+)
 
 const targetGroup = computed(() => results.value?.pathwayGroups[0] ?? null)
 
@@ -229,6 +276,85 @@ const pathStats = computed(() => {
   })
 })
 
+const runTableSources = computed<RunTableSource[]>(() =>
+  dsStore.sources.map(s => ({ sourceKey: s.sourceKey, sourceName: s.sourceName }))
+)
+
+function toMs(v: string | number | undefined): number | undefined {
+  if (v === undefined) return undefined
+  if (typeof v === 'number') return v
+  const n = Date.parse(v)
+  return Number.isNaN(n) ? undefined : n
+}
+
+const runTableExecutions = computed<RunTableExecution[]>(() =>
+  executions.value.map(e => {
+    const start = toMs(e.startTime) ?? toMs(e.executionDate)
+    const end = toMs(e.endTime)
+    return {
+      id: e.id,
+      sourceKey: e.sourceKey,
+      status: e.status,
+      startTime: start,
+      endTime: end,
+      duration: e.duration,
+    }
+  })
+)
+
+const historySourceName = computed(() => {
+  const match = dsStore.sources.find(s => s.sourceKey === historySourceKey.value)
+  return match?.sourceName ?? historySourceKey.value
+})
+
+async function refreshExecutions() {
+  if (!props.pathwayId) {
+    executions.value = []
+    return
+  }
+  executionsLoading.value = true
+  try {
+    const r = await listPathwayExecutions(props.pathwayId)
+    if (r.success) {
+      executions.value = r.data
+      if (!props.selectedExecutionId) {
+        const latestCompleted = r.data.find(e => e.status === 'COMPLETED')
+        if (latestCompleted) emit('execution:select', latestCompleted.id)
+      }
+    } else {
+      logger.error('PathwayWorkbench', 'listPathwayExecutions failed', r.error)
+    }
+  } finally {
+    executionsLoading.value = false
+  }
+}
+
+async function onRun(sourceKey: string) {
+  const gen = generation.value
+  if (!gen) return
+  const ok = await gen.start(sourceKey)
+  if (!ok) logger.error('PathwayWorkbench', 'start failed', gen.error.value)
+  await refreshExecutions()
+}
+
+async function onCancel(sourceKey: string) {
+  const gen = generation.value
+  if (!gen) return
+  const ok = await gen.cancel(sourceKey)
+  if (!ok) logger.error('PathwayWorkbench', 'cancel failed', { sourceKey })
+  await refreshExecutions()
+}
+
+function onShowHistory(sourceKey: string) {
+  historySourceKey.value = sourceKey
+  historyOpen.value = true
+}
+
+function onHistorySelect(id: number | string) {
+  if (typeof id === 'number') emit('execution:select', id)
+  historyOpen.value = false
+}
+
 watch(
   () => props.selectedExecutionId,
   id => {
@@ -237,6 +363,18 @@ watch(
   },
   { immediate: true }
 )
+
+watch(() => props.pathwayId, refreshExecutions, { immediate: true })
+
+onMounted(async () => {
+  if (dsStore.sources.length === 0 && !dsStore.isLoading) {
+    await dsStore.fetchDataSources()
+  }
+})
+
+onBeforeUnmount(() => {
+  generation.value?.stopPolling()
+})
 
 function onPathSelect(info: { code: number; nodeName: string; value: number }) {
   selectedPath.value = { path: info.nodeName }
@@ -248,7 +386,7 @@ defineExpose({ onPathSelect })
 <style scoped>
 .workbench {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 320px;
+  grid-template-columns: 320px minmax(0, 1fr) 320px;
   background: rgb(var(--v-theme-surface));
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
   border-radius: 12px;
@@ -320,13 +458,6 @@ defineExpose({ onPathSelect })
   min-height: 360px;
 }
 
-.workbench__generate-anchor {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  pointer-events: none;
-}
-
 .workbench__sec-label {
   font-size: 10px;
   font-weight: 700;
@@ -346,7 +477,7 @@ defineExpose({ onPathSelect })
 
 @media (max-width: 1280px) {
   .workbench {
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: 320px minmax(0, 1fr);
   }
   .workbench__insights {
     display: none;

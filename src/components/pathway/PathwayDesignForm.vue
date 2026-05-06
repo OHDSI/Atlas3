@@ -3,143 +3,80 @@
     v-if="currentPathway"
     class="pathway-design-form"
   >
-    <v-expansion-panels
-      v-model="openPanels"
-      multiple
-      variant="accordion"
-      class="pathway-design-form__panels"
-    >
-      <v-expansion-panel
-        value="targets"
-        class="pathway-design-form__panel"
-      >
-        <v-expansion-panel-title>
-          <span class="text-eyebrow">{{
-            t('facets.caption.targetCohorts', 'Target Cohorts').value
-          }}</span>
-          <template #actions="{ expanded }">
-            <AtlasButton
-              variant="ghost"
-              size="sm"
-              icon="mdi-plus"
-              :disabled="readonly"
-              @click.stop="showTargetPicker = true"
-            >
-              {{ t('common.add', 'Add').value }}
-            </AtlasButton>
-            <AtlasIcon>{{ expanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</AtlasIcon>
-          </template>
-        </v-expansion-panel-title>
-        <v-expansion-panel-text>
-          <PathwayCohortList
-            :cohorts="targetCohorts"
-            :readonly="readonly"
-            @rename="(id, name) => store.renameTargetCohort(id, name)"
-            @remove="id => store.removeTargetCohort(id)"
-          />
-          <PathwayCohortPicker
-            v-model="showTargetPicker"
-            :excluded-ids="targetIds"
-            @select="refs => refs.forEach(r => store.addTargetCohort(r))"
-          />
-        </v-expansion-panel-text>
-      </v-expansion-panel>
+    <section class="rail-section">
+      <header class="rail-section__header">
+        <span class="text-eyebrow">{{ t('facets.caption.targetCohorts', 'Target Cohorts').value }}</span>
+        <AtlasButton
+          variant="ghost"
+          size="sm"
+          icon="mdi-plus"
+          :disabled="readonly"
+          @click="showTargetPicker = true"
+        >
+          {{ t('common.add', 'Add').value }}
+        </AtlasButton>
+      </header>
+      <PathwayCohortList
+        :cohorts="targetCohorts"
+        :readonly="readonly"
+        @rename="(id, name) => store.renameTargetCohort(id, name)"
+        @remove="id => store.removeTargetCohort(id)"
+      />
+      <PathwayCohortPicker
+        v-model="showTargetPicker"
+        :excluded-ids="targetIds"
+        @select="refs => refs.forEach(r => store.addTargetCohort(r))"
+      />
+    </section>
 
-      <v-expansion-panel
-        value="events"
-        class="pathway-design-form__panel"
-      >
-        <v-expansion-panel-title>
-          <span class="text-eyebrow">{{ t('columns.eventCohort', 'Event Cohorts').value }}</span>
-          <template #actions="{ expanded }">
-            <AtlasButton
-              variant="ghost"
-              size="sm"
-              icon="mdi-plus"
-              :disabled="readonly"
-              @click.stop="showEventPicker = true"
-            >
-              {{ t('common.add', 'Add').value }}
-            </AtlasButton>
-            <AtlasIcon>{{ expanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</AtlasIcon>
-          </template>
-        </v-expansion-panel-title>
-        <v-expansion-panel-text>
-          <PathwayCohortList
-            :cohorts="eventCohorts"
-            :readonly="readonly"
-            @rename="(id, name) => store.renameEventCohort(id, name)"
-            @remove="id => store.removeEventCohort(id)"
-          />
-          <PathwayCohortPicker
-            v-model="showEventPicker"
-            :excluded-ids="eventIds"
-            @select="refs => refs.forEach(r => store.addEventCohort(r))"
-          />
-        </v-expansion-panel-text>
-      </v-expansion-panel>
+    <section class="rail-section">
+      <header class="rail-section__header">
+        <span class="text-eyebrow">{{ t('columns.eventCohort', 'Event Cohorts').value }}</span>
+        <AtlasButton
+          variant="ghost"
+          size="sm"
+          icon="mdi-plus"
+          :disabled="readonly"
+          @click="showEventPicker = true"
+        >
+          {{ t('common.add', 'Add').value }}
+        </AtlasButton>
+      </header>
+      <PathwayCohortList
+        :cohorts="eventCohorts"
+        :readonly="readonly"
+        @rename="(id, name) => store.renameEventCohort(id, name)"
+        @remove="id => store.removeEventCohort(id)"
+      />
+      <PathwayCohortPicker
+        v-model="showEventPicker"
+        :excluded-ids="eventIds"
+        @select="refs => refs.forEach(r => store.addEventCohort(r))"
+      />
+    </section>
 
-      <v-expansion-panel
-        value="settings"
-        class="pathway-design-form__panel"
-      >
-        <v-expansion-panel-title>
-          <span class="text-eyebrow">{{ t('ple.spec.analysisSettings', 'Settings').value }}</span>
-        </v-expansion-panel-title>
-        <v-expansion-panel-text>
-          <PathwaySettings
-            :model-value="settings"
-            :readonly="readonly"
-            @update:model-value="d => store.updateDesign(d)"
-          />
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-
-      <v-expansion-panel
-        v-if="pathwayId"
-        value="past-runs"
-        class="pathway-design-form__panel"
-      >
-        <v-expansion-panel-title>
-          <span class="text-eyebrow">{{
-            t('components.analysisExecution.buttons.allExecutions', 'Past runs ({submissions})', {
-              submissions: pastRuns.length,
-            }).value
-          }}</span>
-        </v-expansion-panel-title>
-        <v-expansion-panel-text>
-          <PathwayPastRuns
-            :runs="pastRuns"
-            :active-id="activeRunId ?? null"
-            @select="id => $emit('execution:select', id)"
-          />
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-    </v-expansion-panels>
+    <section class="rail-section">
+      <header class="rail-section__header">
+        <span class="text-eyebrow">{{ t('ple.spec.analysisSettings', 'Settings').value }}</span>
+      </header>
+      <PathwaySettings
+        :model-value="settings"
+        :readonly="readonly"
+        @update:model-value="d => store.updateDesign(d)"
+      />
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon } from '@/components/ui'
-import { ref, computed, onMounted, watch } from 'vue'
+import { AtlasButton } from '@/components/ui'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePathwayStore } from '@/stores/pathway'
 import PathwayCohortList from './PathwayCohortList.vue'
 import PathwayCohortPicker from './PathwayCohortPicker.vue'
 import PathwaySettings from './PathwaySettings.vue'
-import PathwayPastRuns from './PathwayPastRuns.vue'
 import { useI18n } from '@/composables/useI18n'
-import { listPathwayExecutions } from '@/services/webapi'
-import type { PathwayExecution } from '@/models/pathway.types'
-
-const props = defineProps<{
-  pathwayId?: number
-  activeRunId?: number | null
-}>()
-
-const emit = defineEmits<{
-  'execution:select': [id: number]
-}>()
 
 const store = usePathwayStore()
 const { currentPathway, isReadOnly, isPreviewMode } = storeToRefs(store)
@@ -148,8 +85,6 @@ const { t } = useI18n()
 
 const showTargetPicker = ref(false)
 const showEventPicker = ref(false)
-const pastRuns = ref<PathwayExecution[]>([])
-const openPanels = ref<string[]>(['targets', 'events', 'settings', 'past-runs'])
 
 const targetCohorts = computed(() => currentPathway.value?.targetCohorts ?? [])
 const eventCohorts = computed(() => currentPathway.value?.eventCohorts ?? [])
@@ -163,39 +98,45 @@ const settings = computed(() => ({
   maxDepth: currentPathway.value?.maxDepth ?? 0,
   allowRepeats: currentPathway.value?.allowRepeats ?? false,
 }))
-
-async function refreshRuns() {
-  if (!props.pathwayId) return
-  const r = await listPathwayExecutions(props.pathwayId)
-  if (r.success) {
-    pastRuns.value = r.data
-    if (!props.activeRunId) {
-      const latestCompleted = r.data.find(e => e.status === 'COMPLETED')
-      if (latestCompleted) emit('execution:select', latestCompleted.id)
-    }
-  }
-}
-
-watch(() => props.pathwayId, refreshRuns, { immediate: true })
-onMounted(refreshRuns)
 </script>
 
 <style scoped>
-.pathway-design-form__panels {
-  background: transparent;
+.pathway-design-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
-.pathway-design-form__panel {
-  background: transparent !important;
-  border-radius: 6px !important;
-  margin-bottom: 4px;
+.rail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.pathway-design-form__panel :deep(.v-expansion-panel-title) {
-  padding: 6px 10px;
-  min-height: 36px;
+.rail-section + .rail-section {
+  border-top: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+  padding-top: 12px;
+}
+.rail-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  gap: 6px;
+}
+.pathway-design-form :deep(.v-field__input),
+.pathway-design-form :deep(.v-select__selection-text) {
+  font-size: 13px;
+  min-height: 32px;
+}
+.pathway-design-form :deep(.v-field--variant-outlined .v-field__input) {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.pathway-design-form :deep(.v-label) {
   font-size: 12px;
-  background: rgba(var(--v-theme-on-surface), 0.02);
+  font-weight: 500;
 }
-.pathway-design-form__panel :deep(.v-expansion-panel-text__wrapper) {
-  padding: 8px 10px 12px;
+.pathway-design-form :deep(.v-list-item-title) {
+  font-size: 13px;
+  font-weight: 500;
 }
 </style>

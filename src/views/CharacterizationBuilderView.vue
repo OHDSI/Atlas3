@@ -146,31 +146,11 @@
         @change="handleImportFileChange"
       >
 
-      <AtlasTooltip
-        location="top"
-        :text="runDisabledReason"
-        :disabled="!runDisabledReason"
-      >
-        <template #activator="{ props: tooltipProps }">
-          <div v-bind="tooltipProps">
-            <v-btn
-              color="primary"
-              variant="tonal"
-              prepend-icon="mdi-play-outline"
-              :disabled="!canRun"
-              data-testid="char-builder-run"
-              @click="handleRunClick"
-            >
-              {{ t('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run') }}
-            </v-btn>
-          </div>
-        </template>
-      </AtlasTooltip>
       <v-btn
         v-if="isEditing"
         variant="tonal"
         color="primary"
-        prepend-icon="mdi-content-copy-outline"
+        prepend-icon="mdi-content-copy"
         :disabled="loading || !canCopy"
         data-testid="char-builder-copy"
         @click="handleSaveCopy"
@@ -207,6 +187,7 @@
       data-testid="char-builder-workbench"
       @update:model-value="onDraftChange"
       @explore="onExplore"
+      @snackbar="(msg, sev) => showSnackbar(msg, sev)"
     />
 
     <ExplorePrevalenceDialog
@@ -452,28 +433,6 @@ const canSave = computed<boolean>(() => {
   if (draft.value.name.trim().length === 0) return false
   return isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization')
 })
-
-const canRun = computed<boolean>(() => {
-  return draftId.value != null && !store.isDirty
-})
-
-const runDisabledReason = computed<string>(() => {
-  if (draftId.value == null) {
-    return t(
-      'characterizations.editor.executions.runDisabledNoId',
-      'Save the characterization before running.'
-    ).value
-  }
-  if (store.isDirty) {
-    return t('const.disabledReason.dirty', 'Save your changes before running.').value
-  }
-  return ''
-})
-
-function handleRunClick() {
-  if (!canRun.value) return
-  // Executions live inline in the design view; nothing to switch to.
-}
 
 const deleteMessage = computed<string>(() => {
   return t('cc.viewEdit.deleteConfirmation', `Delete characterization '${draft.value.name}'?`, {

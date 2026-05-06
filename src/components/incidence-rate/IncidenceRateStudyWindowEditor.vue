@@ -1,29 +1,19 @@
 <template>
-  <v-card
-    variant="outlined"
-    class="sw-card"
-  >
-    <v-card-title>
-      {{ t('incidenceRate.studyWindow', 'Study Window') }}
-      <AtlasSpacer />
+  <div class="sw-editor">
+    <div
+      v-if="!hasWindow"
+      class="sw-empty"
+    >
+      <span class="sw-empty__hint">{{ t('incidenceRate.studyWindow.empty', 'No study window').value }}</span>
       <AtlasButton
-        v-if="!hasWindow"
         size="sm"
+        variant="ghost"
         @click="enable"
       >
         {{ t('common.add', 'Add') }}
       </AtlasButton>
-      <v-btn
-        v-else
-        size="small"
-        variant="text"
-        color="error"
-        @click="store.clearStudyWindow"
-      >
-        {{ t('columns.remove', 'Remove') }}
-      </v-btn>
-    </v-card-title>
-    <v-card-text v-if="hasWindow">
+    </div>
+    <template v-else>
       <div class="row">
         <v-text-field
           :model-value="store.currentIR?.expression.studyWindow?.startDate"
@@ -42,12 +32,22 @@
           @update:model-value="(v: string) => update('endDate', v)"
         />
       </div>
-    </v-card-text>
-  </v-card>
+      <div class="sw-actions">
+        <AtlasButton
+          size="sm"
+          variant="ghost"
+          tone="danger"
+          @click="store.clearStudyWindow"
+        >
+          {{ t('columns.remove', 'Remove') }}
+        </AtlasButton>
+      </div>
+    </template>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasSpacer } from '@/components/ui'
+import { AtlasButton } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
@@ -69,11 +69,27 @@ function update(field: 'startDate' | 'endDate', v: string) {
 </script>
 
 <style scoped>
-.sw-card {
-  margin-bottom: 12px;
+.sw-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sw-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sw-empty__hint {
+  font-size: 12px;
+  color: rgba(var(--v-theme-on-surface), 0.62);
 }
 .row {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+}
+.sw-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

@@ -56,7 +56,7 @@ const hint = computed(() => {
     return tv('cc.viewEdit.workbench.empty.runPendingHint', 'Polling for completion…')
   }
   if (props.variant === 'no-runs') {
-    return tv('cc.viewEdit.workbench.empty.noRunsHint', 'Generate against a data source to see Table 1.')
+    return tv('cc.viewEdit.workbench.empty.noRunsHint', 'Generate against a data source to see baseline characteristics.')
   }
   return ''
 })

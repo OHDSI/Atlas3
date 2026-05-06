@@ -156,29 +156,6 @@
       >
         {{ t('common.delete', 'Delete') }}
       </v-btn>
-      <AtlasMenu
-        v-if="currentPathway?.id"
-        v-model="generateMenu"
-        :close-on-content-click="false"
-        offset="6"
-        location="bottom end"
-      >
-        <template #activator="{ props: menuProps }">
-          <AtlasButton
-            v-bind="menuProps"
-            variant="secondary"
-            icon="mdi-play"
-            data-testid="pathway-builder-generate"
-          >
-            {{ t('components.generation.generate', 'Generate') }}
-          </AtlasButton>
-        </template>
-        <PathwayGeneratePopover
-          v-if="currentPathway?.id"
-          :pathway-id="currentPathway.id"
-          @generated="generateMenu = false"
-        />
-      </AtlasMenu>
       <v-btn
         color="primary"
         variant="elevated"
@@ -210,7 +187,6 @@
       :pathway-id="currentPathway?.id ?? null"
       :selected-execution-id="selectedExecutionId"
       @execution:select="id => (selectedExecutionId = id)"
-      @open-generate="generateMenu = true"
     />
 
     <AtlasDialog
@@ -244,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
@@ -255,7 +231,6 @@ import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
 import PathwayWorkbench from './PathwayWorkbench.vue'
-import PathwayGeneratePopover from './PathwayGeneratePopover.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
 import { exportPathway, importPathway } from '@/services/webapi'
@@ -276,7 +251,6 @@ const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
 
 const showVersions = ref(false)
 const showTags = ref(false)
-const generateMenu = ref(false)
 const selectedExecutionId = ref<number | null>(null)
 const importing = ref(false)
 const exporting = ref(false)

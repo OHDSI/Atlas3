@@ -4,15 +4,23 @@
       :model-value="modelValue"
       :available-cohorts="availableCohorts"
       :available-feature-analyses="availableFeatureAnalyses"
-      :runs="store.executions"
-      :active-run-id="selectedExecutionId"
-      :show-past-runs="!!characterizationId"
       class="char-workbench__rail"
       @update:model-value="(v) => $emit('update:modelValue', v)"
-      @select-run="onSelectRun"
     />
 
     <main class="char-workbench__canvas">
+      <DataSourceRunTable
+        :sources="runTableSources"
+        :executions="runTableExecutions"
+        :loading="store.executionsLoading"
+        :run-disabled="runDisabled"
+        :run-disabled-reason="runDisabledReason"
+        data-testid="char-workbench-run-table"
+        @run="handleRun"
+        @cancel="handleCancel"
+        @show-history="handleShowHistory"
+      />
+
       <template v-if="characterizationId">
         <CharacterizationCanvasToolbar
           :mode="viewMode"
@@ -48,7 +56,6 @@
           v-if="emptyVariant"
           :variant="emptyVariant"
           :error-message="execution?.status === 'FAILED' ? errorMessage : undefined"
-          @run="onOpenRunDialog"
         />
 
         <template v-else>
@@ -91,10 +98,13 @@
       />
     </main>
 
-    <RunExecutionDialog
-      v-model="runDialogOpen"
-      :characterization-id="characterizationId"
-      @started="onRunStarted"
+    <PreviousRunsDialog
+      v-model:model-value="historyOpen"
+      :source-name="historySourceName"
+      :source-key="historySourceKey ?? ''"
+      :executions="runTableExecutions"
+      :selected-id="selectedExecutionId"
+      @select="onSelectHistoryExecution"
     />
   </div>
 </template>
@@ -110,14 +120,21 @@ import CharacterizationTable1View from './CharacterizationTable1View.vue'
 import CharacterizationPerAnalysisView from './CharacterizationPerAnalysisView.vue'
 import CharacterizationEmptyState from './CharacterizationEmptyState.vue'
 import ConfigureInspector from './ConfigureInspector.vue'
-import RunExecutionDialog from './RunExecutionDialog.vue'
+import DataSourceRunTable from '@/components/generation/DataSourceRunTable.vue'
+import PreviousRunsDialog from '@/components/generation/PreviousRunsDialog.vue'
+import type {
+  RunTableSource,
+  RunTableExecution,
+} from '@/components/generation/DataSourceRunTable.vue'
 import ResultsFilterPanel from '@/components/characterization-results/ResultsFilterPanel.vue'
 
+import { useI18n } from '@/composables/useI18n'
 import { useCharacterizationStore } from '@/stores/characterization'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { useCharacterizationResults } from '@/composables/useCharacterizationResults'
 import { isTerminalStatus } from '@/composables/useExecutionPolling'
 import { getCohortGenerationInfo } from '@/services/webapi'
+import { logger } from '@/utils/logger'
 import {
   DEFAULT_TABLE1_CONFIG, DEFAULT_TABLE1_FILTERS,
   type CharacterizationDefinition,
@@ -144,10 +161,12 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: CharacterizationDefinition]
   'explore': [row: PrevalenceStat]
+  'snackbar': [message: string, severity: 'success' | 'error' | 'info']
 }>()
 
 const route = useRoute()
 const router = useRouter()
+const { tv } = useI18n()
 const store = useCharacterizationStore()
 const sourcesStore = useDataSourcesStore()
 const cohortSizes = ref<Record<string, number>>({})
@@ -157,8 +176,10 @@ const viewMode = ref<ViewMode>('perAnalysis')
 const config = ref<Table1Config>({ ...DEFAULT_TABLE1_CONFIG })
 const filters = ref<Table1Filters>({ ...DEFAULT_TABLE1_FILTERS })
 const configureOpen = ref<boolean>(false)
-const runDialogOpen = ref<boolean>(false)
 const errorMessage = ref<string>('')
+
+const historyOpen = ref<boolean>(false)
+const historySourceKey = ref<string | null>(null)
 
 const cohorts = computed<LinkedCohort[]>(() => {
   const map = new Map<number, LinkedCohort>()
@@ -221,6 +242,45 @@ const emptyVariant = computed<'no-runs' | 'run-pending' | 'run-failed' | null>((
   return null
 })
 
+const runTableSources = computed<RunTableSource[]>(() =>
+  sourcesStore.sources.map((s) => ({
+    sourceKey: s.sourceKey,
+    sourceName: s.sourceName ?? s.sourceKey,
+  }))
+)
+
+const runTableExecutions = computed<RunTableExecution[]>(() =>
+  store.executions.map((e) => ({
+    id: e.id,
+    sourceKey: e.sourceKey,
+    status: e.status,
+    startTime: e.startTime,
+    endTime: e.endTime,
+    duration: e.duration,
+  }))
+)
+
+const runDisabled = computed<boolean>(() => props.characterizationId == null || store.isDirty)
+
+const runDisabledReason = computed<string>(() => {
+  if (props.characterizationId == null) {
+    return tv(
+      'characterizations.editor.executions.runDisabledNoId',
+      'Save the characterization before running.'
+    )
+  }
+  if (store.isDirty) {
+    return tv('const.disabledReason.dirty', 'Save your changes before running.')
+  }
+  return ''
+})
+
+const historySourceName = computed<string>(() => {
+  if (!historySourceKey.value) return ''
+  const found = sourcesStore.sources.find(s => s.sourceKey === historySourceKey.value)
+  return found?.sourceName ?? historySourceKey.value
+})
+
 watch(
   () => props.characterizationId,
   async (id, prev) => {
@@ -281,15 +341,50 @@ watch(
   { immediate: true },
 )
 
-onMounted(() => {
+onMounted(async () => {
   errorMessage.value = error.value ?? ''
+  if (sourcesStore.sources.length === 0) {
+    try { await sourcesStore.fetchDataSources() } catch { /* surfaced via store */ }
+  }
 })
 
-function onSelectRun(id: number): void {
-  router.push({ query: { ...route.query, run: String(id) } })
+async function handleRun(sourceKey: string): Promise<void> {
+  if (props.characterizationId == null) return
+  try {
+    const exec = await store.runExecution(props.characterizationId, sourceKey)
+    onRunStarted(exec)
+  } catch (err) {
+    logger.error('CharacterizationWorkbench', 'Run failed', err)
+    const msg = err instanceof Error ? err.message : tv('cc.fa.runError', 'Failed to start generation')
+    emit('snackbar', msg, 'error')
+  }
 }
 
-function onOpenRunDialog(): void { runDialogOpen.value = true }
+async function handleCancel(sourceKey: string): Promise<void> {
+  if (props.characterizationId == null) return
+  const latest = store.executions
+    .filter(e => e.sourceKey === sourceKey && !isTerminalStatus(e.status))
+    .sort((a, b) => (b.startTime ?? 0) - (a.startTime ?? 0))[0]
+  try {
+    await store.cancelExecution(props.characterizationId, sourceKey, latest?.id)
+  } catch (err) {
+    logger.error('CharacterizationWorkbench', 'Cancel failed', err)
+    const msg = err instanceof Error ? err.message : tv('cc.fa.cancelError', 'Failed to cancel generation')
+    emit('snackbar', msg, 'error')
+  }
+}
+
+function handleShowHistory(sourceKey: string): void {
+  historySourceKey.value = sourceKey
+  historyOpen.value = true
+}
+
+function onSelectHistoryExecution(id: number | string): void {
+  const numericId = typeof id === 'number' ? id : Number(id)
+  if (!Number.isFinite(numericId)) return
+  historyOpen.value = false
+  void router.push({ query: { ...route.query, run: String(numericId) } })
+}
 
 function onRunStarted(exec: CharacterizationExecution): void {
   void router.replace({ query: { ...route.query, run: String(exec.id) } })
@@ -372,7 +467,7 @@ function onExport(): void {
 <style scoped>
 .char-workbench {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 1fr);
   background: rgb(var(--v-theme-surface));
   border: 1px solid rgba(var(--v-theme-on-surface), 0.08);
   border-radius: 12px;

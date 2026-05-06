@@ -28,7 +28,7 @@
           variant="outlined"
           data-testid="ir-toolbar-target-chip"
         >
-          <strong>T:</strong>
+          <strong>{{ t('columns.target', 'Target').value }}:</strong>
           <span class="muted">&nbsp;{{ targetLabel }}</span>
         </v-chip>
       </template>
@@ -53,7 +53,7 @@
           variant="outlined"
           data-testid="ir-toolbar-outcome-chip"
         >
-          <strong>O:</strong>
+          <strong>{{ t('columns.outcome', 'Outcome').value }}:</strong>
           <span class="muted">&nbsp;{{ outcomeLabel }}</span>
         </v-chip>
       </template>

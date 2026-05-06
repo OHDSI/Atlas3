@@ -20,7 +20,7 @@
         size="small"
         data-testid="char-toolbar-mode-table1"
       >
-        {{ t('cc.viewEdit.workbench.modeTable1', 'Table 1').value }}
+        {{ t('cc.viewEdit.workbench.modeTable1', 'Baseline').value }}
       </v-btn>
     </v-btn-toggle>
 

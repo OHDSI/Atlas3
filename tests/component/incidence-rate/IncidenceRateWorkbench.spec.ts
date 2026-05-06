@@ -30,6 +30,8 @@ const stubs = [
   'IncidenceRateInsightsRail',
   'IncidenceRateEmptyState',
   'IncidenceRateStratifyInspector',
+  'DataSourceRunTable',
+  'PreviousRunsDialog',
 ]
 
 const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: { template: '<div/>' } }] })

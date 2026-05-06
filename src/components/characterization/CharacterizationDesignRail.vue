@@ -6,28 +6,12 @@
       :available-feature-analyses="availableFeatureAnalyses"
       @update:model-value="v => $emit('update:modelValue', v)"
     />
-
-    <template v-if="showPastRuns">
-      <div class="char-design-rail__sec-label">
-        {{ t('cc.viewEdit.workbench.pastRuns', 'Past runs').value }}
-      </div>
-      <CharacterizationPastRuns
-        :runs="runs"
-        :active-id="activeRunId"
-        @select="id => $emit('select-run', id)"
-      />
-    </template>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { useI18n } from '@/composables/useI18n'
 import CharacterizationDesignForm from './CharacterizationDesignForm.vue'
-import CharacterizationPastRuns from './CharacterizationPastRuns.vue'
-import type {
-  CharacterizationDefinition,
-  CharacterizationExecution,
-} from '@/models/characterization.types'
+import type { CharacterizationDefinition } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import type { FeatureAnalysisListItem } from '@/models/feature-analysis.types'
 
@@ -35,33 +19,36 @@ defineProps<{
   modelValue: CharacterizationDefinition
   availableCohorts: CohortDefinitionSummary[]
   availableFeatureAnalyses: FeatureAnalysisListItem[]
-  runs: CharacterizationExecution[]
-  activeRunId: number | null
-  showPastRuns: boolean
 }>()
 
 defineEmits<{
   'update:modelValue': [value: CharacterizationDefinition]
-  'select-run': [id: number]
 }>()
-
-const { t } = useI18n()
 </script>
 
 <style scoped>
 .char-design-rail {
-  padding: 14px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   overflow-y: auto;
 }
-.char-design-rail__sec-label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgb(var(--v-theme-on-surface));
-  margin: 14px 0 6px;
+.char-design-rail :deep(.v-field__input),
+.char-design-rail :deep(.v-select__selection-text) {
+  font-size: 13px;
+  min-height: 32px;
+}
+.char-design-rail :deep(.v-field--variant-outlined .v-field__input) {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.char-design-rail :deep(.v-label) {
+  font-size: 12px;
+  font-weight: 500;
+}
+.char-design-rail :deep(.v-list-item-title) {
+  font-size: 13px;
+  font-weight: 500;
 }
 </style>

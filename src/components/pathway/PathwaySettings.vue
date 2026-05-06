@@ -46,8 +46,8 @@
       <AtlasSwitch
         :model-value="modelValue.allowRepeats"
         hide-details
-        inset
         :readonly="readonly"
+        class="pathway-settings__switch"
         @update:model-value="(v) => v !== null && update('allowRepeats', v)"
       />
     </div>
@@ -99,5 +99,12 @@ function update<K extends keyof PathwayDesign>(key: K, value: PathwayDesign[K]) 
 .pathway-settings__label {
   font-size: 13px;
   color: rgba(var(--v-theme-on-surface), 0.78);
+}
+.pathway-settings__switch :deep(.v-switch__track) {
+  opacity: 1;
+  background: rgba(var(--v-theme-on-surface), 0.38);
+}
+.pathway-settings__switch :deep(.v-selection-control--dirty .v-switch__track) {
+  background: rgb(var(--v-theme-primary));
 }
 </style>
