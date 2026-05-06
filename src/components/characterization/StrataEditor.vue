@@ -73,24 +73,23 @@
         />
       </div>
       <div class="strata-editor__criteria-row">
-        <v-chip
-          size="x-small"
-          :color="hasCriteria(stratum) ? 'primary' : undefined"
+        <AtlasChip
+          size="sm"
+          :tone="hasCriteria(stratum) ? 'primary' : 'neutral'"
           :variant="hasCriteria(stratum) ? 'tonal' : 'outlined'"
           class="strata-editor__criteria-chip"
         >
           {{ criteriaSummary(stratum) }}
-        </v-chip>
-        <v-btn
-          size="x-small"
-          variant="text"
-          density="compact"
-          prepend-icon="mdi-pencil-outline"
+        </AtlasChip>
+        <AtlasButton
+          size="sm"
+          variant="ghost"
+          icon="mdi-pencil-outline"
           :data-testid="`strata-editor-edit-criteria-${index}`"
           @click="openCriteriaDialog(stratum.id)"
         >
           {{ t('common.edit', 'Edit criteria').value }}
-        </v-btn>
+        </AtlasButton>
       </div>
     </div>
 
@@ -111,14 +110,13 @@
         @select-concept="onSelectConcept"
       />
       <template #actions>
-        <v-btn
-          variant="text"
-          size="small"
-          density="compact"
+        <AtlasButton
+          variant="ghost"
+          size="sm"
           @click="dialogOpen = false"
         >
           {{ t('common.close', 'Close').value }}
-        </v-btn>
+        </AtlasButton>
       </template>
     </AtlasDialog>
 
@@ -141,7 +139,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
-import { AtlasButton, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'

@@ -102,18 +102,17 @@
         tabindex="0"
       >
         <!-- Feedback Button -->
-        <v-btn
+        <AtlasButton
           v-if="showFeedbackButton"
+          tone="warning"
+          size="sm"
           rounded
-          color="orange"
-          variant="flat"
-          size="small"
           :href="feedbackUrl"
           target="_blank"
           class="mr-4"
         >
           Feedback
-        </v-btn>
+        </AtlasButton>
 
         <!-- Language Selector -->
         <LanguageSelector v-if="showLanguageSelector" />

@@ -7,16 +7,15 @@
       <div class="add-filter-wrapper">
         <AtlasMenu>
           <template #activator="{ props: slotProps }">
-            <v-btn
+            <AtlasButton
               v-bind="slotProps"
-              color="primary"
-              variant="tonal"
-              prepend-icon="mdi-plus"
-              size="small"
+              variant="secondary"
+              icon="mdi-plus"
+              size="sm"
               data-testid="add-entry-event"
             >
               {{ t('components.criteriaGroup.addCriteria') }}
-            </v-btn>
+            </AtlasButton>
           </template>
           <AtlasList>
             <AtlasListItem

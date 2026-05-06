@@ -78,17 +78,16 @@
                 {{ t('components.conceptSet.addConcepts') }}
               </AtlasButton>
 
-              <v-btn
-                color="error"
-                variant="outlined"
-                size="small"
+              <AtlasButton
+                variant="danger"
+                size="sm"
                 @click="conceptSet.id && deleteConceptSet(conceptSet.id)"
               >
                 <AtlasIcon class="mr-2">
                   mdi-delete
                 </AtlasIcon>
                 {{ t('common.delete') }}
-              </v-btn>
+              </AtlasButton>
             </div>
           </v-expansion-panel-text>
         </v-expansion-panel>

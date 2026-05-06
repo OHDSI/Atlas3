@@ -20,28 +20,26 @@
     @clear-error="store.clearError()"
   >
     <template #actions>
-      <v-btn
+      <AtlasButton
         v-if="isEditing"
-        variant="tonal"
-        color="primary"
-        prepend-icon="mdi-content-copy-outline"
+        variant="secondary"
+        icon="mdi-content-copy-outline"
         :disabled="loading || !canCopy"
         data-testid="feature-analysis-editor-copy"
         @click="handleSaveCopy"
       >
         {{ t('common.duplicate', 'Duplicate') }}
-      </v-btn>
-      <v-btn
+      </AtlasButton>
+      <AtlasButton
         v-if="isEditing"
-        variant="text"
-        color="error"
-        prepend-icon="mdi-delete-outline"
+        variant="ghost"
+        icon="mdi-delete-outline"
         :disabled="loading || !canDelete"
         data-testid="feature-analysis-editor-delete"
         @click="handleDeleteClick"
       >
         {{ t('common.delete', 'Delete') }}
-      </v-btn>
+      </AtlasButton>
       <AtlasButton
         icon="mdi-content-save-outline"
         :disabled="!canSave"
@@ -135,10 +133,10 @@
             {{ t('cc.fa.design', 'Covariate settings (JSON)') }}
           </h2>
           <div class="feature-analysis-editor__preset-actions">
-            <v-btn
-              variant="tonal"
-              size="small"
-              prepend-icon="mdi-download-outline"
+            <AtlasButton
+              variant="secondary"
+              size="sm"
+              icon="mdi-download-outline"
               :loading="loadingDefaults"
               data-testid="feature-analysis-editor-preset-default"
               @click="loadDefaultCovariateSettings(false)"
@@ -146,11 +144,11 @@
               {{
                 t('featureAnalyses.editor.preset.loadDefault', 'Load default covariate settings')
               }}
-            </v-btn>
-            <v-btn
-              variant="tonal"
-              size="small"
-              prepend-icon="mdi-clock-outline"
+            </AtlasButton>
+            <AtlasButton
+              variant="secondary"
+              size="sm"
+              icon="mdi-clock-outline"
               :loading="loadingDefaults"
               data-testid="feature-analysis-editor-preset-default-temporal"
               @click="loadDefaultCovariateSettings(true)"
@@ -161,7 +159,7 @@
                   'Load default temporal covariate settings'
                 )
               }}
-            </v-btn>
+            </AtlasButton>
             <AtlasChip
               v-if="presetJsonError"
               tone="danger"

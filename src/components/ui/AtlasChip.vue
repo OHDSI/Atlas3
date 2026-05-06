@@ -1,6 +1,6 @@
 <template>
   <v-chip
-    :color="toneColor"
+    :color="resolvedColor"
     :size="vuetifySize"
     :closable="closable"
     :disabled="disabled"
@@ -18,7 +18,7 @@
 import { computed, useAttrs } from 'vue'
 
 export type AtlasChipTone = 'neutral' | 'primary' | 'info' | 'success' | 'warning' | 'danger'
-export type AtlasChipSize = 'sm' | 'md'
+export type AtlasChipSize = 'xs' | 'sm' | 'md'
 
 interface Props {
   tone?: AtlasChipTone
@@ -29,7 +29,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  tone: 'neutral',
+  tone: undefined,
   size: 'md',
   closable: false,
   disabled: false,
@@ -52,10 +52,20 @@ const TONE_COLOR: Record<AtlasChipTone, string | undefined> = {
   danger:  'error',
 }
 
-const toneColor = computed(() => TONE_COLOR[props.tone])
-const vuetifySize = computed(() => (props.size === 'sm' ? 'small' : undefined))
-
 const attrs = useAttrs()
+
+const resolvedColor = computed(() => {
+  if (props.tone !== undefined) return TONE_COLOR[props.tone]
+  const passthrough = (attrs as Record<string, unknown>).color
+  return typeof passthrough === 'string' ? passthrough : undefined
+})
+
+const vuetifySize = computed(() => {
+  if (props.size === 'xs') return 'x-small'
+  if (props.size === 'sm') return 'small'
+  return undefined
+})
+
 const forwardAttrs = computed(() => {
   const { color: _c, size: _s, density: _d, ...rest } = attrs as Record<string, unknown>
   void _c; void _s; void _d

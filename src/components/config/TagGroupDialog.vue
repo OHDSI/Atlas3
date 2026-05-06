@@ -23,13 +23,13 @@
         class="mb-2"
       />
 
-      <v-text-field
+      <AtlasTextField
         v-model="form.color"
         label="Color"
         type="color"
         hint="Hex color code for visual identification"
         persistent-hint
-        :error-messages="errors.color"
+        :error="errors.color"
         variant="outlined"
         class="mb-2"
       >
@@ -40,7 +40,7 @@
             :style="{ backgroundColor: form.color }"
           />
         </template>
-      </v-text-field>
+      </AtlasTextField>
 
       <AtlasTextField
         v-model="form.icon"

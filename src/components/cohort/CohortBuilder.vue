@@ -144,24 +144,27 @@
                 variant="outlined"
                 divided
               >
-                <v-btn
+                <AtlasButton
+                  toggle
                   value="FIRST"
-                  size="small"
+                  size="sm"
                 >
                   {{ t('options.earliestEvents', 'First') }}
-                </v-btn>
-                <v-btn
+                </AtlasButton>
+                <AtlasButton
+                  toggle
                   value="ALL"
-                  size="small"
+                  size="sm"
                 >
                   {{ t('options.all') }}
-                </v-btn>
-                <v-btn
+                </AtlasButton>
+                <AtlasButton
+                  toggle
                   value="LAST"
-                  size="small"
+                  size="sm"
                 >
                   {{ t('options.latestEvents', 'Latest') }}
-                </v-btn>
+                </AtlasButton>
               </v-btn-toggle>
             </div>
           </div>
@@ -193,24 +196,27 @@
                 variant="outlined"
                 divided
               >
-                <v-btn
+                <AtlasButton
+                  toggle
                   value="FIRST"
-                  size="small"
+                  size="sm"
                 >
                   {{ t('options.earliestEvents', 'First') }}
-                </v-btn>
-                <v-btn
+                </AtlasButton>
+                <AtlasButton
+                  toggle
                   value="ALL"
-                  size="small"
+                  size="sm"
                 >
                   {{ t('options.all') }}
-                </v-btn>
-                <v-btn
+                </AtlasButton>
+                <AtlasButton
+                  toggle
                   value="LAST"
-                  size="small"
+                  size="sm"
                 >
                   {{ t('options.latestEvents', 'Latest') }}
-                </v-btn>
+                </AtlasButton>
               </v-btn-toggle>
               <AtlasSpacer />
               <AtlasIconButton
@@ -235,11 +241,10 @@
             v-else
             class="cohort-builder__add-additional"
           >
-            <v-btn
-              variant="text"
-              color="primary"
-              prepend-icon="mdi-filter-plus"
-              size="small"
+            <AtlasButton
+              variant="ghost"
+              icon="mdi-filter-plus"
+              size="sm"
               @click="addAdditionalCriteria"
             >
               {{
@@ -248,7 +253,7 @@
                   'Add inclusion criteria'
                 ).value
               }}
-            </v-btn>
+            </AtlasButton>
           </div>
         </div>
         <!-- /.section-wrapper -->
@@ -273,16 +278,15 @@
             </span>
             <AtlasSpacer />
             <div class="section-controls">
-              <v-btn
-                color="primary"
-                variant="tonal"
-                prepend-icon="mdi-plus"
-                size="small"
+              <AtlasButton
+                variant="secondary"
+                icon="mdi-plus"
+                size="sm"
                 data-testid="add-inclusion-rule"
                 @click="inclusionPanelRef?.addNewRule()"
               >
                 {{ t('components.cohortExpressionEditor.addRule', 'Add rule').value }}
-              </v-btn>
+              </AtlasButton>
               <span class="section-controls__label">
                 {{
                   t(
@@ -317,24 +321,27 @@
                 variant="outlined"
                 divided
               >
-                <v-btn
+                <AtlasButton
+                  toggle
                   value="FIRST"
-                  size="small"
+                  size="sm"
                 >
                   {{ t('options.earliestEvents', 'First') }}
-                </v-btn>
-                <v-btn
+                </AtlasButton>
+                <AtlasButton
+                  toggle
                   value="ALL"
-                  size="small"
+                  size="sm"
                 >
                   {{ t('options.all') }}
-                </v-btn>
-                <v-btn
+                </AtlasButton>
+                <AtlasButton
+                  toggle
                   value="LAST"
-                  size="small"
+                  size="sm"
                 >
                   {{ t('options.latestEvents', 'Latest') }}
-                </v-btn>
+                </AtlasButton>
               </v-btn-toggle>
             </div>
           </div>
@@ -389,13 +396,14 @@
                   location="top"
                 >
                   <template #activator="{ props: tooltipProps }">
-                    <v-btn
+                    <AtlasButton
                       v-bind="tooltipProps"
+                      toggle
                       value="CONTINUOUS_OBSERVATION"
-                      size="small"
+                      size="sm"
                     >
                       {{ t('options.endOfContinuousObservationShort', 'Observation').value }}
-                    </v-btn>
+                    </AtlasButton>
                   </template>
                 </AtlasTooltip>
                 <AtlasTooltip
@@ -408,13 +416,14 @@
                   location="top"
                 >
                   <template #activator="{ props: tooltipProps }">
-                    <v-btn
+                    <AtlasButton
                       v-bind="tooltipProps"
+                      toggle
                       value="FIXED_DURATION"
-                      size="small"
+                      size="sm"
                     >
                       {{ t('options.fixedDurationShort', 'Fixed duration').value }}
-                    </v-btn>
+                    </AtlasButton>
                   </template>
                 </AtlasTooltip>
                 <AtlasTooltip
@@ -425,13 +434,14 @@
                   location="top"
                 >
                   <template #activator="{ props: tooltipProps }">
-                    <v-btn
+                    <AtlasButton
                       v-bind="tooltipProps"
+                      toggle
                       value="CONTINUOUS_DRUG"
-                      size="small"
+                      size="sm"
                     >
                       {{ t('options.endOfContinuousDrugExposureShort', 'Drug exposure').value }}
-                    </v-btn>
+                    </AtlasButton>
                   </template>
                 </AtlasTooltip>
               </v-btn-toggle>

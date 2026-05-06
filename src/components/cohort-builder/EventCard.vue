@@ -199,20 +199,15 @@ const removeEvent = () => {
           :label="temporalWindowDisplay ?? ''"
           :closable="false"
         />
-        <v-chip
+        <AtlasChip
           v-if="hasAttributes"
-          size="small"
+          size="sm"
           color="accent"
           variant="tonal"
+          prepend-icon="mdi-filter"
         >
-          <AtlasIcon
-            start
-            size="small"
-          >
-            mdi-filter
-          </AtlasIcon>
           {{ event.attributes!.length }} attribute{{ event.attributes!.length > 1 ? 's' : '' }}
-        </v-chip>
+        </AtlasChip>
       </div>
     </v-card-text>
 
@@ -261,11 +256,12 @@ const removeEvent = () => {
               <div class="text-subtitle-2 flex-grow-1">
                 Cardinality
               </div>
-              <v-btn
+              <AtlasIconButton
                 v-if="hasCardinality"
                 icon="mdi-close"
                 variant="text"
-                size="x-small"
+                size="sm"
+                v-bind="{ ariaLabel: 'Remove cardinality' }"
                 @click="removeCardinality"
               />
             </div>
@@ -284,11 +280,12 @@ const removeEvent = () => {
               <div class="text-subtitle-2 flex-grow-1">
                 Temporal Windows
               </div>
-              <v-btn
+              <AtlasIconButton
                 v-if="hasTemporalWindows"
                 icon="mdi-close"
                 variant="text"
-                size="x-small"
+                size="sm"
+                v-bind="{ ariaLabel: 'Remove temporal window' }"
                 @click="removeTemporalWindow"
               />
             </div>

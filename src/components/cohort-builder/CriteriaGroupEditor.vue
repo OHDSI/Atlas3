@@ -28,42 +28,42 @@
         <v-card class="match-type-menu">
           <v-card-text class="pa-3">
             <div class="segmented-buttons">
-              <v-btn
-                :variant="matchTypeTemp === 'ALL' ? 'tonal' : 'outlined'"
-                :color="matchTypeTemp === 'ALL' ? 'primary' : undefined"
-                size="small"
+              <AtlasButton
+                :variant="matchTypeTemp === 'ALL' ? 'tonal' : 'secondary'"
+                :tone="matchTypeTemp === 'ALL' ? undefined : 'neutral'"
+                size="sm"
                 class="flex-1"
                 @click="matchTypeTemp = 'ALL'"
               >
                 {{ t('options.all', 'All') }}
-              </v-btn>
-              <v-btn
-                :variant="matchTypeTemp === 'ANY' ? 'tonal' : 'outlined'"
-                :color="matchTypeTemp === 'ANY' ? 'primary' : undefined"
-                size="small"
+              </AtlasButton>
+              <AtlasButton
+                :variant="matchTypeTemp === 'ANY' ? 'tonal' : 'secondary'"
+                :tone="matchTypeTemp === 'ANY' ? undefined : 'neutral'"
+                size="sm"
                 class="flex-1"
                 @click="matchTypeTemp = 'ANY'"
               >
                 {{ t('options.any', 'Any') }}
-              </v-btn>
-              <v-btn
-                :variant="matchTypeTemp === 'AT_LEAST' ? 'tonal' : 'outlined'"
-                :color="matchTypeTemp === 'AT_LEAST' ? 'primary' : undefined"
-                size="small"
+              </AtlasButton>
+              <AtlasButton
+                :variant="matchTypeTemp === 'AT_LEAST' ? 'tonal' : 'secondary'"
+                :tone="matchTypeTemp === 'AT_LEAST' ? undefined : 'neutral'"
+                size="sm"
                 class="flex-1"
                 @click="matchTypeTemp = 'AT_LEAST'"
               >
                 {{ t('options.atLeast', 'At least') }}
-              </v-btn>
-              <v-btn
-                :variant="matchTypeTemp === 'AT_MOST' ? 'tonal' : 'outlined'"
-                :color="matchTypeTemp === 'AT_MOST' ? 'primary' : undefined"
-                size="small"
+              </AtlasButton>
+              <AtlasButton
+                :variant="matchTypeTemp === 'AT_MOST' ? 'tonal' : 'secondary'"
+                :tone="matchTypeTemp === 'AT_MOST' ? undefined : 'neutral'"
+                size="sm"
                 class="flex-1"
                 @click="matchTypeTemp = 'AT_MOST'"
               >
                 {{ t('options.atMost', 'At most') }}
-              </v-btn>
+              </AtlasButton>
             </div>
             <AtlasTextField
               v-if="matchTypeTemp === 'AT_LEAST' || matchTypeTemp === 'AT_MOST'"
@@ -190,14 +190,14 @@
                     <v-card class="cardinality-menu">
                       <v-card-text class="pa-3">
                         <div class="segmented-buttons">
-                          <v-btn
+                          <AtlasButton
                             :variant="
-                              getCardinalityType(event) === 'at_least' ? 'tonal' : 'outlined'
+                              getCardinalityType(event) === 'at_least' ? 'tonal' : 'secondary'
                             "
-                            :color="
-                              getCardinalityType(event) === 'at_least' ? 'primary' : undefined
+                            :tone="
+                              getCardinalityType(event) === 'at_least' ? undefined : 'neutral'
                             "
-                            size="small"
+                            size="sm"
                             class="flex-1"
                             @click="
                               updateEventCardinality(
@@ -208,13 +208,13 @@
                             "
                           >
                             At least
-                          </v-btn>
-                          <v-btn
+                          </AtlasButton>
+                          <AtlasButton
                             :variant="
-                              getCardinalityType(event) === 'exactly' ? 'tonal' : 'outlined'
+                              getCardinalityType(event) === 'exactly' ? 'tonal' : 'secondary'
                             "
-                            :color="getCardinalityType(event) === 'exactly' ? 'primary' : undefined"
-                            size="small"
+                            :tone="getCardinalityType(event) === 'exactly' ? undefined : 'neutral'"
+                            size="sm"
                             class="flex-1"
                             @click="
                               updateEventCardinality(
@@ -225,13 +225,13 @@
                             "
                           >
                             Exactly
-                          </v-btn>
-                          <v-btn
+                          </AtlasButton>
+                          <AtlasButton
                             :variant="
-                              getCardinalityType(event) === 'at_most' ? 'tonal' : 'outlined'
+                              getCardinalityType(event) === 'at_most' ? 'tonal' : 'secondary'
                             "
-                            :color="getCardinalityType(event) === 'at_most' ? 'primary' : undefined"
-                            size="small"
+                            :tone="getCardinalityType(event) === 'at_most' ? undefined : 'neutral'"
+                            size="sm"
                             class="flex-1"
                             @click="
                               updateEventCardinality(
@@ -242,7 +242,7 @@
                             "
                           >
                             At most
-                          </v-btn>
+                          </AtlasButton>
                         </div>
                         <AtlasTextField
                           :model-value="event.cardinality?.count || 1"
@@ -266,16 +266,15 @@
                       <div class="event-header-actions">
                         <AtlasMenu>
                           <template #activator="{ props: menuProps }">
-                            <v-btn
+                            <AtlasButton
                               v-bind="menuProps"
-                              prepend-icon="mdi-plus"
-                              size="small"
-                              variant="text"
-                              color="primary"
+                              icon="mdi-plus"
+                              size="sm"
+                              variant="ghost"
                               data-testid="add-attribute-button"
                             >
                               {{ t('components.common.addAttribute') }}
-                            </v-btn>
+                            </AtlasButton>
                           </template>
                           <AtlasList>
                             <AtlasListItem
@@ -347,15 +346,15 @@
                               </v-card-text>
                             </v-card>
                           </AtlasMenu>
-                          <v-btn
+                          <AtlasButton
                             v-else
-                            size="small"
-                            variant="outlined"
-                            prepend-icon="mdi-calendar-range"
+                            size="sm"
+                            variant="secondary"
+                            icon="mdi-calendar-range"
                             @click="addTemporalWindow(index)"
                           >
                             Add Temporal Window
-                          </v-btn>
+                          </AtlasButton>
                         </div>
                       </div>
 
@@ -395,15 +394,15 @@
                 </div>
               </div>
 
-              <v-alert
+              <AtlasAlert
                 v-else
-                color="grey-lighten-4"
+                severity="info"
                 variant="outlined"
               >
                 <div style="color: #666">
                   No events in group. Add events to build criteria logic.
                 </div>
-              </v-alert>
+              </AtlasAlert>
             </div>
           </div>
         </div>

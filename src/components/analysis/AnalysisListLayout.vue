@@ -21,22 +21,24 @@
             :data-testid="testid ? `${testid}-view-toggle` : undefined"
             @update:model-value="onViewModeChange"
           >
-            <v-btn
+            <AtlasButton
+              toggle
               value="tile"
-              size="small"
+              size="sm"
               :aria-label="t('common.tileView', 'Tile view').value"
               :data-testid="testid ? `${testid}-view-toggle-tile` : undefined"
             >
               <AtlasIcon>mdi-view-grid</AtlasIcon>
-            </v-btn>
-            <v-btn
+            </AtlasButton>
+            <AtlasButton
+              toggle
               value="table"
-              size="small"
+              size="sm"
               :aria-label="t('dataSources.table.tableTab', 'Table view').value"
               :data-testid="testid ? `${testid}-view-toggle-table` : undefined"
             >
               <AtlasIcon>mdi-view-list</AtlasIcon>
-            </v-btn>
+            </AtlasButton>
           </v-btn-toggle>
         </div>
       </div>
@@ -79,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasIcon, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasSpacer } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
 export type AnalysisViewMode = 'tile' | 'table'

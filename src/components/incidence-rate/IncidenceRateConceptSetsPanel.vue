@@ -26,14 +26,14 @@
         >
           <td>{{ cs.name }}</td>
           <td>
-            <v-btn
+            <AtlasButton
               v-if="typeof cs.id === 'number'"
-              size="x-small"
-              variant="text"
+              size="sm"
+              variant="ghost"
               :to="`/conceptset/${cs.id}`"
             >
               {{ t('cs.manager.concept.tabs.hierarchy.view', 'View') }}
-            </v-btn>
+            </AtlasButton>
           </td>
         </tr>
       </tbody>
@@ -45,6 +45,7 @@
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
+import { AtlasButton } from '@/components/ui'
 
 const { t } = useI18n()
 const store = useIncidenceRateStore()

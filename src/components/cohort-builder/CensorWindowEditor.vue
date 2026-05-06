@@ -32,10 +32,9 @@
       <div class="trim-rows">
         <div class="trim-row">
           <span class="trim-row__label">{{ leftCensorLabel }}</span>
-          <v-text-field
-            v-model="startDateModel"
+          <AtlasTextField
+            :model-value="startDateModel ?? undefined"
             type="date"
-            density="compact"
             variant="outlined"
             hide-details
             class="trim-row__input"
@@ -43,16 +42,15 @@
             :disabled="disabled"
             :aria-label="leftCensorLabel"
             clearable
-            @update:model-value="emitCensorWindow"
+            @update:model-value="(v) => { startDateModel = (v as string) || null; emitCensorWindow() }"
             @click:clear="clearStartDate"
           />
         </div>
         <div class="trim-row">
           <span class="trim-row__label">{{ rightCensorLabel }}</span>
-          <v-text-field
-            v-model="endDateModel"
+          <AtlasTextField
+            :model-value="endDateModel ?? undefined"
             type="date"
-            density="compact"
             variant="outlined"
             hide-details
             class="trim-row__input"
@@ -60,7 +58,7 @@
             :disabled="disabled"
             :aria-label="rightCensorLabel"
             clearable
-            @update:model-value="emitCensorWindow"
+            @update:model-value="(v) => { endDateModel = (v as string) || null; emitCensorWindow() }"
             @click:clear="clearEndDate"
           />
         </div>

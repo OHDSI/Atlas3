@@ -1,12 +1,12 @@
 <template>
-  <v-chip
-    size="small"
-    color="orange"
+  <AtlasChip
+    size="sm"
+    tone="warning"
     variant="outlined"
     :closable="closable"
     style="cursor: pointer"
     data-testid="temporal-filter-chip"
-    @click:close="$emit('close')"
+    @close="$emit('close')"
   >
     <AtlasIcon
       start
@@ -15,11 +15,11 @@
       mdi-clock-outline
     </AtlasIcon>
     <slot>{{ label }}</slot>
-  </v-chip>
+  </AtlasChip>
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasChip, AtlasIcon } from '@/components/ui'
 interface Props {
   label?: string
   closable?: boolean

@@ -16,14 +16,12 @@
           clearable
           class="permissions-section__search"
         />
-        <v-btn
-          color="primary"
-          variant="elevated"
-          prepend-icon="mdi-plus"
+        <AtlasButton
+          icon="mdi-plus"
           @click="showCreateDialog = true"
         >
           New Role
-        </v-btn>
+        </AtlasButton>
       </div>
 
       <!-- Loading -->
@@ -112,23 +110,21 @@
           </p>
         </div>
         <div class="permissions-section__role-actions">
-          <v-btn
-            icon
+          <AtlasIconButton
+            icon="mdi-pencil"
+            v-bind="{ ariaLabel: 'Edit role' }"
             variant="text"
-            size="small"
+            size="sm"
             @click="handleEditRole"
-          >
-            <AtlasIcon>mdi-pencil</AtlasIcon>
-          </v-btn>
-          <v-btn
-            icon
+          />
+          <AtlasIconButton
+            icon="mdi-delete"
+            v-bind="{ ariaLabel: 'Delete role' }"
             variant="text"
-            size="small"
-            color="error"
+            size="sm"
+            tone="danger"
             @click="showDeleteDialog = true"
-          >
-            <AtlasIcon>mdi-delete</AtlasIcon>
-          </v-btn>
+          />
         </div>
       </div>
 
@@ -175,7 +171,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import { useAuth } from '@/composables/useAuth'

@@ -104,7 +104,7 @@ describe('LanguageSelector', () => {
     const wrapper = mountComponent()
 
     const btn = wrapper.findComponent({ name: 'VBtn' })
-    expect(btn.props('icon')).toBe(true)
+    expect(btn.props('icon')).toBe('mdi-translate')
     expect(btn.props('variant')).toBe('text')
   })
 })

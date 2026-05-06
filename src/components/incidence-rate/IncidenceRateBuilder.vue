@@ -140,11 +140,11 @@
         location="bottom"
       >
         <template #activator="{ props: tipProps }">
-          <v-btn
-            v-bind="tipProps"
+          <AtlasIconButton
+            v-bind="{ ...tipProps, ariaLabel: t('common.backToCurrent', 'Back to current version').value }"
             icon="mdi-undo"
             variant="text"
-            size="small"
+            size="sm"
             density="compact"
             data-testid="ir-builder-back-to-current"
             @click="store.clearPreviewVersion()"
@@ -161,17 +161,16 @@
       >
         {{ t('common.duplicate', 'Duplicate') }}
       </AtlasButton>
-      <v-btn
+      <AtlasButton
         v-if="store.currentIR?.id"
-        variant="outlined"
-        color="error"
-        prepend-icon="mdi-delete"
+        variant="danger"
+        icon="mdi-delete"
         :disabled="!store.currentIR?.id || !canDelete"
         data-testid="ir-builder-delete"
         @click="askDelete = true"
       >
         {{ t('common.delete', 'Delete') }}
-      </v-btn>
+      </AtlasButton>
       <AtlasMenu
         v-if="store.currentIR?.id"
         v-model="generateMenu"
@@ -195,17 +194,15 @@
           @generated="generateMenu = false"
         />
       </AtlasMenu>
-      <v-btn
-        color="primary"
-        variant="elevated"
-        prepend-icon="mdi-content-save"
+      <AtlasButton
+        icon="mdi-content-save"
         :disabled="!store.canSave || saving || !canSave"
         :loading="saving"
         data-testid="ir-builder-save"
         @click="onSave"
       >
         {{ t('common.save', 'Save') }}
-      </v-btn>
+      </AtlasButton>
     </template>
 
     <IncidenceRateWorkbench

@@ -24,9 +24,8 @@
         <div class="cohort-grid__error-message">
           {{ error.message || t('common.errorLoadingCohorts', 'Failed to load cohorts').value }}
         </div>
-        <v-btn
-          color="error"
-          variant="elevated"
+        <AtlasButton
+          variant="danger"
           class="mt-4"
           @click="$emit('retry')"
         >
@@ -34,7 +33,7 @@
             mdi-refresh
           </AtlasIcon>
           {{ t('common.refresh', 'Retry') }}
-        </v-btn>
+        </AtlasButton>
       </div>
     </AtlasAlert>
 
@@ -52,15 +51,15 @@
       <p class="cohort-grid__empty-text">
         {{ emptyMessage }}
       </p>
-      <v-btn
+      <AtlasButton
         v-if="isFiltered"
-        size="small"
-        variant="tonal"
-        prepend-icon="mdi-close"
+        size="sm"
+        variant="secondary"
+        icon="mdi-close"
         @click="$emit('clear-filters')"
       >
         {{ t('search.clearAllSelections', 'Clear filters').value }}
-      </v-btn>
+      </AtlasButton>
       <AtlasButton
         v-else
         icon="mdi-plus"

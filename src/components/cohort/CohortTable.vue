@@ -19,9 +19,8 @@
         <div>
           {{ error.message || t('common.errorLoadingCohorts', 'Failed to load cohorts').value }}
         </div>
-        <v-btn
-          color="error"
-          variant="elevated"
+        <AtlasButton
+          variant="danger"
           class="mt-3"
           @click="$emit('retry')"
         >
@@ -29,7 +28,7 @@
             mdi-refresh
           </AtlasIcon>
           {{ t('common.refresh', 'Retry').value }}
-        </v-btn>
+        </AtlasButton>
       </div>
     </AtlasAlert>
 
@@ -47,15 +46,15 @@
       <p class="cohort-table__empty-text">
         {{ emptyMessage }}
       </p>
-      <v-btn
+      <AtlasButton
         v-if="isFiltered"
-        size="small"
-        variant="tonal"
-        prepend-icon="mdi-close"
+        size="sm"
+        variant="secondary"
+        icon="mdi-close"
         @click="$emit('clear-filters')"
       >
         {{ t('search.clearAllSelections', 'Clear filters').value }}
-      </v-btn>
+      </AtlasButton>
       <AtlasButton
         v-else
         icon="mdi-plus"
@@ -127,16 +126,16 @@
                 v-if="cohort.tags && cohort.tags.length > 0"
                 class="cohort-table__tags"
               >
-                <v-chip
+                <AtlasChip
                   v-for="tag in cohort.tags"
                   :key="tag.id || tag.name"
-                  size="x-small"
-                  :color="(selectedTags ?? []).includes(tag.name) ? 'primary' : 'default'"
+                  size="sm"
+                  :tone="(selectedTags ?? []).includes(tag.name) ? 'primary' : 'neutral'"
                   :variant="(selectedTags ?? []).includes(tag.name) ? 'elevated' : 'tonal'"
                   @click.stop="$emit('tag-click', tag.name)"
                 >
                   {{ tag.name }}
-                </v-chip>
+                </AtlasChip>
               </div>
             </td>
             <td class="cohort-table__col-author">
@@ -191,7 +190,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import { AtlasAlert, AtlasButton, AtlasCard, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 
 const { t, locale } = useI18n()
 const router = useRouter()

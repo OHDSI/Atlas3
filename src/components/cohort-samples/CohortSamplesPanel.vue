@@ -13,16 +13,15 @@
           and gender.
         </div>
       </div>
-      <v-btn
-        color="primary"
-        variant="elevated"
-        prepend-icon="mdi-plus"
+      <AtlasButton
+        variant="primary"
+        icon="mdi-plus"
         :disabled="!cohortId || !sourceKey || creating"
         data-testid="cohort-samples-new"
         @click="dialogOpen = true"
       >
         New sample
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <AtlasDivider class="my-3" />
@@ -69,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasDivider, AtlasSkeleton } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDivider, AtlasSkeleton } from '@/components/ui'
 import { ref, watch } from 'vue'
 import {
   listCohortSamples,

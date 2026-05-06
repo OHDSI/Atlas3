@@ -64,13 +64,13 @@
 
             <v-list-item-subtitle>
               <div class="d-flex align-center flex-wrap gap-2">
-                <v-chip
+                <AtlasChip
                   :color="getStatusColor(source.cacheStatus?.status)"
-                  size="small"
+                  size="sm"
                   variant="tonal"
                 >
                   {{ getStatusLabel(source.cacheStatus?.status) }}
-                </v-chip>
+                </AtlasChip>
 
                 <!-- Cache Stats -->
                 <template
@@ -114,11 +114,11 @@
             <template #append>
               <div class="d-flex align-center gap-2">
                 <!-- Build/Rebuild Button -->
-                <v-btn
+                <AtlasButton
                   v-if="source.cacheStatus?.status !== 'building'"
-                  :color="source.cacheStatus?.status === 'ready' ? 'primary' : 'success'"
-                  :variant="source.cacheStatus?.status === 'ready' ? 'outlined' : 'flat'"
-                  size="small"
+                  :variant="source.cacheStatus?.status === 'ready' ? 'secondary' : 'primary'"
+                  :tone="source.cacheStatus?.status === 'ready' ? 'primary' : 'success'"
+                  size="sm"
                   :loading="buildingSource === source.sourceKey"
                   :disabled="buildingSource !== null"
                   @click="handleBuildCache(source.sourceKey)"
@@ -136,7 +136,7 @@
                       ? t('trexsql.rebuild', 'Rebuild')
                       : t('trexsql.build', 'Build Cache')
                   }}
-                </v-btn>
+                </AtlasButton>
 
                 <!-- Building Progress -->
                 <div
@@ -178,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAvatar, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressCircular, AtlasSnackbar } from '@/components/ui'
+import { AtlasAvatar, AtlasButton, AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasProgressCircular, AtlasSnackbar } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'

@@ -51,16 +51,15 @@
           <span class="patient-count__number">{{ patientCount?.toLocaleString() || '0' }}</span>
           <span class="patient-count__label ml-1">{{ t('columns.personsCount', 'Patients') }}</span>
         </div>
-        <v-btn
-          color="primary"
-          variant="text"
-          size="small"
+        <AtlasButton
+          variant="ghost"
+          size="sm"
           :disabled="!cohortId || !canWriteSource"
           block
           @click.stop="handleGenerate"
         >
           {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
-        </v-btn>
+        </AtlasButton>
       </div>
 
       <div
@@ -76,17 +75,16 @@
         <span class="ml-2 text-error text-caption">{{
           failMessage || t('ir.results.failed', 'Failed').value
         }}</span>
-        <v-btn
-          color="primary"
-          variant="text"
-          size="small"
+        <AtlasButton
+          variant="ghost"
+          size="sm"
           :disabled="!cohortId || !canWriteSource"
           block
           class="mt-2"
           @click.stop="handleGenerate"
         >
           {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
-        </v-btn>
+        </AtlasButton>
       </div>
     </v-card-text>
   </v-card>

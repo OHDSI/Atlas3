@@ -7,24 +7,26 @@
       variant="outlined"
       density="compact"
     >
-      <v-btn
-        size="small"
-        prepend-icon="mdi-content-copy"
+      <AtlasButton
+        size="sm"
+        variant="secondary"
+        icon="mdi-content-copy"
         :loading="copying"
         :disabled="!data || data.length === 0 || copying || exporting"
         @click="handleCopy"
       >
         Copy
-      </v-btn>
-      <v-btn
-        size="small"
-        prepend-icon="mdi-file-delimited"
+      </AtlasButton>
+      <AtlasButton
+        size="sm"
+        variant="secondary"
+        icon="mdi-file-delimited"
         :loading="exporting"
         :disabled="!data || data.length === 0 || copying || exporting"
         @click="handleExportCSV"
       >
         CSV
-      </v-btn>
+      </AtlasButton>
     </v-btn-group>
 
     <AtlasSnackbar
@@ -39,7 +41,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { AtlasSnackbar } from '@/components/ui'
+import { AtlasButton, AtlasSnackbar } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import * as Papa from 'papaparse'
 import { logger } from '@/utils/logger'

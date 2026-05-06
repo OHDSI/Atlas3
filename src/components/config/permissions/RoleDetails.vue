@@ -12,19 +12,14 @@
             class="role-details__value"
           >
             <span class="role-details__name">{{ role.name }}</span>
-            <v-btn
+            <AtlasIconButton
               icon="mdi-pencil"
-              size="small"
+              v-bind="{ ariaLabel: 'Edit Role Name' }"
+              size="sm"
               variant="text"
+              title="Edit Role Name"
               @click="startEditName"
-            >
-              <AtlasIcon size="small">
-                mdi-pencil
-              </AtlasIcon>
-              <AtlasTooltip activator="parent">
-                Edit Role Name
-              </AtlasTooltip>
-            </v-btn>
+            />
           </div>
           <div
             v-else
@@ -74,19 +69,14 @@
             <span class="role-details__description">
               {{ role.description || 'No description provided' }}
             </span>
-            <v-btn
+            <AtlasIconButton
               icon="mdi-pencil"
-              size="small"
+              v-bind="{ ariaLabel: 'Edit Description' }"
+              size="sm"
               variant="text"
+              title="Edit Description"
               @click="startEditDescription"
-            >
-              <AtlasIcon size="small">
-                mdi-pencil
-              </AtlasIcon>
-              <AtlasTooltip activator="parent">
-                Edit Description
-              </AtlasTooltip>
-            </v-btn>
+            />
           </div>
           <div
             v-else
@@ -166,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasIcon, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasIcon, AtlasIconButton, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'

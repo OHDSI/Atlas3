@@ -42,13 +42,13 @@
       @delete="handleDeleteClick"
     >
       <template #[`item.type`]="{ item }">
-        <v-chip
-          size="small"
+        <AtlasChip
+          size="sm"
           variant="tonal"
           :color="typeChipColor(item.type)"
         >
           {{ item.type }}
-        </v-chip>
+        </AtlasChip>
       </template>
       <template #[`item.domain`]="{ item }">
         {{ item.domain ?? '—' }}
@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasDialog, AtlasTextField } from '@/components/ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 

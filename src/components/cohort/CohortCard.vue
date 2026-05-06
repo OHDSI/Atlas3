@@ -56,17 +56,17 @@
         v-if="cohort.tags && cohort.tags.length > 0"
         class="cohort-card__tags"
       >
-        <v-chip
+        <AtlasChip
           v-for="tag in cohort.tags"
           :key="tag.id || tag.name"
-          size="x-small"
-          :color="selectedTags.includes(tag.name) ? 'primary' : undefined"
+          size="sm"
+          :tone="selectedTags.includes(tag.name) ? 'primary' : 'neutral'"
           :variant="selectedTags.includes(tag.name) ? 'flat' : 'tonal'"
           class="cohort-card__tag"
           @click.stop="$emit('tag-click', tag.name)"
         >
           {{ tag.name }}
-        </v-chip>
+        </AtlasChip>
       </div>
 
       <AtlasSpacer />
@@ -130,7 +130,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
-import { AtlasCard, AtlasIconButton, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { AtlasCard, AtlasChip, AtlasIconButton, AtlasSpacer, AtlasTooltip } from '@/components/ui'
 
 interface Props {
   cohort: CohortDefinitionSummary

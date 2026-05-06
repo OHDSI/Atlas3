@@ -10,13 +10,12 @@
     <v-card-text>
       <!-- Single Concept Selection Mode -->
       <template v-if="singleSelect">
-        <v-text-field
+        <AtlasTextField
           :model-value="selectedConcept?.CONCEPT_NAME || ''"
           readonly
           :label="tv('components.conceptPicker.selectConcept', 'Selected Concept')"
           :placeholder="tv('search.placeholder', 'Click search to select...')"
           variant="outlined"
-          density="compact"
           data-testid="single-concept-display"
         >
           <template #append>
@@ -36,7 +35,7 @@
               @click="clearSingleConceptSelection"
             />
           </template>
-        </v-text-field>
+        </AtlasTextField>
 
         <!-- Selected Concept Chip -->
         <AtlasChip
@@ -103,18 +102,18 @@
       </template>
     </v-card-text>
 
-    <!-- Concept Search Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showSearch"
+      chromeless
       max-width="800"
       scrollable
     >
       <ConceptSearch @select-concept="handleConceptSelect" />
-    </v-dialog>
+    </AtlasDialog>
 
-    <!-- Create New Concept Set Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="showCreateNew"
+      chromeless
       max-width="600"
       scrollable
     >
@@ -124,12 +123,12 @@
         @cancel="showCreateNew = false"
         @add-concepts="openSearchFromEditor"
       />
-    </v-dialog>
+    </AtlasDialog>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { AtlasChip, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasListItem, AtlasSelect } from '@/components/ui'
+import { AtlasChip, AtlasDialog, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasListItem, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSets } from '@/composables/useConceptSets'

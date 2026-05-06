@@ -216,40 +216,35 @@ describe('NestedCriteriaRenderer', () => {
     })
   })
 
-  describe('Logic Type Colors', () => {
-    it('should assign primary color to ALL', () => {
+  describe('Logic Type Tones', () => {
+    it('should assign primary tone to ALL', () => {
       const wrapper = mountComponent()
       const vm = wrapper.vm as any
-      const color = vm.getLogicColor('ALL')
-      expect(color).toBe('primary')
+      expect(vm.getLogicTone('ALL')).toBe('primary')
     })
 
-    it('should assign secondary color to ANY', () => {
+    it('should assign info tone to ANY', () => {
       const wrapper = mountComponent()
       const vm = wrapper.vm as any
-      const color = vm.getLogicColor('ANY')
-      expect(color).toBe('secondary')
+      expect(vm.getLogicTone('ANY')).toBe('info')
     })
 
-    it('should assign success color to AT_LEAST', () => {
+    it('should assign success tone to AT_LEAST', () => {
       const wrapper = mountComponent()
       const vm = wrapper.vm as any
-      const color = vm.getLogicColor('AT_LEAST')
-      expect(color).toBe('success')
+      expect(vm.getLogicTone('AT_LEAST')).toBe('success')
     })
 
-    it('should assign warning color to AT_MOST', () => {
+    it('should assign warning tone to AT_MOST', () => {
       const wrapper = mountComponent()
       const vm = wrapper.vm as any
-      const color = vm.getLogicColor('AT_MOST')
-      expect(color).toBe('warning')
+      expect(vm.getLogicTone('AT_MOST')).toBe('warning')
     })
 
-    it('should assign grey color to unknown logic type', () => {
+    it('should assign neutral tone to unknown logic type', () => {
       const wrapper = mountComponent()
       const vm = wrapper.vm as any
-      const color = vm.getLogicColor('UNKNOWN')
-      expect(color).toBe('grey')
+      expect(vm.getLogicTone('UNKNOWN')).toBe('neutral')
     })
   })
 

@@ -25,16 +25,15 @@
         <div class="event-header__right">
           <AtlasMenu>
             <template #activator="{ props: menuProps }">
-              <v-btn
+              <AtlasButton
                 v-bind="menuProps"
-                prepend-icon="mdi-plus"
-                size="small"
-                variant="text"
-                color="primary"
+                icon="mdi-plus"
+                size="sm"
+                variant="ghost"
                 data-testid="add-attribute-button"
               >
                 {{ t('components.common.addAttribute') }}
-              </v-btn>
+              </AtlasButton>
             </template>
             <AtlasList>
               <AtlasListItem
@@ -47,15 +46,14 @@
               />
             </AtlasList>
           </AtlasMenu>
-          <v-btn
-            icon
-            size="small"
+          <AtlasIconButton
+            v-bind="{ ariaLabel: t('common.remove', 'Remove').value }"
+            icon="mdi-delete"
+            size="sm"
             variant="text"
-            color="primary"
+            tone="primary"
             @click="emit('remove')"
-          >
-            <AtlasIcon>mdi-delete</AtlasIcon>
-          </v-btn>
+          />
         </div>
       </div>
 
@@ -116,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { computed, ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'

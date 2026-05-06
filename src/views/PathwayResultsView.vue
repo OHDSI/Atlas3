@@ -16,24 +16,26 @@
         mandatory
         @update:model-value="(v: 'visual' | 'tabular' | null) => v && (mode = v)"
       >
-        <v-btn
+        <AtlasButton
+          toggle
           value="visual"
-          size="small"
+          size="sm"
         >
           <AtlasIcon start>
             mdi-chart-donut
           </AtlasIcon>
           {{ t('cohortDefinitions.costUtilization.visualization', 'Visualization') }}
-        </v-btn>
-        <v-btn
+        </AtlasButton>
+        <AtlasButton
+          toggle
           value="tabular"
-          size="small"
+          size="sm"
         >
           <AtlasIcon start>
             mdi-table
           </AtlasIcon>
           {{ t('pathway.results.tabular', 'Tabular') }}
-        </v-btn>
+        </AtlasButton>
       </v-btn-toggle>
     </template>
 
@@ -84,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasIcon } from '@/components/ui'
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePathwayResults } from '@/composables/usePathwayResults'

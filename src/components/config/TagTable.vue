@@ -77,12 +77,12 @@
 
     <!-- Usage Count -->
     <template #item.count="{ item }">
-      <v-chip
-        size="small"
+      <AtlasChip
+        size="sm"
         variant="outlined"
       >
         {{ item.count || 0 }}
-      </v-chip>
+      </AtlasChip>
     </template>
 
     <!-- Actions -->

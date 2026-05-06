@@ -43,7 +43,7 @@ interface Props {
   required?: boolean
   disabled?: boolean
   readonly?: boolean
-  type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'url'
+  type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'url' | 'date' | 'time' | 'datetime-local' | 'color'
   placeholder?: string
   prependIcon?: string
   appendIcon?: string

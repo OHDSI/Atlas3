@@ -1,6 +1,7 @@
 <template>
-  <v-dialog
+  <AtlasDialog
     v-model="isOpen"
+    chromeless
     :max-width="440"
     :persistent="true"
     transition="dialog-bottom-transition"
@@ -37,12 +38,12 @@
             mdi-alert-circle-outline
           </AtlasIcon>
           <span>{{ errorMessage }}</span>
-          <v-btn
+          <AtlasIconButton
             icon="mdi-close"
-            size="x-small"
+            size="sm"
             variant="text"
             class="ml-auto"
-            :aria-label="t('common.close', 'Dismiss').value"
+            v-bind="{ ariaLabel: t('common.close', 'Dismiss').value }"
             @click="clearError"
           />
         </div>
@@ -53,20 +54,20 @@
           </p>
 
           <div class="login-card__providers">
-            <v-btn
+            <AtlasButton
               v-for="provider in providers"
               :key="provider.name"
-              variant="outlined"
-              color="default"
-              size="large"
+              variant="secondary"
+              tone="neutral"
+              size="lg"
               block
               class="login-card__provider-btn"
               :prepend-icon="provider.icon"
-              :append-icon="'mdi-chevron-right'"
+              append-icon="mdi-chevron-right"
               @click="selectProvider(provider)"
             >
               {{ provider.name }}
-            </v-btn>
+            </AtlasButton>
           </div>
         </div>
 
@@ -108,11 +109,11 @@
         Atlas v3.0 · OHDSI
       </div>
     </v-card>
-  </v-dialog>
+  </AtlasDialog>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

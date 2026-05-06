@@ -16,20 +16,20 @@
         :subtitle="item.raw.description"
       >
         <template #append>
-          <v-chip
+          <AtlasChip
             v-if="item.raw.groupOnly"
-            size="x-small"
-            color="primary"
+            size="sm"
+            tone="primary"
           >
             Group Only
-          </v-chip>
-          <v-chip
+          </AtlasChip>
+          <AtlasChip
             v-if="!item.raw.requiresConceptSet"
-            size="x-small"
+            size="sm"
             color="secondary"
           >
             No Concept Set
-          </v-chip>
+          </AtlasChip>
         </template>
       </AtlasListItem>
     </template>
@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasListItem, AtlasSelect } from '@/components/ui'
+import { AtlasChip, AtlasListItem, AtlasSelect } from '@/components/ui'
 /**
  * FilterTypeSelector Component
  *

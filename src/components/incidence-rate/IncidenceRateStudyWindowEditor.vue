@@ -13,33 +13,31 @@
       >
         {{ t('common.add', 'Add') }}
       </AtlasButton>
-      <v-btn
+      <AtlasButton
         v-else
-        size="small"
-        variant="text"
-        color="error"
+        size="sm"
+        variant="ghost"
+        tone="danger"
         @click="store.clearStudyWindow"
       >
         {{ t('columns.remove', 'Remove') }}
-      </v-btn>
+      </AtlasButton>
     </v-card-title>
     <v-card-text v-if="hasWindow">
       <div class="row">
-        <v-text-field
+        <AtlasTextField
           :model-value="store.currentIR?.expression.studyWindow?.startDate"
           type="date"
-          density="compact"
           hide-details
           :label="t('incidenceRate.studyWindowStart', 'Start date').value"
-          @update:model-value="(v: string) => update('startDate', v)"
+          @update:model-value="(v: string | number) => update('startDate', String(v))"
         />
-        <v-text-field
+        <AtlasTextField
           :model-value="store.currentIR?.expression.studyWindow?.endDate"
           type="date"
-          density="compact"
           hide-details
           :label="t('incidenceRate.studyWindowEnd', 'End date').value"
-          @update:model-value="(v: string) => update('endDate', v)"
+          @update:model-value="(v: string | number) => update('endDate', String(v))"
         />
       </div>
     </v-card-text>
@@ -47,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasSpacer } from '@/components/ui'
+import { AtlasButton, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
