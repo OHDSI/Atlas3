@@ -75,8 +75,21 @@
       <h2 class="landing__section-title">
         {{ t('home.documentation.title', 'Documentation') }}
       </h2>
-      <!-- eslint-disable-next-line vue/no-v-html -- trusted i18n content -->
-      <p v-html="documentationHtml" />
+      <p class="landing__documentation-text">
+        {{
+          t(
+            'home.documentation.intro',
+            'The ATLAS user guide ships inside the application:'
+          )
+        }}
+        <router-link
+          to="/docs"
+          class="landing__documentation-link"
+          data-testid="landing-docs-link"
+        >
+          {{ t('home.documentation.openManual', 'open the user manual').value }}
+        </router-link>.
+      </p>
     </AtlasCard>
   </div>
 </template>
@@ -101,10 +114,6 @@ const { t, tv } = useI18n()
 const descriptionHtml = tv(
   'home.description',
   "ATLAS is an open source application developed as a part of <a href='http://www.ohdsi.org' target='_new'>OHDSI</a> intended to provide a unified interface to patient level data and analytics."
-)
-const documentationHtml = tv(
-  'home.documentation.text',
-  "The ATLAS user guide can be found <a target='_new' href='http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas'>here</a>."
 )
 
 const features: FeatureTile[] = [
@@ -135,6 +144,16 @@ const features: FeatureTile[] = [
     ).value,
     icon: 'mdi-chart-line',
     route: '/incidence-rates',
+  },
+  {
+    id: 'docs',
+    title: t('navigation.docs', 'User manual').value,
+    description: t(
+      'home.features.docs',
+      'Browse the ATLAS v3.0 user guide without leaving the app.'
+    ).value,
+    icon: 'mdi-book-open-page-variant-outline',
+    route: '/docs',
   },
 ]
 
@@ -277,15 +296,19 @@ const handleNewCohort = () => {
   color: rgba(0, 0, 0, 0.87);
 }
 
-.landing__documentation p {
+.landing__documentation-text {
   margin: 0;
   font-size: 13px;
   color: rgb(var(--v-theme-on-surface-variant));
 }
 
-.landing__documentation :deep(a) {
+.landing__documentation-link {
   color: rgb(var(--v-theme-primary));
   text-decoration: underline;
+}
+
+.landing__documentation-link:hover {
+  color: rgb(var(--v-theme-orange));
 }
 
 @media (max-width: 768px) {
