@@ -115,7 +115,7 @@
       class="concept-set-list__empty"
     >
       <AtlasIcon
-        icon="mdi-bookmark-multiple-outline"
+        icon="mdi-shape"
         size="36"
         class="concept-set-list__empty-icon"
       />

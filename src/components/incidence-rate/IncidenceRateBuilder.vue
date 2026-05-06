@@ -171,29 +171,6 @@
       >
         {{ t('common.delete', 'Delete') }}
       </AtlasButton>
-      <AtlasMenu
-        v-if="store.currentIR?.id"
-        v-model="generateMenu"
-        :close-on-content-click="false"
-        offset="6"
-        location="bottom end"
-      >
-        <template #activator="{ props: menuProps }">
-          <AtlasButton
-            v-bind="menuProps"
-            variant="secondary"
-            icon="mdi-play"
-            data-testid="ir-builder-generate"
-          >
-            {{ t('components.generation.generate', 'Generate') }}
-          </AtlasButton>
-        </template>
-        <IncidenceRateGeneratePopover
-          v-if="store.currentIR?.id"
-          :ir-id="store.currentIR.id"
-          @generated="generateMenu = false"
-        />
-      </AtlasMenu>
       <AtlasButton
         icon="mdi-content-save"
         :disabled="!store.canSave || saving || !canSave"
@@ -205,10 +182,7 @@
       </AtlasButton>
     </template>
 
-    <IncidenceRateWorkbench
-      v-if="store.currentIR"
-      @open-generate="generateMenu = true"
-    />
+    <IncidenceRateWorkbench v-if="store.currentIR" />
 
     <AtlasDialog
       v-model="showConceptSetsDialog"
@@ -291,10 +265,9 @@ import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasMenu, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
-import IncidenceRateGeneratePopover from '@/components/incidence-rate/IncidenceRateGeneratePopover.vue'
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'
 import IncidenceRateVersionsPanel from '@/components/incidence-rate/IncidenceRateVersionsPanel.vue'
 import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
@@ -314,7 +287,6 @@ const askDelete = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
-const generateMenu = ref(false)
 const importing = ref(false)
 const exporting = ref(false)
 const importFileInput = ref<HTMLInputElement | null>(null)

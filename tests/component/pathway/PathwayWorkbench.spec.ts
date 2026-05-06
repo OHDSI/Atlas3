@@ -30,12 +30,12 @@ const stubChildren = [
   'PathwayDesignForm',
   'PathwaySunburst',
   'PathwayTableView',
-  'PathwayGeneratePopover',
   'PathwayCanvasToolbar',
   'PathwayCoverageStat',
   'PathwayLegend',
   'PathwayPathStats',
-  'PathwayPastRuns',
+  'DataSourceRunTable',
+  'PreviousRunsDialog',
 ]
 
 describe('PathwayWorkbench', () => {

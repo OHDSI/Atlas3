@@ -60,9 +60,15 @@
           v-for="tag in cohort.tags"
           :key="tag.id || tag.name"
           size="sm"
-          :tone="selectedTags.includes(tag.name) ? 'primary' : 'neutral'"
-          :variant="selectedTags.includes(tag.name) ? 'flat' : 'tonal'"
+          variant="flat"
           class="cohort-card__tag"
+          :style="{
+            backgroundColor: tagColor(tag.color),
+            color: tagContrastColor(tag.color),
+            boxShadow: selectedTags.includes(tag.name)
+              ? `0 0 0 2px rgb(var(--v-theme-primary))`
+              : undefined,
+          }"
           @click.stop="$emit('tag-click', tag.name)"
         >
           {{ tag.name }}
@@ -131,6 +137,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import { AtlasCard, AtlasChip, AtlasIconButton, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import { tagColor, tagContrastColor } from '@/utils/tag-color'
 
 interface Props {
   cohort: CohortDefinitionSummary

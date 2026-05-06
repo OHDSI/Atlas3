@@ -156,15 +156,13 @@ describe('CharacterizationBuilderView', () => {
     mounted = null
   })
 
-  it('mounts in new mode with empty form, header tabs/icons, and a disabled Run button', async () => {
+  it('mounts in new mode with empty form and header tabs/icons', async () => {
     mounted = await mountBuilder('/characterizations/new')
 
     expect(mounted.wrapper.find('[data-testid="char-builder-workbench"]').exists()).toBe(true)
     expect(mounted.wrapper.find('[data-testid="char-builder-conceptsets-icon"]').exists()).toBe(true)
 
-    const runBtn = mounted.wrapper.find('[data-testid="char-builder-run"]')
-    expect(runBtn.exists()).toBe(true)
-    expect(runBtn.attributes('disabled')).toBeDefined()
+    expect(mounted.wrapper.find('[data-testid="char-builder-run"]').exists()).toBe(false)
 
     // Save Copy / Delete only show in edit mode.
     expect(mounted.wrapper.find('[data-testid="char-builder-copy"]').exists()).toBe(false)

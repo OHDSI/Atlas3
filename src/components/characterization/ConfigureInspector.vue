@@ -5,7 +5,7 @@
     data-testid="configure-inspector"
   >
     <header class="configure-inspector__header">
-      <span class="text-eyebrow">{{ t('cc.viewEdit.workbench.configurator.title', 'Configure Table 1').value }}</span>
+      <span class="text-eyebrow">{{ t('cc.viewEdit.workbench.configurator.title', 'Configure Baseline').value }}</span>
       <AtlasIconButton
         icon="mdi-close"
         size="sm"

@@ -15,10 +15,9 @@
         </div>
       </div>
 
-      <!-- Status display -->
       <div
         v-if="tileStatus === 'idle'"
-        class="tile-status"
+        class="tile-status tile-status--idle"
       >
         <AtlasButton
           size="sm"
@@ -114,9 +113,6 @@ const emit = defineEmits<{
 
 const webapiStore = useWebAPIStore()
 
-// Per-source write access — covers both global admin:source and per-source
-// WRITE grants from /user/me's sourceAccess map. Disables Generate when the
-// user can't run jobs against this source.
 const { canWrite: canWriteSource } = useSourceAccess(toRef(() => props.source.sourceKey))
 
 const job = computed(() => {
@@ -154,18 +150,14 @@ const failMessage = computed(() => job.value?.failMessage)
 
 async function handleGenerate() {
   if (!props.cohortId) return
-
   try {
     await webapiStore.generateCohort(props.cohortId, props.source.sourceKey)
   } catch (error) {
     logger.error('DataSourceTile', 'Generation error', error)
-    // Error will be displayed by the store or parent component
   }
 }
 
-// Emit tile-click event when card is clicked (for viewing reports)
 function handleTileClick() {
-  // Only emit if cohort has been generated (complete status)
   if (tileStatus.value === 'complete') {
     emit('tile-click', props.source.sourceKey)
   }

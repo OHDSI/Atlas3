@@ -1,23 +1,20 @@
 <template>
-  <AtlasContainer fluid>
-    <div
-      v-if="loadingError"
-      class="state error"
-    >
-      {{ loadingError }}
-    </div>
-    <IncidenceRateBuilder v-else-if="store.currentIR" />
-    <div
-      v-else
-      class="state"
-    >
-      {{ t('common.loading', 'Loading incidence rate…') }}
-    </div>
-  </AtlasContainer>
+  <div
+    v-if="loadingError"
+    class="state error"
+  >
+    {{ loadingError }}
+  </div>
+  <IncidenceRateBuilder v-else-if="store.currentIR" />
+  <div
+    v-else
+    class="state"
+  >
+    {{ t('common.loading', 'Loading incidence rate…') }}
+  </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasContainer } from '@/components/ui'
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'

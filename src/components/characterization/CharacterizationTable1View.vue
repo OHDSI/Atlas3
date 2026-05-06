@@ -7,7 +7,7 @@
     <header class="char-t1__header">
       <span class="text-eyebrow">{{ tv('cc.viewEdit.workbench.table1.eyebrow', 'Run summary') }}</span>
       <h3 class="char-t1__title">
-        {{ tv('cc.viewEdit.workbench.table1.title', 'Table 1 — Baseline Characteristics') }}
+        {{ tv('cc.viewEdit.workbench.table1.title', 'Baseline Characteristics') }}
       </h3>
     </header>
 

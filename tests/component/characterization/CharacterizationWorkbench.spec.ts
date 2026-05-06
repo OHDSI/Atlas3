@@ -30,7 +30,8 @@ const stubs = [
   'CharacterizationDesignRail', 'CharacterizationCanvasToolbar',
   'CharacterizationRunMeta', 'ResultsFilterPanel',
   'CharacterizationTable1View', 'CharacterizationPerAnalysisView',
-  'CharacterizationEmptyState', 'ConfigureInspector', 'RunExecutionDialog',
+  'CharacterizationEmptyState', 'ConfigureInspector',
+  'DataSourceRunTable', 'PreviousRunsDialog',
 ]
 
 function makeRouter() {

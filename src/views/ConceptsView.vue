@@ -20,7 +20,7 @@
           <AtlasTab value="sets">
             <AtlasIcon
               start
-              icon="mdi-bookmark-multiple-outline"
+              icon="mdi-shape"
             />
             {{ t('cs.browser.caption', 'Concept Sets') }}
           </AtlasTab>

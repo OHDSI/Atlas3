@@ -27,8 +27,9 @@
             v-for="tag in visibleTags(item)"
             :key="tag.name"
             size="sm"
-            variant="tonal"
+            variant="flat"
             class="analysis-data-table__tag"
+            :style="{ backgroundColor: tagColor(tag.color), color: tagContrastColor(tag.color) }"
           >
             {{ tag.name }}
           </AtlasChip>
@@ -140,8 +141,9 @@ import { AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton } 
 import { computed, useSlots } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { formatDate, formatRelativeTime } from '@/utils/date-format'
+import { tagColor, tagContrastColor } from '@/utils/tag-color'
 
-interface Tag { id?: number; name: string }
+interface Tag { id?: number; name: string; color?: string }
 
 interface Props {
   headers: { title: string; key: string; sortable?: boolean }[]

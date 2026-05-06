@@ -35,7 +35,6 @@ vi.mock('@/services/webapi', () => ({
 
 const stubs = [
   'IncidenceRateWorkbench',
-  'IncidenceRateGeneratePopover',
   'TagSelectionDialog',
   'IncidenceRateConceptSetsPanel',
   'IncidenceRateVersionsPanel',

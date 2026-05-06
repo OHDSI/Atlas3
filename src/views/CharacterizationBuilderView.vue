@@ -146,25 +146,6 @@
         @change="handleImportFileChange"
       >
 
-      <AtlasTooltip
-        location="top"
-        :text="runDisabledReason"
-        :disabled="!runDisabledReason"
-      >
-        <template #activator="{ props: tooltipProps }">
-          <div v-bind="tooltipProps">
-            <AtlasButton
-              variant="secondary"
-              icon="mdi-play-outline"
-              :disabled="!canRun"
-              data-testid="char-builder-run"
-              @click="handleRunClick"
-            >
-              {{ t('cohortDefinitions.cohort.modals.configureReportsToRun.run', 'Run') }}
-            </AtlasButton>
-          </div>
-        </template>
-      </AtlasTooltip>
       <AtlasButton
         v-if="isEditing"
         variant="secondary"
@@ -204,6 +185,7 @@
       data-testid="char-builder-workbench"
       @update:model-value="onDraftChange"
       @explore="onExplore"
+      @snackbar="(msg, sev) => showSnackbar(msg, sev)"
     />
 
     <ExplorePrevalenceDialog
@@ -449,28 +431,6 @@ const canSave = computed<boolean>(() => {
   if (draft.value.name.trim().length === 0) return false
   return isEditing.value ? canWrite.value : hasPermission('create:cohort-characterization')
 })
-
-const canRun = computed<boolean>(() => {
-  return draftId.value != null && !store.isDirty
-})
-
-const runDisabledReason = computed<string>(() => {
-  if (draftId.value == null) {
-    return t(
-      'characterizations.editor.executions.runDisabledNoId',
-      'Save the characterization before running.'
-    ).value
-  }
-  if (store.isDirty) {
-    return t('const.disabledReason.dirty', 'Save your changes before running.').value
-  }
-  return ''
-})
-
-function handleRunClick() {
-  if (!canRun.value) return
-  // Executions live inline in the design view; nothing to switch to.
-}
 
 const deleteMessage = computed<string>(() => {
   return t('cc.viewEdit.deleteConfirmation', `Delete characterization '${draft.value.name}'?`, {

@@ -22,7 +22,7 @@
         size="sm"
         data-testid="char-toolbar-mode-table1"
       >
-        {{ t('cc.viewEdit.workbench.modeTable1', 'Table 1').value }}
+        {{ t('cc.viewEdit.workbench.modeTable1', 'Baseline').value }}
       </AtlasButton>
     </v-btn-toggle>
 

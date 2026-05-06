@@ -119,6 +119,14 @@ const features: FeatureTile[] = [
     route: '/characterizations',
   },
   {
+    id: 'pathway',
+    title: t('navigation.pathways', 'Treatment pathways').value,
+    description: t('home.features.pathway', 'Visualize sequences of interventions over time.')
+      .value,
+    icon: 'mdi-vector-polyline',
+    route: '/pathways',
+  },
+  {
     id: 'incidence-rate',
     title: t('navigation.incidenceRates', 'Incidence rates').value,
     description: t(
@@ -127,14 +135,6 @@ const features: FeatureTile[] = [
     ).value,
     icon: 'mdi-chart-line',
     route: '/incidence-rates',
-  },
-  {
-    id: 'pathway',
-    title: t('navigation.pathways', 'Treatment pathways').value,
-    description: t('home.features.pathway', 'Visualize sequences of interventions over time.')
-      .value,
-    icon: 'mdi-vector-polyline',
-    route: '/pathways',
   },
 ]
 
