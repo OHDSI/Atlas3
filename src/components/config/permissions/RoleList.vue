@@ -17,14 +17,12 @@
           style="max-width: 400px"
         />
       </div>
-      <v-btn
-        color="primary"
-        variant="elevated"
-        prepend-icon="mdi-plus"
+      <AtlasButton
+        icon="mdi-plus"
         @click="handleCreate"
       >
         New Role
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Loading State -->
@@ -63,16 +61,14 @@
       <p class="text-body-2 text-medium-emphasis mt-2">
         Create your first role to get started with role-based access control.
       </p>
-      <v-btn
-        color="primary"
-        variant="elevated"
-        size="large"
+      <AtlasButton
+        size="lg"
         class="mt-4"
-        prepend-icon="mdi-plus"
+        icon="mdi-plus"
         @click="handleCreate"
       >
         Create First Role
-      </v-btn>
+      </AtlasButton>
     </div>
 
     <!-- Roles Data Table -->
@@ -124,34 +120,24 @@
       <!-- Actions Column -->
       <template #item.actions="{ item }">
         <div class="role-list__actions">
-          <v-btn
+          <AtlasIconButton
             icon="mdi-pencil"
-            size="small"
+            v-bind="{ ariaLabel: 'Edit Role' }"
+            size="sm"
             variant="text"
+            title="Edit Role"
             @click.stop="handleEdit(item)"
-          >
-            <AtlasIcon size="small">
-              mdi-pencil
-            </AtlasIcon>
-            <AtlasTooltip activator="parent">
-              Edit Role
-            </AtlasTooltip>
-          </v-btn>
+          />
 
-          <v-btn
+          <AtlasIconButton
             icon="mdi-delete"
-            size="small"
+            v-bind="{ ariaLabel: 'Delete Role' }"
+            size="sm"
             variant="text"
-            color="error"
+            tone="danger"
+            title="Delete Role"
             @click.stop="handleDelete(item)"
-          >
-            <AtlasIcon size="small">
-              mdi-delete
-            </AtlasIcon>
-            <AtlasTooltip activator="parent">
-              Delete Role
-            </AtlasTooltip>
-          </v-btn>
+          />
         </div>
       </template>
 
@@ -191,7 +177,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasDataTable, AtlasIcon, AtlasProgressLinear, AtlasSkeleton, AtlasTextField, AtlasTooltip } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasTextField } from '@/components/ui'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRoles } from '@/composables/useRoles'

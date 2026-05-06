@@ -10,24 +10,26 @@
       variant="outlined"
       density="compact"
     >
-      <v-btn
-        size="small"
-        prepend-icon="mdi-image"
+      <AtlasButton
+        size="sm"
+        variant="secondary"
+        icon="mdi-image"
         :loading="exporting === 'png'"
         :disabled="!chartInstance || exporting !== null"
         @click="handleExportPNG"
       >
         PNG
-      </v-btn>
-      <v-btn
-        size="small"
-        prepend-icon="mdi-vector-polyline"
+      </AtlasButton>
+      <AtlasButton
+        size="sm"
+        variant="secondary"
+        icon="mdi-vector-polyline"
         :loading="exporting === 'svg'"
         :disabled="!chartInstance || exporting !== null"
         @click="handleExportSVG"
       >
         SVG
-      </v-btn>
+      </AtlasButton>
     </v-btn-group>
   </div>
 </template>
@@ -36,6 +38,7 @@
 import { ref } from 'vue'
 import type { EChartsType } from 'echarts/core'
 import { logger } from '@/utils/logger'
+import { AtlasButton } from '@/components/ui'
 
 /**
  * Props

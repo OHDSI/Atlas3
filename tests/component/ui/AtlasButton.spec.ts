@@ -87,7 +87,7 @@ describe('AtlasButton', () => {
     const wrapper2 = mount(AtlasButton, {
       global: { plugins: [vuetify] },
       props: {},
-      attrs: { color: 'orange', variant: 'tonal', size: 'large' },
+      attrs: { color: 'orange', variant: 'elevated', size: 'large' },
       slots: { default: 'x' },
     })
     const btn = wrapper2.findComponent({ name: 'VBtn' })

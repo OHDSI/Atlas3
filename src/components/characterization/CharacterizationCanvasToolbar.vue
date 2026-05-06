@@ -8,20 +8,22 @@
       divided
       @update:model-value="(v: ViewMode | null) => v && $emit('update:mode', v)"
     >
-      <v-btn
+      <AtlasButton
+        toggle
         value="perAnalysis"
-        size="small"
+        size="sm"
         data-testid="char-toolbar-mode-perAnalysis"
       >
         {{ t('cc.viewEdit.workbench.modePerAnalysis', 'Per-analysis').value }}
-      </v-btn>
-      <v-btn
+      </AtlasButton>
+      <AtlasButton
+        toggle
         value="table1"
-        size="small"
+        size="sm"
         data-testid="char-toolbar-mode-table1"
       >
         {{ t('cc.viewEdit.workbench.modeTable1', 'Baseline').value }}
-      </v-btn>
+      </AtlasButton>
     </v-btn-toggle>
 
     <AtlasChip
@@ -55,15 +57,15 @@
 
     <AtlasSpacer />
 
-    <v-btn
-      size="small"
-      variant="tonal"
-      prepend-icon="mdi-tune-variant"
+    <AtlasButton
+      size="sm"
+      variant="secondary"
+      icon="mdi-tune-variant"
       data-testid="char-toolbar-configure"
       @click="$emit('open-configure')"
     >
       {{ t('cc.viewEdit.workbench.configure', 'Configure').value }}
-    </v-btn>
+    </AtlasButton>
     <AtlasButton
       variant="ghost"
       size="sm"

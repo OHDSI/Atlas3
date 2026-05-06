@@ -146,28 +146,26 @@
         @change="handleImportFileChange"
       >
 
-      <v-btn
+      <AtlasButton
         v-if="isEditing"
-        variant="tonal"
-        color="primary"
-        prepend-icon="mdi-content-copy"
+        variant="secondary"
+        icon="mdi-content-copy-outline"
         :disabled="loading || !canCopy"
         data-testid="char-builder-copy"
         @click="handleSaveCopy"
       >
         {{ t('common.duplicate', 'Duplicate') }}
-      </v-btn>
-      <v-btn
+      </AtlasButton>
+      <AtlasButton
         v-if="isEditing"
-        variant="text"
-        color="error"
-        prepend-icon="mdi-delete-outline"
+        variant="ghost"
+        icon="mdi-delete-outline"
         :disabled="loading || !canDelete"
         data-testid="char-builder-delete"
         @click="handleDeleteClick"
       >
         {{ t('common.delete', 'Delete') }}
-      </v-btn>
+      </AtlasButton>
       <AtlasButton
         icon="mdi-content-save-outline"
         :disabled="!canSave"

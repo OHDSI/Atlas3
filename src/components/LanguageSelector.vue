@@ -1,17 +1,16 @@
 <template>
   <AtlasMenu>
     <template #activator="{ props }">
-      <v-btn
+      <AtlasIconButton
         v-bind="props"
         :loading="loading"
         :disabled="loading"
         variant="text"
-        icon
+        icon="mdi-translate"
+        aria-label="Select language"
         data-testid="language-selector"
         @click.shift.exact="handleShiftClick"
-      >
-        <AtlasIcon>mdi-translate</AtlasIcon>
-      </v-btn>
+      />
     </template>
 
     <AtlasList>
@@ -32,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
+import { AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useLocaleStore } from '@/stores/locale'
 import { logger } from '@/utils/logger'

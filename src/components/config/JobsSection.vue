@@ -13,22 +13,24 @@
           color="primary"
           variant="outlined"
         >
-          <v-btn
+          <AtlasButton
+            toggle
             value="all"
-            size="small"
+            size="sm"
           >
             {{ t('options.all') }}
-            <v-chip
-              size="x-small"
+            <AtlasChip
+              size="xs"
               class="ml-1"
               variant="tonal"
             >
               {{ totalJobsCount }}
-            </v-chip>
-          </v-btn>
-          <v-btn
+            </AtlasChip>
+          </AtlasButton>
+          <AtlasButton
+            toggle
             value="running"
-            size="small"
+            size="sm"
           >
             <AtlasIcon
               start
@@ -38,19 +40,20 @@
               mdi-play-circle
             </AtlasIcon>
             {{ t('ir.results.running') }}
-            <v-chip
+            <AtlasChip
               v-if="runningJobsCount > 0"
-              size="x-small"
+              size="xs"
               class="ml-1"
               color="blue"
               variant="tonal"
             >
               {{ runningJobsCount }}
-            </v-chip>
-          </v-btn>
-          <v-btn
+            </AtlasChip>
+          </AtlasButton>
+          <AtlasButton
+            toggle
             value="completed"
-            size="small"
+            size="sm"
           >
             <AtlasIcon
               start
@@ -60,10 +63,11 @@
               mdi-check-circle
             </AtlasIcon>
             {{ t('executionStatus.values.COMPLETED') }}
-          </v-btn>
-          <v-btn
+          </AtlasButton>
+          <AtlasButton
+            toggle
             value="failed"
-            size="small"
+            size="sm"
           >
             <AtlasIcon
               start
@@ -73,19 +77,23 @@
               mdi-alert-circle
             </AtlasIcon>
             {{ t('ir.results.failed') }}
-          </v-btn>
+          </AtlasButton>
         </v-btn-toggle>
 
-        <!-- Auto-refresh Toggle -->
-        <v-btn
+        <AtlasIconButton
           :icon="pollingEnabled ? 'mdi-sync' : 'mdi-sync-off'"
-          :color="pollingEnabled ? 'primary' : 'default'"
+          :tone="pollingEnabled ? 'primary' : 'neutral'"
           variant="text"
           :title="
             pollingEnabled
               ? tv('configuration.jobs.actions.stopPolling')
               : tv('configuration.jobs.actions.startPolling')
           "
+          v-bind="{
+            ariaLabel: pollingEnabled
+              ? tv('configuration.jobs.actions.stopPolling')
+              : tv('configuration.jobs.actions.startPolling')
+          }"
           @click="togglePolling"
         />
 
@@ -192,9 +200,9 @@
 
           <!-- Status Column -->
           <template #item.status="{ item }">
-            <v-chip
+            <AtlasChip
               :color="getStatusDisplay(item.status).color"
-              size="small"
+              size="sm"
               variant="tonal"
             >
               <AtlasIcon
@@ -204,7 +212,7 @@
                 {{ getStatusDisplay(item.status).icon }}
               </AtlasIcon>
               {{ getStatusDisplay(item.status).label }}
-            </v-chip>
+            </AtlasChip>
           </template>
 
           <!-- Author Column -->
@@ -267,7 +275,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasDataTable, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSpacer } from '@/components/ui'
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useJobs } from '@/composables/useJobs'

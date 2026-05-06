@@ -36,29 +36,29 @@
           md="6"
           class="d-flex justify-end align-center gap-2"
         >
-          <v-btn
-            variant="outlined"
-            prepend-icon="mdi-content-copy"
+          <AtlasButton
+            variant="secondary"
+            icon="mdi-content-copy"
             @click="copyToClipboard"
           >
             Copy
-          </v-btn>
-          <v-btn
-            variant="outlined"
-            prepend-icon="mdi-download"
+          </AtlasButton>
+          <AtlasButton
+            variant="secondary"
+            icon="mdi-download"
             @click="exportToCSV"
           >
             CSV
-          </v-btn>
+          </AtlasButton>
           <AtlasMenu>
             <template #activator="{ props: menuProps }">
-              <v-btn
-                variant="outlined"
-                prepend-icon="mdi-view-column"
+              <AtlasButton
+                variant="secondary"
+                icon="mdi-view-column"
                 v-bind="menuProps"
               >
                 Columns
-              </v-btn>
+              </AtlasButton>
             </template>
             <AtlasList>
               <AtlasListItem
@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasCheckbox, AtlasCol, AtlasDataTable, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasPagination, AtlasRow, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasCol, AtlasDataTable, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasPagination, AtlasRow, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
 import type { PrevalenceTableRow } from '@/models/datasource.types'
 import { formatNumber, formatPercentage, exportTableToCSV } from '@/utils/datasource-formatters'

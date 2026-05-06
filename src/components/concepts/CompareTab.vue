@@ -15,16 +15,16 @@
         <span class="text-body-2 text-medium-emphasis ml-4">
           {{ t('cs.browser.compare.conceptSet2', 'Concept Set 2:') }}
         </span>
-        <v-chip
+        <AtlasChip
           v-if="store.comparisonOtherSet"
-          size="small"
-          color="secondary"
+          size="sm"
+          tone="info"
           variant="tonal"
           closable
-          @click:close="onClearOther"
+          @close="onClearOther"
         >
           {{ store.comparisonOtherSet.name }}
-        </v-chip>
+        </AtlasChip>
         <AtlasButton
           v-else
           variant="secondary"
@@ -126,13 +126,13 @@
         class="compare-tab__table"
       >
         <template #item.match="{ item }">
-          <v-chip
-            :color="matchColor(item.match)"
-            size="x-small"
+          <AtlasChip
+            :tone="matchTone(item.match)"
+            size="sm"
             variant="tonal"
           >
             {{ item.match }}
-          </v-chip>
+          </AtlasChip>
         </template>
       </AtlasDataTable>
     </template>
@@ -244,10 +244,10 @@ const headers = computed(() => [
   },
 ])
 
-function matchColor(label: string): string {
+function matchTone(label: string): 'neutral' | 'primary' | 'info' | 'success' | 'warning' | 'danger' {
   if (label === t('common.both', 'Both').value) return 'success'
   if (label === leftLabel.value) return 'primary'
-  return 'secondary'
+  return 'info'
 }
 
 function onOtherSelected(id: number) {

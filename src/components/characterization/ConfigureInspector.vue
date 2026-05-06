@@ -6,11 +6,11 @@
   >
     <header class="configure-inspector__header">
       <span class="text-eyebrow">{{ t('cc.viewEdit.workbench.configurator.title', 'Configure Baseline').value }}</span>
-      <v-btn
+      <AtlasIconButton
         icon="mdi-close"
-        size="x-small"
+        size="sm"
         variant="text"
-        density="compact"
+        v-bind="{ ariaLabel: tv('common.close', 'Close') }"
         data-testid="configure-close"
         @click="$emit('close')"
       />
@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
+import { AtlasIconButton, AtlasSelect, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Table1Config } from '@/models/characterization.types'

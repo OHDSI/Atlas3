@@ -11,12 +11,18 @@
             color="primary"
             density="compact"
           >
-            <v-btn value="session">
+            <AtlasButton
+              toggle
+              value="session"
+            >
               {{ t('configuration.priorityOptions.session') }}
-            </v-btn>
-            <v-btn value="application">
+            </AtlasButton>
+            <AtlasButton
+              toggle
+              value="application"
+            >
               {{ t('configuration.priorityOptions.application') }}
-            </v-btn>
+            </AtlasButton>
           </v-btn-toggle>
         </div>
       </v-card-text>

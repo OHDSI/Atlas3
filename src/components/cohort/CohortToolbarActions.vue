@@ -41,10 +41,9 @@
       </AtlasList>
     </AtlasMenu>
 
-    <v-btn
+    <AtlasButton
       v-if="showGenerate"
       variant="tonal"
-      color="primary"
       :disabled="!canSave"
       data-testid="generate-btn"
       @click="$emit('generate')"
@@ -61,7 +60,7 @@
       <span class="d-none d-md-inline">{{
         t('components.analysisExecution.buttons.generate')
       }}</span>
-    </v-btn>
+    </AtlasButton>
 
     <AtlasButton
       :disabled="!canSave || isPreviewingVersion"

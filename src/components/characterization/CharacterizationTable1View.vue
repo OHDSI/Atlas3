@@ -133,13 +133,12 @@
                 {{ formatStdDiffCI(row) }}
               </td>
               <td class="char-t1__cell-num">
-                <v-btn
+                <AtlasIconButton
                   v-if="row.kind === 'binary'"
                   icon="mdi-magnify"
-                  size="x-small"
+                  size="sm"
                   variant="text"
-                  density="compact"
-                  :aria-label="tv('columns.explore', 'Explore')"
+                  v-bind="{ ariaLabel: tv('columns.explore', 'Explore') }"
                   data-testid="char-t1-explore"
                   @click="$emit('explore', row._source)"
                 />
@@ -155,7 +154,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasIconButton } from '@/components/ui'
 import { buildTable1 } from '@/utils/characterization-table1'
 import type {
   DistributionStat,

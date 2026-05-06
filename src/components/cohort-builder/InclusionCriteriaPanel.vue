@@ -95,17 +95,16 @@
           </div>
 
           <!-- Add Group Button -->
-          <v-btn
-            variant="tonal"
-            color="primary"
-            prepend-icon="mdi-plus"
-            size="small"
+          <AtlasButton
+            variant="primary"
+            icon="mdi-plus"
+            size="sm"
             @click="addGroup(index)"
           >
             {{
               t('components.cohortExpressionEditor.addCriteriaGroup', 'Add criteria group').value
             }}
-          </v-btn>
+          </AtlasButton>
         </v-expansion-panel-text>
       </v-expansion-panel>
     </v-expansion-panels>

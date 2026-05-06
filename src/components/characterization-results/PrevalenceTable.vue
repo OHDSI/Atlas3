@@ -69,15 +69,14 @@
       </template>
 
       <template #[`item.actions`]="{ item }">
-        <v-btn
-          size="x-small"
-          variant="text"
-          color="primary"
+        <AtlasButton
+          size="sm"
+          variant="ghost"
           :data-testid="`char-results-explore-${item.covariateId}`"
           @click="onExplore(item._row)"
         >
           {{ tv('columns.explore', 'Explore') }}
-        </v-btn>
+        </AtlasButton>
       </template>
 
       <template #no-data>
@@ -95,7 +94,7 @@ import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
-import { AtlasCard, AtlasDataTable } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasDataTable } from '@/components/ui'
 
 interface Props {
   analysisId: number

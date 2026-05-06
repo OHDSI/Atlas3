@@ -30,14 +30,14 @@
           <template #item="{ item, props: itemProps }">
             <AtlasListItem v-bind="itemProps">
               <template #append>
-                <v-chip
+                <AtlasChip
                   v-if="item.raw.cacheStatus"
-                  :color="getCacheStatusColor(item.raw.cacheStatus)"
-                  size="x-small"
+                  :tone="getCacheStatusTone(item.raw.cacheStatus)"
+                  size="sm"
                   variant="tonal"
                 >
                   {{ getCacheStatusLabel(item.raw.cacheStatus) }}
-                </v-chip>
+                </AtlasChip>
               </template>
             </AtlasListItem>
           </template>
@@ -81,14 +81,13 @@
             mdi-alert-circle
           </AtlasIcon>
           <span class="patient-count-bar__error-text">{{ countError }}</span>
-          <v-btn
-            size="x-small"
-            variant="text"
-            color="primary"
+          <AtlasButton
+            size="sm"
+            variant="ghost"
             @click="handleRetry"
           >
             {{ t('common.retry', 'Retry') }}
-          </v-btn>
+          </AtlasButton>
         </div>
 
         <!-- No Dataset Selected -->
@@ -211,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasListItem, AtlasProgressLinear, AtlasSelect, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasIcon, AtlasListItem, AtlasProgressLinear, AtlasSelect, AtlasTooltip } from '@/components/ui'
 import { computed, watch, onMounted, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
@@ -338,7 +337,9 @@ const dataSourceItems = computed(() => {
   }))
 })
 
-function getCacheStatusColor(status: CacheStatusType | undefined): string {
+function getCacheStatusTone(
+  status: CacheStatusType | undefined
+): 'neutral' | 'primary' | 'info' | 'success' | 'warning' | 'danger' {
   switch (status) {
     case 'ready':
       return 'success'
@@ -347,10 +348,10 @@ function getCacheStatusColor(status: CacheStatusType | undefined): string {
     case 'stale':
       return 'warning'
     case 'error':
-      return 'error'
+      return 'danger'
     case 'not_built':
     default:
-      return 'grey'
+      return 'neutral'
   }
 }
 

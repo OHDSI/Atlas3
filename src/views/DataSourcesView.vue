@@ -28,14 +28,13 @@
         >
           <div class="d-flex align-center justify-space-between">
             <span>{{ store.error.sources }}</span>
-            <v-btn
-              color="error"
-              variant="text"
-              size="small"
+            <AtlasButton
+              variant="ghost"
+              size="sm"
               @click="store.retryFetchSources"
             >
               {{ t('common.retry', 'Retry') }}
-            </v-btn>
+            </AtlasButton>
           </div>
         </AtlasAlert>
 
@@ -47,14 +46,13 @@
         >
           <div class="d-flex align-center justify-space-between">
             <span>{{ store.error.report }}</span>
-            <v-btn
-              color="error"
-              variant="text"
-              size="small"
+            <AtlasButton
+              variant="ghost"
+              size="sm"
               @click="store.retryFetchReport"
             >
               {{ t('common.retry', 'Retry') }}
-            </v-btn>
+            </AtlasButton>
           </div>
         </AtlasAlert>
 
@@ -175,7 +173,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { logger } from '@/utils/logger'
 import { REPORT_TYPE_LABELS, type ReportType } from '@/models/datasource.types'
-import { AtlasAlert, AtlasCard, AtlasIcon, AtlasPageShell, AtlasSkeleton } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasIcon, AtlasPageShell, AtlasSkeleton } from '@/components/ui'
 import DataSourceSelector from '@/components/datasources/DataSourceSelector.vue'
 import DataSourceSidebar from '@/components/datasources/DataSourceSidebar.vue'
 import DashboardReport from '@/components/datasources/DashboardReport.vue'

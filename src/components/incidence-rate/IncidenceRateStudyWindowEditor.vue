@@ -15,21 +15,19 @@
     </div>
     <template v-else>
       <div class="row">
-        <v-text-field
+        <AtlasTextField
           :model-value="store.currentIR?.expression.studyWindow?.startDate"
           type="date"
-          density="compact"
           hide-details
           :label="t('incidenceRate.studyWindowStart', 'Start date').value"
-          @update:model-value="(v: string) => update('startDate', v)"
+          @update:model-value="(v: string | number) => update('startDate', String(v))"
         />
-        <v-text-field
+        <AtlasTextField
           :model-value="store.currentIR?.expression.studyWindow?.endDate"
           type="date"
-          density="compact"
           hide-details
           :label="t('incidenceRate.studyWindowEnd', 'End date').value"
-          @update:model-value="(v: string) => update('endDate', v)"
+          @update:model-value="(v: string | number) => update('endDate', String(v))"
         />
       </div>
       <div class="sw-actions">
@@ -47,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton } from '@/components/ui'
+import { AtlasButton, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'

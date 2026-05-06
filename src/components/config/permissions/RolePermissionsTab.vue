@@ -89,14 +89,14 @@
             mandatory
             class="role-permissions-tab__chips"
           >
-            <v-chip
+            <AtlasChip
               value="all"
               filter
               variant="outlined"
             >
               All Categories
-            </v-chip>
-            <v-chip
+            </AtlasChip>
+            <AtlasChip
               v-for="category in availableCategories"
               :key="category"
               :value="category"
@@ -104,7 +104,7 @@
               variant="outlined"
             >
               {{ category }} ({{ getCategoryCount(category) }})
-            </v-chip>
+            </AtlasChip>
           </v-chip-group>
         </div>
 
@@ -158,13 +158,13 @@
 
           <!-- Category Column -->
           <template #item.category="{ item }">
-            <v-chip
+            <AtlasChip
               v-if="item.category"
-              size="small"
+              size="sm"
               variant="outlined"
             >
               {{ item.category }}
-            </v-chip>
+            </AtlasChip>
             <span v-else> — </span>
           </template>
         </AtlasDataTable>

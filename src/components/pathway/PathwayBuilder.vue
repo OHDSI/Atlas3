@@ -145,27 +145,25 @@
       >
         {{ t('common.duplicate', 'Duplicate') }}
       </AtlasButton>
-      <v-btn
+      <AtlasButton
         v-if="currentPathway?.id"
-        variant="outlined"
-        color="error"
-        prepend-icon="mdi-delete"
+        variant="danger"
+        icon="mdi-delete"
         :disabled="!currentPathway?.id || !hasPermission('write:pathway')"
         data-testid="pathway-builder-delete"
         @click="onDelete"
       >
         {{ t('common.delete', 'Delete') }}
-      </v-btn>
-      <v-btn
-        color="primary"
-        variant="elevated"
-        prepend-icon="mdi-content-save"
+      </AtlasButton>
+      <AtlasButton
+        variant="primary"
+        icon="mdi-content-save"
         :disabled="!canSave"
         data-testid="pathway-builder-save"
         @click="onSave"
       >
         {{ t('common.save', 'Save') }}
-      </v-btn>
+      </AtlasButton>
     </template>
 
     <template

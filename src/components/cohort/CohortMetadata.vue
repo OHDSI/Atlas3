@@ -38,16 +38,16 @@
           v-if="localTags.length > 0"
           class="metadata-tags__list"
         >
-          <v-chip
+          <AtlasChip
             v-for="(tag, index) in localTags"
             :key="index"
             :color="tag.color || '#1f425a'"
             closable
             class="metadata-tags__chip"
-            @click:close="removeTag(index)"
+            @close="removeTag(index)"
           >
             {{ tag.name }}
-          </v-chip>
+          </AtlasChip>
         </div>
 
         <!-- Add new tag -->
@@ -67,14 +67,12 @@
                 :close-on-content-click="false"
               >
                 <template #activator="{ props: menuProps }">
-                  <v-btn
-                    v-bind="menuProps"
-                    icon
-                    size="small"
+                  <AtlasIconButton
+                    v-bind="{ ...menuProps, ariaLabel: t('common.pickColor', 'Pick color').value }"
+                    icon="mdi-palette"
+                    size="sm"
                     variant="text"
-                  >
-                    <AtlasIcon>mdi-palette</AtlasIcon>
-                  </v-btn>
+                  />
                 </template>
                 <v-card>
                   <v-card-text>
@@ -87,15 +85,14 @@
                   </v-card-text>
                 </v-card>
               </AtlasMenu>
-              <v-btn
-                icon
-                size="small"
+              <AtlasIconButton
+                v-bind="{ ariaLabel: t('common.addTag', 'Add tag').value }"
+                icon="mdi-plus"
+                size="sm"
                 variant="text"
                 :disabled="!newTagName.trim()"
                 @click="addTag"
-              >
-                <AtlasIcon>mdi-plus</AtlasIcon>
-              </v-btn>
+              />
             </template>
           </AtlasTextField>
         </div>
@@ -105,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasMenu, AtlasTextField } from '@/components/ui'
+import { AtlasChip, AtlasIconButton, AtlasMenu, AtlasTextField } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Tag } from '@/models/cohort.types'

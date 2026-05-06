@@ -19,7 +19,14 @@
         v-if="tileStatus === 'idle'"
         class="tile-status tile-status--idle"
       >
-        <span class="text-body-2 text-medium-emphasis">{{ t('common.notRun', 'Not run').value }}</span>
+        <AtlasButton
+          size="sm"
+          :disabled="!cohortId || !canWriteSource"
+          block
+          @click.stop="handleGenerate"
+        >
+          {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
+        </AtlasButton>
       </div>
 
       <div
@@ -43,6 +50,15 @@
           <span class="patient-count__number">{{ patientCount?.toLocaleString() || '0' }}</span>
           <span class="patient-count__label ml-1">{{ t('columns.personsCount', 'Patients') }}</span>
         </div>
+        <AtlasButton
+          variant="ghost"
+          size="sm"
+          :disabled="!cohortId || !canWriteSource"
+          block
+          @click.stop="handleGenerate"
+        >
+          {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
+        </AtlasButton>
       </div>
 
       <div
@@ -58,17 +74,29 @@
         <span class="ml-2 text-error text-caption">{{
           failMessage || t('ir.results.failed', 'Failed').value
         }}</span>
+        <AtlasButton
+          variant="ghost"
+          size="sm"
+          :disabled="!cohortId || !canWriteSource"
+          block
+          class="mt-2"
+          @click.stop="handleGenerate"
+        >
+          {{ t('components.analysisExecution.buttons.generate', 'Generate') }}
+        </AtlasButton>
       </div>
     </v-card-text>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import { AtlasIcon, AtlasProgressCircular } from '@/components/ui'
-import { computed } from 'vue'
+import { AtlasButton, AtlasIcon, AtlasProgressCircular } from '@/components/ui'
+import { computed, toRef } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
+import { useSourceAccess } from '@/composables/useEntityAccess'
 import type { CDMSource, TileStatus } from '@/models/webapi.types'
+import { logger } from '@/utils/logger'
 
 const { t } = useI18n()
 
@@ -84,6 +112,8 @@ const emit = defineEmits<{
 }>()
 
 const webapiStore = useWebAPIStore()
+
+const { canWrite: canWriteSource } = useSourceAccess(toRef(() => props.source.sourceKey))
 
 const job = computed(() => {
   if (!props.cohortId) return undefined
@@ -118,8 +148,16 @@ const statusText = computed(() => {
 
 const failMessage = computed(() => job.value?.failMessage)
 
+async function handleGenerate() {
+  if (!props.cohortId) return
+  try {
+    await webapiStore.generateCohort(props.cohortId, props.source.sourceKey)
+  } catch (error) {
+    logger.error('DataSourceTile', 'Generation error', error)
+  }
+}
+
 function handleTileClick() {
-  // Only emit if cohort has been generated (complete status)
   if (tileStatus.value === 'complete') {
     emit('tile-click', props.source.sourceKey)
   }

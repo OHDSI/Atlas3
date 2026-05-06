@@ -10,10 +10,12 @@
   >
     <slot>{{ text }}</slot>
     <template
-      v-if="closable"
+      v-if="$slots.actions || closable"
       #actions
     >
+      <slot name="actions" />
       <v-btn
+        v-if="closable && !$slots.actions"
         variant="text"
         @click="$emit('update:modelValue', false)"
       >

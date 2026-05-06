@@ -109,14 +109,13 @@
                 @update:model-value="(v) => updateAttributeOperator(index, v as string)"
               />
 
-              <v-text-field
+              <AtlasTextField
                 v-if="
                   attribute.type === 'dateRange' &&
                     (attribute.operator === 'BETWEEN' || attribute.operator === 'AFTER')
                 "
                 :model-value="attribute.value"
                 type="date"
-                density="compact"
                 variant="outlined"
                 hide-details
                 class="value-input"
@@ -126,10 +125,9 @@
 
               <template v-if="attribute.type === 'dateRange' && attribute.operator === 'BETWEEN'">
                 <span class="and-text">{{ t('common.and') }}</span>
-                <v-text-field
+                <AtlasTextField
                   :model-value="attribute.extent"
                   type="date"
-                  density="compact"
                   variant="outlined"
                   hide-details
                   class="value-input"
@@ -138,11 +136,10 @@
                 />
               </template>
 
-              <v-text-field
+              <AtlasTextField
                 v-if="attribute.type === 'dateRange' && attribute.operator === 'BEFORE'"
                 :model-value="attribute.value"
                 type="date"
-                density="compact"
                 variant="outlined"
                 hide-details
                 class="value-input"
@@ -179,20 +176,15 @@
 
             <!-- Boolean Attributes -->
             <template v-else-if="attribute.type === 'boolean'">
-              <v-chip
-                color="success"
+              <AtlasChip
+                tone="success"
                 variant="outlined"
-                size="small"
+                size="sm"
+                prepend-icon="mdi-check-circle"
                 data-testid="attribute-boolean-chip"
               >
-                <AtlasIcon
-                  start
-                  size="small"
-                >
-                  mdi-check-circle
-                </AtlasIcon>
                 {{ getAttributeLabel(attribute.attributeKey) }}
-              </v-chip>
+              </AtlasChip>
             </template>
 
             <!-- Concept Attributes (Multiple Concepts) -->
@@ -257,23 +249,18 @@
 
             <!-- Date Adjustment Attributes -->
             <template v-else-if="attribute.type === 'dateAdjustment'">
-              <v-chip
+              <AtlasChip
                 v-if="attribute.dateAdjustment"
-                color="primary"
+                tone="primary"
                 variant="outlined"
-                size="small"
+                size="sm"
+                prepend-icon="mdi-calendar-edit"
                 data-testid="attribute-date-adjustment-chip"
                 style="cursor: pointer"
                 @click="openDateAdjustmentEditor(index)"
               >
-                <AtlasIcon
-                  start
-                  size="small"
-                >
-                  mdi-calendar-edit
-                </AtlasIcon>
                 {{ getDateAdjustmentSummary(attribute.dateAdjustment) }}
-              </v-chip>
+              </AtlasChip>
               <AtlasButton
                 v-else
                 variant="secondary"
@@ -288,29 +275,27 @@
 
             <!-- User Defined Period Attributes -->
             <template v-else-if="attribute.type === 'userDefinedPeriod'">
-              <v-text-field
+              <AtlasTextField
                 :model-value="attribute.period.startDate"
-                :error-messages="attributeErrors[index] || undefined"
+                :error="attributeErrors[index] || undefined"
                 type="date"
                 label="Start Date"
-                density="compact"
                 variant="outlined"
                 class="value-input"
                 data-testid="attribute-period-start-date"
                 @blur="validatePeriodDates(index)"
-                @update:model-value="updatePeriodStartDate(index, $event)"
+                @update:model-value="(v) => updatePeriodStartDate(index, v as string)"
               />
               <span class="and-text">{{ t('common.to', 'to') }}</span>
-              <v-text-field
+              <AtlasTextField
                 :model-value="attribute.period.endDate"
                 type="date"
                 label="End Date"
-                density="compact"
                 variant="outlined"
                 class="value-input"
                 data-testid="attribute-period-end-date"
                 @blur="validatePeriodDates(index)"
-                @update:model-value="updatePeriodEndDate(index, $event)"
+                @update:model-value="(v) => updatePeriodEndDate(index, v as string)"
               />
             </template>
           </div>
@@ -330,9 +315,9 @@
       </div>
     </div>
 
-    <!-- Temporal Window Editor Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="temporalEditorOpen"
+      chromeless
       max-width="600"
       scrollable
     >
@@ -341,11 +326,11 @@
         :model-value="getTemporalWindowValue(selectedTemporalIndex)"
         @update:model-value="updateTemporalWindow"
       />
-    </v-dialog>
+    </AtlasDialog>
 
-    <!-- Date Adjustment Editor Dialog -->
-    <v-dialog
+    <AtlasDialog
       v-model="dateAdjustmentEditorOpen"
+      chromeless
       max-width="500"
       scrollable
     >
@@ -354,12 +339,12 @@
         :model-value="getDateAdjustmentValue(selectedDateAdjustmentIndex)"
         @update:model-value="updateDateAdjustment"
       />
-    </v-dialog>
+    </AtlasDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasCheckbox, AtlasChip, AtlasIcon, AtlasIconButton, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCheckbox, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'

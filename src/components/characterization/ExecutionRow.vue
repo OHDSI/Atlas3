@@ -21,14 +21,14 @@
     </div>
 
     <div class="execution-row__cell">
-      <v-chip
-        :color="statusColor"
-        size="small"
+      <AtlasChip
+        :tone="statusTone"
+        size="sm"
         variant="flat"
         :data-testid="`execution-row-status-${execution.id}`"
       >
         {{ execution.status }}
-      </v-chip>
+      </AtlasChip>
     </div>
 
     <div class="execution-row__cell execution-row__start">
@@ -40,17 +40,17 @@
     </div>
 
     <div class="execution-row__cell execution-row__actions">
-      <v-btn
+      <AtlasButton
         v-if="!isTerminal"
-        size="small"
-        variant="outlined"
-        color="warning"
-        prepend-icon="mdi-cancel"
+        size="sm"
+        variant="secondary"
+        tone="warning"
+        icon="mdi-cancel"
         :data-testid="`execution-row-cancel-${execution.id}`"
         @click="onCancel"
       >
         {{ t('common.cancel', 'Cancel') }}
-      </v-btn>
+      </AtlasButton>
       <AtlasButton
         v-if="isCompleted"
         variant="secondary"
@@ -66,7 +66,8 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIcon } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasIcon } from '@/components/ui'
+import type { AtlasChipTone } from '@/components/ui'
 import { computed } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
@@ -89,18 +90,18 @@ const { t } = useI18n()
 const isTerminal = computed<boolean>(() => isTerminalStatus(props.execution.status))
 const isCompleted = computed<boolean>(() => props.execution.status === 'COMPLETED')
 
-const STATUS_COLORS: Record<GenerationStatus, string> = {
+const STATUS_TONES: Record<GenerationStatus, AtlasChipTone> = {
   PENDING: 'info',
   STARTING: 'info',
   STARTED: 'info',
   RUNNING: 'info',
   COMPLETED: 'success',
-  FAILED: 'error',
-  CANCELED: 'error',
-  STOPPING: 'error',
+  FAILED: 'danger',
+  CANCELED: 'danger',
+  STOPPING: 'danger',
 }
 
-const statusColor = computed<string>(() => STATUS_COLORS[props.execution.status] ?? 'grey')
+const statusTone = computed<AtlasChipTone>(() => STATUS_TONES[props.execution.status] ?? 'neutral')
 
 function formatTimestamp(ts: number | undefined): string {
   if (ts == null) return '—'
