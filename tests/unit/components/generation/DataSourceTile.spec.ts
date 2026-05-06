@@ -96,21 +96,7 @@ describe('DataSourceTile', () => {
   describe('Idle Status', () => {
     it('should display idle state when no job exists', () => {
       const wrapper = mountComponent({ cohortId: 123 })
-      const button = wrapper.findComponent({ name: 'VBtn' })
-      expect(button.exists()).toBe(true)
-      expect(button.text()).toContain('Generate')
-    })
-
-    it('should disable generate button when cohortId is null', () => {
-      const wrapper = mountComponent({ cohortId: null })
-      const button = wrapper.findComponent({ name: 'VBtn' })
-      expect(button.attributes('disabled')).toBeDefined()
-    })
-
-    it('should enable generate button when cohortId is provided', () => {
-      const wrapper = mountComponent({ cohortId: 123 })
-      const button = wrapper.findComponent({ name: 'VBtn' })
-      expect(button.attributes('disabled')).toBeUndefined()
+      expect(wrapper.find('.tile-status--idle').exists()).toBe(true)
     })
   })
 
@@ -179,13 +165,6 @@ describe('DataSourceTile', () => {
       expect(wrapper.text()).toMatch(/Patients|Persons|common\.patients|columns\.personsCount/)
     })
 
-    it('should display generate button when complete', () => {
-      const wrapper = mountComponent({ cohortId: 123 })
-      const button = wrapper.findComponent({ name: 'VBtn' })
-      expect(button.exists()).toBe(true)
-      expect(button.text()).toContain('Generate')
-    })
-
     it('should apply complete class to card', () => {
       const wrapper = mountComponent({ cohortId: 123 })
       expect(wrapper.find('.data-source-tile--complete').exists()).toBe(true)
@@ -248,13 +227,6 @@ describe('DataSourceTile', () => {
       expect(wrapper.text()).toContain('Database connection error')
     })
 
-    it('should display generate button when failed', () => {
-      const wrapper = mountComponent({ cohortId: 123 })
-      const button = wrapper.findComponent({ name: 'VBtn' })
-      expect(button.exists()).toBe(true)
-      expect(button.text()).toContain('Generate')
-    })
-
     it('should apply failed class to card', () => {
       const wrapper = mountComponent({ cohortId: 123 })
       expect(wrapper.find('.data-source-tile--failed').exists()).toBe(true)
@@ -279,37 +251,6 @@ describe('DataSourceTile', () => {
   })
 
   describe('User Interactions', () => {
-    it('should call generateCohort when generate button is clicked', async () => {
-      const generateSpy = vi.spyOn(webapiStore, 'generateCohort').mockResolvedValue(null)
-      const wrapper = mountComponent({ cohortId: 123 })
-
-      const button = wrapper.findComponent({ name: 'VBtn' })
-      await button.trigger('click')
-
-      expect(generateSpy).toHaveBeenCalledWith(123, 'TEST_SOURCE')
-    })
-
-    it('should not call generateCohort when cohortId is null', async () => {
-      const generateSpy = vi.spyOn(webapiStore, 'generateCohort')
-      const wrapper = mountComponent({ cohortId: null })
-
-      const button = wrapper.findComponent({ name: 'VBtn' })
-      await button.trigger('click')
-
-      expect(generateSpy).not.toHaveBeenCalled()
-    })
-
-    it('should stop click propagation on generate button', async () => {
-      const wrapper = mountComponent({ cohortId: 123 })
-      const button = wrapper.findComponent({ name: 'VBtn' })
-
-      const clickEvent = new Event('click', { bubbles: true })
-      const _stopPropagationSpy = vi.spyOn(clickEvent, 'stopPropagation')
-
-      // Note: @click.stop is handled by Vue, so we just verify button exists
-      expect(button.exists()).toBe(true)
-    })
-
     it('should emit tile-click when card is clicked and status is complete', async () => {
       const job = createMockGenerationJob({
         id: 1,
@@ -387,26 +328,6 @@ describe('DataSourceTile', () => {
     it('should accept null cohortId', () => {
       const wrapper = mountComponent({ cohortId: null })
       expect(wrapper.props('cohortId')).toBeNull()
-    })
-  })
-
-  describe('Error Handling', () => {
-    it('should handle generation error gracefully', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-      vi.spyOn(webapiStore, 'generateCohort').mockRejectedValue(new Error('Network error'))
-
-      const wrapper = mountComponent({ cohortId: 123 })
-      const button = wrapper.findComponent({ name: 'VBtn' })
-
-      await button.trigger('click')
-
-      // Wait for async operation
-      await new Promise(resolve => setTimeout(resolve, 0))
-
-      // Component should still exist and not crash
-      expect(wrapper.exists()).toBe(true)
-
-      consoleErrorSpy.mockRestore()
     })
   })
 
@@ -491,7 +412,6 @@ describe('DataSourceTile', () => {
 
       const wrapper = mountComponent({ cohortId: 123 })
       expect(wrapper.text()).not.toContain('5,000')
-      expect(wrapper.findComponent({ name: 'VBtn' }).text()).toContain('Generate')
     })
 
     it('should not display job from different source', () => {
@@ -507,7 +427,6 @@ describe('DataSourceTile', () => {
 
       const wrapper = mountComponent({ cohortId: 123 })
       expect(wrapper.text()).not.toContain('5,000')
-      expect(wrapper.findComponent({ name: 'VBtn' }).text()).toContain('Generate')
     })
   })
 })

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
@@ -53,6 +53,9 @@ function mountDialog(props: Partial<{
 
 describe('PreviousRunsDialog', () => {
   beforeEach(() => setActivePinia(createPinia()))
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
 
   it('renders a row per execution for the source', () => {
     mountDialog({
