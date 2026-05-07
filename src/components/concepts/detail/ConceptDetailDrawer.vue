@@ -3,7 +3,7 @@ import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { useConceptDetailStore } from '@/stores/concept-detail'
-import { AtlasIconButton } from '@/components/ui'
+import { AtlasAlert, AtlasIconButton, AtlasProgressLinear } from '@/components/ui'
 import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
 import ConceptStatCards from '@/components/concepts/detail/ConceptStatCards.vue'
 import ConceptAttributesCard from '@/components/concepts/detail/ConceptAttributesCard.vue'
@@ -58,20 +58,19 @@ watch(
           />
         </div>
 
-        <v-progress-linear
+        <AtlasProgressLinear
           v-if="isLoading"
           indeterminate
           color="primary"
         />
 
-        <v-alert
+        <AtlasAlert
           v-if="error"
-          type="error"
-          density="compact"
+          severity="danger"
           class="ma-4"
         >
           {{ error }}
-        </v-alert>
+        </AtlasAlert>
 
         <template v-if="concept && !error">
           <ConceptDetailHeader :concept="concept" />

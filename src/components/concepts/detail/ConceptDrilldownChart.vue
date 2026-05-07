@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasSelect, AtlasTab, AtlasTabs } from '@/components/ui'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useDataSourcesStore } from '@/stores/datasources'
 import type { Concept } from '@/models/concept-set.types'
@@ -103,28 +103,25 @@ const sourceItems = computed(() =>
   >
     <header class="card-title">
       <span>Drilldown Report</span>
-      <v-select
+      <AtlasSelect
         v-model="selectedSourceKey"
         :items="sourceItems"
-        density="compact"
-        variant="outlined"
         hide-details
         style="max-width: 220px"
       />
     </header>
 
-    <v-tabs
+    <AtlasTabs
       v-model="activeTab"
-      density="compact"
       bg-color="transparent"
     >
-      <v-tab value="age">
+      <AtlasTab value="age">
         Age at first occurrence
-      </v-tab>
-      <v-tab value="month">
+      </AtlasTab>
+      <AtlasTab value="month">
         Calendar month
-      </v-tab>
-    </v-tabs>
+      </AtlasTab>
+    </AtlasTabs>
 
     <div class="card-body">
       <div

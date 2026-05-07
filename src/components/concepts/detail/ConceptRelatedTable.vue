@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { AtlasCard } from '@/components/ui'
+import { AtlasCard, AtlasChip, AtlasDataTable } from '@/components/ui'
+import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
 const props = defineProps<{ related: RelatedConcept[] }>()
 
 const route = useRoute()
 const sourceKey = computed(() => (route.params.sourceKey as string) ?? '')
+const conceptDrawer = useConceptDetailDrawerStore()
+
+function openConceptDetail(conceptId: number) {
+  if (!sourceKey.value) return
+  conceptDrawer.open(sourceKey.value, conceptId)
+}
 
 interface Row {
   conceptId: number
@@ -62,54 +69,46 @@ const headers = [
     >
       No related concepts found.
     </p>
-    <v-data-table
+    <AtlasDataTable
       v-else
-      density="compact"
       :headers="headers"
       :items="rows"
       :items-per-page="25"
     >
       <template #[`item.relationship`]="{ item }">
-        <v-chip
-          density="compact"
-          size="small"
-          variant="tonal"
-        >
+        <AtlasChip size="sm">
           {{ item.relationship }}
-        </v-chip>
+        </AtlasChip>
       </template>
       <template #[`item.conceptName`]="{ item }">
-        <router-link
-          :to="`/concept/${sourceKey}/${item.conceptId}`"
+        <a
+          href="#"
           class="concept-link"
+          @click.prevent="openConceptDetail(item.conceptId)"
         >
           {{ item.conceptName }}
-        </router-link>
+        </a>
       </template>
       <template #[`item.standardConcept`]="{ item }">
-        <v-chip
+        <AtlasChip
           v-if="item.standardConcept === 'S'"
-          density="compact"
-          size="x-small"
-          color="success"
-          variant="tonal"
+          size="xs"
+          tone="success"
         >
           S
-        </v-chip>
-        <v-chip
+        </AtlasChip>
+        <AtlasChip
           v-else-if="item.standardConcept === 'C'"
-          density="compact"
-          size="x-small"
-          variant="tonal"
+          size="xs"
         >
           C
-        </v-chip>
+        </AtlasChip>
         <span
           v-else
           class="muted"
         >—</span>
       </template>
-    </v-data-table>
+    </AtlasDataTable>
   </AtlasCard>
 </template>
 

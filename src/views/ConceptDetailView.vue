@@ -2,6 +2,7 @@
 import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConceptDetailStore } from '@/stores/concept-detail'
+import { AtlasAlert, AtlasProgressLinear } from '@/components/ui'
 import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
 import ConceptStatCards from '@/components/concepts/detail/ConceptStatCards.vue'
 import ConceptAttributesCard from '@/components/concepts/detail/ConceptAttributesCard.vue'
@@ -31,20 +32,19 @@ watch(() => [props.sourceKey, props.conceptId], load)
     class="concept-detail-view"
     data-testid="concept-detail-view"
   >
-    <v-progress-linear
+    <AtlasProgressLinear
       v-if="isLoading"
       indeterminate
       color="primary"
     />
 
-    <v-alert
+    <AtlasAlert
       v-if="error"
-      type="error"
-      density="compact"
+      severity="danger"
       class="ma-4"
     >
       {{ error }}
-    </v-alert>
+    </AtlasAlert>
 
     <template v-if="concept && !error">
       <ConceptDetailHeader :concept="concept" />

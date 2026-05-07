@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
+import { AtlasButton, AtlasChip, AtlasIconButton } from '@/components/ui'
 import type { Concept } from '@/models/concept-set.types'
 
 const props = defineProps<{ concept: Concept }>()
@@ -38,8 +39,8 @@ const standardLabel = computed(() => {
   }
 })
 
-const standardColor = computed(() =>
-  props.concept.standardConcept === 'S' ? 'success' : 'default'
+const standardTone = computed(() =>
+  props.concept.standardConcept === 'S' ? ('success' as const) : undefined,
 )
 
 function onAdd() {
@@ -59,12 +60,11 @@ async function onCopy() {
     class="concept-detail-header"
     data-testid="concept-detail-header"
   >
-    <v-btn
+    <AtlasIconButton
       icon="mdi-arrow-left"
       variant="text"
-      density="compact"
-      size="small"
-      aria-label="Go back"
+      size="sm"
+      v-bind="{ ariaLabel: 'Go back' }"
       data-testid="concept-detail-back"
       @click="onBack"
     />
@@ -73,67 +73,46 @@ async function onCopy() {
         {{ concept.conceptName }}
       </h1>
       <div class="concept-chips">
-        <v-chip
-          :color="standardColor"
-          density="compact"
-          variant="tonal"
-          size="small"
+        <AtlasChip
+          :tone="standardTone"
+          size="sm"
         >
           {{ standardLabel }}
-        </v-chip>
-        <v-chip
-          density="compact"
-          variant="tonal"
-          size="small"
-        >
+        </AtlasChip>
+        <AtlasChip size="sm">
           {{ concept.vocabularyId }}
-        </v-chip>
-        <v-chip
-          density="compact"
-          variant="outlined"
-          size="small"
-        >
+        </AtlasChip>
+        <AtlasChip size="sm">
           {{ concept.conceptId }}
-        </v-chip>
-        <v-chip
-          density="compact"
-          variant="outlined"
-          size="small"
-        >
+        </AtlasChip>
+        <AtlasChip size="sm">
           {{ concept.domainId }}
-        </v-chip>
-        <v-chip
-          density="compact"
-          variant="outlined"
-          size="small"
-        >
+        </AtlasChip>
+        <AtlasChip size="sm">
           {{ concept.conceptClassId }}
-        </v-chip>
+        </AtlasChip>
       </div>
     </div>
 
     <div class="concept-actions">
-      <v-btn
-        color="primary"
-        variant="flat"
-        density="compact"
-        size="small"
-        prepend-icon="mdi-plus"
+      <AtlasButton
+        variant="primary"
+        size="sm"
+        icon="mdi-plus"
         data-testid="add-to-concept-set"
         @click="onAdd"
       >
         Add to Concept Set
-      </v-btn>
-      <v-btn
-        variant="outlined"
-        density="compact"
-        size="small"
-        prepend-icon="mdi-content-copy"
+      </AtlasButton>
+      <AtlasButton
+        variant="secondary"
+        size="sm"
+        icon="mdi-content-copy"
         data-testid="copy-concept-id"
         @click="onCopy"
       >
         Copy ID
-      </v-btn>
+      </AtlasButton>
     </div>
   </div>
 </template>
