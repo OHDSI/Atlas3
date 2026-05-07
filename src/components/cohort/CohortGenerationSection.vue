@@ -70,6 +70,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { AtlasAlert, AtlasButton } from '@/components/ui'
 import type { AtlasChipTone } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
+import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import { useWebAPIStore } from '@/stores/webapi'
 import CollapsibleSection from '@/components/shared/CollapsibleSection.vue'
 import CohortReportDrawer from './CohortReportDrawer.vue'
@@ -93,6 +94,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const webapiStore = useWebAPIStore()
+const sourceAccess = useSourceAccessFor()
 
 const sources = computed(() => webapiStore.sourcesList)
 
@@ -182,8 +184,8 @@ const defaultExpanded = computed(() => jobs.value.length > 0)
 
 const canGenerateAll = computed(() => {
   if (props.cohortId === null) return false
-  if (sources.value.length === 0) return false
   return sources.value.some(s => {
+    if (!sourceAccess.canWrite(s.sourceKey)) return false
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
     return !j || (j.status !== 'RUNNING' && j.status !== 'PENDING')
   })
@@ -192,6 +194,7 @@ const canGenerateAll = computed(() => {
 async function generateAll() {
   if (props.cohortId === null) return
   for (const s of sources.value) {
+    if (!sourceAccess.canWrite(s.sourceKey)) continue
     const j = jobs.value.find(x => x.sourceKey === s.sourceKey)
     if (j && (j.status === 'RUNNING' || j.status === 'PENDING')) continue
     try {
@@ -238,12 +241,12 @@ const extraActions: ExtraAction[] = [
   {
     key: 'inclusion',
     label: t('cohortDefinitions.generation.row.inclusionReport', 'Inclusion report').value,
-    disabledWhen: r => r.latestStatus !== 'COMPLETED',
+    disabledWhen: r => r.latestStatus !== 'COMPLETED' || !sourceAccess.canRead(r.sourceKey),
   },
   {
     key: 'samples',
     label: t('cohortDefinitions.generation.row.samples', 'Samples').value,
-    disabledWhen: r => r.latestStatus !== 'COMPLETED',
+    disabledWhen: r => r.latestStatus !== 'COMPLETED' || !sourceAccess.canRead(r.sourceKey),
   },
 ]
 

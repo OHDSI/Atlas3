@@ -553,7 +553,6 @@
       :selected-tags="cohortTags"
       @update:selected-tags="handleTagsUpdate"
     />
-
   </div>
 </template>
 

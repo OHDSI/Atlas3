@@ -80,7 +80,6 @@
         :cohort="cohort"
         :selected-tags="selectedTags"
         class="cohort-grid__card"
-        @generate="$emit('generate', $event)"
         @delete="$emit('delete', $event)"
         @tag-click="$emit('tag-click', $event)"
         @show-info="$emit('show-info', $event)"
@@ -110,7 +109,6 @@ interface Emits {
   (e: 'retry'): void
   (e: 'create-cohort'): void
   (e: 'clear-filters'): void
-  (e: 'generate', cohort: CohortDefinitionSummary): void
   (e: 'delete', cohort: CohortDefinitionSummary): void
   (e: 'tag-click', tagName: string): void
   (e: 'show-info', cohort: CohortDefinitionSummary): void

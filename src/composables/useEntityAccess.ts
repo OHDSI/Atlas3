@@ -158,3 +158,27 @@ export function useSourceAccess(sourceKey: MaybeRefOrGetter<string | null | unde
 
   return { canRead, canWrite }
 }
+
+export function useSourceAccessFor() {
+  const authStore = useAuthStore()
+  const isSourceAdmin = () =>
+    permissionChecker.hasPermission('admin:source', authStore.permissions).granted
+  const hasGlobalRead = () =>
+    permissionChecker.hasPermission('source:*:access', authStore.permissions).granted
+
+  function canRead(sourceKey: string | null | undefined): boolean {
+    if (isSourceAdmin() || hasGlobalRead()) return true
+    if (!sourceKey) return false
+    const g = authStore.entityAccess.source[sourceKey]
+    return Array.isArray(g) && (g.includes('READ') || g.includes('WRITE'))
+  }
+
+  function canWrite(sourceKey: string | null | undefined): boolean {
+    if (isSourceAdmin()) return true
+    if (!sourceKey) return false
+    const g = authStore.entityAccess.source[sourceKey]
+    return Array.isArray(g) && g.includes('WRITE')
+  }
+
+  return { canRead, canWrite }
+}

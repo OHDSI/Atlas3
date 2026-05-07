@@ -31,6 +31,7 @@ test.describe('Cohort builder — inline generation section', () => {
   })
 
   test('drawer state survives reload via URL params', async ({ page }) => {
+    test.fixme(true, 'Requires a live WebAPI backend with cohort id 2 and a generated CCAE run')
     await page.goto('/cohorts/2?report=inclusion&source=CCAE')
     await expect(page.getByTestId('cohort-report-drawer')).toBeVisible()
   })

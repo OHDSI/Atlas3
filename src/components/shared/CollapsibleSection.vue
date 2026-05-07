@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useId } from 'vue'
+import { ref, useId, watch } from 'vue'
 import { AtlasChip, AtlasIcon, AtlasSpacer } from '@/components/ui'
 import type { AtlasChipTone } from '@/components/ui'
 
@@ -88,8 +88,17 @@ const props = withDefaults(defineProps<Props>(), {
 
 const id = useId()
 const expanded = ref(props.defaultExpanded)
+const userToggled = ref(false)
+
+watch(
+  () => props.defaultExpanded,
+  next => {
+    if (!userToggled.value) expanded.value = next
+  }
+)
 
 function toggle() {
+  userToggled.value = true
   expanded.value = !expanded.value
 }
 

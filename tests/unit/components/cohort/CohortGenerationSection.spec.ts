@@ -20,6 +20,10 @@ vi.mock('@/composables/useEntityAccess', () => ({
     canRead: computed(() => true),
     canWrite: computed(() => true),
   }),
+  useSourceAccessFor: () => ({
+    canRead: () => true,
+    canWrite: () => true,
+  }),
 }))
 
 vi.mock('@/components/reports/inclusion/InclusionRuleReport.vue', () => ({

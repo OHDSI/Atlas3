@@ -175,28 +175,3 @@ export const CohortDefinitionListSchema = z.array(CohortDefinitionSummarySchema)
 
 export type CohortDefinitionList = z.infer<typeof CohortDefinitionListSchema>
 
-/**
- * UI state for generation panel
- */
-export interface GenerationPanelState {
-  isOpen: boolean
-  cohortId: number | null
-  pollingActive: boolean
-  lastRefresh?: Date
-}
-
-/**
- * Derived state for individual data source tiles
- */
-export interface DataSourceTileState {
-  source: CDMSource
-  tileStatus: TileStatus
-  job?: GenerationJob
-  patientCount?: number
-  errorMessage?: string
-}
-
-/**
- * UI status for data source tiles
- */
-export type TileStatus = 'idle' | 'generating' | 'complete' | 'failed'

@@ -164,15 +164,6 @@
                   @click.stop="$emit('show-info', cohort)"
                 />
                 <AtlasIconButton
-                  icon="mdi-account-multiple"
-                  v-bind="{ ariaLabel: t('components.analysisExecution.buttons.generate', 'Generate').value }"
-                  variant="text"
-                  size="sm"
-                  data-testid="cohort-table-generate"
-                  :disabled="!access.canWrite(cohort.id)"
-                  @click.stop="$emit('generate', cohort)"
-                />
-                <AtlasIconButton
                   icon="mdi-delete-outline"
                   v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
                   variant="text"
@@ -222,7 +213,6 @@ defineEmits<{
   retry: []
   'create-cohort': []
   'clear-filters': []
-  generate: [cohort: CohortDefinitionSummary]
   delete: [cohort: CohortDefinitionSummary]
   'tag-click': [tagName: string]
   'show-info': [cohort: CohortDefinitionSummary]
