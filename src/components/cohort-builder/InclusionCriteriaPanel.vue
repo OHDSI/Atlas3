@@ -55,14 +55,14 @@
           <div class="inclusion-criteria-panel__detail-actions">
             <AtlasIconButton
               icon="mdi-pencil-outline"
-              :aria-label="t('common.edit', 'Edit').value"
+              v-bind="{ ariaLabel: t('common.edit', 'Edit').value }"
               variant="text"
               size="sm"
               @click="openEditDialog(selectedIndex)"
             />
             <AtlasIconButton
               icon="mdi-delete-outline"
-              :aria-label="t('common.delete', 'Delete').value"
+              v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
               variant="text"
               tone="danger"
               size="sm"
