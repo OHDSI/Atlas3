@@ -86,6 +86,19 @@
         hover
         class="concept-set-table__table"
       >
+        <template
+          v-if="sourceKey"
+          #item.conceptName="{ item }"
+        >
+          <router-link
+            :to="`/concept/${sourceKey}/${item.conceptId}`"
+            :data-testid="`concept-name-link-${item.conceptId}`"
+            class="concept-name-link"
+          >
+            {{ item.conceptName }}
+          </router-link>
+        </template>
+
         <!-- Descendants Toggle -->
         <template #item.includeDescendants="{ item }">
           <AtlasCheckbox
@@ -238,6 +251,7 @@ const { t } = useI18n()
 interface Props {
   items: ConceptSetItem[]
   loading?: boolean
+  sourceKey?: string
 }
 
 const props = defineProps<Props>()
@@ -493,5 +507,13 @@ function onRemove(item: ConceptSetItem) {
   color: rgb(var(--v-theme-on-surface-variant));
   text-align: center;
   max-width: 480px;
+}
+
+.concept-name-link {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+}
+.concept-name-link:hover {
+  text-decoration: underline;
 }
 </style>

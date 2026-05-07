@@ -169,6 +169,7 @@
               <ConceptSetTable
                 :items="store.currentSet?.items || []"
                 :loading="false"
+                :source-key="sourceKey.value"
                 @toggle:descendants="onToggleDescendants"
                 @toggle:mapped="onToggleMapped"
                 @toggle:exclude="onToggleExclude"
