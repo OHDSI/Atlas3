@@ -6,6 +6,10 @@
     :meta="metaText"
     :default-expanded="defaultExpanded"
   >
+    <template #controls>
+      <CachePreviewSelector />
+    </template>
+
     <template
       v-if="cohortId !== null && sources.length > 0"
       #actions
@@ -75,6 +79,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import { useWebAPIStore } from '@/stores/webapi'
 import CollapsibleSection from '@/components/shared/CollapsibleSection.vue'
+import CachePreviewSelector from '@/components/cohort-builder/CachePreviewSelector.vue'
 import CohortReportDrawer from './CohortReportDrawer.vue'
 import DataSourceRunTable, {
   type RunTableSource,

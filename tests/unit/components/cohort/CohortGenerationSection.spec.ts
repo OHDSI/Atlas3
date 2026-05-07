@@ -54,6 +54,8 @@ function mountSection(
   const store = useWebAPIStore()
   store.sources = sourcesList as never
   for (const j of jobs) store.addGenerationJob(j as never)
+  vi.spyOn(store, 'fetchSources').mockResolvedValue(undefined)
+  vi.spyOn(store, 'fetchCohortGenerationInfo').mockResolvedValue(undefined)
   const router = makeRouter()
   return mount(CohortGenerationSection, {
     attachTo: document.body,

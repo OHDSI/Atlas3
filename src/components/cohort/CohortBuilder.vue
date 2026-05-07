@@ -34,12 +34,6 @@
       </AtlasButton>
     </div>
 
-    <!-- Patient Count Bar (TrexSQL) -->
-    <patient-count-bar
-      :expression="cohortExpression"
-      @retry="triggerValidation"
-    />
-
     <CohortGenerationSection :cohort-id="cohortId" />
 
     <!-- Toolbar (status + actions) — hidden when the host view
@@ -278,15 +272,6 @@
             </span>
             <AtlasSpacer />
             <div class="section-controls">
-              <AtlasButton
-                variant="secondary"
-                icon="mdi-plus"
-                size="sm"
-                data-testid="add-inclusion-rule"
-                @click="inclusionPanelRef?.addNewRule()"
-              >
-                {{ t('components.cohortExpressionEditor.addRule', 'Add rule').value }}
-              </AtlasButton>
               <span class="section-controls__label">
                 {{
                   t(
@@ -346,8 +331,8 @@
             </div>
           </div>
           <inclusion-criteria-panel
-            ref="inclusionPanelRef"
             v-model="inclusionRules"
+            :expression="cohortExpression"
             :qualifying-limit="inclusionQualifyingLimit"
             @update:qualifying-limit="inclusionQualifyingLimit = $event"
             @select-concept-set="handleSelectConceptSetForCriteria"
@@ -638,7 +623,6 @@ import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
-import PatientCountBar from '../cohort-builder/PatientCountBar.vue'
 import TagSelectionDialog from './TagSelectionDialog.vue'
 import type { Tag } from '@/models/cohort.types'
 
@@ -735,7 +719,6 @@ const loadedSnapshot = ref<string | null>(null)
 
 // Component refs
 const additionalCriteriaRef = ref<InstanceType<typeof CriteriaGroupEditor> | null>(null)
-const inclusionPanelRef = ref<InstanceType<typeof InclusionCriteriaPanel> | null>(null)
 
 // Generation state
 const selectedSourceKey = ref<string | null>(null)

@@ -3,9 +3,11 @@ import {
   TrexSQLCacheStatusSchema,
   PatientCountResultSchema,
   BuildCacheResponseSchema,
+  InclusionStatsResultSchema,
   type TrexSQLCacheStatus,
   type PatientCountResult,
   type BuildCacheResponse,
+  type InclusionStatsResult,
 } from '@/models/trexsql.types'
 
 const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
@@ -274,5 +276,58 @@ export async function isCacheReady(sourceKey: string): Promise<boolean> {
     return status.status === 'ready'
   } catch {
     return false
+  }
+}
+
+export async function getInclusionStats(
+  sourceKey: string,
+  expression: Record<string, unknown>,
+  signal?: AbortSignal
+): Promise<InclusionStatsResult> {
+  const url = `${BASE_URL}/trexsql/${sourceKey}/cache/inclusion`
+
+  const authHeader = await getAuthHeader()
+
+  cancelCountRequest(sourceKey)
+  const controller = new AbortController()
+  activeCountRequests.set(sourceKey, controller)
+  if (signal) {
+    signal.addEventListener('abort', () => controller.abort())
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader },
+      body: JSON.stringify({ expression: JSON.stringify(expression) }),
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const status = response.status
+      if (status === 400) throw new Error('Invalid cohort expression')
+      if (status === 404) throw new Error(`Data source '${sourceKey}' not found`)
+      if (status === 503) throw new Error('Cache not available. Please build the cache first.')
+      const errorText = await response.text().catch(() => 'Unknown error')
+      throw new Error(`Inclusion stats failed: ${errorText}`)
+    }
+
+    const data = await response.json()
+    const parsed = InclusionStatsResultSchema.safeParse(data)
+    if (parsed.success) return parsed.data
+
+    return {
+      entryEventCount: Number(data.entryEventCount ?? 0),
+      totalPatientCount: Number(data.totalPatientCount ?? 0),
+      finalCount: Number(data.finalCount ?? 0),
+      ruleCounts: Array.isArray(data.ruleCounts) ? data.ruleCounts : [],
+      executionTimeMs: Number(data.executionTimeMs ?? 0),
+    }
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') throw error
+    logger.error('TrexSQL', 'Failed to get inclusion stats', { sourceKey, error })
+    throw error
+  } finally {
+    activeCountRequests.delete(sourceKey)
   }
 }

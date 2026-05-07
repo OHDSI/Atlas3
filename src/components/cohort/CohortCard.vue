@@ -136,7 +136,7 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   selectedTags: () => [],
 })
-const emit = defineEmits<Emits>()
+defineEmits<Emits>()
 const router = useRouter()
 const { t, locale } = useI18n()
 
