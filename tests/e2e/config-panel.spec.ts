@@ -251,7 +251,9 @@ test.describe('Configuration Panel', () => {
         await page.keyboard.press('Enter')
 
         // Panel should open
-        await expect(page.locator('.v-navigation-drawer:visible')).toBeVisible({ timeout: 3000 })
+        await expect(page.locator('.v-navigation-drawer.config-panel')).toBeVisible({
+          timeout: 3000,
+        })
 
         // Press Escape to close
         await page.keyboard.press('Escape')

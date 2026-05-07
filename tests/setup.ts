@@ -23,6 +23,17 @@ import { vi } from 'vitest'
   }
 }
 
+// Under singleFork: true, jsdom (and its localStorage/sessionStorage) is
+// shared across test files. Reset storage between files so values written
+// by one file (e.g. webapi store auto-persisting `selectedVocabulary`) do
+// not leak into the next file's expectations.
+if (typeof localStorage !== 'undefined') {
+  localStorage.clear()
+}
+if (typeof sessionStorage !== 'undefined') {
+  sessionStorage.clear()
+}
+
 // Mock navigator.userAgent (required for Vuetify display composable)
 Object.defineProperty(window.navigator, 'userAgent', {
   writable: true,
