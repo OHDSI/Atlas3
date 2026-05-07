@@ -74,12 +74,23 @@
         />
       </div>
 
-      <!-- Attrition table -->
+      <!-- Attrition funnel (cumulative — lazy-loaded) -->
       <section class="mt-6">
         <h3 class="text-subtitle-1 font-weight-medium mb-2">
-          Attrition by inclusion rule
+          Attrition funnel
         </h3>
-        <InclusionRuleAttritionTable :rules="report.inclusionRuleStats" />
+        <InclusionRuleAttritionFunnel :report="report" />
+      </section>
+
+      <!-- Per-rule satisfaction table -->
+      <section class="mt-6">
+        <h3 class="text-subtitle-1 font-weight-medium mb-2">
+          Per-rule satisfaction
+        </h3>
+        <InclusionRuleAttritionTable
+          :rules="report.inclusionRuleStats"
+          :cumulative-remaining="cumulativeRemaining"
+        />
       </section>
 
       <!-- Treemap -->
@@ -98,12 +109,19 @@
 
 <script setup lang="ts">
 import { AtlasAlert, AtlasSkeleton, AtlasTab, AtlasTabs } from '@/components/ui'
-import { ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { getInclusionRuleReport } from '@/services/webapi'
 import type { InclusionRuleReport, InclusionRuleReportMode } from '@/models/report.types'
+import { computeAttritionSteps } from '@/utils/inclusion-attrition'
 import InclusionRuleAttritionTable from './InclusionRuleAttritionTable.vue'
 import InclusionRuleTreemap from './InclusionRuleTreemap.vue'
 import SummaryStat from './SummaryStat.vue'
+
+const InclusionRuleAttritionFunnel = defineAsyncComponent({
+  loader: () => import('./InclusionRuleAttritionFunnel.vue'),
+  loadingComponent: AtlasSkeleton,
+  delay: 200,
+})
 
 const props = defineProps<{
   cohortId: number
@@ -114,6 +132,12 @@ const mode = ref<InclusionRuleReportMode>(1)
 const report = ref<InclusionRuleReport | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
+
+const cumulativeRemaining = computed<number[] | undefined>(() => {
+  if (!report.value) return undefined
+  // computeAttritionSteps returns [Initial, ...perRule]; drop the initial step
+  return computeAttritionSteps(report.value).slice(1).map(s => s.remaining)
+})
 
 async function load() {
   if (!props.cohortId || !props.sourceKey) return
