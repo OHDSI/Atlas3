@@ -333,8 +333,8 @@ test.describe('Cohorts List', () => {
     await expect(firstCard).toBeVisible({ timeout: 10000 })
 
     // Check action button sizes (Vuetify size="small" v-btn renders ~32px square)
-    const materializeButton = firstCard.locator('button[aria-label="Generate cohort"]')
-    const buttonBox = await materializeButton.boundingBox()
+    const actionButton = firstCard.locator('.cohort-card__action-btn').first()
+    const buttonBox = await actionButton.boundingBox()
 
     expect(buttonBox?.width).toBeGreaterThanOrEqual(28)
     expect(buttonBox?.height).toBeGreaterThanOrEqual(28)
