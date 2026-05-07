@@ -241,12 +241,12 @@ const extraActions: ExtraAction[] = [
   {
     key: 'inclusion',
     label: t('cohortDefinitions.generation.row.inclusionReport', 'Inclusion report').value,
-    disabledWhen: r => r.latestStatus !== 'COMPLETED' || !sourceAccess.canRead(r.sourceKey),
+    disabledWhen: r => r.latestStatus !== 'COMPLETED',
   },
   {
     key: 'samples',
     label: t('cohortDefinitions.generation.row.samples', 'Samples').value,
-    disabledWhen: r => r.latestStatus !== 'COMPLETED' || !sourceAccess.canRead(r.sourceKey),
+    disabledWhen: r => r.latestStatus !== 'COMPLETED',
   },
 ]
 
