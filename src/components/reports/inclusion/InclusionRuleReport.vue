@@ -46,7 +46,7 @@
       severity="info"
       data-testid="inclusion-rule-report-empty"
     >
-      No generation results found for this cohort and source. Generate the cohort first.
+      No inclusion-rule report data is available for this cohort and source. The cohort may have no inclusion rules, or it may not have been generated yet. If you've generated it already, try re-running.
     </AtlasAlert>
 
     <template v-else>

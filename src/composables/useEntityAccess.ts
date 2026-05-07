@@ -16,6 +16,7 @@
 
 import { computed, type ComputedRef, type MaybeRefOrGetter, toValue } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { authConfig } from '@/config/auth.config'
 import type { EntityAccessKind, EntityGrant } from '@/models/auth.types'
 import { permissionChecker } from '@/services/auth/permissionChecker'
 
@@ -138,6 +139,7 @@ export function useSourceAccess(sourceKey: MaybeRefOrGetter<string | null | unde
   })
 
   const canRead = computed(() => {
+    if (!authConfig.userAuthenticationEnabled) return true
     if (
       permissionChecker.hasPermission('admin:source', authStore.permissions).granted ||
       permissionChecker.hasPermission('source:*:access', authStore.permissions).granted
@@ -149,6 +151,7 @@ export function useSourceAccess(sourceKey: MaybeRefOrGetter<string | null | unde
   })
 
   const canWrite = computed(() => {
+    if (!authConfig.userAuthenticationEnabled) return true
     if (permissionChecker.hasPermission('admin:source', authStore.permissions).granted) {
       return true
     }
@@ -167,6 +170,7 @@ export function useSourceAccessFor() {
     permissionChecker.hasPermission('source:*:access', authStore.permissions).granted
 
   function canRead(sourceKey: string | null | undefined): boolean {
+    if (!authConfig.userAuthenticationEnabled) return true
     if (isSourceAdmin() || hasGlobalRead()) return true
     if (!sourceKey) return false
     const g = authStore.entityAccess.source[sourceKey]
@@ -174,6 +178,7 @@ export function useSourceAccessFor() {
   }
 
   function canWrite(sourceKey: string | null | undefined): boolean {
+    if (!authConfig.userAuthenticationEnabled) return true
     if (isSourceAdmin()) return true
     if (!sourceKey) return false
     const g = authStore.entityAccess.source[sourceKey]
