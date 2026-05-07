@@ -348,6 +348,7 @@
           <inclusion-criteria-panel
             ref="inclusionPanelRef"
             v-model="inclusionRules"
+            :expression="cohortExpression"
             :qualifying-limit="inclusionQualifyingLimit"
             @update:qualifying-limit="inclusionQualifyingLimit = $event"
             @select-concept-set="handleSelectConceptSetForCriteria"
