@@ -84,7 +84,7 @@
           :icon="action.icon"
           :disabled="action.disabledWhen ? action.disabledWhen(item as Row) : false"
           :data-testid="`row-extra-${action.key}-${(item as Row).sourceKey}`"
-          @click="$emit('extra-action', action.key, (item as Row).sourceKey)"
+          @click="onExtraClick(action.key, (item as Row).sourceKey)"
         >
           {{ action.label }}
         </AtlasButton>
@@ -145,12 +145,16 @@ const props = withDefaults(defineProps<Props>(), {
   hideCancel: false,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   run: [sourceKey: string]
   cancel: [sourceKey: string]
   'show-history': [sourceKey: string]
   'extra-action': [actionKey: string, sourceKey: string]
 }>()
+
+function onExtraClick(actionKey: string, sourceKey: string) {
+  emit('extra-action', actionKey, sourceKey)
+}
 
 const { t, tv } = useI18n()
 const em = '—'

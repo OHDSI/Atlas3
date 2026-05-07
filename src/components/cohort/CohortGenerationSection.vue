@@ -48,7 +48,6 @@
 
     <CohortReportDrawer
       v-model="drawer.open"
-      data-testid="cohort-report-drawer"
       :cohort-id="cohortId"
       :source-key="drawer.sourceKey"
       :report-type="drawer.reportType"
@@ -252,15 +251,15 @@ const extraActions: ExtraAction[] = [
 
 function onExtraAction(actionKey: string, sourceKey: string) {
   if (actionKey !== 'inclusion' && actionKey !== 'samples') return
-  drawer.open = true
   drawer.sourceKey = sourceKey
   drawer.reportType = actionKey
+  drawer.open = true
   router.replace({ query: { ...route.query, report: actionKey, source: sourceKey } }).catch(() => {})
 }
 
 watch(
   () => drawer.open,
-  open => {
+  (open) => {
     if (!open) {
       drawer.sourceKey = null
       drawer.reportType = null
