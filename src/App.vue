@@ -59,6 +59,9 @@
 
     <!-- Configuration Panel -->
     <ConfigPanel />
+
+    <!-- Concept Detail Drawer (opens from concept tables and search results) -->
+    <ConceptDetailDrawer />
   </v-app>
 </template>
 
@@ -70,6 +73,7 @@ import SessionExpiryModal from '@/components/auth/SessionExpiryModal.vue'
 import ConfigurationWarningBanner from '@/components/cohort-builder/ConfigurationWarningBanner.vue'
 import LicenseAgreementDialog from '@/components/shared/LicenseAgreementDialog.vue'
 import ConfigPanel from '@/components/config/ConfigPanel.vue'
+import ConceptDetailDrawer from '@/components/concepts/detail/ConceptDetailDrawer.vue'
 import { useLocaleStore } from '@/stores/locale'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'

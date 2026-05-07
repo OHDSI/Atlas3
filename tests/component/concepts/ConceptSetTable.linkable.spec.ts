@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -10,6 +11,15 @@ vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../helpers/i18n-mock')
   return mockUseI18n
 })
+
+const open = vi.fn()
+vi.mock('@/stores/concept-detail-drawer', () => ({
+  useConceptDetailDrawerStore: vi.fn(() => ({ open, close: vi.fn(), isOpen: false })),
+}))
+
+vi.mock('@/stores/webapi', () => ({
+  useWebAPIStore: vi.fn(() => ({ getValidVocabularySource: () => null })),
+}))
 
 const items = [
   {
@@ -28,7 +38,12 @@ const items = [
 ]
 
 describe('ConceptSetTable linkable', () => {
-  it('renders concept name as a router-link to detail when sourceKey is set', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    open.mockClear()
+  })
+
+  it('renders concept name as a click-link that opens the detail drawer when sourceKey is set', async () => {
     const vuetify = createVuetify({ components, directives })
     const router = createRouter({
       history: createMemoryHistory(),
@@ -42,6 +57,7 @@ describe('ConceptSetTable linkable', () => {
 
     const link = wrapper.find('a[data-testid="concept-name-link-201826"]')
     expect(link.exists()).toBe(true)
-    expect(link.attributes('href')).toBe('/concept/SYNPUF1K/201826')
+    await link.trigger('click')
+    expect(open).toHaveBeenCalledWith('SYNPUF1K', 201826)
   })
 })

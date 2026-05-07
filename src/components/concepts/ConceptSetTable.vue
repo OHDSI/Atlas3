@@ -90,13 +90,14 @@
           v-if="resolvedSourceKey"
           #item.conceptName="{ item }"
         >
-          <router-link
-            :to="`/concept/${resolvedSourceKey}/${item.conceptId}`"
+          <a
+            href="#"
             :data-testid="`concept-name-link-${item.conceptId}`"
             class="concept-name-link"
+            @click.prevent="openConceptDetail(item)"
           >
             {{ item.conceptName }}
-          </router-link>
+          </a>
         </template>
 
         <!-- Descendants Toggle -->
@@ -246,10 +247,12 @@ import type { ConceptSetItem } from '@/models/concept-set.types'
 import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
 import { useWebAPIStore } from '@/stores/webapi'
+import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 
 const { t } = useI18n()
 const webapiStore = useWebAPIStore()
+const conceptDrawer = useConceptDetailDrawerStore()
 
 interface Props {
   items: ConceptSetItem[]
@@ -266,6 +269,11 @@ const props = defineProps<Props>()
 const resolvedSourceKey = computed(
   () => props.sourceKey || webapiStore.getValidVocabularySource() || getDefaultSourceKey() || '',
 )
+
+function openConceptDetail(item: ConceptSetItem) {
+  if (!resolvedSourceKey.value) return
+  conceptDrawer.open(resolvedSourceKey.value, item.conceptId)
+}
 
 const emit = defineEmits<{
   'toggle:descendants': [conceptId: number]

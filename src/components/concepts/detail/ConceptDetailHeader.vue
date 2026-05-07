@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { Concept } from '@/models/concept-set.types'
 
 const props = defineProps<{ concept: Concept }>()
@@ -10,8 +11,15 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const drawer = useConceptDetailDrawerStore()
 
 function onBack() {
+  // When the header is rendered inside the drawer, "back" closes the drawer
+  // rather than triggering a router navigation.
+  if (drawer.isOpen) {
+    drawer.close()
+    return
+  }
   if (window.history.length > 1) {
     router.back()
   } else {
