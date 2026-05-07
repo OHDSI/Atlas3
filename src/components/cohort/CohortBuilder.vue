@@ -94,385 +94,354 @@
          the page reads as a logical pipeline (entry → inclusion
          → exit → era), not a stack of independent forms. -->
     <div class="cohort-builder__steps">
-      <!-- Cohort Entry Events — Step 1 -->
-      <div
-        class="section-step mb-3"
+      <CollapsibleSection
         data-step="1"
+        :title="t('components.cohortExpressionEditor.cohortEntryEvents').value"
+        :badge="1"
+        :state-chip="{ label: entryEventsState.label, tone: toChipTone(entryEventsState.tone) }"
+        default-expanded
       >
-        <span class="section-step-badge">1</span>
-        <div class="section-wrapper section-wrapper--step">
-          <div class="section-header">
-            <h3 class="section-title">
-              {{ t('components.cohortExpressionEditor.cohortEntryEvents') }}
-            </h3>
-            <span :class="['section-state-chip', `section-state-chip--${entryEventsState.tone}`]">
-              {{ entryEventsState.label }}
-            </span>
-            <AtlasSpacer />
-            <div class="section-controls">
-              <span class="section-controls__label">
-                {{
-                  t(
-                    'components.cohortExpressionEditor.entryQualifyingLimitLabel',
-                    'Cohort entry on'
-                  ).value
-                }}
-                <AtlasTooltip
-                  location="top"
-                  max-width="320"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <AtlasIcon
-                      v-bind="tooltipProps"
-                      icon="mdi-help-circle-outline"
-                      size="14"
-                      class="section-controls__help"
-                    />
-                  </template>
-                  <span>{{
-                    t(
-                      'components.cohortExpressionEditor.entryQualifyingLimitHelp',
-                      'Which qualifying event marks a person’s cohort entry: their first, every occurrence, or their last.'
-                    ).value
-                  }}</span>
-                </AtlasTooltip>
-              </span>
-              <v-btn-toggle
-                v-model="qualifyingLimit"
-                mandatory
-                density="compact"
-                variant="outlined"
-                divided
-              >
-                <AtlasButton
-                  toggle
-                  value="FIRST"
-                  size="sm"
-                >
-                  {{ t('options.earliestEvents', 'First') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="ALL"
-                  size="sm"
-                >
-                  {{ t('options.all') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="LAST"
-                  size="sm"
-                >
-                  {{ t('options.latestEvents', 'Latest') }}
-                </AtlasButton>
-              </v-btn-toggle>
-            </div>
-          </div>
-
-          <entry-events-list
-            :events="entryEvents"
-            :observation-period="observationPeriod"
-            @update:events="entryEvents = $event"
-            @update:observation-period="observationPeriod = $event"
-            @select-concept-set="handleSelectConceptSet"
-            @select-concept-for-attribute="handleSelectConceptForEntryEvent"
-            @edit-concept-set="handleEditConceptSet"
-          />
-
-          <!-- Additional Criteria (restricts entry events). The "with"
-           connector is now a soft pill, not block-letter "WITH". -->
-          <div
-            v-if="additionalCriteria"
-            class="cohort-builder__additional-criteria"
-          >
-            <div class="cohort-builder__additional-criteria-header">
-              <span class="cohort-builder__connector-pill">
-                {{ t('components.cohortExpressionEditor.withQualifyingLimit', 'with').value }}
-              </span>
-              <v-btn-toggle
-                v-model="additionalCriteria.qualifyingLimit"
-                mandatory
-                density="compact"
-                variant="outlined"
-                divided
-              >
-                <AtlasButton
-                  toggle
-                  value="FIRST"
-                  size="sm"
-                >
-                  {{ t('options.earliestEvents', 'First') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="ALL"
-                  size="sm"
-                >
-                  {{ t('options.all') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="LAST"
-                  size="sm"
-                >
-                  {{ t('options.latestEvents', 'Latest') }}
-                </AtlasButton>
-              </v-btn-toggle>
-              <AtlasSpacer />
-              <AtlasIconButton
-                icon="mdi-close"
-                v-bind="{ ariaLabel: t('common.remove', 'Remove').value }"
-                variant="text"
-                tone="danger"
-                size="sm"
-                @click="removeAdditionalCriteria"
-              />
-            </div>
-            <criteria-group-editor
-              ref="additionalCriteriaRef"
-              v-model="additionalCriteria"
-              @select-concept-set="handleSelectConceptSetForAdditionalCriteria"
-              @select-concept="handleSelectConceptForAdditionalCriteria"
-              @edit-concept-set="handleEditConceptSet"
-              @remove="removeAdditionalCriteria"
-            />
-          </div>
-          <div
-            v-else
-            class="cohort-builder__add-additional"
-          >
-            <AtlasButton
-              variant="ghost"
-              icon="mdi-filter-plus"
-              size="sm"
-              @click="addAdditionalCriteria"
-            >
+        <template #controls>
+          <div class="section-controls">
+            <span class="section-controls__label">
               {{
                 t(
-                  'components.cohortExpressionEditor.addInclusionCriteria',
-                  'Add inclusion criteria'
+                  'components.cohortExpressionEditor.entryQualifyingLimitLabel',
+                  'Cohort entry on'
                 ).value
               }}
-            </AtlasButton>
-          </div>
-        </div>
-        <!-- /.section-wrapper -->
-      </div>
-      <!-- /.section-step (1) -->
-
-      <!-- Inclusion Criteria — Step 2 -->
-      <div
-        class="section-step mb-3"
-        data-step="2"
-      >
-        <span class="section-step-badge">2</span>
-        <div class="section-wrapper section-wrapper--step">
-          <div class="section-header">
-            <h3 class="section-title">
-              {{ t('components.cohortExpressionEditor.inclusionCriteriaTitle') }}
-            </h3>
-            <span
-              :class="['section-state-chip', `section-state-chip--${inclusionRulesState.tone}`]"
-            >
-              {{ inclusionRulesState.label }}
-            </span>
-            <AtlasSpacer />
-            <div class="section-controls">
-              <AtlasButton
-                variant="secondary"
-                icon="mdi-plus"
-                size="sm"
-                data-testid="add-inclusion-rule"
-                @click="inclusionPanelRef?.addNewRule()"
+              <AtlasTooltip
+                location="top"
+                max-width="320"
               >
-                {{ t('components.cohortExpressionEditor.addRule', 'Add rule').value }}
-              </AtlasButton>
-              <span class="section-controls__label">
-                {{
+                <template #activator="{ props: tooltipProps }">
+                  <AtlasIcon
+                    v-bind="tooltipProps"
+                    icon="mdi-help-circle-outline"
+                    size="14"
+                    class="section-controls__help"
+                  />
+                </template>
+                <span>{{
                   t(
-                    'components.cohortExpressionEditor.inclusionQualifyingLimitLabel',
-                    'Apply rules to'
+                    'components.cohortExpressionEditor.entryQualifyingLimitHelp',
+                    'Which qualifying event marks a person’s cohort entry: their first, every occurrence, or their last.'
                   ).value
-                }}
-                <AtlasTooltip
-                  location="top"
-                  max-width="320"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <AtlasIcon
-                      v-bind="tooltipProps"
-                      icon="mdi-help-circle-outline"
-                      size="14"
-                      class="section-controls__help"
-                    />
-                  </template>
-                  <span>{{
-                    t(
-                      'components.cohortExpressionEditor.inclusionQualifyingLimitHelp',
-                      'Which qualifying event each rule is evaluated against: a person’s first, every, or their last.'
-                    ).value
-                  }}</span>
-                </AtlasTooltip>
-              </span>
-              <v-btn-toggle
-                v-model="inclusionQualifyingLimit"
-                mandatory
-                density="compact"
-                variant="outlined"
-                divided
-              >
-                <AtlasButton
-                  toggle
-                  value="FIRST"
-                  size="sm"
-                >
-                  {{ t('options.earliestEvents', 'First') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="ALL"
-                  size="sm"
-                >
-                  {{ t('options.all') }}
-                </AtlasButton>
-                <AtlasButton
-                  toggle
-                  value="LAST"
-                  size="sm"
-                >
-                  {{ t('options.latestEvents', 'Latest') }}
-                </AtlasButton>
-              </v-btn-toggle>
-            </div>
-          </div>
-          <inclusion-criteria-panel
-            ref="inclusionPanelRef"
-            v-model="inclusionRules"
-            :qualifying-limit="inclusionQualifyingLimit"
-            @update:qualifying-limit="inclusionQualifyingLimit = $event"
-            @select-concept-set="handleSelectConceptSetForCriteria"
-            @select-concept="handleSelectConceptForCriteria"
-            @edit-concept-set="handleEditConceptSet"
-          />
-        </div>
-        <!-- /.section-wrapper -->
-      </div>
-      <!-- /.section-step (2) -->
-
-      <!-- Exit & Eras — Step 3 -->
-      <div
-        class="section-step mb-3"
-        data-step="3"
-      >
-        <span class="section-step-badge">3</span>
-        <div class="section-wrapper section-wrapper--step">
-          <div class="section-header">
-            <h3 class="section-title">
-              {{ t('components.cohortExpressionEditor.exitAndErasTitle', 'Cohort Exit & Eras') }}
-            </h3>
-            <span
-              v-if="exitCriteriaState.tone !== 'muted'"
-              :class="['section-state-chip', `section-state-chip--${exitCriteriaState.tone}`]"
-            >
-              {{ exitCriteriaState.label }}
+                }}</span>
+              </AtlasTooltip>
             </span>
-            <AtlasSpacer />
-            <div class="section-controls">
-              <span class="section-controls__label">{{
-                t('components.cohortExpressionEditor.exitStrategyLabel', 'Strategy').value
-              }}</span>
-              <v-btn-toggle
-                v-model="exitCriteria.strategy"
-                mandatory
-                density="compact"
-                variant="outlined"
-                divided
+            <v-btn-toggle
+              v-model="qualifyingLimit"
+              mandatory
+              density="compact"
+              variant="outlined"
+              divided
+            >
+              <AtlasButton
+                toggle
+                value="FIRST"
+                size="sm"
               >
-                <AtlasTooltip
-                  :text="
-                    t('options.endOfContinuousObservation', 'End of continuous observation period')
-                      .value
-                  "
-                  location="top"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <AtlasButton
-                      v-bind="tooltipProps"
-                      toggle
-                      value="CONTINUOUS_OBSERVATION"
-                      size="sm"
-                    >
-                      {{ t('options.endOfContinuousObservationShort', 'Observation').value }}
-                    </AtlasButton>
-                  </template>
-                </AtlasTooltip>
-                <AtlasTooltip
-                  :text="
-                    t(
-                      'options.fixedDurationRelativeToInitialEvent',
-                      'Fixed duration relative to initial event'
-                    ).value
-                  "
-                  location="top"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <AtlasButton
-                      v-bind="tooltipProps"
-                      toggle
-                      value="FIXED_DURATION"
-                      size="sm"
-                    >
-                      {{ t('options.fixedDurationShort', 'Fixed duration').value }}
-                    </AtlasButton>
-                  </template>
-                </AtlasTooltip>
-                <AtlasTooltip
-                  :text="
-                    t('options.endOfContinuousDrugExposure', 'End of continuous drug exposure')
-                      .value
-                  "
-                  location="top"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <AtlasButton
-                      v-bind="tooltipProps"
-                      toggle
-                      value="CONTINUOUS_DRUG"
-                      size="sm"
-                    >
-                      {{ t('options.endOfContinuousDrugExposureShort', 'Drug exposure').value }}
-                    </AtlasButton>
-                  </template>
-                </AtlasTooltip>
-              </v-btn-toggle>
-            </div>
+                {{ t('options.earliestEvents', 'First') }}
+              </AtlasButton>
+              <AtlasButton
+                toggle
+                value="ALL"
+                size="sm"
+              >
+                {{ t('options.all') }}
+              </AtlasButton>
+              <AtlasButton
+                toggle
+                value="LAST"
+                size="sm"
+              >
+                {{ t('options.latestEvents', 'Latest') }}
+              </AtlasButton>
+            </v-btn-toggle>
           </div>
-          <exit-criteria-panel
-            v-model="exitCriteria"
-            :censoring-criteria="censoringCriteria"
-            :concept-sets="usedConceptSets"
-            @update:censoring-criteria="censoringCriteria = $event"
-            @select-drug-concept-set="handleSelectDrugConceptSet"
-            @select-censoring-concept-set="handleSelectCensoringConceptSet"
-          />
+        </template>
 
-          <div class="section-subheader">
-            <span class="text-eyebrow">{{
-              t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras').value
-            }}</span>
-            <span class="section-subheader__rule" />
+        <entry-events-list
+          :events="entryEvents"
+          :observation-period="observationPeriod"
+          @update:events="entryEvents = $event"
+          @update:observation-period="observationPeriod = $event"
+          @select-concept-set="handleSelectConceptSet"
+          @select-concept-for-attribute="handleSelectConceptForEntryEvent"
+          @edit-concept-set="handleEditConceptSet"
+        />
+
+        <!-- Additional Criteria (restricts entry events). The "with"
+           connector is now a soft pill, not block-letter "WITH". -->
+        <div
+          v-if="additionalCriteria"
+          class="cohort-builder__additional-criteria"
+        >
+          <div class="cohort-builder__additional-criteria-header">
+            <span class="cohort-builder__connector-pill">
+              {{ t('components.cohortExpressionEditor.withQualifyingLimit', 'with').value }}
+            </span>
+            <v-btn-toggle
+              v-model="additionalCriteria.qualifyingLimit"
+              mandatory
+              density="compact"
+              variant="outlined"
+              divided
+            >
+              <AtlasButton
+                toggle
+                value="FIRST"
+                size="sm"
+              >
+                {{ t('options.earliestEvents', 'First') }}
+              </AtlasButton>
+              <AtlasButton
+                toggle
+                value="ALL"
+                size="sm"
+              >
+                {{ t('options.all') }}
+              </AtlasButton>
+              <AtlasButton
+                toggle
+                value="LAST"
+                size="sm"
+              >
+                {{ t('options.latestEvents', 'Latest') }}
+              </AtlasButton>
+            </v-btn-toggle>
+            <AtlasSpacer />
+            <AtlasIconButton
+              icon="mdi-close"
+              v-bind="{ ariaLabel: t('common.remove', 'Remove').value }"
+              variant="text"
+              tone="danger"
+              size="sm"
+              @click="removeAdditionalCriteria"
+            />
           </div>
-          <censor-window-editor
-            :censor-window="censorWindow"
-            :collapse-settings="collapseSettings"
-            @update:censor-window="onCensorWindowUpdate"
-            @update:collapse-settings="collapseSettings = $event"
-            @validation-error="handleCensorWindowValidation"
+          <criteria-group-editor
+            ref="additionalCriteriaRef"
+            v-model="additionalCriteria"
+            @select-concept-set="handleSelectConceptSetForAdditionalCriteria"
+            @select-concept="handleSelectConceptForAdditionalCriteria"
+            @edit-concept-set="handleEditConceptSet"
+            @remove="removeAdditionalCriteria"
           />
         </div>
-        <!-- /.section-wrapper -->
-      </div>
-      <!-- /.section-step (3) -->
+        <div
+          v-else
+          class="cohort-builder__add-additional"
+        >
+          <AtlasButton
+            variant="ghost"
+            icon="mdi-filter-plus"
+            size="sm"
+            @click="addAdditionalCriteria"
+          >
+            {{
+              t(
+                'components.cohortExpressionEditor.addInclusionCriteria',
+                'Add inclusion criteria'
+              ).value
+            }}
+          </AtlasButton>
+        </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        data-step="2"
+        :title="t('components.cohortExpressionEditor.inclusionCriteriaTitle').value"
+        :badge="2"
+        :state-chip="{ label: inclusionRulesState.label, tone: toChipTone(inclusionRulesState.tone) }"
+        default-expanded
+      >
+        <template #controls>
+          <div class="section-controls">
+            <AtlasButton
+              variant="secondary"
+              icon="mdi-plus"
+              size="sm"
+              data-testid="add-inclusion-rule"
+              @click="inclusionPanelRef?.addNewRule()"
+            >
+              {{ t('components.cohortExpressionEditor.addRule', 'Add rule').value }}
+            </AtlasButton>
+            <span class="section-controls__label">
+              {{
+                t(
+                  'components.cohortExpressionEditor.inclusionQualifyingLimitLabel',
+                  'Apply rules to'
+                ).value
+              }}
+              <AtlasTooltip
+                location="top"
+                max-width="320"
+              >
+                <template #activator="{ props: tooltipProps }">
+                  <AtlasIcon
+                    v-bind="tooltipProps"
+                    icon="mdi-help-circle-outline"
+                    size="14"
+                    class="section-controls__help"
+                  />
+                </template>
+                <span>{{
+                  t(
+                    'components.cohortExpressionEditor.inclusionQualifyingLimitHelp',
+                    'Which qualifying event each rule is evaluated against: a person’s first, every, or their last.'
+                  ).value
+                }}</span>
+              </AtlasTooltip>
+            </span>
+            <v-btn-toggle
+              v-model="inclusionQualifyingLimit"
+              mandatory
+              density="compact"
+              variant="outlined"
+              divided
+            >
+              <AtlasButton
+                toggle
+                value="FIRST"
+                size="sm"
+              >
+                {{ t('options.earliestEvents', 'First') }}
+              </AtlasButton>
+              <AtlasButton
+                toggle
+                value="ALL"
+                size="sm"
+              >
+                {{ t('options.all') }}
+              </AtlasButton>
+              <AtlasButton
+                toggle
+                value="LAST"
+                size="sm"
+              >
+                {{ t('options.latestEvents', 'Latest') }}
+              </AtlasButton>
+            </v-btn-toggle>
+          </div>
+        </template>
+        <inclusion-criteria-panel
+          ref="inclusionPanelRef"
+          v-model="inclusionRules"
+          :qualifying-limit="inclusionQualifyingLimit"
+          @update:qualifying-limit="inclusionQualifyingLimit = $event"
+          @select-concept-set="handleSelectConceptSetForCriteria"
+          @select-concept="handleSelectConceptForCriteria"
+          @edit-concept-set="handleEditConceptSet"
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        data-step="3"
+        :title="t('components.cohortExpressionEditor.exitAndErasTitle', 'Cohort Exit & Eras').value"
+        :badge="3"
+        :state-chip="
+          exitCriteriaState.tone === 'muted'
+            ? undefined
+            : { label: exitCriteriaState.label, tone: toChipTone(exitCriteriaState.tone) }
+        "
+        default-expanded
+      >
+        <template #controls>
+          <div class="section-controls">
+            <span class="section-controls__label">{{
+              t('components.cohortExpressionEditor.exitStrategyLabel', 'Strategy').value
+            }}</span>
+            <v-btn-toggle
+              v-model="exitCriteria.strategy"
+              mandatory
+              density="compact"
+              variant="outlined"
+              divided
+            >
+              <AtlasTooltip
+                :text="
+                  t('options.endOfContinuousObservation', 'End of continuous observation period')
+                    .value
+                "
+                location="top"
+              >
+                <template #activator="{ props: tooltipProps }">
+                  <AtlasButton
+                    v-bind="tooltipProps"
+                    toggle
+                    value="CONTINUOUS_OBSERVATION"
+                    size="sm"
+                  >
+                    {{ t('options.endOfContinuousObservationShort', 'Observation').value }}
+                  </AtlasButton>
+                </template>
+              </AtlasTooltip>
+              <AtlasTooltip
+                :text="
+                  t(
+                    'options.fixedDurationRelativeToInitialEvent',
+                    'Fixed duration relative to initial event'
+                  ).value
+                "
+                location="top"
+              >
+                <template #activator="{ props: tooltipProps }">
+                  <AtlasButton
+                    v-bind="tooltipProps"
+                    toggle
+                    value="FIXED_DURATION"
+                    size="sm"
+                  >
+                    {{ t('options.fixedDurationShort', 'Fixed duration').value }}
+                  </AtlasButton>
+                </template>
+              </AtlasTooltip>
+              <AtlasTooltip
+                :text="
+                  t('options.endOfContinuousDrugExposure', 'End of continuous drug exposure')
+                    .value
+                "
+                location="top"
+              >
+                <template #activator="{ props: tooltipProps }">
+                  <AtlasButton
+                    v-bind="tooltipProps"
+                    toggle
+                    value="CONTINUOUS_DRUG"
+                    size="sm"
+                  >
+                    {{ t('options.endOfContinuousDrugExposureShort', 'Drug exposure').value }}
+                  </AtlasButton>
+                </template>
+              </AtlasTooltip>
+            </v-btn-toggle>
+          </div>
+        </template>
+        <exit-criteria-panel
+          v-model="exitCriteria"
+          :censoring-criteria="censoringCriteria"
+          :concept-sets="usedConceptSets"
+          @update:censoring-criteria="censoringCriteria = $event"
+          @select-drug-concept-set="handleSelectDrugConceptSet"
+          @select-censoring-concept-set="handleSelectCensoringConceptSet"
+        />
+
+        <div class="section-subheader">
+          <span class="text-eyebrow">{{
+            t('components.cohortExpressionEditor.cohortErasTitle', 'Cohort Eras').value
+          }}</span>
+          <span class="section-subheader__rule" />
+        </div>
+        <censor-window-editor
+          :censor-window="censorWindow"
+          :collapse-settings="collapseSettings"
+          @update:censor-window="onCensorWindowUpdate"
+          @update:collapse-settings="collapseSettings = $event"
+          @validation-error="handleCensorWindowValidation"
+        />
+      </CollapsibleSection>
     </div>
     <!-- /.cohort-builder__steps -->
 
@@ -595,6 +564,8 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasProgressCircular, AtlasSnackbar, AtlasSpacer, AtlasTooltip } from '@/components/ui'
+import type { AtlasChipTone } from '@/components/ui'
+import CollapsibleSection from '@/components/shared/CollapsibleSection.vue'
 import { ref, computed, onMounted, onBeforeUnmount, watch, toRef } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { logger } from '@/utils/logger'
@@ -762,6 +733,10 @@ const cohortId = computed(() => (props.id ? Number(props.id) : null))
 interface SectionState {
   label: string
   tone: 'primary' | 'warning' | 'muted' | 'success'
+}
+
+function toChipTone(tone: SectionState['tone']): AtlasChipTone {
+  return tone === 'muted' ? 'neutral' : tone
 }
 
 const entryEventsState = computed<SectionState>(() => {
@@ -2236,35 +2211,8 @@ defineExpose({
   gap: 8px;
 }
 
-/* Section Layout — uses the SurfaceCard "elevated" pattern: white
- * surface, 12px radius, soft two-pass shadow. Replaces the bespoke
- * border + heavier drop shadow. */
-.section-wrapper {
-  background: rgb(var(--v-theme-surface));
-  border-radius: 12px;
-  box-shadow:
-    0 1px 3px rgba(15, 23, 42, 0.08),
-    0 8px 24px rgba(15, 23, 42, 0.08);
-  overflow: hidden;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 20px 6px;
-  min-height: 44px;
-  /* Lighter chrome — drop the explicit bottom border. The card's
-   * own elevation already separates header from body. */
-  flex-wrap: wrap;
-}
-
-.section-title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 500;
-  color: rgb(var(--v-theme-primary));
-  letter-spacing: 0.01em;
+.cohort-builder__steps {
+  position: relative;
 }
 
 .section-controls {
@@ -2294,64 +2242,6 @@ defineExpose({
   opacity: 1;
 }
 
-/* ============================================================
- * Step rail — connects the four sections as a logical pipeline
- * (entry → inclusion → exit → era). Each step is a flex row with
- * a numbered badge on the left and the section card on the right.
- * The badges live OUTSIDE the section card (which has overflow:
- * hidden for its rounded corners) so they aren't clipped.
- * ============================================================ */
-.cohort-builder__steps {
-  position: relative;
-}
-
-/* The vertical rail runs through the centres of the badges. */
-.cohort-builder__steps::before {
-  content: '';
-  position: absolute;
-  left: 13px;
-  top: 20px;
-  bottom: 20px;
-  width: 2px;
-  background: rgb(var(--v-theme-outline-variant, 224, 224, 224));
-  border-radius: 1px;
-  pointer-events: none;
-}
-
-.section-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  position: relative;
-}
-
-.section-wrapper--step {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Numbered step circle — anchors on the rail at the left, sits
- * level with the section header. */
-.section-step-badge {
-  position: relative;
-  z-index: 1;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  margin-top: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgb(var(--v-theme-surface));
-  border: 2px solid rgb(var(--v-theme-outline-variant, 224, 224, 224));
-  color: rgb(var(--v-theme-on-surface-variant));
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
 .section-subheader {
   display: flex;
   align-items: center;
@@ -2363,42 +2253,6 @@ defineExpose({
   flex: 1;
   height: 1px;
   background-color: rgba(var(--v-theme-on-surface), 0.08);
-}
-
-/* ============================================================
- * Section state chip — small pill in the header showing
- * Required / Optional / Done / count.
- * ============================================================ */
-.section-state-chip {
-  display: inline-flex;
-  align-items: center;
-  height: 20px;
-  padding: 0 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
-.section-state-chip--primary {
-  background: rgba(var(--v-theme-primary), 0.12);
-  color: rgb(var(--v-theme-primary));
-}
-
-.section-state-chip--success {
-  background: rgba(var(--v-theme-success, 76, 175, 80), 0.14);
-  color: rgb(var(--v-theme-success, 56, 142, 60));
-}
-
-.section-state-chip--warning {
-  background: rgba(var(--v-theme-warning, 255, 152, 0), 0.16);
-  color: rgb(var(--v-theme-warning, 230, 124, 0));
-}
-
-.section-state-chip--muted {
-  background: rgb(var(--v-theme-surface-variant));
-  color: rgb(var(--v-theme-on-surface-variant));
 }
 
 /* ============================================================
