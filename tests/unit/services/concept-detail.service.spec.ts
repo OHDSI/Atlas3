@@ -10,7 +10,7 @@ vi.mock('@/services/http-client', () => ({
   httpPost: vi.fn(),
 }))
 
-import { getConceptRelated } from '@/services/concept-detail.service'
+import { getConceptRelated, getConceptAncestorAndDescendant } from '@/services/concept-detail.service'
 import { httpClient } from '@/services/http-client'
 import type { Mock } from 'vitest'
 
@@ -21,7 +21,7 @@ describe('concept-detail.service', () => {
 
   describe('getConceptRelated', () => {
     it('fetches related concepts for a source/conceptId and maps to camelCase', async () => {
-      ;(httpClient as Mock).mockResolvedValueOnce([
+      (httpClient as Mock).mockResolvedValueOnce([
         {
           CONCEPT_ID: 73211009,
           CONCEPT_NAME: 'Diabetes mellitus',
@@ -47,9 +47,35 @@ describe('concept-detail.service', () => {
     })
 
     it('returns [] and logs error when validation fails', async () => {
-      ;(httpClient as Mock).mockResolvedValueOnce([{ broken: true }])
+      (httpClient as Mock).mockResolvedValueOnce([{ broken: true }])
       const result = await getConceptRelated('SYNPUF1K', 1)
       expect(result).toEqual([])
+    })
+  })
+
+  describe('getConceptAncestorAndDescendant', () => {
+    it('fetches the flat ancestor+descendant list', async () => {
+      ;(httpClient as Mock).mockResolvedValueOnce([
+        {
+          CONCEPT_ID: 73211009,
+          CONCEPT_NAME: 'Diabetes mellitus',
+          CONCEPT_CODE: '73211009',
+          DOMAIN_ID: 'Condition',
+          VOCABULARY_ID: 'SNOMED',
+          CONCEPT_CLASS_ID: 'Clinical Finding',
+          STANDARD_CONCEPT: 'S',
+          INVALID_REASON: null,
+          RELATIONSHIPS: [{ RELATIONSHIP_NAME: 'Has ancestor of', RELATIONSHIP_DISTANCE: 1 }],
+        },
+      ])
+
+      const result = await getConceptAncestorAndDescendant('SYNPUF1K', 201826)
+
+      expect(httpClient).toHaveBeenCalledWith(
+        '/vocabulary/SYNPUF1K/concept/201826/ancestorAndDescendant'
+      )
+      expect(result).toHaveLength(1)
+      expect(result[0].relationships[0].relationshipName).toBe('Has ancestor of')
     })
   })
 })

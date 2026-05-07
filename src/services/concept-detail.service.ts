@@ -45,3 +45,27 @@ export async function getConceptRelated(
     return []
   }
 }
+
+export async function getConceptAncestorAndDescendant(
+  sourceKey: string,
+  conceptId: number
+): Promise<RelatedConcept[]> {
+  try {
+    const data = await httpClient<unknown>(
+      `/vocabulary/${sourceKey}/concept/${conceptId}/ancestorAndDescendant`
+    )
+    const parsed = RelatedConceptsResponseSchema.safeParse(data)
+    if (!parsed.success) {
+      logger.error('ConceptDetail', 'getConceptAncestorAndDescendant validation failed', parsed.error)
+      return []
+    }
+    return parsed.data.map(mapRelatedFromApi)
+  } catch (error) {
+    logger.error(
+      'ConceptDetail',
+      `getConceptAncestorAndDescendant failed for ${sourceKey}/${conceptId}`,
+      error
+    )
+    return []
+  }
+}
