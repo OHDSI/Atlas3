@@ -46,14 +46,24 @@
       v-for="(rule, index) in rules"
       :key="rule.id"
       type="button"
+      draggable="true"
       class="inclusion-rail__rule"
       :class="{
         'inclusion-rail__rule--active': index === selectedIndex,
         'inclusion-rail__rule--computing': isComputing && index === computingIndex,
+        'inclusion-rail__rule--dragging': dragSourceIndex === index,
+        'inclusion-rail__rule--drop-before': dropTargetIndex === index && dropPosition === 'before',
+        'inclusion-rail__rule--drop-after': dropTargetIndex === index && dropPosition === 'after',
       }"
       data-testid="inclusion-rail-rule"
       @click="$emit('select', index)"
+      @dragstart="onDragStart(index, $event)"
+      @dragover.prevent="onDragOver(index, $event)"
+      @dragleave="onDragLeave(index)"
+      @drop.prevent="onDrop(index)"
+      @dragend="onDragEnd"
     >
+      <span class="inclusion-rail__rule-handle">⋮⋮</span>
       <span
         v-if="hasFunnel && fillPercentForIndex(index) !== null"
         class="inclusion-rail__rule-fill"
@@ -101,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { AtlasButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { InclusionRule } from '@/models/cohort.types'
@@ -125,10 +135,62 @@ const props = withDefaults(defineProps<Props>(), {
   computingIndex: null,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   select: [index: number]
   'add-rule': []
+  reorder: [payload: { fromIndex: number; toIndex: number }]
 }>()
+
+const dragSourceIndex = ref<number | null>(null)
+const dropTargetIndex = ref<number | null>(null)
+const dropPosition = ref<'before' | 'after' | null>(null)
+
+function onDragStart(index: number, ev: DragEvent): void {
+  dragSourceIndex.value = index
+  if (ev.dataTransfer) {
+    ev.dataTransfer.effectAllowed = 'move'
+    ev.dataTransfer.setData('text/plain', String(index))
+  }
+}
+
+function onDragOver(index: number, ev: DragEvent): void {
+  if (dragSourceIndex.value === null) return
+  const target = ev.currentTarget as HTMLElement
+  const rect = target.getBoundingClientRect()
+  const before = ev.clientY < rect.top + rect.height / 2
+  dropTargetIndex.value = index
+  dropPosition.value = before ? 'before' : 'after'
+  if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move'
+}
+
+function onDragLeave(index: number): void {
+  if (dropTargetIndex.value === index) {
+    dropTargetIndex.value = null
+    dropPosition.value = null
+  }
+}
+
+function onDrop(index: number): void {
+  const from = dragSourceIndex.value
+  if (from === null) return
+  let to = index
+  if (dropPosition.value === 'after') to = index + 1
+  if (from < to) to -= 1
+  if (from !== to) {
+    emit('reorder', { fromIndex: from, toIndex: to })
+  }
+  resetDragState()
+}
+
+function onDragEnd(): void {
+  resetDragState()
+}
+
+function resetDragState(): void {
+  dragSourceIndex.value = null
+  dropTargetIndex.value = null
+  dropPosition.value = null
+}
 
 const hasFunnel = computed(
   () => (props.cacheState === 'ready' || props.cacheState === 'stale') && props.ruleCounts !== null
@@ -182,10 +244,6 @@ function summaryFor(rule: InclusionRule): string {
 
 <style scoped>
 .inclusion-rail {
-  background: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline));
-  border-radius: 8px;
-  padding: 8px;
   font-size: 12px;
 }
 .inclusion-rail__header {
@@ -230,7 +288,7 @@ function summaryFor(rule: InclusionRule): string {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 8px 10px;
+  padding: 8px 10px 8px 22px;
   border-radius: 6px;
   border: none;
   background: transparent;
@@ -239,6 +297,7 @@ function summaryFor(rule: InclusionRule): string {
   overflow: hidden;
   font: inherit;
   color: inherit;
+  transition: opacity 0.15s, box-shadow 0.15s;
 }
 .inclusion-rail__rule:hover {
   background: rgb(var(--v-theme-surface-variant));
@@ -246,6 +305,35 @@ function summaryFor(rule: InclusionRule): string {
 .inclusion-rail__rule--active {
   background: rgb(var(--v-theme-primary)) !important;
   color: rgb(var(--v-theme-on-primary));
+}
+.inclusion-rail__rule-handle {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  font-size: 10px;
+  letter-spacing: -2px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  opacity: 0;
+  cursor: grab;
+  transition: opacity 0.15s;
+}
+.inclusion-rail__rule:hover .inclusion-rail__rule-handle,
+.inclusion-rail__rule--dragging .inclusion-rail__rule-handle {
+  opacity: 0.6;
+}
+.inclusion-rail__rule--active .inclusion-rail__rule-handle {
+  color: rgb(var(--v-theme-on-primary));
+}
+.inclusion-rail__rule--dragging {
+  opacity: 0.4;
+}
+.inclusion-rail__rule--drop-before {
+  box-shadow: inset 0 2px 0 0 rgb(var(--v-theme-primary));
+}
+.inclusion-rail__rule--drop-after {
+  box-shadow: inset 0 -2px 0 0 rgb(var(--v-theme-primary));
 }
 .inclusion-rail__rule-fill {
   position: absolute;

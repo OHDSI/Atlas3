@@ -8,7 +8,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import InclusionCriteriaPanel from '@/components/cohort-builder/InclusionCriteriaPanel.vue'
-import type { InclusionRule, CriteriaGroup } from '@/models/cohort.types'
+import type { InclusionRule } from '@/models/cohort.types'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
@@ -186,7 +186,7 @@ describe('InclusionCriteriaPanel', () => {
 
       const emitted = wrapper.emitted('update:modelValue') as any[]
       const rules = emitted[emitted.length - 1][0] as InclusionRule[]
-      expect(rules[0].name).toContain('New Inclusion Rule')
+      expect(rules[rules.length - 1].name).toContain('New Inclusion Rule')
     })
 
     it('should create rule with incremented counter', async () => {
@@ -209,8 +209,9 @@ describe('InclusionCriteriaPanel', () => {
       expect(emitted.length).toBeGreaterThanOrEqual(2)
     })
 
-    it('should add new rule at the beginning of array', async () => {
-      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
+    it('should append new rule to the end of array', async () => {
+      const existing = createMockInclusionRules()
+      const wrapper = mountComponent({ modelValue: existing })
       const vm = wrapper.vm as any
 
       vm.addNewRule()
@@ -218,18 +219,20 @@ describe('InclusionCriteriaPanel', () => {
 
       const emitted = wrapper.emitted('update:modelValue') as any[]
       const rules = emitted[emitted.length - 1][0] as InclusionRule[]
-      expect(rules[0].name).toContain('New Inclusion Rule')
-      expect(rules[1].name).toBe('Test Inclusion Rule')
+      expect(rules[0].name).toBe('Test Inclusion Rule')
+      expect(rules[rules.length - 1].name).toContain('New Inclusion Rule')
+      expect(rules.length).toBe(existing.length + 1)
     })
 
-    it('should select the new rule (index 0) after adding', async () => {
-      const wrapper = mountComponent()
+    it('should select the new rule (last index) after adding', async () => {
+      const existing = createMockInclusionRules()
+      const wrapper = mountComponent({ modelValue: existing })
       const vm = wrapper.vm as any
 
       vm.addNewRule()
       await wrapper.vm.$nextTick()
 
-      expect(vm.selectedIndex).toBe(0)
+      expect(vm.selectedIndex).toBe(existing.length)
     })
 
     it('should create rule with a default criteria group', async () => {
@@ -241,9 +244,10 @@ describe('InclusionCriteriaPanel', () => {
 
       const emitted = wrapper.emitted('update:modelValue') as any[]
       const rules = emitted[emitted.length - 1][0] as InclusionRule[]
-      expect(rules[0].criteriaGroups).toHaveLength(1)
-      expect(rules[0].criteriaGroups[0].logicType).toBe('ALL')
-      expect(rules[0].criteriaGroups[0].events).toEqual([])
+      const added = rules[rules.length - 1]!
+      expect(added.criteriaGroups).toHaveLength(1)
+      expect(added.criteriaGroups[0]!.logicType).toBe('ALL')
+      expect(added.criteriaGroups[0]!.events).toEqual([])
     })
   })
 

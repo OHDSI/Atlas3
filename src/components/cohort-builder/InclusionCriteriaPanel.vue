@@ -26,21 +26,27 @@
       v-else
       class="inclusion-criteria-panel__layout"
     >
-      <InclusionRuleRail
-        :rules="modelValue"
-        :selected-index="selectedIndex"
-        :cache-state="cacheState"
-        :entry-event-count="stats?.entryEventCount ?? null"
-        :total-dataset-count="stats?.totalPatientCount ?? null"
-        :rule-counts="stats?.ruleCounts ?? null"
-        :final-count="stats?.finalCount ?? null"
-        :is-computing="isLoading"
-        :computing-index="lastEditedIndex"
-        @select="onSelect"
-        @add-rule="addNewRule"
-      />
+      <AtlasCard padding="sm">
+        <InclusionRuleRail
+          :rules="modelValue"
+          :selected-index="selectedIndex"
+          :cache-state="cacheState"
+          :entry-event-count="stats?.entryEventCount ?? null"
+          :total-dataset-count="stats?.totalPatientCount ?? null"
+          :rule-counts="stats?.ruleCounts ?? null"
+          :final-count="stats?.finalCount ?? null"
+          :is-computing="isLoading"
+          :computing-index="lastEditedIndex"
+          @select="onSelect"
+          @add-rule="addNewRule"
+          @reorder="onReorder"
+        />
+      </AtlasCard>
 
-      <div class="inclusion-criteria-panel__detail">
+      <AtlasCard
+        padding="md"
+        class="inclusion-criteria-panel__detail"
+      >
         <div
           v-if="selectedIndex !== null"
           class="inclusion-criteria-panel__detail-head"
@@ -49,14 +55,14 @@
           <div class="inclusion-criteria-panel__detail-actions">
             <AtlasIconButton
               icon="mdi-pencil-outline"
-              v-bind="{ ariaLabel: t('common.edit', 'Edit').value }"
+              :aria-label="t('common.edit', 'Edit').value"
               variant="text"
               size="sm"
               @click="openEditDialog(selectedIndex)"
             />
             <AtlasIconButton
               icon="mdi-delete-outline"
-              v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
+              :aria-label="t('common.delete', 'Delete').value"
               variant="text"
               tone="danger"
               size="sm"
@@ -73,7 +79,7 @@
           @select-concept="onSelectConcept"
           @edit-concept-set="$emit('edit-concept-set', $event)"
         />
-      </div>
+      </AtlasCard>
     </div>
 
     <AtlasDialog
@@ -108,7 +114,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
-import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import { useInclusionStats } from '@/composables/useInclusionStats'
@@ -188,6 +194,23 @@ function onSelect(index: number): void {
   selectedIndex.value = index
 }
 
+function onReorder({ fromIndex, toIndex }: { fromIndex: number; toIndex: number }): void {
+  const updated = [...props.modelValue]
+  const [moved] = updated.splice(fromIndex, 1)
+  if (!moved) return
+  updated.splice(toIndex, 0, moved)
+  if (selectedIndex.value === fromIndex) {
+    selectedIndex.value = toIndex
+  } else if (selectedIndex.value !== null) {
+    if (fromIndex < selectedIndex.value && toIndex >= selectedIndex.value) {
+      selectedIndex.value -= 1
+    } else if (fromIndex > selectedIndex.value && toIndex <= selectedIndex.value) {
+      selectedIndex.value += 1
+    }
+  }
+  emit('update:modelValue', updated)
+}
+
 function onRuleUpdated(rule: InclusionRule): void {
   if (selectedIndex.value === null) return
   const updated = [...props.modelValue]
@@ -230,9 +253,9 @@ async function addNewRule(): Promise<void> {
     criteriaGroups: [defaultGroup],
   }
   ruleCounter.value++
-  const updated = [newRule, ...props.modelValue]
+  const updated = [...props.modelValue, newRule]
   emit('update:modelValue', updated)
-  selectedIndex.value = 0
+  selectedIndex.value = updated.length - 1
   await nextTick()
   await nextTick()
   panelRoot.value
@@ -261,7 +284,6 @@ function saveEditedName(): void {
   editingName.value = ''
 }
 
-defineExpose({ addNewRule })
 </script>
 
 <style scoped>
@@ -298,13 +320,6 @@ defineExpose({ addNewRule })
   .inclusion-criteria-panel__layout {
     grid-template-columns: 1fr;
   }
-}
-
-.inclusion-criteria-panel__detail {
-  background: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline));
-  border-radius: 8px;
-  padding: 12px;
 }
 
 .inclusion-criteria-panel__detail-head {

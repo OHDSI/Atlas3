@@ -272,15 +272,6 @@
             </span>
             <AtlasSpacer />
             <div class="section-controls">
-              <AtlasButton
-                variant="secondary"
-                icon="mdi-plus"
-                size="sm"
-                data-testid="add-inclusion-rule"
-                @click="inclusionPanelRef?.addNewRule()"
-              >
-                {{ t('components.cohortExpressionEditor.addRule', 'Add rule').value }}
-              </AtlasButton>
               <span class="section-controls__label">
                 {{
                   t(
@@ -340,7 +331,6 @@
             </div>
           </div>
           <inclusion-criteria-panel
-            ref="inclusionPanelRef"
             v-model="inclusionRules"
             :expression="cohortExpression"
             :qualifying-limit="inclusionQualifyingLimit"
@@ -729,7 +719,6 @@ const loadedSnapshot = ref<string | null>(null)
 
 // Component refs
 const additionalCriteriaRef = ref<InstanceType<typeof CriteriaGroupEditor> | null>(null)
-const inclusionPanelRef = ref<InstanceType<typeof InclusionCriteriaPanel> | null>(null)
 
 // Generation state
 const selectedSourceKey = ref<string | null>(null)
