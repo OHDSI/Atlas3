@@ -3337,6 +3337,27 @@
         }
       }
     },
+    "generation": {
+      "section": {
+        "title": "Generation",
+        "statusSaveFirst": "Save cohort to generate",
+        "statusNoRuns": "No generations yet",
+        "statusCount": "{done} / {total} generated",
+        "lastRunMeta": "Last run · {time} on {source}",
+        "generateAll": "Generate all"
+      },
+      "row": {
+        "inclusionReport": "Inclusion report",
+        "samples": "Samples"
+      },
+      "drawer": {
+        "inclusionTitle": "Inclusion rule report",
+        "samplesTitle": "Cohort samples"
+      },
+      "permissions": {
+        "noWrite": "You don't have write access on this source."
+      }
+    },
     "cohortCaption": "Cohort #<%=id%>",
     "cohortCaptionPreview": "Cohort #<%=id%> - Version <%=number%> Preview",
     "cohortreports": {
