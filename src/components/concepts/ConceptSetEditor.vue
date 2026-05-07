@@ -164,27 +164,17 @@
 
         <div class="cs-editor__body">
           <!-- Inline concept detail view: replaces the tabbed body when the
-               user clicked a concept name inside this editor. Back button
-               returns to the previous tab. -->
+               user clicked a concept name inside this editor. The header's
+               built-in back arrow returns to the previous tab. -->
           <div
             v-if="viewingConcept"
             class="cs-editor__inline-detail"
             data-testid="concept-set-editor-inline-detail"
           >
-            <div class="cs-editor__inline-detail-toolbar">
-              <AtlasButton
-                variant="ghost"
-                size="sm"
-                icon="mdi-arrow-left"
-                data-testid="concept-set-editor-back"
-                @click="viewingConcept = null"
-              >
-                {{ t('common.back', 'Back') }}
-              </AtlasButton>
-            </div>
             <ConceptDetailContent
               :source-key="viewingConcept.sourceKey"
               :concept-id="viewingConcept.conceptId"
+              :on-back="() => (viewingConcept = null)"
             />
           </div>
 

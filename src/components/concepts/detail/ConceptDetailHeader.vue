@@ -5,7 +5,15 @@ import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { AtlasButton, AtlasChip, AtlasIconButton } from '@/components/ui'
 import type { Concept } from '@/models/concept-set.types'
 
-const props = defineProps<{ concept: Concept }>()
+const props = defineProps<{
+  concept: Concept
+  /**
+   * Optional handler invoked when the back button is pressed. When supplied
+   * (e.g., from the concept set editor inline view), it overrides the
+   * default behaviour completely — no drawer close, no router.back().
+   */
+  onBack?: () => void
+}>()
 const emit = defineEmits<{
   'add-to-concept-set': [concept: Concept]
   'copy-id': [conceptId: number]
@@ -14,7 +22,11 @@ const emit = defineEmits<{
 const router = useRouter()
 const drawer = useConceptDetailDrawerStore()
 
-function onBack() {
+function handleBack() {
+  if (props.onBack) {
+    props.onBack()
+    return
+  }
   // When the header is rendered inside the drawer, "back" closes the drawer
   // rather than triggering a router navigation.
   if (drawer.isOpen) {
@@ -66,7 +78,7 @@ async function onCopy() {
       size="sm"
       v-bind="{ ariaLabel: 'Go back' }"
       data-testid="concept-detail-back"
-      @click="onBack"
+      @click="handleBack"
     />
     <div class="concept-title-row">
       <h1 class="concept-title">

@@ -13,6 +13,12 @@ import ConceptDrilldownChart from '@/components/concepts/detail/ConceptDrilldown
 const props = defineProps<{
   sourceKey: string
   conceptId: number
+  /**
+   * Optional back handler — forwarded to ConceptDetailHeader. When supplied
+   * (e.g., from the concept set editor inline view), the header's back
+   * button calls this instead of using its default routing/drawer logic.
+   */
+  onBack?: () => void
 }>()
 
 const store = useConceptDetailStore()
@@ -49,7 +55,10 @@ watch(() => [props.sourceKey, props.conceptId], load)
     </AtlasAlert>
 
     <template v-if="concept && !error">
-      <ConceptDetailHeader :concept="concept" />
+      <ConceptDetailHeader
+        :concept="concept"
+        :on-back="onBack"
+      />
 
       <div class="content-body">
         <ConceptStatCards
