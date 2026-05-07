@@ -479,4 +479,76 @@ describe('TrexSQLService', () => {
       expect(result).toBe(false)
     })
   })
+
+  describe('getInclusionStats', () => {
+    it('POSTs the stringified expression and returns parsed stats', async () => {
+      const payload = {
+        entryEventCount: 15200,
+        totalPatientCount: 1178420,
+        finalCount: 5180,
+        ruleCounts: [
+          { ruleIndex: 0, ruleName: 'Adult', cumulativeCount: 12341 },
+        ],
+        executionTimeMs: 312,
+      }
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: true,
+        json: async () => payload,
+      } as Response)
+
+      const { getInclusionStats } = await import('@/services/trexsql.service')
+      const result = await getInclusionStats('CDM_SOURCE', { foo: 'bar' })
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/trexsql/CDM_SOURCE/cache/inclusion'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ expression: JSON.stringify({ foo: 'bar' }) }),
+        })
+      )
+      expect(result.entryEventCount).toBe(15200)
+      expect(result.ruleCounts).toHaveLength(1)
+    })
+
+    it('throws "Cache not available" on 503', async () => {
+      vi.mocked(global.fetch).mockResolvedValue({
+        ok: false,
+        status: 503,
+        text: async () => 'cache offline',
+      } as Response)
+
+      const { getInclusionStats } = await import('@/services/trexsql.service')
+      await expect(getInclusionStats('X', {})).rejects.toThrow(/Cache not available/)
+    })
+
+    it('cancels in-flight requests when called again with same source', async () => {
+      const { getInclusionStats } = await import('@/services/trexsql.service')
+
+      let firstAborted = false
+      vi.mocked(global.fetch).mockImplementationOnce((_url, init) => {
+        return new Promise((_resolve, reject) => {
+          ;(init as RequestInit).signal?.addEventListener('abort', () => {
+            firstAborted = true
+            const err = new Error('aborted')
+            err.name = 'AbortError'
+            reject(err)
+          })
+        })
+      })
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          entryEventCount: 1, totalPatientCount: 1, finalCount: 1,
+          ruleCounts: [], executionTimeMs: 0,
+        }),
+      } as Response)
+
+      const first = getInclusionStats('X', { v: 1 }).catch(e => e)
+      const second = await getInclusionStats('X', { v: 2 })
+
+      await first
+      expect(firstAborted).toBe(true)
+      expect(second.entryEventCount).toBe(1)
+    })
+  })
 })
