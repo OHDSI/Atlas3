@@ -34,12 +34,6 @@
       </AtlasButton>
     </div>
 
-    <!-- Patient Count Bar (TrexSQL) -->
-    <patient-count-bar
-      :expression="cohortExpression"
-      @retry="triggerValidation"
-    />
-
     <CohortGenerationSection :cohort-id="cohortId" />
 
     <!-- Toolbar (status + actions) — hidden when the host view
@@ -639,7 +633,6 @@ import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
-import PatientCountBar from '../cohort-builder/PatientCountBar.vue'
 import TagSelectionDialog from './TagSelectionDialog.vue'
 import type { Tag } from '@/models/cohort.types'
 
