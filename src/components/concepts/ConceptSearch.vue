@@ -64,7 +64,8 @@ import { ref, computed } from 'vue'
 import { AtlasAlert, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
-import { useDataSourcesStore } from '@/stores/datasources'
+import { useWebAPIStore } from '@/stores/webapi'
+import { getSourceKey } from '@/config/webapi'
 import ConceptTable from './ConceptTable.vue'
 
 const { t } = useI18n()
@@ -74,8 +75,10 @@ const { t } = useI18n()
 // ============================================================================
 
 const store = useConceptSearchStore()
-const dataSources = useDataSourcesStore()
-const selectedSourceKey = computed(() => dataSources.selectedSource?.sourceKey ?? '')
+const webapiStore = useWebAPIStore()
+const selectedSourceKey = computed(
+  () => webapiStore.getValidVocabularySource() || getSourceKey() || '',
+)
 
 // ============================================================================
 // Local State
