@@ -110,8 +110,8 @@ const selectedStatus = computed(() => {
   }
 })
 
-function onChange(value: string | null): void {
-  if (value) selectDataSource(value)
+function onChange(value: unknown): void {
+  if (typeof value === 'string' && value) selectDataSource(value)
 }
 
 onMounted(() => {
