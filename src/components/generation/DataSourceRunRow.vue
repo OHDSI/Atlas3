@@ -63,12 +63,14 @@ interface Props {
   historyCount: number
   runDisabled?: boolean
   runDisabledReason?: string
+  hideCancel?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   latestStatus: undefined,
   runDisabled: false,
   runDisabledReason: '',
+  hideCancel: false,
 })
 
 const emit = defineEmits<{
@@ -92,7 +94,7 @@ const primaryLabel = computed(() => {
   if (isStopping.value) {
     return t('components.analysisExecution.buttons.stopping', 'Stopping…').value
   }
-  if (isActive.value) {
+  if (isActive.value && !props.hideCancel) {
     return t('components.analysisExecution.buttons.cancel', 'Cancel').value
   }
   if (!props.latestStatus) {
@@ -102,7 +104,7 @@ const primaryLabel = computed(() => {
 })
 
 const primaryVariant = computed<'primary' | 'danger'>(() =>
-  isActive.value ? 'danger' : 'primary'
+  isActive.value && !props.hideCancel ? 'danger' : 'primary'
 )
 
 const permissionMessage = tv(
@@ -114,6 +116,7 @@ const effectiveDisabled = computed(() => {
   if (isStopping.value) return true
   if (props.runDisabled) return true
   if (!canWrite.value) return true
+  if (isActive.value && props.hideCancel) return true
   return false
 })
 
@@ -129,7 +132,7 @@ const historyLabel = tv('components.analysisExecution.previousRuns', 'Previous r
 
 function onPrimaryClick() {
   if (effectiveDisabled.value) return
-  if (isActive.value) emit('cancel')
+  if (isActive.value && !props.hideCancel) emit('cancel')
   else emit('run')
 }
 </script>
