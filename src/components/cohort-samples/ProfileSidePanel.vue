@@ -22,6 +22,7 @@
     <template v-else-if="person">
       <ProfileDemographics />
       <ProfileObservationBand />
+      <HighlightsPanel />
       <ProfileTimeline />
       <ProfileEventsTable />
     </template>
@@ -35,6 +36,7 @@ import ProfileDemographics from '@/components/profile/ProfileDemographics.vue'
 import ProfileObservationBand from '@/components/profile/ProfileObservationBand.vue'
 import ProfileTimeline from '@/components/profile/ProfileTimeline.vue'
 import ProfileEventsTable from '@/components/profile/ProfileEventsTable.vue'
+import HighlightsPanel from '@/components/profile/HighlightsPanel.vue'
 import { usePersonProfile } from '@/composables/usePersonProfile'
 
 const props = defineProps<{
