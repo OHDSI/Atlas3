@@ -15,6 +15,25 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
+vi.mock('@/composables/useInclusionStats', () => ({
+  useInclusionStats: () => ({
+    stats: { value: null },
+    isLoading: { value: false },
+    error: { value: null },
+    isStale: { value: false },
+    refresh: vi.fn(),
+  }),
+}))
+
+vi.mock('@/composables/useTrexSQLCache', () => ({
+  useTrexSQLCache: () => ({
+    isTrexSQLEnabled: { value: false },
+    selectedSourceKey: { value: null },
+    isCacheReady: { value: false },
+    selectedCacheStatus: { value: null },
+  }),
+}))
+
 const vuetify = createVuetify({ components, directives })
 
 function createMockInclusionRule(): InclusionRule {
@@ -64,6 +83,32 @@ function mountComponent(props = {}) {
           template: '<div class="criteria-group-editor-stub" />',
           props: ['modelValue'],
           emits: ['update:modelValue', 'remove', 'select-concept-set', 'select-concept', 'edit-concept-set']
+        },
+        InclusionRuleRail: {
+          template: `
+            <div class="inclusion-rule-rail-stub">
+              <button
+                v-for="(rule, i) in rules"
+                :key="rule.id"
+                type="button"
+                data-testid="inclusion-rail-rule"
+                :class="['inclusion-rail__rule', { 'inclusion-rail__rule--active': i === selectedIndex }]"
+                @click="$emit('select', i)"
+              >{{ rule.name }}</button>
+            </div>
+          `,
+          props: ['rules', 'selectedIndex', 'cacheState', 'entryEventCount', 'totalDatasetCount', 'ruleCounts', 'finalCount', 'isComputing', 'computingIndex'],
+          emits: ['select', 'add-rule'],
+        },
+        InclusionRuleDetail: {
+          template: `
+            <div class="inclusion-rule-detail-stub">
+              <input v-if="rule" class="rule-description-input" :value="rule.description ?? ''" />
+              <button v-if="rule" data-testid="add-criteria-group">Add criteria group</button>
+            </div>
+          `,
+          props: ['rule'],
+          emits: ['update:rule', 'select-concept-set', 'select-concept', 'edit-concept-set'],
         }
       }
     }
@@ -83,19 +128,12 @@ describe('InclusionCriteriaPanel', () => {
     })
 
     it('should not render the legacy vertical "ALL" sticker', () => {
-      // Refresh: vertical sideways-lr label was retired; the
-      // qualifying-limit toggle in the surrounding section header
-      // is the single source of truth for that information now.
       const wrapper = mountComponent()
       expect(wrapper.find('.vertical-label').exists()).toBe(false)
       expect(wrapper.find('.inclusion-criteria-panel__relation-pill').exists()).toBe(false)
     })
 
     it('should expose addNewRule for the parent section header', () => {
-      // Refresh: the panel no longer renders its own add-rule
-      // button (parent section header hosts that action). The
-      // panel exposes addNewRule via defineExpose so the parent
-      // can trigger it.
       const wrapper = mountComponent()
       const vm = wrapper.vm as unknown as { addNewRule?: () => void }
       expect(typeof vm.addNewRule).toBe('function')
@@ -103,22 +141,18 @@ describe('InclusionCriteriaPanel', () => {
 
     it('should display empty state when no rules', () => {
       const wrapper = mountComponent()
-      // Check component renders with empty rules
       expect(wrapper.exists()).toBe(true)
     })
   })
 
   describe('Empty State', () => {
     it('should show empty state message', () => {
-      // Refresh: replaced v-alert with the MD3 filled empty-state
-      // container used elsewhere in the modernised UI.
       const wrapper = mountComponent({ modelValue: [] })
       expect(wrapper.find('.inclusion-criteria-panel__empty').exists()).toBe(true)
     })
 
     it('should display helpful text in empty state', () => {
       const wrapper = mountComponent({ modelValue: [] })
-      // Component should render without errors
       expect(wrapper.exists()).toBe(true)
     })
 
@@ -172,8 +206,6 @@ describe('InclusionCriteriaPanel', () => {
       }
       const emitted = wrapper.emitted('update:modelValue') as any[] | undefined
       if (!emitted) return
-      // Each addNewRule call emits a separate update with the new rule
-      // Check that we have at least 2 emissions
       expect(emitted.length).toBeGreaterThanOrEqual(2)
     })
 
@@ -190,14 +222,14 @@ describe('InclusionCriteriaPanel', () => {
       expect(rules[1].name).toBe('Test Inclusion Rule')
     })
 
-    it('should automatically expand new rule', async () => {
+    it('should select the new rule (index 0) after adding', async () => {
       const wrapper = mountComponent()
       const vm = wrapper.vm as any
 
       vm.addNewRule()
       await wrapper.vm.$nextTick()
 
-      expect(vm.expandedPanel).toBe(0)
+      expect(vm.selectedIndex).toBe(0)
     })
 
     it('should create rule with a default criteria group', async () => {
@@ -216,10 +248,10 @@ describe('InclusionCriteriaPanel', () => {
   })
 
   describe('Displaying Inclusion Rules', () => {
-    it('should display expansion panels when rules exist', () => {
+    it('should display rule rows in the rail when rules exist', () => {
       const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      const panels = wrapper.findComponent({ name: 'VExpansionPanels' })
-      expect(panels.exists()).toBe(true)
+      const rows = wrapper.findAll('[data-testid="inclusion-rail-rule"]')
+      expect(rows.length).toBeGreaterThan(0)
     })
 
     it('should display rule names', () => {
@@ -228,24 +260,24 @@ describe('InclusionCriteriaPanel', () => {
       expect(wrapper.text()).toContain('Second Inclusion Rule')
     })
 
-    it('should render correct number of expansion panels', () => {
+    it('should render correct number of rail rows', () => {
       const mockRules = createMockInclusionRules()
       const wrapper = mountComponent({ modelValue: mockRules })
-      const panels = wrapper.findAllComponents({ name: 'VExpansionPanel' })
-      expect(panels.length).toBe(mockRules.length)
+      const rows = wrapper.findAll('[data-testid="inclusion-rail-rule"]')
+      expect(rows.length).toBe(mockRules.length)
     })
 
-    it('should display edit button for each rule', () => {
+    it('should display edit and remove buttons for selected rule', () => {
       const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
       const buttons = wrapper.findAllComponents({ name: 'VBtn' })
       expect(buttons.length).toBeGreaterThan(0)
     })
 
-    it('should display remove button for each rule', () => {
+    it('should display remove button for selected rule', () => {
       const mockRules = createMockInclusionRules()
       const wrapper = mountComponent({ modelValue: mockRules })
       const removeButtons = wrapper.findAll('[data-testid="remove-inclusion-rule"]')
-      expect(removeButtons.length).toBe(mockRules.length)
+      expect(removeButtons.length).toBeGreaterThanOrEqual(1)
     })
   })
 
@@ -305,50 +337,23 @@ describe('InclusionCriteriaPanel', () => {
   })
 
   describe('Editing Rule Descriptions', () => {
-    it('should display description input field', () => {
+    it('should display description input field when a rule is selected', () => {
       const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      // Component should render with rules
-      expect(wrapper.exists()).toBe(true)
+      expect(wrapper.find('.rule-description-input').exists()).toBe(true)
     })
 
     it('should display current description', () => {
       const _wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      // Verify the mock data has a description
       const rules = createMockInclusionRules()
       expect(rules[0].description).toBe('This is a test inclusion rule')
     })
 
-    it('should update description on blur', async () => {
-      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      const vm = wrapper.vm as any
-
-      const mockEvent = {
-        target: { value: 'Updated description' }
-      }
-
-      vm.updateRuleDescription(0, mockEvent)
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-      const emitted = wrapper.emitted('update:modelValue') as any[]
-      const rules = emitted[emitted.length - 1][0] as InclusionRule[]
-      expect(rules[0].description).toBe('Updated description')
+    it.skip('should update description on blur — TODO: description updates now flow through onRuleUpdated via InclusionRuleDetail', async () => {
+      // Description update logic moved to InclusionRuleDetail; panel receives update:rule event
     })
 
-    it('should handle empty description', async () => {
-      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      const vm = wrapper.vm as any
-
-      const mockEvent = {
-        target: { value: '' }
-      }
-
-      vm.updateRuleDescription(0, mockEvent)
-      await wrapper.vm.$nextTick()
-
-      const emitted = wrapper.emitted('update:modelValue') as any[]
-      const rules = emitted[emitted.length - 1][0] as InclusionRule[]
-      expect(rules[0].description).toBeUndefined()
+    it.skip('should handle empty description — TODO: handled inside InclusionRuleDetail now', async () => {
+      // Logic moved to InclusionRuleDetail
     })
   })
 
@@ -385,64 +390,26 @@ describe('InclusionCriteriaPanel', () => {
     it('should display criteria groups for each rule', () => {
       const mockRules = createMockInclusionRules()
       const wrapper = mountComponent({ modelValue: mockRules })
-      // Component should render the rules
       expect(wrapper.exists()).toBe(true)
-      // Expansion panels should exist for rules with criteria groups
-      const panels = wrapper.findAllComponents({ name: 'VExpansionPanel' })
-      expect(panels.length).toBe(mockRules.length)
+      const rows = wrapper.findAll('[data-testid="inclusion-rail-rule"]')
+      expect(rows.length).toBe(mockRules.length)
     })
 
-    it('should add criteria group to rule', async () => {
-      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      const vm = wrapper.vm as any
-      const initialLength = createMockInclusionRule().criteriaGroups.length
-
-      vm.addGroup(0)
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-      const emitted = wrapper.emitted('update:modelValue') as any[]
-      const rules = emitted[emitted.length - 1][0] as InclusionRule[]
-      expect(rules[0].criteriaGroups.length).toBeGreaterThan(initialLength)
+    it.skip('should add criteria group to rule — TODO: addGroup moved to InclusionRuleDetail', async () => {
+      // Group mutations now handled by InclusionRuleDetail emitting update:rule
     })
 
-    it('should update criteria group', async () => {
-      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      const vm = wrapper.vm as any
-
-      const updatedGroup: CriteriaGroup = {
-        id: 'group-1',
-        logicType: 'ANY',
-        events: []
-      }
-
-      vm.updateGroup(0, 0, updatedGroup)
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-      const emitted = wrapper.emitted('update:modelValue') as any[]
-      const rules = emitted[emitted.length - 1][0] as InclusionRule[]
-      expect(rules[0].criteriaGroups[0].logicType).toBe('ANY')
+    it.skip('should update criteria group — TODO: updateGroup moved to InclusionRuleDetail', async () => {
+      // Group mutations now handled by InclusionRuleDetail emitting update:rule
     })
 
-    it('should remove criteria group', async () => {
-      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      const vm = wrapper.vm as any
-      const initialLength = createMockInclusionRule().criteriaGroups.length
-
-      vm.removeGroup(0, 0)
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-      const emitted = wrapper.emitted('update:modelValue') as any[]
-      const rules = emitted[emitted.length - 1][0] as InclusionRule[]
-      expect(rules[0].criteriaGroups.length).toBeLessThan(initialLength)
+    it.skip('should remove criteria group — TODO: removeGroup moved to InclusionRuleDetail', async () => {
+      // Group mutations now handled by InclusionRuleDetail emitting update:rule
     })
 
-    it('should display add group button', () => {
+    it('should display add group button in detail pane when rule selected', () => {
       const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      // Component should render without errors
-      expect(wrapper.exists()).toBe(true)
+      expect(wrapper.find('[data-testid="add-criteria-group"]').exists()).toBe(true)
     })
   })
 
@@ -451,24 +418,12 @@ describe('InclusionCriteriaPanel', () => {
       const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
       const vm = wrapper.vm as any
 
-      vm.handleSelectConceptSet(0, 0, 0)
+      vm.onSelectConceptSet({ groupIndex: 0, eventIndex: 0 })
       await wrapper.vm.$nextTick()
 
       expect(wrapper.emitted('select-concept-set')).toBeTruthy()
       const emitted = wrapper.emitted('select-concept-set') as any[]
       expect(emitted[0][0]).toEqual({ ruleIndex: 0, groupIndex: 0, eventIndex: 0 })
-    })
-
-    it('should handle concept set selection with event context', async () => {
-      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      const vm = wrapper.vm as any
-
-      vm.handleSelectConceptSet(1, 0, { eventIndex: 2, eventId: 'event-2' })
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.emitted('select-concept-set')).toBeTruthy()
-      const emitted = wrapper.emitted('select-concept-set') as any[]
-      expect(emitted[0][0].eventIndex).toBe(2)
     })
 
     it('should emit edit-concept-set event', async () => {
@@ -489,8 +444,8 @@ describe('InclusionCriteriaPanel', () => {
       const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
       const vm = wrapper.vm as any
 
-      const context = { eventIndex: 0, attributeIndex: 1, domainFilter: 'Condition' }
-      vm.handleSelectConcept(0, 0, context)
+      const context = { groupIndex: 0, eventIndex: 0, attributeIndex: 1, domainFilter: 'Condition' as string | undefined }
+      vm.onSelectConcept(context)
       await wrapper.vm.$nextTick()
 
       expect(wrapper.emitted('select-concept')).toBeTruthy()
@@ -508,8 +463,8 @@ describe('InclusionCriteriaPanel', () => {
       const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
       const vm = wrapper.vm as any
 
-      const context = { eventIndex: 1, attributeIndex: 0, domainFilter: undefined }
-      vm.handleSelectConcept(0, 0, context)
+      const context = { groupIndex: 0, eventIndex: 1, attributeIndex: 0, domainFilter: undefined as string | undefined }
+      vm.onSelectConcept(context)
       await wrapper.vm.$nextTick()
 
       expect(wrapper.emitted('select-concept')).toBeTruthy()
@@ -518,44 +473,37 @@ describe('InclusionCriteriaPanel', () => {
     })
   })
 
-  describe('Expansion Panel Behavior', () => {
-    it('should support single expansion mode', () => {
-      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      // Component should render without errors
-      expect(wrapper.exists()).toBe(true)
-    })
-
-    it('should start with no panels expanded', () => {
+  describe('Rail selection behavior', () => {
+    it('should start with first rule selected when rules are present', () => {
       const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
       const vm = wrapper.vm as any
-      // expandedPanel should be undefined initially
-      expect(vm.expandedPanel === undefined || vm.expandedPanel === null).toBe(true)
+      expect(vm.selectedIndex).toBe(0)
     })
 
-    it('should expand panel when value is set', async () => {
+    it('should start with null selection when empty', () => {
+      const wrapper = mountComponent({ modelValue: [] })
+      const vm = wrapper.vm as any
+      expect(vm.selectedIndex).toBeNull()
+    })
+
+    it('should update selection when onSelect is called', async () => {
       const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
       const vm = wrapper.vm as any
 
-      vm.expandedPanel = 0
+      vm.onSelect(1)
       await wrapper.vm.$nextTick()
 
-      expect(vm.expandedPanel).toBe(0)
+      expect(vm.selectedIndex).toBe(1)
     })
   })
 
   describe('Styling and Layout', () => {
     it('should apply the panel root class', () => {
-      // Refresh: events-container + vertical-label + flex-grow-1
-      // class names retired alongside the sticker layout. The
-      // panel now lives under a single .inclusion-criteria-panel
-      // root with a header strip and rules list.
       const wrapper = mountComponent()
       expect(wrapper.find('.inclusion-criteria-panel').exists()).toBe(true)
     })
 
     it('should not render an internal header strip', () => {
-      // Refresh: the in-panel header strip + add-rule action were
-      // retired; the surrounding section header hosts that now.
       const wrapper = mountComponent()
       expect(wrapper.find('.inclusion-criteria-panel__header').exists()).toBe(false)
     })
@@ -568,8 +516,6 @@ describe('InclusionCriteriaPanel', () => {
     })
 
     it('should handle empty modelValue as default', () => {
-      // Component requires modelValue prop, so test with empty array.
-      // Empty state is now a div, not a v-alert.
       const wrapper = mountComponent({ modelValue: [] })
       expect(wrapper.exists()).toBe(true)
       expect(wrapper.find('.inclusion-criteria-panel__empty').exists()).toBe(true)
@@ -597,32 +543,12 @@ describe('InclusionCriteriaPanel', () => {
       expect(wrapper.exists()).toBe(true)
     })
 
-    it('should handle adding group to non-existent rule gracefully', async () => {
-      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      const vm = wrapper.vm as any
-
-      // Try to add group to index that doesn't exist
-      vm.addGroup(999)
-      await wrapper.vm.$nextTick()
-
-      // Should not emit update since rule doesn't exist
-      expect(wrapper.emitted('update:modelValue')).toBeFalsy()
+    it.skip('should handle adding group to non-existent rule gracefully — TODO: addGroup moved to InclusionRuleDetail', async () => {
+      // addGroup no longer exists on the panel; tested in InclusionRuleDetail.spec.ts
     })
 
-    it('should handle updating non-existent group gracefully', async () => {
-      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
-      const vm = wrapper.vm as any
-
-      const updatedGroup: CriteriaGroup = {
-        id: 'group-new',
-        logicType: 'ANY',
-        events: []
-      }
-
-      vm.updateGroup(999, 0, updatedGroup)
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.emitted('update:modelValue')).toBeFalsy()
+    it.skip('should handle updating non-existent group gracefully — TODO: updateGroup moved to InclusionRuleDetail', async () => {
+      // updateGroup no longer exists on the panel; tested in InclusionRuleDetail.spec.ts
     })
 
     it('should handle removing non-existent rule gracefully', async () => {
@@ -634,12 +560,30 @@ describe('InclusionCriteriaPanel', () => {
       vm.removeRule(999)
       await wrapper.vm.$nextTick()
 
-      // Should still emit update but length should remain same
       if (wrapper.emitted('update:modelValue')) {
         const emitted = wrapper.emitted('update:modelValue') as any[]
         const rules = emitted[emitted.length - 1][0] as InclusionRule[]
         expect(rules.length).toBe(originalLength)
       }
+    })
+  })
+
+  describe('Master-detail layout', () => {
+    it('selects the first rule by default when rules are present', async () => {
+      const rules = createMockInclusionRules()
+      const wrapper = mountComponent({ modelValue: rules })
+      await wrapper.vm.$nextTick()
+      const rows = wrapper.findAll('[data-testid="inclusion-rail-rule"]')
+      expect(rows[0]!.classes()).toContain('inclusion-rail__rule--active')
+    })
+
+    it('switches detail pane when a different rail row is clicked', async () => {
+      const rules = createMockInclusionRules()
+      const wrapper = mountComponent({ modelValue: rules })
+      await wrapper.vm.$nextTick()
+      await wrapper.findAll('[data-testid="inclusion-rail-rule"]')[1]!.trigger('click')
+      const active = wrapper.find('[data-testid="inclusion-rail-rule"].inclusion-rail__rule--active')
+      expect(active.text()).toContain('Second Inclusion Rule')
     })
   })
 })
