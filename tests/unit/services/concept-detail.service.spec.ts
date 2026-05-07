@@ -91,28 +91,28 @@ describe('concept-detail.service', () => {
     })
 
     it('fetches and maps drilldown for a Condition concept', async () => {
-      ;(httpClient as Mock).mockResolvedValueOnce({
-        AGE_AT_FIRST_OCCURRENCE: [
+      (httpClient as Mock).mockResolvedValueOnce({
+        ageAtFirstOccurrence: [
           {
-            CATEGORY: 'MALE',
-            MIN_VALUE: 0,
-            P10_VALUE: 35,
-            P25_VALUE: 45,
-            MEDIAN_VALUE: 58,
-            P75_VALUE: 70,
-            P90_VALUE: 78,
-            MAX_VALUE: 99,
+            category: 'MALE',
+            minValue: 0,
+            p10Value: 35,
+            p25Value: 45,
+            medianValue: 58,
+            p75Value: 70,
+            p90Value: 78,
+            maxValue: 99,
           },
         ],
-        PREVALENCE_BY_GENDER_AGE_YEAR: [
+        prevalenceByGenderAgeYear: [
           {
-            TRELLIS_NAME: '40-49',
-            SERIES_NAME: 'MALE',
-            X_CALENDAR_YEAR: 2010,
-            Y_PREVALENCE_1000PP: 32.5,
+            trellisName: '40-49',
+            seriesName: 'MALE',
+            xCalendarYear: 2010,
+            yPrevalence1000Pp: 32.5,
           },
         ],
-        PREVALENCE_BY_MONTH: [{ X_CALENDAR_MONTH: 201001, Y_PREVALENCE_1000PP: 12.4 }],
+        prevalenceByMonth: [{ xCalendarMonth: 201001, yPrevalence1000Pp: 12.4 }],
       })
 
       const result = await getConceptDrilldown('SYNPUF1K', 'Condition', 201826)

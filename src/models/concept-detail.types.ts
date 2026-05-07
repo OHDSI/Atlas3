@@ -56,57 +56,63 @@ export type DrilldownDomain =
   | 'observation'
   | 'device'
 
-export const DrilldownReportSchema = z.object({
-  AGE_AT_FIRST_OCCURRENCE: z
-    .array(
-      z.object({
-        CATEGORY: z.string(),
-        MIN_VALUE: z.number(),
-        P10_VALUE: z.number(),
-        P25_VALUE: z.number(),
-        MEDIAN_VALUE: z.number(),
-        P75_VALUE: z.number(),
-        P90_VALUE: z.number(),
-        MAX_VALUE: z.number(),
-      })
-    )
-    .default([]),
-  PREVALENCE_BY_GENDER_AGE_YEAR: z
-    .array(
-      z.object({
-        TRELLIS_NAME: z.string(),
-        SERIES_NAME: z.string(),
-        X_CALENDAR_YEAR: z.number(),
-        Y_PREVALENCE_1000PP: z.number(),
-      })
-    )
-    .default([]),
-  PREVALENCE_BY_MONTH: z
-    .array(
-      z.object({
-        X_CALENDAR_MONTH: z.number(),
-        Y_PREVALENCE_1000PP: z.number(),
-      })
-    )
-    .default([]),
-}).passthrough()
+const BoxPlotRowSchema = z
+  .object({
+    category: z.string().optional(),
+    minValue: z.number().nullable().optional(),
+    p10Value: z.number().nullable().optional(),
+    p25Value: z.number().nullable().optional(),
+    medianValue: z.number().nullable().optional(),
+    p75Value: z.number().nullable().optional(),
+    p90Value: z.number().nullable().optional(),
+    maxValue: z.number().nullable().optional(),
+  })
+  .passthrough()
+
+const PrevalenceByMonthRowSchema = z
+  .object({
+    xCalendarMonth: z.number(),
+    yPrevalence1000Pp: z.number(),
+  })
+  .passthrough()
+
+const PrevalenceByGenderAgeYearRowSchema = z
+  .object({
+    trellisName: z.string().optional(),
+    seriesName: z.string().optional(),
+    xCalendarYear: z.number().optional(),
+    yPrevalence1000Pp: z.number().optional(),
+  })
+  .passthrough()
+
+export const DrilldownReportSchema = z
+  .object({
+    ageAtFirstOccurrence: z.array(BoxPlotRowSchema).optional(),
+    ageAtFirstDiagnosis: z.array(BoxPlotRowSchema).optional(),
+    ageAtFirstExposure: z.array(BoxPlotRowSchema).optional(),
+    prevalenceByGenderAgeYear: z.array(PrevalenceByGenderAgeYearRowSchema).optional(),
+    prevalenceByMonth: z.array(PrevalenceByMonthRowSchema).optional(),
+  })
+  .passthrough()
+
+export interface BoxPlotRow {
+  category?: string
+  minValue?: number | null
+  p10Value?: number | null
+  p25Value?: number | null
+  medianValue?: number | null
+  p75Value?: number | null
+  p90Value?: number | null
+  maxValue?: number | null
+}
 
 export interface DrilldownReport {
-  ageAtFirstOccurrence: Array<{
-    category: string
-    minValue: number
-    p10Value: number
-    p25Value: number
-    medianValue: number
-    p75Value: number
-    p90Value: number
-    maxValue: number
-  }>
+  ageAtFirstOccurrence: BoxPlotRow[]
   prevalenceByGenderAgeYear: Array<{
-    trellisName: string
-    seriesName: string
-    calendarYear: number
-    prevalence1000pp: number
+    trellisName?: string
+    seriesName?: string
+    calendarYear?: number
+    prevalence1000pp?: number
   }>
   prevalenceByMonth: Array<{
     calendarMonth: number

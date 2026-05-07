@@ -40,7 +40,7 @@ describe('concept-detail store', () => {
   })
 
   it('loadConcept fans out four parallel calls and populates state', async () => {
-    ;(getConceptById as Mock).mockResolvedValue({
+    (getConceptById as Mock).mockResolvedValue({
       conceptId: 201826,
       conceptName: 'Type 2 diabetes mellitus',
       domainId: 'Condition',
@@ -71,7 +71,7 @@ describe('concept-detail store', () => {
   })
 
   it('caches concept loads within 5-minute TTL', async () => {
-    ;(getConceptById as Mock).mockResolvedValue({
+    (getConceptById as Mock).mockResolvedValue({
       conceptId: 1,
       conceptName: 'X',
       domainId: 'Condition',
@@ -93,7 +93,7 @@ describe('concept-detail store', () => {
   })
 
   it('partitions hierarchy into parents and children using RELATIONSHIP_NAME', async () => {
-    ;(getConceptById as Mock).mockResolvedValue({
+    (getConceptById as Mock).mockResolvedValue({
       conceptId: 201826,
       conceptName: 'T2DM',
       domainId: 'Condition',

@@ -1,28 +1,34 @@
 <script setup lang="ts">
+import { AtlasCard } from '@/components/ui'
 import type { Concept } from '@/models/concept-set.types'
 
 defineProps<{ concept: Concept }>()
 </script>
 
 <template>
-  <v-card
-    density="compact"
-    variant="outlined"
+  <AtlasCard
+    padding="none"
     data-testid="concept-attributes-card"
   >
-    <v-card-title class="card-title">Concept Details</v-card-title>
-    <v-card-text class="card-body">
+    <header class="card-title">
+      Concept Details
+    </header>
+    <div class="card-body">
       <dl class="kv">
-        <dt>Concept ID</dt><dd class="mono">{{ concept.conceptId }}</dd>
-        <dt>Concept Code</dt><dd class="mono">{{ concept.conceptCode }}</dd>
+        <dt>Concept ID</dt><dd class="mono">
+          {{ concept.conceptId }}
+        </dd>
+        <dt>Concept Code</dt><dd class="mono">
+          {{ concept.conceptCode }}
+        </dd>
         <dt>Domain</dt><dd>{{ concept.domainId }}</dd>
         <dt>Vocabulary</dt><dd>{{ concept.vocabularyId }}</dd>
         <dt>Concept Class</dt><dd>{{ concept.conceptClassId }}</dd>
         <dt>Standard Concept</dt><dd>{{ concept.standardConcept ?? '—' }}</dd>
         <dt>Invalid Reason</dt><dd>{{ concept.invalidReason ?? '—' }}</dd>
       </dl>
-    </v-card-text>
-  </v-card>
+    </div>
+  </AtlasCard>
 </template>
 
 <style scoped>
@@ -32,18 +38,18 @@ defineProps<{ concept: Concept }>()
   letter-spacing: 0.5px;
   color: rgba(0, 0, 0, 0.6);
   font-weight: 600;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 .card-body {
-  padding: 12px;
+  padding: 16px;
 }
 .kv {
   display: grid;
   grid-template-columns: 140px 1fr 140px 1fr;
   row-gap: 6px;
   column-gap: 16px;
-  font-size: 12px;
+  font-size: 13px;
   margin: 0;
 }
 .kv dt {

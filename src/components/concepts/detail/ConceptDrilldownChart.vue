@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
+import { AtlasCard } from '@/components/ui'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import { useDataSourcesStore } from '@/stores/datasources'
 import type { Concept } from '@/models/concept-set.types'
@@ -82,21 +83,26 @@ const currentOption = computed(() =>
   activeTab.value === 'age' ? ageOption.value : monthOption.value
 )
 
+const activeSeriesEmpty = computed(() => {
+  if (activeTab.value === 'age') {
+    return (report.value?.ageAtFirstOccurrence ?? []).length === 0
+  }
+  return (report.value?.prevalenceByMonth ?? []).length === 0
+})
+
 const sourceItems = computed(() =>
   (dataSources.sources ?? []).map((s) => ({ title: s.sourceName, value: s.sourceKey }))
 )
 </script>
 
 <template>
-  <v-card
+  <AtlasCard
     v-if="drillable"
-    density="compact"
-    variant="outlined"
+    padding="none"
     data-testid="concept-drilldown-chart"
   >
-    <v-card-title class="card-title">
-      Drilldown Report
-      <v-spacer />
+    <header class="card-title">
+      <span>Drilldown Report</span>
       <v-select
         v-model="selectedSourceKey"
         :items="sourceItems"
@@ -105,18 +111,22 @@ const sourceItems = computed(() =>
         hide-details
         style="max-width: 220px"
       />
-    </v-card-title>
+    </header>
 
     <v-tabs
       v-model="activeTab"
       density="compact"
       bg-color="transparent"
     >
-      <v-tab value="age">Age at first occurrence</v-tab>
-      <v-tab value="month">Calendar month</v-tab>
+      <v-tab value="age">
+        Age at first occurrence
+      </v-tab>
+      <v-tab value="month">
+        Calendar month
+      </v-tab>
     </v-tabs>
 
-    <v-card-text class="card-body">
+    <div class="card-body">
       <div
         v-if="conceptDetail.isDrilldownLoading"
         class="loading"
@@ -124,19 +134,19 @@ const sourceItems = computed(() =>
         Loading drilldown…
       </div>
       <div
-        v-else-if="!report"
+        v-else-if="!report || activeSeriesEmpty"
         class="empty"
       >
-        No drilldown data for this source.
+        No drilldown data for this concept in {{ selectedSourceKey }}.
       </div>
       <VChart
         v-else
         :option="currentOption"
         autoresize
-        style="height: 280px; width: 100%"
+        style="height: 320px; width: 100%"
       />
-    </v-card-text>
-  </v-card>
+    </div>
+  </AtlasCard>
 </template>
 
 <style scoped>
@@ -146,13 +156,14 @@ const sourceItems = computed(() =>
   letter-spacing: 0.5px;
   color: rgba(0, 0, 0, 0.6);
   font-weight: 600;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
 }
-.card-body { padding: 12px; }
+.card-body { padding: 16px; }
 .loading, .empty {
   color: rgba(0, 0, 0, 0.6);
   font-size: 12px;

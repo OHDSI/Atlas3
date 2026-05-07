@@ -90,25 +90,16 @@ export async function getConceptDrilldown(
     }
     const d = parsed.data
     return {
-      ageAtFirstOccurrence: d.AGE_AT_FIRST_OCCURRENCE.map((r) => ({
-        category: r.CATEGORY,
-        minValue: r.MIN_VALUE,
-        p10Value: r.P10_VALUE,
-        p25Value: r.P25_VALUE,
-        medianValue: r.MEDIAN_VALUE,
-        p75Value: r.P75_VALUE,
-        p90Value: r.P90_VALUE,
-        maxValue: r.MAX_VALUE,
+      ageAtFirstOccurrence: d.ageAtFirstOccurrence ?? [],
+      prevalenceByGenderAgeYear: (d.prevalenceByGenderAgeYear ?? []).map((r) => ({
+        trellisName: r.trellisName,
+        seriesName: r.seriesName,
+        calendarYear: r.xCalendarYear,
+        prevalence1000pp: r.yPrevalence1000Pp,
       })),
-      prevalenceByGenderAgeYear: d.PREVALENCE_BY_GENDER_AGE_YEAR.map((r) => ({
-        trellisName: r.TRELLIS_NAME,
-        seriesName: r.SERIES_NAME,
-        calendarYear: r.X_CALENDAR_YEAR,
-        prevalence1000pp: r.Y_PREVALENCE_1000PP,
-      })),
-      prevalenceByMonth: d.PREVALENCE_BY_MONTH.map((r) => ({
-        calendarMonth: r.X_CALENDAR_MONTH,
-        prevalence1000pp: r.Y_PREVALENCE_1000PP,
+      prevalenceByMonth: (d.prevalenceByMonth ?? []).map((r) => ({
+        calendarMonth: r.xCalendarMonth,
+        prevalence1000pp: r.yPrevalence1000Pp,
       })),
     }
   } catch (error) {

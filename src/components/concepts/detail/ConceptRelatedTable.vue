@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { AtlasCard } from '@/components/ui'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
 const props = defineProps<{ related: RelatedConcept[] }>()
@@ -47,16 +48,14 @@ const headers = [
 </script>
 
 <template>
-  <v-card
-    density="compact"
-    variant="outlined"
+  <AtlasCard
+    padding="none"
     data-testid="concept-related-table"
   >
-    <v-card-title class="card-title">
-      Related Concepts
-      <v-spacer />
+    <header class="card-title">
+      <span>Related Concepts</span>
       <span class="muted">{{ rows.length }} relationships</span>
-    </v-card-title>
+    </header>
     <p
       v-if="rows.length === 0"
       class="empty"
@@ -94,20 +93,24 @@ const headers = [
           size="x-small"
           color="success"
           variant="tonal"
-        >S</v-chip>
+        >
+          S
+        </v-chip>
         <v-chip
           v-else-if="item.standardConcept === 'C'"
           density="compact"
           size="x-small"
           variant="tonal"
-        >C</v-chip>
+        >
+          C
+        </v-chip>
         <span
           v-else
           class="muted"
         >—</span>
       </template>
     </v-data-table>
-  </v-card>
+  </AtlasCard>
 </template>
 
 <style scoped>
@@ -116,14 +119,15 @@ const headers = [
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: rgba(0, 0, 0, 0.6);
+  justify-content: space-between;
   font-weight: 600;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
 }
 .muted { color: rgba(0, 0, 0, 0.4); font-size: 11px; }
-.empty { padding: 16px; color: rgba(0, 0, 0, 0.6); font-size: 12px; margin: 0; text-align: center; }
+.empty { padding: 24px; color: rgba(0, 0, 0, 0.6); font-size: 13px; margin: 0; text-align: center; }
 .concept-link {
   color: rgb(var(--v-theme-primary));
   text-decoration: none;

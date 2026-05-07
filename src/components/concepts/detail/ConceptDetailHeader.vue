@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import type { Concept } from '@/models/concept-set.types'
 
 const props = defineProps<{ concept: Concept }>()
@@ -7,6 +8,16 @@ const emit = defineEmits<{
   'add-to-concept-set': [concept: Concept]
   'copy-id': [conceptId: number]
 }>()
+
+const router = useRouter()
+
+function onBack() {
+  if (window.history.length > 1) {
+    router.back()
+  } else {
+    router.push('/concepts')
+  }
+}
 
 const standardLabel = computed(() => {
   switch (props.concept.standardConcept) {
@@ -40,8 +51,19 @@ async function onCopy() {
     class="concept-detail-header"
     data-testid="concept-detail-header"
   >
+    <v-btn
+      icon="mdi-arrow-left"
+      variant="text"
+      density="compact"
+      size="small"
+      aria-label="Go back"
+      data-testid="concept-detail-back"
+      @click="onBack"
+    />
     <div class="concept-title-row">
-      <h1 class="concept-title">{{ concept.conceptName }}</h1>
+      <h1 class="concept-title">
+        {{ concept.conceptName }}
+      </h1>
       <div class="concept-chips">
         <v-chip
           :color="standardColor"

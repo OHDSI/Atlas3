@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { AtlasCard } from '@/components/ui'
 import type { Concept } from '@/models/concept-set.types'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
@@ -20,21 +21,19 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
 </script>
 
 <template>
-  <v-card
-    density="compact"
-    variant="outlined"
+  <AtlasCard
+    padding="none"
     data-testid="concept-hierarchy-minimap"
   >
-    <v-card-title class="card-title">
-      Hierarchy
-      <v-spacer />
+    <header class="card-title">
+      <span>Hierarchy</span>
       <a
         v-if="!isEmpty"
         href="#"
         class="view-full"
       >View full →</a>
-    </v-card-title>
-    <v-card-text class="card-body">
+    </header>
+    <div class="card-body">
       <p
         v-if="isEmpty"
         class="empty"
@@ -84,8 +83,8 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
           </li>
         </ul>
       </template>
-    </v-card-text>
-  </v-card>
+    </div>
+  </AtlasCard>
 </template>
 
 <style scoped>
@@ -95,10 +94,11 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
   letter-spacing: 0.5px;
   color: rgba(0, 0, 0, 0.6);
   font-weight: 600;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 .view-full {
   font-size: 11px;
@@ -107,8 +107,8 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
   color: rgb(var(--v-theme-primary));
   text-decoration: none;
 }
-.card-body { padding: 12px; }
-.tree { list-style: none; padding: 0; margin: 0; font-size: 12px; }
+.card-body { padding: 16px; }
+.tree { list-style: none; padding: 0; margin: 0; font-size: 13px; }
 .node { display: flex; align-items: center; gap: 4px; padding: 2px 0; }
 .node.faded { color: rgba(0, 0, 0, 0.6); }
 .node.current {

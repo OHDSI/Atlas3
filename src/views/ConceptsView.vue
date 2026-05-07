@@ -55,10 +55,13 @@ import { AtlasIcon, AtlasPageShell, AtlasTab, AtlasTabs } from '@/components/ui'
 import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
 import ConceptSetList from '@/components/concepts/ConceptSetList.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useWebAPIStore } from '@/stores/webapi'
+import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 
 const route = useRoute()
 const router = useRouter()
 const conceptSetsStore = useConceptSetsStore()
+const webapiStore = useWebAPIStore()
 const { t } = useI18n()
 
 const pageTitle = computed(() => t('cs.browser.caption', 'Concepts').value)
@@ -70,10 +73,15 @@ const pageSubtitle = computed(
 // Active tab state - sync with URL query. Default to "sets" (concept sets list).
 const activeTab = ref<string>((route.query.tab as string) || 'sets')
 
-// CDM source key configuration - will be dynamic in future
-const sourceKey = ref('SYNPUF1K')
+// Vocabulary source key — derived from the webapi store's available vocabulary
+// sources, falling back to the configured default. Stays reactive so child
+// components see the right source once the WebAPI sources finish loading.
+const sourceKey = computed(
+  () => webapiStore.getValidVocabularySource() || getDefaultSourceKey() || '',
+)
 
-// Provide sourceKey to child components
+// Provide sourceKey to child components (as a ref-like object with `.value`
+// to keep the existing inject contract — `inject<{ value: string }>('sourceKey')`).
 provide('sourceKey', sourceKey)
 
 // Watch for tab changes and update URL. `immediate: true` syncs the URL to

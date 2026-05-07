@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
+import { AtlasCard } from '@/components/ui'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import type { ConceptRecordCount } from '@/models/concept-detail.types'
@@ -45,15 +46,16 @@ watch(() => [props.conceptId, props.primarySourceKey], ensureCounts)
     class="stat-grid"
     data-testid="concept-stat-cards"
   >
-    <v-card
+    <AtlasCard
       v-for="source in sourcesList"
       :key="source.sourceKey"
       :data-testid="`stat-card-${source.sourceKey}`"
-      density="compact"
-      variant="outlined"
+      padding="md"
       class="stat-card"
     >
-      <div class="stat-source">{{ source.sourceName }}</div>
+      <div class="stat-source">
+        {{ source.sourceName }}
+      </div>
       <div class="stat-big">
         {{ formatCount(countsBySource.get(source.sourceKey)?.recordCount) }}
       </div>
@@ -61,7 +63,7 @@ watch(() => [props.conceptId, props.primarySourceKey], ensureCounts)
         {{ formatPercent(countsBySource.get(source.sourceKey)?.personCount) }} persons ·
         {{ formatCount(countsBySource.get(source.sourceKey)?.descendantRecordCount) }} desc.
       </div>
-    </v-card>
+    </AtlasCard>
   </section>
 </template>
 
@@ -71,25 +73,24 @@ watch(() => [props.conceptId, props.primarySourceKey], ensureCounts)
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
 }
-.stat-card {
-  padding: 12px;
-}
+.stat-card { /* AtlasCard handles padding */ }
 .stat-source {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: rgba(0, 0, 0, 0.6);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 .stat-big {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  line-height: 1.1;
 }
 .stat-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: rgba(0, 0, 0, 0.6);
   font-variant-numeric: tabular-nums;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 </style>
