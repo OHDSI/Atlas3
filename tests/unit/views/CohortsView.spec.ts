@@ -87,14 +87,6 @@ vi.mock('@/components/cohort/CohortFilters.vue', () => ({
   }
 }))
 
-vi.mock('@/components/cohort/GenerationPanel.vue', () => ({
-  default: {
-    name: 'GenerationPanel',
-    template: '<div class="generation-panel-mock"></div>',
-    props: ['modelValue', 'cohortId']
-  }
-}))
-
 // Import after mocks are set up
 import CohortsView from '@/views/CohortsView.vue'
 
@@ -358,20 +350,6 @@ describe('CohortsView.vue', () => {
 
       const pagination = wrapper.findComponent({ name: 'CohortPagination' })
       expect(pagination.exists()).toBe(true)
-    })
-
-    it('should not render GenerationPanel — generate flow moved off the overview', () => {
-      // Refresh: removed Generate buttons from cards/rows and the
-      // GenerationPanel from the cohort overview entirely. Generation
-      // happens from the cohort builder page.
-      wrapper = mount(CohortsView, {
-        global: {
-          plugins: [vuetify]
-        }
-      })
-
-      const panel = wrapper.findComponent({ name: 'GenerationPanel' })
-      expect(panel.exists()).toBe(false)
     })
 
     it('should pass correct props to CohortGrid', () => {
