@@ -267,13 +267,6 @@ const coreNavigationItems: NavigationItem[] = [
     visible: true,
     active: false,
   },
-  {
-    id: 'profiles',
-    titleKey: 'navigation.profiles',
-    route: '/profiles',
-    visible: true,
-    active: false,
-  },
 ]
 
 const navigationItems = ref<NavigationItem[]>(getFilteredCoreNavigationItems())

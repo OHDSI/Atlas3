@@ -18,8 +18,6 @@ services:
     mem_limit: "2G"
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mypass}
-    ports:
-      - "5433:5432"
     volumes:
       - atlas3-postgres-data:/var/lib/postgresql/data
     healthcheck:

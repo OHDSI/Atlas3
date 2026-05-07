@@ -1,9 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { useEntityAccess, useEntityAccessFor, useSourceAccess } from '@/composables/useEntityAccess'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
+import { authConfig, setAuthConfig } from '@/config/auth.config'
 
 function setupUser(opts: {
   permissionIdx?: Record<string, string[]>
@@ -86,8 +87,16 @@ describe('useEntityAccess', () => {
 })
 
 describe('useSourceAccess', () => {
+  let prevAuthEnabled: boolean
+
   beforeEach(() => {
     setActivePinia(createPinia())
+    prevAuthEnabled = authConfig.userAuthenticationEnabled
+    setAuthConfig({ userAuthenticationEnabled: true })
+  })
+
+  afterEach(() => {
+    setAuthConfig({ userAuthenticationEnabled: prevAuthEnabled })
   })
 
   it('grants write when sourceAccess includes WRITE', () => {

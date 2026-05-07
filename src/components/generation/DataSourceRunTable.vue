@@ -45,6 +45,12 @@
       </div>
     </template>
 
+    <template #[`item.patients`]="{ item }">
+      <span :class="(item as Row).personCount === undefined ? 'dsrt-muted' : 'dsrt-pcount'">
+        {{ (item as Row).personCount !== undefined ? (item as Row).personCount!.toLocaleString() : em }}
+      </span>
+    </template>
+
     <template #[`item.lastRun`]="{ item }">
       <span :class="(item as Row).lastRun ? '' : 'dsrt-muted'">
         {{ (item as Row).lastRun || em }}
@@ -58,23 +64,38 @@
     </template>
 
     <template #[`item.actions`]="{ item }">
-      <DataSourceRunRow
-        :source-key="(item as Row).sourceKey"
-        :latest-status="(item as Row).latestStatus"
-        :history-count="(item as Row).count"
-        :run-disabled="runDisabled"
-        :run-disabled-reason="runDisabledReason"
-        @run="$emit('run', (item as Row).sourceKey)"
-        @cancel="$emit('cancel', (item as Row).sourceKey)"
-        @show-history="$emit('show-history', (item as Row).sourceKey)"
-      />
+      <div class="dsrt-actions-cell">
+        <DataSourceRunRow
+          :source-key="(item as Row).sourceKey"
+          :latest-status="(item as Row).latestStatus"
+          :history-count="(item as Row).count"
+          :run-disabled="runDisabled"
+          :run-disabled-reason="runDisabledReason"
+          :hide-cancel="hideCancel"
+          @run="$emit('run', (item as Row).sourceKey)"
+          @cancel="$emit('cancel', (item as Row).sourceKey)"
+          @show-history="$emit('show-history', (item as Row).sourceKey)"
+        />
+        <AtlasButton
+          v-for="action in extraActions"
+          :key="action.key"
+          size="sm"
+          variant="secondary"
+          :icon="action.icon"
+          :disabled="action.disabledWhen ? action.disabledWhen(item as Row) : false"
+          :data-testid="`row-extra-${action.key}-${(item as Row).sourceKey}`"
+          @click="onExtraClick(action.key, (item as Row).sourceKey)"
+        >
+          {{ action.label }}
+        </AtlasButton>
+      </div>
     </template>
   </AtlasDataTable>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { AtlasDataTable, AtlasChip, AtlasProgressCircular } from '@/components/ui'
+import { AtlasButton, AtlasDataTable, AtlasChip, AtlasProgressCircular } from '@/components/ui'
 import type { AtlasChipTone } from '@/components/ui'
 import DataSourceRunRow from './DataSourceRunRow.vue'
 import { useI18n } from '@/composables/useI18n'
@@ -92,6 +113,14 @@ export interface RunTableExecution {
   startTime?: number
   endTime?: number
   duration?: number
+  personCount?: number
+}
+
+export interface ExtraAction {
+  key: string
+  label: string
+  icon?: string
+  disabledWhen?: (row: Row) => boolean
 }
 
 interface Props {
@@ -101,6 +130,9 @@ interface Props {
   runDisabled?: boolean
   runDisabledReason?: string
   noSourcesText?: string
+  showPatientCount?: boolean
+  extraActions?: ExtraAction[]
+  hideCancel?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -108,24 +140,49 @@ const props = withDefaults(defineProps<Props>(), {
   runDisabled: false,
   runDisabledReason: '',
   noSourcesText: undefined,
+  showPatientCount: false,
+  extraActions: () => [],
+  hideCancel: false,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   run: [sourceKey: string]
   cancel: [sourceKey: string]
   'show-history': [sourceKey: string]
+  'extra-action': [actionKey: string, sourceKey: string]
 }>()
+
+function onExtraClick(actionKey: string, sourceKey: string) {
+  emit('extra-action', actionKey, sourceKey)
+}
 
 const { t, tv } = useI18n()
 const em = '—'
 
-const headers = computed(() => [
-  { key: 'source', title: t('columns.sourceName', 'Data source').value, sortable: false },
-  { key: 'status', title: t('columns.status', 'Status').value, sortable: false },
-  { key: 'lastRun', title: t('columns.lastRun', 'Last run').value, sortable: false },
-  { key: 'duration', title: t('columns.duration', 'Duration').value, sortable: false },
-  { key: 'actions', title: '', sortable: false, align: 'end' as const, width: 220 },
-])
+interface TableHeader {
+  key: string
+  title?: string
+  sortable?: boolean
+  align?: 'start' | 'center' | 'end'
+  width?: number | string
+  [k: string]: unknown
+}
+
+const headers = computed<TableHeader[]>(() => {
+  const h: TableHeader[] = [
+    { key: 'source', title: t('columns.sourceName', 'Data source').value, sortable: false },
+    { key: 'status', title: t('columns.status', 'Status').value, sortable: false },
+  ]
+  if (props.showPatientCount) {
+    h.push({ key: 'patients', title: t('columns.patients', 'Patients').value, sortable: false, align: 'end' })
+  }
+  h.push(
+    { key: 'lastRun', title: t('columns.lastRun', 'Last run').value, sortable: false },
+    { key: 'duration', title: t('columns.duration', 'Duration').value, sortable: false },
+    { key: 'actions', title: '', sortable: false, align: 'end', width: 280 }
+  )
+  return h
+})
 
 const noRunText = computed(() => t('components.analysisExecution.notRun', 'Not run').value)
 const defaultNoSourcesText = tv('components.analysisExecution.noSources', 'No data sources available')
@@ -195,6 +252,7 @@ interface Row {
   lastRun: string
   duration: string
   count: number
+  personCount?: number
 }
 
 const latestBySource = computed(() => {
@@ -230,6 +288,7 @@ const rows = computed<Row[]>(() =>
       lastRun: formatDateTime(latest?.startTime),
       duration: latest ? formatDuration(effectiveDuration(latest)) : '',
       count: countBySource.value.get(s.sourceKey) ?? 0,
+      personCount: latest?.personCount,
     }
   })
 )
@@ -252,5 +311,18 @@ const rows = computed<Row[]>(() =>
 }
 .dsrt-muted {
   color: rgba(var(--v-theme-on-surface), 0.5);
+}
+.dsrt-actions-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+.dsrt-pcount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: rgb(var(--v-theme-primary));
 }
 </style>
