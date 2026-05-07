@@ -67,6 +67,20 @@
         </AtlasChip>
       </template>
 
+      <!-- Concept Name Link (when linkable + sourceKey provided) -->
+      <template
+        v-if="linkable && sourceKey"
+        #item.conceptName="{ item }"
+      >
+        <router-link
+          :to="`/concept/${sourceKey}/${item.conceptId}`"
+          :data-testid="`concept-name-link-${item.conceptId}`"
+          class="concept-name-link"
+        >
+          {{ item.conceptName }}
+        </router-link>
+      </template>
+
       <!-- Record Count Columns - Format with commas or dash if undefined, show spinner while loading -->
       <template #item.recordCount="{ item }">
         <div class="d-flex align-center justify-end">
@@ -243,6 +257,8 @@ interface Props {
   conceptsInSet?: Set<number> // Track which concepts are already in set
   selectable?: boolean // Render leading checkbox column for bulk selection
   selected?: number[] // v-model:selected — list of selected conceptIds
+  linkable?: boolean
+  sourceKey?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -254,6 +270,8 @@ const props = withDefaults(defineProps<Props>(), {
   conceptsInSet: () => new Set(),
   selectable: false,
   selected: () => [],
+  linkable: false,
+  sourceKey: undefined,
 })
 
 const emit = defineEmits<{
@@ -450,5 +468,13 @@ function formatCount(count: number | undefined): string {
 
 .gap-2 {
   gap: 8px;
+}
+
+.concept-name-link {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+}
+.concept-name-link:hover {
+  text-decoration: underline;
 }
 </style>
