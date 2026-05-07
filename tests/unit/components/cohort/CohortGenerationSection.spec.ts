@@ -56,15 +56,9 @@ function mountSection(
   for (const j of jobs) store.addGenerationJob(j as never)
   const router = makeRouter()
   return mount(CohortGenerationSection, {
+    attachTo: document.body,
     global: {
       plugins: [vuetify, router],
-      stubs: {
-        VNavigationDrawer: {
-          props: ['modelValue'],
-          emits: ['update:modelValue'],
-          template: '<div data-testid="cohort-report-drawer" v-if="modelValue"><slot /></div>',
-        },
-      },
     },
     props: { cohortId: 1, ...props },
   })
@@ -73,6 +67,7 @@ function mountSection(
 describe('CohortGenerationSection', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    document.body.innerHTML = ''
   })
 
   it('shows "Save cohort to generate" chip when cohortId is null', async () => {
@@ -127,7 +122,7 @@ describe('CohortGenerationSection', () => {
     expect(btn.attributes('disabled')).toBeUndefined()
     await btn.trigger('click')
     await flushPromises()
-    expect(wrapper.find('[data-testid="cohort-report-drawer"]').exists()).toBe(true)
+    expect(document.querySelector('[data-testid="cohort-report-drawer"]')).not.toBeNull()
   })
 
   it('disables Inclusion report and Samples buttons for non-complete rows', async () => {

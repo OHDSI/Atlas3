@@ -77,17 +77,9 @@ describe('CohortSampleDetail', () => {
     expect(wrapper.text()).toContain('—') // null recordCount in row 2
   })
 
-  it('renders a profile router-link per row when sourceKey is provided', () => {
+  it('emits open-profile with the personId when the profile button is clicked', async () => {
     const wrapper = mount(CohortSampleDetail, {
-      global: {
-        plugins: [vuetify, createPinia()],
-        stubs: {
-          RouterLink: {
-            props: ['to'],
-            template: '<a :data-href="to"><slot /></a>',
-          },
-        },
-      },
+      global: globalMountOpts,
       props: {
         sourceKey: 'EUNOMIA',
         sample: {
@@ -103,7 +95,8 @@ describe('CohortSampleDetail', () => {
     })
     const link = wrapper.find('[data-test=cohort-sample-profile-link]')
     expect(link.exists()).toBe(true)
-    expect(link.attributes('data-href')).toBe('/profiles/EUNOMIA/1001/42')
+    await link.trigger('click')
+    expect(wrapper.emitted('open-profile')).toEqual([['1001']])
   })
 
   it('renders the personId as plain text when no sourceKey is available', () => {

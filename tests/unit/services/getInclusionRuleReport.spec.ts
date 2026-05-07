@@ -42,7 +42,7 @@ describe('getInclusionRuleReport', () => {
     await getInclusionRuleReport(42, 'EUNOMIA', 0)
 
     const calledUrl = httpMock.mock.calls[0]![0]
-    expect(calledUrl).toContain('/cohortdefinition/42/report/EUNOMIA?mode=0')
+    expect(calledUrl).toContain('/cohortdefinition/42/report/EUNOMIA/inclusion?mode=0')
   })
 
   it('returns null when the response shape does not validate', async () => {
