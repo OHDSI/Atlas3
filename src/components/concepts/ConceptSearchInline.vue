@@ -50,6 +50,7 @@
       @update:items-per-page="onItemsPerPageChange"
       @add-concept="onAddConcept"
       @remove-concept="onRemoveConcept"
+      @view-concept="(payload) => emit('view-concept', payload)"
     />
   </div>
 </template>
@@ -79,6 +80,7 @@ const conceptSetsStore = useConceptSetsStore()
 const emit = defineEmits<{
   'add-concept': [concept: Concept]
   'remove-concept': [concept: Concept]
+  'view-concept': [payload: { conceptId: number; sourceKey: string }]
 }>()
 
 // ============================================================================

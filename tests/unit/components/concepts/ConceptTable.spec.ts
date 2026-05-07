@@ -14,6 +14,14 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
+vi.mock('@/stores/concept-detail-drawer', () => ({
+  useConceptDetailDrawerStore: vi.fn(() => ({ open: vi.fn(), close: vi.fn(), isOpen: false })),
+}))
+
+vi.mock('@/stores/webapi', () => ({
+  useWebAPIStore: vi.fn(() => ({ getValidVocabularySource: () => null })),
+}))
+
 const vuetify = createVuetify({ components, directives })
 
 const mockConcepts: Concept[] = [
