@@ -54,11 +54,9 @@
 
         <cohort-toolbar-actions
           :can-save="builderRef.canSave"
-          :show-generate="!!builderRef.cohortId"
           :is-previewing-version="builderRef.isPreviewingVersion"
           @cancel="builderRef.handleCancel()"
           @save="builderRef.handleSave()"
-          @generate="builderRef.openGenerationPanel()"
         />
       </div>
     </template>

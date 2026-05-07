@@ -42,27 +42,6 @@
     </AtlasMenu>
 
     <AtlasButton
-      v-if="showGenerate"
-      variant="tonal"
-      :disabled="!canSave"
-      data-testid="generate-btn"
-      @click="$emit('generate')"
-    >
-      <AtlasIcon
-        class="d-none d-md-inline"
-        start
-      >
-        mdi-database-cog-outline
-      </AtlasIcon>
-      <AtlasIcon class="d-md-none">
-        mdi-database-cog-outline
-      </AtlasIcon>
-      <span class="d-none d-md-inline">{{
-        t('components.analysisExecution.buttons.generate')
-      }}</span>
-    </AtlasButton>
-
-    <AtlasButton
       :disabled="!canSave || isPreviewingVersion"
       data-testid="save-cohort-btn"
       @click="$emit('save')"
@@ -81,7 +60,6 @@ import { useI18n } from '@/composables/useI18n'
 
 interface Props {
   canSave: boolean
-  showGenerate: boolean
   isPreviewingVersion?: boolean
 }
 
@@ -90,7 +68,6 @@ defineProps<Props>()
 defineEmits<{
   (e: 'cancel'): void
   (e: 'save'): void
-  (e: 'generate'): void
   (e: 'export-download'): void
   (e: 'export-copy'): void
 }>()

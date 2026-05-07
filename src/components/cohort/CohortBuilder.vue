@@ -40,6 +40,8 @@
       @retry="triggerValidation"
     />
 
+    <CohortGenerationSection :cohort-id="cohortId" />
+
     <!-- Toolbar (status + actions) — hidden when the host view
          renders its own copy in the hero header. State stays here;
          exposed via defineExpose so the parent can wire it up. -->
@@ -68,11 +70,9 @@
 
       <cohort-toolbar-actions
         :can-save="canSave"
-        :show-generate="!!cohortId"
         :is-previewing-version="isPreviewingVersion"
         @cancel="handleCancel"
         @save="handleSave"
-        @generate="openGenerationPanel"
         @export-download="handleExportDownload"
         @export-copy="handleExportCopy"
       />
@@ -554,11 +554,6 @@
       @update:selected-tags="handleTagsUpdate"
     />
 
-    <!-- Generation Panel -->
-    <generation-panel
-      v-model="isGenerationPanelOpen"
-      :cohort-id="cohortId"
-    />
   </div>
 </template>
 
@@ -605,7 +600,7 @@ import InclusionCriteriaPanel from '../cohort-builder/InclusionCriteriaPanel.vue
 import ExitCriteriaPanel from '../cohort-builder/ExitCriteriaPanel.vue'
 import CensorWindowEditor from '../cohort-builder/CensorWindowEditor.vue'
 import CriteriaGroupEditor from '../cohort-builder/CriteriaGroupEditor.vue'
-import GenerationPanel from './GenerationPanel.vue'
+import CohortGenerationSection from './CohortGenerationSection.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import type { VersionsConfig, User } from '@/components/versions/types'
 import { format, parseISO } from 'date-fns'
@@ -684,7 +679,6 @@ const showValidationDialog = ref(false)
 const showConceptSetsDialog = ref(false)
 const showVersionsDialog = ref(false)
 const showTagsDialog = ref(false)
-const isGenerationPanelOpen = ref(false)
 const showUnsavedDialog = ref(false)
 let pendingNavigation: (() => void) | null = null
 
@@ -1168,11 +1162,6 @@ onMounted(async () => {
       }
     }),
   ])
-
-  // Check if we should open the generation panel (from cohort overview)
-  if (route.query.generate === 'true') {
-    isGenerationPanelOpen.value = true
-  }
 
   // Add beforeunload handler to warn when closing tab/window with unsaved changes
   window.addEventListener('beforeunload', handleBeforeUnload)
@@ -1829,10 +1818,6 @@ function handleCancel() {
   router.push('/cohorts')
 }
 
-function openGenerationPanel() {
-  isGenerationPanelOpen.value = true
-}
-
 function gatherConceptSets(): ConceptSetReference[] {
   const conceptSetRefs = new Map<number | string, ConceptSetReference>()
 
@@ -2049,7 +2034,6 @@ defineExpose({
   },
   handleCancel,
   handleSave,
-  openGenerationPanel,
   // Existing expose (criteria editor / inclusion panel) is
   // re-declared here because defineExpose may only be called
   // once per component.
