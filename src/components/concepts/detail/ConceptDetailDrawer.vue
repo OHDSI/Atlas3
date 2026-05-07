@@ -1,22 +1,12 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
-import { useConceptDetailStore } from '@/stores/concept-detail'
-import { AtlasAlert, AtlasIconButton, AtlasProgressLinear } from '@/components/ui'
-import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
-import ConceptStatCards from '@/components/concepts/detail/ConceptStatCards.vue'
-import ConceptAttributesCard from '@/components/concepts/detail/ConceptAttributesCard.vue'
-import ConceptHierarchyMiniMap from '@/components/concepts/detail/ConceptHierarchyMiniMap.vue'
-import ConceptRelatedTable from '@/components/concepts/detail/ConceptRelatedTable.vue'
-import ConceptDrilldownChart from '@/components/concepts/detail/ConceptDrilldownChart.vue'
+import { AtlasIconButton } from '@/components/ui'
+import ConceptDetailContent from '@/components/concepts/detail/ConceptDetailContent.vue'
 
 const drawer = useConceptDetailDrawerStore()
 const { isOpen, sourceKey, conceptId } = storeToRefs(drawer)
-
-const detail = useConceptDetailStore()
-const { concept, isLoading, error, related, parents, children, recordCountsBySource } =
-  storeToRefs(detail)
 
 const drawerOpen = computed({
   get: () => isOpen.value,
@@ -25,15 +15,11 @@ const drawerOpen = computed({
   },
 })
 
-watch(
-  [isOpen, sourceKey, conceptId],
-  async ([open, sk, cid]) => {
-    if (open && sk && cid != null) {
-      await detail.loadConcept(sk, cid)
-    }
-  },
-  { immediate: true },
-)
+// Match the ConceptSetEditor drawer width so the two panels look aligned.
+const drawerWidth = computed(() => {
+  if (typeof window === 'undefined') return 1100
+  return Math.min(window.innerWidth * 0.85, 1400)
+})
 </script>
 
 <template>
@@ -42,7 +28,7 @@ watch(
       v-model="drawerOpen"
       location="right"
       temporary
-      :width="900"
+      :width="drawerWidth"
       class="concept-detail-drawer"
     >
       <div class="drawer-shell">
@@ -51,54 +37,17 @@ watch(
             icon="mdi-close"
             variant="text"
             size="sm"
-            :aria-label="'Close concept details'"
             v-bind="{ ariaLabel: 'Close concept details' }"
             data-testid="concept-drawer-close"
             @click="drawer.close()"
           />
         </div>
 
-        <AtlasProgressLinear
-          v-if="isLoading"
-          indeterminate
-          color="primary"
+        <ConceptDetailContent
+          v-if="isOpen && sourceKey && conceptId"
+          :source-key="sourceKey"
+          :concept-id="conceptId"
         />
-
-        <AtlasAlert
-          v-if="error"
-          severity="danger"
-          class="ma-4"
-        >
-          {{ error }}
-        </AtlasAlert>
-
-        <template v-if="concept && !error">
-          <ConceptDetailHeader :concept="concept" />
-
-          <div class="drawer-body">
-            <ConceptStatCards
-              :concept-id="concept.conceptId"
-              :primary-source-key="sourceKey"
-              :counts-by-source="recordCountsBySource"
-            />
-
-            <div class="drawer-row">
-              <ConceptAttributesCard :concept="concept" />
-              <ConceptHierarchyMiniMap
-                :concept="concept"
-                :parents="parents"
-                :children="children"
-              />
-            </div>
-
-            <ConceptRelatedTable :related="related" />
-
-            <ConceptDrilldownChart
-              :concept="concept"
-              :primary-source-key="sourceKey"
-            />
-          </div>
-        </template>
       </div>
     </v-navigation-drawer>
   </Teleport>
@@ -118,21 +67,5 @@ watch(
   display: flex;
   justify-content: flex-end;
   padding: 8px 12px 0;
-}
-.drawer-body {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.drawer-row {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 12px;
-}
-@media (max-width: 1280px) {
-  .drawer-row {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

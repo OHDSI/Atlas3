@@ -231,7 +231,7 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasChip, AtlasDataTable, AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
-import { computed, ref } from 'vue'
+import { computed, ref, useAttrs } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
@@ -241,6 +241,7 @@ import type { Concept } from '@/models/concept-set.types'
 const { t } = useI18n()
 const webapiStore = useWebAPIStore()
 const conceptDrawer = useConceptDetailDrawerStore()
+const attrs = useAttrs()
 
 // ============================================================================
 // Local State
@@ -288,11 +289,6 @@ const resolvedSourceKey = computed(
   () => props.sourceKey || webapiStore.getValidVocabularySource() || getDefaultSourceKey() || '',
 )
 
-function openConceptDetail(concept: Concept) {
-  if (!resolvedSourceKey.value) return
-  conceptDrawer.open(resolvedSourceKey.value, concept.conceptId)
-}
-
 const emit = defineEmits<{
   'update:page': [page: number]
   'update:itemsPerPage': [itemsPerPage: number]
@@ -301,7 +297,20 @@ const emit = defineEmits<{
   'update:selected': [conceptIds: number[]]
   'add-concept': [concept: Concept]
   'remove-concept': [concept: Concept]
+  'view-concept': [payload: { conceptId: number; sourceKey: string }]
 }>()
+
+// If a parent is listening for `view-concept`, emit and let them handle it
+// (e.g., concept set editor renders the detail inline). Otherwise fall back
+// to the global side-panel drawer.
+function openConceptDetail(concept: Concept) {
+  if (!resolvedSourceKey.value) return
+  if ('onViewConcept' in attrs) {
+    emit('view-concept', { conceptId: concept.conceptId, sourceKey: resolvedSourceKey.value })
+    return
+  }
+  conceptDrawer.open(resolvedSourceKey.value, concept.conceptId)
+}
 
 // ============================================================================
 // Table Configuration

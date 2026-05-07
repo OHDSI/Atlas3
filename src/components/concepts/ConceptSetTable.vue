@@ -241,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, useAttrs } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
@@ -253,6 +253,7 @@ import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 const { t } = useI18n()
 const webapiStore = useWebAPIStore()
 const conceptDrawer = useConceptDetailDrawerStore()
+const attrs = useAttrs()
 
 interface Props {
   items: ConceptSetItem[]
@@ -270,17 +271,25 @@ const resolvedSourceKey = computed(
   () => props.sourceKey || webapiStore.getValidVocabularySource() || getDefaultSourceKey() || '',
 )
 
-function openConceptDetail(item: ConceptSetItem) {
-  if (!resolvedSourceKey.value) return
-  conceptDrawer.open(resolvedSourceKey.value, item.conceptId)
-}
-
 const emit = defineEmits<{
   'toggle:descendants': [conceptId: number]
   'toggle:mapped': [conceptId: number]
   'toggle:exclude': [conceptId: number]
   remove: [conceptId: number]
+  'view-concept': [payload: { conceptId: number; sourceKey: string }]
 }>()
+
+// If a parent listens for `view-concept`, emit instead of opening the global
+// drawer — that lets containers (like the concept set editor) render the
+// detail in their own panel rather than spawning a second one on top.
+function openConceptDetail(item: ConceptSetItem) {
+  if (!resolvedSourceKey.value) return
+  if ('onViewConcept' in attrs) {
+    emit('view-concept', { conceptId: item.conceptId, sourceKey: resolvedSourceKey.value })
+    return
+  }
+  conceptDrawer.open(resolvedSourceKey.value, item.conceptId)
+}
 
 // ============================================================================
 // Local state

@@ -25,7 +25,25 @@ async function load() {
   await conceptDetail.loadDrilldown(selectedSourceKey.value)
 }
 
-onMounted(load)
+async function ensureSources() {
+  // Drilldown lives in the side panel which can mount before the data
+  // sources store has loaded. Without this, the select shows an empty
+  // "(no value)" placeholder. Calling fetchDataSources is idempotent and
+  // safe — the store guards against re-loading.
+  if ((dataSources.sources ?? []).length === 0) {
+    try {
+      await dataSources.fetchDataSources()
+    } catch {
+      // Non-fatal: the chart still renders with the primary source as
+      // the lone fallback in `sourceItems`.
+    }
+  }
+}
+
+onMounted(() => {
+  void ensureSources()
+  void load()
+})
 watch(selectedSourceKey, load)
 watch(() => props.concept.conceptId, load)
 
@@ -90,9 +108,19 @@ const activeSeriesEmpty = computed(() => {
   return (report.value?.prevalenceByMonth ?? []).length === 0
 })
 
-const sourceItems = computed(() =>
-  (dataSources.sources ?? []).map((s) => ({ title: s.sourceName, value: s.sourceKey }))
-)
+const sourceItems = computed(() => {
+  const list = (dataSources.sources ?? []).map((s) => ({
+    title: s.sourceName,
+    value: s.sourceKey,
+  }))
+  // Guarantee the dropdown always has at least the primary source so the
+  // user never sees an empty "(no value)" select while sources are still
+  // loading or unavailable.
+  if (selectedSourceKey.value && !list.some((i) => i.value === selectedSourceKey.value)) {
+    list.unshift({ title: selectedSourceKey.value, value: selectedSourceKey.value })
+  }
+  return list
+})
 </script>
 
 <template>
