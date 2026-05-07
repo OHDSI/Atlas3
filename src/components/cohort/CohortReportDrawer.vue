@@ -6,14 +6,22 @@
     :width="drawerWidth"
     @update:model-value="onDrawerChange"
   >
-    <v-card flat class="h-100 d-flex flex-column">
+    <v-card
+      flat
+      class="h-100 d-flex flex-column"
+    >
       <v-card-title class="d-flex align-center pa-4 border-b">
-        <AtlasIcon class="mr-2" color="primary">{{ headerIcon }}</AtlasIcon>
+        <AtlasIcon
+          class="mr-2"
+          color="primary"
+        >
+          {{ headerIcon }}
+        </AtlasIcon>
         <span class="text-h6">{{ headerTitle }}</span>
         <AtlasSpacer />
         <AtlasIconButton
           icon="mdi-close"
-          :ariaLabel="closeLabel"
+          v-bind="{ ariaLabel: closeLabel }"
           variant="text"
           size="sm"
           data-testid="report-drawer-close"
