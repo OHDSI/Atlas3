@@ -72,6 +72,7 @@ export function useInclusionStats(
       if (oldSource !== undefined && newSource !== oldSource) {
         stats.value = null
         lastExpressionKey.value = null
+        trigger()
       }
     }
   )

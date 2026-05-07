@@ -103,6 +103,19 @@ describe('useInclusionStats', () => {
     expect(stats.value).toBeNull()
   })
 
+  it('refetches when source changes', async () => {
+    vi.mocked(getInclusionStats).mockResolvedValue(samplePayload)
+    const expr = ref<Record<string, unknown> | null>({ a: 1 })
+    useInclusionStats(expr)
+    await flush()
+    vi.mocked(getInclusionStats).mockClear()
+
+    useTrexSQLCacheReturn.selectedSourceKey.value = 'SYNPUF-100K'
+    await nextTick()
+    await flush()
+    expect(getInclusionStats).toHaveBeenCalledWith('SYNPUF-100K', { a: 1 })
+  })
+
   it('reports error message on rejection', async () => {
     vi.mocked(getInclusionStats).mockRejectedValue(new Error('boom'))
     const expr = ref<Record<string, unknown> | null>({ a: 1 })
