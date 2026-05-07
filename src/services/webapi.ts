@@ -716,7 +716,7 @@ export async function getCohortReport(
  *
  * This wrapper validates the envelope and parses `treemapData` into a typed tree.
  *
- * Endpoint: GET /cohortdefinition/{id}/report/{sourceKey}?mode={0|1|2}
+ * Endpoint: GET /cohortdefinition/{id}/report/{sourceKey}/inclusion?mode={0|1|2}
  */
 export async function getInclusionRuleReport(
   cohortId: number,
@@ -725,7 +725,7 @@ export async function getInclusionRuleReport(
 ): Promise<InclusionRuleReport | null> {
   try {
     const data = await fetchJSON<unknown>(
-      `/cohortdefinition/${cohortId}/report/${sourceKey}?mode=${mode}`
+      `/cohortdefinition/${cohortId}/report/${sourceKey}/inclusion?mode=${mode}`
     )
 
     const parsed = InclusionRuleReportSchema.safeParse(data)
