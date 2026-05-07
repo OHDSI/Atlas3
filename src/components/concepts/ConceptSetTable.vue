@@ -241,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useAttrs } from 'vue'
+import { ref, computed, getCurrentInstance } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
@@ -253,7 +253,7 @@ import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 const { t } = useI18n()
 const webapiStore = useWebAPIStore()
 const conceptDrawer = useConceptDetailDrawerStore()
-const attrs = useAttrs()
+const instance = getCurrentInstance()
 
 interface Props {
   items: ConceptSetItem[]
@@ -282,9 +282,16 @@ const emit = defineEmits<{
 // If a parent listens for `view-concept`, emit instead of opening the global
 // drawer — that lets containers (like the concept set editor) render the
 // detail in their own panel rather than spawning a second one on top.
+// Note: declared emits are consumed before reaching $attrs, so we have to
+// inspect the raw vnode props to detect a parent listener.
+function hasViewConceptListener(): boolean {
+  const props = (instance?.vnode.props ?? {}) as Record<string, unknown>
+  return typeof props.onViewConcept === 'function'
+}
+
 function openConceptDetail(item: ConceptSetItem) {
   if (!resolvedSourceKey.value) return
-  if ('onViewConcept' in attrs) {
+  if (hasViewConceptListener()) {
     emit('view-concept', { conceptId: item.conceptId, sourceKey: resolvedSourceKey.value })
     return
   }

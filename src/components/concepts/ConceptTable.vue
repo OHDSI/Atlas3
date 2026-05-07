@@ -231,7 +231,7 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasChip, AtlasDataTable, AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
-import { computed, ref, useAttrs } from 'vue'
+import { computed, ref, getCurrentInstance } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useWebAPIStore } from '@/stores/webapi'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
@@ -241,7 +241,7 @@ import type { Concept } from '@/models/concept-set.types'
 const { t } = useI18n()
 const webapiStore = useWebAPIStore()
 const conceptDrawer = useConceptDetailDrawerStore()
-const attrs = useAttrs()
+const instance = getCurrentInstance()
 
 // ============================================================================
 // Local State
@@ -302,10 +302,16 @@ const emit = defineEmits<{
 
 // If a parent is listening for `view-concept`, emit and let them handle it
 // (e.g., concept set editor renders the detail inline). Otherwise fall back
-// to the global side-panel drawer.
+// to the global side-panel drawer. Declared emits are consumed before
+// reaching $attrs, so we have to inspect the raw vnode props.
+function hasViewConceptListener(): boolean {
+  const vprops = (instance?.vnode.props ?? {}) as Record<string, unknown>
+  return typeof vprops.onViewConcept === 'function'
+}
+
 function openConceptDetail(concept: Concept) {
   if (!resolvedSourceKey.value) return
-  if ('onViewConcept' in attrs) {
+  if (hasViewConceptListener()) {
     emit('view-concept', { conceptId: concept.conceptId, sourceKey: resolvedSourceKey.value })
     return
   }
