@@ -279,7 +279,6 @@
           v-model="newCohortName"
           :label="t('columns.name', 'Cohort name').value"
           variant="outlined"
-          autofocus
           @keyup.enter="confirmCreateCohort"
         />
         <template #actions>

@@ -1,12 +1,13 @@
 <template>
   <div class="pathway-settings">
     <div class="pathway-settings__row">
-      <label class="pathway-settings__label">{{
-        t('pathway.combinationWindow', 'Collapse window (days)')
-      }}</label>
+      <div class="pathway-settings__label">
+        {{ t('pathway.combinationWindow', 'Collapse window (days)') }}
+      </div>
       <AtlasSelect
         :model-value="modelValue.combinationWindow as (typeof combinationWindowOptions)[number]"
         :items="combinationWindowOptions"
+        :aria-label="t('pathway.combinationWindow', 'Collapse window (days)').value"
         variant="underlined"
         hide-details
         :readonly="readonly"
@@ -14,12 +15,13 @@
       />
     </div>
     <div class="pathway-settings__row">
-      <label class="pathway-settings__label">{{
-        t('pathway.minCellCount', 'Minimum cell count')
-      }}</label>
+      <div class="pathway-settings__label">
+        {{ t('pathway.minCellCount', 'Minimum cell count') }}
+      </div>
       <AtlasSelect
         :model-value="modelValue.minCellCount as (typeof minCellCountOptions)[number]"
         :items="minCellCountOptions"
+        :aria-label="t('pathway.minCellCount', 'Minimum cell count').value"
         variant="underlined"
         hide-details
         :readonly="readonly"
@@ -27,12 +29,13 @@
       />
     </div>
     <div class="pathway-settings__row">
-      <label class="pathway-settings__label">{{
-        t('pathway.maxDepth', 'Maximum path length')
-      }}</label>
+      <div class="pathway-settings__label">
+        {{ t('pathway.maxDepth', 'Maximum path length') }}
+      </div>
       <AtlasSelect
         :model-value="modelValue.maxDepth as (typeof maxDepthOptions)[number]"
         :items="maxDepthOptions"
+        :aria-label="t('pathway.maxDepth', 'Maximum path length').value"
         variant="underlined"
         hide-details
         :readonly="readonly"
@@ -40,11 +43,12 @@
       />
     </div>
     <div class="pathway-settings__row">
-      <label class="pathway-settings__label">{{
-        t('pathway.allowRepeats', 'Allow repeats')
-      }}</label>
+      <div class="pathway-settings__label">
+        {{ t('pathway.allowRepeats', 'Allow repeats') }}
+      </div>
       <AtlasSwitch
         :model-value="modelValue.allowRepeats"
+        :aria-label="t('pathway.allowRepeats', 'Allow repeats').value"
         hide-details
         :readonly="readonly"
         class="pathway-settings__switch"

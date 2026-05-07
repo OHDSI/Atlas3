@@ -120,7 +120,6 @@
         v-model="editingName"
         :label="t('cohortDefinitions.ruleName', 'Rule name').value"
         variant="outlined"
-        autofocus
         @keyup.enter="saveEditedName"
       />
       <template #actions>
@@ -396,12 +395,17 @@ defineExpose({ addNewRule })
   color: #333;
   border: 1px solid #e0e0e0;
   background: white;
-  outline: none;
   padding: 8px 12px;
   border-radius: 4px;
   transition: all 0.2s;
   font-family: inherit;
   width: 100%;
+}
+
+.rule-description-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
+  border-color: #1f425a;
 }
 
 .rule-description-input:hover {

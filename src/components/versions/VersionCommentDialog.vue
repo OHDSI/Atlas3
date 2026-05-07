@@ -20,7 +20,6 @@
         :rows="4"
         multiline
         variant="outlined"
-        autofocus
         class="mt-4"
       />
 

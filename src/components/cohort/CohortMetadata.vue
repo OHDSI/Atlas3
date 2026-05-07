@@ -31,7 +31,9 @@
 
       <!-- Tags Editor -->
       <div class="metadata-tags">
-        <label class="metadata-tags__label">{{ t('common.tags', 'Tags') }}</label>
+        <div class="metadata-tags__label">
+          {{ t('common.tags', 'Tags') }}
+        </div>
 
         <!-- Existing tags -->
         <div

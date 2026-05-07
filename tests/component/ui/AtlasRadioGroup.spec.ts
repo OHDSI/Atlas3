@@ -72,4 +72,24 @@ describe('AtlasRadioGroup', () => {
     expect(wrapper.emitted('update:modelValue')).toBeTruthy()
     expect(wrapper.emitted('update:modelValue')![0]).toEqual(['b'])
   })
+
+  it('exposes aria-required on the rendered group when required=true', () => {
+    const wrapper = mountWith({ required: true })
+    expect(wrapper.html()).toContain('aria-required="true"')
+  })
+
+  it('does not render aria-required when required=false', () => {
+    const wrapper = mountWith()
+    expect(wrapper.html()).not.toContain('aria-required')
+  })
+
+  it('exposes aria-invalid on the rendered group when error is present', () => {
+    const wrapper = mountWith({ error: 'Required' })
+    expect(wrapper.html()).toContain('aria-invalid="true"')
+  })
+
+  it('does not render aria-invalid when no error', () => {
+    const wrapper = mountWith()
+    expect(wrapper.html()).not.toContain('aria-invalid')
+  })
 })

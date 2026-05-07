@@ -5,6 +5,9 @@
     :max-width="maxWidth"
     :persistent="persistent"
     :width="width"
+    role="dialog"
+    aria-modal="true"
+    :aria-labelledby="title ? titleId : undefined"
     v-bind="forwardAttrs"
     @update:model-value="onModelValueUpdate"
   >
@@ -23,6 +26,7 @@
           </div>
           <h2
             v-if="title"
+            :id="titleId"
             class="atlas-dialog__title"
           >
             {{ title }}
@@ -40,7 +44,7 @@
           variant="text"
           size="sm"
           tone="neutral"
-          v-bind="{ ariaLabel: closeLabel }"
+          v-bind="{ ariaLabel: resolvedCloseLabel }"
           @click="closeFromButton"
         />
       </header>
@@ -62,9 +66,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue'
+import { computed, nextTick, ref, useAttrs, watch } from 'vue'
 import { VDialog, VCard, VDivider } from 'vuetify/components'
 import AtlasIconButton from './AtlasIconButton.vue'
+import { useI18n } from '@/composables/useI18n'
 
 interface Props {
   modelValue: boolean
@@ -79,7 +84,7 @@ interface Props {
   chromeless?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   eyebrow: '',
   title: undefined,
   subtitle: undefined,
@@ -87,7 +92,7 @@ withDefaults(defineProps<Props>(), {
   width: undefined,
   persistent: false,
   showClose: true,
-  closeLabel: 'Close',
+  closeLabel: undefined,
   chromeless: false,
 })
 
@@ -98,12 +103,48 @@ const emit = defineEmits<{
 
 defineOptions({ inheritAttrs: false })
 
+const i18n = useI18n() as Partial<ReturnType<typeof useI18n>>
+
+const titleId = `atlas-dialog-title-${Math.random().toString(36).slice(2, 10)}`
+
+const resolvedCloseLabel = computed(() => {
+  if (props.closeLabel) return props.closeLabel
+  return typeof i18n.tv === 'function' ? i18n.tv('a11y.closeDialog', 'Close dialog') : 'Close dialog'
+})
+
 const attrs = useAttrs()
 const forwardAttrs = computed(() => {
   const { 'max-width': _mw, maxWidth: _mw2, persistent: _p, width: _w, ...rest } = attrs as Record<string, unknown>
   void _mw; void _mw2; void _p; void _w
   return rest
 })
+
+const previouslyFocused = ref<HTMLElement | null>(null)
+
+watch(
+  () => props.modelValue,
+  (open, prev) => {
+    if (open && !prev) {
+      const active = (typeof document !== 'undefined' ? document.activeElement : null) as HTMLElement | null
+      previouslyFocused.value = active && typeof active.focus === 'function' ? active : null
+      return
+    }
+    if (!open && prev) {
+      const target = previouslyFocused.value
+      previouslyFocused.value = null
+      if (target && typeof target.focus === 'function') {
+        nextTick(() => {
+          try {
+            target.focus()
+          } catch {
+            void 0
+          }
+        })
+      }
+    }
+  },
+  { immediate: true }
+)
 
 function onModelValueUpdate(open: boolean) {
   emit('update:modelValue', open)

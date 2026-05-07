@@ -1,5 +1,8 @@
 {
   "locale": "en",
+  "a11y": {
+    "closeDialog": "Close dialog"
+  },
   "datatable": {
     "language": {
       "decimal": "",
@@ -178,6 +181,24 @@
     "profiles": "Profiles",
     "search": "Search",
     "tagging": "Tagging"
+  },
+  "a11y": {
+    "skipToMain": "Skip to main content",
+    "logoHome": "OHDSI ATLAS Home"
+  },
+  "route": {
+    "home": { "title": "Home" },
+    "cohorts": { "title": "Cohorts" },
+    "cohortBuilder": { "title": "Cohort Builder" },
+    "conceptSets": { "title": "Concept Sets" },
+    "profiles": { "title": "Profiles" },
+    "analysis": { "title": "Analysis" },
+    "characterizations": { "title": "Characterizations" },
+    "featureAnalyses": { "title": "Feature Analyses" },
+    "pathways": { "title": "Cohort Pathways" },
+    "incidenceRates": { "title": "Incidence Rates" },
+    "dataSources": { "title": "Data Sources" },
+    "roleManagement": { "title": "Role Management" }
   },
   "options": {
     "after": "After",

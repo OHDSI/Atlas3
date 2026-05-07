@@ -163,12 +163,16 @@ export const useLocaleStore = defineStore('locale', {
       this.locale = locale
       localStorage.setItem('locale', locale)
 
-      // Update page title with locale
       if (typeof document !== 'undefined') {
-        const currentTitle = document.title
-        const baseTitle = currentTitle.split(' | ')[0] || 'Atlas'
-        document.title = `${baseTitle} | ${locale.toUpperCase()}`
-        document.documentElement.lang = locale
+        document.documentElement.setAttribute('lang', locale)
+      }
+
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(
+          new CustomEvent('locale-changed', {
+            detail: { locale },
+          })
+        )
       }
     },
 

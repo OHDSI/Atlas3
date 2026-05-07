@@ -5,6 +5,8 @@
     :color="severityColor"
     :timeout="timeout"
     :location="location"
+    :role="ariaRole"
+    :aria-live="ariaLive"
     v-bind="forwardAttrs"
     @update:model-value="(v: boolean) => $emit('update:modelValue', v)"
   >
@@ -58,6 +60,10 @@ const SEVERITY_COLOR: Record<AtlasSnackbarSeverity, string> = {
 }
 
 const severityColor = computed(() => SEVERITY_COLOR[props.severity])
+
+const isAssertive = computed(() => props.severity === 'danger')
+const ariaRole = computed(() => (isAssertive.value ? 'alert' : 'status'))
+const ariaLive = computed(() => (isAssertive.value ? 'assertive' : 'polite'))
 
 const attrs = useAttrs()
 const forwardAttrs = computed(() => {

@@ -12,6 +12,7 @@
     :hide-default-footer="hideDefaultFooter"
     :no-data-text="noDataText"
     :loading-text="loadingText"
+    :aria-label="caption"
     density="compact"
     v-bind="forwardAttrs"
     @update:page="(v: number) => $emit('update:page', v)"
@@ -60,6 +61,7 @@ interface Props {
   hideDefaultFooter?: boolean
   noDataText?: string
   loadingText?: string
+  caption?: string
 }
 
 withDefaults(defineProps<Props>(), {
@@ -72,6 +74,7 @@ withDefaults(defineProps<Props>(), {
   hideDefaultFooter: false,
   noDataText: undefined,
   loadingText: undefined,
+  caption: undefined,
 })
 
 defineEmits<{

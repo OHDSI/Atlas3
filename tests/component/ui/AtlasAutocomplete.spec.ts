@@ -94,4 +94,24 @@ describe('AtlasAutocomplete', () => {
     const wrapper = mountWith({ noFilter: true })
     expect(wrapper.findComponent({ name: 'VAutocomplete' }).props('noFilter')).toBe(true)
   })
+
+  it('sets aria-required on the input when required=true', () => {
+    const wrapper = mountWith({ required: true })
+    expect(wrapper.find('input').attributes('aria-required')).toBe('true')
+  })
+
+  it('does not set aria-required when required=false', () => {
+    const wrapper = mountWith()
+    expect(wrapper.find('input').attributes('aria-required')).toBeUndefined()
+  })
+
+  it('sets aria-invalid on the input when error is present', () => {
+    const wrapper = mountWith({ error: 'Bad' })
+    expect(wrapper.find('input').attributes('aria-invalid')).toBe('true')
+  })
+
+  it('does not set aria-invalid when no error', () => {
+    const wrapper = mountWith()
+    expect(wrapper.find('input').attributes('aria-invalid')).toBeUndefined()
+  })
 })

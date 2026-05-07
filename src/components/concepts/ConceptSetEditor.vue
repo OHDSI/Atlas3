@@ -839,7 +839,6 @@ function closePasteDialog() {
   border: 0;
   border-bottom: 1px solid transparent;
   padding: 2px 0 4px;
-  outline: none;
   transition: border-color 120ms ease;
 }
 .cs-editor__title-input::placeholder {
@@ -850,7 +849,9 @@ function closePasteDialog() {
 .cs-editor__title-input:hover {
   border-bottom-color: rgba(0, 0, 0, 0.12);
 }
-.cs-editor__title-input:focus {
+.cs-editor__title-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
   border-bottom-color: rgb(var(--v-theme-primary));
 }
 .cs-editor__title-input:disabled {

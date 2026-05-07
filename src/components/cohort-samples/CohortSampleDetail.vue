@@ -143,9 +143,12 @@ const anyRecordCount = computed(() =>
   border-bottom: 1px solid transparent;
   transition: border-color 120ms ease;
 }
-.profile-link:hover,
+.profile-link:hover {
+  border-bottom-color: currentColor;
+}
 .profile-link:focus-visible {
   border-bottom-color: currentColor;
-  outline: none;
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
 }
 </style>

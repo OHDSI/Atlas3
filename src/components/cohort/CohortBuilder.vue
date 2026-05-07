@@ -2187,12 +2187,17 @@ defineExpose({
   color: #333;
   border: 1px solid #e0e0e0;
   background: white;
-  outline: none;
   padding: 6px 12px;
   border-radius: 4px;
   transition: all 0.2s;
   min-width: 250px;
   flex: 1;
+}
+
+.cohort-builder__name-input:focus-visible,
+.cohort-builder__description-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
 }
 
 .cohort-builder__description-input {

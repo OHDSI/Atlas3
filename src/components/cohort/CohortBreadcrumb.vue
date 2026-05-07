@@ -1,11 +1,20 @@
 <template>
-  <nav class="cohort-breadcrumb">
-    <span
+  <nav
+    class="cohort-breadcrumb"
+    aria-label="Breadcrumb"
+  >
+    <button
+      type="button"
       class="cohort-breadcrumb__item cohort-breadcrumb__item--link"
       @click="$emit('navigate-back')"
-    >{{ t('navigation.cohortdefinitions') }}</span>
+    >
+      {{ t('navigation.cohortdefinitions') }}
+    </button>
     <span class="cohort-breadcrumb__separator">›</span>
-    <span class="cohort-breadcrumb__item cohort-breadcrumb__item--active">
+    <span
+      class="cohort-breadcrumb__item cohort-breadcrumb__item--active"
+      aria-current="page"
+    >
       {{ modelValue || t('cohortDefinitions.newDefinition') }}
     </span>
     <AtlasTooltip
@@ -37,7 +46,6 @@
         :label="t('columns.name', 'Name').value"
         :placeholder="tv('cohortDefinitions.newDefinitionTitle')"
         variant="outlined"
-        autofocus
         @keyup.enter="saveEditedName"
       />
       <template #actions>
@@ -108,6 +116,11 @@ function saveEditedName() {
 
     &--link {
       cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+      color: inherit;
       &:hover {
         color: rgb(var(--v-theme-primary));
         text-decoration: underline;
