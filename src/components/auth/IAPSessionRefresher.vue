@@ -4,6 +4,7 @@
     v-if="isIAPEnabled"
     ref="iapFrame"
     src="/_gcp_iap/session_refresher"
+    title="Identity-aware proxy session refresh"
     style="display: none"
     @load="handleIframeLoad"
   />

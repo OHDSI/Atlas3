@@ -76,4 +76,28 @@ describe('AtlasSnackbar', () => {
     await wrapper.findComponent({ name: 'VSnackbar' }).vm.$emit('update:modelValue', false)
     expect(wrapper.emitted('update:modelValue')).toEqual([[false]])
   })
+
+  it.each(['info', 'success', 'warning'] as const)('uses role="status" and aria-live="polite" for severity=%s', async (severity) => {
+    mountWith({ severity })
+    await new Promise(r => setTimeout(r, 50))
+    const overlay = document.querySelector('.v-snackbar') as HTMLElement | null
+    expect(overlay?.getAttribute('role')).toBe('status')
+    expect(overlay?.getAttribute('aria-live')).toBe('polite')
+  })
+
+  it('uses role="alert" and aria-live="assertive" for severity=danger', async () => {
+    mountWith({ severity: 'danger' })
+    await new Promise(r => setTimeout(r, 50))
+    const overlay = document.querySelector('.v-snackbar') as HTMLElement | null
+    expect(overlay?.getAttribute('role')).toBe('alert')
+    expect(overlay?.getAttribute('aria-live')).toBe('assertive')
+  })
+
+  it('defaults to role="status" and aria-live="polite"', async () => {
+    mountWith()
+    await new Promise(r => setTimeout(r, 50))
+    const overlay = document.querySelector('.v-snackbar') as HTMLElement | null
+    expect(overlay?.getAttribute('role')).toBe('status')
+    expect(overlay?.getAttribute('aria-live')).toBe('polite')
+  })
 })

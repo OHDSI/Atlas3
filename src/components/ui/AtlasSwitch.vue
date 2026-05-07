@@ -5,6 +5,9 @@
     :label="label"
     :disabled="disabled"
     :color="toneColor"
+    :error-messages="errorMessages"
+    :aria-required="required ? 'true' : undefined"
+    :aria-invalid="hasError ? 'true' : undefined"
     density="compact"
     v-bind="forwardAttrs"
     @update:model-value="(v: boolean | null) => $emit('update:modelValue', !!v)"
@@ -21,6 +24,8 @@ interface Props {
   label?: string
   disabled?: boolean
   tone?: AtlasSwitchTone
+  error?: string
+  required?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -28,6 +33,8 @@ const props = withDefaults(defineProps<Props>(), {
   label: undefined,
   disabled: false,
   tone: 'primary',
+  error: undefined,
+  required: false,
 })
 
 defineEmits<{ 'update:modelValue': [value: boolean] }>()
@@ -40,6 +47,10 @@ const TONE_COLOR: Record<AtlasSwitchTone, string> = {
 }
 
 const toneColor = computed(() => TONE_COLOR[props.tone])
+
+const errorMessages = computed(() => (props.error ? [props.error] : undefined))
+
+const hasError = computed(() => !!props.error)
 
 const attrs = useAttrs()
 const forwardAttrs = computed(() => {

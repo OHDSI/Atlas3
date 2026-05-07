@@ -92,4 +92,17 @@ describe('AtlasDataTable', () => {
     await wrapper.findComponent({ name: 'VDataTable' }).vm.$emit('update:sort-by', newSort)
     expect(wrapper.emitted('update:sortBy')).toEqual([[newSort]])
   })
+
+  it('forwards caption prop as aria-label on the underlying table', () => {
+    const wrapper = mountWith({ caption: 'Concept results' })
+    expect(wrapper.findComponent({ name: 'VDataTable' }).attributes('aria-label')).toBe(
+      'Concept results',
+    )
+  })
+
+  it('omits aria-label when caption is not provided', () => {
+    const wrapper = mountWith()
+    const ariaLabel = wrapper.findComponent({ name: 'VDataTable' }).attributes('aria-label')
+    expect(ariaLabel === undefined || ariaLabel === '').toBe(true)
+  })
 })

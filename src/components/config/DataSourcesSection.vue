@@ -77,6 +77,7 @@
                     type="radio"
                     :value="source.sourceKey"
                     :disabled="!source.hasVocabulary"
+                    :aria-label="`${tv('columns.vocabulary')}: ${source.sourceName}`"
                     class="mr-2"
                   >
                   <span>{{ source.vocabularyVersion || source.version || '-' }}</span>
@@ -88,6 +89,7 @@
                   type="radio"
                   :value="source.sourceKey"
                   :disabled="!source.hasEvidence"
+                  :aria-label="`${tv('columns.evidence')}: ${source.sourceName}`"
                 >
               </td>
               <td>
@@ -96,6 +98,7 @@
                   type="radio"
                   :value="source.sourceKey"
                   :disabled="!source.hasResults"
+                  :aria-label="`${tv('columns.results')}: ${source.sourceName}`"
                 >
               </td>
               <td>

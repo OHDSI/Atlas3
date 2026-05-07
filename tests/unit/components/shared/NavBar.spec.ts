@@ -195,8 +195,15 @@ describe('NavBar', () => {
   describe('Navigation Items', () => {
     it('should render navigation items on desktop', () => {
       const wrapper = mountComponent()
-      const nav = wrapper.find('.nav-bar__nav.d-none.d-md-block')
+      const nav = wrapper.find('ul.nav-bar__nav.d-none.d-md-flex')
       expect(nav.exists()).toBe(true)
+    })
+
+    it('should expose the nav landmark with an accessible label', () => {
+      const wrapper = mountComponent()
+      const nav = wrapper.find('nav.nav-bar__nav-wrapper')
+      expect(nav.exists()).toBe(true)
+      expect(nav.attributes('aria-label')).toBe('Main')
     })
 
     it('should render navigation list with items', () => {
@@ -253,12 +260,12 @@ describe('NavBar', () => {
       expect(mockPush).toHaveBeenCalledWith('/')
     })
 
-    it('should navigate to home on logo keyboard interaction', async () => {
+    it('should navigate to home on logo keyboard interaction', () => {
       const wrapper = mountComponent()
       const logo = wrapper.find('.nav-bar__logo')
 
-      expect(logo.attributes('tabindex')).toBe('0')
-      expect(logo.attributes('role')).toBe('button')
+      expect(logo.element.tagName).toBe('BUTTON')
+      expect(logo.attributes('type')).toBe('button')
     })
   })
 
@@ -338,11 +345,12 @@ describe('NavBar', () => {
       expect(configBtn?.attributes('aria-label')).toBe('Open configuration panel')
     })
 
-    it('should have proper role and tabindex on logo', () => {
+    it('should render the logo as a native button', () => {
       const wrapper = mountComponent()
       const logo = wrapper.find('.nav-bar__logo')
-      expect(logo.attributes('role')).toBe('button')
-      expect(logo.attributes('tabindex')).toBe('0')
+      expect(logo.element.tagName).toBe('BUTTON')
+      expect(logo.attributes('type')).toBe('button')
+      expect(logo.attributes('aria-label')).toBeTruthy()
     })
 
     it('should have alt text on images', () => {
@@ -394,7 +402,7 @@ describe('NavBar', () => {
 
     it('should have proper layout classes for responsive design', () => {
       const wrapper = mountComponent()
-      expect(wrapper.find('.d-none.d-md-block').exists()).toBe(true)
+      expect(wrapper.find('.d-none.d-md-flex').exists()).toBe(true)
       expect(wrapper.find('.d-md-none').exists()).toBe(true)
     })
   })

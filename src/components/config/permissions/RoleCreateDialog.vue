@@ -21,7 +21,6 @@
         variant="outlined"
         required
         class="mb-2"
-        autofocus
         :disabled="saving"
       />
 

@@ -123,6 +123,26 @@ describe('Vue Router', () => {
     vi.restoreAllMocks()
   })
 
+  describe('Document Title Guard', () => {
+    it('should set document.title from titleKey on navigation', async () => {
+      await router.push('/cohorts')
+      await router.isReady()
+      expect(document.title.endsWith(' | ATLAS')).toBe(true)
+    })
+
+    it('should attach a titleKey to the home route meta', () => {
+      const homeRoute = router.getRoutes().find((r) => r.name === 'home')
+      expect((homeRoute?.meta as { titleKey?: string })?.titleKey).toBe('route.home.title')
+    })
+
+    it('should attach a titleKey to cohorts and concepts routes', () => {
+      const cohortsRoute = router.getRoutes().find((r) => r.name === 'cohorts')
+      const conceptsRoute = router.getRoutes().find((r) => r.name === 'concepts')
+      expect((cohortsRoute?.meta as { titleKey?: string })?.titleKey).toBe('route.cohorts.title')
+      expect((conceptsRoute?.meta as { titleKey?: string })?.titleKey).toBe('route.conceptSets.title')
+    })
+  })
+
   describe('Route Definitions', () => {
     it('should define home route', () => {
       const homeRoute = router.getRoutes().find((r) => r.name === 'home')

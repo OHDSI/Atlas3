@@ -22,6 +22,13 @@
           <th class="attrition-table__col-num">
             % excluded
           </th>
+          <th
+            v-if="cumulativeRemaining"
+            class="attrition-table__col-num"
+            data-testid="inclusion-attrition-cumulative-header"
+          >
+            Cumulative remaining
+          </th>
           <th class="attrition-table__col-bar" />
         </tr>
       </thead>
@@ -45,6 +52,13 @@
           </td>
           <td class="attrition-table__col-num">
             {{ formatPercent(rule.percentExcluded) }}
+          </td>
+          <td
+            v-if="cumulativeRemaining"
+            class="attrition-table__col-num"
+            data-testid="inclusion-attrition-cumulative-cell"
+          >
+            {{ formatCount(cumulativeRemaining[idx] ?? 0) }}
           </td>
           <td class="attrition-table__col-bar">
             <div class="attrition-table__bar-track">
@@ -79,7 +93,11 @@ import type { InclusionRuleStatistic } from '@/models/report.types'
 
 const { t } = useI18n()
 
-defineProps<{ rules: InclusionRuleStatistic[] }>()
+defineProps<{
+  rules: InclusionRuleStatistic[]
+  /** Per-rule cumulative remaining counts (one entry per rule, in the same order). When provided, an extra column renders. */
+  cumulativeRemaining?: number[]
+}>()
 
 function formatCount(n: number): string {
   return new Intl.NumberFormat().format(n)

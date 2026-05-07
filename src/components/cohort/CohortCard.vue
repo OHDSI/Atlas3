@@ -94,23 +94,6 @@
       </AtlasTooltip>
 
       <AtlasTooltip
-        :text="generateTooltipText"
-        location="top"
-      >
-        <template #activator="{ props: tooltipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tooltipProps, ariaLabel: 'Generate cohort' }"
-            icon="mdi-account-multiple"
-            variant="text"
-            size="sm"
-            class="cohort-card__action-btn"
-            :disabled="!canWrite"
-            @click.stop="handleGenerate"
-          />
-        </template>
-      </AtlasTooltip>
-
-      <AtlasTooltip
         :text="deleteTooltipText"
         location="top"
       >
@@ -145,7 +128,6 @@ interface Props {
 }
 
 interface Emits {
-  (e: 'generate', cohort: CohortDefinitionSummary): void
   (e: 'delete', cohort: CohortDefinitionSummary): void
   (e: 'tag-click', tagName: string): void
   (e: 'show-info', cohort: CohortDefinitionSummary): void
@@ -163,17 +145,13 @@ const byLabel = t('columns.author', 'Author')
 const createdLabel = t('columns.created', 'Created')
 const updatedOnLabel = t('columns.modified', 'Modified')
 const infoTooltip = t('common.cohortInformation', 'Cohort information')
-const materializeTooltip = t('components.analysisExecution.buttons.generate', 'Generate')
 const deleteTooltip = t('common.delete', 'Delete')
 const noPermissionTooltip = t('common.noPermission', 'You do not have permission for this action')
 const unknownLabel = t('common.anonymous', 'Unknown')
 const naLabel = t('common.noData', 'N/A')
 
 const cohortId = toRef(() => props.cohort.id)
-const { canWrite, canDelete } = useEntityAccess('cohortDefinition', cohortId)
-const generateTooltipText = computed(() =>
-  canWrite.value ? materializeTooltip.value : noPermissionTooltip.value
-)
+const { canDelete } = useEntityAccess('cohortDefinition', cohortId)
 const deleteTooltipText = computed(() =>
   canDelete.value ? deleteTooltip.value : noPermissionTooltip.value
 )
@@ -201,10 +179,6 @@ function formatDate(dateValue: string | number | null | undefined): string {
 
 function handleCardClick() {
   router.push(`/cohorts/${props.cohort.id}`)
-}
-
-function handleGenerate() {
-  emit('generate', props.cohort)
 }
 </script>
 

@@ -3,21 +3,20 @@
     <div class="nav-bar__container">
       <!-- Debug: Show what's being rendered -->
       <!-- Custom logo (when configured) -->
-      <div
+      <button
         v-if="customLogoUrl"
+        type="button"
         class="nav-bar__logo nav-bar__logo--custom"
-        role="button"
-        tabindex="0"
         @click="handleLogoClick"
       >
         <img
           :src="customLogoUrl"
-          alt="Logo"
+          alt="OHDSI ATLAS Home"
           class="nav-bar__custom-logo"
           @error="handleLogoError"
           @load="handleLogoLoad"
         >
-      </div>
+      </button>
 
       <!-- Default logos (OHDSI + ATLAS) -->
       <template v-else>
@@ -26,10 +25,10 @@
           alt="OHDSI"
           class="nav-bar__ohdsi-logo"
         >
-        <div
+        <button
+          type="button"
           class="nav-bar__logo"
-          role="button"
-          tabindex="0"
+          :aria-label="logoAriaLabel"
           @click="handleLogoClick"
         >
           <img
@@ -37,11 +36,14 @@
             alt="ATLAS"
             height="20"
           >
-        </div>
+        </button>
       </template>
-      <!-- Full menu for larger screens -->
-      <nav class="nav-bar__nav d-none d-md-block">
-        <ul class="nav-bar__nav-list">
+      <nav
+        class="nav-bar__nav-wrapper"
+        aria-label="Main"
+      >
+        <!-- Full menu for larger screens -->
+        <ul class="nav-bar__nav nav-bar__nav-list d-none d-md-flex">
           <template
             v-for="item in navigationItems"
             :key="item.id"
@@ -61,42 +63,42 @@
             </li>
           </template>
         </ul>
-      </nav>
 
-      <!-- Dropdown menu for smaller screens -->
-      <div class="nav-bar__nav-dropdown d-md-none">
-        <AtlasMenu>
-          <template #activator="{ props: menuProps }">
-            <AtlasButton
-              v-bind="menuProps"
-              variant="ghost"
-              icon="mdi-menu-down"
-              icon-position="end"
-            >
-              <AtlasIcon start>
-                mdi-menu
-              </AtlasIcon>
-              {{ t('common.menu', 'Menu') }}
-            </AtlasButton>
-          </template>
-          <AtlasList>
-            <template
-              v-for="item in navigationItems"
-              :key="item.id"
-            >
-              <AtlasListItem
-                v-if="item.visible"
-                :active="item.active"
-                @click="handleNavClick(item)"
+        <!-- Dropdown menu for smaller screens -->
+        <div class="nav-bar__nav-dropdown d-md-none">
+          <AtlasMenu>
+            <template #activator="{ props: menuProps }">
+              <AtlasButton
+                v-bind="menuProps"
+                variant="ghost"
+                icon="mdi-menu-down"
+                icon-position="end"
               >
-                <v-list-item-title>
-                  {{ getNavTitle(item.titleKey) }}
-                </v-list-item-title>
-              </AtlasListItem>
+                <AtlasIcon start>
+                  mdi-menu
+                </AtlasIcon>
+                {{ t('common.menu', 'Menu') }}
+              </AtlasButton>
             </template>
-          </AtlasList>
-        </AtlasMenu>
-      </div>
+            <AtlasList>
+              <template
+                v-for="item in navigationItems"
+                :key="item.id"
+              >
+                <AtlasListItem
+                  v-if="item.visible"
+                  :active="item.active"
+                  @click="handleNavClick(item)"
+                >
+                  <v-list-item-title>
+                    {{ getNavTitle(item.titleKey) }}
+                  </v-list-item-title>
+                </AtlasListItem>
+              </template>
+            </AtlasList>
+          </AtlasMenu>
+        </div>
+      </nav>
       <div
         class="nav-bar__right"
         tabindex="0"
@@ -243,6 +245,7 @@ const logoNavigateTo = ref('/')
 
 const signInLabel = t('components.userBar.signin', 'Sign In')
 const signOutLabel = t('components.userBar.signout', 'Sign Out')
+const logoAriaLabel = computed(() => t('a11y.logoHome', 'OHDSI ATLAS Home').value)
 
 // Core navigation items (will be filtered based on plugin configuration)
 const coreNavigationItems: NavigationItem[] = [
@@ -271,13 +274,6 @@ const coreNavigationItems: NavigationItem[] = [
     id: 'analysis',
     titleKey: 'navigation.analysis',
     route: '/analysis',
-    visible: true,
-    active: false,
-  },
-  {
-    id: 'profiles',
-    titleKey: 'navigation.profiles',
-    route: '/profiles',
     visible: true,
     active: false,
   },
@@ -485,6 +481,16 @@ onMounted(() => {
   padding: 0.5rem 0;
   margin-left: 0.25rem;
   cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+}
+
+.nav-bar__logo:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .nav-bar__logo img {
@@ -497,6 +503,10 @@ onMounted(() => {
   padding: 0.5rem 0;
   margin-left: 1rem;
   cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
 }
 
 .nav-bar__custom-logo {
@@ -522,6 +532,11 @@ onMounted(() => {
 .nav-bar__auth,
 .nav-bar__user {
   margin-right: 0;
+}
+
+.nav-bar__nav-wrapper {
+  display: flex;
+  align-items: center;
 }
 
 .nav-bar__nav {

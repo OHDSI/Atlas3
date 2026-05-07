@@ -78,6 +78,27 @@ describe('InclusionRuleAttritionTable', () => {
     expect(text).toContain('oops')
   })
 
+  it('renders a cumulative-remaining column when the prop is provided', () => {
+    const wrapper = mount(InclusionRuleAttritionTable, {
+      global: { plugins },
+      props: { rules: sampleRules, cumulativeRemaining: [1820, 1620, 200] },
+    })
+
+    expect(wrapper.find('[data-testid=inclusion-attrition-cumulative-header]').exists()).toBe(true)
+    const cells = wrapper.findAll('[data-testid=inclusion-attrition-cumulative-cell]')
+    expect(cells).toHaveLength(3)
+    expect(cells[1]!.text()).toBe('1,620')
+  })
+
+  it('omits the cumulative column when no prop is provided', () => {
+    const wrapper = mount(InclusionRuleAttritionTable, {
+      global: { plugins },
+      props: { rules: sampleRules },
+    })
+
+    expect(wrapper.find('[data-testid=inclusion-attrition-cumulative-header]').exists()).toBe(false)
+  })
+
   it('clamps and color-grades the bar fill across each threshold band', () => {
     const wrapper = mount(InclusionRuleAttritionTable, {
       global: { plugins },

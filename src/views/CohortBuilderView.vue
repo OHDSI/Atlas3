@@ -54,11 +54,9 @@
 
         <cohort-toolbar-actions
           :can-save="builderRef.canSave"
-          :show-generate="!!builderRef.cohortId"
           :is-previewing-version="builderRef.isPreviewingVersion"
           @cancel="builderRef.handleCancel()"
           @save="builderRef.handleSave()"
-          @generate="builderRef.openGenerationPanel()"
         />
       </div>
     </template>
@@ -153,7 +151,6 @@ function onUpdateDescription(description: string) {
   border: 0;
   border-bottom: 1px solid transparent;
   padding: 0 0 2px;
-  outline: none;
   transition: border-color 120ms ease;
 }
 .cohort-builder-view__title-input::placeholder {
@@ -164,7 +161,9 @@ function onUpdateDescription(description: string) {
 .cohort-builder-view__title-input:hover {
   border-bottom-color: rgba(0, 0, 0, 0.12);
 }
-.cohort-builder-view__title-input:focus {
+.cohort-builder-view__title-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
   border-bottom-color: rgb(var(--v-theme-primary));
 }
 
@@ -179,7 +178,6 @@ function onUpdateDescription(description: string) {
   border: 0;
   border-bottom: 1px solid transparent;
   padding: 2px 0;
-  outline: none;
   transition: border-color 120ms ease;
 }
 .cohort-builder-view__subtitle-input::placeholder {
@@ -189,7 +187,9 @@ function onUpdateDescription(description: string) {
 .cohort-builder-view__subtitle-input:hover {
   border-bottom-color: rgba(0, 0, 0, 0.12);
 }
-.cohort-builder-view__subtitle-input:focus {
+.cohort-builder-view__subtitle-input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
   border-bottom-color: rgb(var(--v-theme-primary));
 }
 

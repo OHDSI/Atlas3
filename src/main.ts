@@ -36,6 +36,7 @@ import {
   SunburstChart,
   BoxplotChart,
   CustomChart,
+  FunnelChart,
 } from 'echarts/charts'
 
 // Import ECharts components
@@ -64,6 +65,7 @@ use([
   SunburstChart,
   BoxplotChart,
   CustomChart,
+  FunnelChart,
   TitleComponent,
   TooltipComponent,
   GridComponent,

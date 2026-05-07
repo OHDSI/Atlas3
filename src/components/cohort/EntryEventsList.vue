@@ -68,9 +68,9 @@
       >
         <div class="obs-period-dialog-content">
           <div class="obs-period-field">
-            <label>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_3') }}</label>
             <AtlasTextField
               :model-value="observationPeriod.priorDays"
+              :label="t('components.cohortExpressionEditor.cohortEntryEventsText_3').value"
               type="number"
               variant="outlined"
               hide-details
@@ -79,9 +79,9 @@
             />
           </div>
           <div class="obs-period-field">
-            <label>{{ t('components.cohortExpressionEditor.cohortEntryEventsText_4') }}</label>
             <AtlasTextField
               :model-value="observationPeriod.postDays"
+              :label="t('components.cohortExpressionEditor.cohortEntryEventsText_4').value"
               type="number"
               variant="outlined"
               hide-details

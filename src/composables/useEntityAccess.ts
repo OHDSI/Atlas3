@@ -16,6 +16,7 @@
 
 import { computed, type ComputedRef, type MaybeRefOrGetter, toValue } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { authConfig } from '@/config/auth.config'
 import type { EntityAccessKind, EntityGrant } from '@/models/auth.types'
 import { permissionChecker } from '@/services/auth/permissionChecker'
 
@@ -138,7 +139,10 @@ export function useSourceAccess(sourceKey: MaybeRefOrGetter<string | null | unde
   })
 
   const canRead = computed(() => {
+    if (!authConfig.userAuthenticationEnabled) return true
     if (
+      permissionChecker.hasPermission('read:source', authStore.permissions).granted ||
+      permissionChecker.hasPermission('write:source', authStore.permissions).granted ||
       permissionChecker.hasPermission('admin:source', authStore.permissions).granted ||
       permissionChecker.hasPermission('source:*:access', authStore.permissions).granted
     ) {
@@ -149,12 +153,47 @@ export function useSourceAccess(sourceKey: MaybeRefOrGetter<string | null | unde
   })
 
   const canWrite = computed(() => {
-    if (permissionChecker.hasPermission('admin:source', authStore.permissions).granted) {
+    if (!authConfig.userAuthenticationEnabled) return true
+    if (
+      permissionChecker.hasPermission('write:source', authStore.permissions).granted ||
+      permissionChecker.hasPermission('admin:source', authStore.permissions).granted
+    ) {
       return true
     }
     const g = grant.value
     return Array.isArray(g) && g.includes('WRITE')
   })
+
+  return { canRead, canWrite }
+}
+
+export function useSourceAccessFor() {
+  const authStore = useAuthStore()
+  const has = (perm: string) =>
+    permissionChecker.hasPermission(perm, authStore.permissions).granted
+
+  function canRead(sourceKey: string | null | undefined): boolean {
+    if (!authConfig.userAuthenticationEnabled) return true
+    if (
+      has('read:source') ||
+      has('write:source') ||
+      has('admin:source') ||
+      has('source:*:access')
+    ) {
+      return true
+    }
+    if (!sourceKey) return false
+    const g = authStore.entityAccess.source[sourceKey]
+    return Array.isArray(g) && (g.includes('READ') || g.includes('WRITE'))
+  }
+
+  function canWrite(sourceKey: string | null | undefined): boolean {
+    if (!authConfig.userAuthenticationEnabled) return true
+    if (has('write:source') || has('admin:source')) return true
+    if (!sourceKey) return false
+    const g = authStore.entityAccess.source[sourceKey]
+    return Array.isArray(g) && g.includes('WRITE')
+  }
 
   return { canRead, canWrite }
 }

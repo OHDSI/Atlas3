@@ -44,14 +44,15 @@
           data-testid="cohort-sample-detail-row"
         >
           <td>
-            <router-link
-              v-if="profilePath(el.personId)"
-              :to="profilePath(el.personId)!"
+            <button
+              v-if="effectiveSourceKey"
+              type="button"
               class="profile-link"
               data-test="cohort-sample-profile-link"
+              @click="$emit('open-profile', el.personId)"
             >
               {{ el.personId }}
-            </router-link>
+            </button>
             <span v-else>{{ el.personId }}</span>
           </td>
           <td>{{ formatGender(el.genderConceptId) }}</td>
@@ -85,7 +86,6 @@ import {
   GENDER_MALE_CONCEPT_ID,
   type CohortSample,
 } from '@/models/cohort-sample.types'
-import { profileRouteFor } from '@/utils/profile-routes'
 import { useDataSourcesStore } from '@/stores/datasources'
 
 const props = defineProps<{
@@ -94,14 +94,11 @@ const props = defineProps<{
   sourceKey?: string
 }>()
 
+defineEmits<{ 'open-profile': [personId: string] }>()
+
 const dsStore = useDataSourcesStore()
 
-function profilePath(personId: string): string | null {
-  const sourceKey = props.sourceKey ?? dsStore.selectedSource?.sourceKey
-  if (!sourceKey) return null
-  const cohortId = props.sample.cohortDefinitionId ?? undefined
-  return profileRouteFor(sourceKey, personId, cohortId)
-}
+const effectiveSourceKey = computed(() => props.sourceKey ?? dsStore.selectedSource?.sourceKey)
 
 function formatCount(n: number): string {
   return new Intl.NumberFormat().format(n)
@@ -138,14 +135,22 @@ const anyRecordCount = computed(() =>
 
 .profile-link {
   color: rgb(var(--v-theme-primary));
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
   text-decoration: none;
   font-variant-numeric: tabular-nums;
   border-bottom: 1px solid transparent;
   transition: border-color 120ms ease;
 }
-.profile-link:hover,
+.profile-link:hover {
+  border-bottom-color: currentColor;
+}
 .profile-link:focus-visible {
   border-bottom-color: currentColor;
-  outline: none;
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
 }
 </style>

@@ -6,6 +6,8 @@
     :inline="inline"
     :error-messages="errorMessages"
     :disabled="disabled"
+    :aria-required="required ? 'true' : undefined"
+    :aria-invalid="hasError ? 'true' : undefined"
     density="compact"
     v-bind="forwardAttrs"
     @update:model-value="(v: string | number | null) => $emit('update:modelValue', v)"
@@ -44,6 +46,8 @@ const displayLabel = computed(() => {
 })
 
 const errorMessages = computed(() => (props.error ? [props.error] : undefined))
+
+const hasError = computed(() => !!props.error)
 
 const attrs = useAttrs()
 const forwardAttrs = computed(() => {
