@@ -35,7 +35,17 @@
               :key="item.conceptId"
             >
               <v-list-item-title>
-                {{ item.conceptName }}
+                <router-link
+                  v-if="sourceKey"
+                  :to="`/concept/${sourceKey}/${item.conceptId}`"
+                  :data-testid="`concept-name-link-${item.conceptId}`"
+                  class="concept-name-link"
+                >
+                  {{ item.conceptName }}
+                </router-link>
+                <template v-else>
+                  {{ item.conceptName }}
+                </template>
               </v-list-item-title>
               <v-list-item-subtitle>
                 {{
@@ -119,9 +129,15 @@
 import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasIconButton, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { useWebAPIStore } from '@/stores/webapi'
+import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 import type { ConceptSet } from '@/models/concept-set.types'
 
 const { t, tv } = useI18n()
+const webapiStore = useWebAPIStore()
+const sourceKey = computed(
+  () => webapiStore.getValidVocabularySource() || getDefaultSourceKey() || '',
+)
 
 interface Props {
   modelValue?: ConceptSet
@@ -181,3 +197,13 @@ function updateIncludeDescendants(index: number, value: boolean) {
   })
 }
 </script>
+
+<style scoped>
+.concept-name-link {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+}
+.concept-name-link:hover {
+  text-decoration: underline;
+}
+</style>

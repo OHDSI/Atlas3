@@ -87,11 +87,11 @@
         class="concept-set-table__table"
       >
         <template
-          v-if="sourceKey"
+          v-if="resolvedSourceKey"
           #item.conceptName="{ item }"
         >
           <router-link
-            :to="`/concept/${sourceKey}/${item.conceptId}`"
+            :to="`/concept/${resolvedSourceKey}/${item.conceptId}`"
             :data-testid="`concept-name-link-${item.conceptId}`"
             class="concept-name-link"
           >
@@ -245,8 +245,11 @@ import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
+import { useWebAPIStore } from '@/stores/webapi'
+import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 
 const { t } = useI18n()
+const webapiStore = useWebAPIStore()
 
 interface Props {
   items: ConceptSetItem[]
@@ -255,6 +258,14 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+// Resolve a usable source key: explicit prop wins, otherwise fall back to the
+// WebAPI store's vocabulary source, then the configured default. Without this
+// fallback the row links silently disappear whenever the parent forgets to
+// pass `:source-key` (or passes empty during initial render).
+const resolvedSourceKey = computed(
+  () => props.sourceKey || webapiStore.getValidVocabularySource() || getDefaultSourceKey() || '',
+)
 
 const emit = defineEmits<{
   'toggle:descendants': [conceptId: number]
