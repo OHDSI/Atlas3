@@ -13,6 +13,9 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }))
 
 beforeEach(() => {
+  // Clear body in case a prior test file leaked teleported v-dialog content.
+  // singleFork shares jsdom across files (see tests/setup.ts).
+  document.body.innerHTML = ''
   setActivePinia(createPinia())
 })
 
