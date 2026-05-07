@@ -10,7 +10,22 @@
         aria-modal="true"
       >
         <header class="crd__header">
-          <AtlasIcon class="mr-2" color="primary">{{ headerIcon }}</AtlasIcon>
+          <AtlasIconButton
+            v-if="reportType === 'profile'"
+            icon="mdi-arrow-left"
+            v-bind="{ ariaLabel: 'Back to samples' }"
+            variant="text"
+            size="sm"
+            data-testid="report-drawer-back"
+            class="mr-1"
+            @click="emit('back')"
+          />
+          <AtlasIcon
+            class="mr-2"
+            color="primary"
+          >
+            {{ headerIcon }}
+          </AtlasIcon>
           <span class="text-h6">{{ headerTitle }}</span>
           <AtlasSpacer />
           <AtlasIconButton
@@ -32,6 +47,13 @@
             v-else-if="reportType === 'samples' && cohortId !== null && sourceKey"
             :cohort-id="cohortId"
             :source-key="sourceKey"
+            @open-profile="(personId: string) => emit('open-profile', personId)"
+          />
+          <ProfileSidePanel
+            v-else-if="reportType === 'profile' && sourceKey && personId"
+            :source-key="sourceKey"
+            :person-id="personId"
+            :cohort-id="cohortId ?? undefined"
           />
         </div>
       </aside>
@@ -45,16 +67,22 @@ import { AtlasIcon, AtlasIconButton, AtlasSpacer } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import InclusionRuleReport from '@/components/reports/inclusion/InclusionRuleReport.vue'
 import CohortSamplesPanel from '@/components/cohort-samples/CohortSamplesPanel.vue'
+import ProfileSidePanel from '@/components/cohort-samples/ProfileSidePanel.vue'
 
 interface Props {
   modelValue: boolean
   cohortId: number | null
   sourceKey: string | null
-  reportType: 'inclusion' | 'samples' | null
+  reportType: 'inclusion' | 'samples' | 'profile' | null
+  personId?: string | null
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  'open-profile': [personId: string]
+  back: []
+}>()
 
 const { t } = useI18n()
 
@@ -62,13 +90,18 @@ const drawerWidth = computed(() =>
   typeof window !== 'undefined' ? Math.min(window.innerWidth * 0.85, 1400) : 1200
 )
 
-const headerIcon = computed(() =>
-  props.reportType === 'samples' ? 'mdi-shuffle-variant' : 'mdi-filter-variant'
-)
+const headerIcon = computed(() => {
+  if (props.reportType === 'samples') return 'mdi-shuffle-variant'
+  if (props.reportType === 'profile') return 'mdi-account-circle-outline'
+  return 'mdi-filter-variant'
+})
 
 const headerTitle = computed(() => {
   if (props.reportType === 'samples') {
     return t('cohortDefinitions.generation.drawer.samplesTitle', 'Cohort samples').value
+  }
+  if (props.reportType === 'profile') {
+    return props.personId ? `Person ${props.personId}` : 'Profile'
   }
   return t('cohortDefinitions.generation.drawer.inclusionTitle', 'Inclusion rule report').value
 })

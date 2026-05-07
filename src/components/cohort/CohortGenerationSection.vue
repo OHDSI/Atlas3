@@ -51,6 +51,9 @@
       :cohort-id="cohortId"
       :source-key="drawer.sourceKey"
       :report-type="drawer.reportType"
+      :person-id="drawer.personId"
+      @open-profile="onOpenProfile"
+      @back="onProfileBack"
     />
 
     <PreviousRunsDialog
@@ -230,11 +233,30 @@ function onShowHistory(sourceKey: string) {
   historyDialog.open = true
 }
 
-const drawer = reactive<{ open: boolean; sourceKey: string | null; reportType: 'inclusion' | 'samples' | null }>({
+const drawer = reactive<{
+  open: boolean
+  sourceKey: string | null
+  reportType: 'inclusion' | 'samples' | 'profile' | null
+  personId: string | null
+  prevReportType: 'inclusion' | 'samples' | null
+}>({
   open: false,
   sourceKey: null,
   reportType: null,
+  personId: null,
+  prevReportType: null,
 })
+
+function onOpenProfile(personId: string) {
+  drawer.prevReportType = drawer.reportType === 'samples' ? 'samples' : null
+  drawer.personId = personId
+  drawer.reportType = 'profile'
+}
+
+function onProfileBack() {
+  drawer.personId = null
+  drawer.reportType = drawer.prevReportType ?? 'samples'
+}
 
 const extraActions: ExtraAction[] = [
   {

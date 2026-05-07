@@ -55,6 +55,7 @@
           :sample="selectedSample"
           :loading="detailLoading"
           :source-key="sourceKey"
+          @open-profile="(personId: string) => $emit('open-profile', personId)"
         />
       </div>
     </template>
@@ -86,6 +87,8 @@ const props = defineProps<{
   cohortId: number
   sourceKey: string
 }>()
+
+defineEmits<{ 'open-profile': [personId: string] }>()
 
 const samples = ref<CohortSample[]>([])
 const loading = ref(false)
