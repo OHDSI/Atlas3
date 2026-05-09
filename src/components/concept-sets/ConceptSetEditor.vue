@@ -35,7 +35,18 @@
               :key="item.conceptId"
             >
               <v-list-item-title>
-                {{ item.conceptName }}
+                <a
+                  v-if="sourceKey"
+                  href="#"
+                  :data-testid="`concept-name-link-${item.conceptId}`"
+                  class="concept-name-link"
+                  @click.prevent="openConceptDetail(item)"
+                >
+                  {{ item.conceptName }}
+                </a>
+                <template v-else>
+                  {{ item.conceptName }}
+                </template>
               </v-list-item-title>
               <v-list-item-subtitle>
                 {{
@@ -119,9 +130,22 @@
 import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasIconButton, AtlasList, AtlasListItem, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
-import type { ConceptSet } from '@/models/concept-set.types'
+import { useWebAPIStore } from '@/stores/webapi'
+import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
+import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
+import type { ConceptSet, ConceptSetItem } from '@/models/concept-set.types'
 
 const { t, tv } = useI18n()
+const webapiStore = useWebAPIStore()
+const conceptDrawer = useConceptDetailDrawerStore()
+const sourceKey = computed(
+  () => webapiStore.getValidVocabularySource() || getDefaultSourceKey() || '',
+)
+
+function openConceptDetail(item: ConceptSetItem) {
+  if (!sourceKey.value) return
+  conceptDrawer.open(sourceKey.value, item.conceptId)
+}
 
 interface Props {
   modelValue?: ConceptSet
@@ -181,3 +205,13 @@ function updateIncludeDescendants(index: number, value: boolean) {
   })
 }
 </script>
+
+<style scoped>
+.concept-name-link {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+}
+.concept-name-link:hover {
+  text-decoration: underline;
+}
+</style>

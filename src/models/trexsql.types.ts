@@ -141,3 +141,24 @@ export interface DataSourceWithCacheStatus {
  * LocalStorage key for persisting selected data source
  */
 export const TREXSQL_SELECTED_SOURCE_KEY = 'atlas3:trexsql:selectedDataSource'
+
+// ============================================================================
+// Inclusion Stats Types
+// ============================================================================
+
+export const InclusionRuleStatsRowSchema = z.object({
+  ruleIndex: z.number().int().min(0),
+  ruleName: z.string(),
+  cumulativeCount: z.number().int().min(0),
+})
+
+export const InclusionStatsResultSchema = z.object({
+  entryEventCount: z.number().int().min(0),
+  totalPatientCount: z.number().int().min(0),
+  finalCount: z.number().int().min(0),
+  ruleCounts: z.array(InclusionRuleStatsRowSchema),
+  executionTimeMs: z.number().int().min(0),
+})
+
+export type InclusionRuleStatsRow = z.infer<typeof InclusionRuleStatsRowSchema>
+export type InclusionStatsResult = z.infer<typeof InclusionStatsResultSchema>

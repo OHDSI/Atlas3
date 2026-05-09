@@ -86,6 +86,20 @@
         hover
         class="concept-set-table__table"
       >
+        <template
+          v-if="resolvedSourceKey"
+          #item.conceptName="{ item }"
+        >
+          <a
+            href="#"
+            :data-testid="`concept-name-link-${item.conceptId}`"
+            class="concept-name-link"
+            @click.prevent="openConceptDetail(item)"
+          >
+            {{ item.conceptName }}
+          </a>
+        </template>
+
         <!-- Descendants Toggle -->
         <template #item.includeDescendants="{ item }">
           <AtlasCheckbox
@@ -227,27 +241,62 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, getCurrentInstance } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { ConceptSetItem } from '@/models/concept-set.types'
 import { AtlasButton, AtlasCard, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 import { getDomainColor } from '@/utils/domain-colors'
+import { useWebAPIStore } from '@/stores/webapi'
+import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
+import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 
 const { t } = useI18n()
+const webapiStore = useWebAPIStore()
+const conceptDrawer = useConceptDetailDrawerStore()
+const instance = getCurrentInstance()
 
 interface Props {
   items: ConceptSetItem[]
   loading?: boolean
+  sourceKey?: string
 }
 
 const props = defineProps<Props>()
+
+// Resolve a usable source key: explicit prop wins, otherwise fall back to the
+// WebAPI store's vocabulary source, then the configured default. Without this
+// fallback the row links silently disappear whenever the parent forgets to
+// pass `:source-key` (or passes empty during initial render).
+const resolvedSourceKey = computed(
+  () => props.sourceKey || webapiStore.getValidVocabularySource() || getDefaultSourceKey() || '',
+)
 
 const emit = defineEmits<{
   'toggle:descendants': [conceptId: number]
   'toggle:mapped': [conceptId: number]
   'toggle:exclude': [conceptId: number]
   remove: [conceptId: number]
+  'view-concept': [payload: { conceptId: number; sourceKey: string }]
 }>()
+
+// If a parent listens for `view-concept`, emit instead of opening the global
+// drawer — that lets containers (like the concept set editor) render the
+// detail in their own panel rather than spawning a second one on top.
+// Note: declared emits are consumed before reaching $attrs, so we have to
+// inspect the raw vnode props to detect a parent listener.
+function hasViewConceptListener(): boolean {
+  const props = (instance?.vnode.props ?? {}) as Record<string, unknown>
+  return typeof props.onViewConcept === 'function'
+}
+
+function openConceptDetail(item: ConceptSetItem) {
+  if (!resolvedSourceKey.value) return
+  if (hasViewConceptListener()) {
+    emit('view-concept', { conceptId: item.conceptId, sourceKey: resolvedSourceKey.value })
+    return
+  }
+  conceptDrawer.open(resolvedSourceKey.value, item.conceptId)
+}
 
 // ============================================================================
 // Local state
@@ -493,5 +542,13 @@ function onRemove(item: ConceptSetItem) {
   color: rgb(var(--v-theme-on-surface-variant));
   text-align: center;
   max-width: 480px;
+}
+
+.concept-name-link {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+}
+.concept-name-link:hover {
+  text-decoration: underline;
 }
 </style>

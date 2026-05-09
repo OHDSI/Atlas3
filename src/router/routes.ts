@@ -233,6 +233,16 @@ export const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, titleKey: 'route.conceptSets.title' },
   },
   {
+    path: '/concept/:sourceKey/:conceptId(\\d+)',
+    name: 'concept-detail',
+    component: () => import('@/views/ConceptDetailView.vue'),
+    meta: { requiresAuth: true },
+    props: (route) => ({
+      sourceKey: route.params.sourceKey as string,
+      conceptId: parseInt(route.params.conceptId as string, 10),
+    }),
+  },
+  {
     path: '/pathways/new',
     name: 'pathway-new',
     component: () => import('@/views/PathwayManagerView.vue'),

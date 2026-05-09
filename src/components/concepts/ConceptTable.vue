@@ -67,6 +67,21 @@
         </AtlasChip>
       </template>
 
+      <!-- Concept Name Link (opens the side-panel detail drawer) -->
+      <template
+        v-if="linkable && resolvedSourceKey"
+        #item.conceptName="{ item }"
+      >
+        <a
+          href="#"
+          :data-testid="`concept-name-link-${item.conceptId}`"
+          class="concept-name-link"
+          @click.prevent="openConceptDetail(item)"
+        >
+          {{ item.conceptName }}
+        </a>
+      </template>
+
       <!-- Record Count Columns - Format with commas or dash if undefined, show spinner while loading -->
       <template #item.recordCount="{ item }">
         <div class="d-flex align-center justify-end">
@@ -216,11 +231,17 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasChip, AtlasDataTable, AtlasIcon, AtlasPagination, AtlasProgressCircular, AtlasSelect, AtlasSkeleton } from '@/components/ui'
-import { computed, ref } from 'vue'
+import { computed, ref, getCurrentInstance } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { useWebAPIStore } from '@/stores/webapi'
+import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
+import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 import type { Concept } from '@/models/concept-set.types'
 
 const { t } = useI18n()
+const webapiStore = useWebAPIStore()
+const conceptDrawer = useConceptDetailDrawerStore()
+const instance = getCurrentInstance()
 
 // ============================================================================
 // Local State
@@ -243,6 +264,8 @@ interface Props {
   conceptsInSet?: Set<number> // Track which concepts are already in set
   selectable?: boolean // Render leading checkbox column for bulk selection
   selected?: number[] // v-model:selected — list of selected conceptIds
+  linkable?: boolean
+  sourceKey?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -254,7 +277,17 @@ const props = withDefaults(defineProps<Props>(), {
   conceptsInSet: () => new Set(),
   selectable: false,
   selected: () => [],
+  linkable: true,
+  sourceKey: undefined,
 })
+
+// Resolve a usable source key for detail-view links: explicit prop wins,
+// otherwise fall back to the WebAPI store's vocabulary source, then the
+// configured default. Without this fallback the row link silently
+// disappears when a parent forgets to pass `:source-key`.
+const resolvedSourceKey = computed(
+  () => props.sourceKey || webapiStore.getValidVocabularySource() || getDefaultSourceKey() || '',
+)
 
 const emit = defineEmits<{
   'update:page': [page: number]
@@ -264,7 +297,26 @@ const emit = defineEmits<{
   'update:selected': [conceptIds: number[]]
   'add-concept': [concept: Concept]
   'remove-concept': [concept: Concept]
+  'view-concept': [payload: { conceptId: number; sourceKey: string }]
 }>()
+
+// If a parent is listening for `view-concept`, emit and let them handle it
+// (e.g., concept set editor renders the detail inline). Otherwise fall back
+// to the global side-panel drawer. Declared emits are consumed before
+// reaching $attrs, so we have to inspect the raw vnode props.
+function hasViewConceptListener(): boolean {
+  const vprops = (instance?.vnode.props ?? {}) as Record<string, unknown>
+  return typeof vprops.onViewConcept === 'function'
+}
+
+function openConceptDetail(concept: Concept) {
+  if (!resolvedSourceKey.value) return
+  if (hasViewConceptListener()) {
+    emit('view-concept', { conceptId: concept.conceptId, sourceKey: resolvedSourceKey.value })
+    return
+  }
+  conceptDrawer.open(resolvedSourceKey.value, concept.conceptId)
+}
 
 // ============================================================================
 // Table Configuration
@@ -450,5 +502,13 @@ function formatCount(count: number | undefined): string {
 
 .gap-2 {
   gap: 8px;
+}
+
+.concept-name-link {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+}
+.concept-name-link:hover {
+  text-decoration: underline;
 }
 </style>

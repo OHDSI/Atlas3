@@ -51,6 +51,8 @@
       :total-items="store.totalCount"
       :page="store.page"
       :items-per-page="store.itemsPerPage"
+      :linkable="true"
+      :source-key="selectedSourceKey"
       @update:page="onPageChange"
       @update:items-per-page="onItemsPerPageChange"
     />
@@ -62,6 +64,8 @@ import { ref, computed } from 'vue'
 import { AtlasAlert, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
+import { useWebAPIStore } from '@/stores/webapi'
+import { getSourceKey } from '@/config/webapi'
 import ConceptTable from './ConceptTable.vue'
 
 const { t } = useI18n()
@@ -71,6 +75,10 @@ const { t } = useI18n()
 // ============================================================================
 
 const store = useConceptSearchStore()
+const webapiStore = useWebAPIStore()
+const selectedSourceKey = computed(
+  () => webapiStore.getValidVocabularySource() || getSourceKey() || '',
+)
 
 // ============================================================================
 // Local State

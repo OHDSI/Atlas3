@@ -163,16 +163,36 @@
         </nav>
 
         <div class="cs-editor__body">
-          <v-window v-model="activeTab">
+          <!-- Inline concept detail view: replaces the tabbed body when the
+               user clicked a concept name inside this editor. The header's
+               built-in back arrow returns to the previous tab. -->
+          <div
+            v-if="viewingConcept"
+            class="cs-editor__inline-detail"
+            data-testid="concept-set-editor-inline-detail"
+          >
+            <ConceptDetailContent
+              :source-key="viewingConcept.sourceKey"
+              :concept-id="viewingConcept.conceptId"
+              :on-back="() => (viewingConcept = null)"
+            />
+          </div>
+
+          <v-window
+            v-else
+            v-model="activeTab"
+          >
             <!-- Selected Concepts Tab -->
             <v-window-item value="selected">
               <ConceptSetTable
                 :items="store.currentSet?.items || []"
                 :loading="false"
+                :source-key="sourceKey.value"
                 @toggle:descendants="onToggleDescendants"
                 @toggle:mapped="onToggleMapped"
                 @toggle:exclude="onToggleExclude"
                 @remove="onRemoveFromSet"
+                @view-concept="onViewConcept"
               />
             </v-window-item>
 
@@ -181,6 +201,7 @@
               <ConceptSearchInline
                 @add-concept="onAddConcept"
                 @remove-concept="onRemoveConcept"
+                @view-concept="onViewConcept"
               />
             </v-window-item>
 
@@ -373,6 +394,7 @@ import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
+import ConceptDetailContent from './detail/ConceptDetailContent.vue'
 import { AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
@@ -412,6 +434,24 @@ const formValid = ref(false)
 const loading = ref(false)
 const hasUnsavedChanges = ref(false)
 const activeTab = ref<string>('selected') // Tab state for concept building - default to selected
+
+// Inline concept detail view state. When set, the editor body swaps from the
+// tabs to a ConceptDetailContent panel with a back button. Cleared on back
+// or when the editor closes.
+const viewingConcept = ref<{ sourceKey: string; conceptId: number } | null>(null)
+
+function onViewConcept(payload: { conceptId: number; sourceKey: string }) {
+  viewingConcept.value = { sourceKey: payload.sourceKey, conceptId: payload.conceptId }
+}
+
+// Reset the inline detail view when the editor closes so reopening starts on
+// the tabs again, not on a stale concept page.
+watch(
+  () => props.modelValue,
+  (open) => {
+    if (!open) viewingConcept.value = null
+  },
+)
 
 interface FormData {
   name: string
@@ -898,6 +938,16 @@ function closePasteDialog() {
   min-height: 0;
   overflow-y: auto;
   padding: 16px 28px 28px;
+}
+
+.cs-editor__inline-detail {
+  display: flex;
+  flex-direction: column;
+}
+.cs-editor__inline-detail-toolbar {
+  padding: 4px 0 12px;
+  border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
+  margin-bottom: 12px;
 }
 
 /* Paste IDs dialog */

@@ -3,12 +3,6 @@
     ref="panelRoot"
     class="inclusion-criteria-panel"
   >
-    <!-- Add-rule action moved up into the surrounding section
-         header (next to the qualifying-limit toggle) so we don't
-         burn a whole row on a single button. -->
-
-    <!-- Empty state — single quiet line; the section header
-         already hosts the "Add rule" CTA. -->
     <div
       v-if="modelValue.length === 0"
       class="inclusion-criteria-panel__empty"
@@ -28,86 +22,65 @@
       </span>
     </div>
 
-    <!-- Inclusion Rules Accordion. Still uses v-expansion-panels
-         but the per-panel chrome was retired in favour of plain
-         SurfaceCard-style rows. -->
-    <v-expansion-panels
+    <div
       v-else
-      v-model="expandedPanel"
-      flat
-      class="inclusion-criteria-panel__rules"
+      class="inclusion-criteria-panel__layout"
     >
-      <v-expansion-panel
-        v-for="(rule, index) in modelValue"
-        :key="rule.id"
-        :value="index"
-        class="inclusion-rule-panel"
+      <AtlasCard padding="sm">
+        <InclusionRuleRail
+          :rules="modelValue"
+          :selected-index="selectedIndex"
+          :cache-state="cacheState"
+          :entry-event-count="stats?.entryEventCount ?? null"
+          :total-dataset-count="stats?.totalPatientCount ?? null"
+          :rule-counts="stats?.ruleCounts ?? null"
+          :final-count="stats?.finalCount ?? null"
+          :is-computing="isLoading"
+          :computing-index="lastEditedIndex"
+          @select="onSelect"
+          @add-rule="addNewRule"
+          @reorder="onReorder"
+        />
+      </AtlasCard>
+
+      <AtlasCard
+        padding="md"
+        class="inclusion-criteria-panel__detail"
       >
-        <v-expansion-panel-title>
-          <div class="rule-title-container">
-            <span class="rule-title-display">{{ rule.name }}</span>
-            <div class="rule-actions">
-              <AtlasIconButton
-                icon="mdi-pencil-outline"
-                v-bind="{ ariaLabel: t('common.edit', 'Edit').value }"
-                variant="text"
-                size="sm"
-                @click.stop="openEditDialog(index)"
-              />
-              <AtlasIconButton
-                icon="mdi-delete-outline"
-                v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
-                variant="text"
-                tone="danger"
-                size="sm"
-                data-testid="remove-inclusion-rule"
-                @click.stop="removeRule(index)"
-              />
-            </div>
-          </div>
-        </v-expansion-panel-title>
-
-        <v-expansion-panel-text>
-          <!-- Rule Description (editable) -->
-          <div class="rule-description-container mb-3">
-            <input
-              v-model="rule.description"
-              class="rule-description-input"
-              placeholder="Add a description for this inclusion rule…"
-              @blur="updateRuleDescription(index, $event)"
-            >
-          </div>
-
-          <!-- Criteria Groups -->
-          <div
-            v-for="(group, groupIndex) in rule.criteriaGroups"
-            :key="group.id"
-            class="mb-3"
-          >
-            <CriteriaGroupEditor
-              :model-value="group"
-              @update:model-value="updateGroup(index, groupIndex, $event)"
-              @remove="removeGroup(index, groupIndex)"
-              @select-concept-set="handleSelectConceptSet(index, groupIndex, $event)"
-              @select-concept="handleSelectConcept(index, groupIndex, $event)"
-              @edit-concept-set="$emit('edit-concept-set', $event)"
+        <div
+          v-if="selectedIndex !== null"
+          class="inclusion-criteria-panel__detail-head"
+        >
+          <span class="inclusion-criteria-panel__detail-name">{{ activeRule?.name }}</span>
+          <div class="inclusion-criteria-panel__detail-actions">
+            <AtlasIconButton
+              icon="mdi-pencil-outline"
+              v-bind="{ ariaLabel: t('common.edit', 'Edit').value }"
+              variant="text"
+              size="sm"
+              @click="openEditDialog(selectedIndex)"
+            />
+            <AtlasIconButton
+              icon="mdi-delete-outline"
+              v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
+              variant="text"
+              tone="danger"
+              size="sm"
+              data-testid="remove-inclusion-rule"
+              @click="removeRule(selectedIndex)"
             />
           </div>
+        </div>
 
-          <!-- Add Group Button -->
-          <AtlasButton
-            variant="primary"
-            icon="mdi-plus"
-            size="sm"
-            @click="addGroup(index)"
-          >
-            {{
-              t('components.cohortExpressionEditor.addCriteriaGroup', 'Add criteria group').value
-            }}
-          </AtlasButton>
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-    </v-expansion-panels>
+        <InclusionRuleDetail
+          :rule="activeRule"
+          @update:rule="onRuleUpdated"
+          @select-concept-set="onSelectConceptSet"
+          @select-concept="onSelectConcept"
+          @edit-concept-set="$emit('edit-concept-set', $event)"
+        />
+      </AtlasCard>
+    </div>
 
     <AtlasDialog
       v-model="showEditDialog"
@@ -120,6 +93,7 @@
         v-model="editingName"
         :label="t('cohortDefinitions.ruleName', 'Rule name').value"
         variant="outlined"
+        density="compact"
         @keyup.enter="saveEditedName"
       />
       <template #actions>
@@ -129,9 +103,7 @@
         >
           {{ t('common.cancel', 'Cancel').value }}
         </AtlasButton>
-        <AtlasButton
-          @click="saveEditedName"
-        >
+        <AtlasButton @click="saveEditedName">
           {{ t('common.save', 'Save').value }}
         </AtlasButton>
       </template>
@@ -140,22 +112,27 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasTextField } from '@/components/ui'
-import { ref, nextTick } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
+import { AtlasButton, AtlasCard, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
-import type { InclusionRule, CriteriaGroup, QualifyingLimit } from '@/models/cohort.types'
-import CriteriaGroupEditor from './CriteriaGroupEditor.vue'
+import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
+import { useInclusionStats } from '@/composables/useInclusionStats'
+import type { CriteriaGroup, InclusionRule, QualifyingLimit } from '@/models/cohort.types'
+import InclusionRuleRail from './InclusionRuleRail.vue'
+import InclusionRuleDetail from './InclusionRuleDetail.vue'
 
 const { t } = useI18n()
 
 interface Props {
   modelValue: InclusionRule[]
   qualifyingLimit?: QualifyingLimit
+  expression?: Record<string, unknown> | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   qualifyingLimit: 'ALL',
+  expression: null,
 })
 
 const emit = defineEmits<{
@@ -174,145 +151,139 @@ const emit = defineEmits<{
   'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
-// Local state - single expanded panel index (undefined = all closed)
-const expandedPanel = ref<number | undefined>(undefined)
 const panelRoot = ref<HTMLElement | null>(null)
-let ruleCounter = ref(1)
+const selectedIndex = ref<number | null>(props.modelValue.length > 0 ? 0 : null)
+const lastEditedIndex = ref<number | null>(null)
+const ruleCounter = ref(1)
 
-// Edit dialog state
 const showEditDialog = ref(false)
 const editingName = ref('')
 const editingRuleIndex = ref<number | null>(null)
 
-// Methods
-function addGroup(ruleIndex: number) {
-  const newGroup: CriteriaGroup = {
-    id: uuidv4(),
-    logicType: 'ALL',
-    events: [],
+const expressionRef = computed(() => props.expression)
+const { stats, isLoading } = useInclusionStats(expressionRef)
+const { isCacheReady, selectedCacheStatus, isTrexSQLEnabled } = useTrexSQLCache()
+
+const cacheState = computed<'ready' | 'stale' | 'building' | 'unavailable'>(() => {
+  if (!isTrexSQLEnabled.value) return 'unavailable'
+  const status = selectedCacheStatus.value?.status
+  if (status === 'ready' && isCacheReady.value) return 'ready'
+  if (status === 'stale') return 'stale'
+  if (status === 'building') return 'building'
+  return 'unavailable'
+})
+
+const activeRule = computed(() =>
+  selectedIndex.value === null ? null : props.modelValue[selectedIndex.value] ?? null
+)
+
+watch(
+  () => props.modelValue.length,
+  (len) => {
+    if (len === 0) {
+      selectedIndex.value = null
+    } else if (selectedIndex.value === null) {
+      selectedIndex.value = 0
+    } else if (selectedIndex.value >= len) {
+      selectedIndex.value = len - 1
+    }
   }
+)
 
-  const updatedRules = [...props.modelValue]
-  const rule = updatedRules[ruleIndex]
-  if (!rule) return
-  rule.criteriaGroups.push(newGroup)
-  emit('update:modelValue', updatedRules)
+function onSelect(index: number): void {
+  selectedIndex.value = index
 }
 
-function updateGroup(ruleIndex: number, groupIndex: number, group: CriteriaGroup) {
-  const updatedRules = [...props.modelValue]
-  const rule = updatedRules[ruleIndex]
-  if (!rule) return
-  rule.criteriaGroups[groupIndex] = group
-  emit('update:modelValue', updatedRules)
-}
-
-function removeGroup(ruleIndex: number, groupIndex: number) {
-  const updatedRules = [...props.modelValue]
-  const rule = updatedRules[ruleIndex]
-  if (!rule) return
-  rule.criteriaGroups.splice(groupIndex, 1)
-  emit('update:modelValue', updatedRules)
-}
-
-function removeRule(index: number) {
-  const updatedRules = [...props.modelValue]
-  updatedRules.splice(index, 1)
-  emit('update:modelValue', updatedRules)
-}
-
-async function addNewRule() {
-  // Create a default criteria group automatically
-  const defaultGroup: CriteriaGroup = {
-    id: uuidv4(),
-    logicType: 'ALL',
-    events: [],
+function onReorder({ fromIndex, toIndex }: { fromIndex: number; toIndex: number }): void {
+  const updated = [...props.modelValue]
+  const [moved] = updated.splice(fromIndex, 1)
+  if (!moved) return
+  updated.splice(toIndex, 0, moved)
+  if (selectedIndex.value === fromIndex) {
+    selectedIndex.value = toIndex
+  } else if (selectedIndex.value !== null) {
+    if (fromIndex < selectedIndex.value && toIndex >= selectedIndex.value) {
+      selectedIndex.value -= 1
+    } else if (fromIndex > selectedIndex.value && toIndex <= selectedIndex.value) {
+      selectedIndex.value += 1
+    }
   }
+  emit('update:modelValue', updated)
+}
 
+function onRuleUpdated(rule: InclusionRule): void {
+  if (selectedIndex.value === null) return
+  const updated = [...props.modelValue]
+  updated[selectedIndex.value] = rule
+  lastEditedIndex.value = selectedIndex.value
+  emit('update:modelValue', updated)
+}
+
+function onSelectConceptSet(ctx: { groupIndex: number; eventIndex: number }): void {
+  if (selectedIndex.value === null) return
+  emit('select-concept-set', {
+    ruleIndex: selectedIndex.value,
+    groupIndex: ctx.groupIndex,
+    eventIndex: ctx.eventIndex,
+  })
+}
+
+function onSelectConcept(ctx: {
+  groupIndex: number
+  eventIndex: number
+  attributeIndex: number
+  domainFilter: string | undefined
+}): void {
+  if (selectedIndex.value === null) return
+  emit('select-concept', { ruleIndex: selectedIndex.value, ...ctx })
+}
+
+function removeRule(index: number): void {
+  const updated = [...props.modelValue]
+  updated.splice(index, 1)
+  emit('update:modelValue', updated)
+}
+
+async function addNewRule(): Promise<void> {
+  const defaultGroup: CriteriaGroup = { id: uuidv4(), logicType: 'ALL', events: [] }
   const newRule: InclusionRule = {
     id: uuidv4(),
     name: `New Inclusion Rule ${ruleCounter.value}`,
     description: undefined,
     criteriaGroups: [defaultGroup],
   }
-
   ruleCounter.value++
-
-  // Add at the beginning of the array (top)
-  const updatedRules = [newRule, ...props.modelValue]
-  emit('update:modelValue', updatedRules)
-
-  // Automatically expand the new rule (index 0 since it's added at the beginning)
-  expandedPanel.value = 0
-
-  // Auto-open the criteria-type picker inside the new rule's
-  // empty group so the user lands directly in the next step
-  // instead of having to find the "Add criteria" button. Two
-  // nextTick()s: one for the new rule to render, another for
-  // the expansion-panel-text to mount its inner content.
+  const updated = [...props.modelValue, newRule]
+  emit('update:modelValue', updated)
+  selectedIndex.value = updated.length - 1
   await nextTick()
   await nextTick()
-  const addCriteriaBtn = panelRoot.value?.querySelector<HTMLButtonElement>(
-    '[data-testid="add-event-to-group"]'
-  )
-  addCriteriaBtn?.click()
+  panelRoot.value
+    ?.querySelector<HTMLButtonElement>('[data-testid="add-event-to-group"]')
+    ?.click()
 }
 
-function openEditDialog(index: number) {
-  editingRuleIndex.value = index
+function openEditDialog(index: number): void {
   const rule = props.modelValue[index]
-  if (rule) {
-    editingName.value = rule.name
-    showEditDialog.value = true
-  }
+  if (!rule) return
+  editingRuleIndex.value = index
+  editingName.value = rule.name
+  showEditDialog.value = true
 }
 
-function saveEditedName() {
+function saveEditedName(): void {
   if (editingRuleIndex.value === null) return
-
-  const updatedRules = [...props.modelValue]
-  const rule = updatedRules[editingRuleIndex.value]
+  const updated = [...props.modelValue]
+  const rule = updated[editingRuleIndex.value]
   if (rule) {
     rule.name = editingName.value || `New Inclusion Rule ${editingRuleIndex.value + 1}`
-    emit('update:modelValue', updatedRules)
+    emit('update:modelValue', updated)
   }
-
   showEditDialog.value = false
   editingRuleIndex.value = null
   editingName.value = ''
 }
 
-function updateRuleDescription(index: number, event: Event) {
-  const updatedRules = [...props.modelValue]
-  const rule = updatedRules[index]
-  if (rule) {
-    const input = event.target as HTMLInputElement
-    rule.description = input.value || undefined
-    emit('update:modelValue', updatedRules)
-  }
-}
-
-function handleSelectConceptSet(
-  ruleIndex: number,
-  groupIndex: number,
-  eventIndexOrContext: number | { eventIndex: number; eventId: string }
-) {
-  const eventIndex =
-    typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
-  emit('select-concept-set', { ruleIndex, groupIndex, eventIndex })
-}
-
-function handleSelectConcept(
-  ruleIndex: number,
-  groupIndex: number,
-  context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined }
-) {
-  emit('select-concept', { ruleIndex, groupIndex, ...context })
-}
-
-// Exposed so the surrounding section header can host the
-// "Add rule" button and call into the panel directly.
-defineExpose({ addNewRule })
 </script>
 
 <style scoped>
@@ -320,9 +291,6 @@ defineExpose({ addNewRule })
   padding: 12px 20px 16px;
 }
 
-/* Single-line quiet hint instead of the previous large filled
- * container — the "Add rule" button already sits in the section
- * header, so the empty state just needs to explain WHY it's empty. */
 .inclusion-criteria-panel__empty {
   display: flex;
   align-items: center;
@@ -342,95 +310,35 @@ defineExpose({ addNewRule })
   line-height: 1.5;
 }
 
-.inclusion-criteria-panel__rules {
-  background: transparent !important;
-}
-
-.inclusion-rule-panel {
-  margin-bottom: 8px;
-  border-radius: 12px !important;
-  background: rgb(var(--v-theme-surface));
-  box-shadow:
-    0 1px 3px rgba(15, 23, 42, 0.08),
-    0 8px 24px rgba(15, 23, 42, 0.08);
-}
-
-.rule-title-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
+.inclusion-criteria-panel__layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
   gap: 12px;
 }
 
-.rule-title-display {
-  flex: 1;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
+@media (max-width: 1023px) {
+  .inclusion-criteria-panel__layout {
+    grid-template-columns: 1fr;
+  }
 }
 
-.rule-actions {
+.inclusion-criteria-panel__detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.inclusion-criteria-panel__detail-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.inclusion-criteria-panel__detail-actions {
   display: flex;
   align-items: center;
   gap: 4px;
 }
-
-.rule-description-container {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.rule-description-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.rule-description-input {
-  font-size: 14px;
-  color: #333;
-  border: 1px solid #e0e0e0;
-  background: white;
-  padding: 8px 12px;
-  border-radius: 4px;
-  transition: all 0.2s;
-  font-family: inherit;
-  width: 100%;
-}
-
-.rule-description-input:focus-visible {
-  outline: 2px solid rgb(var(--v-theme-primary));
-  outline-offset: 2px;
-  border-color: #1f425a;
-}
-
-.rule-description-input:hover {
-  border-color: #1f425a;
-}
-
-.rule-description-input:focus {
-  border-color: #1f425a;
-  box-shadow: 0 0 0 2px rgba(31, 66, 90, 0.1);
-}
-
-.rule-description-input::placeholder {
-  color: #999;
-}
-
-/* Override Vuetify expansion panel styles for tighter padding and
- * to drop the Material Blue active border (#2196F3) which clashed
- * with the navy/Tableau palette. */
-:deep(.v-expansion-panel-title) {
-  padding: 8px 16px;
-  min-height: 44px;
-}
-
-:deep(.v-expansion-panel-text__wrapper) {
-  padding: 8px 16px 12px;
-}
-
 </style>
