@@ -40,6 +40,7 @@ export const JobTypeSchema = z.enum([
   'cohortInclusionReport',
   'prediction',
   'estimation',
+  'cacheGeneration',
   'UNKNOWN',
 ])
 
@@ -190,6 +191,7 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
   cohortInclusionReport: 'Inclusion Report',
   prediction: 'Prediction',
   estimation: 'Estimation',
+  cacheGeneration: 'Cache Build',
   UNKNOWN: 'Unknown',
 }
 
@@ -206,6 +208,7 @@ export const JOB_TYPE_ICONS: Record<JobType, string> = {
   cohortInclusionReport: 'mdi-file-document',
   prediction: 'mdi-crystal-ball',
   estimation: 'mdi-calculator',
+  cacheGeneration: 'mdi-database-arrow-down',
   UNKNOWN: 'mdi-help-circle',
 }
 

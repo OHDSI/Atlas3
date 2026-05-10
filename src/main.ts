@@ -13,6 +13,7 @@ import { useAuthStore } from './stores/auth'
 import { useLocaleStore } from './stores/locale'
 import { initializePluginFramework } from './plugins/index.ts'
 import { setupGlobalMessageHandler } from './plugins/messaging/HostMessageBus.ts'
+import { setupPythiaBridge } from './plugins/host/pythiaBridge.ts'
 import { tokenExpiryService } from './services/auth/tokenExpiry'
 import { configLoaderService } from './services/config-loader.service'
 import { logger } from './utils/logger'
@@ -96,6 +97,9 @@ async function initializeApp() {
 
   // Create Vuetify instance with custom theme
   const vuetify = createVuetifyInstance(primaryColor)
+  // Expose for plugins that mark `vuetify` as external and resolve it via
+  // SystemJS at runtime (see index.html). Same singleton as the host's app.
+  ;(window as unknown as { __atlasVuetify?: unknown }).__atlasVuetify = vuetify
 
   const app = createApp(App)
 
@@ -119,6 +123,7 @@ setupAuthInterceptor()
 
 // Setup plugin message handler
 setupGlobalMessageHandler(router)
+setupPythiaBridge()
 
 // Handle OAuth token in hash URL (for hash-based routing compatibility)
 // Pattern: #/{client}/{token} e.g., #/OidcClient/eyJhbG...

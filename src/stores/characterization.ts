@@ -436,6 +436,68 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     pollingScopes.clear()
   }
 
+  // ============================================================================
+  // Pythia partial-update entry-point
+  // ============================================================================
+
+  /**
+   * Merge a partial change into `currentCharacterization` from a pythia
+   * agent proposal. Mutates in place so the open editor re-renders. Only
+   * the listed fields are touched; cohorts/featureAnalyses arrays accept
+   * either a full replacement (`cohorts` / `featureAnalyses`) or an
+   * append-only set (`cohortsToAdd` / `featureAnalysesToAdd`).
+   */
+  function applyProposal(payload: {
+    name?: string
+    description?: string
+    cohorts?: Array<{ id: number; name: string }>
+    cohortsToAdd?: Array<{ id: number; name: string }>
+    featureAnalyses?: Array<{ id: number; name: string }>
+    featureAnalysesToAdd?: Array<{ id: number; name: string }>
+  }): boolean {
+    if (!currentCharacterization.value) return false
+    let applied = false
+    const ch = currentCharacterization.value
+    if (typeof payload.name === 'string' && payload.name.trim()) {
+      ch.name = payload.name
+      applied = true
+    }
+    if (typeof payload.description === 'string') {
+      ch.description = payload.description
+      applied = true
+    }
+    if (Array.isArray(payload.cohorts)) {
+      ch.cohorts = payload.cohorts
+      applied = true
+    } else if (Array.isArray(payload.cohortsToAdd) && payload.cohortsToAdd.length > 0) {
+      const seen = new Set((ch.cohorts ?? []).map(c => c.id))
+      ch.cohorts = [...(ch.cohorts ?? [])]
+      for (const c of payload.cohortsToAdd) {
+        if (!seen.has(c.id)) {
+          ch.cohorts.push(c)
+          seen.add(c.id)
+        }
+      }
+      applied = true
+    }
+    if (Array.isArray(payload.featureAnalyses)) {
+      ch.featureAnalyses = payload.featureAnalyses
+      applied = true
+    } else if (Array.isArray(payload.featureAnalysesToAdd) && payload.featureAnalysesToAdd.length > 0) {
+      const seen = new Set((ch.featureAnalyses ?? []).map(fa => fa.id))
+      ch.featureAnalyses = [...(ch.featureAnalyses ?? [])]
+      for (const fa of payload.featureAnalysesToAdd) {
+        if (!seen.has(fa.id)) {
+          ch.featureAnalyses.push(fa)
+          seen.add(fa.id)
+        }
+      }
+      applied = true
+    }
+    if (applied) markDirty()
+    return applied
+  }
+
   return {
     // State
     characterizations,
@@ -466,6 +528,7 @@ export const useCharacterizationStore = defineStore('characterization', () => {
     clearCurrent,
     markDirty,
     markClean,
+    applyProposal,
     loadExecutions,
     runExecution,
     cancelExecution,

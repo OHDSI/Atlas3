@@ -1,0 +1,291 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
+
+vi.mock('@/router', () => ({
+  default: {
+    push: vi.fn().mockResolvedValue(undefined),
+    currentRoute: { value: { name: 'home', params: {} } },
+  },
+}))
+
+vi.mock('@/services/concept-set.service', () => ({
+  createConceptSet: vi.fn(),
+}))
+
+vi.mock('@/services/feature-analysis.service', () => ({
+  createFeatureAnalysis: vi.fn(),
+}))
+
+vi.mock('@/services/characterization.service', () => ({
+  createCharacterization: vi.fn(),
+}))
+
+vi.mock('@/services/webapi', () => ({
+  createPathway: vi.fn(),
+  createIncidenceRate: vi.fn(),
+}))
+
+import router from '@/router'
+import { createFeatureAnalysis } from '@/services/feature-analysis.service'
+import { createCharacterization } from '@/services/characterization.service'
+import { createPathway, createIncidenceRate } from '@/services/webapi'
+import { setupPythiaBridge } from '@/plugins/host/pythiaBridge'
+import { useCohortStore } from '@/stores/cohort'
+import { createHostMessageBus, getHostMessageBus } from '@/plugins/messaging/HostMessageBus'
+
+function dispatchPluginMessage(detail: unknown) {
+  window.dispatchEvent(new CustomEvent('plugin-message', { detail }))
+}
+
+// Wait one microtask for the bridge's async handler to settle.
+const flush = () => new Promise<void>(resolve => setTimeout(resolve, 0))
+
+describe('pythiaBridge', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    setupPythiaBridge()
+    createHostMessageBus('pythia-plugin')
+    vi.mocked(router.push).mockClear()
+    vi.mocked(createFeatureAnalysis).mockReset()
+    vi.mocked(createCharacterization).mockReset()
+    vi.mocked(createPathway).mockReset()
+    vi.mocked(createIncidenceRate).mockReset()
+  })
+
+  it('routes cohort.applyProposal into the cohort store', () => {
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: {
+          kind: 'setObservationPeriod',
+          observationPeriod: { priorDays: 365, postDays: 30 },
+        },
+      },
+      timestamp: new Date(),
+    })
+
+    const store = useCohortStore()
+    expect(store.currentCohort?.observationPeriod).toEqual({ priorDays: 365, postDays: 30 })
+  })
+
+  it('ignores plugin-messages from unrelated plugins', () => {
+    const store = useCohortStore()
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'some-other-plugin',
+      payload: {
+        proposal: {
+          kind: 'setObservationPeriod',
+          observationPeriod: { priorDays: 999, postDays: 999 },
+        },
+      },
+      timestamp: new Date(),
+    })
+
+    expect(store.currentCohort?.observationPeriod).toBeUndefined()
+  })
+
+  it('responds to cohort.getContext with the current source + cohort summary', async () => {
+    const bus = getHostMessageBus('pythia-plugin')!
+    const handleResponseSpy = vi.spyOn(bus, 'handleResponse')
+
+    dispatchPluginMessage({
+      type: 'cohort.getContext',
+      sourcePluginId: 'pythia-plugin',
+      payload: {},
+      callbackId: 'cb-1',
+      timestamp: new Date(),
+    })
+
+    expect(handleResponseSpy).toHaveBeenCalledOnce()
+    const response = handleResponseSpy.mock.calls[0][1] as { sourceKey: unknown; cohort: unknown }
+    expect(response).toHaveProperty('sourceKey')
+    expect(response).toHaveProperty('cohort')
+  })
+
+  it('cohort.rejectProposal is a no-op (does not throw)', () => {
+    expect(() =>
+      dispatchPluginMessage({
+        type: 'cohort.rejectProposal',
+        sourcePluginId: 'pythia-plugin',
+        payload: { id: 'p-1' },
+        timestamp: new Date(),
+      })
+    ).not.toThrow()
+  })
+
+  it('createFeatureAnalysis proposal → calls service + navigates to feature-analysis-edit', async () => {
+    vi.mocked(createFeatureAnalysis).mockResolvedValue({
+      id: 42,
+      name: 'Demographics',
+      type: 'PRESET',
+      design: 'demographics-age-group',
+    })
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: {
+          kind: 'createFeatureAnalysis',
+          payload: {
+            name: 'Demographics',
+            type: 'PRESET',
+            design: 'demographics-age-group',
+          },
+          openAfterCreate: true,
+        },
+      },
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(createFeatureAnalysis).toHaveBeenCalledOnce()
+    expect(router.push).toHaveBeenCalledWith({
+      name: 'feature-analysis-edit',
+      params: { id: '42' },
+    })
+  })
+
+  it('createCharacterization proposal → calls service + navigates to characterization-edit', async () => {
+    vi.mocked(createCharacterization).mockResolvedValue({
+      id: 7,
+      name: 'T2DM baseline',
+      cohorts: [{ id: 1, name: 'T2DM' }],
+      featureAnalyses: [{ id: 10, name: 'Demographics' }],
+      stratas: [],
+    })
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: {
+          kind: 'createCharacterization',
+          payload: {
+            name: 'T2DM baseline',
+            cohorts: [{ id: 1, name: 'T2DM' }],
+            featureAnalyses: [{ id: 10, name: 'Demographics' }],
+          },
+          openAfterCreate: true,
+        },
+      },
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(createCharacterization).toHaveBeenCalledOnce()
+    expect(router.push).toHaveBeenCalledWith({
+      name: 'characterization-edit',
+      params: { id: '7' },
+    })
+  })
+
+  it('createPathway proposal → unwraps ApiResult + navigates to pathway-edit', async () => {
+    vi.mocked(createPathway).mockResolvedValue({
+      success: true,
+      data: { id: 13, name: 'Antidiabetic sequencing' } as never,
+    })
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: {
+          kind: 'createPathway',
+          payload: {
+            name: 'Antidiabetic sequencing',
+            combinationWindow: 60,
+          },
+          openAfterCreate: true,
+        },
+      },
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(createPathway).toHaveBeenCalledOnce()
+    expect(router.push).toHaveBeenCalledWith({
+      name: 'pathway-edit',
+      params: { id: '13' },
+    })
+  })
+
+  it('createIncidenceRate proposal → unwraps ApiResult + navigates to incidence-rate-edit', async () => {
+    vi.mocked(createIncidenceRate).mockResolvedValue({
+      success: true,
+      data: { id: 21, name: 'GI bleed on NSAIDs' } as never,
+    })
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: {
+          kind: 'createIncidenceRate',
+          payload: {
+            name: 'GI bleed on NSAIDs',
+            timeAtRisk: {
+              start: { DateField: 'StartDate', Offset: 0 },
+              end: { DateField: 'StartDate', Offset: 365 },
+            },
+          },
+          openAfterCreate: true,
+        },
+      },
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(createIncidenceRate).toHaveBeenCalledOnce()
+    expect(router.push).toHaveBeenCalledWith({
+      name: 'incidence-rate-edit',
+      params: { id: '21' },
+    })
+  })
+
+  it('createPathway proposal → no router.push when ApiResult.success is false', async () => {
+    vi.mocked(createPathway).mockResolvedValue({
+      success: false,
+      error: 'WebAPI returned 500',
+    })
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: {
+          kind: 'createPathway',
+          payload: { name: 'will fail' },
+          openAfterCreate: true,
+        },
+      },
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(createPathway).toHaveBeenCalledOnce()
+    expect(router.push).not.toHaveBeenCalled()
+  })
+
+  it('navigate proposal → calls router.push with route name + params', async () => {
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: {
+          kind: 'navigate',
+          route: { name: 'cohort-edit', params: { id: 7 } },
+        },
+      },
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(router.push).toHaveBeenCalledWith({
+      name: 'cohort-edit',
+      params: { id: 7 },
+    })
+  })
+})

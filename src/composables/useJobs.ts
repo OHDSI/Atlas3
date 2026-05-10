@@ -20,10 +20,12 @@ import {
 } from '@/models/jobs.types'
 
 /**
- * Permission string for reading job executions
- * Based on Atlas 2.x pattern: job:*:get
+ * Permission string for reading job executions. The store hits
+ * `GET /job/execution?comprehensivePage=true`, which Apache Shiro maps to
+ * `job:execution:get`. The earlier `job:*:get` wildcard form was never
+ * registered server-side, so it always resolved to false.
  */
-const JOBS_READ_PERMISSION = 'job:*:get'
+const JOBS_READ_PERMISSION = 'job:execution:get'
 
 export function useJobs() {
   const jobsStore = useJobsStore()

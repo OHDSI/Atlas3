@@ -28,6 +28,10 @@ build/
 *.local
 .histoire/
 .histoire-dist/
+
+# Built plugin parcels — produced by `npm run build` in each
+# plugins-dev/<plugin>/ directory. Source lives in plugins-dev/.
+public/plugins/
 histoire-dist/
 
 # Testing

@@ -289,6 +289,17 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
     if (event.cardinality.countColumn) {
       atlasEvent.Occurrence.CountColumn = event.cardinality.countColumn
     }
+  } else if (wrapInCriteria) {
+    // Same circe-NPE-shield as the StartWindow default below: correlated
+    // criteria need an Occurrence block on the wrapper. The 2.15 default
+    // is "at least 1" which matches the visible UI text the user sees
+    // before they expand cardinality.
+    atlasEvent.Occurrence = {
+      Type: 2, // AT_LEAST
+      Count: 1,
+      CountMethod: 'ALL',
+      IsDistinct: false,
+    }
   }
 
   if (event.temporalWindow) {
@@ -310,6 +321,25 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
         UseIndexEnd: event.temporalWindow.startWindow.referencePoint === 'INDEX_END',
         UseEventEnd: event.temporalWindow.startWindow.referencePoint === 'EVENT_END',
       }
+    }
+  } else if (wrapInCriteria) {
+    // Correlated criteria (inclusion rules, additional criteria, nested
+    // groups) MUST carry a StartWindow — circe's
+    // CohortExpressionQueryBuilder.getCorelatedlCriteriaQuery dereferences
+    // `drugEra.startWindow.start` with no null guard and NPEs otherwise.
+    //
+    // When the user hasn't explicitly added a temporal window, fall back
+    // to "any time during observation": Coeff -1 / +1 with no Days bound,
+    // matching ATLAS 2.x's representation of an unbounded window. The
+    // dedicated long-term-baseline default (-365 to 0) only kicks in when
+    // the user clicks "Add temporal window" in the criterion editor — so
+    // a freshly-added criterion behaves as "any time" until the user
+    // explicitly narrows it.
+    atlasEvent.StartWindow = {
+      Start: { Coeff: -1 },
+      End: { Coeff: 1 },
+      UseIndexEnd: false,
+      UseEventEnd: false,
     }
   }
 

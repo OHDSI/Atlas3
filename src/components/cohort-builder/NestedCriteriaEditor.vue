@@ -493,9 +493,12 @@ function toggleTemporalWindow(index: number, enabled: boolean) {
   const event = localNested.value.events[index]
   if (!event) return
   if (enabled) {
+    // OHDSI long-term baseline: 365 days before index up to (and
+    // including) the index event — matches FeatureExtraction's
+    // `longTerm` covariate window.
     event.temporalWindow = {
-      startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-      endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
+      startWindow: { days: 365, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
+      endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
     }
   } else {
     delete event.temporalWindow

@@ -89,8 +89,21 @@ services:
       TREXSQL_ENABLED: "true"
       TREXSQL_CACHE_PATH: /data/cache
       HOME: /data
+      # Cohort agent (bao plugin) — loads /opt/webapi/plugins/*.jar at startup
+      JAVA_OPTS: "-Dloader.path=/opt/webapi/plugins"
+      # AWS Bedrock for the cohort design agent. Bao calls Bedrock REST
+      # directly with `Authorization: Bearer ${AWS_BEARER_TOKEN_BEDROCK}` —
+      # no SigV4 / profile creds needed. The token is loaded from .env
+      # via the env_file directive below.
+      AWS_REGION: us-east-1
+      BAO_AGENT_MODEL: minimax.minimax-m2.5
+    env_file:
+      - .env
     volumes:
       - atlas3-webapi-data:/data
+      # Bind-mounts for cohort agent dogfood:
+      - /home/ph/code/WebAPI/target/WebAPI.jar:/var/lib/ohdsi/webapi/WebAPI.jar:ro
+      - /home/ph/code/trexsql/plugins/bao/dist:/opt/webapi/plugins:ro
     depends_on:
       atlas3-postgres:
         condition: service_healthy
@@ -119,6 +132,7 @@ services:
         VITE_AUTH_ENABLED: "true"
         VITE_AUTH_SKIP_LOGIN: "false"
         VITE_AUTH_PROVIDERS: '[{"name":"Database","url":"user/login/db","ajax":true,"icon":"mdi-database","isUseCredentialsForm":true}]'
+        VITE_BAO_AGENT_ENABLED: "true"
     container_name: atlas3-frontend
     platform: linux/amd64
     restart: unless-stopped

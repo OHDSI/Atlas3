@@ -1,0 +1,96 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import type { ProposalState } from './types'
+
+const props = defineProps<{ proposal: ProposalState }>()
+defineEmits<{ accept: [id: string]; reject: [id: string] }>()
+
+const args = computed(() => props.proposal.args)
+const cohorts = computed(() => args.value.cohorts ?? [])
+const fas = computed(() => args.value.featureAnalyses ?? [])
+
+function summary(refs: Array<{ name?: string }>): string {
+  const named = refs.map(r => r.name).filter(Boolean) as string[]
+  if (named.length === 0) return ''
+  if (named.length <= 2) return named.join(', ')
+  return `${named.slice(0, 2).join(', ')} (+${named.length - 2} more)`
+}
+</script>
+
+<template>
+  <div
+    class="proposal-card"
+    :class="{ accepted: proposal.status === 'accepted', rejected: proposal.status === 'rejected' }"
+  >
+    <div class="card-header">
+      <span class="badge">Characterization</span>
+      <span class="counts">{{ cohorts.length }} cohorts · {{ fas.length }} feature analyses</span>
+    </div>
+    <div class="set-name">
+      {{ args.name ?? 'Unnamed characterization' }}
+    </div>
+    <div
+      v-if="args.description"
+      class="description"
+    >
+      {{ args.description }}
+    </div>
+    <dl class="meta">
+      <dt>Cohorts</dt>
+      <dd>{{ summary(cohorts) || '—' }}</dd>
+      <dt>Features</dt>
+      <dd>{{ summary(fas) || '—' }}</dd>
+    </dl>
+    <div
+      v-if="proposal.status === 'pending'"
+      class="actions"
+    >
+      <button
+        type="button"
+        class="accept"
+        @click="$emit('accept', proposal.id)"
+      >
+        Create &amp; open
+      </button>
+      <button
+        type="button"
+        class="reject"
+        @click="$emit('reject', proposal.id)"
+      >
+        Reject
+      </button>
+    </div>
+    <div
+      v-else-if="proposal.status === 'accepted'"
+      class="status-line"
+    >
+      Characterization created
+    </div>
+    <div
+      v-else
+      class="status-line muted"
+    >
+      Rejected
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.proposal-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; margin: 6px 0; background: #ffffff; font-size: 0.8125rem; }
+.proposal-card.accepted { border-color: #16a34a; background: #f0fdf4; }
+.proposal-card.rejected { opacity: 0.55; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.badge { display: inline-block; padding: 1px 6px; border-radius: 999px; background: #fae8ff; color: #6b21a8; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.counts { font-size: 0.6875rem; color: #6b7280; }
+.set-name { font-weight: 600; color: #111827; }
+.description { font-size: 0.75rem; color: #4b5563; margin-top: 2px; }
+.meta { display: grid; grid-template-columns: max-content 1fr; gap: 2px 8px; margin: 4px 0 0; font-size: 0.6875rem; color: #4b5563; }
+.meta dt { color: #6b7280; }
+.meta dd { margin: 0; }
+.actions { display: flex; gap: 6px; margin-top: 8px; }
+.actions button { flex: 1; padding: 4px 8px; border-radius: 6px; border: 1px solid transparent; font-size: 0.75rem; cursor: pointer; }
+.actions .accept { background: #16a34a; color: white; }
+.actions .reject { background: white; color: #6b7280; border-color: #d1d5db; }
+.status-line { margin-top: 6px; font-size: 0.75rem; color: #16a34a; }
+.status-line.muted { color: #9ca3af; }
+</style>

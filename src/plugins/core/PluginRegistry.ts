@@ -4,8 +4,14 @@ import {
   PluginLifecycleState,
   AuthContext,
   PluginMessageBus,
+  FabMount,
 } from '@/models/PluginModels'
 import { logger } from '@/utils/logger'
+
+export interface RegisteredFab {
+  pluginId: string
+  fab: FabMount
+}
 
 export class PluginRegistry {
   private plugins: Map<string, PluginInstance> = new Map()
@@ -30,6 +36,7 @@ export class PluginRegistry {
 
     this.plugins.set(registration.id, instance)
     logger.info('PluginRegistry', `Registered plugin: ${registration.id}`)
+    this.notifyChangeListeners('added', registration.id)
 
     return instance
   }
@@ -140,6 +147,19 @@ export class PluginRegistry {
 
   getPluginsByState(state: PluginLifecycleState): PluginInstance[] {
     return Array.from(this.plugins.values()).filter(p => p.state === state)
+  }
+
+  getFabPlugins(mountId: string): RegisteredFab[] {
+    const matches: RegisteredFab[] = []
+    for (const instance of this.plugins.values()) {
+      const fabs = instance.registration.fabMounts ?? []
+      for (const fab of fabs) {
+        if (fab.id === mountId) {
+          matches.push({ pluginId: instance.registration.id, fab })
+        }
+      }
+    }
+    return matches
   }
 
   getFailedPlugins(): PluginInstance[] {

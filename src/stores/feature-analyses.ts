@@ -256,6 +256,49 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     currentFA.value = null
   }
 
+  // ============================================================================
+  // Pythia partial-update entry-point
+  // ============================================================================
+
+  const isDirty = ref<boolean>(false)
+
+  /**
+   * Merge a partial change into `currentFA` from a pythia agent proposal.
+   * Mutates in place so the open editor re-renders. Only the listed fields
+   * are touched; everything else is preserved.
+   */
+  function applyProposal(payload: Partial<FeatureAnalysis>): boolean {
+    if (!currentFA.value) return false
+    let applied = false
+    const fa = currentFA.value
+    if (typeof payload.name === 'string' && payload.name.trim()) {
+      fa.name = payload.name
+      applied = true
+    }
+    if (typeof payload.description === 'string') {
+      fa.description = payload.description
+      applied = true
+    }
+    if (payload.type !== undefined) {
+      fa.type = payload.type
+      applied = true
+    }
+    if (payload.domain !== undefined) {
+      fa.domain = payload.domain
+      applied = true
+    }
+    if (payload.statType !== undefined) {
+      fa.statType = payload.statType
+      applied = true
+    }
+    if (payload.design !== undefined) {
+      fa.design = payload.design as FeatureAnalysis['design']
+      applied = true
+    }
+    if (applied) isDirty.value = true
+    return applied
+  }
+
   return {
     // State
     featureAnalyses,
@@ -265,6 +308,7 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     filterTerm,
     domains,
     aggregates,
+    isDirty,
 
     // Getters
     filteredFeatureAnalyses,
@@ -282,5 +326,6 @@ export const useFeatureAnalysesStore = defineStore('feature-analyses', () => {
     loadAggregates,
     clearError,
     clearCurrent,
+    applyProposal,
   }
 })

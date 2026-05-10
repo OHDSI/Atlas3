@@ -1,6 +1,11 @@
 /* eslint-env node */
 module.exports = {
   root: true,
+  // package.json's `lint` script passes --ignore-path .gitignore. Files
+  // listed here are *additionally* ignored — needed for `public/vendor/`,
+  // which is third-party (SystemJS, Vue, vue-router globals) committed
+  // to ship as static assets but should not be linted.
+  ignorePatterns: ['public/vendor/**'],
   env: {
     browser: true,
     es2020: true,
@@ -106,6 +111,18 @@ module.exports = {
         'no-console': 'off',
         // Allow any in tests for mocking purposes
         '@typescript-eslint/no-explicit-any': 'off',
+      },
+    },
+    {
+      // Plugins are loaded as single-spa parcels with their own Vuetify
+      // and bundle. They can't import the host's Atlas* wrappers from
+      // @/components/ui across the parcel boundary, so they use raw
+      // Vuetify elements directly. The chat panel renders sanitised
+      // markdown via DOMPurify, so v-html is intentional and safe.
+      files: ['plugins-dev/**/*.{vue,ts,tsx}'],
+      rules: {
+        'vue/no-restricted-html-elements': 'off',
+        'vue/no-v-html': 'off',
       },
     },
     {

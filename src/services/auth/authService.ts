@@ -60,11 +60,14 @@ export function parseUserInfo(data: Record<string, unknown>): UserInfo {
   }
 
   // Old API exposed an explicit flag; new API drops it, so derive from the
-  // presence of any trexsql:* permission.
+  // user's permissions. The global `*` wildcard implicitly grants all
+  // trexsql endpoints, so admins (who hold `*`) must also be considered
+  // enabled — `'*'.startsWith('trexsql:')` is false, which previously hid
+  // the live-preview UI from admins.
   const trexsqlCacheEnabled =
     typeof data.trexsqlCacheEnabled === 'boolean'
       ? (data.trexsqlCacheEnabled as boolean)
-      : flatPerms.some(p => p.startsWith('trexsql:'))
+      : flatPerms.some(p => p === '*' || p.startsWith('trexsql:'))
 
   return {
     login,

@@ -162,7 +162,12 @@ const canSeeCache = computed(() => hasPermission('admin:cache'))
 const canSeeSources = computed(() => hasPermission('admin:source'))
 const canSeeTags = computed(() => hasPermission('admin:tags'))
 const canSeePermissions = computed(() => hasPermission('admin:security'))
-const canSeeJobs = computed(() => hasPermission('job:*:get'))
+// JobsSection.vue lists Spring Batch job executions — the underlying API
+// call is `GET /job/execution?comprehensivePage=true` (see
+// services/jobs.service.ts), which Apache Shiro maps to `job:execution:get`.
+// The earlier `job:*:get` form was never registered server-side and always
+// resolved to false, hiding the panel for everyone (including admins).
+const canSeeJobs = computed(() => hasPermission('job:execution:get'))
 const hasAnyAdminTab = computed(
   () =>
     canSeeCache.value ||
@@ -289,6 +294,13 @@ onUnmounted(() => {
 
 .config-panel__nav {
   flex-shrink: 0;
+  /* Vuetify's v-data-table inside child sections renders sticky headers at
+     z-index: 4. Without an explicit stacking context here, those sticky
+     headers can paint over the tab bar (the JobsSection bug). Lift the
+     tab bar above any child sticky element. */
+  position: relative;
+  z-index: 5;
+  background: rgb(var(--v-theme-surface));
 }
 
 .config-panel__nav .v-tab {
@@ -298,6 +310,12 @@ onUnmounted(() => {
 
 .config-panel__sections {
   padding: 1.5rem;
+  /* Establish a stacking context so position:sticky descendants (e.g. the
+     v-data-table header inside JobsSection) stay clipped to the scroll
+     container instead of bleeding upward over siblings. */
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
 }
 
 .config-section {

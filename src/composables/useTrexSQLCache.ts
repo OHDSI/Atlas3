@@ -20,35 +20,46 @@ import { listDataSources } from '@/services/datasource.service'
 
 const COUNT_DEBOUNCE_MS = 500
 
+// Shared module-level state. All components that call useTrexSQLCache() see
+// the same `selectedSourceKey`, `dataSources`, detection result, etc. The
+// previous per-call instances meant CachePreviewSelector's detection didn't
+// reach InclusionCriteriaPanel / PatientCountBar / useInclusionStats — each
+// got its own empty state and silently disabled the live-preview UI.
+const selectedSourceKey: Ref<string | null> = ref(null)
+const dataSources: Ref<DataSourceWithCacheStatus[]> = ref([])
+const isLoadingDataSources = ref(false)
+
+const countState: Ref<PatientCountState> = ref({
+  selectedSourceKey: null,
+  result: null,
+  isLoading: false,
+  error: null,
+  cacheStatus: null,
+})
+
+const countError: Ref<string | null> = ref(null)
+const isCountLoading = ref(false)
+const isCountSlow = ref(false)
+
+let slowCountTimerId: ReturnType<typeof setTimeout> | null = null
+
+const trexSQLDetected = ref<boolean | null>(null)
+
+let initializePromise: Promise<void> | null = null
+
 export function useTrexSQLCache() {
   const authStore = useAuthStore()
 
-  const selectedSourceKey: Ref<string | null> = ref(null)
-  const dataSources: Ref<DataSourceWithCacheStatus[]> = ref([])
-  const isLoadingDataSources = ref(false)
-
-  const countState: Ref<PatientCountState> = ref({
-    selectedSourceKey: null,
-    result: null,
-    isLoading: false,
-    error: null,
-    cacheStatus: null,
-  })
-
-  const countError: Ref<string | null> = ref(null)
-  const isCountLoading = ref(false)
-  const isCountSlow = ref(false)
-
-  let slowCountTimerId: ReturnType<typeof setTimeout> | null = null
-
-  const trexSQLDetected = ref<boolean | null>(null)
-
   const isTrexSQLEnabled: ComputedRef<boolean> = computed(() => {
-    // If auth store has explicit value, use it
-    if (authStore.user?.trexsqlCacheEnabled !== undefined) {
-      return authStore.user.trexsqlCacheEnabled
-    }
-    return trexSQLDetected.value ?? false
+    // Trust an explicit `true` from the auth store; otherwise (false or
+    // undefined) fall through to runtime detection. The previous form
+    // short-circuited on any non-undefined value, which meant a stale
+    // `false` (cached from a session that pre-dates the auth fix or from
+    // a user without the trexsql:* permission set) would permanently hide
+    // the live-preview UI even after `/trexsql/*/cache/status` started
+    // succeeding.
+    if (authStore.user?.trexsqlCacheEnabled === true) return true
+    return trexSQLDetected.value === true
   })
 
   const patientCount: ComputedRef<PatientCountResult | null> = computed(() => {
@@ -268,6 +279,12 @@ export function useTrexSQLCache() {
       return
     }
 
+    // Flip the pending flag the moment the expression changes, not when
+    // the debounced fetch finally fires. Without this the patient-count
+    // bar sits silently for ~500ms after every keystroke before the
+    // pulsing animation starts — making it look like nothing happened.
+    isCountLoading.value = true
+    countState.value.isLoading = true
     debouncedGetPatientCount(selectedSourceKey.value, expression)
   }
 
@@ -303,19 +320,29 @@ export function useTrexSQLCache() {
   }
 
   async function initialize(): Promise<void> {
-    loadSelectedSource()
+    // Module-level memoization: if another component already triggered the
+    // initialize flow, await its in-flight promise instead of running the
+    // detection + dataSources fetch again.
+    if (initializePromise) return initializePromise
 
-    // Re-detect TrexSQL if not explicitly set by user or if previous detection failed
-    if (authStore.user?.trexsqlCacheEnabled === undefined) {
-      // Always re-detect if previous detection failed (trexSQLDetected is false or null)
-      if (trexSQLDetected.value !== true) {
+    initializePromise = (async () => {
+      loadSelectedSource()
+
+      // Always run detection unless the auth store says trexsql is enabled.
+      // We can't trust a stale `false` from the auth store (it may come
+      // from a session that pre-dates the trexsql backend coming online,
+      // or from a permission set that didn't surface trexsql:* to the
+      // frontend). Detection is a single GET against
+      // /trexsql/<source>/cache/status — cheap and self-correcting.
+      if (authStore.user?.trexsqlCacheEnabled !== true && trexSQLDetected.value !== true) {
         await detectTrexSQLAvailability()
       }
-    }
 
-    if (isTrexSQLEnabled.value) {
-      await fetchDataSourcesWithCacheStatus()
-    }
+      if (isTrexSQLEnabled.value) {
+        await fetchDataSourcesWithCacheStatus()
+      }
+    })()
+    return initializePromise
   }
 
   async function detectTrexSQLAvailability(): Promise<void> {
