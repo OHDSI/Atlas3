@@ -214,21 +214,25 @@ export interface AskState {
   groupIndex?: number
 }
 
-export type ChecklistStepStatus = 'pending' | 'in_progress' | 'done' | 'blocked'
+export type PlanStepStatus = 'pending' | 'in_progress' | 'done' | 'blocked'
 
-export interface ChecklistStep {
+export interface PlanStep {
   id: string
   label: string
   description?: string
-  status: ChecklistStepStatus
+  status: PlanStepStatus
   linkedProposalKind?: string
   linkedRoute?: string
 }
 
-export interface Checklist {
+export interface Plan {
   id: string
   title: string
-  steps: ChecklistStep[]
+  // Optional markdown narrative (3-5 sentences) — goal, approach,
+  // prerequisites, success criteria. Pythia attaches it for non-trivial
+  // analyses; trivial 1-2 step flows skip it.
+  document?: string
+  steps: PlanStep[]
   status: 'active' | 'completed' | 'abandoned'
   createdAt: number
   updatedAt: number

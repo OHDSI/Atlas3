@@ -24,14 +24,13 @@ import {
   setTokenProvider,
   switchToSession,
 } from './chat-session'
-import { activeChecklist, markStepProgress } from './checklist-state'
-import ChecklistCard from './ChecklistCard.vue'
-import type { ChecklistStep } from './types'
+import { activePlan, markStepProgress } from './plan-state'
+import PlanCard from './PlanCard.vue'
+import type { PlanStep } from './types'
 import CriterionProposalCard from './CriterionProposalCard.vue'
 import ObservationWindowProposalCard from './ObservationWindowProposalCard.vue'
 import ExitCriterionProposalCard from './ExitCriterionProposalCard.vue'
 import InclusionRuleProposalCard from './InclusionRuleProposalCard.vue'
-import ConceptSetProposalCard from './ConceptSetProposalCard.vue'
 import NavigateProposalCard from './NavigateProposalCard.vue'
 import StandaloneConceptSetProposalCard from './StandaloneConceptSetProposalCard.vue'
 import FeatureAnalysisProposalCard from './FeatureAnalysisProposalCard.vue'
@@ -196,8 +195,6 @@ function cardComponentFor(toolName: string) {
     case 'add_exit_criterion': return ExitCriterionProposalCard
     case 'add_inclusion_rule':
     case 'add_criteria': return InclusionRuleProposalCard
-    case 'embed_concept_set_in_cohort':
-    case 'create_concept_set': return ConceptSetProposalCard
     case 'create_standalone_concept_set': return StandaloneConceptSetProposalCard
     case 'navigate_to': return NavigateProposalCard
     case 'create_feature_analysis': return FeatureAnalysisProposalCard
@@ -330,7 +327,7 @@ function onAccept(id: string) {
   dismissProposalLater(id, DISMISS_ACCEPTED_MS)
 }
 
-function onOpenStep(step: ChecklistStep) {
+function onOpenStep(step: PlanStep) {
   if (!step.linkedRoute) return
   applyProposal(props.messageBus, {
     kind: 'navigate',
@@ -490,11 +487,11 @@ onMounted(async () => {
     </v-toolbar>
 
     <div
-      v-if="activeChecklist"
+      v-if="activePlan"
       class="cohort-agent-chat__pinned"
     >
-      <ChecklistCard
-        :checklist="activeChecklist"
+      <PlanCard
+        :plan="activePlan"
         @open-step="onOpenStep"
       />
     </div>

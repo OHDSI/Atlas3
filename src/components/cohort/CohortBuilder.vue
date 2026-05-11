@@ -1188,7 +1188,22 @@ onMounted(async () => {
   } else {
     const restored = cohortStore.restoreFromDraft()
     if (!restored) {
-      cohortStore.createNewCohort()
+      // If pythia (or any other code path) has already populated
+      // currentCohort with actual content right before navigating us to
+      // /cohorts/new, don't clobber it. Only initialise a fresh blank
+      // cohort when there's truly nothing to preserve.
+      const existing = cohortStore.currentCohort
+      const hasContent =
+        existing != null &&
+        ((existing.entryEvents?.length ?? 0) > 0 ||
+          (existing.inclusionRules?.length ?? 0) > 0 ||
+          (existing.conceptSets?.length ?? 0) > 0 ||
+          (typeof existing.name === 'string' &&
+            existing.name.trim().length > 0 &&
+            existing.name !== 'New Cohort'))
+      if (!hasContent) {
+        cohortStore.createNewCohort()
+      }
     }
     loadedTags.value = []
     // Set name from query param if provided (from New Cohort dialog)

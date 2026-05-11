@@ -148,30 +148,30 @@ export type AgentProposal =
   | { kind: 'setExitCriteria'; exitCriteria: ExitCriteria }
   | { kind: 'addCensoringCriterion'; event: CohortEvent }
   | { kind: 'navigate'; route: NavigateRoute; reason?: string }
+  // The host always navigates the user to the relevant editor after a
+  // successful create, so the prior `openAfterCreate: boolean` field is
+  // gone. If we ever need a "create silently in the background" mode it
+  // should come back as an opt-OUT (`silent: true`) rather than the
+  // always-true opt-IN it used to be.
   | {
       kind: 'createStandaloneConceptSet'
       conceptSet: StandaloneConceptSetPayload
-      openAfterCreate: boolean
     }
   | {
       kind: 'createFeatureAnalysis'
       payload: FeatureAnalysisCreatePayload
-      openAfterCreate: boolean
     }
   | {
       kind: 'createCharacterization'
       payload: CharacterizationCreatePayload
-      openAfterCreate: boolean
     }
   | {
       kind: 'createPathway'
       payload: PathwayCreatePayload
-      openAfterCreate: boolean
     }
   | {
       kind: 'createIncidenceRate'
       payload: IncidenceRateCreatePayload
-      openAfterCreate: boolean
     }
   | { kind: 'updateConceptSet'; payload: UpdateConceptSetPayload }
   | { kind: 'updateFeatureAnalysis'; payload: UpdateFeatureAnalysisPayload }

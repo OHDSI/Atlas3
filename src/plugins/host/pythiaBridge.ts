@@ -83,22 +83,19 @@ async function handleApplyProposal(payload: { proposal: AgentProposal }) {
       handleNavigate(proposal.route)
       return
     case 'createStandaloneConceptSet':
-      await handleCreateStandaloneConceptSet(
-        proposal.conceptSet,
-        proposal.openAfterCreate
-      )
+      await handleCreateStandaloneConceptSet(proposal.conceptSet)
       return
     case 'createFeatureAnalysis':
-      await handleCreateFeatureAnalysis(proposal.payload, proposal.openAfterCreate)
+      await handleCreateFeatureAnalysis(proposal.payload)
       return
     case 'createCharacterization':
-      await handleCreateCharacterization(proposal.payload, proposal.openAfterCreate)
+      await handleCreateCharacterization(proposal.payload)
       return
     case 'createPathway':
-      await handleCreatePathway(proposal.payload, proposal.openAfterCreate)
+      await handleCreatePathway(proposal.payload)
       return
     case 'createIncidenceRate':
-      await handleCreateIncidenceRate(proposal.payload, proposal.openAfterCreate)
+      await handleCreateIncidenceRate(proposal.payload)
       return
     case 'updateConceptSet':
       await handleUpdateConceptSet(proposal.payload)
@@ -118,6 +115,36 @@ async function handleApplyProposal(payload: { proposal: AgentProposal }) {
     default:
       // Cohort-store proposal kinds (entry events, inclusion rules, etc.)
       useCohortStore().applyProposal(proposal)
+      // Auto-navigate when pythia is building a cohort but the user is
+      // not on a cohort route — otherwise their work is invisible. The
+      // store's applyProposal calls createNewCohort() implicitly when
+      // currentCohort is null, so by the time we get here the cohort
+      // exists either as a draft (no id → cohort-new) or as a saved
+      // entity (id present → cohort-edit/:id).
+      await ensureOnCohortRoute()
+  }
+}
+
+const COHORT_ROUTES = new Set([
+  'cohort-edit',
+  'cohort-new',
+  'cohort-version-preview',
+])
+
+async function ensureOnCohortRoute() {
+  const current = router.currentRoute.value
+  const name = typeof current.name === 'string' ? current.name : ''
+  if (COHORT_ROUTES.has(name)) return
+  const cohort = useCohortStore().currentCohort
+  if (!cohort) return
+  try {
+    if (typeof cohort.id === 'number') {
+      await router.push({ name: 'cohort-edit', params: { id: String(cohort.id) } })
+    } else {
+      await router.push({ name: 'cohort-new' })
+    }
+  } catch (err) {
+    logger.warn('pythiaBridge', 'auto-navigate to cohort route failed', err)
   }
 }
 
@@ -132,8 +159,7 @@ function handleNavigate(route: NavigateRoute) {
 }
 
 async function handleCreateStandaloneConceptSet(
-  payload: StandaloneConceptSetPayload,
-  openAfterCreate: boolean
+  payload: StandaloneConceptSetPayload
 ) {
   if (!payload?.name || !Array.isArray(payload.items) || payload.items.length === 0) {
     showSnackbar('Concept set is missing a name or items', 'error')
@@ -169,16 +195,47 @@ async function handleCreateStandaloneConceptSet(
     return
   }
 
-  showSnackbar(`Concept set "${created.name}" created`, 'success')
+  // Branch on intent. Pythia's `create_standalone_concept_set` is the
+  // single concept-set tool, used both for "create a Statins set" and for
+  // "I need a Statins set to plug into this cohort I'm building". We
+  // distinguish on the cohort-store state, NOT on the current route:
+  //
+  // - If there's any cohort in the store (active build or saved cohort
+  //   open in the editor), the new concept set is almost certainly meant
+  //   for it. Attach via addConceptSet and STAY where pythia is so the
+  //   cohort-build flow continues uninterrupted. We also push the user
+  //   onto the cohort route if they aren't already there — that way a
+  //   model that creates the concept set BEFORE adding entry events
+  //   (no cohort-mutation proposal has yet pulled the user in) still
+  //   ends up on the cohort builder rather than /concepts.
+  //
+  // - If there's no cohort in the store at all, fall back to "open the
+  //   concept-set editor" — the user explicitly wanted a standalone set.
+  const cohortStore = useCohortStore()
+  if (cohortStore.currentCohort) {
+    cohortStore.applyProposal({
+      kind: 'addConceptSet',
+      conceptSet: {
+        id: created.id as number,
+        name: created.name,
+        conceptCount: created.items?.length ?? 0,
+      },
+    } as never)
+    await ensureOnCohortRoute()
+    showSnackbar(
+      `Concept set "${created.name}" created and attached to the cohort`,
+      'success'
+    )
+    return
+  }
 
-  if (openAfterCreate) {
-    try {
-      await router.push({ name: 'concepts' })
-      const store = useConceptSetsStore()
-      await store.openEditEditor(created.id)
-    } catch (err) {
-      logger.warn('pythiaBridge', 'open-after-create failed', err)
-    }
+  showSnackbar(`Concept set "${created.name}" created`, 'success')
+  try {
+    await router.push({ name: 'concepts' })
+    const store = useConceptSetsStore()
+    await store.openEditEditor(created.id)
+  } catch (err) {
+    logger.warn('pythiaBridge', 'open-after-create failed', err)
   }
 }
 
@@ -191,8 +248,7 @@ async function navigateToEditor(routeName: string, id: number | string) {
 }
 
 async function handleCreateFeatureAnalysis(
-  payload: FeatureAnalysisCreatePayload,
-  openAfterCreate: boolean
+  payload: FeatureAnalysisCreatePayload
 ) {
   if (!payload?.name || !payload?.type) {
     showSnackbar('Feature analysis is missing a name or type', 'error')
@@ -216,7 +272,7 @@ async function handleCreateFeatureAnalysis(
       return
     }
     showSnackbar(`Feature analysis "${created.name}" created`, 'success')
-    if (openAfterCreate) await navigateToEditor('feature-analysis-edit', created.id)
+    await navigateToEditor('feature-analysis-edit', created.id)
   } catch (err) {
     logger.error('pythiaBridge', 'createFeatureAnalysis failed', err)
     showSnackbar(`Failed to create feature analysis: ${(err as Error).message}`, 'error')
@@ -224,8 +280,7 @@ async function handleCreateFeatureAnalysis(
 }
 
 async function handleCreateCharacterization(
-  payload: CharacterizationCreatePayload,
-  openAfterCreate: boolean
+  payload: CharacterizationCreatePayload
 ) {
   if (!payload?.name) {
     showSnackbar('Characterization is missing a name', 'error')
@@ -259,7 +314,7 @@ async function handleCreateCharacterization(
       return
     }
     showSnackbar(`Characterization "${created.name}" created`, 'success')
-    if (openAfterCreate) await navigateToEditor('characterization-edit', created.id)
+    await navigateToEditor('characterization-edit', created.id)
   } catch (err) {
     logger.error('pythiaBridge', 'createCharacterization failed', err)
     showSnackbar(`Failed to create characterization: ${(err as Error).message}`, 'error')
@@ -267,8 +322,7 @@ async function handleCreateCharacterization(
 }
 
 async function handleCreatePathway(
-  payload: PathwayCreatePayload,
-  openAfterCreate: boolean
+  payload: PathwayCreatePayload
 ) {
   if (!payload?.name) {
     showSnackbar('Pathway is missing a name', 'error')
@@ -294,7 +348,7 @@ async function handleCreatePathway(
       return
     }
     showSnackbar(`Pathway "${result.data.name}" created`, 'success')
-    if (openAfterCreate) await navigateToEditor('pathway-edit', result.data.id)
+    await navigateToEditor('pathway-edit', result.data.id)
   } catch (err) {
     logger.error('pythiaBridge', 'createPathway failed', err)
     showSnackbar(`Failed to create pathway: ${(err as Error).message}`, 'error')
@@ -302,8 +356,7 @@ async function handleCreatePathway(
 }
 
 async function handleCreateIncidenceRate(
-  payload: IncidenceRateCreatePayload,
-  openAfterCreate: boolean
+  payload: IncidenceRateCreatePayload
 ) {
   if (!payload?.name) {
     showSnackbar('Incidence rate is missing a name', 'error')
@@ -337,7 +390,7 @@ async function handleCreateIncidenceRate(
       return
     }
     showSnackbar(`Incidence rate "${result.data.name}" created`, 'success')
-    if (openAfterCreate) await navigateToEditor('incidence-rate-edit', result.data.id)
+    await navigateToEditor('incidence-rate-edit', result.data.id)
   } catch (err) {
     logger.error('pythiaBridge', 'createIncidenceRate failed', err)
     showSnackbar(`Failed to create incidence rate: ${(err as Error).message}`, 'error')

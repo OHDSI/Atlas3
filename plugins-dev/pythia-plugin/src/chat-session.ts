@@ -11,16 +11,16 @@ import {
   type UIMessage,
 } from 'ai'
 import type { RouteContext } from './shell-bridge'
-import type { AskState, Checklist, ProposalState } from './types'
+import type { AskState, Plan, ProposalState } from './types'
 import {
-  activeChecklist,
-  applyChecklistToolCall,
-  checklistHistory,
-  isChecklistTool,
-  resetChecklists,
-  restoreChecklists,
-  snapshotChecklists,
-} from './checklist-state'
+  activePlan,
+  applyPlanToolCall,
+  isPlanTool,
+  planHistory,
+  resetPlans,
+  restorePlans,
+  snapshotPlans,
+} from './plan-state'
 
 const INDEX_KEY = 'cohort-agent-plugin.sessions.v1.index'
 const ACTIVE_KEY = 'cohort-agent-plugin.sessions.v1.active'
@@ -33,9 +33,6 @@ export const CLIENT_SIDE_TOOLS = new Set([
   'set_observation_window',
   'add_exit_criterion',
   'set_censor_event',
-  'embed_concept_set_in_cohort',
-  // Legacy alias kept for any sessions persisted before the rename.
-  'create_concept_set',
   'add_inclusion_rule',
   'navigate_to',
   'create_standalone_concept_set',
@@ -83,8 +80,13 @@ export const activeSessionId = ref<string>('')
 interface PersistedSession {
   messages: UIMessage[]
   proposals: Record<string, ProposalState>
-  activeChecklist?: Checklist | null
-  checklistHistory?: Checklist[]
+  activePlan?: Plan | null
+  planHistory?: Plan[]
+  // Legacy field names from before the Checklist→Plan rename. Kept on the
+  // read path so old persisted sessions don't drop their plan card. Not
+  // written by current code.
+  activeChecklist?: Plan | null
+  checklistHistory?: Plan[]
   asks?: Record<string, AskState>
 }
 
@@ -121,8 +123,15 @@ function readSession(id: string): PersistedSession {
   return {
     messages: sess.messages ?? [],
     proposals: sess.proposals ?? {},
-    activeChecklist: sess.activeChecklist ?? null,
-    checklistHistory: Array.isArray(sess.checklistHistory) ? sess.checklistHistory : [],
+    // Prefer the new field names; fall back to the legacy
+    // `activeChecklist`/`checklistHistory` for sessions persisted before
+    // the rename so old chats don't lose their plan card.
+    activePlan: sess.activePlan ?? sess.activeChecklist ?? null,
+    planHistory: Array.isArray(sess.planHistory)
+      ? sess.planHistory
+      : Array.isArray(sess.checklistHistory)
+        ? sess.checklistHistory
+        : [],
     asks: sess.asks ?? {},
   }
 }
@@ -180,12 +189,12 @@ function attachPersistence(chat: Chat<UIMessage>) {
   const persistAll = () => {
     const id = activeSessionId.value
     if (!id) return
-    const snap = snapshotChecklists()
+    const snap = snapshotPlans()
     writeSession(id, {
       messages: JSON.parse(JSON.stringify(chat.messages)) as UIMessage[],
       proposals: proposals.value,
-      activeChecklist: snap.active,
-      checklistHistory: snap.history,
+      activePlan: snap.active,
+      planHistory: snap.history,
       asks: asks.value,
     })
   }
@@ -204,9 +213,31 @@ function attachPersistence(chat: Chat<UIMessage>) {
     { deep: true }
   )
   watch(proposals, persistAll, { deep: true })
-  watch(activeChecklist, persistAll, { deep: true })
-  watch(checklistHistory, persistAll, { deep: true })
+  watch(activePlan, persistAll, { deep: true })
+  watch(planHistory, persistAll, { deep: true })
   watch(asks, persistAll, { deep: true })
+}
+
+function resolveMaxAutoSteps(): number {
+  const DEFAULT = 15
+  const parse = (raw: unknown): number | null => {
+    if (typeof raw !== 'string' && typeof raw !== 'number') return null
+    const n = typeof raw === 'number' ? raw : parseInt(raw, 10)
+    return Number.isFinite(n) && n > 0 ? n : null
+  }
+  // Runtime override (dev convenience). Set with
+  //   localStorage.setItem('pythiaMaxAutoSteps', '25')
+  // in DevTools, then refresh — no rebuild needed.
+  if (typeof localStorage !== 'undefined') {
+    const ls = parse(localStorage.getItem('pythiaMaxAutoSteps'))
+    if (ls !== null) return ls
+  }
+  // Build-time env var, baked in by Vite (prefix VITE_* so it's exposed
+  // to the bundle). Set in docker-compose.yml or your shell when
+  // building the plugin.
+  const env = parse(import.meta.env?.VITE_PYTHIA_MAX_AUTO_STEPS)
+  if (env !== null) return env
+  return DEFAULT
 }
 
 /**
@@ -253,9 +284,9 @@ export function getChatInstance(): Chat<UIMessage> {
   const persisted = readSession(id)
   proposals.value = persisted.proposals
   asks.value = persisted.asks ?? {}
-  restoreChecklists({
-    active: persisted.activeChecklist ?? null,
-    history: persisted.checklistHistory ?? [],
+  restorePlans({
+    active: persisted.activePlan ?? null,
+    history: persisted.planHistory ?? [],
   })
 
   const transport = new DefaultChatTransport({
@@ -286,14 +317,15 @@ export function getChatInstance(): Chat<UIMessage> {
   // parts) didn't bite because (a) message count stays at 1 and (b)
   // bao's SSE doesn't emit `start-step` chunks, so step-start parts
   // never materialise.
-  // 15 covers a typical "build me a complex cohort" flow:
-  //   ~2 search_existing_cohorts/search_phenotypes (orientation)
-  // + ~5 search_concepts (entry/inclusion/exclusion concept lookups)
-  // + ~5 client-side proposals (entry, observation, inclusion, exit, censor)
-  // + ~3 buffer for retries or refinements.
-  // Tighter caps starve complex flows; a much higher cap re-introduces the
+  // Configurable via VITE_PYTHIA_MAX_AUTO_STEPS at build time, with a
+  // dev-convenience runtime override at localStorage.pythiaMaxAutoSteps
+  // (no rebuild needed — set it in DevTools, refresh).
+  // 15 is the working default for typical "build me a complex cohort"
+  // flows (~2 orientation searches + ~5 concept lookups + ~5 client-side
+  // proposals + ~3 buffer). Bump it when sparse local vocabularies push
+  // the model into long retry chains; tighten it if you observe the
   // "tool-loop forever" failure mode the cap was added to prevent.
-  const MAX_AUTO_STEPS = 15
+  const MAX_AUTO_STEPS = resolveMaxAutoSteps()
   const sendAutomaticallyWithCap: NonNullable<ConstructorParameters<typeof Chat<UIMessage>>[0]['sendAutomaticallyWhen']> = ({ messages }) => {
     if (!lastAssistantMessageIsCompleteWithToolCalls({ messages })) return false
     const last = messages[messages.length - 1]
@@ -318,8 +350,8 @@ export function getChatInstance(): Chat<UIMessage> {
     messages: persisted.messages,
     sendAutomaticallyWhen: sendAutomaticallyWithCap,
     onToolCall: ({ toolCall }: { toolCall: { toolCallId: string; toolName: string; input: unknown } }) => {
-      if (isChecklistTool(toolCall.toolName)) {
-        const result = applyChecklistToolCall(toolCall.toolName, toolCall.input)
+      if (isPlanTool(toolCall.toolName)) {
+        const result = applyPlanToolCall(toolCall.toolName, toolCall.input)
         chat.addToolResult({
           tool: toolCall.toolName,
           toolCallId: toolCall.toolCallId,
@@ -408,7 +440,7 @@ export function newChat() {
   activeSessionId.value = id
   proposals.value = {}
   asks.value = {}
-  resetChecklists()
+  resetPlans()
   if (chatInstance) chatInstance.messages = []
   // Add the empty session to the index so the picker shows it; it gets a
   // real title once the user sends the first message.
@@ -423,9 +455,9 @@ export function switchToSession(id: string) {
   activeSessionId.value = id
   proposals.value = persisted.proposals
   asks.value = persisted.asks ?? {}
-  restoreChecklists({
-    active: persisted.activeChecklist ?? null,
-    history: persisted.checklistHistory ?? [],
+  restorePlans({
+    active: persisted.activePlan ?? null,
+    history: persisted.planHistory ?? [],
   })
   if (chatInstance) chatInstance.messages = persisted.messages
 }
@@ -447,14 +479,14 @@ export function clearCurrentSession() {
   if (chatInstance) chatInstance.messages = []
   proposals.value = {}
   asks.value = {}
-  resetChecklists()
+  resetPlans()
   const id = activeSessionId.value
   if (id) {
     writeSession(id, {
       messages: [],
       proposals: {},
-      activeChecklist: null,
-      checklistHistory: [],
+      activePlan: null,
+      planHistory: [],
       asks: {},
     })
     const idx = readIndex().map(s =>

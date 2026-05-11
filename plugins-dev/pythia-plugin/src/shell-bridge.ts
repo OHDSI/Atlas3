@@ -1,7 +1,6 @@
 import type { MessageBus } from './main'
 import type {
   ConceptRefArgs,
-  ConceptSetArgs,
   CreateCharacterizationArgs,
   CreateFeatureAnalysisArgs,
   CreateIncidenceRateArgs,
@@ -146,6 +145,21 @@ function buildEventFromCriterion(args: CriterionArgs): unknown {
       id: uid(),
       name: args.conceptName,
       conceptCount: 1,
+      // Embed the concept item directly. Without this, the cohort builder
+      // renders the criterion with an empty concept set and the user sees
+      // "nothing was added".
+      items: [
+        {
+          concept: {
+            CONCEPT_ID: args.conceptId,
+            CONCEPT_NAME: args.conceptName,
+            DOMAIN_ID: args.domain ?? '',
+          },
+          includeDescendants: args.includeDescendants ?? true,
+          isExcluded: args.isExcluded ?? false,
+          includeMapped: false,
+        },
+      ],
     },
   }
   if (args.operator && typeof args.value === 'number') {
@@ -156,23 +170,6 @@ function buildEventFromCriterion(args: CriterionArgs): unknown {
   return event
 }
 
-function buildConceptSet(args: ConceptSetArgs): unknown {
-  return {
-    id: uid(),
-    name: args.name ?? 'Unnamed concept set',
-    conceptCount: args.items?.length ?? 0,
-    items: (args.items ?? []).map(it => ({
-      concept: {
-        CONCEPT_ID: it.conceptId,
-        CONCEPT_NAME: it.conceptName,
-        DOMAIN_ID: it.domain,
-      },
-      includeDescendants: it.includeDescendants ?? true,
-      isExcluded: it.isExcluded ?? false,
-      includeMapped: false,
-    })),
-  }
-}
 
 const NAVIGATE_VIEWS: ReadonlySet<NavigateView> = new Set<NavigateView>([
   'home', 'cohorts', 'cohort-new', 'cohort-edit',
@@ -240,7 +237,6 @@ function buildFeatureAnalysisProposal(args: CreateFeatureAnalysisArgs): AgentPro
       statType: args.statType,
       design: args.design,
     },
-    openAfterCreate: true,
   } as unknown as AgentProposal
 }
 
@@ -261,7 +257,6 @@ function buildCharacterizationProposal(args: CreateCharacterizationArgs): AgentP
       cohorts,
       featureAnalyses,
     },
-    openAfterCreate: true,
   } as unknown as AgentProposal
 }
 
@@ -285,7 +280,6 @@ function buildPathwayProposal(args: CreatePathwayArgs): AgentProposal | null {
       maxDepth: args.maxDepth,
       allowRepeats: args.allowRepeats,
     },
-    openAfterCreate: true,
   } as unknown as AgentProposal
 }
 
@@ -313,7 +307,6 @@ function buildIncidenceRateProposal(args: CreateIncidenceRateArgs): AgentProposa
       timeAtRisk: tar,
       studyWindow: args.studyWindow,
     },
-    openAfterCreate: true,
   } as unknown as AgentProposal
 }
 
@@ -490,7 +483,6 @@ function buildStandaloneConceptSetProposal(args: StandaloneConceptSetArgs): Agen
           isExcluded: it.isExcluded ?? false,
         })),
     },
-    openAfterCreate: true,
   } as unknown as AgentProposal
 }
 
@@ -584,15 +576,6 @@ export function proposalFromToolCall(
       const event = buildEventFromCriterion(args as CriterionArgs)
       if (!event) return null
       return { kind: 'addCensoringCriterion', event }
-    }
-
-    case 'embed_concept_set_in_cohort':
-    case 'create_concept_set': {
-      // 'create_concept_set' is the legacy name; both map to the same
-      // "embed a concept set into the currently-open cohort" behaviour.
-      const cs = args as ConceptSetArgs
-      if (!cs.name || !cs.items?.length) return null
-      return { kind: 'addConceptSet', conceptSet: buildConceptSet(cs) }
     }
 
     case 'navigate_to':

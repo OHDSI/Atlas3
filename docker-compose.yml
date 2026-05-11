@@ -27,10 +27,7 @@ services:
       retries: 10
 
   atlas3-webapi:
-    build:
-      context: ../WebAPI
-      dockerfile: Dockerfile
-    image: ghcr.io/ohdsi/webapi:3.0-dev
+    image: ghcr.io/ohdsi/webapi:3.0-dev@sha256:a6e5fcffd87d7a3e77c155b6bbf8847ce87cb3d9f00e788dbbc4bde670a595c4
     container_name: atlas3-webapi
     platform: linux/amd64
     restart: unless-stopped
@@ -101,9 +98,6 @@ services:
       - .env
     volumes:
       - atlas3-webapi-data:/data
-      # Bind-mounts for cohort agent dogfood:
-      - /home/ph/code/WebAPI/target/WebAPI.jar:/var/lib/ohdsi/webapi/WebAPI.jar:ro
-      - /home/ph/code/trexsql/plugins/bao/dist:/opt/webapi/plugins:ro
     depends_on:
       atlas3-postgres:
         condition: service_healthy
