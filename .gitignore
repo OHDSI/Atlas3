@@ -13,6 +13,7 @@ sp*
 .sp*
 .env*
 !.env.test
+!.env.example
 *md
 .gitignore
 check-config.html
