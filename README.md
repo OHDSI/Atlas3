@@ -125,9 +125,11 @@ If you want each component on the host without Docker, the steps below mirror th
 4. Run it with `java -jar target/WebAPI.jar`, passing the `DATASOURCE_*` and `SPRING_FLYWAY_*` settings as environment variables or via `--spring.config.location`. WebAPI will run Flyway migrations against the configured schema on first boot.
 5. Confirm http://localhost:8080/WebAPI/info returns the version JSON.
 
-#### 2a. Enable the TrexSQL query cache
+#### 2a. Enable the TrexSQL query cache (optional)
 
-Live patient counts in the cohort builder, the inclusion-rule rail, and several descriptive views all read from **TrexSQL**, a query-result cache that **is not part of the WebAPI fat-jar** and must be wired in separately. The prebuilt `ghcr.io/ohdsi/webapi:3.0-dev` image (and the Docker Compose stack that pulls it) already has TrexSQL baked in — this step matters only for native installs.
+**This step is optional.** ATLAS v3.0 runs without TrexSQL — you only lose the live patient-count features. Skip this section if you don't need them and come back later when you do.
+
+TrexSQL is a query-result cache that powers live patient counts in the cohort builder, the inclusion-rule rail, and several descriptive views. It **is not part of the WebAPI fat-jar** and must be wired in separately. The prebuilt `ghcr.io/ohdsi/webapi:3.0-dev` image (and the Docker Compose stack that pulls it) already has TrexSQL baked in — this section matters only for native installs that want the cache.
 
 > **TrexSQL currently supports Linux x86_64 only.** macOS and Windows are not supported — the native library is published only for Linux amd64. Run WebAPI on Linux (host or container) if you need the cache.
 
@@ -194,40 +196,6 @@ After signing in, an administrator should:
 - Confirm the **Data Sources** page lists each connected CDM and that its dashboard renders without errors.
 - Run a small smoke-test cohort against each source to validate end-to-end execution.
 
-### Achilles: the prerequisite for descriptive reports
-
-[OHDSI Achilles](https://github.com/OHDSI/Achilles) is a separate R package that analyses a CDM database and writes summary tables into the same source's results schema. ATLAS v3.0's **Data Sources** reports **read from those Achilles tables**; if Achilles has never run, the source is connected but the dashboards are blank.
-
-For each source you want to use:
-
-1. Install Achilles in an R environment that can reach the CDM:
-   ```r
-   install.packages("Achilles")
-   # or: remotes::install_github("OHDSI/Achilles")
-   ```
-2. Run `Achilles::achilles(connectionDetails, ...)` with the CDM and results schema names. On a multi-million person database this can take from minutes to hours.
-3. Re-run Achilles after every CDM refresh; the results schema is rebuilt from scratch each time.
-
-### Verifying a clean setup
-
-After the stack is up, run these three checks before declaring victory:
-
-1. `curl -sk https://localhost/WebAPI/info` should return JSON containing the WebAPI version and build date.
-2. `curl -sk https://localhost/WebAPI/source/sources` should return a non-empty JSON array with one entry per configured CDM. An empty array means no sources are registered.
-3. In the browser, open the developer console and watch the Network tab while loading **Data Sources**. You should see `200` responses for `/source/sources` and each per-source report. Repeated `401` responses point at authentication, `404` at routing, `500` at WebAPI itself — the response body usually has a clear error.
-
-### Common installation issues
-
-- **The ATLAS page loads but every list is empty.** WebAPI is reachable but no CDM sources are configured. Add rows to the WebAPI source tables (or run the `atlasdb/` init scripts).
-- **CORS errors in the browser console.** The frontend and WebAPI are on different origins and WebAPI's `SECURITY_CORS_ALLOWED_ORIGINS` does not include the ATLAS v3.0 origin. Either add the origin to the allow-list or put both behind the same reverse proxy.
-- **Flyway error on WebAPI startup.** The configured database user lacks privileges on the `webapi` schema, or a previous WebAPI version left a migration in an inconsistent state. Inspect the WebAPI log; Flyway prints the failing migration explicitly.
-- **Login fails with valid credentials.** Check the WebAPI clock against the host running the browser. A skew larger than the JWT clock-tolerance window makes every freshly issued token look already-expired.
-- **Data Sources page is empty for every tab.** The most common case: the source is configured but Achilles has not been run against it. See above.
-
-### Related: Broadsea
-
-The OHDSI [Broadsea](https://github.com/OHDSI/Broadsea) project bundles WebAPI, ATLAS, Achilles, the Data Quality Dashboard, and a sample CDM into a single Docker stack. It is the fastest way to demo the whole OHDSI toolchain on a laptop — but the current Broadsea release ships ATLAS 2.x and the matching WebAPI 2.x backend, neither of which works with ATLAS v3.0. Broadsea support for ATLAS v3.0 / WebAPI v3.0 is on the OHDSI roadmap; until that lands, use the `docker-compose.yml` in this repository.
-
 ## Testing
 
 Atlas has comprehensive test coverage across multiple test types:
@@ -278,13 +246,6 @@ npm run check-all
   - Chart components
   - UI components
   - Form components
-
-## Authentication
-
-Atlas supports authentication through:
-- JWT-based authentication
-- Session management with automatic token refresh
-- Cross-tab session synchronization
 
 ## Plugin Development
 
