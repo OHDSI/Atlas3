@@ -400,3 +400,31 @@ export function useTrexSQLCache() {
 }
 
 export type UseTrexSQLCacheReturn = ReturnType<typeof useTrexSQLCache>
+
+/**
+ * Reset the module-level singleton state. Test-only: production never
+ * needs this because the state is intentionally shared across all
+ * useTrexSQLCache() callers in one tab. Tests run many composable
+ * invocations back-to-back and need a clean slate per case.
+ */
+export function __resetTrexSQLCacheForTests(): void {
+  selectedSourceKey.value = null
+  dataSources.value = []
+  isLoadingDataSources.value = false
+  countState.value = {
+    selectedSourceKey: null,
+    result: null,
+    isLoading: false,
+    error: null,
+    cacheStatus: null,
+  }
+  countError.value = null
+  isCountLoading.value = false
+  isCountSlow.value = false
+  if (slowCountTimerId) {
+    clearTimeout(slowCountTimerId)
+    slowCountTimerId = null
+  }
+  trexSQLDetected.value = null
+  initializePromise = null
+}

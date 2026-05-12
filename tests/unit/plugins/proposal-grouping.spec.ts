@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { UIMessage } from 'ai'
-import { locateGroup } from '../../../plugins-dev/pythia-plugin/src/chat-session'
+import { locateGroup } from '../../../plugins-dev/pythia-plugin/src/locate-group'
 
 function assistantWithToolCalls(id: string, toolCallIds: string[]): UIMessage {
   return {
