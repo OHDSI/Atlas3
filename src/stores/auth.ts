@@ -127,6 +127,11 @@ export const useAuthStore = defineStore('auth', {
       this.errorMessage = null
       this.isRunningAs = false
       this.originalUser = null
+      // The expiry warning is tied to the active session — once auth is
+      // cleared (logout, cross-tab sync, refresh failure) the modal must
+      // not linger above whatever comes next.
+      this.sessionExpiryModalOpen = false
+      this.sessionExpiresAt = null
 
       storageManager.clearAll()
       this.cancelRefreshTimer()
@@ -163,6 +168,14 @@ export const useAuthStore = defineStore('auth', {
     },
 
     openLoginModal() {
+      // The login modal supersedes the session-expiry warning: once we're
+      // forcing re-auth, the "your session is about to expire" prompt is
+      // moot. Without this, the two render simultaneously when expiry
+      // races with a 401 (authInterceptor, sessionSync, route guard) or
+      // when the warning's countdown hits zero and handleExpired fires.
+      if (this.sessionExpiryModalOpen) {
+        this.sessionExpiryModalOpen = false
+      }
       const now = Date.now()
       if (now - lastModalOpenTime < MODAL_DEBOUNCE_MS || this.loginModalOpen) {
         return
@@ -320,6 +333,11 @@ export const useAuthStore = defineStore('auth', {
     },
 
     showSessionExpiryModal(expiresAt: Date) {
+      // If the login modal is already up, the session-expiry warning is
+      // redundant — the user is being asked to re-authenticate anyway.
+      // Skipping here also prevents the expiry timer from showing the
+      // warning after a 401 has already cleared auth.
+      if (this.loginModalOpen) return
       this.sessionExpiryModalOpen = true
       this.sessionExpiresAt = expiresAt
     },

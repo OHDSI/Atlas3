@@ -282,6 +282,64 @@ export const usePathwayStore = defineStore('pathway', () => {
     }, PATHWAY_AUTO_SAVE_INTERVAL_MS)
   }
 
+  /**
+   * Pythia partial-update entry-point. Routes meta vs design fields to the
+   * existing actions and adds target/event cohorts via their dedicated
+   * helpers. Returns true when something was applied.
+   */
+  function applyProposal(payload: {
+    name?: string
+    description?: string
+    targetCohorts?: PathwayCohortRef[]
+    targetCohortsToAdd?: PathwayCohortRef[]
+    eventCohorts?: PathwayCohortRef[]
+    eventCohortsToAdd?: PathwayCohortRef[]
+    combinationWindow?: number
+    minCellCount?: number
+    maxDepth?: number
+    allowRepeats?: boolean
+  }): boolean {
+    if (!currentPathway.value) return false
+    let applied = false
+    const meta: Partial<Pick<Pathway, 'name' | 'description'>> = {}
+    if (typeof payload.name === 'string' && payload.name.trim()) meta.name = payload.name
+    if (typeof payload.description === 'string') meta.description = payload.description
+    if (Object.keys(meta).length > 0) {
+      updateMeta(meta)
+      applied = true
+    }
+
+    const design: Partial<PathwayDesign> = {}
+    if (typeof payload.combinationWindow === 'number') design.combinationWindow = payload.combinationWindow
+    if (typeof payload.minCellCount === 'number') design.minCellCount = payload.minCellCount
+    if (typeof payload.maxDepth === 'number') design.maxDepth = payload.maxDepth
+    if (typeof payload.allowRepeats === 'boolean') design.allowRepeats = payload.allowRepeats
+    if (Object.keys(design).length > 0) {
+      updateDesign(design)
+      applied = true
+    }
+
+    if (Array.isArray(payload.targetCohorts)) {
+      currentPathway.value.targetCohorts = payload.targetCohorts
+      markDirty()
+      applied = true
+    } else if (Array.isArray(payload.targetCohortsToAdd)) {
+      for (const c of payload.targetCohortsToAdd) addTargetCohort(c)
+      if (payload.targetCohortsToAdd.length > 0) applied = true
+    }
+
+    if (Array.isArray(payload.eventCohorts)) {
+      currentPathway.value.eventCohorts = payload.eventCohorts
+      markDirty()
+      applied = true
+    } else if (Array.isArray(payload.eventCohortsToAdd)) {
+      for (const c of payload.eventCohortsToAdd) addEventCohort(c)
+      if (payload.eventCohortsToAdd.length > 0) applied = true
+    }
+
+    return applied
+  }
+
   return {
     currentPathway,
     isDirty,
@@ -297,6 +355,7 @@ export const usePathwayStore = defineStore('pathway', () => {
     markClean,
     updateDesign,
     updateMeta,
+    applyProposal,
     addTargetCohort,
     removeTargetCohort,
     renameTargetCohort,

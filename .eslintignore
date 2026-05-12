@@ -6,6 +6,10 @@ dist/
 build/
 coverage/
 
+# Third-party static assets and built plugin parcels served as-is
+public/vendor/
+public/plugins/
+
 # Generated files
 *.min.js
 *.bundle.js

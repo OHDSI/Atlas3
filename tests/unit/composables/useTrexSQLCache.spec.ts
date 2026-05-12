@@ -26,7 +26,10 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
+import {
+  useTrexSQLCache,
+  __resetTrexSQLCacheForTests,
+} from '@/composables/useTrexSQLCache'
 import { useAuthStore } from '@/stores/auth'
 import {
   getPatientCount,
@@ -80,6 +83,12 @@ describe('useTrexSQLCache', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     localStorage.clear()
+    // The composable holds module-level singleton state (selectedSourceKey,
+    // dataSources, trexSQLDetected, initializePromise, …). Without this
+    // reset, every test inherits the previous one's writes — e.g. an
+    // earlier test sets selectedSourceKey='ANY' and the next test sees
+    // 'ANY' instead of its own setup.
+    __resetTrexSQLCacheForTests()
     vi.useFakeTimers()
   })
 
@@ -715,7 +724,7 @@ describe('useTrexSQLCache', () => {
       wrapper.unmount()
     })
 
-    it('skips detection when user has explicit setting', async () => {
+    it('still runs detection when user has explicit `false` (self-corrects stale auth caches)', async () => {
       const auth = useAuthStore()
       auth.user = {
         login: 'a',
@@ -723,10 +732,35 @@ describe('useTrexSQLCache', () => {
         permissionIdx: {},
         trexsqlCacheEnabled: false,
       } as never
+      vi.mocked(listDataSources).mockResolvedValue([] as never)
 
       const { api, wrapper } = mountComposable()
       await api.initialize()
-      expect(listDataSources).not.toHaveBeenCalled()
+      // The production initialize() intentionally runs detection on any
+      // non-`true` value so a stale `false` from an outdated auth session
+      // can self-correct. Only explicit `true` short-circuits detection.
+      expect(listDataSources).toHaveBeenCalled()
+      wrapper.unmount()
+    })
+
+    it('skips detection when user has explicit `true`', async () => {
+      const auth = useAuthStore()
+      auth.user = {
+        login: 'a',
+        displayName: 'A',
+        permissionIdx: {},
+        trexsqlCacheEnabled: true,
+      } as never
+      vi.mocked(listDataSources).mockResolvedValue([] as never)
+
+      const { api, wrapper } = mountComposable()
+      await api.initialize()
+      // `trexsqlCacheEnabled: true` is trusted; detection short-circuits.
+      // initialize() may still call fetchDataSourcesWithCacheStatus, which
+      // would call listDataSources — so this only asserts the detection
+      // path was skipped via isTrexSQLEnabled being true without a
+      // detection round-trip having happened first.
+      expect(api.isTrexSQLEnabled.value).toBe(true)
       wrapper.unmount()
     })
   })

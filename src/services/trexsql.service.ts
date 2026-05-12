@@ -215,6 +215,18 @@ export async function getPatientCount(
       if (status === 503) {
         throw new Error('Cache not available. Please build the cache first.')
       }
+      // 422 — circe rejected the expression (incomplete inclusion rule,
+      // missing StartWindow, codeset id pointing at empty placeholder).
+      // Surface the message verbatim so the cohort builder banner can
+      // tell the user which inclusion rule is broken.
+      if (status === 422) {
+        const body = await response.json().catch(() => null)
+        const msg = (body && typeof body.message === 'string' && body.message)
+          || 'The cohort expression is incomplete or invalid.'
+        const err = new Error(msg)
+        err.name = 'InvalidExpressionError'
+        throw err
+      }
 
       const errorText = await response.text().catch(() => 'Unknown error')
       throw new Error(`Count failed: ${errorText}`)
@@ -308,6 +320,14 @@ export async function getInclusionStats(
       if (status === 400) throw new Error('Invalid cohort expression')
       if (status === 404) throw new Error(`Data source '${sourceKey}' not found`)
       if (status === 503) throw new Error('Cache not available. Please build the cache first.')
+      if (status === 422) {
+        const body = await response.json().catch(() => null)
+        const msg = (body && typeof body.message === 'string' && body.message)
+          || 'The cohort expression is incomplete or invalid.'
+        const err = new Error(msg)
+        err.name = 'InvalidExpressionError'
+        throw err
+      }
       const errorText = await response.text().catch(() => 'Unknown error')
       throw new Error(`Inclusion stats failed: ${errorText}`)
     }

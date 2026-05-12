@@ -27,15 +27,66 @@
       class="inclusion-criteria-panel__layout"
     >
       <AtlasCard padding="sm">
+        <AtlasTooltip
+          v-if="statsError && isInvalidExpression"
+          location="bottom"
+          max-width="520"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <AtlasAlert
+              v-bind="tooltipProps"
+              severity="warning"
+              density="compact"
+              class="mb-2 inclusion-stats-error"
+              data-testid="inclusion-stats-invalid-expression"
+            >
+              <strong>Inclusion rule incomplete.</strong>
+              <AtlasIcon
+                size="14"
+                class="ml-1 inclusion-stats-error__hint"
+              >
+                mdi-information-outline
+              </AtlasIcon>
+            </AtlasAlert>
+          </template>
+          <div class="inclusion-stats-error__tooltip">
+            {{ statsError }}
+          </div>
+        </AtlasTooltip>
+        <AtlasTooltip
+          v-else-if="statsError"
+          location="bottom"
+          max-width="520"
+        >
+          <template #activator="{ props: tooltipProps }">
+            <AtlasAlert
+              v-bind="tooltipProps"
+              severity="danger"
+              density="compact"
+              class="mb-2 inclusion-stats-error"
+            >
+              <strong>Live preview failed.</strong>
+              <AtlasIcon
+                size="14"
+                class="ml-1 inclusion-stats-error__hint"
+              >
+                mdi-information-outline
+              </AtlasIcon>
+            </AtlasAlert>
+          </template>
+          <div class="inclusion-stats-error__tooltip">
+            {{ statsError }}
+          </div>
+        </AtlasTooltip>
         <InclusionRuleRail
           :rules="modelValue"
           :selected-index="selectedIndex"
           :cache-state="cacheState"
-          :entry-event-count="stats?.entryEventCount ?? null"
+          :entry-event-count="(statsError ? null : stats?.entryEventCount) ?? null"
           :total-dataset-count="stats?.totalPatientCount ?? null"
-          :rule-counts="stats?.ruleCounts ?? null"
-          :final-count="stats?.finalCount ?? null"
-          :is-computing="isLoading"
+          :rule-counts="(statsError ? null : stats?.ruleCounts) ?? null"
+          :final-count="(statsError ? null : stats?.finalCount) ?? null"
+          :is-computing="isPending && !statsError"
           :computing-index="lastEditedIndex"
           @select="onSelect"
           @add-rule="addNewRule"
@@ -114,7 +165,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
-import { AtlasButton, AtlasCard, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import { useInclusionStats } from '@/composables/useInclusionStats'
@@ -161,7 +212,8 @@ const editingName = ref('')
 const editingRuleIndex = ref<number | null>(null)
 
 const expressionRef = computed(() => props.expression)
-const { stats, isLoading } = useInclusionStats(expressionRef)
+const { stats, isPending, error: statsError, isInvalidExpression } =
+  useInclusionStats(expressionRef)
 const { isCacheReady, selectedCacheStatus, isTrexSQLEnabled } = useTrexSQLCache()
 
 const cacheState = computed<'ready' | 'stale' | 'building' | 'unavailable'>(() => {
@@ -340,5 +392,21 @@ function saveEditedName(): void {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.inclusion-stats-error {
+  cursor: help;
+}
+.inclusion-stats-error__hint {
+  vertical-align: middle;
+  opacity: 0.7;
+}
+.inclusion-stats-error__tooltip {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 320px;
+  overflow-y: auto;
 }
 </style>

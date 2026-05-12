@@ -910,6 +910,30 @@ async function buildCohortExpression() {
       })
     )
 
+    // Strip in-progress criteria from inclusion rules before building the
+    // live-preview expression. A criterion that was just added but has no
+    // valid concept set assigned (id === 0 placeholder, or a concept set
+    // whose items array is empty) makes circe NPE in
+    // CohortExpressionQueryBuilder.getCorelatedlCriteriaQuery — it expects
+    // every correlated criterion to have a populated codeset and a
+    // StartWindow. Rather than failing the entire preview, we exclude
+    // those criteria so the user still sees counts from the completed
+    // rules; the inclusion rule banner separately tells them their
+    // newest criterion is incomplete.
+    const sanitizedInclusionRules = inclusionRules.value.map(rule => ({
+      ...rule,
+      criteriaGroups: rule.criteriaGroups.map(group => ({
+        ...group,
+        events: group.events.filter(e => {
+          if (e.criteriaType === 'Demographic') return true
+          const cs = e.conceptSet
+          if (!cs) return false
+          if (cs.id === 0) return false
+          return Array.isArray(cs.items) && cs.items.length > 0
+        }),
+      })),
+    }))
+
     // Build cohort definition with all fields (same as validation)
     const cohortDef: CohortDefinition = {
       name: cohortName.value || 'Untitled Cohort',
@@ -917,7 +941,7 @@ async function buildCohortExpression() {
       tags: cohortTags.value,
       entryEvents: entryEvents.value,
       additionalCriteria: additionalCriteria.value,
-      inclusionRules: inclusionRules.value,
+      inclusionRules: sanitizedInclusionRules,
       exitCriteria: exitCriteria.value,
       censorWindow: censorWindow.value || undefined,
       collapseSettings: collapseSettings.value,
@@ -926,7 +950,7 @@ async function buildCohortExpression() {
       qualifyingLimit: qualifyingLimit.value,
       primaryCriteriaLimit: primaryCriteriaLimit.value,
       inclusionQualifyingLimit: inclusionQualifyingLimit.value,
-      conceptSets: conceptSetsWithItems, // Use concept sets with items populated
+      conceptSets: conceptSetsWithItems.filter(cs => cs.id !== 0),
     }
 
     // Convert to Atlas format (same as checkV2 validation)
@@ -1125,6 +1149,26 @@ watch(
   { immediate: true }
 )
 
+// Re-sync local refs from the store when the cohort agent applies a proposal.
+// Local refs (entryEvents, inclusionRules, observationPeriod, …) are
+// initialized once at load (~1317) and shared by reference for arrays. Object
+// replacements (observationPeriod, exitCriteria) and freshly-created arrays
+// (censoringCriteria starting from undefined) lose that link, so we explicitly
+// re-bind them here. Only fires on agent-driven mutations — user edits use the
+// local refs directly without bumping `agentRevision`, so no feedback loop.
+watch(
+  () => cohortStore.agentRevision,
+  () => {
+    const c = cohortStore.currentCohort
+    if (!c) return
+    entryEvents.value = c.entryEvents
+    inclusionRules.value = c.inclusionRules
+    observationPeriod.value = c.observationPeriod || { priorDays: 0, postDays: 0 }
+    exitCriteria.value = c.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+    censoringCriteria.value = c.censoringCriteria ?? []
+  }
+)
+
 // Tags
 const cohortTags = computed(() => cohortStore.currentCohort?.tags || [])
 const tagCount = computed(() => cohortTags.value.length)
@@ -1144,7 +1188,22 @@ onMounted(async () => {
   } else {
     const restored = cohortStore.restoreFromDraft()
     if (!restored) {
-      cohortStore.createNewCohort()
+      // If pythia (or any other code path) has already populated
+      // currentCohort with actual content right before navigating us to
+      // /cohorts/new, don't clobber it. Only initialise a fresh blank
+      // cohort when there's truly nothing to preserve.
+      const existing = cohortStore.currentCohort
+      const hasContent =
+        existing != null &&
+        ((existing.entryEvents?.length ?? 0) > 0 ||
+          (existing.inclusionRules?.length ?? 0) > 0 ||
+          (existing.conceptSets?.length ?? 0) > 0 ||
+          (typeof existing.name === 'string' &&
+            existing.name.trim().length > 0 &&
+            existing.name !== 'New Cohort'))
+      if (!hasContent) {
+        cohortStore.createNewCohort()
+      }
     }
     loadedTags.value = []
     // Set name from query param if provided (from New Cohort dialog)
@@ -1457,6 +1516,23 @@ function handleConceptsSelected(
     INVALID_REASON: c.invalidReason,
   }))
 
+  // Concept attributes (Gender, Race, etc.) accept a list of concepts
+  // but a duplicate concept_id has no semantic meaning — circe treats
+  // `Gender IN (8507, 8507)` identically to `Gender IN (8507)` and the
+  // chip UI just renders two identical pills. Dedupe by CONCEPT_ID
+  // when merging the existing list with the user's new selection.
+  const mergeConcepts = <T extends { CONCEPT_ID: number }>(existing: T[], incoming: T[]): T[] => {
+    const seen = new Set(existing.map(c => c.CONCEPT_ID))
+    const merged = [...existing]
+    for (const c of incoming) {
+      if (!seen.has(c.CONCEPT_ID)) {
+        merged.push(c)
+        seen.add(c.CONCEPT_ID)
+      }
+    }
+    return merged
+  }
+
   const context = selectedCriteriaContext.value
 
   // Handle entry events
@@ -1467,7 +1543,7 @@ function handleConceptsSelected(
       if (attr && attr.type === 'concept') {
         // Add selected concepts to the existing array (support multi-select)
         const existingConcepts = attr.concepts || []
-        const newConcepts = [...existingConcepts, ...convertedConcepts]
+        const newConcepts = mergeConcepts(existingConcepts, convertedConcepts)
         event.attributes[context.attributeIndex] = {
           ...attr,
           concepts: newConcepts,

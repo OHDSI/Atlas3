@@ -514,6 +514,55 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   }
 
   // ============================================================================
+  // Pythia partial-update entry-point
+  // ============================================================================
+
+  /**
+   * Merge a partial change into `currentSet` from a pythia agent proposal.
+   * Mutates in place so the open editor re-renders; callers should pre-shape
+   * `payload.items` into full ConceptSetItem records when present.
+   *
+   * Returns true when something was applied; false if no editor is open
+   * or the payload had no recognised fields.
+   */
+  function applyProposal(payload: {
+    name?: string
+    description?: string
+    itemsToAdd?: ConceptSetItem[]
+    items?: ConceptSetItem[]
+  }): boolean {
+    if (!currentSet.value) return false
+    let applied = false
+
+    if (typeof payload.name === 'string' && payload.name.trim()) {
+      currentSet.value.name = payload.name
+      applied = true
+    }
+    if (typeof payload.description === 'string') {
+      currentSet.value.description = payload.description
+      applied = true
+    }
+    if (Array.isArray(payload.items)) {
+      // Full replace
+      currentSet.value.items = payload.items
+      applied = true
+    } else if (Array.isArray(payload.itemsToAdd) && payload.itemsToAdd.length > 0) {
+      // Append-only path: skip duplicates by conceptId
+      const existing = new Set(currentSet.value.items.map(it => it.conceptId))
+      for (const item of payload.itemsToAdd) {
+        if (!existing.has(item.conceptId)) {
+          currentSet.value.items.push(item)
+          existing.add(item.conceptId)
+        }
+      }
+      applied = true
+    }
+
+    if (applied) isDirty.value = true
+    return applied
+  }
+
+  // ============================================================================
   // Return
   // ============================================================================
 
@@ -557,6 +606,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     removeConceptFromSet,
     toggleConceptFlag,
     isConceptInSet,
+
+    // Pythia agent partial-update entry-point
+    applyProposal,
 
     // Version preview (T018-T020)
     loadVersionPreview,

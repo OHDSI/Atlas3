@@ -416,6 +416,66 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     return executions.value.find(e => e.id === id) ?? null
   }
 
+  /**
+   * Pythia partial-update entry-point. Routes meta vs expression fields to
+   * the existing actions and adds target/outcome cohort ids via their
+   * dedicated helpers. Returns true when something was applied.
+   */
+  function applyProposal(payload: {
+    name?: string
+    description?: string
+    targetIds?: number[]
+    targetIdsToAdd?: Array<{ id: number; name?: string }>
+    outcomeIds?: number[]
+    outcomeIdsToAdd?: Array<{ id: number; name?: string }>
+    timeAtRisk?: Partial<TimeAtRisk>
+    studyWindow?: StudyWindow | null
+  }): boolean {
+    if (!currentIR.value) return false
+    let applied = false
+
+    const meta: Partial<Pick<IncidenceRate, 'name' | 'description'>> = {}
+    if (typeof payload.name === 'string' && payload.name.trim()) meta.name = payload.name
+    if (typeof payload.description === 'string') meta.description = payload.description
+    if (Object.keys(meta).length > 0) {
+      updateMeta(meta)
+      applied = true
+    }
+
+    if (Array.isArray(payload.targetIds)) {
+      currentIR.value.expression.targetIds = [...payload.targetIds]
+      markDirty()
+      applied = true
+    } else if (Array.isArray(payload.targetIdsToAdd)) {
+      for (const t of payload.targetIdsToAdd) addTargetCohortId(t.id, t.name)
+      if (payload.targetIdsToAdd.length > 0) applied = true
+    }
+
+    if (Array.isArray(payload.outcomeIds)) {
+      currentIR.value.expression.outcomeIds = [...payload.outcomeIds]
+      markDirty()
+      applied = true
+    } else if (Array.isArray(payload.outcomeIdsToAdd)) {
+      for (const o of payload.outcomeIdsToAdd) addOutcomeCohortId(o.id, o.name)
+      if (payload.outcomeIdsToAdd.length > 0) applied = true
+    }
+
+    if (payload.timeAtRisk) {
+      updateTimeAtRisk(payload.timeAtRisk)
+      applied = true
+    }
+
+    if (payload.studyWindow === null) {
+      clearStudyWindow()
+      applied = true
+    } else if (payload.studyWindow) {
+      setStudyWindow(payload.studyWindow)
+      applied = true
+    }
+
+    return applied
+  }
+
   return {
     // state
     currentIR,
@@ -444,6 +504,7 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     markClean,
     updateExpression,
     updateMeta,
+    applyProposal,
     addTargetCohortId,
     removeTargetCohortId,
     addOutcomeCohortId,

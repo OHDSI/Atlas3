@@ -41,9 +41,11 @@ const props = withDefaults(
     treemap: InclusionTreemapNode | null
     /** Total number of inclusion rules — used to count failures from leaf bit-strings */
     ruleCount: number
+    /** Inclusion-rule names indexed by rule number (rule 1 first). Used for friendly leaf labels. */
+    ruleNames?: string[]
     height?: number
   }>(),
-  { height: 420 }
+  { height: 420, ruleNames: () => [] }
 )
 
 const hasData = computed(() => {
@@ -52,8 +54,20 @@ const hasData = computed(() => {
   return !!root.children && root.children.length > 0
 })
 
-// Atlas 2.15 colour scheme: green (all pass) → red (all fail)
-const palette = ['#7BB209', '#95B90A', '#C9C40D', '#E77F13', '#FF3D19']
+// Tone palette matches the cohort-builder rail and the attrition funnel:
+// success (green) when most/all rules pass, warning (amber) for partial,
+// error (red) when most/all rules fail. Reads the runtime CSS variable
+// so it tracks the active Vuetify theme.
+function themeColor(token: 'success' | 'warning' | 'error', alpha: number): string {
+  if (typeof window === 'undefined') return '#7BB209'
+  const root = getComputedStyle(document.documentElement)
+  const triplet = root.getPropertyValue(`--v-theme-${token}`).trim()
+  if (!triplet) {
+    const fallback = { success: '52, 199, 89', warning: '255, 149, 0', error: '255, 59, 48' }[token]
+    return `rgba(${fallback}, ${alpha})`
+  }
+  return `rgba(${triplet}, ${alpha})`
+}
 
 function failuresFromName(name: string, ruleCount: number): number {
   // The server encodes each leaf as a bit-string of length ruleCount where
@@ -65,27 +79,65 @@ function failuresFromName(name: string, ruleCount: number): number {
 }
 
 function colorForLeaf(name: string): string {
-  const failures = failuresFromName(name, props.ruleCount)
-  if (props.ruleCount === 0) return palette[0]!
-  // Map failures (0 .. ruleCount) onto palette indices (0 .. palette.length - 1)
-  const idx = Math.round((failures / Math.max(1, props.ruleCount)) * (palette.length - 1))
-  return palette[Math.max(0, Math.min(palette.length - 1, idx))]!
+  if (props.ruleCount === 0) return themeColor('success', 0.6)
+  const passing = props.ruleCount - failuresFromName(name, props.ruleCount)
+  const retention = passing / props.ruleCount
+  // Same thresholds as InclusionRuleRail.toneForIndex.
+  if (retention >= 0.8) return themeColor('success', 0.6)
+  if (retention >= 0.4) return themeColor('warning', 0.6)
+  return themeColor('error', 0.6)
+}
+
+function truncate(s: string, max: number): string {
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s
+}
+
+// Build a human-readable label for a leaf bit-string. Rule i in the
+// bit-string maps to ruleNames[i]; '1' means satisfied, '0' means not.
+// Falls back to numeric "Rule N" when names aren't passed.
+function friendlyName(bitString: string): string {
+  if (!bitString || !/^[01]+$/.test(bitString)) return bitString
+  const lines: string[] = []
+  for (let i = 0; i < bitString.length; i++) {
+    const passed = bitString[i] === '1'
+    const name = props.ruleNames[i] || `Rule ${i + 1}`
+    lines.push(`${passed ? '✓' : '✗'} ${truncate(name, 28)}`)
+  }
+  return lines.join('\n')
 }
 
 function decorate(node: InclusionTreemapNode): Record<string, unknown> {
   const isLeaf = !node.children || node.children.length === 0
-  return {
-    name: node.name,
-    value: node.size ?? 0,
-    itemStyle: isLeaf ? { color: colorForLeaf(node.name) } : undefined,
-    children: node.children?.map(decorate) ?? undefined,
+  // Only emit `value` for leaves. The server's tree has interior `Group N`
+  // nodes with no `size` field — emitting `value: 0` for them made echarts
+  // draw zero-area rectangles for the entire subtree, leaving the chart
+  // an empty white box. Without `value`, echarts sums the children.
+  const out: Record<string, unknown> = { name: node.name }
+  if (isLeaf) {
+    out.value = node.size ?? 0
+    out.itemStyle = { color: colorForLeaf(node.name) }
+    // Stash the friendly label and the original bit-string separately so
+    // the formatter can pick the right one without losing the
+    // algorithmic identifier (failuresFromName / tooltip rely on it).
+    out._friendly = friendlyName(node.name)
+    out._bitString = node.name
+  } else {
+    out.children = node.children!.map(decorate)
   }
+  return out
 }
 
-function buildTooltip(info: { name: string; value: number }, ruleCount: number): string {
-  const failures = failuresFromName(info.name, ruleCount)
+function buildTooltip(
+  info: { name: string; value: number; data?: { _friendly?: string; _bitString?: string } },
+  ruleCount: number
+): string {
+  const bitString = info.data?._bitString || info.name
+  const failures = failuresFromName(bitString, ruleCount)
   const passing = ruleCount - failures
-  return `<strong>${info.name || '(root)'}</strong><br/>Persons: ${info.value}<br/>Rules satisfied: ${passing} of ${ruleCount}`
+  const heading = info.data?._friendly
+    ? info.data._friendly.replace(/\n/g, '<br/>')
+    : (bitString || '(root)')
+  return `<strong>${heading}</strong><br/>Persons: ${info.value}<br/>Rules satisfied: ${passing} of ${ruleCount}`
 }
 
 const chartOption = computed(() => {
@@ -101,7 +153,16 @@ const chartOption = computed(() => {
         roam: false,
         nodeClick: false,
         breadcrumb: { show: false },
-        label: { show: true, formatter: '{b}' },
+        label: {
+          show: true,
+          // Show the friendly per-rule list ("✓ Age >= 18 / ✗ New rule")
+          // for leaves; interior group nodes keep their group label.
+          formatter: (info: { name: string; data?: { _friendly?: string } }) =>
+            info.data?._friendly || info.name,
+          fontSize: 11,
+          lineHeight: 14,
+          color: 'rgba(0, 0, 0, 0.82)',
+        },
         data: root.children?.map(decorate) ?? [],
       },
     ],
@@ -112,11 +173,12 @@ defineExpose({ buildTooltip })
 
 const legend = computed(() => {
   if (props.ruleCount === 0) {
-    return [{ color: palette[0]!, label: 'No inclusion rules' }]
+    return [{ color: themeColor('success', 0.6), label: 'No inclusion rules' }]
   }
   return [
-    { color: palette[0]!, label: `All ${props.ruleCount} rules satisfied` },
-    { color: palette[palette.length - 1]!, label: `0 rules satisfied` },
+    { color: themeColor('success', 0.6), label: `≥ 80% rules satisfied` },
+    { color: themeColor('warning', 0.6), label: `40–80%` },
+    { color: themeColor('error', 0.6), label: `< 40% rules satisfied` },
   ]
 })
 </script>

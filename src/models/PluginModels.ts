@@ -35,12 +35,23 @@ export interface MenuItemConfiguration {
   }
 }
 
+export type FabPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+
+export interface FabMount {
+  id: string
+  label: string
+  icon: string
+  color?: string
+  position?: FabPosition
+}
+
 export interface PluginRegistration {
   id: string
   name: string
   version: string
   entryPoint: string
   menuItems: MenuItemConfiguration[]
+  fabMounts?: FabMount[]
   activationConditions?: Record<string, unknown>
   metadata?: {
     author?: string
@@ -182,12 +193,21 @@ export const MenuItemConfigurationSchema = z.object({
     .optional(),
 })
 
+export const FabMountSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  icon: z.string(),
+  color: z.string().optional(),
+  position: z.enum(['bottom-right', 'bottom-left', 'top-right', 'top-left']).optional(),
+})
+
 export const PluginRegistrationSchema = z.object({
   id: z.string().regex(/^[a-z0-9-_]+$/),
   name: z.string().min(1),
   version: z.string(),
   entryPoint: z.string(),
   menuItems: z.array(MenuItemConfigurationSchema),
+  fabMounts: z.array(FabMountSchema).optional(),
   activationConditions: z.record(z.unknown()).optional(),
   metadata: z
     .object({

@@ -94,10 +94,15 @@ describe('InclusionRuleAttritionFunnel', () => {
     expect(data).toHaveLength(3)
     expect(data[0]!.name).toBe('Initial Population')
     expect(data[0]!.value).toBe(2689)
+    // The funnel now uses ECharts' "sizingValue = previous step's count"
+    // trick so segment i is labelled with rule i but visually anchored to
+    // rule (i-1)'s top edge. So data[1].value is the initial cohort
+    // (2689), and data[2].value is the cohort entering rule 2 (the count
+    // remaining after rule 1 = 736).
     expect(data[1]!.name).toBe('Has Osteoarthritis')
-    expect(data[1]!.value).toBe(736)
+    expect(data[1]!.value).toBe(2689)
     expect(data[2]!.name).toBe('Has Otitis media')
-    expect(data[2]!.value).toBe(511)
+    expect(data[2]!.value).toBe(736)
   })
 
   it('color-codes each segment by retention %', () => {
@@ -107,14 +112,25 @@ describe('InclusionRuleAttritionFunnel', () => {
     })
     const vm = wrapper.vm as unknown as FunnelInternals
 
-    expect(vm.retentionColor(100)).toBe('#34c759')
-    expect(vm.retentionColor(75)).toBe('#ff9500')
-    expect(vm.retentionColor(0)).toBe('#ff3b30')
+    // The palette migrated to rgba() reads of Vuetify's --v-theme-* CSS
+    // variables. Whitespace inside the value isn't normalised by Vuetify
+    // (success comes through as `76,175,80`, warning as `251, 140, 0`),
+    // so match the RGB digits with a regex and ignore inter-channel spaces.
+    const SUCCESS = /rgba\(\s*76\s*,\s*175\s*,\s*80\s*,\s*0\.85\s*\)/
+    const WARNING = /rgba\(\s*251\s*,\s*140\s*,\s*0\s*,\s*0\.85\s*\)/
+    const ERROR = /rgba\(\s*176\s*,\s*0\s*,\s*32\s*,\s*0\.85\s*\)/
+    expect(vm.retentionColor(100)).toMatch(SUCCESS)
+    expect(vm.retentionColor(75)).toMatch(WARNING)
+    expect(vm.retentionColor(0)).toMatch(ERROR)
 
-    const colors = vm.chartOption.series[0]!.data.map(d => d.itemStyle.color)
-    expect(colors[0]).toBe('#34c759') // Initial population: 100%
-    // Final ~19% retention should be in the amber→red zone
-    expect(colors[2]).not.toBe('#34c759')
+    // The chart's itemStyle.color holds the fill (alpha 0.25), not the
+    // stroke. Just check the initial-population tint stays in the success
+    // family and the final segment doesn't. Vuetify's CSS-var output
+    // omits inter-channel whitespace for success — match with regex.
+    const SUCCESS_RX = /76\s*,\s*175\s*,\s*80/
+    const colors = vm.chartOption.series[0]!.data.map(d => d.itemStyle.color as string)
+    expect(colors[0]).toMatch(SUCCESS_RX) // Initial population: 100% retention → success fill
+    expect(colors[2]).not.toMatch(SUCCESS_RX) // Final ~19% retention is in the amber→red zone
   })
 
   describe('CSV export', () => {

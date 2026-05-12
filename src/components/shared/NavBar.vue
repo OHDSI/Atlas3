@@ -229,7 +229,7 @@ const uiStore = useUIStore()
 // the per-tab gating in ConfigPanel — if every section would be hidden, the
 // entry point shouldn't be visible at all.
 const hasAnyAdminAccess = computed(() =>
-  hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security', 'job:*:get'])
+  hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security', 'job:execution:get'])
 )
 
 const logoSrc = logoSvg

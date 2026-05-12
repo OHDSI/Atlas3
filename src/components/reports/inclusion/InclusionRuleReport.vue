@@ -90,6 +90,7 @@
         <InclusionRuleAttritionTable
           :rules="report.inclusionRuleStats"
           :cumulative-remaining="cumulativeRemaining"
+          :base-count="report.summary.baseCount"
         />
       </section>
 
@@ -101,6 +102,7 @@
         <InclusionRuleTreemap
           :treemap="report.treemap"
           :rule-count="report.inclusionRuleStats.length"
+          :rule-names="report.inclusionRuleStats.map(r => r.name)"
         />
       </section>
     </template>
