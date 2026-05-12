@@ -576,9 +576,14 @@ function updateEventAttributes(index: number, attributes: EventAttribute[]) {
 function addTemporalWindow(index: number) {
   const event = localGroup.value.events[index]
   if (event) {
+    // OHDSI long-term baseline: 365 days prior up to (and including)
+    // the index event. Matches FeatureExtraction's `longTerm` covariate
+    // window — the dominant convention for comorbidity / prior-
+    // medication assessment across OHDSI phenotypes. The user can edit
+    // it in place.
     event.temporalWindow = {
-      startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-      endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
+      startWindow: { days: 365, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
+      endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
     }
     emitUpdate()
   }
@@ -872,12 +877,21 @@ function updateConceptAttribute(index: number, concepts: Concept[]) {
     if (event && event.attributes && selectedAttributeIndex.value >= 0) {
       const attr = event.attributes[selectedAttributeIndex.value]
       if (attr && attr.type === 'concept') {
-        // Add selected concepts to the existing array (support multi-select)
+        // Dedupe by CONCEPT_ID — adding "MALE" twice has no semantic
+        // value (circe treats `Gender IN (8507, 8507)` identically to
+        // a single 8507) and the chip UI shows duplicate pills.
         const existingConcepts = attr.concepts || []
-        const newConcepts = [...existingConcepts, ...concepts]
+        const seen = new Set(existingConcepts.map(c => c.CONCEPT_ID))
+        const merged = [...existingConcepts]
+        for (const c of concepts) {
+          if (!seen.has(c.CONCEPT_ID)) {
+            merged.push(c)
+            seen.add(c.CONCEPT_ID)
+          }
+        }
         event.attributes[selectedAttributeIndex.value] = {
           ...attr,
-          concepts: newConcepts,
+          concepts: merged,
         }
       }
       selectedAttributeIndex.value = -1 // Reset after update

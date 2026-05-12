@@ -54,10 +54,15 @@ describe('InclusionRuleAttritionTable', () => {
     })
 
     const bars = wrapper.findAll('.attrition-table__bar-fill')
-    // Rule 0: 91% → green palette
-    expect((bars[0]!.attributes('style') ?? '').toLowerCase()).toContain('rgb(123, 178, 9)') // #7BB209
-    // Rule 2: 10% → orange/red palette
-    expect((bars[2]!.attributes('style') ?? '').toLowerCase()).toContain('rgb(231, 127, 19)') // #E77F13
+    // 3-tone Vuetify-theme palette (success ≥ 80%, warning ≥ 40%, error
+    // otherwise). Vuetify's CSS variables expand without consistent
+    // whitespace between channels, so match with regex.
+    const SUCCESS_RX = /rgba\(\s*76\s*,\s*175\s*,\s*80\s*,\s*0\.85\s*\)/
+    const ERROR_RX = /rgba\(\s*176\s*,\s*0\s*,\s*32\s*,\s*0\.85\s*\)/
+    // Rule 0: 91% → success
+    expect((bars[0]!.attributes('style') ?? '').toLowerCase()).toMatch(SUCCESS_RX)
+    // Rule 2: 10% → error
+    expect((bars[2]!.attributes('style') ?? '').toLowerCase()).toMatch(ERROR_RX)
   })
 
   it('renders an em-dash for empty / non-numeric percent values', () => {
@@ -100,29 +105,41 @@ describe('InclusionRuleAttritionTable', () => {
   })
 
   it('clamps and color-grades the bar fill across each threshold band', () => {
+    // 3-tone palette: error (< 40%), warning (40–80%), success (≥ 80%).
+    // Replaces the prior 5-tone hex palette.
     const wrapper = mount(InclusionRuleAttritionTable, {
       global: { plugins },
       props: {
         rules: [
-          { id: 0, name: 'r0', countSatisfying: 1, percentSatisfying: '5', percentExcluded: '95' },     // <10  → red    #FF3D19
-          { id: 1, name: 'r1', countSatisfying: 1, percentSatisfying: '20', percentExcluded: '80' },    // <25  → orange #E77F13
-          { id: 2, name: 'r2', countSatisfying: 1, percentSatisfying: '40', percentExcluded: '60' },    // <50  → yellow #C9C40D
-          { id: 3, name: 'r3', countSatisfying: 1, percentSatisfying: '60', percentExcluded: '40' },    // <75  → light  #95B90A
-          { id: 4, name: 'r4', countSatisfying: 1, percentSatisfying: '90', percentExcluded: '10' },    // ≥75  → green  #7BB209
-          { id: 5, name: 'r5', countSatisfying: 1, percentSatisfying: '999', percentExcluded: '0' },    // clamp to 100
-          { id: 6, name: 'r6', countSatisfying: 1, percentSatisfying: '-5', percentExcluded: '105' },   // clamp to 0
+          { id: 0, name: 'r0', countSatisfying: 1, percentSatisfying: '5', percentExcluded: '95' },     // <40  → error
+          { id: 1, name: 'r1', countSatisfying: 1, percentSatisfying: '20', percentExcluded: '80' },    // <40  → error
+          { id: 2, name: 'r2', countSatisfying: 1, percentSatisfying: '40', percentExcluded: '60' },    // ≥40  → warning
+          { id: 3, name: 'r3', countSatisfying: 1, percentSatisfying: '60', percentExcluded: '40' },    // ≥40  → warning
+          { id: 4, name: 'r4', countSatisfying: 1, percentSatisfying: '90', percentExcluded: '10' },    // ≥80  → success
+          { id: 5, name: 'r5', countSatisfying: 1, percentSatisfying: '999', percentExcluded: '0' },    // clamp to 100 → success
+          { id: 6, name: 'r6', countSatisfying: 1, percentSatisfying: '-5', percentExcluded: '105' },   // clamp to 0  → error
         ],
       },
     })
 
+    // Vuetify default theme triplets (whitespace inside parens isn't
+    // normalised, so match digits with regex):
+    //   error → rgba(176, 0, 32, …)
+    //   warning → rgba(251, 140, 0, …)
+    //   success → rgba(76, 175, 80, …)
+    const ERROR = /rgba\(\s*176\s*,\s*0\s*,\s*32\s*,\s*0\.85\s*\)/
+    const WARNING = /rgba\(\s*251\s*,\s*140\s*,\s*0\s*,\s*0\.85\s*\)/
+    const SUCCESS = /rgba\(\s*76\s*,\s*175\s*,\s*80\s*,\s*0\.85\s*\)/
     const bars = wrapper.findAll('.attrition-table__bar-fill')
     const styles = bars.map(b => (b.attributes('style') ?? '').toLowerCase())
-    expect(styles[0]!).toContain('rgb(255, 61, 25)')   // #FF3D19
-    expect(styles[1]!).toContain('rgb(231, 127, 19)')  // #E77F13
-    expect(styles[2]!).toContain('rgb(201, 196, 13)')  // #C9C40D
-    expect(styles[3]!).toContain('rgb(149, 185, 10)')  // #95B90A
-    expect(styles[4]!).toContain('rgb(123, 178, 9)')   // #7BB209
-    expect(styles[5]!).toContain('width: 100%')        // clamp upper
-    expect(styles[6]!).toContain('width: 0%')          // clamp lower
+    expect(styles[0]!).toMatch(ERROR)
+    expect(styles[1]!).toMatch(ERROR)
+    expect(styles[2]!).toMatch(WARNING)
+    expect(styles[3]!).toMatch(WARNING)
+    expect(styles[4]!).toMatch(SUCCESS)
+    expect(styles[5]!).toContain('width: 100%')
+    expect(styles[5]!).toMatch(SUCCESS)
+    expect(styles[6]!).toContain('width: 0%')
+    expect(styles[6]!).toMatch(ERROR)
   })
 })

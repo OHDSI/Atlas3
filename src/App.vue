@@ -62,6 +62,13 @@
 
     <!-- Concept Detail Drawer (opens from concept tables and search results) -->
     <ConceptDetailDrawer />
+
+    <!-- Pythia (Atlas3 cohort design advisor) — global FAB + overlay,
+         gated on auth + feature flag. -->
+    <template v-if="pythiaEnabled && authStore.isAuthenticated">
+      <PluginFab mount-id="pythia.fab" />
+      <PluginOverlayHost />
+    </template>
   </v-app>
 </template>
 
@@ -73,7 +80,10 @@ import SessionExpiryModal from '@/components/auth/SessionExpiryModal.vue'
 import ConfigurationWarningBanner from '@/components/cohort-builder/ConfigurationWarningBanner.vue'
 import LicenseAgreementDialog from '@/components/shared/LicenseAgreementDialog.vue'
 import ConfigPanel from '@/components/config/ConfigPanel.vue'
+import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import ConceptDetailDrawer from '@/components/concepts/detail/ConceptDetailDrawer.vue'
+import PluginFab from '@/components/plugins/PluginFab.vue'
+import PluginOverlayHost from '@/components/plugins/PluginOverlayHost.vue'
 import { useLocaleStore } from '@/stores/locale'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
@@ -94,6 +104,8 @@ const isInitializing = computed(() => {
 })
 
 const showNavBar = ref(true)
+
+const pythiaEnabled = import.meta.env.VITE_BAO_AGENT_ENABLED === 'true'
 
 pluginConfigService.onChange(() => {
   showNavBar.value = pluginConfigService.showNavBar()
@@ -149,6 +161,11 @@ function handleRejectLicense() {
 onMounted(() => {
   checkLicenseStatus()
   showNavBar.value = pluginConfigService.showNavBar()
+  // Kick off TrexSQL detection + dataSources cache-status fetch once, at
+  // app boot. This populates the shared module-level state so any page
+  // (cohort builder, configuration, etc.) sees `isTrexSQLEnabled = true`
+  // and `dataSources` populated without each component re-running detection.
+  void useTrexSQLCache().initialize()
 })
 </script>
 

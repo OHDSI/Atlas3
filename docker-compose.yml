@@ -27,10 +27,7 @@ services:
       retries: 10
 
   atlas3-webapi:
-    build:
-      context: ../WebAPI
-      dockerfile: Dockerfile
-    image: ghcr.io/ohdsi/webapi:3.0-dev
+    image: ghcr.io/ohdsi/webapi:3.0-dev@sha256:a6e5fcffd87d7a3e77c155b6bbf8847ce87cb3d9f00e788dbbc4bde670a595c4
     container_name: atlas3-webapi
     platform: linux/amd64
     restart: unless-stopped
@@ -89,6 +86,14 @@ services:
       TREXSQL_ENABLED: "true"
       TREXSQL_CACHE_PATH: /data/cache
       HOME: /data
+      # Pythia AI agent (bao plugin baked into the WebAPI image). Reads
+      # AWS_BEARER_TOKEN_BEDROCK from .env via env_file below. AWS_REGION
+      # and BAO_AGENT_MODEL are safe to commit — only the bearer token
+      # is sensitive.
+      AWS_REGION: us-east-1
+      BAO_AGENT_MODEL: ${BAO_AGENT_MODEL:-minimax.minimax-m2.5}
+    env_file:
+      - .env
     volumes:
       - atlas3-webapi-data:/data
     depends_on:
@@ -119,6 +124,7 @@ services:
         VITE_AUTH_ENABLED: "true"
         VITE_AUTH_SKIP_LOGIN: "false"
         VITE_AUTH_PROVIDERS: '[{"name":"Database","url":"user/login/db","ajax":true,"icon":"mdi-database","isUseCredentialsForm":true}]'
+        VITE_BAO_AGENT_ENABLED: ${VITE_BAO_AGENT_ENABLED:-false}
     container_name: atlas3-frontend
     platform: linux/amd64
     restart: unless-stopped

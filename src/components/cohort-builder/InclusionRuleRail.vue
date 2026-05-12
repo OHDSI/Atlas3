@@ -25,6 +25,7 @@
     <div
       v-if="cacheState === 'ready' || cacheState === 'stale'"
       class="inclusion-rail__entry"
+      :class="{ 'inclusion-rail__entry--computing': isComputing }"
       data-testid="inclusion-rail-entry"
     >
       <div class="inclusion-rail__entry-label">
@@ -48,13 +49,19 @@
       type="button"
       draggable="true"
       class="inclusion-rail__rule"
-      :class="{
-        'inclusion-rail__rule--active': index === selectedIndex,
-        'inclusion-rail__rule--computing': isComputing && index === computingIndex,
-        'inclusion-rail__rule--dragging': dragSourceIndex === index,
-        'inclusion-rail__rule--drop-before': dropTargetIndex === index && dropPosition === 'before',
-        'inclusion-rail__rule--drop-after': dropTargetIndex === index && dropPosition === 'after',
-      }"
+      :class="[
+        toneForIndex(index) ? `inclusion-rail__rule--tone-${toneForIndex(index)}` : null,
+        {
+          'inclusion-rail__rule--active': index === selectedIndex,
+          // All rule counts depend on the full expression, so when the
+          // expression changes they all need to be recomputed — pulse
+          // every rule, not just the last-edited one.
+          'inclusion-rail__rule--computing': isComputing,
+          'inclusion-rail__rule--dragging': dragSourceIndex === index,
+          'inclusion-rail__rule--drop-before': dropTargetIndex === index && dropPosition === 'before',
+          'inclusion-rail__rule--drop-after': dropTargetIndex === index && dropPosition === 'after',
+        },
+      ]"
       data-testid="inclusion-rail-rule"
       @click="$emit('select', index)"
       @dragstart="onDragStart(index, $event)"
@@ -94,6 +101,7 @@
     <div
       v-if="hasFunnel && finalCount !== null"
       class="inclusion-rail__final"
+      :class="{ 'inclusion-rail__final--computing': isComputing }"
       data-testid="inclusion-rail-final"
     >
       <div class="inclusion-rail__final-label">
@@ -222,6 +230,24 @@ function pctForIndex(index: number): number | null {
   return fill === null ? null : Math.round(fill)
 }
 
+// Tone for a rule reflects how aggressively THIS rule cuts the cohort
+// compared to the previous step (or entry events for the first rule).
+// retention >= 80% → success (gentle filter), >= 40% → warning, else danger.
+// A rule that knocks the cohort to 0 reads loudest red; a rule that
+// preserves nearly everyone reads green.
+function toneForIndex(index: number): 'success' | 'warning' | 'danger' | null {
+  const count = countForIndex(index)
+  if (count === null) return null
+  const prevCount = index === 0
+    ? props.entryEventCount
+    : countForIndex(index - 1)
+  if (prevCount === null || prevCount <= 0) return null
+  const retention = count / prevCount
+  if (retention >= 0.8) return 'success'
+  if (retention >= 0.4) return 'warning'
+  return 'danger'
+}
+
 function formatCount(n: number | null): string {
   if (n === null || n === undefined) return '—'
   return n.toLocaleString()
@@ -302,9 +328,15 @@ function summaryFor(rule: InclusionRule): string {
 .inclusion-rail__rule:hover {
   background: rgb(var(--v-theme-surface-variant));
 }
+/* The selection marker is a primary-colored left stripe rather than a
+ * full background fill. The previous fill made `.rule-count` and
+ * `.rule-pct` inherit white-on-primary, which hid the green/amber/red
+ * tone signal on the selected rule — the very rule the user is most
+ * likely inspecting. The stripe keeps the selection visible while
+ * letting tonal colors carry through. */
 .inclusion-rail__rule--active {
-  background: rgb(var(--v-theme-primary)) !important;
-  color: rgb(var(--v-theme-on-primary));
+  background: rgb(var(--v-theme-primary), 0.08);
+  box-shadow: inset 3px 0 0 0 rgb(var(--v-theme-primary));
 }
 .inclusion-rail__rule-handle {
   position: absolute;
@@ -342,8 +374,15 @@ function summaryFor(rule: InclusionRule): string {
   border-radius: 6px;
   z-index: 0;
 }
-.inclusion-rail__rule--active .inclusion-rail__rule-fill {
-  background: rgb(var(--v-theme-on-primary), 0.2);
+/* Tint the fill, count, and percent based on how aggressive the rule is.
+ * The default is success-green; --tone-warning swaps to amber for rules
+ * that drop the cohort meaningfully; --tone-danger goes red for rules
+ * that gut it (or zero it out). */
+.inclusion-rail__rule--tone-warning .inclusion-rail__rule-fill {
+  background: rgb(var(--v-theme-warning), 0.25);
+}
+.inclusion-rail__rule--tone-danger .inclusion-rail__rule-fill {
+  background: rgb(var(--v-theme-error), 0.25);
 }
 .inclusion-rail__rule-content {
   position: relative;
@@ -375,8 +414,11 @@ function summaryFor(rule: InclusionRule): string {
   font-variant-numeric: tabular-nums;
   color: rgb(var(--v-theme-success));
 }
-.inclusion-rail__rule--active .inclusion-rail__rule-count {
-  color: inherit;
+.inclusion-rail__rule--tone-warning .inclusion-rail__rule-count {
+  color: rgb(var(--v-theme-warning));
+}
+.inclusion-rail__rule--tone-danger .inclusion-rail__rule-count {
+  color: rgb(var(--v-theme-error));
 }
 .inclusion-rail__rule-bottom {
   display: flex;
@@ -388,19 +430,30 @@ function summaryFor(rule: InclusionRule): string {
 .inclusion-rail__rule-meta {
   color: rgb(var(--v-theme-on-surface-variant));
 }
-.inclusion-rail__rule--active .inclusion-rail__rule-meta { color: inherit; opacity: 0.85; }
 .inclusion-rail__rule-pct {
   font-variant-numeric: tabular-nums;
   color: rgb(var(--v-theme-success));
 }
-.inclusion-rail__rule--active .inclusion-rail__rule-pct { color: inherit; opacity: 0.85; }
+.inclusion-rail__rule--tone-warning .inclusion-rail__rule-pct {
+  color: rgb(var(--v-theme-warning));
+}
+.inclusion-rail__rule--tone-danger .inclusion-rail__rule-pct {
+  color: rgb(var(--v-theme-error));
+}
 
-.inclusion-rail__rule--computing .inclusion-rail__rule-count::after {
-  content: ' …';
+/* Pulse the count's opacity in place rather than appending a "…",
+ * so the number doesn't shift while the new value is being computed.
+ * Applies to entry-event header, every rule, and the final qualifying
+ * cohort badge — all three depend on the full expression. */
+.inclusion-rail__rule--computing .inclusion-rail__rule-count,
+.inclusion-rail__rule--computing .inclusion-rail__rule-pct,
+.inclusion-rail__entry--computing .inclusion-rail__entry-meta,
+.inclusion-rail__final--computing .inclusion-rail__final-count,
+.inclusion-rail__final--computing .inclusion-rail__final-pct {
   animation: inclusion-rail-pulse 1.2s ease-in-out infinite;
 }
 @keyframes inclusion-rail-pulse {
-  0%, 100% { opacity: 0.3; }
+  0%, 100% { opacity: 0.35; }
   50%      { opacity: 1; }
 }
 

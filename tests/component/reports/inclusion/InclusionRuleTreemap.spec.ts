@@ -59,8 +59,12 @@ describe('InclusionRuleTreemap', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('All 2 rules satisfied')
-    expect(wrapper.text()).toContain('0 rules satisfied')
+    // Legend migrated from per-cohort labels ("All N rules satisfied",
+    // "0 rules satisfied") to a 3-band threshold palette aligned with
+    // the funnel / attrition table.
+    const text = wrapper.text()
+    expect(text).toContain('≥ 80% rules satisfied')
+    expect(text).toContain('< 40% rules satisfied')
   })
 
   it('shows a "no inclusion rules" legend when ruleCount is 0', () => {

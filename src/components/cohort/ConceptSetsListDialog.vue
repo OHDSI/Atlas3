@@ -34,8 +34,8 @@
           <td>{{ conceptSet.items?.length || 0 }}</td>
           <td>
             <AtlasIconButton
-              icon="mdi-eye"
-              v-bind="{ ariaLabel: 'View' }"
+              icon="mdi-pencil-outline"
+              v-bind="{ ariaLabel: 'Edit' }"
               variant="text"
               size="sm"
               @click="$emit('view', conceptSet)"

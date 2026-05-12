@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atlas Cohort Builder</title>
     <!-- Load SystemJS before everything else -->
-    <script src="/Atlas/vendor/system.js"></script>
-    <script src="/Atlas/vendor/named-register.js"></script>
+    <script src="%BASE_URL%vendor/system.js"></script>
+    <script src="%BASE_URL%vendor/named-register.js"></script>
     <!-- Load Vue globally so SystemJS plugins can use it -->
-    <script src="/Atlas/vendor/vue.global.js"></script>
+    <script src="%BASE_URL%vendor/vue.global.js"></script>
     <!-- Load Vue Router globally -->
-    <script src="/Atlas/vendor/vue-router.global.js"></script>
+    <script src="%BASE_URL%vendor/vue-router.global.js"></script>
     <!-- Load React globally for React-based plugins -->
-    <script src="/Atlas/vendor/react.production.min.js" onerror="this.onerror=null;this.src='/Atlas/vendor/react.development.js'"></script>
-    <script src="/Atlas/vendor/react-dom.production.min.js" onerror="this.onerror=null;this.src='/Atlas/vendor/react-dom.development.js'"></script>
+    <script src="%BASE_URL%vendor/react.production.min.js" onerror="this.onerror=null;this.src='%BASE_URL%vendor/react.development.js'"></script>
+    <script src="%BASE_URL%vendor/react-dom.production.min.js" onerror="this.onerror=null;this.src='%BASE_URL%vendor/react-dom.development.js'"></script>
     <script>
       // Register dependencies with SystemJS
       (function() {
@@ -71,7 +71,17 @@
                 }
               });
 
-              console.log('[SystemJS] Vue module registered with', vueExports.length, 'exports');
+              // Also re-export every other own property of window.Vue so
+              // libraries like Vuetify can pick up newer/less-common APIs
+              // (camelize, toValue, useId, useTemplateRef, effectScope, etc.)
+              // without us having to track Vue's API surface manually.
+              Object.keys(window.Vue).forEach(function(key) {
+                if (!vueExports.includes(key)) {
+                  _export(key, window.Vue[key]);
+                }
+              });
+
+              console.log('[SystemJS] Vue module registered with', Object.keys(window.Vue).length, 'exports');
             }
           };
         });
@@ -93,8 +103,42 @@
           };
         });
 
+        // Register vuetify against the host's singleton instance.
+        // The host stores it on window.__atlasVuetify after createVuetifyInstance
+        // runs (see src/main.ts). Plugins that mark `vuetify` as a Rollup
+        // external resolve it through SystemJS at runtime, so they share the
+        // same instance and the same theme.
+        window.System.register('vuetify', [], function(_export) {
+          return {
+            setters: [],
+            execute: function() {
+              _export('default', window.__atlasVuetify);
+              console.log('[SystemJS] vuetify module registered');
+            }
+          };
+        });
+        // Vuetify components are accessed via auto-import in source plugins;
+        // for plugins that resolve them through bare imports, they're picked
+        // up from the host's singleton (already registered above).
+        window.System.register('vuetify/components', [], function(_export) {
+          return {
+            setters: [],
+            execute: function() {
+              _export(window.__atlasVuetify ? window.__atlasVuetify.components || {} : {});
+            }
+          };
+        });
+        window.System.register('vuetify/directives', [], function(_export) {
+          return {
+            setters: [],
+            execute: function() {
+              _export(window.__atlasVuetify ? window.__atlasVuetify.directives || {} : {});
+            }
+          };
+        });
+
         // Load and register single-spa-vue
-        window.System.import('/Atlas/vendor/single-spa-vue.js').then(function(module) {
+        window.System.import('%BASE_URL%vendor/single-spa-vue.js').then(function(module) {
           console.log('[SystemJS] single-spa-vue loaded:', module);
           // Register it under the 'single-spa-vue' name
           window.System.register('single-spa-vue', [], function(_export) {
@@ -156,7 +200,7 @@
         }
 
         // Load single-spa-react
-        window.System.import('/Atlas/vendor/single-spa-react.js').then(function(module) {
+        window.System.import('%BASE_URL%vendor/single-spa-react.js').then(function(module) {
           window.System.set('single-spa-react', { default: module.default || module });
         }).catch(function(err) {
           console.error('[SystemJS] Failed to load single-spa-react:', err);

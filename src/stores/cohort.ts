@@ -4,7 +4,15 @@
  */
 import { defineStore } from 'pinia'
 import { ref, computed, watch, type WatchStopHandle } from 'vue'
-import type { CohortDefinition, CohortEvent } from '@/models/cohort.types'
+import type {
+  CohortDefinition,
+  CohortEvent,
+  ConceptSetReference,
+  ExitCriteria,
+  InclusionRule,
+  ObservationPeriod,
+} from '@/models/cohort.types'
+import type { AgentProposal } from '@/models/agent.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
 import { saveCohortToCache, getCohortFromCache, deleteCohortFromCache } from '@/utils/cohort-cache'
 import { getVersion as getVersionAPI } from '@/services/cohort-definition-versions.service'
@@ -38,6 +46,11 @@ export const useCohortStore = defineStore('cohort', () => {
   const currentCohort = ref<CohortDefinition | null>(null)
   const isDirty = ref(false)
   const lastAutoSave = ref<Date | null>(null)
+  // Bumped every time `applyProposal` mutates the cohort. Components that hold
+  // their own local copies of `currentCohort.*` (e.g. CohortBuilder) watch this
+  // counter and re-sync; they don't watch `currentCohort` itself, which would
+  // create a feedback loop with their own user-edit writes.
+  const agentRevision = ref(0)
 
   // Version preview state (T013)
   const previewVersion = ref<Version | null>(null)
@@ -123,6 +136,86 @@ export const useCohortStore = defineStore('cohort', () => {
       currentCohort.value.entryEvents[index] = updatedEvent
       isDirty.value = true
     }
+  }
+
+  function ensureCohort() {
+    if (!currentCohort.value) {
+      createNewCohort()
+    }
+    return currentCohort.value!
+  }
+
+  function addInclusionRule(rule: InclusionRule) {
+    ensureCohort().inclusionRules.push(rule)
+    isDirty.value = true
+  }
+
+  function addConceptSetReference(ref: ConceptSetReference) {
+    const cohort = ensureCohort()
+    if (!cohort.conceptSets.some(cs => cs.id === ref.id)) {
+      cohort.conceptSets.push(ref)
+      isDirty.value = true
+    }
+  }
+
+  function setObservationPeriod(period: ObservationPeriod) {
+    ensureCohort().observationPeriod = period
+    isDirty.value = true
+  }
+
+  function setExitCriteria(exit: ExitCriteria) {
+    ensureCohort().exitCriteria = exit
+    isDirty.value = true
+  }
+
+  function addCensoringCriterion(event: CohortEvent) {
+    const cohort = ensureCohort()
+    cohort.censoringCriteria = cohort.censoringCriteria ?? []
+    cohort.censoringCriteria.push(event)
+    isDirty.value = true
+  }
+
+  function applyProposal(proposal: AgentProposal) {
+    switch (proposal.kind) {
+      case 'addEntryEvent':
+        addEntryEvent(proposal.event)
+        break
+      case 'addInclusionRule':
+        addInclusionRule(proposal.rule)
+        break
+      case 'addConceptSet':
+        addConceptSetReference(proposal.conceptSet)
+        break
+      case 'setObservationPeriod':
+        setObservationPeriod(proposal.observationPeriod)
+        break
+      case 'setExitCriteria':
+        setExitCriteria(proposal.exitCriteria)
+        break
+      case 'addCensoringCriterion':
+        addCensoringCriterion(proposal.event)
+        break
+      // Non-cohort proposal kinds are handled by pythiaBridge before
+      // reaching the cohort store. Ignore here.
+      case 'navigate':
+      case 'createStandaloneConceptSet':
+      case 'createFeatureAnalysis':
+      case 'createCharacterization':
+      case 'createPathway':
+      case 'createIncidenceRate':
+      case 'updateConceptSet':
+      case 'updateFeatureAnalysis':
+      case 'updateCharacterization':
+      case 'updatePathway':
+      case 'updateIncidenceRate':
+        return
+      default: {
+        const exhaustive: never = proposal
+        logger.warn('CohortStore', 'Unknown agent proposal', exhaustive)
+        return
+      }
+    }
+    agentRevision.value++
   }
 
   function clearCohort() {
@@ -522,6 +615,7 @@ export const useCohortStore = defineStore('cohort', () => {
     validationErrors,
     isReadOnly,
     retryState,
+    agentRevision,
     // Getters
     hasEntryEvents,
     hasInclusionRules,
@@ -534,6 +628,12 @@ export const useCohortStore = defineStore('cohort', () => {
     addEntryEvent,
     removeEntryEvent,
     updateEntryEvent,
+    addInclusionRule,
+    addConceptSetReference,
+    setObservationPeriod,
+    setExitCriteria,
+    addCensoringCriterion,
+    applyProposal,
     clearCohort,
     markClean,
     markDirty,
