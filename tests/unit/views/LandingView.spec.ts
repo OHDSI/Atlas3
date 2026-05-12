@@ -153,10 +153,10 @@ describe('LandingView', () => {
       expect(docText.exists()).toBe(true)
     })
 
-    it('should contain documentation link', () => {
+    it('should contain documentation link to in-app manual', () => {
       const wrapper = mountComponent()
       const documentation = wrapper.find('.landing__documentation')
-      expect(documentation.html()).toContain('http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas')
+      expect(documentation.html()).toContain('href="/docs"')
     })
   })
 
@@ -246,28 +246,28 @@ describe('LandingView', () => {
       expect(wrapper.find('.landing__features').exists()).toBe(true)
     })
 
-    it('should render three feature tiles', () => {
+    it('should render four feature tiles', () => {
       const wrapper = mountComponent()
       const features = wrapper.findAll('.landing__feature')
-      expect(features.length).toBe(3)
+      expect(features.length).toBe(4)
     })
 
     it('should render feature titles', () => {
       const wrapper = mountComponent()
       const featureTitles = wrapper.findAll('.landing__feature-title')
-      expect(featureTitles.length).toBe(3)
+      expect(featureTitles.length).toBe(4)
     })
 
     it('should render feature descriptions', () => {
       const wrapper = mountComponent()
       const featureDescriptions = wrapper.findAll('.landing__feature-description')
-      expect(featureDescriptions.length).toBe(3)
+      expect(featureDescriptions.length).toBe(4)
     })
 
     it('should render feature icons', () => {
       const wrapper = mountComponent()
       const featureIcons = wrapper.findAll('.landing__feature-icon')
-      expect(featureIcons.length).toBe(3)
+      expect(featureIcons.length).toBe(4)
     })
   })
 
@@ -300,11 +300,11 @@ describe('LandingView', () => {
       expect(html).toContain('http://www.ohdsi.org')
     })
 
-    it('should have external documentation link with target _new', () => {
+    it('should link the documentation section to the in-app manual', () => {
       const wrapper = mountComponent()
       const documentation = wrapper.find('.landing__documentation')
       const html = documentation.html()
-      expect(html).toContain('target="_new"')
+      expect(html).toContain('href="/docs"')
     })
   })
 
