@@ -66,3 +66,11 @@ jobs:
           path: |
             coverage/
             !coverage/**/*.tmp
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          flags: unit
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}

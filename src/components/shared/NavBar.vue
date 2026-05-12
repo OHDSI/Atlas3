@@ -119,6 +119,16 @@
         <!-- Language Selector -->
         <LanguageSelector v-if="showLanguageSelector" />
 
+        <!-- Docs (user manual) -->
+        <AtlasIconButton
+          icon="mdi-book-open-page-variant-outline"
+          v-bind="{ ariaLabel: t('navigation.docs', 'User manual').value }"
+          variant="text"
+          size="sm"
+          data-testid="nav-docs"
+          @click="handleDocsClick"
+        />
+
         <!-- Configuration Panel Icon: hidden when user has no admin perms -->
         <AtlasIconButton
           v-if="showConfigButton && hasAnyAdminAccess"
@@ -359,6 +369,11 @@ function handleConfigClick() {
   } else {
     uiStore.openConfigPanel()
   }
+}
+
+async function handleDocsClick() {
+  await router.isReady()
+  router.push('/docs')
 }
 
 const updateActiveNavFromRoute = () => {

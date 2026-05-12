@@ -334,6 +334,14 @@ export const routes: RouteRecordRaw[] = [
     props: true,
     meta: { requiresAuth: true, titleKey: 'route.dataSources.title' },
   },
+  {
+    path: '/docs',
+    name: 'docs',
+    // Lazy-imported so neither the viewer chunk nor the bundled
+    // PDF (~2 MB) is fetched until a user navigates here.
+    component: () => import('@/views/DocsView.vue'),
+    meta: { requiresAuth: false },
+  },
   // Role and Permissions Management routes
   {
     path: '/config/roles',
