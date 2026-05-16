@@ -5,7 +5,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-ARG VITE_BASE_PATH=/atlas
+ARG VITE_BASE_PATH=/atlas/
 ARG VITE_AUTH_ENABLED=true
 ARG VITE_AUTH_SKIP_LOGIN=false
 ARG VITE_AUTH_PROVIDERS='[{"name":"Database","url":"user/login/db","ajax":true,"icon":"mdi-database","isUseCredentialsForm":true}]'
