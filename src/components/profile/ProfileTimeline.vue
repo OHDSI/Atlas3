@@ -47,31 +47,107 @@ import { AtlasCard, AtlasChip } from '@/components/ui'
 import ProfileFilterChips from '@/components/profile/ProfileFilterChips.vue'
 
 const store = useProfileStore()
-const { chartSeries } = useTimelineFilters()
+const { chartSeries, axisExtent } = useTimelineFilters()
 
-const option = computed(() => ({
-  grid: { left: 120, right: 24, top: 16, bottom: 60 },
-  xAxis: { type: 'value', name: 'Day', nameGap: 24, nameLocation: 'middle' },
-  yAxis: { type: 'category', data: [...OMOP_DOMAINS] },
-  tooltip: {
-    trigger: 'item',
-    formatter: (p: { data?: { name?: string; value?: number[] } }) =>
-      `${p.data?.name ?? ''}<br/>Day ${p.data?.value?.[0] ?? ''}`,
-  },
-  brush: { toolbox: ['lineX', 'clear'], xAxisIndex: 0 },
-  series: chartSeries.value.map(d => ({
-    name: d.domain,
-    type: 'scatter',
-    symbolSize: 8,
-    data: d.points.map(pt => ({
-      name: pt.conceptName,
-      value: [pt.startDay, d.domain],
-      itemStyle: {
-        color: pt.color === DEFAULT_HIGHLIGHT_COLOR ? pt.domainColor : pt.color,
+// Minimum pixel width for point-style records so they remain
+// clickable / visible. Mirrors `minBoxPix` in Atlas's profileChart.js.
+const MIN_BOX_PX = 5
+const BAR_HEIGHT_PX = 8
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+interface SeriesDatum {
+  name: string
+  value: [number, number | null, string]
+  isRange: boolean
+}
+
+const option = computed(() => {
+  const { min, max } = axisExtent.value
+  return {
+    grid: { left: 120, right: 24, top: 16, bottom: 60 },
+    xAxis: {
+      type: 'value',
+      name: 'Day (0 = cohort entry)',
+      nameGap: 24,
+      nameLocation: 'middle',
+      min,
+      max,
+    },
+    yAxis: { type: 'category', data: [...OMOP_DOMAINS] },
+    tooltip: {
+      trigger: 'item',
+      formatter: (p: { data?: SeriesDatum }) => {
+        const d = p.data
+        if (!d) return ''
+        const [start, end] = d.value
+        const range =
+          d.isRange && typeof end === 'number'
+            ? `Day ${start} → Day ${end} (${end - start}d)`
+            : `Day ${start}`
+        return `${escapeHtml(d.name)}<br/>${range}`
       },
+    },
+    brush: { toolbox: ['lineX', 'clear'], xAxisIndex: 0 },
+    series: chartSeries.value.map((d, i) => ({
+      name: d.domain,
+      type: 'custom' as const,
+      encode: { x: [0, 1], y: 2, tooltip: [0, 1] },
+      renderItem: (
+        _params: unknown,
+        api: {
+          value: (i: number) => number | string
+          coord: (pt: [number, number | string]) => [number, number]
+          size: (data: [number, number]) => [number, number]
+          style: (extra?: Record<string, unknown>) => Record<string, unknown>
+        },
+      ) => {
+        const startDay = api.value(0) as number
+        const endRaw = api.value(1)
+        const yCat = api.value(2) as string
+        const [xStart, yPix] = api.coord([startDay, yCat])
+        const hasRange = typeof endRaw === 'number' && endRaw > startDay
+        const xEnd = hasRange ? api.coord([endRaw as number, yCat])[0] : xStart
+        const width = Math.max(MIN_BOX_PX, xEnd - xStart)
+        return {
+          type: 'rect',
+          shape: {
+            x: hasRange ? xStart : xStart - MIN_BOX_PX / 2,
+            y: yPix - BAR_HEIGHT_PX / 2,
+            width,
+            height: BAR_HEIGHT_PX,
+          },
+          style: api.style(),
+        }
+      },
+      data: d.points.map<SeriesDatum>(pt => ({
+        name: pt.conceptName,
+        value: [pt.startDay, pt.endDay, d.domain],
+        isRange: pt.isRange,
+        itemStyle: {
+          color: pt.color === DEFAULT_HIGHLIGHT_COLOR ? pt.domainColor : pt.color,
+        },
+      })),
+      markLine:
+        i === 0
+          ? {
+              symbol: 'none',
+              silent: true,
+              lineStyle: { color: '#888', type: 'dashed', width: 1 },
+              label: { formatter: 'Cohort entry', position: 'insideEndTop', color: '#666' },
+              data: [{ xAxis: 0 }],
+            }
+          : undefined,
     })),
-  })),
-}))
+  }
+})
 
 function onBrush(e: { areas?: Array<{ coordRange?: [number, number] }> }) {
   const range = e.areas?.[0]?.coordRange
