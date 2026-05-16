@@ -7,18 +7,24 @@ defineEmits<{ accept: [id: string]; reject: [id: string] }>()
 
 const args = computed(() => props.proposal.args)
 
+// add_inclusion_rule uses {logicType, events}; add_criteria uses {logic, items}.
+// shell-bridge.proposalFromToolCall already normalises both on accept — mirror
+// that here so the card renders both shapes correctly.
+const items = computed(
+  () => args.value.events ?? args.value.items ?? [],
+)
 const logicLabel = computed(() => {
   const lt = args.value.logicType
   if (lt === 'AT_LEAST') return `≥ ${args.value.count ?? 1} of`
   if (lt === 'AT_MOST') return `≤ ${args.value.count ?? 1} of`
-  if (lt === 'ANY') return 'Any of'
+  if (lt === 'ANY' || args.value.logic === 'OR') return 'Any of'
   return 'All of'
 })
 
 const eventNames = computed(() =>
-  (args.value.events ?? []).map(e => e.conceptName ?? 'Unnamed').slice(0, 4)
+  items.value.map((e: { conceptName?: string }) => e.conceptName ?? 'Unnamed').slice(0, 4),
 )
-const extra = computed(() => (args.value.events?.length ?? 0) - eventNames.value.length)
+const extra = computed(() => items.value.length - eventNames.value.length)
 </script>
 
 <template>
