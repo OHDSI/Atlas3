@@ -117,13 +117,27 @@
                 start
                 icon="mdi-checkbox-marked-circle-outline"
               />
-              {{ t('cs.manager.tabs.includedConcepts', 'Selected') }}
+              {{ t('cs.manager.tabs.selected', 'Selected') }}
               <AtlasChip
                 size="sm"
                 tone="primary"
                 class="cs-editor__tab-count"
               >
                 {{ itemCount }}
+              </AtlasChip>
+            </AtlasTab>
+            <AtlasTab value="included">
+              <AtlasIcon
+                start
+                icon="mdi-family-tree"
+              />
+              {{ t('cs.manager.tabs.included', 'Included') }}
+              <AtlasChip
+                size="sm"
+                tone="primary"
+                class="cs-editor__tab-count"
+              >
+                {{ store.includedLoading ? '…' : store.includedItems.length }}
               </AtlasChip>
             </AtlasTab>
             <AtlasTab value="search">
@@ -193,6 +207,19 @@
                 @toggle:exclude="onToggleExclude"
                 @remove="onRemoveFromSet"
                 @view-concept="onViewConcept"
+              />
+            </v-window-item>
+
+            <!-- Included Concepts Tab -->
+            <v-window-item value="included">
+              <IncludedConceptsTable
+                :items="store.includedItems"
+                :loading="store.includedLoading"
+                :error="store.includedError"
+                :manual-count="store.currentSet?.items?.length ?? 0"
+                :source-key="sourceKey.value"
+                @view-concept="onViewConcept"
+                @retry="store.resolveIncluded(sourceKey.value)"
               />
             </v-window-item>
 
@@ -392,6 +419,7 @@ import type { ConceptSet, Concept } from '@/models/concept-set.types'
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
+import IncludedConceptsTable from './IncludedConceptsTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
 import ConceptDetailContent from './detail/ConceptDetailContent.vue'
@@ -449,7 +477,10 @@ function onViewConcept(payload: { conceptId: number; sourceKey: string }) {
 watch(
   () => props.modelValue,
   (open) => {
-    if (!open) viewingConcept.value = null
+    if (!open) {
+      viewingConcept.value = null
+      store.resetIncluded()
+    }
   },
 )
 
