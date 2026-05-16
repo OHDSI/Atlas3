@@ -3,7 +3,7 @@
  * State management for concept set CRUD operations
  */
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   getAllConceptSets,
   getConceptSetById,
@@ -26,7 +26,9 @@ import {
   getRecommendedConcepts,
   getConceptRecordCounts,
   compareConceptSets,
+  resolveConceptSetExpression,
 } from '@/services/concept-search.service'
+import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 
@@ -55,6 +57,12 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   const comparisonOtherSet = ref<ConceptSet | null>(null)
   const loadingComparison = ref<boolean>(false)
   const comparisonError = ref<string | null>(null)
+
+  const includedItems = ref<Concept[]>([])
+  const includedLoading = ref<boolean>(false)
+  const includedError = ref<string | null>(null)
+  const includedFetchedAt = ref<number | null>(null)
+  let includedAbortCtrl: AbortController | null = null
 
   // ============================================================================
   // Getters
@@ -514,6 +522,64 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   }
 
   // ============================================================================
+  // Included concepts
+  // ============================================================================
+
+  async function resolveIncluded(sourceKey?: string): Promise<void> {
+    const items = currentSet.value?.items ?? []
+    if (items.length === 0) {
+      includedAbortCtrl?.abort()
+      includedAbortCtrl = null
+      includedItems.value = []
+      includedError.value = null
+      includedLoading.value = false
+      return
+    }
+
+    const key = sourceKey || useWebAPIStore().getValidVocabularySource()
+    if (!key) {
+      includedError.value = 'No vocabulary source available'
+      return
+    }
+
+    includedAbortCtrl?.abort()
+    const ctrl = new AbortController()
+    includedAbortCtrl = ctrl
+
+    includedLoading.value = true
+    includedError.value = null
+
+    const expression: ConceptSetExpression = {
+      items: items.map(conceptSetItemToExpressionItem),
+    }
+
+    try {
+      const concepts = await resolveConceptSetExpression(key, expression, ctrl.signal)
+      if (ctrl !== includedAbortCtrl) return
+      includedItems.value = concepts
+      includedFetchedAt.value = Date.now()
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return
+      if (ctrl !== includedAbortCtrl) return
+      includedError.value = err instanceof Error ? err.message : 'Failed to resolve concept set'
+      logger.error('ConceptSetsStore', 'resolveIncluded error', err)
+    } finally {
+      if (ctrl === includedAbortCtrl) {
+        includedLoading.value = false
+      }
+    }
+  }
+
+  function resetIncluded(): void {
+    includedAbortCtrl?.abort()
+    includedAbortCtrl = null
+    includedItems.value = []
+    includedLoading.value = false
+    includedError.value = null
+    includedFetchedAt.value = null
+  }
+
+  // ============================================================================
   // Pythia partial-update entry-point
   // ============================================================================
 
@@ -561,6 +627,32 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     if (applied) isDirty.value = true
     return applied
   }
+
+  // ============================================================================
+  // Debounced watcher: auto-resolve included list on item edits
+  // ============================================================================
+
+  const debouncedResolveIncluded = debounce(() => {
+    void resolveIncluded()
+  }, 500)
+
+  watch(
+    () => currentSet.value?.items,
+    (items) => {
+      if (!items || items.length === 0) {
+        debouncedResolveIncluded.cancel()
+        includedAbortCtrl?.abort()
+        includedAbortCtrl = null
+        includedItems.value = []
+        includedError.value = null
+        includedLoading.value = false
+        includedFetchedAt.value = null
+        return
+      }
+      debouncedResolveIncluded()
+    },
+    { deep: true },
+  )
 
   // ============================================================================
   // Return
@@ -616,5 +708,13 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     savePreviewAsCurrent,
     loadRecommendedConcepts,
     loadComparison,
+
+    // Included concepts
+    includedItems,
+    includedLoading,
+    includedError,
+    includedFetchedAt,
+    resolveIncluded,
+    resetIncluded,
   }
 })

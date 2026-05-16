@@ -189,3 +189,40 @@ export async function compareConceptSets(
 
   return parsed.data.map(mapComparisonItemFromAPI)
 }
+
+export async function resolveConceptSetExpression(
+  sourceKey: string,
+  expression: ConceptSetExpression,
+  signal?: AbortSignal,
+): Promise<Concept[]> {
+  if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
+    throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
+  }
+
+  const ids = await httpPost<unknown>(
+    `/vocabulary/${sourceKey}/resolveConceptSetExpression`,
+    expression,
+    { signal },
+  )
+
+  if (!Array.isArray(ids) || !ids.every((id) => typeof id === 'number' && Number.isFinite(id))) {
+    logger.error('ConceptSearch', 'Invalid resolveConceptSetExpression response', ids)
+    throw new Error('Invalid resolveConceptSetExpression response format')
+  }
+
+  if (ids.length === 0) return []
+
+  const raw = await httpPost<unknown>(
+    `/vocabulary/${sourceKey}/lookup/identifiers`,
+    ids,
+    { signal },
+  )
+
+  const parsed = ConceptSearchResponseSchema.safeParse(raw)
+  if (!parsed.success) {
+    logger.error('ConceptSearch', 'lookup/identifiers validation error', parsed.error)
+    throw new Error('Invalid resolveConceptSetExpression response format')
+  }
+
+  return parsed.data.map(mapConceptFromAPI)
+}

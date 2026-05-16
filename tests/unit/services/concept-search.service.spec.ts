@@ -36,6 +36,7 @@ import {
   getConceptRecordCounts,
   getRecommendedConcepts,
   compareConceptSets,
+  resolveConceptSetExpression,
 } from '@/services/concept-search.service'
 import { mapConceptFromAPI } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
@@ -453,6 +454,193 @@ describe('ConceptSearchService', () => {
         'Invalid recommended concepts response format'
       )
       expect(logger.error).toHaveBeenCalled()
+    })
+  })
+
+  describe('resolveConceptSetExpression', () => {
+    const expression: ConceptSetExpression = {
+      items: [
+        {
+          concept: {
+            CONCEPT_ID: 201826,
+            CONCEPT_NAME: 'Type 2 diabetes mellitus',
+            CONCEPT_CODE: '44054006',
+            DOMAIN_ID: 'Condition',
+            VOCABULARY_ID: 'SNOMED',
+            CONCEPT_CLASS_ID: 'Clinical Finding',
+            STANDARD_CONCEPT: 'S',
+            INVALID_REASON: null,
+          },
+          isExcluded: false,
+          includeDescendants: true,
+          includeMapped: false,
+        },
+      ],
+    }
+
+    it('POSTs the expression to the resolve endpoint and maps the response', async () => {
+      const apiResponse = [
+        {
+          CONCEPT_ID: 201826,
+          CONCEPT_NAME: 'Type 2 diabetes mellitus',
+          CONCEPT_CODE: '44054006',
+          DOMAIN_ID: 'Condition',
+          VOCABULARY_ID: 'SNOMED',
+          CONCEPT_CLASS_ID: 'Clinical Finding',
+          STANDARD_CONCEPT: 'S',
+          INVALID_REASON: null,
+        },
+        {
+          CONCEPT_ID: 443238,
+          CONCEPT_NAME: 'Type 2 diabetes mellitus with diabetic nephropathy',
+          CONCEPT_CODE: '127013003',
+          DOMAIN_ID: 'Condition',
+          VOCABULARY_ID: 'SNOMED',
+          CONCEPT_CLASS_ID: 'Clinical Finding',
+          STANDARD_CONCEPT: 'S',
+          INVALID_REASON: null,
+        },
+      ]
+
+      // First call: resolveConceptSetExpression returns an array of IDs
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify([201826, 443238])),
+      })
+      // Second call: lookup/identifiers returns full concept records
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(apiResponse)),
+      })
+
+      const result = await resolveConceptSetExpression('SYNPUF1K', expression)
+
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('/vocabulary/SYNPUF1K/resolveConceptSetExpression'),
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('"CONCEPT_ID":201826'),
+        }),
+      )
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining('/vocabulary/SYNPUF1K/lookup/identifiers'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify([201826, 443238]),
+        }),
+      )
+      expect(result).toHaveLength(2)
+      expect(result[0]).toMatchObject({ conceptId: 201826, vocabularyId: 'SNOMED' })
+      expect(result[1]).toMatchObject({ conceptId: 443238 })
+    })
+
+    it('passes the AbortSignal through to fetch', async () => {
+      // First call: resolve returns one ID
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve('[1]'),
+      })
+      // Second call: lookup/identifiers returns empty array
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve('[]'),
+      })
+
+      const ctrl = new AbortController()
+      await resolveConceptSetExpression('SYNPUF1K', expression, ctrl.signal)
+
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        expect.any(String),
+        expect.objectContaining({ signal: ctrl.signal }),
+      )
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        expect.any(String),
+        expect.objectContaining({ signal: ctrl.signal }),
+      )
+    })
+
+    it('throws on non-2xx responses', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: () => Promise.resolve(''),
+      })
+
+      await expect(resolveConceptSetExpression('SYNPUF1K', expression)).rejects.toThrow(/HTTP 500/)
+    })
+
+    it('throws when the response is not a JSON array', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve('{"not":"an array"}'),
+      })
+
+      await expect(resolveConceptSetExpression('SYNPUF1K', expression)).rejects.toThrow(
+        /Invalid resolve.*response/i,
+      )
+    })
+
+    it('throws when an array element fails schema validation', async () => {
+      // First call: resolve returns a valid ID array
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve('[1]'),
+      })
+      // Second call: lookup/identifiers returns a malformed concept
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify([{ CONCEPT_ID: 'not-a-number' }])),
+      })
+      await expect(resolveConceptSetExpression('SYNPUF1K', expression)).rejects.toThrow(
+        /Invalid resolve.*response/i,
+      )
+    })
+
+    it('throws when sourceKey is empty', async () => {
+      await expect(resolveConceptSetExpression('', expression)).rejects.toThrow(/Invalid vocabulary/i)
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('returns [] without calling lookup/identifiers when resolve returns an empty array', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve('[]'),
+      })
+
+      const result = await resolveConceptSetExpression('SYNPUF1K', expression)
+
+      expect(result).toEqual([])
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/resolveConceptSetExpression'),
+        expect.any(Object),
+      )
+    })
+
+    it('throws when the resolve response contains non-numbers', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve('["not a number"]'),
+      })
+      await expect(resolveConceptSetExpression('SYNPUF1K', expression)).rejects.toThrow(
+        /Invalid resolveConceptSetExpression response format/i,
+      )
     })
   })
 
