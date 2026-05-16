@@ -514,8 +514,25 @@ export function proposalFromToolCall(
       const items = (args.items as CriterionArgs[] | undefined)
         ?? (args.events as CriterionArgs[] | undefined)
         ?? []
-      const events = items.map(buildEventFromCriterion).filter(Boolean)
-      if (events.length === 0) return null
+      const isExclusion = args.group === 'exclusion'
+      const baseEvents = items
+        .map(buildEventFromCriterion)
+        .filter(Boolean) as Record<string, unknown>[]
+      if (baseEvents.length === 0) return null
+      // CIRCE encodes "patient must not have X" as a criterion with
+      // cardinality EXACTLY 0. For exclusion groups, force ALL-logic so
+      // "0 of A AND 0 of B AND 0 of C" means the patient has none of them.
+      // ANY-logic with cardinality 0 would mean "≥1 of these is absent",
+      // which is not what an exclusion list means.
+      const events = isExclusion
+        ? baseEvents.map(e => ({
+            ...e,
+            cardinality: { type: 'EXACTLY', count: 0, countingMethod: 'ALL' },
+          }))
+        : baseEvents
+      const logicType = isExclusion
+        ? 'ALL'
+        : (args.logic === 'OR' ? 'ANY' : 'ALL')
       const ruleName =
         (typeof args.name === 'string' && args.name.trim()) ||
         deriveRuleName(items, typeof args.group === 'string' ? args.group : undefined,
@@ -526,7 +543,7 @@ export function proposalFromToolCall(
           id: uid(),
           name: ruleName,
           criteriaGroups: [
-            { id: uid(), logicType: (args.logic === 'OR' ? 'ANY' : 'ALL'), events },
+            { id: uid(), logicType, events },
           ],
         },
       }

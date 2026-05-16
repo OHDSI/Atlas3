@@ -240,10 +240,8 @@ function resolveMaxAutoSteps(): number {
   return DEFAULT
 }
 
-// Re-export from the standalone module. Lives there (not here) so the
-// root vitest run can unit-test it without pulling `@ai-sdk/vue` into
-// the import graph.
-export { locateGroup } from './locate-group'
+import { locateGroup } from './locate-group'
+export { locateGroup }
 
 export function getChatInstance(): Chat<UIMessage> {
   if (chatInstance) return chatInstance
@@ -293,16 +291,24 @@ export function getChatInstance(): Chat<UIMessage> {
   // the model into long retry chains; tighten it if you observe the
   // "tool-loop forever" failure mode the cap was added to prevent.
   const MAX_AUTO_STEPS = resolveMaxAutoSteps()
+  // bao runs ONE Bedrock turn per request and ends with a `finish` chunk
+  // carrying a `finishReason` ("tool-calls" | "stop" | "length" | "error").
+  // The client is supposed to drive the multi-turn loop only when the model
+  // wants more tool round-trips (i.e. `tool-calls`). bao does NOT emit
+  // step boundary chunks, so the AI SDK's `lastAssistantMessageIsComplete-
+  // WithToolCalls` predicate looks at the whole message as a single step
+  // and stays true even after the model has finalised — re-prompting
+  // forever. We capture the last finishReason in `onFinish` (fired before
+  // `shouldSendAutomatically`) and gate the predicate on it.
+  let lastFinishReason: string | undefined
   const sendAutomaticallyWithCap: NonNullable<ConstructorParameters<typeof Chat<UIMessage>>[0]['sendAutomaticallyWhen']> = ({ messages }) => {
+    if (lastFinishReason !== 'tool-calls') return false
     if (!lastAssistantMessageIsCompleteWithToolCalls({ messages })) return false
     const last = messages[messages.length - 1]
     if (!last || last.role !== 'assistant' || !Array.isArray(last.parts)) return false
     let toolCallCount = 0
     for (const p of last.parts) {
       const t = (p as { type?: string }).type
-      // Both shapes the @ai-sdk/vue stream produces for tool calls:
-      // the canonical 'tool-input-available' (output-available state)
-      // and the legacy/short-form 'tool-<name>' part.
       if (t === 'tool-input-available') {
         toolCallCount += 1
       } else if (typeof t === 'string' && t.startsWith('tool-') && t !== 'tool-output-available') {
@@ -316,6 +322,9 @@ export function getChatInstance(): Chat<UIMessage> {
     transport,
     messages: persisted.messages,
     sendAutomaticallyWhen: sendAutomaticallyWithCap,
+    onFinish: ({ finishReason }) => {
+      lastFinishReason = finishReason
+    },
     onToolCall: ({ toolCall }: { toolCall: { toolCallId: string; toolName: string; input: unknown } }) => {
       if (isPlanTool(toolCall.toolName)) {
         const result = applyPlanToolCall(toolCall.toolName, toolCall.input)
