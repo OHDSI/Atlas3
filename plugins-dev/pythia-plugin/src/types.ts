@@ -48,32 +48,9 @@ export interface InclusionRuleArgs {
   events?: CriterionArgs[]
 }
 
-// Closed list of view names the model is allowed to navigate to. Mirrors
-// the Vue Router `name` field in src/router/routes.ts (host side). The
-// shell bridge validates against this list before accepting the proposal.
-export type NavigateView =
-  | 'home'
-  | 'cohorts'
-  | 'cohort-new'
-  | 'cohort-edit'
-  | 'concepts'
-  | 'concept-detail'
-  | 'datasources'
-  | 'profiles'
-  | 'profile-view'
-  | 'feature-analyses'
-  | 'feature-analysis-new'
-  | 'feature-analysis-edit'
-  | 'characterizations'
-  | 'characterization-new'
-  | 'characterization-edit'
-  | 'pathways'
-  | 'pathway-new'
-  | 'pathway-edit'
-  | 'pathway-results'
-  | 'incidence-rates'
-  | 'incidence-rate-new'
-  | 'incidence-rate-edit'
+// View names come from Atlas3's generated route manifest. Validation is
+// runtime — see isAgentVisibleView in route-manifest.ts.
+export type NavigateView = string
 
 export interface NavigateArgs {
   view?: NavigateView

@@ -21,53 +21,53 @@ export const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'home',
     component: () => import('@/views/LandingView.vue'),
-    meta: { requiresAuth: false, titleKey: 'route.home.title' },
+    meta: { requiresAuth: false, titleKey: 'route.home.title', agentVisible: true, agentLabel: 'Home' },
   },
   {
     path: '/cohorts',
     name: 'cohorts',
     component: () => import('@/views/CohortsView.vue'),
-    meta: { requiresAuth: true, titleKey: 'route.cohorts.title' },
+    meta: { requiresAuth: true, titleKey: 'route.cohorts.title', agentVisible: true, agentLabel: 'Cohorts' },
   },
   {
     path: '/cohorts/new',
     name: 'cohort-new',
     component: () => import('@/views/CohortBuilderView.vue'),
-    meta: { requiresAuth: true, titleKey: 'route.cohortBuilder.title' },
+    meta: { requiresAuth: true, titleKey: 'route.cohortBuilder.title', agentVisible: true, agentLabel: 'New cohort' },
   },
   {
     path: '/cohorts/:id',
     name: 'cohort-edit',
     component: () => import('@/views/CohortBuilderView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.cohortBuilder.title' },
+    meta: { requiresAuth: true, titleKey: 'route.cohortBuilder.title', agentVisible: true, agentLabel: 'Cohort editor' },
   },
   {
     path: '/profiles',
     name: 'profiles',
     component: () => import('@/views/ProfileView.vue'),
-    meta: { requiresAuth: true, titleKey: 'route.profiles.title' },
+    meta: { requiresAuth: true, titleKey: 'route.profiles.title', agentVisible: true, agentLabel: 'Profiles' },
   },
   {
     path: '/profiles/:sourceKey',
     name: 'profiles-source',
     component: () => import('@/views/ProfileView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.profiles.title' },
+    meta: { requiresAuth: true, titleKey: 'route.profiles.title', agentVisible: true, agentLabel: 'Profiles (source)' },
   },
   {
     path: '/profiles/:sourceKey/:personId(\\d+)',
     name: 'profile-view',
     component: () => import('@/views/ProfileView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.profiles.title' },
+    meta: { requiresAuth: true, titleKey: 'route.profiles.title', agentVisible: true, agentLabel: 'Patient profile' },
   },
   {
     path: '/profiles/:sourceKey/:personId(\\d+)/:cohortId(\\d+)',
     name: 'profile-view-cohort',
     component: () => import('@/views/ProfileView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.profiles.title' },
+    meta: { requiresAuth: true, titleKey: 'route.profiles.title', agentVisible: true, agentLabel: 'Patient profile (cohort)' },
   },
   // Analysis hub: shared parent for the four list views, each rendered inside
   // a tab strip. Default redirect respects the user's last-visited tab via
@@ -94,25 +94,25 @@ export const routes: RouteRecordRaw[] = [
         path: 'feature-analyses',
         name: 'feature-analyses',
         component: () => import('@/views/FeatureAnalysesView.vue'),
-        meta: { requiresAuth: true, titleKey: 'route.featureAnalyses.title' },
+        meta: { requiresAuth: true, titleKey: 'route.featureAnalyses.title', agentVisible: true, agentLabel: 'Feature analyses' },
       },
       {
         path: 'characterizations',
         name: 'characterizations',
         component: () => import('@/views/CharacterizationsView.vue'),
-        meta: { requiresAuth: true, titleKey: 'route.characterizations.title' },
+        meta: { requiresAuth: true, titleKey: 'route.characterizations.title', agentVisible: true, agentLabel: 'Characterizations' },
       },
       {
         path: 'pathways',
         name: 'pathways',
         component: () => import('@/views/PathwaysView.vue'),
-        meta: { requiresAuth: true, titleKey: 'route.pathways.title' },
+        meta: { requiresAuth: true, titleKey: 'route.pathways.title', agentVisible: true, agentLabel: 'Pathways' },
       },
       {
         path: 'incidence-rates',
         name: 'incidence-rates',
         component: () => import('@/views/IncidenceRatesView.vue'),
-        meta: { requiresAuth: true, titleKey: 'route.incidenceRates.title' },
+        meta: { requiresAuth: true, titleKey: 'route.incidenceRates.title', agentVisible: true, agentLabel: 'Incidence rates' },
       },
     ],
   },
@@ -127,27 +127,27 @@ export const routes: RouteRecordRaw[] = [
     path: '/feature-analyses/new',
     name: 'feature-analysis-new',
     component: () => import('@/views/FeatureAnalysisEditorView.vue'),
-    meta: { requiresAuth: true, titleKey: 'route.featureAnalyses.title' },
+    meta: { requiresAuth: true, titleKey: 'route.featureAnalyses.title', agentVisible: true, agentLabel: 'New feature analysis' },
   },
   {
     path: '/feature-analyses/:id',
     name: 'feature-analysis-edit',
     component: () => import('@/views/FeatureAnalysisEditorView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.featureAnalyses.title' },
+    meta: { requiresAuth: true, titleKey: 'route.featureAnalyses.title', agentVisible: true, agentLabel: 'Feature analysis editor' },
   },
   {
     path: '/characterizations/new',
     name: 'characterization-new',
     component: () => import('@/views/CharacterizationBuilderView.vue'),
-    meta: { requiresAuth: true, titleKey: 'route.characterizations.title' },
+    meta: { requiresAuth: true, titleKey: 'route.characterizations.title', agentVisible: true, agentLabel: 'New characterization' },
   },
   {
     path: '/characterizations/:id',
     name: 'characterization-edit',
     component: () => import('@/views/CharacterizationBuilderView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.characterizations.title' },
+    meta: { requiresAuth: true, titleKey: 'route.characterizations.title', agentVisible: true, agentLabel: 'Characterization editor' },
   },
   {
     path: '/characterizations/:id/results/:executionId',
@@ -156,7 +156,7 @@ export const routes: RouteRecordRaw[] = [
       path: `/characterizations/${to.params.id as string}`,
       query: { ...to.query, run: String(to.params.executionId) },
     }),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, agentVisible: true, agentLabel: 'Characterization results' },
   },
   {
     // NOTE: beforeEnter version-preview hook is intentionally deferred to
@@ -165,7 +165,7 @@ export const routes: RouteRecordRaw[] = [
     name: 'characterization-version-preview',
     component: () => import('@/views/CharacterizationBuilderView.vue'),
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, agentVisible: true, agentLabel: 'Characterization version preview' },
   },
   // Version preview routes (T036, T037)
   {
@@ -173,7 +173,7 @@ export const routes: RouteRecordRaw[] = [
     name: 'cohort-version-preview',
     component: () => import('@/views/CohortBuilderView.vue'),
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, agentVisible: true, agentLabel: 'Cohort version preview' },
     beforeEnter: async (to, _from, next) => {
       const { useCohortStore } = await import('@/stores/cohort')
       const cohortStore = useCohortStore()
@@ -202,7 +202,7 @@ export const routes: RouteRecordRaw[] = [
     name: 'conceptset-version-preview',
     component: () => import('@/views/ConceptsView.vue'),
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, agentVisible: true, agentLabel: 'Concept set version preview' },
     beforeEnter: async (to, _from, next) => {
       const { useConceptSetsStore } = await import('@/stores/concept-sets')
       const conceptSetsStore = useConceptSetsStore()
@@ -230,13 +230,13 @@ export const routes: RouteRecordRaw[] = [
     path: '/concepts',
     name: 'concepts',
     component: () => import('@/views/ConceptsView.vue'),
-    meta: { requiresAuth: true, titleKey: 'route.conceptSets.title' },
+    meta: { requiresAuth: true, titleKey: 'route.conceptSets.title', agentVisible: true, agentLabel: 'Concept sets' },
   },
   {
     path: '/concept/:sourceKey/:conceptId(\\d+)',
     name: 'concept-detail',
     component: () => import('@/views/ConceptDetailView.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, agentVisible: true, agentLabel: 'Concept detail' },
     props: (route) => ({
       sourceKey: route.params.sourceKey as string,
       conceptId: parseInt(route.params.conceptId as string, 10),
@@ -246,21 +246,21 @@ export const routes: RouteRecordRaw[] = [
     path: '/pathways/new',
     name: 'pathway-new',
     component: () => import('@/views/PathwayManagerView.vue'),
-    meta: { requiresAuth: true, titleKey: 'route.pathways.title' },
+    meta: { requiresAuth: true, titleKey: 'route.pathways.title', agentVisible: true, agentLabel: 'New pathway' },
   },
   {
     path: '/pathways/:id(\\d+)',
     name: 'pathway-edit',
     component: () => import('@/views/PathwayManagerView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.pathways.title' },
+    meta: { requiresAuth: true, titleKey: 'route.pathways.title', agentVisible: true, agentLabel: 'Pathway editor' },
   },
   {
     path: '/pathway-analysis/:id(\\d+)/version/:version',
     name: 'pathway-version-preview',
     component: () => import('@/views/PathwayManagerView.vue'),
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, agentVisible: true, agentLabel: 'Pathway version preview' },
     beforeEnter: async (to, _from, next) => {
       const { usePathwayStore } = await import('@/stores/pathway')
       const pathwayStore = usePathwayStore()
@@ -286,27 +286,27 @@ export const routes: RouteRecordRaw[] = [
     name: 'pathway-results',
     component: () => import('@/views/PathwayResultsView.vue'),
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, agentVisible: true, agentLabel: 'Pathway results' },
   },
   {
     path: '/incidence-rates/new',
     name: 'incidence-rate-new',
     component: () => import('@/views/IncidenceRateManagerView.vue'),
-    meta: { requiresAuth: true, titleKey: 'route.incidenceRates.title' },
+    meta: { requiresAuth: true, titleKey: 'route.incidenceRates.title', agentVisible: true, agentLabel: 'New incidence rate' },
   },
   {
     path: '/incidence-rates/:id(\\d+)',
     name: 'incidence-rate-edit',
     component: () => import('@/views/IncidenceRateManagerView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.incidenceRates.title' },
+    meta: { requiresAuth: true, titleKey: 'route.incidenceRates.title', agentVisible: true, agentLabel: 'Incidence rate editor' },
   },
   {
     path: '/incidence-rates/:id(\\d+)/version/:version',
     name: 'incidence-rate-version-preview',
     component: () => import('@/views/IncidenceRateManagerView.vue'),
     props: true,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, agentVisible: true, agentLabel: 'Incidence rate version preview' },
     beforeEnter: async (to, _from, next) => {
       const { useIncidenceRateStore } = await import('@/stores/incidence-rate')
       const irStore = useIncidenceRateStore()
@@ -332,7 +332,7 @@ export const routes: RouteRecordRaw[] = [
     name: 'datasources',
     component: () => import('@/views/DataSourcesView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.dataSources.title' },
+    meta: { requiresAuth: true, titleKey: 'route.dataSources.title', agentVisible: true, agentLabel: 'Data sources' },
   },
   {
     path: '/docs',
@@ -340,45 +340,45 @@ export const routes: RouteRecordRaw[] = [
     // Lazy-imported so neither the viewer chunk nor the bundled
     // PDF (~2 MB) is fetched until a user navigates here.
     component: () => import('@/views/DocsView.vue'),
-    meta: { requiresAuth: false },
+    meta: { requiresAuth: false, agentVisible: true, agentLabel: 'Documentation' },
   },
   // Role and Permissions Management routes
   {
     path: '/config/roles',
     name: 'role-management',
     component: () => import('@/views/config/RoleManagementView.vue'),
-    meta: { requiresAuth: true, titleKey: 'route.roleManagement.title' },
+    meta: { requiresAuth: true, titleKey: 'route.roleManagement.title', agentVisible: false },
   },
   {
     path: '/config/roles/:id',
     name: 'role-details',
     component: () => import('@/views/config/RoleDetailsView.vue'),
     props: true,
-    meta: { requiresAuth: true, titleKey: 'route.roleManagement.title' },
+    meta: { requiresAuth: true, titleKey: 'route.roleManagement.title', agentVisible: false },
   },
   {
     path: '/oauth/callback',
     name: 'oauth-callback',
     component: () => import('@/views/LandingView.vue'),
-    meta: { isOAuthCallback: true },
+    meta: { isOAuthCallback: true, agentVisible: false },
   },
   {
     path: '/saml/callback',
     name: 'saml-callback',
     component: () => import('@/views/LandingView.vue'),
-    meta: { isSAMLCallback: true },
+    meta: { isSAMLCallback: true, agentVisible: false },
   },
   {
     path: '/openid/callback',
     name: 'openid-callback',
     component: () => import('@/views/LandingView.vue'),
-    meta: { isOpenIDCallback: true },
+    meta: { isOpenIDCallback: true, agentVisible: false },
   },
   {
     path: '/:client/:token/:redirectUrl?',
     name: 'oauth-token',
     component: () => import('@/views/LandingView.vue'),
-    meta: { isOAuthCallback: true },
+    meta: { isOAuthCallback: true, agentVisible: false },
   },
   ...generatePluginRoutes(),
 ]

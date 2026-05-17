@@ -1,0 +1,307 @@
+[
+  {
+    "name": "home",
+    "path": "/",
+    "params": [],
+    "agentVisible": true,
+    "label": "Home"
+  },
+  {
+    "name": "cohorts",
+    "path": "/cohorts",
+    "params": [],
+    "agentVisible": true,
+    "label": "Cohorts"
+  },
+  {
+    "name": "cohort-new",
+    "path": "/cohorts/new",
+    "params": [],
+    "agentVisible": true,
+    "label": "New cohort"
+  },
+  {
+    "name": "cohort-edit",
+    "path": "/cohorts/:id",
+    "params": [
+      "id"
+    ],
+    "agentVisible": true,
+    "label": "Cohort editor"
+  },
+  {
+    "name": "profiles",
+    "path": "/profiles",
+    "params": [],
+    "agentVisible": true,
+    "label": "Profiles"
+  },
+  {
+    "name": "profiles-source",
+    "path": "/profiles/:sourceKey",
+    "params": [
+      "sourceKey"
+    ],
+    "agentVisible": true,
+    "label": "Profiles (source)"
+  },
+  {
+    "name": "profile-view",
+    "path": "/profiles/:sourceKey/:personId(\\\\d+)",
+    "params": [
+      "sourceKey",
+      "personId"
+    ],
+    "agentVisible": true,
+    "label": "Patient profile"
+  },
+  {
+    "name": "profile-view-cohort",
+    "path": "/profiles/:sourceKey/:personId(\\\\d+)/:cohortId(\\\\d+)",
+    "params": [
+      "sourceKey",
+      "personId",
+      "cohortId"
+    ],
+    "agentVisible": true,
+    "label": "Patient profile (cohort)"
+  },
+  {
+    "name": "feature-analyses",
+    "path": "feature-analyses",
+    "params": [],
+    "agentVisible": true,
+    "label": "Feature analyses"
+  },
+  {
+    "name": "characterizations",
+    "path": "characterizations",
+    "params": [],
+    "agentVisible": true,
+    "label": "Characterizations"
+  },
+  {
+    "name": "pathways",
+    "path": "pathways",
+    "params": [],
+    "agentVisible": true,
+    "label": "Pathways"
+  },
+  {
+    "name": "incidence-rates",
+    "path": "incidence-rates",
+    "params": [],
+    "agentVisible": true,
+    "label": "Incidence rates"
+  },
+  {
+    "name": "feature-analysis-new",
+    "path": "/feature-analyses/new",
+    "params": [],
+    "agentVisible": true,
+    "label": "New feature analysis"
+  },
+  {
+    "name": "feature-analysis-edit",
+    "path": "/feature-analyses/:id",
+    "params": [
+      "id"
+    ],
+    "agentVisible": true,
+    "label": "Feature analysis editor"
+  },
+  {
+    "name": "characterization-new",
+    "path": "/characterizations/new",
+    "params": [],
+    "agentVisible": true,
+    "label": "New characterization"
+  },
+  {
+    "name": "characterization-edit",
+    "path": "/characterizations/:id",
+    "params": [
+      "id"
+    ],
+    "agentVisible": true,
+    "label": "Characterization editor"
+  },
+  {
+    "name": "characterization-results",
+    "path": "/characterizations/:id/results/:executionId",
+    "params": [
+      "id",
+      "executionId"
+    ],
+    "agentVisible": true,
+    "label": "Characterization results"
+  },
+  {
+    "name": "characterization-version-preview",
+    "path": "/characterization/:id/version/:version",
+    "params": [
+      "id",
+      "version"
+    ],
+    "agentVisible": true,
+    "label": "Characterization version preview"
+  },
+  {
+    "name": "cohort-version-preview",
+    "path": "/cohortdefinition/:id/version/:version",
+    "params": [
+      "id",
+      "version"
+    ],
+    "agentVisible": true,
+    "label": "Cohort version preview"
+  },
+  {
+    "name": "conceptset-version-preview",
+    "path": "/conceptset/:id/version/:version",
+    "params": [
+      "id",
+      "version"
+    ],
+    "agentVisible": true,
+    "label": "Concept set version preview"
+  },
+  {
+    "name": "concepts",
+    "path": "/concepts",
+    "params": [],
+    "agentVisible": true,
+    "label": "Concept sets"
+  },
+  {
+    "name": "concept-detail",
+    "path": "/concept/:sourceKey/:conceptId(\\\\d+)",
+    "params": [
+      "sourceKey",
+      "conceptId"
+    ],
+    "agentVisible": true,
+    "label": "Concept detail"
+  },
+  {
+    "name": "pathway-new",
+    "path": "/pathways/new",
+    "params": [],
+    "agentVisible": true,
+    "label": "New pathway"
+  },
+  {
+    "name": "pathway-edit",
+    "path": "/pathways/:id(\\\\d+)",
+    "params": [
+      "id"
+    ],
+    "agentVisible": true,
+    "label": "Pathway editor"
+  },
+  {
+    "name": "pathway-version-preview",
+    "path": "/pathway-analysis/:id(\\\\d+)/version/:version",
+    "params": [
+      "id",
+      "version"
+    ],
+    "agentVisible": true,
+    "label": "Pathway version preview"
+  },
+  {
+    "name": "pathway-results",
+    "path": "/pathways/:id(\\\\d+)/results/:executionId(\\\\d+)",
+    "params": [
+      "id",
+      "executionId"
+    ],
+    "agentVisible": true,
+    "label": "Pathway results"
+  },
+  {
+    "name": "incidence-rate-new",
+    "path": "/incidence-rates/new",
+    "params": [],
+    "agentVisible": true,
+    "label": "New incidence rate"
+  },
+  {
+    "name": "incidence-rate-edit",
+    "path": "/incidence-rates/:id(\\\\d+)",
+    "params": [
+      "id"
+    ],
+    "agentVisible": true,
+    "label": "Incidence rate editor"
+  },
+  {
+    "name": "incidence-rate-version-preview",
+    "path": "/incidence-rates/:id(\\\\d+)/version/:version",
+    "params": [
+      "id",
+      "version"
+    ],
+    "agentVisible": true,
+    "label": "Incidence rate version preview"
+  },
+  {
+    "name": "datasources",
+    "path": "/datasources/:sourceKey?/:reportType?",
+    "params": [
+      "sourceKey",
+      "reportType"
+    ],
+    "agentVisible": true,
+    "label": "Data sources"
+  },
+  {
+    "name": "docs",
+    "path": "/docs",
+    "params": [],
+    "agentVisible": true,
+    "label": "Documentation"
+  },
+  {
+    "name": "role-management",
+    "path": "/config/roles",
+    "params": [],
+    "agentVisible": false
+  },
+  {
+    "name": "role-details",
+    "path": "/config/roles/:id",
+    "params": [
+      "id"
+    ],
+    "agentVisible": false
+  },
+  {
+    "name": "oauth-callback",
+    "path": "/oauth/callback",
+    "params": [],
+    "agentVisible": false
+  },
+  {
+    "name": "saml-callback",
+    "path": "/saml/callback",
+    "params": [],
+    "agentVisible": false
+  },
+  {
+    "name": "openid-callback",
+    "path": "/openid/callback",
+    "params": [],
+    "agentVisible": false
+  },
+  {
+    "name": "oauth-token",
+    "path": "/:client/:token/:redirectUrl?",
+    "params": [
+      "client",
+      "token",
+      "redirectUrl"
+    ],
+    "agentVisible": false
+  }
+]

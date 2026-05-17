@@ -11,6 +11,8 @@ import {
   type UIMessage,
 } from 'ai'
 import type { RouteContext } from './shell-bridge'
+import { proposalFromToolCall } from './shell-bridge'
+import type { MessageBus } from './main'
 import type { AskState, Plan, ProposalState } from './types'
 import {
   activePlan,
@@ -21,6 +23,103 @@ import {
   restorePlans,
   snapshotPlans,
 } from './plan-state'
+
+let _hostBus: MessageBus | null = null
+let hostApplyProposal: ((p: unknown) => void) | null = null
+export function setHostBridge(opts: { bus: MessageBus; applyProposal: (p: unknown) => void }) {
+  _hostBus = opts.bus
+  void _hostBus // reserved for Task 7 — kept for future handler wiring
+  hostApplyProposal = opts.applyProposal
+}
+
+export interface LastNavigation {
+  id: string             // tool call id, used to dedupe display
+  toName: string         // route the agent navigated to
+  reason?: string
+  previous: { name: string; params: Record<string, string | number> } | null
+  at: number             // Date.now() — used by ChatPanel to expire after 5s
+}
+
+export const lastNavigation = ref<LastNavigation | null>(null)
+
+export interface NavigateHandlerDeps {
+  addToolResult: (r: { tool: string; toolCallId: string; output: unknown }) => void
+  applyProposal: (p: unknown) => void
+}
+
+export function handleNavigateTool(
+  toolCall: { toolCallId: string; input: unknown },
+  deps: NavigateHandlerDeps
+): void {
+  const proposal = proposalFromToolCall(
+    'navigate_to',
+    (toolCall.input ?? {}) as Parameters<typeof proposalFromToolCall>[1]
+  )
+  if (!proposal) {
+    deps.addToolResult({
+      tool: 'navigate_to',
+      toolCallId: toolCall.toolCallId,
+      output: {
+        success: false,
+        applied: false,
+        error: 'Unknown or hidden view',
+        instruction:
+          'navigate_to was rejected because the view is not in the route manifest. List your available views or pick a different one.',
+      },
+    })
+    return
+  }
+  const route = (proposal as unknown as { route: { name: string }; reason?: string }).route
+  const reason = (proposal as unknown as { reason?: string }).reason
+
+  // Capture the previous route from the last-fetched shell context so the
+  // user can undo. sessionRouteContext is refreshed by ChatPanel before
+  // each message send, so it reflects where the user was AT SEND TIME —
+  // which is when the model decided to navigate.
+  const ctx = sessionRouteContext.value
+  const previous = ctx?.routeName
+    ? { name: ctx.routeName, params: { ...(ctx.routeParams ?? {}) } as Record<string, string | number> }
+    : null
+
+  deps.applyProposal(proposal)
+
+  lastNavigation.value = {
+    id: toolCall.toolCallId,
+    toName: route.name,
+    reason,
+    previous,
+    at: Date.now(),
+  }
+
+  deps.addToolResult({
+    tool: 'navigate_to',
+    toolCallId: toolCall.toolCallId,
+    output: {
+      success: true,
+      applied: true,
+      route: route.name,
+      undoAvailable: previous !== null,
+      instruction:
+        'You took the user to a new view. Continue your turn; the user can undo via the toast if they wanted to stay.',
+    },
+  })
+}
+
+export function undoLastNavigation(): boolean {
+  const ln = lastNavigation.value
+  if (!ln || !ln.previous || !hostApplyProposal) return false
+  hostApplyProposal({
+    kind: 'navigate',
+    route: { name: ln.previous.name, params: ln.previous.params },
+    reason: 'Undo Pythia navigation',
+  })
+  lastNavigation.value = null
+  return true
+}
+
+export function dismissLastNavigation(): void {
+  lastNavigation.value = null
+}
 
 const INDEX_KEY = 'cohort-agent-plugin.sessions.v1.index'
 const ACTIVE_KEY = 'cohort-agent-plugin.sessions.v1.active'
@@ -34,7 +133,6 @@ export const CLIENT_SIDE_TOOLS = new Set([
   'add_exit_criterion',
   'set_censor_event',
   'add_inclusion_rule',
-  'navigate_to',
   'create_standalone_concept_set',
   'create_feature_analysis',
   'create_characterization',
@@ -243,6 +341,79 @@ function resolveMaxAutoSteps(): number {
 import { locateGroup } from './locate-group'
 export { locateGroup }
 
+export interface ProposalResolver {
+  addToolResult: (r: { tool: string; toolCallId: string; output: unknown }) => void
+}
+
+const PROPOSAL_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes
+const proposalTimers = new Map<string, ReturnType<typeof setTimeout>>()
+
+function clearProposalTimers() {
+  for (const t of proposalTimers.values()) clearTimeout(t)
+  proposalTimers.clear()
+}
+
+export function recordProposal(
+  toolCall: { toolCallId: string; toolName: string; input: unknown },
+  deps: ProposalResolver,
+  groupInfo?: { groupId?: string; groupIndex?: number }
+): void {
+  const groupId = groupInfo?.groupId
+  const groupIndex = groupInfo?.groupIndex
+  proposals.value[toolCall.toolCallId] = {
+    id: toolCall.toolCallId,
+    toolName: toolCall.toolName,
+    args: (toolCall.input ?? {}) as ProposalState['args'],
+    status: 'pending',
+    groupId,
+    groupIndex,
+  }
+  // Timeout fallback: if the user closes the panel without deciding, the
+  // model would otherwise be stuck waiting on this tool-result forever.
+  // After 10 minutes, stub a pending decision so the loop terminates.
+  const t = setTimeout(() => {
+    if (proposals.value[toolCall.toolCallId]?.status === 'pending') {
+      deps.addToolResult({
+        tool: toolCall.toolName,
+        toolCallId: toolCall.toolCallId,
+        output: {
+          decision: 'pending',
+          timeout: true,
+          instruction:
+            'The user has not decided within 10 minutes. End your turn with a brief recap; they can act on the proposal card later.',
+        },
+      })
+    }
+    proposalTimers.delete(toolCall.toolCallId)
+  }, PROPOSAL_TIMEOUT_MS)
+  proposalTimers.set(toolCall.toolCallId, t)
+}
+
+export function resolveProposal(
+  toolCallId: string,
+  decision: 'accepted' | 'rejected',
+  deps: ProposalResolver
+): void {
+  const p = proposals.value[toolCallId]
+  if (!p) return
+  const timer = proposalTimers.get(toolCallId)
+  if (timer) {
+    clearTimeout(timer)
+    proposalTimers.delete(toolCallId)
+  }
+  deps.addToolResult({
+    tool: p.toolName,
+    toolCallId,
+    output: {
+      decision,
+      instruction:
+        decision === 'accepted'
+          ? 'The user accepted your proposal. Continue your turn — propose the next step or summarise.'
+          : 'The user rejected your proposal. Ask one clarifying question or propose an alternative; do not re-propose the same thing.',
+    },
+  })
+}
+
 export function getChatInstance(): Chat<UIMessage> {
   if (chatInstance) return chatInstance
   const id = ensureActiveSession()
@@ -326,6 +497,17 @@ export function getChatInstance(): Chat<UIMessage> {
       lastFinishReason = finishReason
     },
     onToolCall: ({ toolCall }: { toolCall: { toolCallId: string; toolName: string; input: unknown } }) => {
+      if (toolCall.toolName === 'navigate_to') {
+        if (!hostApplyProposal) return
+        handleNavigateTool(
+          { toolCallId: toolCall.toolCallId, input: toolCall.input },
+          {
+            addToolResult: (r) => chat.addToolResult(r),
+            applyProposal: hostApplyProposal,
+          }
+        )
+        return
+      }
       if (isPlanTool(toolCall.toolName)) {
         const result = applyPlanToolCall(toolCall.toolName, toolCall.input)
         chat.addToolResult({
@@ -380,27 +562,13 @@ export function getChatInstance(): Chat<UIMessage> {
       }
       if (CLIENT_SIDE_TOOLS.has(toolCall.toolName)) {
         const { groupId, groupIndex } = locateGroup(chat.messages, toolCall.toolCallId)
-        proposals.value[toolCall.toolCallId] = {
-          id: toolCall.toolCallId,
-          toolName: toolCall.toolName,
-          args: (toolCall.input ?? {}) as ProposalState['args'],
-          status: 'pending',
-          groupId,
-          groupIndex,
-        }
-        // Auto-stub so the multi-turn loop can continue, but make the
-        // message itself terminal so the model stops calling more tools
-        // and produces its final summary text instead.
-        chat.addToolResult({
-          tool: toolCall.toolName,
-          toolCallId: toolCall.toolCallId,
-          output: {
-            success: true,
-            presented: true,
-            awaitingUserDecision: true,
-            instruction: 'The proposal has been shown to the user as an interactive card. STOP calling tools now. End your turn with a brief one-paragraph summary of what you proposed and wait for the user to accept, reject, or refine.',
-          },
-        })
+        recordProposal(
+          { toolCallId: toolCall.toolCallId, toolName: toolCall.toolName, input: toolCall.input },
+          { addToolResult: (r) => chat.addToolResult(r) },
+          { groupId, groupIndex }
+        )
+        // No auto-stub — accept/reject in ChatPanel calls resolveProposal,
+        // which sends the real outcome as the tool-result.
       }
     },
   })
@@ -411,6 +579,7 @@ export function getChatInstance(): Chat<UIMessage> {
 }
 
 export function newChat() {
+  clearProposalTimers()
   const id = newSessionId()
   safeWrite(ACTIVE_KEY, id)
   activeSessionId.value = id
@@ -426,6 +595,7 @@ export function newChat() {
 
 export function switchToSession(id: string) {
   if (id === activeSessionId.value) return
+  clearProposalTimers()
   const persisted = readSession(id)
   safeWrite(ACTIVE_KEY, id)
   activeSessionId.value = id
@@ -452,6 +622,7 @@ export function deleteChatSession(id: string) {
 }
 
 export function clearCurrentSession() {
+  clearProposalTimers()
   if (chatInstance) chatInstance.messages = []
   proposals.value = {}
   asks.value = {}
