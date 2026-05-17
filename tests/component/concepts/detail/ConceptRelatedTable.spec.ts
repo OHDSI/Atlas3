@@ -1,9 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { createRouter, createMemoryHistory } from 'vue-router'
+import { createPinia, setActivePinia } from 'pinia'
 import ConceptRelatedTable from '@/components/concepts/detail/ConceptRelatedTable.vue'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
@@ -33,6 +34,11 @@ const related: RelatedConcept[] = [
 ]
 
 describe('ConceptRelatedTable', () => {
+  beforeEach(() => {
+    // Pinia is required by useI18n() inside the component tree.
+    setActivePinia(createPinia())
+  })
+
   it('renders one row per related concept with relationship name and vocabulary', () => {
     const vuetify = createVuetify({ components, directives })
     const router = createRouter({ history: createMemoryHistory(), routes: [] })

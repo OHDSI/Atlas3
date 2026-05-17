@@ -288,4 +288,185 @@ describe('Config Validator', () => {
       expect(summary).toContain('more errors')
     })
   })
+
+  describe('validateAtlasConfig — cross-reference branches', () => {
+    // Build a config that actually passes AtlasConfigSchema.parse() so we
+    // reach validateCrossReferences (instead of bailing in the catch).
+    function baseConfig(): Record<string, unknown> {
+      return {
+        criteriaTypes: {
+          conditionOccurrence: {
+            nameKey: 'filters.condition.name',
+            descriptionKeys: { all: 'filters.condition.description' },
+          },
+        },
+        attributeMapping: {
+          conditionOccurrence: [
+            { id: 'age', type: 'numericRange', nameKey: 'attributes.age.name' },
+          ],
+        },
+        sections: [
+          {
+            id: 'initialEvents',
+            name: 'Initial Events',
+            buttonText: 'Add Initial Event',
+            excludeTypes: [],
+          },
+        ],
+      }
+    }
+
+    it('warns for attributeMapping key with no matching criteriaTypes', () => {
+      const config = baseConfig() as {
+        attributeMapping: Record<string, unknown[]>
+      }
+      config.attributeMapping.orphanFilter = [
+        { id: 'attr1', type: 'numericRange', nameKey: 'attributes.attr1.name' },
+      ]
+      const result = validateAtlasConfig(config)
+      expect(result.warnings.map(w => w.code)).toContain('ORPHANED_ATTRIBUTE_MAPPING')
+    })
+
+    it('warns for criteriaTypes key with no matching attributeMapping', () => {
+      const config = baseConfig() as {
+        criteriaTypes: Record<string, unknown>
+      }
+      config.criteriaTypes.lonelyFilter = {
+        nameKey: 'filters.lonely.name',
+        descriptionKeys: { all: 'filters.lonely.description' },
+      }
+      const result = validateAtlasConfig(config)
+      expect(result.warnings.map(w => w.code)).toContain('MISSING_ATTRIBUTE_MAPPING')
+    })
+
+    it('errors when an attribute references an unknown section via excludeFromSections', () => {
+      const config = baseConfig() as {
+        attributeMapping: Record<string, unknown[]>
+      }
+      config.attributeMapping.conditionOccurrence = [
+        {
+          id: 'age',
+          type: 'numericRange',
+          nameKey: 'attributes.age.name',
+          excludeFromSections: ['ghostSection'],
+        },
+      ]
+      const result = validateAtlasConfig(config)
+      expect(result.errors.map(e => e.code)).toContain('INVALID_SECTION_REFERENCE')
+    })
+
+    it('warns when section excludeTypes references an unknown filter type', () => {
+      const config = baseConfig() as {
+        sections: Array<{ id: string; name: string; buttonText: string; excludeTypes: string[] }>
+      }
+      config.sections = [
+        {
+          id: 'initialEvents',
+          name: 'Initial Events',
+          buttonText: 'Add Initial Event',
+          excludeTypes: ['ghostFilter'],
+        },
+      ]
+      const result = validateAtlasConfig(config)
+      expect(result.warnings.map(w => w.code)).toContain('INVALID_EXCLUDE_TYPE')
+    })
+
+    it('accepts sections provided as an object (id→section map)', () => {
+      const config = baseConfig() as Record<string, unknown>
+      config.sections = {
+        initialEvents: {
+          name: 'Initial Events',
+          buttonText: 'Add Initial Event',
+          excludeTypes: [],
+        },
+      }
+      // Add an attribute that references the section id derived from the map key
+      ;(config.attributeMapping as Record<string, unknown[]>).conditionOccurrence = [
+        {
+          id: 'age',
+          type: 'numericRange',
+          nameKey: 'attributes.age.name',
+          excludeFromSections: ['initialEvents'],
+        },
+      ]
+      const result = validateAtlasConfig(config)
+      // Section id derived from key should match - no INVALID_SECTION_REFERENCE
+      expect(result.errors.map(e => e.code)).not.toContain('INVALID_SECTION_REFERENCE')
+    })
+  })
+
+  describe('formatValidationSummary — truncation and scope branches', () => {
+    it('truncates long warning lists at 3', () => {
+      const result = {
+        valid: true,
+        errors: [],
+        warnings: Array(8).fill(null).map((_, i) => ({
+          filterType: `f${i}`,
+          message: `Warn ${i}`,
+          code: `W${i}`,
+        })),
+        validFilterTypes: [],
+        invalidFilterTypes: [],
+        timestamp: new Date(),
+      }
+      const summary = formatValidationSummary(result)
+      expect(summary).toContain('more warnings')
+    })
+
+    it('renders global-scoped errors (no filterType) with [global] location', () => {
+      const result = {
+        valid: false,
+        errors: [{ message: 'Top-level boom', code: 'TOP' }],
+        warnings: [],
+        validFilterTypes: [],
+        invalidFilterTypes: [],
+        timestamp: new Date(),
+      }
+      const summary = formatValidationSummary(result)
+      expect(summary).toContain('[global]')
+    })
+
+    it('renders attribute-scoped errors with [filterType.attributeId] location', () => {
+      const result = {
+        valid: false,
+        errors: [
+          { filterType: 'condition', attributeId: 'age', message: 'bad', code: 'X' },
+        ],
+        warnings: [],
+        validFilterTypes: [],
+        invalidFilterTypes: ['condition'],
+        timestamp: new Date(),
+      }
+      const summary = formatValidationSummary(result)
+      expect(summary).toContain('[condition.age]')
+    })
+
+    it('renders global-scoped warnings (no filterType) with [global] location', () => {
+      const result = {
+        valid: true,
+        errors: [],
+        warnings: [{ message: 'Global warning', code: 'GW' }],
+        validFilterTypes: [],
+        invalidFilterTypes: [],
+        timestamp: new Date(),
+      }
+      const summary = formatValidationSummary(result)
+      expect(summary).toContain('[global]')
+    })
+
+    it('renders attribute-scoped warnings with [filterType.attributeId] location', () => {
+      const result = {
+        valid: true,
+        errors: [],
+        warnings: [
+          { filterType: 'condition', attributeId: 'age', message: 'soft warn', code: 'W' },
+        ],
+        validFilterTypes: ['condition'],
+        invalidFilterTypes: [],
+        timestamp: new Date(),
+      }
+      const summary = formatValidationSummary(result)
+      expect(summary).toContain('[condition.age]')
+    })
+  })
 })

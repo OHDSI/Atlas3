@@ -4,9 +4,10 @@
  * Tests for session expiry warning modal component
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mount, VueWrapper } from '@vue/test-utils';
 import { createVuetify } from 'vuetify';
+import { createPinia, setActivePinia } from 'pinia';
 import SessionExpiryModal from '@/components/auth/SessionExpiryModal.vue';
 
 const vuetify = createVuetify();
@@ -15,6 +16,9 @@ describe('SessionExpiryModal.vue', () => {
   let wrapper: VueWrapper;
 
   beforeEach(() => {
+    // Pinia is required by useI18n() inside AtlasDialog/AtlasButton.
+    // Each spec file runs in its own worker; install a fresh pinia per test.
+    setActivePinia(createPinia());
     vi.useFakeTimers();
   });
 

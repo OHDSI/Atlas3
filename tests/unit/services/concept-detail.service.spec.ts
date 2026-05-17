@@ -90,6 +90,45 @@ describe('concept-detail.service', () => {
       expect(httpClient).not.toHaveBeenCalled()
     })
 
+    it('returns null and logs error when the drilldown response fails validation', async () => {
+      (httpClient as Mock).mockResolvedValueOnce({ ageAtFirstOccurrence: 'not-an-array' })
+      const result = await getConceptDrilldown('SYNPUF1K', 'Condition', 201826)
+      expect(result).toBeNull()
+    })
+
+    it('returns null when the drilldown HTTP call rejects', async () => {
+      (httpClient as Mock).mockRejectedValueOnce(new Error('boom'))
+      const result = await getConceptDrilldown('SYNPUF1K', 'Condition', 201826)
+      expect(result).toBeNull()
+    })
+
+    it('falls back to empty arrays when drilldown sections are missing', async () => {
+      (httpClient as Mock).mockResolvedValueOnce({}) // no ageAtFirstOccurrence / etc.
+      const result = await getConceptDrilldown('SYNPUF1K', 'Condition', 201826)
+      expect(result).not.toBeNull()
+      expect(result!.ageAtFirstOccurrence).toEqual([])
+      expect(result!.prevalenceByGenderAgeYear).toEqual([])
+      expect(result!.prevalenceByMonth).toEqual([])
+    })
+
+    it('returns [] from getConceptRelated when the HTTP call rejects', async () => {
+      (httpClient as Mock).mockRejectedValueOnce(new Error('network error'))
+      const result = await getConceptRelated('SYNPUF1K', 1)
+      expect(result).toEqual([])
+    })
+
+    it('returns [] from getConceptAncestorAndDescendant when the HTTP call rejects', async () => {
+      (httpClient as Mock).mockRejectedValueOnce(new Error('network error'))
+      const result = await getConceptAncestorAndDescendant('SYNPUF1K', 1)
+      expect(result).toEqual([])
+    })
+
+    it('returns [] from getConceptAncestorAndDescendant on validation failure', async () => {
+      (httpClient as Mock).mockResolvedValueOnce([{ broken: true }])
+      const result = await getConceptAncestorAndDescendant('SYNPUF1K', 1)
+      expect(result).toEqual([])
+    })
+
     it('fetches and maps drilldown for a Condition concept', async () => {
       (httpClient as Mock).mockResolvedValueOnce({
         ageAtFirstOccurrence: [

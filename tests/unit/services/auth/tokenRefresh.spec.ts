@@ -108,6 +108,101 @@ describe('TokenRefreshService', () => {
     });
   });
 
+  describe('Failure paths', () => {
+    it('returns false and records lastError when retryCount is already at max', async () => {
+      vi.useRealTimers()
+      tokenRefreshService.resetState()
+      const { authService } = await import('@/services/auth/authService')
+      vi.mocked(authService.refreshToken).mockResolvedValue(false)
+
+      // Invoke the private executeRefresh directly at the max retry count so
+      // it does not attempt another (deferred) retry — this exercises the
+      // "max retries reached" branch (lines 94-95 of the source).
+      const result = await (
+        tokenRefreshService as unknown as {
+          executeRefresh: (n: number) => Promise<boolean>
+        }
+      ).executeRefresh(3)
+
+      expect(result).toBe(false)
+      const state = tokenRefreshService.getState()
+      expect(state.lastError).toBeInstanceOf(Error)
+      expect(state.lastFailureTime).toBeInstanceOf(Date)
+    })
+
+    it('returns false on max retries when authService rejects', async () => {
+      vi.useRealTimers()
+      tokenRefreshService.resetState()
+      const { authService } = await import('@/services/auth/authService')
+      vi.mocked(authService.refreshToken).mockRejectedValue(new Error('refresh boom'))
+
+      const result = await (
+        tokenRefreshService as unknown as {
+          executeRefresh: (n: number) => Promise<boolean>
+        }
+      ).executeRefresh(3)
+
+      expect(result).toBe(false)
+      const state = tokenRefreshService.getState()
+      expect(state.lastError?.message).toBe('refresh boom')
+    })
+
+    it('coalesces concurrent refresh calls into a single in-flight promise', async () => {
+      vi.useRealTimers()
+      tokenRefreshService.resetState()
+      const { authService } = await import('@/services/auth/authService')
+      // Resolve the next tick so both callers attach to the same in-flight call.
+      vi.mocked(authService.refreshToken).mockImplementation(
+        () => new Promise<boolean>((resolve) => setTimeout(() => resolve(true), 10))
+      )
+
+      const p1 = tokenRefreshService.refreshToken()
+      // Yield so refreshToken's sync prelude runs and state.refreshPromise is set.
+      await Promise.resolve()
+      const p2 = tokenRefreshService.refreshToken()
+
+      const [r1, r2] = await Promise.all([p1, p2])
+
+      expect(r1).toBe(true)
+      expect(r2).toBe(true)
+      // Only one underlying refresh call should have been made.
+      expect(authService.refreshToken).toHaveBeenCalledTimes(1)
+    })
+
+    it('skips refresh when last refresh was recent (MIN_REFRESH_INTERVAL_MS)', async () => {
+      vi.useRealTimers()
+      tokenRefreshService.resetState()
+      const { authService } = await import('@/services/auth/authService')
+      vi.mocked(authService.refreshToken).mockResolvedValue(true)
+      await tokenRefreshService.refreshToken()
+
+      // Immediately re-request — should be skipped (returns true without calling authService).
+      vi.mocked(authService.refreshToken).mockClear()
+      const result = await tokenRefreshService.refreshToken()
+      expect(result).toBe(true)
+      expect(authService.refreshToken).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('resetState', () => {
+    it('clears all state fields back to their defaults', async () => {
+      vi.useRealTimers()
+      const { authService } = await import('@/services/auth/authService')
+      vi.mocked(authService.refreshToken).mockResolvedValue(true)
+      tokenRefreshService.resetState()
+      await tokenRefreshService.refreshToken()
+
+      tokenRefreshService.resetState()
+      const state = tokenRefreshService.getState()
+      expect(state.isRefreshing).toBe(false)
+      expect(state.refreshPromise).toBeNull()
+      expect(state.retryCount).toBe(0)
+      expect(state.lastRefreshTime).toBeNull()
+      expect(state.lastFailureTime).toBeNull()
+      expect(state.lastError).toBeNull()
+    })
+  })
+
   describe('State management', () => {
     it('should provide state snapshot via getState()', async () => {
       const state = tokenRefreshService.getState();

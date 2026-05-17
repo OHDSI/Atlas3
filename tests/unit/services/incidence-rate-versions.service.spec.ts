@@ -68,4 +68,33 @@ describe('IR versions service', () => {
     expect(http.httpPut).toHaveBeenCalledWith('/ir/7/version/3/createAsset', undefined)
     expect(r.id).toBe(99)
   })
+
+  describe('error / validation branches', () => {
+    it('getIncidenceRateVersions throws on a malformed list payload', async () => {
+      vi.mocked(http.httpGet).mockResolvedValueOnce([{ not: 'a version' }])
+      await expect(getIncidenceRateVersions(7)).rejects.toThrow('Invalid version list')
+    })
+
+    it('getIncidenceRateVersions rethrows when the network layer rejects', async () => {
+      vi.mocked(http.httpGet).mockRejectedValueOnce(new Error('http 404'))
+      await expect(getIncidenceRateVersions(7)).rejects.toThrow('http 404')
+    })
+
+    it('getIncidenceRateVersion throws on a malformed asset payload', async () => {
+      vi.mocked(http.httpGet).mockResolvedValueOnce({ wrong: true })
+      await expect(getIncidenceRateVersion(7, 3)).rejects.toThrow('Invalid version asset')
+    })
+
+    it('updateIncidenceRateVersion throws when the PUT response is invalid', async () => {
+      vi.mocked(http.httpPut).mockResolvedValueOnce({ bogus: 1 })
+      await expect(updateIncidenceRateVersion(7, 3, { comment: 'x' })).rejects.toThrow(
+        'Invalid version update response'
+      )
+    })
+
+    it('copyIncidenceRateVersion throws when the createAsset response is malformed', async () => {
+      vi.mocked(http.httpPut).mockResolvedValueOnce({ noId: true })
+      await expect(copyIncidenceRateVersion(7, 3)).rejects.toThrow('Invalid copyVersion response')
+    })
+  })
 })
