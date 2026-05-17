@@ -68,6 +68,8 @@ export interface TimelinePoint {
   conceptName: string
   startDay: number
   endDay: number | null
+  /** True when endDay is a number greater than startDay — render as a bar. */
+  isRange: boolean
   /** explicit highlight color (or DEFAULT_HIGHLIGHT_COLOR) */
   color: string
   /** domain-derived fallback color for un-highlighted points */
@@ -82,6 +84,7 @@ export interface TimelineDataset {
 export function useTimelineFilters(): {
   uniqueConcepts: ComputedRef<UniqueConcept[]>
   chartSeries: ComputedRef<TimelineDataset[]>
+  axisExtent: ComputedRef<{ min: number; max: number }>
 } {
   const store = useProfileStore()
 
@@ -105,6 +108,7 @@ export function useTimelineFilters(): {
     const buckets = new Map<string, TimelinePoint[]>()
     for (const r of store.filteredRecords) {
       const domain = normalizeDomain(r.domain)
+      const endDay = r.endDay ?? null
       const point: TimelinePoint = {
         conceptId: r.conceptId,
         conceptName: r.conceptName,
@@ -112,7 +116,8 @@ export function useTimelineFilters(): {
         // r.endDay is `number | null | undefined` after the schema
         // accepted both shapes; coerce undefined to null so the
         // TimelinePoint contract stays `number | null`.
-        endDay: r.endDay ?? null,
+        endDay,
+        isRange: endDay !== null && endDay > r.startDay,
         color: store.highlights.get(r.conceptId) ?? DEFAULT_HIGHLIGHT_COLOR,
         domainColor: resolveDomainColorHex(domain),
       }
@@ -126,5 +131,25 @@ export function useTimelineFilters(): {
     return Array.from(buckets.entries()).map(([domain, points]) => ({ domain, points }))
   })
 
-  return { uniqueConcepts, chartSeries }
+  const axisExtent = computed<{ min: number; max: number }>(() => {
+    // Anchor on cohort entry (day 0) so the axis always shows the
+    // index event even when all records fall on one side of it.
+    let min = 0
+    let max = 0
+    for (const r of store.person?.records ?? []) {
+      if (r.startDay < min) min = r.startDay
+      if (r.startDay > max) max = r.startDay
+      if (typeof r.endDay === 'number') {
+        if (r.endDay < min) min = r.endDay
+        if (r.endDay > max) max = r.endDay
+      }
+    }
+    for (const op of store.person?.observationPeriods ?? []) {
+      if (typeof op.startDays === 'number' && op.startDays < min) min = op.startDays
+      if (typeof op.endDays === 'number' && op.endDays > max) max = op.endDays
+    }
+    return { min, max }
+  })
+
+  return { uniqueConcepts, chartSeries, axisExtent }
 }
