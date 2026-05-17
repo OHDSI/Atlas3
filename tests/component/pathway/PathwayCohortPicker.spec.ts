@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia, setActivePinia } from 'pinia'
 import PathwayCohortPicker from '@/components/pathway/PathwayCohortPicker.vue'
 
 const vuetify = createVuetify({ components, directives })
@@ -18,6 +19,11 @@ vi.mock('@/services/webapi', () => ({
 }))
 
 describe('PathwayCohortPicker', () => {
+  beforeEach(() => {
+    // Pinia is required by useI18n() inside the component tree.
+    setActivePinia(createPinia())
+  })
+
   it('emits select with chosen cohort refs', async () => {
     const w = mount(PathwayCohortPicker, {
       props: { modelValue: true, excludedIds: [] },

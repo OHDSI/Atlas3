@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia, setActivePinia } from 'pinia'
 import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
 import type { Concept } from '@/models/concept-set.types'
 
@@ -18,6 +19,11 @@ const concept: Concept = {
 }
 
 describe('ConceptDetailHeader', () => {
+  beforeEach(() => {
+    // Pinia is required by useI18n() inside the component tree.
+    setActivePinia(createPinia())
+  })
+
   it('renders concept name, vocabulary, ID, domain, class as chips', () => {
     const vuetify = createVuetify({ components, directives })
     const wrapper = mount(ConceptDetailHeader, {

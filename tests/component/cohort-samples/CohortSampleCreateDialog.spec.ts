@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia, setActivePinia } from 'pinia'
 import CohortSampleCreateDialog from '@/components/cohort-samples/CohortSampleCreateDialog.vue'
 import {
   GENDER_FEMALE_CONCEPT_ID,
@@ -21,6 +22,8 @@ function makeWrapper() {
 
 describe('CohortSampleCreateDialog', () => {
   beforeEach(() => {
+    // Pinia is required by useI18n() inside AtlasDialog/AtlasButton.
+    setActivePinia(createPinia())
     document.body.innerHTML = ''
   })
 

@@ -6,6 +6,7 @@ import { mount, VueWrapper } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia, setActivePinia } from 'pinia'
 import ClinicalDomainReport from '@/components/datasources/ClinicalDomainReport.vue'
 import DomainPrevalenceTreemap from '@/components/datasources/DomainPrevalenceTreemap.vue'
 import DomainPrevalenceTable from '@/components/datasources/DomainPrevalenceTable.vue'
@@ -71,6 +72,8 @@ describe('ClinicalDomainReport', () => {
   let wrapper: VueWrapper
 
   beforeEach(() => {
+    // Pinia is required by useDataSourcesStore() inside the component.
+    setActivePinia(createPinia())
     wrapper = mountComponent()
   })
 

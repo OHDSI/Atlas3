@@ -2,7 +2,11 @@ import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
 vi.mock('@/services/webapi')
-vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
+vi.mock('@/utils/logger', () => ({
+  logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
+const routerPushMock = vi.fn()
+vi.mock('vue-router', () => ({ useRouter: () => ({ push: routerPushMock }) }))
 
 let webapi: typeof import('@/services/webapi')
 let usePathwayBuilder: typeof import('@/composables/usePathwayBuilder').usePathwayBuilder
@@ -83,5 +87,113 @@ describe('usePathwayBuilder', () => {
     const ok = await remove()
     expect(webapi.deletePathway).toHaveBeenCalledWith(5)
     expect(ok).toBe(true)
+  })
+
+  it('save returns null when there is no currentPathway', async () => {
+    const { save } = usePathwayBuilder()
+    const result = await save()
+    expect(result).toBeNull()
+    expect(webapi.createPathway).not.toHaveBeenCalled()
+    expect(webapi.savePathway).not.toHaveBeenCalled()
+  })
+
+  it('save blocks and notifies when validation errors exist', async () => {
+    const store = usePathwayStore()
+    store.createNewPathway()
+    // No target/event cohorts — validatePathway() will populate errors
+    await store.validatePathway()
+    expect(store.hasErrors).toBe(true)
+
+    const { save, feedback } = usePathwayBuilder()
+    const result = await save()
+
+    expect(result).toBeNull()
+    expect(webapi.createPathway).not.toHaveBeenCalled()
+    expect(webapi.savePathway).not.toHaveBeenCalled()
+    expect(feedback.value?.color).toBe('error')
+    expect(feedback.value?.message).toMatch(/Cannot save/)
+  })
+
+  it('save reports save failure via feedback', async () => {
+    const store = usePathwayStore()
+    store.createNewPathway()
+    store.updateMeta({ name: 'NewFail' })
+    store.addTargetCohort({ id: 1, name: 'T' })
+    store.addEventCohort({ id: 2, name: 'E' })
+    await store.validatePathway()
+
+    vi.mocked(webapi.createPathway).mockResolvedValue({
+      success: false,
+      error: 'server exploded',
+    })
+
+    const { save, feedback } = usePathwayBuilder()
+    const result = await save()
+    expect(result).toBeNull()
+    expect(feedback.value?.color).toBe('error')
+    expect(feedback.value?.message).toContain('server exploded')
+  })
+
+  it('save navigates to /pathways/:id when creating a brand-new pathway', async () => {
+    const store = usePathwayStore()
+    store.createNewPathway()
+    store.updateMeta({ name: 'New' })
+    store.addTargetCohort({ id: 1, name: 'T' })
+    store.addEventCohort({ id: 2, name: 'E' })
+    await store.validatePathway()
+
+    vi.mocked(webapi.createPathway).mockResolvedValue({
+      success: true,
+      data: { ...store.currentPathway!, id: 77 },
+    })
+
+    routerPushMock.mockClear()
+    const { save, feedback } = usePathwayBuilder()
+    await save()
+    expect(routerPushMock).toHaveBeenCalledWith('/pathways/77')
+    expect(feedback.value?.color).toBe('success')
+  })
+
+  it('copy returns null when no current pathway id', async () => {
+    const { copy } = usePathwayBuilder()
+    const out = await copy()
+    expect(out).toBeNull()
+    expect(webapi.copyPathway).not.toHaveBeenCalled()
+  })
+
+  it('copy reports failure via feedback', async () => {
+    const store = usePathwayStore()
+    store.createNewPathway()
+    if (store.currentPathway) store.currentPathway.id = 5
+    vi.mocked(webapi.copyPathway).mockResolvedValue({
+      success: false,
+      error: 'cannot copy',
+    })
+
+    const { copy, feedback } = usePathwayBuilder()
+    const out = await copy()
+    expect(out).toBeNull()
+    expect(feedback.value?.color).toBe('error')
+    expect(feedback.value?.message).toContain('cannot copy')
+  })
+
+  it('remove returns false when no current pathway id', async () => {
+    const { remove } = usePathwayBuilder()
+    const ok = await remove()
+    expect(ok).toBe(false)
+    expect(webapi.deletePathway).not.toHaveBeenCalled()
+  })
+
+  it('remove reports failure via feedback when deletePathway returns false', async () => {
+    const store = usePathwayStore()
+    store.createNewPathway()
+    if (store.currentPathway) store.currentPathway.id = 5
+    vi.mocked(webapi.deletePathway).mockResolvedValue(false)
+
+    const { remove, feedback } = usePathwayBuilder()
+    const ok = await remove()
+    expect(ok).toBe(false)
+    expect(feedback.value?.color).toBe('error')
+    expect(feedback.value?.message).toBe('Delete failed')
   })
 })

@@ -55,4 +55,33 @@ describe('pathway-versions.service', () => {
       undefined
     )
   })
+
+  describe('error / validation branches', () => {
+    it('getPathwayVersions throws on a malformed list payload', async () => {
+      vi.mocked(httpClient.httpGet).mockResolvedValueOnce([{ not: 'a version' }])
+      await expect(getPathwayVersions(1)).rejects.toThrow('Invalid version list')
+    })
+
+    it('getPathwayVersions rethrows when the network layer rejects', async () => {
+      vi.mocked(httpClient.httpGet).mockRejectedValueOnce(new Error('boom'))
+      await expect(getPathwayVersions(1)).rejects.toThrow('boom')
+    })
+
+    it('getPathwayVersion throws on a malformed asset payload', async () => {
+      vi.mocked(httpClient.httpGet).mockResolvedValueOnce({ wrong: true })
+      await expect(getPathwayVersion(1, 2)).rejects.toThrow('Invalid version asset')
+    })
+
+    it('updatePathwayVersion throws when the PUT response is invalid', async () => {
+      vi.mocked(httpClient.httpPut).mockResolvedValueOnce({ bogus: 1 })
+      await expect(updatePathwayVersion(1, 2, { comment: 'x' })).rejects.toThrow(
+        'Invalid version update response'
+      )
+    })
+
+    it('copyPathwayVersion throws when the createAsset response is malformed', async () => {
+      vi.mocked(httpClient.httpPut).mockResolvedValueOnce({ noId: true })
+      await expect(copyPathwayVersion(1, 2)).rejects.toThrow('Invalid copyVersion response')
+    })
+  })
 })

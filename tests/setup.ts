@@ -23,10 +23,10 @@ import { vi } from 'vitest'
   }
 }
 
-// Under singleFork: true, jsdom (and its localStorage/sessionStorage) is
-// shared across test files. Reset storage between files so values written
-// by one file (e.g. webapi store auto-persisting `selectedVocabulary`) do
-// not leak into the next file's expectations.
+// Each test file runs in its own worker (multi-fork pool), so jsdom storage
+// is not shared across files. We still defensively clear localStorage and
+// sessionStorage at the start of each file in case anything in the worker
+// process accumulated state between modules loaded by the same worker.
 if (typeof localStorage !== 'undefined') {
   localStorage.clear()
 }

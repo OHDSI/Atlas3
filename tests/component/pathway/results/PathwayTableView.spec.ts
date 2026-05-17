@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia, setActivePinia } from 'pinia'
 import PathwayTableView from '@/components/pathway/results/PathwayTableView.vue'
 
 const vuetify = createVuetify({ components, directives })
@@ -25,6 +26,11 @@ const results = {
 }
 
 describe('PathwayTableView', () => {
+  beforeEach(() => {
+    // Pinia is required by useI18n() inside the component tree.
+    setActivePinia(createPinia())
+  })
+
   it('renders four tables with section headings', () => {
     const w = mount(PathwayTableView, {
       props: { design, results, targetCohortId: 1 },

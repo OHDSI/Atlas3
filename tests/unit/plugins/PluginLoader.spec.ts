@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi, type Mock, afterEach } from 'vitest';
+import { setActivePinia, createPinia } from 'pinia';
 import { PluginLoader } from '@/plugins/core/PluginLoader';
 import { PluginRegistry } from '@/plugins/core/PluginRegistry';
 import { PluginInstance } from '@/models/PluginModels';
@@ -9,6 +10,9 @@ import { registerApplication, start } from 'single-spa';
 vi.mock('single-spa', () => ({
   registerApplication: vi.fn(),
   start: vi.fn(),
+  triggerAppChange: vi.fn(),
+  getAppNames: vi.fn().mockReturnValue([]),
+  getAppStatus: vi.fn(),
 }));
 
 // Mock logger
@@ -20,12 +24,29 @@ vi.mock('@/utils/logger', () => ({
   },
 }));
 
-describe.skip('PluginLoader', () => {
+// Mock storageManager
+vi.mock('@/services/auth/storageManager', () => ({
+  storageManager: {
+    getToken: vi.fn().mockReturnValue('test-token'),
+    get: vi.fn(),
+    set: vi.fn(),
+  },
+}));
+
+// Mock webapi store - return a minimal store-like object
+vi.mock('@/stores/webapi', () => ({
+  useWebAPIStore: vi.fn(() => ({
+    selectedSource: null,
+    sources: [] as Array<{ sourceKey: string }>,
+    fetchSources: vi.fn().mockResolvedValue(undefined),
+    $subscribe: vi.fn().mockReturnValue(() => {}),
+  })),
+}));
+
+describe('PluginLoader', () => {
   let loader: PluginLoader;
   let registry: PluginRegistry;
   let mockSystemImport: Mock;
-  let _originalSetTimeout: typeof setTimeout;
-  let _originalClearTimeout: typeof clearTimeout;
 
   const mockPlugin: PluginInstance = {
     registration: {
@@ -59,11 +80,19 @@ describe.skip('PluginLoader', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
-    originalSetTimeout = global.setTimeout;
-    originalClearTimeout = global.clearTimeout;
+    setActivePinia(createPinia());
 
     registry = new PluginRegistry();
     loader = new PluginLoader(registry);
+
+    // Register the plugin so handleLoadError can find it during retry
+    if (!registry.hasPlugin(mockPlugin.registration.id)) {
+      registry.registerPlugin(
+        mockPlugin.registration,
+        mockPlugin.authContext,
+        mockPlugin.messageBus
+      );
+    }
 
     // Mock System.import as a spy
     mockSystemImport = vi.fn().mockResolvedValue(mockPluginModule);
@@ -225,8 +254,10 @@ describe.skip('PluginLoader', () => {
 
       const setErrorSpy = vi.spyOn(registry, 'setPluginError');
 
-      // Start loading
-      const loadPromise = loader.loadPlugin(mockPlugin);
+      // Start loading; the inner System.import promise will never resolve,
+      // so we cannot await the outer loadPlugin promise. Just attach a
+      // catch handler to avoid unhandled rejection noise.
+      loader.loadPlugin(mockPlugin).catch(() => {});
 
       // Advance time to trigger timeout
       await vi.advanceTimersByTimeAsync(30000);
@@ -238,9 +269,6 @@ describe.skip('PluginLoader', () => {
         }),
         true
       );
-
-      // Let the promise complete
-      await loadPromise;
     });
 
     describe('activeWhen function', () => {
@@ -285,12 +313,22 @@ describe.skip('PluginLoader', () => {
 
         const props = customProps();
 
-        expect(props).toEqual({
-          name: 'Test Plugin',
-          authContext: mockPlugin.authContext,
-          messageBus: mockPlugin.messageBus,
-          domElement: expect.any(HTMLElement),
-        });
+        expect(props).toEqual(
+          expect.objectContaining({
+            name: 'Test Plugin',
+            authContext: mockPlugin.authContext,
+            messageBus: mockPlugin.messageBus,
+            domElement: expect.any(HTMLElement),
+            appId: 'test-plugin',
+            containerId: 'plugin-test-plugin',
+            isAtlas: true,
+            autoMount: false,
+          })
+        );
+        expect(typeof props.getToken).toBe('function');
+        // getToken should resolve to a string (storageManager.getToken
+        // returns the configured value or '' when unset).
+        await expect(props.getToken()).resolves.toEqual(expect.any(String));
       });
 
       it('should find DOM element with correct ID', async () => {
@@ -370,8 +408,7 @@ describe.skip('PluginLoader', () => {
     });
 
     it('should set error after MAX_RETRIES attempts', async () => {
-      const loadError = new Error('Persistent failure');
-      mockSystemImport.mockRejectedValue(loadError);
+      mockSystemImport.mockRejectedValue(new Error('Persistent failure'));
 
       const setErrorSpy = vi.spyOn(registry, 'setPluginError');
 
@@ -382,7 +419,13 @@ describe.skip('PluginLoader', () => {
       await vi.advanceTimersByTimeAsync(2000);
       await vi.advanceTimersByTimeAsync(3000);
 
-      expect(setErrorSpy).toHaveBeenCalledWith('test-plugin', loadError, false);
+      expect(setErrorSpy).toHaveBeenCalledWith(
+        'test-plugin',
+        expect.objectContaining({
+          message: expect.stringContaining('Persistent failure'),
+        }),
+        false
+      );
       expect(mockSystemImport).toHaveBeenCalledTimes(4); // Initial + 3 retries
     });
 
@@ -414,12 +457,6 @@ describe.skip('PluginLoader', () => {
       await vi.advanceTimersByTimeAsync(3000);
 
       // Now try manual retry - should start fresh
-      registry.registerPlugin(
-        mockPlugin.registration,
-        mockPlugin.authContext,
-        mockPlugin.messageBus
-      );
-
       mockSystemImport.mockResolvedValueOnce(mockPluginModule);
       await loader.retryPlugin('test-plugin');
 
@@ -429,14 +466,6 @@ describe.skip('PluginLoader', () => {
   });
 
   describe('retryPlugin', () => {
-    beforeEach(() => {
-      registry.registerPlugin(
-        mockPlugin.registration,
-        mockPlugin.authContext,
-        mockPlugin.messageBus
-      );
-    });
-
     it('should clear error and reload plugin', async () => {
       registry.setPluginError('test-plugin', new Error('Test'), true);
 
@@ -508,6 +537,92 @@ describe.skip('PluginLoader', () => {
 
       expect(start).toHaveBeenCalledTimes(2); // Each call goes through
     });
+
+    it('should expose single-spa helpers on window.__singleSpa', () => {
+      loader.startPluginFramework();
+
+      const exposed = (
+        window as unknown as {
+          __singleSpa?: {
+            getAppNames: unknown
+            getAppStatus: unknown
+            triggerAppChange: unknown
+          }
+        }
+      ).__singleSpa;
+      expect(exposed).toBeDefined();
+      expect(typeof exposed?.getAppNames).toBe('function');
+      expect(typeof exposed?.getAppStatus).toBe('function');
+      expect(typeof exposed?.triggerAppChange).toBe('function');
+    });
+
+    it('should call triggerAppChange after a short delay', async () => {
+      const { triggerAppChange } = await import('single-spa');
+      loader.startPluginFramework();
+      // The framework schedules triggerAppChange via setTimeout(..., 100)
+      await vi.advanceTimersByTimeAsync(100);
+      expect(triggerAppChange).toHaveBeenCalled();
+    });
+
+    it('should notify plugins when source watcher detects a dataset', async () => {
+      const { useWebAPIStore } = await import('@/stores/webapi');
+      const { getAppNames } = await import('single-spa');
+      (getAppNames as Mock).mockReturnValue(['test-plugin']);
+
+      // Provide a source so checkAndNotify() returns true synchronously.
+      (useWebAPIStore as unknown as Mock).mockReturnValueOnce({
+        selectedSource: 'cdm-source',
+        sources: [{ sourceKey: 'cdm-source' }],
+        fetchSources: vi.fn().mockResolvedValue(undefined),
+        $subscribe: vi.fn().mockReturnValue(() => {}),
+      });
+
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+      loader.startPluginFramework();
+      await vi.advanceTimersByTimeAsync(100);
+
+      // notifyPluginsOfPropChange should have dispatched a custom event
+      expect(dispatchSpy).toHaveBeenCalledWith(expect.any(CustomEvent));
+      const ev = dispatchSpy.mock.calls.find(
+        c => (c[0] as Event).type === 'custom-props-changed'
+      )?.[0] as CustomEvent | undefined;
+      expect(ev).toBeDefined();
+      expect(ev?.detail).toEqual({ appId: 'test-plugin', datasetId: 'cdm-source' });
+    });
+
+    it('should notify plugins when the store mutates to a new dataset', async () => {
+      const { useWebAPIStore } = await import('@/stores/webapi');
+      const { getAppNames } = await import('single-spa');
+      (getAppNames as Mock).mockReturnValue(['test-plugin']);
+
+      let subscriber: ((m: unknown, s: { selectedSource: string | null; sources: Array<{ sourceKey: string }> }) => void) | null = null;
+      (useWebAPIStore as unknown as Mock).mockReturnValueOnce({
+        selectedSource: null,
+        sources: [],
+        fetchSources: vi.fn().mockResolvedValue(undefined),
+        $subscribe: vi.fn().mockImplementation((cb: typeof subscriber) => {
+          subscriber = cb;
+          return () => {};
+        }),
+      });
+
+      const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
+      loader.startPluginFramework();
+      await vi.advanceTimersByTimeAsync(100);
+
+      // No source yet - no notify
+      expect(
+        dispatchSpy.mock.calls.find(c => (c[0] as Event).type === 'custom-props-changed')
+      ).toBeUndefined();
+
+      // Now mutate the store
+      subscriber!({}, { selectedSource: 'new-source', sources: [] });
+
+      const ev = dispatchSpy.mock.calls.find(
+        c => (c[0] as Event).type === 'custom-props-changed'
+      )?.[0] as CustomEvent | undefined;
+      expect(ev?.detail).toEqual({ appId: 'test-plugin', datasetId: 'new-source' });
+    });
   });
 
   describe('integration scenarios', () => {
@@ -574,17 +689,18 @@ describe.skip('PluginLoader', () => {
     it('should clear loading timeouts', async () => {
       const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
-      // Start loading a plugin that will hang
+      // Start loading a plugin that will hang (System.import never resolves)
       mockSystemImport.mockImplementation(() => new Promise(() => {}));
-      const loadPromise = loader.loadPlugin(mockPlugin);
+      loader.loadPlugin(mockPlugin).catch(() => {});
 
-      // Dispose before load completes
+      // Yield one microtask so the synchronous portion of loadPlugin
+      // (setting up the timeout) runs before we dispose.
+      await Promise.resolve();
+
+      // Dispose before load completes — should clear the loading timeout
       loader.dispose();
 
       expect(clearTimeoutSpy).toHaveBeenCalled();
-
-      // Let promise settle
-      await loadPromise.catch(() => {});
     });
 
     it('should be safe to call multiple times', () => {
@@ -592,6 +708,23 @@ describe.skip('PluginLoader', () => {
         loader.dispose();
         loader.dispose();
       }).not.toThrow();
+    });
+
+    it('should unsubscribe the source watcher when active', async () => {
+      const { useWebAPIStore } = await import('@/stores/webapi');
+      const unsubscribe = vi.fn();
+      (useWebAPIStore as unknown as Mock).mockReturnValueOnce({
+        selectedSource: null,
+        sources: [],
+        fetchSources: vi.fn().mockResolvedValue(undefined),
+        $subscribe: vi.fn().mockReturnValue(unsubscribe),
+      });
+
+      loader.startPluginFramework();
+      await vi.advanceTimersByTimeAsync(100);
+
+      loader.dispose();
+      expect(unsubscribe).toHaveBeenCalled();
     });
   });
 });
