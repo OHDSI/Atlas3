@@ -1,3 +1,4 @@
+import { getViewParams, isAgentVisibleView } from './route-manifest'
 import type { MessageBus } from './main'
 import type {
   ConceptRefArgs,
@@ -9,7 +10,6 @@ import type {
   ExitCriterionArgs,
   InclusionRuleArgs,
   NavigateArgs,
-  NavigateView,
   ObservationWindowArgs,
   ProposalArgs,
   StandaloneConceptSetArgs,
@@ -171,52 +171,14 @@ function buildEventFromCriterion(args: CriterionArgs): unknown {
 }
 
 
-const NAVIGATE_VIEWS: ReadonlySet<NavigateView> = new Set<NavigateView>([
-  'home', 'cohorts', 'cohort-new', 'cohort-edit',
-  'concepts', 'concept-detail', 'datasources',
-  'profiles', 'profile-view',
-  'feature-analyses', 'feature-analysis-new', 'feature-analysis-edit',
-  'characterizations', 'characterization-new', 'characterization-edit',
-  'pathways', 'pathway-new', 'pathway-edit', 'pathway-results',
-  'incidence-rates', 'incidence-rate-new', 'incidence-rate-edit',
-])
-
-// Each route-name's required + accepted param keys. Used to project the
-// loose tool args onto a clean `params` object before pushing onto Vue
-// Router. Anything not listed here is ignored.
-const NAVIGATE_PARAM_KEYS: Record<NavigateView, readonly (keyof NavigateArgs)[]> = {
-  home: [],
-  cohorts: [],
-  'cohort-new': [],
-  'cohort-edit': ['id'],
-  concepts: [],
-  'concept-detail': ['sourceKey', 'conceptId'],
-  datasources: ['sourceKey'],
-  profiles: [],
-  'profile-view': ['sourceKey', 'personId'],
-  'feature-analyses': [],
-  'feature-analysis-new': [],
-  'feature-analysis-edit': ['id'],
-  characterizations: [],
-  'characterization-new': [],
-  'characterization-edit': ['id'],
-  pathways: [],
-  'pathway-new': [],
-  'pathway-edit': ['id'],
-  'pathway-results': ['id', 'executionId'],
-  'incidence-rates': [],
-  'incidence-rate-new': [],
-  'incidence-rate-edit': ['id'],
-}
-
 function buildNavigateProposal(args: NavigateArgs): AgentProposal | null {
   const view = args.view
-  if (!view || !NAVIGATE_VIEWS.has(view)) return null
-  const allowedKeys = NAVIGATE_PARAM_KEYS[view] ?? []
+  if (!view || !isAgentVisibleView(view)) return null
+  const allowedKeys = getViewParams(view)
   const params: Record<string, string | number> = {}
   for (const k of allowedKeys) {
-    const v = args[k]
-    if (v !== undefined && v !== null) params[k as string] = v as string | number
+    const v = (args as Record<string, unknown>)[k]
+    if (v !== undefined && v !== null) params[k] = v as string | number
   }
   return {
     kind: 'navigate',

@@ -17,10 +17,12 @@ import {
   getChatInstance,
   newChat,
   proposals,
+  resolveProposal,
   sessionIndex,
   sessionRouteContext,
   sessionSourceKey,
   sessionToken,
+  setHostBridge,
   setTokenProvider,
   switchToSession,
 } from './chat-session'
@@ -31,7 +33,6 @@ import CriterionProposalCard from './CriterionProposalCard.vue'
 import ObservationWindowProposalCard from './ObservationWindowProposalCard.vue'
 import ExitCriterionProposalCard from './ExitCriterionProposalCard.vue'
 import InclusionRuleProposalCard from './InclusionRuleProposalCard.vue'
-import NavigateProposalCard from './NavigateProposalCard.vue'
 import StandaloneConceptSetProposalCard from './StandaloneConceptSetProposalCard.vue'
 import FeatureAnalysisProposalCard from './FeatureAnalysisProposalCard.vue'
 import CharacterizationProposalCard from './CharacterizationProposalCard.vue'
@@ -41,6 +42,7 @@ import UpdateProposalCard from './UpdateProposalCard.vue'
 import ProposalGroupCard from './ProposalGroupCard.vue'
 import AskUserCard from './AskUserCard.vue'
 import StarterPrompts from './StarterPrompts.vue'
+import UndoToast from './UndoToast.vue'
 import type { AskState, ProposalState } from './types'
 
 const props = defineProps<{
@@ -196,7 +198,6 @@ function cardComponentFor(toolName: string) {
     case 'add_inclusion_rule':
     case 'add_criteria': return InclusionRuleProposalCard
     case 'create_standalone_concept_set': return StandaloneConceptSetProposalCard
-    case 'navigate_to': return NavigateProposalCard
     case 'create_feature_analysis': return FeatureAnalysisProposalCard
     case 'create_characterization': return CharacterizationProposalCard
     case 'create_pathway': return PathwayProposalCard
@@ -324,6 +325,7 @@ function onAccept(id: string) {
     const kind = (proposal as { kind?: string }).kind
     if (kind) markStepProgress(kind, 'done')
   }
+  resolveProposal(id, 'accepted', { addToolResult: (r) => chat.addToolResult(r) })
   dismissProposalLater(id, DISMISS_ACCEPTED_MS)
 }
 
@@ -341,6 +343,7 @@ function onReject(id: string) {
   if (!p) return
   p.status = 'rejected'
   rejectProposal(props.messageBus, id)
+  resolveProposal(id, 'rejected', { addToolResult: (r) => chat.addToolResult(r) })
   dismissProposalLater(id, DISMISS_REJECTED_MS)
 }
 
@@ -381,6 +384,10 @@ onMounted(async () => {
   // transport always re-reads the current (possibly refreshed) JWT.
   sessionToken.value = props.authContext.token
   if (props.getToken) setTokenProvider(props.getToken)
+  setHostBridge({
+    bus: props.messageBus,
+    applyProposal: (p) => applyProposal(props.messageBus, p as never),
+  })
   const ctx = await getShellContext(props.messageBus)
   sessionSourceKey.value = ctx.sourceKey
   sessionRouteContext.value = ctx.routeContext ?? null
@@ -495,6 +502,8 @@ onMounted(async () => {
         @open-step="onOpenStep"
       />
     </div>
+
+    <UndoToast />
 
     <div
       ref="messagesContainer"

@@ -23,7 +23,8 @@
     "tokens:build": "tsx scripts/build-tokens.ts",
     "tokens:check": "tsx scripts/build-tokens.ts && git diff --exit-code src/ui/tokens.css",
     "predev": "npm run tokens:build",
-    "prebuild": "npm run tokens:build",
+    "generate:routes": "node scripts/emit-route-manifest.mjs",
+    "prebuild": "npm run tokens:build && npm run generate:routes",
     "ui:dev": "histoire dev",
     "ui:build": "histoire build"
   },

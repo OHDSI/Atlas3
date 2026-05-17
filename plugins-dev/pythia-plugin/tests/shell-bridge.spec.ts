@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { proposalFromToolCall } from '../src/shell-bridge'
+import { isAgentVisibleView } from '../src/route-manifest'
 
 describe('proposalFromToolCall', () => {
   it('add_criterion (no group) → addEntryEvent', () => {
@@ -222,5 +223,37 @@ describe('proposalFromToolCall', () => {
     expect(
       proposalFromToolCall('navigate_to', { view: 'totally-fake-view' })
     ).toBeNull()
+  })
+})
+
+describe('navigate_to via manifest', () => {
+  it('rejects views not in the manifest', () => {
+    const p = proposalFromToolCall('navigate_to', { view: 'nonexistent-route', reason: 'x' })
+    expect(p).toBeNull()
+  })
+
+  it('accepts a newly-added manifest route', () => {
+    // characterization-results is the canary — it must be reachable now.
+    expect(isAgentVisibleView('characterization-results')).toBe(true)
+    const p = proposalFromToolCall('navigate_to', {
+      view: 'characterization-results',
+      id: 17,
+      executionId: 99,
+      reason: 'See the run',
+    })
+    expect(p?.kind).toBe('navigate')
+    const route = (p as { route: { name: string; params: Record<string, unknown> } }).route
+    expect(route.name).toBe('characterization-results')
+    expect(route.params).toEqual({ id: 17, executionId: 99 })
+  })
+
+  it('drops params not declared for the view', () => {
+    const p = proposalFromToolCall('navigate_to', {
+      view: 'home',
+      id: 5, // home takes no params; must be dropped
+      reason: 'go home',
+    })
+    const route = (p as { route: { params: Record<string, unknown> } }).route
+    expect(route.params).toEqual({})
   })
 })
