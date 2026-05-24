@@ -136,27 +136,26 @@ describe('LandingView', () => {
   })
 
   describe('Documentation Section', () => {
-    it('should render the documentation section', () => {
+    // The documentation entry is now a full-width clickable AtlasCard tile
+    // styled like the analysis feature tiles (icon + title + description),
+    // sitting in its own row below the analysis tiles — not a wide card
+    // with a button. Selector reflects the new `.landing__feature--docs`
+    // class added in the landing redesign.
+    it('should render the documentation tile', () => {
       const wrapper = mountComponent()
-      expect(wrapper.find('.landing__documentation').exists()).toBe(true)
+      expect(wrapper.find('.landing__feature--docs').exists()).toBe(true)
     })
 
-    it('should render the documentation title', () => {
+    it('should render the documentation title text', () => {
       const wrapper = mountComponent()
-      const sectionTitle = wrapper.find('.landing__section-title')
-      expect(sectionTitle.exists()).toBe(true)
+      const docs = wrapper.find('.landing__feature--docs')
+      expect(docs.text()).toContain('Documentation')
     })
 
-    it('should render documentation text with v-html', () => {
+    it('should link the entire documentation tile to /docs', () => {
       const wrapper = mountComponent()
-      const docText = wrapper.find('.landing__documentation p')
-      expect(docText.exists()).toBe(true)
-    })
-
-    it('should contain documentation link to in-app manual', () => {
-      const wrapper = mountComponent()
-      const documentation = wrapper.find('.landing__documentation')
-      expect(documentation.html()).toContain('href="/docs"')
+      const docs = wrapper.find('.landing__feature--docs')
+      expect(docs.html()).toContain('href="/docs"')
     })
   })
 
@@ -284,10 +283,11 @@ describe('LandingView', () => {
       expect(title.exists()).toBe(true)
     })
 
-    it('should have semantic heading for documentation section', () => {
+    it('should expose the documentation tile as a link for screen readers', () => {
       const wrapper = mountComponent()
-      const sectionTitle = wrapper.find('h2.landing__section-title')
-      expect(sectionTitle.exists()).toBe(true)
+      const docs = wrapper.find('.landing__feature--docs')
+      // router-link renders as <a href> — that's the semantic affordance.
+      expect(docs.element.tagName.toLowerCase()).toBe('a')
     })
   })
 
@@ -300,9 +300,9 @@ describe('LandingView', () => {
       expect(html).toContain('http://www.ohdsi.org')
     })
 
-    it('should link the documentation section to the in-app manual', () => {
+    it('should link the documentation tile to the in-app manual', () => {
       const wrapper = mountComponent()
-      const documentation = wrapper.find('.landing__documentation')
+      const documentation = wrapper.find('.landing__feature--docs')
       const html = documentation.html()
       expect(html).toContain('href="/docs"')
     })
@@ -325,9 +325,9 @@ describe('LandingView', () => {
 
     it('should use translation for documentation title', () => {
       const wrapper = mountComponent()
-      const sectionTitle = wrapper.find('.landing__section-title')
+      const title = wrapper.find('.landing__feature--docs .landing__feature-title')
       // The mock returns the fallback value
-      expect(sectionTitle.text()).toBe('Documentation')
+      expect(title.text()).toBe('Documentation')
     })
   })
 
@@ -337,7 +337,7 @@ describe('LandingView', () => {
 
       expect(wrapper.find('.landing__title').exists()).toBe(true)
       expect(wrapper.find('.landing__description').exists()).toBe(true)
-      expect(wrapper.find('.landing__documentation').exists()).toBe(true)
+      expect(wrapper.find('.landing__feature--docs').exists()).toBe(true)
       expect(wrapper.find('.landing__actions').exists()).toBe(true)
       expect(wrapper.find('.landing__illustration').exists()).toBe(true)
       expect(wrapper.find('.landing__features').exists()).toBe(true)

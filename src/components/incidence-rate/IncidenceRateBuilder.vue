@@ -3,7 +3,7 @@
     :eyebrow="t('navigation.incidenceRates', 'Incidence rate analysis').value"
     :title="title"
     :subtitle="subtitle"
-    :show-back="true"
+    :show-back="false"
     testid="ir-builder"
     @back="handleBack"
   >
@@ -36,151 +36,166 @@
       >
     </template>
     <template #actions>
-      <AtlasTooltip
-        :text="t('ir.tabs.conceptSets', 'Concept Sets').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Concept sets' }"
-            icon="mdi-bookmark-multiple-outline"
-            variant="text"
-            size="sm"
-            data-testid="ir-builder-conceptsets-icon"
-            @click="showConceptSetsDialog = true"
-          />
-        </template>
-      </AtlasTooltip>
-      <AtlasTooltip
-        v-if="store.currentIR?.id"
-        :text="t('ir.tabs.versions', 'Versions').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
-            icon="mdi-history"
-            variant="text"
-            size="sm"
-            data-testid="ir-builder-versions-icon"
-            @click="showVersionsDialog = true"
-          />
-        </template>
-      </AtlasTooltip>
-      <AtlasTooltip
-        v-if="store.currentIR?.id"
-        :text="t('common.tags', 'Tags').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasBadge
-            v-bind="tipProps"
-            :content="irTags.length || 0"
-            :model-value="irTags.length > 0"
-            color="primary"
-            offset-x="6"
-            offset-y="6"
+      <BuilderActionToolbar>
+        <template #status>
+          <AtlasTooltip
+            :text="t('ir.tabs.conceptSets', 'Concept Sets').value"
+            location="bottom"
           >
-            <AtlasIconButton
-              v-bind="{ ariaLabel: 'Tags' }"
-              icon="mdi-tag-outline"
-              variant="text"
-              size="sm"
-              :disabled="store.isPreviewMode"
-              data-testid="ir-builder-tags-icon"
-              @click="showTagsDialog = true"
-            />
-          </AtlasBadge>
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Concept sets' }"
+                icon="mdi-shape"
+                variant="text"
+                size="sm"
+                data-testid="ir-builder-conceptsets-icon"
+                @click="showConceptSetsDialog = true"
+              />
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
+            :text="t('ir.tabs.versions', 'Versions').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
+                icon="mdi-history"
+                variant="text"
+                size="sm"
+                :disabled="!store.currentIR?.id"
+                data-testid="ir-builder-versions-icon"
+                @click="showVersionsDialog = true"
+              />
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
+            :text="t('common.tags', 'Tags').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasBadge
+                v-bind="tipProps"
+                :content="irTags.length || 0"
+                :model-value="irTags.length > 0"
+                color="primary"
+                offset-x="6"
+                offset-y="6"
+              >
+                <AtlasIconButton
+                  v-bind="{ ariaLabel: 'Tags' }"
+                  icon="mdi-tag-outline"
+                  variant="text"
+                  size="sm"
+                  :disabled="!store.currentIR?.id || store.isPreviewMode"
+                  data-testid="ir-builder-tags-icon"
+                  @click="showTagsDialog = true"
+                />
+              </AtlasBadge>
+            </template>
+          </AtlasTooltip>
         </template>
-      </AtlasTooltip>
-      <AtlasTooltip
-        :text="t('common.import', 'Import design').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
-            icon="mdi-upload"
-            variant="text"
+        <template #actions>
+          <AtlasButton
+            variant="ghost"
             size="sm"
-            :loading="importing"
-            data-testid="ir-builder-import-icon"
-            @click="handleImportClick"
-          />
+            data-testid="ir-builder-cancel"
+            @click="handleBack"
+          >
+            <AtlasIcon class="d-md-none">
+              mdi-close
+            </AtlasIcon>
+            <span class="d-none d-md-inline">{{ t('common.cancel', 'Cancel').value }}</span>
+          </AtlasButton>
+          <AtlasTooltip
+            v-if="store.isPreviewMode"
+            :text="t('common.backToCurrent', 'Back to current version').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: t('common.backToCurrent', 'Back to current version').value }"
+                icon="mdi-undo"
+                variant="text"
+                size="sm"
+                data-testid="ir-builder-back-to-current"
+                @click="store.clearPreviewVersion()"
+              />
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
+            :text="t('common.import', 'Import design').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
+                icon="mdi-upload"
+                variant="text"
+                size="sm"
+                :loading="importing"
+                data-testid="ir-builder-import-icon"
+                @click="handleImportClick"
+              />
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
+            :text="t('common.export', 'Export design').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
+                icon="mdi-download"
+                variant="text"
+                size="sm"
+                :loading="exporting"
+                :disabled="!store.currentIR?.id"
+                data-testid="ir-builder-export-icon"
+                @click="handleExport"
+              />
+            </template>
+          </AtlasTooltip>
+          <input
+            ref="importFileInput"
+            type="file"
+            accept="application/json,.json"
+            aria-label="Import incidence rate design"
+            style="display: none"
+            data-testid="ir-builder-import-input"
+            @change="handleImportFileChange"
+          >
+          <AtlasButton
+            variant="secondary"
+            icon="mdi-content-copy"
+            :disabled="!store.currentIR?.id || !canCopy"
+            data-testid="ir-builder-copy"
+            @click="onCopy"
+          >
+            {{ t('common.duplicate', 'Duplicate') }}
+          </AtlasButton>
+          <AtlasButton
+            variant="ghost"
+            tone="danger"
+            icon="mdi-delete-outline"
+            :disabled="!store.currentIR?.id || !canDelete"
+            data-testid="ir-builder-delete"
+            @click="askDelete = true"
+          >
+            {{ t('common.delete', 'Delete') }}
+          </AtlasButton>
+          <AtlasButton
+            variant="primary"
+            icon="mdi-content-save-outline"
+            :disabled="!store.canSave || saving || !canSave"
+            :loading="saving"
+            data-testid="ir-builder-save"
+            @click="onSave"
+          >
+            {{ t('common.save', 'Save') }}
+          </AtlasButton>
         </template>
-      </AtlasTooltip>
-      <AtlasTooltip
-        v-if="store.currentIR?.id"
-        :text="t('common.export', 'Export design').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
-            icon="mdi-download"
-            variant="text"
-            size="sm"
-            :loading="exporting"
-            data-testid="ir-builder-export-icon"
-            @click="handleExport"
-          />
-        </template>
-      </AtlasTooltip>
-      <input
-        ref="importFileInput"
-        type="file"
-        accept="application/json,.json"
-        aria-label="Import incidence rate design"
-        style="display: none"
-        data-testid="ir-builder-import-input"
-        @change="handleImportFileChange"
-      >
-      <AtlasTooltip
-        v-if="store.isPreviewMode"
-        :text="t('common.backToCurrent', 'Back to current version').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: t('common.backToCurrent', 'Back to current version').value }"
-            icon="mdi-undo"
-            variant="text"
-            size="sm"
-            density="compact"
-            data-testid="ir-builder-back-to-current"
-            @click="store.clearPreviewVersion()"
-          />
-        </template>
-      </AtlasTooltip>
-      <AtlasButton
-        v-if="store.currentIR?.id"
-        variant="secondary"
-        icon="mdi-content-copy"
-        :disabled="!store.currentIR?.id || !canCopy"
-        data-testid="ir-builder-copy"
-        @click="onCopy"
-      >
-        {{ t('common.duplicate', 'Duplicate') }}
-      </AtlasButton>
-      <AtlasButton
-        v-if="store.currentIR?.id"
-        variant="danger"
-        icon="mdi-delete"
-        :disabled="!store.currentIR?.id || !canDelete"
-        data-testid="ir-builder-delete"
-        @click="askDelete = true"
-      >
-        {{ t('common.delete', 'Delete') }}
-      </AtlasButton>
-      <AtlasButton
-        icon="mdi-content-save"
-        :disabled="!store.canSave || saving || !canSave"
-        :loading="saving"
-        data-testid="ir-builder-save"
-        @click="onSave"
-      >
-        {{ t('common.save', 'Save') }}
-      </AtlasButton>
+      </BuilderActionToolbar>
     </template>
 
     <IncidenceRateWorkbench v-if="store.currentIR" />
@@ -266,7 +281,8 @@ import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'
 import IncidenceRateConceptSetsPanel from '@/components/incidence-rate/IncidenceRateConceptSetsPanel.vue'

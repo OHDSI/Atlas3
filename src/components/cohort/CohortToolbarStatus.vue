@@ -5,9 +5,10 @@
          the icon-and-count chips for concept sets / validation /
          versions / tags. -->
 
-    <!-- Concept Sets Icon -->
+    <!-- Concept Sets Icon — always shown so the toolbar shape stays
+         stable across builders. Disabled (dim, no click) when there
+         are no concept sets to navigate to. -->
     <AtlasTooltip
-      v-if="conceptSetCount > 0"
       :text="t('cohortDefinitions.cohortDefinitionManager.tabs.conceptSets', 'Concept Sets').value"
       location="bottom"
     >
@@ -15,24 +16,25 @@
         <AtlasBadge
           v-bind="tooltipProps"
           :content="conceptSetCount"
+          :model-value="conceptSetCount > 0"
           color="primary"
           class="cohort-toolbar-status__badge"
         >
           <AtlasIcon
-            color="primary"
+            :color="conceptSetCount > 0 ? 'primary' : 'grey'"
             icon="mdi-shape"
             size="small"
             data-testid="concept-sets-icon"
-            style="cursor: pointer"
-            @click="$emit('show-concept-sets')"
+            :style="conceptSetCount > 0 ? 'cursor: pointer' : 'cursor: default; opacity: 0.5'"
+            @click="conceptSetCount > 0 && $emit('show-concept-sets')"
           />
         </AtlasBadge>
       </template>
     </AtlasTooltip>
 
-    <!-- Versions Icon -->
+    <!-- Versions Icon — always shown; disabled when entity isn't
+         saved yet or the user is previewing a historical version. -->
     <AtlasTooltip
-      v-if="cohortId && !isPreviewingVersion"
       :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
       location="bottom"
     >
@@ -40,24 +42,24 @@
         <AtlasBadge
           v-bind="tooltipProps"
           :content="versionCount"
+          :model-value="!!cohortId && !isPreviewingVersion"
           color="primary"
           class="cohort-toolbar-status__badge"
         >
           <AtlasIcon
-            color="primary"
+            :color="cohortId && !isPreviewingVersion ? 'primary' : 'grey'"
             icon="mdi-history"
             size="small"
             data-testid="versions-icon"
-            style="cursor: pointer"
-            @click="$emit('show-versions')"
+            :style="cohortId && !isPreviewingVersion ? 'cursor: pointer' : 'cursor: default; opacity: 0.5'"
+            @click="cohortId && !isPreviewingVersion && $emit('show-versions')"
           />
         </AtlasBadge>
       </template>
     </AtlasTooltip>
 
-    <!-- Tags Icon -->
+    <!-- Tags Icon — always shown; disabled in version-preview mode. -->
     <AtlasTooltip
-      v-if="!isPreviewingVersion"
       :text="t('configuration.buttons.tagManagement', 'Manage Tags').value"
       location="bottom"
     >
@@ -69,12 +71,12 @@
           class="cohort-toolbar-status__badge"
         >
           <AtlasIcon
-            color="primary"
+            :color="!isPreviewingVersion ? 'primary' : 'grey'"
             icon="mdi-tag-multiple"
             size="small"
             data-testid="tags-icon"
-            style="cursor: pointer"
-            @click="$emit('show-tags')"
+            :style="!isPreviewingVersion ? 'cursor: pointer' : 'cursor: default; opacity: 0.5'"
+            @click="!isPreviewingVersion && $emit('show-tags')"
           />
         </AtlasBadge>
       </template>

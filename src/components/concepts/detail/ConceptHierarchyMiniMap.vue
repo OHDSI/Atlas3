@@ -9,10 +9,17 @@ const props = defineProps<{
   concept: Concept
   parents: RelatedConcept[]
   children: RelatedConcept[]
+  sourceKey?: string
 }>()
 
+// Prefer the explicit sourceKey prop (the drawer renders this component over
+// other routes, so route.params.sourceKey is empty there and links would
+// resolve to /concept//<id>, a 404). Fall back to the route param for
+// stand-alone /concept/:sourceKey/:conceptId usage.
 const route = useRoute()
-const sourceKey = computed(() => (route.params.sourceKey as string) ?? '')
+const sourceKey = computed(
+  () => props.sourceKey || ((route.params.sourceKey as string) ?? '')
+)
 
 const isEmpty = computed(() => props.parents.length === 0 && props.children.length === 0)
 

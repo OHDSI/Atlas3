@@ -53,6 +53,14 @@ BEGIN
     SELECT id INTO perm_id FROM webapi.sec_permission WHERE value = 'cache:jobs:get';
     INSERT INTO webapi.sec_role_permission (role_id, permission_id) VALUES (admin_role_id, perm_id) ON CONFLICT DO NOTHING;
 
+    -- Spring Batch job executions listed by JobsPanel.vue. The Atlas3 nav
+    -- gates the Jobs side panel icon on this permission; without it, admins
+    -- see no Jobs entry next to the Configuration cog.
+    INSERT INTO webapi.sec_permission (value, description)
+    VALUES ('job:execution:get', 'List Spring Batch job executions') ON CONFLICT (value) DO NOTHING;
+    SELECT id INTO perm_id FROM webapi.sec_permission WHERE value = 'job:execution:get';
+    INSERT INTO webapi.sec_role_permission (role_id, permission_id) VALUES (admin_role_id, perm_id) ON CONFLICT DO NOTHING;
+
     -- Role management permissions
     INSERT INTO webapi.sec_permission (value, description)
     VALUES ('role:*:permissions:*:put', 'Add permissions to role') ON CONFLICT (value) DO NOTHING;

@@ -28,11 +28,13 @@
           </AtlasList>
         </AtlasMenu>
 
-        <!-- Observation Period chip — was orange-outlined which read
-             as alarm; tonal primary keeps it informative. -->
+        <!-- Observation Period chip — orange/warning outlined to match
+             the other timeframe pills (TemporalFilterChip). Pushed to
+             the right edge of the toolbar via margin-left:auto. -->
         <AtlasChip
           class="obs-period-chip"
-          tone="primary"
+          tone="warning"
+          variant="outlined"
           size="sm"
           @click="showObsPeriodDialog = true"
         >
@@ -220,6 +222,7 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
 .obs-period-chip {
   cursor: pointer;
   font-size: 12px;
+  margin-left: auto;
 }
 
 .obs-period-dialog-content {

@@ -73,6 +73,7 @@ watch(() => [props.sourceKey, props.conceptId], load)
             :concept="concept"
             :parents="parents"
             :children="children"
+            :source-key="props.sourceKey"
           />
         </div>
 

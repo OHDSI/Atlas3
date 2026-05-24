@@ -16,7 +16,6 @@
         data-testid="characterizations-search"
         @update:model-value="(v: string | number) => handleSearchInput(v != null ? String(v) : null)"
       />
-      <AtlasSpacer />
       <AtlasButton
         icon="mdi-plus"
         :aria-label="t('cc.new', 'New Characterization').value"
@@ -98,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasTextField } from '@/components/ui'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 

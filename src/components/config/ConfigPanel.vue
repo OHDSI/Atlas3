@@ -68,15 +68,6 @@
             </AtlasIcon>
             Permissions
           </AtlasTab>
-          <AtlasTab
-            v-if="canSeeJobs"
-            value="jobs"
-          >
-            <AtlasIcon start>
-              mdi-run
-            </AtlasIcon>
-            Jobs
-          </AtlasTab>
         </AtlasTabs>
 
         <!-- Scrollable Content -->
@@ -117,14 +108,6 @@
             <PermissionsSection />
           </div>
 
-          <!-- Jobs Section (v-if ensures fresh data after login) -->
-          <div
-            v-if="activeSection === 'jobs' && canSeeJobs"
-            class="config-section"
-          >
-            <JobsSection />
-          </div>
-
           <!-- All admin sections hidden — show a friendly placeholder. -->
           <div
             v-if="!hasAnyAdminTab"
@@ -149,7 +132,6 @@ import CacheManagementSection from './CacheManagementSection.vue'
 import DataSourcesSection from './DataSourcesSection.vue'
 import TagManagementSection from './TagManagementSection.vue'
 import PermissionsSection from './PermissionsSection.vue'
-import JobsSection from './JobsSection.vue'
 
 const uiStore = useUIStore()
 const { hasPermission } = usePermissions()
@@ -162,19 +144,12 @@ const canSeeCache = computed(() => hasPermission('admin:cache'))
 const canSeeSources = computed(() => hasPermission('admin:source'))
 const canSeeTags = computed(() => hasPermission('admin:tags'))
 const canSeePermissions = computed(() => hasPermission('admin:security'))
-// JobsSection.vue lists Spring Batch job executions — the underlying API
-// call is `GET /job/execution?comprehensivePage=true` (see
-// services/jobs.service.ts), which Apache Shiro maps to `job:execution:get`.
-// The earlier `job:*:get` form was never registered server-side and always
-// resolved to false, hiding the panel for everyone (including admins).
-const canSeeJobs = computed(() => hasPermission('job:execution:get'))
 const hasAnyAdminTab = computed(
   () =>
     canSeeCache.value ||
     canSeeSources.value ||
     canSeeTags.value ||
-    canSeePermissions.value ||
-    canSeeJobs.value
+    canSeePermissions.value
 )
 
 // Reactive state from UI store

@@ -54,6 +54,7 @@
 
         <cohort-toolbar-actions
           :can-save="builderRef.canSave"
+          :is-dirty="builderRef.hasUnsavedChanges"
           :is-previewing-version="builderRef.isPreviewingVersion"
           @cancel="builderRef.handleCancel()"
           @save="builderRef.handleSave()"

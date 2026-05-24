@@ -15,6 +15,32 @@ import { logger } from '@/utils/logger'
 
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000 // 24 hours
 
+// Atlas3-only keys (e.g. `route.*`) that don't exist in WebAPI's translation
+// bundle. We keep the bundled en.json as a fallback layer and deep-merge any
+// WebAPI bundle on top so missing keys still resolve.
+let bundledFallback: Translations | null = null
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+function deepMergeTranslations(base: Translations, override: Translations): Translations {
+  const out: Record<string, unknown> = { ...base }
+  for (const [key, val] of Object.entries(override)) {
+    const existing = out[key]
+    if (isPlainObject(existing) && isPlainObject(val)) {
+      out[key] = deepMergeTranslations(existing as Translations, val as Translations)
+    } else {
+      out[key] = val
+    }
+  }
+  return out as Translations
+}
+
+function withFallback(bundle: Translations): Translations {
+  return bundledFallback ? deepMergeTranslations(bundledFallback, bundle) : bundle
+}
+
 export const useLocaleStore = defineStore('locale', {
   state: (): LocaleState => ({
     locale: 'en',
@@ -93,7 +119,7 @@ export const useLocaleStore = defineStore('locale', {
       const cached = this.translationCache.get(locale)
 
       if (cached && this.isCacheValid(cached)) {
-        this.translations = cached.bundle.translations
+        this.translations = withFallback(cached.bundle.translations)
         return
       }
 
@@ -104,7 +130,7 @@ export const useLocaleStore = defineStore('locale', {
           const cached = JSON.parse(cachedStr) as TranslationCache
           if (this.isCacheValid(cached)) {
             this.translationCache.set(locale, cached)
-            this.translations = cached.bundle.translations
+            this.translations = withFallback(cached.bundle.translations)
             return
           }
         } catch (error) {
@@ -125,7 +151,7 @@ export const useLocaleStore = defineStore('locale', {
 
         this.translationCache.set(locale, cache)
         localStorage.setItem(localStorageKey, JSON.stringify(cache))
-        this.translations = bundle.translations
+        this.translations = withFallback(bundle.translations)
       } catch (error) {
         logger.error('LocaleStore', `Failed to fetch translations for ${locale}`, error)
         this.error = `Failed to load ${locale} translations. Falling back to English.`
@@ -204,10 +230,14 @@ export const useLocaleStore = defineStore('locale', {
      */
     async loadFallbackTranslations(): Promise<void> {
       try {
-        // Import English translations directly
+        // Dynamic JSON import returns a module namespace; the actual content
+        // is under `.default`. Spread to flatten in case future Vite versions
+        // change the shape.
         const englishTranslations = await import('@/locales/en.json')
-        // TypeScript with resolveJsonModule provides JSON directly, not as .default
-        this.translations = englishTranslations as Translations
+        const flat = (englishTranslations as { default?: Translations }).default
+          ?? (englishTranslations as unknown as Translations)
+        bundledFallback = flat
+        this.translations = flat
       } catch (error) {
         logger.error('LocaleStore', 'Failed to load fallback translations', error)
         // Provide minimal fallback translations

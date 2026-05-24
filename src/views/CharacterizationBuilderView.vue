@@ -18,6 +18,7 @@
     :eyebrow="t('cc.title', 'Characterization').value"
     :title="titleText"
     :error="storeError"
+    :show-back="false"
     testid="char-builder"
     @back="handleBack"
     @clear-error="store.clearError()"
@@ -43,139 +44,149 @@
       >
     </template>
     <template #actions>
-      <AtlasTooltip
-        :text="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Concept sets' }"
-            icon="mdi-bookmark-multiple-outline"
-            variant="text"
-            size="sm"
-            data-testid="char-builder-conceptsets-icon"
-            @click="showConceptSetsDialog = true"
-          />
-        </template>
-      </AtlasTooltip>
-
-      <AtlasTooltip
-        v-if="isEditing"
-        :text="t('cc.viewEdit.tabs.versions', 'Versions').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
-            icon="mdi-history"
-            variant="text"
-            size="sm"
-            data-testid="char-builder-versions-icon"
-            @click="showVersionsDialog = true"
-          />
-        </template>
-      </AtlasTooltip>
-
-      <AtlasTooltip
-        :text="t('cc.viewEdit.tabs.messages', 'Validation').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasBadge
-            v-bind="tipProps"
-            :color="validationBadge?.color || 'default'"
-            :content="validationBadge?.count ?? 0"
-            :model-value="!!validationBadge"
-            offset-x="6"
-            offset-y="6"
+      <BuilderActionToolbar>
+        <template #status>
+          <AtlasTooltip
+            :text="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
+            location="bottom"
           >
-            <AtlasIconButton
-              icon="mdi-message-text"
-              v-bind="{ ariaLabel: 'Validation messages' }"
-              variant="text"
-              size="sm"
-              data-testid="char-builder-validation-icon"
-              @click="showValidationDialog = true"
-            />
-          </AtlasBadge>
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Concept sets' }"
+                icon="mdi-shape"
+                variant="text"
+                size="sm"
+                data-testid="char-builder-conceptsets-icon"
+                @click="showConceptSetsDialog = true"
+              />
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
+            :text="t('cc.viewEdit.tabs.messages', 'Validation').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasBadge
+                v-bind="tipProps"
+                :color="validationBadge?.color || 'default'"
+                :content="validationBadge?.count ?? 0"
+                :model-value="!!validationBadge"
+                offset-x="6"
+                offset-y="6"
+              >
+                <AtlasIconButton
+                  icon="mdi-message-text"
+                  v-bind="{ ariaLabel: 'Validation messages' }"
+                  variant="text"
+                  size="sm"
+                  data-testid="char-builder-validation-icon"
+                  @click="showValidationDialog = true"
+                />
+              </AtlasBadge>
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
+            :text="t('cc.viewEdit.tabs.versions', 'Versions').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
+                icon="mdi-history"
+                variant="text"
+                size="sm"
+                :disabled="!isEditing"
+                data-testid="char-builder-versions-icon"
+                @click="showVersionsDialog = true"
+              />
+            </template>
+          </AtlasTooltip>
         </template>
-      </AtlasTooltip>
-
-      <AtlasTooltip
-        :text="t('common.import', 'Import design').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
-            icon="mdi-upload"
-            variant="text"
+        <template #actions>
+          <AtlasButton
+            variant="ghost"
             size="sm"
-            :loading="importing"
-            data-testid="char-builder-import-icon"
-            @click="handleImportClick"
-          />
+            data-testid="char-builder-cancel"
+            @click="handleBack"
+          >
+            <AtlasIcon class="d-md-none">
+              mdi-close
+            </AtlasIcon>
+            <span class="d-none d-md-inline">{{ t('common.cancel', 'Cancel').value }}</span>
+          </AtlasButton>
+          <AtlasTooltip
+            :text="t('common.import', 'Import design').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
+                icon="mdi-upload"
+                variant="text"
+                size="sm"
+                :loading="importing"
+                data-testid="char-builder-import-icon"
+                @click="handleImportClick"
+              />
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
+            :text="t('common.export', 'Export design').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
+                icon="mdi-download"
+                variant="text"
+                size="sm"
+                :loading="exporting"
+                :disabled="!isEditing || !canExport"
+                data-testid="char-builder-export-icon"
+                @click="handleExport"
+              />
+            </template>
+          </AtlasTooltip>
+          <input
+            ref="importFileInput"
+            type="file"
+            accept="application/json,.json"
+            aria-label="Import characterization design"
+            style="display: none"
+            data-testid="char-builder-import-input"
+            @change="handleImportFileChange"
+          >
+          <AtlasButton
+            variant="secondary"
+            icon="mdi-content-copy-outline"
+            :disabled="!isEditing || loading || !canCopy"
+            data-testid="char-builder-copy"
+            @click="handleSaveCopy"
+          >
+            {{ t('common.duplicate', 'Duplicate') }}
+          </AtlasButton>
+          <AtlasButton
+            variant="ghost"
+            tone="danger"
+            icon="mdi-delete-outline"
+            :disabled="!isEditing || loading || !canDelete"
+            data-testid="char-builder-delete"
+            @click="handleDeleteClick"
+          >
+            {{ t('common.delete', 'Delete') }}
+          </AtlasButton>
+          <AtlasButton
+            variant="primary"
+            icon="mdi-content-save-outline"
+            :disabled="!canSave"
+            :loading="saving"
+            data-testid="char-builder-save"
+            @click="handleSave"
+          >
+            {{ t('common.save', 'Save') }}
+          </AtlasButton>
         </template>
-      </AtlasTooltip>
-
-      <AtlasTooltip
-        v-if="isEditing"
-        :text="t('common.export', 'Export design').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
-            icon="mdi-download"
-            variant="text"
-            size="sm"
-            :loading="exporting"
-            :disabled="!canExport"
-            data-testid="char-builder-export-icon"
-            @click="handleExport"
-          />
-        </template>
-      </AtlasTooltip>
-
-      <input
-        ref="importFileInput"
-        type="file"
-        accept="application/json,.json"
-        aria-label="Import characterization design"
-        style="display: none"
-        data-testid="char-builder-import-input"
-        @change="handleImportFileChange"
-      >
-
-      <AtlasButton
-        v-if="isEditing"
-        variant="secondary"
-        icon="mdi-content-copy-outline"
-        :disabled="loading || !canCopy"
-        data-testid="char-builder-copy"
-        @click="handleSaveCopy"
-      >
-        {{ t('common.duplicate', 'Duplicate') }}
-      </AtlasButton>
-      <AtlasButton
-        v-if="isEditing"
-        variant="ghost"
-        icon="mdi-delete-outline"
-        :disabled="loading || !canDelete"
-        data-testid="char-builder-delete"
-        @click="handleDeleteClick"
-      >
-        {{ t('common.delete', 'Delete') }}
-      </AtlasButton>
-      <AtlasButton
-        icon="mdi-content-save-outline"
-        :disabled="!canSave"
-        :loading="saving"
-        data-testid="char-builder-save"
-        @click="handleSave"
-      >
-        {{ t('common.save', 'Save') }}
-      </AtlasButton>
+      </BuilderActionToolbar>
     </template>
 
     <CharacterizationWorkbench
@@ -300,10 +311,11 @@ import { logger } from '@/utils/logger'
 import CharacterizationWorkbench from '@/components/characterization/CharacterizationWorkbench.vue'
 import CharacterizationConceptSetsTab from '@/components/characterization/CharacterizationConceptSetsTab.vue'
 import CharacterizationMessagesTab from '@/components/characterization/CharacterizationMessagesTab.vue'
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
+import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
 import type { CharacterizationDefinition, PrevalenceStat } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'

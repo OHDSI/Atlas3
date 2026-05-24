@@ -60,6 +60,9 @@
     <!-- Configuration Panel -->
     <ConfigPanel />
 
+    <!-- Jobs Panel (separate side drawer, sibling of ConfigPanel) -->
+    <JobsPanel />
+
     <!-- Concept Detail Drawer (opens from concept tables and search results) -->
     <ConceptDetailDrawer />
 
@@ -80,6 +83,7 @@ import SessionExpiryModal from '@/components/auth/SessionExpiryModal.vue'
 import ConfigurationWarningBanner from '@/components/cohort-builder/ConfigurationWarningBanner.vue'
 import LicenseAgreementDialog from '@/components/shared/LicenseAgreementDialog.vue'
 import ConfigPanel from '@/components/config/ConfigPanel.vue'
+import JobsPanel from '@/components/jobs/JobsPanel.vue'
 import { useTrexSQLCache } from '@/composables/useTrexSQLCache'
 import ConceptDetailDrawer from '@/components/concepts/detail/ConceptDetailDrawer.vue'
 import PluginFab from '@/components/plugins/PluginFab.vue'

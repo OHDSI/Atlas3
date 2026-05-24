@@ -115,15 +115,18 @@ export const PermissionListSchema = z.array(PermissionSchema)
  * User Schema
  * Represents a person who uses the system
  */
+// WebAPI uses id = -1 for the built-in "anonymous" pseudo-user, so the
+// id must allow non-positive ints. Without this, the entire user list
+// fails zod validation and the permissions UI renders empty.
 export const UserSchema = z
   .object({
-    id: z.number().int().positive(),
+    id: z.number().int(),
     login: z.string().min(1).max(255),
     name: z.string().max(255).optional().nullable(),
     displayName: z.string().max(255).optional().nullable(),
     email: z.string().optional().nullable(),
   })
-  .passthrough() // Allow additional fields from API
+  .passthrough()
 
 export type User = z.infer<typeof UserSchema>
 
