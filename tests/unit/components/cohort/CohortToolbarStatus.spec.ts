@@ -56,11 +56,14 @@ describe('CohortToolbarStatus', () => {
   })
 
   describe('Concept Sets Badge', () => {
-    it('should not show concept sets badge when count is 0', () => {
+    it('should render the concept sets icon when count is 0 (disabled, no badge)', () => {
+      // Behavior changed: the icon now always renders so the toolbar shape
+      // stays stable across builders. When the count is 0 the icon is dim
+      // and the badge content is hidden (v-badge :model-value="false").
       const wrapper = mountComponent({ conceptSetCount: 0 })
 
       const conceptIcon = wrapper.find('[data-testid="concept-sets-icon"]')
-      expect(conceptIcon.exists()).toBe(false)
+      expect(conceptIcon.exists()).toBe(true)
     })
 
     it('should show concept sets badge when count > 0', () => {
@@ -243,8 +246,9 @@ describe('CohortToolbarStatus', () => {
       const validationIcon = wrapper.find('[data-testid="validation-icon"]')
       const loadingIcon = wrapper.find('[data-testid="validation-icon-loading"]')
 
-      expect(conceptIcon.exists()).toBe(false)
-      expect(validationIcon.exists()).toBe(true) // Always shows now
+      // Concept-sets icon also always shows now (disabled state when 0).
+      expect(conceptIcon.exists()).toBe(true)
+      expect(validationIcon.exists()).toBe(true)
       expect(loadingIcon.exists()).toBe(false)
     })
   })

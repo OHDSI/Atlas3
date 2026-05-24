@@ -159,9 +159,14 @@ describe('FeatureAnalysisEditorView', () => {
       mounted.wrapper.find('[data-testid="feature-analysis-editor-design-custom"]').exists()
     ).toBe(false)
 
-    // Save Copy / Delete only show in edit mode.
-    expect(mounted.wrapper.find('[data-testid="feature-analysis-editor-copy"]').exists()).toBe(false)
-    expect(mounted.wrapper.find('[data-testid="feature-analysis-editor-delete"]').exists()).toBe(false)
+    // Copy / Delete now always render (disabled when not editing) so the
+    // toolbar reads identically across the cohort + analysis builders.
+    const copyBtn = mounted.wrapper.find('[data-testid="feature-analysis-editor-copy"]')
+    const deleteBtn = mounted.wrapper.find('[data-testid="feature-analysis-editor-delete"]')
+    expect(copyBtn.exists()).toBe(true)
+    expect(deleteBtn.exists()).toBe(true)
+    expect(copyBtn.attributes('disabled')).toBeDefined()
+    expect(deleteBtn.attributes('disabled')).toBeDefined()
 
     // Name field starts empty.
     const nameInput = mounted.wrapper.find(

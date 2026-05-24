@@ -164,9 +164,15 @@ describe('CharacterizationBuilderView', () => {
 
     expect(mounted.wrapper.find('[data-testid="char-builder-run"]').exists()).toBe(false)
 
-    // Save Copy / Delete only show in edit mode.
-    expect(mounted.wrapper.find('[data-testid="char-builder-copy"]').exists()).toBe(false)
-    expect(mounted.wrapper.find('[data-testid="char-builder-delete"]').exists()).toBe(false)
+    // Copy / Delete buttons now always render (disabled when not in edit
+    // mode) so the toolbar shape stays stable across builders. Check that
+    // they're present AND disabled in new mode.
+    const copyBtn = mounted.wrapper.find('[data-testid="char-builder-copy"]')
+    const deleteBtn = mounted.wrapper.find('[data-testid="char-builder-delete"]')
+    expect(copyBtn.exists()).toBe(true)
+    expect(deleteBtn.exists()).toBe(true)
+    expect(copyBtn.attributes('disabled')).toBeDefined()
+    expect(deleteBtn.attributes('disabled')).toBeDefined()
 
     const nameInput = mounted.wrapper.find(
       '[data-testid="char-builder-name"]'
