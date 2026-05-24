@@ -69,27 +69,29 @@
     </div>
 
     <AtlasCard
-      class="landing__documentation"
+      tag="router-link"
+      interactive
       padding="md"
+      to="/docs"
+      class="landing__feature landing__feature--docs"
+      data-testid="landing-docs-link"
     >
-      <h2 class="landing__section-title">
+      <AtlasIcon
+        icon="mdi-book-open-page-variant-outline"
+        size="24"
+        class="landing__feature-icon"
+      />
+      <div class="landing__feature-title">
         {{ t('home.documentation.title', 'Documentation') }}
-      </h2>
-      <p class="landing__documentation-text">
+      </div>
+      <div class="landing__feature-description">
         {{
           t(
-            'home.documentation.intro',
-            'The ATLAS user guide ships inside the application:'
+            'home.features.docs',
+            'Browse the ATLAS v3.0 user guide without leaving the app.'
           )
         }}
-        <router-link
-          to="/docs"
-          class="landing__documentation-link"
-          data-testid="landing-docs-link"
-        >
-          {{ t('home.documentation.openManual', 'open the user manual').value }}
-        </router-link>.
-      </p>
+      </div>
     </AtlasCard>
   </div>
 </template>
@@ -144,16 +146,6 @@ const features: FeatureTile[] = [
     ).value,
     icon: 'mdi-chart-line',
     route: '/incidence-rates',
-  },
-  {
-    id: 'docs',
-    title: t('navigation.docs', 'User manual').value,
-    description: t(
-      'home.features.docs',
-      'Browse the ATLAS v3.0 user guide without leaving the app.'
-    ).value,
-    icon: 'mdi-book-open-page-variant-outline',
-    route: '/docs',
   },
 ]
 
@@ -256,8 +248,14 @@ const handleNewCohort = () => {
 
 .landing__features {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .landing__features {
+    grid-template-columns: 1fr;
+  }
 }
 
 .landing__feature {
@@ -285,30 +283,9 @@ const handleNewCohort = () => {
   color: rgb(var(--v-theme-on-surface-variant));
 }
 
-.landing__documentation {
-  /* SurfaceCard provides surface, radius, shadow, padding. */
-}
-
-.landing__section-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: rgba(0, 0, 0, 0.87);
-}
-
-.landing__documentation-text {
-  margin: 0;
-  font-size: 13px;
-  color: rgb(var(--v-theme-on-surface-variant));
-}
-
-.landing__documentation-link {
-  color: rgb(var(--v-theme-primary));
-  text-decoration: underline;
-}
-
-.landing__documentation-link:hover {
-  color: rgb(var(--v-theme-orange));
+.landing__feature--docs {
+  /* Docs tile sits alone in its own row beneath the analysis tiles. */
+  width: 100%;
 }
 
 @media (max-width: 768px) {

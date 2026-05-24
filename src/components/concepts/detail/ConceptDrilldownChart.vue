@@ -16,7 +16,7 @@ const conceptDetail = useConceptDetailStore()
 const dataSources = useDataSourcesStore()
 
 const selectedSourceKey = ref(props.primarySourceKey)
-const activeTab = ref<'age' | 'month'>('age')
+const activeTab = ref<'month' | 'age'>('month')
 
 const drillable = computed(() => domainPath(props.concept.domainId) !== null)
 
@@ -143,11 +143,11 @@ const sourceItems = computed(() => {
       v-model="activeTab"
       bg-color="transparent"
     >
-      <AtlasTab value="age">
-        Age at first occurrence
-      </AtlasTab>
       <AtlasTab value="month">
         Calendar month
+      </AtlasTab>
+      <AtlasTab value="age">
+        Age at first occurrence
       </AtlasTab>
     </AtlasTabs>
 

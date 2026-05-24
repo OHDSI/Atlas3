@@ -157,6 +157,12 @@ export const proposals = ref<Record<string, ProposalState>>({})
 // can re-render the buttons without losing state.
 export const asks = ref<Record<string, AskState>>({})
 
+// True when the last completed agent turn finished because we capped the
+// auto-loop at MAX_AUTO_STEPS (model still wanted more tool calls, but we
+// stopped sending). Drives the "Continue?" inline card in ChatPanel.
+// Cleared whenever a new message is sent.
+export const maxStepsReached = ref(false)
+
 // Live token getter set by the host on parcel mount. We prefer this over
 // reading sessionToken because Atlas3 silently refreshes the JWT in the
 // background — a snapshot taken at panel-mount time goes stale and the
@@ -486,7 +492,11 @@ export function getChatInstance(): Chat<UIMessage> {
         toolCallCount += 1
       }
     }
-    return toolCallCount < MAX_AUTO_STEPS
+    if (toolCallCount < MAX_AUTO_STEPS) return true
+    // Model wanted to keep calling tools but we hit the cap — surface the
+    // "Continue?" affordance so the user can choose to extend the budget.
+    maxStepsReached.value = true
+    return false
   }
 
   const chat = new Chat<UIMessage>({
@@ -585,6 +595,7 @@ export function newChat() {
   activeSessionId.value = id
   proposals.value = {}
   asks.value = {}
+  maxStepsReached.value = false
   resetPlans()
   if (chatInstance) chatInstance.messages = []
   // Add the empty session to the index so the picker shows it; it gets a
@@ -601,6 +612,7 @@ export function switchToSession(id: string) {
   activeSessionId.value = id
   proposals.value = persisted.proposals
   asks.value = persisted.asks ?? {}
+  maxStepsReached.value = false
   restorePlans({
     active: persisted.activePlan ?? null,
     history: persisted.planHistory ?? [],
@@ -621,11 +633,23 @@ export function deleteChatSession(id: string) {
   }
 }
 
+// Tell the agent to keep going after we capped its auto-loop. bao doesn't
+// expose a true "resume" endpoint — sending a fresh user turn is the
+// established way to extend the conversation, and matches what a human
+// would type to nudge a stalled chat. Clearing the flag here also covers
+// the case where the user types their own message instead of clicking.
+export function continueChat(): void {
+  if (!chatInstance) return
+  maxStepsReached.value = false
+  void chatInstance.sendMessage({ text: 'continue' })
+}
+
 export function clearCurrentSession() {
   clearProposalTimers()
   if (chatInstance) chatInstance.messages = []
   proposals.value = {}
   asks.value = {}
+  maxStepsReached.value = false
   resetPlans()
   const id = activeSessionId.value
   if (id) {

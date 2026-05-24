@@ -410,7 +410,7 @@
 
 <script setup lang="ts">
 import { logger } from '@/utils/logger'
-import { ref, computed, inject, watch, toRef } from 'vue'
+import { ref, computed, inject, watch, toRef, onBeforeUnmount } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { usePermissions } from '@/composables/usePermissions'
@@ -474,15 +474,30 @@ function onViewConcept(payload: { conceptId: number; sourceKey: string }) {
 
 // Reset the inline detail view when the editor closes so reopening starts on
 // the tabs again, not on a stale concept page.
+//
+// Also lock body scroll while the drawer is open. The drawer is teleported to
+// <body>, which means Vuetify's built-in overlay scroll-lock isn't engaged for
+// it consistently across browsers — without this manual lock, wheel/touch
+// scroll inside the panel falls through to the cohort builder page behind it.
 watch(
   () => props.modelValue,
   (open) => {
     if (!open) {
       viewingConcept.value = null
       store.resetIncluded()
+      document.body.style.overflow = ''
+    } else {
+      document.body.style.overflow = 'hidden'
     }
   },
+  { immediate: true },
 )
+
+// Failsafe: never leak the body-overflow lock if the editor is unmounted
+// while still open (e.g., route change with the drawer visible).
+onBeforeUnmount(() => {
+  document.body.style.overflow = ''
+})
 
 interface FormData {
   name: string

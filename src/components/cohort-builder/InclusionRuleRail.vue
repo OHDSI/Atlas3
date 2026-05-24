@@ -22,6 +22,12 @@
       </AtlasButton>
     </div>
 
+    <!-- Live preview datasource picker (moved here from the Generation
+         section — the stats shown beneath are scoped to this source). -->
+    <div class="inclusion-rail__preview-selector">
+      <CachePreviewSelector />
+    </div>
+
     <div
       v-if="cacheState === 'ready' || cacheState === 'stale'"
       class="inclusion-rail__entry"
@@ -124,6 +130,7 @@ import { AtlasButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { InclusionRule } from '@/models/cohort.types'
 import type { InclusionRuleStatsRow } from '@/models/trexsql.types'
+import CachePreviewSelector from '@/components/cohort-builder/CachePreviewSelector.vue'
 
 const { t } = useI18n()
 
@@ -288,6 +295,19 @@ function summaryFor(rule: InclusionRule): string {
 .inclusion-rail__count {
   margin-left: 4px;
   opacity: 0.7;
+}
+.inclusion-rail__preview-selector {
+  display: flex;
+  margin-bottom: 8px;
+}
+.inclusion-rail__preview-selector :deep(.cache-preview-selector) {
+  width: 100%;
+  flex-wrap: wrap;
+}
+.inclusion-rail__preview-selector :deep(.cache-preview-selector__select) {
+  min-width: 0;
+  max-width: none;
+  flex: 1;
 }
 .inclusion-rail__entry {
   padding: 8px 10px;

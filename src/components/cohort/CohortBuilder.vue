@@ -41,35 +41,37 @@
          exposed via defineExpose so the parent can wire it up. -->
     <div
       v-if="!hideInternalToolbar"
-      class="cohort-builder__toolbar"
+      class="cohort-builder__toolbar-row"
     >
-      <AtlasSpacer />
-
-      <cohort-toolbar-status
-        :concept-set-count="usedConceptSets.length"
-        :validation-count="validationWarnings.length"
-        :validation-color="highestSeverityColor"
-        :is-validating="isValidating"
-        :version-count="versionCount"
-        :tag-count="tagCount"
-        :cohort-id="cohortId"
-        :is-previewing-version="isPreviewingVersion"
-        @show-concept-sets="showConceptSetsDialog = true"
-        @show-validation="showValidationDialog = true"
-        @show-versions="showVersionsDialog = true"
-        @show-tags="showTagsDialog = true"
-      />
-
-      <span class="cohort-builder__toolbar-divider" />
-
-      <cohort-toolbar-actions
-        :can-save="canSave"
-        :is-previewing-version="isPreviewingVersion"
-        @cancel="handleCancel"
-        @save="handleSave"
-        @export-download="handleExportDownload"
-        @export-copy="handleExportCopy"
-      />
+      <BuilderActionToolbar>
+        <template #status>
+          <cohort-toolbar-status
+            :concept-set-count="usedConceptSets.length"
+            :validation-count="validationWarnings.length"
+            :validation-color="highestSeverityColor"
+            :is-validating="isValidating"
+            :version-count="versionCount"
+            :tag-count="tagCount"
+            :cohort-id="cohortId"
+            :is-previewing-version="isPreviewingVersion"
+            @show-concept-sets="showConceptSetsDialog = true"
+            @show-validation="showValidationDialog = true"
+            @show-versions="showVersionsDialog = true"
+            @show-tags="showTagsDialog = true"
+          />
+        </template>
+        <template #actions>
+          <cohort-toolbar-actions
+            :can-save="canSave"
+            :is-dirty="hasUnsavedChanges"
+            :is-previewing-version="isPreviewingVersion"
+            @cancel="handleCancel"
+            @save="handleSave"
+            @export-download="handleExportDownload"
+            @export-copy="handleExportCopy"
+          />
+        </template>
+      </BuilderActionToolbar>
     </div>
 
     <concept-sets-list-dialog
@@ -243,8 +245,8 @@
             >
               {{
                 t(
-                  'components.cohortExpressionEditor.addInclusionCriteria',
-                  'Add inclusion criteria'
+                  'components.cohortExpressionEditor.restrictInitialEventsButton',
+                  'Restrict initial events'
                 ).value
               }}
             </AtlasButton>
@@ -621,6 +623,7 @@ import * as cohortDefinitionVersionsService from '@/services/cohort-definition-v
 import CohortBreadcrumb from './CohortBreadcrumb.vue'
 import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
+import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 import TagSelectionDialog from './TagSelectionDialog.vue'
@@ -1234,11 +1237,13 @@ onMounted(async () => {
 })
 
 // Navigation guard to prevent losing unsaved changes. The confirm
-// step now opens a styled v-dialog instead of the native
-// window.confirm — the rest of the route-leave flow is gated on the
-// user's button click in that dialog.
+// step opens a styled v-dialog instead of the native window.confirm.
+// We can't keep `next` around and call it after the user confirms —
+// `next(false)` permanently aborts the original navigation. Instead we
+// remember the target route and re-push it via router.push once
+// confirmLeaveUnsaved fires.
 let navigationConfirmed = false
-onBeforeRouteLeave((_to, _from, next) => {
+onBeforeRouteLeave((to, _from, next) => {
   if (!hasUnsavedChanges.value || navigationConfirmed) {
     navigationConfirmed = false
     next()
@@ -1251,14 +1256,12 @@ onBeforeRouteLeave((_to, _from, next) => {
   }
 
   isConfirmingNavigation.value = true
-  // Stash the route-leave callback so the dialog buttons can call it.
   pendingNavigation = () => {
     navigationConfirmed = true
     isConfirmingNavigation.value = false
-    next()
+    router.push(to.fullPath)
   }
   showUnsavedDialog.value = true
-  // Block the navigation for now — the dialog will resume or cancel.
   next(false)
 })
 
@@ -2102,6 +2105,7 @@ defineExpose({
   isPreviewingVersion,
   // Actions state
   canSave,
+  hasUnsavedChanges,
   // Methods invoked by toolbar buttons
   openConceptSetsDialog: () => {
     showConceptSetsDialog.value = true
@@ -2176,23 +2180,13 @@ defineExpose({
   transform: scale(1.1);
 }
 
-/* Top Toolbar — sits flush on the page surface (no background or
- * separating border) and is denser. Status icons + action buttons
- * are right-aligned together (status to the immediate left of
- * the actions, separated by a thin divider). */
-.cohort-builder__toolbar {
+/* Cohort top toolbar lives on a flush page row. Push the action-toolbar
+ * (status + divider + buttons) to the right; the page itself owns the
+ * outer alignment, not the toolbar component. */
+.cohort-builder__toolbar-row {
   display: flex;
-  align-items: center;
+  justify-content: flex-end;
   padding: 4px 0 8px;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.cohort-builder__toolbar-divider {
-  display: inline-block;
-  width: 1px;
-  height: 22px;
-  background: rgb(var(--v-theme-outline-variant, 224, 224, 224));
 }
 
 .cohort-builder__cohort-fields {

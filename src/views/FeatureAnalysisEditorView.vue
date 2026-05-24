@@ -15,40 +15,56 @@
   <AnalysisBuilderShell
     :title="titleText"
     :error="storeError"
+    :show-back="false"
     testid="feature-analysis-editor"
     @back="handleBack"
     @clear-error="store.clearError()"
   >
     <template #actions>
-      <AtlasButton
-        v-if="isEditing"
-        variant="secondary"
-        icon="mdi-content-copy-outline"
-        :disabled="loading || !canCopy"
-        data-testid="feature-analysis-editor-copy"
-        @click="handleSaveCopy"
-      >
-        {{ t('common.duplicate', 'Duplicate') }}
-      </AtlasButton>
-      <AtlasButton
-        v-if="isEditing"
-        variant="ghost"
-        icon="mdi-delete-outline"
-        :disabled="loading || !canDelete"
-        data-testid="feature-analysis-editor-delete"
-        @click="handleDeleteClick"
-      >
-        {{ t('common.delete', 'Delete') }}
-      </AtlasButton>
-      <AtlasButton
-        icon="mdi-content-save-outline"
-        :disabled="!canSave"
-        :loading="saving"
-        data-testid="feature-analysis-editor-save"
-        @click="handleSave"
-      >
-        {{ t('common.save', 'Save') }}
-      </AtlasButton>
+      <BuilderActionToolbar>
+        <template #actions>
+          <AtlasButton
+            variant="ghost"
+            size="sm"
+            data-testid="feature-analysis-editor-cancel"
+            @click="handleBack"
+          >
+            <AtlasIcon class="d-md-none">
+              mdi-close
+            </AtlasIcon>
+            <span class="d-none d-md-inline">{{ t('common.cancel', 'Cancel').value }}</span>
+          </AtlasButton>
+          <AtlasButton
+            variant="secondary"
+            icon="mdi-content-copy-outline"
+            :disabled="!isEditing || loading || !canCopy"
+            data-testid="feature-analysis-editor-copy"
+            @click="handleSaveCopy"
+          >
+            {{ t('common.duplicate', 'Duplicate') }}
+          </AtlasButton>
+          <AtlasButton
+            variant="ghost"
+            tone="danger"
+            icon="mdi-delete-outline"
+            :disabled="!isEditing || loading || !canDelete"
+            data-testid="feature-analysis-editor-delete"
+            @click="handleDeleteClick"
+          >
+            {{ t('common.delete', 'Delete') }}
+          </AtlasButton>
+          <AtlasButton
+            variant="primary"
+            icon="mdi-content-save-outline"
+            :disabled="!canSave"
+            :loading="saving"
+            data-testid="feature-analysis-editor-save"
+            @click="handleSave"
+          >
+            {{ t('common.save', 'Save') }}
+          </AtlasButton>
+        </template>
+      </BuilderActionToolbar>
     </template>
 
     <!-- Main editor card -->
@@ -285,7 +301,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasCol, AtlasDialog, AtlasRow, AtlasSelect, AtlasSnackbar, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasCol, AtlasDialog, AtlasIcon, AtlasRow, AtlasSelect, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
@@ -304,6 +320,7 @@ import type {
 } from '@/models/feature-analysis.types'
 import type { ConceptSetReference } from '@/models/concept-set.types'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
+import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
 
 const props = defineProps<{
   id?: string

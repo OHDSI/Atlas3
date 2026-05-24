@@ -129,6 +129,17 @@
           @click="handleDocsClick"
         />
 
+        <!-- Jobs Panel Icon: separate side drawer, sits left of the cog. -->
+        <AtlasIconButton
+          v-if="hasJobsAccess"
+          icon="mdi-briefcase-clock-outline"
+          v-bind="{ ariaLabel: t('jobs.openPanel', 'Open jobs panel').value }"
+          variant="text"
+          size="sm"
+          data-testid="nav-jobs"
+          @click="handleJobsClick"
+        />
+
         <!-- Configuration Panel Icon: hidden when user has no admin perms -->
         <AtlasIconButton
           v-if="showConfigButton && hasAnyAdminAccess"
@@ -227,10 +238,12 @@ const uiStore = useUIStore()
 
 // Hide the cog icon entirely for users without any admin permission. Mirrors
 // the per-tab gating in ConfigPanel — if every section would be hidden, the
-// entry point shouldn't be visible at all.
+// entry point shouldn't be visible at all. Jobs now has its own nav entry
+// (hasJobsAccess) and is no longer gating the cog.
 const hasAnyAdminAccess = computed(() =>
-  hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security', 'job:execution:get'])
+  hasAnyPermission(['admin:cache', 'admin:source', 'admin:tags', 'admin:security'])
 )
+const hasJobsAccess = computed(() => hasAnyPermission(['job:execution:get']))
 
 const logoSrc = logoSvg
 const logoOhdsiOnlySrc = logoOhdsiOnlyPng
@@ -368,6 +381,14 @@ function handleConfigClick() {
     uiStore.closeConfigPanel()
   } else {
     uiStore.openConfigPanel()
+  }
+}
+
+function handleJobsClick() {
+  if (uiStore.jobsPanelOpen) {
+    uiStore.closeJobsPanel()
+  } else {
+    uiStore.openJobsPanel()
   }
 }
 

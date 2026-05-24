@@ -4,9 +4,6 @@
     class="cache-preview-selector"
     data-testid="cache-preview-selector"
   >
-    <span class="cache-preview-selector__label">
-      {{ t('inclusionRail.livePreviewCache', 'Live preview cache').value }}
-    </span>
     <AtlasSelect
       :model-value="selectedSourceKey"
       :items="items"
@@ -124,14 +121,6 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-}
-
-.cache-preview-selector__label {
-  font-size: 11px;
-  color: rgb(var(--v-theme-on-surface-variant));
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  font-weight: 600;
 }
 
 .cache-preview-selector__select {

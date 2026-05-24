@@ -20,6 +20,16 @@
           ).value
         }}
       </span>
+      <AtlasButton
+        variant="primary"
+        size="sm"
+        icon="mdi-plus"
+        class="inclusion-criteria-panel__empty-add"
+        data-testid="inclusion-empty-add"
+        @click="addNewRule"
+      >
+        {{ t('inclusionRail.add', 'Add inclusion rule').value }}
+      </AtlasButton>
     </div>
 
     <div
@@ -360,6 +370,12 @@ function saveEditedName(): void {
   font-size: 13px;
   color: rgb(var(--v-theme-on-surface-variant));
   line-height: 1.5;
+  flex: 1;
+}
+
+.inclusion-criteria-panel__empty-add {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .inclusion-criteria-panel__layout {

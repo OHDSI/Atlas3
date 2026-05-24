@@ -15,7 +15,6 @@
         data-testid="pathways-search"
         @update:model-value="(v: string | number) => handleSearchInput(v != null ? String(v) : null)"
       />
-      <AtlasSpacer />
       <AtlasButton
         icon="mdi-plus"
         data-testid="pathways-create"

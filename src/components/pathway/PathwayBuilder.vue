@@ -3,7 +3,7 @@
     :eyebrow="t('navigation.pathways', 'Pathway analysis').value"
     :title="title"
     :subtitle="subtitle"
-    :show-back="true"
+    :show-back="false"
     testid="pathway-builder"
     @back="handleBack"
   >
@@ -36,135 +36,150 @@
       >
     </template>
     <template #actions>
-      <AtlasTooltip
-        v-if="currentPathway?.id"
-        :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
-            icon="mdi-history"
-            variant="text"
-            size="sm"
-            data-testid="pathway-builder-versions"
-            @click="showVersions = true"
-          />
-        </template>
-      </AtlasTooltip>
-      <AtlasTooltip
-        v-if="currentPathway?.id"
-        :text="t('common.tags', 'Tags').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasBadge
-            v-bind="tipProps"
-            :content="pathwayTags.length || 0"
-            :model-value="pathwayTags.length > 0"
-            color="primary"
-            offset-x="6"
-            offset-y="6"
+      <BuilderActionToolbar>
+        <template #status>
+          <AtlasTooltip
+            :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+            location="bottom"
           >
-            <AtlasIconButton
-              v-bind="{ ariaLabel: 'Tags' }"
-              icon="mdi-tag-outline"
-              variant="text"
-              size="sm"
-              :disabled="isPreviewMode"
-              data-testid="pathway-builder-tags"
-              @click="showTags = true"
-            />
-          </AtlasBadge>
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
+                icon="mdi-history"
+                variant="text"
+                size="sm"
+                :disabled="!currentPathway?.id"
+                data-testid="pathway-builder-versions"
+                @click="showVersions = true"
+              />
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
+            :text="t('common.tags', 'Tags').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasBadge
+                v-bind="tipProps"
+                :content="pathwayTags.length || 0"
+                :model-value="pathwayTags.length > 0"
+                color="primary"
+                offset-x="6"
+                offset-y="6"
+              >
+                <AtlasIconButton
+                  v-bind="{ ariaLabel: 'Tags' }"
+                  icon="mdi-tag-outline"
+                  variant="text"
+                  size="sm"
+                  :disabled="!currentPathway?.id || isPreviewMode"
+                  data-testid="pathway-builder-tags"
+                  @click="showTags = true"
+                />
+              </AtlasBadge>
+            </template>
+          </AtlasTooltip>
         </template>
-      </AtlasTooltip>
-      <AtlasTooltip
-        v-if="previewVersion"
-        :text="t('common.backToCurrent', 'Back to current version').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Back to current version' }"
-            icon="mdi-undo"
-            variant="text"
+        <template #actions>
+          <AtlasButton
+            variant="ghost"
             size="sm"
-            data-testid="pathway-builder-back-to-current"
-            @click="store.clearPreviewVersion()"
-          />
+            data-testid="pathway-builder-cancel"
+            @click="handleBack"
+          >
+            <AtlasIcon class="d-md-none">
+              mdi-close
+            </AtlasIcon>
+            <span class="d-none d-md-inline">{{ t('common.cancel', 'Cancel').value }}</span>
+          </AtlasButton>
+          <AtlasTooltip
+            v-if="previewVersion"
+            :text="t('common.backToCurrent', 'Back to current version').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Back to current version' }"
+                icon="mdi-undo"
+                variant="text"
+                size="sm"
+                data-testid="pathway-builder-back-to-current"
+                @click="store.clearPreviewVersion()"
+              />
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
+            :text="t('common.import', 'Import design').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
+                icon="mdi-upload"
+                variant="text"
+                size="sm"
+                :loading="importing"
+                data-testid="pathway-builder-import"
+                @click="handleImportClick"
+              />
+            </template>
+          </AtlasTooltip>
+          <AtlasTooltip
+            :text="t('common.export', 'Export design').value"
+            location="bottom"
+          >
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
+                icon="mdi-download"
+                variant="text"
+                size="sm"
+                :loading="exporting"
+                :disabled="!currentPathway?.id"
+                data-testid="pathway-builder-export"
+                @click="handleExport"
+              />
+            </template>
+          </AtlasTooltip>
+          <input
+            ref="importFileInput"
+            type="file"
+            accept="application/json,.json"
+            aria-label="Import pathway design"
+            style="display: none"
+            data-testid="pathway-builder-import-input"
+            @change="handleImportFileChange"
+          >
+          <AtlasButton
+            variant="secondary"
+            icon="mdi-content-copy"
+            :disabled="!currentPathway?.id || !canCopy"
+            data-testid="pathway-builder-copy"
+            @click="onCopy"
+          >
+            {{ t('common.duplicate', 'Duplicate') }}
+          </AtlasButton>
+          <AtlasButton
+            variant="ghost"
+            tone="danger"
+            icon="mdi-delete-outline"
+            :disabled="!currentPathway?.id || !hasPermission('write:pathway')"
+            data-testid="pathway-builder-delete"
+            @click="onDelete"
+          >
+            {{ t('common.delete', 'Delete') }}
+          </AtlasButton>
+          <AtlasButton
+            variant="primary"
+            icon="mdi-content-save-outline"
+            :disabled="!canSave"
+            data-testid="pathway-builder-save"
+            @click="onSave"
+          >
+            {{ t('common.save', 'Save') }}
+          </AtlasButton>
         </template>
-      </AtlasTooltip>
-      <AtlasTooltip
-        :text="t('common.import', 'Import design').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
-            icon="mdi-upload"
-            variant="text"
-            size="sm"
-            :loading="importing"
-            data-testid="pathway-builder-import"
-            @click="handleImportClick"
-          />
-        </template>
-      </AtlasTooltip>
-      <AtlasTooltip
-        v-if="currentPathway?.id"
-        :text="t('common.export', 'Export design').value"
-        location="bottom"
-      >
-        <template #activator="{ props: tipProps }">
-          <AtlasIconButton
-            v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
-            icon="mdi-download"
-            variant="text"
-            size="sm"
-            :loading="exporting"
-            data-testid="pathway-builder-export"
-            @click="handleExport"
-          />
-        </template>
-      </AtlasTooltip>
-      <input
-        ref="importFileInput"
-        type="file"
-        accept="application/json,.json"
-        aria-label="Import pathway design"
-        style="display: none"
-        data-testid="pathway-builder-import-input"
-        @change="handleImportFileChange"
-      >
-      <AtlasButton
-        v-if="currentPathway?.id"
-        variant="secondary"
-        icon="mdi-content-copy"
-        :disabled="!currentPathway?.id || !canCopy"
-        data-testid="pathway-builder-copy"
-        @click="onCopy"
-      >
-        {{ t('common.duplicate', 'Duplicate') }}
-      </AtlasButton>
-      <AtlasButton
-        v-if="currentPathway?.id"
-        variant="danger"
-        icon="mdi-delete"
-        :disabled="!currentPathway?.id || !hasPermission('write:pathway')"
-        data-testid="pathway-builder-delete"
-        @click="onDelete"
-      >
-        {{ t('common.delete', 'Delete') }}
-      </AtlasButton>
-      <AtlasButton
-        variant="primary"
-        icon="mdi-content-save"
-        :disabled="!canSave"
-        data-testid="pathway-builder-save"
-        @click="onSave"
-      >
-        {{ t('common.save', 'Save') }}
-      </AtlasButton>
+      </BuilderActionToolbar>
     </template>
 
     <template
@@ -219,7 +234,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
+import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
@@ -229,6 +244,7 @@ import { useI18n } from '@/composables/useI18n'
 import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
+import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
 import PathwayWorkbench from './PathwayWorkbench.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'

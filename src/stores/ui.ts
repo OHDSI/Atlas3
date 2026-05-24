@@ -19,6 +19,9 @@ export const useUIStore = defineStore('ui', () => {
     scrollPosition: 0,
   })
 
+  // Jobs Panel State (separate side-drawer, sibling of the config panel)
+  const jobsPanelOpen = ref(false)
+
   // Actions
   function togglePanel(panelId: string) {
     if (expandedPanels.value.has(panelId)) {
@@ -89,12 +92,21 @@ export const useUIStore = defineStore('ui', () => {
     configPanelState.value.scrollPosition = position
   }
 
+  function openJobsPanel() {
+    jobsPanelOpen.value = true
+  }
+
+  function closeJobsPanel() {
+    jobsPanelOpen.value = false
+  }
+
   return {
     // State
     expandedPanels,
     openModals,
     expandedEventCards,
     configPanelState,
+    jobsPanelOpen,
     // Actions
     togglePanel,
     expandPanel,
@@ -110,5 +122,7 @@ export const useUIStore = defineStore('ui', () => {
     closeConfigPanel,
     setConfigPanelSection,
     setConfigPanelScroll,
+    openJobsPanel,
+    closeJobsPanel,
   }
 })

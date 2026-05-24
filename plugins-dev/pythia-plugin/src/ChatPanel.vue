@@ -13,8 +13,10 @@ import {
   activeSessionId,
   asks,
   clearCurrentSession,
+  continueChat,
   deleteChatSession,
   getChatInstance,
+  maxStepsReached,
   newChat,
   proposals,
   resolveProposal,
@@ -102,6 +104,59 @@ const proposalGroups = computed<ProposalGroup[]>(() => {
     g.items.sort((a, b) => (a.groupIndex ?? 0) - (b.groupIndex ?? 0))
   }
   return Array.from(buckets.values())
+})
+
+// The last assistant message — that's where the typing indicator attaches
+// while a response is streaming. We track it by id so a brand-new
+// assistant message that hasn't received any text part yet still gets the
+// dots (rendered as a standalone bubble in that case).
+const lastAssistantMessage = computed(() => {
+  for (let i = messages.value.length - 1; i >= 0; i--) {
+    if (messages.value[i].role === 'assistant') return messages.value[i]
+  }
+  return null
+})
+
+const showTypingIndicator = computed(() => {
+  if (!isStreaming.value) return false
+  return true
+})
+
+// True only for the LAST part overall of the last assistant message AND
+// only when that part is text. Keeps the dots glued to the bottom of the
+// streaming bubble so any tool chip that arrives next still appears
+// ABOVE the typing indicator. When the last part isn't text (e.g. a
+// fresh tool-call chip), this returns false and the standalone bubble
+// below picks up the indicator.
+function isTrailingAssistantTextPart(
+  msg: { id: string; role: string; parts?: unknown[] },
+  partIdx: number
+): boolean {
+  if (!showTypingIndicator.value) return false
+  if (msg.role !== 'assistant') return false
+  if (lastAssistantMessage.value?.id !== msg.id) return false
+  const parts = (msg.parts ?? []) as Array<{ type?: string }>
+  if (partIdx !== parts.length - 1) return false
+  return !!textOf(parts[partIdx])
+}
+
+// True when the assistant is mid-stream but the bottom of the
+// conversation isn't a text part the dots are already glued to. Covers:
+//   - No assistant message yet (user just sent, first chunk pending)
+//   - Last assistant part is a tool-call chip (newest tool sits above
+//     the dots; the standalone bubble adds them below it)
+const showStandaloneTypingBubble = computed(() => {
+  if (!showTypingIndicator.value) return false
+  const last = lastAssistantMessage.value
+  if (!last) {
+    const tail = messages.value[messages.value.length - 1]
+    return tail?.role === 'user'
+  }
+  const parts = (last.parts ?? []) as Array<{ type?: string }>
+  const tailPart = parts[parts.length - 1]
+  // If the last part is text, the trailing dots inside the text bubble
+  // are already showing — don't duplicate.
+  return !textOf(tailPart)
 })
 
 function textOf(part: unknown): string {
@@ -214,6 +269,7 @@ function cardComponentFor(toolName: string) {
 async function send(text: string) {
   const trimmed = text.trim()
   if (!trimmed || isStreaming.value) return
+  maxStepsReached.value = false
   // If there are pending ask_user prompts and the user typed instead of
   // clicking, mark them resolved so the buttons disable and the card
   // doesn't claim credit for an answer it didn't receive. Then schedule
@@ -245,6 +301,7 @@ function onAnswer(askId: string, answer: { id?: string; label: string }) {
   if (!a || a.status !== 'pending') return
   a.status = 'answered'
   a.chosen = answer
+  maxStepsReached.value = false
   // The user's selection feeds the next turn as a normal user message.
   // We deliberately don't go through send() here because that would
   // re-mark all pending asks as "(typed reply)" — but this IS the answer
@@ -267,6 +324,19 @@ function onStop() {
 
 function onNewChat() {
   newChat()
+}
+
+async function onContinue() {
+  // Re-snapshot the shell context so the resumed turn sees the user's
+  // current route, same as a normal send().
+  try {
+    const ctx = await getShellContext(props.messageBus)
+    sessionSourceKey.value = ctx.sourceKey
+    sessionRouteContext.value = ctx.routeContext ?? null
+  } catch {
+    // Stale context is preferable to no context — keep last known.
+  }
+  continueChat()
 }
 
 function onSwitchSession(id: string) {
@@ -379,6 +449,119 @@ watch(
   maybeScrollToBottom
 )
 
+const SIZE_STORAGE_KEY = 'pythia.chatPanel.size'
+const MIN_W = 320
+const MIN_H = 400
+const rootRef = ref<{ $el?: HTMLElement } | HTMLElement | null>(null)
+let overlayPanel: HTMLElement | null = null
+
+function rootEl(): HTMLElement | null {
+  const r = rootRef.value
+  if (!r) return null
+  if (r instanceof HTMLElement) return r
+  return (r as { $el?: HTMLElement }).$el ?? null
+}
+
+function maxW(): number {
+  return Math.max(MIN_W, Math.floor(window.innerWidth * 0.9))
+}
+function maxH(): number {
+  return Math.max(MIN_H, Math.floor(window.innerHeight * 0.9))
+}
+function clampW(w: number): number {
+  return Math.min(maxW(), Math.max(MIN_W, Math.round(w)))
+}
+function clampH(h: number): number {
+  return Math.min(maxH(), Math.max(MIN_H, Math.round(h)))
+}
+
+function findOverlayPanel(): HTMLElement | null {
+  let el: HTMLElement | null = rootEl()
+  while (el) {
+    if (el.classList && el.classList.contains('plugin-overlay-panel')) return el
+    el = el.parentElement
+  }
+  return null
+}
+
+function applySize(w: number, h: number) {
+  if (!overlayPanel) return
+  overlayPanel.style.width = `${w}px`
+  overlayPanel.style.height = `${h}px`
+  // Override the host's `max-width: calc(100vw - 48px)` style so user-set
+  // sizes can exceed the host default while still respecting our own max.
+  overlayPanel.style.maxWidth = 'none'
+  overlayPanel.style.maxHeight = 'none'
+}
+
+function loadSavedSize() {
+  if (!overlayPanel) return
+  try {
+    const raw = localStorage.getItem(SIZE_STORAGE_KEY)
+    if (!raw) return
+    const parsed = JSON.parse(raw) as { w?: number; h?: number }
+    if (typeof parsed.w === 'number' && typeof parsed.h === 'number') {
+      applySize(clampW(parsed.w), clampH(parsed.h))
+    }
+  } catch {
+    // Corrupt entry; ignore and let host defaults stand.
+  }
+}
+
+function saveSize(w: number, h: number) {
+  try {
+    localStorage.setItem(SIZE_STORAGE_KEY, JSON.stringify({ w, h }))
+  } catch {
+    // Quota/private mode — non-fatal.
+  }
+}
+
+type ResizeAxis = 'x' | 'y' | 'xy'
+
+function startResize(axis: ResizeAxis, ev: PointerEvent) {
+  if (!overlayPanel) overlayPanel = findOverlayPanel()
+  if (!overlayPanel) return
+  ev.preventDefault()
+  const rect = overlayPanel.getBoundingClientRect()
+  const startX = ev.clientX
+  const startY = ev.clientY
+  const startW = rect.width
+  const startH = rect.height
+  const target = ev.currentTarget as HTMLElement
+  try { target.setPointerCapture(ev.pointerId) } catch { /* not all browsers */ }
+
+  const prevUserSelect = document.body.style.userSelect
+  document.body.style.userSelect = 'none'
+
+  const onMove = (e: PointerEvent) => {
+    // Panel is anchored bottom-right, so dragging the top-left corner
+    // inward (positive dx/dy) shrinks; dragging outward grows.
+    let w = startW
+    let h = startH
+    if (axis === 'x' || axis === 'xy') w = clampW(startW - (e.clientX - startX))
+    if (axis === 'y' || axis === 'xy') h = clampH(startH - (e.clientY - startY))
+    applySize(w, h)
+  }
+  const onUp = (e: PointerEvent) => {
+    target.removeEventListener('pointermove', onMove)
+    target.removeEventListener('pointerup', onUp)
+    target.removeEventListener('pointercancel', onUp)
+    document.body.style.userSelect = prevUserSelect
+    try { target.releasePointerCapture(e.pointerId) } catch { /* noop */ }
+    if (overlayPanel) {
+      const r = overlayPanel.getBoundingClientRect()
+      saveSize(Math.round(r.width), Math.round(r.height))
+    }
+  }
+  target.addEventListener('pointermove', onMove)
+  target.addEventListener('pointerup', onUp)
+  target.addEventListener('pointercancel', onUp)
+}
+
+function onResizeLeft(e: PointerEvent) { startResize('x', e) }
+function onResizeTop(e: PointerEvent) { startResize('y', e) }
+function onResizeCorner(e: PointerEvent) { startResize('xy', e) }
+
 onMounted(async () => {
   // Cache a snapshot for first paint, but install the live getToken so the
   // transport always re-reads the current (possibly refreshed) JWT.
@@ -388,6 +571,8 @@ onMounted(async () => {
     bus: props.messageBus,
     applyProposal: (p) => applyProposal(props.messageBus, p as never),
   })
+  overlayPanel = findOverlayPanel()
+  loadSavedSize()
   const ctx = await getShellContext(props.messageBus)
   sessionSourceKey.value = ctx.sourceKey
   sessionRouteContext.value = ctx.routeContext ?? null
@@ -400,10 +585,31 @@ onMounted(async () => {
 
 <template>
   <v-card
+    ref="rootRef"
     class="cohort-agent-chat"
     flat
     rounded="lg"
   >
+    <div
+      class="cohort-agent-chat__resize cohort-agent-chat__resize--left"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize chat width"
+      @pointerdown="onResizeLeft"
+    />
+    <div
+      class="cohort-agent-chat__resize cohort-agent-chat__resize--top"
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="Resize chat height"
+      @pointerdown="onResizeTop"
+    />
+    <div
+      class="cohort-agent-chat__resize cohort-agent-chat__resize--corner"
+      role="separator"
+      aria-label="Resize chat"
+      @pointerdown="onResizeCorner"
+    />
     <v-toolbar
       density="compact"
       color="surface"
@@ -417,22 +623,6 @@ onMounted(async () => {
         {{ t('cohortAgent.title', 'Pythia AI Agent') }}
       </v-toolbar-title>
       <v-spacer />
-      <v-chip
-        v-if="isStreaming"
-        size="x-small"
-        color="primary"
-        variant="tonal"
-        class="me-2"
-      >
-        <template #prepend>
-          <v-progress-circular
-            indeterminate
-            size="10"
-            width="2"
-          />
-        </template>
-        <span class="ms-2">{{ t('cohortAgent.streaming', 'streaming…') }}</span>
-      </v-chip>
       <v-menu
         location="bottom end"
         :close-on-content-click="false"
@@ -535,12 +725,22 @@ onMounted(async () => {
             v-else-if="textOf(part)"
             class="cohort-agent-chat__bubble cohort-agent-chat__markdown"
             :class="`cohort-agent-chat__bubble--${msg.role}`"
-            v-html="renderMarkdown(textOf(part))"
-          />
+          >
+            <span v-html="renderMarkdown(textOf(part))" />
+            <span
+              v-if="isTrailingAssistantTextPart(msg, idx)"
+              class="cohort-agent-chat__typing cohort-agent-chat__typing--trailing"
+              aria-label="Assistant is typing"
+            >
+              <span class="cohort-agent-chat__typing-dot" />
+              <span class="cohort-agent-chat__typing-dot" />
+              <span class="cohort-agent-chat__typing-dot" />
+            </span>
+          </div>
 
           <v-chip
             v-else-if="typeof part.type === 'string' && part.type.startsWith('tool-')"
-            size="x-small"
+            size="small"
             variant="tonal"
             color="info"
             class="cohort-agent-chat__tool-chip"
@@ -549,13 +749,29 @@ onMounted(async () => {
             <template #prepend>
               <v-icon
                 icon="mdi-tools"
-                size="x-small"
+                size="18"
               />
             </template>
             {{ part.type.replace(/^tool-/, '') }}
           </v-chip>
         </div>
       </template>
+
+      <div
+        v-if="showStandaloneTypingBubble"
+        class="cohort-agent-chat__row cohort-agent-chat__row--assistant"
+      >
+        <div
+          class="cohort-agent-chat__bubble cohort-agent-chat__bubble--assistant cohort-agent-chat__bubble--typing"
+          aria-label="Assistant is typing"
+        >
+          <span class="cohort-agent-chat__typing">
+            <span class="cohort-agent-chat__typing-dot" />
+            <span class="cohort-agent-chat__typing-dot" />
+            <span class="cohort-agent-chat__typing-dot" />
+          </span>
+        </div>
+      </div>
 
       <AskUserCard
         v-for="ask in askList"
@@ -586,6 +802,27 @@ onMounted(async () => {
           @reject-one="onReject"
         />
       </template>
+
+      <div
+        v-if="maxStepsReached && !isStreaming"
+        class="continue-card"
+      >
+        <div class="card-header">
+          <span class="badge">Step limit reached</span>
+        </div>
+        <div class="continue-message">
+          {{ t('cohortAgent.continuePrompt', 'The agent paused after reaching its per-turn step budget. Continue to let it keep working on your request.') }}
+        </div>
+        <div class="actions">
+          <button
+            type="button"
+            class="continue-btn"
+            @click="onContinue"
+          >
+            {{ t('cohortAgent.continueButton', 'Continue') }}
+          </button>
+        </div>
+      </div>
 
       <v-alert
         v-if="error"
@@ -646,6 +883,34 @@ onMounted(async () => {
   height: 100%;
   width: 100%;
   background: rgb(var(--v-theme-background));
+  position: relative;
+}
+.cohort-agent-chat__resize {
+  position: absolute;
+  z-index: 5;
+  touch-action: none;
+  background: transparent;
+}
+.cohort-agent-chat__resize--left {
+  top: 12px;
+  bottom: 0;
+  left: 0;
+  width: 6px;
+  cursor: ew-resize;
+}
+.cohort-agent-chat__resize--top {
+  top: 0;
+  left: 12px;
+  right: 0;
+  height: 6px;
+  cursor: ns-resize;
+}
+.cohort-agent-chat__resize--corner {
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
 }
 .cohort-agent-chat__toolbar {
   flex: 0 0 auto;
@@ -758,10 +1023,78 @@ onMounted(async () => {
   align-self: flex-start;
   font-family: ui-monospace, SFMono-Regular, monospace;
 }
+.cohort-agent-chat__tool-chip :deep(.v-chip__prepend) {
+  margin-inline-end: 6px;
+}
 .cohort-agent-chat__composer { flex: 0 0 auto; }
 .cohort-agent-chat__pinned {
   flex: 0 0 auto;
   padding: 6px 12px 0;
   background: rgb(var(--v-theme-background));
 }
+.cohort-agent-chat__typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cohort-agent-chat__typing--trailing {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.cohort-agent-chat__typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.35;
+  animation: cohort-agent-typing 1.2s infinite ease-in-out;
+}
+.cohort-agent-chat__typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.cohort-agent-chat__typing-dot:nth-child(3) { animation-delay: 0.3s; }
+.cohort-agent-chat__bubble--typing {
+  color: #4b5563;
+  padding: 10px 14px;
+}
+@keyframes cohort-agent-typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30% { transform: translateY(-3px); opacity: 0.9; }
+}
+.continue-card {
+  border: 1px solid #fde68a;
+  border-left: 3px solid #d97706;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 6px 0;
+  background: #fffbeb;
+  font-size: 0.8125rem;
+}
+.continue-card .card-header { margin-bottom: 4px; }
+.continue-card .badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #fde68a;
+  color: #78350f;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.continue-card .continue-message {
+  color: #1f2937;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.continue-card .actions { display: flex; justify-content: flex-end; }
+.continue-card .continue-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: #d97706;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.continue-card .continue-btn:hover { background: #b45309; }
 </style>

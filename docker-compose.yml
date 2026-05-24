@@ -27,7 +27,13 @@ services:
       retries: 10
 
   atlas3-webapi:
-    image: ghcr.io/ohdsi/webapi:3.0-dev@sha256:a6e5fcffd87d7a3e77c155b6bbf8847ce87cb3d9f00e788dbbc4bde670a595c4
+    image: atlas3-webapi:local
+    build:
+      context: ./docker/webapi
+      dockerfile: Dockerfile
+      args:
+        WEBAPI_DIGEST: sha256:a084547bf3ff36fcf7de87eb03e5efbe2403739ab2b39e8ea344b8dc0af996f6
+        TREXSQL_VERSION: "0.2.3"
     container_name: atlas3-webapi
     platform: linux/amd64
     restart: unless-stopped
