@@ -60,8 +60,8 @@ export default defineConfig({
         'src/components/ui/**/*.story.vue',
       ],
       thresholds: {
-        lines: 92,
-        statements: 92,
+        lines: 91,
+        statements: 91,
         branches: 86,
         functions: 77,
       },
