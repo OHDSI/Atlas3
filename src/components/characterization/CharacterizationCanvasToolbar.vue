@@ -24,6 +24,14 @@
       >
         {{ t('cc.viewEdit.workbench.modeTable1', 'Baseline').value }}
       </AtlasButton>
+      <AtlasButton
+        toggle
+        value="dashboard"
+        size="sm"
+        data-testid="char-toolbar-mode-dashboard"
+      >
+        {{ t('cc.viewEdit.workbench.modeDashboard', 'Overview').value }}
+      </AtlasButton>
     </v-btn-toggle>
 
     <AtlasChip
@@ -83,7 +91,7 @@
 import { AtlasButton, AtlasChip, AtlasSpacer, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 
-export type ViewMode = 'table1' | 'perAnalysis'
+export type ViewMode = 'table1' | 'perAnalysis' | 'dashboard'
 
 interface ActiveRun {
   id: number

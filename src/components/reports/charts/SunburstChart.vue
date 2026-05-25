@@ -27,6 +27,8 @@ import { hierarchy, partition, type HierarchyRectangularNode } from 'd3'
 
 export interface SunburstNode {
   name: string
+  code?: number
+  codePath?: string
   value?: number
   itemColor?: string
   children?: SunburstNode[]
@@ -70,7 +72,8 @@ function combinationBits(name: string): number[] | null {
 }
 
 function bandsForNode(d: LaidOutNode, colors: (key: string) => string): Band[] {
-  const bits = combinationBits(d.data.name)
+  const code = d.data.code
+  const bits = code != null ? combinationBits(String(code)) : combinationBits(d.data.name)
   if (!bits) {
     return [{ r0: d.y0, r1: d.y1, color: d.data.itemColor || colors(d.data.name) }]
   }
@@ -112,9 +115,13 @@ function buildBreadcrumb(d: LaidOutNode | undefined): string {
     cur = cur.parent as LaidOutNode | null
   }
   const rows = chain.map(node => {
-    const bits = combinationBits(node.data.name)
+    const code = node.data.code
+    const bits = code != null ? combinationBits(String(code)) : combinationBits(node.data.name)
     const segs = bits
-      ? bits.map(b => ({ name: String(1 << b), color: props.colors(String(1 << b)) }))
+      ? (node.data.splitChildren ?? bits.map(b => ({ name: String(1 << b) }))).map((sc, i) => ({
+          name: sc.name,
+          color: props.colors(String(1 << bits[i]!)),
+        }))
       : [{ name: node.data.name, color: node.data.itemColor || props.colors(node.data.name) }]
     return segs
       .map(
@@ -201,7 +208,16 @@ function handleChartClick(e: { dataIndex?: number }): void {
   const idx = e?.dataIndex
   if (typeof idx !== 'number') return
   const d = renderable.value[idx]
-  if (d) emit('arc-click', d.data)
+  if (!d) return
+  const chain: string[] = []
+  let cur: LaidOutNode | null = d
+  while (cur && cur.depth > 0) {
+    const code = cur.data.code
+    chain.unshift(code != null ? String(code) : cur.data.name)
+    cur = cur.parent as LaidOutNode | null
+  }
+  const node: SunburstNode = { ...d.data, codePath: chain.join('-') }
+  emit('arc-click', node)
 }
 
 defineExpose({ handleChartClick })

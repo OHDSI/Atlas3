@@ -1803,7 +1803,7 @@ async function handleSave() {
       if (ref.items && ref.items.length > 0) {
         return ref
       }
-      if (ref.id !== undefined && ref.id !== null) {
+      if (ref.id) {
         const fullConceptSet = await getConceptSetById(ref.id)
         if (fullConceptSet?.items) {
           return { ...ref, items: fullConceptSet.items as ConceptSetItem[] }

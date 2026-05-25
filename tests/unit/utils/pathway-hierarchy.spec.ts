@@ -38,8 +38,8 @@ describe('buildPathwayHierarchy', () => {
     }
     const tree = buildPathwayHierarchy(group, eventCodes, 5, colors)
     expect(tree.children?.length).toBe(1)
-    expect(tree.children![0].name).toBe('1')
-    expect(tree.children![0].children?.[0].name).toBe('2')
+    expect(tree.children![0].name).toBe('A')
+    expect(tree.children![0].children?.[0].name).toBe('B')
   })
 
   it('appends end sentinel when path shorter than maxDepth', () => {
@@ -59,7 +59,7 @@ describe('buildPathwayHierarchy', () => {
     }
     const tree = buildPathwayHierarchy(group, eventCodes, 3, colors)
     const leaf = tree.children![0].children![0].children![0]
-    expect(leaf.name).toBe('4')
+    expect(leaf.name).toBe('C')
     expect(leaf.children).toBeUndefined()
   })
 
@@ -71,7 +71,7 @@ describe('buildPathwayHierarchy', () => {
     const tree = buildPathwayHierarchy(group, eventCodes, 5, colors)
     const splitNodes = tree.children![0].splitChildren
     expect(splitNodes).toBeDefined()
-    expect(splitNodes!.map(n => n.name)).toEqual(['1', '2'])
+    expect(splitNodes!.map(n => n.name)).toEqual(['A', 'B'])
   })
 
   it('aggregates personCount across shared prefixes', () => {
@@ -83,7 +83,7 @@ describe('buildPathwayHierarchy', () => {
       ],
     }
     const tree = buildPathwayHierarchy(group, eventCodes, 5, colors)
-    expect(tree.children![0].name).toBe('1')
+    expect(tree.children![0].name).toBe('A')
     expect(tree.children![0].value).toBe(15)
   })
 })

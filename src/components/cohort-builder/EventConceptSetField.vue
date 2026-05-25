@@ -8,7 +8,7 @@
     </div>
     <div class="event-concept-set-field__input">
       <AtlasButton
-        v-if="!conceptSet || !conceptSet.id"
+        v-if="!conceptSet || (conceptSet.id == null)"
         variant="secondary"
         size="sm"
         data-testid="concept-set-picker"

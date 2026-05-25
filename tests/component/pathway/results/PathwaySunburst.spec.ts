@@ -31,10 +31,12 @@ const results = {
   ],
 }
 
+const colors = (_key: string) => '#ccc'
+
 describe('PathwaySunburst', () => {
   it('renders a SunburstChart for the given target group', () => {
     const w = mount(PathwaySunburst, {
-      props: { design, results, targetCohortId: 1 },
+      props: { design, results, targetCohortId: 1, colors },
       global: {
         plugins: [vuetify],
         stubs: { SunburstChart: true, 'v-chart': true },
@@ -45,7 +47,7 @@ describe('PathwaySunburst', () => {
 
   it('emits pathway:select with decoded path on arc click', () => {
     const w = mount(PathwaySunburst, {
-      props: { design, results, targetCohortId: 1 },
+      props: { design, results, targetCohortId: 1, colors },
       global: {
         plugins: [vuetify],
         stubs: { SunburstChart: true, 'v-chart': true },

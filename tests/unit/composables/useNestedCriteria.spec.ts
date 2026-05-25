@@ -78,7 +78,7 @@ describe('useNestedCriteria', () => {
 
       const event = addEvent('ConditionOccurrence')
 
-      expect(event.conceptSet).toEqual({ id: 0, name: 'Select concept set...' })
+      expect(event.conceptSet).toEqual({ id: null, name: 'Select concept set...' })
     })
 
     it('generates unique IDs for multiple events', () => {

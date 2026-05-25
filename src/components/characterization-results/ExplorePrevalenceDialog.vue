@@ -1,61 +1,103 @@
 <!--
   ExplorePrevalenceDialog
 
-  Drill into the prevalence cell for a single covariate / cohort. Calls
-  `explorePrevalence` on open and renders whatever shape the WebAPI
-  returns as a generic v-data-table — the columns are inferred from the
-  union of keys across rows so this works regardless of the exact
-  feature-analysis backing the data.
+  Detail view for a single covariate. Shows metadata (concept, domain,
+  analysis) and a per-cohort comparison table with inline bar indicators.
 -->
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    eyebrow="EXPLORE"
-    :title="titleText"
-    max-width="900"
+    eyebrow="COVARIATE DETAIL"
+    :title="stat?.covariateName ?? ''"
+    max-width="720"
     data-testid="char-results-explore-dialog"
     @close="close"
     @update:model-value="onUpdateModel"
   >
+    <template v-if="stat">
+      <div class="explore__meta">
+        <dl class="explore__dl">
+          <div>
+            <dt>Analysis</dt>
+            <dd>{{ stat.analysisName }}</dd>
+          </div>
+          <div v-if="stat.domainId">
+            <dt>Domain</dt>
+            <dd>{{ stat.domainId }}</dd>
+          </div>
+          <div>
+            <dt>Concept ID</dt>
+            <dd>
+              <a
+                v-if="stat.conceptId"
+                href="#"
+                class="explore__link"
+                @click.prevent="openConcept(stat.conceptId)"
+              >{{ stat.conceptId }}</a>
+              <span v-else>—</span>
+            </dd>
+          </div>
+          <div v-if="stat.conceptName">
+            <dt>Concept</dt>
+            <dd>{{ stat.conceptName }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <table class="explore__table">
+        <thead>
+          <tr>
+            <th class="explore__th-label">
+              Cohort
+            </th>
+            <th class="explore__th-num">
+              Count
+            </th>
+            <th class="explore__th-num">
+              %
+            </th>
+            <th class="explore__th-bar" />
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="row in cohortRows"
+            :key="row.id"
+          >
+            <td class="explore__td-label">
+              {{ row.name }}
+            </td>
+            <td class="explore__td-num">
+              {{ row.count != null ? row.count.toLocaleString() : '—' }}
+            </td>
+            <td class="explore__td-num">
+              {{ row.pct != null ? row.pct.toFixed(2) + '%' : '—' }}
+            </td>
+            <td class="explore__td-bar">
+              <div
+                class="explore__bar"
+                :style="{ width: barWidth(row.pct) }"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div
+        v-if="stat.stdDiff != null"
+        class="explore__stddiff"
+      >
+        Standardised mean difference: <strong>{{ stat.stdDiff.toFixed(4) }}</strong>
+      </div>
+    </template>
+
     <div
-      v-if="loading"
-      class="explore-dialog__loading"
-    >
-      <AtlasSkeleton
-        v-for="n in 4"
-        :key="n"
-        type="table-row"
-      />
-    </div>
-
-    <AtlasAlert
-      v-else-if="error"
-      severity="danger"
-      class="mb-2"
-    >
-      {{ error }}
-    </AtlasAlert>
-
-    <div
-      v-else-if="!rows.length"
-      class="explore-dialog__empty"
-    >
-      <AtlasIcon
-        icon="mdi-database-off-outline"
-        size="32"
-        class="explore-dialog__empty-icon"
-      />
-      <p class="explore-dialog__empty-text">
-        {{ tv('common.noData', 'No related concepts.') }}
-      </p>
-    </div>
-
-    <AtlasDataTable
       v-else
-      :items="rows"
-      :headers="headers"
-      :items-per-page="25"
-    />
+      class="explore__empty"
+    >
+      No covariate selected.
+    </div>
+
     <template #actions>
       <AtlasButton
         variant="ghost"
@@ -68,20 +110,17 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasSkeleton } from '@/components/ui'
-import { computed, ref, watch } from 'vue'
-
+import { computed } from 'vue'
+import { AtlasButton, AtlasDialog } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
-import { explorePrevalence } from '@/services/characterization.service'
-import { logger } from '@/utils/logger'
+import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
+import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
+import { useDataSourcesStore } from '@/stores/datasources'
+import type { PrevalenceStat } from '@/models/characterization.types'
 
 interface Props {
   modelValue: boolean
-  generationId: number | null
-  analysisId: number | null
-  cohortId: number | null
-  covariateId: number | null
-  covariateName: string | null
+  stat: PrevalenceStat | null
 }
 
 const props = defineProps<Props>()
@@ -90,83 +129,55 @@ const emit = defineEmits<{
 }>()
 
 const { tv } = useI18n()
+const conceptDrawer = useConceptDetailDrawerStore()
+const dsStore = useDataSourcesStore()
 
-const loading = ref(false)
-const error = ref<string | null>(null)
-const rows = ref<Record<string, unknown>[]>([])
-
-const titleText = computed<string>(() =>
-  tv(
-    'cc.viewEdit.executions.prevalenceStatConverter.exploringConceptHierarchyFor',
-    'Explore covariate: {name}',
-    {
-      name: props.covariateName ?? '',
-    }
-  )
-)
-
-const headers = computed(() => {
-  const keys = new Set<string>()
-  for (const row of rows.value) {
-    for (const k of Object.keys(row)) {
-      keys.add(k)
-    }
+async function openConcept(id: number): Promise<void> {
+  if (dsStore.sources.length === 0) {
+    try { await dsStore.fetchDataSources() } catch { /* ignore */ }
   }
-  return Array.from(keys).map(key => ({
-    title: key,
-    key,
+  const sourceKey = dsStore.sources[0]?.sourceKey
+  if (sourceKey) conceptDrawer.open(sourceKey, id)
+}
+
+interface CohortRow {
+  id: number
+  name: string
+  count: number | null
+  pct: number | null
+}
+
+function pickStratum(rec: Record<string, Record<string, number>>): Record<string, number> | null {
+  const keys = Object.keys(rec)
+  if (keys.length === 0) return null
+  const k = keys.includes(DEFAULT_STRATA_KEY) ? DEFAULT_STRATA_KEY : keys[0]!
+  return rec[k] ?? null
+}
+
+const cohortRows = computed<CohortRow[]>(() => {
+  if (!props.stat) return []
+  const countMap = pickStratum(props.stat.count)
+  const pctMap = pickStratum(props.stat.pct)
+  return props.stat.cohorts.map(c => ({
+    id: c.id,
+    name: c.name,
+    count: countMap?.[String(c.id)] ?? null,
+    pct: pctMap?.[String(c.id)] ?? null,
   }))
 })
 
-function isComplete(): boolean {
-  return (
-    props.generationId !== null &&
-    props.analysisId !== null &&
-    props.cohortId !== null &&
-    props.covariateId !== null
-  )
-}
-
-async function load(): Promise<void> {
-  if (!isComplete()) {
-    return
+const maxPct = computed(() => {
+  let m = 0
+  for (const r of cohortRows.value) {
+    if (r.pct != null && r.pct > m) m = r.pct
   }
-  loading.value = true
-  error.value = null
-  rows.value = []
-  try {
-    const result = await explorePrevalence(
-      props.generationId as number,
-      props.analysisId as number,
-      props.cohortId as number,
-      props.covariateId as number
-    )
-    if (Array.isArray(result)) {
-      rows.value = result.filter(
-        (r): r is Record<string, unknown> => typeof r === 'object' && r !== null
-      )
-    } else if (result && typeof result === 'object') {
-      rows.value = [result as Record<string, unknown>]
-    } else {
-      rows.value = []
-    }
-  } catch (err) {
-    logger.error('ExplorePrevalenceDialog', 'Failed to explore prevalence', err)
-    error.value = err instanceof Error ? err.message : String(err)
-  } finally {
-    loading.value = false
-  }
-}
+  return m || 1
+})
 
-watch(
-  () => [props.modelValue, props.generationId, props.analysisId, props.cohortId, props.covariateId],
-  () => {
-    if (props.modelValue && isComplete()) {
-      void load()
-    }
-  },
-  { immediate: true }
-)
+function barWidth(pct: number | null): string {
+  if (pct == null || pct <= 0) return '0%'
+  return `${Math.min((pct / maxPct.value) * 100, 100)}%`
+}
 
 function close(): void {
   emit('update:modelValue', false)
@@ -178,32 +189,93 @@ function onUpdateModel(value: boolean): void {
 </script>
 
 <style scoped>
-.explore-dialog__loading {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
-}
-
-.explore-dialog__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 48px 24px;
-  border-radius: 12px;
+.explore__meta {
+  margin-bottom: 20px;
+  padding: 16px;
   background: rgb(var(--v-theme-surface-variant));
+  border-radius: 8px;
 }
-
-.explore-dialog__empty-icon {
-  color: rgb(var(--v-theme-on-surface-variant));
-  opacity: 0.7;
+.explore__dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+  margin: 0;
 }
-
-.explore-dialog__empty-text {
+.explore__dl dt {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(var(--v-theme-on-surface), 0.5);
+  margin-bottom: 2px;
+}
+.explore__dl dd {
   margin: 0;
   font-size: 14px;
-  color: rgb(var(--v-theme-on-surface-variant));
+  color: rgb(var(--v-theme-on-surface));
+}
+.explore__link {
+  color: rgb(var(--v-theme-primary));
+  text-decoration: none;
+}
+.explore__link:hover {
+  text-decoration: underline;
+}
+.explore__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.explore__th-label,
+.explore__td-label {
+  text-align: left;
+  padding: 8px 12px;
+}
+.explore__th-num,
+.explore__td-num {
+  text-align: right;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+.explore__th-bar {
+  width: 40%;
+  padding: 8px 12px;
+}
+.explore__td-bar {
+  padding: 8px 12px;
+}
+.explore__bar {
+  height: 14px;
+  background: rgb(var(--v-theme-primary));
+  border-radius: 3px;
+  opacity: 0.7;
+  min-width: 2px;
+  transition: width 0.3s ease;
+}
+.explore__table thead {
+  border-bottom: 2px solid rgb(var(--v-theme-outline));
+}
+.explore__table tbody tr {
+  border-bottom: 1px solid rgba(var(--v-theme-outline), 0.3);
+}
+.explore__table th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+}
+.explore__stddiff {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgb(var(--v-theme-surface-variant));
+  border-radius: 8px;
+  font-size: 13px;
+  color: rgba(var(--v-theme-on-surface), 0.8);
+}
+.explore__empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: rgba(var(--v-theme-on-surface), 0.5);
 }
 </style>

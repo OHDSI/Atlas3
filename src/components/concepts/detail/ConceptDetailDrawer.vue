@@ -53,6 +53,15 @@ const drawerWidth = computed(() => {
   </Teleport>
 </template>
 
+<style>
+.v-navigation-drawer__scrim {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+</style>
+
 <style scoped>
 .concept-detail-drawer {
   background: rgb(var(--v-theme-background));

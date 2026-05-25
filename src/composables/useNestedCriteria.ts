@@ -29,7 +29,7 @@ export function useNestedCriteria(initial?: NestedCriteria) {
     const newEvent: CohortEvent = {
       id: uuidv4(),
       criteriaType,
-      conceptSet: conceptSet || { id: 0, name: 'Select concept set...' },
+      conceptSet: conceptSet || { id: null as unknown as number, name: 'Select concept set...' },
       attributes: [],
     }
     nested.value.events.push(newEvent)

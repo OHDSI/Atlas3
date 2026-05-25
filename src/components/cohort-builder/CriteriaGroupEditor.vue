@@ -309,11 +309,7 @@
                           class="concept-set-section"
                         >
                           <EventConceptSetField
-                            :concept-set="
-                              event.conceptSet && event.conceptSet.id !== 0
-                                ? event.conceptSet
-                                : undefined
-                            "
+                            :concept-set="event.conceptSet"
                             @select="selectConceptSetForEvent(index)"
                             @edit="emit('edit-concept-set', $event)"
                             @clear="clearConceptSet(index)"
@@ -552,7 +548,7 @@ function addEvent(criteriaType: CriteriaType) {
   const newEvent: CohortEvent = {
     id: uuidv4(),
     criteriaType,
-    conceptSet: { id: 0, name: 'Select concept set...' },
+    conceptSet: { id: null as unknown as number, name: 'Select concept set...' },
     attributes: [],
   }
 
@@ -691,7 +687,7 @@ function selectConceptForAttribute(
 
 function clearConceptSet(index: number) {
   if (localGroup.value.events[index]) {
-    localGroup.value.events[index].conceptSet = { id: 0, name: 'Select concept set...' }
+    localGroup.value.events[index].conceptSet = { id: null as unknown as number, name: 'Select concept set...' }
     emitUpdate()
   }
 }

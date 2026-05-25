@@ -1,14 +1,28 @@
 <template>
-  <div class="char-workbench">
-    <CharacterizationDesignRail
-      :model-value="modelValue"
-      :available-cohorts="availableCohorts"
-      :available-feature-analyses="availableFeatureAnalyses"
+  <div
+    class="char-workbench"
+    :class="{ 'char-workbench--rail-collapsed': !railOpen }"
+  >
+    <div
+      v-show="railOpen"
       class="char-workbench__rail"
-      @update:model-value="(v) => $emit('update:modelValue', v)"
-    />
+    >
+      <CharacterizationDesignRail
+        :model-value="modelValue"
+        :available-cohorts="availableCohorts"
+        :available-feature-analyses="availableFeatureAnalyses"
+        @update:model-value="(v) => $emit('update:modelValue', v)"
+      />
+    </div>
 
     <main class="char-workbench__canvas">
+      <button
+        class="rail-toggle"
+        :title="railOpen ? 'Hide design panel' : 'Show design panel'"
+        @click="railOpen = !railOpen"
+      >
+        {{ railOpen ? '◂ Hide Analysis Design' : '▸ Show Analysis Design' }}
+      </button>
       <DataSourceRunTable
         :sources="runTableSources"
         :executions="runTableExecutions"
@@ -69,6 +83,12 @@
             :cohort-sizes="cohortSizes"
             @explore="onExplore"
           />
+          <CharacterizationDashboardView
+            v-else-if="viewMode === 'dashboard'"
+            :prevalence="prevalence"
+            :distribution="distribution"
+            :cohorts="cohorts"
+          />
           <CharacterizationPerAnalysisView
             v-else
             :prevalence="prevalence"
@@ -118,6 +138,7 @@ import CharacterizationCanvasToolbar from './CharacterizationCanvasToolbar.vue'
 import CharacterizationRunMeta from './CharacterizationRunMeta.vue'
 import CharacterizationTable1View from './CharacterizationTable1View.vue'
 import CharacterizationPerAnalysisView from './CharacterizationPerAnalysisView.vue'
+import CharacterizationDashboardView from './CharacterizationDashboardView.vue'
 import CharacterizationEmptyState from './CharacterizationEmptyState.vue'
 import ConfigureInspector from './ConfigureInspector.vue'
 import DataSourceRunTable from '@/components/generation/DataSourceRunTable.vue'
@@ -172,6 +193,7 @@ const sourcesStore = useDataSourcesStore()
 const cohortSizes = ref<Record<string, number>>({})
 const { execution, prevalence, distribution, resultCount, error, load, reset } = useCharacterizationResults()
 
+const railOpen = ref(!route.params.id)
 const viewMode = ref<ViewMode>('perAnalysis')
 const config = ref<Table1Config>({ ...DEFAULT_TABLE1_CONFIG })
 const filters = ref<Table1Filters>({ ...DEFAULT_TABLE1_FILTERS })
@@ -485,6 +507,23 @@ function onExport(): void {
   min-height: 540px;
   position: relative;
   min-width: 0;
+}
+.char-workbench--rail-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+.rail-toggle {
+  background: rgb(var(--v-theme-primary));
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.rail-toggle:hover {
+  opacity: 0.9;
 }
 @media (max-width: 1024px) {
   .char-workbench { grid-template-columns: 1fr; }

@@ -38,7 +38,9 @@ export function useIncidenceRateGeneration(irId: number) {
       stopPolling()
       return
     }
-    if (ds.sources.length === 0 && !ds.isLoading) await ds.fetchDataSources()
+    for (let attempt = 0; attempt < 2 && ds.sources.length === 0; attempt++) {
+      try { await ds.fetchDataSources() } catch { /* retry */ }
+    }
     const idToKey = new Map(ds.sources.map(s => [s.sourceId, s.sourceKey]))
     for (const info of result.data) {
       const numId = info.executionInfo.id.sourceId

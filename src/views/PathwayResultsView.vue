@@ -54,6 +54,7 @@
           <PathwayLegend
             :design="design"
             :colors="colors"
+            :event-codes="results.eventCodes"
             :target-cohort-name="targetCohortName"
             :target-cohort-count="targetGroup.targetCohortCount"
             :total-pathways-count="targetGroup.totalPathwaysCount"
@@ -70,6 +71,7 @@
             :design="design"
             :results="results"
             :target-cohort-id="targetGroup.targetCohortId"
+            :colors="colors"
             @pathway:select="info => (selectedPath = info)"
           />
         </div>
@@ -152,9 +154,17 @@ const targetCohortName = computed(() => {
 
 const colorMap = computed(() => {
   const map = new Map<string, string>()
-  if (design.value) {
-    design.value.eventCohorts.forEach((_, i) => {
-      map.set(String(1 << i), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
+  const singleCodes = (results.value?.eventCodes ?? [])
+    .filter(ec => !ec.isCombo)
+    .sort((a, b) => a.code - b.code)
+  if (singleCodes.length > 0) {
+    singleCodes.forEach((ec, i) => {
+      map.set(String(ec.code), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
+    })
+  } else if (design.value) {
+    design.value.eventCohorts.forEach((cohort, i) => {
+      const bit = cohort.code != null ? (1 << cohort.code) : (1 << i)
+      map.set(String(bit), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
     })
   }
   return map

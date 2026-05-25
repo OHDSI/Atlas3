@@ -1,6 +1,10 @@
 <template>
-  <div class="workbench">
+  <div
+    class="workbench"
+    :class="{ 'workbench--rail-collapsed': !railOpen }"
+  >
     <aside
+      v-show="railOpen"
       class="workbench__design"
       data-testid="workbench-design-rail"
     >
@@ -11,6 +15,13 @@
       class="workbench__canvas"
       data-testid="workbench-canvas"
     >
+      <button
+        class="rail-toggle"
+        :title="railOpen ? 'Hide design panel' : 'Show design panel'"
+        @click="railOpen = !railOpen"
+      >
+        {{ railOpen ? '◂ Hide Analysis Design' : '▸ Show Analysis Design' }}
+      </button>
       <PathwayCanvasToolbar
         :mode="mode"
         :active-run="activeRunSummary"
@@ -35,9 +46,7 @@
         class="workbench__canvas-empty"
         data-testid="canvas-empty"
       >
-        <div class="workbench__canvas-empty-icon">
-          ◌
-        </div>
+        <div class="workbench__canvas-empty-icon" />
         <h3>
           {{ t('pathway.workbench.emptyChartTitle', 'Your sunburst will appear here').value }}
         </h3>
@@ -56,9 +65,7 @@
         class="workbench__canvas-empty"
         data-testid="canvas-no-run"
       >
-        <div class="workbench__canvas-empty-icon">
-          ▶
-        </div>
+        <div class="workbench__canvas-empty-icon" />
         <h3>{{ t('pathway.workbench.noRunYetTitle', 'No runs yet').value }}</h3>
         <p>
           {{
@@ -79,6 +86,7 @@
           :design="design"
           :results="results"
           :target-cohort-id="targetGroup.targetCohortId"
+          :colors="colors"
           @pathway:select="onPathSelect"
         />
         <PathwayTableView
@@ -106,6 +114,7 @@
         <PathwayLegend
           :design="design!"
           :colors="colors"
+          :event-codes="results?.eventCodes"
           :target-cohort-name="targetCohortName"
           :target-cohort-count="targetGroup.targetCohortCount"
           :total-pathways-count="targetGroup.totalPathwaysCount"
@@ -197,6 +206,8 @@ const PALETTE_20 = [
   '#9edae5',
 ]
 
+const TERMINAL_STATUSES = new Set(['COMPLETED', 'FAILED', 'CANCELED'])
+
 const props = defineProps<{
   pathwayId: number | null
   selectedExecutionId?: number | null
@@ -224,6 +235,7 @@ watch(
   { immediate: true }
 )
 
+const railOpen = ref(props.pathwayId === null)
 const mode = ref<'visual' | 'tabular'>('visual')
 const selectedPath = ref<{ path: string } | null>(null)
 const executions = ref<PathwayExecution[]>([])
@@ -247,9 +259,17 @@ const targetCohortName = computed(() => {
 
 const colorMap = computed(() => {
   const map = new Map<string, string>()
-  if (design.value) {
-    design.value.eventCohorts.forEach((_, i) => {
-      map.set(String(1 << i), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
+  const singleCodes = (results.value?.eventCodes ?? [])
+    .filter(ec => !ec.isCombo)
+    .sort((a, b) => a.code - b.code)
+  if (singleCodes.length > 0) {
+    singleCodes.forEach((ec, i) => {
+      map.set(String(ec.code), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
+    })
+  } else if (design.value) {
+    design.value.eventCohorts.forEach((cohort, i) => {
+      const bit = cohort.code != null ? (1 << cohort.code) : (1 << i)
+      map.set(String(bit), PALETTE_20[i % PALETTE_20.length] ?? '#cccccc')
     })
   }
   return map
@@ -287,8 +307,8 @@ function toMs(v: string | number | undefined): number | undefined {
   return Number.isNaN(n) ? undefined : n
 }
 
-const runTableExecutions = computed<RunTableExecution[]>(() =>
-  executions.value.map(e => {
+const runTableExecutions = computed<RunTableExecution[]>(() => {
+  const rows: RunTableExecution[] = executions.value.map(e => {
     const start = toMs(e.startTime) ?? toMs(e.executionDate)
     const end = toMs(e.endTime)
     return {
@@ -300,7 +320,22 @@ const runTableExecutions = computed<RunTableExecution[]>(() =>
       duration: e.duration,
     }
   })
-)
+
+  const live = generation.value?.execution.value
+  if (live && !TERMINAL_STATUSES.has(live.status)) {
+    const idx = rows.findIndex(r => r.sourceKey === live.sourceKey)
+    const liveRow: RunTableExecution = {
+      id: live.id,
+      sourceKey: live.sourceKey,
+      status: live.status,
+      startTime: toMs(live.startTime) ?? toMs(live.executionDate),
+    }
+    if (idx >= 0) rows[idx] = liveRow
+    else rows.unshift(liveRow)
+  }
+
+  return rows
+})
 
 const historySourceName = computed(() => {
   const match = dsStore.sources.find(s => s.sourceKey === historySourceKey.value)
@@ -365,6 +400,13 @@ watch(
 )
 
 watch(() => props.pathwayId, refreshExecutions, { immediate: true })
+
+watch(
+  () => generation.value?.polling.value,
+  (now, prev) => {
+    if (prev && !now) refreshExecutions()
+  }
+)
 
 onMounted(async () => {
   if (dsStore.sources.length === 0 && !dsStore.isLoading) {
@@ -475,6 +517,23 @@ defineExpose({ onPathSelect })
   border-radius: 8px;
 }
 
+.workbench--rail-collapsed {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+.rail-toggle {
+  background: rgb(var(--v-theme-primary));
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.rail-toggle:hover {
+  opacity: 0.9;
+}
 @media (max-width: 1280px) {
   .workbench {
     grid-template-columns: 320px minmax(0, 1fr);

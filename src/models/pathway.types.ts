@@ -19,6 +19,7 @@ export const PathwayCohortRefSchema = z
   .object({
     id: z.number(),
     name: z.string(),
+    code: z.number().optional(),
   })
   .passthrough()
 export type PathwayCohortRef = z.infer<typeof PathwayCohortRefSchema>

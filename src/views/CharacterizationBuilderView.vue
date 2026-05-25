@@ -156,15 +156,22 @@
             data-testid="char-builder-import-input"
             @change="handleImportFileChange"
           >
-          <AtlasButton
-            variant="secondary"
-            icon="mdi-content-copy-outline"
-            :disabled="!isEditing || loading || !canCopy"
-            data-testid="char-builder-copy"
-            @click="handleSaveCopy"
+          <AtlasTooltip
+            :text="t('common.duplicate', 'Duplicate').value"
+            location="bottom"
           >
-            {{ t('common.duplicate', 'Duplicate') }}
-          </AtlasButton>
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: t('common.duplicate', 'Duplicate').value }"
+                icon="mdi-content-copy"
+                variant="text"
+                size="sm"
+                :disabled="!isEditing || loading || !canCopy"
+                data-testid="char-builder-copy"
+                @click="handleSaveCopy"
+              />
+            </template>
+          </AtlasTooltip>
           <AtlasButton
             variant="ghost"
             tone="danger"
@@ -177,7 +184,6 @@
           </AtlasButton>
           <AtlasButton
             variant="primary"
-            icon="mdi-content-save-outline"
             :disabled="!canSave"
             :loading="saving"
             data-testid="char-builder-save"
@@ -202,11 +208,7 @@
 
     <ExplorePrevalenceDialog
       v-model="exploreOpen"
-      :generation-id="exploreGenerationId"
-      :analysis-id="exploreAnalysisId"
-      :cohort-id="exploreCohortId"
-      :covariate-id="exploreCovariateId"
-      :covariate-name="exploreCovariateName"
+      :stat="exploreStat"
     />
 
     <AtlasDialog
@@ -376,30 +378,11 @@ function showSnackbar(message: string, color: 'success' | 'error' | 'info' = 'su
 }
 
 const exploreOpen = ref<boolean>(false)
-const exploreGenerationId = ref<number | null>(null)
-const exploreAnalysisId = ref<number | null>(null)
-const exploreCohortId = ref<number | null>(null)
-const exploreCovariateId = ref<number | null>(null)
-const exploreCovariateName = ref<string | null>(null)
+const exploreStat = ref<PrevalenceStat | null>(null)
 
 function onExplore(row: PrevalenceStat): void {
-  const cohort = row.cohorts[0]
-  if (!cohort) return
-  const runId = readRunIdFromQuery()
-  if (runId === null) return
-  exploreGenerationId.value = runId
-  exploreAnalysisId.value = row.analysisId
-  exploreCohortId.value = cohort.id
-  exploreCovariateId.value = row.covariateId
-  exploreCovariateName.value = row.covariateName
+  exploreStat.value = row
   exploreOpen.value = true
-}
-
-function readRunIdFromQuery(): number | null {
-  const q = router.currentRoute.value.query?.run
-  if (typeof q !== 'string') return null
-  const n = Number(q)
-  return Number.isFinite(n) ? n : null
 }
 
 // ---------------------------------------------------------------------------
