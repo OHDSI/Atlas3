@@ -19,6 +19,7 @@
     </v-overlay>
 
     <v-card
+      v-if="showHeader"
       class="detail-header mb-4"
       elevation="2"
     >
@@ -74,7 +75,7 @@
               data.prevalenceByMonth.length > 0
           "
           cols="12"
-          md="6"
+          :md="compact ? 12 : 6"
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
@@ -97,7 +98,7 @@
               data.ageAtFirstOccurrence.length > 0
           "
           cols="12"
-          md="6"
+          :md="compact ? 12 : 6"
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
@@ -116,7 +117,7 @@
         <AtlasCol
           v-else-if="field === 'lengthOfEra' && data.lengthOfEra && data.lengthOfEra.length > 0"
           cols="12"
-          md="6"
+          :md="compact ? 12 : 6"
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
@@ -135,7 +136,7 @@
         <AtlasCol
           v-else-if="field === 'byType' && data.byType && data.byType.length > 0"
           cols="12"
-          md="6"
+          :md="compact ? 12 : 6"
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
@@ -154,7 +155,7 @@
         <AtlasCol
           v-else-if="field === 'byUnit' && data.byUnit && data.byUnit.length > 0"
           cols="12"
-          md="6"
+          :md="compact ? 12 : 6"
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
@@ -177,7 +178,7 @@
               data.byValueAsConcept.length > 0
           "
           cols="12"
-          md="6"
+          :md="compact ? 12 : 6"
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
@@ -196,7 +197,7 @@
         <AtlasCol
           v-else-if="field === 'byOperator' && data.byOperator && data.byOperator.length > 0"
           cols="12"
-          md="6"
+          :md="compact ? 12 : 6"
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
@@ -215,7 +216,7 @@
         <AtlasCol
           v-else-if="field === 'byQualifier' && data.byQualifier && data.byQualifier.length > 0"
           cols="12"
-          md="6"
+          :md="compact ? 12 : 6"
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
@@ -234,7 +235,7 @@
         <AtlasCol
           v-else-if="field === 'byFrequency' && data.byFrequency"
           cols="12"
-          md="6"
+          :md="compact ? 12 : 6"
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
@@ -282,13 +283,18 @@ interface Props {
   data: DrilldownReport | null
   loading?: boolean
   conceptName: string
-  conceptPath: string
+  conceptPath?: string
   domain?: Domain
+  showHeader?: boolean
+  compact?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
+  conceptPath: '',
   domain: 'condition',
+  showHeader: true,
+  compact: false,
 })
 
 defineEmits<{

@@ -102,13 +102,12 @@ describe('concept-detail.service', () => {
       expect(result).toBeNull()
     })
 
-    it('falls back to empty arrays when drilldown sections are missing', async () => {
-      (httpClient as Mock).mockResolvedValueOnce({}) // no ageAtFirstOccurrence / etc.
+    it('falls back to empty report when drilldown sections are missing', async () => {
+      (httpClient as Mock).mockResolvedValueOnce({})
       const result = await getConceptDrilldown('SYNPUF1K', 'Condition', 201826)
       expect(result).not.toBeNull()
-      expect(result!.ageAtFirstOccurrence).toEqual([])
-      expect(result!.prevalenceByGenderAgeYear).toEqual([])
-      expect(result!.prevalenceByMonth).toEqual([])
+      expect(result!.ageAtFirstOccurrence).toBeUndefined()
+      expect(result!.prevalenceByMonth).toBeUndefined()
     })
 
     it('returns [] from getConceptRelated when the HTTP call rejects', async () => {
@@ -158,9 +157,8 @@ describe('concept-detail.service', () => {
 
       expect(httpClient).toHaveBeenCalledWith('/cdmresults/SYNPUF1K/condition/201826')
       expect(result).not.toBeNull()
-      expect(result!.ageAtFirstOccurrence[0].medianValue).toBe(58)
-      expect(result!.prevalenceByGenderAgeYear[0].calendarYear).toBe(2010)
-      expect(result!.prevalenceByMonth[0].calendarMonth).toBe(201001)
+      expect(result!.ageAtFirstOccurrence![0].median).toBe(58)
+      expect(result!.prevalenceByMonth![0].value).toBe(12.4)
     })
   })
 })

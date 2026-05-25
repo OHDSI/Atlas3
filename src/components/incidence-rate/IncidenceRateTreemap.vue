@@ -1,118 +1,113 @@
 <template>
-  <svg
-    ref="svgRef"
-    :width="width"
-    :height="height"
-    class="treemap"
-  />
+  <div class="ir-treemap">
+    <TreemapChart
+      :data="treemapNodes"
+      :height="400"
+      :show-export="false"
+      :enable-zoom="true"
+      title="Stratified Incidence"
+    />
+    <div class="ir-treemap__legend">
+      <span class="ir-treemap__legend-label">Lower rate</span>
+      <div class="ir-treemap__legend-bar" />
+      <span class="ir-treemap__legend-label">Higher rate</span>
+      <span class="ir-treemap__legend-hint">(color = incidence rate per person-year; area = persons at risk)</span>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
-import * as d3 from 'd3'
+import { computed } from 'vue'
+import TreemapChart from '@/components/reports/charts/TreemapChart.vue'
+import type { TreemapNode } from '@/models/report.types'
 
 const props = defineProps<{
   treemapJson: string
-  width?: number
-  height?: number
+  strataNames?: string[]
 }>()
 
-const svgRef = ref<SVGSVGElement | null>(null)
-const width = props.width ?? 600
-const height = props.height ?? 400
-
-interface Node {
+interface RawNode {
   name: string
-  children?: Node[]
+  children?: RawNode[]
   size?: number
-  rate?: number
   cases?: number
-  tar?: number
-  persons?: number
+  timeAtRisk?: number
 }
 
-defineExpose({ svgRef })
-
-function render() {
-  if (!svgRef.value) return
-  const svg = d3.select(svgRef.value)
-  svg.selectAll('*').remove()
-
-  let root: Node
-  try {
-    root = JSON.parse(props.treemapJson || '{}') as Node
-  } catch {
-    root = { name: 'root' }
+function decodeBitmask(mask: string, names: string[]): string {
+  const bits = mask.split('')
+  const matched: string[] = []
+  const unmatched: string[] = []
+  for (let i = 0; i < bits.length && i < names.length; i++) {
+    if (bits[i] === '1') matched.push(names[i]!)
+    else unmatched.push(names[i]!)
   }
+  if (matched.length === 0) return 'None matched'
+  if (unmatched.length === 0) return matched.join(', ')
+  return matched.join(', ')
+}
 
-  if (!root.children || root.children.length === 0) return
+function collectLeaves(node: RawNode, out: TreemapNode[], names: string[]): void {
+  if (node.children && node.children.length > 0) {
+    for (const child of node.children) collectLeaves(child, out, names)
+    return
+  }
+  const cases = node.cases ?? 0
+  const tar = node.timeAtRisk ?? 0
+  const persons = node.size ?? 0
+  const py = tar / 365.25
+  const rate = py > 0 ? cases / py : 0
 
-  const hierarchy = d3
-    .hierarchy<Node>(root)
-    .sum(d => d.size ?? 0)
-    .sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
+  const label = names.length > 0 && /^[01]+$/.test(node.name)
+    ? decodeBitmask(node.name, names)
+    : node.name
 
-  d3.treemap<Node>().size([width, height]).padding(1)(hierarchy)
-
-  // Build a non-zero-rate domain for the color scale.
-  const rates = hierarchy
-    .leaves()
-    .map(l => l.data.rate ?? 0)
-    .filter(r => r > 0)
-  const maxRate = rates.length ? Math.max(...rates) : 1
-
-  const color = d3
-    .scaleSequential(d3.interpolateRgbBasis(['#3b82f6', '#facc15', '#ef4444']))
-    .domain([0, maxRate])
-
-  const cell = svg
-    .selectAll('g')
-    .data(hierarchy.leaves())
-    .join('g')
-    .attr(
-      'transform',
-      d =>
-        `translate(${(d as d3.HierarchyRectangularNode<Node>).x0},${(d as d3.HierarchyRectangularNode<Node>).y0})`
-    )
-
-  cell
-    .append('rect')
-    .attr(
-      'width',
-      d => (d as d3.HierarchyRectangularNode<Node>).x1 - (d as d3.HierarchyRectangularNode<Node>).x0
-    )
-    .attr(
-      'height',
-      d => (d as d3.HierarchyRectangularNode<Node>).y1 - (d as d3.HierarchyRectangularNode<Node>).y0
-    )
-    .attr('fill', d => {
-      const r = d.data.rate ?? 0
-      const tar = d.data.tar ?? 0
-      const cases = d.data.cases ?? 0
-      if (tar === 0) return '#bbb'
-      if (cases === 0) return '#000'
-      return color(r)
-    })
-    .attr('stroke', '#fff')
-
-  cell.append('title').text(d => {
-    const v = d.data
-    return [
-      v.name,
-      `Persons: ${v.persons ?? '—'}`,
-      `Cases: ${v.cases ?? 0}`,
-      `TAR: ${v.tar ?? 0}`,
-      `Rate: ${(v.rate ?? 0).toFixed(4)}`,
-    ].join('\n')
+  const ratePer1000 = (rate * 1000).toFixed(1)
+  out.push({
+    name: `${label}`,
+    value: persons || 1,
+    colorValue: rate,
+    conceptPath: `${persons.toLocaleString()} persons || ${cases.toLocaleString()} cases || Rate: ${ratePer1000} per 1,000 PY`,
   })
 }
 
-watch(() => props.treemapJson, render)
-onMounted(render)
+const treemapNodes = computed<TreemapNode[]>(() => {
+  let root: RawNode
+  try {
+    root = JSON.parse(props.treemapJson || '{}') as RawNode
+  } catch {
+    return []
+  }
+  if (!root.children || root.children.length === 0) return []
+  const leaves: TreemapNode[] = []
+  collectLeaves(root, leaves, props.strataNames ?? [])
+  return leaves
+})
 </script>
 
 <style scoped>
-.treemap {
-  display: block;
+.ir-treemap__legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  padding: 8px 0 4px;
+  font-size: 11px;
+  color: rgba(var(--v-theme-on-surface), 0.55);
+}
+.ir-treemap__legend-bar {
+  width: 80px;
+  height: 10px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #7e9bbf, #4e79a7, #1f425a);
+}
+.ir-treemap__legend-label {
+  font-weight: 600;
+  font-size: 10px;
+}
+.ir-treemap__legend-hint {
+  font-style: italic;
+  font-size: 10px;
+  margin-left: 4px;
 }
 </style>

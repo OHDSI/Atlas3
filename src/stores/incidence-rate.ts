@@ -212,7 +212,21 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
     previewVersion.value = null
     isReadOnly.value = false
     executionInfoBySourceKey.value = {}
+    await resolveCohortNames(result.data)
     return true
+  }
+
+  async function resolveCohortNames(ir: IncidenceRate) {
+    const ids = [...(ir.expression.targetIds ?? []), ...(ir.expression.outcomeIds ?? [])]
+    const missing = ids.filter(id => !cohortNameById.value.has(id))
+    if (missing.length === 0) return
+    const { getCohortDefinition } = await import('@/services/webapi')
+    await Promise.all(
+      missing.map(async id => {
+        const cohort = await getCohortDefinition(id)
+        if (cohort?.name) cohortNameById.value.set(id, cohort.name)
+      })
+    )
   }
 
   async function loadVersionPreview(id: number, versionNumber: number): Promise<boolean> {

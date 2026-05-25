@@ -38,10 +38,9 @@
       <template #[`item.conceptId`]="{ item }">
         <a
           v-if="item.conceptId"
-          :href="conceptUrl(item.conceptId)"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="#"
           class="prevalence-table__concept-link"
+          @click.prevent="openConcept(item.conceptId)"
         >
           {{ item.conceptId }}
         </a>
@@ -69,14 +68,14 @@
       </template>
 
       <template #[`item.actions`]="{ item }">
-        <AtlasButton
+        <AtlasIconButton
+          icon="mdi-magnify"
           size="sm"
-          variant="ghost"
+          variant="text"
+          v-bind="{ ariaLabel: tv('columns.explore', 'Explore') }"
           :data-testid="`char-results-explore-${item.covariateId}`"
           @click="onExplore(item._row)"
-        >
-          {{ tv('columns.explore', 'Explore') }}
-        </AtlasButton>
+        />
       </template>
 
       <template #no-data>
@@ -94,7 +93,9 @@ import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
 import type { LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
-import { AtlasButton, AtlasCard, AtlasDataTable } from '@/components/ui'
+import { AtlasCard, AtlasDataTable, AtlasIconButton } from '@/components/ui'
+import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
+import { useDataSourcesStore } from '@/stores/datasources'
 
 interface Props {
   analysisId: number
@@ -183,7 +184,7 @@ const headers = computed(() => {
     })
   }
   out.push({
-    title: tv('columns.explore', 'Explore'),
+    title: '',
     key: 'actions',
     sortable: false,
     align: 'end',
@@ -212,8 +213,15 @@ function formatStdDiff(value: unknown): string {
   return value.toFixed(4)
 }
 
-function conceptUrl(conceptId: number): string {
-  return `https://athena.ohdsi.org/search-terms/terms/${conceptId}`
+const conceptDrawer = useConceptDetailDrawerStore()
+const dsStore = useDataSourcesStore()
+
+async function openConcept(id: number): Promise<void> {
+  if (dsStore.sources.length === 0) {
+    try { await dsStore.fetchDataSources() } catch { /* ignore */ }
+  }
+  const sourceKey = dsStore.sources[0]?.sourceKey
+  if (sourceKey) conceptDrawer.open(sourceKey, id)
 }
 
 function onExplore(row: PrevalenceStat): void {

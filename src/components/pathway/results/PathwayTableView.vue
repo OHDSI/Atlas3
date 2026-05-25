@@ -192,16 +192,29 @@ function exportCsv(rows: Array<Record<string, string | number>>, name: string): 
 <style scoped>
 .pathway-tables section {
   margin-bottom: 24px;
+  overflow-x: auto;
 }
 .pathway-tables table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
 }
 .pathway-tables th,
 .pathway-tables td {
-  padding: 4px 8px;
+  padding: 6px 8px;
   border-bottom: 1px solid #eee;
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+}
+.pathway-tables th {
+  font-weight: 600;
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
 }
 .export-btn {
   margin-bottom: 8px;

@@ -79,42 +79,6 @@
     <div class="path-stats__section-label">
       {{ t('pathway.workbench.pathStats', 'Path stats').value }}
     </div>
-    <div class="path-stats__stat-rows">
-      <div
-        class="path-stats__stat-row"
-        data-testid="path-stat-row"
-      >
-        <span>{{ t('pathway.workbench.medianDuration', 'Median duration').value }}</span>
-        <span class="path-stats__stat-v">{{ formatDays(stats.stats.medianDurationDays) }}</span>
-      </div>
-      <div
-        class="path-stats__stat-row"
-        data-testid="path-stat-row"
-      >
-        <span>{{ t('pathway.workbench.medianStepGap', 'Median step gap').value }}</span>
-        <span class="path-stats__stat-v">{{ formatDays(stats.stats.medianStepGapDays) }}</span>
-      </div>
-      <div
-        class="path-stats__stat-row"
-        data-testid="path-stat-row"
-      >
-        <span>{{ t('pathway.workbench.daysToStep1', 'Cohort entry → step 1').value }}</span>
-        <span class="path-stats__stat-v">{{ formatDays(stats.stats.daysToStep1) }}</span>
-      </div>
-      <div
-        class="path-stats__stat-row"
-        data-testid="path-stat-row"
-      >
-        <span>{{
-          t('pathway.workbench.continuedPastLast', 'Continued past last step').value
-        }}</span>
-        <span class="path-stats__stat-v">{{
-          stats.stats.continuedPastLastStep === null
-            ? '—'
-            : stats.stats.continuedPastLastStep.toLocaleString()
-        }}</span>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -129,11 +93,6 @@ defineProps<{
 }>()
 
 const { t } = useI18n()
-
-function formatDays(value: number | null): string {
-  if (value === null) return '—'
-  return `${value} d`
-}
 </script>
 
 <style scoped>
@@ -227,15 +186,4 @@ function formatDays(value: number | null): string {
   margin-left: 2px;
 }
 
-.path-stats__stat-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-  font-size: 12px;
-  color: rgba(var(--v-theme-on-surface), 0.78);
-}
-.path-stats__stat-v {
-  font-weight: 600;
-  color: rgb(var(--v-theme-on-surface));
-}
 </style>

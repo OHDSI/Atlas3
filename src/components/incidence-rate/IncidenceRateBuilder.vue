@@ -165,15 +165,22 @@
             data-testid="ir-builder-import-input"
             @change="handleImportFileChange"
           >
-          <AtlasButton
-            variant="secondary"
-            icon="mdi-content-copy"
-            :disabled="!store.currentIR?.id || !canCopy"
-            data-testid="ir-builder-copy"
-            @click="onCopy"
+          <AtlasTooltip
+            :text="t('common.duplicate', 'Duplicate').value"
+            location="bottom"
           >
-            {{ t('common.duplicate', 'Duplicate') }}
-          </AtlasButton>
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: t('common.duplicate', 'Duplicate').value }"
+                icon="mdi-content-copy"
+                variant="text"
+                size="sm"
+                :disabled="!store.currentIR?.id || !canCopy"
+                data-testid="ir-builder-copy"
+                @click="onCopy"
+              />
+            </template>
+          </AtlasTooltip>
           <AtlasButton
             variant="ghost"
             tone="danger"
@@ -186,7 +193,6 @@
           </AtlasButton>
           <AtlasButton
             variant="primary"
-            icon="mdi-content-save-outline"
             :disabled="!store.canSave || saving || !canSave"
             :loading="saving"
             data-testid="ir-builder-save"

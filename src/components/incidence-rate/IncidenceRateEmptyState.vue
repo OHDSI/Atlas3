@@ -41,11 +41,11 @@ const { t } = useI18n()
 
 const icon = computed(() => {
   switch (props.variant) {
-    case 'no-id':       return '💾'
-    case 'no-runs':     return '▶'
-    case 'run-pending': return '⏳'
-    case 'run-failed':  return '⚠'
-    case 'select-to':   return '◌'
+    case 'no-id':       return ''
+    case 'no-runs':     return ''
+    case 'run-pending': return ''
+    case 'run-failed':  return ''
+    case 'select-to':   return ''
     default:            return ''
   }
 })

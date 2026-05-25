@@ -60,11 +60,7 @@ describe('computePathStats', () => {
     expect(out.steps[0]).toMatchObject({ name: 'SABA', entered: 1210 })
     expect(out.steps[1]).toMatchObject({ name: 'ICS', entered: 880, retentionPct: expect.closeTo(72.7, 0) })
     expect(out.steps[2]).toMatchObject({ name: 'LABA', entered: 414, retentionPct: expect.closeTo(47.0, 0) })
-    // Time-based stats are not in the current payload — must surface as null.
-    expect(out.stats.medianDurationDays).toBeNull()
-    expect(out.stats.medianStepGapDays).toBeNull()
-    expect(out.stats.daysToStep1).toBeNull()
-    expect(out.stats.continuedPastLastStep).toBeNull()
+    expect(out).not.toHaveProperty('stats')
   })
 
   it('returns null summary when targetCohortId has no group', () => {

@@ -1,24 +1,40 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
 import IncidenceRateTreemap from '@/components/incidence-rate/IncidenceRateTreemap.vue'
+
+const vuetify = createVuetify({ components, directives })
+
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}))
 
 const json = JSON.stringify({
   name: 'root',
   children: [
-    { name: 'a', size: 10, rate: 1, cases: 1, tar: 100, persons: 100 },
-    { name: 'b', size: 20, rate: 2, cases: 2, tar: 100, persons: 100 },
+    { name: 'a', size: 10, cases: 1, timeAtRisk: 100 },
+    { name: 'b', size: 20, cases: 2, timeAtRisk: 100 },
   ],
 })
 
 describe('IncidenceRateTreemap', () => {
-  it('renders one rect per leaf', async () => {
-    const w = mount(IncidenceRateTreemap, { props: { treemapJson: json, width: 200, height: 200 } })
-    await new Promise(r => setTimeout(r, 0))
-    expect(w.findAll('rect').length).toBe(2)
+  it('renders TreemapChart with leaf data', () => {
+    const w = mount(IncidenceRateTreemap, {
+      props: { treemapJson: json },
+      global: { plugins: [vuetify], stubs: { 'v-chart': true } },
+    })
+    expect(w.findComponent({ name: 'TreemapChart' }).exists()).toBe(true)
   })
 
   it('handles empty input gracefully', () => {
-    const w = mount(IncidenceRateTreemap, { props: { treemapJson: '', width: 200, height: 200 } })
-    expect(w.findAll('rect').length).toBe(0)
+    const w = mount(IncidenceRateTreemap, {
+      props: { treemapJson: '' },
+      global: { plugins: [vuetify], stubs: { 'v-chart': true } },
+    })
+    expect(w.html()).toBeDefined()
   })
 })

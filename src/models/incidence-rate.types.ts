@@ -125,10 +125,15 @@ export const IncidenceRateSummaryStatsSchema = z
     totalPersons: z.number(),
     cases: z.number(),
     timeAtRisk: z.number(),
-    proportion: z.number(),
-    rate: z.number(),
+    proportion: z.number().default(0),
+    rate: z.number().default(0),
   })
   .passthrough()
+  .transform(s => ({
+    ...s,
+    proportion: s.proportion || (s.totalPersons > 0 ? s.cases / s.totalPersons : 0),
+    rate: s.rate || (s.timeAtRisk > 0 ? s.cases / (s.timeAtRisk / 365.25) : 0),
+  }))
 export type IncidenceRateSummaryStats = z.infer<typeof IncidenceRateSummaryStatsSchema>
 
 export const IncidenceRateInfoBySourceSchema = z

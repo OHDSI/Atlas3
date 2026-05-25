@@ -30,59 +30,60 @@
               {{ tv('columns.covariate', 'Covariate') }}
             </th>
             <th
-              v-for="c in cohortGroupHeaders"
-              :key="c.key"
-              :colspan="c.span"
-              class="char-t1__col-cohort"
+              v-if="showOverall"
+              class="char-t1__col-value"
+            >
+              Overall
+              <div class="char-t1__col-hint">
+                N (%) / Mean (SD)
+              </div>
+            </th>
+            <th
+              v-for="col in columns"
+              :key="col.cohortKey"
+              class="char-t1__col-value"
               data-testid="char-t1-cohort-header"
             >
-              {{ c.label }}
+              {{ col.cohortName }}
+              <div class="char-t1__col-hint">
+                N (%) / Mean (SD)
+              </div>
             </th>
             <th
               v-if="includeStdDiff"
-              class="char-t1__col-num"
-              rowspan="2"
+              class="char-t1__col-value"
               data-testid="char-t1-stddiff-header"
             >
               {{ tv('characterizations.results.table.stdDiff', 'Std Diff') }}
             </th>
-            <th
-              v-if="includeStdDiffCI"
-              class="char-t1__col-num"
-              rowspan="2"
-              data-testid="char-t1-stddiff-ci-header"
-            >
-              {{ tv('characterizations.results.table.stdDiffCI', '95% CI') }}
-            </th>
-            <th
-              class="char-t1__col-num"
-              rowspan="2"
-            >
-              {{ tv('columns.explore', 'Explore') }}
-            </th>
-          </tr>
-          <tr>
-            <th />
-            <template
-              v-for="col in columns"
-              :key="col.cohortKey"
-            >
-              <th
-                v-if="config.showCounts"
-                class="char-t1__col-num"
-              >
-                {{ tv('columns.count', 'N') }}
-              </th>
-              <th
-                v-if="config.showPercent"
-                class="char-t1__col-num"
-              >
-                {{ tv('columns.pct', '%') }}
-              </th>
-            </template>
+            <th class="char-t1__col-action" />
           </tr>
         </thead>
         <tbody>
+          <tr class="char-t1__row char-t1__row--total">
+            <td class="char-t1__cell-label">
+              <strong>N</strong>
+            </td>
+            <td
+              v-if="showOverall"
+              class="char-t1__cell-value"
+            >
+              <strong>{{ overallN.toLocaleString() }}</strong>
+            </td>
+            <td
+              v-for="col in columns"
+              :key="'n-' + col.cohortKey"
+              class="char-t1__cell-value"
+            >
+              <strong>{{ cohortN(col.cohortKey) }}</strong>
+            </td>
+            <td
+              v-if="includeStdDiff"
+              class="char-t1__cell-value"
+            />
+            <td class="char-t1__cell-action" />
+          </tr>
+
           <template
             v-for="row in rows"
             :key="rowKey(row)"
@@ -102,37 +103,27 @@
               <td class="char-t1__cell-label">
                 {{ row.label }}
               </td>
-              <template
+              <td
+                v-if="showOverall"
+                class="char-t1__cell-value"
+              >
+                {{ formatOverall(row) }}
+              </td>
+              <td
                 v-for="col in columns"
                 :key="col.cohortKey"
+                class="char-t1__cell-value"
               >
-                <td
-                  v-if="config.showCounts"
-                  class="char-t1__cell-num"
-                >
-                  {{ formatCount(row, col.cohortKey) }}
-                </td>
-                <td
-                  v-if="config.showPercent"
-                  class="char-t1__cell-num"
-                >
-                  {{ formatPct(row, col.cohortKey) }}
-                </td>
-              </template>
+                {{ formatCell(row, col.cohortKey) }}
+              </td>
               <td
                 v-if="includeStdDiff"
-                class="char-t1__cell-num"
+                class="char-t1__cell-value"
                 :class="{ 'char-t1__cell-stddiff--high': isHighStdDiff(row) }"
               >
                 {{ formatStdDiff(row) }}
               </td>
-              <td
-                v-if="includeStdDiffCI"
-                class="char-t1__cell-num char-t1__cell-ci"
-              >
-                {{ formatStdDiffCI(row) }}
-              </td>
-              <td class="char-t1__cell-num">
+              <td class="char-t1__cell-action">
                 <AtlasIconButton
                   v-if="row.kind === 'binary'"
                   icon="mdi-magnify"
@@ -155,7 +146,7 @@
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { AtlasCard, AtlasIconButton } from '@/components/ui'
-import { buildTable1 } from '@/utils/characterization-table1'
+import { buildTable1, deriveCohortSizes } from '@/utils/characterization-table1'
 import type {
   DistributionStat,
   LinkedCohort,
@@ -192,70 +183,72 @@ const built = computed(() =>
 const rows = computed<Table1Row[]>(() => built.value.rows)
 const columns = computed(() => built.value.columns)
 const includeStdDiff = computed<boolean>(() => built.value.includeStdDiff)
-const includeStdDiffCI = computed<boolean>(
-  () => built.value.includeStdDiff && props.config.showStdDiffCI,
+const showOverall = computed(() => props.cohorts.length > 1)
+
+const sizes = computed(() => {
+  if (props.cohortSizes && Object.keys(props.cohortSizes).length > 0) return props.cohortSizes
+  return deriveCohortSizes({ prevalence: props.prevalence, cohorts: props.cohorts })
+})
+
+const overallN = computed(() =>
+  Object.values(sizes.value).reduce((s, n) => s + n, 0)
 )
 
-const cohortGroupHeaders = computed(() => {
-  const numericCellsPerCohort =
-    (props.config.showCounts ? 1 : 0) + (props.config.showPercent ? 1 : 0)
-  if (!props.config.strataAsCols) {
-    return props.cohorts.map(c => ({
-      key: String(c.id),
-      label: c.name,
-      span: numericCellsPerCohort,
-    }))
-  }
-  const grouped = new Map<number, { label: string; span: number }>()
-  for (const col of columns.value) {
-    const g = grouped.get(col.cohortId) ?? { label: col.cohortName, span: 0 }
-    g.span += numericCellsPerCohort
-    grouped.set(col.cohortId, g)
-  }
-  return Array.from(grouped.entries()).map(([id, g]) => ({
-    key: String(id),
-    label: g.label,
-    span: g.span,
-  }))
-})
+function cohortN(key: string): string {
+  const n = sizes.value[key]
+  return typeof n === 'number' ? n.toLocaleString() : '—'
+}
 
-const totalColumnCount = computed(() => {
-  const numericCellsPerCohort =
-    (props.config.showCounts ? 1 : 0) + (props.config.showPercent ? 1 : 0)
-  return (
-    1 +
-    columns.value.length * numericCellsPerCohort +
-    (includeStdDiff.value ? 1 : 0) +
-    (includeStdDiffCI.value ? 1 : 0) +
-    1
-  )
-})
+const totalColumnCount = computed(() =>
+  1 + (showOverall.value ? 1 : 0) + columns.value.length + (includeStdDiff.value ? 1 : 0) + 1
+)
 
 function rowKey(row: Table1Row): string {
   if (row.kind === 'group') return `g-${row.analysisId}`
   return `${row.kind}-${row.analysisId}-${row.covariateId}`
 }
 
-function formatCount(row: Table1Row, key: string): string {
+function formatCell(row: Table1Row, key: string): string {
   if (row.kind === 'binary') {
     const c = row.cells[key]
-    return c ? c.count.toLocaleString() : '—'
+    if (!c) return '—'
+    return `${c.count.toLocaleString()} (${c.pct.toFixed(1)}%)`
   }
   if (row.kind === 'continuous') {
     const c = row.cells[key]
-    return c ? c.primary.toFixed(1) : '—'
+    if (!c) return '—'
+    if (row.stat === 'median-iqr') return `${c.primary.toFixed(1)} [${c.secondary.toFixed(1)}]`
+    return `${c.primary.toFixed(1)} (${c.secondary.toFixed(1)})`
   }
   return ''
 }
 
-function formatPct(row: Table1Row, key: string): string {
+function formatOverall(row: Table1Row): string {
   if (row.kind === 'binary') {
-    const c = row.cells[key]
-    return c ? `${c.pct.toFixed(2)}%` : '—'
+    let totalCount = 0
+    let totalN = 0
+    for (const col of columns.value) {
+      const c = row.cells[col.cohortKey]
+      if (c) totalCount += c.count
+      const n = sizes.value[col.cohortKey]
+      if (typeof n === 'number') totalN += n
+    }
+    if (totalN === 0) return '—'
+    const pct = (totalCount / totalN) * 100
+    return `${totalCount.toLocaleString()} (${pct.toFixed(1)}%)`
   }
   if (row.kind === 'continuous') {
-    const c = row.cells[key]
-    return c ? `(${c.secondary.toFixed(1)})` : ''
+    let sumVal = 0
+    let count = 0
+    for (const col of columns.value) {
+      const c = row.cells[col.cohortKey]
+      if (c) {
+        sumVal += c.primary
+        count++
+      }
+    }
+    if (count === 0) return '—'
+    return `${(sumVal / count).toFixed(1)}`
   }
   return ''
 }
@@ -263,11 +256,6 @@ function formatPct(row: Table1Row, key: string): string {
 function formatStdDiff(row: Table1Row): string {
   if (row.kind === 'binary' && typeof row.stdDiff === 'number') return row.stdDiff.toFixed(4)
   return '—'
-}
-
-function formatStdDiffCI(row: Table1Row): string {
-  if (row.kind !== 'binary' || !row.stdDiffCI) return '—'
-  return `[${row.stdDiffCI.lower.toFixed(3)}, ${row.stdDiffCI.upper.toFixed(3)}]`
 }
 
 function isHighStdDiff(row: Table1Row): boolean {
@@ -316,43 +304,55 @@ function isHighStdDiff(row: Table1Row): boolean {
   letter-spacing: 0.06em;
   color: rgba(var(--v-theme-on-surface), 0.7);
   background: rgba(var(--v-theme-on-surface), 0.03);
-  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.10);
-  text-align: left;
-  font-weight: 700;
-}
-.char-t1__col-num {
+  border-bottom: 2px solid rgba(var(--v-theme-on-surface), 0.15);
   text-align: right;
+  font-weight: 700;
+  white-space: nowrap;
 }
-.char-t1__col-cohort {
-  text-align: center;
-  color: rgb(var(--v-theme-primary));
+.char-t1__table thead th.char-t1__col-label {
+  text-align: left;
+}
+.char-t1__col-hint {
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: rgba(var(--v-theme-on-surface), 0.45);
+  margin-top: 2px;
+}
+.char-t1__col-action {
+  width: 40px;
 }
 .char-t1__group td {
   background: rgba(var(--v-theme-orange), 0.06);
-  font-weight: 700;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  font-weight: 600;
+  font-size: 12px;
   color: rgb(var(--v-theme-orange));
   border-top: 1px solid rgba(var(--v-theme-on-surface), 0.06);
   border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
-.char-t1__cell-num {
+.char-t1__cell-value {
   text-align: right;
+  white-space: nowrap;
 }
-.char-t1__cell-ci {
-  color: rgba(var(--v-theme-on-surface), 0.62);
-  font-size: 11px;
-}
-.char-t1__cell-stddiff--high {
-  color: rgb(192, 57, 43);
-  font-weight: 600;
-}
-.char-t1__row:hover td {
-  background: rgba(var(--v-theme-orange), 0.03);
+.char-t1__cell-action {
+  text-align: center;
+  width: 40px;
 }
 .char-t1__cell-label {
-  color: rgb(var(--v-theme-on-surface));
-  padding-left: 26px !important;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.char-t1__cell-stddiff--high {
+  color: rgb(var(--v-theme-error));
+  font-weight: 600;
+}
+.char-t1__row--total td {
+  border-bottom: 2px solid rgba(var(--v-theme-on-surface), 0.15);
+  background: rgba(var(--v-theme-on-surface), 0.02);
+}
+.char-t1__row {
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.06);
 }
 </style>

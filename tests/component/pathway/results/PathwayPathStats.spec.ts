@@ -25,12 +25,6 @@ const sample: PathStatsOutput = {
     { name: 'ICS', colorKey: '2', entered: 880, retentionPct: 72.7 },
     { name: 'LABA', colorKey: '4', entered: 414, retentionPct: 47.0 },
   ],
-  stats: {
-    medianDurationDays: null,
-    medianStepGapDays: null,
-    daysToStep1: null,
-    continuedPastLastStep: null,
-  },
 }
 
 const colors = (k: string) => ({ '1': '#1f77b4', '2': '#ff7f0e', '4': '#2ca02c' }[k] ?? '#ccc')
@@ -68,28 +62,4 @@ describe('PathwayPathStats', () => {
     expect(rows[1]!.text()).toMatch(/73%|72\.7%/)
   })
 
-  it('renders an em-dash for missing time-based stats', () => {
-    const w = mountIt(sample)
-    const rows = w.findAll('[data-testid="path-stat-row"]')
-    expect(rows.length).toBeGreaterThanOrEqual(1)
-    rows.forEach((r) => {
-      expect(r.text()).toContain('—')
-    })
-  })
-
-  it('renders numeric stats when they are present', () => {
-    const w = mountIt({
-      ...sample,
-      stats: {
-        medianDurationDays: 142,
-        medianStepGapDays: 38,
-        daysToStep1: 21,
-        continuedPastLastStep: 182,
-      },
-    })
-    expect(w.text()).toMatch(/142/)
-    expect(w.text()).toMatch(/38/)
-    expect(w.text()).toMatch(/21/)
-    expect(w.text()).toMatch(/182/)
-  })
 })

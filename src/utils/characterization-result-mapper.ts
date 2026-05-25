@@ -19,6 +19,11 @@ import type {
 import type { FeatureAnalysisType } from '@/models/feature-analysis.types'
 import { logger } from '@/utils/logger'
 
+/** Split PascalCase / camelCase into words. "DrugGroupEraStartLongTerm" → "Drug Group Era Start Long Term" */
+function humanizeCamelCase(s: string): string {
+  return s.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+}
+
 /** Default stratum key used when a row is not stratified. */
 export const DEFAULT_STRATA_KEY = 'overall'
 
@@ -36,6 +41,7 @@ interface RawRow {
   analysisName?: string
   covariateId?: number
   covariateName?: string
+  covariateShortName?: string
   conceptId?: number
   conceptName?: string
   domainId?: string
@@ -64,15 +70,66 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-function toRawRow(value: unknown): RawRow | null {
-  if (!isRecord(value)) {
-    return null
+function isComparativeItem(value: Record<string, unknown>): boolean {
+  return typeof value.targetCohortId === 'number' && typeof value.comparatorCohortId === 'number'
+}
+
+function expandComparative(value: Record<string, unknown>): RawRow[] {
+  const base = {
+    analysisId: value.analysisId as number,
+    analysisName: value.analysisName as string | undefined,
+    covariateId: value.covariateId as number,
+    covariateName: value.covariateName as string | undefined,
+    covariateShortName: value.covariateShortName as string | undefined,
+    conceptId: value.conceptId as number | undefined,
+    conceptName: value.conceptName as string | undefined,
+    domainId: value.domainId as string | undefined,
+    faType: value.faType as RawRow['faType'],
+    strataId: value.strataId as number | string | undefined,
+    strataName: value.strataName as string | undefined,
   }
-  // Minimum viable shape: needs an analysis + covariate + concept id.
-  if (typeof value.analysisId !== 'number' || typeof value.covariateId !== 'number') {
-    return null
+  const rows: RawRow[] = []
+  const target: RawRow = {
+    ...base,
+    cohortId: value.targetCohortId as number,
+    cohortName: value.targetCohortName as string | undefined,
+    count: value.targetCount as number | undefined,
+    pct: value.targetPct as number | undefined,
+    avg: value.targetAvg as number | undefined,
+    stdDev: value.targetStdDev as number | undefined,
+    min: value.targetMin as number | undefined,
+    p10: value.targetP10 as number | undefined,
+    p25: value.targetP25 as number | undefined,
+    median: value.targetMedian as number | undefined,
+    p75: value.targetP75 as number | undefined,
+    p90: value.targetP90 as number | undefined,
+    max: value.targetMax as number | undefined,
   }
-  return value as RawRow
+  const comparator: RawRow = {
+    ...base,
+    cohortId: value.comparatorCohortId as number,
+    cohortName: value.comparatorCohortName as string | undefined,
+    count: value.comparatorCount as number | undefined,
+    pct: value.comparatorPct as number | undefined,
+    avg: value.comparatorAvg as number | undefined,
+    stdDev: value.comparatorStdDev as number | undefined,
+    min: value.comparatorMin as number | undefined,
+    p10: value.comparatorP10 as number | undefined,
+    p25: value.comparatorP25 as number | undefined,
+    median: value.comparatorMedian as number | undefined,
+    p75: value.comparatorP75 as number | undefined,
+    p90: value.comparatorP90 as number | undefined,
+    max: value.comparatorMax as number | undefined,
+  }
+  rows.push(target, comparator)
+  return rows
+}
+
+function toRawRows(value: unknown): RawRow[] {
+  if (!isRecord(value)) return []
+  if (typeof value.analysisId !== 'number' || typeof value.covariateId !== 'number') return []
+  if (isComparativeItem(value)) return expandComparative(value)
+  return [value as RawRow]
 }
 
 function classifyRow(row: RawRow): CharacterizationStatType | null {
@@ -80,11 +137,10 @@ function classifyRow(row: RawRow): CharacterizationStatType | null {
   if (explicit === 'PREVALENCE' || explicit === 'DISTRIBUTION') {
     return explicit
   }
-  // Inferred: distribution stats carry summary fields; prevalence carries
-  // count/pct. We check distribution first because a few WebAPI reports
-  // emit both `count` and the distribution stats (count = persons).
+  // Inferred: true distribution rows carry summary stats beyond avg (which
+  // the WebAPI sets on every row as pct/100). Require at least one of
+  // stdDev/median/p25/p75 to distinguish from prevalence rows.
   if (
-    typeof row.avg === 'number' ||
     typeof row.stdDev === 'number' ||
     typeof row.median === 'number' ||
     typeof row.p25 === 'number' ||
@@ -137,12 +193,18 @@ function ensureCohort(cohorts: LinkedCohort[], row: RawRow): void {
   cohorts.push({ id: row.cohortId, name: row.cohortName ?? `Cohort ${row.cohortId}` })
 }
 
+function pickCovariateName(row: RawRow): string {
+  const short = row.covariateShortName?.trim()
+  if (short) return short
+  return row.covariateName ?? `Covariate ${row.covariateId}`
+}
+
 function newPrevalenceStat(row: RawRow): PrevalenceStat {
   return {
     analysisId: row.analysisId as number,
-    analysisName: row.analysisName ?? `Analysis ${row.analysisId}`,
+    analysisName: humanizeCamelCase(row.analysisName ?? `Analysis ${row.analysisId}`),
     covariateId: row.covariateId as number,
-    covariateName: row.covariateName ?? `Covariate ${row.covariateId}`,
+    covariateName: pickCovariateName(row),
     conceptId: typeof row.conceptId === 'number' ? row.conceptId : 0,
     conceptName: row.conceptName,
     domainId: row.domainId,
@@ -156,9 +218,9 @@ function newPrevalenceStat(row: RawRow): PrevalenceStat {
 function newDistributionStat(row: RawRow): DistributionStat {
   return {
     analysisId: row.analysisId as number,
-    analysisName: row.analysisName ?? `Analysis ${row.analysisId}`,
+    analysisName: humanizeCamelCase(row.analysisName ?? `Analysis ${row.analysisId}`),
     covariateId: row.covariateId as number,
-    covariateName: row.covariateName ?? `Covariate ${row.covariateId}`,
+    covariateName: pickCovariateName(row),
     conceptId: typeof row.conceptId === 'number' ? row.conceptId : 0,
     conceptName: row.conceptName,
     domainId: row.domainId,
@@ -213,49 +275,51 @@ export function mapCharacterizationResults(raw: unknown[]): MappedCharacterizati
   let skipped = 0
 
   for (const value of raw) {
-    const row = toRawRow(value)
-    if (!row) {
+    const rows = toRawRows(value)
+    if (rows.length === 0) {
       skipped++
       continue
     }
-    const type = classifyRow(row)
-    if (type === null) {
-      skipped++
-      continue
-    }
-    const groupKey = `${row.analysisId}::${row.covariateId}`
-    const cKey = cohortKey(row)
-    if (!cKey) {
-      skipped++
-      continue
-    }
-    const sKey = strataKey(row)
+    for (const row of rows) {
+      const type = classifyRow(row)
+      if (type === null) {
+        skipped++
+        continue
+      }
+      const groupKey = `${row.analysisId}::${row.covariateId}`
+      const cKey = cohortKey(row)
+      if (!cKey) {
+        skipped++
+        continue
+      }
+      const sKey = strataKey(row)
 
-    if (type === 'PREVALENCE') {
-      let stat = prevalenceMap.get(groupKey)
-      if (!stat) {
-        stat = newPrevalenceStat(row)
-        prevalenceMap.set(groupKey, stat)
+      if (type === 'PREVALENCE') {
+        let stat = prevalenceMap.get(groupKey)
+        if (!stat) {
+          stat = newPrevalenceStat(row)
+          prevalenceMap.set(groupKey, stat)
+        }
+        ensureCohort(stat.cohorts, row)
+        setNested(stat.count, sKey, cKey, row.count)
+        setNested(stat.pct, sKey, cKey, row.pct)
+      } else {
+        let stat = distributionMap.get(groupKey)
+        if (!stat) {
+          stat = newDistributionStat(row)
+          distributionMap.set(groupKey, stat)
+        }
+        ensureCohort(stat.cohorts, row)
+        setNested(stat.avg, sKey, cKey, row.avg)
+        setNested(stat.stdDev, sKey, cKey, row.stdDev)
+        setNested(stat.min, sKey, cKey, row.min)
+        setNested(stat.p10, sKey, cKey, row.p10)
+        setNested(stat.p25, sKey, cKey, row.p25)
+        setNested(stat.median, sKey, cKey, row.median)
+        setNested(stat.p75, sKey, cKey, row.p75)
+        setNested(stat.p90, sKey, cKey, row.p90)
+        setNested(stat.max, sKey, cKey, row.max)
       }
-      ensureCohort(stat.cohorts, row)
-      setNested(stat.count, sKey, cKey, row.count)
-      setNested(stat.pct, sKey, cKey, row.pct)
-    } else {
-      let stat = distributionMap.get(groupKey)
-      if (!stat) {
-        stat = newDistributionStat(row)
-        distributionMap.set(groupKey, stat)
-      }
-      ensureCohort(stat.cohorts, row)
-      setNested(stat.avg, sKey, cKey, row.avg)
-      setNested(stat.stdDev, sKey, cKey, row.stdDev)
-      setNested(stat.min, sKey, cKey, row.min)
-      setNested(stat.p10, sKey, cKey, row.p10)
-      setNested(stat.p25, sKey, cKey, row.p25)
-      setNested(stat.median, sKey, cKey, row.median)
-      setNested(stat.p75, sKey, cKey, row.p75)
-      setNested(stat.p90, sKey, cKey, row.p90)
-      setNested(stat.max, sKey, cKey, row.max)
     }
   }
 

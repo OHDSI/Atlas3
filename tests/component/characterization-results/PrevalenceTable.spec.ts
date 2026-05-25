@@ -6,6 +6,7 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia, setActivePinia } from 'pinia'
 
 import PrevalenceTable from '@/components/characterization-results/PrevalenceTable.vue'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
@@ -41,6 +42,7 @@ function makeRow(overrides: Partial<PrevalenceStat> = {}): PrevalenceStat {
 describe('PrevalenceTable', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
+    setActivePinia(createPinia())
   })
 
   it('renders without a Std Diff column for a single cohort', () => {

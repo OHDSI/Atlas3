@@ -1,9 +1,11 @@
 <template>
   <div
     class="ir-workbench"
+    :class="{ 'ir-workbench--rail-collapsed': !railOpen }"
     data-testid="ir-workbench"
   >
     <IncidenceRateDesignRail
+      v-show="railOpen"
       class="ir-workbench__rail"
       data-testid="ir-workbench-rail"
       @strata:add="onStrataAdd"
@@ -14,6 +16,13 @@
       class="ir-workbench__canvas"
       data-testid="ir-workbench-canvas"
     >
+      <button
+        class="rail-toggle"
+        :title="railOpen ? 'Hide design panel' : 'Show design panel'"
+        @click="railOpen = !railOpen"
+      >
+        {{ railOpen ? '◂ Hide Analysis Design' : '▸ Show Analysis Design' }}
+      </button>
       <template v-if="!store.currentIR?.id">
         <IncidenceRateEmptyState variant="no-id" />
       </template>
@@ -57,17 +66,34 @@
             :error-message="activeRun?.message ?? undefined"
           />
         </template>
-        <template v-else-if="report">
-          <IncidenceRateTreemap
-            v-if="mode === 'treemap'"
-            ref="treemapRef"
-            :treemap-json="report.treemapData"
-          />
-          <IncidenceRateRatesTable
-            v-else
-            :report="report"
-            :multiplier="store.rateMultiplier"
-          />
+        <IncidenceRateComparisonChart
+          v-if="!emptyVariant && irIdRef && sourceKeyRef && targetIdRef"
+          :ir-id="irIdRef"
+          :source-key="sourceKeyRef"
+          :target-id="targetIdRef"
+          :selected-outcome-id="store.selectedOutcomeId"
+          @select="(id) => store.setSelectedTargetOutcome(store.selectedTargetId, id)"
+        />
+        <template v-if="report">
+          <AtlasAlert
+            v-if="report.summary.cases === 0"
+            severity="info"
+            class="mb-2"
+          >
+            No cases found for this target/outcome combination. Try selecting a different outcome.
+          </AtlasAlert>
+          <template v-else>
+            <IncidenceRateTreemap
+              v-if="mode === 'treemap'"
+              :treemap-json="report.treemapData"
+              :strata-names="strataNames"
+            />
+            <IncidenceRateRatesTable
+              v-else
+              :report="report"
+              :multiplier="store.rateMultiplier"
+            />
+          </template>
         </template>
       </template>
 
@@ -112,8 +138,10 @@ import IncidenceRateDesignRail from './IncidenceRateDesignRail.vue'
 import IncidenceRateCanvasToolbar, { type ViewMode } from './IncidenceRateCanvasToolbar.vue'
 import IncidenceRateRunMeta from './IncidenceRateRunMeta.vue'
 import IncidenceRateTreemap from './IncidenceRateTreemap.vue'
+import IncidenceRateComparisonChart from './IncidenceRateComparisonChart.vue'
 import IncidenceRateRatesTable from './IncidenceRateRatesTable.vue'
 import IncidenceRateInsightsRail from './IncidenceRateInsightsRail.vue'
+import { AtlasAlert } from '@/components/ui'
 import IncidenceRateEmptyState from './IncidenceRateEmptyState.vue'
 import IncidenceRateStratifyInspector from './IncidenceRateStratifyInspector.vue'
 import DataSourceRunTable, {
@@ -122,7 +150,6 @@ import DataSourceRunTable, {
 } from '@/components/generation/DataSourceRunTable.vue'
 import PreviousRunsDialog from '@/components/generation/PreviousRunsDialog.vue'
 import { IR_TERMINAL_STATUSES } from '@/models/incidence-rate.types'
-import { downloadPNG, downloadSVG } from '@/utils/treemap-export'
 import { arrayToCsv, downloadCsv } from '@/utils/csv'
 import type { CriteriaGroup } from '@/models/cohort.types'
 import type { StratifyRule } from '@/models/incidence-rate.types'
@@ -132,10 +159,10 @@ const { tv } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const store = useIncidenceRateStore()
+const railOpen = ref(!route.params.id)
 const ds = useDataSourcesStore()
 
 const mode = ref<ViewMode>('treemap')
-const treemapRef = ref<InstanceType<typeof IncidenceRateTreemap> | null>(null)
 
 const strataInspectorOpen = ref(false)
 const strataInspectorIndex = ref<number | null>(null)
@@ -164,6 +191,10 @@ const targetIdRef = computed<number | null>(() => store.selectedTargetId)
 const outcomeIdRef = computed<number | null>(() => store.selectedOutcomeId)
 
 const { report } = useIncidenceRateReport(irIdRef, sourceKeyRef, targetIdRef, outcomeIdRef)
+
+const strataNames = computed(() =>
+  (store.currentIR?.expression.strata ?? []).map(s => s.name)
+)
 
 const availableTargets = computed(() =>
   (store.currentIR?.expression.targetIds ?? []).map(id => ({
@@ -196,6 +227,12 @@ watch(
       const list = id !== prevId ? store.executions : executions
       const completed = list.find(e => e.status === 'COMPLETED' || e.status === 'COMPLETE')
       if (completed) await router.replace({ query: { ...route.query, run: String(completed.id) } })
+    }
+    if (store.selectedTargetId === null && store.currentIR?.expression.targetIds.length) {
+      store.setSelectedTargetOutcome(
+        store.currentIR.expression.targetIds[0]!,
+        store.currentIR.expression.outcomeIds[0] ?? null
+      )
     }
   },
   { immediate: true },
@@ -284,11 +321,7 @@ function onStrataEdit(index: number) {
 }
 
 function onExport(format: 'csv' | 'svg' | 'png') {
-  if (format === 'svg' && treemapRef.value?.svgRef) {
-    downloadSVG(treemapRef.value.svgRef, 'incidence-rate.svg')
-  } else if (format === 'png' && treemapRef.value?.svgRef) {
-    void downloadPNG(treemapRef.value.svgRef, 'incidence-rate.png')
-  } else if (format === 'csv' && report.value) {
+  if (format === 'csv' && report.value) {
     type CsvRow = { name: string; totalPersons: number; cases: number; timeAtRisk: number }
     const rows: CsvRow[] = [
       {
@@ -336,6 +369,23 @@ function onExport(format: 'csv' | 'svg' | 'png') {
 @media (max-width: 1280px) {
   .ir-workbench { grid-template-columns: 320px minmax(0, 1fr); }
   .ir-workbench__insights { display: none; }
+}
+.ir-workbench--rail-collapsed {
+  grid-template-columns: minmax(0, 1fr) 280px;
+}
+.rail-toggle {
+  background: rgb(var(--v-theme-primary));
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.rail-toggle:hover {
+  opacity: 0.9;
 }
 @media (max-width: 1024px) {
   .ir-workbench { grid-template-columns: 1fr; }

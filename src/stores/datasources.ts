@@ -49,7 +49,15 @@ export const useDataSourcesStore = defineStore('datasources', () => {
   const isLoading = computed(() => loading.value.sources || loading.value.report)
 
   // Actions
+  let fetchPromise: Promise<void> | null = null
+
   async function fetchDataSources() {
+    if (fetchPromise) return fetchPromise
+    fetchPromise = doFetchDataSources()
+    try { await fetchPromise } finally { fetchPromise = null }
+  }
+
+  async function doFetchDataSources() {
     loading.value.sources = true
     error.value.sources = null
 

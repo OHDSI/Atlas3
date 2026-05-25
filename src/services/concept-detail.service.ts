@@ -2,11 +2,11 @@ import { httpClient } from '@/services/http-client'
 import { logger } from '@/utils/logger'
 import {
   RelatedConceptsResponseSchema,
-  DrilldownReportSchema,
   domainPath,
   type RelatedConcept,
-  type DrilldownReport,
 } from '@/models/concept-detail.types'
+import type { DrilldownReport } from '@/models/report.types'
+import { mapDrilldownReport } from '@/services/report-mapper'
 
 function mapRelatedFromApi(
   api: ReturnType<typeof RelatedConceptsResponseSchema.parse>[number]
@@ -76,32 +76,22 @@ export async function getConceptAncestorAndDescendant(
 export async function getConceptDrilldown(
   sourceKey: string,
   domainId: string,
-  conceptId: number
+  conceptId: number,
+  conceptName = '',
 ): Promise<DrilldownReport | null> {
   const path = domainPath(domainId)
   if (!path) return null
 
   try {
     const data = await httpClient<unknown>(`/cdmresults/${sourceKey}/${path}/${conceptId}`)
-    const parsed = DrilldownReportSchema.safeParse(data)
-    if (!parsed.success) {
-      logger.error('ConceptDetail', 'getConceptDrilldown validation failed', parsed.error)
-      return null
-    }
-    const d = parsed.data
-    return {
-      ageAtFirstOccurrence: d.ageAtFirstOccurrence ?? [],
-      prevalenceByGenderAgeYear: (d.prevalenceByGenderAgeYear ?? []).map((r) => ({
-        trellisName: r.trellisName,
-        seriesName: r.seriesName,
-        calendarYear: r.xCalendarYear,
-        prevalence1000pp: r.yPrevalence1000Pp,
-      })),
-      prevalenceByMonth: (d.prevalenceByMonth ?? []).map((r) => ({
-        calendarMonth: r.xCalendarMonth,
-        prevalence1000pp: r.yPrevalence1000Pp,
-      })),
-    }
+    if (!data || typeof data !== 'object') return null
+    return mapDrilldownReport(
+      data as import('@/models/report.types').WebAPIDrilldownRaw,
+      conceptId,
+      conceptName,
+      '',
+      path,
+    )
   } catch (error) {
     logger.error(
       'ConceptDetail',

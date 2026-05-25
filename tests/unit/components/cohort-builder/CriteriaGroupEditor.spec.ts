@@ -282,7 +282,7 @@ describe('CriteriaGroupEditor', () => {
         events: [{
           id: 'event-1',
           criteriaType: 'ConditionOccurrence',
-          conceptSet: { id: 0, name: 'Select concept set...' },
+          conceptSet: { id: null, name: 'Select concept set...' },
           attributes: []
         }]
       }

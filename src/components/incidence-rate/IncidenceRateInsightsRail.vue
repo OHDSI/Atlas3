@@ -10,9 +10,10 @@
     <div
       class="ir-insights__kpi"
       data-testid="ir-kpi"
+      :title="`Persons at risk in the target cohort during the time-at-risk window`"
     >
       <div class="k-label">
-        {{ t('ir.results.persons', 'Persons').value }}
+        Persons at risk
       </div>
       <div class="k-val">
         {{ format(report.summary.totalPersons) }}
@@ -21,9 +22,10 @@
     <div
       class="ir-insights__kpi"
       data-testid="ir-kpi"
+      :title="`Persons who had the outcome during follow-up (${propPct})`"
     >
       <div class="k-label">
-        {{ t('ir.results.cases', 'Cases').value }}
+        Outcome cases
       </div>
       <div class="k-val">
         {{ format(report.summary.cases) }}
@@ -35,9 +37,10 @@
     <div
       class="ir-insights__kpi"
       data-testid="ir-kpi"
+      title="Total person-time observed across all persons, measured in person-years"
     >
       <div class="k-label">
-        {{ t('ir.results.timeAtRiskYears', 'TAR (years)').value }}
+        Person-years at risk
       </div>
       <div class="k-val">
         {{ formatYears(report.summary.timeAtRisk) }}
@@ -46,12 +49,58 @@
     <div
       class="ir-insights__kpi"
       data-testid="ir-kpi"
+      :title="`Incidence rate: ${format(report.summary.cases)} cases per ${formatYears(report.summary.timeAtRisk)} person-years, scaled by ${multiplier.toLocaleString()}`"
     >
       <div class="k-label">
-        {{ t('ir.results.rate', 'Rate').value }} / {{ multiplier.toLocaleString() }}
+        Incidence rate per {{ multiplier.toLocaleString() }} PY
       </div>
       <div class="k-val k-val--accent">
         {{ rate(report.summary.rate) }}
+      </div>
+      <div class="k-hint">
+        Not comparable across outcomes
+      </div>
+    </div>
+
+    <div
+      class="ir-insights__kpi"
+      data-testid="ir-kpi-donut"
+    >
+      <div class="k-label">
+        {{ t('ir.results.proportion', 'Cases vs Non-Cases').value }}
+      </div>
+      <div class="ir-insights__donut-wrap">
+        <svg
+          viewBox="0 0 80 80"
+          class="ir-insights__donut"
+        >
+          <circle
+            cx="40"
+            cy="40"
+            r="30"
+            fill="none"
+            stroke="rgba(var(--v-theme-on-surface), 0.08)"
+            stroke-width="10"
+          />
+          <circle
+            cx="40"
+            cy="40"
+            r="30"
+            fill="none"
+            stroke="rgb(var(--v-theme-orange))"
+            stroke-width="10"
+            :stroke-dasharray="`${casesArc} ${188.5 - casesArc}`"
+            stroke-dashoffset="47.1"
+            stroke-linecap="round"
+          />
+          <text
+            x="40"
+            y="42"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            class="ir-insights__donut-label"
+          >{{ casePct }}</text>
+        </svg>
       </div>
     </div>
 
@@ -111,6 +160,15 @@ const sortedStrata = computed(() =>
 
 const propPct = computed(() => `${(props.report.summary.proportion * 100).toFixed(1)}% proportion`)
 
+const casePct = computed(() => {
+  const p = props.report.summary.proportion * 100
+  return `${p.toFixed(1)}%`
+})
+const casesArc = computed(() => {
+  const p = Math.min(props.report.summary.proportion, 1)
+  return p * 188.5
+})
+
 function format(n: number | null | undefined) {
   return n == null ? '—' : Math.round(n).toLocaleString()
 }
@@ -147,6 +205,9 @@ function rate(r: number) {
 .k-val { font-size: 18px; font-weight: 600; line-height: 1.1; margin-top: 2px; }
 .k-val--accent { color: rgb(var(--v-theme-orange)); }
 .k-hint { font-size: 10px; color: rgba(var(--v-theme-on-surface), 0.55); margin-top: 1px; }
+.ir-insights__donut-wrap { display: flex; justify-content: center; padding: 4px 0; }
+.ir-insights__donut { width: 80px; height: 80px; }
+.ir-insights__donut-label { font-size: 12px; font-weight: 600; fill: rgb(var(--v-theme-on-surface)); }
 .ir-insights__strata { width: 100%; border-collapse: collapse; font-size: 10px; }
 .ir-insights__strata th, .ir-insights__strata td {
   text-align: left; padding: 4px 6px;

@@ -274,7 +274,7 @@ describe('concept-detail store', () => {
     await store.loadConcept('SYNPUF1K', 10)
     await store.loadDrilldown('SYNPUF1K')
 
-    expect(getConceptDrilldown).toHaveBeenCalledWith('SYNPUF1K', 'Condition', 10)
+    expect(getConceptDrilldown).toHaveBeenCalledWith('SYNPUF1K', 'Condition', 10, 'D')
     expect(store.drilldownBySource.get('SYNPUF1K')).toEqual({ report: { foo: 1 } })
     expect(store.isDrilldownLoading).toBe(false)
 

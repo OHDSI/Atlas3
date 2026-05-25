@@ -2,6 +2,8 @@ import type { PathwayGroup, PathwayEventCode } from '@/models/pathway.types'
 
 export interface PathwayHierarchyNode {
   name: string
+  /** Original numeric code (bitmask) — used for color lookups. */
+  code?: number
   value: number
   itemColor?: string
   children?: PathwayHierarchyNode[]
@@ -31,15 +33,14 @@ export function decomposeCombo(code: number): number[] {
   return bits
 }
 
-// eventCodes is reserved for future use (combo lookups by code) but the current
-// implementation only needs the bit decomposition. Keeping it in the signature
-// for stability across consumers and to avoid an API change later.
 export function buildPathwayHierarchy(
   group: PathwayGroup,
-  _eventCodes: PathwayEventCode[],
+  eventCodes: PathwayEventCode[],
   maxDepth: number,
   colors: (key: string) => string
 ): PathwayHierarchyNode {
+  const codeToName = new Map<number, string>()
+  for (const ec of eventCodes) codeToName.set(ec.code, ec.name)
   const root: PathwayHierarchyNode = { name: 'root', value: 0, children: [] }
 
   for (const p of group.pathways) {
@@ -59,18 +60,33 @@ export function buildPathwayHierarchy(
     root.value += p.personCount
   }
 
-  decorate(root, colors)
+  decorate(root, colors, codeToName)
   return root
 }
 
-function decorate(node: PathwayHierarchyNode, colors: (key: string) => string): void {
+function resolveCodeName(code: number, codeToName: Map<number, string>): string {
+  const direct = codeToName.get(code)
+  if (direct) return direct
+  if (isComboCode(code)) {
+    const bits = decomposeCombo(code)
+    return bits.map(b => codeToName.get(b) ?? String(b)).join(' + ')
+  }
+  return String(code)
+}
+
+function decorate(
+  node: PathwayHierarchyNode,
+  colors: (key: string) => string,
+  codeToName: Map<number, string>
+): void {
   if (node.name !== 'root' && node.name !== END) {
     const code = Number(node.name)
     if (!Number.isNaN(code)) {
+      node.code = code
       if (isComboCode(code)) {
         const bits = decomposeCombo(code)
         node.splitChildren = bits.map(b => ({
-          name: String(b),
+          name: codeToName.get(b) ?? String(b),
           value: node.value,
           itemColor: colors(String(b)),
         }))
@@ -78,8 +94,9 @@ function decorate(node: PathwayHierarchyNode, colors: (key: string) => string): 
       } else {
         node.itemColor = colors(node.name)
       }
+      node.name = resolveCodeName(code, codeToName)
     }
   }
   if (node.name === END) node.itemColor = 'rgba(185,184,184,0.23)'
-  for (const c of node.children || []) decorate(c, colors)
+  for (const c of node.children || []) decorate(c, colors, codeToName)
 }

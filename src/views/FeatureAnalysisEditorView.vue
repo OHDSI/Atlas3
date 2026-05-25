@@ -34,15 +34,22 @@
             </AtlasIcon>
             <span class="d-none d-md-inline">{{ t('common.cancel', 'Cancel').value }}</span>
           </AtlasButton>
-          <AtlasButton
-            variant="secondary"
-            icon="mdi-content-copy-outline"
-            :disabled="!isEditing || loading || !canCopy"
-            data-testid="feature-analysis-editor-copy"
-            @click="handleSaveCopy"
+          <AtlasTooltip
+            :text="t('common.duplicate', 'Duplicate').value"
+            location="bottom"
           >
-            {{ t('common.duplicate', 'Duplicate') }}
-          </AtlasButton>
+            <template #activator="{ props: tipProps }">
+              <AtlasIconButton
+                v-bind="{ ...tipProps, ariaLabel: t('common.duplicate', 'Duplicate').value }"
+                icon="mdi-content-copy"
+                variant="text"
+                size="sm"
+                :disabled="!isEditing || loading || !canCopy"
+                data-testid="feature-analysis-editor-copy"
+                @click="handleSaveCopy"
+              />
+            </template>
+          </AtlasTooltip>
           <AtlasButton
             variant="ghost"
             tone="danger"
@@ -55,7 +62,6 @@
           </AtlasButton>
           <AtlasButton
             variant="primary"
-            icon="mdi-content-save-outline"
             :disabled="!canSave"
             :loading="saving"
             data-testid="feature-analysis-editor-save"
@@ -301,7 +307,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasCol, AtlasDialog, AtlasIcon, AtlasRow, AtlasSelect, AtlasSnackbar, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasChip, AtlasCol, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasRow, AtlasSelect, AtlasSnackbar, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'

@@ -8,11 +8,8 @@ import {
   getConceptDrilldown,
 } from '@/services/concept-detail.service'
 import type { Concept } from '@/models/concept-set.types'
-import type {
-  RelatedConcept,
-  ConceptRecordCount,
-  DrilldownReport,
-} from '@/models/concept-detail.types'
+import type { RelatedConcept, ConceptRecordCount } from '@/models/concept-detail.types'
+import type { DrilldownReport } from '@/models/report.types'
 
 const CACHE_TTL_MS = 5 * 60 * 1000
 
@@ -139,7 +136,8 @@ export const useConceptDetailStore = defineStore('concept-detail', () => {
       const report = await getConceptDrilldown(
         sourceKey,
         concept.value.domainId,
-        concept.value.conceptId
+        concept.value.conceptId,
+        concept.value.conceptName,
       )
       drilldownBySource.value = new Map(drilldownBySource.value).set(sourceKey, report)
     } finally {

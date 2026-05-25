@@ -19,9 +19,9 @@ export function toAllPathwaysRows(
     }
     row['Count'] = p.personCount
     row['% with Pathway'] =
-      group.totalPathwaysCount === 0 ? 0 : (p.personCount / group.totalPathwaysCount) * 100
+      group.totalPathwaysCount === 0 ? 0 : Math.round((p.personCount / group.totalPathwaysCount) * 10000) / 100
     row['% of Cohort'] =
-      group.targetCohortCount === 0 ? 0 : (p.personCount / group.targetCohortCount) * 100
+      group.targetCohortCount === 0 ? 0 : Math.round((p.personCount / group.targetCohortCount) * 10000) / 100
     return row
   })
 }
@@ -46,7 +46,7 @@ export function toCountsByRankRows(
       'Event Cohort': codeToName(eventCodes, code),
       Rank: Number(rank),
       Count: count,
-      '%': group.totalPathwaysCount === 0 ? 0 : (count / group.totalPathwaysCount) * 100,
+      '%': group.totalPathwaysCount === 0 ? 0 : Math.round((count / group.totalPathwaysCount) * 10000) / 100,
     }
   })
 }
@@ -67,7 +67,7 @@ export function toEventCohortCountRows(
   return [...tally.entries()].map(([name, count]) => ({
     'Event Cohort': name,
     Count: count,
-    '%': group.totalPathwaysCount === 0 ? 0 : (count / group.totalPathwaysCount) * 100,
+    '%': group.totalPathwaysCount === 0 ? 0 : Math.round((count / group.totalPathwaysCount) * 10000) / 100,
   }))
 }
 

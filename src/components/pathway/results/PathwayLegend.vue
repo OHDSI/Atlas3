@@ -2,31 +2,46 @@
   <table class="pathway-legend">
     <tbody>
       <tr
-        v-for="(c, i) in design.eventCohorts"
-        :key="c.id"
+        v-for="item in items"
+        :key="item.code"
       >
         <td>
           <span
             class="swatch"
-            :style="{ backgroundColor: colors(String(1 << i)) }"
+            :style="{ backgroundColor: colors(String(item.code)) }"
           />
         </td>
-        <td>{{ c.name }}</td>
+        <td>{{ item.name }}</td>
       </tr>
     </tbody>
   </table>
 </template>
 
 <script setup lang="ts">
-import type { Pathway } from '@/models/pathway.types'
+import { computed } from 'vue'
+import type { Pathway, PathwayEventCode } from '@/models/pathway.types'
 
-defineProps<{
+const props = defineProps<{
   design: Pathway
   colors: (key: string) => string
+  eventCodes?: PathwayEventCode[]
   targetCohortName?: string
   targetCohortCount?: number
   totalPathwaysCount?: number
 }>()
+
+const items = computed(() => {
+  if (props.eventCodes) {
+    return props.eventCodes
+      .filter(ec => !ec.isCombo)
+      .sort((a, b) => a.code - b.code)
+  }
+  return props.design.eventCohorts.map((c, i) => ({
+    code: c.code != null ? (1 << c.code) : (1 << i),
+    name: c.name,
+    isCombo: false,
+  }))
+})
 </script>
 
 <style scoped>

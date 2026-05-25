@@ -38,8 +38,8 @@ defineEmits<{ run: [] }>()
 const { tv } = useI18n()
 
 const icon = computed(() => ({
-  'no-id': '◌', 'no-runs': '▶', 'run-pending': '⏳',
-  'run-failed': '⚠', 'no-data': '∅',
+  'no-id': '', 'no-runs': '', 'run-pending': '',
+  'run-failed': '', 'no-data': '',
 } as const)[props.variant])
 
 const title = computed(() => ({

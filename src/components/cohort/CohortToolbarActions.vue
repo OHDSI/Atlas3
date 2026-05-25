@@ -53,10 +53,7 @@
         data-testid="save-cohort-btn"
         @click="$emit('save')"
       >
-        <AtlasIcon class="d-md-none">
-          mdi-content-save-outline
-        </AtlasIcon>
-        <span class="d-none d-md-inline">{{ t('common.save') }}</span>
+        {{ t('common.save') }}
       </AtlasButton>
     </span>
   </div>

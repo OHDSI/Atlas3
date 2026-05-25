@@ -355,8 +355,37 @@ function orderAndGroup(
     g.rows.push(r)
   }
 
+  const DOMAIN_ORDER: Record<string, number> = {
+    Demographics: 0,
+    Observation: 1,
+    Condition: 2,
+    Drug: 3,
+    Procedure: 4,
+    Measurement: 5,
+    Device: 6,
+    Visit: 7,
+  }
+
+  function groupSortKey(name: string, rows: typeof all): number {
+    for (const r of rows) {
+      if ('_source' in r && r._source?.domainId) {
+        const d = r._source.domainId
+        if (d in DOMAIN_ORDER) return DOMAIN_ORDER[d]!
+      }
+    }
+    const lower = name.toLowerCase()
+    if (lower.includes('demographics') || lower.includes('age') || lower.includes('gender')) return 0
+    if (lower.includes('observation')) return 1
+    if (lower.includes('condition')) return 2
+    if (lower.includes('drug')) return 3
+    return 10
+  }
+
+  const sorted = Array.from(groups.entries())
+    .sort(([, a], [, b]) => groupSortKey(a.name, a.rows) - groupSortKey(b.name, b.rows))
+
   const out: Table1Row[] = []
-  for (const [analysisId, g] of groups) {
+  for (const [analysisId, g] of sorted) {
     g.rows.sort((a, b) => a.label.localeCompare(b.label))
     out.push({ kind: 'group', analysisId, label: g.name })
     for (const r of g.rows) out.push(r)

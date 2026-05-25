@@ -8,7 +8,9 @@ import ConceptStatCards from '@/components/concepts/detail/ConceptStatCards.vue'
 import ConceptAttributesCard from '@/components/concepts/detail/ConceptAttributesCard.vue'
 import ConceptHierarchyMiniMap from '@/components/concepts/detail/ConceptHierarchyMiniMap.vue'
 import ConceptRelatedTable from '@/components/concepts/detail/ConceptRelatedTable.vue'
-import ConceptDrilldownChart from '@/components/concepts/detail/ConceptDrilldownChart.vue'
+import DrilldownDetails from '@/components/reports/DrilldownDetails.vue'
+import { domainPath } from '@/models/concept-detail.types'
+import type { Domain } from '@/config/drilldown-config'
 
 const props = defineProps<{
   sourceKey: string
@@ -21,6 +23,7 @@ const { concept, isLoading, error, related, parents, children, recordCountsBySou
 
 async function load() {
   await store.loadConcept(props.sourceKey, props.conceptId)
+  await store.loadDrilldown(props.sourceKey)
 }
 
 onMounted(load)
@@ -67,9 +70,14 @@ watch(() => [props.sourceKey, props.conceptId], load)
 
         <ConceptRelatedTable :related="related" />
 
-        <ConceptDrilldownChart
-          :concept="concept"
-          :primary-source-key="props.sourceKey"
+        <DrilldownDetails
+          v-if="domainPath(concept.domainId)"
+          :data="store.drilldownBySource.get(props.sourceKey) ?? null"
+          :loading="store.isDrilldownLoading"
+          :concept-name="concept.conceptName"
+          :domain="(domainPath(concept.domainId) as Domain) ?? 'condition'"
+          :show-header="false"
+          :compact="true"
         />
       </div>
     </template>
