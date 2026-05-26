@@ -316,7 +316,12 @@ describe('auth.config', () => {
       const module = await import('@/config/auth.config')
 
       const newProviders = [
-        { name: 'TestProvider', url: '/test' }
+        {
+          name: 'TestProvider',
+          url: '/test',
+          ajax: false,
+          icon: 'mdi-account',
+        }
       ]
 
       module.setAuthConfig({ authProviders: newProviders })
