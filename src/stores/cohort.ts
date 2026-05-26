@@ -108,6 +108,7 @@ export const useCohortStore = defineStore('cohort', () => {
       conceptSets: [],
     }
     isDirty.value = false
+    clearDraft()
   }
 
   function addEntryEvent(event: CohortEvent) {

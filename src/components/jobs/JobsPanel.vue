@@ -62,7 +62,7 @@ const windowWidth = ref(window.innerWidth)
 
 const drawerWidth = computed(() => {
   if (windowWidth.value <= 768) return windowWidth.value
-  const calculated = Math.min(windowWidth.value * 0.7, 1100)
+  const calculated = Math.min(windowWidth.value * 0.85, 1400)
   return Math.max(calculated, 320)
 })
 
