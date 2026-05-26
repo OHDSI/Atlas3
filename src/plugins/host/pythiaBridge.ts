@@ -112,16 +112,16 @@ async function handleApplyProposal(payload: { proposal: AgentProposal }) {
     case 'updateIncidenceRate':
       await handleUpdateIncidenceRate(proposal.payload)
       return
-    default:
-      // Cohort-store proposal kinds (entry events, inclusion rules, etc.)
-      useCohortStore().applyProposal(proposal)
-      // Auto-navigate when pythia is building a cohort but the user is
-      // not on a cohort route — otherwise their work is invisible. The
-      // store's applyProposal calls createNewCohort() implicitly when
-      // currentCohort is null, so by the time we get here the cohort
-      // exists either as a draft (no id → cohort-new) or as a saved
-      // entity (id present → cohort-edit/:id).
+    default: {
+      const cohortStore = useCohortStore()
+      const currentRoute = router.currentRoute.value
+      const onNewCohortRoute = currentRoute.name === 'cohort-new'
+      if (!onNewCohortRoute) {
+        cohortStore.createNewCohort()
+      }
+      cohortStore.applyProposal(proposal)
       await ensureOnCohortRoute()
+    }
   }
 }
 

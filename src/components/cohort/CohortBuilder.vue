@@ -1900,7 +1900,7 @@ async function handleSave() {
 }
 
 function handleCancel() {
-  // The onBeforeRouteLeave guard will handle the unsaved changes confirmation
+  cohortStore.clearDraft()
   router.push('/cohorts')
 }
 

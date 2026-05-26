@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, shallowRef } from 'vue'
+import { AtlasFab } from '@/components/ui'
 import { pluginRegistry, type RegisteredFab } from '@/plugins/core/PluginRegistry'
 import { usePluginOverlay } from '@/plugins/host/pluginOverlayState'
 
@@ -41,22 +42,16 @@ function positionStyle(position: string | undefined): Record<string, string> {
 
 <template>
   <Teleport to="body">
-    <v-btn
+    <AtlasFab
       v-for="entry in fabs"
       :key="entry.pluginId"
       :icon="entry.fab.icon"
       :color="entry.fab.color || 'primary'"
-      :aria-label="entry.fab.label"
-      :title="entry.fab.label"
+      v-bind="{ ariaLabel: entry.fab.label }"
       :data-testid="`plugin-fab-${entry.pluginId}`"
-      size="large"
-      elevation="6"
       :style="{
         position: 'fixed',
         zIndex: 2000,
-        width: '56px',
-        height: '56px',
-        borderRadius: '28px',
         ...positionStyle(entry.fab.position),
       }"
       @click="overlay.toggle(entry.pluginId)"

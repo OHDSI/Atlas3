@@ -1,5 +1,14 @@
 <template>
   <Teleport to="body">
+    <div
+      v-if="modelValue"
+      class="crd-scrim"
+      role="button"
+      tabindex="-1"
+      :aria-label="closeLabel"
+      @click="close"
+      @keydown.escape="close"
+    />
     <Transition name="crd-slide">
       <aside
         v-if="modelValue"
@@ -131,6 +140,14 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.crd-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 66, 90, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 1009;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
 .crd {
   position: fixed;
   top: 0;
