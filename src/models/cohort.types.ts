@@ -58,6 +58,7 @@ export interface CohortEvent {
   sourceConceptId?: number
   cardinality?: Cardinality
   temporalWindow?: TemporalWindow
+  endTemporalWindow?: TemporalWindow
   attributes?: EventAttribute[]
   nestedCriteria?: NestedCriteria
   restrictVisit?: boolean // Event must occur in same visit as index

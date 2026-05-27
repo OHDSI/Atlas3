@@ -90,7 +90,7 @@ const UserRefSchema = z.union([
       login: z.string(),
       name: z.string().optional(),
     })
-    .strip(),
+    .passthrough(),
 ])
 
 const TagSchema = z
@@ -99,7 +99,7 @@ const TagSchema = z
     name: z.string(),
     color: z.string().optional(),
   })
-  .strip()
+  .passthrough()
 
 const ConceptSetReferenceSchema = z
   .object({
@@ -108,7 +108,7 @@ const ConceptSetReferenceSchema = z
     conceptCount: z.number().optional(),
     items: z.array(z.unknown()).optional(),
   })
-  .strip()
+  .passthrough()
 
 // ============================================================================
 // FeatureAnalysis
@@ -131,7 +131,7 @@ export interface FeatureAnalysis {
   type: FeatureAnalysisType
   domain?: FeatureAnalysisDomain
   statType?: FeatureAnalysisStatType
-  design: CovariateSetting | FeatureAnalysisCriteriaSetDesign | string
+  design: CovariateSetting | FeatureAnalysisCriteriaSetDesign | unknown[] | string
   conceptSets?: ConceptSetReference[]
   createdBy?: { login: string; name?: string } | string
   createdDate?: number
@@ -155,7 +155,8 @@ export const FeatureAnalysisSchema = z
           conceptSets: z.array(ConceptSetReferenceSchema),
           criteria: z.unknown(),
         })
-        .strip(),
+        .passthrough(),
+      z.array(z.unknown()),
       z.string(),
     ]),
     conceptSets: z.array(ConceptSetReferenceSchema).optional(),
@@ -165,7 +166,7 @@ export const FeatureAnalysisSchema = z
     modifiedDate: z.number().optional(),
     tags: z.array(TagSchema).optional(),
   })
-  .strip()
+  .passthrough()
 
 // ============================================================================
 // List endpoint shape (lighter — design and conceptSets aren't returned)
@@ -183,6 +184,6 @@ export const FeatureAnalysisListItemSchema = z
     createdDate: z.number().optional(),
     modifiedDate: z.number().optional(),
   })
-  .strip()
+  .passthrough()
 
 export type FeatureAnalysisListItem = z.infer<typeof FeatureAnalysisListItemSchema>

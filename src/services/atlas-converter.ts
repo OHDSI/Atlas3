@@ -179,7 +179,31 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
         },
 
     CensorWindow: cohort.censorWindow ? convertCensorWindowToAtlas(cohort.censorWindow) : {},
+
+    ...(cohort.exitCriteria ? { EndStrategy: convertExitCriteriaToAtlas(cohort.exitCriteria) } : {}),
   }
+}
+
+function convertExitCriteriaToAtlas(exit: import('@/models/cohort.types').ExitCriteria): AtlasEndStrategy {
+  if (exit.strategy === 'FIXED_DURATION') {
+    return {
+      DateOffset: {
+        DateField: exit.dateField === 'END_DATE' ? 'EndDate' : 'StartDate',
+        Offset: exit.offset ?? 0,
+      },
+    }
+  }
+  if (exit.strategy === 'CONTINUOUS_DRUG') {
+    return {
+      CustomEra: {
+        DrugCodesetId: exit.conceptSet?.id as number ?? 0,
+        GapDays: exit.persistenceWindow ?? 0,
+        Offset: exit.offset ?? 0,
+        ...(exit.surveillanceWindow != null ? { DaysSupplyOverride: exit.surveillanceWindow } : {}),
+      },
+    }
+  }
+  return {}
 }
 
 function convertDemographicEventToAtlas(event: CohortEvent): Record<string, unknown> {
@@ -343,6 +367,29 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
     }
   }
 
+  // Write EndWindow if present
+  if (event.endTemporalWindow) {
+    const etw = event.endTemporalWindow
+    const endStartDays = etw.startWindow?.days
+    const endEndDays = etw.endWindow?.days
+    atlasEvent.EndWindow = {
+      Start: etw.startWindow
+        ? {
+            ...(endStartDays !== null && endStartDays !== undefined ? { Days: endStartDays } : {}),
+            Coeff: etw.startWindow.beforeAfter === 'AFTER' ? 1 : -1,
+          }
+        : { Coeff: -1 },
+      End: etw.endWindow
+        ? {
+            ...(endEndDays !== null && endEndDays !== undefined ? { Days: endEndDays } : {}),
+            Coeff: etw.endWindow.beforeAfter === 'AFTER' ? 1 : -1,
+          }
+        : { Coeff: 1 },
+      UseIndexEnd: etw.startWindow?.referencePoint === 'INDEX_END',
+      UseEventEnd: etw.startWindow?.referencePoint === 'EVENT_END',
+    }
+  }
+
   if (event.dateAdjustment) {
     atlasEvent.DateAdjustment = {
       StartWith: event.dateAdjustment.startWith,
@@ -370,9 +417,24 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
   return atlasEvent
 }
 
-function convertTextAttribute(attributeKey: string, value: string): Record<string, string> {
+function convertTextAttribute(attributeKey: string, value: string, operator?: string): Record<string, unknown> {
   const attributeName = convertToPascalCase(attributeKey)
-  return { [attributeName]: value }
+  return {
+    [attributeName]: {
+      Text: value,
+      Op: operator ? convertOperatorToAtlasText(operator) : 'contains',
+    },
+  }
+}
+
+function convertOperatorToAtlasText(op: string): string {
+  const map: Record<string, string> = {
+    CONTAINS: 'contains',
+    EQUALS: 'eq',
+    STARTS_WITH: 'startsWith',
+    ENDS_WITH: 'endsWith',
+  }
+  return map[op] || 'contains'
 }
 
 export function parseTextAttribute(attributeKey: string, value: string): EventAttribute {
@@ -382,6 +444,38 @@ export function parseTextAttribute(attributeKey: string, value: string): EventAt
     operator: 'CONTAINS',
     value,
   }
+}
+
+function parseTextFilterAttribute(
+  attributeKey: string,
+  raw: unknown
+): EventAttribute | null {
+  if (typeof raw === 'string') {
+    return {
+      type: 'text',
+      attributeKey: attributeKey as 'valueAsString',
+      operator: 'CONTAINS',
+      value: raw,
+    }
+  }
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const filter = raw as { Text?: string; Op?: string }
+    if (filter.Text != null) {
+      const opMap: Record<string, string> = {
+        contains: 'CONTAINS',
+        eq: 'EQUALS',
+        startsWith: 'STARTS_WITH',
+        endsWith: 'ENDS_WITH',
+      }
+      return {
+        type: 'text',
+        attributeKey: attributeKey as 'valueAsString',
+        operator: (filter.Op ? opMap[filter.Op] : 'CONTAINS') || 'CONTAINS',
+        value: filter.Text,
+      }
+    }
+  }
+  return null
 }
 
 function convertBooleanAttribute(attributeKey: string, value: boolean): Record<string, boolean> {
@@ -632,7 +726,7 @@ function convertAttributeToAtlas(attr: EventAttribute): Record<string, unknown> 
   } else if (attr.type === 'boolean') {
     return convertBooleanAttribute(attr.attributeKey, attr.value)
   } else if (attr.type === 'text') {
-    return convertTextAttribute(attr.attributeKey, attr.value)
+    return convertTextAttribute(attr.attributeKey, attr.value, attr.operator)
   } else if (attr.type === 'temporalRelationship') {
     return convertTemporalRelationshipAttribute(attr.attributeKey, attr.temporalWindow)
   } else if (attr.type === 'dateAdjustment') {
@@ -662,6 +756,8 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
       atlas.CensoringCriteria && atlas.CensoringCriteria.length > 0
         ? atlas.CensoringCriteria.map(e => convertAtlasToEvent(e, atlas.ConceptSets))
         : undefined,
+
+    exitCriteria: atlas.EndStrategy ? convertAtlasEndStrategy(atlas.EndStrategy) : undefined,
 
     entryEvents:
       atlas.PrimaryCriteria?.CriteriaList?.map(e => convertAtlasToEvent(e, atlas.ConceptSets)) ||
@@ -786,6 +882,7 @@ function convertAtlasToEvent(
       'ConditionEra',
       'DrugExposure',
       'DrugEra',
+      'DoseEra',
       'ProcedureOccurrence',
       'Observation',
       'VisitOccurrence',
@@ -911,6 +1008,35 @@ function convertAtlasToEvent(
             referencePoint: startWindow.UseIndexEnd
               ? 'INDEX_END'
               : startWindow.UseEventEnd
+                ? 'EVENT_END'
+                : 'INDEX_START',
+          }
+        : undefined,
+    }
+  }
+
+  // Atlas EndWindow (separate from StartWindow — constrains event end date)
+  const atlasEndWindow = (atlasEvent as Record<string, unknown>).EndWindow as typeof startWindow | undefined
+  if (atlasEndWindow) {
+    event.endTemporalWindow = {
+      startWindow: atlasEndWindow.Start
+        ? {
+            days: atlasEndWindow.Start.Days !== undefined ? atlasEndWindow.Start.Days : null,
+            beforeAfter: (atlasEndWindow.Start.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
+            referencePoint: atlasEndWindow.UseIndexEnd
+              ? 'INDEX_END'
+              : atlasEndWindow.UseEventEnd
+                ? 'EVENT_END'
+                : 'INDEX_START',
+          }
+        : undefined,
+      endWindow: atlasEndWindow.End
+        ? {
+            days: atlasEndWindow.End.Days !== undefined ? atlasEndWindow.End.Days : null,
+            beforeAfter: (atlasEndWindow.End.Coeff ?? 1) < 0 ? 'BEFORE' : 'AFTER',
+            referencePoint: atlasEndWindow.UseIndexEnd
+              ? 'INDEX_END'
+              : atlasEndWindow.UseEventEnd
                 ? 'EVENT_END'
                 : 'INDEX_START',
           }
@@ -1123,14 +1249,10 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     })
   }
 
-  // ValueAsString - Text
-  if (typeof criteriaObj.ValueAsString === 'string') {
-    attributes.push({
-      type: 'text',
-      attributeKey: 'valueAsString',
-      operator: 'CONTAINS',
-      value: criteriaObj.ValueAsString,
-    })
+  // ValueAsString - Text (may be plain string or TextFilter object)
+  if (criteriaObj.ValueAsString != null) {
+    const parsed = parseTextFilterAttribute('valueAsString', criteriaObj.ValueAsString)
+    if (parsed) attributes.push(parsed)
   }
 
   // OccurrenceStartDate - DateRange
@@ -1305,6 +1427,193 @@ function extractAttributesFromCriteria(criteriaObj: Record<string, unknown>): Ev
     if (cs) attributes.push(cs)
   }
 
+  // StopReason - TextFilter (DrugExposure)
+  if (criteriaObj.StopReason != null) {
+    const parsed = parseTextFilterAttribute('stopReason', criteriaObj.StopReason)
+    if (parsed) attributes.push(parsed)
+  }
+
+  // Sig - TextFilter (DrugExposure)
+  if (criteriaObj.Sig != null) {
+    const parsed = parseTextFilterAttribute('sig', criteriaObj.Sig)
+    if (parsed) attributes.push(parsed)
+  }
+
+  // SourceCode - TextFilter
+  if (criteriaObj.SourceCode != null) {
+    const parsed = parseTextFilterAttribute('sourceCode', criteriaObj.SourceCode)
+    if (parsed) attributes.push(parsed)
+  }
+
+  // LotNumber - TextFilter (Specimen)
+  if (criteriaObj.LotNumber != null) {
+    const parsed = parseTextFilterAttribute('lotNumber', criteriaObj.LotNumber)
+    if (parsed) attributes.push(parsed)
+  }
+
+  // UniqueDeviceId - TextFilter (DeviceExposure)
+  if (criteriaObj.UniqueDeviceId != null) {
+    const parsed = parseTextFilterAttribute('deviceId', criteriaObj.UniqueDeviceId)
+    if (parsed) attributes.push(parsed)
+  }
+
+  // PayerPlanPeriod concept-set attributes (CodesetId references)
+  for (const [field, attrKey] of [
+    ['PayerConcept', 'payerConcept'],
+    ['PlanConcept', 'planConcept'],
+    ['SponsorConcept', 'sponsorConcept'],
+    ['StopReasonConcept', 'stopReasonConcept'],
+    ['PayerSourceConcept', 'payerSourceConcept'],
+    ['PlanSourceConcept', 'planSourceConcept'],
+    ['SponsorSourceConcept', 'sponsorSourceConcept'],
+    ['StopReasonSourceConcept', 'stopReasonSourceConcept'],
+  ] as const) {
+    if (typeof criteriaObj[field] === 'number') {
+      attributes.push({
+        type: 'conceptSet',
+        attributeKey: attrKey,
+        conceptSet: { id: criteriaObj[field] as number, name: '' },
+      } as EventAttribute)
+    }
+  }
+
+  // PeriodType - Concept array (ObservationPeriod)
+  if (criteriaObj.PeriodType && Array.isArray(criteriaObj.PeriodType) && (criteriaObj.PeriodType as unknown[]).length > 0) {
+    attributes.push(
+      parseConceptAttribute('periodType', criteriaObj.PeriodType as unknown[], criteriaObj.PeriodTypeExclude as boolean | undefined)
+    )
+  }
+  {
+    const cs = parseConceptSetAttribute('periodTypeCs', criteriaObj.PeriodTypeCS)
+    if (cs) attributes.push(cs)
+  }
+
+  // VisitDetailTypeCS - Concept set (VisitDetail)
+  {
+    const cs = parseConceptSetAttribute('visitDetailTypeCs', criteriaObj.VisitDetailTypeCS)
+    if (cs) attributes.push(cs)
+  }
+
+  // PlaceOfServiceLocation - numeric reference (LocationRegion CodesetId)
+  if (typeof criteriaObj.PlaceOfServiceLocation === 'number') {
+    attributes.push({
+      type: 'conceptSet',
+      attributeKey: 'placeOfServiceLocation',
+      conceptSet: { id: criteriaObj.PlaceOfServiceLocation as number, name: '' },
+    } as EventAttribute)
+  }
+
+  // SourceId - TextFilter (Specimen)
+  if (criteriaObj.SourceId != null) {
+    const parsed = parseTextFilterAttribute('sourceId', criteriaObj.SourceId)
+    if (parsed) attributes.push(parsed)
+  }
+
+  // MeasurementType / ObservationType / DrugType / ProcedureType / DeviceType /
+  // DeathType / SpecimenType — Concept arrays with optional CS variants.
+  // These follow the same pattern as ConditionType.
+  for (const [key, csKey, excludeKey] of [
+    ['MeasurementType', 'MeasurementTypeCS', 'MeasurementTypeExclude'],
+    ['ObservationType', 'ObservationTypeCS', 'ObservationTypeExclude'],
+    ['DrugType', 'DrugTypeCS', 'DrugTypeExclude'],
+    ['ProcedureType', 'ProcedureTypeCS', 'ProcedureTypeExclude'],
+    ['DeviceType', 'DeviceTypeCS', 'DeviceTypeExclude'],
+    ['DeathType', 'DeathTypeCS', 'DeathTypeExclude'],
+    ['SpecimenType', 'SpecimenTypeCS', 'SpecimenTypeExclude'],
+    ['Unit', 'UnitCS', 'UnitExclude'],
+    ['Operator', 'OperatorCS', 'OperatorExclude'],
+    ['ValueAsConcept', 'ValueAsConceptCS', 'ValueAsConceptExclude'],
+    ['RouteConcept', 'RouteConceptCS', 'RouteConceptExclude'],
+    ['DoseUnit', 'DoseUnitCS', 'DoseUnitExclude'],
+    ['Modifier', 'ModifierCS', 'ModifierExclude'],
+    ['Qualifier', 'QualifierCS', 'QualifierExclude'],
+    ['PlaceOfService', 'PlaceOfServiceCS', 'PlaceOfServiceExclude'],
+    ['AnatomicSite', 'AnatomicSiteCS', 'AnatomicSiteExclude'],
+    ['DiseaseStatus', 'DiseaseStatusCS', 'DiseaseStatusExclude'],
+  ] as const) {
+    const attrKey = key.charAt(0).toLowerCase() + key.slice(1)
+    if (criteriaObj[key] && Array.isArray(criteriaObj[key]) && (criteriaObj[key] as unknown[]).length > 0) {
+      attributes.push(
+        parseConceptAttribute(attrKey, criteriaObj[key] as unknown[], criteriaObj[excludeKey] as boolean | undefined)
+      )
+    }
+    const csAttrKey = attrKey + 'Cs'
+    const csVal = parseConceptSetAttribute(csAttrKey, criteriaObj[csKey])
+    if (csVal) attributes.push(csVal)
+  }
+
+  // Refills, DaysSupply, EffectiveDrugDose, RangeLow, RangeHigh,
+  // RangeLowRatio, RangeHighRatio, DoseValue, OccurrenceCount, GapDays,
+  // PeriodLength, AgeAtEnd — NumericRange attributes
+  for (const [field, attrKey] of [
+    ['Refills', 'refills'],
+    ['DaysSupply', 'daysSupply'],
+    ['EffectiveDrugDose', 'effectiveDrugDose'],
+    ['RangeLow', 'rangeLow'],
+    ['RangeHigh', 'rangeHigh'],
+    ['RangeLowRatio', 'rangeLowRatio'],
+    ['RangeHighRatio', 'rangeHighRatio'],
+    ['DoseValue', 'doseValue'],
+    ['OccurrenceCount', 'occurrenceCount'],
+    ['GapDays', 'gapDays'],
+    ['PeriodLength', 'periodLength'],
+    ['AgeAtEnd', 'ageAtEnd'],
+    ['VisitDetailLength', 'visitDetailLength'],
+    ['PlaceOfServiceDistance', 'placeOfServiceDistance'],
+  ] as const) {
+    if (criteriaObj[field] && typeof criteriaObj[field] === 'object' && criteriaObj[field] !== null) {
+      const val = criteriaObj[field] as { Op: string; Value: number; Extent?: number }
+      attributes.push({
+        type: 'numericRange',
+        attributeKey: attrKey,
+        operator: convertAtlasToOperator(val.Op) as import('@/models/event.types').NumericOperator,
+        value: val.Value,
+        extent: val.Extent,
+      })
+    }
+  }
+
+  // VisitDetailStartDate / VisitDetailEndDate / PeriodStartDate / PeriodEndDate — DateRange
+  for (const [field, attrKey] of [
+    ['VisitDetailStartDate', 'visitDetailStartDate'],
+    ['VisitDetailEndDate', 'visitDetailEndDate'],
+    ['PeriodStartDate', 'periodStartDate'],
+    ['PeriodEndDate', 'periodEndDate'],
+    ['VisitStartDate', 'visitStartDate'],
+    ['VisitEndDate', 'visitEndDate'],
+    ['StartDate', 'startDate'],
+    ['EndDate', 'endDate'],
+  ] as const) {
+    if (criteriaObj[field] && typeof criteriaObj[field] === 'object' && criteriaObj[field] !== null) {
+      const val = criteriaObj[field] as { Op: string; Value: string; Extent?: string }
+      attributes.push({
+        type: 'dateRange',
+        attributeKey: attrKey,
+        operator: convertAtlasToOperator(val.Op) as import('@/models/event.types').DateOperator,
+        value: val.Value,
+        extent: val.Extent,
+      })
+    }
+  }
+
+  // Primary - Boolean (Visit/Procedure)
+  if (typeof criteriaObj.Primary === 'boolean') {
+    attributes.push({
+      type: 'boolean',
+      attributeKey: 'primary',
+      value: criteriaObj.Primary,
+    })
+  }
+
+  // Abnormal - Boolean (Measurement)
+  if (typeof criteriaObj.Abnormal === 'boolean') {
+    attributes.push({
+      type: 'boolean',
+      attributeKey: 'abnormal',
+      value: criteriaObj.Abnormal,
+    })
+  }
+
   // First - Boolean
   if (typeof criteriaObj.First === 'boolean') {
     attributes.push({
@@ -1411,6 +1720,26 @@ function convertCensorWindowFromAtlas(atlasCw: Record<string, unknown>): CensorW
     cw.endDate = atlasCw.EndDate as string | null
   }
   return cw
+}
+
+function convertAtlasEndStrategy(es: AtlasEndStrategy): import('@/models/cohort.types').ExitCriteria {
+  if (es.DateOffset) {
+    return {
+      strategy: 'FIXED_DURATION',
+      dateField: es.DateOffset.DateField === 'EndDate' ? 'END_DATE' : 'START_DATE',
+      offset: es.DateOffset.Offset ?? 0,
+    }
+  }
+  if (es.CustomEra) {
+    return {
+      strategy: 'CONTINUOUS_DRUG',
+      conceptSet: { id: es.CustomEra.DrugCodesetId, name: '' },
+      persistenceWindow: es.CustomEra.GapDays ?? 0,
+      offset: es.CustomEra.Offset ?? 0,
+      surveillanceWindow: (es.CustomEra as Record<string, unknown>).DaysSupplyOverride as number | undefined,
+    }
+  }
+  return { strategy: 'CONTINUOUS_OBSERVATION' }
 }
 
 // Helpers

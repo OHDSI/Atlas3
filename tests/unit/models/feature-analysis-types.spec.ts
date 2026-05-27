@@ -106,7 +106,7 @@ describe('FeatureAnalysisSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('strips unknown WebAPI fields', () => {
+  it('preserves unknown fields via passthrough WebAPI fields', () => {
     const result = FeatureAnalysisSchema.safeParse({
       name: 'X',
       type: 'PRESET',
@@ -115,7 +115,7 @@ describe('FeatureAnalysisSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('hasWriteAccess')
+      expect(result.data).toHaveProperty('hasWriteAccess')
     }
   })
 
@@ -163,7 +163,7 @@ describe('FeatureAnalysisListItemSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough fields', () => {
     const result = FeatureAnalysisListItemSchema.safeParse({
       id: 1,
       name: 'X',
@@ -172,7 +172,7 @@ describe('FeatureAnalysisListItemSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('hasWriteAccess')
+      expect(result.data).toHaveProperty('hasWriteAccess')
     }
   })
 

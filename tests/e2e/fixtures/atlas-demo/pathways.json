@@ -1,0 +1,3005 @@
+[
+  {
+    "createdDate": 1575438372190,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 43,
+    "name": "New Cohort PathwayV1",
+    "targetCohorts": [
+      {
+        "id": 1772791,
+        "name": "Pharyngitis Test 1232",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 179
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1772791,
+        "name": "Pharyngitis Test",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 178
+      }
+    ],
+    "combinationWindow": 3,
+    "minCellCount": 2,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": -1788770881
+  },
+  {
+    "createdDate": 1575947459901,
+    "modifiedDate": 1575947705107,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 45,
+    "name": "AB",
+    "targetCohorts": [
+      {
+        "id": 1770675,
+        "name": "[BookOfOHDSI] New users of ACE inhibitors as first-line monotherapy for hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 192
+      },
+      {
+        "id": 1772801,
+        "name": "New phenotype of ACE inhibitors",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 191
+      },
+      {
+        "id": 1772712,
+        "name": "new users of ace inhibitors who have a prior diagnosis of hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 193
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1772830,
+        "name": "[TKR] Hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 190
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": -7140513
+  },
+  {
+    "createdDate": 1576050817752,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 46,
+    "name": "cancer_valsartan_vs_otherARBs",
+    "targetCohorts": [
+      {
+        "id": 1772750,
+        "name": "[Test_2]_ARB other than Valsartan First user",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 195
+      },
+      {
+        "id": 1772749,
+        "name": "[Test_2]_Valsartan first user",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 196
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1770606,
+        "name": "[MHKIM] cohort O",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 194
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 2,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": 17379759
+  },
+  {
+    "createdDate": 1591382373649,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 103,
+    "name": "[N3C] COPD to PNA",
+    "targetCohorts": [
+      {
+        "id": 1774279,
+        "name": "[N3C-Demo] COPD",
+        "description": "[N3C-Demo] COPD",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 533
+      },
+      {
+        "id": 1769397,
+        "name": "Columbia 2019 phenotype c - characterization",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 607
+      },
+      {
+        "id": 1775077,
+        "name": "COVID-19_Cohort",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 608
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1774298,
+        "name": "[N3C-Demo] Pneumonia",
+        "description": "[N3C-Demo] Pneumonia",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 532
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": -864690115
+  },
+  {
+    "createdDate": 1576577582336,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 47,
+    "name": "[lw] SPAF",
+    "targetCohorts": [
+      {
+        "id": 1772895,
+        "name": "[lw] atrial fibrillation",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 199
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1772896,
+        "name": "[lw] NOACs",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 197
+      },
+      {
+        "id": 1772897,
+        "name": "[lw] VKA use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 198
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": 141793390
+  },
+  {
+    "createdDate": 1576746480766,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 48,
+    "name": "New Cohort Pathway.",
+    "targetCohorts": [
+      {
+        "id": 1772912,
+        "name": "ace inhibitors without prior hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 203
+      },
+      {
+        "id": 1772911,
+        "name": "new users of ace inhibitors who have a prior diagnosis of hypertension_",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 204
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1772914,
+        "name": "type 1 diabetes",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 201
+      },
+      {
+        "id": 1772754,
+        "name": "Acute myocardial infarction incident event",
+        "description": "AMI recorded during inpt/ER vist, no events in prior 90d ",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 202
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": 77297286
+  },
+  {
+    "createdDate": 1675066589121,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 263,
+    "name": "covid hemato",
+    "targetCohorts": [
+      {
+        "id": 1781685,
+        "name": "COVID19 hemato",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 1769
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1781685,
+        "name": "COVID19 hemato",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 1770
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": 1500117475
+  },
+  {
+    "createdDate": 1712064130264,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 401,
+    "name": "KT-Evi",
+    "targetCohorts": [
+      {
+        "id": 1789351,
+        "name": "[MI-16.1] Hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 28593
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1789355,
+        "name": "[MI-16.1] Losartan",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 28589
+      },
+      {
+        "id": 1789354,
+        "name": "[MI-16.1] Amlodipine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 28590
+      },
+      {
+        "id": 1789353,
+        "name": "[MI-16.1] Metorolol",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 28591
+      },
+      {
+        "id": 1789352,
+        "name": "[MI-16.1] Hydrochlorothiazide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 28592
+      }
+    ],
+    "combinationWindow": 14,
+    "minCellCount": 1,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": -1558277210
+  },
+  {
+    "createdDate": 1779033184878,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 616,
+    "name": "KLungg",
+    "targetCohorts": [
+      {
+        "id": 1773700,
+        "name": "Asthma+GERD",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 49161
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1773624,
+        "name": "[AM] LABA use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 49159
+      },
+      {
+        "id": 1773622,
+        "name": "[AM] SABA use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 49160
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": -153763937
+  },
+  {
+    "createdDate": 1712065071447,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 407,
+    "name": "Groepje achterin de zaal",
+    "targetCohorts": [
+      {
+        "id": 1789351,
+        "name": "[MI-16.1] Hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 28633
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1789355,
+        "name": "[MI-16.1] Losartan",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 28629
+      },
+      {
+        "id": 1789354,
+        "name": "[MI-16.1] Amlodipine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 28630
+      },
+      {
+        "id": 1789353,
+        "name": "[MI-16.1] Metorolol",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 28631
+      },
+      {
+        "id": 1789352,
+        "name": "[MI-16.1] Hydrochlorothiazide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 28632
+      }
+    ],
+    "combinationWindow": 5,
+    "minCellCount": 50,
+    "maxDepth": 5,
+    "allowRepeats": true,
+    "hashCode": -568477164
+  },
+  {
+    "createdDate": 1547418069156,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 6,
+    "name": "[1401] AF",
+    "targetCohorts": [
+      {
+        "id": 1769842,
+        "name": "[1401] Stroke prevention AF",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 40
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1769856,
+        "name": "[1401] Factor Xa",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 37
+      },
+      {
+        "id": 1769855,
+        "name": "[1401] Direct Thrombin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 38
+      },
+      {
+        "id": 1769854,
+        "name": "[1401] Vitamin K",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 39
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": 1797756530
+  },
+  {
+    "createdDate": 1547459723993,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 7,
+    "name": "[1401] AF Ingredient : Line of therapy for patients suffering from  Atrial Fibrillation",
+    "targetCohorts": [
+      {
+        "id": 1769842,
+        "name": "Population on drug for prevention for Atrial Fibrillation",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 53
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1769868,
+        "name": "[1401] warfarin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 15,
+        "pathwayCohortId": 41
+      },
+      {
+        "id": 1769867,
+        "name": "[1401] tioclomarol",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 14,
+        "pathwayCohortId": 42
+      },
+      {
+        "id": 1769866,
+        "name": "[1401] rivaroxaban",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 13,
+        "pathwayCohortId": 43
+      },
+      {
+        "id": 1769865,
+        "name": "[1401] phenprocoumon",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 12,
+        "pathwayCohortId": 44
+      },
+      {
+        "id": 1769872,
+        "name": "[1401] lepirudin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 10,
+        "pathwayCohortId": 54
+      },
+      {
+        "id": 1769871,
+        "name": "[1401] desirudin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 55
+      },
+      {
+        "id": 1769870,
+        "name": "[1401] bivalirudin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 56
+      },
+      {
+        "id": 1769869,
+        "name": "[1401] argatroban",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 57
+      },
+      {
+        "id": 1769860,
+        "name": "[1401] dabigatran",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 45
+      },
+      {
+        "id": 1769859,
+        "name": "[1401] clorindione",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 46
+      },
+      {
+        "id": 1769858,
+        "name": "[1401] apixaban",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 47
+      },
+      {
+        "id": 1769857,
+        "name": "[1401] acenocoumarol",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 48
+      },
+      {
+        "id": 1769864,
+        "name": "[1401] phenindione",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 11,
+        "pathwayCohortId": 49
+      },
+      {
+        "id": 1769863,
+        "name": "[1401] fluindione",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 9,
+        "pathwayCohortId": 50
+      },
+      {
+        "id": 1769862,
+        "name": "[1401] edoxaban",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 8,
+        "pathwayCohortId": 51
+      },
+      {
+        "id": 1769861,
+        "name": "[1401] dicoumarol",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 52
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": 256147820
+  },
+  {
+    "createdDate": 1547556261390,
+    "modifiedDate": 1547556417392,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 8,
+    "name": "af (new)",
+    "targetCohorts": [
+      {
+        "id": 1769842,
+        "name": "[1401] Stroke prevention AF",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 61
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1769856,
+        "name": "[1401] Factor Xa",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 58
+      },
+      {
+        "id": 1769855,
+        "name": "[1401] Direct Thrombin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 59
+      },
+      {
+        "id": 1769854,
+        "name": "[1401] Vitamin K",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 60
+      }
+    ],
+    "combinationWindow": 30,
+    "minCellCount": 100,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": 2102846123
+  },
+  {
+    "createdDate": 1551886853094,
+    "modifiedDate": 1551890608378,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 12,
+    "name": "OSP-149 (AF)",
+    "targetCohorts": [
+      {
+        "id": 1769842,
+        "name": "[1401] Stroke prevention AF",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 76
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1769856,
+        "name": "[1401] Factor Xa",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 73
+      },
+      {
+        "id": 1769855,
+        "name": "[1401] Direct Thrombin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 74
+      },
+      {
+        "id": 1769854,
+        "name": "[1401] Vitamin K",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 75
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": 1979701634
+  },
+  {
+    "createdDate": 1552256040127,
+    "modifiedDate": 1552256050873,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 13,
+    "name": "test20190310",
+    "targetCohorts": [
+      {
+        "id": 1769452,
+        "name": "Diabetes",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 79
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1770139,
+        "name": "Aspirin simple",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 77
+      },
+      {
+        "id": 1769453,
+        "name": "Metformin",
+        "description": "met",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 78
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 2,
+    "allowRepeats": false,
+    "hashCode": -2111518595
+  },
+  {
+    "createdDate": 1596743192525,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 131,
+    "name": "Multiple GI Bleeding events",
+    "targetCohorts": [
+      {
+        "id": 1774855,
+        "name": "Any visit",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 594
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1774853,
+        "name": "Major gastroinstestinal (GI) bleeding event",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 592
+      }
+    ],
+    "combinationWindow": 9999,
+    "minCellCount": 1,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": -2110997909
+  },
+  {
+    "createdDate": 1566901032396,
+    "modifiedDate": 1566901992743,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 28,
+    "name": "LCM - statins",
+    "targetCohorts": [
+      {
+        "id": 1771884,
+        "name": "LCM - Pure hypercholesterolemia",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 121
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1771292,
+        "name": "LCM - Target Atorvastatin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 118
+      },
+      {
+        "id": 1771293,
+        "name": "LCM - Reference Pravastatin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 119
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 2,
+    "allowRepeats": false,
+    "hashCode": 260630377
+  },
+  {
+    "createdDate": 1567175396047,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 30,
+    "name": "COPY OF: [COGNOS] Inibidores ECA",
+    "targetCohorts": [
+      {
+        "id": 1771886,
+        "name": "[COGNOS] Inibidores ECA como tratamento de primeira linha para hipertencao",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 137
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 906302,
+        "name": "Lisinopril_Clonazepam",
+        "description": "null",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 131
+      },
+      {
+        "id": 906303,
+        "name": "Lisinopril_Escitalopram",
+        "description": "null",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 132
+      },
+      {
+        "id": 1771137,
+        "name": "XD_ramipril_comparator",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 133
+      },
+      {
+        "id": 1771144,
+        "name": "XD_benazepril_comparator",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 134
+      },
+      {
+        "id": 1771015,
+        "name": "XD_enalapril_comparator",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 135
+      },
+      {
+        "id": 1770934,
+        "name": "XD_quinapril_comparator",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 136
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 1,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": -2102795573
+  },
+  {
+    "createdDate": 1571117376336,
+    "modifiedDate": 1571117433099,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 35,
+    "name": "COPY OF: UTI (1)",
+    "targetCohorts": [
+      {
+        "id": 1770235,
+        "name": "827 - UTI",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 157
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1772332,
+        "name": "vh:male",
+        "description": "male",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 158
+      },
+      {
+        "id": 1770239,
+        "name": "827-Bactrim",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 155
+      },
+      {
+        "id": 1770238,
+        "name": "827-Fluoroquinolones",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 156
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 3,
+    "allowRepeats": false,
+    "hashCode": 947593652
+  },
+  {
+    "createdDate": 1572596069160,
+    "modifiedDate": 1572636765972,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 40,
+    "name": "ohad-Ex1",
+    "targetCohorts": [
+      {
+        "id": 1772522,
+        "name": "Dementia-OMOP5",
+        "description": "",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 170
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1769452,
+        "name": "Diabetes (6)",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 169
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 1,
+    "allowRepeats": false,
+    "hashCode": -713862732
+  },
+  {
+    "createdDate": 1572833892066,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 41,
+    "name": "[China Study] Bipolar Disorder Antipsychotic or mood stabilizer Patients",
+    "targetCohorts": [
+      {
+        "id": 1772530,
+        "name": "[China Study] Bipolar with antipsychotic or mood stabilizer - 365d prior and year 2013 after",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 174
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1772532,
+        "name": "[China Study] antipsychotic after bipolar diagnosis fix 2",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 171
+      },
+      {
+        "id": 1772531,
+        "name": "[China Study] mood stabilizer use after bipolar diagnosis fix 2",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 172
+      },
+      {
+        "id": 1772533,
+        "name": "[China Study] antidepressant use hms after bipolar diagnosis fix 2",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 173
+      }
+    ],
+    "combinationWindow": 60,
+    "minCellCount": 5,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": -403305788
+  },
+  {
+    "createdDate": 1581482013981,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 61,
+    "name": "T2DM drug class Pathway",
+    "targetCohorts": [
+      {
+        "id": 1773353,
+        "name": "T2DM Patients",
+        "description": "This cohort contains people who were diagnosed with T2DM",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 273
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1773356,
+        "name": "Meglitinides",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 265
+      },
+      {
+        "id": 1773355,
+        "name": "Sulfonyureas",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 266
+      },
+      {
+        "id": 1773354,
+        "name": "Insulin",
+        "description": "This cohort contains people who have had Insulin drugs",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 267
+      },
+      {
+        "id": 1773360,
+        "name": "GLP-1 receptor agonists",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 268
+      },
+      {
+        "id": 1773359,
+        "name": "DPP-4 inhibitors",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 269
+      },
+      {
+        "id": 1773358,
+        "name": "Thiazolidinediones",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 270
+      },
+      {
+        "id": 1773357,
+        "name": "Metformin (1)",
+        "description": "This cohort contains people who had metformin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 271
+      },
+      {
+        "id": 1773361,
+        "name": "SGLT2 inhibitors",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 272
+      }
+    ],
+    "combinationWindow": 5,
+    "minCellCount": 0,
+    "maxDepth": 3,
+    "allowRepeats": false,
+    "hashCode": -837596543
+  },
+  {
+    "createdDate": 1582082203628,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 66,
+    "name": "T2DM Treatment Pathway",
+    "targetCohorts": [
+      {
+        "id": 1773436,
+        "name": "Type 2 Diabetes Mellitus",
+        "description": "New users of metformin who have a prior diagnosis of diabetes",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 307
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1769516,
+        "name": "Insulin Glargine, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 297
+      },
+      {
+        "id": 1769515,
+        "name": "Insulin, Aspart, Human, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 298
+      },
+      {
+        "id": 1769514,
+        "name": "glimepiride, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 299
+      },
+      {
+        "id": 1769513,
+        "name": "Glyburide, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 300
+      },
+      {
+        "id": 1769520,
+        "name": "Metformin, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 301
+      },
+      {
+        "id": 1769519,
+        "name": "Gliclazide, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 302
+      },
+      {
+        "id": 1769518,
+        "name": "rosiglitazone, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 8,
+        "pathwayCohortId": 303
+      },
+      {
+        "id": 1773437,
+        "name": "Glipizide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 304
+      },
+      {
+        "id": 1769517,
+        "name": "sitagliptin, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 9,
+        "pathwayCohortId": 305
+      },
+      {
+        "id": 1769512,
+        "name": "pioglitazone, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 306
+      }
+    ],
+    "combinationWindow": 14,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": 1747011303
+  },
+  {
+    "createdDate": 1582166784515,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 67,
+    "name": "book tutorial",
+    "targetCohorts": [
+      {
+        "id": 1773311,
+        "name": "[OHDSI EU 2019] Patients initiating first-line therapy for hypertension with >3 yr follow-up",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 316
+      },
+      {
+        "id": 1770317,
+        "name": "[OHDSI EU 2019] New users of Thiazide-like diuretics as first-line monotherapy for hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 318
+      },
+      {
+        "id": 1773309,
+        "name": "[OHDSI EU 2019] Patients initiating first-line therapy for hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 319
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1770906,
+        "name": "[OHDSI EU 2019] beta blocker use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 308
+      },
+      {
+        "id": 1770905,
+        "name": "[OHDSI EU 2019] non-dihydropyridine Calcium Channel Blocker (ndCCB) use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 309
+      },
+      {
+        "id": 1770904,
+        "name": "[OHDSI EU 2019] dihydropyridine Calcium Channel Blocker (dCCB) use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 310
+      },
+      {
+        "id": 1770903,
+        "name": "[OHDSI EU 2019] Thiazide diuretic use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 311
+      },
+      {
+        "id": 1770902,
+        "name": "[OHDSI EU 2019] Angiotensin receptor blocker (ARB) use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 312
+      },
+      {
+        "id": 1770901,
+        "name": "[OHDSI EU 2019] ACE inhibitor use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 313
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": 1344721130
+  },
+  {
+    "createdDate": 1582558662791,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 69,
+    "name": "T2DM Treatment Pathway (1)",
+    "targetCohorts": [
+      {
+        "id": 1773510,
+        "name": "Type 2 Diabetes Mellitus",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 333
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1769516,
+        "name": "Insulin Glargine, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 323
+      },
+      {
+        "id": 1769515,
+        "name": "Insulin, Aspart, Human, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 324
+      },
+      {
+        "id": 1769514,
+        "name": "glimepiride, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 325
+      },
+      {
+        "id": 1769513,
+        "name": "Glyburide, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 326
+      },
+      {
+        "id": 1769520,
+        "name": "Metformin, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 327
+      },
+      {
+        "id": 1769519,
+        "name": "Gliclazide, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 328
+      },
+      {
+        "id": 1769518,
+        "name": "rosiglitazone, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 8,
+        "pathwayCohortId": 329
+      },
+      {
+        "id": 1773437,
+        "name": "Glipizide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 330
+      },
+      {
+        "id": 1769517,
+        "name": "sitagliptin, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 9,
+        "pathwayCohortId": 331
+      },
+      {
+        "id": 1769512,
+        "name": "pioglitazone, first",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 332
+      }
+    ],
+    "combinationWindow": 14,
+    "minCellCount": 0,
+    "maxDepth": 5,
+    "allowRepeats": false,
+    "hashCode": -1626289788
+  },
+  {
+    "createdDate": 1654741168928,
+    "modifiedDate": 1654741191153,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 211,
+    "name": "COPY OF [Glaucoma] glaucoma trt ingedient",
+    "targetCohorts": [
+      {
+        "id": 1775948,
+        "name": "Glaucoma patient",
+        "description": "Glaucoma patient",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 1068
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1775978,
+        "name": "Patients who treated laser (1)",
+        "description": "Patients who treated laser",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 1059
+      },
+      {
+        "id": 1775977,
+        "name": "Patients who treated surgery (1)",
+        "description": "Patients who treated surgery",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 1060
+      },
+      {
+        "id": 1775972,
+        "name": "Patients with mannitol or glycerin",
+        "description": "Patients with mannitol or glycerin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 8,
+        "pathwayCohortId": 1061
+      },
+      {
+        "id": 1775971,
+        "name": "Patients who treated pilocarpine (1)",
+        "description": "Patients who treated pilocarpine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 1062
+      },
+      {
+        "id": 1775970,
+        "name": "Patients who treated prostaglandin (1)",
+        "description": "Patients who treated prostaglandin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 1063
+      },
+      {
+        "id": 1775976,
+        "name": "Patients who treated acetazolamide or methazolamide (1)",
+        "description": "Patients who treated acetazolamide or methazolamide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 1064
+      },
+      {
+        "id": 1775975,
+        "name": "Patients who treated brinzolamide or dorzolamide (1)",
+        "description": "Patients who treated brinzolamide or dorzolamide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 1065
+      },
+      {
+        "id": 1775974,
+        "name": "Patients who treated alpha 2 agonist (1)",
+        "description": "Patients who treated alpha 2 agonist",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 1066
+      },
+      {
+        "id": 1775973,
+        "name": "Patients who treated beta blocker (1)",
+        "description": "Patients who treated betablocker",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 1067
+      }
+    ],
+    "combinationWindow": 1,
+    "minCellCount": 1,
+    "maxDepth": 7,
+    "allowRepeats": true,
+    "hashCode": 974018229
+  },
+  {
+    "createdDate": 1620837756676,
+    "modifiedDate": 1622553106924,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 155,
+    "name": "[cervello] Drug Utilization",
+    "targetCohorts": [
+      {
+        "id": 1775116,
+        "name": "[CERVELLO] Non-affective psychoses",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 726
+      },
+      {
+        "id": 1775115,
+        "name": "[CERVELLO] Bipolar disorders",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 727
+      },
+      {
+        "id": 1775035,
+        "name": "[CERVELLO] Anxiety disorders",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 728
+      },
+      {
+        "id": 1775113,
+        "name": "[CERVELLO] Depressive disorders",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 729
+      },
+      {
+        "id": 1775120,
+        "name": "[CERVELLO] Neurodevelopmental disorders",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 730
+      },
+      {
+        "id": 1775184,
+        "name": "[CERVELLO] ADHD",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 731
+      },
+      {
+        "id": 1775119,
+        "name": "[CERVELLO] Substance misuse and dependence",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 732
+      },
+      {
+        "id": 1775583,
+        "name": "[CERVELLO] Alcohol misuse or dependence",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 733
+      },
+      {
+        "id": 1775117,
+        "name": "[CERVELLO] Personality disorders",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 734
+      },
+      {
+        "id": 1775122,
+        "name": "[CERVELLO] Dementia",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 735
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1775360,
+        "name": "[CERVELLO] OC Antidepressants",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 736
+      },
+      {
+        "id": 1775359,
+        "name": "[CERVELLO] OC Hypnotics_sedatives",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 737
+      },
+      {
+        "id": 1775358,
+        "name": "[CERVELLO] OC Anxiolytics",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 738
+      },
+      {
+        "id": 1775364,
+        "name": "[CERVELLO] OC Anti-dementia",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 739
+      },
+      {
+        "id": 1775299,
+        "name": "[CERVELLO] OC Antipsychotics",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 740
+      },
+      {
+        "id": 1775363,
+        "name": "[CERVELLO] OC ADHD drugs",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 741
+      },
+      {
+        "id": 1775362,
+        "name": "[CERVELLO] OC Lithium",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 742
+      },
+      {
+        "id": 1775361,
+        "name": "[CERVELLO] OC Antiepileptics",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 743
+      }
+    ],
+    "combinationWindow": 30,
+    "minCellCount": 5,
+    "maxDepth": 10,
+    "allowRepeats": true,
+    "hashCode": 1346797341
+  },
+  {
+    "createdDate": 1776366811357,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 581,
+    "name": "PTSD Drug",
+    "targetCohorts": [
+      {
+        "id": 1796964,
+        "name": "PTSD (1)",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 48954
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1796988,
+        "name": "[PTSD Drug Cohort] Desipramine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 12,
+        "pathwayCohortId": 48893
+      },
+      {
+        "id": 1796987,
+        "name": "[PTSD Drug Cohort] Clomipramine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 10,
+        "pathwayCohortId": 48894
+      },
+      {
+        "id": 1796986,
+        "name": "[PTSD Drug Cohort] Amoxapine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 48895
+      },
+      {
+        "id": 1796985,
+        "name": "[PTSD Drug Cohort] Venlafaxine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 56,
+        "pathwayCohortId": 48896
+      },
+      {
+        "id": 1796992,
+        "name": "[PTSD Drug Cohort] Protriptyline",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 44,
+        "pathwayCohortId": 48897
+      },
+      {
+        "id": 1796991,
+        "name": "[PTSD Drug Cohort] Maprotiline",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 28,
+        "pathwayCohortId": 48898
+      },
+      {
+        "id": 1796990,
+        "name": "[PTSD Drug Cohort] Imipramine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 22,
+        "pathwayCohortId": 48899
+      },
+      {
+        "id": 1796989,
+        "name": "[PTSD Drug Cohort] Doxepin",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 14,
+        "pathwayCohortId": 48900
+      },
+      {
+        "id": 1796980,
+        "name": "[PTSD Drug Cohort] Bupropion",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 48901
+      },
+      {
+        "id": 1796979,
+        "name": "[PTSD Drug Cohort] Mirtazapine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 32,
+        "pathwayCohortId": 48902
+      },
+      {
+        "id": 1796978,
+        "name": "[PTSD Drug Cohort] Tranylcypromine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 51,
+        "pathwayCohortId": 48903
+      },
+      {
+        "id": 1796977,
+        "name": "[PTSD Drug Cohort] Selegiline",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 47,
+        "pathwayCohortId": 48904
+      },
+      {
+        "id": 1796984,
+        "name": "[PTSD Drug Cohort] Milnacipran",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 31,
+        "pathwayCohortId": 48905
+      },
+      {
+        "id": 1796983,
+        "name": "[PTSD Drug Cohort] Levomilnacipran",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 25,
+        "pathwayCohortId": 48906
+      },
+      {
+        "id": 1796982,
+        "name": "[PTSD Drug Cohort] Duloxetine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 15,
+        "pathwayCohortId": 48907
+      },
+      {
+        "id": 1796981,
+        "name": "[PTSD Drug Cohort] Desvenlafaxine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 13,
+        "pathwayCohortId": 48908
+      },
+      {
+        "id": 1796972,
+        "name": "[PTSD Drug Cohort] Fluvoxamine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 19,
+        "pathwayCohortId": 48909
+      },
+      {
+        "id": 1796971,
+        "name": "[PTSD Drug Cohort] Fluoxetine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 17,
+        "pathwayCohortId": 48910
+      },
+      {
+        "id": 1796970,
+        "name": "[PTSD Drug Cohort] Escitalopram",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 16,
+        "pathwayCohortId": 48911
+      },
+      {
+        "id": 1796969,
+        "name": "[PTSD Drug Cohort] Citalopram",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 9,
+        "pathwayCohortId": 48912
+      },
+      {
+        "id": 1796976,
+        "name": "[PTSD Drug Cohort] Phenelzine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 40,
+        "pathwayCohortId": 48913
+      },
+      {
+        "id": 1796975,
+        "name": "[PTSD Drug Cohort] Isocarboxazid",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 23,
+        "pathwayCohortId": 48914
+      },
+      {
+        "id": 1796974,
+        "name": "[PTSD Drug Cohort] Vortioxetine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 58,
+        "pathwayCohortId": 48915
+      },
+      {
+        "id": 1796973,
+        "name": "[PTSD Drug Cohort] Vilazodone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 57,
+        "pathwayCohortId": 48916
+      },
+      {
+        "id": 1796968,
+        "name": "[PTSD Drug Cohort] Paroxetine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 37,
+        "pathwayCohortId": 48917
+      },
+      {
+        "id": 1796967,
+        "name": "[PTSD Drug Cohort] Sertraline",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 48,
+        "pathwayCohortId": 48918
+      },
+      {
+        "id": 1796966,
+        "name": "[PTSD Drug Cohort] Clozapine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 11,
+        "pathwayCohortId": 48919
+      },
+      {
+        "id": 1796965,
+        "name": "[PTSD Drug Group Cohort] Lithium",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 60,
+        "pathwayCohortId": 48920
+      },
+      {
+        "id": 1797020,
+        "name": "[PTSD Drug Cohort] Risperidone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 46,
+        "pathwayCohortId": 48921
+      },
+      {
+        "id": 1797019,
+        "name": "[PTSD Drug Cohort] Quetiapine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 45,
+        "pathwayCohortId": 48922
+      },
+      {
+        "id": 1797018,
+        "name": "[PTSD Drug Cohort] Paliperidone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 36,
+        "pathwayCohortId": 48923
+      },
+      {
+        "id": 1797017,
+        "name": "[PTSD Drug Cohort] Lurasidone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 27,
+        "pathwayCohortId": 48924
+      },
+      {
+        "id": 1797024,
+        "name": "[PTSD Drug Cohort] Oxcarbazepine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 35,
+        "pathwayCohortId": 48925
+      },
+      {
+        "id": 1797023,
+        "name": "[PTSD Drug Cohort] Lamotrigine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 24,
+        "pathwayCohortId": 48926
+      },
+      {
+        "id": 1797022,
+        "name": "[PTSD Drug Cohort] Carbamazepine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 48927
+      },
+      {
+        "id": 1797021,
+        "name": "[PTSD Drug Cohort] Ziprasidone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 59,
+        "pathwayCohortId": 48928
+      },
+      {
+        "id": 1797012,
+        "name": "[PTSD Drug Cohort] Brexpiprazole",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 48929
+      },
+      {
+        "id": 1797011,
+        "name": "[PTSD Drug Cohort] Olanzapine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 34,
+        "pathwayCohortId": 48930
+      },
+      {
+        "id": 1797010,
+        "name": "[PTSD Drug Cohort] Triflupromazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 53,
+        "pathwayCohortId": 48931
+      },
+      {
+        "id": 1797009,
+        "name": "[PTSD Drug Cohort] Trifluoperazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 52,
+        "pathwayCohortId": 48932
+      },
+      {
+        "id": 1797016,
+        "name": "[PTSD Drug Cohort] Iloperidone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 21,
+        "pathwayCohortId": 48933
+      },
+      {
+        "id": 1797015,
+        "name": "[PTSD Drug Cohort] Asenapine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 48934
+      },
+      {
+        "id": 1797014,
+        "name": "[PTSD Drug Cohort] Aripiprazole",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 48935
+      },
+      {
+        "id": 1797013,
+        "name": "[PTSD Drug Cohort] Cariprazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 48936
+      },
+      {
+        "id": 1797004,
+        "name": "[PTSD Drug Cohort] Pimozide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 41,
+        "pathwayCohortId": 48937
+      },
+      {
+        "id": 1797003,
+        "name": "[PTSD Drug Cohort] Perphenazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 39,
+        "pathwayCohortId": 48938
+      },
+      {
+        "id": 1797002,
+        "name": "[PTSD Drug Cohort] Perazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 38,
+        "pathwayCohortId": 48939
+      },
+      {
+        "id": 1797001,
+        "name": "[PTSD Drug Cohort] Molindone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 33,
+        "pathwayCohortId": 48940
+      },
+      {
+        "id": 1797008,
+        "name": "[PTSD Drug Cohort] Thiothixene",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 50,
+        "pathwayCohortId": 48941
+      },
+      {
+        "id": 1797007,
+        "name": "[PTSD Drug Cohort] Thioridazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 49,
+        "pathwayCohortId": 48942
+      },
+      {
+        "id": 1797006,
+        "name": "[PTSD Drug Cohort] Promazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 43,
+        "pathwayCohortId": 48943
+      },
+      {
+        "id": 1797005,
+        "name": "[PTSD Drug Cohort] Prochlorperazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 42,
+        "pathwayCohortId": 48944
+      },
+      {
+        "id": 1796996,
+        "name": "[PTSD Drug Cohort] Fluphenazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 18,
+        "pathwayCohortId": 48945
+      },
+      {
+        "id": 1796995,
+        "name": "[PTSD Drug Cohort] Chlorprothixene",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 8,
+        "pathwayCohortId": 48946
+      },
+      {
+        "id": 1796994,
+        "name": "[PTSD Drug Cohort] Chlorpromazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 48947
+      },
+      {
+        "id": 1796993,
+        "name": "[PTSD Drug Cohort] Trimipramine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 54,
+        "pathwayCohortId": 48948
+      },
+      {
+        "id": 1797000,
+        "name": "[PTSD Drug Cohort] Methotrimeprazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 30,
+        "pathwayCohortId": 48949
+      },
+      {
+        "id": 1796999,
+        "name": "[PTSD Drug Cohort] Mesoridazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 29,
+        "pathwayCohortId": 48950
+      },
+      {
+        "id": 1796998,
+        "name": "[PTSD Drug Cohort] Loxapine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 26,
+        "pathwayCohortId": 48951
+      },
+      {
+        "id": 1796997,
+        "name": "[PTSD Drug Cohort] Haloperidol",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 20,
+        "pathwayCohortId": 48952
+      },
+      {
+        "id": 1797025,
+        "name": "[PTSD Drug Cohort] Valproate",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 55,
+        "pathwayCohortId": 48953
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 1,
+    "maxDepth": 5,
+    "allowRepeats": true,
+    "hashCode": 664502431
+  },
+  {
+    "createdDate": 1712063264698,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 396,
+    "name": "dfl",
+    "targetCohorts": [
+      {
+        "id": 1789351,
+        "name": "[MI-16.1] Hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 28560
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1789355,
+        "name": "[MI-16.1] Losartan",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 28561
+      },
+      {
+        "id": 1789354,
+        "name": "[MI-16.1] Amlodipine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 28562
+      },
+      {
+        "id": 1789353,
+        "name": "[MI-16.1] Metorolol",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 28563
+      },
+      {
+        "id": 1789352,
+        "name": "[MI-16.1] Hydrochlorothiazide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 28564
+      }
+    ],
+    "combinationWindow": 100,
+    "minCellCount": 100000000,
+    "maxDepth": 10,
+    "allowRepeats": true,
+    "hashCode": 52690965
+  },
+  {
+    "createdDate": 1667924974827,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 242,
+    "name": "COPY OF COPY OF COPY OF [EHDEN UMC] IBD cohort pathway ingredient-level",
+    "targetCohorts": [
+      {
+        "id": 1780270,
+        "name": "[EHDEN UMC] Persons with IBD = ulcerative colitis or Crohns disease",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 1454
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1780348,
+        "name": "[EHDEN UMC] tixocortol",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 14,
+        "pathwayCohortId": 1436
+      },
+      {
+        "id": 1780347,
+        "name": "[EHDEN UMC] budesonide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 1437
+      },
+      {
+        "id": 1780345,
+        "name": "[EHDEN UMC] prednisolone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 11,
+        "pathwayCohortId": 1438
+      },
+      {
+        "id": 1780352,
+        "name": "[EHDEN UMC] olsalazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 10,
+        "pathwayCohortId": 1439
+      },
+      {
+        "id": 1780351,
+        "name": "[EHDEN UMC] balsalazide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 1440
+      },
+      {
+        "id": 1780350,
+        "name": "[EHDEN UMC] sulfasalazine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 13,
+        "pathwayCohortId": 1441
+      },
+      {
+        "id": 1780349,
+        "name": "[EHDEN UMC] mesalamine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 8,
+        "pathwayCohortId": 1442
+      },
+      {
+        "id": 1780340,
+        "name": "[EHDEN UMC] methylprednisolone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 9,
+        "pathwayCohortId": 1443
+      },
+      {
+        "id": 1780339,
+        "name": "[EHDEN UMC] prednisone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 12,
+        "pathwayCohortId": 1444
+      },
+      {
+        "id": 1780344,
+        "name": "[EHDEN UMC] betamethasone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 1445
+      },
+      {
+        "id": 1780343,
+        "name": "[EHDEN UMC] hydrocortisone",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 1446
+      },
+      {
+        "id": 1780356,
+        "name": "[EHDEN UMC] golimumab",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 1447
+      },
+      {
+        "id": 1780355,
+        "name": "[EHDEN UMC] ustekinumab",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 16,
+        "pathwayCohortId": 1448
+      },
+      {
+        "id": 1780354,
+        "name": "[EHDEN UMC] tofacitinib",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 15,
+        "pathwayCohortId": 1449
+      },
+      {
+        "id": 1780353,
+        "name": "[EHDEN UMC] vedolizumab",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 17,
+        "pathwayCohortId": 1450
+      },
+      {
+        "id": 1780360,
+        "name": "[EHDEN UMC] infliximab",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 1451
+      },
+      {
+        "id": 1780358,
+        "name": "[EHDEN UMC] certolizumab pegol",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 1452
+      },
+      {
+        "id": 1780357,
+        "name": "[EHDEN UMC] adalimumab",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 1453
+      }
+    ],
+    "combinationWindow": 7,
+    "minCellCount": 5,
+    "maxDepth": 3,
+    "allowRepeats": false,
+    "hashCode": -52096614
+  },
+  {
+    "createdDate": 1655356160419,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 212,
+    "name": "[MS] Cohort Pathway",
+    "targetCohorts": [
+      {
+        "id": 1779568,
+        "name": "[MS] Culpepper 3x [med only after condition]",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 1132
+      },
+      {
+        "id": 1779567,
+        "name": "[MS] Culpepper 3x [medication only]",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 1081
+      },
+      {
+        "id": 1779566,
+        "name": "[MS] Culpepper 3x",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 1133
+      },
+      {
+        "id": 1779571,
+        "name": "[MS] any single med",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 1082
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1779612,
+        "name": "[MS] interferon beta-1a exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 1096
+      },
+      {
+        "id": 1779611,
+        "name": "[MS] glatiramer exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 1097
+      },
+      {
+        "id": 1779610,
+        "name": "[MS] fingolimod exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 1098
+      },
+      {
+        "id": 1779609,
+        "name": "[MS] dimethyl fumarate exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 1094
+      },
+      {
+        "id": 1779616,
+        "name": "[MS] ocrelizumab exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 11,
+        "pathwayCohortId": 1099
+      },
+      {
+        "id": 1779615,
+        "name": "[MS] natalizumab exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 10,
+        "pathwayCohortId": 1100
+      },
+      {
+        "id": 1779614,
+        "name": "[MS] mitoxantrone exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 9,
+        "pathwayCohortId": 1101
+      },
+      {
+        "id": 1779613,
+        "name": "[MS] interferon beta-1b exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 8,
+        "pathwayCohortId": 1102
+      },
+      {
+        "id": 1779608,
+        "name": "[MS] daclizumab exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 1095
+      },
+      {
+        "id": 1779607,
+        "name": "[MS] cladribine exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 1093
+      },
+      {
+        "id": 1779596,
+        "name": "[MS] alemtuzumab exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 1079
+      },
+      {
+        "id": 1779620,
+        "name": "[MS] diroximel fumarate exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 1103
+      },
+      {
+        "id": 1779619,
+        "name": "[MS] teriflunomide exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 15,
+        "pathwayCohortId": 1104
+      },
+      {
+        "id": 1779618,
+        "name": "[MS] rituximab exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 13,
+        "pathwayCohortId": 1105
+      },
+      {
+        "id": 1779617,
+        "name": "[MS] peginterferon beta-1a exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 12,
+        "pathwayCohortId": 1106
+      },
+      {
+        "id": 1779621,
+        "name": "[MS] siponimod exposure",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 14,
+        "pathwayCohortId": 1107
+      }
+    ],
+    "combinationWindow": 1,
+    "minCellCount": 0,
+    "maxDepth": 10,
+    "allowRepeats": false,
+    "hashCode": 2076369345
+  },
+  {
+    "createdDate": 1632813718862,
+    "modifiedDate": 1632813857914,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 175,
+    "name": "schizo_Pathway (1)",
+    "targetCohorts": [
+      {
+        "id": 1777777,
+        "name": "Schizo_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 894
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1777786,
+        "name": "Perphenazine_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 881
+      },
+      {
+        "id": 1777785,
+        "name": "Sulpiride_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 10,
+        "pathwayCohortId": 882
+      },
+      {
+        "id": 1777780,
+        "name": "Paliperidone_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 883
+      },
+      {
+        "id": 1777779,
+        "name": "Amisulpride_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 884
+      },
+      {
+        "id": 1777778,
+        "name": "Clozapine_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 885
+      },
+      {
+        "id": 1777784,
+        "name": "Chlorpromazine_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 886
+      },
+      {
+        "id": 1777783,
+        "name": "Haloperidol_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 887
+      },
+      {
+        "id": 1777782,
+        "name": "ziprasidone_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 12,
+        "pathwayCohortId": 888
+      },
+      {
+        "id": 1777781,
+        "name": "Zotepine_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 11,
+        "pathwayCohortId": 889
+      },
+      {
+        "id": 1777770,
+        "name": "Aripiprazole_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 890
+      },
+      {
+        "id": 1777769,
+        "name": "Risperidone_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 9,
+        "pathwayCohortId": 891
+      },
+      {
+        "id": 1777768,
+        "name": "Quetiapine_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 8,
+        "pathwayCohortId": 892
+      },
+      {
+        "id": 1777767,
+        "name": "Olanzapine_YH",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 893
+      }
+    ],
+    "combinationWindow": 0,
+    "minCellCount": 0,
+    "maxDepth": 4,
+    "allowRepeats": false,
+    "hashCode": -558529266
+  },
+  {
+    "createdDate": 1647886611850,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 200,
+    "name": "Min - TestPathway of antihypertensive drugs",
+    "targetCohorts": [
+      {
+        "id": 1773311,
+        "name": "[OHDSI EU 2019] Patients initiating first-line therapy for hypertension with >3 yr follow-up",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 1024
+      },
+      {
+        "id": 1773310,
+        "name": "Patients initiating first-line therapy for hypertension with >3 yr follow-up and treatment every 120d",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 1025
+      },
+      {
+        "id": 1773309,
+        "name": "[OHDSI EU 2019] Patients initiating first-line therapy for hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 1026
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1770908,
+        "name": "[OHDSI EU 2019] Diuretic-potassium sparing use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 1015
+      },
+      {
+        "id": 1770907,
+        "name": "[OHDSI EU 2019] Diuretic-loop use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 1016
+      },
+      {
+        "id": 1770906,
+        "name": "[OHDSI EU 2019] beta blocker use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 1017
+      },
+      {
+        "id": 1770905,
+        "name": "[OHDSI EU 2019] non-dihydropyridine Calcium Channel Blocker (ndCCB) use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 8,
+        "pathwayCohortId": 1018
+      },
+      {
+        "id": 1770909,
+        "name": "[OHDSI EU 2019] alpha-1 blocker use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 1019
+      },
+      {
+        "id": 1770904,
+        "name": "[OHDSI EU 2019] dihydropyridine Calcium Channel Blocker (dCCB) use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 1020
+      },
+      {
+        "id": 1770903,
+        "name": "[OHDSI EU 2019] Thiazide diuretic use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 1021
+      },
+      {
+        "id": 1770902,
+        "name": "[OHDSI EU 2019] Angiotensin receptor blocker (ARB) use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 1022
+      },
+      {
+        "id": 1770901,
+        "name": "[OHDSI EU 2019] ACE inhibitor use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 1023
+      }
+    ],
+    "combinationWindow": 14,
+    "minCellCount": 5,
+    "maxDepth": 10,
+    "allowRepeats": false,
+    "hashCode": -1537668022
+  },
+  {
+    "createdDate": 1771494066466,
+    "modifiedDate": 1778064628258,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 557,
+    "name": "initiating a first-line antihypertensive therapy",
+    "targetCohorts": [
+      {
+        "id": 1788166,
+        "name": "Patients initiating first-line therapy for hypertension with 3 year follow-up",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 49007
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1777500,
+        "name": "beta blocker use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 6,
+        "pathwayCohortId": 48998
+      },
+      {
+        "id": 1777499,
+        "name": "non-dihydropyridine Calcium Channel Blocker (ndCCB) use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 8,
+        "pathwayCohortId": 48999
+      },
+      {
+        "id": 1777498,
+        "name": "dihydropyridine Calcium Channel Blocker (dCCB) use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 7,
+        "pathwayCohortId": 49000
+      },
+      {
+        "id": 1777503,
+        "name": "alpha-1 blocker use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 5,
+        "pathwayCohortId": 49001
+      },
+      {
+        "id": 1777502,
+        "name": "Diuretic-potassium sparing use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 49002
+      },
+      {
+        "id": 1777501,
+        "name": "Diuretic-loop use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 49003
+      },
+      {
+        "id": 1796305,
+        "name": "Angiotensin Receptor Blocker (ARB) Use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 49004
+      },
+      {
+        "id": 1789224,
+        "name": "Ace Inhibitor use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 49005
+      },
+      {
+        "id": 1770903,
+        "name": "Thiazide diuretic use",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 4,
+        "pathwayCohortId": 49006
+      }
+    ],
+    "combinationWindow": 14,
+    "minCellCount": 5,
+    "maxDepth": 10,
+    "allowRepeats": false,
+    "hashCode": -692050244
+  },
+  {
+    "createdDate": 1713275412474,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 416,
+    "name": "MI 16.2 analyse inhaalopdracht",
+    "targetCohorts": [
+      {
+        "id": 1789351,
+        "name": "[MI-16.1] Hypertension",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "pathwayCohortId": 28736
+      }
+    ],
+    "eventCohorts": [
+      {
+        "id": 1789355,
+        "name": "[MI-16.1] Losartan",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 2,
+        "pathwayCohortId": 28732
+      },
+      {
+        "id": 1789354,
+        "name": "[MI-16.1] Amlodipine",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 0,
+        "pathwayCohortId": 28733
+      },
+      {
+        "id": 1789353,
+        "name": "[MI-16.1] Metorolol",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 3,
+        "pathwayCohortId": 28734
+      },
+      {
+        "id": 1789352,
+        "name": "[MI-16.1] Hydrochlorothiazide",
+        "hasWriteAccess": false,
+        "hasReadAccess": false,
+        "code": 1,
+        "pathwayCohortId": 28735
+      }
+    ],
+    "combinationWindow": 10,
+    "minCellCount": 1,
+    "maxDepth": 1,
+    "allowRepeats": true,
+    "hashCode": -1886319009
+  }
+]

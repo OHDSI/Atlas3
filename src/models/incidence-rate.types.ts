@@ -27,16 +27,16 @@ export const TimeAtRiskSchema = z.object({
 export type TimeAtRisk = z.infer<typeof TimeAtRiskSchema>
 
 export const StudyWindowSchema = z.object({
-  startDate: z.string().min(1),
-  endDate: z.string().min(1),
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
 })
 export type StudyWindow = z.infer<typeof StudyWindowSchema>
 
 // CriteriaGroup is intentionally pass-through: the cohort-builder
 // CriteriaGroupEditor component will validate its own contents.
 export const StratifyRuleSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
+  name: z.string().nullable(),
+  description: z.string().nullable().optional(),
   expression: z.any(), // CriteriaGroup; validated visually by CriteriaGroupEditor
 })
 export type StratifyRule = z.infer<typeof StratifyRuleSchema>
@@ -49,7 +49,7 @@ export const IncidenceRateExpressionSchema = z
     targetIds: z.array(z.number().int()).default([]),
     outcomeIds: z.array(z.number().int()).default([]),
     timeAtRisk: TimeAtRiskSchema,
-    studyWindow: StudyWindowSchema.optional(),
+    studyWindow: StudyWindowSchema.nullable().optional(),
     strata: z.array(StratifyRuleSchema).default([]),
   })
   .passthrough()

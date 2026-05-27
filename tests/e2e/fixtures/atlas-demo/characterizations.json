@@ -1,0 +1,341 @@
+[
+  {
+    "createdDate": 1543775633662,
+    "modifiedDate": 1552023308304,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 5,
+    "hashCode": -1640670960,
+    "name": "[SWAT4LS] Analysis"
+  },
+  {
+    "createdDate": 1545861797810,
+    "modifiedDate": 1554523844392,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 7,
+    "hashCode": -407816729,
+    "name": "charlson"
+  },
+  {
+    "createdDate": 1549456196028,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 9,
+    "hashCode": 1771603713,
+    "name": "test characterization"
+  },
+  {
+    "createdDate": 1556761063170,
+    "modifiedDate": 1556761086667,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 28,
+    "hashCode": -568138084,
+    "name": "COPY OF: Character 1"
+  },
+  {
+    "createdDate": 1563882392886,
+    "modifiedDate": 1563884808365,
+    "hasWriteAccess": false,
+    "hasReadAccess": false,
+    "tags": [],
+    "id": 56,
+    "hashCode": -1985086937,
+    "name": "vaccine then death characterization"
+  },
+  {
+    "id": 10001,
+    "name": "T2DM Baseline Characterization",
+    "description": "Characterize baseline features of T2DM patients",
+    "cohorts": [
+      {
+        "id": 99257,
+        "name": "Adult onset obesity"
+      },
+      {
+        "id": 1662241,
+        "name": "ACE inhibitor users"
+      }
+    ],
+    "featureAnalyses": [
+      {
+        "id": 2,
+        "name": "Condition Group Era Start Long Term",
+        "statType": "PREVALENCE"
+      },
+      {
+        "id": 3,
+        "name": "Drug Group Era Start Medium Term",
+        "statType": "PREVALENCE"
+      },
+      {
+        "id": 4,
+        "name": "Condition Era Short Term",
+        "statType": "PREVALENCE"
+      }
+    ],
+    "stratas": [],
+    "strataConceptSets": [],
+    "parameters": [],
+    "tags": [],
+    "createdDate": 1700000000000,
+    "hashCode": 12345
+  },
+  {
+    "id": 10002,
+    "name": "Cardiovascular Risk with Strata",
+    "description": "CVD risk analysis stratified by age and gender",
+    "cohorts": [
+      {
+        "id": 2978,
+        "name": "Dabigatran new users"
+      }
+    ],
+    "featureAnalyses": [
+      {
+        "id": 5,
+        "name": "Drug Group Era Long Term",
+        "statType": "PREVALENCE"
+      },
+      {
+        "id": 10,
+        "name": "Condition Era Any Time Prior",
+        "statType": "PREVALENCE"
+      }
+    ],
+    "stratas": [
+      {
+        "id": "1",
+        "name": "Age >= 65",
+        "criteria": {
+          "Type": "ALL",
+          "CriteriaList": [],
+          "DemographicCriteriaList": [
+            {
+              "Age": {
+                "Value": 65,
+                "Op": "gte"
+              }
+            }
+          ],
+          "Groups": []
+        }
+      },
+      {
+        "id": "2",
+        "name": "Male",
+        "criteria": {
+          "Type": "ALL",
+          "CriteriaList": [],
+          "DemographicCriteriaList": [
+            {
+              "Gender": [
+                {
+                  "CONCEPT_ID": 8507
+                }
+              ]
+            }
+          ],
+          "Groups": []
+        }
+      }
+    ],
+    "strataConceptSets": [],
+    "parameters": [
+      {
+        "name": "minCovariatePersonCount",
+        "value": "100"
+      },
+      {
+        "name": "minIntervalPersonCount",
+        "value": "100"
+      }
+    ],
+    "tags": [],
+    "createdDate": 1700100000000,
+    "hashCode": 12346
+  },
+  {
+    "id": 10003,
+    "name": "Single Cohort Analysis",
+    "description": "Minimal characterization with one cohort and one feature",
+    "cohorts": [
+      {
+        "id": 124552,
+        "name": "Febrile seizures"
+      }
+    ],
+    "featureAnalyses": [
+      {
+        "id": 9,
+        "name": "Condition Era Start Long Term",
+        "statType": "PREVALENCE"
+      }
+    ],
+    "stratas": [],
+    "parameters": [],
+    "tags": [],
+    "createdDate": 1700200000000,
+    "hashCode": 12347
+  },
+  {
+    "id": 10004,
+    "name": "Distribution Analysis",
+    "description": "Characterization with distribution-type features",
+    "cohorts": [
+      {
+        "id": 99257,
+        "name": "Adult onset obesity"
+      }
+    ],
+    "featureAnalyses": [
+      {
+        "id": 339,
+        "name": "Custom measurement analysis",
+        "statType": "DISTRIBUTION"
+      },
+      {
+        "id": 2,
+        "name": "Condition Group Era Start Long Term",
+        "statType": "PREVALENCE"
+      }
+    ],
+    "stratas": [],
+    "strataOnly": false,
+    "parameters": [],
+    "tags": [],
+    "createdDate": 1700300000000,
+    "hashCode": 12348
+  },
+  {
+    "id": 10005,
+    "name": "Multi-Strata Deep Analysis",
+    "description": "Complex characterization with multiple strata and concept sets",
+    "cohorts": [
+      {
+        "id": 1770900,
+        "name": "Hypertension first-line"
+      },
+      {
+        "id": 2978,
+        "name": "Dabigatran users"
+      },
+      {
+        "id": 99257,
+        "name": "Adult onset obesity"
+      }
+    ],
+    "featureAnalyses": [
+      {
+        "id": 2,
+        "name": "Condition Group Era Start Long Term",
+        "statType": "PREVALENCE"
+      },
+      {
+        "id": 3,
+        "name": "Drug Group Era Start Medium Term",
+        "statType": "PREVALENCE"
+      },
+      {
+        "id": 4,
+        "name": "Condition Era Short Term",
+        "statType": "PREVALENCE"
+      },
+      {
+        "id": 5,
+        "name": "Drug Group Era Long Term",
+        "statType": "PREVALENCE"
+      },
+      {
+        "id": 10,
+        "name": "Condition Era Any Time Prior",
+        "statType": "PREVALENCE"
+      }
+    ],
+    "stratas": [
+      {
+        "id": "1",
+        "name": "Age 18-44",
+        "criteria": {
+          "Type": "ALL",
+          "CriteriaList": [],
+          "DemographicCriteriaList": [
+            {
+              "Age": {
+                "Value": 18,
+                "Op": "gte",
+                "Extent": 44
+              }
+            }
+          ],
+          "Groups": []
+        }
+      },
+      {
+        "id": "2",
+        "name": "Age 45-64",
+        "criteria": {
+          "Type": "ALL",
+          "CriteriaList": [],
+          "DemographicCriteriaList": [
+            {
+              "Age": {
+                "Value": 45,
+                "Op": "gte",
+                "Extent": 64
+              }
+            }
+          ],
+          "Groups": []
+        }
+      },
+      {
+        "id": "3",
+        "name": "Age >= 65",
+        "criteria": {
+          "Type": "ALL",
+          "CriteriaList": [],
+          "DemographicCriteriaList": [
+            {
+              "Age": {
+                "Value": 65,
+                "Op": "gte"
+              }
+            }
+          ],
+          "Groups": []
+        }
+      }
+    ],
+    "strataConceptSets": [],
+    "stratifiedBy": "age",
+    "parameters": [
+      {
+        "name": "minCovariatePersonCount",
+        "value": "50"
+      },
+      {
+        "name": "minIntervalPersonCount",
+        "value": "50"
+      }
+    ],
+    "tags": [
+      {
+        "name": "study",
+        "id": 1
+      }
+    ],
+    "createdDate": 1700400000000,
+    "modifiedDate": 1700500000000,
+    "createdBy": {
+      "login": "admin",
+      "name": "Admin User"
+    },
+    "hashCode": 12349
+  }
+]

@@ -1,0 +1,48 @@
+{
+  "createdDate": 1591382373649,
+  "hasWriteAccess": false,
+  "hasReadAccess": false,
+  "tags": [],
+  "id": 103,
+  "name": "[N3C] COPD to PNA",
+  "targetCohorts": [
+    {
+      "id": 1774279,
+      "name": "[N3C-Demo] COPD",
+      "description": "[N3C-Demo] COPD",
+      "hasWriteAccess": false,
+      "hasReadAccess": false,
+      "pathwayCohortId": 533
+    },
+    {
+      "id": 1769397,
+      "name": "Columbia 2019 phenotype c - characterization",
+      "hasWriteAccess": false,
+      "hasReadAccess": false,
+      "pathwayCohortId": 607
+    },
+    {
+      "id": 1775077,
+      "name": "COVID-19_Cohort",
+      "hasWriteAccess": false,
+      "hasReadAccess": false,
+      "pathwayCohortId": 608
+    }
+  ],
+  "eventCohorts": [
+    {
+      "id": 1774298,
+      "name": "[N3C-Demo] Pneumonia",
+      "description": "[N3C-Demo] Pneumonia",
+      "hasWriteAccess": false,
+      "hasReadAccess": false,
+      "code": 0,
+      "pathwayCohortId": 532
+    }
+  ],
+  "combinationWindow": 0,
+  "minCellCount": 0,
+  "maxDepth": 5,
+  "allowRepeats": false,
+  "hashCode": -864690115
+}

@@ -238,10 +238,24 @@ export const ATTRIBUTE_KEY_TO_ATLAS: Record<string, string> = {
   // Numeric attributes
   age: 'Age',
   ageAtStart: 'AgeAtStart',
+  ageAtEnd: 'AgeAtEnd',
   valueAsNumber: 'ValueAsNumber',
   visitLength: 'VisitLength',
+  visitDetailLength: 'VisitDetailLength',
   eraLength: 'EraLength',
   quantity: 'Quantity',
+  refills: 'Refills',
+  daysSupply: 'DaysSupply',
+  effectiveDrugDose: 'EffectiveDrugDose',
+  rangeLow: 'RangeLow',
+  rangeHigh: 'RangeHigh',
+  rangeLowRatio: 'RangeLowRatio',
+  rangeHighRatio: 'RangeHighRatio',
+  doseValue: 'DoseValue',
+  occurrenceCount: 'OccurrenceCount',
+  gapDays: 'GapDays',
+  periodLength: 'PeriodLength',
+  placeOfServiceDistance: 'PlaceOfServiceDistance',
 
   // Concept attributes
   gender: 'Gender',
@@ -249,14 +263,56 @@ export const ATTRIBUTE_KEY_TO_ATLAS: Record<string, string> = {
   ethnicity: 'Ethnicity',
   visitType: 'VisitType',
   providerSpecialty: 'ProviderSpecialty',
+  conditionType: 'ConditionType',
+  conditionStatus: 'ConditionStatus',
+  measurementType: 'MeasurementType',
+  observationType: 'ObservationType',
+  drugType: 'DrugType',
+  procedureType: 'ProcedureType',
+  deviceType: 'DeviceType',
+  deathType: 'DeathType',
+  specimenType: 'SpecimenType',
+  unit: 'Unit',
+  operator: 'Operator',
+  valueAsConcept: 'ValueAsConcept',
+  routeConcept: 'RouteConcept',
+  doseUnit: 'DoseUnit',
+  modifier: 'Modifier',
+  qualifier: 'Qualifier',
+  placeOfService: 'PlaceOfService',
+  anatomicSite: 'AnatomicSite',
+  diseaseStatus: 'DiseaseStatus',
 
   // Date attributes
   occurrenceStartDate: 'OccurrenceStartDate',
   occurrenceEndDate: 'OccurrenceEndDate',
   visitStartDate: 'VisitStartDate',
   visitEndDate: 'VisitEndDate',
+  visitDetailStartDate: 'VisitDetailStartDate',
+  visitDetailEndDate: 'VisitDetailEndDate',
   eraStartDate: 'EraStartDate',
   eraEndDate: 'EraEndDate',
+  periodStartDate: 'PeriodStartDate',
+  periodEndDate: 'PeriodEndDate',
+
+  // LocationRegion date attributes
+  startDate: 'StartDate',
+  endDate: 'EndDate',
+
+  // PayerPlanPeriod concept-set attributes
+  payerConcept: 'PayerConcept',
+  planConcept: 'PlanConcept',
+  sponsorConcept: 'SponsorConcept',
+  stopReasonConcept: 'StopReasonConcept',
+  payerSourceConcept: 'PayerSourceConcept',
+  planSourceConcept: 'PlanSourceConcept',
+  sponsorSourceConcept: 'SponsorSourceConcept',
+  stopReasonSourceConcept: 'StopReasonSourceConcept',
+
+  // ObservationPeriod / VisitDetail type attributes
+  periodType: 'PeriodType',
+  visitDetailType: 'VisitDetailType',
+  placeOfServiceLocation: 'PlaceOfServiceLocation',
 
   // Text attributes
   valueAsString: 'ValueAsString',
@@ -265,6 +321,7 @@ export const ATTRIBUTE_KEY_TO_ATLAS: Record<string, string> = {
   sig: 'Sig',
   lotNumber: 'LotNumber',
   deviceId: 'UniqueDeviceId',
+  sourceId: 'SourceId',
 
   // Boolean attributes
   first: 'First',

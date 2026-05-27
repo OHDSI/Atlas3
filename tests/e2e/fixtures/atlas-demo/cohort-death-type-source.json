@@ -1,0 +1,73 @@
+{
+  "cdmVersionRange": ">=5.0.0",
+  "PrimaryCriteria": {
+    "CriteriaList": [
+      {
+        "Death": {
+          "DeathType": [
+            {
+              "CONCEPT_ID": 38003565,
+              "CONCEPT_NAME": "Payer enrollment status \"Deceased\"",
+              "STANDARD_CONCEPT": null,
+              "STANDARD_CONCEPT_CAPTION": "Unknown",
+              "INVALID_REASON": null,
+              "INVALID_REASON_CAPTION": "Unknown",
+              "CONCEPT_CODE": "OMOP generated",
+              "DOMAIN_ID": "Type Concept",
+              "VOCABULARY_ID": "Death Type",
+              "CONCEPT_CLASS_ID": null
+            }
+          ],
+          "DeathTypeExclude": false,
+          "DeathSourceConcept": 0
+        }
+      }
+    ],
+    "ObservationWindow": {
+      "PriorDays": 0,
+      "PostDays": 0
+    },
+    "PrimaryCriteriaLimit": {
+      "Type": "First"
+    }
+  },
+  "ConceptSets": [
+    {
+      "id": 0,
+      "name": "No matching concept (concept 0)",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_ID": 0,
+              "CONCEPT_NAME": "No matching concept",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "CONCEPT_CODE": "No matching concept",
+              "DOMAIN_ID": "Metadata",
+              "VOCABULARY_ID": "None",
+              "CONCEPT_CLASS_ID": "Undefined"
+            },
+            "isExcluded": false,
+            "includeDescendants": false,
+            "includeMapped": false
+          }
+        ]
+      }
+    }
+  ],
+  "QualifiedLimit": {
+    "Type": "First"
+  },
+  "ExpressionLimit": {
+    "Type": "First"
+  },
+  "InclusionRules": [],
+  "CensoringCriteria": [],
+  "CollapseSettings": {
+    "CollapseType": "ERA",
+    "EraPad": 0
+  }
+}

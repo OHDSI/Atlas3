@@ -105,11 +105,11 @@ export interface ConceptSet {
 export const ConceptSetSchema = z.object({
   id: z.union([z.number(), z.string()]).optional(),
   name: z.string().min(1).max(255),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   createdDate: z.union([z.string(), z.number()]).optional(),
-  createdBy: z.string().optional(),
+  createdBy: z.string().nullable().optional(),
   modifiedDate: z.union([z.string(), z.number()]).optional(),
-  modifiedBy: z.string().optional(),
+  modifiedBy: z.string().nullable().optional(),
   shared: z.boolean().default(false),
   items: z.array(ConceptSetItemSchema).default([]),
 })
