@@ -469,6 +469,21 @@ export async function setupBasicMocks(page: Page) {
   await page.route('**/cohortdefinition/checkV2**', async (route: Route) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
   })
+
+  // Mock cohort version history endpoint
+  await page.route('**/cohortdefinition/*/version/**', async (route: Route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+  })
+
+  // Mock feature analysis list (used by characterization builder)
+  await page.route('**/feature-analysis?size=*', async (route: Route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ content: [], totalElements: 0 }) })
+  })
+
+  // Mock characterization design snapshot
+  await page.route('**/cohort-characterization/*/design', async (route: Route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+  })
 }
 
 /**

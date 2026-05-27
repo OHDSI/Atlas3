@@ -171,6 +171,22 @@ test.describe('Atlas Pathway Compatibility', () => {
       }
     })
 
+    // Mock the GET for the newly created pathway (app navigates to it after import)
+    await page.route('**/pathway-analysis/999', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(importedPathway),
+        })
+      } else {
+        await route.continue()
+      }
+    })
+    await page.route('**/pathway-analysis/999/generation', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+    })
+
     // Navigate to a new pathway so the import button is visible
     await page.route('**/pathway-analysis?size=*', async (route) => {
       await route.fulfill({
@@ -334,21 +350,28 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
     const ir = atlasDemoIncidenceRates[0]
     let importCalled = false
 
+    const importedIR = { ...ir, id: 999, expression: JSON.stringify(ir.expression) }
+
     await page.route('**/ir/design', async (route) => {
       if (route.request().method() === 'POST') {
         importCalled = true
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({
-            ...ir,
-            id: 999,
-            expression: JSON.stringify(ir.expression),
-          }),
+          body: JSON.stringify(importedIR),
         })
       } else {
         await route.continue()
       }
+    })
+
+    await page.route('**/ir/999', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(importedIR) })
+      } else { await route.continue() }
+    })
+    await page.route('**/ir/999/info', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
     })
 
     await page.goto('/incidence-rates/new')
@@ -509,23 +532,28 @@ test.describe('Atlas Characterization Compatibility', () => {
     const char = atlasDemoCharacterizations[0]
     let importCalled = false
 
+    const importedChar = { ...char, id: 999, cohorts: [], featureAnalyses: [], stratas: [] }
+
     await page.route('**/cohort-characterization/import', async (route) => {
       if (route.request().method() === 'POST') {
         importCalled = true
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({
-            ...char,
-            id: 999,
-            cohorts: [],
-            featureAnalyses: [],
-            stratas: [],
-          }),
+          body: JSON.stringify(importedChar),
         })
       } else {
         await route.continue()
       }
+    })
+
+    await page.route('**/cohort-characterization/999', async (route) => {
+      if (route.request().method() === 'GET') {
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(importedChar) })
+      } else { await route.continue() }
+    })
+    await page.route('**/cohort-characterization/999/generation', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
     })
 
     // Navigate to an existing characterization first to get the import button
