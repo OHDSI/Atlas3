@@ -30,6 +30,10 @@ export function clearCohortStore(): void {
   cohortStore.clear()
 }
 
+export function seedCohortStore(id: number, data: Record<string, unknown>): void {
+  cohortStore.set(id, data)
+}
+
 // Load the person profile fixture (JSON) at module load time. We avoid
 // `import x from '*.json'` because the test runner's ESM mode requires an
 // explicit `with { type: 'json' }` attribute; readFileSync sidesteps that.
@@ -438,6 +442,32 @@ export async function setupBasicMocks(page: Page) {
         expression: '{"ConceptSets":[{"id":0,"name":"ACE Inhibitors","expression":{"items":[]}}]}'
       })
     })
+  })
+
+  // Mock i18n endpoints (locale list + translation bundles)
+  await page.route('**/WebAPI/i18n/locales', async (route: Route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '["en"]' })
+  })
+  await page.route('**/WebAPI/i18n**', async (route: Route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+  })
+
+  // Mock job execution polling endpoint
+  await page.route('**/job/execution**', async (route: Route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '{"content":[]}' })
+  })
+
+  // Mock TrexSQL cache endpoints
+  await page.route('**/trexsql/**/cache/**', async (route: Route) => {
+    await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' })
+  })
+  await page.route('**/trexsql/cache/**', async (route: Route) => {
+    await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' })
+  })
+
+  // Mock cohort definition checkV2 endpoint
+  await page.route('**/cohortdefinition/checkV2**', async (route: Route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
   })
 }
 

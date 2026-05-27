@@ -8,14 +8,18 @@
  */
 
 import { test, expect, type Page } from '@playwright/test'
-import { setupBasicMocks, clearCohortStore } from './helpers/api-mocks'
+import { setupBasicMocks, clearCohortStore, seedCohortStore } from './helpers/api-mocks'
 import { waitForPageReady, waitForOverlaysToClose } from './helpers/wait-utils'
 import { atlasDemoCohorts, type AtlasDemoCohort } from './fixtures/atlas-demo'
 
+async function setupAllMocks(page: Page) {
+  clearCohortStore()
+  await setupBasicMocks(page)
+}
+
 test.describe('Atlas Format Compatibility - Cohort Import', () => {
   test.beforeEach(async ({ page }) => {
-    clearCohortStore()
-    await setupBasicMocks(page)
+    await setupAllMocks(page)
   })
 
   for (const cohort of atlasDemoCohorts) {
@@ -53,8 +57,7 @@ test.describe('Atlas Format Compatibility - Cohort Import', () => {
 
 test.describe('Atlas Format Compatibility - Round-Trip via UI', () => {
   test.beforeEach(async ({ page }) => {
-    clearCohortStore()
-    await setupBasicMocks(page)
+    await setupAllMocks(page)
   })
 
   test('import and export preserve expression structure', async ({ page }) => {
@@ -99,21 +102,11 @@ test.describe('Atlas Format Compatibility - Round-Trip via UI', () => {
   test('export JSON button produces valid Atlas-format JSON', async ({ page }) => {
     const cohort = atlasDemoCohorts[0]
 
-    // Set up a cohort in the store that will be loaded
-    await page.route('**/cohortdefinition/500', async (route) => {
-      if (route.request().method() === 'GET') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            id: 500,
-            name: 'Export test cohort',
-            expression: cohort.expression,
-          }),
-        })
-      } else {
-        await route.continue()
-      }
+    // Pre-populate cohort store so the generic mock serves it
+    seedCohortStore(500, {
+      id: 500,
+      name: 'Export test cohort',
+      expression: cohort.expression,
     })
 
     // Navigate directly to the cohort builder
@@ -164,12 +157,11 @@ test.describe('Atlas Format Compatibility - Round-Trip via UI', () => {
 
 test.describe('Atlas Format Compatibility - Expression Structure Preservation', () => {
   test.beforeEach(async ({ page }) => {
-    clearCohortStore()
-    await setupBasicMocks(page)
+    await setupAllMocks(page)
   })
 
   test('Measurement criteria with ValueAsNumber preserves numeric attributes', async ({ page }) => {
-    const cohort = atlasDemoCohorts.find(c => c.id === 99257)!
+    const cohort = atlasDemoCohorts.find(c => c.id === 1)!
     await importCohortViaUI(page, cohort)
 
     const saved = await captureImportedExpression(page, cohort)
@@ -181,7 +173,7 @@ test.describe('Atlas Format Compatibility - Expression Structure Preservation', 
   })
 
   test('ConditionOccurrence with VisitType filter preserves concept arrays', async ({ page }) => {
-    const cohort = atlasDemoCohorts.find(c => c.id === 124552)!
+    const cohort = atlasDemoCohorts.find(c => c.id === 3)!
     await importCohortViaUI(page, cohort)
 
     const saved = await captureImportedExpression(page, cohort)
@@ -192,7 +184,7 @@ test.describe('Atlas Format Compatibility - Expression Structure Preservation', 
   })
 
   test('DrugExposure with First flag preserves boolean attributes', async ({ page }) => {
-    const cohort = atlasDemoCohorts.find(c => c.id === 1662241)!
+    const cohort = atlasDemoCohorts.find(c => c.id === 8)!
     await importCohortViaUI(page, cohort)
 
     const saved = await captureImportedExpression(page, cohort)
@@ -206,7 +198,7 @@ test.describe('Atlas Format Compatibility - Expression Structure Preservation', 
   })
 
   test('Complex cohort with AdditionalCriteria preserves temporal windows', async ({ page }) => {
-    const cohort = atlasDemoCohorts.find(c => c.id === 1770900)!
+    const cohort = atlasDemoCohorts.find(c => c.id === 10)!
     await importCohortViaUI(page, cohort)
 
     const saved = await captureImportedExpression(page, cohort)
@@ -218,8 +210,7 @@ test.describe('Atlas Format Compatibility - Expression Structure Preservation', 
 
 test.describe('Atlas Format Compatibility - Cohort Builder Rendering', () => {
   test.beforeEach(async ({ page }) => {
-    clearCohortStore()
-    await setupBasicMocks(page)
+    await setupAllMocks(page)
   })
 
   for (const cohort of atlasDemoCohorts) {
@@ -234,21 +225,11 @@ test.describe('Atlas Format Compatibility - Cohort Builder Rendering', () => {
         errors.push(err.message)
       })
 
-      // Set up the cohort as a mock endpoint
-      await page.route(`**/cohortdefinition/${cohort.id}`, async (route) => {
-        if (route.request().method() === 'GET') {
-          await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-              id: cohort.id,
-              name: cohort.name,
-              expression: cohort.expression,
-            }),
-          })
-        } else {
-          await route.continue()
-        }
+      // Pre-populate the in-memory cohort store so the generic mock serves it
+      seedCohortStore(cohort.id, {
+        id: cohort.id,
+        name: cohort.name,
+        expression: cohort.expression,
       })
 
       // Navigate to the cohort builder
