@@ -8,7 +8,7 @@ import type {
   QualifyingLimit,
   LogicType,
 } from '@/models/cohort.types'
-import type { EventAttribute } from '@/models/event.types'
+import type { EventAttribute, TextAttributeKey } from '@/models/event.types'
 import type {
   AtlasConceptSet,
   AtlasCriteria,
@@ -17,6 +17,7 @@ import type {
   ConceptSetItem,
   AtlasCriteriaTypeObject,
   AtlasConceptSetItem,
+  AtlasEndStrategy,
 } from '@/models/atlas.types'
 
 interface AtlasJSON {
@@ -43,6 +44,7 @@ interface AtlasJSON {
     EraPad: number
   }
   CensorWindow?: Record<string, unknown>
+  EndStrategy?: AtlasEndStrategy
 }
 
 const SOURCE_CONCEPT_KEYS: Partial<Record<CriteriaType, string>> = {
@@ -461,16 +463,16 @@ function parseTextFilterAttribute(
   if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
     const filter = raw as { Text?: string; Op?: string }
     if (filter.Text != null) {
-      const opMap: Record<string, string> = {
+      const opMap: Record<string, 'CONTAINS' | 'EQUALS' | 'STARTS_WITH' | 'ENDS_WITH'> = {
         contains: 'CONTAINS',
         eq: 'EQUALS',
         startsWith: 'STARTS_WITH',
         endsWith: 'ENDS_WITH',
       }
       return {
-        type: 'text',
-        attributeKey: attributeKey as 'valueAsString',
-        operator: (filter.Op ? opMap[filter.Op] : 'CONTAINS') || 'CONTAINS',
+        type: 'text' as const,
+        attributeKey: attributeKey as TextAttributeKey,
+        operator: (filter.Op ? opMap[filter.Op] : 'CONTAINS') ?? 'CONTAINS',
         value: filter.Text,
       }
     }

@@ -193,7 +193,7 @@ const outcomeIdRef = computed<number | null>(() => store.selectedOutcomeId)
 const { report } = useIncidenceRateReport(irIdRef, sourceKeyRef, targetIdRef, outcomeIdRef)
 
 const strataNames = computed(() =>
-  (store.currentIR?.expression.strata ?? []).map(s => s.name)
+  (store.currentIR?.expression.strata ?? []).map(s => s.name ?? '')
 )
 
 const availableTargets = computed(() =>

@@ -1,7 +1,7 @@
 <template>
   <div class="rule-editor">
     <AtlasTextField
-      :model-value="rule.name"
+      :model-value="rule.name ?? ''"
       :label="t('incidenceRate.stratifyName', 'Rule name').value"
       hide-details
       class="mb-2"

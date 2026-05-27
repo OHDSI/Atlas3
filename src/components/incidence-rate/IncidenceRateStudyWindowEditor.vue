@@ -16,14 +16,14 @@
     <template v-else>
       <div class="row">
         <AtlasTextField
-          :model-value="store.currentIR?.expression.studyWindow?.startDate"
+          :model-value="store.currentIR?.expression.studyWindow?.startDate ?? ''"
           type="date"
           hide-details
           :label="t('incidenceRate.studyWindowStart', 'Start date').value"
           @update:model-value="(v: string | number) => update('startDate', String(v))"
         />
         <AtlasTextField
-          :model-value="store.currentIR?.expression.studyWindow?.endDate"
+          :model-value="store.currentIR?.expression.studyWindow?.endDate ?? ''"
           type="date"
           hide-details
           :label="t('incidenceRate.studyWindowEnd', 'End date').value"

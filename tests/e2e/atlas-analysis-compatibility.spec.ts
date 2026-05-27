@@ -8,7 +8,7 @@
 
 import { test, expect, type Page } from '@playwright/test'
 import { setupBasicMocks, clearCohortStore } from './helpers/api-mocks'
-import { waitForPageReady, waitForOverlaysToClose } from './helpers/wait-utils'
+import { waitForPageReady } from './helpers/wait-utils'
 import {
   atlasDemoPathways,
   atlasDemoIncidenceRates,
