@@ -147,7 +147,15 @@ export interface UserDefinedPeriodAttribute {
 }
 
 // Attribute keys
-export type NumericAttributeKey = 'age' | 'valueAsNumber' | 'visitLength' | 'eraLength' | 'quantity'
+export type NumericAttributeKey =
+  | 'age' | 'ageAtStart' | 'ageAtEnd'
+  | 'valueAsNumber'
+  | 'visitLength' | 'visitDetailLength' | 'eraLength' | 'periodLength'
+  | 'quantity' | 'refills' | 'daysSupply'
+  | 'effectiveDrugDose' | 'doseValue'
+  | 'rangeLow' | 'rangeHigh' | 'rangeLowRatio' | 'rangeHighRatio'
+  | 'occurrenceCount' | 'gapDays'
+  | 'placeOfServiceDistance'
 
 /**
  * Identifier for a concept-typed attribute. Always camelCase; the canonical list
@@ -162,12 +170,20 @@ export type DateAttributeKey =
   | 'occurrenceEndDate'
   | 'visitStartDate'
   | 'visitEndDate'
+  | 'visitDetailStartDate'
+  | 'visitDetailEndDate'
   | 'eraStartDate'
   | 'eraEndDate'
+  | 'periodStartDate'
+  | 'periodEndDate'
+  | 'startDate'
+  | 'endDate'
 
-export type TextAttributeKey = 'valueAsString' | 'sourceCode'
+export type TextAttributeKey =
+  | 'valueAsString' | 'sourceCode'
+  | 'stopReason' | 'sig' | 'lotNumber' | 'deviceId' | 'sourceId'
 
-export type BooleanAttributeKey = 'first' | 'primary'
+export type BooleanAttributeKey = 'first' | 'primary' | 'abnormal'
 
 export type TemporalAttributeKey = 'temporalRelationship'
 

@@ -336,7 +336,7 @@ export const useIncidenceRateStore = defineStore('incidence-rate', () => {
       })
     }
     if (ir.expression.studyWindow) {
-      if (ir.expression.studyWindow.startDate >= ir.expression.studyWindow.endDate) {
+      if (ir.expression.studyWindow.startDate && ir.expression.studyWindow.endDate && ir.expression.studyWindow.startDate >= ir.expression.studyWindow.endDate) {
         errors.push({
           field: 'studyWindow',
           message: 'Study window start must be before end',

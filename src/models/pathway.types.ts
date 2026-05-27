@@ -28,8 +28,8 @@ export type PathwayCohortRef = z.infer<typeof PathwayCohortRefSchema>
 // nested object on the wire). It powers the `PathwaySettings` editor and
 // is the partial type accepted by `pathwayStore.updateDesign(...)`.
 export const PathwayDesignSchema = z.object({
-  combinationWindow: z.number().int().min(1),
-  minCellCount: z.number().int().min(1),
+  combinationWindow: z.number().int().min(0),
+  minCellCount: z.number().int().min(0),
   maxDepth: z.number().int().min(1).max(10),
   allowRepeats: z.boolean(),
 })
@@ -43,8 +43,8 @@ export const PathwaySchema = z
     description: z.string().optional(),
     targetCohorts: z.array(PathwayCohortRefSchema).default([]),
     eventCohorts: z.array(PathwayCohortRefSchema).default([]),
-    combinationWindow: z.number().int().min(1).default(30),
-    minCellCount: z.number().int().min(1).default(5),
+    combinationWindow: z.number().int().min(0).default(30),
+    minCellCount: z.number().int().min(0).default(5),
     maxDepth: z.number().int().min(1).max(10).default(5),
     allowRepeats: z.boolean().default(false),
     tags: z.array(TagSchema).default([]),

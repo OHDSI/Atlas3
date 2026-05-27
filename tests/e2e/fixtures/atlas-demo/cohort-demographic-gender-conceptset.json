@@ -1,0 +1,78 @@
+{
+  "cdmVersionRange": ">=5.0.0",
+  "PrimaryCriteria": {
+    "CriteriaList": [],
+    "ObservationWindow": {
+      "PriorDays": 0,
+      "PostDays": 0
+    },
+    "PrimaryCriteriaLimit": {
+      "Type": "First"
+    }
+  },
+  "ConceptSets": [],
+  "QualifiedLimit": {
+    "Type": "First"
+  },
+  "ExpressionLimit": {
+    "Type": "First"
+  },
+  "InclusionRules": [
+    {
+      "name": "gender_female",
+      "expression": {
+        "Type": "ALL",
+        "CriteriaList": [],
+        "DemographicCriteriaList": [
+          {
+            "Gender": [
+              {
+                "CONCEPT_ID": 4251434,
+                "CONCEPT_NAME": "Surgically transgendered transsexual, male-to-female",
+                "STANDARD_CONCEPT": null,
+                "STANDARD_CONCEPT_CAPTION": "Unknown",
+                "INVALID_REASON": null,
+                "INVALID_REASON_CAPTION": "Unknown",
+                "CONCEPT_CODE": "407378000",
+                "DOMAIN_ID": "Gender",
+                "VOCABULARY_ID": "SNOMED",
+                "CONCEPT_CLASS_ID": null
+              },
+              {
+                "CONCEPT_ID": 4231242,
+                "CONCEPT_NAME": "Surgically transgendered transsexual, female-to-male",
+                "STANDARD_CONCEPT": null,
+                "STANDARD_CONCEPT_CAPTION": "Unknown",
+                "INVALID_REASON": null,
+                "INVALID_REASON_CAPTION": "Unknown",
+                "CONCEPT_CODE": "407379008",
+                "DOMAIN_ID": "Gender",
+                "VOCABULARY_ID": "SNOMED",
+                "CONCEPT_CLASS_ID": null
+              },
+              {
+                "CONCEPT_ID": 8532,
+                "CONCEPT_NAME": "FEMALE",
+                "STANDARD_CONCEPT": null,
+                "STANDARD_CONCEPT_CAPTION": "Unknown",
+                "INVALID_REASON": null,
+                "INVALID_REASON_CAPTION": "Unknown",
+                "CONCEPT_CODE": "F",
+                "DOMAIN_ID": "Gender",
+                "VOCABULARY_ID": "Gender",
+                "CONCEPT_CLASS_ID": null
+              }
+            ]
+          }
+        ],
+        "Groups": []
+      }
+    }
+  ],
+  "CensoringCriteria": [],
+  "CollapseSettings": {
+    "CollapseType": "ERA",
+    "EraPad": 0
+  },
+  "CensorWindow": {}
+}

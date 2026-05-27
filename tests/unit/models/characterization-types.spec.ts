@@ -25,11 +25,11 @@ describe('LinkedCohortSchema', () => {
     expect(LinkedCohortSchema.safeParse({ id: 1, name: 'A' }).success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough', () => {
     const result = LinkedCohortSchema.safeParse({ id: 1, name: 'A', expressionType: 'X' })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('expressionType')
+      expect(result.data).toHaveProperty('expressionType')
     }
   })
 
@@ -53,11 +53,11 @@ describe('LinkedFeatureAnalysisSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough', () => {
     const result = LinkedFeatureAnalysisSchema.safeParse({ id: 1, futureField: true })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('futureField')
+      expect(result.data).toHaveProperty('futureField')
     }
   })
 
@@ -76,7 +76,7 @@ describe('StratumSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough', () => {
     const result = StratumSchema.safeParse({
       id: 'a',
       name: 'b',
@@ -85,7 +85,7 @@ describe('StratumSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('futureField')
+      expect(result.data).toHaveProperty('futureField')
     }
   })
 
@@ -101,7 +101,7 @@ describe('CharacterizationParameterSchema', () => {
     ).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough', () => {
     const result = CharacterizationParameterSchema.safeParse({
       name: 't',
       value: 1,
@@ -109,7 +109,7 @@ describe('CharacterizationParameterSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('futureField')
+      expect(result.data).toHaveProperty('futureField')
     }
   })
 
@@ -145,7 +145,7 @@ describe('CharacterizationDefinitionSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('strips unknown fields from WebAPI', () => {
+  it('preserves unknown fields via passthrough from WebAPI', () => {
     const result = CharacterizationDefinitionSchema.safeParse({
       name: 'X',
       cohorts: [],
@@ -155,7 +155,7 @@ describe('CharacterizationDefinitionSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('hasWriteAccess')
+      expect(result.data).toHaveProperty('hasWriteAccess')
     }
   })
 
@@ -185,7 +185,7 @@ describe('CharacterizationListItemSchema', () => {
     expect(CharacterizationListItemSchema.safeParse(item).success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough', () => {
     const result = CharacterizationListItemSchema.safeParse({
       id: 1,
       name: 'X',
@@ -193,7 +193,7 @@ describe('CharacterizationListItemSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('hasWriteAccess')
+      expect(result.data).toHaveProperty('hasWriteAccess')
     }
   })
 
@@ -241,7 +241,7 @@ describe('CharacterizationExecutionSchema', () => {
     expect(CharacterizationExecutionSchema.safeParse(exec).success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough', () => {
     const result = CharacterizationExecutionSchema.safeParse({
       id: 1,
       status: 'PENDING',
@@ -250,7 +250,7 @@ describe('CharacterizationExecutionSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('executionId')
+      expect(result.data).toHaveProperty('executionId')
     }
   })
 
@@ -280,7 +280,7 @@ describe('PrevalenceStatSchema', () => {
     expect(PrevalenceStatSchema.safeParse(stat).success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough', () => {
     const result = PrevalenceStatSchema.safeParse({
       analysisId: 1,
       analysisName: 'X',
@@ -294,7 +294,7 @@ describe('PrevalenceStatSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('futureField')
+      expect(result.data).toHaveProperty('futureField')
     }
   })
 
@@ -334,7 +334,7 @@ describe('DistributionStatSchema', () => {
     expect(DistributionStatSchema.safeParse(stat).success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough', () => {
     const base = {
       analysisId: 2,
       analysisName: 'Age',
@@ -356,7 +356,7 @@ describe('DistributionStatSchema', () => {
     const result = DistributionStatSchema.safeParse(base)
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('futureField')
+      expect(result.data).toHaveProperty('futureField')
     }
   })
 
@@ -404,7 +404,7 @@ describe('ComparativeDistributionStatSchema', () => {
     expect(ComparativeDistributionStatSchema.safeParse(stat).success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough', () => {
     const result = ComparativeDistributionStatSchema.safeParse({
       analysisId: 1,
       analysisName: 'X',
@@ -426,7 +426,7 @@ describe('ComparativeDistributionStatSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('futureField')
+      expect(result.data).toHaveProperty('futureField')
     }
   })
 
@@ -463,7 +463,7 @@ describe('TemporalDataPointSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('strips unknown fields', () => {
+  it('preserves unknown fields via passthrough', () => {
     const result = TemporalDataPointSchema.safeParse({
       timeId: 0,
       count: 1,
@@ -472,7 +472,7 @@ describe('TemporalDataPointSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data).not.toHaveProperty('futureField')
+      expect(result.data).toHaveProperty('futureField')
     }
   })
 

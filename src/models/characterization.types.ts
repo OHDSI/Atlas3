@@ -29,7 +29,7 @@ export const LinkedCohortSchema = z
     id: z.number(),
     name: z.string(),
   })
-  .strip()
+  .passthrough()
 
 export interface LinkedFeatureAnalysis {
   id: number
@@ -56,7 +56,7 @@ export const LinkedFeatureAnalysisSchema = z
     includeTemporal: z.boolean().optional(),
     statType: z.enum(['PREVALENCE', 'DISTRIBUTION']).optional(),
   })
-  .strip()
+  .passthrough()
 
 // ============================================================================
 // Strata & parameters
@@ -75,7 +75,7 @@ export const StratumSchema = z
     name: z.string(),
     criteria: z.unknown(),
   })
-  .strip()
+  .passthrough()
 
 export interface CharacterizationParameter {
   name: string
@@ -87,7 +87,7 @@ export const CharacterizationParameterSchema = z
     name: z.string(),
     value: z.unknown(),
   })
-  .strip()
+  .passthrough()
 
 // ============================================================================
 // Shared user/tag/concept-set ref schemas
@@ -100,7 +100,7 @@ const UserRefSchema = z.union([
       login: z.string(),
       name: z.string().optional(),
     })
-    .strip(),
+    .passthrough(),
 ])
 
 const TagSchema = z
@@ -109,7 +109,7 @@ const TagSchema = z
     name: z.string(),
     color: z.string().optional(),
   })
-  .strip()
+  .passthrough()
 
 const ConceptSetReferenceSchema = z
   .object({
@@ -118,7 +118,7 @@ const ConceptSetReferenceSchema = z
     conceptCount: z.number().optional(),
     items: z.array(z.unknown()).optional(),
   })
-  .strip()
+  .passthrough()
 
 // ============================================================================
 // CharacterizationDefinition
@@ -161,7 +161,7 @@ export const CharacterizationDefinitionSchema = z
     modifiedBy: UserRefSchema.optional(),
     modifiedDate: z.number().optional(),
   })
-  .strip()
+  .passthrough()
 
 // ============================================================================
 // List endpoint (lighter shape — full design not returned)
@@ -191,7 +191,7 @@ export const CharacterizationListItemSchema = z
     createdDate: z.number().optional(),
     modifiedDate: z.number().optional(),
   })
-  .strip()
+  .passthrough()
 
 // ============================================================================
 // Generation / execution
@@ -251,7 +251,7 @@ export const CharacterizationExecutionSchema = z
     cdmDatabaseSchema: z.string().optional(),
     exitMessage: z.string().optional(),
   })
-  .strip()
+  .passthrough()
 
 // ============================================================================
 // Result statistics
@@ -291,7 +291,7 @@ export const PrevalenceStatSchema = z
     pct: NestedNumberMapSchema,
     stdDiff: z.number().optional(),
   })
-  .strip()
+  .passthrough()
 
 export interface DistributionStat {
   analysisId: number
@@ -335,7 +335,7 @@ export const DistributionStatSchema = z
     p90: NestedNumberMapSchema,
     max: NestedNumberMapSchema,
   })
-  .strip()
+  .passthrough()
 
 export interface ComparativeDistributionStat extends DistributionStat {
   stdDiff: number
@@ -359,7 +359,7 @@ export const TemporalDataPointSchema = z
     count: z.number(),
     pct: z.number(),
   })
-  .strip()
+  .passthrough()
 
 export interface Table1Config {
   groupByAnalysis: boolean

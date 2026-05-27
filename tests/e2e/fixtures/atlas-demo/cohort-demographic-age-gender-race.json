@@ -1,0 +1,93 @@
+{
+  "cdmVersionRange": ">=5.0.0",
+  "PrimaryCriteria": {
+    "CriteriaList": [],
+    "ObservationWindow": {
+      "PriorDays": 0,
+      "PostDays": 0
+    },
+    "PrimaryCriteriaLimit": {
+      "Type": "First"
+    }
+  },
+  "ConceptSets": [],
+  "QualifiedLimit": {
+    "Type": "First"
+  },
+  "ExpressionLimit": {
+    "Type": "First"
+  },
+  "InclusionRules": [
+    {
+      "name": "Demographics",
+      "expression": {
+        "Type": "ALL",
+        "CriteriaList": [],
+        "DemographicCriteriaList": [
+          {
+            "Age": {
+              "Value": 18,
+              "Op": "gt",
+              "Extent": 20
+            }
+          },
+          {
+            "Gender": [
+              {
+                "CONCEPT_ID": 8532,
+                "CONCEPT_NAME": "FEMALE",
+                "STANDARD_CONCEPT": null,
+                "STANDARD_CONCEPT_CAPTION": "Unknown",
+                "INVALID_REASON": null,
+                "INVALID_REASON_CAPTION": "Unknown",
+                "CONCEPT_CODE": "F",
+                "DOMAIN_ID": "Gender",
+                "VOCABULARY_ID": "Gender",
+                "CONCEPT_CLASS_ID": null
+              }
+            ]
+          },
+          {
+            "Race": [
+              {
+                "CONCEPT_ID": 8527,
+                "CONCEPT_NAME": "White",
+                "STANDARD_CONCEPT": null,
+                "STANDARD_CONCEPT_CAPTION": "Unknown",
+                "INVALID_REASON": null,
+                "INVALID_REASON_CAPTION": "Unknown",
+                "CONCEPT_CODE": "5",
+                "DOMAIN_ID": "Race",
+                "VOCABULARY_ID": "Race",
+                "CONCEPT_CLASS_ID": null
+              }
+            ]
+          },
+          {
+            "Ethnicity": [
+              {
+                "CONCEPT_ID": 38003564,
+                "CONCEPT_NAME": "Not Hispanic or Latino",
+                "STANDARD_CONCEPT": null,
+                "STANDARD_CONCEPT_CAPTION": "Unknown",
+                "INVALID_REASON": null,
+                "INVALID_REASON_CAPTION": "Unknown",
+                "CONCEPT_CODE": "Not Hispanic",
+                "DOMAIN_ID": "Ethnicity",
+                "VOCABULARY_ID": "Ethnicity",
+                "CONCEPT_CLASS_ID": null
+              }
+            ]
+          }
+        ],
+        "Groups": []
+      }
+    }
+  ],
+  "CensoringCriteria": [],
+  "CollapseSettings": {
+    "CollapseType": "ERA",
+    "EraPad": 0
+  },
+  "CensorWindow": {}
+}

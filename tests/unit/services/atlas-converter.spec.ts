@@ -2971,7 +2971,8 @@ describe('Atlas Converter - Phase 1 Attributes (US1)', () => {
 
       const atlasJSON = convertInternalToAtlas(cohort)
 
-      expect(atlasJSON.PrimaryCriteria.CriteriaList[0]?.Observation?.ValueAsString).toBe('abnormal')
+      const vas = atlasJSON.PrimaryCriteria.CriteriaList[0]?.Observation?.ValueAsString as { Text: string; Op: string }
+      expect(vas).toEqual({ Text: 'abnormal', Op: 'contains' })
     })
 
     it('round-trips text attribute', () => {
