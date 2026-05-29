@@ -191,7 +191,19 @@ function selectProvider(provider: AuthProvider) {
   }
 
   if (!provider.isUseCredentialsForm && !provider.ajax) {
+    // Redirect-based provider (OAuth, SAML, etc.)
     auth.login(provider.url)
+  } else if (!provider.isUseCredentialsForm && provider.ajax) {
+    // AJAX provider without credentials form (Windows/NTLM/Kerberos)
+    handleAjaxLogin(provider)
+  }
+}
+
+async function handleAjaxLogin(provider: AuthProvider) {
+  try {
+    await authService.loginAjax(provider.url)
+  } catch (error) {
+    logger.error('LoginModal', 'AJAX login failed', error)
   }
 }
 

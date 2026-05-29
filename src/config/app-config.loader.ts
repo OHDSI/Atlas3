@@ -18,6 +18,7 @@ export async function loadAppConfig(): Promise<AppConfig> {
         resolvedConfig.api = { ...defaultAppConfig.api, ...overrides.api }
       }
     } else {
+      // eslint-disable-next-line no-console -- runs before app bootstrap; logger not yet available
       console.warn(
         '[AppConfig] No config-local.json found (HTTP %d). Using default configuration.',
         response.status
@@ -25,6 +26,7 @@ export async function loadAppConfig(): Promise<AppConfig> {
       resolvedConfig = { ...defaultAppConfig }
     }
   } catch (error) {
+    // eslint-disable-next-line no-console -- runs before app bootstrap; logger not yet available
     console.warn('[AppConfig] Failed to load config-local.json, using defaults.', error)
     resolvedConfig = { ...defaultAppConfig }
   }
