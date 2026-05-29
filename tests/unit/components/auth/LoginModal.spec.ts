@@ -24,7 +24,7 @@ vi.mock('@/utils/logger', () => ({
 
 // Mock auth config
 vi.mock('@/config/auth.config', () => ({
-  authConfig: {
+  getAuthConfig: () => ({
     userAuthenticationEnabled: true,
     authProviders: [
       {
@@ -35,7 +35,7 @@ vi.mock('@/config/auth.config', () => ({
         isUseCredentialsForm: true,
       },
     ],
-  },
+  }),
 }))
 
 // Mock auth service

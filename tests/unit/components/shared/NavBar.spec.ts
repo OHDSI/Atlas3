@@ -71,9 +71,10 @@ vi.mock('@/stores/ui', () => ({
 
 // Mock auth config
 vi.mock('@/config/auth.config', () => ({
-  authConfig: {
-    enableSkipLogin: false
-  }
+  getAuthConfig: () => ({
+    userAuthenticationEnabled: true,
+    enableSkipLogin: false,
+  }),
 }))
 
 // Mock plugin-related modules

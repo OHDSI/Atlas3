@@ -12,7 +12,6 @@ vi.mock('@/services/auth/authService', () => ({
     logout: vi.fn(),
     refreshToken: vi.fn(),
     runAs: vi.fn(),
-    exitRunAs: vi.fn(),
   },
 }))
 
@@ -191,18 +190,6 @@ describe('useAuth', () => {
       await runAs('targetuser')
 
       expect(authService.runAs).toHaveBeenCalledWith('targetuser')
-    })
-  })
-
-  describe('exitRunAs', () => {
-    it('should call authService.exitRunAs', async () => {
-      vi.mocked(authService.exitRunAs).mockResolvedValue()
-
-      const { exitRunAs } = useAuth()
-
-      await exitRunAs()
-
-      expect(authService.exitRunAs).toHaveBeenCalled()
     })
   })
 

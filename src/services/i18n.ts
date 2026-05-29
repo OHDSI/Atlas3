@@ -5,9 +5,11 @@
 import { z } from 'zod'
 import { logger } from '@/utils/logger'
 import type { Locale, TranslationBundle, LocaleCode, Translations } from '@/types/i18n'
-import { WEBAPI_BASE_URL } from '@/config/webapi'
+import { getAppConfig } from '@/config/app-config.loader'
 
-const API_BASE_URL = WEBAPI_BASE_URL
+function getApiBaseUrl(): string {
+  return getAppConfig().api.url
+}
 
 // Zod schemas for runtime validation
 const LocaleSchema = z.object({
@@ -55,7 +57,7 @@ export async function fetchLocales(): Promise<Locale[]> {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${API_BASE_URL}/i18n/locales`, { headers })
+    const response = await fetch(`${getApiBaseUrl()}/i18n/locales`, { headers })
     if (!response.ok) {
       throw new Error(`Failed to fetch locales: ${response.statusText}`)
     }
@@ -89,7 +91,7 @@ export async function fetchLocales(): Promise<Locale[]> {
  */
 export async function fetchTranslations(locale: LocaleCode): Promise<TranslationBundle> {
   try {
-    const response = await fetch(`${API_BASE_URL}/i18n?lang=${locale}`)
+    const response = await fetch(`${getApiBaseUrl()}/i18n?lang=${locale}`)
     if (!response.ok) {
       throw new Error(`Failed to fetch translations for ${locale}: ${response.statusText}`)
     }

@@ -9,11 +9,18 @@
  */
 export const DEFAULT_SOURCE_KEY = 'SYNPUF1K'
 
+import { getAppConfig } from '@/config/app-config.loader'
+
 /**
  * WebAPI base URL
- * Uses Vite proxy in development, environment variable in production
+ * Resolved from runtime configuration (config-local.json).
  */
-export const WEBAPI_BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
+export function getWebAPIBaseUrl(): string {
+  return getAppConfig().api.url
+}
+
+/** @deprecated Use getWebAPIBaseUrl() instead */
+export const WEBAPI_BASE_URL = '/WebAPI'
 
 /** Get vocabulary source key from localStorage or default */
 export function getSourceKey(): string {

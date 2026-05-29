@@ -3,8 +3,7 @@
  * Handles authentication, retries, and common headers for all API requests.
  */
 import { logger } from '@/utils/logger'
-
-const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
+import { getAppConfig } from '@/config/app-config.loader'
 const MAX_RETRY_ATTEMPTS = 3
 const INITIAL_RETRY_DELAY_MS = 500
 
@@ -82,7 +81,7 @@ export interface HttpClientResponse<T> {
 }
 
 export async function httpClient<T>(endpoint: string, options: HttpClientOptions = {}): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`
+  const url = `${getAppConfig().api.url}${endpoint}`
   const maxRetries = options.maxRetries ?? MAX_RETRY_ATTEMPTS
   const initialDelay = options.initialRetryDelay ?? INITIAL_RETRY_DELAY_MS
   let lastError: Error | null = null
@@ -204,5 +203,5 @@ export function httpDelete<T>(
 }
 
 export function getBaseUrl(): string {
-  return BASE_URL
+  return getAppConfig().api.url
 }

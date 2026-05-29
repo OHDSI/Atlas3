@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores/auth'
 import { logger } from '@/utils/logger'
-import { authConfig } from '@/config/auth.config'
+import { getAuthConfig } from '@/config/auth.config'
 
 /**
  * Sets up fetch interceptor that handles 401 responses.
@@ -27,7 +27,7 @@ export function setupAuthInterceptor() {
           const authStore = useAuthStore()
           if (!authStore.isAuthenticating && !authStore.isRefreshing) {
             authStore.clearAuth()
-            if (authConfig.userAuthenticationEnabled) {
+            if (getAuthConfig().userAuthenticationEnabled) {
               authStore.openLoginModal()
             }
           }

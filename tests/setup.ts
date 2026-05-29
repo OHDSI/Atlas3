@@ -126,3 +126,23 @@ global.fetch = vi.fn().mockResolvedValue({
   body: null,
   bodyUsed: false,
 } as Response)
+
+// Mock app-config.loader so all tests get a resolved config without fetching
+vi.mock('@/config/app-config.loader', () => ({
+  loadAppConfig: vi.fn().mockResolvedValue(undefined),
+  getAppConfig: () => ({
+    api: { url: '/WebAPI' },
+    userAuthenticationEnabled: false,
+    enableSkipLogin: false,
+    enablePermissionManagement: true,
+    authProviders: [],
+    refreshTokenThreshold: 900000,
+    enableIAPSession: false,
+    enableTermsAndConditions: false,
+    enablePythia: false,
+    enablePersonCount: true,
+    enableTaggingSection: false,
+    defaultLocale: 'en',
+    pollInterval: 60000,
+  }),
+}))

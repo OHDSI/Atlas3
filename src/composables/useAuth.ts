@@ -38,10 +38,6 @@ export function useAuth() {
       return authService.runAs(targetUsername)
     },
 
-    async exitRunAs(): Promise<void> {
-      return authService.exitRunAs()
-    },
-
     hasPermission(permission: string): boolean {
       return permissionChecker.hasPermission(permission, authStore.permissions).granted
     },

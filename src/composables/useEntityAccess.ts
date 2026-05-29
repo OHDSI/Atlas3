@@ -16,7 +16,7 @@
 
 import { computed, type ComputedRef, type MaybeRefOrGetter, toValue } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { authConfig } from '@/config/auth.config'
+import { getAuthConfig } from '@/config/auth.config'
 import type { EntityAccessKind, EntityGrant } from '@/models/auth.types'
 import { permissionChecker } from '@/services/auth/permissionChecker'
 
@@ -139,7 +139,7 @@ export function useSourceAccess(sourceKey: MaybeRefOrGetter<string | null | unde
   })
 
   const canRead = computed(() => {
-    if (!authConfig.userAuthenticationEnabled) return true
+    if (!getAuthConfig().userAuthenticationEnabled) return true
     if (
       permissionChecker.hasPermission('read:source', authStore.permissions).granted ||
       permissionChecker.hasPermission('write:source', authStore.permissions).granted ||
@@ -153,7 +153,7 @@ export function useSourceAccess(sourceKey: MaybeRefOrGetter<string | null | unde
   })
 
   const canWrite = computed(() => {
-    if (!authConfig.userAuthenticationEnabled) return true
+    if (!getAuthConfig().userAuthenticationEnabled) return true
     if (
       permissionChecker.hasPermission('write:source', authStore.permissions).granted ||
       permissionChecker.hasPermission('admin:source', authStore.permissions).granted
@@ -173,7 +173,7 @@ export function useSourceAccessFor() {
     permissionChecker.hasPermission(perm, authStore.permissions).granted
 
   function canRead(sourceKey: string | null | undefined): boolean {
-    if (!authConfig.userAuthenticationEnabled) return true
+    if (!getAuthConfig().userAuthenticationEnabled) return true
     if (
       has('read:source') ||
       has('write:source') ||
@@ -188,7 +188,7 @@ export function useSourceAccessFor() {
   }
 
   function canWrite(sourceKey: string | null | undefined): boolean {
-    if (!authConfig.userAuthenticationEnabled) return true
+    if (!getAuthConfig().userAuthenticationEnabled) return true
     if (has('write:source') || has('admin:source')) return true
     if (!sourceKey) return false
     const g = authStore.entityAccess.source[sourceKey]

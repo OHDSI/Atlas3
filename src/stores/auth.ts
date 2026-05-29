@@ -5,7 +5,7 @@ import { storageManager } from '@/services/auth/storageManager'
 import { tokenManager } from '@/services/auth/tokenManager'
 import { refreshManager } from '@/services/auth/refreshManager'
 import { permissionService } from '@/services/auth/permissions'
-import { authConfig } from '@/config/auth.config'
+import { getAuthConfig } from '@/config/auth.config'
 import { logger } from '@/utils/logger'
 
 // Storage handler reference for cleanup
@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = token
       this.tokenExpirationDate = parsedToken.expirationDate
       this.tokenExpired = parsedToken.isExpired
-      this.isAuthenticated = !parsedToken.isExpired && authConfig.userAuthenticationEnabled
+      this.isAuthenticated = !parsedToken.isExpired && getAuthConfig().userAuthenticationEnabled
 
       storageManager.saveToken(token)
 
@@ -197,7 +197,7 @@ export const useAuthStore = defineStore('auth', {
 
       const timeoutId = refreshManager.scheduleRefresh(
         this.token,
-        authConfig.refreshTokenThreshold,
+        getAuthConfig().refreshTokenThreshold,
         async () => {
           return await this.performTokenRefresh()
         }
@@ -288,7 +288,7 @@ export const useAuthStore = defineStore('auth', {
           } catch (error) {
             logger.error('Auth', 'Failed to fetch user info on init', error)
             this.clearAuth()
-            if (authConfig.userAuthenticationEnabled) {
+            if (getAuthConfig().userAuthenticationEnabled) {
               this.openLoginModal()
             }
           }

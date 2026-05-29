@@ -7,11 +7,11 @@ import { setActivePinia, createPinia } from 'pinia'
 
 // Mock dependencies before importing authService
 vi.mock('@/config/auth.config', () => ({
-  authConfig: {
+  getAuthConfig: () => ({
     webAPIRoot: 'http://test-api.com',
     userAuthenticationEnabled: true,
     refreshTokenThreshold: 300000,
-  },
+  }),
 }))
 
 vi.mock('@/services/auth/storageManager', () => ({
@@ -93,86 +93,6 @@ describe('AuthService', () => {
     vi.restoreAllMocks()
   })
 
-  describe('detectIAP', () => {
-    it('should return true when IAP header is present', async () => {
-      mockFetch.mockResolvedValueOnce({
-        headers: createHeadersMock({ 'x-goog-iap-jwt-assertion': 'token' }),
-      })
-
-      const result = await authService.detectIAP()
-
-      expect(result).toBe(true)
-      expect(mockFetch).toHaveBeenCalledWith('http://test-api.com/info', {
-        method: 'HEAD',
-      })
-    })
-
-    it('should return false when IAP header is not present', async () => {
-      mockFetch.mockResolvedValueOnce({
-        headers: createHeadersMock({}),
-      })
-
-      const result = await authService.detectIAP()
-
-      expect(result).toBe(false)
-    })
-
-    it('should return false on fetch error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      const result = await authService.detectIAP()
-
-      expect(result).toBe(false)
-    })
-  })
-
-  describe('loginWithIAP', () => {
-    it('should authenticate via IAP and set user', async () => {
-      const mockToken = 'iap-token'
-      const mockUserInfo = {
-        login: 'iapuser',
-        name: 'IAP User',
-        email: 'iap@example.com',
-      }
-
-      mockFetch
-        .mockResolvedValueOnce({
-          ok: true,
-          headers: createHeadersMock({ 'Bearer': mockToken }),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          headers: createHeadersMock({}),
-          json: () => Promise.resolve(mockUserInfo),
-        })
-
-      await authService.loginWithIAP()
-
-      const authStore = useAuthStore()
-      expect(authStore.token).toBe(mockToken)
-      expect(authStore.authClient).toBe('IAP')
-      expect(authStore.user?.login).toBe('iapuser')
-    })
-
-    it('should throw error on IAP authentication failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        headers: createHeadersMock({}),
-      })
-
-      await expect(authService.loginWithIAP()).rejects.toThrow('IAP authentication failed')
-    })
-
-    it('should throw error when no token received from IAP', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        headers: createHeadersMock({}),
-      })
-
-      await expect(authService.loginWithIAP()).rejects.toThrow('No token received from IAP authentication')
-    })
-  })
-
   describe('login', () => {
     it('should authenticate with credentials', async () => {
       const mockToken = 'test-token'
@@ -185,7 +105,8 @@ describe('AuthService', () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          headers: createHeadersMock({ 'Bearer': mockToken }),
+          headers: createHeadersMock({}),
+          json: () => Promise.resolve({ login: 'testuser', jwt: mockToken, roles: [], message: 'Login successful' }),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -236,6 +157,7 @@ describe('AuthService', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         headers: createHeadersMock({}),
+        json: () => Promise.resolve({ login: null, jwt: null, roles: null, message: 'User not found' }),
       })
 
       await expect(
@@ -243,7 +165,7 @@ describe('AuthService', () => {
           username: 'testuser',
           password: 'password',
         })
-      ).rejects.toThrow('No token received from server')
+      ).rejects.toThrow('User not found')
     })
   })
 
@@ -265,40 +187,6 @@ describe('AuthService', () => {
 
       const authStore = useAuthStore()
       expect(authStore.token).toBeNull()
-    })
-
-    it('should redirect for IAP logout', async () => {
-      vi.mocked(storageManager.getAuthClient).mockReturnValue('IAP')
-
-      // Mock fetch for the initial logout call
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({}),
-      })
-
-      // Create a location mock with setter tracking
-      let capturedHref = ''
-      const locationMock = {
-        get href() { return capturedHref },
-        set href(val: string) { capturedHref = val },
-        origin: 'http://localhost:3000',
-        pathname: '/',
-      }
-
-      // Store original and replace
-      const originalLocation = window.location
-      // @ts-expect-error - Replacing location for testing
-      delete window.location
-      // @ts-expect-error - Assigning mock location
-      window.location = locationMock
-
-      await authService.logout()
-
-      expect(capturedHref).toBe('/_gcp_iap/clear_login_cookie')
-
-      // Restore original
-      // @ts-expect-error - Restoring original location
-      window.location = originalLocation
     })
 
     it('should perform SAML logout', async () => {
@@ -371,7 +259,7 @@ describe('AuthService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        headers: createHeadersMock({ 'Bearer': 'new-token' }),
+        json: () => Promise.resolve({ login: 'admin', jwt: 'new-token', roles: [], message: 'Refreshed' }),
       })
 
       const result = await authService.refreshToken()
@@ -405,7 +293,7 @@ describe('AuthService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        headers: createHeadersMock({}),
+        json: () => Promise.resolve({ login: null, jwt: null, roles: null, message: 'No session.' }),
       })
 
       const result = await authService.refreshToken()
@@ -430,7 +318,7 @@ describe('AuthService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        headers: createHeadersMock({ 'Bearer': 'new-token' }),
+        json: () => Promise.resolve({ login: 'admin', jwt: 'new-token', roles: [], message: 'Refreshed' }),
       })
 
       await authService.refreshToken()
@@ -441,30 +329,6 @@ describe('AuthService', () => {
       )
       const init = mockFetch.mock.calls[0][1] as RequestInit
       expect(init.body).toBeUndefined()
-    })
-
-    it('should fall back to body.jwt when Bearer header is absent (WebAPI 3.0)', async () => {
-      const authStore = useAuthStore()
-      authStore.setToken('old-token')
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        headers: createHeadersMock({}),
-        clone: () => ({
-          json: () =>
-            Promise.resolve({
-              login: 'admin',
-              jwt: 'new-token-from-body',
-              roles: [],
-              message: 'Refreshed Token in for session',
-            }),
-        }),
-      })
-
-      const result = await authService.refreshToken()
-
-      expect(result).toBe(true)
-      expect(authStore.token).toBe('new-token-from-body')
     })
   })
 
@@ -602,7 +466,7 @@ describe('AuthService', () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          headers: createHeadersMock({ 'Bearer': 'impersonated-token' }),
+          json: () => Promise.resolve({ login: 'targetuser', jwt: 'impersonated-token', roles: [], message: 'Login successful' }),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -637,62 +501,10 @@ describe('AuthService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        headers: createHeadersMock({}),
+        json: () => Promise.resolve({ login: null, jwt: null, roles: null, message: 'User not found' }),
       })
 
-      await expect(authService.runAs('targetuser')).rejects.toThrow('No token received from run-as')
-    })
-  })
-
-  describe('exitRunAs', () => {
-    it('should exit run-as successfully', async () => {
-      const authStore = useAuthStore()
-      authStore.setToken('impersonated-token')
-      authStore.setUser({ login: 'targetuser', displayName: 'Target', permissionIdx: {} })
-      authStore.setRunAsState({
-        login: 'targetuser',
-        displayName: 'Target User',
-        permissionIdx: {},
-      })
-      // Manually set originalUser since setRunAsState works differently
-      ;(authStore as unknown as { originalUser: unknown }).originalUser = {
-        login: 'admin',
-        displayName: 'Admin User',
-        permissionIdx: {},
-      }
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        headers: createHeadersMock({ 'Bearer': 'original-token' }),
-      })
-
-      await authService.exitRunAs()
-
-      expect(authStore.token).toBe('original-token')
-    })
-
-    it('should throw error when not running as another user', async () => {
-      const authStore = useAuthStore()
-      authStore.setToken('regular-token')
-
-      await expect(authService.exitRunAs()).rejects.toThrow('Not currently running as another user')
-    })
-
-    it('should throw error on exit run-as API failure', async () => {
-      const authStore = useAuthStore()
-      authStore.setToken('impersonated-token')
-      ;(authStore as unknown as { originalUser: unknown }).originalUser = {
-        login: 'admin',
-        displayName: 'Admin User',
-        permissionIdx: {},
-      }
-
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        headers: createHeadersMock({}),
-      })
-
-      await expect(authService.exitRunAs()).rejects.toThrow('Failed to exit run-as')
+      await expect(authService.runAs('targetuser')).rejects.toThrow('User not found')
     })
   })
 

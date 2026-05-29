@@ -35,14 +35,6 @@
               {{ t('auth.originalUser', { username: originalUsername }) }}
             </div>
           </div>
-          <AtlasButton
-            variant="secondary"
-            icon="mdi-exit-run"
-            :loading="isExiting"
-            @click="handleExitRunAs"
-          >
-            {{ t('auth.exitRunAs') }}
-          </AtlasButton>
         </div>
       </AtlasAlert>
 
@@ -92,7 +84,6 @@ const auth = useAuth()
 const targetUser = ref('')
 const errorMessage = ref<string | null>(null)
 const isLoading = ref(false)
-const isExiting = ref(false)
 
 const isRunningAs = computed(() => {
   return auth.isRunningAs?.value || false
@@ -120,20 +111,6 @@ async function handleRunAs() {
     errorMessage.value = message
   } finally {
     isLoading.value = false
-  }
-}
-
-async function handleExitRunAs() {
-  errorMessage.value = null
-  isExiting.value = true
-
-  try {
-    await auth.exitRunAs()
-  } catch (error) {
-    const message = error instanceof Error ? error.message : tv('auth.failedToExitRunAs')
-    errorMessage.value = message
-  } finally {
-    isExiting.value = false
   }
 }
 </script>

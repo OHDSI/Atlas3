@@ -7,7 +7,7 @@ import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
 import { useLocaleStore } from '@/stores/locale'
-import { authConfig } from '@/config/auth.config'
+import { getAuthConfig } from '@/config/auth.config'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
 import { routes } from './routes'
@@ -219,7 +219,7 @@ router.beforeEach(
     }
 
     // Skip auth check if authentication is disabled
-    if (!authConfig.userAuthenticationEnabled) {
+    if (!getAuthConfig().userAuthenticationEnabled) {
       next()
       return
     }
@@ -232,7 +232,7 @@ router.beforeEach(
 
       // If not authenticated, show login modal and stay on current page
       // BUT only if authentication is actually enabled
-      if (!authStore.isAuthenticated && authConfig.userAuthenticationEnabled) {
+      if (!authStore.isAuthenticated && getAuthConfig().userAuthenticationEnabled) {
         logger.debug('Router', 'Route requires auth, opening login modal')
         authStore.openLoginModal()
 

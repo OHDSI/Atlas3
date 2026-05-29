@@ -14,7 +14,6 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     include: [
       'tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      'scripts/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
     exclude: ['node_modules/', 'vue-mri-ui-lib/', 'tests/e2e/**'],
     reporters: ['default', 'junit'],

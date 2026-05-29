@@ -117,7 +117,7 @@ import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton } from '@/componen
 import { ref, computed, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
-import { authConfig } from '@/config/auth.config'
+import { getAuthConfig } from '@/config/auth.config'
 import { authService } from '@/services/auth/authService'
 import { logger } from '@/utils/logger'
 import type { AuthProvider, LoginCredentials } from '@/models/auth.types'
@@ -135,6 +135,7 @@ const isOpen = computed({
   },
 })
 
+const authConfig = getAuthConfig()
 const providers = ref<AuthProvider[]>(authConfig.authProviders)
 const selectedProvider = ref<AuthProvider | null>(null)
 const loadingProviders = ref(false)

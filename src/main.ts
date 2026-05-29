@@ -16,6 +16,7 @@ import { setupGlobalMessageHandler } from './plugins/messaging/HostMessageBus.ts
 import { setupPythiaBridge } from './plugins/host/pythiaBridge.ts'
 import { tokenExpiryService } from './services/auth/tokenExpiry'
 import { configLoaderService } from './services/config-loader.service'
+import { loadAppConfig } from './config/app-config.loader'
 import { logger } from './utils/logger'
 import '@/assets/styles/typography.css'
 import '@/assets/styles/vuetify-overrides.css'
@@ -172,7 +173,8 @@ window.addEventListener('hashchange', async () => {
 })
 
 // Initialize and mount the app
-initializeApp()
+loadAppConfig()
+  .then(() => initializeApp())
   .then(async app => {
     // Initialize stores
     const authStore = useAuthStore()

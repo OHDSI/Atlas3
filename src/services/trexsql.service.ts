@@ -9,8 +9,11 @@ import {
   type BuildCacheResponse,
   type InclusionStatsResult,
 } from '@/models/trexsql.types'
+import { getAppConfig } from '@/config/app-config.loader'
 
-const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
+function getBaseUrl(): string {
+  return getAppConfig().api.url
+}
 
 const activeCountRequests = new Map<string, AbortController>()
 
@@ -46,7 +49,7 @@ export async function buildCache(
   sourceKey: string,
   schemaName?: string
 ): Promise<BuildCacheResponse> {
-  const url = `${BASE_URL}/trexsql/${sourceKey}/cache`
+  const url = `${getBaseUrl()}/trexsql/${sourceKey}/cache`
 
   try {
     logger.info('TrexSQL', `Starting cache build for ${sourceKey}`)
@@ -126,7 +129,7 @@ function mapCacheStatusResponse(
 }
 
 export async function getCacheStatus(sourceKey: string): Promise<TrexSQLCacheStatus> {
-  const url = `${BASE_URL}/trexsql/${sourceKey}/cache/status`
+  const url = `${getBaseUrl()}/trexsql/${sourceKey}/cache/status`
 
   try {
     logger.debug('TrexSQL', `Fetching cache status for ${sourceKey}`)
@@ -178,7 +181,7 @@ export async function getPatientCount(
   expression: Record<string, unknown>,
   signal?: AbortSignal
 ): Promise<PatientCountResult> {
-  const url = `${BASE_URL}/trexsql/${sourceKey}/cache/count`
+  const url = `${getBaseUrl()}/trexsql/${sourceKey}/cache/count`
 
   cancelCountRequest(sourceKey)
 
@@ -296,7 +299,7 @@ export async function getInclusionStats(
   expression: Record<string, unknown>,
   signal?: AbortSignal
 ): Promise<InclusionStatsResult> {
-  const url = `${BASE_URL}/trexsql/${sourceKey}/cache/inclusion`
+  const url = `${getBaseUrl()}/trexsql/${sourceKey}/cache/inclusion`
 
   const authHeader = await getAuthHeader()
 

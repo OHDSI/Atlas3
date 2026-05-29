@@ -14,8 +14,11 @@ import {
   type ConceptSetAPIResponse,
 } from '@/utils/api-mappers'
 import { logger } from '@/utils/logger'
+import { getAppConfig } from '@/config/app-config.loader'
 
-const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
+function getBaseUrl(): string {
+  return getAppConfig().api.url
+}
 
 async function getAuthToken(): Promise<string | null> {
   try {
@@ -30,7 +33,7 @@ async function getAuthToken(): Promise<string | null> {
  * Internal fetch wrapper with error handling
  */
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`
+  const url = `${getBaseUrl()}${endpoint}`
 
   // Get auth token
   const token = await getAuthToken()

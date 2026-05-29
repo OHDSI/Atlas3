@@ -93,6 +93,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useI18n } from '@/composables/useI18n'
 import { useLicenseAgreement } from '@/composables/useLicenseAgreement'
 import { pluginConfigService } from '@/services/PluginConfigService'
+import { getAppConfig } from '@/config/app-config.loader'
 import { logger } from '@/utils/logger'
 
 const localeStore = useLocaleStore()
@@ -109,7 +110,7 @@ const isInitializing = computed(() => {
 
 const showNavBar = ref(true)
 
-const pythiaEnabled = import.meta.env.VITE_BAO_AGENT_ENABLED === 'true'
+const pythiaEnabled = getAppConfig().enablePythia
 
 pluginConfigService.onChange(() => {
   showNavBar.value = pluginConfigService.showNavBar()

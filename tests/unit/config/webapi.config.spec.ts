@@ -4,16 +4,28 @@
  *
  * This test suite covers all exports from the webapi configuration:
  * - DEFAULT_SOURCE_KEY constant
- * - WEBAPI_BASE_URL constant with environment variable handling
+ * - getWebAPIBaseUrl() function (reads from AppConfig)
  * - getSourceKey() function with localStorage integration
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+// Mock getAppConfig
+const mockApiUrl = vi.fn(() => '/WebAPI')
+vi.mock('@/config/app-config.loader', () => ({
+  getAppConfig: () => ({
+    api: {
+      get url() {
+        return mockApiUrl()
+      },
+    },
+  }),
+}))
+
 describe('webapi.config', () => {
   beforeEach(() => {
-    // Clear localStorage before each test
     localStorage.clear()
+    mockApiUrl.mockReturnValue('/WebAPI')
   })
 
   afterEach(() => {
@@ -36,61 +48,45 @@ describe('webapi.config', () => {
     })
   })
 
-  describe('WEBAPI_BASE_URL', () => {
-    it('uses VITE_WEBAPI_URL when environment variable is set', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', 'https://api.example.com/WebAPI')
+  describe('getWebAPIBaseUrl', () => {
+    it('returns the URL from AppConfig', async () => {
+      mockApiUrl.mockReturnValue('https://api.example.com/WebAPI')
 
-      const { WEBAPI_BASE_URL } = await import('@/config/webapi')
+      const { getWebAPIBaseUrl } = await import('@/config/webapi')
 
-      expect(WEBAPI_BASE_URL).toBe('https://api.example.com/WebAPI')
+      expect(getWebAPIBaseUrl()).toBe('https://api.example.com/WebAPI')
     })
 
-    it('uses default /WebAPI when VITE_WEBAPI_URL is empty string', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', '')
+    it('returns default /WebAPI when config uses default', async () => {
+      mockApiUrl.mockReturnValue('/WebAPI')
 
-      const { WEBAPI_BASE_URL } = await import('@/config/webapi')
+      const { getWebAPIBaseUrl } = await import('@/config/webapi')
 
-      expect(WEBAPI_BASE_URL).toBe('/WebAPI')
-    })
-
-    it('handles custom WebAPI path', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', '/custom/api/path')
-
-      const { WEBAPI_BASE_URL } = await import('@/config/webapi')
-
-      expect(WEBAPI_BASE_URL).toBe('/custom/api/path')
+      expect(getWebAPIBaseUrl()).toBe('/WebAPI')
     })
 
     it('handles full URL with protocol and domain', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', 'https://ohdsi.example.org:8080/WebAPI')
+      mockApiUrl.mockReturnValue('https://ohdsi.example.org:8080/WebAPI')
 
-      const { WEBAPI_BASE_URL } = await import('@/config/webapi')
+      const { getWebAPIBaseUrl } = await import('@/config/webapi')
 
-      expect(WEBAPI_BASE_URL).toBe('https://ohdsi.example.org:8080/WebAPI')
-    })
-
-    it('handles URL with trailing slash', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', 'https://api.example.com/WebAPI/')
-
-      const { WEBAPI_BASE_URL } = await import('@/config/webapi')
-
-      expect(WEBAPI_BASE_URL).toBe('https://api.example.com/WebAPI/')
-    })
-
-    it('handles URL without leading slash', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', 'WebAPI')
-
-      const { WEBAPI_BASE_URL } = await import('@/config/webapi')
-
-      expect(WEBAPI_BASE_URL).toBe('WebAPI')
+      expect(getWebAPIBaseUrl()).toBe('https://ohdsi.example.org:8080/WebAPI')
     })
 
     it('handles localhost URL', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', 'http://localhost:8080/WebAPI')
+      mockApiUrl.mockReturnValue('http://localhost:8080/WebAPI')
 
+      const { getWebAPIBaseUrl } = await import('@/config/webapi')
+
+      expect(getWebAPIBaseUrl()).toBe('http://localhost:8080/WebAPI')
+    })
+  })
+
+  describe('WEBAPI_BASE_URL (deprecated)', () => {
+    it('exports static /WebAPI fallback', async () => {
       const { WEBAPI_BASE_URL } = await import('@/config/webapi')
 
-      expect(WEBAPI_BASE_URL).toBe('http://localhost:8080/WebAPI')
+      expect(WEBAPI_BASE_URL).toBe('/WebAPI')
     })
   })
 
@@ -270,43 +266,43 @@ describe('webapi.config', () => {
   })
 
   describe('integration scenarios', () => {
-    it('works correctly with both custom WEBAPI_BASE_URL and selectedVocabulary', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', 'https://production.example.com/WebAPI')
+    it('works correctly with custom getWebAPIBaseUrl and selectedVocabulary', async () => {
+      mockApiUrl.mockReturnValue('https://production.example.com/WebAPI')
       localStorage.setItem('selectedVocabulary', 'PROD_CDM')
 
-      const { WEBAPI_BASE_URL, getSourceKey } = await import('@/config/webapi')
+      const { getWebAPIBaseUrl, getSourceKey } = await import('@/config/webapi')
 
-      expect(WEBAPI_BASE_URL).toBe('https://production.example.com/WebAPI')
+      expect(getWebAPIBaseUrl()).toBe('https://production.example.com/WebAPI')
       expect(getSourceKey()).toBe('PROD_CDM')
     })
 
-    it('works correctly with empty WEBAPI_BASE_URL and custom selectedVocabulary', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', '')
+    it('works correctly with default URL and custom selectedVocabulary', async () => {
+      mockApiUrl.mockReturnValue('/WebAPI')
       localStorage.setItem('selectedVocabulary', 'CUSTOM_CDM')
 
-      const { WEBAPI_BASE_URL, getSourceKey } = await import('@/config/webapi')
+      const { getWebAPIBaseUrl, getSourceKey } = await import('@/config/webapi')
 
-      expect(WEBAPI_BASE_URL).toBe('/WebAPI')
+      expect(getWebAPIBaseUrl()).toBe('/WebAPI')
       expect(getSourceKey()).toBe('CUSTOM_CDM')
     })
 
-    it('works correctly with custom WEBAPI_BASE_URL and default selectedVocabulary', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', 'https://test.example.com/api')
+    it('works correctly with custom URL and default selectedVocabulary', async () => {
+      mockApiUrl.mockReturnValue('https://test.example.com/api')
       localStorage.removeItem('selectedVocabulary')
 
-      const { WEBAPI_BASE_URL, getSourceKey } = await import('@/config/webapi')
+      const { getWebAPIBaseUrl, getSourceKey } = await import('@/config/webapi')
 
-      expect(WEBAPI_BASE_URL).toBe('https://test.example.com/api')
+      expect(getWebAPIBaseUrl()).toBe('https://test.example.com/api')
       expect(getSourceKey()).toBe('SYNPUF1K')
     })
 
-    it('works correctly with empty env var and no selectedVocabulary', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', '')
+    it('works correctly with default URL and no selectedVocabulary', async () => {
+      mockApiUrl.mockReturnValue('/WebAPI')
       localStorage.removeItem('selectedVocabulary')
 
-      const { WEBAPI_BASE_URL, getSourceKey, DEFAULT_SOURCE_KEY } = await import('@/config/webapi')
+      const { getWebAPIBaseUrl, getSourceKey, DEFAULT_SOURCE_KEY } = await import('@/config/webapi')
 
-      expect(WEBAPI_BASE_URL).toBe('/WebAPI')
+      expect(getWebAPIBaseUrl()).toBe('/WebAPI')
       expect(getSourceKey()).toBe(DEFAULT_SOURCE_KEY)
       expect(getSourceKey()).toBe('SYNPUF1K')
     })
@@ -340,20 +336,20 @@ describe('webapi.config', () => {
       expect(getSourceKey()).toBe(keyWithNull)
     })
 
-    it('handles WEBAPI_BASE_URL with query parameters', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', 'https://api.example.com/WebAPI?version=2.14&locale=en')
+    it('handles getWebAPIBaseUrl with query parameters', async () => {
+      mockApiUrl.mockReturnValue('https://api.example.com/WebAPI?version=2.14&locale=en')
 
-      const { WEBAPI_BASE_URL } = await import('@/config/webapi')
+      const { getWebAPIBaseUrl } = await import('@/config/webapi')
 
-      expect(WEBAPI_BASE_URL).toBe('https://api.example.com/WebAPI?version=2.14&locale=en')
+      expect(getWebAPIBaseUrl()).toBe('https://api.example.com/WebAPI?version=2.14&locale=en')
     })
 
-    it('handles WEBAPI_BASE_URL with fragment identifier', async () => {
-      vi.stubEnv('VITE_WEBAPI_URL', 'https://api.example.com/WebAPI#section')
+    it('handles getWebAPIBaseUrl with fragment identifier', async () => {
+      mockApiUrl.mockReturnValue('https://api.example.com/WebAPI#section')
 
-      const { WEBAPI_BASE_URL } = await import('@/config/webapi')
+      const { getWebAPIBaseUrl } = await import('@/config/webapi')
 
-      expect(WEBAPI_BASE_URL).toBe('https://api.example.com/WebAPI#section')
+      expect(getWebAPIBaseUrl()).toBe('https://api.example.com/WebAPI#section')
     })
   })
 })
