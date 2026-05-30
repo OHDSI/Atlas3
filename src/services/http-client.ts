@@ -51,7 +51,7 @@ async function handleAuthError(status: number, url: string): Promise<void> {
 
   try {
     const { useAuthStore } = await import('@/stores/auth')
-    const { authConfig } = await import('@/config/auth.config')
+    const { getAuthConfig } = await import('@/config/auth.config')
     const authStore = useAuthStore()
 
     if (authStore.isAuthenticating || authStore.isRefreshing) {
@@ -59,7 +59,7 @@ async function handleAuthError(status: number, url: string): Promise<void> {
     }
 
     authStore.clearAuth()
-    if (authConfig.userAuthenticationEnabled) {
+    if (getAuthConfig().userAuthenticationEnabled) {
       authStore.openLoginModal()
     }
   } catch {
