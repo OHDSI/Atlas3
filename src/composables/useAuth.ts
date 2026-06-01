@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/auth/authService'
 import { permissionChecker } from '@/services/auth/permissionChecker'
 import { storageManager } from '@/services/auth/storageManager'
-import type { LoginCredentials } from '@/models/auth.types'
+import type { AuthProvider, LoginCredentials } from '@/models/auth.types'
 
 export function useAuth() {
   const authStore = useAuthStore()
@@ -22,7 +22,7 @@ export function useAuth() {
     isRunningAs: computed(() => authStore.isRunningAs),
     originalUser: computed(() => authStore.originalUser),
 
-    async login(provider: string, credentials?: LoginCredentials): Promise<void> {
+    async login(provider: AuthProvider, credentials?: LoginCredentials): Promise<void> {
       return authService.login(provider, credentials)
     },
 

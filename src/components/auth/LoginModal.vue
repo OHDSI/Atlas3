@@ -190,20 +190,16 @@ function selectProvider(provider: AuthProvider) {
     auth.saveLogoutUrl(provider.logoutUrl)
   }
 
-  if (!provider.isUseCredentialsForm && !provider.ajax) {
-    // Redirect-based provider (OAuth, SAML, etc.)
-    auth.login(provider.url)
-  } else if (!provider.isUseCredentialsForm && provider.ajax) {
-    // AJAX provider without credentials form (Windows/NTLM/Kerberos)
-    handleAjaxLogin(provider)
+  if (!provider.isUseCredentialsForm) {
+    handleProviderLogin(provider)
   }
 }
 
-async function handleAjaxLogin(provider: AuthProvider) {
+async function handleProviderLogin(provider: AuthProvider) {
   try {
-    await authService.loginAjax(provider.url)
+    await auth.login(provider)
   } catch (error) {
-    logger.error('LoginModal', 'AJAX login failed', error)
+    logger.error('LoginModal', 'Provider login failed', error)
   }
 }
 
@@ -217,7 +213,7 @@ async function handleLogin(credentials: LoginCredentials) {
   if (!provider) return
 
   try {
-    await auth.login(provider.url, credentials)
+    await auth.login(provider, credentials)
   } catch (error) {
     logger.error('LoginModal', 'Login failed', error)
   }

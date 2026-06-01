@@ -32,6 +32,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
       reportsDirectory: './coverage',
+      clean: false,
       // Include all src/ files for coverage
       include: ['src/**/*.{ts,vue}'],
       // Documented exclusions with justifications
@@ -41,6 +42,7 @@ export default defineConfig({
         '**/*.spec.ts',
         '**/*.test.ts',
         // Type declarations only - no runtime code
+        '**/*.types.ts',
         '**/types.ts',
         '**/*.d.ts',
         'src/env.d.ts',

@@ -35,6 +35,15 @@ import { useAuthStore } from '@/stores/auth'
 import { authService } from '@/services/auth/authService'
 import { permissionChecker } from '@/services/auth/permissionChecker'
 import { storageManager } from '@/services/auth/storageManager'
+import type { AuthProvider } from '@/models/auth.types'
+
+const dbProvider: AuthProvider = {
+  name: 'Database',
+  url: 'db',
+  ajax: true,
+  icon: 'mdi-database',
+  isUseCredentialsForm: true,
+}
 
 describe('useAuth', () => {
   beforeEach(() => {
@@ -150,9 +159,12 @@ describe('useAuth', () => {
 
       const { login } = useAuth()
 
-      await login('db', { username: 'test', password: 'pass' })
+      await login(dbProvider, { username: 'test', password: 'pass' })
 
-      expect(authService.login).toHaveBeenCalledWith('db', { username: 'test', password: 'pass' })
+      expect(authService.login).toHaveBeenCalledWith(dbProvider, {
+        username: 'test',
+        password: 'pass',
+      })
     })
   })
 

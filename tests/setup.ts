@@ -127,22 +127,10 @@ global.fetch = vi.fn().mockResolvedValue({
   bodyUsed: false,
 } as Response)
 
-// Mock app-config.loader so all tests get a resolved config without fetching
-vi.mock('@/config/app-config.loader', () => ({
-  loadAppConfig: vi.fn().mockResolvedValue(undefined),
-  getAppConfig: () => ({
-    api: { url: '/WebAPI' },
-    userAuthenticationEnabled: false,
-    enableSkipLogin: false,
-    enablePermissionManagement: true,
-    authProviders: [],
-    refreshTokenThreshold: 900000,
-    enableIAPSession: false,
-    enableTermsAndConditions: false,
-    enablePythia: false,
-    enablePersonCount: true,
-    enableTaggingSection: false,
-    defaultLocale: 'en',
-    pollInterval: 60000,
-  }),
-}))
+// Load app config using the mocked fetch above (returns {} → defaults apply).
+// This populates resolvedConfig so that getAppConfig() works in all test files
+// without requiring each file to mock the module. Tests that need specific
+// config values can either mock fetch for config-local.json or use their own
+// vi.mock('@/config/app-config.loader', ...) which takes precedence per-file.
+import { loadAppConfig } from '@/config/app-config.loader'
+await loadAppConfig()

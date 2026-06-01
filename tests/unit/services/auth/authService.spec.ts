@@ -56,6 +56,7 @@ import { authService } from '@/services/auth/authService'
 import { storageManager } from '@/services/auth/storageManager'
 import { tokenManager } from '@/services/auth/tokenManager'
 import { useAuthStore } from '@/stores/auth'
+import type { AuthProvider } from '@/models/auth.types'
 
 // Helper to create a proper headers mock with all required methods
 function createHeadersMock(headersMap: Record<string, string> = {}): Headers {
@@ -66,6 +67,30 @@ function createHeadersMock(headersMap: Record<string, string> = {}): Headers {
     entries: () => map.entries(),
     [Symbol.iterator]: () => map.entries(),
   } as unknown as Headers
+}
+
+const credentialsProvider: AuthProvider = {
+  name: 'Database',
+  url: 'user/login/db',
+  ajax: true,
+  icon: 'mdi-database',
+  isUseCredentialsForm: true,
+}
+
+const redirectProvider: AuthProvider = {
+  name: 'Google',
+  url: 'user/login/google',
+  ajax: false,
+  icon: 'mdi-google',
+  isUseCredentialsForm: false,
+}
+
+const ajaxProvider: AuthProvider = {
+  name: 'Windows',
+  url: 'user/login/windows',
+  ajax: true,
+  icon: 'mdi-microsoft-windows',
+  isUseCredentialsForm: false,
 }
 
 describe('AuthService', () => {
@@ -114,7 +139,7 @@ describe('AuthService', () => {
           json: () => Promise.resolve(mockUserInfo),
         })
 
-      await authService.login('user/login/db', {
+      await authService.login(credentialsProvider, {
         username: 'testuser',
         password: 'password123',
       })
@@ -129,7 +154,7 @@ describe('AuthService', () => {
       delete (window as unknown as { location: unknown }).location
       window.location = { href: '', hash: '#/home' } as Location
 
-      await authService.login('user/login/google')
+      await authService.login(redirectProvider)
 
       expect(window.location.href).toContain('user/login/google')
       expect(window.location.href).toContain('redirectUrl=')
@@ -146,7 +171,7 @@ describe('AuthService', () => {
       })
 
       await expect(
-        authService.login('user/login/db', {
+        authService.login(credentialsProvider, {
           username: 'testuser',
           password: 'wrong',
         })
@@ -161,11 +186,87 @@ describe('AuthService', () => {
       })
 
       await expect(
-        authService.login('user/login/db', {
+        authService.login(credentialsProvider, {
           username: 'testuser',
           password: 'password',
         })
       ).rejects.toThrow('User not found')
+    })
+
+    it('should authenticate via AJAX provider using Bearer header token', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: createHeadersMock({ Bearer: 'ajax-token' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: createHeadersMock({}),
+          json: () => Promise.resolve({ login: 'ajaxuser', name: 'Ajax User' }),
+        })
+
+      await authService.login(ajaxProvider)
+
+      const authStore = useAuthStore()
+      expect(authStore.token).toBe('ajax-token')
+      expect(authStore.user?.login).toBe('ajaxuser')
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'http://test-api.com/user/login/windows',
+        expect.objectContaining({ method: 'GET', credentials: 'include' })
+      )
+    })
+
+    it('should authenticate via AJAX provider using JSON jwt fallback', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: createHeadersMock({}),
+          json: () => Promise.resolve({ jwt: 'body-token' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: createHeadersMock({}),
+          json: () => Promise.resolve({ login: 'ajaxuser', name: 'Ajax User' }),
+        })
+
+      await authService.login(ajaxProvider)
+
+      const authStore = useAuthStore()
+      expect(authStore.token).toBe('body-token')
+      expect(authStore.user?.login).toBe('ajaxuser')
+    })
+
+    it('should throw error on ajax login failure', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        headers: createHeadersMock({ 'x-auth-error': 'Integrated auth failed' }),
+        text: () => Promise.resolve(''),
+      })
+
+      await expect(authService.login(ajaxProvider)).rejects.toThrow('Integrated auth failed')
+    })
+
+    it('should throw error when ajax login returns no token', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: createHeadersMock({}),
+        json: () => Promise.resolve({}),
+      })
+
+      await expect(authService.login(ajaxProvider)).rejects.toThrow(
+        'No token received from server'
+      )
+    })
+
+    it('should throw when credentials provider is invoked without credentials', async () => {
+      await expect(authService.login(credentialsProvider)).rejects.toThrow(
+        'Credentials are required for this authentication provider'
+      )
     })
   })
 

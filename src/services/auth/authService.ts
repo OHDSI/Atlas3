@@ -7,8 +7,7 @@ import { permissionChecker } from './permissionChecker'
 import { logger } from '@/utils/logger'
 
 export interface IAuthService {
-  login(provider: string, credentials?: LoginCredentials): Promise<void>
-  loginAjax(provider: string): Promise<void>
+  login(provider: AuthProvider, credentials?: LoginCredentials): Promise<void>
   logout(): Promise<void>
   refreshToken(): Promise<boolean>
   fetchUserInfo(): Promise<UserInfo>
@@ -83,84 +82,146 @@ class AuthService implements IAuthService {
     return getAuthConfig().webAPIRoot
   }
 
-  async login(provider: string, credentials?: LoginCredentials): Promise<void> {
+  private buildProviderUrl(providerUrl: string): string {
+    const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
+    return `${baseUrl}${providerUrl}`
+  }
+
+  private async redirectToProvider(provider: AuthProvider): Promise<void> {
+    const hashRoute = window.location.hash
+    const loginUrl = this.buildProviderUrl(provider.url)
+
+    window.location.href = hashRoute
+      ? `${loginUrl}?redirectUrl=${encodeURIComponent(hashRoute)}`
+      : loginUrl
+  }
+
+  private async loginWithCredentials(
+    provider: AuthProvider,
+    credentials: LoginCredentials
+  ): Promise<void> {
+    const formData = new URLSearchParams()
+    formData.append('login', credentials.username)
+    formData.append('password', credentials.password)
+
+    const url = this.buildProviderUrl(provider.url)
+    logger.debug('Auth', 'POST to', url)
+    logger.debug('Auth', 'Credentials', { username: credentials.username, password: '***' })
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+    })
+
+    logger.debug('Auth', 'Response status', response.status)
+    logger.debug('Auth', 'Response headers', Object.fromEntries(response.headers.entries()))
+
+    await this.finalizeLoginFromResponse(response, {
+      allowBearerHeader: false,
+      noTokenMessage: 'No token received from server',
+    })
+  }
+
+  private async loginWithAjax(provider: AuthProvider): Promise<void> {
+    const url = this.buildProviderUrl(provider.url)
+    logger.debug('Auth', 'AJAX login (no credentials) GET', url)
+
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    logger.debug('Auth', 'Response status', response.status)
+
+    await this.finalizeLoginFromResponse(response, {
+      allowBearerHeader: true,
+      noTokenMessage: 'No token received from server',
+    })
+  }
+
+  private async throwAuthError(response: Response): Promise<never> {
+    const errorHeader = response.headers.get('x-auth-error')
+    const errorBody = await response.text()
+    logger.error('Auth', 'Login failed', {
+      status: response.status,
+      errorHeader,
+      errorBody,
+    })
+    throw new Error(errorHeader || errorBody || 'Authentication failed')
+  }
+
+  private async completeLogin(token: string): Promise<void> {
+    const authStore = useAuthStore()
+
+    authStore.setToken(token)
+
+    const userInfo = await this.fetchUserInfo()
+    authStore.setUser(userInfo)
+
+    import('@/stores/locale')
+      .then(({ useLocaleStore }) => {
+        useLocaleStore().fetchAvailableLocales()
+      })
+      .catch(err => {
+        logger.warn('Auth', 'Failed to refresh locales after login', err)
+      })
+
+    authStore.closeLoginModal()
+  }
+
+  private async finalizeLoginFromResponse(
+    response: Response,
+    options: { allowBearerHeader: boolean; noTokenMessage: string }
+  ): Promise<void> {
+    if (!response.ok) {
+      await this.throwAuthError(response)
+    }
+
+    let body: Record<string, unknown> | null = null
+    let token: string | null = options.allowBearerHeader ? response.headers.get('Bearer') : null
+
+    if (!token) {
+      try {
+        const responseForJson = typeof response.clone === 'function' ? response.clone() : response
+        body = (await responseForJson.json()) as Record<string, unknown>
+        if (typeof body.jwt === 'string') {
+          token = body.jwt
+        }
+      } catch {
+        // response wasn't JSON — fall through
+      }
+    }
+
+    logger.debug('Auth', 'Token received', token ? 'YES' : 'NO')
+
+    if (!token) {
+      const message = typeof body?.message === 'string' ? body.message : options.noTokenMessage
+      throw new Error(message)
+    }
+
+    await this.completeLogin(token)
+  }
+
+  async login(provider: AuthProvider, credentials?: LoginCredentials): Promise<void> {
     const authStore = useAuthStore()
     authStore.setAuthenticating(true)
     authStore.setError(null)
 
     try {
       logger.debug('Auth', 'Login attempt', { provider, webAPIRoot: this.webAPIRoot })
-      let response: Response
-
-      if (credentials) {
-        const formData = new URLSearchParams()
-        formData.append('login', credentials.username)
-        formData.append('password', credentials.password)
-
-        // Ensure proper URL formatting with slash
-        const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-        const url = `${baseUrl}${provider}`
-        logger.debug('Auth', 'POST to', url)
-        logger.debug('Auth', 'Credentials', { username: credentials.username, password: '***' })
-
-        response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: formData.toString(),
-        })
-
-        logger.debug('Auth', 'Response status', response.status)
-        logger.debug('Auth', 'Response headers', Object.fromEntries(response.headers.entries()))
+      if (provider.isUseCredentialsForm) {
+        if (!credentials) {
+          throw new Error('Credentials are required for this authentication provider')
+        }
+        await this.loginWithCredentials(provider, credentials)
+      } else if (provider.ajax) {
+        await this.loginWithAjax(provider)
       } else {
-        // OAuth/redirect provider - ensure proper URL with slash
-        const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-
-        // Build redirect URL with hash route (Atlas pattern)
-        const hashRoute = window.location.hash
-        const loginUrl = `${baseUrl}${provider}`
-
-        // Redirect with optional redirectUrl parameter for hash routes
-        window.location.href = hashRoute
-          ? `${loginUrl}?redirectUrl=${encodeURIComponent(hashRoute)}`
-          : loginUrl
-        return
+        await this.redirectToProvider(provider)
       }
-
-      if (!response.ok) {
-        const errorHeader = response.headers.get('x-auth-error')
-        const errorBody = await response.text()
-        logger.error('Auth', 'Login failed', {
-          status: response.status,
-          errorHeader,
-          errorBody,
-        })
-        throw new Error(errorHeader || errorBody || 'Authentication failed')
-      }
-
-      const body = await response.json()
-      const token = body?.jwt as string | undefined
-      logger.debug('Auth', 'Token received', token ? 'YES' : 'NO')
-
-      if (!token) {
-        throw new Error(body?.message || 'No token received from server')
-      }
-
-      authStore.setToken(token)
-
-      const userInfo = await this.fetchUserInfo()
-      authStore.setUser(userInfo)
-
-      import('@/stores/locale')
-        .then(({ useLocaleStore }) => {
-          useLocaleStore().fetchAvailableLocales()
-        })
-        .catch(err => {
-          logger.warn('Auth', 'Failed to refresh locales after login', err)
-        })
-
-      authStore.closeLoginModal()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Authentication failed'
       authStore.setError(message)
@@ -176,73 +237,6 @@ class AuthService implements IAuthService {
    * transparently. Makes a GET request to the provider URL and extracts the token
    * from the response.
    */
-  async loginAjax(provider: string): Promise<void> {
-    const authStore = useAuthStore()
-    authStore.setAuthenticating(true)
-    authStore.setError(null)
-
-    try {
-      const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-      const url = `${baseUrl}${provider}`
-      logger.debug('Auth', 'AJAX login (no credentials) GET', url)
-
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-      })
-
-      logger.debug('Auth', 'Response status', response.status)
-
-      if (!response.ok) {
-        const errorHeader = response.headers.get('x-auth-error')
-        const errorBody = await response.text()
-        logger.error('Auth', 'AJAX login failed', {
-          status: response.status,
-          errorHeader,
-          errorBody,
-        })
-        throw new Error(errorHeader || errorBody || 'Authentication failed')
-      }
-
-      let token = response.headers.get('Bearer')
-      if (!token) {
-        try {
-          const body = await response.clone().json()
-          if (body && typeof body.jwt === 'string') {
-            token = body.jwt
-          }
-        } catch {
-          // response wasn't JSON — fall through
-        }
-      }
-
-      if (!token) {
-        throw new Error('No token received from server')
-      }
-
-      authStore.setToken(token)
-
-      const userInfo = await this.fetchUserInfo()
-      authStore.setUser(userInfo)
-
-      import('@/stores/locale')
-        .then(({ useLocaleStore }) => {
-          useLocaleStore().fetchAvailableLocales()
-        })
-        .catch(err => {
-          logger.warn('Auth', 'Failed to refresh locales after login', err)
-        })
-
-      authStore.closeLoginModal()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Authentication failed'
-      authStore.setError(message)
-      throw error
-    } finally {
-      authStore.setAuthenticating(false)
-    }
-  }
-
   async logout(): Promise<void> {
     const authStore = useAuthStore()
 
