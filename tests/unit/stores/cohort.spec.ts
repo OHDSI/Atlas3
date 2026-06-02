@@ -1125,4 +1125,24 @@ describe('Cohort Store', () => {
       expect(() => store.dispose()).not.toThrow()
     })
   })
+
+  describe('agent handshake', () => {
+    it('requestNewCohort resets and bumps newCohortSignal', () => {
+      const store = useCohortStore()
+      store.createNewCohort()
+      store.addInclusionRule({ id: 'r1', name: 'r', criteriaGroups: [] } as never)
+      const before = store.newCohortSignal
+      store.requestNewCohort()
+      expect(store.newCohortSignal).toBe(before + 1)
+      expect(store.currentCohort?.inclusionRules.length).toBe(0)
+      expect(store.isDirty).toBe(false)
+    })
+
+    it('requestSave resolves with the payload passed to notifySaved', async () => {
+      const store = useCohortStore()
+      const p = store.requestSave()
+      store.notifySaved({ id: 42, name: 'Cohort A' })
+      await expect(p).resolves.toEqual({ id: 42, name: 'Cohort A' })
+    })
+  })
 })
