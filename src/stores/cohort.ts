@@ -199,6 +199,7 @@ export const useCohortStore = defineStore('cohort', () => {
       // Non-cohort proposal kinds are handled by pythiaBridge before
       // reaching the cohort store. Ignore here.
       case 'navigate':
+      case 'saveCohort':
       case 'createStandaloneConceptSet':
       case 'createFeatureAnalysis':
       case 'createCharacterization':
@@ -230,6 +231,33 @@ export const useCohortStore = defineStore('cohort', () => {
 
   function markDirty() {
     isDirty.value = true
+  }
+
+  // The WebAPI save and reset-to-blank logic lives in the mounted CohortBuilder,
+  // not here. These signals let the host bridge trigger that flow (and await the
+  // save) rather than re-implementing the editor's concept-set assembly.
+  const saveRequest = ref(0)
+  const newCohortSignal = ref(0)
+  let saveResolver: ((r: { id?: number; name?: string }) => void) | null = null
+
+  function requestSave(): Promise<{ id?: number; name?: string }> {
+    return new Promise(resolve => {
+      saveResolver = resolve
+      saveRequest.value++
+      // Never hang the caller if no editor is mounted to answer the signal.
+      setTimeout(() => notifySaved(), 8000)
+    })
+  }
+
+  function notifySaved(result: { id?: number; name?: string } = {}) {
+    const resolve = saveResolver
+    saveResolver = null
+    resolve?.(result)
+  }
+
+  function requestNewCohort() {
+    createNewCohort()
+    newCohortSignal.value++
   }
 
   // SessionStorage auto-save
@@ -617,6 +645,8 @@ export const useCohortStore = defineStore('cohort', () => {
     isReadOnly,
     retryState,
     agentRevision,
+    saveRequest,
+    newCohortSignal,
     // Getters
     hasEntryEvents,
     hasInclusionRules,
@@ -638,6 +668,9 @@ export const useCohortStore = defineStore('cohort', () => {
     clearCohort,
     markClean,
     markDirty,
+    requestSave,
+    notifySaved,
+    requestNewCohort,
     // Draft management
     saveToDraft,
     restoreFromDraft,
