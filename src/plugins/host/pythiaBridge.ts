@@ -99,7 +99,7 @@ async function applyProposalInner(
       await handleNavigate(proposal.route)
       return
     case 'saveCohort':
-      return await handleSaveCohort()
+      return await handleSaveCohort(proposal)
     case 'createStandaloneConceptSet':
       return await handleCreateStandaloneConceptSet(proposal.conceptSet)
     case 'createFeatureAnalysis':
@@ -157,14 +157,16 @@ async function ensureOnCohortRoute() {
   }
 }
 
-async function handleSaveCohort(): Promise<{ id?: number; name?: string } | void> {
+async function handleSaveCohort(
+  proposal: { name?: string; description?: string } = {}
+): Promise<{ id?: number; name?: string } | void> {
   const cohortStore = useCohortStore()
   if (!cohortStore.currentCohort) {
     showSnackbar('There is no cohort to save yet', 'error')
     return
   }
   await ensureOnCohortRoute()
-  return await cohortStore.requestSave()
+  return await cohortStore.requestSave({ name: proposal.name, description: proposal.description })
 }
 
 async function handleNavigate(route: NavigateRoute) {

@@ -1178,6 +1178,9 @@ watch(
 watch(
   () => cohortStore.saveRequest,
   async () => {
+    const opts = cohortStore.saveOptions
+    if (opts?.name) cohortName.value = opts.name
+    if (opts?.description) cohortDescription.value = opts.description
     let saved: { id?: number; name?: string } = {}
     try {
       saved = (await handleSave()) ?? {}

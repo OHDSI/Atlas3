@@ -238,10 +238,15 @@ export const useCohortStore = defineStore('cohort', () => {
   // save) rather than re-implementing the editor's concept-set assembly.
   const saveRequest = ref(0)
   const newCohortSignal = ref(0)
+  // Name/description the caller wants applied to the cohort before it is saved.
+  // The mounted editor reads this when it answers a save request — a cohort
+  // built programmatically otherwise has no name and the editor refuses to save.
+  const saveOptions = ref<{ name?: string; description?: string }>({})
   let saveResolver: ((r: { id?: number; name?: string }) => void) | null = null
 
-  function requestSave(): Promise<{ id?: number; name?: string }> {
+  function requestSave(opts: { name?: string; description?: string } = {}): Promise<{ id?: number; name?: string }> {
     return new Promise(resolve => {
+      saveOptions.value = opts
       saveResolver = resolve
       saveRequest.value++
       // Never hang the caller if no editor is mounted to answer the signal.
@@ -647,6 +652,7 @@ export const useCohortStore = defineStore('cohort', () => {
     agentRevision,
     saveRequest,
     newCohortSignal,
+    saveOptions,
     // Getters
     hasEntryEvents,
     hasInclusionRules,
