@@ -1144,5 +1144,39 @@ describe('Cohort Store', () => {
       store.notifySaved({ id: 42, name: 'Cohort A' })
       await expect(p).resolves.toEqual({ id: 42, name: 'Cohort A' })
     })
+
+    it('requestSave records saveOptions and bumps saveRequest synchronously', () => {
+      const store = useCohortStore()
+      const before = store.saveRequest
+      void store.requestSave({ name: 'N', description: 'D' })
+      expect(store.saveRequest).toBe(before + 1)
+      expect(store.saveOptions).toEqual({ name: 'N', description: 'D' })
+    })
+
+    it('requestSave falls back to {} after the 8s timeout if nothing answers', async () => {
+      vi.useFakeTimers()
+      try {
+        const store = useCohortStore()
+        const p = store.requestSave()
+        vi.advanceTimersByTime(8000)
+        await expect(p).resolves.toEqual({})
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('notifySaved with no pending resolver is a no-op', () => {
+      const store = useCohortStore()
+      expect(() => store.notifySaved({ id: 1 })).not.toThrow()
+    })
+
+    it('applyProposal ignores saveCohort kind (handled by the host bridge)', () => {
+      const store = useCohortStore()
+      store.createNewCohort()
+      const before = store.saveRequest
+      store.applyProposal({ kind: 'saveCohort', name: 'X' } as never)
+      // No state mutation — the bridge orchestrates the save flow.
+      expect(store.saveRequest).toBe(before)
+    })
   })
 })
