@@ -178,6 +178,7 @@ export type AgentProposal =
   | { kind: 'updateCharacterization'; payload: UpdateCharacterizationPayload }
   | { kind: 'updatePathway'; payload: UpdatePathwayPayload }
   | { kind: 'updateIncidenceRate'; payload: UpdateIncidenceRatePayload }
+  | { kind: 'saveCohort' }
 
 export interface AgentToolCallSummary {
   id: string
