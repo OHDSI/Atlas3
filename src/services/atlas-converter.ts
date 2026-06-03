@@ -182,11 +182,21 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
 
     CensorWindow: cohort.censorWindow ? convertCensorWindowToAtlas(cohort.censorWindow) : {},
 
-    ...(cohort.exitCriteria ? { EndStrategy: convertExitCriteriaToAtlas(cohort.exitCriteria) } : {}),
+    ...(() => {
+      const endStrategy = cohort.exitCriteria
+        ? convertExitCriteriaToAtlas(cohort.exitCriteria)
+        : null
+      return endStrategy ? { EndStrategy: endStrategy } : {}
+    })(),
   }
 }
 
-function convertExitCriteriaToAtlas(exit: import('@/models/cohort.types').ExitCriteria): AtlasEndStrategy {
+// Returns null for "end of continuous observation": circe's EndStrategy is a
+// polymorphic type, so an empty `EndStrategy: {}` fails deserialization — the
+// strategy must be expressed by omitting the field entirely.
+function convertExitCriteriaToAtlas(
+  exit: import('@/models/cohort.types').ExitCriteria
+): AtlasEndStrategy | null {
   if (exit.strategy === 'FIXED_DURATION') {
     return {
       DateOffset: {
@@ -205,7 +215,7 @@ function convertExitCriteriaToAtlas(exit: import('@/models/cohort.types').ExitCr
       },
     }
   }
-  return {}
+  return null
 }
 
 function convertDemographicEventToAtlas(event: CohortEvent): Record<string, unknown> {

@@ -175,4 +175,38 @@ describe('Exit Criteria Round-Trip Tests', () => {
       expect(atlasOutput.CensoringCriteria).toBeDefined()
     })
   })
+
+  describe('EndStrategy', () => {
+    it('omits EndStrategy for end-of-continuous-observation', () => {
+      const cohort: CohortDefinition = {
+        name: 'cohort',
+        entryEvents: [],
+        conceptSets: [],
+        inclusionRules: [],
+        exitCriteria: { strategy: 'CONTINUOUS_OBSERVATION' },
+      }
+
+      const atlasOutput = convertInternalToAtlas(cohort)
+
+      // circe's EndStrategy is polymorphic; an empty {} fails deserialization.
+      // Continuous observation must be expressed by omitting the field.
+      expect('EndStrategy' in atlasOutput).toBe(false)
+    })
+
+    it('emits DateOffset EndStrategy for fixed duration', () => {
+      const cohort: CohortDefinition = {
+        name: 'cohort',
+        entryEvents: [],
+        conceptSets: [],
+        inclusionRules: [],
+        exitCriteria: { strategy: 'FIXED_DURATION', dateField: 'END_DATE', offset: 30 },
+      }
+
+      const atlasOutput = convertInternalToAtlas(cohort)
+
+      expect(atlasOutput.EndStrategy).toEqual({
+        DateOffset: { DateField: 'EndDate', Offset: 30 },
+      })
+    })
+  })
 })

@@ -1,7 +1,7 @@
 /**
  * InclusionCriteriaPanel Component Tests
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import { createPinia, setActivePinia } from 'pinia'
@@ -15,14 +15,20 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
+// Hoisted refs so individual tests can flip statsError / isInvalidExpression
+// to exercise the AtlasAlert branches and the copyStatsError handler.
+const inclusionStatsState = vi.hoisted(() => ({
+  stats: { value: null as null },
+  isLoading: { value: false },
+  isPending: { value: false },
+  error: { value: null as string | null },
+  isInvalidExpression: { value: false },
+  isStale: { value: false },
+  refresh: () => {},
+}))
+
 vi.mock('@/composables/useInclusionStats', () => ({
-  useInclusionStats: () => ({
-    stats: { value: null },
-    isLoading: { value: false },
-    error: { value: null },
-    isStale: { value: false },
-    refresh: vi.fn(),
-  }),
+  useInclusionStats: () => inclusionStatsState,
 }))
 
 vi.mock('@/composables/useTrexSQLCache', () => ({
@@ -119,6 +125,9 @@ describe('InclusionCriteriaPanel', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    inclusionStatsState.error.value = null
+    inclusionStatsState.isInvalidExpression.value = false
+    inclusionStatsState.isPending.value = false
   })
 
   describe('Basic Rendering', () => {
@@ -588,6 +597,71 @@ describe('InclusionCriteriaPanel', () => {
       await wrapper.findAll('[data-testid="inclusion-rail-rule"]')[1]!.trigger('click')
       const active = wrapper.find('[data-testid="inclusion-rail-rule"].inclusion-rail__rule--active')
       expect(active.text()).toContain('Second Inclusion Rule')
+    })
+  })
+
+  describe('copyStatsError', () => {
+    afterEach(() => {
+      vi.useRealTimers()
+      Object.assign(navigator, { clipboard: undefined })
+    })
+
+    it('writes the stats error to clipboard and flips errorCopied true→false after 1500ms', async () => {
+      vi.useFakeTimers()
+      inclusionStatsState.error.value = 'Boom — SQL execution failed'
+      const writeText = vi.fn().mockResolvedValue(undefined)
+      Object.assign(navigator, { clipboard: { writeText } })
+
+      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
+      const vm = wrapper.vm as any
+      await vm.copyStatsError()
+
+      expect(writeText).toHaveBeenCalledWith('Boom — SQL execution failed')
+      expect(vm.errorCopied).toBe(true)
+
+      vi.advanceTimersByTime(1500)
+      expect(vm.errorCopied).toBe(false)
+    })
+
+    it('is a no-op when there is no stats error', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined)
+      Object.assign(navigator, { clipboard: { writeText } })
+
+      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
+      const vm = wrapper.vm as any
+      await vm.copyStatsError()
+
+      expect(writeText).not.toHaveBeenCalled()
+      expect(vm.errorCopied).toBe(false)
+    })
+
+    it('is a no-op when the clipboard API is unavailable', async () => {
+      inclusionStatsState.error.value = 'failure'
+      Object.assign(navigator, { clipboard: undefined })
+
+      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
+      const vm = wrapper.vm as any
+      await vm.copyStatsError()
+
+      expect(vm.errorCopied).toBe(false)
+    })
+
+    it('restarts the 1500ms reset window on rapid successive copies', async () => {
+      vi.useFakeTimers()
+      inclusionStatsState.error.value = 'still broken'
+      const writeText = vi.fn().mockResolvedValue(undefined)
+      Object.assign(navigator, { clipboard: { writeText } })
+
+      const wrapper = mountComponent({ modelValue: createMockInclusionRules() })
+      const vm = wrapper.vm as any
+      await vm.copyStatsError()
+      vi.advanceTimersByTime(1000)
+      // second copy before the first timer fires — should reset the window.
+      await vm.copyStatsError()
+      vi.advanceTimersByTime(1000)
+      expect(vm.errorCopied).toBe(true)
+      vi.advanceTimersByTime(500)
+      expect(vm.errorCopied).toBe(false)
     })
   })
 })

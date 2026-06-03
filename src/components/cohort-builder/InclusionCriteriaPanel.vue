@@ -57,6 +57,15 @@
               >
                 mdi-information-outline
               </AtlasIcon>
+              <AtlasIconButton
+                :icon="errorCopied ? 'mdi-check' : 'mdi-content-copy'"
+                size="sm"
+                variant="text"
+                class="ml-1 inclusion-stats-error__copy"
+                data-testid="inclusion-stats-error-copy"
+                v-bind="{ ariaLabel: t('common.copy', 'Copy error').value }"
+                @click.stop="copyStatsError"
+              />
             </AtlasAlert>
           </template>
           <div class="inclusion-stats-error__tooltip">
@@ -82,6 +91,15 @@
               >
                 mdi-information-outline
               </AtlasIcon>
+              <AtlasIconButton
+                :icon="errorCopied ? 'mdi-check' : 'mdi-content-copy'"
+                size="sm"
+                variant="text"
+                class="ml-1 inclusion-stats-error__copy"
+                data-testid="inclusion-stats-error-copy-danger"
+                v-bind="{ ariaLabel: t('common.copy', 'Copy error').value }"
+                @click.stop="copyStatsError"
+              />
             </AtlasAlert>
           </template>
           <div class="inclusion-stats-error__tooltip">
@@ -225,6 +243,19 @@ const expressionRef = computed(() => props.expression)
 const { stats, isPending, error: statsError, isInvalidExpression } =
   useInclusionStats(expressionRef)
 const { isCacheReady, selectedCacheStatus, isTrexSQLEnabled } = useTrexSQLCache()
+
+const errorCopied = ref(false)
+let copyResetTimer: ReturnType<typeof setTimeout> | undefined
+
+async function copyStatsError(): Promise<void> {
+  if (!statsError.value || !navigator?.clipboard?.writeText) return
+  await navigator.clipboard.writeText(statsError.value)
+  errorCopied.value = true
+  clearTimeout(copyResetTimer)
+  copyResetTimer = setTimeout(() => {
+    errorCopied.value = false
+  }, 1500)
+}
 
 const cacheState = computed<'ready' | 'stale' | 'building' | 'unavailable'>(() => {
   if (!isTrexSQLEnabled.value) return 'unavailable'
