@@ -80,7 +80,7 @@ services:
       SECURITY_AUTH_AD_ENABLED: "false"
       SECURITY_AUTH_CAS_ENABLED: "false"
       # OAuth callbacks
-      SECURITY_AUTH_OAUTH_CALLBACK_UI: "http://localhost/atlas/#/welcome"
+      SECURITY_AUTH_OAUTH_CALLBACK_UI: "http://localhost/atlas/#/oauth/callback"
       SECURITY_AUTH_OAUTH_CALLBACK_API: "http://localhost:8080/WebAPI/user/oauth/callback"
       # DB-auth datasource (reads webapi.auth_user)
       SECURITY_AUTH_DB_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver

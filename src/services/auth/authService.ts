@@ -281,7 +281,7 @@ class AuthService implements IAuthService {
         // OIDC Single Logout - redirect to identity provider's end session endpoint
         logger.info('Auth', 'Performing OIDC Single Logout', logoutUrl)
         authStore.clearAuth()
-        const currentUrl = window.location.origin + window.location.pathname
+        const currentUrl = window.location.href
         const separator = logoutUrl.includes('?') ? '&' : '?'
         const fullLogoutUrl = `${logoutUrl}${separator}post_logout_redirect_uri=${encodeURIComponent(currentUrl)}`
         window.location.href = fullLogoutUrl
