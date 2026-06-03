@@ -288,4 +288,107 @@ describe('pythiaBridge', () => {
       params: { id: 7 },
     })
   })
+
+  it('saveCohort proposal → bumps saveRequest with the carried name + description', async () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    const before = store.saveRequest
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: {
+          kind: 'saveCohort',
+          name: 'T2DM cohort',
+          description: 'agent-built',
+        },
+      },
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(store.saveRequest).toBe(before + 1)
+    expect(store.saveOptions).toEqual({ name: 'T2DM cohort', description: 'agent-built' })
+  })
+
+  it('saveCohort proposal → no-op (no saveRequest bump) when no current cohort exists', async () => {
+    const store = useCohortStore()
+    const before = store.saveRequest
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: { kind: 'saveCohort', name: 'Whatever' },
+      },
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(store.saveRequest).toBe(before)
+  })
+
+  it('saveCohort proposal → resolves the callbackId with the saved cohort summary', async () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    const bus = getHostMessageBus('pythia-plugin')!
+    const handleResponseSpy = vi.spyOn(bus, 'handleResponse')
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: { kind: 'saveCohort', name: 'X' },
+      },
+      callbackId: 'cb-save-1',
+      timestamp: new Date(),
+    })
+
+    await flush()
+    // Editor would normally answer; simulate it here.
+    store.notifySaved({ id: 77, name: 'X' })
+    await flush()
+
+    expect(handleResponseSpy).toHaveBeenCalledWith('cb-save-1', { id: 77, name: 'X' })
+  })
+
+  it('navigate to cohort-new → requestNewCohort bumps newCohortSignal and resets', async () => {
+    const store = useCohortStore()
+    store.createNewCohort()
+    const before = store.newCohortSignal
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: { kind: 'navigate', route: { name: 'cohort-new' } },
+      },
+      timestamp: new Date(),
+    })
+
+    await flush()
+    expect(store.newCohortSignal).toBe(before + 1)
+    expect(router.push).toHaveBeenCalledWith({ name: 'cohort-new', params: {} })
+  })
+
+  it('applyProposal with callbackId but no current cohort still resolves the caller', async () => {
+    const bus = getHostMessageBus('pythia-plugin')!
+    const handleResponseSpy = vi.spyOn(bus, 'handleResponse')
+
+    dispatchPluginMessage({
+      type: 'cohort.applyProposal',
+      sourcePluginId: 'pythia-plugin',
+      payload: {
+        proposal: { kind: 'saveCohort' },
+      },
+      callbackId: 'cb-resolve-empty',
+      timestamp: new Date(),
+    })
+
+    await flush()
+    // handleSaveCohort returns void → bridge still resolves caller with {} so
+    // the agent isn't left hanging.
+    expect(handleResponseSpy).toHaveBeenCalledWith('cb-resolve-empty', {})
+  })
 })

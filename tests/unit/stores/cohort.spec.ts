@@ -1125,4 +1125,58 @@ describe('Cohort Store', () => {
       expect(() => store.dispose()).not.toThrow()
     })
   })
+
+  describe('agent handshake', () => {
+    it('requestNewCohort resets and bumps newCohortSignal', () => {
+      const store = useCohortStore()
+      store.createNewCohort()
+      store.addInclusionRule({ id: 'r1', name: 'r', criteriaGroups: [] } as never)
+      const before = store.newCohortSignal
+      store.requestNewCohort()
+      expect(store.newCohortSignal).toBe(before + 1)
+      expect(store.currentCohort?.inclusionRules.length).toBe(0)
+      expect(store.isDirty).toBe(false)
+    })
+
+    it('requestSave resolves with the payload passed to notifySaved', async () => {
+      const store = useCohortStore()
+      const p = store.requestSave()
+      store.notifySaved({ id: 42, name: 'Cohort A' })
+      await expect(p).resolves.toEqual({ id: 42, name: 'Cohort A' })
+    })
+
+    it('requestSave records saveOptions and bumps saveRequest synchronously', () => {
+      const store = useCohortStore()
+      const before = store.saveRequest
+      void store.requestSave({ name: 'N', description: 'D' })
+      expect(store.saveRequest).toBe(before + 1)
+      expect(store.saveOptions).toEqual({ name: 'N', description: 'D' })
+    })
+
+    it('requestSave falls back to {} after the 8s timeout if nothing answers', async () => {
+      vi.useFakeTimers()
+      try {
+        const store = useCohortStore()
+        const p = store.requestSave()
+        vi.advanceTimersByTime(8000)
+        await expect(p).resolves.toEqual({})
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('notifySaved with no pending resolver is a no-op', () => {
+      const store = useCohortStore()
+      expect(() => store.notifySaved({ id: 1 })).not.toThrow()
+    })
+
+    it('applyProposal ignores saveCohort kind (handled by the host bridge)', () => {
+      const store = useCohortStore()
+      store.createNewCohort()
+      const before = store.saveRequest
+      store.applyProposal({ kind: 'saveCohort', name: 'X' } as never)
+      // No state mutation — the bridge orchestrates the save flow.
+      expect(store.saveRequest).toBe(before)
+    })
+  })
 })

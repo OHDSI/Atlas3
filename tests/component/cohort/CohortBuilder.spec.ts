@@ -1240,4 +1240,90 @@ describe('CohortBuilder', () => {
       expect.objectContaining({ path: '/cohortdefinition/42/version/current' })
     )
   })
+
+  // ---------------------------------------------------------------------------
+  // Host bridge handshake — saveRequest / newCohortSignal watchers
+  // ---------------------------------------------------------------------------
+
+  it('saveRequest watcher applies saveOptions to local name/description and calls notifySaved', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+
+    const notifySpy = vi.spyOn(store, 'notifySaved')
+    // canSave is false (no entry events) — handleSave returns {} and the watcher
+    // still calls notifySaved so the bridge's awaited Promise resolves.
+    const p = store.requestSave({ name: 'From Agent', description: 'Agent desc' })
+    await wrapper.vm.$nextTick()
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(setup.cohortName).toBe('From Agent')
+    expect(setup.cohortDescription).toBe('Agent desc')
+    expect(notifySpy).toHaveBeenCalled()
+    await expect(p).resolves.toEqual({})
+  })
+
+  it('saveRequest watcher leaves name untouched when saveOptions is empty', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Existing'
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+
+    store.requestSave()
+    await wrapper.vm.$nextTick()
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(setup.cohortName).toBe('Existing')
+  })
+
+  it('newCohortSignal watcher repopulates local refs from the blank store cohort', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    // Dirty up the editor first
+    setup.cohortName = 'old name'
+    setup.entryEvents = [{ id: 'evt-old', criteriaType: 'X', attributes: [] }]
+    setup.inclusionRules = [
+      { id: 'r1', name: 'leftover', description: '', criteriaGroups: [] },
+    ]
+
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.requestNewCohort()
+    await wrapper.vm.$nextTick()
+
+    // Blank cohort uses default name from createNewCohort; in this mock setup it
+    // is the cohort store's default. Just assert the watcher cleared the prior
+    // entry events and inclusion rules.
+    expect(setup.entryEvents).toEqual([])
+    expect(setup.inclusionRules).toEqual([])
+    expect(setup.exitCriteria).toEqual({ strategy: 'CONTINUOUS_OBSERVATION' })
+    expect(setup.loadedTags).toEqual([])
+  })
+
+  it('newCohortSignal watcher is a no-op when there is no current cohort', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'preserved'
+    const { useCohortStore } = await import('@/stores/cohort')
+    const store = useCohortStore()
+    store.clearCohort()
+    // Trigger the signal even though no cohort exists; watcher must early-return.
+    ;(store as unknown as { newCohortSignal: number }).newCohortSignal += 1
+    await wrapper.vm.$nextTick()
+    expect(setup.cohortName).toBe('preserved')
+  })
+
+  it('handleSave returns an empty object when canSave is false (so the bridge resolves)', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    const result = await setup.handleSave()
+    expect(result).toEqual({})
+  })
 })

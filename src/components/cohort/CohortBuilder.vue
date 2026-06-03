@@ -1172,6 +1172,51 @@ watch(
   }
 )
 
+// The host bridge asks the mounted editor to run its full WebAPI save flow.
+// Always answer the signal — handleSave no-ops when nothing is savable — so the
+// bridge's awaited requestSave() resolves either way.
+watch(
+  () => cohortStore.saveRequest,
+  async () => {
+    const opts = cohortStore.saveOptions
+    if (opts?.name) cohortName.value = opts.name
+    if (opts?.description) cohortDescription.value = opts.description
+    let saved: { id?: number; name?: string } = {}
+    try {
+      saved = (await handleSave()) ?? {}
+    } finally {
+      cohortStore.notifySaved(saved)
+    }
+  }
+)
+
+// Reset to a blank cohort in place. Navigating cohort-new → cohort-new is a
+// same-route no-op, so onMounted never re-runs; without this the previous
+// cohort's criteria would linger and the next cohort's proposals would pile
+// onto it.
+watch(
+  () => cohortStore.newCohortSignal,
+  () => {
+    const c = cohortStore.currentCohort
+    if (!c) return
+    cancelValidation()
+    cohortName.value = c.name
+    cohortDescription.value = c.description ?? ''
+    entryEvents.value = c.entryEvents
+    additionalCriteria.value = c.additionalCriteria
+    inclusionRules.value = c.inclusionRules
+    exitCriteria.value = c.exitCriteria ?? { strategy: 'CONTINUOUS_OBSERVATION' }
+    censorWindow.value = c.censorWindow ?? null
+    censoringCriteria.value = c.censoringCriteria ?? []
+    observationPeriod.value = c.observationPeriod || { priorDays: 0, postDays: 0 }
+    qualifyingLimit.value = c.qualifyingLimit
+    primaryCriteriaLimit.value = c.primaryCriteriaLimit
+    inclusionQualifyingLimit.value = c.inclusionQualifyingLimit ?? 'ALL'
+    loadedTags.value = []
+    loadedSnapshot.value = createStateSnapshot()
+  }
+)
+
 // Tags
 const cohortTags = computed(() => cohortStore.currentCohort?.tags || [])
 const tagCount = computed(() => cohortTags.value.length)
@@ -1789,8 +1834,8 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
   selectedCriteriaContext.value = null
 }
 
-async function handleSave() {
-  if (!canSave.value) return
+async function handleSave(): Promise<{ id?: number; name?: string }> {
+  if (!canSave.value) return {}
 
   // Collect every concept set the cohort references (entry, additional,
   // inclusion rules, exit, censoring) and hydrate items from the API for any
@@ -1850,7 +1895,7 @@ async function handleSave() {
     if (!savedCohort || !savedCohort.id) {
       errorMessage.value = 'Failed to save cohort to server'
       showError.value = true
-      return
+      return {}
     }
 
     // Sync tags via separate API calls
@@ -1892,10 +1937,12 @@ async function handleSave() {
 
     successMessage.value = 'Cohort saved successfully'
     showSuccess.value = true
+    return { id: savedCohort.id, name: cohortDefinition.name }
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to save cohort', error)
     errorMessage.value = error instanceof Error ? error.message : 'Failed to save cohort'
     showError.value = true
+    return {}
   }
 }
 
