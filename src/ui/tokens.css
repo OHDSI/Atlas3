@@ -1,6 +1,6 @@
 /* GENERATED — DO NOT EDIT.
  * Source: src/ui/tokens.ts. Run `npm run tokens:build` to regenerate. */
-:root {
+:root, .v-theme--light {
   --atlas-color-primary: #1f425a;
   --atlas-color-primary-darken: #163349;
   --atlas-color-accent: #eb6622;
@@ -32,4 +32,19 @@
   --atlas-z-dropdown: 1000;
   --atlas-z-dialog: 2000;
   --atlas-z-snackbar: 3000;
+}
+.v-theme--dark {
+  --atlas-color-primary: #6aa3cb;
+  --atlas-color-primary-darken: #4f86ad;
+  --atlas-color-accent: #eb6622;
+  --atlas-color-surface: #161618;
+  --atlas-color-surface-variant: #0a0a0b;
+  --atlas-color-on-surface: #f4f4f5;
+  --atlas-color-on-surface-variant: #a1a1aa;
+  --atlas-color-outline: rgba(255,255,255,.14);
+  --atlas-color-outline-variant: rgba(255,255,255,.07);
+  --atlas-color-info: #4aa3f0;
+  --atlas-color-success: #5cc16a;
+  --atlas-color-warning: #ffa726;
+  --atlas-color-danger: #ff6b6b;
 }

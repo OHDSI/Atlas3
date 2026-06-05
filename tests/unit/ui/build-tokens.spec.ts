@@ -10,8 +10,19 @@ describe('generateTokensCss', () => {
     expect(css).toMatch(/^\/\* GENERATED — DO NOT EDIT/m)
   })
 
-  it('emits a :root block', () => {
-    expect(css).toMatch(/:root\s*\{/)
+  it('emits a :root, .v-theme--light block for light colors + shared tokens', () => {
+    expect(css).toMatch(/:root,\s*\.v-theme--light\s*\{/)
+    expect(css).toContain('--atlas-color-primary: #1f425a;')
+    expect(css).toContain('--atlas-radius-md: 8px;')
+  })
+
+  it('emits a .v-theme--dark block overriding only color tokens', () => {
+    expect(css).toMatch(/\.v-theme--dark\s*\{/)
+    const darkBlock = css.slice(css.indexOf('.v-theme--dark'))
+    expect(darkBlock).toContain('--atlas-color-primary: #6aa3cb;')
+    expect(darkBlock).toContain('--atlas-color-surface: #161618;')
+    // shared (non-color) tokens are NOT repeated in the dark block
+    expect(darkBlock).not.toContain('--atlas-radius-md')
   })
 
   it('emits color custom properties with --atlas- prefix', () => {
