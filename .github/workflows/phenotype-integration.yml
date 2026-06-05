@@ -76,6 +76,12 @@ jobs:
   phenotype-tests:
     needs: generate-fixtures
     runs-on: ubuntu-latest
+    # Browsers + OS deps are pre-baked in this image, so we avoid the
+    # `playwright install` browser download from cdn.playwright.dev, which
+    # hangs indefinitely on GitHub runners. Keep the version in sync with the
+    # @playwright/test version in package-lock.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
     timeout-minutes: 20
     permissions:
       contents: read
@@ -96,9 +102,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
 
       - name: Download phenotype fixtures
         uses: actions/download-artifact@v4

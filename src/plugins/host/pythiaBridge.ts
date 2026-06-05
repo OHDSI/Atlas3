@@ -54,7 +54,10 @@ export function setupPythiaBridge(): void {
     switch (detail.type) {
       case 'cohort.applyProposal':
       case 'pythia.applyProposal':
-        void handleApplyProposal(detail.payload as { proposal: AgentProposal })
+        void handleApplyProposal(
+          detail.payload as { proposal: AgentProposal },
+          detail.callbackId
+        )
         break
       case 'cohort.rejectProposal':
       case 'pythia.rejectProposal':
@@ -75,43 +78,48 @@ export function setupPythiaBridge(): void {
   logger.debug('pythiaBridge', 'installed')
 }
 
-async function handleApplyProposal(payload: { proposal: AgentProposal }) {
+async function handleApplyProposal(
+  payload: { proposal: AgentProposal },
+  callbackId?: string
+): Promise<void> {
+  const result = await applyProposalInner(payload)
+  if (callbackId) {
+    const bus = getHostMessageBus(PLUGIN_ID)
+    bus?.handleResponse(callbackId, result ?? {})
+  }
+}
+
+async function applyProposalInner(
+  payload: { proposal: AgentProposal }
+): Promise<{ id?: number | string; name?: string } | void> {
   if (!payload?.proposal) return
   const proposal = payload.proposal
   switch (proposal.kind) {
     case 'navigate':
-      handleNavigate(proposal.route)
+      await handleNavigate(proposal.route)
       return
+    case 'saveCohort':
+      return await handleSaveCohort(proposal)
     case 'createStandaloneConceptSet':
-      await handleCreateStandaloneConceptSet(proposal.conceptSet)
-      return
+      return await handleCreateStandaloneConceptSet(proposal.conceptSet)
     case 'createFeatureAnalysis':
-      await handleCreateFeatureAnalysis(proposal.payload)
-      return
+      return await handleCreateFeatureAnalysis(proposal.payload)
     case 'createCharacterization':
-      await handleCreateCharacterization(proposal.payload)
-      return
+      return await handleCreateCharacterization(proposal.payload)
     case 'createPathway':
-      await handleCreatePathway(proposal.payload)
-      return
+      return await handleCreatePathway(proposal.payload)
     case 'createIncidenceRate':
-      await handleCreateIncidenceRate(proposal.payload)
-      return
+      return await handleCreateIncidenceRate(proposal.payload)
     case 'updateConceptSet':
-      await handleUpdateConceptSet(proposal.payload)
-      return
+      await handleUpdateConceptSet(proposal.payload); return
     case 'updateFeatureAnalysis':
-      await handleUpdateFeatureAnalysis(proposal.payload)
-      return
+      await handleUpdateFeatureAnalysis(proposal.payload); return
     case 'updateCharacterization':
-      await handleUpdateCharacterization(proposal.payload)
-      return
+      await handleUpdateCharacterization(proposal.payload); return
     case 'updatePathway':
-      await handleUpdatePathway(proposal.payload)
-      return
+      await handleUpdatePathway(proposal.payload); return
     case 'updateIncidenceRate':
-      await handleUpdateIncidenceRate(proposal.payload)
-      return
+      await handleUpdateIncidenceRate(proposal.payload); return
     default: {
       const cohortStore = useCohortStore()
       const currentRoute = router.currentRoute.value
@@ -121,6 +129,7 @@ async function handleApplyProposal(payload: { proposal: AgentProposal }) {
       }
       cohortStore.applyProposal(proposal)
       await ensureOnCohortRoute()
+      return
     }
   }
 }
@@ -148,8 +157,29 @@ async function ensureOnCohortRoute() {
   }
 }
 
-function handleNavigate(route: NavigateRoute) {
+async function handleSaveCohort(
+  proposal: { name?: string; description?: string } = {}
+): Promise<{ id?: number; name?: string } | void> {
+  const cohortStore = useCohortStore()
+  if (!cohortStore.currentCohort) {
+    showSnackbar('There is no cohort to save yet', 'error')
+    return
+  }
+  await ensureOnCohortRoute()
+  return await cohortStore.requestSave({ name: proposal.name, description: proposal.description })
+}
+
+async function handleNavigate(route: NavigateRoute) {
   if (!route?.name) return
+  if (route.name === 'cohort-new') {
+    const cohortStore = useCohortStore()
+    const currentName = router.currentRoute.value.name
+    const editorMounted = typeof currentName === 'string' && COHORT_ROUTES.has(currentName)
+    if (editorMounted && cohortStore.currentCohort && cohortStore.isDirty) {
+      await cohortStore.requestSave() // safety auto-save before blanking
+    }
+    cohortStore.requestNewCohort()
+  }
   try {
     router.push({ name: route.name, params: route.params ?? {} })
   } catch (err) {
@@ -160,7 +190,7 @@ function handleNavigate(route: NavigateRoute) {
 
 async function handleCreateStandaloneConceptSet(
   payload: StandaloneConceptSetPayload
-) {
+): Promise<{ id?: number | string; name?: string } | void> {
   if (!payload?.name || !Array.isArray(payload.items) || payload.items.length === 0) {
     showSnackbar('Concept set is missing a name or items', 'error')
     return
@@ -226,7 +256,7 @@ async function handleCreateStandaloneConceptSet(
       `Concept set "${created.name}" created and attached to the cohort`,
       'success'
     )
-    return
+    return { id: created.id, name: created.name }
   }
 
   showSnackbar(`Concept set "${created.name}" created`, 'success')
@@ -237,6 +267,7 @@ async function handleCreateStandaloneConceptSet(
   } catch (err) {
     logger.warn('pythiaBridge', 'open-after-create failed', err)
   }
+  return { id: created.id, name: created.name }
 }
 
 async function navigateToEditor(routeName: string, id: number | string) {
@@ -249,7 +280,7 @@ async function navigateToEditor(routeName: string, id: number | string) {
 
 async function handleCreateFeatureAnalysis(
   payload: FeatureAnalysisCreatePayload
-) {
+): Promise<{ id?: number | string; name?: string } | void> {
   if (!payload?.name || !payload?.type) {
     showSnackbar('Feature analysis is missing a name or type', 'error')
     return
@@ -273,6 +304,7 @@ async function handleCreateFeatureAnalysis(
     }
     showSnackbar(`Feature analysis "${created.name}" created`, 'success')
     await navigateToEditor('feature-analysis-edit', created.id)
+    return { id: created.id, name: created.name }
   } catch (err) {
     logger.error('pythiaBridge', 'createFeatureAnalysis failed', err)
     showSnackbar(`Failed to create feature analysis: ${(err as Error).message}`, 'error')
@@ -281,7 +313,7 @@ async function handleCreateFeatureAnalysis(
 
 async function handleCreateCharacterization(
   payload: CharacterizationCreatePayload
-) {
+): Promise<{ id?: number | string; name?: string } | void> {
   if (!payload?.name) {
     showSnackbar('Characterization is missing a name', 'error')
     return
@@ -315,6 +347,7 @@ async function handleCreateCharacterization(
     }
     showSnackbar(`Characterization "${created.name}" created`, 'success')
     await navigateToEditor('characterization-edit', created.id)
+    return { id: created.id, name: created.name }
   } catch (err) {
     logger.error('pythiaBridge', 'createCharacterization failed', err)
     showSnackbar(`Failed to create characterization: ${(err as Error).message}`, 'error')
@@ -323,7 +356,7 @@ async function handleCreateCharacterization(
 
 async function handleCreatePathway(
   payload: PathwayCreatePayload
-) {
+): Promise<{ id?: number | string; name?: string } | void> {
   if (!payload?.name) {
     showSnackbar('Pathway is missing a name', 'error')
     return
@@ -349,6 +382,7 @@ async function handleCreatePathway(
     }
     showSnackbar(`Pathway "${result.data.name}" created`, 'success')
     await navigateToEditor('pathway-edit', result.data.id)
+    return { id: result.data.id, name: payload.name }
   } catch (err) {
     logger.error('pythiaBridge', 'createPathway failed', err)
     showSnackbar(`Failed to create pathway: ${(err as Error).message}`, 'error')
@@ -357,7 +391,7 @@ async function handleCreatePathway(
 
 async function handleCreateIncidenceRate(
   payload: IncidenceRateCreatePayload
-) {
+): Promise<{ id?: number | string; name?: string } | void> {
   if (!payload?.name) {
     showSnackbar('Incidence rate is missing a name', 'error')
     return
@@ -391,6 +425,7 @@ async function handleCreateIncidenceRate(
     }
     showSnackbar(`Incidence rate "${result.data.name}" created`, 'success')
     await navigateToEditor('incidence-rate-edit', result.data.id)
+    return { id: result.data.id, name: payload.name }
   } catch (err) {
     logger.error('pythiaBridge', 'createIncidenceRate failed', err)
     showSnackbar(`Failed to create incidence rate: ${(err as Error).message}`, 'error')
