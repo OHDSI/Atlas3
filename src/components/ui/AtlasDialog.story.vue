@@ -4,7 +4,6 @@ import { ref } from 'vue'
 import AtlasDialog from './AtlasDialog.vue'
 import AtlasButton from './AtlasButton.vue'
 import AtlasTextField from './AtlasTextField.vue'
-import AtlasStoryDocs from './_story/AtlasStoryDocs.vue'
 
 const open = ref(false)
 const openWithSubtitle = ref(false)
@@ -18,34 +17,6 @@ const formName = ref('')
     title="AtlasDialog"
     group="tier-a"
   >
-    <Variant title="Overview">
-      <AtlasStoryDocs
-        name="AtlasDialog"
-        description="Modal dialog wrapping Vuetify's VDialog with a branded card (eyebrow, title, subtitle, close button), focus restoration, or a chromeless passthrough."
-        :props="[
-          { name: 'modelValue', type: 'boolean', default: '(required)', description: 'Open state. Use v-model.' },
-          { name: 'eyebrow', type: 'string', default: `''`, description: 'Small uppercase label above the title.' },
-          { name: 'title', type: 'string', default: 'undefined', description: 'Dialog heading (also drives aria-labelledby).' },
-          { name: 'subtitle', type: 'string', default: 'undefined', description: 'Secondary line below the title.' },
-          { name: 'maxWidth', type: 'number | string', default: '560', description: 'Maximum dialog width.' },
-          { name: 'width', type: 'number | string', default: 'undefined', description: 'Explicit dialog width.' },
-          { name: 'persistent', type: 'boolean', default: 'false', description: 'Prevents closing via overlay click or escape.' },
-          { name: 'showClose', type: 'boolean', default: 'true', description: 'Shows the header close button.' },
-          { name: 'closeLabel', type: 'string', default: `'Close dialog'`, description: 'Accessible label for the close button.' },
-          { name: 'chromeless', type: 'boolean', default: 'false', description: 'Renders the default slot without the branded card chrome.' },
-        ]"
-        :events="[
-          { name: 'update:modelValue', payload: 'boolean', description: 'Emitted when the open state changes.' },
-          { name: 'close', payload: '—', description: 'Emitted when the dialog closes.' },
-        ]"
-        :slots="[
-          { name: 'default', description: 'Dialog body content.' },
-          { name: 'actions', description: 'Footer actions (typically buttons).' },
-        ]"
-        usage="<AtlasDialog v-model=&quot;open&quot; eyebrow=&quot;CONFIRM&quot; title=&quot;Discard changes?&quot;>...<template #actions>...</template></AtlasDialog>"
-      />
-    </Variant>
-
     <Variant title="confirm dialog">
       <AtlasButton @click="open = true">
         Open dialog

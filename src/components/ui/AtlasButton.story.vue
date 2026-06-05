@@ -7,7 +7,6 @@ import AtlasButton from './AtlasButton.vue'
     title="AtlasButton"
     group="tier-a"
   >
-
     <Variant title="variants">
       <div style="display:flex; gap:12px; flex-wrap:wrap;">
         <AtlasButton variant="primary">

@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import AtlasDataTable from './AtlasDataTable.vue'
 import AtlasChip from './AtlasChip.vue'
-import AtlasStoryDocs from './_story/AtlasStoryDocs.vue'
 
 const headers = [
   { key: 'name', title: 'Cohort name' },
@@ -35,34 +34,6 @@ void loading.value
     title="AtlasDataTable"
     group="tier-b"
   >
-    <Variant title="Overview">
-      <AtlasStoryDocs
-        name="AtlasDataTable"
-        description="Data grid wrapping Vuetify's VDataTable with compact density, brand defaults and full slot forwarding for custom cells."
-        :props="[
-          { name: 'headers', type: 'Header[]', default: '(required)', description: 'Column definitions ({ key, title, value, sortable, align, width }).' },
-          { name: 'items', type: 'unknown[]', default: '(required)', description: 'Row data.' },
-          { name: 'loading', type: 'boolean', default: 'false', description: 'Shows the loading indicator.' },
-          { name: 'itemsPerPage', type: 'number', default: '10', description: 'Page size.' },
-          { name: 'page', type: 'number', default: '1', description: 'Current page (1-based). Use v-model:page.' },
-          { name: 'sortBy', type: 'SortItem[]', default: '[]', description: 'Active sort. Use v-model:sort-by.' },
-          { name: 'height', type: 'number | string', default: 'undefined', description: 'Fixed table height (enables internal scroll).' },
-          { name: 'fixedHeader', type: 'boolean', default: 'false', description: 'Keeps the header visible while scrolling.' },
-          { name: 'hideDefaultFooter', type: 'boolean', default: 'false', description: 'Hides the pagination footer.' },
-          { name: 'noDataText', type: 'string', default: 'undefined', description: 'Text shown when there are no items.' },
-          { name: 'loadingText', type: 'string', default: 'undefined', description: 'Text shown while loading.' },
-          { name: 'caption', type: 'string', default: 'undefined', description: 'Accessible label (aria-label) for the table.' },
-        ]"
-        :events="[
-          { name: 'update:page', payload: 'number', description: 'Emitted on page change.' },
-          { name: 'update:itemsPerPage', payload: 'number', description: 'Emitted on page-size change.' },
-          { name: 'update:sortBy', payload: 'SortItem[]', description: 'Emitted on sort change.' },
-        ]"
-        :slots="[{ name: '(all VDataTable slots)', description: 'Every slot is forwarded, e.g. #item.<key> for custom cell rendering.' }]"
-        usage="<AtlasDataTable :headers=&quot;headers&quot; :items=&quot;items&quot;><template #item.status=&quot;{ item }&quot;>...</template></AtlasDataTable>"
-      />
-    </Variant>
-
     <Variant title="default">
       <AtlasDataTable
         :headers="headers"
