@@ -4,7 +4,9 @@ import { tokens } from './tokens'
 
 type ThemeOptions = Pick<VuetifyOptions, 'theme' | 'defaults'>
 
-type ColorSet = typeof tokens.color
+// Widen the literal `as const` token types to plain strings so both the light
+// (tokens.color) and dark (tokens.colorDark) sets are assignable to colorsFor.
+type ColorSet = Record<keyof typeof tokens.color, string>
 
 function colorsFor(set: ColorSet, primaryOverride?: string | null) {
   return {
