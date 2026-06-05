@@ -97,4 +97,5 @@ desktop.ini
 *.pid.lock
 .gitignore
 .superpowers/
+docs/superpowers/
 .gstack/
