@@ -8,7 +8,7 @@ const active = ref(true)
 <template>
   <Story
     title="AtlasSwitch"
-    group="tier-a"
+    group="components"
   >
     <Variant title="tones">
       <div style="display:flex; gap:24px;">

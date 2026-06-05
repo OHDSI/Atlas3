@@ -15,7 +15,7 @@ const formName = ref('')
 <template>
   <Story
     title="AtlasDialog"
-    group="tier-a"
+    group="components"
   >
     <Variant title="confirm dialog">
       <AtlasButton @click="open = true">

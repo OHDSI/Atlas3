@@ -5,7 +5,7 @@ import AtlasAlert from './AtlasAlert.vue'
 <template>
   <Story
     title="AtlasAlert"
-    group="tier-a"
+    group="components"
   >
     <Variant title="severities">
       <div style="display:grid; gap:12px;">

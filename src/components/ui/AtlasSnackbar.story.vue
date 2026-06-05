@@ -13,7 +13,7 @@ const openTop = ref(false)
 <template>
   <Story
     title="AtlasSnackbar"
-    group="tier-a"
+    group="components"
   >
     <Variant title="info">
       <AtlasButton @click="open = true">

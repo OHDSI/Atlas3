@@ -8,7 +8,7 @@ const checked = ref(false)
 <template>
   <Story
     title="AtlasCheckbox"
-    group="tier-a"
+    group="components"
   >
     <Variant title="default">
       <AtlasCheckbox

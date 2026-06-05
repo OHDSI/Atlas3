@@ -12,7 +12,7 @@ const multilineValue = ref('')
 <template>
   <Story
     title="AtlasTextField"
-    group="tier-a"
+    group="components"
   >
     <Variant title="default">
       <AtlasTextField

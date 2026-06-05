@@ -5,7 +5,7 @@ import AtlasButton from './AtlasButton.vue'
 <template>
   <Story
     title="AtlasButton"
-    group="tier-a"
+    group="components"
   >
     <Variant title="variants">
       <div style="display:flex; gap:12px; flex-wrap:wrap;">

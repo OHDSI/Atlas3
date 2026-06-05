@@ -5,7 +5,7 @@ import AtlasChip from './AtlasChip.vue'
 <template>
   <Story
     title="AtlasChip"
-    group="tier-a"
+    group="components"
   >
     <Variant title="tones">
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
