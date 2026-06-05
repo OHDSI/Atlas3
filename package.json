@@ -26,7 +26,8 @@
     "generate:routes": "node scripts/emit-route-manifest.mjs",
     "prebuild": "npm run tokens:build && npm run generate:routes",
     "ui:dev": "histoire dev",
-    "ui:build": "histoire build"
+    "ui:build": "histoire build",
+    "lib:build": "npm run tokens:build && vite build --config vite.lib.config.ts"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -75,6 +76,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "^5.4.21",
+    "vite-plugin-dts": "^4.5.4",
     "vitest": "^1.6.1",
     "vue-tsc": "^3.1.3"
   }

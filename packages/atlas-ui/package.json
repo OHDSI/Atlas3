@@ -9,9 +9,9 @@
   "files": ["dist"],
   "main": "./dist/atlas-ui.js",
   "module": "./dist/atlas-ui.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/atlas-ui.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/atlas-ui.js" },
+    ".": { "types": "./dist/atlas-ui.d.ts", "import": "./dist/atlas-ui.js" },
     "./tokens.css": "./dist/atlas-ui.css",
     "./style.css": "./dist/atlas-ui.css"
   },
