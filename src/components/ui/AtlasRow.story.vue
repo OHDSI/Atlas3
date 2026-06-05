@@ -21,10 +21,10 @@ import AtlasStoryDocs from './_story/AtlasStoryDocs.vue'
 
     <Variant title="default">
       <AtlasRow>
-        <AtlasCol style="background: rgba(0,0,0,0.05); padding: 12px;">
+        <AtlasCol style="background: rgba(127,127,127,0.15); padding: 12px;">
           Column A
         </AtlasCol>
-        <AtlasCol style="background: rgba(0,0,0,0.1); padding: 12px;">
+        <AtlasCol style="background: rgba(127,127,127,0.3); padding: 12px;">
           Column B
         </AtlasCol>
       </AtlasRow>
