@@ -26,6 +26,7 @@
   --atlas-density-default: compact;
   --atlas-elevation-ambient: 0 1px 3px rgba(15,23,42,.08);
   --atlas-elevation-diffuse: 0 8px 24px rgba(15,23,42,.08);
+  --atlas-elevation-hover: 0 2px 6px rgba(15,23,42,.1), 0 12px 32px rgba(15,23,42,.12);
   --atlas-motion-fast: 120ms ease;
   --atlas-motion-med: 160ms ease;
   --atlas-motion-slow: 240ms ease;

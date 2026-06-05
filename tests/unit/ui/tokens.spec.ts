@@ -55,4 +55,8 @@ describe('design tokens', () => {
   it('keeps dark color keys in sync with light color keys', () => {
     expect(Object.keys(tokens.colorDark).sort()).toEqual(Object.keys(tokens.color).sort())
   })
+
+  it('exposes a hover elevation token', () => {
+    expect(tokens.elevation.hover).toBe('0 2px 6px rgba(15,23,42,.1), 0 12px 32px rgba(15,23,42,.12)')
+  })
 })

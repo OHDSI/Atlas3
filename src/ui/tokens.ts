@@ -35,6 +35,7 @@ export const tokens = {
   elevation: {
     ambient: '0 1px 3px rgba(15,23,42,.08)',
     diffuse: '0 8px 24px rgba(15,23,42,.08)',
+    hover:   '0 2px 6px rgba(15,23,42,.1), 0 12px 32px rgba(15,23,42,.12)',
   },
   motion:  { fast: '120ms ease', med: '160ms ease', slow: '240ms ease' },
   z:       { dropdown: 1000, dialog: 2000, snackbar: 3000 },
