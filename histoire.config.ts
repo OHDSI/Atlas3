@@ -7,6 +7,12 @@ export default defineConfig({
   setupFile: './histoire.setup.ts',
   theme: {
     title: 'Atlas UI',
+    logo: {
+      square: '/src/assets/icons/atlas-ui-library-logo.svg',
+      light: '/src/assets/icons/atlas-ui-library-logo.svg',
+      dark: '/src/assets/icons/atlas-ui-library-logo-dark.svg',
+    },
+    logoHref: 'https://github.com/OHDSI/Atlas3',
     colors: {
       primary: {
         50: '#eaf1f6',

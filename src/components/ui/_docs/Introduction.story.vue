@@ -6,7 +6,6 @@ import AtlasStoryDocs from '../_story/AtlasStoryDocs.vue'
   <Story
     title="Introduction"
     group="top"
-    :docs-only="true"
   >
     <Variant title="Getting started">
       <AtlasStoryDocs

@@ -4,43 +4,39 @@
     with-background
     style="min-height: 100%;"
   >
-    <div style="position: relative; padding: 24px;">
-      <button
-        type="button"
-        class="story-theme-toggle"
-        aria-label="Toggle theme"
-        :aria-pressed="theme === 'dark'"
-        @click="theme = theme === 'dark' ? 'light' : 'dark'"
-      >
-        {{ theme === 'dark' ? '☾ Dark' : '☀ Light' }}
-      </button>
+    <div style="padding: 24px;">
       <slot />
     </div>
   </v-theme-provider>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-const theme = ref<'light' | 'dark'>('light')
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+
+// Histoire applies its `dark` class (theme.darkClass) to the story sandbox's
+// <html> when its global light/dark toggle is switched. We mirror that into the
+// Vuetify theme so the single global toggle themes the components too.
+const isDark = ref(false)
+let observer: MutationObserver | null = null
+
+function syncDark() {
+  const cl = document.documentElement.classList
+  isDark.value = cl.contains('dark') || cl.contains('htw-dark')
+}
+
+const theme = computed(() => (isDark.value ? 'dark' : 'light'))
+
+onMounted(() => {
+  syncDark()
+  observer = new MutationObserver(syncDark)
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class'],
+  })
+})
+
+onBeforeUnmount(() => {
+  observer?.disconnect()
+  observer = null
+})
 </script>
-
-<style scoped>
-.story-theme-toggle {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 10;
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: var(--atlas-radius-md);
-  border: 1px solid rgb(var(--v-theme-outline));
-  background: rgb(var(--v-theme-surface));
-  color: rgb(var(--v-theme-on-surface));
-  cursor: pointer;
-}
-
-.story-theme-toggle:focus-visible {
-  outline: 2px solid rgb(var(--v-theme-primary));
-  outline-offset: 2px;
-}
-</style>
