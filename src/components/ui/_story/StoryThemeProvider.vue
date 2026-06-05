@@ -16,12 +16,18 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 // Histoire applies its `dark` class (theme.darkClass) to the story sandbox's
 // <html> when its global light/dark toggle is switched. We mirror that into the
 // Vuetify theme so the single global toggle themes the components too.
-const isDark = ref(false)
+function readDark() {
+  const cl = document.documentElement.classList
+  return cl.contains('dark') || cl.contains('htw-dark')
+}
+
+// Initialise from the current class so the first render already matches the
+// active theme (no light→dark flash), then keep it in sync via the observer.
+const isDark = ref(readDark())
 let observer: MutationObserver | null = null
 
 function syncDark() {
-  const cl = document.documentElement.classList
-  isDark.value = cl.contains('dark') || cl.contains('htw-dark')
+  isDark.value = readDark()
 }
 
 const theme = computed(() => (isDark.value ? 'dark' : 'light'))
