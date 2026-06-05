@@ -11,7 +11,6 @@ import AtlasProgressCircular from './AtlasProgressCircular.vue'
 import AtlasSkeleton from './AtlasSkeleton.vue'
 import AtlasPagination from './AtlasPagination.vue'
 import AtlasAvatar from './AtlasAvatar.vue'
-import AtlasBadge from './AtlasBadge.vue'
 import AtlasBanner from './AtlasBanner.vue'
 import AtlasSpacer from './AtlasSpacer.vue'
 import AtlasRow from './AtlasRow.vue'
@@ -82,23 +81,13 @@ const page = ref(1)
             />
           </AtlasCol>
           <AtlasCol>
-            <h3>Avatar / Badge / Banner / Icon</h3>
+            <h3>Avatar / Banner / Icon</h3>
             <AtlasAvatar
               color="primary"
               size="40"
             >
               AB
             </AtlasAvatar>
-            <AtlasBadge
-              content="3"
-              color="error"
-              style="margin-left: 16px;"
-            >
-              <AtlasIcon
-                icon="mdi-bell"
-                size="32"
-              />
-            </AtlasBadge>
 
             <AtlasBanner
               style="margin-top: 16px;"
