@@ -1,14 +1,21 @@
 <template>
   <section class="atlas-docs">
-    <h2 class="atlas-docs__title">{{ name }}</h2>
-    <p class="atlas-docs__desc">{{ description }}</p>
+    <h2 class="atlas-docs__title">
+      {{ name }}
+    </h2>
+    <p class="atlas-docs__desc">
+      {{ description }}
+    </p>
 
     <template v-if="props?.length">
       <h3>Props</h3>
       <table class="atlas-docs__table">
         <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
         <tbody>
-          <tr v-for="p in props" :key="p.name">
+          <tr
+            v-for="p in props"
+            :key="p.name"
+          >
             <td><code>{{ p.name }}</code></td><td><code>{{ p.type }}</code></td>
             <td><code>{{ p.default ?? '—' }}</code></td><td>{{ p.description }}</td>
           </tr>
@@ -21,7 +28,10 @@
       <table class="atlas-docs__table">
         <thead><tr><th>Name</th><th>Payload</th><th>Description</th></tr></thead>
         <tbody>
-          <tr v-for="e in events" :key="e.name">
+          <tr
+            v-for="e in events"
+            :key="e.name"
+          >
             <td><code>{{ e.name }}</code></td><td><code>{{ e.payload ?? '—' }}</code></td><td>{{ e.description }}</td>
           </tr>
         </tbody>
@@ -33,7 +43,12 @@
       <table class="atlas-docs__table">
         <thead><tr><th>Name</th><th>Description</th></tr></thead>
         <tbody>
-          <tr v-for="s in slots" :key="s.name"><td><code>{{ s.name }}</code></td><td>{{ s.description }}</td></tr>
+          <tr
+            v-for="s in slots"
+            :key="s.name"
+          >
+            <td><code>{{ s.name }}</code></td><td>{{ s.description }}</td>
+          </tr>
         </tbody>
       </table>
     </template>
@@ -43,9 +58,30 @@
       <pre class="atlas-docs__code"><code>{{ usage }}</code></pre>
     </template>
 
-    <div v-if="dos?.length || donts?.length" class="atlas-docs__guidance">
-      <div v-if="dos?.length"><h4>✓ Do</h4><ul><li v-for="d in dos" :key="d">{{ d }}</li></ul></div>
-      <div v-if="donts?.length"><h4>✗ Don't</h4><ul><li v-for="d in donts" :key="d">{{ d }}</li></ul></div>
+    <div
+      v-if="dos?.length || donts?.length"
+      class="atlas-docs__guidance"
+    >
+      <div v-if="dos?.length">
+        <h4>✓ Do</h4><ul>
+          <li
+            v-for="d in dos"
+            :key="d"
+          >
+            {{ d }}
+          </li>
+        </ul>
+      </div>
+      <div v-if="donts?.length">
+        <h4>✗ Don't</h4><ul>
+          <li
+            v-for="d in donts"
+            :key="d"
+          >
+            {{ d }}
+          </li>
+        </ul>
+      </div>
     </div>
   </section>
 </template>

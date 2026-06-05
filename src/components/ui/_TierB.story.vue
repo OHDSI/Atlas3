@@ -16,7 +16,6 @@ import AtlasSpacer from './AtlasSpacer.vue'
 import AtlasRow from './AtlasRow.vue'
 import AtlasCol from './AtlasCol.vue'
 import AtlasContainer from './AtlasContainer.vue'
-import AtlasIcon from './AtlasIcon.vue'
 import AtlasButton from './AtlasButton.vue'
 
 import { ref } from 'vue'
