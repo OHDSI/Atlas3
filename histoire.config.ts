@@ -5,6 +5,23 @@ import { HstVue } from '@histoire/plugin-vue'
 export default defineConfig({
   plugins: [HstVue()],
   setupFile: './histoire.setup.ts',
+  theme: {
+    title: 'Atlas UI',
+    colors: {
+      primary: {
+        50: '#eaf1f6',
+        100: '#cdddea',
+        200: '#a9c4d8',
+        300: '#84abc6',
+        400: '#6aa3cb',
+        500: '#1f425a',
+        600: '#1b3a50',
+        700: '#163349',
+        800: '#112839',
+        900: '#0c1d2a',
+      },
+    },
+  },
   storyMatch: ['src/components/ui/**/*.story.vue'],
   vite: {
     base: '/Atlas3/',
