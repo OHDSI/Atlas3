@@ -8,7 +8,7 @@ import AtlasListItem from './AtlasListItem.vue'
 <template>
   <Story
     title="AtlasMenu"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasMenu>

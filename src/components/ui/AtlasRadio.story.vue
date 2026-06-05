@@ -8,7 +8,7 @@ const selected = ref('a')
 <template>
   <Story
     title="AtlasRadio"
-    group="tier-a"
+    group="components"
   >
     <Variant title="inside v-radio-group">
       <v-radio-group v-model="selected">

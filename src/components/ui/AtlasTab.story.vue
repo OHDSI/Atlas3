@@ -9,7 +9,7 @@ const tab = ref('a')
 <template>
   <Story
     title="AtlasTab"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasTabs v-model="tab">

@@ -5,7 +5,7 @@ import AtlasSkeleton from './AtlasSkeleton.vue'
 <template>
   <Story
     title="AtlasSkeleton"
-    group="tier-b"
+    group="components"
   >
     <Variant title="text">
       <AtlasSkeleton type="text" />

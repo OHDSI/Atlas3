@@ -6,7 +6,7 @@ import AtlasListItem from './AtlasListItem.vue'
 <template>
   <Story
     title="AtlasList"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasList>

@@ -5,7 +5,7 @@ import AtlasIconButton from './AtlasIconButton.vue'
 <template>
   <Story
     title="AtlasIconButton"
-    group="tier-a"
+    group="components"
   >
     <Variant title="variants × tones">
       <div style="display:grid; grid-template-columns: repeat(3, auto); gap:12px; align-items:center; justify-items:start;">

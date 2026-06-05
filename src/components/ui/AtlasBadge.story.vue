@@ -5,7 +5,7 @@ import AtlasBadge from './AtlasBadge.vue'
 <template>
   <Story
     title="AtlasBadge"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasBadge

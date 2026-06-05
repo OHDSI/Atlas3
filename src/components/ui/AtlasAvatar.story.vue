@@ -5,7 +5,7 @@ import AtlasAvatar from './AtlasAvatar.vue'
 <template>
   <Story
     title="AtlasAvatar"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasAvatar

@@ -5,7 +5,7 @@ import AtlasCard from './AtlasCard.vue'
 <template>
   <Story
     title="AtlasCard"
-    group="top"
+    group="components"
   >
     <Variant title="default">
       <AtlasCard>Default card with medium padding.</AtlasCard>

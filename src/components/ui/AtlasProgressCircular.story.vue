@@ -5,7 +5,7 @@ import AtlasProgressCircular from './AtlasProgressCircular.vue'
 <template>
   <Story
     title="AtlasProgressCircular"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasProgressCircular

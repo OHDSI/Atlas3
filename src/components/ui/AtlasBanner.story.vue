@@ -5,7 +5,7 @@ import AtlasBanner from './AtlasBanner.vue'
 <template>
   <Story
     title="AtlasBanner"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasBanner text="A banner message" />

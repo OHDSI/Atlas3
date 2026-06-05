@@ -12,7 +12,7 @@ const required = ref('yes')
 <template>
   <Story
     title="AtlasRadioGroup"
-    group="tier-a"
+    group="components"
   >
     <Variant title="vertical (default)">
       <AtlasRadioGroup

@@ -5,7 +5,7 @@ import AtlasDivider from './AtlasDivider.vue'
 <template>
   <Story
     title="AtlasDivider"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <div>

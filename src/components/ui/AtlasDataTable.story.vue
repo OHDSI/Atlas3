@@ -32,7 +32,7 @@ void loading.value
 <template>
   <Story
     title="AtlasDataTable"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasDataTable

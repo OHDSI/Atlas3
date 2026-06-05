@@ -5,7 +5,7 @@ import AtlasProgressLinear from './AtlasProgressLinear.vue'
 <template>
   <Story
     title="AtlasProgressLinear"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasProgressLinear

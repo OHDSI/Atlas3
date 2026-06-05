@@ -40,8 +40,7 @@ export default defineConfig({
   tree: {
     groups: [
       { id: 'top', title: '' },
-      { id: 'tier-a', title: 'Tier A — Semantic' },
-      { id: 'tier-b', title: 'Tier B — Canonical' },
+      { id: 'components', title: 'Components' },
     ],
   },
 })

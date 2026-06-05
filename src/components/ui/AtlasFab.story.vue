@@ -5,7 +5,7 @@ import AtlasFab from './AtlasFab.vue'
 <template>
   <Story
     title="AtlasFab"
-    group="tier-a"
+    group="components"
   >
     <Variant title="default">
       <AtlasFab

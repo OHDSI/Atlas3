@@ -6,7 +6,7 @@ import AtlasCol from './AtlasCol.vue'
 <template>
   <Story
     title="AtlasRow"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasRow>

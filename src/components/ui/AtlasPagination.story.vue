@@ -8,7 +8,7 @@ const page = ref(1)
 <template>
   <Story
     title="AtlasPagination"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasPagination

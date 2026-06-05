@@ -5,7 +5,7 @@ import AtlasSpacer from './AtlasSpacer.vue'
 <template>
   <Story
     title="AtlasSpacer"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <div style="display: flex; align-items: center;">

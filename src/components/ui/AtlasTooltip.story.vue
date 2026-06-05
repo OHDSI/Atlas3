@@ -6,7 +6,7 @@ import AtlasButton from './AtlasButton.vue'
 <template>
   <Story
     title="AtlasTooltip"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasTooltip text="A helpful tooltip">

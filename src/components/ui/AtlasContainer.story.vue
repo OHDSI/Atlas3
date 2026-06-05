@@ -5,7 +5,7 @@ import AtlasContainer from './AtlasContainer.vue'
 <template>
   <Story
     title="AtlasContainer"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasContainer style="background: rgba(127,127,127,0.15);">

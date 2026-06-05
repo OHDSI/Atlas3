@@ -5,7 +5,7 @@ import AtlasIcon from './AtlasIcon.vue'
 <template>
   <Story
     title="AtlasIcon"
-    group="tier-b"
+    group="components"
   >
     <Variant title="default">
       <AtlasIcon
