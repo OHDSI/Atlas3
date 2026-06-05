@@ -3,7 +3,11 @@ import AtlasStoryDocs from '../_story/AtlasStoryDocs.vue'
 </script>
 
 <template>
-  <Story title="Plugin Guide" group="top" :docs-only="true">
+  <Story
+    title="Plugin Guide"
+    group="top"
+    :docs-only="true"
+  >
     <Variant title="Build an Atlas3 plugin">
       <AtlasStoryDocs
         name="Build an Atlas3 plugin with atlas-ui"
