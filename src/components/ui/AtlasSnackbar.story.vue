@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import AtlasSnackbar from './AtlasSnackbar.vue'
 import AtlasButton from './AtlasButton.vue'
+import AtlasStoryDocs from './_story/AtlasStoryDocs.vue'
 
 const open = ref(false)
 const openSuccess = ref(false)
@@ -15,6 +16,30 @@ const openTop = ref(false)
     title="AtlasSnackbar"
     group="tier-a"
   >
+    <Variant title="Overview">
+      <AtlasStoryDocs
+        name="AtlasSnackbar"
+        description="Transient notification wrapping Vuetify's VSnackbar. Maps a semantic severity to a color and ARIA role, with an optional built-in close button."
+        :props="[
+          { name: 'modelValue', type: 'boolean', default: '—', description: 'Open state (use v-model) (required).' },
+          { name: 'severity', type: `'info'|'success'|'warning'|'danger'`, default: `'info'`, description: 'Semantic tone; sets color and aria-live (danger is assertive).' },
+          { name: 'text', type: 'string', default: 'undefined', description: 'Message text (used when the default slot is empty).' },
+          { name: 'timeout', type: 'number', default: '5000', description: 'Auto-dismiss delay in ms; use -1 to disable.' },
+          { name: 'location', type: `'top'|'bottom'`, default: `'bottom'`, description: 'Where the snackbar appears.' },
+          { name: 'closable', type: 'boolean', default: 'true', description: 'Shows a built-in Close button (unless the actions slot is used).' },
+          { name: '…VSnackbar props', type: 'see Vuetify VSnackbar', default: '—', description: 'Additional VSnackbar props are forwarded via attrs (color is derived from severity).' },
+        ]"
+        :events="[{ name: 'update:modelValue', payload: 'boolean', description: 'Emitted when the open state changes (e.g. on timeout or close).' }]"
+        :slots="[
+          { name: 'default', description: 'Message content; overrides the text prop.' },
+          { name: 'actions', description: 'Custom action buttons; replaces the built-in Close button.' },
+        ]"
+        usage="<AtlasSnackbar v-model=&quot;open&quot; severity=&quot;success&quot; text=&quot;Saved.&quot; />"
+        :dos="['Use severity to convey meaning rather than custom colors.', 'Keep messages short.']"
+        :donts="[`Don't use a long timeout for non-critical messages.`]"
+      />
+    </Variant>
+
     <Variant title="info">
       <AtlasButton @click="open = true">
         Show info snackbar
