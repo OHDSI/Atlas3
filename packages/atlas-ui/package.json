@@ -1,0 +1,19 @@
+{
+  "name": "@ohdsi/atlas-ui",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Atlas3 design system: tokens, Vuetify theme and components.",
+  "license": "Apache-2.0",
+  "repository": { "type": "git", "url": "git+https://github.com/ohdsi/Atlas3.git", "directory": "packages/atlas-ui" },
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
+  "files": ["dist"],
+  "main": "./dist/atlas-ui.js",
+  "module": "./dist/atlas-ui.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/atlas-ui.js" },
+    "./tokens.css": "./dist/atlas-ui.css",
+    "./style.css": "./dist/atlas-ui.css"
+  },
+  "peerDependencies": { "vue": "^3.4.0", "vuetify": "^3.5.0" }
+}
