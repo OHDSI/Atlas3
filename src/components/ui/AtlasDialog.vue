@@ -69,7 +69,6 @@
 import { computed, nextTick, ref, useAttrs, watch } from 'vue'
 import { VDialog, VCard, VDivider } from 'vuetify/components'
 import AtlasIconButton from './AtlasIconButton.vue'
-import { useI18n } from '@/composables/useI18n'
 
 interface Props {
   modelValue: boolean
@@ -103,13 +102,10 @@ const emit = defineEmits<{
 
 defineOptions({ inheritAttrs: false })
 
-const i18n = useI18n() as Partial<ReturnType<typeof useI18n>>
-
 const titleId = `atlas-dialog-title-${Math.random().toString(36).slice(2, 10)}`
 
 const resolvedCloseLabel = computed(() => {
-  if (props.closeLabel) return props.closeLabel
-  return typeof i18n.tv === 'function' ? i18n.tv('a11y.closeDialog', 'Close dialog') : 'Close dialog'
+  return props.closeLabel ?? 'Close dialog'
 })
 
 const attrs = useAttrs()

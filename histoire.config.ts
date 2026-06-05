@@ -7,6 +7,7 @@ export default defineConfig({
   setupFile: './histoire.setup.ts',
   storyMatch: ['src/components/ui/**/*.story.vue'],
   vite: {
+    base: '/Atlas3/',
     resolve: {
       alias: {
         '@': new URL('./src', import.meta.url).pathname,

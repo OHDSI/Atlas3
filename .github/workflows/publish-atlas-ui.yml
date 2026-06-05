@@ -1,0 +1,35 @@
+name: Publish @ohdsi/atlas-ui
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['atlas-ui-v*']
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@ohdsi'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lib:build
+      - name: Stamp prerelease version on develop
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          cd packages/atlas-ui
+          TS=$(date +%Y%m%d%H%M%S); SHA=$(git rev-parse --short HEAD)
+          npm version --no-git-tag-version "$(node -p "require('./package.json').version")-$TS-$SHA"
+      - name: Publish
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        working-directory: packages/atlas-ui
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/develop" ]; then npm publish --tag next; else npm publish; fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
