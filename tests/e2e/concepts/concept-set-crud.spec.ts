@@ -10,7 +10,7 @@ test.describe('Concept Set CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to concepts page
     await setupBasicMocks(page)
-    await page.goto('/concepts')
+    await page.goto('/#/concepts')
 
     // Wait for page to be ready
     await waitForPageReady(page)
@@ -301,7 +301,7 @@ test.describe('Concept Set CRUD Operations', () => {
    */
   test('should show loading state while fetching', async ({ page }) => {
     // Navigate to fresh page
-    await page.goto('/concepts')
+    await page.goto('/#/concepts')
 
     // Immediately check for loading indicator
     const _loadingIndicator = page.locator('.v-progress-linear, .v-skeleton-loader, .v-data-table--loading')

@@ -18,7 +18,7 @@ test.describe('Configuration Panel', () => {
     await setupBasicMocks(page)
 
     // Navigate to home page
-    await page.goto('/')
+    await page.goto('/#/')
     await waitForPageReady(page)
   })
 
@@ -91,7 +91,7 @@ test.describe('Configuration Panel', () => {
 
     test('should navigate away from home page successfully', async ({ page }) => {
       // Try navigating to cohorts page
-      await page.goto('/cohorts')
+      await page.goto('/#/cohorts')
       await waitForNetworkIdle(page)
 
       // Verify navigation worked

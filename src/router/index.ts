@@ -10,7 +10,14 @@ import { useLocaleStore } from '@/stores/locale'
 import { getAuthConfig } from '@/config/auth.config'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
+import { foldSearchIntoHash } from './legacy-url'
 import { routes } from './routes'
+
+// Fold any real (pre-hash) query string into the hash before the hash history
+// captures the current location, so deeplink/OAuth guards see ?cohortId / ?token.
+if (typeof window !== 'undefined') {
+  foldSearchIntoHash()
+}
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),

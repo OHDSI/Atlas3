@@ -5,7 +5,7 @@ test.describe('Plugin Framework', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the app
     await setupBasicMocks(page)
-    await page.goto('/');
+    await page.goto('/#/');
   });
 
   test('should load plugin framework on app initialization', async ({ page }) => {
@@ -48,7 +48,7 @@ test.describe('Plugin Framework', () => {
 
   test('should navigate to plugin route', async ({ page }) => {
     // Try to navigate directly to plugin route
-    await page.goto('/plugins/hello-world-plugin/main');
+    await page.goto('/#/plugins/hello-world-plugin/main');
 
     // Wait for plugin or auth redirect
     await page.waitForTimeout(2000);
@@ -60,7 +60,7 @@ test.describe('Plugin Framework', () => {
 
   test('should handle plugin loading states', async ({ page }) => {
     // Navigate to plugin route
-    await page.goto('/plugins/hello-world-plugin/main');
+    await page.goto('/#/plugins/hello-world-plugin/main');
 
     // Check for loading indicator
     const loadingIndicator = page.locator('text=Loading plugin');
@@ -74,7 +74,7 @@ test.describe('Plugin Framework', () => {
 
   test('should display error UI on plugin load failure', async ({ page }) => {
     // Try to load non-existent plugin
-    await page.goto('/plugins/non-existent-plugin/main');
+    await page.goto('/#/plugins/non-existent-plugin/main');
 
     await page.waitForTimeout(2000);
 
@@ -85,12 +85,12 @@ test.describe('Plugin Framework', () => {
 
   test('should measure plugin navigation performance', async ({ page }) => {
     // Navigate to home
-    await page.goto('/');
+    await page.goto('/#/');
     await page.waitForTimeout(1000);
 
     // Measure navigation to plugin
     const startTime = Date.now();
-    await page.goto('/plugins/hello-world-plugin/main');
+    await page.goto('/#/plugins/hello-world-plugin/main');
     await page.waitForTimeout(500);
     const endTime = Date.now();
 
@@ -104,11 +104,11 @@ test.describe('Plugin Framework', () => {
 
   test('should handle multiple plugin routes', async ({ page }) => {
     // Test that plugin routes are properly scoped
-    await page.goto('/plugins/hello-world-plugin/main');
+    await page.goto('/#/plugins/hello-world-plugin/main');
     await page.waitForTimeout(500);
 
     // Try a different route for the same plugin
-    await page.goto('/plugins/hello-world-plugin/about');
+    await page.goto('/#/plugins/hello-world-plugin/about');
     await page.waitForTimeout(500);
 
     // Should not cause errors
@@ -126,7 +126,7 @@ test.describe('Plugin Messaging', () => {
       messages.push(msg);
     });
 
-    await page.goto('/plugins/hello-world-plugin/main');
+    await page.goto('/#/plugins/hello-world-plugin/main');
     await page.waitForTimeout(2000);
 
     // If plugin is visible, try to trigger message
@@ -148,7 +148,7 @@ test.describe('Plugin Messaging', () => {
 
 test.describe('Plugin Authentication', () => {
   test('should provide auth context to plugins', async ({ page }) => {
-    await page.goto('/plugins/hello-world-plugin/main');
+    await page.goto('/#/plugins/hello-world-plugin/main');
     await page.waitForTimeout(2000);
 
     // Check if auth context is visible in plugin
@@ -164,7 +164,7 @@ test.describe('Plugin Authentication', () => {
 test.describe('Plugin Error Handling', () => {
   test('should display error UI and retry button on failure', async ({ page }) => {
     // Mock plugin load failure by navigating to invalid plugin
-    await page.goto('/plugins/invalid-plugin/main');
+    await page.goto('/#/plugins/invalid-plugin/main');
     await page.waitForTimeout(2000);
 
     // Check for error UI components - page may show error or redirect

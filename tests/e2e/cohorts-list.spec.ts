@@ -20,7 +20,7 @@ test.describe('Cohorts List', () => {
     await setupBasicMocks(page)
 
     // Navigate to cohorts list page
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
 
     // Wait for initial load and overlays to close
     await waitForPageReady(page)
@@ -51,7 +51,7 @@ test.describe('Cohorts List', () => {
   test('should show loading skeletons or content', async ({ page }) => {
     // Setup mocks and navigate
     await setupBasicMocks(page)
-    await page.goto('/cohorts', { waitUntil: 'domcontentloaded' })
+    await page.goto('/#/cohorts', { waitUntil: 'domcontentloaded' })
 
     // Check if skeletons appear OR content loads directly
     const skeletons = page.locator('.v-skeleton-loader')
@@ -344,7 +344,7 @@ test.describe('Cohorts List', () => {
 test.describe('Visual Comparison', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForNetworkIdle(page)
   })
 
@@ -387,7 +387,7 @@ test.describe('Performance', () => {
     await setupBasicMocks(page)
     const startTime = Date.now()
 
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForNetworkIdle(page)
     await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
 
@@ -400,7 +400,7 @@ test.describe('Performance', () => {
   test('should handle search with reasonable performance', async ({ page }) => {
     // Setup and wait for initial load
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForNetworkIdle(page)
     await expect(page.locator('.cohort-card').first()).toBeVisible({ timeout: 10000 })
 
@@ -423,7 +423,7 @@ test.describe('Performance', () => {
 test.describe('Accessibility', () => {
   test('should have accessible button labels', async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await expect(page.locator('.cohorts-view__toolbar')).toBeVisible({ timeout: 10000 })
 
     // Check for aria-labels or accessible names
@@ -443,7 +443,7 @@ test.describe('Accessibility', () => {
 
   test('should support keyboard navigation', async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await expect(page.locator('.cohorts-view__toolbar')).toBeVisible({ timeout: 10000 })
 
     // Tab through interactive elements
@@ -458,7 +458,7 @@ test.describe('Accessibility', () => {
   test('should have visible focus states', async ({ page }) => {
     // Setup mocks before navigation
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForNetworkIdle(page)
     await expect(page.locator('.cohorts-view__toolbar')).toBeVisible({ timeout: 10000 })
 

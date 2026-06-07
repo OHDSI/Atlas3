@@ -32,7 +32,7 @@ test.describe('DataSources Chart-Parity Reports', () => {
   })
 
   async function goToReport(page: Page, reportType: string) {
-    await page.goto(`/datasources/${SOURCE_KEY}/${reportType}`)
+    await page.goto(`/#/datasources/${SOURCE_KEY}/${reportType}`)
     await waitForPageReady(page)
   }
 

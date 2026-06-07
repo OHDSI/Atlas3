@@ -9,7 +9,7 @@ import { setupBasicMocks } from './helpers/api-mocks'
 test.describe('Profile highlights', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/profiles/SYNPUF1K/1234/42')
+    await page.goto('/#/profiles/SYNPUF1K/1234/42')
     await expect(page.locator('[data-test="highlights-panel"]')).toBeVisible()
   })
 

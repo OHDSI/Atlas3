@@ -6,7 +6,7 @@ test.describe('Inclusion rule live funnel', () => {
   test.skip(!HAS_TREXSQL, 'TrexSQL preconditions not present (set E2E_TREXSQL_ENABLED=1)')
 
   test('updates rail counts after editing a criterion', async ({ page }) => {
-    await page.goto('/cohortdefinition/0')
+    await page.goto('/#/cohortdefinition/0')
     await page.getByText('Inclusion rules').click()
     await page.getByTestId('inclusion-rail-add').click()
 

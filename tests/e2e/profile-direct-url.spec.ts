@@ -12,7 +12,7 @@ test.describe('Profile direct URL', () => {
   })
 
   test('renders header, demographics, and events table', async ({ page }) => {
-    await page.goto('/profiles/SYNPUF1K/1234/42')
+    await page.goto('/#/profiles/SYNPUF1K/1234/42')
 
     // Person input + source select replaced the single profile-input-bar.
     await expect(page.locator('[data-test="profile-person-input"]')).toBeVisible()

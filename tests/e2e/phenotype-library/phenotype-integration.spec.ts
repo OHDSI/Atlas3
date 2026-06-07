@@ -176,7 +176,7 @@ test.describe('PhenotypeLibrary Integration Tests', () => {
       await setupBasicMocks(page)
 
       // ── Step 1: Navigate to cohorts list and open Import dialog ───────
-      await page.goto('/cohorts')
+      await page.goto('/#/cohorts')
       await waitForPageReady(page)
 
       await page.locator('[data-testid="import-cohort-btn"]').click()

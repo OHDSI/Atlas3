@@ -17,7 +17,7 @@ test.describe('Profile search flow', () => {
     // store is not auto-fetched on the Profiles view, so the v-select
     // dropdown is empty in test; we exercise the personId-submit branch
     // of the search flow instead, which is the meaningful interaction.
-    await page.goto('/profiles/SYNPUF1K')
+    await page.goto('/#/profiles/SYNPUF1K')
 
     const personInput = page.locator('[data-test="profile-person-input"] input')
     await expect(personInput).toBeEnabled()
