@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vue-tsc -p tsconfig.app.json && vite build",
     "preview": "vite preview",
-    "type-check": "vue-tsc --noEmit",
+    "type-check": "vue-tsc -p tsconfig.app.json --noEmit",
     "lint": "cross-env NODE_OPTIONS=--max-old-space-size=4096 eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
     "test:unit": "cross-env NODE_OPTIONS=--max-old-space-size=12288 vitest",

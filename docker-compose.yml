@@ -126,11 +126,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        VITE_AUTH_ENABLED: "true"
-        VITE_AUTH_SKIP_LOGIN: "false"
-        VITE_AUTH_PROVIDERS: '[{"name":"Database","url":"user/login/db","ajax":true,"icon":"mdi-database","isUseCredentialsForm":true}]'
-        VITE_BAO_AGENT_ENABLED: ${VITE_BAO_AGENT_ENABLED:-false}
     container_name: atlas3-frontend
     platform: linux/amd64
     restart: unless-stopped

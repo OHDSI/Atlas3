@@ -107,8 +107,7 @@ export class PluginLoader {
         name: registration.id,
         app: () => Promise.resolve(pluginModule),
         activeWhen: location => {
-          const basePath = import.meta.env.BASE_URL.replace(/\/$/, '')
-          const pluginPath = `${basePath}/plugins/${registration.id}/`
+          const pluginPath = `/plugins/${registration.id}/`
           const currentPath = this.extractPathFromLocation(location)
           return currentPath.startsWith(pluginPath)
         },
