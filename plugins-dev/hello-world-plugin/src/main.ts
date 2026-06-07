@@ -1,5 +1,8 @@
 import { h, createApp } from 'vue';
 import singleSpaVue from 'single-spa-vue';
+import { createVuetify } from 'vuetify';
+import { buildVuetifyOptions } from '@ohdsi/atlas-ui';
+import '@ohdsi/atlas-ui/style.css';
 import App from './App.vue';
 
 // Plugin props interface - exported for type checking in other files
@@ -32,6 +35,7 @@ const vueLifecycles = singleSpaVue({
     },
   },
   handleInstance(app, props) {
+    app.use(createVuetify(buildVuetifyOptions()));
     app.provide('pluginProps', props);
   },
 });

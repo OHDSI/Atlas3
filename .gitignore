@@ -89,6 +89,9 @@ Thumbs.db
 Thumbs.db
 desktop.ini
 
+# Histoire per-component docs (Docs tab) — tracked despite the broad *md rule
+!*.story.md
+
 # Misc
 .eslintcache
 .stylelintcache
@@ -97,4 +100,5 @@ desktop.ini
 *.pid.lock
 .gitignore
 .superpowers/
+docs/superpowers/
 .gstack/

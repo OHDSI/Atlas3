@@ -130,6 +130,11 @@ module.exports = {
       rules: {
         'vue/no-restricted-html-elements': 'off',
         'no-restricted-imports': 'off',
+        // Histoire story files are named after their subject (e.g. Tokens.story.vue,
+        // Introduction.story.vue). The `.story` suffix is not counted as a word, so
+        // single-word subjects trip vue/multi-word-component-names. Stories are not
+        // shipped components, so this rule is not meaningful here.
+        'vue/multi-word-component-names': 'off',
       },
     },
   ],

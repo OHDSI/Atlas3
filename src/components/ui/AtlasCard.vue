@@ -50,9 +50,7 @@ withDefaults(defineProps<Props>(), {
 }
 
 .atlas-card--interactive:hover {
-  box-shadow:
-    0 2px 6px rgba(15, 23, 42, 0.1),
-    0 12px 32px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--atlas-elevation-hover);
   transform: translateY(-2px);
 }
 

@@ -17,7 +17,7 @@ const multi  = ref<string[]>([])
 <template>
   <Story
     title="AtlasSelect"
-    group="tier-a"
+    group="components"
   >
     <Variant title="default">
       <AtlasSelect

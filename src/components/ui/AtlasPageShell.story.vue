@@ -5,7 +5,7 @@ import AtlasPageShell from './AtlasPageShell.vue'
 <template>
   <Story
     title="AtlasPageShell"
-    group="top"
+    group="components"
   >
     <Variant title="default header">
       <AtlasPageShell
