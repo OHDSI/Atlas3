@@ -15,24 +15,22 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
+// Mock auth store (http-client imports it dynamically)
+vi.mock('@/stores/auth', () => ({
+  useAuthStore: vi.fn(() => ({ token: null })),
+}))
+
+import * as webapi from '@/services/webapi'
+
 describe('WebAPI Service', () => {
   let mockFetch: ReturnType<typeof vi.fn>
-  let webapi: typeof import('@/services/webapi')
 
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.clearAllMocks()
-    // Re-import to get fresh module
-    vi.resetModules()
-
-    // Set up mock AFTER resetModules to ensure it's not affected by module resets
     mockFetch = vi.fn()
-    // Mock both global.fetch and window.fetch to ensure consistent behavior
-    global.fetch = mockFetch
-    window.fetch = mockFetch
+    global.fetch = mockFetch as unknown as typeof fetch
     localStorage.clear()
     localStorage.setItem('locale', 'en')
-
-    webapi = await import('@/services/webapi')
   })
 
   afterEach(() => {

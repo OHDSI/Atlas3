@@ -17,7 +17,7 @@ import { waitForOverlaysToClose, waitForPageReady } from './helpers/wait-utils'
 test.describe('Language Selector', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForPageReady(page)
   })
 
@@ -74,7 +74,7 @@ test.describe('Language Selector', () => {
 test.describe('Cohort Card Actions', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForPageReady(page)
   })
 
@@ -150,7 +150,7 @@ test.describe('Cohort List - Error Handling', () => {
       }
     })
 
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await page.waitForTimeout(2000)
 
     // Check for error alert or message
@@ -175,7 +175,7 @@ test.describe('Cohort List - Error Handling', () => {
       }
     })
 
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await page.waitForTimeout(2000)
 
     // Look for retry button
@@ -204,7 +204,7 @@ test.describe('Cohort List - Empty State', () => {
       }
     })
 
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await page.waitForTimeout(2000)
 
     // Check for empty state message or create button prominence
@@ -222,7 +222,7 @@ test.describe('Cohort List - Empty State', () => {
 test.describe('Cohort Import', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForPageReady(page)
   })
 
@@ -254,7 +254,7 @@ test.describe('Cohort Import', () => {
 test.describe('URL State Persistence', () => {
   test('should persist search query in URL', async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForPageReady(page)
 
     // Look for the actual search input (has placeholder or aria-label for search)

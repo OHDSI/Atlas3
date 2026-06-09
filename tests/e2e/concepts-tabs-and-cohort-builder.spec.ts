@@ -15,7 +15,7 @@ import { waitForNetworkIdle, waitForOverlaysToClose, waitForPageReady } from './
 test.describe('Concepts View - Tab Switching', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/concepts')
+    await page.goto('/#/concepts')
     await waitForPageReady(page)
   })
 
@@ -51,7 +51,7 @@ test.describe('Concepts View - Tab Switching', () => {
 
   test('should persist tab selection in URL', async ({ page }) => {
     // Navigate directly with tab parameter
-    await page.goto('/concepts?tab=sets')
+    await page.goto('/#/concepts?tab=sets')
     await waitForNetworkIdle(page)
 
     // Verify the sets tab is active
@@ -64,7 +64,7 @@ test.describe('Concepts View - Tab Switching', () => {
   })
 
   test('should display Concept Sets list when on sets tab', async ({ page }) => {
-    await page.goto('/concepts?tab=sets')
+    await page.goto('/#/concepts?tab=sets')
     await waitForNetworkIdle(page)
     await page.waitForTimeout(1000)
 
@@ -90,7 +90,7 @@ test.describe('Cohort Builder - Breadcrumb Navigation', () => {
   })
 
   test('should display breadcrumb navigation on cohort builder page', async ({ page }) => {
-    await page.goto('/cohorts/1')
+    await page.goto('/#/cohorts/1')
     await waitForPageReady(page)
 
     // Check for breadcrumb (actual class is .cohort-breadcrumb from CohortBreadcrumb.vue)
@@ -102,7 +102,7 @@ test.describe('Cohort Builder - Breadcrumb Navigation', () => {
   })
 
   test('should navigate back to cohorts list when clicking breadcrumb', async ({ page }) => {
-    await page.goto('/cohorts/1')
+    await page.goto('/#/cohorts/1')
     await waitForPageReady(page)
 
     // Ensure no overlays are blocking
@@ -127,7 +127,7 @@ test.describe('Cohort Builder - Breadcrumb Navigation', () => {
 test.describe('Cohort Builder - Name Editing', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts/1')
+    await page.goto('/#/cohorts/1')
     await waitForPageReady(page)
   })
 
@@ -151,7 +151,7 @@ test.describe('Cohort Builder - Name Editing', () => {
 test.describe('Cohort Builder - Description Field', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts/1')
+    await page.goto('/#/cohorts/1')
     await waitForPageReady(page)
   })
 
@@ -181,7 +181,7 @@ test.describe('Cohort Builder - Description Field', () => {
 test.describe('Cohort Builder - Action Buttons', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts/1')
+    await page.goto('/#/cohorts/1')
     await waitForPageReady(page)
   })
 

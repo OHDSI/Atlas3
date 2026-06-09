@@ -8,7 +8,7 @@ test.describe('Cohort builder — inline generation section', () => {
   test('generate, view inclusion report, then samples', async ({ page }) => {
     test.fixme(true, 'Requires a live WebAPI backend with a generatable cohort id 2')
 
-    await page.goto('/cohorts/2')
+    await page.goto('/#/cohorts/2')
     await expect(page.getByTestId('cohort-generation-section')).toBeVisible()
 
     const header = page.getByTestId('cs-header').first()
@@ -32,7 +32,7 @@ test.describe('Cohort builder — inline generation section', () => {
 
   test('drawer state survives reload via URL params', async ({ page }) => {
     test.fixme(true, 'Requires a live WebAPI backend with cohort id 2 and a generated CCAE run')
-    await page.goto('/cohorts/2?report=inclusion&source=CCAE')
+    await page.goto('/#/cohorts/2?report=inclusion&source=CCAE')
     await expect(page.getByTestId('cohort-report-drawer')).toBeVisible()
   })
 })

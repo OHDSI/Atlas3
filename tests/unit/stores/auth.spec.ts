@@ -33,10 +33,10 @@ vi.mock('@/services/auth/refreshManager', () => ({
 }))
 
 vi.mock('@/config/auth.config', () => ({
-  authConfig: {
+  getAuthConfig: () => ({
     userAuthenticationEnabled: true,
     refreshTokenThreshold: 300000,
-  },
+  }),
 }))
 
 vi.mock('@/utils/logger', () => ({

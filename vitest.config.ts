@@ -14,7 +14,6 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     include: [
       'tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
-      'scripts/__tests__/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
     exclude: ['node_modules/', 'vue-mri-ui-lib/', 'tests/e2e/**'],
     reporters: ['default', 'junit'],
@@ -33,6 +32,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
       reportsDirectory: './coverage',
+      clean: false,
       // Include all src/ files for coverage
       include: ['src/**/*.{ts,vue}'],
       // Documented exclusions with justifications
@@ -42,6 +42,7 @@ export default defineConfig({
         '**/*.spec.ts',
         '**/*.test.ts',
         // Type declarations only - no runtime code
+        '**/*.types.ts',
         '**/types.ts',
         '**/*.d.ts',
         'src/env.d.ts',

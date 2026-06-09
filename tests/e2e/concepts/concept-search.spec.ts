@@ -10,7 +10,7 @@ test.describe('Concept Search', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to concepts page (search tab — default is now "sets")
     await setupBasicMocks(page)
-    await page.goto('/concepts?tab=search')
+    await page.goto('/#/concepts?tab=search')
 
     // Wait for page to load
     await waitForPageReady(page)

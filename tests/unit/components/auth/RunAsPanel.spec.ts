@@ -38,7 +38,6 @@ vi.mock('@/composables/useI18n', () => ({
 vi.mock('@/services/auth/authService', () => ({
   authService: {
     runAs: vi.fn(),
-    exitRunAs: vi.fn(),
   },
 }))
 
@@ -183,12 +182,6 @@ describe('RunAsPanel', () => {
 
       expect(wrapper.vm.isLoading).toBe(false)
     })
-
-    it('should have isExiting reactive property', () => {
-      wrapper = mountComponent()
-
-      expect(wrapper.vm.isExiting).toBe(false)
-    })
   })
 
   describe('Computed Properties', () => {
@@ -221,12 +214,6 @@ describe('RunAsPanel', () => {
       expect(typeof wrapper.vm.handleRunAs).toBe('function')
     })
 
-    it('should have handleExitRunAs method', () => {
-      wrapper = mountComponent()
-
-      expect(typeof wrapper.vm.handleExitRunAs).toBe('function')
-    })
-
     it('should set loading state during run-as', async () => {
       const { authService } = await import('@/services/auth/authService')
       authService.runAs = vi.fn().mockImplementation(
@@ -245,26 +232,6 @@ describe('RunAsPanel', () => {
 
       await promise
       expect(wrapper.vm.isLoading).toBe(false)
-    })
-
-    it('should set exiting state during exit run-as', async () => {
-      const { authService } = await import('@/services/auth/authService')
-      authService.exitRunAs = vi.fn().mockImplementation(
-        () => new Promise(resolve => setTimeout(resolve, 100))
-      )
-
-      wrapper = mountComponent()
-
-      authStore.isRunningAs = true
-      authStore.user = mockUser
-
-      const promise = wrapper.vm.handleExitRunAs()
-
-      await wrapper.vm.$nextTick()
-      expect(wrapper.vm.isExiting).toBe(true)
-
-      await promise
-      expect(wrapper.vm.isExiting).toBe(false)
     })
   })
 

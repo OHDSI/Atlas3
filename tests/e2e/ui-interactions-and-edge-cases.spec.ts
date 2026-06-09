@@ -17,7 +17,7 @@ test.describe('DataSources - Report Type Selector', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
     await setupDatasourcesMocks(page)
-    await page.goto('/datasources')
+    await page.goto('/#/datasources')
     await waitForPageReady(page)
   })
 
@@ -31,7 +31,7 @@ test.describe('DataSources - Report Type Selector', () => {
   })
 
   test('should render the sidebar regardless of datasource selection', async ({ page }) => {
-    await page.goto('/datasources')
+    await page.goto('/#/datasources')
     await waitForNetworkIdle(page)
 
     const sidebar = page.locator('.datasource-sidebar')
@@ -48,7 +48,7 @@ test.describe('Concept Search - Advanced Features', () => {
     await setupBasicMocks(page)
     // Default tab is now "sets"; the search-tab-only tests below need
     // the search hero input as the page's primary text field.
-    await page.goto('/concepts?tab=search')
+    await page.goto('/#/concepts?tab=search')
     await waitForPageReady(page)
   })
 
@@ -115,7 +115,7 @@ test.describe('Concept Search - Advanced Features', () => {
 test.describe('Cohort List - UI Interactions', () => {
   test.beforeEach(async ({ page }) => {
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForPageReady(page)
   })
 
@@ -123,7 +123,7 @@ test.describe('Cohort List - UI Interactions', () => {
     await setupBasicMocks(page)
 
     // Navigate to trigger loading
-    await page.goto('/cohorts', { waitUntil: 'domcontentloaded' })
+    await page.goto('/#/cohorts', { waitUntil: 'domcontentloaded' })
 
     // Check for loading skeleton or spinner
     const skeleton = page.locator('.v-skeleton-loader, .v-progress-circular')
@@ -163,11 +163,11 @@ test.describe('Browser Navigation', () => {
     await setupBasicMocks(page)
 
     // Navigate to cohorts list
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForPageReady(page)
 
     // Navigate to a cohort
-    await page.goto('/cohorts/1')
+    await page.goto('/#/cohorts/1')
     await waitForPageReady(page)
 
     // Use browser back button
@@ -184,8 +184,8 @@ test.describe('Browser Navigation', () => {
     await setupBasicMocks(page)
 
     // Navigate through pages
-    await page.goto('/')
-    await page.goto('/cohorts')
+    await page.goto('/#/')
+    await page.goto('/#/cohorts')
     await waitForPageReady(page)
 
     // Go back
@@ -217,7 +217,7 @@ test.describe('UI Loading States', () => {
       })
     })
 
-    await page.goto('/cohorts', { waitUntil: 'domcontentloaded' })
+    await page.goto('/#/cohorts', { waitUntil: 'domcontentloaded' })
 
     // Check for loading state
     const loadingIndicator = page.locator('.v-skeleton-loader, .v-progress-circular, .loading')
@@ -241,7 +241,7 @@ test.describe('Concept Sets - Tab Integration', () => {
       })
     })
 
-    await page.goto('/concepts?tab=sets')
+    await page.goto('/#/concepts?tab=sets')
     await waitForPageReady(page)
 
     // Check for empty state, create button, or tab content

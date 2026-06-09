@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { getAppConfig } from '@/config/app-config.loader'
 import { logger } from '@/utils/logger'
 
 const iapFrame = ref<HTMLIFrameElement | null>(null)
@@ -19,9 +20,7 @@ const refreshInterval = ref<number | null>(null)
 
 // Check if IAP is enabled based on environment or detection
 const isIAPEnabled = computed(() => {
-  // IAP would be detected by presence of x-goog-iap-jwt-assertion header
-  // or explicit configuration
-  return import.meta.env.VITE_AUTH_IAP_ENABLED === 'true'
+  return getAppConfig().enableIAPSession
 })
 
 function handleIframeLoad() {

@@ -1,354 +1,192 @@
 /**
  * Auth Configuration Tests
- * Tests for authentication configuration parsing and defaults
+ * Tests for authentication configuration derived from AppConfig
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import type { AppConfig } from '@/config/app-config.types'
+
+const mockAppConfig: AppConfig = {
+  api: { url: '/WebAPI' },
+  userAuthenticationEnabled: false,
+  enableSkipLogin: false,
+  enablePermissionManagement: true,
+  authProviders: [],
+  refreshTokenThreshold: 1000 * 60 * 15,
+  enableIAPSession: false,
+  enableTermsAndConditions: false,
+  enablePythia: false,
+  enablePersonCount: true,
+  enableTaggingSection: false,
+  defaultLocale: 'en',
+  pollInterval: 60000,
+}
+
+vi.mock('@/config/app-config.loader', () => ({
+  getAppConfig: () => ({ ...mockAppConfig }),
+}))
+
+vi.mock('@/utils/logger', () => ({
+  logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
 
 describe('auth.config', () => {
-  let originalEnv: Record<string, string | undefined>
-
   beforeEach(() => {
-    // Store original env values
-    originalEnv = {
-      VITE_AUTH_ENABLED: import.meta.env.VITE_AUTH_ENABLED,
-      VITE_AUTH_SKIP_LOGIN: import.meta.env.VITE_AUTH_SKIP_LOGIN,
-      VITE_AUTH_PROVIDERS: import.meta.env.VITE_AUTH_PROVIDERS,
-      VITE_AUTH_REFRESH_THRESHOLD: import.meta.env.VITE_AUTH_REFRESH_THRESHOLD,
-      VITE_WEBAPI_URL: import.meta.env.VITE_WEBAPI_URL,
-      VITE_AUTH_WEBAPI_URL: import.meta.env.VITE_AUTH_WEBAPI_URL,
-      VITE_AUTH_PERMISSION_MANAGEMENT: import.meta.env.VITE_AUTH_PERMISSION_MANAGEMENT,
-    }
-  })
-
-  afterEach(() => {
-    // Restore original env values
-    Object.keys(originalEnv).forEach(key => {
-      if (originalEnv[key] === undefined) {
-        delete (import.meta.env as Record<string, unknown>)[key]
-      } else {
-        (import.meta.env as Record<string, unknown>)[key] = originalEnv[key]
-      }
-    })
     vi.resetModules()
+    // Reset mock to defaults
+    Object.assign(mockAppConfig, {
+      api: { url: '/WebAPI' },
+      userAuthenticationEnabled: false,
+      enableSkipLogin: false,
+      enablePermissionManagement: true,
+      authProviders: [],
+      refreshTokenThreshold: 1000 * 60 * 15,
+      enableIAPSession: false,
+      enableTermsAndConditions: false,
+      enablePythia: false,
+      enablePersonCount: true,
+      enableTaggingSection: false,
+      defaultLocale: 'en',
+      pollInterval: 60000,
+    })
   })
 
-  describe('AuthConfig interface', () => {
-    it('should export AuthConfig type', async () => {
+  describe('getAuthConfig', () => {
+    it('should export getAuthConfig and setAuthConfig', async () => {
       const module = await import('@/config/auth.config')
-      expect(module.defaultAuthConfig).toBeDefined()
-      expect(module.authConfig).toBeDefined()
-    })
-  })
-
-  describe('parseProvidersFromEnv', () => {
-    it('should parse valid JSON provider configuration', async () => {
-      const providers = [
-        { name: 'Google', url: '/auth/google' },
-        { name: 'Azure', url: '/auth/azure' }
-      ]
-
-      ;(import.meta.env as Record<string, unknown>).VITE_AUTH_PROVIDERS = JSON.stringify(providers)
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.authProviders).toEqual(providers)
-      expect(defaultAuthConfig.authProviders).toHaveLength(2)
+      expect(module.getAuthConfig).toBeDefined()
+      expect(module.setAuthConfig).toBeDefined()
     })
 
-    it('should return empty array when VITE_AUTH_PROVIDERS is undefined', async () => {
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_PROVIDERS
+    it('should return correct default structure from AppConfig defaults', async () => {
+      const { getAuthConfig } = await import('@/config/auth.config')
+      const config = getAuthConfig()
 
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.authProviders).toEqual([])
-    })
-
-    it('should return empty array on invalid JSON', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_PROVIDERS = 'invalid json {'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.authProviders).toEqual([])
-    })
-
-    it('should return empty array on empty string', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_PROVIDERS = ''
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.authProviders).toEqual([])
-    })
-  })
-
-  describe('parseBooleanEnv', () => {
-    it('should parse "true" as true', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_ENABLED = 'true'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.userAuthenticationEnabled).toBe(true)
-    })
-
-    it('should parse "1" as true', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_ENABLED = '1'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.userAuthenticationEnabled).toBe(true)
-    })
-
-    it('should parse "yes" as true', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_ENABLED = 'yes'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.userAuthenticationEnabled).toBe(true)
-    })
-
-    it('should parse "false" as false', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_ENABLED = 'false'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.userAuthenticationEnabled).toBe(false)
-    })
-
-    it('should parse "0" as false', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_ENABLED = '0'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.userAuthenticationEnabled).toBe(false)
-    })
-
-    it('should use default value when undefined', async () => {
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_ENABLED
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.userAuthenticationEnabled).toBe(false) // default is false
-    })
-
-    it('should parse skip login boolean', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_SKIP_LOGIN = 'true'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.enableSkipLogin).toBe(true)
-    })
-
-    it('should parse permission management boolean', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_PERMISSION_MANAGEMENT = 'false'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.enablePermissionManagement).toBe(false)
-    })
-  })
-
-  describe('parseNumberEnv', () => {
-    it('should parse valid number string', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_REFRESH_THRESHOLD = '7200000'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.refreshTokenThreshold).toBe(7200000)
-    })
-
-    it('should use default value when undefined', async () => {
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_REFRESH_THRESHOLD
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.refreshTokenThreshold).toBe(1000 * 60 * 60 * 4) // 4 hours default
-    })
-
-    it('should use default value on NaN', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_REFRESH_THRESHOLD = 'not-a-number'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.refreshTokenThreshold).toBe(1000 * 60 * 60 * 4)
-    })
-
-    it('should parse negative numbers', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_REFRESH_THRESHOLD = '-500'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.refreshTokenThreshold).toBe(-500)
-    })
-
-    it('should parse zero', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_AUTH_REFRESH_THRESHOLD = '0'
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.refreshTokenThreshold).toBe(0)
-    })
-  })
-
-  describe('defaultAuthConfig', () => {
-    it('should have correct default structure', async () => {
-      // Clear all env vars to get pure defaults
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_ENABLED
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_SKIP_LOGIN
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_PROVIDERS
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_REFRESH_THRESHOLD
-      delete (import.meta.env as Record<string, unknown>).VITE_WEBAPI_URL
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_WEBAPI_URL
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_PERMISSION_MANAGEMENT
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig).toMatchObject({
+      expect(config).toMatchObject({
         userAuthenticationEnabled: false,
         enableSkipLogin: false,
         authProviders: [],
-        refreshTokenThreshold: 1000 * 60 * 60 * 4, // 4 hours
+        refreshTokenThreshold: 1000 * 60 * 15,
         webAPIRoot: '/WebAPI',
         enablePermissionManagement: true,
       })
     })
 
-    it('should prioritize VITE_WEBAPI_URL over VITE_AUTH_WEBAPI_URL', async () => {
-      (import.meta.env as Record<string, unknown>).VITE_WEBAPI_URL = 'https://webapi.example.com'
-      ;(import.meta.env as Record<string, unknown>).VITE_AUTH_WEBAPI_URL = 'https://auth.example.com'
+    it('should reflect userAuthenticationEnabled from AppConfig', async () => {
+      mockAppConfig.userAuthenticationEnabled = true
 
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.webAPIRoot).toBe('https://webapi.example.com')
+      const { getAuthConfig } = await import('@/config/auth.config')
+      expect(getAuthConfig().userAuthenticationEnabled).toBe(true)
     })
 
-    it('should use VITE_AUTH_WEBAPI_URL when VITE_WEBAPI_URL is not set', async () => {
-      delete (import.meta.env as Record<string, unknown>).VITE_WEBAPI_URL
-      ;(import.meta.env as Record<string, unknown>).VITE_AUTH_WEBAPI_URL = 'https://auth.example.com'
+    it('should reflect enableSkipLogin from AppConfig', async () => {
+      mockAppConfig.enableSkipLogin = true
 
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.webAPIRoot).toBe('https://auth.example.com')
+      const { getAuthConfig } = await import('@/config/auth.config')
+      expect(getAuthConfig().enableSkipLogin).toBe(true)
     })
 
-    it('should use default /WebAPI when no URLs are set', async () => {
-      delete (import.meta.env as Record<string, unknown>).VITE_WEBAPI_URL
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_WEBAPI_URL
+    it('should reflect enablePermissionManagement from AppConfig', async () => {
+      mockAppConfig.enablePermissionManagement = false
 
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.webAPIRoot).toBe('/WebAPI')
+      const { getAuthConfig } = await import('@/config/auth.config')
+      expect(getAuthConfig().enablePermissionManagement).toBe(false)
     })
-  })
 
-  describe('authConfig', () => {
-    it('should be initialized with defaultAuthConfig values', async () => {
-      const { authConfig, defaultAuthConfig } = await import('@/config/auth.config')
+    it('should reflect refreshTokenThreshold from AppConfig', async () => {
+      mockAppConfig.refreshTokenThreshold = 7200000
 
-      expect(authConfig).toMatchObject(defaultAuthConfig)
+      const { getAuthConfig } = await import('@/config/auth.config')
+      expect(getAuthConfig().refreshTokenThreshold).toBe(7200000)
+    })
+
+    it('should reflect api.url as webAPIRoot', async () => {
+      mockAppConfig.api = { url: 'https://webapi.example.com' }
+
+      const { getAuthConfig } = await import('@/config/auth.config')
+      expect(getAuthConfig().webAPIRoot).toBe('https://webapi.example.com')
+    })
+
+    it('should reflect authProviders from AppConfig', async () => {
+      const providers = [
+        { name: 'Google', url: '/auth/google', ajax: false, icon: 'mdi-google' },
+        { name: 'Azure', url: '/auth/azure', ajax: false, icon: 'mdi-microsoft' },
+      ]
+      mockAppConfig.authProviders = providers as AppConfig['authProviders']
+
+      const { getAuthConfig } = await import('@/config/auth.config')
+      expect(getAuthConfig().authProviders).toEqual(providers)
+      expect(getAuthConfig().authProviders).toHaveLength(2)
+    })
+
+    it('should return empty providers when AppConfig has none', async () => {
+      mockAppConfig.authProviders = []
+
+      const { getAuthConfig } = await import('@/config/auth.config')
+      expect(getAuthConfig().authProviders).toEqual([])
     })
   })
 
   describe('setAuthConfig', () => {
     it('should update authConfig with partial values', async () => {
-      vi.resetModules()
-      const module = await import('@/config/auth.config')
+      const { setAuthConfig, getAuthConfig } = await import('@/config/auth.config')
 
-      const originalEnabled = module.authConfig.userAuthenticationEnabled
+      setAuthConfig({ userAuthenticationEnabled: true })
 
-      module.setAuthConfig({ userAuthenticationEnabled: !originalEnabled })
-
-      // Re-import to get the updated reference
-      const { authConfig } = await import('@/config/auth.config')
-      expect(authConfig.userAuthenticationEnabled).toBe(!originalEnabled)
+      expect(getAuthConfig().userAuthenticationEnabled).toBe(true)
     })
 
     it('should merge with existing config', async () => {
-      vi.resetModules()
-      const module = await import('@/config/auth.config')
+      const { setAuthConfig, getAuthConfig } = await import('@/config/auth.config')
 
-      const originalRefreshThreshold = module.authConfig.refreshTokenThreshold
+      const originalThreshold = getAuthConfig().refreshTokenThreshold
+      setAuthConfig({ userAuthenticationEnabled: true })
 
-      module.setAuthConfig({ userAuthenticationEnabled: true })
-
-      const { authConfig } = await import('@/config/auth.config')
-      expect(authConfig.userAuthenticationEnabled).toBe(true)
-      expect(authConfig.refreshTokenThreshold).toBe(originalRefreshThreshold) // unchanged
+      expect(getAuthConfig().userAuthenticationEnabled).toBe(true)
+      expect(getAuthConfig().refreshTokenThreshold).toBe(originalThreshold)
     })
 
     it('should update multiple properties', async () => {
-      vi.resetModules()
-      const module = await import('@/config/auth.config')
+      const { setAuthConfig, getAuthConfig } = await import('@/config/auth.config')
 
-      module.setAuthConfig({
+      setAuthConfig({
         userAuthenticationEnabled: true,
         enableSkipLogin: true,
-        webAPIRoot: 'https://test.example.com'
+        webAPIRoot: 'https://test.example.com',
       })
 
-      const { authConfig } = await import('@/config/auth.config')
-      expect(authConfig.userAuthenticationEnabled).toBe(true)
-      expect(authConfig.enableSkipLogin).toBe(true)
-      expect(authConfig.webAPIRoot).toBe('https://test.example.com')
+      const config = getAuthConfig()
+      expect(config.userAuthenticationEnabled).toBe(true)
+      expect(config.enableSkipLogin).toBe(true)
+      expect(config.webAPIRoot).toBe('https://test.example.com')
     })
 
     it('should update authProviders array', async () => {
-      vi.resetModules()
-      const module = await import('@/config/auth.config')
+      const { setAuthConfig, getAuthConfig } = await import('@/config/auth.config')
 
       const newProviders = [
-        { name: 'TestProvider', url: '/test' }
+        { name: 'TestProvider', url: '/test', ajax: false, icon: 'mdi-account' },
       ]
 
-      module.setAuthConfig({ authProviders: newProviders })
+      setAuthConfig({ authProviders: newProviders as AppConfig['authProviders'] })
 
-      const { authConfig } = await import('@/config/auth.config')
-      expect(authConfig.authProviders).toEqual(newProviders)
+      expect(getAuthConfig().authProviders).toEqual(newProviders)
     })
   })
 
   describe('default values', () => {
-    it('should have 4 hour refresh threshold default', () => {
-      const fourHours = 1000 * 60 * 60 * 4
-      expect(fourHours).toBe(14400000)
+    it('should have 15-minute refresh threshold default', () => {
+      const fifteenMinutes = 1000 * 60 * 15
+      expect(fifteenMinutes).toBe(900000)
     })
 
     it('should default to /WebAPI for proxy-based development', async () => {
-      delete (import.meta.env as Record<string, unknown>).VITE_WEBAPI_URL
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_WEBAPI_URL
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.webAPIRoot).toBe('/WebAPI')
+      const { getAuthConfig } = await import('@/config/auth.config')
+      expect(getAuthConfig().webAPIRoot).toBe('/WebAPI')
     })
 
     it('should default to permission management enabled', async () => {
-      delete (import.meta.env as Record<string, unknown>).VITE_AUTH_PERMISSION_MANAGEMENT
-
-      vi.resetModules()
-      const { defaultAuthConfig } = await import('@/config/auth.config')
-
-      expect(defaultAuthConfig.enablePermissionManagement).toBe(true)
+      const { getAuthConfig } = await import('@/config/auth.config')
+      expect(getAuthConfig().enablePermissionManagement).toBe(true)
     })
   })
 })

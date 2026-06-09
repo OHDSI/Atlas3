@@ -40,6 +40,8 @@ Extensible architecture allowing custom plugins to add new features and integrat
 - **Language**: TypeScript 5.9+ (strict mode)
 - **State Management**: Pinia 2.1+
 - **Routing**: Vue Router 4.2+
+
+Atlas 3.0 uses hash-based client routing. Deep links and callback UI URLs should use the `#/...` form (for example `https://localhost/atlas/#/cohorts` or `https://localhost/atlas/#/oauth/callback`).
 - **Charting**: ECharts 6.0+ with vue-echarts
 - **Validation**: Zod (runtime validation)
 - **Build Tool**: Vite 5.4+

@@ -17,6 +17,28 @@ export class PluginLoader {
     this.registry = registry
   }
 
+  private extractPathFromLocation(location: Location): string {
+    const hash = location.hash || ''
+
+    // Routes are hash-based: #/path or #/path?query. Normalize to path only.
+    if (!hash.startsWith('#/')) {
+      return '/'
+    }
+    const hashRoute = hash.slice(1)
+    const queryIndex = hashRoute.indexOf('?')
+    return queryIndex >= 0 ? hashRoute.slice(0, queryIndex) : hashRoute
+  }
+
+  private getUrlParams(): URLSearchParams {
+    const hash = window.location.hash || ''
+    const queryIndex = hash.indexOf('?')
+    if (queryIndex >= 0 && queryIndex < hash.length - 1) {
+      return new URLSearchParams(hash.slice(queryIndex + 1))
+    }
+
+    return new URLSearchParams()
+  }
+
   async loadPlugin(plugin: PluginInstance): Promise<void> {
     const { registration } = plugin
     // If entryPoint is absolute (starts with / or http), use it directly
@@ -85,14 +107,14 @@ export class PluginLoader {
         name: registration.id,
         app: () => Promise.resolve(pluginModule),
         activeWhen: location => {
-          const basePath = import.meta.env.BASE_URL.replace(/\/$/, '')
-          const pluginPath = `${basePath}/plugins/${registration.id}/`
-          return location.pathname.startsWith(pluginPath)
+          const pluginPath = `/plugins/${registration.id}/`
+          const currentPath = this.extractPathFromLocation(location)
+          return currentPath.startsWith(pluginPath)
         },
         customProps: () => {
           const containerId = `plugin-${registration.id}`
           const domElement = document.getElementById(containerId)
-          const urlParams = new URLSearchParams(window.location.search)
+          const urlParams = this.getUrlParams()
           let datasetId = urlParams.get('datasetId') || undefined
 
           if (!datasetId) {

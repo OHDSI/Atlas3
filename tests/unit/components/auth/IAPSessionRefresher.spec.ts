@@ -14,6 +14,16 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
+// Mock getAppConfig
+const mockEnableIAPSession = vi.fn(() => false)
+vi.mock('@/config/app-config.loader', () => ({
+  getAppConfig: () => ({
+    get enableIAPSession() {
+      return mockEnableIAPSession()
+    },
+  }),
+}))
+
 describe('IAPSessionRefresher', () => {
   let wrapper: VueWrapper
 
@@ -32,7 +42,7 @@ describe('IAPSessionRefresher', () => {
   describe('Component Mounting', () => {
     it('should not render iframe when IAP is disabled', () => {
       // Set IAP disabled
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'false')
+      mockEnableIAPSession.mockReturnValue(false)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -42,7 +52,7 @@ describe('IAPSessionRefresher', () => {
 
     it('should render iframe when IAP is enabled', () => {
       // Set IAP enabled
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -51,7 +61,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should set correct iframe src for IAP session refresher', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -60,7 +70,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should have display:none style on iframe', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -71,7 +81,7 @@ describe('IAPSessionRefresher', () => {
 
   describe('IAP Detection', () => {
     it('should detect IAP from environment variable', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -79,7 +89,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should return false when IAP env var is not set', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', undefined)
+      mockEnableIAPSession.mockReturnValue(false)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -87,7 +97,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should return false when IAP env var is explicitly false', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'false')
+      mockEnableIAPSession.mockReturnValue(false)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -97,7 +107,7 @@ describe('IAPSessionRefresher', () => {
 
   describe('Iframe Load Handler', () => {
     it('should handle iframe load event', async () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       const { logger } = await import('@/utils/logger')
 
@@ -115,7 +125,7 @@ describe('IAPSessionRefresher', () => {
 
   describe('Session Refresh Scheduling', () => {
     it('should schedule refresh when IAP is enabled', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -124,7 +134,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should not schedule refresh when IAP is disabled', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'false')
+      mockEnableIAPSession.mockReturnValue(false)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -133,7 +143,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should refresh every 45 minutes', async () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       const { logger } = await import('@/utils/logger')
 
@@ -146,7 +156,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should refresh iframe by resetting src', async () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       const { logger } = await import('@/utils/logger')
 
@@ -168,7 +178,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should handle multiple refresh cycles', async () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       const { logger } = await import('@/utils/logger')
 
@@ -189,7 +199,7 @@ describe('IAPSessionRefresher', () => {
 
   describe('Lifecycle Hooks', () => {
     it('should clear interval on unmount', async () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -203,7 +213,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should not crash on unmount when interval is not set', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'false')
+      mockEnableIAPSession.mockReturnValue(false)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -211,7 +221,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should set up refresh on mount when IAP is enabled', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -222,7 +232,7 @@ describe('IAPSessionRefresher', () => {
 
   describe('Edge Cases', () => {
     it('should handle missing iframe ref during refresh', async () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -237,7 +247,7 @@ describe('IAPSessionRefresher', () => {
     })
 
     it('should restore src even if iframe is removed during delay', async () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+      mockEnableIAPSession.mockReturnValue(true)
 
       wrapper = mount(IAPSessionRefresher)
 
@@ -255,25 +265,17 @@ describe('IAPSessionRefresher', () => {
     })
   })
 
-  describe('IAP Environment Variable', () => {
-    it('should handle string "true" as enabled', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'true')
+  describe('AppConfig Integration', () => {
+    it('should be enabled when enableIAPSession is true', () => {
+      mockEnableIAPSession.mockReturnValue(true)
 
       wrapper = mount(IAPSessionRefresher)
 
       expect(wrapper.vm.isIAPEnabled).toBe(true)
     })
 
-    it('should handle any other string as disabled', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', 'yes')
-
-      wrapper = mount(IAPSessionRefresher)
-
-      expect(wrapper.vm.isIAPEnabled).toBe(false)
-    })
-
-    it('should handle empty string as disabled', () => {
-      vi.stubEnv('VITE_AUTH_IAP_ENABLED', '')
+    it('should be disabled when enableIAPSession is false', () => {
+      mockEnableIAPSession.mockReturnValue(false)
 
       wrapper = mount(IAPSessionRefresher)
 

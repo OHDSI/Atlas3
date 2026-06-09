@@ -42,7 +42,7 @@ test.describe('Atlas Pathway Compatibility', () => {
         }
       })
 
-      await page.goto(`/pathways/${pathway.id}`)
+      await page.goto(`/#/pathways/${pathway.id}`)
       await waitForPageReady(page)
 
       const nameField = page.getByTestId('pathway-builder-name')
@@ -76,7 +76,7 @@ test.describe('Atlas Pathway Compatibility', () => {
       }
     })
 
-    await page.goto(`/pathways/${zeroWindowPathway.id}`)
+    await page.goto(`/#/pathways/${zeroWindowPathway.id}`)
     await waitForPageReady(page)
 
     const nameField = page.getByTestId('pathway-builder-name')
@@ -93,7 +93,7 @@ test.describe('Atlas Pathway Compatibility', () => {
       } else { await route.continue() }
     })
 
-    await page.goto(`/pathways/${pw.id}`)
+    await page.goto(`/#/pathways/${pw.id}`)
     await waitForPageReady(page)
     await expect(page.getByTestId('pathway-builder-name')).toBeVisible({ timeout: 15000 })
   })
@@ -108,7 +108,7 @@ test.describe('Atlas Pathway Compatibility', () => {
       } else { await route.continue() }
     })
 
-    await page.goto(`/pathways/${pw.id}`)
+    await page.goto(`/#/pathways/${pw.id}`)
     await waitForPageReady(page)
     await expect(page.getByTestId('pathway-builder-name')).toBeVisible({ timeout: 15000 })
   })
@@ -123,7 +123,7 @@ test.describe('Atlas Pathway Compatibility', () => {
       } else { await route.continue() }
     })
 
-    await page.goto(`/pathways/${pw.id}`)
+    await page.goto(`/#/pathways/${pw.id}`)
     await waitForPageReady(page)
     await expect(page.getByTestId('pathway-builder-name')).toBeVisible({ timeout: 15000 })
   })
@@ -143,7 +143,7 @@ test.describe('Atlas Pathway Compatibility', () => {
       })
     })
 
-    await page.goto('/pathways')
+    await page.goto('/#/pathways')
     await waitForPageReady(page)
 
     const listItems = page.locator('[data-testid^="pathway-row-"]')
@@ -196,7 +196,7 @@ test.describe('Atlas Pathway Compatibility', () => {
       })
     })
 
-    await page.goto('/pathways/new')
+    await page.goto('/#/pathways/new')
     await waitForPageReady(page)
 
     const importInput = page.getByTestId('pathway-builder-import-input')
@@ -247,7 +247,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
         }
       })
 
-      await page.goto(`/incidence-rates/${ir.id}`)
+      await page.goto(`/#/incidence-rates/${ir.id}`)
       await waitForPageReady(page)
 
       const nameField = page.getByTestId('ir-builder-name')
@@ -276,7 +276,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
       } else { await route.continue() }
     })
 
-    await page.goto(`/incidence-rates/${ir.id}`)
+    await page.goto(`/#/incidence-rates/${ir.id}`)
     await waitForPageReady(page)
     await expect(page.getByTestId('ir-builder-name')).toBeVisible({ timeout: 15000 })
   })
@@ -295,7 +295,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
       } else { await route.continue() }
     })
 
-    await page.goto(`/incidence-rates/${ir.id}`)
+    await page.goto(`/#/incidence-rates/${ir.id}`)
     await waitForPageReady(page)
     await expect(page.getByTestId('ir-builder-name')).toBeVisible({ timeout: 15000 })
   })
@@ -315,7 +315,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
       } else { await route.continue() }
     })
 
-    await page.goto(`/incidence-rates/${ir.id}`)
+    await page.goto(`/#/incidence-rates/${ir.id}`)
     await waitForPageReady(page)
     await expect(page.getByTestId('ir-builder-name')).toBeVisible({ timeout: 15000 })
   })
@@ -339,7 +339,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
       }
     })
 
-    await page.goto(`/incidence-rates/${ir.id}`)
+    await page.goto(`/#/incidence-rates/${ir.id}`)
     await waitForPageReady(page)
 
     const nameField = page.getByTestId('ir-builder-name')
@@ -374,7 +374,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
     })
 
-    await page.goto('/incidence-rates/new')
+    await page.goto('/#/incidence-rates/new')
     await waitForPageReady(page)
 
     const importInput = page.getByTestId('ir-builder-import-input')
@@ -408,7 +408,7 @@ test.describe('Atlas Incidence Rate Compatibility', () => {
       }
     })
 
-    await page.goto('/incidence-rates')
+    await page.goto('/#/incidence-rates')
     await waitForPageReady(page)
   })
 })
@@ -448,7 +448,7 @@ test.describe('Atlas Characterization Compatibility', () => {
         }
       })
 
-      await page.goto(`/characterizations/${char.id}`)
+      await page.goto(`/#/characterizations/${char.id}`)
       await waitForPageReady(page)
 
       const conversionErrors = errors.filter(e =>
@@ -480,7 +480,7 @@ test.describe('Atlas Characterization Compatibility', () => {
     const errors: string[] = []
     page.on('pageerror', err => errors.push(err.message))
 
-    await page.goto(`/characterizations/${char.id}`)
+    await page.goto(`/#/characterizations/${char.id}`)
     await waitForPageReady(page)
 
     const conversionErrors = errors.filter(e => e.includes('TypeError') || e.includes('Cannot read'))
@@ -507,7 +507,7 @@ test.describe('Atlas Characterization Compatibility', () => {
       } else { await route.continue() }
     })
 
-    await page.goto(`/characterizations/${char.id}`)
+    await page.goto(`/#/characterizations/${char.id}`)
     await waitForPageReady(page)
   })
 
@@ -524,7 +524,7 @@ test.describe('Atlas Characterization Compatibility', () => {
       }
     })
 
-    await page.goto('/characterizations')
+    await page.goto('/#/characterizations')
     await waitForPageReady(page)
   })
 
@@ -576,7 +576,7 @@ test.describe('Atlas Characterization Compatibility', () => {
       }
     })
 
-    await page.goto(`/characterizations/${char.id}`)
+    await page.goto(`/#/characterizations/${char.id}`)
     await waitForPageReady(page)
 
     const importInput = page.getByTestId('char-builder-import-input')

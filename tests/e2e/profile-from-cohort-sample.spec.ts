@@ -33,7 +33,7 @@ test.describe('Profile from cohort sample', () => {
   test.skip('clicking a personId row navigates to that person profile', async ({ page }) => {
     // Placeholder — see TODO above. Skipped until the cohort-samples flow
     // has E2E mocks and fixtures.
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     const link = page.locator('[data-test="cohort-sample-profile-link"]').first()
     await link.click()
     await expect(page).toHaveURL(/\/profiles\/.+\/\d+/)

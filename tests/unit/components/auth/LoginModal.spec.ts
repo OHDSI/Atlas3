@@ -2,18 +2,84 @@
  * LoginModal Component Tests
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mount, VueWrapper } from '@vue/test-utils'
-import { createVuetify } from 'vuetify'
+import { mount, flushPromises, VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { defineComponent } from 'vue'
+import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import LoginModal from '@/components/auth/LoginModal.vue'
 import type { AuthProvider } from '@/models/auth.types'
 import { useAuthStore } from '@/stores/auth'
+import { authService } from '@/services/auth/authService'
 
 const vuetify = createVuetify({ components, directives })
 
-// Mock logger
+const credentialsProvider: AuthProvider = {
+  name: 'Database',
+  url: '/auth/db',
+  ajax: true,
+  icon: 'mdi-database',
+  isUseCredentialsForm: true,
+}
+
+const ajaxProvider: AuthProvider = {
+  name: 'Windows',
+  url: '/auth/windows',
+  ajax: true,
+  icon: 'mdi-microsoft-windows',
+  isUseCredentialsForm: false,
+}
+
+const redirectProvider: AuthProvider = {
+  name: 'Google',
+  url: '/oauth/google',
+  ajax: false,
+  icon: 'mdi-google',
+  isUseCredentialsForm: false,
+}
+
+const stubCredentials = {
+  username: 'stub-user',
+  password: 'stub-password',
+}
+
+vi.mock('@/components/ui', () => ({
+  AtlasDialog: defineComponent({
+    name: 'AtlasDialog',
+    props: {
+      modelValue: { type: Boolean, default: false },
+      maxWidth: { type: [String, Number], default: undefined },
+      persistent: { type: Boolean, default: false },
+    },
+    emits: ['update:modelValue'],
+    template: `
+      <div
+        data-testid="atlas-dialog"
+        :data-open="String(modelValue)"
+        :data-persistent="String(persistent)"
+        :data-max-width="String(maxWidth ?? '')"
+      >
+        <slot v-if="modelValue" />
+      </div>
+    `,
+  }),
+  AtlasButton: defineComponent({
+    name: 'AtlasButton',
+    emits: ['click'],
+    template: '<button type="button" v-bind="$attrs" @click="$emit(\'click\')"><slot /></button>',
+  }),
+  AtlasIcon: defineComponent({
+    name: 'AtlasIcon',
+    template: '<span v-bind="$attrs"><slot /></span>',
+  }),
+  AtlasIconButton: defineComponent({
+    name: 'AtlasIconButton',
+    emits: ['click'],
+    template: '<button type="button" data-testid="dismiss-error" v-bind="$attrs" @click="$emit(\'click\')"><slot /></button>',
+  }),
+}))
+
 vi.mock('@/utils/logger', () => ({
   logger: {
     debug: vi.fn(),
@@ -22,9 +88,8 @@ vi.mock('@/utils/logger', () => ({
   },
 }))
 
-// Mock auth config
 vi.mock('@/config/auth.config', () => ({
-  authConfig: {
+  getAuthConfig: () => ({
     userAuthenticationEnabled: true,
     authProviders: [
       {
@@ -35,10 +100,9 @@ vi.mock('@/config/auth.config', () => ({
         isUseCredentialsForm: true,
       },
     ],
-  },
+  }),
 }))
 
-// Mock auth service
 vi.mock('@/services/auth/authService', () => ({
   authService: {
     login: vi.fn(),
@@ -55,29 +119,14 @@ vi.mock('@/services/auth/authService', () => ({
   },
 }))
 
-// Mock useI18n composable
 vi.mock('@/composables/useI18n', () => ({
   useI18n: () => ({
-    t: (key: string, defaultValue: string) => ({ value: defaultValue }),
+    t: (_unusedKey: string, defaultValue: string) => ({
+      value: defaultValue,
+      toString: () => defaultValue,
+    }),
   }),
 }))
-
-const _mockProviders: AuthProvider[] = [
-  {
-    name: 'Database',
-    url: '/auth/db',
-    ajax: true,
-    icon: 'mdi-database',
-    isUseCredentialsForm: true,
-  },
-  {
-    name: 'Google',
-    url: '/oauth/google',
-    ajax: false,
-    icon: 'mdi-google',
-    isUseCredentialsForm: false,
-  },
-]
 
 describe('LoginModal', () => {
   let wrapper: VueWrapper
@@ -89,6 +138,7 @@ describe('LoginModal', () => {
     setActivePinia(pinia)
     authStore = useAuthStore()
     vi.clearAllMocks()
+    vi.mocked(authService.fetchOAuthProviders).mockResolvedValue([credentialsProvider])
   })
 
   afterEach(() => {
@@ -104,312 +154,165 @@ describe('LoginModal', () => {
         stubs: {
           CredentialsForm: {
             name: 'CredentialsForm',
-            template: '<div class="credentials-form-stub" data-testid="credentials-form"></div>',
             props: ['provider', 'loading'],
             emits: ['submit'],
+            template: `
+              <form
+                data-testid="credentials-form"
+                @submit.prevent="$emit('submit', { username: '${stubCredentials.username}', password: '${stubCredentials.password}' })"
+              >
+                <button type="submit">Submit credentials</button>
+              </form>
+            `,
           },
         },
       },
     })
   }
 
-  describe('Component Mounting', () => {
-    it('should render dialog', () => {
+  async function openModal(providers: AuthProvider[] = [credentialsProvider]) {
+    vi.mocked(authService.fetchOAuthProviders).mockResolvedValue(providers)
+    wrapper = mountComponent()
+    authStore.loginModalOpen = true
+    await flushPromises()
+  }
+
+  function providerButtons() {
+    return wrapper.findAll('.login-card__provider-btn')
+  }
+
+  function providerButtonAt(index: number) {
+    const button = providerButtons()[index]
+    expect(button).toBeDefined()
+    return button!
+  }
+
+  describe('rendering', () => {
+    it('renders a closed persistent dialog by default', () => {
       wrapper = mountComponent()
 
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
-      expect(dialog.exists()).toBe(true)
+      const dialog = wrapper.get('[data-testid="atlas-dialog"]')
+      expect(dialog.attributes('data-open')).toBe('false')
+      expect(dialog.attributes('data-persistent')).toBe('true')
+      expect(dialog.attributes('data-max-width')).toBe('440')
+      expect(wrapper.find('.login-card').exists()).toBe(false)
     })
 
-    it('should be persistent (not closeable by clicking outside)', () => {
-      wrapper = mountComponent()
+    it('renders the card and heading when the modal opens', async () => {
+      await openModal([credentialsProvider, ajaxProvider])
 
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
-      expect(dialog.props('persistent')).toBe(true)
+      expect(authService.fetchOAuthProviders).toHaveBeenCalledTimes(1)
+      expect(wrapper.find('.login-card').exists()).toBe(true)
+      expect(wrapper.get('.login-card__title').text()).toBe('Welcome back')
+      expect(wrapper.get('.login-card__subtitle').text()).toBe('Sign in to continue')
     })
 
-    it('should constrain dialog width', () => {
-      wrapper = mountComponent()
+    it('renders provider buttons returned from fetch', async () => {
+      await openModal([credentialsProvider, ajaxProvider, redirectProvider])
 
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
-      expect(dialog.props('maxWidth')).toBeTruthy()
+      const buttons = providerButtons()
+      expect(buttons).toHaveLength(3)
+      expect(buttons.map(button => button.text())).toEqual(['Database', 'Windows', 'Google'])
+      expect(wrapper.find('[data-testid="credentials-form"]').exists()).toBe(false)
     })
 
-    it('should render card when modal is open', async () => {
-      wrapper = mountComponent()
+    it('falls back to config providers when fetch returns no providers', async () => {
+      await openModal([])
 
+      expect(wrapper.find('[data-testid="credentials-form"]').exists()).toBe(true)
+      expect(providerButtons()).toHaveLength(0)
+    })
+
+    it('falls back to config providers when fetch fails', async () => {
+      vi.mocked(authService.fetchOAuthProviders).mockRejectedValueOnce(new Error('network error'))
+      wrapper = mountComponent()
       authStore.loginModalOpen = true
-      await wrapper.vm.$nextTick()
+      await flushPromises()
 
-      const card = wrapper.findComponent({ name: 'VCard' })
-      expect(card.exists()).toBe(true)
-    })
-
-    it('should render a heading when modal is open', async () => {
-      wrapper = mountComponent()
-
-      authStore.loginModalOpen = true
-      await wrapper.vm.$nextTick()
-
-      const card = wrapper.findComponent({ name: 'VCard' })
-      const heading = card.find('.login-card__title')
-      expect(heading.exists()).toBe(true)
-      expect(heading.text().length).toBeGreaterThan(0)
+      expect(wrapper.find('[data-testid="credentials-form"]').exists()).toBe(true)
+      expect(providerButtons()).toHaveLength(0)
     })
   })
 
-  describe('Dialog Visibility', () => {
-    it('should be closed by default', () => {
-      wrapper = mountComponent()
+  describe('provider interactions', () => {
+    it('shows the credentials form after selecting a credentials provider', async () => {
+      await openModal([credentialsProvider, ajaxProvider])
 
-      expect(wrapper.vm.isOpen).toBe(false)
+      await providerButtonAt(0).trigger('click')
+
+      expect(wrapper.find('[data-testid="credentials-form"]').exists()).toBe(true)
+      expect(wrapper.get('.login-card__back-btn').text()).toBe('Back')
+      expect(wrapper.find('.login-card__providers').exists()).toBe(false)
     })
 
-    it('should reflect auth store loginModalOpen state', async () => {
-      wrapper = mountComponent()
+    it('submits credentials from the credentials form through authService.login', async () => {
+      vi.mocked(authService.login).mockResolvedValue()
+      await openModal([credentialsProvider, ajaxProvider])
 
-      authStore.loginModalOpen = false
-      await wrapper.vm.$nextTick()
-      expect(wrapper.vm.isOpen).toBe(false)
+      await providerButtonAt(0).trigger('click')
+      await wrapper.get('[data-testid="credentials-form"]').trigger('submit')
 
-      authStore.loginModalOpen = true
-      await wrapper.vm.$nextTick()
-      expect(wrapper.vm.isOpen).toBe(true)
-    })
-  })
-
-  describe('Provider State', () => {
-    it('should initialize with no selected provider', () => {
-      wrapper = mountComponent()
-
-      expect(wrapper.vm.selectedProvider).toBeNull()
+      expect(authService.login).toHaveBeenCalledWith(credentialsProvider, stubCredentials)
     })
 
-    it('should have providers array', () => {
-      wrapper = mountComponent()
+    it('calls authService.login for ajax providers without a credentials form', async () => {
+      vi.mocked(authService.login).mockResolvedValue()
+      await openModal([credentialsProvider, ajaxProvider])
 
-      expect(Array.isArray(wrapper.vm.providers)).toBe(true)
+      await providerButtonAt(1).trigger('click')
+
+      expect(authService.login).toHaveBeenCalledWith(ajaxProvider, undefined)
+      expect(wrapper.find('[data-testid="credentials-form"]').exists()).toBe(false)
     })
 
-    it('should allow selecting a provider', () => {
-      wrapper = mountComponent()
+    it('calls authService.login for redirect providers without a credentials form', async () => {
+      vi.mocked(authService.login).mockResolvedValue()
+      await openModal([credentialsProvider, redirectProvider])
 
-      const testProvider: AuthProvider = {
-        name: 'Test Provider',
-        url: '/auth/test',
-        ajax: true,
-        icon: 'mdi-test',
-        isUseCredentialsForm: true,
-      }
+      await providerButtonAt(1).trigger('click')
 
-      wrapper.vm.selectProvider(testProvider)
-
-      expect(wrapper.vm.selectedProvider).toEqual(testProvider)
+      expect(authService.login).toHaveBeenCalledWith(redirectProvider, undefined)
+      expect(wrapper.find('[data-testid="credentials-form"]').exists()).toBe(false)
     })
 
-    it('should reset selected provider', () => {
-      wrapper = mountComponent()
-
-      const testProvider: AuthProvider = {
-        name: 'Test Provider',
-        url: '/auth/test',
-        ajax: true,
-        icon: 'mdi-test',
-        isUseCredentialsForm: true,
-      }
-
-      wrapper.vm.selectProvider(testProvider)
-      expect(wrapper.vm.selectedProvider).toBeTruthy()
-
-      wrapper.vm.backToProviders()
-      expect(wrapper.vm.selectedProvider).toBeNull()
-    })
-  })
-
-  describe('Loading State', () => {
-    it('should track loading providers state', () => {
-      wrapper = mountComponent()
-
-      expect(typeof wrapper.vm.loadingProviders).toBe('boolean')
-    })
-
-    it('should have isAuthenticating computed property', () => {
-      wrapper = mountComponent()
-
-      expect(wrapper.vm.isAuthenticating).toBeDefined()
-    })
-  })
-
-  describe('Error Handling', () => {
-    it('should have errorMessage computed property', () => {
-      wrapper = mountComponent()
-
-      expect(wrapper.vm.errorMessage).toBeDefined()
-    })
-
-    it('should show error block when error message exists', async () => {
-      wrapper = mountComponent()
-
-      authStore.loginModalOpen = true
-      authStore.errorMessage = 'Test error message'
-      await wrapper.vm.$nextTick()
-
-      const card = wrapper.findComponent({ name: 'VCard' })
-      const error = card.find('.login-card__error')
-      expect(error.exists()).toBe(true)
-      expect(error.text()).toContain('Test error message')
-    })
-
-    it('should have clearError method', () => {
-      wrapper = mountComponent()
-
-      expect(typeof wrapper.vm.clearError).toBe('function')
-    })
-  })
-
-  describe('Modal Control Methods', () => {
-    it('should have close method', () => {
-      wrapper = mountComponent()
-
-      expect(typeof wrapper.vm.close).toBe('function')
-    })
-
-    it('should have selectProvider method', () => {
-      wrapper = mountComponent()
-
-      expect(typeof wrapper.vm.selectProvider).toBe('function')
-    })
-
-    it('should have backToProviders method', () => {
-      wrapper = mountComponent()
-
-      expect(typeof wrapper.vm.backToProviders).toBe('function')
-    })
-
-    it('should have handleLogin method', () => {
-      wrapper = mountComponent()
-
-      expect(typeof wrapper.vm.handleLogin).toBe('function')
-    })
-  })
-
-  describe('Conditional Rendering', () => {
-    it('should render provider list when no provider selected', async () => {
-      wrapper = mountComponent()
-
-      authStore.loginModalOpen = true
-      await wrapper.vm.$nextTick()
-      await new Promise(resolve => setTimeout(resolve, 10))
-
-      wrapper.vm.selectedProvider = null
-      await wrapper.vm.$nextTick()
-
-      // Check if provider selection UI should be shown
-      expect(wrapper.vm.selectedProvider).toBeNull()
-    })
-
-    it('should render credentials form when credentials provider is selected', async () => {
-      wrapper = mountComponent()
-
-      authStore.loginModalOpen = true
-      await wrapper.vm.$nextTick()
-
-      const credentialsProvider: AuthProvider = {
-        name: 'Database',
-        url: '/auth/db',
-        ajax: true,
-        icon: 'mdi-database',
-        isUseCredentialsForm: true,
-      }
-
-      wrapper.vm.selectedProvider = credentialsProvider
-      await wrapper.vm.$nextTick()
-
-      // CredentialsForm component stub should be rendered
-      const credentialsFormStub = wrapper.findComponent({ name: 'CredentialsForm' })
-      expect(credentialsFormStub.exists()).toBe(true)
-    })
-
-    it('should not show credentials form when OAuth provider is selected', async () => {
-      wrapper = mountComponent()
-
-      const oauthProvider: AuthProvider = {
-        name: 'Google',
-        url: '/oauth/google',
-        ajax: false,
-        icon: 'mdi-google',
-        isUseCredentialsForm: false,
-      }
-
-      wrapper.vm.selectedProvider = oauthProvider
-      await wrapper.vm.$nextTick()
-
-      const credentialsForm = wrapper.find('[data-testid="credentials-form"]')
-      expect(credentialsForm.exists()).toBe(false)
-    })
-  })
-
-  describe('Provider Fetching', () => {
-    it('should have fetchProviders method available', () => {
-      wrapper = mountComponent()
-
-      expect(typeof wrapper.vm.fetchProviders).toBe('function')
-    })
-  })
-
-  describe('Component Integration', () => {
-    it('should integrate with auth store', () => {
-      wrapper = mountComponent()
-
-      // Check that component has access to auth store state
-      expect(wrapper.vm.isAuthenticating).toBeDefined()
-      expect(wrapper.vm.errorMessage).toBeDefined()
-      expect(wrapper.vm.isOpen).toBeDefined()
-    })
-
-    it('should handle login credentials submission', async () => {
-      wrapper = mountComponent()
-
-      const credentials = {
-        username: 'testuser',
-        password: 'testpass',
-      }
-
-      // This should not throw
-      await expect(wrapper.vm.handleLogin(credentials)).resolves.not.toThrow()
-    })
-  })
-
-  describe('Back Navigation', () => {
-    it('should clear error when going back to providers', () => {
-      wrapper = mountComponent()
-
+    it('returns to the provider list and clears errors when back is clicked', async () => {
+      await openModal([credentialsProvider, ajaxProvider])
+      await providerButtonAt(0).trigger('click')
       authStore.errorMessage = 'Previous error'
+      await flushPromises()
 
-      wrapper.vm.backToProviders()
+      await wrapper.get('.login-card__back-btn').trigger('click')
 
-      // After going back, error should be cleared
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+      expect(providerButtons()).toHaveLength(2)
+      expect(wrapper.find('[data-testid="credentials-form"]').exists()).toBe(false)
       expect(authStore.errorMessage).toBeNull()
     })
   })
 
-  describe('Modal Close', () => {
-    it('should close modal and reset selection', () => {
-      wrapper = mountComponent()
+  describe('error handling and closing', () => {
+    it('shows the auth store error and clears it when dismissed', async () => {
+      await openModal([credentialsProvider, ajaxProvider])
+      authStore.errorMessage = 'Test error message'
+      await flushPromises()
 
-      const testProvider: AuthProvider = {
-        name: 'Test',
-        url: '/auth/test',
-        ajax: true,
-        icon: 'mdi-test',
-        isUseCredentialsForm: true,
-      }
+      expect(wrapper.get('[role="alert"]').text()).toContain('Test error message')
 
-      wrapper.vm.selectedProvider = testProvider
-      wrapper.vm.close()
+      await wrapper.get('[data-testid="dismiss-error"]').trigger('click')
 
-      expect(wrapper.vm.selectedProvider).toBeNull()
+      expect(authStore.errorMessage).toBeNull()
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    })
+
+    it('closes the modal when the dialog emits update:modelValue false', async () => {
+      await openModal([credentialsProvider, ajaxProvider])
+      await providerButtonAt(0).trigger('click')
+
+      wrapper.findComponent({ name: 'AtlasDialog' }).vm.$emit('update:modelValue', false)
+      await flushPromises()
+
       expect(authStore.loginModalOpen).toBe(false)
+      expect(wrapper.find('.login-card').exists()).toBe(false)
     })
   })
 })

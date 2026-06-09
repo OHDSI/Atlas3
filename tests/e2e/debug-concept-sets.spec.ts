@@ -12,7 +12,7 @@ test('debug concept sets loading', async ({ page }) => {
   })
 
   // Navigate to concepts page (use relative URL to use baseURL from config)
-  await page.goto('/concepts?tab=sets')
+  await page.goto('/#/concepts?tab=sets')
   await page.waitForTimeout(3000)
 
   // Check what's visible

@@ -35,10 +35,9 @@ vi.mock('@/stores/ui', () => ({
   useUIStore: vi.fn(),
 }))
 
+const mockAuthConfig = { userAuthenticationEnabled: true }
 vi.mock('@/config/auth.config', () => ({
-  authConfig: {
-    userAuthenticationEnabled: true,
-  },
+  getAuthConfig: () => mockAuthConfig,
   setAuthConfig: vi.fn(),
 }))
 
@@ -63,7 +62,7 @@ vi.mock('@/services/auth/authService', () => ({
 
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
-import { authConfig } from '@/config/auth.config'
+
 import { generatePluginRoutes } from '@/plugins/navigation/PluginRoutes.ts'
 import { logger } from '@/utils/logger'
 import { authService } from '@/services/auth/authService'
@@ -434,7 +433,7 @@ describe('Vue Router', () => {
   describe('Authentication Guard', () => {
     beforeEach(() => {
       // Reset auth config
-      vi.mocked(authConfig).userAuthenticationEnabled = true
+      mockAuthConfig.userAuthenticationEnabled = true
     })
 
     it('should allow access to public routes without authentication', async () => {
@@ -463,7 +462,7 @@ describe('Vue Router', () => {
     })
 
     it('should skip auth check when authentication is disabled', async () => {
-      vi.mocked(authConfig).userAuthenticationEnabled = false
+      mockAuthConfig.userAuthenticationEnabled = false
       mockAuthStore.isAuthenticated = false
 
       await router.push('/cohorts')

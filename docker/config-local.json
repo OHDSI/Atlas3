@@ -1,0 +1,13 @@
+{
+  "api": { "url": "/WebAPI" },
+  "userAuthenticationEnabled": true,
+  "authProviders": [
+    {
+      "name": "Database",
+      "url": "user/login/db",
+      "ajax": true,
+      "icon": "mdi-database",
+      "isUseCredentialsForm": true
+    }
+  ]
+}

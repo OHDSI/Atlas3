@@ -272,35 +272,44 @@ describe('PluginLoader', () => {
     });
 
     describe('activeWhen function', () => {
-      it('should return true when pathname matches plugin path', async () => {
+      it('should return true when hash path matches plugin path', async () => {
         await loader.loadPlugin(mockPlugin);
 
         const registerCall = (registerApplication as Mock).mock.calls[0][0];
         const activeWhen = registerCall.activeWhen;
 
-        const result = activeWhen({ pathname: '/plugins/test-plugin/dashboard' });
+        const result = activeWhen({ hash: '#/plugins/test-plugin/dashboard' });
         expect(result).toBe(true);
       });
 
-      it('should return false when pathname does not match plugin path', async () => {
+      it('should return false when hash path does not match plugin path', async () => {
         await loader.loadPlugin(mockPlugin);
 
         const registerCall = (registerApplication as Mock).mock.calls[0][0];
         const activeWhen = registerCall.activeWhen;
 
-        const result = activeWhen({ pathname: '/other/path' });
+        const result = activeWhen({ hash: '#/other/path' });
         expect(result).toBe(false);
       });
 
-      it('should handle base path correctly', async () => {
+      it('should handle plugin root hash route', async () => {
         await loader.loadPlugin(mockPlugin);
 
         const registerCall = (registerApplication as Mock).mock.calls[0][0];
         const activeWhen = registerCall.activeWhen;
 
-        // Should normalize multiple slashes
-        const result = activeWhen({ pathname: '/plugins/test-plugin/' });
+        const result = activeWhen({ hash: '#/plugins/test-plugin/' });
         expect(result).toBe(true);
+      });
+
+      it('should return false when location has no hash route', async () => {
+        await loader.loadPlugin(mockPlugin);
+
+        const registerCall = (registerApplication as Mock).mock.calls[0][0];
+        const activeWhen = registerCall.activeWhen;
+
+        const result = activeWhen({ pathname: '/plugins/test-plugin/' });
+        expect(result).toBe(false);
       });
     });
 

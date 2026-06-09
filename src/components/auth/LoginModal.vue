@@ -117,7 +117,7 @@ import { AtlasButton, AtlasDialog, AtlasIcon, AtlasIconButton } from '@/componen
 import { ref, computed, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
-import { authConfig } from '@/config/auth.config'
+import { getAuthConfig } from '@/config/auth.config'
 import { authService } from '@/services/auth/authService'
 import { logger } from '@/utils/logger'
 import type { AuthProvider, LoginCredentials } from '@/models/auth.types'
@@ -135,6 +135,7 @@ const isOpen = computed({
   },
 })
 
+const authConfig = getAuthConfig()
 const providers = ref<AuthProvider[]>(authConfig.authProviders)
 const selectedProvider = ref<AuthProvider | null>(null)
 const loadingProviders = ref(false)
@@ -189,8 +190,16 @@ function selectProvider(provider: AuthProvider) {
     auth.saveLogoutUrl(provider.logoutUrl)
   }
 
-  if (!provider.isUseCredentialsForm && !provider.ajax) {
-    auth.login(provider.url)
+  if (!provider.isUseCredentialsForm) {
+    handleProviderLogin(provider)
+  }
+}
+
+async function handleProviderLogin(provider: AuthProvider) {
+  try {
+    await auth.login(provider)
+  } catch (error) {
+    logger.error('LoginModal', 'Provider login failed', error)
   }
 }
 
@@ -204,7 +213,7 @@ async function handleLogin(credentials: LoginCredentials) {
   if (!provider) return
 
   try {
-    await auth.login(provider.url, credentials)
+    await auth.login(provider, credentials)
   } catch (error) {
     logger.error('LoginModal', 'Login failed', error)
   }

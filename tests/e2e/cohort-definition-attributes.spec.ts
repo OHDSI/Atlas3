@@ -41,7 +41,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
 
   test('T046: opening cohort does not trigger unsaved changes', async ({ page }) => {
     // Navigate to the cohorts list page
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForNetworkIdle(page)
 
     // Mock the list of cohorts
@@ -68,7 +68,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
 
     // Open an existing cohort by navigating directly
     // (In a real scenario, we'd click on a cohort in the list)
-    await page.goto('/cohorts/1')
+    await page.goto('/#/cohorts/1')
     await waitForNetworkIdle(page)
     await page.waitForTimeout(1000)
 
@@ -142,7 +142,7 @@ test.describe('Cohort Definition Attributes - False Change Detection', () => {
     })
 
     // Navigate to the cohort
-    await page.goto('/cohorts/1')
+    await page.goto('/#/cohorts/1')
     await waitForNetworkIdle(page)
     await page.waitForTimeout(1000)
 

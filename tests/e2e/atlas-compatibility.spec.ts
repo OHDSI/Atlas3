@@ -24,7 +24,7 @@ test.describe('Atlas Format Compatibility - Cohort Import', () => {
 
   for (const cohort of atlasDemoCohorts) {
     test(`imports "${cohort.name}" (id ${cohort.id}) via JSON paste`, async ({ page }) => {
-      await page.goto('/cohorts')
+      await page.goto('/#/cohorts')
       await waitForPageReady(page)
       await waitForOverlaysToClose(page)
 
@@ -66,7 +66,7 @@ test.describe('Atlas Format Compatibility - Round-Trip via UI', () => {
     const expressionJson = JSON.stringify(cohort.expression)
 
     // Step 1: Import cohort
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForPageReady(page)
     await waitForOverlaysToClose(page)
 
@@ -110,7 +110,7 @@ test.describe('Atlas Format Compatibility - Round-Trip via UI', () => {
     })
 
     // Navigate directly to the cohort builder
-    await page.goto('/cohorts/500')
+    await page.goto('/#/cohorts/500')
     await waitForPageReady(page)
 
     // Click the export button
@@ -233,7 +233,7 @@ test.describe('Atlas Format Compatibility - Cohort Builder Rendering', () => {
       })
 
       // Navigate to the cohort builder and wait for initial load
-      await page.goto(`/cohorts/${cohort.id}`)
+      await page.goto(`/#/cohorts/${cohort.id}`)
       // Give the page time to process the expression — don't wait for
       // full networkidle since some endpoints may not be mocked
       await page.waitForTimeout(3000)
@@ -251,7 +251,7 @@ test.describe('Atlas Format Compatibility - API Structure Validation', () => {
   test('atlas-demo.ohdsi.org cohort list response matches expected schema', async ({ page }) => {
     // Verify that our mock cohort list format matches what Atlas produces
     await setupBasicMocks(page)
-    await page.goto('/cohorts')
+    await page.goto('/#/cohorts')
     await waitForPageReady(page)
 
     // The mock cohort list should render cards
@@ -298,7 +298,7 @@ test.describe('Atlas Format Compatibility - API Structure Validation', () => {
 // --- Helper functions ---
 
 async function importCohortViaUI(page: Page, cohort: AtlasDemoCohort) {
-  await page.goto('/cohorts')
+  await page.goto('/#/cohorts')
   await waitForPageReady(page)
   await waitForOverlaysToClose(page)
 

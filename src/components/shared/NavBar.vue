@@ -209,7 +209,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'
 import { usePermissions } from '@/composables/usePermissions'
 import { useUIStore } from '@/stores/ui'
-import { authConfig } from '@/config/auth.config'
+import { getAuthConfig } from '@/config/auth.config'
 import {
   generatePluginMenuItems,
   type PluginMenuItem,
@@ -466,8 +466,8 @@ onMounted(() => {
   })
 
   if (
-    authConfig.userAuthenticationEnabled &&
-    authConfig.enableSkipLogin &&
+    getAuthConfig().userAuthenticationEnabled &&
+    getAuthConfig().enableSkipLogin &&
     !auth.isAuthenticated.value
   ) {
     auth.openLoginModal()

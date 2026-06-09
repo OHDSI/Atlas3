@@ -20,8 +20,11 @@ import {
   transformDataDensityReport,
   transformPersonReport,
 } from '@/utils/datasource-formatters'
+import { getAppConfig } from '@/config/app-config.loader'
 
-const BASE_URL = import.meta.env.VITE_WEBAPI_URL || '/WebAPI'
+function getBaseUrl(): string {
+  return getAppConfig().api.url
+}
 
 const MAX_RETRY_ATTEMPTS = 3
 const INITIAL_RETRY_DELAY_MS = 500
@@ -57,7 +60,7 @@ async function getAuthToken(): Promise<string | null> {
 }
 
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`
+  const url = `${getBaseUrl()}${endpoint}`
   let lastError: Error | null = null
 
   // Cancel previous request to the same endpoint

@@ -2,18 +2,25 @@
  * Vue Router Configuration
  * Basic routing for cohort builder SPA with OAuth callback support and authentication guards
  */
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
 import { useLocaleStore } from '@/stores/locale'
-import { authConfig } from '@/config/auth.config'
+import { getAuthConfig } from '@/config/auth.config'
 import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
+import { foldSearchIntoHash } from './legacy-url'
 import { routes } from './routes'
 
+// Fold any real (pre-hash) query string into the hash before the hash history
+// captures the current location, so deeplink/OAuth guards see ?cohortId / ?token.
+if (typeof window !== 'undefined') {
+  foldSearchIntoHash()
+}
+
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes,
 })
 
@@ -219,7 +226,7 @@ router.beforeEach(
     }
 
     // Skip auth check if authentication is disabled
-    if (!authConfig.userAuthenticationEnabled) {
+    if (!getAuthConfig().userAuthenticationEnabled) {
       next()
       return
     }
@@ -232,7 +239,7 @@ router.beforeEach(
 
       // If not authenticated, show login modal and stay on current page
       // BUT only if authentication is actually enabled
-      if (!authStore.isAuthenticated && authConfig.userAuthenticationEnabled) {
+      if (!authStore.isAuthenticated && getAuthConfig().userAuthenticationEnabled) {
         logger.debug('Router', 'Route requires auth, opening login modal')
         authStore.openLoginModal()
 

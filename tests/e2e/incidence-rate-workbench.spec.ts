@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe.skip('Incidence Rate workbench', () => {
   test('design → save → generate → past run → switch view → export CSV', async ({ page }) => {
-    await page.goto('/incidence-rates/new')
+    await page.goto('/#/incidence-rates/new')
 
     await expect(page.getByTestId('ir-builder')).toBeVisible()
     await page.getByTestId('ir-builder-name').fill(`E2E IR ${Date.now()}`)

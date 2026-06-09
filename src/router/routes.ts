@@ -116,8 +116,7 @@ export const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  // Back-compat redirects: existing string-based router.push('/<type>') calls
-  // throughout the codebase keep working.
+  // Route aliases: keep legacy list URLs mapped to Analysis Hub child routes.
   { path: '/characterizations', redirect: { name: 'characterizations' } },
   { path: '/feature-analyses', redirect: { name: 'feature-analyses' } },
   { path: '/pathways', redirect: { name: 'pathways' } },

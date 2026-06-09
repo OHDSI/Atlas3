@@ -1,26 +1,23 @@
 import type { LoginCredentials, UserInfo, AuthProvider, EntityAccess } from '@/models/auth.types'
 import { emptyEntityAccess } from '@/models/auth.types'
 import { useAuthStore } from '@/stores/auth'
-import { authConfig } from '@/config/auth.config'
+import { getAuthConfig } from '@/config/auth.config'
 import { storageManager } from './storageManager'
 import { permissionChecker } from './permissionChecker'
 import { logger } from '@/utils/logger'
 
 export interface IAuthService {
-  login(provider: string, credentials?: LoginCredentials): Promise<void>
+  login(provider: AuthProvider, credentials?: LoginCredentials): Promise<void>
   logout(): Promise<void>
   refreshToken(): Promise<boolean>
   fetchUserInfo(): Promise<UserInfo>
   runAs(targetUsername: string): Promise<void>
-  exitRunAs(): Promise<void>
 }
 
 /**
  * Parse the /user/me response into a UserInfo.
  *
  * WebAPI 3.0 returns `{ user: { login, name, ... }, authz: { permissions: string[], ...AccessMaps } }`.
- * Older WebAPI variants returned `{ login, name, permissions: { resource: [...] } }` at the top level;
- * we accept both shapes so older backends still work in dev.
  */
 export function parseUserInfo(data: Record<string, unknown>): UserInfo {
   const user = (data.user as Record<string, unknown> | undefined) ?? data
@@ -82,152 +79,149 @@ export function parseUserInfo(data: Record<string, unknown>): UserInfo {
 
 class AuthService implements IAuthService {
   private get webAPIRoot(): string {
-    return authConfig.webAPIRoot
+    return getAuthConfig().webAPIRoot
   }
 
-  /**
-   * Detect if Google IAP is enabled
-   */
-  async detectIAP(): Promise<boolean> {
-    try {
-      const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-      const response = await fetch(`${baseUrl}info`, {
-        method: 'HEAD',
-      })
-
-      // IAP sets x-goog-iap-jwt-assertion header
-      return response.headers.has('x-goog-iap-jwt-assertion')
-    } catch (error) {
-      return false
-    }
+  private buildProviderUrl(providerUrl: string): string {
+    const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
+    return `${baseUrl}${providerUrl}`
   }
 
-  /**
-   * Authenticate via Google IAP
-   */
-  async loginWithIAP(): Promise<void> {
+  private async redirectToProvider(provider: AuthProvider): Promise<void> {
+    const hashRoute = window.location.hash
+    const loginUrl = this.buildProviderUrl(provider.url)
+
+    window.location.href = hashRoute
+      ? `${loginUrl}?redirectUrl=${encodeURIComponent(hashRoute)}`
+      : loginUrl
+  }
+
+  private async loginWithCredentials(
+    provider: AuthProvider,
+    credentials: LoginCredentials
+  ): Promise<void> {
+    const formData = new URLSearchParams()
+    formData.append('login', credentials.username)
+    formData.append('password', credentials.password)
+
+    const url = this.buildProviderUrl(provider.url)
+    logger.debug('Auth', 'POST to', url)
+    logger.debug('Auth', 'Credentials', { username: credentials.username, password: '***' })
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+    })
+
+    logger.debug('Auth', 'Response status', response.status)
+    logger.debug('Auth', 'Response headers', Object.fromEntries(response.headers.entries()))
+
+    await this.finalizeLoginFromResponse(response, {
+      allowBearerHeader: false,
+      noTokenMessage: 'No token received from server',
+    })
+  }
+
+  private async loginWithAjax(provider: AuthProvider): Promise<void> {
+    const url = this.buildProviderUrl(provider.url)
+    logger.debug('Auth', 'AJAX login (no credentials) GET', url)
+
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    logger.debug('Auth', 'Response status', response.status)
+
+    await this.finalizeLoginFromResponse(response, {
+      allowBearerHeader: true,
+      noTokenMessage: 'No token received from server',
+    })
+  }
+
+  private async throwAuthError(response: Response): Promise<never> {
+    const errorHeader = response.headers.get('x-auth-error')
+    const errorBody = await response.text()
+    logger.error('Auth', 'Login failed', {
+      status: response.status,
+      errorHeader,
+      errorBody,
+    })
+    throw new Error(errorHeader || errorBody || 'Authentication failed')
+  }
+
+  private async completeLogin(token: string): Promise<void> {
     const authStore = useAuthStore()
-    authStore.setAuthenticating(true)
-    authStore.setError(null)
 
-    try {
-      const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-      const response = await fetch(`${baseUrl}user/login/iap`, {
-        method: 'POST',
+    authStore.setToken(token)
+
+    const userInfo = await this.fetchUserInfo()
+    authStore.setUser(userInfo)
+
+    import('@/stores/locale')
+      .then(({ useLocaleStore }) => {
+        useLocaleStore().fetchAvailableLocales()
+      })
+      .catch(err => {
+        logger.warn('Auth', 'Failed to refresh locales after login', err)
       })
 
-      if (!response.ok) {
-        throw new Error('IAP authentication failed')
-      }
-
-      const token = response.headers.get('Bearer')
-      if (!token) {
-        throw new Error('No token received from IAP authentication')
-      }
-
-      authStore.setToken(token)
-      authStore.setAuthClient('IAP')
-
-      const userInfo = await this.fetchUserInfo()
-      authStore.setUser(userInfo)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'IAP authentication failed'
-      authStore.setError(message)
-      throw error
-    } finally {
-      authStore.setAuthenticating(false)
-    }
+    authStore.closeLoginModal()
   }
 
-  async login(provider: string, credentials?: LoginCredentials): Promise<void> {
+  private async finalizeLoginFromResponse(
+    response: Response,
+    options: { allowBearerHeader: boolean; noTokenMessage: string }
+  ): Promise<void> {
+    if (!response.ok) {
+      await this.throwAuthError(response)
+    }
+
+    let body: Record<string, unknown> | null = null
+    let token: string | null = options.allowBearerHeader ? response.headers.get('Bearer') : null
+
+    if (!token) {
+      try {
+        const responseForJson = typeof response.clone === 'function' ? response.clone() : response
+        body = (await responseForJson.json()) as Record<string, unknown>
+        if (typeof body.jwt === 'string') {
+          token = body.jwt
+        }
+      } catch {
+        // response wasn't JSON — fall through
+      }
+    }
+
+    logger.debug('Auth', 'Token received', token ? 'YES' : 'NO')
+
+    if (!token) {
+      const message = typeof body?.message === 'string' ? body.message : options.noTokenMessage
+      throw new Error(message)
+    }
+
+    await this.completeLogin(token)
+  }
+
+  async login(provider: AuthProvider, credentials?: LoginCredentials): Promise<void> {
     const authStore = useAuthStore()
     authStore.setAuthenticating(true)
     authStore.setError(null)
 
     try {
       logger.debug('Auth', 'Login attempt', { provider, webAPIRoot: this.webAPIRoot })
-      let response: Response
-
-      if (credentials) {
-        const formData = new URLSearchParams()
-        formData.append('login', credentials.username)
-        formData.append('password', credentials.password)
-
-        // Ensure proper URL formatting with slash
-        const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-        const url = `${baseUrl}${provider}`
-        logger.debug('Auth', 'POST to', url)
-        logger.debug('Auth', 'Credentials', { username: credentials.username, password: '***' })
-
-        response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: formData.toString(),
-        })
-
-        logger.debug('Auth', 'Response status', response.status)
-        logger.debug('Auth', 'Response headers', Object.fromEntries(response.headers.entries()))
-      } else {
-        // OAuth/redirect provider - ensure proper URL with slash
-        const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-
-        // Build redirect URL with hash route (Atlas pattern)
-        const hashRoute = window.location.hash
-        const loginUrl = `${baseUrl}${provider}`
-
-        // Redirect with optional redirectUrl parameter for hash routes
-        window.location.href = hashRoute
-          ? `${loginUrl}?redirectUrl=${encodeURIComponent(hashRoute)}`
-          : loginUrl
-        return
-      }
-
-      if (!response.ok) {
-        const errorHeader = response.headers.get('x-auth-error')
-        const errorBody = await response.text()
-        logger.error('Auth', 'Login failed', {
-          status: response.status,
-          errorHeader,
-          errorBody,
-        })
-        throw new Error(errorHeader || errorBody || 'Authentication failed')
-      }
-
-      // WebAPI 3.0 returns { login, jwt, roles, message } in the JSON body.
-      // Older WebAPI versions returned the token in a `Bearer` response header.
-      let token = response.headers.get('Bearer')
-      if (!token) {
-        try {
-          const body = await response.clone().json()
-          if (body && typeof body.jwt === 'string') {
-            token = body.jwt
-          }
-        } catch {
-          // response wasn't JSON — fall through to the no-token error
+      if (provider.isUseCredentialsForm) {
+        if (!credentials) {
+          throw new Error('Credentials are required for this authentication provider')
         }
+        await this.loginWithCredentials(provider, credentials)
+      } else if (provider.ajax) {
+        await this.loginWithAjax(provider)
+      } else {
+        await this.redirectToProvider(provider)
       }
-      logger.debug('Auth', 'Token received', token ? 'YES' : 'NO')
-
-      if (!token) {
-        throw new Error('No token received from server')
-      }
-
-      authStore.setToken(token)
-
-      const userInfo = await this.fetchUserInfo()
-      authStore.setUser(userInfo)
-
-      import('@/stores/locale')
-        .then(({ useLocaleStore }) => {
-          useLocaleStore().fetchAvailableLocales()
-        })
-        .catch(err => {
-          logger.warn('Auth', 'Failed to refresh locales after login', err)
-        })
-
-      authStore.closeLoginModal()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Authentication failed'
       authStore.setError(message)
@@ -237,6 +231,12 @@ class AuthService implements IAuthService {
     }
   }
 
+  /**
+   * Authenticate via an AJAX provider that does not require a credentials form.
+   * Used for Windows/NTLM/Kerberos where the browser handles the auth challenge
+   * transparently. Makes a GET request to the provider URL and extracts the token
+   * from the response.
+   */
   async logout(): Promise<void> {
     const authStore = useAuthStore()
 
@@ -257,13 +257,7 @@ class AuthService implements IAuthService {
         },
       }).catch(e => logger.warn('Auth', 'WebAPI logout call failed', e))
 
-      if (authClient === 'IAP') {
-        // Google IAP logout - clear auth then redirect
-        logger.info('Auth', 'Performing Google IAP logout')
-        authStore.clearAuth()
-        window.location.href = '/_gcp_iap/clear_login_cookie'
-        return
-      } else if (authClient === 'SAML') {
+      if (authClient === 'SAML') {
         // SAML Single Logout - needs token for session identification
         logger.info('Auth', 'Performing SAML Single Logout')
         const response = await fetch(`${baseUrl}user/logout/saml`, {
@@ -287,7 +281,7 @@ class AuthService implements IAuthService {
         // OIDC Single Logout - redirect to identity provider's end session endpoint
         logger.info('Auth', 'Performing OIDC Single Logout', logoutUrl)
         authStore.clearAuth()
-        const currentUrl = window.location.origin + window.location.pathname
+        const currentUrl = window.location.href
         const separator = logoutUrl.includes('?') ? '&' : '?'
         const fullLogoutUrl = `${logoutUrl}${separator}post_logout_redirect_uri=${encodeURIComponent(currentUrl)}`
         window.location.href = fullLogoutUrl
@@ -325,19 +319,8 @@ class AuthService implements IAuthService {
         return false
       }
 
-      // WebAPI 3.0 returns { login, jwt, roles, message } in the JSON body.
-      // Older WebAPI versions returned the token in a `Bearer` response header.
-      let newToken = response.headers.get('Bearer')
-      if (!newToken) {
-        try {
-          const body = await response.clone().json()
-          if (body && typeof body.jwt === 'string') {
-            newToken = body.jwt
-          }
-        } catch {
-          // response wasn't JSON — fall through to the no-token error
-        }
-      }
+      const body = await response.json()
+      const newToken = body?.jwt as string | undefined
 
       if (!newToken) {
         return false
@@ -389,42 +372,15 @@ class AuthService implements IAuthService {
       throw new Error('Failed to run as user')
     }
 
-    const newToken = response.headers.get('Bearer')
+    const body = await response.json()
+    const newToken = body?.jwt as string | undefined
     if (!newToken) {
-      throw new Error('No token received from run-as')
+      throw new Error(body?.message || 'No token received from run-as')
     }
 
     authStore.setToken(newToken)
     const userInfo = await this.fetchUserInfo()
     authStore.setRunAsState(userInfo)
-  }
-
-  async exitRunAs(): Promise<void> {
-    const authStore = useAuthStore()
-
-    if (!authStore.originalUser) {
-      throw new Error('Not currently running as another user')
-    }
-
-    const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
-    const response = await fetch(`${baseUrl}user/runas/exit`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to exit run-as')
-    }
-
-    const originalToken = response.headers.get('Bearer')
-    if (!originalToken) {
-      throw new Error('No token received from exit run-as')
-    }
-
-    authStore.setToken(originalToken)
-    authStore.exitRunAsState(authStore.originalUser)
   }
 
   async fetchOAuthProviders(): Promise<AuthProvider[]> {

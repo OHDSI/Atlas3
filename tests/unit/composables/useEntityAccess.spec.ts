@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useEntityAccess, useEntityAccessFor, useSourceAccess } from '@/composables/useEntityAccess'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
-import { authConfig, setAuthConfig } from '@/config/auth.config'
+import { getAuthConfig, setAuthConfig } from '@/config/auth.config'
 
 function setupUser(opts: {
   permissionIdx?: Record<string, string[]>
@@ -91,7 +91,7 @@ describe('useSourceAccess', () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())
-    prevAuthEnabled = authConfig.userAuthenticationEnabled
+    prevAuthEnabled = getAuthConfig().userAuthenticationEnabled
     setAuthConfig({ userAuthenticationEnabled: true })
   })
 

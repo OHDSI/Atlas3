@@ -1,0 +1,34 @@
+{
+  "$schema": "./config-local.schema.json",
+  "$comment": "Copy this file to config-local.json and adjust for your environment. Only fields you specify will override the defaults.",
+  "api": {
+    "url": "http://localhost:8080/WebAPI"
+  },
+  "userAuthenticationEnabled": true,
+  "enableSkipLogin": false,
+  "enablePermissionManagement": true,
+  "authProviders": [
+    {
+      "name": "Database",
+      "url": "user/login/db",
+      "ajax": true,
+      "icon": "mdi-database",
+      "isUseCredentialsForm": true
+    },
+    {
+      "name": "Windows",
+      "url": "user/login/windows",
+      "ajax": true,
+      "icon": "mdi-microsoft-windows",
+      "isUseCredentialsForm": false
+    }
+  ],
+  "refreshTokenThreshold": 900000,
+  "enableIAPSession": false,
+  "enableTermsAndConditions": false,
+  "enablePythia": false,
+  "enablePersonCount": true,
+  "enableTaggingSection": false,
+  "defaultLocale": "en",
+  "pollInterval": 60000
+}
