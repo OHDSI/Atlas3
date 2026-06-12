@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import ConceptHierarchyMiniMap from '@/components/concepts/detail/ConceptHierarchyMiniMap.vue'
 import type { Concept } from '@/models/concept-set.types'
@@ -48,6 +49,12 @@ const children: RelatedConcept[] = [
 ]
 
 describe('ConceptHierarchyMiniMap', () => {
+  // The component reads the concept-detail drawer store in setup (the in-place
+  // "View full" overlay), so an active Pinia must exist before mounting.
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   it('renders parents above current and children below', () => {
     const vuetify = createVuetify({ components, directives })
     const router = createRouter({ history: createMemoryHistory(), routes: [] })
