@@ -624,6 +624,7 @@ import CohortBreadcrumb from './CohortBreadcrumb.vue'
 import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
+import { ensureUniqueConceptSetId } from '@/utils/concept-set-id'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 import TagSelectionDialog from './TagSelectionDialog.vue'
@@ -1761,6 +1762,13 @@ function handleConceptSetSaved() {
  */
 function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
   if (!selectedCriteriaContext.value) return
+
+  // A concept set's id is its identity in the cohort — the Atlas CodesetId every
+  // criterion references and the key the cohort dedupes on. A freshly created set
+  // arrives without a real id (the new-set path yields id 0), so two new sets both
+  // carry id 0 and collapse onto each other: adding the second overrides the first.
+  // Give any id-less set a unique numeric id before it enters the cohort.
+  conceptSetRef = ensureUniqueConceptSetId(conceptSetRef, usedConceptSets.value)
 
   // Handle entry event selection
   if (selectedCriteriaContext.value.eventId) {
