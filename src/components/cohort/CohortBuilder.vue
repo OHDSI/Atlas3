@@ -171,6 +171,7 @@
             @update:events="entryEvents = $event"
             @update:observation-period="observationPeriod = $event"
             @select-concept-set="handleSelectConceptSet"
+            @select-concept-set-nested="handleSelectConceptSetForEntryNested"
             @select-concept-for-attribute="handleSelectConceptForEntryEvent"
             @edit-concept-set="handleEditConceptSet"
           />
@@ -625,6 +626,7 @@ import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
 import { ensureUniqueConceptSetId } from '@/utils/concept-set-id'
+import { resolveCriteriaTargetEvent } from '@/utils/criteria-target'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
 import TagSelectionDialog from './TagSelectionDialog.vue'
@@ -710,6 +712,10 @@ const selectedCriteriaContext = ref<{
   groupIndex: number
   eventIndex: number
   attributeIndex?: number
+  // When set, the selection targets the nested-criteria child at this index
+  // inside the resolved parent event (issue #93). Without this, a nested
+  // child's concept set was written onto its parent event.
+  nestedEventIndex?: number
 } | null>(null)
 const showError = ref(false)
 const errorMessage = ref('')
@@ -1456,21 +1462,46 @@ function handleSelectConceptSet(eventId: string) {
   isConceptSetDialogOpen.value = true
 }
 
+// A nested-criteria child of an *entry event* requested a concept set. Keep the
+// parent entry event id, but mark the nested child index so assignment lands on
+// `parentEvent.nestedCriteria.events[nestedEventIndex]` rather than the parent.
+function handleSelectConceptSetForEntryNested(eventId: string, nestedEventIndex: number) {
+  selectedCriteriaContext.value = {
+    eventId,
+    ruleIndex: -1,
+    groupIndex: -1,
+    eventIndex: -1,
+    nestedEventIndex,
+  }
+  isConceptSetDialogOpen.value = true
+}
+
 function handleSelectConceptSetForCriteria(context: {
   ruleIndex: number
   groupIndex: number
   eventIndex: number
+  nestedEventIndex?: number
 }) {
   selectedCriteriaContext.value = { ...context, eventId: null }
   isConceptSetDialogOpen.value = true
 }
 
 function handleSelectConceptSetForAdditionalCriteria(
-  eventIndexOrContext: number | { eventIndex: number; eventId: string }
+  eventIndexOrContext:
+    | number
+    | { eventIndex: number; eventId?: string; nestedEventIndex?: number }
 ) {
   const eventIndex =
     typeof eventIndexOrContext === 'number' ? eventIndexOrContext : eventIndexOrContext.eventIndex
-  selectedCriteriaContext.value = { eventId: null, ruleIndex: -2, groupIndex: 0, eventIndex }
+  const nestedEventIndex =
+    typeof eventIndexOrContext === 'number' ? undefined : eventIndexOrContext.nestedEventIndex
+  selectedCriteriaContext.value = {
+    eventId: null,
+    ruleIndex: -2,
+    groupIndex: 0,
+    eventIndex,
+    nestedEventIndex,
+  }
   isConceptSetDialogOpen.value = true
 }
 
@@ -1770,56 +1801,70 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
   // Give any id-less set a unique numeric id before it enters the cohort.
   conceptSetRef = ensureUniqueConceptSetId(conceptSetRef, usedConceptSets.value)
 
+  const context = selectedCriteriaContext.value
+  const isNested = context.nestedEventIndex !== undefined && context.nestedEventIndex !== null
+
   // Handle entry event selection
-  if (selectedCriteriaContext.value.eventId) {
-    const eventIndex = entryEvents.value.findIndex(
-      e => e.id === selectedCriteriaContext.value!.eventId
-    )
+  if (context.eventId) {
+    const eventIndex = entryEvents.value.findIndex(e => e.id === context.eventId)
     if (eventIndex === -1) return
 
     const currentEvent = entryEvents.value[eventIndex]
     if (!currentEvent) return
 
-    // Update the event directly - Vue 3 ref reactivity will detect this
-    entryEvents.value[eventIndex] = {
-      ...currentEvent,
-      conceptSet: conceptSetRef,
+    if (isNested) {
+      // Assign to the nested child rather than the parent entry event (#93).
+      const target = resolveCriteriaTargetEvent(context, {
+        entryEvents: entryEvents.value,
+        additionalCriteria: additionalCriteria.value,
+        inclusionRules: inclusionRules.value,
+      })
+      if (!target) return
+      target.conceptSet = conceptSetRef
+      // Reassign the entry event ref so Vue picks up the nested mutation.
+      entryEvents.value[eventIndex] = { ...currentEvent }
+    } else {
+      // Update the event directly - Vue 3 ref reactivity will detect this
+      entryEvents.value[eventIndex] = {
+        ...currentEvent,
+        conceptSet: conceptSetRef,
+      }
     }
   }
   // Handle additional criteria event selection
-  else if (selectedCriteriaContext.value.ruleIndex === -2) {
-    const { eventIndex } = selectedCriteriaContext.value
+  else if (context.ruleIndex === -2) {
     if (!additionalCriteria.value) return
 
-    const event = additionalCriteria.value.events[eventIndex]
-    if (!event) return
+    const target = resolveCriteriaTargetEvent(context, {
+      entryEvents: entryEvents.value,
+      additionalCriteria: additionalCriteria.value,
+      inclusionRules: inclusionRules.value,
+    })
+    if (!target) return
 
-    // Update the event's concept set
-    event.conceptSet = conceptSetRef
+    // Update the (parent or nested) event's concept set
+    target.conceptSet = conceptSetRef
 
     // Trigger reactivity
     additionalCriteria.value = { ...additionalCriteria.value }
   }
   // Handle criteria group event selection
-  else if (selectedCriteriaContext.value.ruleIndex >= 0) {
-    const { ruleIndex, groupIndex, eventIndex } = selectedCriteriaContext.value
-    const rule = inclusionRules.value[ruleIndex]
-    if (!rule) return
+  else if (context.ruleIndex >= 0) {
+    const target = resolveCriteriaTargetEvent(context, {
+      entryEvents: entryEvents.value,
+      additionalCriteria: additionalCriteria.value,
+      inclusionRules: inclusionRules.value,
+    })
+    if (!target) return
 
-    const group = rule.criteriaGroups[groupIndex]
-    if (!group) return
-
-    const event = group.events[eventIndex]
-    if (!event) return
-
-    // Update the event's concept set
-    event.conceptSet = conceptSetRef
+    // Update the (parent or nested) event's concept set
+    target.conceptSet = conceptSetRef
 
     // Trigger reactivity
     inclusionRules.value = [...inclusionRules.value]
   }
   // Handle exit criteria concept set selection
-  else if (selectedCriteriaContext.value.ruleIndex === -3) {
+  else if (context.ruleIndex === -3) {
     if (exitCriteriaSelectionType.value === 'DRUG_EXPOSURE') {
       // Set concept set for drug exposure strategy
       exitCriteria.value = {

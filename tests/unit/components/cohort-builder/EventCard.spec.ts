@@ -35,7 +35,8 @@ vi.mock('@/composables/useFilterConfig', () => ({
         requiresConceptSet: true,
         groupOnly: false
       }
-    ])
+    ]),
+    requiresConceptSet: () => true
   })
 }))
 

@@ -60,7 +60,10 @@
       <!-- Event Body -->
       <div class="event-body">
         <!-- Event Concept Set -->
-        <div class="concept-set-section">
+        <div
+          v-if="eventRequiresConceptSet"
+          class="concept-set-section"
+        >
           <EventConceptSetField
             :concept-set="event.conceptSet"
             :select-label="
@@ -105,7 +108,7 @@
             :depth="1"
             @update:model-value="updateNestedCriteria"
             @remove="removeNestedCriteria"
-            @select-concept-set="emit('select-concept-set')"
+            @select-concept-set="emit('select-concept-set-nested', $event.eventIndex)"
           />
         </div>
       </div>
@@ -148,13 +151,20 @@ const emit = defineEmits<{
   update: [event: CohortEvent]
   remove: []
   'select-concept-set': []
+  /** A nested-criteria child requested a concept set; payload is the child index. */
+  'select-concept-set-nested': [nestedEventIndex: number]
   'select-concept-set-for-attribute': [attributeIndex: number]
   'select-concept-for-attribute': [attributeIndex: number, domainFilter: string | undefined]
   'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
 }>()
 
 // Use configuration-driven filter list (supports all 16 filter types)
-const { availableFilters } = useFilterConfig(ref('initialEvents'))
+const { availableFilters, requiresConceptSet } = useFilterConfig(ref('initialEvents'))
+
+// Whether this event's criteria type carries an event-level concept set.
+// Some OMOP entities (e.g. Observation Period) have no concept_id, so the
+// concept-set field must be hidden for them (issue #98).
+const eventRequiresConceptSet = computed(() => requiresConceptSet(criteriaTypeKey.value))
 
 const eventTypeOptions = computed(() => {
   return availableFilters.value.map(filter => ({

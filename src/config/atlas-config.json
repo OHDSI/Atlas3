@@ -66,12 +66,14 @@
     },
     "observationPeriod": {
       "name": "Observation Period",
+      "requiresConceptSet": false,
       "descriptions": {
         "all": "Find patients based on observation period."
       }
     },
     "payerPlanPeriod": {
       "name": "Payer Plan Period",
+      "requiresConceptSet": false,
       "descriptions": {
         "all": "Find patients based on payer plan period."
       }

@@ -109,6 +109,9 @@
         @update="updateEvent"
         @remove="removeEvent(event.id)"
         @select-concept-set="selectConceptSetForEvent(event.id)"
+        @select-concept-set-nested="
+          nestedEventIndex => emit('select-concept-set-nested', event.id, nestedEventIndex)
+        "
         @select-concept-set-for-attribute="
           attributeIndex => $emit('select-concept-set-for-attribute', event.id, attributeIndex)
         "
@@ -143,6 +146,7 @@ const emit = defineEmits<{
   'update:events': [events: CohortEvent[]]
   'update:observation-period': [period: ObservationPeriod]
   'select-concept-set': [eventId: string]
+  'select-concept-set-nested': [eventId: string, nestedEventIndex: number]
   'select-concept-set-for-attribute': [eventId: string, attributeIndex: number]
   'select-concept-for-attribute': [
     eventId: string,

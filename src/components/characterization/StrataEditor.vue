@@ -144,7 +144,7 @@ import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
 import type { Stratum } from '@/models/characterization.types'
-import type { ConceptSetReference, CriteriaGroup } from '@/models/cohort.types'
+import type { CohortEvent, ConceptSetReference, CriteriaGroup } from '@/models/cohort.types'
 import type { Concept as AtlasConcept } from '@/models/event.types'
 import type { Concept as PickerConcept } from '@/models/concept-set.types'
 
@@ -170,6 +170,7 @@ const conceptSearchDialogOpen = ref<boolean>(false)
 // so the dialog's confirmation can write back to the right event/attribute.
 const pickerContext = ref<{
   eventIndex: number
+  nestedEventIndex?: number
   attributeIndex?: number
   domainFilter?: string
 } | null>(null)
@@ -274,9 +275,16 @@ function onDialogGroupUpdate(group: CriteriaGroup) {
   emitUpdate(next)
 }
 
-function onSelectConceptSet(payload: number | { eventIndex: number; eventId: string }) {
+function onSelectConceptSet(
+  payload:
+    | number
+    | { eventIndex: number; eventId: string }
+    | { eventIndex: number; nestedEventIndex: number },
+) {
   const eventIndex = typeof payload === 'number' ? payload : payload.eventIndex
-  pickerContext.value = { eventIndex }
+  const nestedEventIndex =
+    typeof payload === 'object' && 'nestedEventIndex' in payload ? payload.nestedEventIndex : undefined
+  pickerContext.value = { eventIndex, nestedEventIndex }
   conceptSetDialogOpen.value = true
 }
 
@@ -324,11 +332,25 @@ async function onConceptSetSelected(conceptSet: {
   const group = dialogGroup.value
   const event = group.events[ctx.eventIndex]
   if (event) {
+    let updatedEvent: CohortEvent
+    if (ctx.nestedEventIndex !== undefined && event.nestedCriteria) {
+      // Concept set was selected for a nested child — assign it to that child,
+      // not the parent event (same targeting fix as the cohort builder, #93).
+      updatedEvent = {
+        ...event,
+        nestedCriteria: {
+          ...event.nestedCriteria,
+          events: event.nestedCriteria.events.map((ne, i) =>
+            i === ctx.nestedEventIndex ? { ...ne, conceptSet: full } : ne,
+          ),
+        },
+      }
+    } else {
+      updatedEvent = { ...event, conceptSet: full }
+    }
     const updated: CriteriaGroup = {
       ...group,
-      events: group.events.map((e, i) =>
-        i === ctx.eventIndex ? { ...e, conceptSet: full } : e,
-      ),
+      events: group.events.map((e, i) => (i === ctx.eventIndex ? updatedEvent : e)),
     }
     onDialogGroupUpdate(updated)
   }

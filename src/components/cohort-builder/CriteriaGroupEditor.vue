@@ -382,7 +382,12 @@
                           :depth="1"
                           @update:model-value="updateEventNestedCriteria(index, $event)"
                           @remove="removeEventNestedCriteria(index)"
-                          @select-concept-set="$emit('select-concept-set', $event)"
+                          @select-concept-set="
+                            $emit('select-concept-set', {
+                              eventIndex: index,
+                              nestedEventIndex: $event.eventIndex,
+                            })
+                          "
                         />
                       </div>
                     </div>
@@ -470,7 +475,9 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:modelValue': [value: CriteriaGroup]
   remove: []
-  'select-concept-set': [context: { eventIndex: number; eventId: string } | number]
+  'select-concept-set': [
+    context: { eventIndex: number; eventId: string } | { eventIndex: number; nestedEventIndex: number } | number,
+  ]
   'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
   'select-concept': [
     context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined },
