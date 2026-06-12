@@ -138,15 +138,13 @@ import { computed, ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 
 import { useI18n } from '@/composables/useI18n'
-import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useCriteriaGroupPicker } from '@/composables/useCriteriaGroupPicker'
 import { AtlasButton, AtlasChip, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
 import type { Stratum } from '@/models/characterization.types'
-import type { CohortEvent, ConceptSetReference, CriteriaGroup } from '@/models/cohort.types'
-import type { Concept as AtlasConcept } from '@/models/event.types'
-import type { Concept as PickerConcept } from '@/models/concept-set.types'
+import type { CriteriaGroup } from '@/models/cohort.types'
 
 const props = defineProps<{
   modelValue: Stratum[]
@@ -159,24 +157,9 @@ const emit = defineEmits<{
 }>()
 
 const { t, tv } = useI18n()
-const conceptSetsStore = useConceptSetsStore()
 
 const dialogOpen = ref<boolean>(false)
 const editingStratumId = ref<string | null>(null)
-
-const conceptSetDialogOpen = ref<boolean>(false)
-const conceptSearchDialogOpen = ref<boolean>(false)
-// Context captured when CriteriaGroupEditor asks for a concept set or concept,
-// so the dialog's confirmation can write back to the right event/attribute.
-const pickerContext = ref<{
-  eventIndex: number
-  nestedEventIndex?: number
-  attributeIndex?: number
-  domainFilter?: string
-} | null>(null)
-const conceptSearchDomainFilter = computed<string | undefined>(
-  () => pickerContext.value?.domainFilter,
-)
 
 const dialogStratum = computed<Stratum | null>(() => {
   if (!editingStratumId.value) return null
@@ -275,132 +258,21 @@ function onDialogGroupUpdate(group: CriteriaGroup) {
   emitUpdate(next)
 }
 
-function onSelectConceptSet(
-  payload:
-    | number
-    | { eventIndex: number; eventId: string }
-    | { eventIndex: number; nestedEventIndex: number },
-) {
-  const eventIndex = typeof payload === 'number' ? payload : payload.eventIndex
-  const nestedEventIndex =
-    typeof payload === 'object' && 'nestedEventIndex' in payload ? payload.nestedEventIndex : undefined
-  pickerContext.value = { eventIndex, nestedEventIndex }
-  conceptSetDialogOpen.value = true
-}
-
-function onSelectConcept(context: {
-  eventIndex: number
-  attributeIndex: number
-  domainFilter: string | undefined
-}) {
-  pickerContext.value = {
-    eventIndex: context.eventIndex,
-    attributeIndex: context.attributeIndex,
-    domainFilter: context.domainFilter,
-  }
-  conceptSearchDialogOpen.value = true
-}
-
-async function onConceptSetSelected(conceptSet: {
-  id: number | string
-  name: string
-  items?: unknown[]
-}) {
-  const ctx = pickerContext.value
-  if (!ctx) {
-    conceptSetDialogOpen.value = false
-    return
-  }
-  // Fetch the full concept set with items so the criteria payload is
-  // self-contained (matches the cohort builder's behavior).
-  let full: ConceptSetReference = {
-    id: conceptSet.id,
-    name: conceptSet.name,
-    items: conceptSet.items ?? [],
-  }
-  if (conceptSet.id != null && (!conceptSet.items || conceptSet.items.length === 0)) {
-    await conceptSetsStore.fetchOne(conceptSet.id)
-    if (conceptSetsStore.currentSet && conceptSetsStore.currentSet.id !== undefined) {
-      full = {
-        id: conceptSetsStore.currentSet.id,
-        name: conceptSetsStore.currentSet.name,
-        items: conceptSetsStore.currentSet.items ?? [],
-      }
-    }
-  }
-
-  const group = dialogGroup.value
-  const event = group.events[ctx.eventIndex]
-  if (event) {
-    let updatedEvent: CohortEvent
-    if (ctx.nestedEventIndex !== undefined && event.nestedCriteria) {
-      // Concept set was selected for a nested child — assign it to that child,
-      // not the parent event (same targeting fix as the cohort builder, #93).
-      updatedEvent = {
-        ...event,
-        nestedCriteria: {
-          ...event.nestedCriteria,
-          events: event.nestedCriteria.events.map((ne, i) =>
-            i === ctx.nestedEventIndex ? { ...ne, conceptSet: full } : ne,
-          ),
-        },
-      }
-    } else {
-      updatedEvent = { ...event, conceptSet: full }
-    }
-    const updated: CriteriaGroup = {
-      ...group,
-      events: group.events.map((e, i) => (i === ctx.eventIndex ? updatedEvent : e)),
-    }
-    onDialogGroupUpdate(updated)
-  }
-  conceptSetDialogOpen.value = false
-  pickerContext.value = null
-}
-
-function onConceptsSelected(concepts: PickerConcept[]) {
-  const ctx = pickerContext.value
-  if (!ctx || ctx.attributeIndex === undefined || concepts.length === 0) {
-    conceptSearchDialogOpen.value = false
-    pickerContext.value = null
-    return
-  }
-
-  // Picker yields camelCase concepts; the cohort definition stores them in
-  // Atlas's UPPERCASE shape. Convert at the boundary.
-  const converted: AtlasConcept[] = concepts.map(c => ({
-    CONCEPT_ID: c.conceptId,
-    CONCEPT_NAME: c.conceptName,
-    CONCEPT_CODE: c.conceptCode,
-    DOMAIN_ID: c.domainId,
-    VOCABULARY_ID: c.vocabularyId,
-    CONCEPT_CLASS_ID: c.conceptClassId,
-    STANDARD_CONCEPT: c.standardConcept ?? null,
-    INVALID_REASON: c.invalidReason ?? null,
-  }))
-
-  const group = dialogGroup.value
-  const event = group.events[ctx.eventIndex]
-  if (event && event.attributes) {
-    const attr = event.attributes[ctx.attributeIndex]
-    if (attr && attr.type === 'concept') {
-      const merged = [...(attr.concepts ?? []), ...converted]
-      const updated: CriteriaGroup = {
-        ...group,
-        events: group.events.map((e, i) => {
-          if (i !== ctx.eventIndex) return e
-          const attrs = (e.attributes ?? []).map((a, j) =>
-            j === ctx.attributeIndex && a.type === 'concept' ? { ...a, concepts: merged } : a,
-          )
-          return { ...e, attributes: attrs }
-        }),
-      }
-      onDialogGroupUpdate(updated)
-    }
-  }
-  conceptSearchDialogOpen.value = false
-  pickerContext.value = null
-}
+// Concept-set / concept picking for the embedded CriteriaGroupEditor. Shared
+// with the incidence-rate stratify editor so nested-child targeting (#93) stays
+// correct in one place.
+const {
+  conceptSetDialogOpen,
+  conceptSearchDialogOpen,
+  conceptSearchDomainFilter,
+  onSelectConceptSet,
+  onSelectConcept,
+  onConceptSetSelected,
+  onConceptsSelected,
+} = useCriteriaGroupPicker({
+  getGroup: () => dialogGroup.value,
+  onUpdate: onDialogGroupUpdate,
+})
 
 function addStratum() {
   const stratum: Stratum = {
