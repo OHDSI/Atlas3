@@ -173,6 +173,11 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
             CriteriaList: g.events
               .filter(e => e.criteriaType !== 'Demographic')
               .map(e => convertEventToAtlas(e, true)),
+            // Nested groups carry their own demographics too; without this a
+            // Demographic criterion in any non-first group is silently dropped.
+            DemographicCriteriaList: g.events
+              .filter(e => e.criteriaType === 'Demographic')
+              .map(convertDemographicEventToAtlas),
           })),
         },
       }
@@ -863,10 +868,16 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
               id: generateId(),
               logicType: (group.Type || 'ALL') as LogicType,
               ...(typeof group.Count === 'number' ? { count: group.Count } : {}),
-              events:
-                group.CriteriaList?.map((e: AtlasCriteria) =>
+              events: [
+                ...(group.CriteriaList?.map((e: AtlasCriteria) =>
                   convertAtlasToEvent(e, atlas.ConceptSets)
-                ) || [],
+                ) || []),
+                // Symmetric with the write side: a nested group's demographics
+                // live alongside its criteria in the internal model.
+                ...((group.DemographicCriteriaList as Array<Record<string, unknown>>)?.map(dc =>
+                  convertDemographicCriteriaToEvent(dc)
+                ) || []),
+              ],
             }))
           )
         }

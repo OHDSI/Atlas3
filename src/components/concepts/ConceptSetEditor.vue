@@ -1097,9 +1097,14 @@ async function resolvePastedSourceCodes() {
   sourceCodeResolving.value = true
   try {
     const concepts = await getConceptsBySourceCodes(sourceKey.value, codes)
-    const found = new Set(concepts.map(c => c.conceptCode))
+    // The vocabulary stores a canonical code that can differ from the typed one
+    // only in case/whitespace (matching is commonly case-insensitive), so compare
+    // normalized forms — otherwise a code that *did* resolve is wrongly flagged
+    // as "Not found".
+    const normalize = (code: string) => code.trim().toLowerCase()
+    const found = new Set(concepts.map(c => normalize(c.conceptCode ?? '')))
     sourceCodeResolved.value = concepts
-    sourceCodeUnresolved.value = codes.filter(code => !found.has(code))
+    sourceCodeUnresolved.value = codes.filter(code => !found.has(normalize(code)))
   } catch (err) {
     logger.error('ConceptSetEditor', 'Failed to resolve pasted source codes', err)
     sourceCodeResolved.value = []
@@ -1150,15 +1155,22 @@ function parseJsonImport() {
 }
 
 function applyJsonItems() {
-  // Add each concept then re-apply its non-default flags. `addConceptToSet`
-  // resets flags to false, so we restore isExcluded / includeDescendants /
-  // includeMapped from the parsed expression via the toggle action.
+  // Add each concept then align its flags to the imported values. A new concept
+  // is created with flags=false; an already-present concept is left in place
+  // (`addConceptToSet` no-ops on duplicates). The store only exposes a *toggle*,
+  // so we toggle only when the current value differs from the imported one —
+  // setting flags absolutely. A blind `if (item.flag) toggle(...)` would instead
+  // FLIP an existing concept's flags on re-import, silently destroying the
+  // user's settings.
   for (const item of jsonItems.value) {
     store.addConceptToSet(item)
-    if (!store.isConceptInSet(item.conceptId)) continue
-    if (item.isExcluded) store.toggleConceptFlag(item.conceptId, 'isExcluded')
-    if (item.includeDescendants) store.toggleConceptFlag(item.conceptId, 'includeDescendants')
-    if (item.includeMapped) store.toggleConceptFlag(item.conceptId, 'includeMapped')
+    const current = store.currentSet?.items.find(i => i.conceptId === item.conceptId)
+    if (!current) continue
+    if (current.isExcluded !== item.isExcluded) store.toggleConceptFlag(item.conceptId, 'isExcluded')
+    if (current.includeDescendants !== item.includeDescendants)
+      store.toggleConceptFlag(item.conceptId, 'includeDescendants')
+    if (current.includeMapped !== item.includeMapped)
+      store.toggleConceptFlag(item.conceptId, 'includeMapped')
   }
   hasUnsavedChanges.value = true
   activeTab.value = 'selected'

@@ -81,6 +81,21 @@ describe('concept-set-id helpers', () => {
       expect(again.id).toBe(5)
     })
 
+    it('keeps the same id when the stored item snapshot differs in length', () => {
+      // The stored reference holds a stale/empty item snapshot (e.g. assigned
+      // before items were fetched, or the set was later edited), while the fresh
+      // selection of the SAME set carries the full list. Identity must not depend
+      // on item count, otherwise the set is detached onto a new CodesetId and the
+      // cohort exports the same concept set twice.
+      const used: ConceptSetReference[] = [{ id: 5, name: 'Diabetes', items: [] }]
+
+      const again = ensureUniqueConceptSetId(
+        { id: 5, name: 'Diabetes', items: [{}, {}, {}] },
+        used
+      )
+      expect(again.id).toBe(5)
+    })
+
     it('leaves a concept set with a real, non-colliding id untouched', () => {
       const ref: ConceptSetReference = { id: 42, name: 'Existing', items: [] }
       expect(ensureUniqueConceptSetId(ref, [])).toBe(ref)

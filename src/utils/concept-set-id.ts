@@ -34,13 +34,22 @@ export function nextConceptSetId(existing: ReadonlyArray<Pick<ConceptSetReferenc
 /**
  * Whether two references point at the same concept set. Two freshly created
  * sets can carry the same (broken) id — 0 or, depending on the create path, 1 —
- * so id alone can't tell them apart; name and concept count disambiguate.
+ * so id alone can't tell them apart; the name disambiguates.
+ *
+ * Identity is deliberately `id` + `name` only. `items` is NOT compared: a
+ * stored reference often holds a stale or empty item snapshot (e.g. a set
+ * assigned before its items were fetched, or edited after being referenced
+ * elsewhere), while a fresh selection of the very same set carries the full
+ * list. Comparing item counts would then read the same set as "different" and
+ * hand it a new id — splitting one concept set across two CodesetIds. The id of
+ * a real (server-assigned) set is authoritative; the name only breaks ties
+ * between not-yet-persisted sets sharing a placeholder id.
  */
 function isSameConceptSet(
-  a: Pick<ConceptSetReference, 'id' | 'name' | 'items'>,
-  b: Pick<ConceptSetReference, 'id' | 'name' | 'items'>
+  a: Pick<ConceptSetReference, 'id' | 'name'>,
+  b: Pick<ConceptSetReference, 'id' | 'name'>
 ): boolean {
-  return a.id === b.id && a.name === b.name && (a.items?.length ?? 0) === (b.items?.length ?? 0)
+  return a.id === b.id && a.name === b.name
 }
 
 /**

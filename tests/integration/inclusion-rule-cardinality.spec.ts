@@ -99,4 +99,36 @@ describe('inclusion-rule group cardinality round-trip', () => {
     expect(back.InclusionRules![0].expression.Type).toBe('ALL')
     expect(back.InclusionRules![0].expression.Count).toBeUndefined()
   })
+
+  // Regression: a Demographic criterion in a non-first criteria group used to be
+  // silently dropped on export — the nested-group write mapping filtered out
+  // Demographic events but emitted no DemographicCriteriaList for them.
+  it('preserves a Demographic criterion living in a non-first group', () => {
+    const atlas = cohortWithInclusionRule({
+      Type: 'ALL',
+      CriteriaList: [{ ConditionOccurrence: { CodesetId: 0 } }],
+      DemographicCriteriaList: [],
+      Groups: [
+        {
+          Type: 'ALL',
+          CriteriaList: [{ ConditionOccurrence: { CodesetId: 0 } }],
+          DemographicCriteriaList: [{ Age: { Op: 'gte', Value: 18 } }],
+        },
+      ],
+    })
+
+    // Read: the nested group's demographic becomes a Demographic event.
+    const internal = convertAtlasToInternal(atlas)
+    const nestedGroup = internal.inclusionRules![0].criteriaGroups[1]
+    expect(nestedGroup).toBeDefined()
+    expect(nestedGroup!.events.some(e => e.criteriaType === 'Demographic')).toBe(true)
+
+    // Write: it round-trips back into the nested group's DemographicCriteriaList
+    // rather than vanishing.
+    const back = roundTrip(atlas)
+    const backGroups = back.InclusionRules![0].expression.Groups
+    expect(backGroups).toHaveLength(1)
+    expect(backGroups![0].DemographicCriteriaList).toHaveLength(1)
+    expect(backGroups![0].DemographicCriteriaList![0]).toHaveProperty('Age')
+  })
 })

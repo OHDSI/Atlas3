@@ -511,6 +511,30 @@ describe('ConceptSetEditor', () => {
       expect(vm.sourceCodeResolved).toHaveLength(1)
       expect(vm.sourceCodeUnresolved).toEqual(['BADCODE'])
     })
+
+    it('treats a resolved code as found even when its case differs from the input', async () => {
+      const webapi = useWebAPIStore()
+      vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
+
+      // User typed 'e11.9'; the vocabulary returns the canonical 'E11.9'.
+      const resolved: Concept = { ...mockConcept, conceptId: 1, conceptCode: 'E11.9' }
+      vi.mocked(conceptSearchService.getConceptsBySourceCodes).mockResolvedValue([resolved])
+
+      const wrapper = mountComponent()
+      const vm = wrapper.vm as unknown as {
+        sourceCodeInput: string
+        resolvePastedSourceCodes: () => Promise<void>
+        sourceCodeResolved: Concept[]
+        sourceCodeUnresolved: string[]
+      }
+
+      vm.sourceCodeInput = 'e11.9'
+      await vm.resolvePastedSourceCodes()
+
+      expect(vm.sourceCodeResolved).toHaveLength(1)
+      // Must NOT be reported as unresolved just because of a case mismatch.
+      expect(vm.sourceCodeUnresolved).toEqual([])
+    })
   })
 
   describe('JSON import (#95 Part A)', () => {
@@ -556,6 +580,56 @@ describe('ConceptSetEditor', () => {
       expect(addSpy).toHaveBeenCalledWith(expect.objectContaining({ conceptId: 201826 }))
       // includeDescendants flag should be restored via toggle.
       expect(toggleSpy).toHaveBeenCalledWith(201826, 'includeDescendants')
+    })
+
+    it('does not flip the flags of a concept already in the set on re-import', () => {
+      // The concept is already present with includeDescendants ON. Importing JSON
+      // that also has includeDescendants ON must leave it ON — a blind toggle
+      // would flip it OFF, silently destroying the user's setting.
+      const existing = {
+        ...mockConcept,
+        conceptId: 201826,
+        isExcluded: false,
+        includeDescendants: true,
+        includeMapped: false,
+      }
+      const wrapper = mountComponent({ conceptSet: { name: 'Set', items: [existing] } })
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Set', items: [{ ...existing }] }
+      const toggleSpy = vi.spyOn(store, 'toggleConceptFlag')
+
+      const vm = wrapper.vm as unknown as {
+        jsonInput: string
+        parseJsonImport: () => void
+        applyJsonItems: () => void
+      }
+
+      vm.jsonInput = JSON.stringify({
+        items: [
+          {
+            concept: {
+              CONCEPT_ID: 201826,
+              CONCEPT_NAME: 'Type 2 diabetes mellitus',
+              CONCEPT_CODE: '44054006',
+              DOMAIN_ID: 'Condition',
+              VOCABULARY_ID: 'SNOMED',
+              CONCEPT_CLASS_ID: 'Clinical Finding',
+              STANDARD_CONCEPT: 'S',
+              INVALID_REASON: null,
+            },
+            isExcluded: false,
+            includeDescendants: true,
+            includeMapped: false,
+          },
+        ],
+      })
+      vm.parseJsonImport()
+      vm.applyJsonItems()
+
+      // No toggle for a flag whose desired value already matches.
+      expect(toggleSpy).not.toHaveBeenCalledWith(201826, 'includeDescendants')
+      const item = store.currentSet?.items.find(i => i.conceptId === 201826)
+      expect(item?.includeDescendants).toBe(true)
     })
 
     it('surfaces an error for malformed JSON', () => {
