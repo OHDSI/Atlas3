@@ -86,6 +86,74 @@ export async function getConceptById(
   }
 }
 
+/**
+ * Resolve a batch of concept IDs to full Concept records in a single request.
+ * Uses the WebAPI batch endpoint `POST /vocabulary/{sourceKey}/lookup/identifiers`
+ * (the same one `resolveConceptSetExpression` uses for its second hop). This is
+ * far cheaper than N individual `getConceptById` GETs when resolving pasted IDs.
+ *
+ * The endpoint only returns rows for IDs it can resolve, so callers should diff
+ * the returned `conceptId`s against the requested list to find unresolved IDs.
+ */
+export async function getConceptsByIds(
+  sourceKey: string,
+  conceptIds: number[],
+  signal?: AbortSignal,
+): Promise<Concept[]> {
+  if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
+    throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
+  }
+
+  if (conceptIds.length === 0) return []
+
+  const raw = await httpPost<unknown>(
+    `/vocabulary/${sourceKey}/lookup/identifiers`,
+    conceptIds,
+    { signal },
+  )
+
+  const parsed = ConceptSearchResponseSchema.safeParse(raw)
+  if (!parsed.success) {
+    logger.error('ConceptSearch', 'lookup/identifiers validation error', parsed.error)
+    throw new Error('Invalid concept identifier lookup response format')
+  }
+
+  return parsed.data.map(mapConceptFromAPI)
+}
+
+/**
+ * Resolve a batch of source codes to Concept records in a single request.
+ * Uses the WebAPI endpoint `POST /vocabulary/{sourceKey}/lookup/sourcecodes`
+ * with a JSON array of source-code strings. Only resolvable codes are returned,
+ * so callers should diff the returned `conceptCode`s against the requested list
+ * to find unresolved codes.
+ */
+export async function getConceptsBySourceCodes(
+  sourceKey: string,
+  sourceCodes: string[],
+  signal?: AbortSignal,
+): Promise<Concept[]> {
+  if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
+    throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
+  }
+
+  if (sourceCodes.length === 0) return []
+
+  const raw = await httpPost<unknown>(
+    `/vocabulary/${sourceKey}/lookup/sourcecodes`,
+    sourceCodes,
+    { signal },
+  )
+
+  const parsed = ConceptSearchResponseSchema.safeParse(raw)
+  if (!parsed.success) {
+    logger.error('ConceptSearch', 'lookup/sourcecodes validation error', parsed.error)
+    throw new Error('Invalid source code lookup response format')
+  }
+
+  return parsed.data.map(mapConceptFromAPI)
+}
+
 export async function getConceptRecordCounts(
   sourceKey: string,
   conceptIds: number[]

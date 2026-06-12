@@ -174,6 +174,26 @@
           >
             {{ t('cs.manager.pasteIds', 'Paste IDs') }}
           </AtlasButton>
+
+          <AtlasButton
+            variant="ghost"
+            size="sm"
+            icon="mdi-barcode-scan"
+            class="cs-editor__paste-btn"
+            @click="showSourceCodeDialog = true"
+          >
+            {{ t('cs.manager.importSourceCodes', 'Import codes') }}
+          </AtlasButton>
+
+          <AtlasButton
+            variant="ghost"
+            size="sm"
+            icon="mdi-code-json"
+            class="cs-editor__paste-btn"
+            @click="showJsonDialog = true"
+          >
+            {{ t('cs.manager.importJson', 'Import JSON') }}
+          </AtlasButton>
         </nav>
 
         <div class="cs-editor__body">
@@ -201,7 +221,7 @@
               <ConceptSetTable
                 :items="store.currentSet?.items || []"
                 :loading="false"
-                :source-key="sourceKey.value"
+                :source-key="sourceKey"
                 @toggle:descendants="onToggleDescendants"
                 @toggle:mapped="onToggleMapped"
                 @toggle:exclude="onToggleExclude"
@@ -217,9 +237,9 @@
                 :loading="store.includedLoading"
                 :error="store.includedError"
                 :manual-count="store.currentSet?.items?.length ?? 0"
-                :source-key="sourceKey.value"
+                :source-key="sourceKey"
                 @view-concept="onViewConcept"
-                @retry="store.resolveIncluded(sourceKey.value)"
+                @retry="store.resolveIncluded(sourceKey)"
               />
             </v-window-item>
 
@@ -379,6 +399,166 @@
     </template>
   </AtlasDialog>
 
+  <!-- Import by source code dialog. Resolves source codes (alphanumeric, e.g.
+       ICD10 codes) against the vocabulary and shows a matched / unmatched
+       summary before adding to the set. -->
+  <AtlasDialog
+    v-model="showSourceCodeDialog"
+    :eyebrow="t('cs.manager.importSourceCodes', 'Import codes').value"
+    :title="t('cs.manager.importSourceCodesTitle', 'Import by source code').value"
+    max-width="640"
+    @close="closeSourceCodeDialog"
+  >
+    <p class="cs-paste__hint">
+      {{
+        t(
+          'cs.manager.importSourceCodesHint',
+          'Separate source codes with commas, semicolons, or newlines. We resolve each code against the vocabulary before adding.'
+        ).value
+      }}
+    </p>
+    <AtlasTextField
+      v-model="sourceCodeInput"
+      :placeholder="'E11.9\n250.00, 44054006'"
+      :disabled="sourceCodeResolving"
+      :rows="6"
+      multiline
+      variant="outlined"
+      hide-details
+      class="cs-paste__textarea"
+    />
+
+    <div
+      v-if="sourceCodeResolved.length || sourceCodeUnresolved.length"
+      class="cs-paste__summary"
+    >
+      <div
+        v-if="sourceCodeResolved.length"
+        class="cs-paste__summary-row cs-paste__summary-row--ok"
+      >
+        <AtlasIcon
+          icon="mdi-check-circle-outline"
+          size="18"
+        />
+        <span>{{ t('cs.manager.pasteIdsResolved', 'Resolved').value }}:
+          {{ sourceCodeResolved.length }}</span>
+      </div>
+      <div
+        v-if="sourceCodeUnresolved.length"
+        class="cs-paste__summary-row cs-paste__summary-row--err"
+      >
+        <AtlasIcon
+          icon="mdi-alert-circle-outline"
+          size="18"
+        />
+        <span>{{ t('cs.manager.pasteIdsUnresolved', 'Not found').value }}:
+          {{ sourceCodeUnresolved.join(', ') }}</span>
+      </div>
+    </div>
+
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        :disabled="sourceCodeResolving"
+        @click="closeSourceCodeDialog"
+      >
+        {{ t('common.cancel', 'Cancel').value }}
+      </AtlasButton>
+      <AtlasButton
+        v-if="!sourceCodeResolved.length && !sourceCodeUnresolved.length"
+        :loading="sourceCodeResolving"
+        :disabled="!sourceCodeInput.trim()"
+        @click="resolvePastedSourceCodes"
+      >
+        {{ t('cs.manager.pasteIdsResolveBtn', 'Resolve').value }}
+      </AtlasButton>
+      <AtlasButton
+        v-else
+        :disabled="!sourceCodeResolved.length"
+        @click="applySourceCodeConcepts"
+      >
+        {{ t('cs.manager.pasteIdsAddBtn', 'Add').value }} {{ sourceCodeResolved.length || '' }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
+
+  <!-- Import by JSON dialog. Accepts a pasted concept set expression
+       ({ items: [...] }) and adds the resolved items to the set. -->
+  <AtlasDialog
+    v-model="showJsonDialog"
+    :eyebrow="t('cs.manager.importJson', 'Import JSON').value"
+    :title="t('cs.manager.importJsonTitle', 'Import concept set JSON').value"
+    max-width="640"
+    @close="closeJsonDialog"
+  >
+    <p class="cs-paste__hint">
+      {{
+        t(
+          'cs.manager.importJsonHint',
+          'Paste a concept set expression JSON ({ "items": [ ... ] }). Each item\'s concept and its flags will be added to the set.'
+        ).value
+      }}
+    </p>
+    <AtlasTextField
+      v-model="jsonInput"
+      :placeholder="'{ &quot;items&quot;: [ { &quot;concept&quot;: { &quot;CONCEPT_ID&quot;: 201826, ... }, &quot;isExcluded&quot;: false, &quot;includeDescendants&quot;: true, &quot;includeMapped&quot;: false } ] }'"
+      :rows="8"
+      multiline
+      variant="outlined"
+      hide-details
+      class="cs-paste__textarea"
+    />
+
+    <div
+      v-if="jsonParsed && jsonItems.length"
+      class="cs-paste__summary"
+    >
+      <div class="cs-paste__summary-row cs-paste__summary-row--ok">
+        <AtlasIcon
+          icon="mdi-check-circle-outline"
+          size="18"
+        />
+        <span>{{ t('cs.manager.pasteIdsResolved', 'Resolved').value }}:
+          {{ jsonItems.length }}</span>
+      </div>
+    </div>
+    <div
+      v-if="jsonError"
+      class="cs-paste__summary"
+    >
+      <div class="cs-paste__summary-row cs-paste__summary-row--err">
+        <AtlasIcon
+          icon="mdi-alert-circle-outline"
+          size="18"
+        />
+        <span>{{ jsonError }}</span>
+      </div>
+    </div>
+
+    <template #actions>
+      <AtlasButton
+        variant="ghost"
+        @click="closeJsonDialog"
+      >
+        {{ t('common.cancel', 'Cancel').value }}
+      </AtlasButton>
+      <AtlasButton
+        v-if="!jsonParsed || !jsonItems.length"
+        :disabled="!jsonInput.trim()"
+        @click="parseJsonImport"
+      >
+        {{ t('cs.manager.importJsonParseBtn', 'Parse').value }}
+      </AtlasButton>
+      <AtlasButton
+        v-else
+        :disabled="!jsonItems.length"
+        @click="applyJsonItems"
+      >
+        {{ t('cs.manager.pasteIdsAddBtn', 'Add').value }} {{ jsonItems.length || '' }}
+      </AtlasButton>
+    </template>
+  </AtlasDialog>
+
   <AtlasDialog
     v-model="showDeleteConfirm"
     :eyebrow="t('common.confirm', 'Confirm').value"
@@ -415,7 +595,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
-import type { ConceptSet, Concept } from '@/models/concept-set.types'
+import type { ConceptSet, Concept, ConceptSetItem } from '@/models/concept-set.types'
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
 import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
@@ -426,9 +606,17 @@ import ConceptDetailContent from './detail/ConceptDetailContent.vue'
 import { AtlasButton, AtlasBadge, AtlasChip, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSpacer, AtlasTab, AtlasTabs, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { getVersions as getConceptSetVersions } from '@/services/concept-set-versions.service'
-import { getConceptById } from '@/services/concept-search.service'
+import { getConceptsByIds, getConceptsBySourceCodes } from '@/services/concept-search.service'
+import { useWebAPIStore } from '@/stores/webapi'
+import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
+import {
+  parsePastedIds,
+  parsePastedSourceCodes,
+  parseConceptSetJson,
+} from './concept-set-import'
 
 const { t } = useI18n()
+const webapiStore = useWebAPIStore()
 
 // ============================================================================
 // Props & Emits
@@ -515,16 +703,45 @@ const versionCount = ref(0)
 // so close + delete confirmations match the rest of the app.
 const showCloseConfirm = ref(false)
 const showDeleteConfirm = ref(false)
-// Bulk paste dialog state.
+// Bulk paste (IDs) dialog state.
 const showPasteDialog = ref(false)
 const pasteInput = ref('')
 const pasteResolving = ref(false)
 const pasteResolved = ref<Concept[]>([])
 const pasteUnresolved = ref<number[]>([])
 
-// Source key for vocabulary lookups — falls back to SYNPUF1K, the
-// same default used by the surrounding page.
-const sourceKey = inject<{ value: string }>('sourceKey', { value: 'SYNPUF1K' })
+// Import by source code dialog state.
+const showSourceCodeDialog = ref(false)
+const sourceCodeInput = ref('')
+const sourceCodeResolving = ref(false)
+const sourceCodeResolved = ref<Concept[]>([])
+const sourceCodeUnresolved = ref<string[]>([])
+
+// Import by JSON dialog state.
+const showJsonDialog = ref(false)
+const jsonInput = ref('')
+const jsonItems = ref<ConceptSetItem[]>([])
+const jsonError = ref('')
+const jsonParsed = ref(false)
+
+// Source key for vocabulary lookups.
+//
+// When the editor is opened from ConceptsView, the page provides an injected
+// 'sourceKey' which we honour as the highest-priority source. When opened from
+// elsewhere (e.g. the cohort builder), nothing is provided, so we resolve the
+// same way ConceptTable does: WebAPI store's valid vocabulary source, then the
+// configured default. The previous hardcoded 'SYNPUF1K' default 404'd whenever
+// that wasn't the configured source, breaking the Selected / Included tabs and
+// the Paste IDs flow (#94 / #95).
+const injectedSourceKey = inject<{ value: string }>('sourceKey', { value: '' })
+
+const sourceKey = computed<string>(
+  () =>
+    injectedSourceKey.value ||
+    webapiStore.getValidVocabularySource() ||
+    getDefaultSourceKey() ||
+    '',
+)
 
 // ============================================================================
 // Computed
@@ -808,23 +1025,22 @@ function onRecommendedConceptsAdded(_count: number) {
 }
 
 // ============================================================================
-// Bulk paste IDs
+// Import helpers (shared)
 // ============================================================================
 
-// Parse pasted text into a list of unique numeric concept IDs.
-// Accepts whitespace, commas, semicolons, tabs, or newlines as
-// separators; ignores empty tokens.
-function parsePastedIds(input: string): number[] {
-  const seen = new Set<number>()
-  const tokens = input.split(/[\s,;]+/).filter(Boolean)
-  for (const tok of tokens) {
-    const n = Number.parseInt(tok, 10)
-    if (Number.isFinite(n) && n > 0) {
-      seen.add(n)
-    }
+// Add resolved Concept[] to the set and surface them on the Selected tab.
+// `addConceptToSet` skips concepts already in the set, so re-pasting is safe.
+function applyConceptsToSet(concepts: Concept[]) {
+  for (const concept of concepts) {
+    store.addConceptToSet(concept)
   }
-  return [...seen]
+  hasUnsavedChanges.value = true
+  activeTab.value = 'selected'
 }
+
+// ============================================================================
+// Bulk paste IDs
+// ============================================================================
 
 async function resolvePastedIds() {
   const ids = parsePastedIds(pasteInput.value)
@@ -836,36 +1052,26 @@ async function resolvePastedIds() {
 
   pasteResolving.value = true
   try {
-    // Concurrently fetch each ID. WebAPI doesn't expose a batch
-    // lookup endpoint here, so Promise.all over individual GETs
-    // is the simplest reliable path.
-    const results = await Promise.all(
-      ids.map(async (id): Promise<{ id: number; concept: Concept | null }> => {
-        try {
-          const concept = await getConceptById(sourceKey.value, id)
-          return { id, concept }
-        } catch (err) {
-          logger.error('ConceptSetEditor', `Failed to resolve concept ${id}`, err)
-          return { id, concept: null }
-        }
-      })
-    )
-
-    pasteResolved.value = results.map(r => r.concept).filter((c): c is Concept => c !== null)
-    pasteUnresolved.value = results.filter(r => r.concept === null).map(r => r.id)
+    // Resolve the whole batch in ONE request via the lookup/identifiers
+    // endpoint rather than N individual GETs. The endpoint only returns rows
+    // for IDs it can resolve, so anything missing from the response is
+    // reported as unresolved.
+    const concepts = await getConceptsByIds(sourceKey.value, ids)
+    const found = new Set(concepts.map(c => c.conceptId))
+    pasteResolved.value = concepts
+    pasteUnresolved.value = ids.filter(id => !found.has(id))
+  } catch (err) {
+    logger.error('ConceptSetEditor', 'Failed to resolve pasted IDs', err)
+    pasteResolved.value = []
+    pasteUnresolved.value = ids
   } finally {
     pasteResolving.value = false
   }
 }
 
 function applyPastedConcepts() {
-  for (const concept of pasteResolved.value) {
-    store.addConceptToSet(concept)
-  }
-  hasUnsavedChanges.value = true
+  applyConceptsToSet(pasteResolved.value)
   closePasteDialog()
-  // Switch to the Selected tab so the user can see what landed.
-  activeTab.value = 'selected'
 }
 
 function closePasteDialog() {
@@ -874,6 +1080,97 @@ function closePasteDialog() {
   pasteResolved.value = []
   pasteUnresolved.value = []
   pasteResolving.value = false
+}
+
+// ============================================================================
+// Import by source code
+// ============================================================================
+
+async function resolvePastedSourceCodes() {
+  const codes = parsePastedSourceCodes(sourceCodeInput.value)
+  if (codes.length === 0) {
+    sourceCodeResolved.value = []
+    sourceCodeUnresolved.value = []
+    return
+  }
+
+  sourceCodeResolving.value = true
+  try {
+    const concepts = await getConceptsBySourceCodes(sourceKey.value, codes)
+    const found = new Set(concepts.map(c => c.conceptCode))
+    sourceCodeResolved.value = concepts
+    sourceCodeUnresolved.value = codes.filter(code => !found.has(code))
+  } catch (err) {
+    logger.error('ConceptSetEditor', 'Failed to resolve pasted source codes', err)
+    sourceCodeResolved.value = []
+    sourceCodeUnresolved.value = codes
+  } finally {
+    sourceCodeResolving.value = false
+  }
+}
+
+function applySourceCodeConcepts() {
+  applyConceptsToSet(sourceCodeResolved.value)
+  closeSourceCodeDialog()
+}
+
+function closeSourceCodeDialog() {
+  showSourceCodeDialog.value = false
+  sourceCodeInput.value = ''
+  sourceCodeResolved.value = []
+  sourceCodeUnresolved.value = []
+  sourceCodeResolving.value = false
+}
+
+// ============================================================================
+// Import by JSON (concept set expression)
+// ============================================================================
+
+// Re-parsing is required after any edit, so reset the parsed state when the
+// textarea changes. Keeps the action button showing "Parse" until the user
+// re-validates the (possibly different) JSON.
+watch(jsonInput, () => {
+  if (jsonParsed.value) {
+    jsonParsed.value = false
+    jsonItems.value = []
+    jsonError.value = ''
+  }
+})
+
+function parseJsonImport() {
+  const result = parseConceptSetJson(jsonInput.value)
+  jsonParsed.value = true
+  if (result.ok) {
+    jsonItems.value = result.items
+    jsonError.value = ''
+  } else {
+    jsonItems.value = []
+    jsonError.value = result.error ?? 'Invalid concept set JSON.'
+  }
+}
+
+function applyJsonItems() {
+  // Add each concept then re-apply its non-default flags. `addConceptToSet`
+  // resets flags to false, so we restore isExcluded / includeDescendants /
+  // includeMapped from the parsed expression via the toggle action.
+  for (const item of jsonItems.value) {
+    store.addConceptToSet(item)
+    if (!store.isConceptInSet(item.conceptId)) continue
+    if (item.isExcluded) store.toggleConceptFlag(item.conceptId, 'isExcluded')
+    if (item.includeDescendants) store.toggleConceptFlag(item.conceptId, 'includeDescendants')
+    if (item.includeMapped) store.toggleConceptFlag(item.conceptId, 'includeMapped')
+  }
+  hasUnsavedChanges.value = true
+  activeTab.value = 'selected'
+  closeJsonDialog()
+}
+
+function closeJsonDialog() {
+  showJsonDialog.value = false
+  jsonInput.value = ''
+  jsonItems.value = []
+  jsonError.value = ''
+  jsonParsed.value = false
 }
 </script>
 

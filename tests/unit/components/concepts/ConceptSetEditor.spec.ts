@@ -2,6 +2,25 @@
  * ConceptSetEditor Component Tests (T131)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+// Some sandboxed jsdom builds don't expose a global `localStorage`, which the
+// WebAPI store (and http-client) read directly. Provide a minimal in-memory
+// shim so the editor's source-resolution computed can run. No-op when the
+// environment already supplies localStorage (e.g. CI).
+if (typeof globalThis.localStorage === 'undefined') {
+  const store = new Map<string, string>()
+  const shim = {
+    getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
+    setItem: (k: string, v: string) => void store.set(k, String(v)),
+    removeItem: (k: string) => void store.delete(k),
+    clear: () => store.clear(),
+    key: (i: number) => [...store.keys()][i] ?? null,
+    get length() {
+      return store.size
+    },
+  }
+  Object.defineProperty(globalThis, 'localStorage', { value: shim, configurable: true })
+}
 import { mount, flushPromises } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import { createPinia, setActivePinia } from 'pinia'
@@ -9,13 +28,27 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import ConceptSetEditor from '@/components/concepts/ConceptSetEditor.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useWebAPIStore } from '@/stores/webapi'
 import { useAuthStore } from '@/stores/auth'
 import { emptyEntityAccess } from '@/models/auth.types'
 import type { ConceptSet, Concept } from '@/models/concept-set.types'
+import * as conceptSearchService from '@/services/concept-search.service'
 
 vi.mock('@/composables/useI18n', async () => {
   const { mockUseI18n } = await import('../../../helpers/i18n-mock')
   return mockUseI18n
+})
+
+// Default getValidVocabularySource to a non-SYNPUF source so we can prove the
+// editor uses the store source (not the old hardcoded 'SYNPUF1K' default) when
+// nothing is injected.
+vi.mock('@/services/concept-search.service', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/services/concept-search.service')>()
+  return {
+    ...actual,
+    getConceptsByIds: vi.fn(),
+    getConceptsBySourceCodes: vi.fn(),
+  }
 })
 
 const vuetify = createVuetify({ components, directives })
@@ -413,5 +446,131 @@ describe('ConceptSetEditor', () => {
     if (textFields.length > 0) {
       expect(textFields[0].props('modelValue')).toBe('')
     }
+  })
+
+  describe('source resolution (#94)', () => {
+    it('falls back to webapiStore.getValidVocabularySource() when no sourceKey is injected', () => {
+      const webapi = useWebAPIStore()
+      vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
+
+      const wrapper = mountComponent()
+      // The computed must NOT be the old hardcoded 'SYNPUF1K' default.
+      expect((wrapper.vm as unknown as { sourceKey: string }).sourceKey).toBe('MY_VOCAB')
+    })
+  })
+
+  describe('paste IDs import (#95 Part B)', () => {
+    it('resolves pasted IDs via the batch endpoint and reports unresolved IDs', async () => {
+      const webapi = useWebAPIStore()
+      vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
+
+      const resolved: Concept = { ...mockConcept, conceptId: 201826 }
+      vi.mocked(conceptSearchService.getConceptsByIds).mockResolvedValue([resolved])
+
+      const wrapper = mountComponent()
+      const vm = wrapper.vm as unknown as {
+        pasteInput: string
+        resolvePastedIds: () => Promise<void>
+        pasteResolved: Concept[]
+        pasteUnresolved: number[]
+      }
+
+      vm.pasteInput = '201826 999999'
+      await vm.resolvePastedIds()
+
+      // One batch call with the resolved source key (not 'SYNPUF1K').
+      expect(conceptSearchService.getConceptsByIds).toHaveBeenCalledWith('MY_VOCAB', [201826, 999999])
+      expect(vm.pasteResolved).toHaveLength(1)
+      expect(vm.pasteUnresolved).toEqual([999999])
+    })
+  })
+
+  describe('source code import (#95 Part A)', () => {
+    it('resolves pasted source codes and reports unresolved codes', async () => {
+      const webapi = useWebAPIStore()
+      vi.spyOn(webapi, 'getValidVocabularySource').mockReturnValue('MY_VOCAB')
+
+      const resolved: Concept = { ...mockConcept, conceptId: 1, conceptCode: 'E11.9' }
+      vi.mocked(conceptSearchService.getConceptsBySourceCodes).mockResolvedValue([resolved])
+
+      const wrapper = mountComponent()
+      const vm = wrapper.vm as unknown as {
+        sourceCodeInput: string
+        resolvePastedSourceCodes: () => Promise<void>
+        sourceCodeResolved: Concept[]
+        sourceCodeUnresolved: string[]
+      }
+
+      vm.sourceCodeInput = 'E11.9, BADCODE'
+      await vm.resolvePastedSourceCodes()
+
+      expect(conceptSearchService.getConceptsBySourceCodes).toHaveBeenCalledWith('MY_VOCAB', [
+        'E11.9',
+        'BADCODE',
+      ])
+      expect(vm.sourceCodeResolved).toHaveLength(1)
+      expect(vm.sourceCodeUnresolved).toEqual(['BADCODE'])
+    })
+  })
+
+  describe('JSON import (#95 Part A)', () => {
+    it('parses pasted expression JSON and adds items with flags preserved', async () => {
+      const wrapper = mountComponent({ conceptSet: { name: 'Set', items: [] } })
+      const store = useConceptSetsStore()
+      store.currentSet = { name: 'Set', items: [] }
+      const addSpy = vi.spyOn(store, 'addConceptToSet')
+      const toggleSpy = vi.spyOn(store, 'toggleConceptFlag')
+
+      const vm = wrapper.vm as unknown as {
+        jsonInput: string
+        parseJsonImport: () => void
+        applyJsonItems: () => void
+        jsonItems: unknown[]
+        jsonError: string
+      }
+
+      vm.jsonInput = JSON.stringify({
+        items: [
+          {
+            concept: {
+              CONCEPT_ID: 201826,
+              CONCEPT_NAME: 'Type 2 diabetes mellitus',
+              CONCEPT_CODE: '44054006',
+              DOMAIN_ID: 'Condition',
+              VOCABULARY_ID: 'SNOMED',
+              CONCEPT_CLASS_ID: 'Clinical Finding',
+              STANDARD_CONCEPT: 'S',
+              INVALID_REASON: null,
+            },
+            isExcluded: false,
+            includeDescendants: true,
+            includeMapped: false,
+          },
+        ],
+      })
+      vm.parseJsonImport()
+      expect(vm.jsonError).toBe('')
+      expect(vm.jsonItems).toHaveLength(1)
+
+      vm.applyJsonItems()
+      expect(addSpy).toHaveBeenCalledWith(expect.objectContaining({ conceptId: 201826 }))
+      // includeDescendants flag should be restored via toggle.
+      expect(toggleSpy).toHaveBeenCalledWith(201826, 'includeDescendants')
+    })
+
+    it('surfaces an error for malformed JSON', () => {
+      const wrapper = mountComponent({ conceptSet: { name: 'Set', items: [] } })
+      const vm = wrapper.vm as unknown as {
+        jsonInput: string
+        parseJsonImport: () => void
+        jsonError: string
+        jsonItems: unknown[]
+      }
+
+      vm.jsonInput = '{ not valid'
+      vm.parseJsonImport()
+      expect(vm.jsonError).toMatch(/invalid json/i)
+      expect(vm.jsonItems).toHaveLength(0)
+    })
   })
 })
