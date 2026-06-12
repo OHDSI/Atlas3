@@ -4,6 +4,26 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
+// Some sandboxed jsdom builds don't expose a global `localStorage`, which the
+// http-client reads for the locale header. Provide a minimal in-memory shim so
+// the service requests can run. No-op when localStorage already exists (CI).
+if (typeof globalThis.localStorage === 'undefined') {
+  const store = new Map<string, string>()
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
+      setItem: (k: string, v: string) => void store.set(k, String(v)),
+      removeItem: (k: string) => void store.delete(k),
+      clear: () => store.clear(),
+      key: (i: number) => [...store.keys()][i] ?? null,
+      get length() {
+        return store.size
+      },
+    },
+  })
+}
+
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
@@ -33,6 +53,8 @@ vi.mock('@/utils/api-mappers', () => ({
 import {
   searchConcepts,
   getConceptById,
+  getConceptsByIds,
+  getConceptsBySourceCodes,
   getConceptRecordCounts,
   getRecommendedConcepts,
   compareConceptSets,
@@ -221,6 +243,155 @@ describe('ConceptSearchService', () => {
       const result = await getConceptById('TEST', 123)
 
       expect(result).toBeNull()
+    })
+  })
+
+  describe('getConceptsByIds', () => {
+    const concept = (id: number) => ({
+      CONCEPT_ID: id,
+      CONCEPT_NAME: `Concept ${id}`,
+      DOMAIN_ID: 'Condition',
+      VOCABULARY_ID: 'SNOMED',
+      CONCEPT_CLASS_ID: 'Clinical Finding',
+      STANDARD_CONCEPT: 'S',
+      CONCEPT_CODE: `${id}`,
+      INVALID_REASON: null,
+    })
+
+    it('POSTs the id array to lookup/identifiers and maps the response', async () => {
+      const apiResponse = [concept(201826), concept(443238)]
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(apiResponse)),
+      })
+
+      const result = await getConceptsByIds('SYNPUF1K', [201826, 443238])
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/vocabulary/SYNPUF1K/lookup/identifiers'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify([201826, 443238]),
+        }),
+      )
+      expect(result).toHaveLength(2)
+      expect(result[0]).toMatchObject({ conceptId: 201826 })
+      expect(result[1]).toMatchObject({ conceptId: 443238 })
+    })
+
+    it('returns [] without calling fetch for an empty id list', async () => {
+      const result = await getConceptsByIds('SYNPUF1K', [])
+      expect(result).toEqual([])
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('only returns rows for ids the endpoint resolves (missing ids omitted)', async () => {
+      // Requested 3 ids, endpoint only knows about 1 — the caller diffs these.
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify([concept(201826)])),
+      })
+
+      const result = await getConceptsByIds('SYNPUF1K', [201826, 111, 222])
+      expect(result).toHaveLength(1)
+      expect(result[0].conceptId).toBe(201826)
+    })
+
+    it('throws for an invalid sourceKey', async () => {
+      await expect(getConceptsByIds('', [1])).rejects.toThrow('Invalid vocabulary source')
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('throws and logs on a malformed response', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ not: 'an array' })),
+      })
+
+      await expect(getConceptsByIds('SYNPUF1K', [1])).rejects.toThrow(
+        'Invalid concept identifier lookup response format',
+      )
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('passes the AbortSignal through to fetch', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve('[]'),
+      })
+      const ctrl = new AbortController()
+      await getConceptsByIds('SYNPUF1K', [1], ctrl.signal)
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ signal: ctrl.signal }),
+      )
+    })
+  })
+
+  describe('getConceptsBySourceCodes', () => {
+    const conceptWithCode = (id: number, code: string) => ({
+      CONCEPT_ID: id,
+      CONCEPT_NAME: `Concept ${id}`,
+      DOMAIN_ID: 'Condition',
+      VOCABULARY_ID: 'ICD10CM',
+      CONCEPT_CLASS_ID: '4-char billing code',
+      STANDARD_CONCEPT: null,
+      CONCEPT_CODE: code,
+      INVALID_REASON: null,
+    })
+
+    it('POSTs the code array to lookup/sourcecodes and maps the response', async () => {
+      const apiResponse = [conceptWithCode(35206879, 'E11.9'), conceptWithCode(44826979, '250.00')]
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(apiResponse)),
+      })
+
+      const result = await getConceptsBySourceCodes('SYNPUF1K', ['E11.9', '250.00'])
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/vocabulary/SYNPUF1K/lookup/sourcecodes'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(['E11.9', '250.00']),
+        }),
+      )
+      expect(result).toHaveLength(2)
+      expect(result[0]).toMatchObject({ conceptCode: 'E11.9' })
+      expect(result[1]).toMatchObject({ conceptCode: '250.00' })
+    })
+
+    it('returns [] without calling fetch for an empty code list', async () => {
+      const result = await getConceptsBySourceCodes('SYNPUF1K', [])
+      expect(result).toEqual([])
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('throws for an invalid sourceKey', async () => {
+      await expect(getConceptsBySourceCodes('null', ['E11.9'])).rejects.toThrow(
+        'Invalid vocabulary source',
+      )
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('throws and logs on a malformed response', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ not: 'an array' })),
+      })
+
+      await expect(getConceptsBySourceCodes('SYNPUF1K', ['E11.9'])).rejects.toThrow(
+        'Invalid source code lookup response format',
+      )
+      expect(logger.error).toHaveBeenCalled()
     })
   })
 

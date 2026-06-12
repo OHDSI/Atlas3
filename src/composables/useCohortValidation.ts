@@ -55,19 +55,24 @@ export interface CohortValidationReturn {
   clearWarnings: () => void
 }
 
-function extractConceptSets(
+export function extractConceptSets(
   entryEvents: CohortEvent[],
   additionalCriteria: CriteriaGroup | undefined,
   inclusionRules: InclusionRule[],
   exitCriteria: ExitCriteria,
   censoringCriteria: CohortEvent[]
 ): ConceptSetReference[] {
-  const conceptSetsMap = new Map<string, ConceptSetReference>()
+  // Key by `id`, not `name`: a concept set's identity is its id (the CodesetId
+  // the Atlas expression references). Distinct concept sets can share a name —
+  // e.g. two newly-created sets both still on the blank/default name — and
+  // keying by name would collapse them, silently dropping every set after the
+  // first and leaving criteria pointing at a CodesetId that no longer exists.
+  const conceptSetsMap = new Map<number | string, ConceptSetReference>()
 
   // Extract from entry events
   entryEvents.forEach(event => {
     if (event.conceptSet) {
-      conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+      conceptSetsMap.set(event.conceptSet.id, event.conceptSet)
     }
   })
 
@@ -75,7 +80,7 @@ function extractConceptSets(
   if (additionalCriteria?.events) {
     additionalCriteria.events.forEach(event => {
       if (event.conceptSet) {
-        conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+        conceptSetsMap.set(event.conceptSet.id, event.conceptSet)
       }
     })
   }
@@ -85,7 +90,7 @@ function extractConceptSets(
     rule.criteriaGroups.forEach(group => {
       group.events.forEach(event => {
         if (event.conceptSet) {
-          conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+          conceptSetsMap.set(event.conceptSet.id, event.conceptSet)
         }
       })
     })
@@ -93,13 +98,13 @@ function extractConceptSets(
 
   // Extract from exit criteria (drug exposure)
   if (exitCriteria?.conceptSet) {
-    conceptSetsMap.set(exitCriteria.conceptSet.name, exitCriteria.conceptSet)
+    conceptSetsMap.set(exitCriteria.conceptSet.id, exitCriteria.conceptSet)
   }
 
   // Extract from censoring criteria
   censoringCriteria.forEach(event => {
     if (event.conceptSet) {
-      conceptSetsMap.set(event.conceptSet.name, event.conceptSet)
+      conceptSetsMap.set(event.conceptSet.id, event.conceptSet)
     }
   })
 

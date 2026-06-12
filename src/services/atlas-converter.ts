@@ -143,24 +143,45 @@ export function convertInternalToAtlas(cohort: CohortDefinition): AtlasJSON {
           Groups: [],
         },
 
-    InclusionRules: cohort.inclusionRules.map(rule => ({
-      name: rule.name,
-      ...(rule.description ? { description: rule.description } : {}),
-      expression: {
-        Type: 'ALL',
-        CriteriaList: rule.criteriaGroups.flatMap(g =>
-          g.events
+    InclusionRules: cohort.inclusionRules.map(rule => {
+      // The CIRCE inclusion-rule expression is a single top-level criteria
+      // group: its Type/Count come from the first model group, and any further
+      // model groups nest under Groups[]. Symmetric with convertAtlasToInternal.
+      // (Previously Type was hardcoded 'ALL' and all groups were flattened,
+      // which silently dropped AT_LEAST/AT_MOST + count — e.g. an exclusion
+      // expressed as a group "AT_MOST 0" became a plain "ALL" group, and its
+      // single criterion then defaulted to Occurrence AT_LEAST 1, inverting the
+      // exclusion into a requirement.)
+      const [firstGroup, ...restGroups] = rule.criteriaGroups
+      const groupCount = (g: { count?: number }) =>
+        typeof g.count === 'number' ? { Count: g.count } : {}
+      return {
+        name: rule.name,
+        ...(rule.description ? { description: rule.description } : {}),
+        expression: {
+          Type: firstGroup?.logicType || 'ALL',
+          ...(firstGroup ? groupCount(firstGroup) : {}),
+          CriteriaList: (firstGroup?.events ?? [])
             .filter(e => e.criteriaType !== 'Demographic')
             .map(e => convertEventToAtlas(e, true)),
-        ),
-        DemographicCriteriaList: rule.criteriaGroups.flatMap(g =>
-          g.events
+          DemographicCriteriaList: (firstGroup?.events ?? [])
             .filter(e => e.criteriaType === 'Demographic')
             .map(convertDemographicEventToAtlas),
-        ),
-        Groups: [],
-      },
-    })),
+          Groups: restGroups.map(g => ({
+            Type: g.logicType || 'ALL',
+            ...groupCount(g),
+            CriteriaList: g.events
+              .filter(e => e.criteriaType !== 'Demographic')
+              .map(e => convertEventToAtlas(e, true)),
+            // Nested groups carry their own demographics too; without this a
+            // Demographic criterion in any non-first group is silently dropped.
+            DemographicCriteriaList: g.events
+              .filter(e => e.criteriaType === 'Demographic')
+              .map(convertDemographicEventToAtlas),
+          })),
+        },
+      }
+    }),
 
     CensoringCriteria: cohort.censoringCriteria?.map(e => convertEventToAtlas(e, false)) || [],
 
@@ -807,6 +828,9 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
           criteriaGroups.push({
             id: generateId(),
             logicType: (rule.expression.Type || 'ALL') as LogicType,
+            ...(typeof rule.expression.Count === 'number'
+              ? { count: rule.expression.Count }
+              : {}),
             events: rule.expression.CriteriaList.map((e: AtlasCriteria) =>
               convertAtlasToEvent(e, atlas.ConceptSets)
             ),
@@ -830,6 +854,9 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
             criteriaGroups.push({
               id: generateId(),
               logicType: (rule.expression.Type || 'ALL') as LogicType,
+              ...(typeof rule.expression.Count === 'number'
+                ? { count: rule.expression.Count }
+                : {}),
               events: demographicEvents,
             })
           }
@@ -840,10 +867,17 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
             ...rule.expression.Groups.map((group: import('@/models/atlas.types').AtlasGroup) => ({
               id: generateId(),
               logicType: (group.Type || 'ALL') as LogicType,
-              events:
-                group.CriteriaList?.map((e: AtlasCriteria) =>
+              ...(typeof group.Count === 'number' ? { count: group.Count } : {}),
+              events: [
+                ...(group.CriteriaList?.map((e: AtlasCriteria) =>
                   convertAtlasToEvent(e, atlas.ConceptSets)
-                ) || [],
+                ) || []),
+                // Symmetric with the write side: a nested group's demographics
+                // live alongside its criteria in the internal model.
+                ...((group.DemographicCriteriaList as Array<Record<string, unknown>>)?.map(dc =>
+                  convertDemographicCriteriaToEvent(dc)
+                ) || []),
+              ],
             }))
           )
         }

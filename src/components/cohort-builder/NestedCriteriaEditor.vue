@@ -204,7 +204,7 @@
 
                   <!-- Concept Set Picker -->
                   <div
-                    v-if="event.criteriaType !== 'Demographic'"
+                    v-if="eventRequiresConceptSet(event.criteriaType)"
                     class="mb-2"
                   >
                     <AtlasButton
@@ -355,7 +355,20 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 
 const { t, tv } = useI18n()
-const { availableFilters } = useFilterConfig(ref('criteriaGroup'))
+const { availableFilters, requiresConceptSet } = useFilterConfig(ref('criteriaGroup'))
+
+// camelCase config key from a PascalCase CriteriaType.
+function toCamelCase(str: string): string {
+  return str.charAt(0).toLowerCase() + str.slice(1)
+}
+
+// Whether a nested child's criteria type carries an event-level concept set.
+// Demographic and period-style types (e.g. Observation Period) have none, so
+// the concept-set picker is hidden for them (issues #98, consistent with the
+// entry/group editors).
+function eventRequiresConceptSet(criteriaType: string): boolean {
+  return requiresConceptSet(toCamelCase(criteriaType))
+}
 
 // Local state - deep clone the model value to avoid reactivity issues
 const localNested = ref<NestedCriteria>({

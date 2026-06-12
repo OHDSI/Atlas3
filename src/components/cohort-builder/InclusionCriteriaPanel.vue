@@ -217,7 +217,14 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:modelValue': [value: InclusionRule[]]
   'update:qualifyingLimit': [value: QualifyingLimit]
-  'select-concept-set': [context: { ruleIndex: number; groupIndex: number; eventIndex: number }]
+  'select-concept-set': [
+    context: {
+      ruleIndex: number
+      groupIndex: number
+      eventIndex: number
+      nestedEventIndex?: number
+    },
+  ]
   'select-concept': [
     context: {
       ruleIndex: number
@@ -312,12 +319,17 @@ function onRuleUpdated(rule: InclusionRule): void {
   emit('update:modelValue', updated)
 }
 
-function onSelectConceptSet(ctx: { groupIndex: number; eventIndex: number }): void {
+function onSelectConceptSet(ctx: {
+  groupIndex: number
+  eventIndex: number
+  nestedEventIndex?: number
+}): void {
   if (selectedIndex.value === null) return
   emit('select-concept-set', {
     ruleIndex: selectedIndex.value,
     groupIndex: ctx.groupIndex,
     eventIndex: ctx.eventIndex,
+    nestedEventIndex: ctx.nestedEventIndex,
   })
 }
 

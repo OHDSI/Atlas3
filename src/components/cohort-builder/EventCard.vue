@@ -33,7 +33,17 @@ const { formatTemporalWindowDisplay } = useTemporalWindows()
 
 // Use configuration-driven filter list (supports all 16 filter types)
 const sectionRef = ref(props.section)
-const { availableFilters } = useFilterConfig(sectionRef)
+const { availableFilters, requiresConceptSet } = useFilterConfig(sectionRef)
+
+// Helper to convert PascalCase to camelCase for config lookup
+const toCamelCase = (str: string): string => str.charAt(0).toLowerCase() + str.slice(1)
+
+// Whether this criteria type carries an event-level concept set. Types like
+// Observation Period have no concept_id, so the "No concept set" summary line
+// is meaningless for them and should be hidden (issue #98).
+const eventRequiresConceptSet = computed(() =>
+  requiresConceptSet(toCamelCase(props.event.criteriaType))
+)
 
 // Expand/collapse state
 const expanded = ref(false)
@@ -142,7 +152,10 @@ const removeEvent = () => {
         <div class="event-card__type">
           {{ criteriaTypeLabel }}
         </div>
-        <div class="event-card__concept-set">
+        <div
+          v-if="eventRequiresConceptSet"
+          class="event-card__concept-set"
+        >
           <template v-if="event.conceptSet?.name">
             {{ event.conceptSet.name }}
             <span

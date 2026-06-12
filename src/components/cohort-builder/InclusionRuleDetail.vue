@@ -30,7 +30,12 @@
         :model-value="group"
         @update:model-value="onUpdateGroup(groupIndex, $event)"
         @remove="onRemoveGroup(groupIndex)"
-        @select-concept-set="$emit('select-concept-set', { groupIndex, eventIndex: typeof $event === 'number' ? $event : $event.eventIndex })"
+        @select-concept-set="$emit('select-concept-set', {
+          groupIndex,
+          eventIndex: typeof $event === 'number' ? $event : $event.eventIndex,
+          nestedEventIndex:
+            typeof $event === 'number' ? undefined : 'nestedEventIndex' in $event ? $event.nestedEventIndex : undefined,
+        })"
         @select-concept="$emit('select-concept', { groupIndex, ...$event })"
         @edit-concept-set="$emit('edit-concept-set', $event)"
       />
@@ -64,7 +69,9 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:rule': [rule: InclusionRule]
-  'select-concept-set': [ctx: { groupIndex: number; eventIndex: number }]
+  'select-concept-set': [
+    ctx: { groupIndex: number; eventIndex: number; nestedEventIndex?: number },
+  ]
   'select-concept': [ctx: {
     groupIndex: number
     eventIndex: number

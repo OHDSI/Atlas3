@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { AtlasCard } from '@/components/ui'
+import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { Concept } from '@/models/concept-set.types'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
@@ -21,6 +22,28 @@ const sourceKey = computed(
   () => props.sourceKey || ((route.params.sourceKey as string) ?? '')
 )
 
+const conceptDrawer = useConceptDetailDrawerStore()
+
+// "View full" opens the in-place concept-detail drawer (an overlay) for this
+// concept instead of routing to a stand-alone page — that keeps the user in
+// the cohort editor flow. We hide the link when the drawer is already showing
+// this exact concept, since clicking it there would be a confusing no-op.
+const isInDrawerForThisConcept = computed(
+  () =>
+    conceptDrawer.isOpen &&
+    conceptDrawer.sourceKey === sourceKey.value &&
+    conceptDrawer.conceptId === props.concept.conceptId
+)
+
+const canViewFull = computed(
+  () => !!sourceKey.value && !!props.concept.conceptId && !isInDrawerForThisConcept.value
+)
+
+function viewFull() {
+  if (!canViewFull.value) return
+  conceptDrawer.open(sourceKey.value, props.concept.conceptId)
+}
+
 const isEmpty = computed(() => props.parents.length === 0 && props.children.length === 0)
 
 const visibleParents = computed(() => props.parents.slice(0, 3))
@@ -35,9 +58,11 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
     <header class="card-title">
       <span>Hierarchy</span>
       <a
-        v-if="!isEmpty"
+        v-if="!isEmpty && canViewFull"
         href="#"
         class="view-full"
+        data-testid="view-full"
+        @click.prevent="viewFull"
       >View full →</a>
     </header>
     <div class="card-body">
