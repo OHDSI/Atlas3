@@ -27,6 +27,7 @@ import {
   getConceptRecordCounts,
   compareConceptSets,
   resolveConceptSetExpression,
+  getMappedSourceCodes,
 } from '@/services/concept-search.service'
 import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
@@ -63,6 +64,14 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   const includedError = ref<string | null>(null)
   const includedFetchedAt = ref<number | null>(null)
   let includedAbortCtrl: AbortController | null = null
+
+  // Mapped source codes (the "Source Codes" tab) — the non-standard codes that
+  // map to the resolved/included standard concepts.
+  const sourceCodeItems = ref<Concept[]>([])
+  const sourceCodeLoading = ref<boolean>(false)
+  const sourceCodeError = ref<string | null>(null)
+  const sourceCodeFetchedAt = ref<number | null>(null)
+  let sourceCodeAbortCtrl: AbortController | null = null
 
   // ============================================================================
   // Getters
@@ -577,6 +586,57 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     includedLoading.value = false
     includedError.value = null
     includedFetchedAt.value = null
+    resetSourceCodes()
+  }
+
+  async function resolveSourceCodes(sourceKey?: string): Promise<void> {
+    const conceptIds = includedItems.value.map((c) => c.conceptId)
+    if (conceptIds.length === 0) {
+      sourceCodeAbortCtrl?.abort()
+      sourceCodeAbortCtrl = null
+      sourceCodeItems.value = []
+      sourceCodeError.value = null
+      sourceCodeLoading.value = false
+      return
+    }
+
+    const key = sourceKey || useWebAPIStore().getValidVocabularySource()
+    if (!key) {
+      sourceCodeError.value = 'No vocabulary source available'
+      return
+    }
+
+    sourceCodeAbortCtrl?.abort()
+    const ctrl = new AbortController()
+    sourceCodeAbortCtrl = ctrl
+
+    sourceCodeLoading.value = true
+    sourceCodeError.value = null
+
+    try {
+      const concepts = await getMappedSourceCodes(key, conceptIds, ctrl.signal)
+      if (ctrl !== sourceCodeAbortCtrl) return
+      sourceCodeItems.value = concepts
+      sourceCodeFetchedAt.value = Date.now()
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return
+      if (ctrl !== sourceCodeAbortCtrl) return
+      sourceCodeError.value = err instanceof Error ? err.message : 'Failed to resolve source codes'
+      logger.error('ConceptSetsStore', 'resolveSourceCodes error', err)
+    } finally {
+      if (ctrl === sourceCodeAbortCtrl) {
+        sourceCodeLoading.value = false
+      }
+    }
+  }
+
+  function resetSourceCodes(): void {
+    sourceCodeAbortCtrl?.abort()
+    sourceCodeAbortCtrl = null
+    sourceCodeItems.value = []
+    sourceCodeLoading.value = false
+    sourceCodeError.value = null
+    sourceCodeFetchedAt.value = null
   }
 
   // ============================================================================
@@ -647,6 +707,12 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
         includedError.value = null
         includedLoading.value = false
         includedFetchedAt.value = null
+        sourceCodeAbortCtrl?.abort()
+        sourceCodeAbortCtrl = null
+        sourceCodeItems.value = []
+        sourceCodeError.value = null
+        sourceCodeLoading.value = false
+        sourceCodeFetchedAt.value = null
         return
       }
       debouncedResolveIncluded()
@@ -716,5 +782,13 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     includedFetchedAt,
     resolveIncluded,
     resetIncluded,
+
+    // Source codes (mapped non-standard codes for included concepts)
+    sourceCodeItems,
+    sourceCodeLoading,
+    sourceCodeError,
+    sourceCodeFetchedAt,
+    resolveSourceCodes,
+    resetSourceCodes,
   }
 })
