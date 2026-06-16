@@ -66,4 +66,68 @@ describe('ConceptSetFilters', () => {
     await clearBtn!.trigger('click')
     expect(wrapper.emitted('clear')).toBeTruthy()
   })
+
+  it('resyncs local state from a prop change without re-emitting update:filters', async () => {
+    const wrapper = mountComponent()
+    const emittedBefore = wrapper.emitted('update:filters')?.length ?? 0
+
+    await wrapper.setProps({
+      filters: {
+        searchQuery: 'updated',
+        author: 'alice',
+        createdDateRange: {},
+        modifiedDateRange: {},
+      },
+    })
+    // Two ticks: one for the watch to apply, one for the internal guard to reset.
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+
+    // (a) local state reflects the new prop value
+    expect(wrapper.find('input').element.value).toBe('updated')
+
+    // (b) the external prop change did not cause a re-emit (isInternalUpdate guard)
+    const emittedAfter = wrapper.emitted('update:filters')?.length ?? 0
+    expect(emittedAfter).toBe(emittedBefore)
+  })
+
+  it('removes the author via the active-filter chip close, emitting update:filters', async () => {
+    const filters = { ...defaultFilters, author: 'alice' }
+    const wrapper = mountComponent({ filters, activeFilterCount: 1 })
+
+    const active = wrapper.find('.concept-set-filters__active')
+    expect(active.exists()).toBe(true)
+    expect(active.text()).toContain('alice')
+
+    const closeBtn = active.find('.v-chip__close')
+    expect(closeBtn.exists()).toBe(true)
+    await closeBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    const events = wrapper.emitted('update:filters')
+    expect(events).toBeTruthy()
+    const last = events![events!.length - 1][0] as ConceptSetFilterState
+    expect(last.author).toBe('')
+  })
+
+  it('removes the created-from date via its chip close', async () => {
+    const filters: ConceptSetFilterState = {
+      ...defaultFilters,
+      createdDateRange: { from: new Date('2024-01-01'), to: undefined },
+    }
+    const wrapper = mountComponent({ filters, activeFilterCount: 1 })
+
+    const active = wrapper.find('.concept-set-filters__active')
+    expect(active.exists()).toBe(true)
+
+    const closeBtn = active.find('.v-chip__close')
+    expect(closeBtn.exists()).toBe(true)
+    await closeBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+
+    // The close handler clears localFilters.createdDateRange.from, so the active
+    // row (and its chip) is removed from the DOM.
+    expect(wrapper.find('.concept-set-filters__active').exists()).toBe(false)
+  })
 })
