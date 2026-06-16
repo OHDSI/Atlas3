@@ -161,11 +161,11 @@ const emptyMessage = computed(() => {
 
 watch(
   () => [props.active, includedSignature.value, props.sourceKey] as const,
-  ([active], prev) => {
+  ([active, sig, key], prev) => {
     if (!active) return
     const [prevActive, prevSig, prevKey] = prev ?? [false, '', undefined]
-    if (active !== prevActive || includedSignature.value !== prevSig || props.sourceKey !== prevKey) {
-      void store.resolveSourceCodes(props.sourceKey)
+    if (active !== prevActive || sig !== prevSig || key !== prevKey) {
+      void store.resolveSourceCodes(key)
     }
   },
   { immediate: true },
