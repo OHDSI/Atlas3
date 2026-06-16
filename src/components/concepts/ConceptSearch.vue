@@ -43,6 +43,17 @@
       {{ store.error }}
     </AtlasAlert>
 
+    <!-- Facet filters over the returned results (vocabulary, domain, …). -->
+    <ConceptFacetFilters
+      v-if="!store.isEmpty"
+      :facet-options="store.facetOptions"
+      :selected="store.selectedFacets"
+      :active-filter-count="store.activeFacetCount"
+      class="concept-search__filters"
+      @update:facet="({ key, values }) => store.setFacet(key, values)"
+      @clear="store.clearFacets()"
+    />
+
     <!-- Results Table -->
     <ConceptTable
       :concepts="store.concepts"
@@ -67,6 +78,7 @@ import { useConceptSearchStore } from '@/stores/concept-search'
 import { useWebAPIStore } from '@/stores/webapi'
 import { getSourceKey } from '@/config/webapi'
 import ConceptTable from './ConceptTable.vue'
+import ConceptFacetFilters from './ConceptFacetFilters.vue'
 
 const { t } = useI18n()
 
@@ -145,6 +157,10 @@ function onItemsPerPageChange(itemsPerPage: number) {
 }
 
 .concept-search__hero {
+  margin-bottom: 16px;
+}
+
+.concept-search__filters {
   margin-bottom: 16px;
 }
 
