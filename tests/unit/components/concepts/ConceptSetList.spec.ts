@@ -207,93 +207,6 @@ describe('ConceptSetList', () => {
     }
   })
 
-  it('should render ConceptSetEditor when editor is open', async () => {
-    const wrapper = mountComponent()
-    const store = useConceptSetsStore()
-
-    store.editorOpen = true
-    await wrapper.vm.$nextTick()
-
-    const editor = wrapper.findComponent(ConceptSetEditor)
-    expect(editor.exists()).toBe(true)
-  })
-
-  it('should close editor when editor emits update:modelValue', async () => {
-    const wrapper = mountComponent()
-    const store = useConceptSetsStore()
-
-    store.editorOpen = true
-    const closeEditorSpy = vi.spyOn(store, 'closeEditor')
-
-    await wrapper.vm.$nextTick()
-
-    const editor = wrapper.findComponent(ConceptSetEditor)
-    await editor.vm.$emit('update:modelValue', false)
-
-    expect(closeEditorSpy).toHaveBeenCalled()
-  })
-
-  it('should refresh list when editor emits save', async () => {
-    const wrapper = mountComponent()
-    const store = useConceptSetsStore()
-
-    store.editorOpen = true
-    const fetchAllSpy = vi.spyOn(store, 'fetchAll').mockResolvedValue()
-
-    await wrapper.vm.$nextTick()
-
-    const editor = wrapper.findComponent(ConceptSetEditor)
-    await editor.vm.$emit('save')
-    await flushPromises()
-
-    expect(fetchAllSpy).toHaveBeenCalled()
-  })
-
-  it('should display delete confirmation dialog', async () => {
-    const wrapper = mountComponent()
-    const store = useConceptSetsStore()
-
-    store.editorOpen = true
-    store.currentSet = {
-      id: 123,
-      name: 'Test Set',
-      items: [],
-    }
-
-    await wrapper.vm.$nextTick()
-
-    const editor = wrapper.findComponent(ConceptSetEditor)
-    await editor.vm.$emit('delete', 123)
-    await wrapper.vm.$nextTick()
-
-    const dialog = wrapper.findComponent({ name: 'VDialog' })
-    expect(dialog.exists()).toBe(true)
-  })
-
-  it('should handle delete event from editor', async () => {
-    const wrapper = mountComponent()
-    const store = useConceptSetsStore()
-
-    store.conceptSets = mockConceptSets
-    store.filterTerm = ''
-    store.editorOpen = true
-    store.currentSet = {
-      id: 123,
-      name: 'Test Set',
-      items: [],
-    }
-
-    await wrapper.vm.$nextTick()
-
-    const editor = wrapper.findComponent(ConceptSetEditor)
-    await editor.vm.$emit('delete', 123)
-    await wrapper.vm.$nextTick()
-
-    // Verify dialog exists
-    const dialog = wrapper.findComponent({ name: 'VDialog' })
-    expect(dialog.exists()).toBe(true)
-  })
-
   it('should format author name from object', async () => {
     const wrapper = mountComponent()
     const store = useConceptSetsStore()
@@ -369,11 +282,11 @@ describe('ConceptSetList', () => {
     expect(dataTable.props('itemsPerPage')).toBe(25)
   })
 
-  it('should not open editor when not in editorOpen state', async () => {
+  it('should not render the editor (relocated to ConceptsView)', async () => {
     const wrapper = mountComponent()
     const store = useConceptSetsStore()
 
-    store.editorOpen = false
+    store.editorOpen = true
     await wrapper.vm.$nextTick()
 
     const editor = wrapper.findComponent(ConceptSetEditor)
