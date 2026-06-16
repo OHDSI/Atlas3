@@ -3,13 +3,14 @@
  * State management for concept search functionality
  */
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { searchConcepts, getConceptRecordCounts } from '@/services/concept-search.service'
 import type { Concept } from '@/models/concept-set.types'
 import { getSourceKey } from '@/config/webapi'
 import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
+import { useConceptFacets } from '@/composables/useConceptFacets'
 
 export const useConceptSearchStore = defineStore('concept-search', () => {
   // ============================================================================
@@ -30,15 +31,27 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
   const sortBy = ref<string | null>('conceptId')
   const sortDesc = ref<boolean>(false)
 
+  // Faceted filtering over the result columns (vocabulary, domain, etc.)
+  const facets = useConceptFacets(allConcepts)
+
+  // A new facet selection can push the current page out of range.
+  watch(
+    facets.selected,
+    () => {
+      page.value = 1
+    },
+    { deep: true }
+  )
+
   // ============================================================================
   // Getters
   // ============================================================================
 
-  const totalCount = computed(() => allConcepts.value.length)
+  const totalCount = computed(() => facets.filteredConcepts.value.length)
 
   // Client-side pagination and sorting
   const concepts = computed(() => {
-    const sorted = [...allConcepts.value]
+    const sorted = [...facets.filteredConcepts.value]
 
     // Apply sorting
     if (sortBy.value) {
@@ -69,6 +82,10 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     return sorted.slice(start, end)
   })
 
+  // `isEmpty` reflects whether the search returned ANY results (`allConcepts`),
+  // not whether facets currently match anything. When facets filter every row out,
+  // `isEmpty` stays `false` (keeping the facet bar visible so the user can clear
+  // filters) while `totalCount`/`pageRangeText` report the filtered count of 0.
   const isEmpty = computed(() => allConcepts.value.length === 0)
 
   const pageRangeText = computed(() => {
@@ -106,6 +123,8 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
       allConcepts.value = result.concepts
       loading.value = false
       page.value = 1
+      // A new query changes the available value space — drop stale facets.
+      facets.clearFilters()
 
       loadingRecordCounts.value = true
       const conceptIds = result.concepts.map(c => c.conceptId)
@@ -161,6 +180,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     allConcepts.value = []
     error.value = null
     page.value = 1
+    facets.clearFilters()
   }
 
   // ============================================================================
@@ -184,6 +204,13 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     totalCount,
     isEmpty,
     pageRangeText,
+
+    // Facets
+    facetOptions: facets.facetOptions,
+    selectedFacets: facets.selected,
+    activeFacetCount: facets.activeFilterCount,
+    setFacet: facets.setFacet,
+    clearFacets: facets.clearFilters,
 
     // Actions
     search,

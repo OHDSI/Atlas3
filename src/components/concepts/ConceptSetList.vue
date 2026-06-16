@@ -3,16 +3,13 @@
     <!-- Toolbar: search + status chip + primary action.
          Sits directly on the page card surface — no inner v-card. -->
     <div class="concept-set-list__toolbar">
-      <AtlasTextField
-        :model-value="store.filterTerm"
-        :placeholder="t('common.search', 'Search concept sets…').value"
-        prepend-icon="mdi-magnify"
-        clearable
-        variant="outlined"
-        hide-details
-        class="concept-set-list__search"
-        @update:model-value="(v) => onFilterChange(v as string | null)"
-        @click:clear="onFilterClear"
+      <ConceptSetFilters
+        :filters="store.filters"
+        :available-authors="store.availableAuthors"
+        :active-filter-count="store.activeFilterCount"
+        class="concept-set-list__filters"
+        @update:filters="store.setFilters"
+        @clear="store.clearFilters"
       />
 
       <AtlasChip
@@ -121,7 +118,7 @@
       />
       <p class="concept-set-list__empty-text">
         {{
-          store.filterTerm
+          store.activeFilterCount > 0
             ? t('cs.manager.emptyFilterMessage', 'No concept sets match your search.')
             : t(
               'cs.manager.emptyStateMessage',
@@ -130,7 +127,7 @@
         }}
       </p>
       <AtlasButton
-        v-if="!store.filterTerm"
+        v-if="store.activeFilterCount === 0"
         icon="mdi-plus"
         @click="onAddClick"
       >
@@ -148,7 +145,8 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import ConceptSetFilters from './ConceptSetFilters.vue'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()
@@ -217,14 +215,6 @@ function getAuthorName(
   return author.name || author.login || ''
 }
 
-function onFilterChange(value: string | null) {
-  store.setFilter(value || '')
-}
-
-function onFilterClear() {
-  store.setFilter('')
-}
-
 function onAddClick() {
   store.openCreateEditor()
 }
@@ -256,9 +246,8 @@ function onRowClick(_event: Event, payload: { item: ConceptSetListItem }) {
   flex-wrap: wrap;
 }
 
-.concept-set-list__search {
-  flex: 1 1 320px;
-  max-width: 420px;
+.concept-set-list__filters {
+  flex: 1 1 auto;
 }
 
 .concept-set-list__count {

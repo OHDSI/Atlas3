@@ -20,6 +20,7 @@ import type {
 } from '@/models/concept-set.types'
 import type { Concept } from '@/models/concept-set.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
+import type { DateRange } from '@/composables/useCohorts'
 import { conceptToConceptSetItem, conceptSetItemToExpressionItem } from '@/utils/api-mappers'
 import { getVersion as getVersionAPI } from '@/services/concept-set-versions.service'
 import {
@@ -33,6 +34,13 @@ import { useWebAPIStore } from '@/stores/webapi'
 import { logger } from '@/utils/logger'
 import { debounce } from '@/utils/debounce'
 
+export interface ConceptSetFilterState {
+  searchQuery: string
+  author: string
+  createdDateRange: DateRange
+  modifiedDateRange: DateRange
+}
+
 export const useConceptSetsStore = defineStore('concept-sets', () => {
   // ============================================================================
   // State
@@ -42,7 +50,20 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   const currentSet = ref<ConceptSet | null>(null)
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
-  const filterTerm = ref<string>('')
+  const filters = ref<ConceptSetFilterState>({
+    searchQuery: '',
+    author: '',
+    createdDateRange: {},
+    modifiedDateRange: {},
+  })
+
+  // Backward-compatible alias: existing callers/tests read & write filterTerm.
+  const filterTerm = computed<string>({
+    get: () => filters.value.searchQuery,
+    set: (v: string) => {
+      filters.value.searchQuery = v
+    },
+  })
   const editorOpen = ref<boolean>(false)
 
   // Version preview state (T017)
@@ -77,13 +98,65 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   // Getters
   // ============================================================================
 
+  function getUserString(userValue: unknown): string {
+    if (!userValue) return ''
+    if (typeof userValue === 'string') return userValue.toLowerCase()
+    if (typeof userValue === 'object' && userValue !== null) {
+      const u = userValue as Record<string, unknown>
+      return ((u.name || u.login || u.id || '') as string).toLowerCase()
+    }
+    return ''
+  }
+
+  function isDateInRange(date: number | string | undefined, range: DateRange): boolean {
+    if (!date) return !range.from && !range.to
+    const d = new Date(date)
+    if (range.from && d < range.from) return false
+    if (range.to && d > range.to) return false
+    return true
+  }
+
+  const availableAuthors = computed(() => {
+    const authorSet = new Set<string>()
+    for (const set of conceptSets.value) {
+      const author = getUserString(set.createdBy)
+      if (author) authorSet.add(author)
+    }
+    return Array.from(authorSet).sort()
+  })
+
+  const activeFilterCount = computed(() => {
+    let count = 0
+    if (filters.value.searchQuery) count++
+    if (filters.value.author) count++
+    if (filters.value.createdDateRange.from || filters.value.createdDateRange.to) count++
+    if (filters.value.modifiedDateRange.from || filters.value.modifiedDateRange.to) count++
+    return count
+  })
+
   const filteredSets = computed(() => {
-    if (!filterTerm.value) {
+    const query = filters.value.searchQuery.toLowerCase().trim()
+    const hasSearch = query.length > 0
+    const hasAuthor = filters.value.author.length > 0
+    const authorQuery = hasAuthor ? filters.value.author.toLowerCase() : ''
+    const hasCreated = !!(
+      filters.value.createdDateRange.from || filters.value.createdDateRange.to
+    )
+    const hasModified = !!(
+      filters.value.modifiedDateRange.from || filters.value.modifiedDateRange.to
+    )
+
+    if (!hasSearch && !hasAuthor && !hasCreated && !hasModified) {
       return conceptSets.value
     }
 
-    const term = filterTerm.value.toLowerCase()
-    return conceptSets.value.filter(set => set.name.toLowerCase().includes(term))
+    return conceptSets.value.filter(set => {
+      if (hasSearch && !set.name.toLowerCase().includes(query)) return false
+      if (hasAuthor && !getUserString(set.createdBy).includes(authorQuery)) return false
+      if (hasCreated && !isDateInRange(set.createdDate, filters.value.createdDateRange)) return false
+      if (hasModified && !isDateInRange(set.modifiedDate, filters.value.modifiedDateRange)) return false
+      return true
+    })
   })
 
   const isEmpty = computed(() => conceptSets.value.length === 0)
@@ -229,6 +302,19 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   const setFilter = debounce((term: string) => {
     filterTerm.value = term
   }, 300)
+
+  function setFilters(next: ConceptSetFilterState) {
+    filters.value = { ...next }
+  }
+
+  function clearFilters() {
+    filters.value = {
+      searchQuery: '',
+      author: '',
+      createdDateRange: {},
+      modifiedDateRange: {},
+    }
+  }
 
   /**
    * Open editor for creating new concept set
@@ -731,6 +817,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     loading,
     error,
     filterTerm,
+    filters,
+    availableAuthors,
+    activeFilterCount,
     editorOpen,
     previewVersion,
     isDirty,
@@ -754,6 +843,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     update,
     remove,
     setFilter,
+    setFilters,
+    clearFilters,
     openCreateEditor,
     openEditEditor,
     closeEditor,
