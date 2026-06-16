@@ -10,11 +10,22 @@ import { setActivePinia, createPinia } from 'pinia'
 import ConceptSearch from '@/components/concepts/ConceptSearch.vue'
 import ConceptTable from '@/components/concepts/ConceptTable.vue'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import { AtlasSnackbar } from '@/components/ui'
 import type { Concept } from '@/models/concept-set.types'
 
 vi.mock('@/composables/useI18n', () => ({
   useI18n: () => ({
-    t: (key: string, fallback: string) => ({ value: fallback ?? key }),
+    // Mirror the real composable: interpolate {param} placeholders from the
+    // params object so tests exercise the actual formatted output.
+    t: (key: string, fallback: string, params?: Record<string, unknown>) => {
+      let text = fallback ?? key
+      if (params) {
+        for (const [k, v] of Object.entries(params)) {
+          text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
+        }
+      }
+      return { value: text }
+    },
     tv: (key: string) => key,
   }),
 }))
@@ -103,5 +114,13 @@ describe('ConceptSearch — add to concept set', () => {
     expect(sets.currentSet?.items).toHaveLength(1)
     await table.vm.$emit('remove-concept', concept)
     expect(sets.currentSet?.items).toHaveLength(0)
+  })
+
+  it('shows a confirmation snackbar naming the added concept', async () => {
+    const wrapper = mountSearch()
+    await wrapper.findComponent(ConceptTable).vm.$emit('add-concept', concept)
+    const snackbar = wrapper.findComponent(AtlasSnackbar)
+    expect(snackbar.props('modelValue')).toBe(true)
+    expect(snackbar.props('text')).toContain('Atrial fibrillation')
   })
 })

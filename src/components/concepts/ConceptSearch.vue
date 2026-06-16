@@ -60,12 +60,18 @@
       @add-concept="onAddConcept"
       @remove-concept="onRemoveConcept"
     />
+
+    <AtlasSnackbar
+      v-model="feedback.open"
+      severity="success"
+      :text="feedback.text"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { AtlasAlert, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
 import { useConceptSetsStore } from '@/stores/concept-sets'
@@ -100,6 +106,7 @@ const conceptsInSet = computed(() => {
 // ============================================================================
 
 const searchInput = ref<string>('')
+const feedback = ref<{ open: boolean; text: string }>({ open: false, text: '' })
 
 // ============================================================================
 // Computed
@@ -159,6 +166,17 @@ function onAddConcept(concept: Concept) {
     conceptSetsStore.openCreateEditor()
   }
   conceptSetsStore.addConceptToSet(concept)
+
+  const setName =
+    conceptSetsStore.currentSet?.name ||
+    t('components.conceptSetBuilder.newConceptSet', 'New concept set').value
+  feedback.value = {
+    open: true,
+    text: t('search.addedToSet', 'Added “{concept}” → {set}', {
+      concept: concept.conceptName,
+      set: setName,
+    }).value,
+  }
 }
 
 function onRemoveConcept(concept: Concept) {

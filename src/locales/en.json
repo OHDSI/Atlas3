@@ -2084,6 +2084,7 @@
     }
   },
   "search": {
+    "addedToSet": "Added “{concept}” → {set}",
     "advancedOptions": "Advanced Options",
     "buttonTitle": "Search",
     "classification": "Classification",
