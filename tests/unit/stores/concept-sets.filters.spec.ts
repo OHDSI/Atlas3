@@ -72,6 +72,49 @@ describe('concept-sets store filters', () => {
     expect(store.filteredSets.map(s => s.id).sort()).toEqual([2, 3])
   })
 
+  it('filters by modified date range', () => {
+    const store = useConceptSetsStore()
+    store.conceptSets = [...sets]
+    // Oldest modifiedDate is set 2 (now - day*2). A `from` of now - day*1.5
+    // excludes set 2 while keeping set 1 (now - day) and set 3 (now).
+    store.setFilters({
+      searchQuery: '', author: '',
+      createdDateRange: {},
+      modifiedDateRange: { from: new Date(Date.now() - day * 1.5) },
+    })
+    expect(store.filteredSets.map(s => s.id).sort()).toEqual([1, 3])
+    expect(store.activeFilterCount).toBe(1)
+  })
+
+  it('filters by created date range with ISO-string createdDate', () => {
+    const store = useConceptSetsStore()
+    const isoSet: ConceptSetListItem = {
+      id: 4,
+      name: 'Asthma',
+      createdBy: 'carol',
+      createdDate: new Date(Date.now() - day * 3).toISOString(),
+      modifiedDate: Date.now(),
+    }
+    store.conceptSets = [...sets, isoSet]
+    // Range from now - day*4 includes the ISO-dated set (now - day*3) and
+    // set 3 (now - day*5 is excluded; set 3 is now - day*5 -> excluded).
+    store.setFilters({
+      searchQuery: '', author: '',
+      createdDateRange: { from: new Date(Date.now() - day * 4) },
+      modifiedDateRange: {},
+    })
+    expect(store.filteredSets.map(s => s.id)).toContain(4)
+
+    // A narrower range that ends before the ISO set's date excludes it,
+    // confirming `new Date(isoString)` is compared correctly.
+    store.setFilters({
+      searchQuery: '', author: '',
+      createdDateRange: { to: new Date(Date.now() - day * 4) },
+      modifiedDateRange: {},
+    })
+    expect(store.filteredSets.map(s => s.id)).not.toContain(4)
+  })
+
   it('clearFilters resets everything', () => {
     const store = useConceptSetsStore()
     store.conceptSets = [...sets]
