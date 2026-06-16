@@ -126,28 +126,28 @@ describe('ConceptSetList', () => {
     expect(dataTable.props('loading')).toBe(true)
   })
 
-  it('should update filter term when search input changes', async () => {
-    const wrapper = mountComponent()
+  it('renders ConceptSetFilters and forwards update:filters to the store', async () => {
     const store = useConceptSetsStore()
-    const setFilterSpy = vi.spyOn(store, 'setFilter')
+    store.conceptSets = mockConceptSets
+    const setFiltersSpy = vi.spyOn(store, 'setFilters')
 
-    const textField = wrapper.findComponent({ name: 'VTextField' })
-    await textField.vm.$emit('update:modelValue', 'diabetes')
-    await wrapper.vm.$nextTick()
-
-    expect(setFilterSpy).toHaveBeenCalledWith('diabetes')
-  })
-
-  it('should clear filter when clear button is clicked', async () => {
     const wrapper = mountComponent()
-    const store = useConceptSetsStore()
-    const setFilterSpy = vi.spyOn(store, 'setFilter')
+    const filters = wrapper.findComponent({ name: 'ConceptSetFilters' })
+    expect(filters.exists()).toBe(true)
 
-    const textField = wrapper.findComponent({ name: 'VTextField' })
-    await textField.vm.$emit('click:clear')
+    filters.vm.$emit('update:filters', {
+      searchQuery: 'diabetes',
+      author: '',
+      createdDateRange: {},
+      modifiedDateRange: {},
+    })
     await wrapper.vm.$nextTick()
-
-    expect(setFilterSpy).toHaveBeenCalledWith('')
+    expect(setFiltersSpy).toHaveBeenCalledWith({
+      searchQuery: 'diabetes',
+      author: '',
+      createdDateRange: {},
+      modifiedDateRange: {},
+    })
   })
 
   it('should open create editor when add button is clicked', async () => {
