@@ -36,7 +36,7 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
 
   // A new facet selection can push the current page out of range.
   watch(
-    () => facets.selected.value,
+    facets.selected,
     () => {
       page.value = 1
     },
@@ -82,6 +82,10 @@ export const useConceptSearchStore = defineStore('concept-search', () => {
     return sorted.slice(start, end)
   })
 
+  // `isEmpty` reflects whether the search returned ANY results (`allConcepts`),
+  // not whether facets currently match anything. When facets filter every row out,
+  // `isEmpty` stays `false` (keeping the facet bar visible so the user can clear
+  // filters) while `totalCount`/`pageRangeText` report the filtered count of 0.
   const isEmpty = computed(() => allConcepts.value.length === 0)
 
   const pageRangeText = computed(() => {

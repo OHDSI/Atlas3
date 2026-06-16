@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { nextTick } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 import type { Concept } from '@/models/concept-set.types'
 
@@ -52,8 +53,17 @@ describe('concept-search store facets', () => {
     store.allConcepts = [...data]
     store.page = 3
     store.setFacet('vocabularyId', ['SNOMED'])
-    await Promise.resolve()
+    await nextTick()
     expect(store.page).toBe(1)
+  })
+
+  it('reports zero matches without becoming empty', () => {
+    const store = useConceptSearchStore()
+    store.allConcepts = [...data]
+    store.setFacet('vocabularyId', ['NOPE'])
+    expect(store.totalCount).toBe(0)
+    expect(store.concepts).toHaveLength(0)
+    expect(store.isEmpty).toBe(false)
   })
 
   it('clearFacets restores the full set', () => {
