@@ -126,9 +126,9 @@ const menuOpen = ref(false)
 const labelKeys: Record<FacetKey, [string, string]> = {
   vocabularyId: ['columns.vocabulary', 'Vocabulary'],
   domainId: ['columns.domain', 'Domain'],
-  standardConcept: ['columns.type', 'Type'],
+  standardConcept: ['columns.standard', 'Standard'],
   conceptClassId: ['columns.class', 'Class'],
-  invalidReason: ['columns.validEndDate', 'Validity'],
+  invalidReason: ['columns.validity', 'Validity'],
 }
 
 function facetLabel(key: FacetKey): string {
