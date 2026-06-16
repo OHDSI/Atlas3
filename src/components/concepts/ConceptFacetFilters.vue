@@ -49,7 +49,7 @@
               v-for="facet in facets"
               :key="facet.key"
               :model-value="selected[facet.key]"
-              :items="facetOptions[facet.key]"
+              :items="itemsFor(facet.key)"
               item-title="label"
               item-value="value"
               :label="facetLabel(facet.key)"
@@ -126,14 +126,26 @@ const menuOpen = ref(false)
 const labelKeys: Record<FacetKey, [string, string]> = {
   vocabularyId: ['columns.vocabulary', 'Vocabulary'],
   domainId: ['columns.domain', 'Domain'],
-  standardConcept: ['columns.type', 'Standard'],
+  standardConcept: ['columns.type', 'Type'],
   conceptClassId: ['columns.class', 'Class'],
-  invalidReason: ['columns.validity', 'Validity'],
+  invalidReason: ['columns.validEndDate', 'Validity'],
 }
 
 function facetLabel(key: FacetKey): string {
   const [k, fallback] = labelKeys[key]
   return t(k, fallback).value
+}
+
+// Facet counts are cross-facet, so a still-selected value can drop out of
+// facetOptions[key] (count 0). Re-add such values so their menu chips keep
+// a resolvable title.
+function itemsFor(key: FacetKey) {
+  const options = props.facetOptions[key]
+  const present = new Set(options.map(o => o.value))
+  const missing = props.selected[key]
+    .filter(v => !present.has(v))
+    .map(v => ({ value: v, label: v, count: 0 }))
+  return [...options, ...missing]
 }
 
 function onUpdate(key: FacetKey, values: string[]) {

@@ -60,6 +60,20 @@ describe('ConceptFacetFilters', () => {
     expect(wrapper.text()).toContain('SNOMED')
   })
 
+  it('emits update:facet with the value removed when an active chip is closed', async () => {
+    const selected = { ...emptySelected, vocabularyId: ['SNOMED'] }
+    const wrapper = mountComponent({ selected, activeFilterCount: 1 })
+    const active = wrapper.find('.concept-facet-filters__active')
+    expect(active.exists()).toBe(true)
+
+    const chip = active.find('.v-chip')
+    await chip.find('.v-chip__close').trigger('click')
+
+    const events = wrapper.emitted('update:facet')
+    expect(events).toBeTruthy()
+    expect(events![events!.length - 1][0]).toEqual({ key: 'vocabularyId', values: [] })
+  })
+
   it('emits clear when Clear all is clicked', async () => {
     const wrapper = mountComponent({ activeFilterCount: 1 })
     const clearBtn = wrapper
