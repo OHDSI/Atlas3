@@ -150,7 +150,7 @@ const emptyMessage = computed(() => {
   if (store.includedItems.length === 0) {
     return t(
       'cs.manager.sourceCodesEmptyNoIncluded',
-      'No source codes — add concepts to see their mapped source codes here.',
+      'Add concepts to see their mapped source codes here.',
     ).value
   }
   return t(

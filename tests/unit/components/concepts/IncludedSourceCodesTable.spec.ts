@@ -58,7 +58,7 @@ describe('IncludedSourceCodesTable', () => {
     const store = useConceptSetsStore()
     store.sourceCodeItems = []
     const wrapper = makeWrapper()
-    expect(wrapper.text()).toContain('No source codes')
+    expect(wrapper.text()).toContain('Add concepts')
   })
 
   it('triggers resolveSourceCodes when activated', async () => {
