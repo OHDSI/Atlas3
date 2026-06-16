@@ -126,8 +126,14 @@ describe('ConceptSetFilters', () => {
     await wrapper.vm.$nextTick()
     await wrapper.vm.$nextTick()
 
-    // The close handler clears localFilters.createdDateRange.from, so the active
-    // row (and its chip) is removed from the DOM.
+    // The close handler clears localFilters.createdDateRange.from, which must
+    // emit update:filters with the date cleared (not mutate the prop in place).
+    const events = wrapper.emitted('update:filters')
+    expect(events).toBeTruthy()
+    const last = events![events!.length - 1][0] as ConceptSetFilterState
+    expect(last.createdDateRange.from).toBeUndefined()
+
+    // The active row (and its chip) is also removed from the DOM.
     expect(wrapper.find('.concept-set-filters__active').exists()).toBe(false)
   })
 })

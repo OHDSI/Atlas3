@@ -263,7 +263,11 @@ const modifiedToLabel = t('common.modifiedTo', 'Modified to')
 const clearAllLabel = t('search.clearAllSelections', 'Clear all')
 
 const filtersMenuOpen = ref(false)
-const localFilters = ref<ConceptSetFilterState>({ ...props.filters })
+const localFilters = ref<ConceptSetFilterState>({
+  ...props.filters,
+  createdDateRange: { ...props.filters.createdDateRange },
+  modifiedDateRange: { ...props.filters.modifiedDateRange },
+})
 
 const showCreatedFromPicker = ref(false)
 const showCreatedToPicker = ref(false)
@@ -290,7 +294,11 @@ watch(
   () => props.filters,
   async newFilters => {
     isInternalUpdate = true
-    localFilters.value = { ...newFilters }
+    localFilters.value = {
+      ...newFilters,
+      createdDateRange: { ...newFilters.createdDateRange },
+      modifiedDateRange: { ...newFilters.modifiedDateRange },
+    }
     createdFromDate.value = newFilters.createdDateRange.from
     createdToDate.value = newFilters.createdDateRange.to
     modifiedFromDate.value = newFilters.modifiedDateRange.from
