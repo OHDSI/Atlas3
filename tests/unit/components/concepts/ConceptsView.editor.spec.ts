@@ -2,7 +2,7 @@
  * ConceptsView — page-level concept set editor
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
@@ -66,5 +66,39 @@ describe('ConceptsView — page-level editor', () => {
     sets.openCreateEditor()
     await nextTick()
     expect(wrapper.findComponent(ConceptSetEditor).exists()).toBe(true)
+  })
+
+  it('closes the editor when it emits update:modelValue(false)', async () => {
+    const wrapper = mountView()
+    const sets = useConceptSetsStore()
+    sets.openCreateEditor()
+    await nextTick()
+
+    await wrapper.findComponent(ConceptSetEditor).vm.$emit('update:modelValue', false)
+    expect(sets.editorOpen).toBe(false)
+  })
+
+  it('refreshes the list when the editor emits save', async () => {
+    const wrapper = mountView()
+    const sets = useConceptSetsStore()
+    const fetchAll = vi.spyOn(sets, 'fetchAll').mockResolvedValue(undefined)
+    sets.openCreateEditor()
+    await nextTick()
+
+    await wrapper.findComponent(ConceptSetEditor).vm.$emit('save')
+    expect(fetchAll).toHaveBeenCalledOnce()
+  })
+
+  it('removes the set and closes the editor when the editor emits delete', async () => {
+    const wrapper = mountView()
+    const sets = useConceptSetsStore()
+    const remove = vi.spyOn(sets, 'remove').mockResolvedValue(true)
+    sets.openCreateEditor()
+    await nextTick()
+
+    await wrapper.findComponent(ConceptSetEditor).vm.$emit('delete', 42)
+    expect(remove).toHaveBeenCalledWith(42)
+    await flushPromises()
+    expect(sets.editorOpen).toBe(false)
   })
 })
