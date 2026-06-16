@@ -43,15 +43,18 @@ vi.mock('@/composables/useI18n', () => ({
 const mockCloseEditor = vi.fn()
 const mockFetchAll = vi.fn()
 
+const mockRemove = vi.fn()
+
 vi.mock('@/stores/concept-sets', () => ({
   useConceptSetsStore: () => ({
     closeEditor: mockCloseEditor,
     fetchAll: mockFetchAll,
-    conceptSets: ref([]),
-    currentSet: ref(null),
-    loading: ref(false),
-    error: ref(null),
-    editorOpen: ref(false),
+    remove: mockRemove,
+    conceptSets: [],
+    currentSet: null,
+    loading: false,
+    error: null,
+    editorOpen: false,
   }),
 }))
 
@@ -79,6 +82,7 @@ function mountComponent(options = {}) {
       stubs: {
         ConceptSearch: true,
         ConceptSetList: true,
+        ConceptSetEditor: true,
       },
     },
     ...options,
@@ -196,13 +200,15 @@ describe('ConceptsView', () => {
       expect(mockReplace).toHaveBeenCalledWith({ query: { tab: 'search' } })
     })
 
-    it('should close editor when switching tabs', async () => {
+    it('should keep the editor open when switching tabs', async () => {
+      // The editor is now a page-level drawer shared by both tabs, so it must
+      // persist across tab switches (it no longer closes on navigation).
       const wrapper = mountComponent()
 
       wrapper.vm.activeTab = 'search'
       await flushPromises()
 
-      expect(mockCloseEditor).toHaveBeenCalled()
+      expect(mockCloseEditor).not.toHaveBeenCalled()
     })
 
     it('should preserve other query parameters when switching tabs', async () => {
@@ -230,9 +236,10 @@ describe('ConceptsView', () => {
       wrapper.vm.activeTab = 'sets'
       await flushPromises()
 
-      // Should have called push for each change
+      // Should have called replace for each change
       expect(mockReplace).toHaveBeenCalledTimes(3)
-      expect(mockCloseEditor).toHaveBeenCalledTimes(3)
+      // The page-level editor persists across tab switches.
+      expect(mockCloseEditor).not.toHaveBeenCalled()
     })
   })
 
@@ -339,16 +346,16 @@ describe('ConceptsView', () => {
   })
 
   describe('Store Integration', () => {
-    it('should interact with concept sets store on tab change', async () => {
+    it('should update the URL via the router on tab change', async () => {
       const wrapper = mountComponent()
 
       wrapper.vm.activeTab = 'search'
       await flushPromises()
 
-      expect(mockCloseEditor).toHaveBeenCalled()
+      expect(mockReplace).toHaveBeenCalledWith({ query: { tab: 'search' } })
     })
 
-    it('should call closeEditor when switching from sets to search', async () => {
+    it('should not close the editor when switching from sets to search', async () => {
       mockQuery.value = { tab: 'sets' }
       const wrapper = mountComponent()
       vi.clearAllMocks()
@@ -356,7 +363,7 @@ describe('ConceptsView', () => {
       wrapper.vm.activeTab = 'search'
       await flushPromises()
 
-      expect(mockCloseEditor).toHaveBeenCalled()
+      expect(mockCloseEditor).not.toHaveBeenCalled()
     })
   })
 

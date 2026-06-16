@@ -134,49 +134,6 @@
         {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set') }}
       </AtlasButton>
     </div>
-
-    <!-- Delete Confirmation Dialog -->
-    <AtlasDialog
-      v-model="deleteDialog"
-      eyebrow="CONFIRM"
-      :title="`${t('common.delete', 'Delete').value} ${t('common.conceptSet', 'Concept Set').value}`"
-      max-width="500"
-      @close="deleteDialog = false"
-    >
-      {{
-        t('reusables.manager.messages.deleteConfirmation', 'Are you sure you want to delete')
-      }}
-      "{{ deleteTarget?.name }}"?
-      <template #actions>
-        <AtlasButton
-          variant="ghost"
-          @click="deleteDialog = false"
-        >
-          {{ t('common.cancel', 'Cancel') }}
-        </AtlasButton>
-        <AtlasButton
-          variant="danger"
-          :loading="store.loading"
-          @click="confirmDelete"
-        >
-          {{ t('common.delete', 'Delete') }}
-        </AtlasButton>
-      </template>
-    </AtlasDialog>
-
-    <!-- Concept Set Editor (Side Panel) -->
-    <ConceptSetEditor
-      v-if="store.editorOpen"
-      :model-value="store.editorOpen"
-      :concept-set="store.currentSet"
-      @update:model-value="
-        value => {
-          if (!value) store.closeEditor()
-        }
-      "
-      @save="onSave"
-      @delete="onDeleteClick"
-    />
   </div>
 </template>
 
@@ -188,9 +145,8 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import ConceptSetEditor from './ConceptSetEditor.vue'
 import ConceptSetFilters from './ConceptSetFilters.vue'
-import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
 
 const { t } = useI18n()
 const { hasPermission } = usePermissions()
@@ -208,8 +164,6 @@ const store = useConceptSetsStore()
 // ============================================================================
 
 const itemsPerPage = ref(25)
-const deleteDialog = ref(false)
-const deleteTarget = ref<ConceptSetListItem | null>(null)
 const sortBy = ref([{ key: 'modifiedDate', order: 'desc' as const }])
 
 const countLabel = computed(() => {
@@ -276,28 +230,6 @@ function onRowClick(_event: Event, payload: { item: ConceptSetListItem }) {
   if (payload?.item?.id !== undefined) {
     store.openEditEditor(payload.item.id)
   }
-}
-
-function onDeleteClick(id: number | string) {
-  const item = store.filteredSets.find(s => s.id === id)
-  deleteTarget.value = item || null
-  deleteDialog.value = true
-}
-
-async function confirmDelete() {
-  if (!deleteTarget.value) return
-
-  const success = await store.remove(deleteTarget.value.id)
-
-  if (success) {
-    deleteDialog.value = false
-    deleteTarget.value = null
-  }
-}
-
-async function onSave() {
-  // Refresh the list after save
-  await store.fetchAll()
 }
 </script>
 

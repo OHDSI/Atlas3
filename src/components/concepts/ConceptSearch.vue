@@ -64,21 +64,33 @@
       :items-per-page="store.itemsPerPage"
       :linkable="true"
       :source-key="selectedSourceKey"
+      :show-add-button="true"
+      :concepts-in-set="conceptsInSet"
       @update:page="onPageChange"
       @update:items-per-page="onItemsPerPageChange"
+      @add-concept="onAddConcept"
+      @remove-concept="onRemoveConcept"
+    />
+
+    <AtlasSnackbar
+      v-model="feedback.open"
+      severity="success"
+      :text="feedback.text"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { AtlasAlert, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSearchStore } from '@/stores/concept-search'
+import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import { getSourceKey } from '@/config/webapi'
 import ConceptTable from './ConceptTable.vue'
 import ConceptFacetFilters from './ConceptFacetFilters.vue'
+import type { Concept } from '@/models/concept-set.types'
 
 const { t } = useI18n()
 
@@ -87,16 +99,26 @@ const { t } = useI18n()
 // ============================================================================
 
 const store = useConceptSearchStore()
+const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
 const selectedSourceKey = computed(
   () => webapiStore.getValidVocabularySource() || getSourceKey() || '',
 )
+
+// Concepts already present in the current (in-progress) set — drives the
+// Add/Remove toggle in ConceptTable.
+const conceptsInSet = computed(() => {
+  const ids = new Set<number>()
+  conceptSetsStore.currentSet?.items.forEach(item => ids.add(item.conceptId))
+  return ids
+})
 
 // ============================================================================
 // Local State
 // ============================================================================
 
 const searchInput = ref<string>('')
+const feedback = ref<{ open: boolean; text: string }>({ open: false, text: '' })
 
 // ============================================================================
 // Computed
@@ -148,6 +170,29 @@ function onPageChange(page: number) {
 
 function onItemsPerPageChange(itemsPerPage: number) {
   store.updatePagination(1, itemsPerPage)
+}
+
+function onAddConcept(concept: Concept) {
+  // First add with no set open: create an untitled set and open the editor.
+  if (!conceptSetsStore.currentSet) {
+    conceptSetsStore.openCreateEditor()
+  }
+  conceptSetsStore.addConceptToSet(concept)
+
+  const setName =
+    conceptSetsStore.currentSet?.name ||
+    t('components.conceptSetBuilder.newConceptSet', 'New concept set').value
+  feedback.value = {
+    open: true,
+    text: t('search.addedToSet', 'Added “{concept}” → {set}', {
+      concept: concept.conceptName,
+      set: setName,
+    }).value,
+  }
+}
+
+function onRemoveConcept(concept: Concept) {
+  conceptSetsStore.removeConceptFromSet(concept.conceptId)
 }
 </script>
 

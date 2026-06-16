@@ -20,6 +20,7 @@ vi.mock('@/services/concept-search.service', () => ({
   getRecommendedConcepts: vi.fn(),
   getConceptRecordCounts: vi.fn(),
   compareConceptSets: vi.fn(),
+  getMappedSourceCodes: vi.fn(),
 }))
 
 vi.mock('@/utils/api-mappers', () => ({
@@ -78,6 +79,7 @@ import {
   getRecommendedConcepts,
   getConceptRecordCounts,
   compareConceptSets,
+  getMappedSourceCodes,
 } from '@/services/concept-search.service'
 import type { ComparisonResultItem } from '@/models/concept-set.types'
 
@@ -1008,6 +1010,76 @@ describe('Concept Sets Store', () => {
       await inFlight
 
       expect(store.loadingComparison).toBe(false)
+    })
+  })
+
+  describe('resolveSourceCodes', () => {
+    const mappedConcept = (id: number): Concept => ({
+      conceptId: id,
+      conceptName: `Source ${id}`,
+      conceptCode: `${id}`,
+      domainId: 'Condition',
+      vocabularyId: 'ICD10CM',
+      conceptClassId: 'ICD10 code',
+      standardConcept: null,
+      invalidReason: null,
+    })
+
+    it('resolves mapped source codes from the included concept ids', async () => {
+      const store = useConceptSetsStore()
+      store.includedItems = [
+        { ...mappedConcept(1), conceptId: 201826 },
+        { ...mappedConcept(1), conceptId: 443238 },
+      ]
+      vi.mocked(getMappedSourceCodes).mockResolvedValue([mappedConcept(45542738)])
+
+      await store.resolveSourceCodes('SYNPUF1K')
+
+      expect(getMappedSourceCodes).toHaveBeenCalledWith(
+        'SYNPUF1K',
+        [201826, 443238],
+        expect.any(AbortSignal),
+      )
+      expect(store.sourceCodeItems).toHaveLength(1)
+      expect(store.sourceCodeItems[0].conceptId).toBe(45542738)
+      expect(store.sourceCodeLoading).toBe(false)
+      expect(store.sourceCodeError).toBeNull()
+    })
+
+    it('clears items and does not call the service when nothing is included', async () => {
+      const store = useConceptSetsStore()
+      store.includedItems = []
+      store.sourceCodeItems = [mappedConcept(1)]
+
+      await store.resolveSourceCodes('SYNPUF1K')
+
+      expect(getMappedSourceCodes).not.toHaveBeenCalled()
+      expect(store.sourceCodeItems).toEqual([])
+    })
+
+    it('records an error message when the service rejects', async () => {
+      const store = useConceptSetsStore()
+      store.includedItems = [{ ...mappedConcept(1), conceptId: 201826 }]
+      vi.mocked(getMappedSourceCodes).mockRejectedValue(new Error('boom'))
+
+      await store.resolveSourceCodes('SYNPUF1K')
+
+      expect(store.sourceCodeError).toBe('boom')
+      expect(store.sourceCodeLoading).toBe(false)
+    })
+
+    it('resetSourceCodes clears all state', () => {
+      const store = useConceptSetsStore()
+      store.sourceCodeItems = [mappedConcept(1)]
+      store.sourceCodeError = 'x'
+      store.sourceCodeFetchedAt = 123
+
+      store.resetSourceCodes()
+
+      expect(store.sourceCodeItems).toEqual([])
+      expect(store.sourceCodeError).toBeNull()
+      expect(store.sourceCodeFetchedAt).toBeNull()
+      expect(store.sourceCodeLoading).toBe(false)
     })
   })
 

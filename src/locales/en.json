@@ -2086,6 +2086,7 @@
     }
   },
   "search": {
+    "addedToSet": "Added “{concept}” → {set}",
     "advancedOptions": "Advanced Options",
     "buttonTitle": "Search",
     "classification": "Classification",
@@ -2196,6 +2197,8 @@
       "fullyOptimizedMessage": "The current concept set definition is fully optimized.",
       "includedEmptyNoManual": "Add concepts on the Selected tab to see them here.",
       "includedEmptyNoResolve": "No concepts resolved from this expression.",
+      "sourceCodesEmpty": "No source codes map to the included concepts.",
+      "sourceCodesEmptyNoIncluded": "Add concepts to see their mapped source codes here.",
       "pasteIds": "Paste IDs",
       "pasteIdsTitle": "Paste concept IDs",
       "pasteIdsHint": "Separate IDs with spaces, commas, semicolons, or newlines. We resolve each ID against the vocabulary before adding.",
@@ -2227,6 +2230,7 @@
         "included": "Included",
         "includedConcepts": "Included Concepts",
         "includedSourceCodes": "Included Source Codes",
+        "sourceCodes": "Source Codes",
         "selected": "Selected",
         "versions": "Versions",
         "messages": "Messages"
