@@ -74,7 +74,7 @@ export function useConceptFacets(concepts: Ref<Concept[]>) {
   const filteredConcepts = computed(() => concepts.value.filter(c => matchesExcept(c, null)))
 
   const facetOptions = computed<Record<FacetKey, FacetOption[]>>(() => {
-    const result = emptySelection() as unknown as Record<FacetKey, FacetOption[]>
+    const result = {} as Record<FacetKey, FacetOption[]>
     for (const facet of CONCEPT_FACETS) {
       const counts = new Map<string, number>()
       for (const c of concepts.value) {

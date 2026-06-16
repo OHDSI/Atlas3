@@ -83,6 +83,17 @@ describe('useConceptFacets', () => {
     expect(facetOptions.value.vocabularyId.map(o => o.value)).toEqual(['RxNorm', 'SNOMED'])
   })
 
+  it('handles an empty concept list', () => {
+    const { filteredConcepts, activeFilterCount, facetOptions } = useConceptFacets(ref([]))
+    expect(filteredConcepts.value).toEqual([])
+    expect(activeFilterCount.value).toBe(0)
+    expect(facetOptions.value.vocabularyId).toEqual([])
+    expect(facetOptions.value.domainId).toEqual([])
+    expect(facetOptions.value.standardConcept).toEqual([])
+    expect(facetOptions.value.conceptClassId).toEqual([])
+    expect(facetOptions.value.invalidReason).toEqual([])
+  })
+
   it('clearFilters resets all selections', () => {
     const { setFacet, clearFilters, activeFilterCount, filteredConcepts } = useConceptFacets(ref(data))
     setFacet('vocabularyId', ['SNOMED'])
