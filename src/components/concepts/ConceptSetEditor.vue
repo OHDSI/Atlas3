@@ -140,6 +140,20 @@
                 {{ store.includedLoading ? '…' : store.includedItems.length }}
               </AtlasChip>
             </AtlasTab>
+            <AtlasTab value="source-codes">
+              <AtlasIcon
+                start
+                icon="mdi-barcode-scan"
+              />
+              {{ t('cs.manager.tabs.sourceCodes', 'Source Codes') }}
+              <AtlasChip
+                size="sm"
+                tone="primary"
+                class="cs-editor__tab-count"
+              >
+                {{ store.sourceCodeLoading ? '…' : store.sourceCodeItems.length }}
+              </AtlasChip>
+            </AtlasTab>
             <AtlasTab value="search">
               <AtlasIcon
                 start
@@ -240,6 +254,15 @@
                 :source-key="sourceKey"
                 @view-concept="onViewConcept"
                 @retry="store.resolveIncluded(sourceKey)"
+              />
+            </v-window-item>
+
+            <!-- Source Codes Tab -->
+            <v-window-item value="source-codes">
+              <IncludedSourceCodesTable
+                :active="activeTab === 'source-codes'"
+                :source-key="sourceKey"
+                @view-concept="onViewConcept"
               />
             </v-window-item>
 
@@ -600,6 +623,7 @@ import type { VersionsConfig, VersionsTableItem, User } from '@/components/versi
 import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
 import IncludedConceptsTable from './IncludedConceptsTable.vue'
+import IncludedSourceCodesTable from './IncludedSourceCodesTable.vue'
 import RecommendTab from './RecommendTab.vue'
 import CompareTab from './CompareTab.vue'
 import ConceptDetailContent from './detail/ConceptDetailContent.vue'

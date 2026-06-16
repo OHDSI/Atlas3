@@ -54,6 +54,7 @@ import {
   searchConcepts,
   getConceptById,
   getConceptsByIds,
+  getMappedSourceCodes,
   getConceptsBySourceCodes,
   getConceptRecordCounts,
   getRecommendedConcepts,
@@ -326,6 +327,82 @@ describe('ConceptSearchService', () => {
       })
       const ctrl = new AbortController()
       await getConceptsByIds('SYNPUF1K', [1], ctrl.signal)
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ signal: ctrl.signal }),
+      )
+    })
+  })
+
+  describe('getMappedSourceCodes', () => {
+    const sourceConcept = (id: number, code: string, vocab: string) => ({
+      CONCEPT_ID: id,
+      CONCEPT_NAME: `Source ${id}`,
+      DOMAIN_ID: 'Condition',
+      VOCABULARY_ID: vocab,
+      CONCEPT_CLASS_ID: 'ICD10 code',
+      STANDARD_CONCEPT: null,
+      CONCEPT_CODE: code,
+      INVALID_REASON: null,
+    })
+
+    it('POSTs the concept-id array to lookup/mapped and maps the response', async () => {
+      const apiResponse = [
+        sourceConcept(45542738, 'E11.9', 'ICD10CM'),
+        sourceConcept(44824073, '250.00', 'ICD9CM'),
+      ]
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify(apiResponse)),
+      })
+
+      const result = await getMappedSourceCodes('SYNPUF1K', [201826, 443238])
+
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/vocabulary/SYNPUF1K/lookup/mapped'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify([201826, 443238]),
+        }),
+      )
+      expect(result).toHaveLength(2)
+      expect(result[0]).toMatchObject({ conceptId: 45542738, vocabularyId: 'ICD10CM' })
+    })
+
+    it('returns [] without calling fetch for an empty id list', async () => {
+      const result = await getMappedSourceCodes('SYNPUF1K', [])
+      expect(result).toEqual([])
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('throws for an invalid sourceKey', async () => {
+      await expect(getMappedSourceCodes('', [1])).rejects.toThrow('Invalid vocabulary source')
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('throws and logs on a malformed response', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ not: 'an array' })),
+      })
+
+      await expect(getMappedSourceCodes('SYNPUF1K', [1])).rejects.toThrow(
+        'Invalid mapped source code lookup response format',
+      )
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('passes the AbortSignal through to fetch', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve('[]'),
+      })
+      const ctrl = new AbortController()
+      await getMappedSourceCodes('SYNPUF1K', [1], ctrl.signal)
       expect(mockFetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({ signal: ctrl.signal }),

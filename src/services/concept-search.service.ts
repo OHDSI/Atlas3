@@ -154,6 +154,39 @@ export async function getConceptsBySourceCodes(
   return parsed.data.map(mapConceptFromAPI)
 }
 
+/**
+ * Resolve the *source* codes that map to a set of standard concept IDs.
+ * Uses `POST /vocabulary/{sourceKey}/lookup/mapped` with a JSON array of concept
+ * identifiers — the resolved/included standard concept IDs. Returns the mapped
+ * source Concept records (non-standard codes such as ICD10CM, ICD9CM, source
+ * SNOMED). Mirrors getConceptsByIds, which uses lookup/identifiers.
+ */
+export async function getMappedSourceCodes(
+  sourceKey: string,
+  conceptIds: number[],
+  signal?: AbortSignal,
+): Promise<Concept[]> {
+  if (!sourceKey || sourceKey.trim() === '' || sourceKey === 'null' || sourceKey === 'undefined') {
+    throw new Error('Invalid vocabulary source. Please select a valid source in Configuration.')
+  }
+
+  if (conceptIds.length === 0) return []
+
+  const raw = await httpPost<unknown>(
+    `/vocabulary/${sourceKey}/lookup/mapped`,
+    conceptIds,
+    { signal },
+  )
+
+  const parsed = ConceptSearchResponseSchema.safeParse(raw)
+  if (!parsed.success) {
+    logger.error('ConceptSearch', 'lookup/mapped validation error', parsed.error)
+    throw new Error('Invalid mapped source code lookup response format')
+  }
+
+  return parsed.data.map(mapConceptFromAPI)
+}
+
 export async function getConceptRecordCounts(
   sourceKey: string,
   conceptIds: number[]
