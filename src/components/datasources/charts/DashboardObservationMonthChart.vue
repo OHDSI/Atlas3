@@ -1,6 +1,10 @@
 <template>
   <div class="dashboard-observation-month-chart">
-    <MultiLineChart :data="data" :loading="loading" :height="height" />
+    <MultiLineChart
+      :data="data"
+      :loading="loading"
+      :height="height"
+    />
   </div>
 </template>
 

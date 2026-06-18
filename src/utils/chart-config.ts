@@ -88,7 +88,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
       formatter: (params: unknown) => {
         const paramsArray = Array.isArray(params) ? params : [params]
         const param = paramsArray[0] as { name: string; seriesName: string; value: number }
-        const value = param.value.toLocaleString()
+        const value = formatSINumber(param.value)
         const unit = data.unit ? ` ${data.unit}` : ''
         return `${param.name}<br/>${param.seriesName}: <strong>${value}${unit}</strong>`
       },
@@ -136,7 +136,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
         fontSize: 12,
       },
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString(),
+        formatter: (value: number) => formatSINumber(value),
       },
     },
     series: [
@@ -248,9 +248,9 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
-        const paramsArray = Array.isArray(params) ? params : [params]
-        const param = paramsArray[0] as { name: string; seriesName: string; value: number }
-        const value = param.value.toLocaleString()
+      const paramsArray = Array.isArray(params) ? params : [params]
+      const param = paramsArray[0] as { name: string; seriesName: string; value: number }
+      const value = formatSINumber(param.value)
         return `${param.name}<br/>${param.seriesName}: <strong>${value}</strong>`
       },
     },
@@ -276,7 +276,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
     yAxis: {
       type: 'value',
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString(),
+        formatter: (value: number) => formatSINumber(value),
       },
     },
     series: [
@@ -363,7 +363,7 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
       itemWidth: 12,
       itemHeight: 140,
       inRange: { color: [...TREEMAP_GRADIENT] },
-      text: [dataMax.toLocaleString(), dataMin.toLocaleString()],
+      text: [formatSINumber(dataMax), formatSINumber(dataMin)],
       textStyle: {
         fontSize: 11,
         color: '#5e6470',
@@ -856,7 +856,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       formatter: (params: unknown) => {
         const paramsArray = Array.isArray(params) ? params : [params]
         const param = paramsArray[0] as { name: string; value: number }
-        const value = param.value.toLocaleString()
+        const value = formatSINumber(param.value)
         return `<strong>${param.name}</strong><br/>${data.yAxisLabel || 'Observations'}: ${value}`
       },
     },
@@ -886,7 +886,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       nameLocation: 'middle',
       nameGap: 50,
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString(),
+        formatter: (value: number) => formatSINumber(value),
       },
     },
     dataZoom: [
@@ -936,6 +936,18 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
       axisPointer: {
         type: 'cross',
       },
+      formatter: (params: unknown) => {
+        type TooltipParam = { name?: string; seriesName?: string; value?: number }
+        const paramsArray = (Array.isArray(params) ? params : [params]) as TooltipParam[]
+        if (paramsArray.length === 0) return ''
+        const name = paramsArray[0].name ?? ''
+        const lines = paramsArray.map(param => {
+          const series = param.seriesName || ''
+          const val = typeof param.value === 'number' ? formatSINumber(param.value) : String(param.value)
+          return `${series}: <strong>${val}</strong>`
+        })
+        return `<strong>${name}</strong><br/>${lines.join('<br/>')}`
+      },
     },
     legend: {
       data: data.series.map(s => s.name),
@@ -962,7 +974,7 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
     yAxis: {
       type: 'value',
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString(),
+        formatter: (value: number) => formatSINumber(value),
       },
     },
     series: data.series.map((s, index) => ({
@@ -1007,7 +1019,7 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
           value: number
           data: { prevalence?: number; metric?: number }
         }
-        const value = p.value.toLocaleString()
+        const value = formatSINumber(p.value)
         const name = p.name
         const prevalence = p.data.prevalence
         const metric = p.data.metric

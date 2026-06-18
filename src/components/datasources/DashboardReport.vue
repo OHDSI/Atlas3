@@ -74,8 +74,6 @@
         </ChartSection>
       </AtlasCol>
     </AtlasRow>
-
-    
   </div>
 </template>
 

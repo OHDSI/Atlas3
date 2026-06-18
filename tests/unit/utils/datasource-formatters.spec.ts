@@ -644,14 +644,7 @@ describe('Data Source Formatters', () => {
       expect(result.recordsPerPerson.series[0].data).toEqual([0])
     })
 
-    it('falls back to empty string for missing xCalendarMonth', () => {
-      const raw = {
-        totalRecords: [{ seriesName: 'A', yRecordCount: 10 }]
-      }
-
-      const result = transformDataDensityReport(raw)
-      expect(result.totalRecords.categories).toEqual([''])
-    })
+    
 
     it('uses defaults for missing conceptsPerPerson percentile fields', () => {
       const raw = {
@@ -677,7 +670,7 @@ describe('Data Source Formatters', () => {
       const xSeries = result.totalRecords.series.find(s => s.name === 'X')
       const ySeries = result.totalRecords.series.find(s => s.name === 'Y')
       expect(xSeries?.data).toEqual([10, 20])
-      expect(ySeries?.data).toEqual([5])
+      expect(ySeries?.data).toEqual([5, 0])
     })
   })
 

@@ -249,42 +249,54 @@ interface DataDensityRaw {
 export function transformDataDensityReport(
   raw: DataDensityRaw
 ): import('@/models/datasource.types').DataDensityReport {
-  // Prepare sorted arrays once so categories and series align
-  const sortedTotal = (raw.totalRecords || []).slice().sort((a, b) => (a.xCalendarMonth ?? 0) - (b.xCalendarMonth ?? 0))
-  const totalRecords: import('@/models/datasource.types').MultiLineChartData = {
-    categories: sortedTotal.map(item => item.xCalendarMonth?.toString() || ''),
-    series: [],
-  }
-
-  // Group totalRecords by series name (iterate sortedTotal so series data aligns with categories)
-  if (sortedTotal.length > 0) {
-    const groupedBySeriesName = new Map<string, number[]>()
-    sortedTotal.forEach(item => {
+  // Build union of months across all series for totalRecords so categories include every month
+  const totalRaw = raw.totalRecords || []
+    const totalMonthsSet = new Set<number>()
+    const totalSeriesNames = new Set<string>()
+    const totalLookup = new Map<string, number>()
+    totalRaw.forEach(item => {
+      const month = item.xCalendarMonth!
+      totalMonthsSet.add(month)
       const seriesName = item.seriesName || 'Total'
-      if (!groupedBySeriesName.has(seriesName)) groupedBySeriesName.set(seriesName, [])
-      groupedBySeriesName.get(seriesName)!.push(item.yRecordCount || 0)
+      totalSeriesNames.add(seriesName)
+      totalLookup.set(`${seriesName}|${month}`, item.yRecordCount ?? 0)
     })
+    const totalMonths = Array.from(totalMonthsSet).sort((a, b) => a - b)
+    const totalCategories = totalMonths.map(m => m.toString())
 
-    totalRecords.series = Array.from(groupedBySeriesName.entries()).map(([name, data]) => ({ name, data }))
+  // totalLookup already populated above in the single iteration
+
+  const totalRecords: import('@/models/datasource.types').MultiLineChartData = {
+    categories: totalCategories,
+    series: Array.from(totalSeriesNames).map(name => ({
+      name,
+      data: totalMonths.map(m => totalLookup.get(`${name}|${m}`) ?? 0),
+    })),
   }
 
-  // Prepare sorted recordsPerPerson once
-  const sortedRec = (raw.recordsPerPerson || []).slice().sort((a, b) => (a.xCalendarMonth ?? 0) - (b.xCalendarMonth ?? 0))
-  const recordsPerPerson: import('@/models/datasource.types').MultiLineChartData = {
-    categories: sortedRec.map(item => item.xCalendarMonth?.toString() || ''),
-    series: [],
-  }
-
-  // Group recordsPerPerson by series name
-  if (sortedRec.length > 0) {
-    const groupedBySeriesName = new Map<string, number[]>()
-    sortedRec.forEach(item => {
+  // Same for recordsPerPerson: union months across its series and align each series
+  const recRaw = raw.recordsPerPerson || []
+  const recMonthsSet = new Set<number>()
+  const recSeriesNames = new Set<string>()
+  const recLookup = new Map<string, number>()
+  recRaw.forEach(item => {
+      const month = item.xCalendarMonth!
+      recMonthsSet.add(month)
       const seriesName = item.seriesName || 'Records'
-      if (!groupedBySeriesName.has(seriesName)) groupedBySeriesName.set(seriesName, [])
-      groupedBySeriesName.get(seriesName)!.push(item.yRecordCount || 0)
+      recSeriesNames.add(seriesName)
+      recLookup.set(`${seriesName}|${month}`, item.yRecordCount ?? 0)
     })
+    const recMonths = Array.from(recMonthsSet).sort((a, b) => a - b)
+    const recCategories = recMonths.map(m => m.toString())
 
-    recordsPerPerson.series = Array.from(groupedBySeriesName.entries()).map(([name, data]) => ({ name, data }))
+  // recLookup already populated above in the single iteration
+
+  const recordsPerPerson: import('@/models/datasource.types').MultiLineChartData = {
+    categories: recCategories,
+    series: Array.from(recSeriesNames).map(name => ({
+      name,
+      data: recMonths.map(m => recLookup.get(`${name}|${m}`) ?? 0),
+    })),
   }
 
   const conceptsPerPerson = (raw.conceptsPerPerson || []).map(item => ({
