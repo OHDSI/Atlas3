@@ -34,7 +34,8 @@ const openTop = ref(false)
       <AtlasSnackbar
         v-model="openSuccess"
         severity="success"
-        text="Cohort saved."
+        title="Saved"
+        text="Cohort definition saved."
       />
     </Variant>
     <Variant title="warning">
