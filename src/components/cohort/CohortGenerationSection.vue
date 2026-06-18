@@ -6,6 +6,13 @@
     :meta="metaText"
     :default-expanded="defaultExpanded"
   >
+    <template #controls>
+      <AtlasSwitch
+        v-model="onlyGenerated"
+        :label="t('cohortDefinitions.generation.section.onlyGenerated', 'Only generated').value"
+      />
+    </template>
+
     <template
       v-if="cohortId !== null && sources.length > 0"
       #actions
@@ -35,7 +42,7 @@
     </AtlasAlert>
     <DataSourceRunTable
       v-else
-      :sources="runTableSources"
+      :sources="visibleRunTableSources"
       :executions="runTableExecutions"
       :loading="false"
       :show-patient-count="true"
@@ -67,9 +74,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { AtlasAlert, AtlasButton } from '@/components/ui'
+import AtlasSwitch from '@/components/ui/AtlasSwitch.vue'
 import type { AtlasChipTone } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useSourceAccessFor } from '@/composables/useEntityAccess'
@@ -127,6 +135,18 @@ const runTableSources = computed<RunTableSource[]>(() =>
   sources.value.map(s => ({ sourceKey: s.sourceKey, sourceName: s.sourceName || s.sourceKey }))
 )
 
+const onlyGenerated = ref(false)
+
+const generatedSourceKeys = computed(
+  () => new Set(jobs.value.filter(j => j.status === 'COMPLETE').map(j => j.sourceKey))
+)
+
+const visibleRunTableSources = computed<RunTableSource[]>(() =>
+  onlyGenerated.value
+    ? runTableSources.value.filter(s => generatedSourceKeys.value.has(s.sourceKey))
+    : runTableSources.value
+)
+
 const runTableExecutions = computed<RunTableExecution[]>(() => jobs.value.map(jobToExecution))
 
 const completeCount = computed(() => jobs.value.filter(j => j.status === 'COMPLETE').length)
@@ -182,7 +202,7 @@ function formatRelative(ms: number): string {
   return `${diffD}d ago`
 }
 
-const defaultExpanded = computed(() => jobs.value.length > 0)
+const defaultExpanded = computed(() => false)
 
 const canGenerateAll = computed(() => {
   if (props.cohortId === null) return false
@@ -335,4 +355,6 @@ onBeforeUnmount(() => {
     webapiStore.stopPolling(props.cohortId)
   }
 })
+
+defineExpose({ onlyGenerated, visibleRunTableSources })
 </script>
