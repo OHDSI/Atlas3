@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
+import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import { vuetify, pristinePinia } from './_test-helpers'
 import AtlasSnackbar from '@/components/ui/AtlasSnackbar.vue'
@@ -31,5 +32,21 @@ describe('AtlasSnackbar', () => {
     btn.click()
     await w.vm.$nextTick()
     expect(w.emitted('update:modelValue')?.at(-1)).toEqual([false])
+  })
+
+  it('sets role=alert and aria-live=assertive for danger severity', async () => {
+    mountWith({ modelValue: true, severity: 'danger', text: 'Error' })
+    await nextTick()
+    const el = document.body.querySelector('[role="alert"]')
+    expect(el).not.toBeNull()
+    expect(el?.getAttribute('aria-live')).toBe('assertive')
+  })
+
+  it('sets role=status and aria-live=polite for info severity', async () => {
+    mountWith({ modelValue: true, severity: 'info', text: 'Info' })
+    await nextTick()
+    const el = document.body.querySelector('[role="status"]')
+    expect(el).not.toBeNull()
+    expect(el?.getAttribute('aria-live')).toBe('polite')
   })
 })
