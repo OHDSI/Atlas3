@@ -754,6 +754,129 @@ describe('chart-config', () => {
       expect(options).toEqual({})
       expect(spy).toHaveBeenCalled()
     })
+
+    it('renderItem returns rects for each bin with deterministic pixels', () => {
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 5,
+        offset: 10,
+        bins: [
+          { intervalIndex: 0, countValue: 2 },
+          { intervalIndex: 1, countValue: 4 },
+          { intervalIndex: 2, countValue: 0 },
+        ],
+      }
+
+      const options = dashboardAgeBarOptions(data)
+      const series = options.series as any[]
+      const renderItem = series[0].renderItem
+      expect(typeof renderItem).toBe('function')
+
+      const datapoints = series[0].data as number[][]
+      expect(datapoints).toHaveLength(3)
+
+      // Deterministic coord mapping so expected pixels are exact:
+      // coord([x,y]) => [x*10, 200 - y*3]
+      const coord = ([x, y]: [number, number]) => [x * 10, 200 - y * 3]
+
+      datapoints.forEach((dp) => {
+        const api = {
+          value: (i: number) => dp[i] ?? 0,
+          coord,
+        } as any
+
+        const result = renderItem({}, api)
+
+        const xStart = dp[0]
+        const xEnd = dp[1]
+        const y = dp[2]
+
+        const [xStartPx, yTopPx] = coord([xStart, y])
+        const [xEndPx] = coord([xEnd, y])
+        const [, yBasePx] = coord([xStart, 0])
+
+        const expectedWidth = Math.max(0.5, xEndPx - xStartPx)
+        const expectedHeight = Math.max(0, yBasePx - yTopPx)
+
+        expect(result.type).toBe('rect')
+        expect(result.shape).toBeDefined()
+        expect(result.shape.x).toBe(xStartPx)
+        expect(result.shape.y).toBe(yTopPx)
+        expect(result.shape.width).toBe(expectedWidth)
+        expect(result.shape.height).toBe(expectedHeight)
+        expect(result.style.fill).toBe(CHART_COLORS[0])
+      })
+
+    })
+
+    // Additional explicit cases: unclamped geometry and clamped geometry
+    it('renderItem: unclamped geometry matches raw coord math', () => {
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 5,
+        offset: 10,
+        bins: [
+          { intervalIndex: 0, countValue: 2 },
+        ],
+      }
+
+      const options = dashboardAgeBarOptions(data)
+      const series = options.series as any[]
+      const renderItem = series[0].renderItem
+      const dp = series[0].data[0] as number[]
+
+      const coord = ([x, y]: [number, number]) => [x * 10, 200 - y * 3]
+      const api = { value: (i: number) => dp[i] ?? 0, coord } as any
+
+      const res = renderItem({}, api)
+
+      const [xStartPx, yTopPx] = coord([dp[0], dp[2]])
+      const [xEndPx] = coord([dp[1], dp[2]])
+      const [, yBasePx] = coord([dp[0], 0])
+
+      const rawWidth = xEndPx - xStartPx
+      const rawHeight = yBasePx - yTopPx
+
+      // Ensure this is an unclamped case
+      expect(rawWidth).toBeGreaterThan(0.5)
+      expect(rawHeight).toBeGreaterThan(0)
+
+      expect(res.shape.x).toBe(xStartPx)
+      expect(res.shape.y).toBe(yTopPx)
+      expect(res.shape.width).toBe(rawWidth)
+      expect(res.shape.height).toBe(rawHeight)
+    })
+
+    it('renderItem: applies min-width and non-negative height clamps', () => {
+      // Small intervalSize to produce a sub-pixel width and zero height
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 0.02,
+        offset: 0,
+        bins: [
+          { intervalIndex: 1, countValue: 0 },
+        ],
+      }
+
+      const options = dashboardAgeBarOptions(data)
+      const series = options.series as any[]
+      const dp = series[0].data[0] as number[]
+      const coord = ([x, y]: [number, number]) => [x * 10, 200 - y * 3]
+      const api = { value: (i: number) => dp[i] ?? 0, coord } as any
+
+      const res = series[0].renderItem({}, api)
+
+      const [xStartPx, yTopPx] = coord([dp[0], dp[2]])
+      const [xEndPx] = coord([dp[1], dp[2]])
+      const [, yBasePx] = coord([dp[0], 0])
+      const rawWidth = xEndPx - xStartPx
+      const rawHeight = yBasePx - yTopPx
+
+      expect(rawWidth).toBeLessThan(0.5)
+      expect(rawHeight).toBe(0)
+
+      expect(res.shape.x).toBe(xStartPx)
+      expect(res.shape.y).toBe(yTopPx)
+      expect(res.shape.width).toBe(0.5)
+      expect(res.shape.height).toBe(0)
+    })
   })
 
   describe('dashboardCumulativeLineOptions', () => {

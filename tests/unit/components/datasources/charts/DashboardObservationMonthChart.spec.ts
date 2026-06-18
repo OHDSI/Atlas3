@@ -5,13 +5,17 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import type { LineChartData } from '@/models/datasource.types'
 
-vi.mock('@/utils/chart-config', () => ({
-  dashboardObservationMonthLineOptions: vi.fn((data) => ({
-    xAxis: { data: data.categories },
-    series: data.series
-  })),
-  createResizeHandler: vi.fn(() => vi.fn())
-}))
+vi.mock('@/utils/chart-config', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    dashboardObservationMonthLineOptions: vi.fn((data) => ({
+      xAxis: { data: data.categories },
+      series: data.series
+    })),
+    createResizeHandler: vi.fn(() => vi.fn())
+  }
+})
 
 let chartConfig: typeof import('@/utils/chart-config')
 let DashboardObservationMonthChart: typeof import('@/components/datasources/charts/DashboardObservationMonthChart.vue').default
@@ -84,9 +88,10 @@ describe('DashboardObservationMonthChart', () => {
   })
 
   it('should call chart options function with data', () => {
+    const spy = vi.spyOn(chartConfig, 'multiLineChartOptions')
     mountComponent()
 
-    expect(chartConfig.dashboardObservationMonthLineOptions).toHaveBeenCalledWith(mockLineData)
+    expect(spy).toHaveBeenCalledWith(mockLineData)
   })
 
   it('should handle empty data', () => {

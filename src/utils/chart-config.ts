@@ -587,6 +587,11 @@ type LocalRenderItemAPI = {
   style: (opts: Record<string, unknown>) => unknown
 }
 
+// Encoded data slot indices used by histogram series data arrays
+const ENCODE_X_START = 0
+const ENCODE_X_END = 1
+const ENCODE_Y_VALUE = 2
+
 // ============================================================================
 // Dashboard-specific Chart Configurations
 // ============================================================================
@@ -730,15 +735,15 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
         name: data.seriesName || data.unit || 'Count',
         type: 'custom',
         encode: {
-          x: [0, 1],
-          y: 2,
-          tooltip: [0, 1, 2],
+          x: [ENCODE_X_START, ENCODE_X_END],
+          y: ENCODE_Y_VALUE,
+          tooltip: [ENCODE_X_START, ENCODE_X_END, ENCODE_Y_VALUE],
         },
         data: binStarts.map((xStart, binIndex) => [xStart, xStart + intervalSize, yValues[binIndex]]),
         renderItem: (_params: unknown, api: LocalRenderItemAPI) => {
-          const xStart = Number(api.value(0))
-          const xEnd = Number(api.value(1))
-          const yValue = Number(api.value(2))
+          const xStart = Number(api.value(ENCODE_X_START))
+          const xEnd = Number(api.value(ENCODE_X_END))
+          const yValue = Number(api.value(ENCODE_Y_VALUE))
           const [xStartPx, yTopPx] = api.coord([xStart, yValue]) as [number, number]
           const [xEndPx] = api.coord([xEnd, yValue]) as [number, number]
           const [, yBasePx] = api.coord([xStart, 0]) as [number, number]
