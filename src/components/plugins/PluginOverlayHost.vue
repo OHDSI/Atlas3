@@ -105,7 +105,8 @@ onUnmounted(unmount)
   position: fixed;
   inset: 0;
   background: transparent;
-  z-index: 1100;
+  /* Above the FAB (z-index 2000) so the open panel sits on top of it. */
+  z-index: 2001;
   /* Reset native button chrome — this is a click-to-close overlay,
      rendered as a <button> only for a11y (keyboard activation + role). */
   border: 0;
@@ -114,15 +115,18 @@ onUnmounted(unmount)
 }
 .plugin-overlay-panel {
   position: fixed;
-  bottom: 96px;
+  /* Overlap the FAB and render above it (z-index) rather than stacking
+     above it on the y-axis. The panel covers the button while open; it's
+     dismissed via the backdrop or Esc. */
+  bottom: 24px;
   right: 24px;
   width: min(420px, calc(100vw - 48px));
-  height: min(640px, calc(100vh - 144px));
+  height: min(640px, calc(100vh - 48px));
   background: rgb(var(--v-theme-background));
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-  z-index: 1101;
+  z-index: 2002;
   display: flex;
   flex-direction: column;
   overflow: hidden;
