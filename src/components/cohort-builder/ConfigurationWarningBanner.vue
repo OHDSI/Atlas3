@@ -3,7 +3,6 @@
     v-if="validationResult && validationResult.invalidFilterTypes.length > 0"
     severity="warning"
     title="Configuration Validation Warnings"
-    prominent
     :closable="true"
     class="configuration-warning-banner"
   >

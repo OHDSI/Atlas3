@@ -1,75 +1,43 @@
 <!-- src/components/ui/AtlasAlert.vue -->
 <template>
-  <v-alert
-    :type="alertType"
+  <AtlasFeedbackBody
+    :severity="severity"
+    :tone="tone"
     :title="title"
-    :variant="variant"
+    :count="count"
     :closable="closable"
-    :icon="resolvedIcon"
-    v-bind="forwardAttrs"
-    @click:close="$emit('close')"
+    :prepend-icon="prependIcon"
+    @close="$emit('close')"
   >
-    <template
-      v-if="$slots.prepend"
-      #prepend
-    >
-      <slot name="prepend" />
-    </template>
-    <template
-      v-if="$slots.append"
-      #append
-    >
-      <slot name="append" />
-    </template>
     <slot />
-  </v-alert>
+    <template v-if="$slots.details" #details><slot name="details" /></template>
+    <template v-if="$slots.actions" #actions><slot name="actions" /></template>
+    <template v-if="$slots.append" #append><slot name="append" /></template>
+  </AtlasFeedbackBody>
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue'
+import AtlasFeedbackBody from './AtlasFeedbackBody.vue'
 
 export type AtlasAlertSeverity = 'info' | 'success' | 'warning' | 'danger'
 
 interface Props {
   severity?: AtlasAlertSeverity
+  tone?: 'severity' | 'neutral'
   title?: string
+  count?: number
   closable?: boolean
-  variant?: 'tonal' | 'outlined' | 'flat'
   prependIcon?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   severity: 'info',
+  tone: 'severity',
   title: undefined,
+  count: undefined,
   closable: false,
-  variant: 'tonal',
   prependIcon: undefined,
 })
 
 defineEmits<{ close: [] }>()
-defineOptions({ inheritAttrs: false })
-
-const SEVERITY_ALERT_TYPE: Record<AtlasAlertSeverity, 'info' | 'success' | 'warning' | 'error'> = {
-  info: 'info',
-  success: 'success',
-  warning: 'warning',
-  danger: 'error',
-}
-
-const SEVERITY_ICON: Record<AtlasAlertSeverity, string> = {
-  info: 'mdi-information',
-  success: 'mdi-check-circle',
-  warning: 'mdi-alert',
-  danger: 'mdi-alert-circle',
-}
-
-const alertType = computed(() => SEVERITY_ALERT_TYPE[props.severity])
-const resolvedIcon = computed(() => props.prependIcon ?? SEVERITY_ICON[props.severity])
-
-const attrs = useAttrs()
-const forwardAttrs = computed(() => {
-  const { type: _t, color: _c, ...rest } = attrs as Record<string, unknown>
-  void _t; void _c
-  return rest
-})
 </script>
