@@ -22,6 +22,7 @@ import type {
 } from '@/models/concept-set.types'
 import type { Concept } from '@/models/concept-set.types'
 import type { Version, VersionedAsset } from '@/components/versions/types'
+import type { Tag } from '@/models/cohort.types'
 import type { DateRange } from '@/composables/useCohorts'
 import { conceptToConceptSetItem, conceptSetItemToExpressionItem } from '@/utils/api-mappers'
 import { getVersion as getVersionAPI } from '@/services/concept-set-versions.service'
@@ -123,7 +124,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   const availableTags = computed(() => {
     const tagSet = new Set<string>()
     for (const cs of conceptSets.value) {
-      for (const tag of (cs as { tags?: { name?: string }[] }).tags ?? []) {
+      for (const tag of cs.tags ?? []) {
         if (tag?.name) tagSet.add(tag.name)
       }
     }
@@ -172,7 +173,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       if (hasCreated && !isDateInRange(set.createdDate, filters.value.createdDateRange)) return false
       if (hasModified && !isDateInRange(set.modifiedDate, filters.value.modifiedDateRange)) return false
       if (hasTags) {
-        const names = new Set(((set as { tags?: { name?: string }[] }).tags ?? []).map(t => t.name))
+        const names = new Set((set.tags ?? []).map(t => t.name))
         if (!filters.value.selectedTags.some(name => names.has(name))) return false
       }
       return true
@@ -292,8 +293,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
    */
   async function syncTags(
     id: number | string,
-    oldTags: { id?: number; name: string }[],
-    newTags: { id?: number; name: string }[]
+    oldTags: Tag[],
+    newTags: Tag[]
   ): Promise<void> {
     const toAdd = newTags.filter(n => n.id && !oldTags.some(o => o.id === n.id))
     const toRemove = oldTags.filter(o => o.id && !newTags.some(n => n.id === o.id))
