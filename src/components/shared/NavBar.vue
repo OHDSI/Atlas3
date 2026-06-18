@@ -129,6 +129,9 @@
           @click="handleDocsClick"
         />
 
+        <!-- Notifications bell + inbox -->
+        <NotificationInbox />
+
         <!-- Jobs Panel Icon: separate side drawer, sits left of the cog. -->
         <AtlasIconButton
           v-if="hasJobsAccess"
@@ -219,6 +222,7 @@ import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
 import LoginModal from '@/components/auth/LoginModal.vue'
 import LanguageSelector from '@/components/LanguageSelector.vue'
+import NotificationInbox from '@/components/shared/NotificationInbox.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
 import logoOhdsiOnlyPng from '@/assets/icons/OHDSI logo only - colored.png'
 
