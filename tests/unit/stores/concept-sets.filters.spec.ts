@@ -56,7 +56,7 @@ describe('concept-sets store filters', () => {
   it('filters by author', () => {
     const store = useConceptSetsStore()
     store.conceptSets = [...sets]
-    store.setFilters({ searchQuery: '', author: 'bob', createdDateRange: {}, modifiedDateRange: {} })
+    store.setFilters({ searchQuery: '', author: 'bob', selectedTags: [], createdDateRange: {}, modifiedDateRange: {} })
     expect(store.filteredSets.map(s => s.id)).toEqual([2])
     expect(store.activeFilterCount).toBe(1)
   })
@@ -65,7 +65,7 @@ describe('concept-sets store filters', () => {
     const store = useConceptSetsStore()
     store.conceptSets = [...sets]
     store.setFilters({
-      searchQuery: '', author: '',
+      searchQuery: '', author: '', selectedTags: [],
       createdDateRange: { from: new Date(Date.now() - day * 12) },
       modifiedDateRange: {},
     })
@@ -78,7 +78,7 @@ describe('concept-sets store filters', () => {
     // Oldest modifiedDate is set 2 (now - day*2). A `from` of now - day*1.5
     // excludes set 2 while keeping set 1 (now - day) and set 3 (now).
     store.setFilters({
-      searchQuery: '', author: '',
+      searchQuery: '', author: '', selectedTags: [],
       createdDateRange: {},
       modifiedDateRange: { from: new Date(Date.now() - day * 1.5) },
     })
@@ -99,7 +99,7 @@ describe('concept-sets store filters', () => {
     // Range from now - day*4 includes the ISO-dated set (now - day*3) and
     // set 3 (now - day*5 is excluded; set 3 is now - day*5 -> excluded).
     store.setFilters({
-      searchQuery: '', author: '',
+      searchQuery: '', author: '', selectedTags: [],
       createdDateRange: { from: new Date(Date.now() - day * 4) },
       modifiedDateRange: {},
     })
@@ -108,7 +108,7 @@ describe('concept-sets store filters', () => {
     // A narrower range that ends before the ISO set's date excludes it,
     // confirming `new Date(isoString)` is compared correctly.
     store.setFilters({
-      searchQuery: '', author: '',
+      searchQuery: '', author: '', selectedTags: [],
       createdDateRange: { to: new Date(Date.now() - day * 4) },
       modifiedDateRange: {},
     })
@@ -118,7 +118,7 @@ describe('concept-sets store filters', () => {
   it('clearFilters resets everything', () => {
     const store = useConceptSetsStore()
     store.conceptSets = [...sets]
-    store.setFilters({ searchQuery: 'x', author: 'bob', createdDateRange: {}, modifiedDateRange: {} })
+    store.setFilters({ searchQuery: 'x', author: 'bob', selectedTags: [], createdDateRange: {}, modifiedDateRange: {} })
     store.clearFilters()
     expect(store.filteredSets).toHaveLength(3)
     expect(store.activeFilterCount).toBe(0)

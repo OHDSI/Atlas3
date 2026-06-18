@@ -10,6 +10,8 @@ import {
   createConceptSet,
   updateConceptSet,
   deleteConceptSet,
+  assignTagToConceptSet,
+  unassignTagFromConceptSet,
 } from '@/services/concept-set.service'
 import type {
   ConceptSet,
@@ -37,6 +39,7 @@ import { debounce } from '@/utils/debounce'
 export interface ConceptSetFilterState {
   searchQuery: string
   author: string
+  selectedTags: string[]
   createdDateRange: DateRange
   modifiedDateRange: DateRange
 }
@@ -53,6 +56,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   const filters = ref<ConceptSetFilterState>({
     searchQuery: '',
     author: '',
+    selectedTags: [],
     createdDateRange: {},
     modifiedDateRange: {},
   })
@@ -116,6 +120,16 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     return true
   }
 
+  const availableTags = computed(() => {
+    const tagSet = new Set<string>()
+    for (const cs of conceptSets.value) {
+      for (const tag of (cs as { tags?: { name?: string }[] }).tags ?? []) {
+        if (tag?.name) tagSet.add(tag.name)
+      }
+    }
+    return Array.from(tagSet).sort()
+  })
+
   const availableAuthors = computed(() => {
     const authorSet = new Set<string>()
     for (const set of conceptSets.value) {
@@ -131,6 +145,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     if (filters.value.author) count++
     if (filters.value.createdDateRange.from || filters.value.createdDateRange.to) count++
     if (filters.value.modifiedDateRange.from || filters.value.modifiedDateRange.to) count++
+    count += filters.value.selectedTags.length > 0 ? 1 : 0
     return count
   })
 
@@ -145,8 +160,9 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     const hasModified = !!(
       filters.value.modifiedDateRange.from || filters.value.modifiedDateRange.to
     )
+    const hasTags = filters.value.selectedTags.length > 0
 
-    if (!hasSearch && !hasAuthor && !hasCreated && !hasModified) {
+    if (!hasSearch && !hasAuthor && !hasCreated && !hasModified && !hasTags) {
       return conceptSets.value
     }
 
@@ -155,6 +171,10 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       if (hasAuthor && !getUserString(set.createdBy).includes(authorQuery)) return false
       if (hasCreated && !isDateInRange(set.createdDate, filters.value.createdDateRange)) return false
       if (hasModified && !isDateInRange(set.modifiedDate, filters.value.modifiedDateRange)) return false
+      if (hasTags) {
+        const names = new Set(((set as { tags?: { name?: string }[] }).tags ?? []).map(t => t.name))
+        if (!filters.value.selectedTags.some(name => names.has(name))) return false
+      }
       return true
     })
   })
@@ -268,6 +288,27 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   }
 
   /**
+   * Sync tags for a concept set: assign added tags and unassign removed tags.
+   */
+  async function syncTags(
+    id: number | string,
+    oldTags: { id?: number; name: string }[],
+    newTags: { id?: number; name: string }[]
+  ): Promise<void> {
+    const toAdd = newTags.filter(n => n.id && !oldTags.some(o => o.id === n.id))
+    const toRemove = oldTags.filter(o => o.id && !newTags.some(n => n.id === o.id))
+    for (const tag of toAdd) {
+      if (tag.id) await assignTagToConceptSet(id, tag.id)
+    }
+    for (const tag of toRemove) {
+      if (tag.id) await unassignTagFromConceptSet(id, tag.id)
+    }
+    if (currentSet.value?.id === id) {
+      currentSet.value = { ...currentSet.value, tags: [...newTags] } as typeof currentSet.value
+    }
+  }
+
+  /**
    * Delete a concept set
    */
   async function remove(id: number | string) {
@@ -311,6 +352,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     filters.value = {
       searchQuery: '',
       author: '',
+      selectedTags: [],
       createdDateRange: {},
       modifiedDateRange: {},
     }
@@ -819,6 +861,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     filterTerm,
     filters,
     availableAuthors,
+    availableTags,
     activeFilterCount,
     editorOpen,
     previewVersion,
@@ -842,6 +885,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     create,
     update,
     remove,
+    syncTags,
     setFilter,
     setFilters,
     clearFilters,
