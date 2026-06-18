@@ -598,6 +598,8 @@ import type {
   MultiLineChartData as DatasourceMultiLineChartData,
 } from '@/models/datasource.types'
 
+import { logger } from '@/utils/logger'
+
 /**
  * Dashboard Gender Pie Chart Configuration
  */
@@ -666,7 +668,8 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
   )
 
   if (validBins.length === 0) {
-    // No numeric histogram bins — return an empty options object.
+    // No numeric histogram bins — log and return an empty options object.
+    logger.error('Chart', 'DashboardAgeChart expected non-empty numeric histogram bins.', data.bins)
     return {}
   }
 

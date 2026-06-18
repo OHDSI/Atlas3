@@ -68,7 +68,8 @@ describe('DataSourceService', () => {
       const result = await listDataSources()
 
       expect(result).toHaveLength(1)
-      expect(result[0].sourceKey).toBe('TEST')
+      const first = result[0]!
+      expect(first.sourceKey).toBe('TEST')
     })
 
     it('should throw user-friendly error on failure', async () => {
@@ -138,7 +139,7 @@ describe('DataSourceService', () => {
           personCount: 1000,
         },
         genderDistribution: [],
-        ageDistribution: { categories: [], series: [] },
+        ageDistribution: { intervalSize: 1, offset: 0, bins: [] },
         cumulativeObservation: { categories: [], series: [] },
         observationByMonth: { categories: [], series: [] },
       }
