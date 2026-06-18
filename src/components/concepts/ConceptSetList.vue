@@ -64,6 +64,24 @@
           <span class="concept-set-list__name">{{ item.name }}</span>
         </template>
 
+        <!-- Tags -->
+        <template #item.tags="{ item }">
+          <div
+            v-if="item.tags && item.tags.length > 0"
+            class="concept-set-list__tags"
+          >
+            <AtlasChip
+              v-for="tag in item.tags"
+              :key="tag.id || tag.name"
+              size="sm"
+              variant="flat"
+              :style="{ backgroundColor: tagColor(tag.color), color: tagContrastColor(tag.color) }"
+            >
+              {{ tag.name }}
+            </AtlasChip>
+          </div>
+        </template>
+
         <!-- Created Date -->
         <template #item.createdDate="{ item }">
           {{ formatDate(item.createdDate) }}
@@ -144,6 +162,7 @@ import { useConceptSetsStore } from '@/stores/concept-sets'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccessFor } from '@/composables/useEntityAccess'
 import { formatDate } from '@/utils/date-format'
+import { tagColor, tagContrastColor } from '@/utils/tag-color'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
 import ConceptSetFilters from './ConceptSetFilters.vue'
 import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasSkeleton, AtlasSpacer } from '@/components/ui'
@@ -179,6 +198,7 @@ const countLabel = computed(() => {
 const headers = [
   { title: t('columns.id', 'ID').value, key: 'id', sortable: true, width: '100px' },
   { title: t('columns.name', 'Name').value, key: 'name', sortable: true },
+  { title: t('common.tags', 'Tags').value, key: 'tags', sortable: false, width: '220px' },
   {
     title: t('columns.created', 'Created').value,
     key: 'createdDate',
@@ -253,6 +273,12 @@ function onRowClick(_event: Event, payload: { item: ConceptSetListItem }) {
 .concept-set-list__count {
   /* Tonal chip aligned with the search input height. */
   align-self: center;
+}
+
+.concept-set-list__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .concept-set-list__name {
