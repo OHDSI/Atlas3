@@ -43,25 +43,37 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
   }
 
   const cumulativeObservation: LineChartData = {
-    categories: raw.cumulativeObservation.map(c => c.xLengthOfObservation.toString()),
-    series: [
-      {
-        name: 'Cumulative Observation',
-        data: raw.cumulativeObservation.map(c => c.yPercentPersons),
-      },
-    ],
+    // Ensure categories/series are ordered by the x value used for the x-axis
+    ...(() => {
+      const sorted = (raw.cumulativeObservation || []).slice().sort((a, b) => (a.xLengthOfObservation ?? 0) - (b.xLengthOfObservation ?? 0))
+      return {
+        categories: sorted.map(c => c.xLengthOfObservation?.toString() || ''),
+        series: [
+          {
+            name: 'Cumulative Observation',
+            data: sorted.map(c => c.yPercentPersons || 0),
+          },
+        ],
+      }
+    })(),
     xAxisLabel: 'Days',
     yAxisLabel: 'Percent of Persons',
   }
 
   const observationByMonth: LineChartData = {
-    categories: raw.observedByMonth.map(o => o.monthYear.toString()),
-    series: [
-      {
-        name: 'Observation Count',
-        data: raw.observedByMonth.map(o => o.countValue),
-      },
-    ],
+    // Order by `monthYear` before splitting into parallel arrays
+    ...(() => {
+      const sorted = (raw.observedByMonth || []).slice().sort((a, b) => (a.monthYear ?? 0) - (b.monthYear ?? 0))
+      return {
+        categories: sorted.map(o => o.monthYear?.toString() || ''),
+        series: [
+          {
+            name: 'Observation Count',
+            data: sorted.map(o => o.countValue || 0),
+          },
+        ],
+      }
+    })(),
     xAxisLabel: 'Month',
     yAxisLabel: 'Count',
   }
@@ -237,50 +249,42 @@ interface DataDensityRaw {
 export function transformDataDensityReport(
   raw: DataDensityRaw
 ): import('@/models/datasource.types').DataDensityReport {
-  // Transform total records time series
+  // Prepare sorted arrays once so categories and series align
+  const sortedTotal = (raw.totalRecords || []).slice().sort((a, b) => (a.xCalendarMonth ?? 0) - (b.xCalendarMonth ?? 0))
   const totalRecords: import('@/models/datasource.types').MultiLineChartData = {
-    categories: raw.totalRecords?.map(item => item.xCalendarMonth?.toString() || '') || [],
+    categories: sortedTotal.map(item => item.xCalendarMonth?.toString() || ''),
     series: [],
   }
 
-  // Group totalRecords by series name
-  if (raw.totalRecords && raw.totalRecords.length > 0) {
+  // Group totalRecords by series name (iterate sortedTotal so series data aligns with categories)
+  if (sortedTotal.length > 0) {
     const groupedBySeriesName = new Map<string, number[]>()
-    raw.totalRecords.forEach(item => {
+    sortedTotal.forEach(item => {
       const seriesName = item.seriesName || 'Total'
-      if (!groupedBySeriesName.has(seriesName)) {
-        groupedBySeriesName.set(seriesName, [])
-      }
+      if (!groupedBySeriesName.has(seriesName)) groupedBySeriesName.set(seriesName, [])
       groupedBySeriesName.get(seriesName)!.push(item.yRecordCount || 0)
     })
 
-    totalRecords.series = Array.from(groupedBySeriesName.entries()).map(([name, data]) => ({
-      name,
-      data,
-    }))
+    totalRecords.series = Array.from(groupedBySeriesName.entries()).map(([name, data]) => ({ name, data }))
   }
 
-  // Transform records per person time series
+  // Prepare sorted recordsPerPerson once
+  const sortedRec = (raw.recordsPerPerson || []).slice().sort((a, b) => (a.xCalendarMonth ?? 0) - (b.xCalendarMonth ?? 0))
   const recordsPerPerson: import('@/models/datasource.types').MultiLineChartData = {
-    categories: raw.recordsPerPerson?.map(item => item.xCalendarMonth?.toString() || '') || [],
+    categories: sortedRec.map(item => item.xCalendarMonth?.toString() || ''),
     series: [],
   }
 
   // Group recordsPerPerson by series name
-  if (raw.recordsPerPerson && raw.recordsPerPerson.length > 0) {
+  if (sortedRec.length > 0) {
     const groupedBySeriesName = new Map<string, number[]>()
-    raw.recordsPerPerson.forEach(item => {
+    sortedRec.forEach(item => {
       const seriesName = item.seriesName || 'Records'
-      if (!groupedBySeriesName.has(seriesName)) {
-        groupedBySeriesName.set(seriesName, [])
-      }
+      if (!groupedBySeriesName.has(seriesName)) groupedBySeriesName.set(seriesName, [])
       groupedBySeriesName.get(seriesName)!.push(item.yRecordCount || 0)
     })
 
-    recordsPerPerson.series = Array.from(groupedBySeriesName.entries()).map(([name, data]) => ({
-      name,
-      data,
-    }))
+    recordsPerPerson.series = Array.from(groupedBySeriesName.entries()).map(([name, data]) => ({ name, data }))
   }
 
   const conceptsPerPerson = (raw.conceptsPerPerson || []).map(item => ({
@@ -507,23 +511,34 @@ export function transformObservationPeriodReport(
 
   const cumulativeObservation: import('@/models/datasource.types').MultiLineChartData | undefined =
     raw.cumulativeObservation
-      ? {
-          categories: raw.cumulativeObservation.map(i => i.xLengthOfObservation?.toString() || ''),
-          series: [
-            {
-              name: 'Cumulative %',
-              data: raw.cumulativeObservation.map(i => i.yPercentPersons || 0),
-            },
-          ],
-        }
+      ? (() => {
+          const sorted = (raw.cumulativeObservation || []).slice().sort((a, b) => (a.xLengthOfObservation ?? 0) - (b.xLengthOfObservation ?? 0))
+          return {
+            categories: sorted.map(i => i.xLengthOfObservation?.toString() || ''),
+            series: [
+              {
+                name: 'Cumulative %',
+                data: sorted.map(i => i.yPercentPersons || 0),
+              },
+            ],
+          }
+        })()
       : undefined
 
   const observedByMonth: import('@/models/datasource.types').MultiLineChartData | undefined =
     raw.observedByMonth
-      ? {
-          categories: raw.observedByMonth.map(i => i.monthYear?.toString() || ''),
-          series: [{ name: 'Persons', data: raw.observedByMonth.map(i => i.countValue || 0) }],
-        }
+      ? (() => {
+          const sorted = (raw.observedByMonth || []).slice().sort((a, b) => (a.monthYear ?? 0) - (b.monthYear ?? 0))
+          return {
+            categories: sorted.map(i => i.monthYear?.toString() || ''),
+            series: [
+              {
+                name: 'Persons',
+                data: sorted.map(i => i.countValue || 0),
+              },
+            ],
+          }
+        })()
       : undefined
 
   const personsWithContinuousObsByYear = raw.personsWithContinuousObservationsByYear
@@ -599,15 +614,18 @@ export function transformDeathReport(
 
   const prevalenceByMonth: import('@/models/datasource.types').MultiLineChartData | undefined =
     raw.prevalenceByMonth
-      ? {
-          categories: raw.prevalenceByMonth.map(i => i.xCalendarMonth?.toString() || ''),
-          series: [
-            {
-              name: 'Prevalence per 1000',
-              data: raw.prevalenceByMonth.map(i => i.yPrevalence1000Pp || 0),
-            },
-          ],
-        }
+      ? (() => {
+          const sorted = (raw.prevalenceByMonth || []).slice().sort((a, b) => (a.xCalendarMonth ?? 0) - (b.xCalendarMonth ?? 0))
+          return {
+            categories: sorted.map(i => i.xCalendarMonth?.toString() || ''),
+            series: [
+              {
+                name: 'Prevalence per 1000',
+                data: sorted.map(i => i.yPrevalence1000Pp || 0),
+              },
+            ],
+          }
+        })()
       : undefined
 
   let prevalenceByGenderAgeYear: import('@/models/report.types').TrellisChartData | undefined
