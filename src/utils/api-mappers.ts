@@ -10,6 +10,7 @@ import type {
   ConceptSetExpressionItem,
   ComparisonResultItem,
 } from '@/models/concept-set.types'
+import type { Tag } from '@/models/cohort.types'
 
 /**
  * WebAPI concept set metadata response format
@@ -22,6 +23,7 @@ export interface ConceptSetAPIMetadata {
   modifiedDate?: string | number
   modifiedBy?: string | { id: number; name: string | null; login: string }
   shared?: boolean
+  tags?: Tag[]
 }
 
 /**
@@ -120,6 +122,7 @@ export function mapConceptSetFromAPI(raw: ConceptSetAPIResponse): ConceptSet {
     modifiedDate: raw.modifiedDate,
     modifiedBy: getLogin(raw.modifiedBy),
     shared: raw.shared ?? false,
+    tags: raw.tags ?? [],
     items:
       raw.expression?.items?.map(item => ({
         conceptId: item.concept.CONCEPT_ID,

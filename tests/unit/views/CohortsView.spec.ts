@@ -71,6 +71,14 @@ vi.mock('@/components/cohort/CohortGrid.vue', () => ({
   }
 }))
 
+vi.mock('@/components/cohort/CohortTable.vue', () => ({
+  default: {
+    name: 'CohortTable',
+    template: '<div class="cohort-table-mock"></div>',
+    props: ['cohorts', 'loading', 'error', 'searchQuery', 'selectedTags']
+  }
+}))
+
 vi.mock('@/components/cohort/CohortPagination.vue', () => ({
   default: {
     name: 'CohortPagination',
@@ -327,15 +335,16 @@ describe('CohortsView.vue', () => {
       expect(filters.exists()).toBe(true)
     })
 
-    it('should render CohortGrid component', () => {
+    it('should render CohortTable component (default view mode is table)', () => {
       wrapper = mount(CohortsView, {
         global: {
           plugins: [vuetify]
         }
       })
 
-      const grid = wrapper.findComponent({ name: 'CohortGrid' })
-      expect(grid.exists()).toBe(true)
+      // Default view mode is now table, so CohortTable is the active view component.
+      const table = wrapper.findComponent({ name: 'CohortTable' })
+      expect(table.exists()).toBe(true)
     })
 
     it('should render CohortPagination when cohorts exist', () => {
@@ -352,7 +361,7 @@ describe('CohortsView.vue', () => {
       expect(pagination.exists()).toBe(true)
     })
 
-    it('should pass correct props to CohortGrid', () => {
+    it('should pass correct props to the active view component', () => {
       mockLoading.value = true
 
       wrapper = mount(CohortsView, {
@@ -361,9 +370,10 @@ describe('CohortsView.vue', () => {
         }
       })
 
-      const grid = wrapper.findComponent({ name: 'CohortGrid' })
-      expect(grid.props('loading')).toBe(true)
-      expect(grid.props('cohorts')).toBeDefined()
+      // Default view mode is table; verify props are forwarded to CohortTable.
+      const table = wrapper.findComponent({ name: 'CohortTable' })
+      expect(table.props('loading')).toBe(true)
+      expect(table.props('cohorts')).toBeDefined()
     })
   })
 
@@ -729,7 +739,7 @@ describe('CohortsView.vue', () => {
   })
 
   describe('Error Handling', () => {
-    it('should pass error to CohortGrid when error exists', () => {
+    it('should pass error to CohortTable when error exists', () => {
       const testError = new Error('Failed to fetch cohorts')
       mockError.value = testError
 
@@ -739,8 +749,9 @@ describe('CohortsView.vue', () => {
         }
       })
 
-      const grid = wrapper.findComponent({ name: 'CohortGrid' })
-      expect(grid.props('error')).toEqual(testError)
+      // Default view is table; verify error prop forwarded to CohortTable.
+      const table = wrapper.findComponent({ name: 'CohortTable' })
+      expect(table.props('error')).toEqual(testError)
     })
 
     it('should allow retry when error occurs', async () => {
@@ -752,8 +763,8 @@ describe('CohortsView.vue', () => {
         }
       })
 
-      const grid = wrapper.findComponent({ name: 'CohortGrid' })
-      await grid.vm.$emit('retry')
+      const table = wrapper.findComponent({ name: 'CohortTable' })
+      await table.vm.$emit('retry')
 
       expect(mockFetchCohorts).toHaveBeenCalled()
     })
@@ -769,49 +780,47 @@ describe('CohortsView.vue', () => {
       })
     })
 
-    it('should handle create cohort action from grid', async () => {
-      const grid = wrapper.findComponent({ name: 'CohortGrid' })
-      await grid.vm.$emit('create-cohort')
+    it('should handle create cohort action from table', async () => {
+      // Default view is table; events are wired to CohortTable.
+      const table = wrapper.findComponent({ name: 'CohortTable' })
+      await table.vm.$emit('create-cohort')
 
       expect(wrapper.vm.showNewCohortDialog).toBe(true)
     })
 
-    it('should clear filters when grid emits clear-filters', async () => {
-      // Refresh: grid no longer emits "generate"; instead the filtered
-      // empty-state CTA emits "clear-filters" which should clear all
-      // active filters from the cohorts composable.
-      const grid = wrapper.findComponent({ name: 'CohortGrid' })
+    it('should clear filters when table emits clear-filters', async () => {
+      const table = wrapper.findComponent({ name: 'CohortTable' })
 
-      await grid.vm.$emit('clear-filters')
+      await table.vm.$emit('clear-filters')
 
       expect(mockClearFilters).toHaveBeenCalled()
     })
 
-    it('should handle delete action from grid', async () => {
+    it('should handle delete action from table', async () => {
       const mockCohort = createMockCohort(1)
-      const grid = wrapper.findComponent({ name: 'CohortGrid' })
+      const table = wrapper.findComponent({ name: 'CohortTable' })
 
-      await grid.vm.$emit('delete', mockCohort)
+      await table.vm.$emit('delete', mockCohort)
 
       expect(wrapper.vm.selectedCohort).toEqual(mockCohort)
       expect(wrapper.vm.showDeleteDialog).toBe(true)
     })
 
-    it('should handle tag click from grid', async () => {
-      const grid = wrapper.findComponent({ name: 'CohortGrid' })
+    it('should handle tag click from table', async () => {
+      const table = wrapper.findComponent({ name: 'CohortTable' })
 
-      await grid.vm.$emit('tag-click', 'Diabetes')
+      await table.vm.$emit('tag-click', 'Diabetes')
 
       expect(mockFilters.value.selectedTags).toContain('Diabetes')
     })
 
-    it('should handle show info action from grid', async () => {
+    it('should handle show info action from table', async () => {
       const mockCohort = createMockCohort(1)
       vi.mocked(getCohortDefinition).mockResolvedValue({ id: 1 } as any)
       vi.mocked(getCohortPrintFriendly).mockResolvedValue('<h1>Info</h1>')
 
-      const grid = wrapper.findComponent({ name: 'CohortGrid' })
-      await grid.vm.$emit('show-info', mockCohort)
+      const table = wrapper.findComponent({ name: 'CohortTable' })
+      await table.vm.$emit('show-info', mockCohort)
 
       expect(wrapper.vm.showCohortInfoDialog).toBe(true)
     })
