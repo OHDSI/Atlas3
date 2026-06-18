@@ -22,10 +22,9 @@
           .value
       "
     >
-      <BarChart
+      <DashboardAgeChart
         :data="data.ageAtFirst"
-        :x-axis-label="t('dataSources.observationPeriodReport.age', 'Age').value"
-        :y-axis-label="t('dataSources.observationPeriodReport.people', 'People').value"
+        :height="300"
         data-testid="age-at-first-chart"
       />
     </ChartSection>
@@ -37,10 +36,9 @@
         t('dataSources.observationPeriodReport.observationLength', 'Observation Length').value
       "
     >
-      <BarChart
+      <DashboardAgeChart
         :data="data.observationLength"
-        :x-axis-label="t('dataSources.observationPeriodReport.days', 'Days').value"
-        :y-axis-label="t('dataSources.observationPeriodReport.people', 'People').value"
+        :height="300"
         data-testid="observation-length-chart"
       />
     </ChartSection>
@@ -166,6 +164,7 @@ import BarChart from '@/components/reports/charts/BarChart.vue'
 import BoxPlotChart from '@/components/reports/charts/BoxPlotChart.vue'
 import PieChart from '@/components/reports/charts/PieChart.vue'
 import MultiLineChart from './charts/MultiLineChart.vue'
+import DashboardAgeChart from './charts/DashboardAgeChart.vue'
 
 const { t } = useI18n()
 
@@ -176,8 +175,8 @@ const props = defineProps<{
 const hasData = computed(() => {
   const d = props.data
   const sectionLengths = [
-    d.ageAtFirst?.values?.length,
-    d.observationLength?.values?.length,
+    d.ageAtFirst?.bins?.length,
+    d.observationLength?.bins?.length,
     d.cumulativeObservation?.series?.length,
     d.observedByMonth?.series?.length,
     d.ageByGender?.length,

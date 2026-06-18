@@ -8,6 +8,34 @@ import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
 
 /**
+ * Format large numbers using SI notation (K, M, B, T)
+ * Examples: 1000 → "1.0k", 3000000 → "3.0M", 1500000000 → "1.5B"
+ */
+function formatSINumber(value: number): string {
+  if (value === 0) return '0'
+  if (!Number.isFinite(value)) return String(value)
+
+  const absValue = Math.abs(value)
+  const sign = value < 0 ? '-' : ''
+
+  const thresholds = [
+    { limit: 1e12, suffix: 'T' },
+    { limit: 1e9, suffix: 'B' },
+    { limit: 1e6, suffix: 'M' },
+    { limit: 1e3, suffix: 'k' },
+  ]
+
+  for (const { limit, suffix } of thresholds) {
+    if (absValue >= limit) {
+      const scaled = absValue / limit
+      return `${sign}${scaled.toFixed(1)}${suffix}`
+    }
+  }
+
+  return sign + absValue.toLocaleString()
+}
+
+/**
  * Modern, restrained categorical palette for charts — Tableau 10.
  *
  * Atlas 2.15 used D3's d3.scale.category10 (bright, saturated). This
@@ -552,12 +580,19 @@ export function getExportConfig(backgroundColor = '#ffffff') {
   }
 }
 
+// Minimal subset of the ECharts RenderItem API we use in renderItem
+type LocalRenderItemAPI = {
+  value: (idx: number) => number | string | undefined
+  coord: (v: number[]) => number[]
+  style: (opts: Record<string, unknown>) => unknown
+}
+
 // ============================================================================
 // Dashboard-specific Chart Configurations
 // ============================================================================
 
 import type {
-  BarChartData as DatasourceBarChartData,
+  HistogramChartData as DatasourceHistogramChartData,
   PieChartData as DatasourcePieChartData,
   LineChartData as DatasourceLineChartData,
   MultiLineChartData as DatasourceMultiLineChartData,
@@ -625,18 +660,36 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
 /**
  * Dashboard Age Bar Chart Configuration
  */
-export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOption {
+export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): EChartsOption {
+  const validBins = data.bins.filter(
+    b => Number.isFinite(b.intervalIndex) && Number.isFinite(b.countValue) && b.countValue >= 0
+  )
+
+  if (validBins.length === 0) {
+    // No numeric histogram bins — return an empty options object.
+    return {}
+  }
+
+  const intervalSize = data.intervalSize
+  const offset = data.offset
+  const binStarts = validBins.map(bin => offset + bin.intervalIndex * intervalSize)
+  const yValues = validBins.map(bin => bin.countValue)
+  const yMax = Math.max(0, ...yValues)
+
   return {
     tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow',
-      },
+      trigger: 'item',
       formatter: (params: unknown) => {
-        const paramsArray = Array.isArray(params) ? params : [params]
-        const param = paramsArray[0] as { name: string; value: number }
-        const value = param.value.toLocaleString()
-        return `<strong>Age: ${param.name}</strong><br/>${data.unit || 'Count'}: ${value}`
+        const param = params as { data?: [number, number, number] }
+        const point = param.data
+        if (!point) {
+          return ''
+        }
+
+        const [xStart, xEnd, yValue] = point
+        const value = formatSINumber(yValue)
+        const label = xEnd - xStart === 1 ? `${xStart}` : `${xStart} - ${xEnd}`
+        return `<strong>Age: ${label}</strong><br/>${data.seriesName || data.unit || 'Count'}: ${value}`
       },
     },
     grid: {
@@ -647,42 +700,68 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
       containLabel: true,
     },
     xAxis: {
-      type: 'category',
-      data: data.categories,
-      name: 'Age Group',
+      type: 'value',
+      min: Math.min(...binStarts),
+      max: Math.max(...binStarts) + intervalSize,
+      name: 'Age',
       nameLocation: 'middle',
       nameGap: 30,
       axisLabel: {
-        rotate: data.categories.length > 12 ? 45 : 0,
-        interval: 0,
+        formatter: (value: number) => `${Math.floor(value)}`,
         fontSize: 11,
       },
     },
     yAxis: {
       type: 'value',
       name: data.unit || 'Person Count',
+      max: yMax > 0 ? yMax : undefined,
       nameLocation: 'middle',
-      nameGap: 50,
+      nameGap: 60,
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString(),
+        formatter: (value: number) => formatSINumber(value),
+        fontSize: 11,
       },
     },
-    series: data.series.map((s, index) => ({
-      name: s.name,
-      type: 'bar',
-      data: s.data,
-      itemStyle: {
-        color: CHART_COLORS[index % CHART_COLORS.length],
-        borderRadius: [4, 4, 0, 0],
-      },
-      emphasis: {
-        itemStyle: {
-          shadowBlur: 10,
-          shadowOffsetX: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.3)',
+    series: [
+      {
+        name: data.seriesName || data.unit || 'Count',
+        type: 'custom',
+        encode: {
+          x: [0, 1],
+          y: 2,
+          tooltip: [0, 1, 2],
+        },
+        data: binStarts.map((xStart, binIndex) => [xStart, xStart + intervalSize, yValues[binIndex]]),
+        renderItem: (_params: unknown, api: LocalRenderItemAPI) => {
+          const xStart = Number(api.value(0))
+          const xEnd = Number(api.value(1))
+          const yValue = Number(api.value(2))
+          const [xStartPx, yTopPx] = api.coord([xStart, yValue]) as [number, number]
+          const [xEndPx] = api.coord([xEnd, yValue]) as [number, number]
+          const [, yBasePx] = api.coord([xStart, 0]) as [number, number]
+
+          return {
+            type: 'rect',
+            shape: {
+              x: xStartPx,
+              y: yTopPx,
+              width: Math.max(0.5, xEndPx - xStartPx),
+              height: Math.max(0, yBasePx - yTopPx),
+            },
+            style: {
+              fill: CHART_COLORS[0],
+            },
+          }
+        },
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.3)',
+          },
         },
       },
-    })),
+    ],
   }
 }
 

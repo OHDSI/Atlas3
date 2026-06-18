@@ -18,11 +18,11 @@
 <script setup lang="ts">
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import type { BarChartData } from '@/models/datasource.types'
+import type { HistogramChartData } from '@/models/datasource.types'
 import { dashboardAgeBarOptions, createResizeHandler } from '@/utils/chart-config'
 
 interface Props {
-  data: BarChartData
+  data: HistogramChartData
   loading?: boolean
   height?: number
 }
@@ -36,7 +36,7 @@ const props = withDefaults(defineProps<Props>(), {
 const chartRef = ref<any>(null)
 
 const chartOption = computed(() => {
-  if (!props.data || props.data.categories.length === 0) return {}
+  if (!props.data || props.data.bins.length === 0) return {}
   return dashboardAgeBarOptions(props.data)
 })
 

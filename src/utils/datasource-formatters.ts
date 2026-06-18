@@ -9,7 +9,7 @@ import type {
   PrevalenceData,
   TreemapNode,
   PrevalenceTableRow,
-  BarChartData,
+  HistogramChartData,
   PieChartData,
   LineChartData,
   ReportType,
@@ -31,14 +31,15 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
     value: g.countValue,
   }))
 
-  const ageDistribution: BarChartData = {
-    categories: raw.ageAtFirstObservation.map(a => `${a.intervalIndex}`),
-    series: [
-      {
-        name: 'Person Count',
-        data: raw.ageAtFirstObservation.map(a => a.countValue),
-      },
-    ],
+  const ageDistribution: HistogramChartData = {
+    intervalSize: 1,
+    offset: 0,
+    bins: raw.ageAtFirstObservation.map(a => ({
+      intervalIndex: a.intervalIndex,
+      countValue: a.countValue,
+    })),
+    unit: 'Person Count',
+    seriesName: 'Person Count',
   }
 
   const cumulativeObservation: LineChartData = {
@@ -301,10 +302,15 @@ export function transformDataDensityReport(
 }
 
 interface PersonRawYearOfBirth {
-  year?: number
-  yearOfBirth?: number
-  count?: number
+  intervalIndex?: number
+  percentValue?: number
   countValue?: number
+}
+
+interface PersonRawYearOfBirthStats {
+  minValue?: number
+  maxValue?: number
+  intervalSize?: number
 }
 
 interface PersonRawDistribution {
@@ -316,29 +322,55 @@ interface PersonRawDistribution {
 
 interface PersonRaw {
   yearOfBirth?: PersonRawYearOfBirth[]
+  yearOfBirthStats?: PersonRawYearOfBirthStats[]
   gender?: PersonRawDistribution[]
   race?: PersonRawDistribution[]
   ethnicity?: PersonRawDistribution[]
 }
 
 /**
- * Transform Person API response to internal format
+ * Transform Person API response to internal format.
+ * Mirrors Atlas 2.x logic:
+ *   offset       = yearOfBirthStats[0].minValue   (e.g. 1910)
+ *   intervalSize = yearOfBirthStats[0].intervalSize (e.g. 1)
+ *   bins         = yearOfBirth[].intervalIndex (0-based from offset)
+ *   → actual year = offset + intervalIndex * intervalSize
  */
 export function transformPersonReport(
   raw: PersonRaw
 ): import('@/models/datasource.types').PersonReport {
   // Year of birth distribution
-  const yearOfBirth: import('@/models/datasource.types').BarChartData = {
-    categories:
-      raw.yearOfBirth?.map(y => y.year?.toString() || y.yearOfBirth?.toString() || '') || [],
-    series: [
-      {
-        name: 'Person Count',
-        data: raw.yearOfBirth?.map(y => y.count || y.countValue || 0) || [],
-      },
-    ],
-    unit: 'People',
-  }
+  const yearOfBirth: import('@/models/datasource.types').HistogramChartData = (() => {
+    const yearData = raw.yearOfBirth || []
+    if (yearData.length === 0) {
+      return {
+        intervalSize: 1,
+        offset: 0,
+        bins: [],
+        unit: 'Person Count',
+        seriesName: 'Person Count',
+      }
+    }
+
+    const stats = raw.yearOfBirthStats?.[0]
+    const offset = stats?.minValue ?? 0
+    const intervalSize = stats?.intervalSize ?? 1
+
+    const bins = yearData
+      .map(y => ({
+        intervalIndex: y.intervalIndex ?? 0,
+        countValue: y.countValue ?? 0,
+      }))
+      .sort((a, b) => a.intervalIndex - b.intervalIndex)
+
+    return {
+      intervalSize,
+      offset,
+      bins,
+      unit: 'Person Count',
+      seriesName: 'Person Count',
+    }
+  })()
 
   // Gender distribution
   const gender: import('@/models/datasource.types').PieChartData[] =
@@ -398,6 +430,7 @@ function mapBoxPlotArray(
 
 interface ObservationPeriodRawHistItem {
   intervalIndex?: number
+  percentValue?: number
   countValue?: number
 }
 
@@ -426,7 +459,7 @@ interface ObservationPeriodRaw {
   durationByAgeDecile?: RawBoxPlotItem[]
   personsWithContinuousObservationsByYear?: ObservationPeriodRawHistItem[]
   observationPeriodsPerPerson?: ObservationPeriodsPerPersonItem[]
-  observationLengthStats?: Array<{ attributeName: string; attributeValue: string }>
+  observationLengthStats?: Array<{ minValue?: number; maxValue?: number; intervalSize?: number }>
 }
 
 /**
@@ -436,19 +469,41 @@ interface ObservationPeriodRaw {
 export function transformObservationPeriodReport(
   raw: ObservationPeriodRaw
 ): import('@/models/datasource.types').ObservationPeriodReport {
-  const ageAtFirst = raw.ageAtFirst
-    ? {
-        categories: raw.ageAtFirst.map(i => i.intervalIndex?.toString() || ''),
-        values: raw.ageAtFirst.map(i => i.countValue || 0),
-      }
-    : undefined
+  // ageAtFirst: offset=0, intervalSize=1 — intervalIndex IS the age (matches Atlas 2.x parseHistogramData)
+  const ageAtFirst: import('@/models/datasource.types').HistogramChartData | undefined =
+    raw.ageAtFirst
+      ? {
+          intervalSize: 1,
+          offset: 0,
+          bins: raw.ageAtFirst
+            .map(i => ({
+              intervalIndex: i.intervalIndex ?? 0,
+              countValue: i.countValue ?? 0,
+            }))
+            .sort((a, b) => a.intervalIndex - b.intervalIndex),
+          unit: 'Person Count',
+          seriesName: 'Person Count',
+        }
+      : undefined
 
-  const observationLength = raw.observationLength
-    ? {
-        categories: raw.observationLength.map(i => i.intervalIndex?.toString() || ''),
-        values: raw.observationLength.map(i => i.countValue || 0),
-      }
-    : undefined
+  // observationLength: offset=0, intervalSize from observationLengthStats (e.g. 30 days per bin)
+  // x-axis value = intervalIndex * intervalSize (days)
+  // Mirrors Atlas 2.x: parseObservationLength sets OFFSET=0, INTERVAL_SIZE=stats.intervalSize
+  const observationLength: import('@/models/datasource.types').HistogramChartData | undefined =
+    raw.observationLength
+      ? {
+          intervalSize: raw.observationLengthStats?.[0]?.intervalSize ?? 1,
+          offset: 0,
+          bins: raw.observationLength
+            .map(i => ({
+              intervalIndex: i.intervalIndex ?? 0,
+              countValue: i.countValue ?? 0,
+            }))
+            .sort((a, b) => a.intervalIndex - b.intervalIndex),
+          unit: 'Person Count',
+          seriesName: 'Person Count',
+        }
+      : undefined
 
   const cumulativeObservation: import('@/models/datasource.types').MultiLineChartData | undefined =
     raw.cumulativeObservation
@@ -500,7 +555,6 @@ export function transformObservationPeriodReport(
     durationByAgeDecile: mapBoxPlotArray(raw.durationByAgeDecile),
     personsWithContinuousObsByYear,
     observationPeriodsPerPerson,
-    observationLengthStats: raw.observationLengthStats,
   }
 }
 

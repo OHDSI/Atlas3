@@ -3,8 +3,8 @@
     <AtlasRow>
       <AtlasCol cols="12">
         <ChartSection :title="t('dataSources.personReport.yearOfBirth', 'Year of Birth').value">
-          <BarChart
-            :data="yearOfBirthBarChartData"
+          <DashboardAgeChart
+            :data="data.yearOfBirth"
             :height="350"
           />
         </ChartSection>
@@ -53,13 +53,11 @@
 
 <script setup lang="ts">
 import { AtlasCol, AtlasRow } from '@/components/ui'
-import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { PersonReport as PersonReportData } from '@/models/datasource.types'
-import type { BarChartData } from '@/models/report.types'
 import ChartSection from '@/components/datasources/shared/ChartSection.vue'
 import PieChart from '@/components/reports/charts/PieChart.vue'
-import BarChart from '@/components/reports/charts/BarChart.vue'
+import DashboardAgeChart from '@/components/datasources/charts/DashboardAgeChart.vue'
 
 const { t } = useI18n()
 
@@ -67,13 +65,7 @@ interface Props {
   data: PersonReportData
 }
 
-const props = defineProps<Props>()
-
-const yearOfBirthBarChartData = computed<BarChartData>(() => ({
-  categories: props.data.yearOfBirth.categories,
-  values: props.data.yearOfBirth.series[0]?.data || [],
-  unit: props.data.yearOfBirth.unit || t('dataSources.dashboardReport.people', 'People').value,
-}))
+defineProps<Props>()
 </script>
 
 <style scoped>

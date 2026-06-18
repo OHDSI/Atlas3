@@ -22,7 +22,7 @@ import {
 } from '@/utils/chart-config'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode, TrellisChartData, BoxPlotData } from '@/models/report.types'
 import type {
-  BarChartData as DatasourceBarChartData,
+  HistogramChartData as DatasourceHistogramChartData,
   PieChartData as DatasourcePieChartData,
   LineChartData as DatasourceLineChartData,
   MultiLineChartData as DatasourceMultiLineChartData
@@ -66,6 +66,9 @@ interface ChartSeriesItem {
 interface ChartAxisOption {
   data?: unknown[]
   name?: string
+  type?: string
+  min?: number
+  max?: number
   axisLabel?: {
     rotate?: number
     interval?: number
@@ -618,14 +621,21 @@ describe('chart-config', () => {
   })
 
   describe('dashboardAgeBarOptions', () => {
-    it('should generate age bar chart options', () => {
-      const data: DatasourceBarChartData = {
-        categories: ['0-10', '11-20', '21-30', '31-40'],
-        series: [
-          { name: 'Male', data: [100, 200, 300, 400] },
-          { name: 'Female', data: [90, 180, 290, 390] }
+    beforeEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('should generate histogram chart options', () => {
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 0,
+        bins: [
+          { intervalIndex: 0, countValue: 100 },
+          { intervalIndex: 1, countValue: 200 },
+          { intervalIndex: 2, countValue: 300 },
         ],
-        unit: 'Persons'
+        unit: 'Persons',
+        seriesName: 'Person Count',
       }
 
       const options = dashboardAgeBarOptions(data)
@@ -633,85 +643,116 @@ describe('chart-config', () => {
       expect(options.tooltip).toBeDefined()
       expect(options.grid).toBeDefined()
       expect(options.xAxis).toBeDefined()
-      expect((options.xAxis as ChartAxisOption).name).toBe('Age Group')
+      expect((options.xAxis as ChartAxisOption).name).toBe('Age')
       expect(options.yAxis).toBeDefined()
       expect((options.yAxis as ChartAxisOption).name).toBe('Persons')
       expect(options.series).toBeDefined()
-      expect((options.series as ChartSeriesItem[])).toHaveLength(2)
+      expect((options.series as ChartSeriesItem[])).toHaveLength(1)
+      expect((options.series as ChartSeriesItem[])[0].type).toBe('custom')
     })
 
-    it('should rotate labels for many categories', () => {
-      const data: DatasourceBarChartData = {
-        categories: Array.from({ length: 15 }, (_, i) => `${i * 10}-${(i + 1) * 10}`),
-        series: [{ name: 'Count', data: Array(15).fill(100) }]
+    it('uses offset and intervalSize to map x bins', () => {
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 5,
+        offset: 10,
+        bins: [
+          { intervalIndex: 0, countValue: 10 },
+          { intervalIndex: 1, countValue: 20 },
+          { intervalIndex: 2, countValue: 30 },
+        ],
       }
 
       const options = dashboardAgeBarOptions(data)
+      const series = options.series as ChartSeriesItem[]
 
-      expect((options.xAxis as ChartAxisOption).axisLabel?.rotate).toBe(45)
-    })
-
-    it('should assign colors to multiple series', () => {
-      const data: DatasourceBarChartData = {
-        categories: ['0-10', '11-20'],
-        series: [
-          { name: 'Male', data: [100, 200] },
-          { name: 'Female', data: [90, 180] },
-          { name: 'Unknown', data: [10, 20] }
-        ]
-      }
-
-      const options = dashboardAgeBarOptions(data)
-
-      expect((options.series as ChartSeriesItem[])[0].itemStyle?.color).toBe(CHART_COLORS[0])
-      expect((options.series as ChartSeriesItem[])[1].itemStyle?.color).toBe(CHART_COLORS[1])
-      expect((options.series as ChartSeriesItem[])[2].itemStyle?.color).toBe(CHART_COLORS[2])
-    })
-
-    it('should use default unit when not provided', () => {
-      const data: DatasourceBarChartData = {
-        categories: ['0-10'],
-        series: [{ name: 'Count', data: [100] }]
-      }
-
-      const options = dashboardAgeBarOptions(data)
-
-      expect((options.yAxis as ChartAxisOption).name).toBe('Person Count')
-    })
-
-    it('should handle empty series', () => {
-      const data: DatasourceBarChartData = {
-        categories: ['0-10', '11-20'],
-        series: []
-      }
-
-      const options = dashboardAgeBarOptions(data)
-
-      expect((options.series as ChartSeriesItem[])).toEqual([])
-    })
-
-    it('should apply rounded corners to bars', () => {
-      const data: DatasourceBarChartData = {
-        categories: ['0-10'],
-        series: [{ name: 'Count', data: [100] }]
-      }
-
-      const options = dashboardAgeBarOptions(data)
-
-      expect((options.series as ChartSeriesItem[])[0].itemStyle?.borderRadius).toEqual([4, 4, 0, 0])
+      expect(series[0].data).toEqual([
+        [10, 15, 10],
+        [15, 20, 20],
+        [20, 25, 30],
+      ])
     })
 
     it('calls the tooltip formatter', () => {
-      const data: DatasourceBarChartData = {
-        categories: ['10-19'],
-        series: [{ name: 'Count', data: [250] }],
-        unit: 'Persons'
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 0,
+        bins: [{ intervalIndex: 10, countValue: 250 }],
+        unit: 'Persons',
+        seriesName: 'Person Count',
       }
+
       const options = dashboardAgeBarOptions(data)
       const formatter = (options.tooltip as any).formatter
-      const result = formatter([{ name: '10-19', value: 250 }])
-      expect(result).toContain('10-19')
-      expect(result).toContain('Persons')
+      const result = formatter({ data: [10, 11, 250] })
+
+      expect(result).toContain('Age: 10')
+      expect(result).toContain('Person Count')
+      expect(result).toContain('250')
+    })
+
+    it('formats tooltip with large numbers using SI notation', () => {
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 0,
+        bins: [{ intervalIndex: 0, countValue: 3100000 }],
+        unit: 'Persons',
+      }
+
+      const options = dashboardAgeBarOptions(data)
+      const formatter = (options.tooltip as any).formatter
+      const result = formatter({ data: [0, 1, 3100000] })
+
+      expect(result).toContain('Age: 0')
+      expect(result).toContain('3.1M')
+    })
+
+    it('formats y-axis labels with SI notation for large values', () => {
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 0,
+        bins: [
+          { intervalIndex: 0, countValue: 1000 },
+          { intervalIndex: 1, countValue: 1000000 },
+          { intervalIndex: 2, countValue: 1000000000 },
+        ],
+      }
+
+      const options = dashboardAgeBarOptions(data)
+      const yAxisFormatter = (options.yAxis as any).axisLabel.formatter
+
+      expect(yAxisFormatter(1000)).toBe('1.0k')
+      expect(yAxisFormatter(1000000)).toBe('1.0M')
+      expect(yAxisFormatter(1000000000)).toBe('1.0B')
+      expect(yAxisFormatter(250)).toBe('250')
+    })
+
+    it('sets y-axis max from the largest bin count', () => {
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 0,
+        bins: [
+          { intervalIndex: 0, countValue: 120 },
+          { intervalIndex: 1, countValue: 3100000 },
+          { intervalIndex: 2, countValue: 200 },
+        ],
+      }
+
+      const options = dashboardAgeBarOptions(data)
+      expect((options.yAxis as ChartAxisOption).max).toBe(3100000)
+    })
+
+    it('returns empty options and logs an error for empty/invalid bins', () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 0,
+        bins: [],
+      }
+
+      const options = dashboardAgeBarOptions(data)
+
+      expect(options).toEqual({})
+      expect(spy).toHaveBeenCalled()
     })
   })
 
@@ -1228,55 +1269,6 @@ describe('Dashboard-specific Chart Configurations', () => {
       expect(seriesData[0].itemStyle.color).toBe(CHART_COLORS[0])
       expect(seriesData[1].itemStyle.color).toBe(CHART_COLORS[1])
       expect(seriesData[2].itemStyle.color).toBe(CHART_COLORS[2])
-    })
-  })
-
-  describe('dashboardAgeBarOptions', () => {
-    it('should generate age bar chart configuration', () => {
-      const data = {
-        categories: ['0-9', '10-19', '20-29', '30-39'],
-        series: [{ name: 'Count', data: [100, 200, 300, 250] }],
-        unit: 'Persons'
-      }
-
-      const options = dashboardAgeBarOptions(data)
-
-      expect(options.tooltip).toBeDefined()
-      expect(options.grid).toBeDefined()
-      expect(options.xAxis).toBeDefined()
-      expect(options.yAxis).toBeDefined()
-      expect((options.yAxis as any).name).toBe('Persons')
-    })
-
-    it('should rotate labels for many age groups', () => {
-      const data = {
-        categories: Array.from({ length: 15 }, (_, i) => `${i * 10}-${i * 10 + 9}`),
-        series: [{ name: 'Count', data: Array.from({ length: 15 }, () => 100) }]
-      }
-
-      const options = dashboardAgeBarOptions(data)
-
-      expect((options.xAxis as any).axisLabel.rotate).toBe(45)
-    })
-
-    it('should handle multiple series', () => {
-      const data = {
-        categories: ['0-9', '10-19'],
-        series: [
-          { name: 'Male', data: [50, 60] },
-          { name: 'Female', data: [45, 55] }
-        ],
-        unit: 'Count'
-      }
-
-      const options = dashboardAgeBarOptions(data)
-      const series = options.series as any[]
-
-      expect(series).toHaveLength(2)
-      expect(series[0].name).toBe('Male')
-      expect(series[1].name).toBe('Female')
-      expect(series[0].itemStyle.color).toBe(CHART_COLORS[0])
-      expect(series[1].itemStyle.color).toBe(CHART_COLORS[1])
     })
   })
 
