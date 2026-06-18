@@ -11,9 +11,9 @@
         :model-value="store.unreadCount > 0"
         color="error"
         data-testid="notification-bell"
-        v-bind="menuProps"
       >
         <AtlasIconButton
+          v-bind="menuProps"
           icon="mdi-bell-outline"
           :aria-label="`Notifications (${store.unreadCount} unread)`"
           variant="text"

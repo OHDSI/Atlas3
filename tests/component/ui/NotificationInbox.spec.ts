@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import { vuetify } from './_test-helpers'
 import NotificationInbox from '@/components/shared/NotificationInbox.vue'
+import AtlasIconButton from '@/components/ui/AtlasIconButton.vue'
 import { useNotifications } from '@/stores/notifications'
 
 beforeEach(() => { setActivePinia(createPinia()) })
@@ -25,7 +26,7 @@ describe('NotificationInbox', () => {
     const n = useNotifications()
     n.success('Saved cohort')
     const w = mountInbox()
-    await w.find('[data-testid="notification-bell"]').trigger('click')
+    await w.findComponent(AtlasIconButton).find('button').trigger('click')
     await w.vm.$nextTick()
     expect(document.body.textContent).toContain('Saved cohort')
     const clear = document.body.querySelector('[data-testid="notification-clear"]') as HTMLElement
@@ -38,7 +39,7 @@ describe('NotificationInbox', () => {
     const n = useNotifications()
     n.info('a')
     const w = mountInbox()
-    await w.find('[data-testid="notification-bell"]').trigger('click')
+    await w.findComponent(AtlasIconButton).find('button').trigger('click')
     await w.vm.$nextTick()
     expect(n.unreadCount).toBe(0)
   })
