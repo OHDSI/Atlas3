@@ -101,122 +101,183 @@
           </div>
         </header>
 
-        <!-- Tabs rail: same shared treatment as the outer page tabs. -->
-        <nav class="page-tabs-rail cs-editor__tabs-rail">
-          <AtlasTabs
-            v-model="activeTab"
-            align-tabs="start"
-            density="comfortable"
-            color="primary"
-            slider-color="primary"
-            bg-color="transparent"
-            class="page-tabs"
-          >
-            <AtlasTab value="selected">
-              <AtlasIcon
-                start
-                icon="mdi-checkbox-marked-circle-outline"
-              />
-              {{ t('cs.manager.tabs.selected', 'Selected') }}
-              <AtlasChip
-                size="sm"
-                tone="primary"
-                class="cs-editor__tab-count"
-              >
-                {{ itemCount }}
-              </AtlasChip>
-            </AtlasTab>
-            <AtlasTab value="included">
-              <AtlasIcon
-                start
-                icon="mdi-family-tree"
-              />
-              {{ t('cs.manager.tabs.included', 'Included') }}
-              <AtlasChip
-                size="sm"
-                tone="primary"
-                class="cs-editor__tab-count"
-              >
-                {{ store.includedLoading ? '…' : store.includedItems.length }}
-              </AtlasChip>
-            </AtlasTab>
-            <AtlasTab value="source-codes">
-              <AtlasIcon
-                start
-                icon="mdi-barcode-scan"
-              />
-              {{ t('cs.manager.tabs.sourceCodes', 'Source Codes') }}
-              <AtlasChip
-                size="sm"
-                tone="primary"
-                class="cs-editor__tab-count"
-              >
-                {{ store.sourceCodeLoading ? '…' : store.sourceCodeItems.length }}
-              </AtlasChip>
-            </AtlasTab>
-            <AtlasTab value="search">
-              <AtlasIcon
-                start
-                icon="mdi-magnify"
-              />
-              {{ t('search.tabs.search', 'Search') }}
-            </AtlasTab>
-            <AtlasTab value="recommend">
-              <AtlasIcon
-                start
-                icon="mdi-lightbulb-on-outline"
-              />
-              {{ t('cs.manager.tabs.recommend', 'Recommend') }}
-            </AtlasTab>
-            <AtlasTab value="compare">
-              <AtlasIcon
-                start
-                icon="mdi-compare"
-              />
-              {{ t('cs.browser.compare.compare', 'Compare') }}
-            </AtlasTab>
-          </AtlasTabs>
+        <div class="cs-editor__main">
+          <!-- Tabs rail: same shared treatment as the outer page tabs. -->
+          <nav class="page-tabs-rail cs-editor__tabs-rail">
+            <AtlasTabs
+              v-model="activeTab"
+              align-tabs="start"
+              density="comfortable"
+              color="primary"
+              slider-color="primary"
+              bg-color="transparent"
+              class="page-tabs"
+            >
+              <AtlasTab value="selected">
+                <AtlasIcon
+                  start
+                  icon="mdi-checkbox-marked-circle-outline"
+                />
+                {{ t('cs.manager.tabs.selected', 'Selected') }}
+                <AtlasChip
+                  size="sm"
+                  tone="primary"
+                  class="cs-editor__tab-count"
+                >
+                  {{ itemCount }}
+                </AtlasChip>
+              </AtlasTab>
+              <AtlasTab value="included">
+                <AtlasIcon
+                  start
+                  icon="mdi-family-tree"
+                />
+                {{ t('cs.manager.tabs.included', 'Included') }}
+                <AtlasChip
+                  size="sm"
+                  tone="primary"
+                  class="cs-editor__tab-count"
+                >
+                  {{ store.includedLoading ? '…' : store.includedItems.length }}
+                </AtlasChip>
+              </AtlasTab>
+              <AtlasTab value="source-codes">
+                <AtlasIcon
+                  start
+                  icon="mdi-barcode-scan"
+                />
+                {{ t('cs.manager.tabs.sourceCodes', 'Source Codes') }}
+                <AtlasChip
+                  size="sm"
+                  tone="primary"
+                  class="cs-editor__tab-count"
+                >
+                  {{ store.sourceCodeLoading ? '…' : store.sourceCodeItems.length }}
+                </AtlasChip>
+              </AtlasTab>
+              <AtlasTab value="search">
+                <AtlasIcon
+                  start
+                  icon="mdi-magnify"
+                />
+                {{ t('search.tabs.search', 'Search') }}
+              </AtlasTab>
+              <AtlasTab value="recommend">
+                <AtlasIcon
+                  start
+                  icon="mdi-lightbulb-on-outline"
+                />
+                {{ t('cs.manager.tabs.recommend', 'Recommend') }}
+              </AtlasTab>
+              <AtlasTab value="compare">
+                <AtlasIcon
+                  start
+                  icon="mdi-compare"
+                />
+                {{ t('cs.browser.compare.compare', 'Compare') }}
+              </AtlasTab>
+            </AtlasTabs>
 
-          <AtlasSpacer />
+            <AtlasSpacer />
 
-          <AtlasButton
-            variant="ghost"
-            size="sm"
-            icon="mdi-clipboard-text-outline"
-            class="cs-editor__paste-btn"
-            @click="showPasteDialog = true"
-          >
-            {{ t('cs.manager.pasteIds', 'Paste IDs') }}
-          </AtlasButton>
+            <AtlasButton
+              variant="ghost"
+              size="sm"
+              icon="mdi-clipboard-text-outline"
+              class="cs-editor__paste-btn"
+              @click="showPasteDialog = true"
+            >
+              {{ t('cs.manager.pasteIds', 'Paste IDs') }}
+            </AtlasButton>
 
-          <AtlasButton
-            variant="ghost"
-            size="sm"
-            icon="mdi-barcode-scan"
-            class="cs-editor__paste-btn"
-            @click="showSourceCodeDialog = true"
-          >
-            {{ t('cs.manager.importSourceCodes', 'Import codes') }}
-          </AtlasButton>
+            <AtlasButton
+              variant="ghost"
+              size="sm"
+              icon="mdi-barcode-scan"
+              class="cs-editor__paste-btn"
+              @click="showSourceCodeDialog = true"
+            >
+              {{ t('cs.manager.importSourceCodes', 'Import codes') }}
+            </AtlasButton>
 
-          <AtlasButton
-            variant="ghost"
-            size="sm"
-            icon="mdi-code-json"
-            class="cs-editor__paste-btn"
-            @click="showJsonDialog = true"
-          >
-            {{ t('cs.manager.importJson', 'Import JSON') }}
-          </AtlasButton>
-        </nav>
+            <AtlasButton
+              variant="ghost"
+              size="sm"
+              icon="mdi-code-json"
+              class="cs-editor__paste-btn"
+              @click="showJsonDialog = true"
+            >
+              {{ t('cs.manager.importJson', 'Import JSON') }}
+            </AtlasButton>
+          </nav>
 
-        <div class="cs-editor__body">
-          <!-- Inline concept detail view: replaces the tabbed body when the
-               user clicked a concept name inside this editor. The header's
-               built-in back arrow returns to the previous tab. -->
+          <div class="cs-editor__body">
+            <v-window v-model="activeTab">
+              <!-- Selected Concepts Tab -->
+              <v-window-item value="selected">
+                <ConceptSetTable
+                  :items="store.currentSet?.items || []"
+                  :loading="false"
+                  :source-key="sourceKey"
+                  @toggle:descendants="onToggleDescendants"
+                  @toggle:mapped="onToggleMapped"
+                  @toggle:exclude="onToggleExclude"
+                  @remove="onRemoveFromSet"
+                  @view-concept="onViewConcept"
+                />
+              </v-window-item>
+
+              <!-- Included Concepts Tab -->
+              <v-window-item value="included">
+                <IncludedConceptsTable
+                  :items="store.includedItems"
+                  :loading="store.includedLoading"
+                  :error="store.includedError"
+                  :manual-count="store.currentSet?.items?.length ?? 0"
+                  :source-key="sourceKey"
+                  @view-concept="onViewConcept"
+                  @retry="store.resolveIncluded(sourceKey)"
+                />
+              </v-window-item>
+
+              <!-- Source Codes Tab -->
+              <v-window-item value="source-codes">
+                <IncludedSourceCodesTable
+                  :active="activeTab === 'source-codes'"
+                  :source-key="sourceKey"
+                  @view-concept="onViewConcept"
+                />
+              </v-window-item>
+
+              <!-- Search Tab -->
+              <v-window-item value="search">
+                <ConceptSearchInline
+                  @add-concept="onAddConcept"
+                  @remove-concept="onRemoveConcept"
+                  @view-concept="onViewConcept"
+                />
+              </v-window-item>
+
+              <!-- Recommend Tab -->
+              <v-window-item value="recommend">
+                <RecommendTab
+                  :active="activeTab === 'recommend'"
+                  @concepts-added="onRecommendedConceptsAdded"
+                />
+              </v-window-item>
+
+              <v-window-item value="compare">
+                <CompareTab :active="activeTab === 'compare'" />
+              </v-window-item>
+            </v-window>
+          </div>
+
+          <!-- Concept detail overlays the tabs menu + body (header stays
+             visible) when a concept is opened from any table. The back
+             arrow inside the detail clears it. -->
           <div
             v-if="viewingConcept"
-            class="cs-editor__inline-detail"
+            class="cs-editor__detail-overlay"
             data-testid="concept-set-editor-inline-detail"
           >
             <ConceptDetailContent
@@ -225,68 +286,6 @@
               :on-back="() => (viewingConcept = null)"
             />
           </div>
-
-          <v-window
-            v-else
-            v-model="activeTab"
-          >
-            <!-- Selected Concepts Tab -->
-            <v-window-item value="selected">
-              <ConceptSetTable
-                :items="store.currentSet?.items || []"
-                :loading="false"
-                :source-key="sourceKey"
-                @toggle:descendants="onToggleDescendants"
-                @toggle:mapped="onToggleMapped"
-                @toggle:exclude="onToggleExclude"
-                @remove="onRemoveFromSet"
-                @view-concept="onViewConcept"
-              />
-            </v-window-item>
-
-            <!-- Included Concepts Tab -->
-            <v-window-item value="included">
-              <IncludedConceptsTable
-                :items="store.includedItems"
-                :loading="store.includedLoading"
-                :error="store.includedError"
-                :manual-count="store.currentSet?.items?.length ?? 0"
-                :source-key="sourceKey"
-                @view-concept="onViewConcept"
-                @retry="store.resolveIncluded(sourceKey)"
-              />
-            </v-window-item>
-
-            <!-- Source Codes Tab -->
-            <v-window-item value="source-codes">
-              <IncludedSourceCodesTable
-                :active="activeTab === 'source-codes'"
-                :source-key="sourceKey"
-                @view-concept="onViewConcept"
-              />
-            </v-window-item>
-
-            <!-- Search Tab -->
-            <v-window-item value="search">
-              <ConceptSearchInline
-                @add-concept="onAddConcept"
-                @remove-concept="onRemoveConcept"
-                @view-concept="onViewConcept"
-              />
-            </v-window-item>
-
-            <!-- Recommend Tab -->
-            <v-window-item value="recommend">
-              <RecommendTab
-                :active="activeTab === 'recommend'"
-                @concepts-added="onRecommendedConceptsAdded"
-              />
-            </v-window-item>
-
-            <v-window-item value="compare">
-              <CompareTab :active="activeTab === 'compare'" />
-            </v-window-item>
-          </v-window>
         </div>
       </div>
 
@@ -819,12 +818,8 @@ watch(
   { immediate: true }
 )
 
-// Fixed width to ensure consistent 85% across all tabs
-const drawerWidth = computed(() => {
-  // Use fixed pixel width based on 85% of typical viewport
-  // This prevents v-window from causing layout shifts
-  return Math.min(window.innerWidth * 0.85, 1400)
-})
+// Always fill the viewport minus a 100px gutter.
+const drawerWidth = computed(() => window.innerWidth - 100)
 
 // Versions configuration
 const versionsConfig = computed<VersionsConfig>(() => {
@@ -1312,6 +1307,14 @@ function closeJsonDialog() {
   margin-right: 4px;
 }
 
+.cs-editor__main {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .cs-editor__body {
   flex: 1;
   min-height: 0;
@@ -1319,9 +1322,17 @@ function closeJsonDialog() {
   padding: 16px 28px 28px;
 }
 
-.cs-editor__inline-detail {
+/* Concept detail overlays the tabs menu + body within cs-editor__main,
+ * leaving the editor header (title / save / close) visible above it. */
+.cs-editor__detail-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  background: rgb(var(--v-theme-surface));
+  padding: 16px 28px 28px;
 }
 .cs-editor__inline-detail-toolbar {
   padding: 4px 0 12px;

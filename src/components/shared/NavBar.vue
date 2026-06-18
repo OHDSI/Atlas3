@@ -589,8 +589,8 @@ onMounted(() => {
 .nav-bar__nav-link {
   display: inline-block;
   padding: 20px 12px;
-  color: rgb(var(--v-theme-on-surface-variant));
-  font-weight: 400;
+  color: rgb(var(--v-theme-primary));
+  font-weight: 500;
   text-decoration: none;
   transition: color 0.15s ease-in-out;
   font-size: 14px;
@@ -609,7 +609,7 @@ onMounted(() => {
 
 .nav-bar__nav-item--active .nav-bar__nav-link {
   color: rgb(var(--v-theme-primary));
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .nav-bar__nav-item--active::after {
@@ -619,7 +619,7 @@ onMounted(() => {
   left: 8px;
   right: 8px;
   height: 2px;
-  background-color: rgb(var(--v-theme-primary));
+  background-color: rgb(var(--v-theme-orange));
   border-radius: 2px;
 }
 </style>

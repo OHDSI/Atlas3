@@ -187,14 +187,7 @@ const scrollContainer = ref<HTMLElement>()
  * Mobile (≤768px): Use pixel value to avoid percentage issues
  * Tablet/Desktop: 85% with max 1400px, min 300px
  */
-const drawerWidth = computed(() => {
-  if (windowWidth.value <= 768) {
-    return windowWidth.value
-  }
-  // Ensure drawer doesn't exceed viewport and has minimum usable width
-  const calculatedWidth = Math.min(windowWidth.value * 0.85, 1400)
-  return Math.max(calculatedWidth, 300)
-})
+const drawerWidth = computed(() => windowWidth.value - 100)
 
 /**
  * Handle window resize to update drawer width
