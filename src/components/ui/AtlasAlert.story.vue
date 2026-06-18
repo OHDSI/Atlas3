@@ -54,9 +54,16 @@ import AtlasButton from './AtlasButton.vue'
         closable
       >
         Some filter types are misconfigured and won't appear in the UI.
-        <template #details>Invalid: foo, bar, baz</template>
+        <template #details>
+          Invalid: foo, bar, baz
+        </template>
         <template #actions>
-          <AtlasButton size="sm" variant="tonal">View details</AtlasButton>
+          <AtlasButton
+            size="sm"
+            variant="tonal"
+          >
+            View details
+          </AtlasButton>
         </template>
       </AtlasAlert>
     </Variant>

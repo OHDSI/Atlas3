@@ -10,9 +10,24 @@
     @close="$emit('close')"
   >
     <slot />
-    <template v-if="$slots.details" #details><slot name="details" /></template>
-    <template v-if="$slots.actions" #actions><slot name="actions" /></template>
-    <template v-if="$slots.append" #append><slot name="append" /></template>
+    <template
+      v-if="$slots.details"
+      #details
+    >
+      <slot name="details" />
+    </template>
+    <template
+      v-if="$slots.actions"
+      #actions
+    >
+      <slot name="actions" />
+    </template>
+    <template
+      v-if="$slots.append"
+      #append
+    >
+      <slot name="append" />
+    </template>
   </AtlasFeedbackBody>
 </template>
 

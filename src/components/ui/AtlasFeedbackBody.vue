@@ -5,17 +5,44 @@
     data-testid="atlas-feedback"
   >
     <div class="atlas-feedback__rail">
-      <AtlasIcon color="white" size="20">{{ resolvedIcon }}</AtlasIcon>
+      <AtlasIcon
+        color="white"
+        size="20"
+      >
+        {{ resolvedIcon }}
+      </AtlasIcon>
     </div>
     <div class="atlas-feedback__inner">
       <div class="atlas-feedback__body">
-        <div v-if="title" :class="['atlas-feedback__title', tone === 'neutral' && 'atlas-feedback__title--note']">
+        <div
+          v-if="title"
+          :class="['atlas-feedback__title', tone === 'neutral' && 'atlas-feedback__title--note']"
+        >
           <span>{{ title }}</span>
-          <span v-if="count !== undefined" class="atlas-feedback__count" data-testid="atlas-feedback-count">{{ count }}</span>
+          <span
+            v-if="count !== undefined"
+            class="atlas-feedback__count"
+            data-testid="atlas-feedback-count"
+          >{{ count }}</span>
         </div>
-        <div v-if="$slots.default" class="atlas-feedback__message"><slot /></div>
-        <div v-if="$slots.details" class="atlas-feedback__details"><slot name="details" /></div>
-        <div v-if="$slots.actions" class="atlas-feedback__actions"><slot name="actions" /></div>
+        <div
+          v-if="$slots.default"
+          class="atlas-feedback__message"
+        >
+          <slot />
+        </div>
+        <div
+          v-if="$slots.details"
+          class="atlas-feedback__details"
+        >
+          <slot name="details" />
+        </div>
+        <div
+          v-if="$slots.actions"
+          class="atlas-feedback__actions"
+        >
+          <slot name="actions" />
+        </div>
       </div>
       <slot name="append" />
       <button
@@ -26,7 +53,9 @@
         data-testid="atlas-feedback-close"
         @click="$emit('close')"
       >
-        <AtlasIcon size="18">mdi-close</AtlasIcon>
+        <AtlasIcon size="18">
+          mdi-close
+        </AtlasIcon>
       </button>
     </div>
   </div>
