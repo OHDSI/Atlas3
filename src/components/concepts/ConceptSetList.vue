@@ -6,6 +6,7 @@
       <ConceptSetFilters
         :filters="store.filters"
         :available-authors="store.availableAuthors"
+        :available-tags="store.availableTags"
         :active-filter-count="store.activeFilterCount"
         class="concept-set-list__filters"
         @update:filters="store.setFilters"

@@ -65,6 +65,20 @@
               hide-details
             />
 
+            <AtlasAutocomplete
+              v-model="localFilters.selectedTags"
+              :items="availableTags"
+              :label="tagsLabel"
+              data-testid="cs-filter-tags"
+              prepend-inner-icon="mdi-tag-multiple-outline"
+              chips
+              closable-chips
+              multiple
+              clearable
+              variant="outlined"
+              hide-details
+            />
+
             <div class="concept-set-filters__menu-section-label">
               {{ createdLabel }}
             </div>
@@ -184,6 +198,15 @@
         {{ authorLabel }}: {{ localFilters.author }}
       </AtlasChip>
       <AtlasChip
+        v-for="tag in localFilters.selectedTags"
+        :key="tag"
+        size="sm"
+        closable
+        @close="localFilters.selectedTags = localFilters.selectedTags.filter(t => t !== tag)"
+      >
+        {{ tagsLabel }}: {{ tag }}
+      </AtlasChip>
+      <AtlasChip
         v-if="localFilters.createdDateRange.from"
         size="sm"
         closable
@@ -237,6 +260,7 @@ import { AtlasAutocomplete, AtlasButton, AtlasCard, AtlasChip, AtlasDialog, Atla
 interface Props {
   filters: ConceptSetFilterState
   availableAuthors: string[]
+  availableTags: string[]
   activeFilterCount: number
 }
 
@@ -262,6 +286,8 @@ const modifiedFromLabel = t('common.modifiedFrom', 'Modified from')
 const modifiedToLabel = t('common.modifiedTo', 'Modified to')
 const clearAllLabel = t('search.clearAllSelections', 'Clear all')
 
+const tagsLabel = t('common.tags', 'Tags')
+
 const filtersMenuOpen = ref(false)
 const localFilters = ref<ConceptSetFilterState>({
   ...props.filters,
@@ -282,6 +308,7 @@ const modifiedToDate = ref<Date | undefined>(props.filters.modifiedDateRange.to)
 const hasNonSearchFilters = computed(
   () =>
     !!localFilters.value.author ||
+    localFilters.value.selectedTags.length > 0 ||
     !!localFilters.value.createdDateRange.from ||
     !!localFilters.value.createdDateRange.to ||
     !!localFilters.value.modifiedDateRange.from ||
