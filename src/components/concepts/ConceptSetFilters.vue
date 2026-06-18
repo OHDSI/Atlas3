@@ -291,6 +291,7 @@ const tagsLabel = t('common.tags', 'Tags')
 const filtersMenuOpen = ref(false)
 const localFilters = ref<ConceptSetFilterState>({
   ...props.filters,
+  selectedTags: props.filters.selectedTags ?? [],
   createdDateRange: { ...props.filters.createdDateRange },
   modifiedDateRange: { ...props.filters.modifiedDateRange },
 })
@@ -323,6 +324,7 @@ watch(
     isInternalUpdate = true
     localFilters.value = {
       ...newFilters,
+      selectedTags: newFilters.selectedTags ?? [],
       createdDateRange: { ...newFilters.createdDateRange },
       modifiedDateRange: { ...newFilters.modifiedDateRange },
     }

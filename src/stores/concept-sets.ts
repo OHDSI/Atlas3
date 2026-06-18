@@ -346,7 +346,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   }, 300)
 
   function setFilters(next: ConceptSetFilterState) {
-    filters.value = { ...next }
+    filters.value = { ...next, selectedTags: next.selectedTags ?? [] }
   }
 
   function clearFilters() {
