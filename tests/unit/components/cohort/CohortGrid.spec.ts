@@ -105,9 +105,11 @@ describe('CohortGrid', () => {
       const error = new Error('Failed to load cohorts')
       const wrapper = mountComponent({ error })
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
+      // AtlasAlert renders AtlasFeedbackBody with data-testid="atlas-feedback"
+      // and atlas-feedback--danger class for error/danger severity
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
       expect(alert.exists()).toBe(true)
-      expect(alert.props('type')).toBe('error')
+      expect(alert.classes()).toContain('atlas-feedback--danger')
     })
 
     it('should display error message', () => {

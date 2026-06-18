@@ -171,8 +171,10 @@ describe('ConceptSetList', () => {
     store.error = 'Failed to fetch concept sets'
     await wrapper.vm.$nextTick()
 
-    const alert = wrapper.findComponent({ name: 'VAlert' })
+    // AtlasAlert renders AtlasFeedbackBody with data-testid="atlas-feedback"
+    const alert = wrapper.find('[data-testid="atlas-feedback"]')
     expect(alert.exists()).toBe(true)
+    expect(alert.classes()).toContain('atlas-feedback--danger')
     expect(alert.text()).toContain('Failed to fetch concept sets')
   })
 
@@ -183,8 +185,9 @@ describe('ConceptSetList', () => {
     store.error = 'Failed to fetch concept sets'
     await wrapper.vm.$nextTick()
 
-    const alert = wrapper.findComponent({ name: 'VAlert' })
-    await alert.vm.$emit('click:close')
+    // Click the close button rendered by AtlasFeedbackBody when closable=true
+    const closeBtn = wrapper.find('[data-testid="atlas-feedback-close"]')
+    await closeBtn.trigger('click')
 
     expect(store.error).toBe(null)
   })

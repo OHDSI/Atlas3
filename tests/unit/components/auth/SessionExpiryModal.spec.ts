@@ -27,6 +27,8 @@ describe('SessionExpiryModal.vue', () => {
     if (wrapper) {
       wrapper.unmount();
     }
+    // Clean up any teleported content (v-dialog/v-snackbar) attached to body
+    document.body.innerHTML = '';
   });
 
   describe('Countdown display', () => {
@@ -343,6 +345,8 @@ describe('SessionExpiryModal.vue', () => {
     it('should display extension error when provided', async () => {
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
+      // AtlasAlert inside AtlasDialog is teleported to document.body;
+      // attach the wrapper to the body so the teleport target is accessible.
       wrapper = mount(SessionExpiryModal, {
         props: {
           modelValue: true,
@@ -351,14 +355,18 @@ describe('SessionExpiryModal.vue', () => {
           isExtending: false,
           extensionError: 'Failed to extend session. Network error.',
         },
+        attachTo: document.body,
         global: {
           plugins: [vuetify]
         }
       });
 
-      const alert = wrapper.findComponent({ name: 'VAlert' });
-      expect(alert.exists()).toBe(true);
-      expect(alert.text()).toContain('Failed to extend session');
+      await wrapper.vm.$nextTick();
+
+      // The alert is teleported — query from document.body
+      const alert = document.body.querySelector('[data-testid="atlas-feedback"]');
+      expect(alert).not.toBeNull();
+      expect(alert?.textContent).toContain('Failed to extend session');
     });
 
     it('should not show error alert when no error', async () => {
@@ -377,7 +385,7 @@ describe('SessionExpiryModal.vue', () => {
         }
       });
 
-      const errorAlert = wrapper.findComponent({ name: 'VAlert' });
+      const errorAlert = wrapper.find('[data-testid="atlas-feedback"]');
       expect(errorAlert.exists()).toBe(false);
     });
   });

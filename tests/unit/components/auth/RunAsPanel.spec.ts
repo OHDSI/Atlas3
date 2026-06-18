@@ -115,9 +115,9 @@ describe('RunAsPanel', () => {
     it('should render warning alert', () => {
       wrapper = mountComponent()
 
-      const alerts = wrapper.findAllComponents({ name: 'VAlert' })
-      const warningAlert = alerts.find(alert => alert.props('type') === 'warning')
-      expect(warningAlert).toBeDefined()
+      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
+      const warningFeedback = feedbackEls.find(el => el.classes('atlas-feedback--warning'))
+      expect(warningFeedback).toBeDefined()
     })
   })
 
@@ -301,17 +301,21 @@ describe('RunAsPanel', () => {
     it('should have warning type', () => {
       wrapper = mountComponent()
 
-      const alerts = wrapper.findAllComponents({ name: 'VAlert' })
-      const warningAlert = alerts.find(alert => alert.props('type') === 'warning')
-      expect(warningAlert).toBeDefined()
+      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
+      const warningFeedback = feedbackEls.find(el => el.classes('atlas-feedback--warning'))
+      expect(warningFeedback).toBeDefined()
+      expect(warningFeedback?.classes()).toContain('atlas-feedback--warning')
     })
 
     it('should have tonal variant', () => {
       wrapper = mountComponent()
 
-      const alerts = wrapper.findAllComponents({ name: 'VAlert' })
-      const warningAlert = alerts.find(alert => alert.props('type') === 'warning')
-      expect(warningAlert?.props('variant')).toBe('tonal')
+      // AtlasAlert uses severity-based CSS classes instead of Vuetify variant prop.
+      // The warning severity renders atlas-feedback--warning (no separate tonal variant).
+      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
+      const warningFeedback = feedbackEls.find(el => el.classes('atlas-feedback--warning'))
+      expect(warningFeedback).toBeDefined()
+      expect(warningFeedback?.classes()).toContain('atlas-feedback--warning')
     })
   })
 
@@ -319,9 +323,10 @@ describe('RunAsPanel', () => {
     it('should not show error alert when no error', () => {
       wrapper = mountComponent()
 
-      const alerts = wrapper.findAllComponents({ name: 'VAlert' })
-      const errorAlert = alerts.find(alert => alert.props('type') === 'error')
-      expect(errorAlert).toBeUndefined()
+      // Only the static warning feedback should be visible (no error state by default)
+      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
+      const dangerFeedback = feedbackEls.find(el => el.classes('atlas-feedback--danger'))
+      expect(dangerFeedback).toBeUndefined()
     })
 
     it('should show error alert when error message is set', async () => {
@@ -330,10 +335,10 @@ describe('RunAsPanel', () => {
       wrapper.vm.errorMessage = 'Test error message'
       await wrapper.vm.$nextTick()
 
-      const alerts = wrapper.findAllComponents({ name: 'VAlert' })
-      const errorAlert = alerts.find(alert => alert.props('type') === 'error')
-      expect(errorAlert).toBeDefined()
-      expect(errorAlert?.text()).toContain('Test error message')
+      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
+      const dangerFeedback = feedbackEls.find(el => el.classes('atlas-feedback--danger'))
+      expect(dangerFeedback).toBeDefined()
+      expect(dangerFeedback?.text()).toContain('Test error message')
     })
 
     it('should be closable', async () => {
@@ -342,9 +347,10 @@ describe('RunAsPanel', () => {
       wrapper.vm.errorMessage = 'Test error message'
       await wrapper.vm.$nextTick()
 
-      const alerts = wrapper.findAllComponents({ name: 'VAlert' })
-      const errorAlert = alerts.find(alert => alert.props('type') === 'error')
-      expect(errorAlert?.props('closable')).toBe(true)
+      // Close button is rendered inside atlas-feedback--danger when closable=true
+      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
+      const dangerFeedback = feedbackEls.find(el => el.classes('atlas-feedback--danger'))
+      expect(dangerFeedback?.find('[data-testid="atlas-feedback-close"]').exists()).toBe(true)
     })
 
     it('should clear error on close button click', async () => {
@@ -353,10 +359,9 @@ describe('RunAsPanel', () => {
       wrapper.vm.errorMessage = 'Test error message'
       await wrapper.vm.$nextTick()
 
-      const alerts = wrapper.findAllComponents({ name: 'VAlert' })
-      const errorAlert = alerts.find(alert => alert.props('type') === 'error')
-
-      await errorAlert?.vm.$emit('click:close')
+      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
+      const dangerFeedback = feedbackEls.find(el => el.classes('atlas-feedback--danger'))
+      await dangerFeedback?.find('[data-testid="atlas-feedback-close"]').trigger('click')
       await wrapper.vm.$nextTick()
 
       expect(wrapper.vm.errorMessage).toBeNull()
@@ -367,9 +372,10 @@ describe('RunAsPanel', () => {
     it('should not show running-as info alert by default', () => {
       wrapper = mountComponent()
 
-      const alerts = wrapper.findAllComponents({ name: 'VAlert' })
-      const infoAlert = alerts.find(alert => alert.props('type') === 'info')
-      expect(infoAlert).toBeUndefined()
+      // Only the static warning feedback is shown; no info feedback by default
+      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
+      const infoFeedback = feedbackEls.find(el => el.classes('atlas-feedback--info'))
+      expect(infoFeedback).toBeUndefined()
     })
 
     it('should show running-as info when isRunningAs is true', async () => {
@@ -380,9 +386,9 @@ describe('RunAsPanel', () => {
       authStore.originalUser = mockOriginalUser
       await wrapper.vm.$nextTick()
 
-      const alerts = wrapper.findAllComponents({ name: 'VAlert' })
-      const infoAlert = alerts.find(alert => alert.props('type') === 'info')
-      expect(infoAlert).toBeDefined()
+      const feedbackEls = wrapper.findAll('[data-testid="atlas-feedback"]')
+      const infoFeedback = feedbackEls.find(el => el.classes('atlas-feedback--info'))
+      expect(infoFeedback).toBeDefined()
     })
 
     it('should disable controls when running as another user', async () => {
