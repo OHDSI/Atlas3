@@ -34,7 +34,7 @@ vi.mock('@/stores/config', () => ({
   }),
 }))
 
-import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
+import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import type { Tag } from '@/models/cohort.types'
 
 const vuetify = createVuetify({ components, directives })

@@ -3,6 +3,7 @@
  * OHDSI standardized vocabulary concepts and concept sets
  */
 import { z } from 'zod'
+import type { Tag } from '@/models/cohort.types'
 
 // ============================================================================
 // Core Concept Type (standardized from WebAPI UPPERCASE fields to camelCase)
@@ -99,6 +100,7 @@ export interface ConceptSet {
   modifiedDate?: string | number // ISO 8601 datetime or Unix timestamp
   modifiedBy?: string // Username
   shared?: boolean // Visible to other users
+  tags?: Tag[] // Assigned tags (read from WebAPI; synced via separate endpoints)
   items: ConceptSetItem[] // Concepts in this set
 }
 
@@ -163,6 +165,15 @@ export const ConceptSetListItemSchema = z.object({
         login: z.string(),
       }),
     ])
+    .optional(),
+  tags: z
+    .array(
+      z.object({
+        id: z.number().optional(),
+        name: z.string(),
+        color: z.string().nullable().optional(),
+      })
+    )
     .optional(),
 })
 

@@ -231,3 +231,42 @@ export async function deleteConceptSet(id: number | string): Promise<boolean> {
     return false
   }
 }
+
+/**
+ * Assign a tag to a concept set.
+ * WebAPI: POST /conceptset/{id}/tag  (body is the raw tagId int)
+ */
+export async function assignTagToConceptSet(
+  id: number | string,
+  tagId: number
+): Promise<boolean> {
+  try {
+    await fetchJSON(`/conceptset/${id}/tag/`, {
+      method: 'POST',
+      body: JSON.stringify(tagId),
+    })
+    return true
+  } catch (error) {
+    logger.error('ConceptSet', `Failed to assign tag ${tagId} to concept set ${id}`, error)
+    return false
+  }
+}
+
+/**
+ * Unassign a tag from a concept set.
+ * WebAPI: DELETE /conceptset/{id}/tag/{tagId}
+ */
+export async function unassignTagFromConceptSet(
+  id: number | string,
+  tagId: number
+): Promise<boolean> {
+  try {
+    await fetchJSON(`/conceptset/${id}/tag/${tagId}`, {
+      method: 'DELETE',
+    })
+    return true
+  } catch (error) {
+    logger.error('ConceptSet', `Failed to unassign tag ${tagId} from concept set ${id}`, error)
+    return false
+  }
+}

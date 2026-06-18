@@ -49,6 +49,32 @@
 
           <div class="cs-editor__actions">
             <AtlasTooltip
+              :text="t('common.tags', 'Tags').value"
+              location="bottom"
+            >
+              <template #activator="{ props: tooltipProps }">
+                <AtlasBadge
+                  v-bind="tooltipProps"
+                  :content="selectedTags.length"
+                  :model-value="selectedTags.length > 0"
+                  color="primary"
+                  offset-x="6"
+                  offset-y="6"
+                >
+                  <AtlasIconButton
+                    icon="mdi-tag-multiple"
+                    data-testid="cs-editor-tags-btn"
+                    v-bind="{ ariaLabel: t('common.tags', 'Tags').value }"
+                    variant="text"
+                    size="sm"
+                    :disabled="loading || !!store.previewVersion"
+                    @click="showTagsDialog = true"
+                  />
+                </AtlasBadge>
+              </template>
+            </AtlasTooltip>
+
+            <AtlasTooltip
               v-if="isEditMode && props.conceptSet?.id"
               :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
               location="bottom"
@@ -306,6 +332,13 @@
       </AtlasDialog>
     </v-navigation-drawer>
   </Teleport>
+
+  <!-- Tag selection dialog. -->
+  <TagSelectionDialog
+    v-model="showTagsDialog"
+    :selected-tags="selectedTags"
+    @update:selected-tags="selectedTags = $event"
+  />
 
   <!-- Confirmation dialogs — kept outside the drawer Teleport so they
        remain in the component's normal render tree but are themselves
@@ -620,6 +653,8 @@ import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import type { ConceptSet, Concept, ConceptSetItem } from '@/models/concept-set.types'
 import type { VersionsConfig, VersionsTableItem, User } from '@/components/versions/types'
+import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
+import type { Tag } from '@/models/cohort.types'
 import ConceptSearchInline from './ConceptSearchInline.vue'
 import ConceptSetTable from './ConceptSetTable.vue'
 import IncludedConceptsTable from './IncludedConceptsTable.vue'
@@ -727,6 +762,11 @@ const versionCount = ref(0)
 // so close + delete confirmations match the rest of the app.
 const showCloseConfirm = ref(false)
 const showDeleteConfirm = ref(false)
+
+// Tag selection dialog state.
+const showTagsDialog = ref(false)
+const selectedTags = ref<Tag[]>([])
+const loadedTags = ref<Tag[]>([])
 // Bulk paste (IDs) dialog state.
 const showPasteDialog = ref(false)
 const pasteInput = ref('')
@@ -917,6 +957,17 @@ watch(
   { immediate: true }
 )
 
+// Seed tag state from the incoming concept set so the dialog opens
+// pre-populated, and loadedTags tracks what was last saved.
+watch(
+  () => props.conceptSet,
+  cs => {
+    selectedTags.value = cs?.tags ? [...cs.tags] : []
+    loadedTags.value = cs?.tags ? [...cs.tags] : []
+  },
+  { immediate: true }
+)
+
 // Unsaved-changes is driven by explicit user actions only — the
 // previous deep watcher on `form` fired on the initial assignment
 // when the editor opened, which marked a freshly-opened set as
@@ -967,6 +1018,11 @@ async function onSave() {
     }
 
     if (result) {
+      const savedId = result?.id
+      if (savedId !== undefined && savedId !== null) {
+        await store.syncTags(savedId, loadedTags.value, selectedTags.value)
+        loadedTags.value = [...selectedTags.value]
+      }
       hasUnsavedChanges.value = false
       emit('save')
       emit('update:modelValue', false)

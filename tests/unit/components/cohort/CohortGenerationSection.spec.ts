@@ -101,7 +101,7 @@ describe('CohortGenerationSection', () => {
     expect(header.attributes('aria-expanded')).toBe('false')
   })
 
-  it('starts expanded when at least one job exists', async () => {
+  it('starts collapsed even when jobs exist (dataset list hidden by default)', async () => {
     const wrapper = mountSection(
       { cohortId: 1 },
       [{ id: 1, cohortDefinitionId: 1, sourceKey: 'CCAE', status: 'COMPLETE', personCount: 8420 }],
@@ -109,7 +109,7 @@ describe('CohortGenerationSection', () => {
     )
     await flushPromises()
     const header = wrapper.find('[data-testid="cs-header"]')
-    expect(header.attributes('aria-expanded')).toBe('true')
+    expect(header.attributes('aria-expanded')).toBe('false')
   })
 
   it('opens drawer when row Inclusion-report button is clicked on a complete row', async () => {

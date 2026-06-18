@@ -253,7 +253,7 @@ import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue
 import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
 import PathwayWorkbench from './PathwayWorkbench.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
-import TagSelectionDialog from '@/components/cohort/TagSelectionDialog.vue'
+import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import { exportPathway, importPathway } from '@/services/webapi'
 import { logger } from '@/utils/logger'
 import type { VersionsConfig, VersionsTableItem } from '@/components/versions/types'

@@ -54,6 +54,11 @@ export async function setupBasicMocks(page: Page) {
     // Set acceptance date to current time to bypass license dialog
     localStorage.setItem(LICENSE_ACCEPTANCE_KEY, Date.now().toString())
 
+    // The cohorts overview now defaults to the table view. The card/grid-based
+    // e2e specs assert on .cohort-grid / .cohort-card, so persist the tile
+    // preference here to render the grid those specs exercise.
+    localStorage.setItem('cohorts-view-mode', 'tile')
+
     // Set auth token to bypass authentication dialog
     // Token must be valid JWT format with exp claim far in the future
     // This is a mock JWT: header.payload.signature

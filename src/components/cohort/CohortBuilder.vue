@@ -629,7 +629,7 @@ import { ensureUniqueConceptSetId } from '@/utils/concept-set-id'
 import { resolveCriteriaTargetEvent } from '@/utils/criteria-target'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
-import TagSelectionDialog from './TagSelectionDialog.vue'
+import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'
 import type { Tag } from '@/models/cohort.types'
 
 interface Props {

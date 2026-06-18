@@ -216,7 +216,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import type { Tag } from '@/models/cohort.types'
 import type { Tag as ConfigTag, TagGroup } from '@/models/config.types'
-import CreateTagForm from './CreateTagForm.vue'
+import CreateTagForm from '@/components/tags/CreateTagForm.vue'
 import { logger } from '@/utils/logger'
 
 interface Props {
