@@ -329,13 +329,13 @@ describe('NestedCriteriaRenderer', () => {
   describe('Deep Nesting Warning', () => {
     it('should not show warning at normal depth', () => {
       const wrapper = mountComponent({ depth: 5 })
-      const alert = wrapper.findComponent({ name: 'VAlert' })
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
       expect(alert.exists()).toBe(false)
     })
 
     it('should show warning at depth > 10', () => {
       const wrapper = mountComponent({ depth: 11 })
-      const alert = wrapper.findComponent({ name: 'VAlert' })
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
       expect(alert.exists()).toBe(true)
     })
 
@@ -351,8 +351,8 @@ describe('NestedCriteriaRenderer', () => {
 
     it('should use warning type for alert', () => {
       const wrapper = mountComponent({ depth: 11 })
-      const alert = wrapper.findComponent({ name: 'VAlert' })
-      expect(alert.props('type')).toBe('warning')
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
+      expect(alert.classes()).toContain('atlas-feedback--warning')
     })
   })
 
@@ -478,7 +478,7 @@ describe('NestedCriteriaRenderer', () => {
     it('should handle very large depth values', () => {
       const wrapper = mountComponent({ depth: 100 })
       expect(wrapper.exists()).toBe(true)
-      const alert = wrapper.findComponent({ name: 'VAlert' })
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
       expect(alert.exists()).toBe(true)
     })
 

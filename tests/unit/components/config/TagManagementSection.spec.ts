@@ -403,8 +403,8 @@ describe('TagManagementSection.vue', () => {
       await dialog.vm.$emit('save', mockTagGroup)
       await flushPromises()
 
-      const snackbars = wrapper.findAllComponents({ name: 'VSnackbar' })
-      const successSnackbar = snackbars.find(s => s.props('color') === 'success')
+      const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
+      const successSnackbar = snackbars.find(s => s.props('severity') === 'success')
       expect(successSnackbar?.props('modelValue')).toBe(true)
     })
 
@@ -419,8 +419,8 @@ describe('TagManagementSection.vue', () => {
 
       await flushPromises()
 
-      const snackbars = wrapper.findAllComponents({ name: 'VSnackbar' })
-      const errorSnackbar = snackbars.find(s => s.props('color') === 'error')
+      const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
+      const errorSnackbar = snackbars.find(s => s.props('severity') === 'danger')
       expect(errorSnackbar?.props('modelValue')).toBe(true)
     })
   })

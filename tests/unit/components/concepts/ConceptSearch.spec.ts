@@ -33,6 +33,16 @@ vi.mock('@/config/webapi', () => ({
   getSourceKey: () => 'SYNPUF1K',
 }))
 
+// Mock webapi store to avoid localStorage dependency (Node 26 compat)
+vi.mock('@/stores/webapi', () => ({
+  useWebAPIStore: () => ({
+    getValidVocabularySource: () => 'SYNPUF1K',
+    sources: [],
+    selectedSource: null,
+    vocabularySources: [],
+  }),
+}))
+
 // Mock logger
 vi.mock('@/utils/logger', () => ({
   logger: {
@@ -336,7 +346,7 @@ describe('ConceptSearch', () => {
       await wrapper.vm.onSearch()
       await flushPromises()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
       expect(alert.exists()).toBe(true)
       expect(alert.text()).toContain('Search failed')
     })
@@ -350,8 +360,8 @@ describe('ConceptSearch', () => {
       await wrapper.vm.onSearch()
       await flushPromises()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
-      expect(alert.props('type')).toBe('error')
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
+      expect(alert.classes()).toContain('atlas-feedback--danger')
     })
 
     it('should be closable', async () => {
@@ -363,14 +373,14 @@ describe('ConceptSearch', () => {
       await wrapper.vm.onSearch()
       await flushPromises()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
-      expect(alert.props('closable')).toBe(true)
+      const closeButton = wrapper.find('[data-testid="atlas-feedback-close"]')
+      expect(closeButton.exists()).toBe(true)
     })
 
     it('should not show error alert when no error', () => {
       wrapper = mountComponent()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
       expect(alert.exists()).toBe(false)
     })
   })
