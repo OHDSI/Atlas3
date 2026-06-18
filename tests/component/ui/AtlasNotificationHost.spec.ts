@@ -51,4 +51,20 @@ describe('AtlasNotificationHost', () => {
     await w.vm.$nextTick()
     expect(w.findAll('[data-testid="atlas-feedback"]')).toHaveLength(1)
   })
+
+  it('renders danger item with role="alert" and non-danger with role="status"', async () => {
+    const n = useNotifications()
+    const w = mountHost()
+    // liveItems is reversed (newest first), so push success first, danger second
+    n.success('all good')
+    n.danger('critical error')
+    await w.vm.$nextTick()
+    const items = w.findAll('.atlas-notification-host__item')
+    expect(items).toHaveLength(2)
+    // danger was pushed last → appears first after reverse
+    expect(items[0].attributes('role')).toBe('alert')
+    expect(items[0].attributes('aria-live')).toBe('assertive')
+    expect(items[1].attributes('role')).toBe('status')
+    expect(items[1].attributes('aria-live')).toBe('polite')
+  })
 })

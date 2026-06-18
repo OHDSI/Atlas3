@@ -12,8 +12,8 @@
         v-for="item in visible"
         :key="item.id"
         class="atlas-notification-host__item"
+        :role="item.severity === 'danger' ? 'alert' : 'status'"
         :aria-live="item.severity === 'danger' ? 'assertive' : 'polite'"
-        role="group"
         @mouseenter="pause(item.id)"
         @mouseleave="resume(item)"
         @focusin="pause(item.id)"
@@ -92,7 +92,7 @@ function runAction(item: NotificationItem, action: NotificationAction) {
   store.dismiss(item.id)
 }
 
-watch(visible, list => list.forEach(arm), { immediate: true, deep: true })
+watch(visible, list => list.forEach(arm), { immediate: true })
 
 onUnmounted(() => {
   timers.forEach(t => clearTimeout(t))
