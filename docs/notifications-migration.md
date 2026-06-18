@@ -28,3 +28,20 @@ Remove the local ref and the `<AtlasSnackbar>` markup. The global
 ## Remaining call sites
 Find them with: `rg -l 'AtlasSnackbar' src`. Migrate one view per PR; each is
 independently verifiable. IncidenceRatesView.vue is the worked reference.
+
+## Cleaning up AtlasAlert props during migration
+
+When migrating a view that contains inline `<AtlasAlert>` banners, strip any
+props that no longer exist in the new component:
+
+- `variant` — Direction C is the only style; the prop is ignored and should be removed.
+- `density` — no longer forwarded; remove it.
+- `prominent` — removed in the redesign; remove it.
+
+Also remove any `#prepend` slot that simply renders the severity icon, e.g.:
+```html
+<template #prepend><AtlasIcon>mdi-alert</AtlasIcon></template>
+```
+The new `AtlasFeedbackBody` rail already renders the correct severity icon
+automatically. Leaving these props/slots in place is harmless, but they should
+be stripped as part of each view's migration to keep templates clean.

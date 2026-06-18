@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import AtlasMenu from '@/components/ui/AtlasMenu.vue'
 import AtlasBadge from '@/components/ui/AtlasBadge.vue'
 import AtlasIconButton from '@/components/ui/AtlasIconButton.vue'
@@ -84,7 +84,7 @@ import AtlasFeedbackBody from '@/components/ui/AtlasFeedbackBody.vue'
 import { useNotifications } from '@/stores/notifications'
 
 const store = useNotifications()
-const open = ref(false)
+const open = computed({ get: () => store.inboxOpen, set: v => { store.inboxOpen = v } })
 
 const history = computed(() => store.items.slice().reverse())
 

@@ -52,7 +52,7 @@
       type="button"
       class="atlas-notification-host__more"
       data-testid="notification-more"
-      @click="store.markAllRead()"
+      @click="store.openInbox()"
     >
       +{{ overflow }} more
     </button>

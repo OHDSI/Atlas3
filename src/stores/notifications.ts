@@ -42,6 +42,7 @@ const DEFAULT_TIMEOUT: Record<NotificationSeverity, number> = {
 
 export const useNotifications = defineStore('notifications', () => {
   const items = ref<NotificationItem[]>([])
+  const inboxOpen = ref(false)
   let nextId = 1
 
   const liveItems = computed(() =>
@@ -87,6 +88,9 @@ export const useNotifications = defineStore('notifications', () => {
   function clear() {
     items.value = []
   }
+  function openInbox() {
+    inboxOpen.value = true
+  }
 
-  return { items, liveItems, unreadCount, success, info, warning, danger, dismiss, remove, markRead, markAllRead, clear }
+  return { items, liveItems, unreadCount, inboxOpen, success, info, warning, danger, dismiss, remove, markRead, markAllRead, clear, openInbox }
 })
