@@ -96,19 +96,11 @@
       </AtlasButton>
     </template>
   </AtlasDialog>
-
-  <AtlasSnackbar
-    :model-value="!!feedback"
-    :severity="feedbackSeverity"
-    :text="feedback?.message ?? ''"
-    :timeout="3000"
-    @update:model-value="(open: boolean) => { if (!open) feedback = null }"
-  />
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDialog, AtlasSnackbar, AtlasTextField } from '@/components/ui'
-import type { AtlasSnackbarSeverity } from '@/components/ui'
+import { AtlasButton, AtlasDialog, AtlasTextField } from '@/components/ui'
+import { useNotifications } from '@/stores/notifications'
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useIncidenceRates } from '@/composables/useIncidenceRates'
@@ -139,13 +131,10 @@ const canCreate = computed(() => hasPermission('create:incidence'))
 const canCopy = computed(() => hasPermission('create:incidence'))
 const entityAccess = useEntityAccessFor('incidenceRate')
 const store = useIncidenceRateStore()
+const notify = useNotifications()
 const { t } = useI18n()
 const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)
-const feedback = ref<{ message: string; color: 'success' | 'error' | 'info' } | null>(null)
-const feedbackSeverity = computed<AtlasSnackbarSeverity>(() =>
-  feedback.value?.color === 'error' ? 'danger' : (feedback.value?.color ?? 'info')
-)
 const searchInput = ref('')
 
 const headers = computed(() => [
@@ -188,10 +177,10 @@ async function handleCopy(ir: IncidenceRate) {
   if (!ir.id) return
   const result = await copyIncidenceRate(ir.id)
   if (result.success && result.data.id) {
-    feedback.value = { message: 'Incidence rate copied', color: 'success' }
+    notify.success('Incidence rate copied')
     router.push(`/incidence-rates/${result.data.id}`)
   } else {
-    feedback.value = { message: 'Copy failed', color: 'error' }
+    notify.danger('Copy failed')
     logger.error(
       'IncidenceRatesView',
       'copyIncidenceRate failed',
@@ -210,10 +199,10 @@ async function confirmDelete() {
   if (!deleteTarget.value) return
   const ok = await deleteIncidenceRate(deleteTarget.value)
   if (ok) {
-    feedback.value = { message: 'Incidence rate deleted', color: 'success' }
+    notify.success('Incidence rate deleted')
     await fetchIncidenceRates()
   } else {
-    feedback.value = { message: 'Delete failed', color: 'error' }
+    notify.danger('Delete failed')
   }
   showDelete.value = false
   deleteTarget.value = null

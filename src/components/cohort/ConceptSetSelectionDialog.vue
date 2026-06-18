@@ -194,9 +194,7 @@ const itemsPerPage = ref(25)
 const sortBy = ref([{ key: 'modifiedDate', order: 'desc' as const }])
 
 // Match the editor's drawer width behaviour.
-const drawerWidth = computed(() => {
-  return Math.min(window.innerWidth * 0.85, 1400)
-})
+const drawerWidth = computed(() => window.innerWidth - 100)
 
 const filteredSets = computed(() => {
   const sets = conceptSetsStore.conceptSets

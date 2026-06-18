@@ -250,9 +250,9 @@ describe('CacheManagementSection.vue', () => {
       await wrapper.vm.$nextTick()
       await new Promise(resolve => setTimeout(resolve, 0))
 
-      // Check for success snackbar
-      const snackbars = wrapper.findAllComponents({ name: 'VSnackbar' })
-      const successSnackbar = snackbars.find(s => s.props('color') === 'success')
+      // AtlasSnackbar uses severity prop instead of Vuetify color
+      const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
+      const successSnackbar = snackbars.find(s => s.props('severity') === 'success')
       expect(successSnackbar?.props('modelValue')).toBe(true)
     })
 
@@ -281,9 +281,9 @@ describe('CacheManagementSection.vue', () => {
       await wrapper.vm.$nextTick()
       await new Promise(resolve => setTimeout(resolve, 0))
 
-      // Check for error snackbar
-      const snackbars = wrapper.findAllComponents({ name: 'VSnackbar' })
-      const errorSnackbar = snackbars.find(s => s.props('color') === 'error')
+      // AtlasSnackbar uses severity='danger' for errors (not Vuetify color='error')
+      const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
+      const errorSnackbar = snackbars.find(s => s.props('severity') === 'danger')
       expect(errorSnackbar?.props('modelValue')).toBe(true)
     })
 
@@ -373,16 +373,15 @@ describe('CacheManagementSection.vue', () => {
       await wrapper.vm.$nextTick()
       await new Promise(resolve => setTimeout(resolve, 0))
 
-      // Find close button in snackbar
-      const afterButtons = wrapper.findAllComponents({ name: 'VBtn' })
-      const closeButton = afterButtons.find(btn => btn.text() === 'Close')
+      // AtlasSnackbar uses severity='success'; close it via update:modelValue event
+      const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
+      const successSnackbar = snackbars.find(s => s.props('severity') === 'success')
+      expect(successSnackbar?.props('modelValue')).toBe(true)
 
-      await closeButton!.trigger('click')
+      await successSnackbar?.vm.$emit('update:modelValue', false)
       await wrapper.vm.$nextTick()
 
-      // Snackbar should be hidden
-      const snackbars = wrapper.findAllComponents({ name: 'VSnackbar' })
-      const successSnackbar = snackbars.find(s => s.props('color') === 'success')
+      // Snackbar should be hidden after close
       expect(successSnackbar?.props('modelValue')).toBe(false)
     })
   })

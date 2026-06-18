@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AtlasAlert from './AtlasAlert.vue'
+import AtlasButton from './AtlasButton.vue'
 </script>
 
 <template>
@@ -36,27 +37,35 @@ import AtlasAlert from './AtlasAlert.vue'
       </div>
     </Variant>
 
-    <Variant title="variants">
-      <div style="display:grid; gap:12px;">
-        <AtlasAlert
-          severity="info"
-          variant="tonal"
-        >
-          tonal (default)
-        </AtlasAlert>
-        <AtlasAlert
-          severity="info"
-          variant="outlined"
-        >
-          outlined
-        </AtlasAlert>
-        <AtlasAlert
-          severity="info"
-          variant="flat"
-        >
-          flat
-        </AtlasAlert>
-      </div>
+    <Variant title="neutral note">
+      <AtlasAlert
+        tone="neutral"
+        title="Note"
+      >
+        Inclusion rules are applied in order. Drag to reorder.
+      </AtlasAlert>
+    </Variant>
+
+    <Variant title="count + details + actions">
+      <AtlasAlert
+        severity="warning"
+        title="Configuration validation warnings"
+        :count="3"
+        closable
+      >
+        Some filter types are misconfigured and won't appear in the UI.
+        <template #details>
+          Invalid: foo, bar, baz
+        </template>
+        <template #actions>
+          <AtlasButton
+            size="sm"
+            variant="tonal"
+          >
+            View details
+          </AtlasButton>
+        </template>
+      </AtlasAlert>
     </Variant>
 
     <Variant title="closable">

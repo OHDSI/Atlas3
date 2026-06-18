@@ -113,7 +113,7 @@ describe('AuthStatusDisplay', () => {
 
       wrapper = mountComponent()
 
-      expect(wrapper.findComponent({ name: 'VAlert' }).exists()).toBe(false)
+      expect(wrapper.find('[data-testid="atlas-feedback"]').exists()).toBe(false)
     })
 
     it('should respect authentication state', () => {
@@ -134,7 +134,7 @@ describe('AuthStatusDisplay', () => {
 
       wrapper = mountComponent()
 
-      expect(wrapper.findComponent({ name: 'VAlert' }).exists()).toBe(false)
+      expect(wrapper.find('[data-testid="atlas-feedback"]').exists()).toBe(false)
     })
 
     it('should not show alert when token expires in 11 minutes', () => {
@@ -144,7 +144,7 @@ describe('AuthStatusDisplay', () => {
       wrapper = mountComponent()
 
       expect(wrapper.vm.isExpiringSoon).toBe(false)
-      expect(wrapper.findComponent({ name: 'VAlert' }).exists()).toBe(false)
+      expect(wrapper.find('[data-testid="atlas-feedback"]').exists()).toBe(false)
     })
 
     it('should not show alert when token expires in exactly 11 minutes', () => {
@@ -167,7 +167,7 @@ describe('AuthStatusDisplay', () => {
       await flushPromises()
 
       expect(wrapper.vm.isExpiringSoon).toBe(true)
-      const alert = wrapper.findComponent({ name: 'VAlert' })
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
       expect(alert.exists()).toBe(true)
     })
 
@@ -216,8 +216,8 @@ describe('AuthStatusDisplay', () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
-      expect(alert.props('type')).toBe('warning')
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
+      expect(alert.classes()).toContain('atlas-feedback--warning')
     })
 
     it('should have closable alert', async () => {
@@ -227,8 +227,7 @@ describe('AuthStatusDisplay', () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
-      expect(alert.props('closable')).toBe(true)
+      expect(wrapper.find('[data-testid="atlas-feedback-close"]').exists()).toBe(true)
     })
 
     it('should have tonal variant', async () => {
@@ -238,8 +237,9 @@ describe('AuthStatusDisplay', () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
-      expect(alert.props('variant')).toBe('tonal')
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
+      expect(alert.exists()).toBe(true)
+      expect(alert.classes()).toContain('atlas-feedback--warning')
     })
 
     it('should have mb-4 class', async () => {
@@ -249,7 +249,7 @@ describe('AuthStatusDisplay', () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
       expect(alert.classes()).toContain('mb-4')
     })
   })
@@ -262,14 +262,14 @@ describe('AuthStatusDisplay', () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
       expect(alert.exists()).toBe(true)
 
-      await alert.vm.$emit('click:close')
+      await wrapper.find('[data-testid="atlas-feedback-close"]').trigger('click')
       await wrapper.vm.$nextTick()
 
       expect(wrapper.vm.dismissed).toBe(true)
-      expect(wrapper.findComponent({ name: 'VAlert' }).exists()).toBe(false)
+      expect(wrapper.find('[data-testid="atlas-feedback"]').exists()).toBe(false)
     })
 
     it('should not show alert after dismissal even if still expiring', async () => {
@@ -280,11 +280,11 @@ describe('AuthStatusDisplay', () => {
       await flushPromises()
 
       // Dismiss
-      await wrapper.findComponent({ name: 'VAlert' }).vm.$emit('click:close')
+      await wrapper.find('[data-testid="atlas-feedback-close"]').trigger('click')
       await wrapper.vm.$nextTick()
 
       expect(wrapper.vm.showWarning).toBe(false)
-      expect(wrapper.findComponent({ name: 'VAlert' }).exists()).toBe(false)
+      expect(wrapper.find('[data-testid="atlas-feedback"]').exists()).toBe(false)
     })
   })
 
@@ -484,10 +484,9 @@ describe('AuthStatusDisplay', () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      const alert = wrapper.findComponent({ name: 'VAlert' })
-      const icon = alert.findComponent({ name: 'VIcon' })
-
-      expect(icon.exists()).toBe(true)
+      const alert = wrapper.find('[data-testid="atlas-feedback"]')
+      expect(alert.exists()).toBe(true)
+      expect(alert.find('.atlas-feedback__rail').exists()).toBe(true)
     })
   })
 
@@ -523,7 +522,7 @@ describe('AuthStatusDisplay', () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      expect(wrapper.findComponent({ name: 'VAlert' }).exists()).toBe(false)
+      expect(wrapper.find('[data-testid="atlas-feedback"]').exists()).toBe(false)
 
       // Change to expiring soon
       mockTokenExpirationDate.value = new Date(Date.now() + 5 * 60 * 1000)
@@ -541,7 +540,7 @@ describe('AuthStatusDisplay', () => {
       wrapper = mountComponent()
       await flushPromises()
 
-      expect(wrapper.findComponent({ name: 'VAlert' }).exists()).toBe(true)
+      expect(wrapper.find('[data-testid="atlas-feedback"]').exists()).toBe(true)
 
       // Logout
       mockIsAuthenticated.value = false

@@ -135,12 +135,9 @@ describe('CensoringEventsEditor', () => {
     const wrapper = createWrapper([invalidEvent])
 
     // Should show warning alert
-    const alerts = wrapper.findAllComponents({ name: 'VAlert' })
-    const warningAlert = alerts.find(alert =>
-      alert.text().includes('not found')
-    )
-
-    expect(warningAlert).toBeDefined()
+    const alertEl = wrapper.find('[data-testid="atlas-feedback"]')
+    expect(alertEl.exists()).toBe(true)
+    expect(alertEl.text()).toContain('not found')
   })
 
   it('should format criteria type correctly', () => {

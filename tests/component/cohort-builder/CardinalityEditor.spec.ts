@@ -139,8 +139,8 @@ describe('CardinalityEditor', () => {
       countingMethod: 'ALL',
     })
 
-    // AT_LEAST requires count >= 1
-    expect(wrapper.html()).toContain('error') // Validation error displayed
+    // AT_LEAST requires count >= 1 — alert with danger severity should appear
+    expect(wrapper.find('[data-testid="atlas-feedback"]').exists()).toBe(true)
   })
 
   it('should allow count = 0 for EXACTLY type', () => {

@@ -49,10 +49,12 @@ describe('ChartSection', () => {
   it('should show error alert when error exists', () => {
     const wrapper = mountComponent({ error: 'Failed to load data' })
 
-    const alert = wrapper.findComponent({ name: 'VAlert' })
+    // AtlasAlert renders AtlasFeedbackBody with data-testid="atlas-feedback"
+    // and atlas-feedback--danger class for error/danger severity
+    const alert = wrapper.find('[data-testid="atlas-feedback"]')
     expect(alert.exists()).toBe(true)
-    expect(alert.props('type')).toBe('error')
-    expect(alert.text()).toBe('Failed to load data')
+    expect(alert.classes()).toContain('atlas-feedback--danger')
+    expect(alert.text()).toContain('Failed to load data')
   })
 
   it('should show content when not loading and no error', () => {
@@ -117,8 +119,11 @@ describe('ChartSection', () => {
   it('should have error alert variant of tonal', () => {
     const wrapper = mountComponent({ error: 'Test error' })
 
-    const alert = wrapper.findComponent({ name: 'VAlert' })
-    expect(alert.props('variant')).toBe('tonal')
+    // AtlasAlert no longer uses Vuetify's VAlert variant prop.
+    // The danger severity is conveyed by the atlas-feedback--danger CSS class.
+    const alert = wrapper.find('[data-testid="atlas-feedback"]')
+    expect(alert.exists()).toBe(true)
+    expect(alert.classes()).toContain('atlas-feedback--danger')
   })
 
   it('should prioritize error over loading state', () => {

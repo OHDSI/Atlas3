@@ -135,7 +135,8 @@ function mountComponent(options = {}) {
       plugins: [vuetify],
       stubs: {
         LoginModal: true,
-        LanguageSelector: true
+        LanguageSelector: true,
+        NotificationInbox: true
       }
     },
     ...options

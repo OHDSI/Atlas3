@@ -129,6 +129,9 @@
           @click="handleDocsClick"
         />
 
+        <!-- Notifications bell + inbox -->
+        <NotificationInbox />
+
         <!-- Jobs Panel Icon: separate side drawer, sits left of the cog. -->
         <AtlasIconButton
           v-if="hasJobsAccess"
@@ -219,6 +222,7 @@ import { pluginConfigService } from '@/services/PluginConfigService'
 import { logger } from '@/utils/logger'
 import LoginModal from '@/components/auth/LoginModal.vue'
 import LanguageSelector from '@/components/LanguageSelector.vue'
+import NotificationInbox from '@/components/shared/NotificationInbox.vue'
 import logoSvg from '@/assets/icons/atlas-text.svg'
 import logoOhdsiOnlyPng from '@/assets/icons/OHDSI logo only - colored.png'
 
@@ -585,8 +589,8 @@ onMounted(() => {
 .nav-bar__nav-link {
   display: inline-block;
   padding: 20px 12px;
-  color: rgb(var(--v-theme-on-surface-variant));
-  font-weight: 400;
+  color: rgb(var(--v-theme-primary));
+  font-weight: 500;
   text-decoration: none;
   transition: color 0.15s ease-in-out;
   font-size: 14px;
@@ -605,7 +609,7 @@ onMounted(() => {
 
 .nav-bar__nav-item--active .nav-bar__nav-link {
   color: rgb(var(--v-theme-primary));
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .nav-bar__nav-item--active::after {
@@ -615,7 +619,7 @@ onMounted(() => {
   left: 8px;
   right: 8px;
   height: 2px;
-  background-color: rgb(var(--v-theme-primary));
+  background-color: rgb(var(--v-theme-orange));
   border-radius: 2px;
 }
 </style>
