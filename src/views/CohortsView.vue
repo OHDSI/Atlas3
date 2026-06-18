@@ -380,7 +380,7 @@ type CohortsViewMode = 'tile' | 'table'
 const persistedViewMode = (
   typeof localStorage !== 'undefined' ? localStorage.getItem(VIEW_MODE_KEY) : null
 ) as CohortsViewMode | null
-const viewMode = ref<CohortsViewMode>(persistedViewMode === 'table' ? 'table' : 'tile')
+const viewMode = ref<CohortsViewMode>(persistedViewMode === 'tile' ? 'tile' : 'table')
 watch(viewMode, mode => {
   if (typeof localStorage !== 'undefined') localStorage.setItem(VIEW_MODE_KEY, mode)
 })
