@@ -63,6 +63,9 @@
     <!-- Jobs Panel (separate side drawer, sibling of ConfigPanel) -->
     <JobsPanel />
 
+    <!-- Global notification toast stack -->
+    <AtlasNotificationHost />
+
     <!-- Concept Detail Drawer (opens from concept tables and search results) -->
     <ConceptDetailDrawer />
 
@@ -76,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasProgressCircular } from '@/components/ui'
+import { AtlasProgressCircular, AtlasNotificationHost } from '@/components/ui'
 import { computed, ref, onMounted } from 'vue'
 import NavBar from '@/components/shared/NavBar.vue'
 import SessionExpiryModal from '@/components/auth/SessionExpiryModal.vue'

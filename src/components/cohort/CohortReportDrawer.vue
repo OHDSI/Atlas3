@@ -96,7 +96,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const drawerWidth = computed(() =>
-  typeof window !== 'undefined' ? Math.min(window.innerWidth * 0.85, 1400) : 1200
+  typeof window !== 'undefined' ? window.innerWidth - 100 : 1200
 )
 
 const headerIcon = computed(() => {

@@ -2,15 +2,10 @@
   <AtlasAlert
     v-if="showWarning"
     :severity="isExpiringSoon ? 'warning' : 'info'"
-    variant="tonal"
     closable
     class="mb-4"
     @close="dismissed = true"
   >
-    <template #prepend>
-      <AtlasIcon>{{ isExpiringSoon ? 'mdi-alert' : 'mdi-information' }}</AtlasIcon>
-    </template>
-
     <div>
       <strong v-if="isExpiringSoon">{{ t('auth.sessionExpiringSoon') }}</strong>
       <strong v-else>{{ t('auth.sessionActive') }}</strong>
@@ -36,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasAlert, AtlasButton, AtlasIcon } from '@/components/ui'
+import { AtlasAlert, AtlasButton } from '@/components/ui'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useI18n } from '@/composables/useI18n'

@@ -66,7 +66,7 @@ describe('AnalysisListLayout', () => {
     expect(wrapper.find('[data-testid="foo-error"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('Boom')
 
-    await wrapper.find('.v-alert__close button').trigger('click')
+    await wrapper.find('[data-testid="atlas-feedback-close"]').trigger('click')
     expect(wrapper.emitted('clear-error')).toBeTruthy()
   })
 

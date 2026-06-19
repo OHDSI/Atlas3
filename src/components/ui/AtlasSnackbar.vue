@@ -2,39 +2,43 @@
 <template>
   <v-snackbar
     :model-value="modelValue"
-    :color="severityColor"
     :timeout="timeout"
     :location="location"
     :role="ariaRole"
     :aria-live="ariaLive"
-    v-bind="forwardAttrs"
+    color="transparent"
+    :elevation="0"
+    content-class="atlas-snackbar__content"
     @update:model-value="(v: boolean) => $emit('update:modelValue', v)"
   >
-    <slot>{{ text }}</slot>
-    <template
-      v-if="$slots.actions || closable"
-      #actions
+    <AtlasFeedbackBody
+      :severity="severity"
+      :title="title"
+      :closable="closable"
+      elevated
+      @close="$emit('update:modelValue', false)"
     >
-      <slot name="actions" />
-      <v-btn
-        v-if="closable && !$slots.actions"
-        variant="text"
-        @click="$emit('update:modelValue', false)"
+      <slot>{{ text }}</slot>
+      <template
+        v-if="$slots.actions"
+        #actions
       >
-        Close
-      </v-btn>
-    </template>
+        <slot name="actions" />
+      </template>
+    </AtlasFeedbackBody>
   </v-snackbar>
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue'
+import { computed } from 'vue'
+import AtlasFeedbackBody from './AtlasFeedbackBody.vue'
 
 export type AtlasSnackbarSeverity = 'info' | 'success' | 'warning' | 'danger'
 
 interface Props {
   modelValue: boolean
   severity?: AtlasSnackbarSeverity
+  title?: string
   text?: string
   timeout?: number
   location?: 'top' | 'bottom'
@@ -43,6 +47,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   severity: 'info',
+  title: undefined,
   text: undefined,
   timeout: 5000,
   location: 'bottom',
@@ -50,25 +55,18 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 defineEmits<{ 'update:modelValue': [open: boolean] }>()
-defineOptions({ inheritAttrs: false })
-
-const SEVERITY_COLOR: Record<AtlasSnackbarSeverity, string> = {
-  info:    'info',
-  success: 'success',
-  warning: 'warning',
-  danger:  'error',
-}
-
-const severityColor = computed(() => SEVERITY_COLOR[props.severity])
 
 const isAssertive = computed(() => props.severity === 'danger')
 const ariaRole = computed(() => (isAssertive.value ? 'alert' : 'status'))
 const ariaLive = computed(() => (isAssertive.value ? 'assertive' : 'polite'))
-
-const attrs = useAttrs()
-const forwardAttrs = computed(() => {
-  const { color: _c, ...rest } = attrs as Record<string, unknown>
-  void _c
-  return rest
-})
 </script>
+
+<style scoped>
+:deep(.atlas-snackbar__content) {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  min-width: 360px;
+  max-width: 420px;
+}
+</style>

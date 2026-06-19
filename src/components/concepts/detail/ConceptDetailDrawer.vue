@@ -18,7 +18,7 @@ const drawerOpen = computed({
 // Match the ConceptSetEditor drawer width so the two panels look aligned.
 const drawerWidth = computed(() => {
   if (typeof window === 'undefined') return 1100
-  return Math.min(window.innerWidth * 0.85, 1400)
+  return window.innerWidth - 100
 })
 </script>
 

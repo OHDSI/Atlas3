@@ -275,7 +275,7 @@ describe('DataSourcesView', () => {
       await flushPromises()
 
       expect(store.error.sources).toBeTruthy()
-      const alerts = wrapper.findAll('.v-alert')
+      const alerts = wrapper.findAll('[data-testid="atlas-feedback"]')
       expect(alerts.length).toBeGreaterThan(0)
     })
 

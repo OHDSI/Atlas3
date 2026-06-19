@@ -231,8 +231,9 @@ describe('VocabularySchemaSection.vue', () => {
       await vi.advanceTimersByTimeAsync(600)
       await flushPromises()
 
-      const snackbars = wrapper.findAllComponents({ name: 'VSnackbar' })
-      const successSnackbar = snackbars.find(s => s.props('color') === 'success')
+      // AtlasSnackbar uses severity prop instead of Vuetify color
+      const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
+      const successSnackbar = snackbars.find(s => s.props('severity') === 'success')
       expect(successSnackbar?.props('modelValue')).toBe(true)
 
       vi.useRealTimers()
@@ -284,8 +285,9 @@ describe('VocabularySchemaSection.vue', () => {
       await vi.advanceTimersByTimeAsync(600)
       await flushPromises()
 
-      const snackbars = wrapper.findAllComponents({ name: 'VSnackbar' })
-      const errorSnackbar = snackbars.find(s => s.props('color') === 'error')
+      // AtlasSnackbar uses severity='danger' for errors (not Vuetify color='error')
+      const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
+      const errorSnackbar = snackbars.find(s => s.props('severity') === 'danger')
       expect(errorSnackbar?.props('modelValue')).toBe(true)
 
       vi.useRealTimers()
@@ -383,17 +385,16 @@ describe('VocabularySchemaSection.vue', () => {
       await vi.advanceTimersByTimeAsync(600)
       await flushPromises()
 
-      const buttons = wrapper.findAllComponents({ name: 'VBtn' })
-      const closeButton = buttons.find(btn => btn.text() === 'Close')
+      // Confirm the success snackbar is open via AtlasSnackbar severity prop
+      const snackbars = wrapper.findAllComponents({ name: 'AtlasSnackbar' })
+      const successSnackbar = snackbars.find(s => s.props('severity') === 'success')
+      expect(successSnackbar?.props('modelValue')).toBe(true)
 
-      if (closeButton) {
-        await closeButton.trigger('click')
-        await wrapper.vm.$nextTick()
+      // Close by emitting update:modelValue (snackbar content is teleported to body)
+      await successSnackbar?.vm.$emit('update:modelValue', false)
+      await wrapper.vm.$nextTick()
 
-        const snackbars = wrapper.findAllComponents({ name: 'VSnackbar' })
-        const successSnackbar = snackbars.find(s => s.props('color') === 'success')
-        expect(successSnackbar?.props('modelValue')).toBe(false)
-      }
+      expect(successSnackbar?.props('modelValue')).toBe(false)
 
       vi.useRealTimers()
     })

@@ -109,7 +109,7 @@ describe('DateAdjustmentEditor', () => {
     const wrapper = createWrapper()
 
     // Should have an info alert component
-    const alert = wrapper.findComponent({ name: 'VAlert' })
+    const alert = wrapper.find('[data-testid="atlas-feedback"]')
     expect(alert.exists()).toBe(true)
   })
 
