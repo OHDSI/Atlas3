@@ -945,7 +945,7 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
         type TooltipParam = { name?: string; seriesName?: string; value?: number }
         const paramsArray = (Array.isArray(params) ? params : [params]) as TooltipParam[]
         if (paramsArray.length === 0) return ''
-        const name = paramsArray[0].name ?? ''
+        const name = paramsArray[0]?.name ?? ''
         const lines = paramsArray.map(param => {
           const series = param.seriesName || ''
           const val = typeof param.value === 'number' ? formatSINumber(param.value) : String(param.value)
@@ -1026,8 +1026,8 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
         }
         const value = formatSINumber(p.value)
         const name = p.name
-        const prevalence = p.data.prevalence
-        const metric = p.data.metric
+        const prevalence = p.data?.prevalence
+        const metric = p.data?.metric
 
         let tooltip = `<strong>${name}</strong><br/>`
         tooltip += `Value: ${value}<br/>`
