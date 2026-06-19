@@ -25,10 +25,10 @@
 // incidence rate, characterization, feature analysis). Two slots, with a
 // 1px vertical divider auto-inserted between them when both are present.
 //
-//   <BuilderActionToolbar>
+//   <AtlasActionToolbar>
 //     <template #status><!-- left-aligned, metadata icons --></template>
 //     <template #actions><!-- right-aligned, primary actions --></template>
-//   </BuilderActionToolbar>
+//   </AtlasActionToolbar>
 //
 // Slot contract (keep across all builders so the eye finds them in the
 // same place):
@@ -66,7 +66,7 @@
 .builder-action-toolbar__divider {
   width: 1px;
   height: 24px;
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(var(--v-theme-on-surface), 0.12);
   margin: 0 4px;
   flex-shrink: 0;
 }

@@ -33,13 +33,7 @@ function mountComponent(props = {}) {
       ...props
     },
     global: {
-      plugins: [vuetify],
-      stubs: {
-        LoadingSpinner: {
-          template: '<div class="loading-spinner">{{ message }}</div>',
-          props: ['message']
-        }
-      }
+      plugins: [vuetify]
     }
   })
 }

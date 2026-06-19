@@ -36,7 +36,7 @@
       >
     </template>
     <template #actions>
-      <BuilderActionToolbar>
+      <AtlasActionToolbar>
         <template #status>
           <AtlasTooltip
             :text="t('ir.tabs.conceptSets', 'Concept Sets').value"
@@ -201,7 +201,7 @@
             {{ t('common.save', 'Save') }}
           </AtlasButton>
         </template>
-      </BuilderActionToolbar>
+      </AtlasActionToolbar>
     </template>
 
     <IncidenceRateWorkbench v-if="store.currentIR" />
@@ -287,7 +287,7 @@ import { useIncidenceRateBuilder } from '@/composables/useIncidenceRateBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import { useEntityAccess } from '@/composables/useEntityAccess'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
+import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasSnackbar, AtlasTooltip } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import IncidenceRateWorkbench from '@/components/incidence-rate/IncidenceRateWorkbench.vue'

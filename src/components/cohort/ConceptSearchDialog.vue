@@ -55,10 +55,18 @@
 
       <AtlasDivider class="my-4" />
 
-      <loading-spinner
+      <div
         v-if="isSearching"
-        message="Searching concepts..."
-      />
+        class="concept-search-loading"
+      >
+        <AtlasProgressCircular
+          color="primary"
+          indeterminate
+        />
+        <p class="text-body-2 mt-2">
+          Searching concepts...
+        </p>
+      </div>
 
       <div v-else-if="searchResults && searchResults.length > 0">
         <p class="text-subtitle-2 mb-2">
@@ -121,13 +129,12 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDivider, AtlasDialog, AtlasListItem, AtlasSelect, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasDivider, AtlasDialog, AtlasListItem, AtlasProgressCircular, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
 import { useConceptPickerStore } from '@/stores/concept-picker'
 import { useWebAPIStore } from '@/stores/webapi'
-import LoadingSpinner from '@/components/shared/LoadingSpinner.vue'
 import { logger } from '@/utils/logger'
 
 interface Props {
@@ -243,3 +250,13 @@ watch(
   }
 )
 </script>
+
+<style scoped>
+.concept-search-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+</style>

@@ -44,7 +44,7 @@
       >
     </template>
     <template #actions>
-      <BuilderActionToolbar>
+      <AtlasActionToolbar>
         <template #status>
           <AtlasTooltip
             :text="t('cc.fa.tabs.conceptSets', 'Concept Sets').value"
@@ -192,7 +192,7 @@
             {{ t('common.save', 'Save') }}
           </AtlasButton>
         </template>
-      </BuilderActionToolbar>
+      </AtlasActionToolbar>
     </template>
 
     <CharacterizationWorkbench
@@ -317,7 +317,7 @@ import { AtlasButton, AtlasBadge, AtlasDialog, AtlasIcon, AtlasIconButton, Atlas
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import ExplorePrevalenceDialog from '@/components/characterization-results/ExplorePrevalenceDialog.vue'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
+import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { validateCharacterization, countByLevel } from '@/utils/characterization-validators'
 import type { CharacterizationDefinition, PrevalenceStat } from '@/models/characterization.types'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'

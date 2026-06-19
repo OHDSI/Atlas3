@@ -4,19 +4,19 @@ import { nextTick } from 'vue'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import CollapsibleSection from '@/components/shared/CollapsibleSection.vue'
+import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
 
 const vuetify = createVuetify({ components, directives })
 
 function mountSection(props: Record<string, unknown> = {}, slots: Record<string, string> = {}) {
-  return mount(CollapsibleSection, {
+  return mount(AtlasCollapsibleSection, {
     global: { plugins: [vuetify] },
     props: { title: 'Generation', ...props },
     slots: { default: '<div data-testid="body">body</div>', ...slots },
   })
 }
 
-describe('CollapsibleSection', () => {
+describe('AtlasCollapsibleSection', () => {
   it('renders the title and body and defaults to expanded', () => {
     const wrapper = mountSection()
     expect(wrapper.text()).toContain('Generation')
