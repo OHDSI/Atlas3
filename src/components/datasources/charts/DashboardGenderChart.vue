@@ -19,7 +19,7 @@
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { PieChartData } from '@/models/datasource.types'
-import { dashboardGenderPieOptions, createResizeHandler } from '@/utils/chart-config'
+import { dashboardGenderPieOptions, createResizeHandler } from '@/ui/chart-config'
 
 interface Props {
   data: PieChartData[]

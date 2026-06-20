@@ -4,7 +4,12 @@ const data = { categories: ['2018', '2019', '2020'], series: [{ name: 'M', categ
 </script>
 
 <template>
-  <Story title="Charts/AtlasTrellisChart" group="charts">
-    <Variant title="default"><Chart :data="data" /></Variant>
+  <Story
+    title="Charts/AtlasTrellisChart"
+    group="charts"
+  >
+    <Variant title="default">
+      <Chart :data="data" />
+    </Variant>
   </Story>
 </template>

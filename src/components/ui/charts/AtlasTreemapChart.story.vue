@@ -8,7 +8,12 @@ const data = [
 </script>
 
 <template>
-  <Story title="Charts/AtlasTreemapChart" group="charts">
-    <Variant title="default"><Chart :data="data" /></Variant>
+  <Story
+    title="Charts/AtlasTreemapChart"
+    group="charts"
+  >
+    <Variant title="default">
+      <Chart :data="data" />
+    </Variant>
   </Story>
 </template>

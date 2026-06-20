@@ -5,7 +5,15 @@ const colors = () => '#1f425a'
 </script>
 
 <template>
-  <Story title="Charts/AtlasSunburstChart" group="charts">
-    <Variant title="default"><Chart :data="data" :colors="colors" /></Variant>
+  <Story
+    title="Charts/AtlasSunburstChart"
+    group="charts"
+  >
+    <Variant title="default">
+      <Chart
+        :data="data"
+        :colors="colors"
+      />
+    </Variant>
   </Story>
 </template>

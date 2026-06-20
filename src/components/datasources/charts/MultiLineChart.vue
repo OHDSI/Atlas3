@@ -19,7 +19,7 @@
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { MultiLineChartData } from '@/models/datasource.types'
-import { multiLineChartOptions, createResizeHandler } from '@/utils/chart-config'
+import { multiLineChartOptions, createResizeHandler } from '@/ui/chart-config'
 
 interface Props {
   data: MultiLineChartData

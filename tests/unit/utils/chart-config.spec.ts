@@ -19,7 +19,7 @@ import {
   clinicalDomainTreemapOptions,
   trellisChartOptions,
   boxPlotChartOptions,
-} from '@/utils/chart-config'
+} from '@/ui/chart-config'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode, TrellisChartData, BoxPlotData } from '@/models/report.types'
 import type {
   HistogramChartData as DatasourceHistogramChartData,
