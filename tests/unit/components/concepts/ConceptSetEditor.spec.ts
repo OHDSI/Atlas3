@@ -161,6 +161,20 @@ describe('ConceptSetEditor', () => {
     expect(deleteBtn).toBeTruthy()
   })
 
+  // Discussion #97: new concept sets open on the Search tab so the user can
+  // start adding concepts immediately; existing sets open on Selected.
+  it('opens new concept sets on the Search tab', async () => {
+    const wrapper = mountComponent({ conceptSet: null })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.activeTab).toBe('search')
+  })
+
+  it('opens existing concept sets on the Selected tab', async () => {
+    const wrapper = mountComponent({ conceptSet: mockConceptSet })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.activeTab).toBe('selected')
+  })
+
   it('should render the inline name input', () => {
     const wrapper = mountComponent()
     // Refresh: the name field is now an inline-edit input styled

@@ -4,19 +4,19 @@ import { nextTick } from 'vue'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import CollapsibleSection from '@/components/shared/CollapsibleSection.vue'
+import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
 
 const vuetify = createVuetify({ components, directives })
 
 function mountSection(props: Record<string, unknown> = {}, slots: Record<string, string> = {}) {
-  return mount(CollapsibleSection, {
+  return mount(AtlasCollapsibleSection, {
     global: { plugins: [vuetify] },
     props: { title: 'Generation', ...props },
     slots: { default: '<div data-testid="body">body</div>', ...slots },
   })
 }
 
-describe('CollapsibleSection', () => {
+describe('AtlasCollapsibleSection', () => {
   it('renders the title and body and defaults to expanded', () => {
     const wrapper = mountSection()
     expect(wrapper.text()).toContain('Generation')
@@ -81,6 +81,25 @@ describe('CollapsibleSection', () => {
     await nextTick()
     expect(header.attributes('aria-expanded')).toBe('false')
     await header.trigger('keydown', { key: ' ' })
+    await nextTick()
+    expect(header.attributes('aria-expanded')).toBe('true')
+  })
+
+  it('follows defaultExpanded prop changes until the user toggles manually', async () => {
+    const wrapper = mountSection({ defaultExpanded: true })
+    const header = wrapper.find('[data-testid="cs-header"]')
+    expect(header.attributes('aria-expanded')).toBe('true')
+
+    // Prop change is honoured while the user has not interacted.
+    await wrapper.setProps({ defaultExpanded: false })
+    await nextTick()
+    expect(header.attributes('aria-expanded')).toBe('false')
+
+    // Once the user toggles, later prop changes are ignored.
+    await header.trigger('click')
+    await nextTick()
+    expect(header.attributes('aria-expanded')).toBe('true')
+    await wrapper.setProps({ defaultExpanded: false })
     await nextTick()
     expect(header.attributes('aria-expanded')).toBe('true')
   })

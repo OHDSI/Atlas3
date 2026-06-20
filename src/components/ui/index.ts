@@ -1,5 +1,7 @@
 export { default as AtlasCard } from './AtlasCard.vue'
 export { default as AtlasPageShell } from './AtlasPageShell.vue'
+export { default as AtlasCollapsibleSection } from './AtlasCollapsibleSection.vue'
+export { default as AtlasActionToolbar } from './AtlasActionToolbar.vue'
 export { default as AtlasButton } from './AtlasButton.vue'
 export type { AtlasButtonVariant, AtlasButtonSize } from './AtlasButton.vue'
 export { default as AtlasIconButton } from './AtlasIconButton.vue'

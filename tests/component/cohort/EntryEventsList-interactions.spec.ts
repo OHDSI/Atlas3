@@ -90,8 +90,8 @@ const stubs = {
     template:
       '<input class="stub-textfield" :data-label="label" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
   },
-  EntryEventCard: {
-    name: 'EntryEventCard',
+  CriteriaEventCard: {
+    name: 'CriteriaEventCard',
     props: ['event'],
     emits: ['update', 'remove', 'select-concept-set', 'select-concept-set-for-attribute', 'select-concept-for-attribute', 'edit-concept-set'],
     template:
@@ -140,11 +140,12 @@ describe('EntryEventsList interactions', () => {
     expect(next[0]!.attributes).toEqual([])
   })
 
-  it('opens the observation period dialog when the chip is clicked', async () => {
+  it('renders the continuous-observation editor anchored to the chip', () => {
     const wrapper = mountIt()
-    expect(wrapper.find('.stub-dialog').attributes('data-open')).toBe('false')
-    await wrapper.find('.obs-period-chip').trigger('click')
-    expect(wrapper.find('.stub-dialog').attributes('data-open')).toBe('true')
+    // The orange pill is the popover activator (no page-dimming dialog).
+    expect(wrapper.find('.obs-period-chip').exists()).toBe(true)
+    // The anchored editor exposes the two number fields (days before / after).
+    expect(wrapper.findAll('.stub-textfield').length).toBe(2)
   })
 
   it('emits update:observation-period when priorDays changes', async () => {
@@ -175,16 +176,6 @@ describe('EntryEventsList interactions', () => {
     expect((emits![0]![0] as ObservationPeriod).priorDays).toBe(0)
   })
 
-  it('closes the obs period dialog via the Close button', async () => {
-    const wrapper = mountIt()
-    await wrapper.find('.obs-period-chip').trigger('click')
-    expect(wrapper.find('.stub-dialog').attributes('data-open')).toBe('true')
-    const closeBtn = wrapper.findAll('.stub-dialog-actions .stub-button').find(b => b.text().includes('Close'))
-    expect(closeBtn).toBeTruthy()
-    await closeBtn!.trigger('click')
-    expect(wrapper.find('.stub-dialog').attributes('data-open')).toBe('false')
-  })
-
   it('forwards entry-event-card update emit through updateEvent', async () => {
     const wrapper = mountIt()
     await wrapper.find('.ev-update').trigger('click')
@@ -199,7 +190,7 @@ describe('EntryEventsList interactions', () => {
     const wrapper = mountIt({ events: [{ ...baseEvent, id: 'other' }] })
     // simulate update for the stubbed card whose event has id 'other' but
     // emit a payload referencing an unknown id by mounting a fresh wrapper
-    const stubEvent = wrapper.findComponent({ name: 'EntryEventCard' })
+    const stubEvent = wrapper.findComponent({ name: 'CriteriaEventCard' })
     stubEvent.vm.$emit('update', { id: 'does-not-exist', criteriaType: 'Foo', attributes: [] })
     await wrapper.vm.$nextTick()
     expect(wrapper.emitted('update:events')).toBeFalsy()

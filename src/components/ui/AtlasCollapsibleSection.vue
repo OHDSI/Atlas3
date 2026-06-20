@@ -68,8 +68,10 @@
 
 <script setup lang="ts">
 import { ref, useId, watch } from 'vue'
-import { AtlasChip, AtlasIcon, AtlasSpacer } from '@/components/ui'
-import type { AtlasChipTone } from '@/components/ui'
+import AtlasChip from './AtlasChip.vue'
+import AtlasIcon from './AtlasIcon.vue'
+import AtlasSpacer from './AtlasSpacer.vue'
+import type { AtlasChipTone } from './AtlasChip.vue'
 
 interface Props {
   title: string

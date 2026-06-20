@@ -36,7 +36,7 @@
       >
     </template>
     <template #actions>
-      <BuilderActionToolbar>
+      <AtlasActionToolbar>
         <template #status>
           <AtlasTooltip
             :text="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
@@ -185,7 +185,7 @@
             {{ t('common.save', 'Save') }}
           </AtlasButton>
         </template>
-      </BuilderActionToolbar>
+      </AtlasActionToolbar>
     </template>
 
     <template
@@ -250,7 +250,7 @@ import { useI18n } from '@/composables/useI18n'
 import { usePathwayBuilder } from '@/composables/usePathwayBuilder'
 import { usePermissions } from '@/composables/usePermissions'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
+import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import PathwayWorkbench from './PathwayWorkbench.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import TagSelectionDialog from '@/components/tags/TagSelectionDialog.vue'

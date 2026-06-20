@@ -86,14 +86,18 @@ export async function updateSource(
 
 /**
  * Delete a data source
+ *
+ * WebAPI's delete endpoint is keyed on the numeric `sourceId`
+ * (`DELETE /source/{sourceId}`), not the string `sourceKey` — sending the
+ * key resolves to a non-existent route and the delete fails.
  */
-export async function deleteSource(sourceKey: string): Promise<void> {
+export async function deleteSource(sourceId: number): Promise<void> {
   try {
-    logger.debug('SourceService', `Deleting source key ${sourceKey}`)
-    await httpDelete(`/source/${sourceKey}`)
-    logger.debug('SourceService', `Successfully deleted source key ${sourceKey}`)
+    logger.debug('SourceService', `Deleting source id ${sourceId}`)
+    await httpDelete(`/source/${sourceId}`)
+    logger.debug('SourceService', `Successfully deleted source id ${sourceId}`)
   } catch (error) {
-    logger.error('SourceService', 'Failed to delete source', { sourceKey, error })
+    logger.error('SourceService', 'Failed to delete source', { sourceId, error })
     throw new Error('Unable to delete data source. Please try again.')
   }
 }

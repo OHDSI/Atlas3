@@ -131,7 +131,7 @@
       <!-- Tabs for Users/Permissions -->
       <AtlasTabs
         v-model="detailsTab"
-        class="mt-4"
+        class="mt-4 permissions-section__details-tabs"
       >
         <AtlasTab value="users">
           Users
@@ -284,5 +284,15 @@ onMounted(() => {
 .permissions-section__role-actions {
   display: flex;
   gap: 4px;
+}
+
+/* Pin the Users/Permissions tab bar while a long role detail (many users or
+ * permissions) scrolls inside ConfigPanel's scroll container, so the tabs stay
+ * visible instead of scrolling out of view above the content. */
+.permissions-section__details-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgb(var(--v-theme-surface));
 }
 </style>

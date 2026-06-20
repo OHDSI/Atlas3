@@ -1,9 +1,13 @@
 <template>
   <div
     class="event-concept-set-field"
+    :class="{ 'event-concept-set-field--compact': compact }"
     data-testid="event-concept-set-field"
   >
-    <div class="event-concept-set-field__title">
+    <div
+      v-if="!compact"
+      class="event-concept-set-field__title"
+    >
       {{ label }}
     </div>
     <div class="event-concept-set-field__input">
@@ -41,11 +45,14 @@ withDefaults(
     conceptSet: { id: number | string; name: string } | undefined | null
     label?: string
     selectLabel?: string
+    /** Compact, label-less, borderless variant for use inside a card header. */
+    compact?: boolean
   }>(),
   {
     conceptSet: undefined,
     label: 'Concept Set',
     selectLabel: 'Select Concept Set',
+    compact: false,
   }
 )
 
@@ -85,5 +92,16 @@ const emit = defineEmits<{
   padding: 6px 12px;
   flex: 1 1 auto;
   color: rgb(var(--v-theme-primary));
+}
+
+/* Compact variant: drop the box chrome so the picker sits inline in a card
+   header (next to the event-type label). */
+.event-concept-set-field--compact {
+  border: none;
+  background: transparent;
+  border-radius: 0;
+}
+.event-concept-set-field--compact .event-concept-set-field__input {
+  padding: 0;
 }
 </style>

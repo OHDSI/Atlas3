@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConceptDetailStore } from '@/stores/concept-detail'
-import { AtlasAlert, AtlasProgressLinear } from '@/components/ui'
+import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useI18n } from '@/composables/useI18n'
+import { AtlasAlert, AtlasProgressLinear, AtlasSnackbar } from '@/components/ui'
+import type { Concept } from '@/models/concept-set.types'
 import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
 import ConceptStatCards from '@/components/concepts/detail/ConceptStatCards.vue'
 import ConceptAttributesCard from '@/components/concepts/detail/ConceptAttributesCard.vue'
@@ -26,6 +29,37 @@ const props = defineProps<{
 const store = useConceptDetailStore()
 const { concept, isLoading, error, related, parents, children, recordCountsBySource } =
   storeToRefs(store)
+
+const conceptSetsStore = useConceptSetsStore()
+const { t } = useI18n()
+const feedback = ref<{ open: boolean; text: string }>({ open: false, text: '' })
+
+// The header's "Add to Concept Set" button was previously unhandled here, so it
+// silently did nothing. Mirror the standalone search: add to the set being
+// edited, or create a new untitled set when none is open.
+function onAddToConceptSet(c: Concept) {
+  if (!conceptSetsStore.currentSet) {
+    conceptSetsStore.openCreateEditor()
+  }
+  conceptSetsStore.addConceptToSet(c)
+  const setName =
+    conceptSetsStore.currentSet?.name ||
+    t('components.conceptSetBuilder.newConceptSet', 'New concept set').value
+  feedback.value = {
+    open: true,
+    text: t('search.addedToSet', 'Added "{concept}" → {set}', {
+      concept: c.conceptName,
+      set: setName,
+    }).value,
+  }
+}
+
+// While a different concept loads (e.g. after jumping to a related concept),
+// the store still holds the previously-shown concept. Grey it out so the
+// stale content reads as "loading", not current.
+const isStale = computed(
+  () => isLoading.value && !!concept.value && concept.value.conceptId !== props.conceptId,
+)
 
 async function load() {
   if (props.sourceKey && props.conceptId) {
@@ -59,11 +93,16 @@ watch(() => [props.sourceKey, props.conceptId], load)
 
     <template v-if="concept && !error">
       <ConceptDetailHeader
+        :class="{ 'is-stale': isStale }"
         :concept="concept"
         :on-back="onBack"
+        @add-to-concept-set="onAddToConceptSet"
       />
 
-      <div class="content-body">
+      <div
+        class="content-body"
+        :class="{ 'is-stale': isStale }"
+      >
         <ConceptStatCards
           :concept-id="concept.conceptId"
           :primary-source-key="props.sourceKey"
@@ -80,7 +119,10 @@ watch(() => [props.sourceKey, props.conceptId], load)
           />
         </div>
 
-        <ConceptRelatedTable :related="related" />
+        <ConceptRelatedTable
+          :related="related"
+          :source-key="props.sourceKey"
+        />
 
         <DrilldownDetails
           v-if="domainPath(concept.domainId)"
@@ -93,6 +135,12 @@ watch(() => [props.sourceKey, props.conceptId], load)
         />
       </div>
     </template>
+
+    <AtlasSnackbar
+      v-model="feedback.open"
+      severity="success"
+      :text="feedback.text"
+    />
   </div>
 </template>
 
@@ -100,6 +148,12 @@ watch(() => [props.sourceKey, props.conceptId], load)
 .concept-detail-content {
   display: flex;
   flex-direction: column;
+}
+/* Stale content while a different concept loads: dim and freeze interaction. */
+.is-stale {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 120ms ease;
 }
 .content-body {
   padding: 16px;
