@@ -45,6 +45,8 @@ export default defineConfig({
         '**/*.types.ts',
         '**/types.ts',
         '**/*.d.ts',
+        // Chart data interfaces only - no runtime code (like *.types.ts)
+        'src/ui/chart-types.ts',
         'src/env.d.ts',
         'src/types/**',
         'src/models/**',

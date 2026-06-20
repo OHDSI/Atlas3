@@ -111,4 +111,29 @@ describe('builders are defensive when scalar/time arrays are missing', () => {
       })
     ).not.toThrow()
   })
+
+  it('multiLineChartOptions value mode emits [x, y] pairs from xValues', () => {
+    const opt = multiLineChartOptions({
+      xAxisType: 'value',
+      xValues: [10, 20],
+      series: [{ name: 's', data: [1, 2] }],
+    }) as any
+    expect(opt.xAxis.type).toBe('value')
+    expect(opt.series[0].data).toEqual([[10, 1], [20, 2]])
+  })
+
+  it('multiLineChartOptions value mode falls back to index when xValues missing', () => {
+    const opt = multiLineChartOptions({
+      xAxisType: 'value',
+      series: [{ name: 's', data: [5, 6] }],
+    }) as any
+    expect(opt.series[0].data).toEqual([[0, 5], [1, 6]])
+  })
+
+  it('dashboardObservationMonthLineOptions falls back to index without monthCodes', () => {
+    const opt = dashboardObservationMonthLineOptions({
+      series: [{ name: 's', data: [1, 2] }],
+    }) as any
+    expect(opt.series[0].data).toEqual([[0, 1], [1, 2]])
+  })
 })
