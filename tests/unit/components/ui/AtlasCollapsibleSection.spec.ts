@@ -84,4 +84,23 @@ describe('AtlasCollapsibleSection', () => {
     await nextTick()
     expect(header.attributes('aria-expanded')).toBe('true')
   })
+
+  it('follows defaultExpanded prop changes until the user toggles manually', async () => {
+    const wrapper = mountSection({ defaultExpanded: true })
+    const header = wrapper.find('[data-testid="cs-header"]')
+    expect(header.attributes('aria-expanded')).toBe('true')
+
+    // Prop change is honoured while the user has not interacted.
+    await wrapper.setProps({ defaultExpanded: false })
+    await nextTick()
+    expect(header.attributes('aria-expanded')).toBe('false')
+
+    // Once the user toggles, later prop changes are ignored.
+    await header.trigger('click')
+    await nextTick()
+    expect(header.attributes('aria-expanded')).toBe('true')
+    await wrapper.setProps({ defaultExpanded: false })
+    await nextTick()
+    expect(header.attributes('aria-expanded')).toBe('true')
+  })
 })
