@@ -682,7 +682,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
   const offset = data.offset
   const binStarts = validBins.map(bin => offset + bin.intervalIndex * intervalSize)
   const yValues = validBins.map(bin => bin.countValue)
-  const yMax = Math.max(0, ...yValues)
+  const axisLabel = data.xAxisLabel || 'Age'
 
   return {
     tooltip: {
@@ -696,8 +696,8 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
 
         const [xStart, xEnd, yValue] = point
         const value = formatSINumber(yValue)
-        const label = xEnd - xStart === 1 ? `${xStart}` : `${xStart} - ${xEnd}`
-        return `<strong>Age: ${label}</strong><br/>${data.seriesName || data.unit || 'Count'}: ${value}`
+        const label = intervalSize === 1 ? `${xStart}` : `${xStart} - ${xEnd}`
+        return `<strong>${axisLabel}: ${label}</strong><br/>${data.seriesName || data.unit || 'Count'}: ${value}`
       },
     },
     grid: {
@@ -711,7 +711,7 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
       type: 'value',
       min: Math.min(...binStarts),
       max: Math.max(...binStarts) + intervalSize,
-      name: 'Age',
+      name: axisLabel,
       nameLocation: 'middle',
       nameGap: 30,
       axisLabel: {
@@ -722,7 +722,6 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
     yAxis: {
       type: 'value',
       name: data.unit || 'Person Count',
-      max: yMax > 0 ? yMax : undefined,
       nameLocation: 'middle',
       nameGap: 60,
       axisLabel: {

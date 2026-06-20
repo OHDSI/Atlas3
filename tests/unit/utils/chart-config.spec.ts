@@ -726,7 +726,7 @@ describe('chart-config', () => {
       expect(yAxisFormatter(250)).toBe('250')
     })
 
-    it('sets y-axis max from the largest bin count', () => {
+    it('leaves the y-axis max unset so ECharts auto-scales with headroom', () => {
       const data: DatasourceHistogramChartData = {
         intervalSize: 1,
         offset: 0,
@@ -738,7 +738,64 @@ describe('chart-config', () => {
       }
 
       const options = dashboardAgeBarOptions(data)
-      expect((options.yAxis as ChartAxisOption).max).toBe(3100000)
+      // Pinning max to the tallest bar clips it against the frame and breaks
+      // nice tick rounding — leave it undefined for auto-scaling.
+      expect((options.yAxis as ChartAxisOption).max).toBeUndefined()
+    })
+
+    it('uses xAxisLabel for the axis name and tooltip prefix (defaulting to Age)', () => {
+      const labelled: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 1950,
+        bins: [{ intervalIndex: 0, countValue: 5 }],
+        xAxisLabel: 'Year of Birth',
+      }
+      const opts = dashboardAgeBarOptions(labelled)
+      expect((opts.xAxis as ChartAxisOption).name).toBe('Year of Birth')
+      const tooltip = (opts.tooltip as any).formatter({ data: [1950, 1951, 5] })
+      expect(tooltip).toContain('Year of Birth: 1950')
+
+      const noLabel: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 0,
+        bins: [{ intervalIndex: 0, countValue: 5 }],
+      }
+      expect((dashboardAgeBarOptions(noLabel).xAxis as ChartAxisOption).name).toBe('Age')
+    })
+
+    it('renders a single value when intervalSize is 1 and a range otherwise', () => {
+      const unit: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 0,
+        bins: [{ intervalIndex: 0, countValue: 5 }],
+      }
+      const unitTooltip = (dashboardAgeBarOptions(unit).tooltip as any).formatter({ data: [40, 41, 5] })
+      expect(unitTooltip).toContain('Age: 40')
+      expect(unitTooltip).not.toContain('40 - 41')
+
+      const ranged: DatasourceHistogramChartData = {
+        intervalSize: 30,
+        offset: 0,
+        bins: [{ intervalIndex: 8, countValue: 5 }],
+        xAxisLabel: 'Days',
+      }
+      const rangeTooltip = (dashboardAgeBarOptions(ranged).tooltip as any).formatter({
+        data: [240, 270, 5],
+      })
+      expect(rangeTooltip).toContain('Days: 240 - 270')
+    })
+
+    it('renderItem rects have flat tops (no rounded corners)', () => {
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 1,
+        offset: 0,
+        bins: [{ intervalIndex: 0, countValue: 2 }],
+      }
+      const series = dashboardAgeBarOptions(data).series as any[]
+      const coord = ([x, y]: [number, number]) => [x * 10, 200 - y * 3]
+      const dp = series[0].data[0] as number[]
+      const res = series[0].renderItem({}, { value: (i: number) => dp[i] ?? 0, coord } as any)
+      expect(res.shape.r).toBeUndefined()
     })
 
     it('returns empty options and logs an error for empty/invalid bins', () => {

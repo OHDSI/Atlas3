@@ -40,6 +40,7 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
     })),
     unit: 'Person Count',
     seriesName: 'Person Count',
+    xAxisLabel: 'Age',
   }
 
   const cumulativeObservation: LineChartData = {
@@ -255,7 +256,8 @@ export function transformDataDensityReport(
     const totalSeriesNames = new Set<string>()
     const totalLookup = new Map<string, number>()
     totalRaw.forEach(item => {
-      const month = item.xCalendarMonth!
+      const month = item.xCalendarMonth
+      if (month == null) return
       totalMonthsSet.add(month)
       const seriesName = item.seriesName || 'Total'
       totalSeriesNames.add(seriesName)
@@ -280,7 +282,8 @@ export function transformDataDensityReport(
   const recSeriesNames = new Set<string>()
   const recLookup = new Map<string, number>()
   recRaw.forEach(item => {
-      const month = item.xCalendarMonth!
+      const month = item.xCalendarMonth
+      if (month == null) return
       recMonthsSet.add(month)
       const seriesName = item.seriesName || 'Records'
       recSeriesNames.add(seriesName)
@@ -365,6 +368,7 @@ export function transformPersonReport(
         bins: [],
         unit: 'Person Count',
         seriesName: 'Person Count',
+        xAxisLabel: 'Year of Birth',
       }
     }
 
@@ -385,6 +389,7 @@ export function transformPersonReport(
       bins,
       unit: 'Person Count',
       seriesName: 'Person Count',
+      xAxisLabel: 'Year of Birth',
     }
   })()
 
@@ -499,6 +504,7 @@ export function transformObservationPeriodReport(
             .sort((a, b) => a.intervalIndex - b.intervalIndex),
           unit: 'Person Count',
           seriesName: 'Person Count',
+          xAxisLabel: 'Age',
         }
       : undefined
 
@@ -518,6 +524,7 @@ export function transformObservationPeriodReport(
             .sort((a, b) => a.intervalIndex - b.intervalIndex),
           unit: 'Person Count',
           seriesName: 'Person Count',
+          xAxisLabel: 'Days',
         }
       : undefined
 

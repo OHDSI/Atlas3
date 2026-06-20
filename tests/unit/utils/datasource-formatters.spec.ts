@@ -644,7 +644,20 @@ describe('Data Source Formatters', () => {
       expect(result.recordsPerPerson.series[0].data).toEqual([0])
     })
 
-    
+    it('skips rows with a missing xCalendarMonth instead of throwing', () => {
+      const raw = {
+        totalRecords: [
+          { seriesName: 'A', yRecordCount: 100 }, // no xCalendarMonth
+          { xCalendarMonth: 202301, seriesName: 'A', yRecordCount: 50 },
+        ],
+        recordsPerPerson: [{ seriesName: 'B', yRecordCount: 5 }], // no xCalendarMonth
+      }
+
+      const result = transformDataDensityReport(raw)
+      expect(result.totalRecords.categories).toEqual(['202301'])
+      expect(result.totalRecords.series[0].data).toEqual([50])
+      expect(result.recordsPerPerson.categories).toEqual([])
+    })
 
     it('uses defaults for missing conceptsPerPerson percentile fields', () => {
       const raw = {

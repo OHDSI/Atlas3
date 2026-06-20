@@ -1,9 +1,9 @@
 <template>
   <div class="dashboard-observation-month-chart">
     <MultiLineChart
-      :data="data"
-      :loading="loading"
-      :height="height"
+      :data="props.data"
+      :loading="props.loading"
+      :height="props.height"
     />
   </div>
 </template>
@@ -22,9 +22,6 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false,
   height: 300,
 })
-
-// expose to template
-const { data, loading, height } = props
 </script>
 
 <style scoped>

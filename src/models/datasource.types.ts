@@ -140,6 +140,8 @@ export interface HistogramChartData {
   }>
   unit?: string
   seriesName?: string
+  /** Label for the value (x) axis and tooltip prefix, e.g. 'Age', 'Year of Birth', 'Days'. */
+  xAxisLabel?: string
 }
 
 export interface LineChartData {
@@ -370,6 +372,7 @@ export const HistogramChartDataSchema = z.object({
   ),
   unit: z.string().optional(),
   seriesName: z.string().optional(),
+  xAxisLabel: z.string().optional(),
 })
 
 export const LineChartDataSchema = z.object({
@@ -439,7 +442,7 @@ export const DataDensityReportSchema = z.object({
 })
 
 export const PersonReportSchema = z.object({
-  yearOfBirth: BarChartDataSchema,
+  yearOfBirth: HistogramChartDataSchema,
   gender: z.array(PieChartDataSchema),
   race: z.array(PieChartDataSchema),
   ethnicity: z.array(PieChartDataSchema),
