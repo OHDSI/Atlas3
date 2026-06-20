@@ -636,6 +636,7 @@ import type {
   LineChartData as DatasourceLineChartData,
   MultiLineChartData as DatasourceMultiLineChartData,
 } from '@/models/datasource.types'
+import type { LineChartData as UILineChartData } from '@/ui/chart-types'
 
 import { logger } from '@/utils/logger'
 
@@ -953,7 +954,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
 /**
  * Multi-Line Chart Configuration for Data Density Reports
  */
-export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChartsOption {
+export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLineChartData): EChartsOption {
   return {
     tooltip: {
       trigger: 'axis',

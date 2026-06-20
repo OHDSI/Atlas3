@@ -1,6 +1,10 @@
 <template>
   <div class="atlas-line-chart">
-    <AtlasSkeleton v-if="loading" type="image" :height="height" />
+    <AtlasSkeleton
+      v-if="loading"
+      type="image"
+      :height="height"
+    />
     <v-chart
       v-else
       ref="chartRef"
@@ -14,12 +18,11 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { AtlasSkeleton } from '@/components/ui'
-import type { MultiLineChartData } from '@/models/datasource.types'
-import type { ChartXAxisType } from '@/ui/chart-types'
+import type { LineChartData, ChartXAxisType } from '@/ui/chart-types'
 import { multiLineChartOptions, createResizeHandler } from '@/ui/chart-config'
 
 interface Props {
-  data: MultiLineChartData
+  data: LineChartData
   loading?: boolean
   height?: number
   xAxisType?: ChartXAxisType

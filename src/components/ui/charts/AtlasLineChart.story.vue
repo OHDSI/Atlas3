@@ -18,15 +18,24 @@ const value = {
 </script>
 
 <template>
-  <Story title="Charts/AtlasLineChart" group="charts">
+  <Story
+    title="Charts/AtlasLineChart"
+    group="charts"
+  >
     <Variant title="category axis">
       <AtlasLineChart :data="category" />
     </Variant>
     <Variant title="time axis">
-      <AtlasLineChart :data="time" x-axis-type="time" />
+      <AtlasLineChart
+        :data="time"
+        x-axis-type="time"
+      />
     </Variant>
     <Variant title="value axis">
-      <AtlasLineChart :data="value" x-axis-type="value" />
+      <AtlasLineChart
+        :data="value"
+        x-axis-type="value"
+      />
     </Variant>
   </Story>
 </template>
