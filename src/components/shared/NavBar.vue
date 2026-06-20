@@ -564,11 +564,11 @@ onMounted(() => {
   align-items: center;
   /* Space between the logo and the first menu item (does not affect the gap
      between menu items, which is controlled by .nav-bar__nav-list `gap`). */
-  margin-left: 1.5rem;
+  margin-left: 1rem;
 }
 
 .nav-bar__nav {
-  padding-left: 1.5rem;
+  padding-left: 1rem;
 }
 
 .nav-bar__nav-dropdown {
