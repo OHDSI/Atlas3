@@ -140,35 +140,52 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
   throw lastError || new Error('Request failed')
 }
 
+// In-flight de-duplication for the sources list. Several callers fetch this on
+// app start (the TrexSQL availability check in App.vue and the data sources view).
+// Because fetchJSON cancels any previous request to the same endpoint, those
+// concurrent callers would abort each other, surfacing a spurious
+// "Unable to load data sources" error and an empty/"not implemented" report on
+// reload/deep-link. Coalescing the concurrent calls into a single request fixes it.
+let sourcesInFlight: Promise<DataSource[]> | null = null
+
 /**
  * List all available data sources
  */
 export async function listDataSources(): Promise<DataSource[]> {
-  try {
-    logger.debug('DataSource', 'Fetching sources from /source/sources')
-    const response = await fetchJSON<DataSource[]>('/source/sources')
+  if (sourcesInFlight) return sourcesInFlight
 
-    const validated: DataSource[] = []
-    for (const source of response) {
-      const result = DataSourceSchema.safeParse(source)
-      if (result.success) {
-        validated.push(result.data)
-      } else {
-        logger.error('DataSource', 'Data source validation failed', result.error)
+  sourcesInFlight = (async () => {
+    try {
+      logger.debug('DataSource', 'Fetching sources from /source/sources')
+      const response = await fetchJSON<DataSource[]>('/source/sources')
+
+      const validated: DataSource[] = []
+      for (const source of response) {
+        const result = DataSourceSchema.safeParse(source)
+        if (result.success) {
+          validated.push(result.data)
+        } else {
+          logger.error('DataSource', 'Data source validation failed', result.error)
+        }
       }
-    }
 
-    // If no sources passed validation, throw error to maintain backward compatibility
-    if (response.length > 0 && validated.length === 0) {
-      throw new Error('All data sources failed validation')
-    }
+      // If no sources passed validation, throw error to maintain backward compatibility
+      if (response.length > 0 && validated.length === 0) {
+        throw new Error('All data sources failed validation')
+      }
 
-    logger.debug('DataSource', `Successfully fetched ${validated.length} sources`)
-    return validated
-  } catch (error) {
-    logger.error('DataSource', 'Failed to fetch sources', error)
-    throw new Error('Unable to load data sources. Please try again.')
-  }
+      logger.debug('DataSource', `Successfully fetched ${validated.length} sources`)
+      return validated
+    } catch (error) {
+      logger.error('DataSource', 'Failed to fetch sources', error)
+      throw new Error('Unable to load data sources. Please try again.')
+    } finally {
+      // Allow the next (post-completion) call to fetch fresh data.
+      sourcesInFlight = null
+    }
+  })()
+
+  return sourcesInFlight
 }
 
 /**
