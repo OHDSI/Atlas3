@@ -22,7 +22,7 @@ export default defineConfig({
       fileName: () => 'atlas-ui.js',
     },
     rollupOptions: {
-      external: ['vue', /^vuetify($|\/)/],
+      external: ['vue', /^vuetify($|\/)/, /^echarts($|\/)/, 'vue-echarts'],
       output: { assetFileNames: 'atlas-ui.[ext]', globals: { vue: 'Vue' } },
     },
   },
