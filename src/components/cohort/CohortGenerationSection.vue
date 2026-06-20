@@ -1,5 +1,5 @@
 <template>
-  <CollapsibleSection
+  <AtlasCollapsibleSection
     data-testid="cohort-generation-section"
     :title="t('cohortDefinitions.generation.section.title', 'Generation').value"
     :state-chip="stateChip"
@@ -70,7 +70,7 @@
       :source-key="historyDialog.sourceKey"
       :executions="historyExecutions"
     />
-  </CollapsibleSection>
+  </AtlasCollapsibleSection>
 </template>
 
 <script setup lang="ts">
@@ -82,7 +82,7 @@ import type { AtlasChipTone } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import { useSourceAccessFor } from '@/composables/useEntityAccess'
 import { useWebAPIStore } from '@/stores/webapi'
-import CollapsibleSection from '@/components/shared/CollapsibleSection.vue'
+import AtlasCollapsibleSection from '@/components/ui/AtlasCollapsibleSection.vue'
 import CohortReportDrawer from './CohortReportDrawer.vue'
 import DataSourceRunTable, {
   type RunTableSource,

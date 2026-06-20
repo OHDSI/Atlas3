@@ -43,7 +43,7 @@
       v-if="!hideInternalToolbar"
       class="cohort-builder__toolbar-row"
     >
-      <BuilderActionToolbar>
+      <AtlasActionToolbar>
         <template #status>
           <cohort-toolbar-status
             :concept-set-count="usedConceptSets.length"
@@ -71,7 +71,7 @@
             @export-copy="handleExportCopy"
           />
         </template>
-      </BuilderActionToolbar>
+      </AtlasActionToolbar>
     </div>
 
     <concept-sets-list-dialog
@@ -624,7 +624,7 @@ import * as cohortDefinitionVersionsService from '@/services/cohort-definition-v
 import CohortBreadcrumb from './CohortBreadcrumb.vue'
 import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
-import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
+import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 import { ensureUniqueConceptSetId } from '@/utils/concept-set-id'
 import { resolveCriteriaTargetEvent } from '@/utils/criteria-target'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'

@@ -21,7 +21,7 @@
     @clear-error="store.clearError()"
   >
     <template #actions>
-      <BuilderActionToolbar>
+      <AtlasActionToolbar>
         <template #actions>
           <AtlasButton
             variant="ghost"
@@ -70,7 +70,7 @@
             {{ t('common.save', 'Save') }}
           </AtlasButton>
         </template>
-      </BuilderActionToolbar>
+      </AtlasActionToolbar>
     </template>
 
     <!-- Main editor card -->
@@ -326,7 +326,7 @@ import type {
 } from '@/models/feature-analysis.types'
 import type { ConceptSetReference } from '@/models/concept-set.types'
 import AnalysisBuilderShell from '@/components/analysis/AnalysisBuilderShell.vue'
-import BuilderActionToolbar from '@/components/shared/BuilderActionToolbar.vue'
+import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
 
 const props = defineProps<{
   id?: string
