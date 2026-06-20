@@ -8,6 +8,17 @@ import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
 
 /**
+ * Convert a YYYYMM code (e.g. 200301) to a UTC millisecond timestamp
+ * positioned at the first day of that month. Used for time-axis charts.
+ */
+export function parseYyyymm(code: number | string): number {
+  const s = String(code)
+  const year = Number(s.slice(0, 4))
+  const month = Number(s.slice(-2))
+  return Date.UTC(year, month - 1, 1)
+}
+
+/**
  * Format large numbers using SI notation (K, M, B, T)
  * Examples: 1000 → "1.0k", 3000000 → "3.0M", 1500000000 → "1.5B"
  */
