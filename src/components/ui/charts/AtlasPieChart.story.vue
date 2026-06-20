@@ -17,5 +17,20 @@ const data = [
         title="Gender"
       />
     </Variant>
+    <Variant title="with export toolbar">
+      <AtlasPieChart
+        :data="data"
+        title="Gender"
+        :show-export="true"
+        export-filename="gender-pie"
+      />
+    </Variant>
+    <Variant title="export hidden">
+      <AtlasPieChart
+        :data="data"
+        title="Gender"
+        :show-export="false"
+      />
+    </Variant>
   </Story>
 </template>
