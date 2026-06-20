@@ -147,6 +147,7 @@ export interface HistogramChartData {
 export interface LineChartData {
   categories: string[]
   monthCodes?: (number | string)[]
+  xValues?: number[]
   series: Array<{
     name: string
     data: number[]

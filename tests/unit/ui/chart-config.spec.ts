@@ -33,3 +33,24 @@ describe('dashboardObservationMonthLineOptions', () => {
     ])
   })
 })
+
+import { dashboardCumulativeLineOptions } from '@/ui/chart-config'
+
+describe('dashboardCumulativeLineOptions', () => {
+  const data = {
+    xValues: [0, 1, 2],
+    series: [{ name: 'Percent', data: [100, 80, 60] }],
+    xAxisLabel: 'Years',
+    yAxisLabel: 'Percent of Persons',
+  }
+
+  it('uses a value x-axis', () => {
+    const opt = dashboardCumulativeLineOptions(data) as any
+    expect(opt.xAxis.type).toBe('value')
+  })
+
+  it('emits [x, y] pairs', () => {
+    const opt = dashboardCumulativeLineOptions(data) as any
+    expect(opt.series[0].data).toEqual([[0, 100], [1, 80], [2, 60]])
+  })
+})

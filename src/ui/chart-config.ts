@@ -800,10 +800,9 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
-        const paramsArray = Array.isArray(params) ? params : [params]
-        const param = paramsArray[0] as { name: string; value: number | string }
-        const value = typeof param.value === 'number' ? param.value.toFixed(1) : param.value
-        return `<strong>${data.xAxisLabel || 'Year'}: ${param.name}</strong><br/>${data.yAxisLabel || 'Percentage'}: ${value}%`
+        const arr = Array.isArray(params) ? params : [params]
+        const p = arr[0] as { value: [number, number] }
+        return `<strong>${data.xAxisLabel || 'Years'}: ${p.value[0]}</strong><br/>${data.yAxisLabel || 'Percentage'}: ${p.value[1].toFixed(1)}%`
       },
     },
     grid: {
@@ -814,15 +813,11 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       containLabel: true,
     },
     xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: data.categories,
-      name: data.xAxisLabel || 'Year',
+      type: 'value',
+      name: data.xAxisLabel || 'Years',
       nameLocation: 'middle',
       nameGap: 30,
-      axisLabel: {
-        fontSize: 11,
-      },
+      axisLabel: { fontSize: 11 },
     },
     yAxis: {
       type: 'value',
@@ -837,7 +832,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       name: s.name,
       type: 'line',
       smooth: true,
-      data: s.data,
+      data: s.data.map((v: number, i: number) => [data.xValues![i], v]),
       symbol: 'circle',
       symbolSize: 6,
       itemStyle: {
