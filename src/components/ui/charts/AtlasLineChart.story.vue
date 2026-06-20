@@ -23,18 +23,23 @@ const value = {
     group="charts"
   >
     <Variant title="category axis">
-      <AtlasLineChart :data="category" />
+      <AtlasLineChart
+        :data="category"
+        :show-export="true"
+      />
     </Variant>
     <Variant title="time axis">
       <AtlasLineChart
         :data="time"
         x-axis-type="time"
+        :show-export="true"
       />
     </Variant>
     <Variant title="value axis">
       <AtlasLineChart
         :data="value"
         x-axis-type="value"
+        :show-export="true"
       />
     </Variant>
   </Story>
