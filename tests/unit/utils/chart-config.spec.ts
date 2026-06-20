@@ -942,8 +942,10 @@ describe('chart-config', () => {
 
   describe('dashboardCumulativeLineOptions', () => {
     it('should generate cumulative observation line chart options', () => {
+      // The builder now uses a value x-axis (xValues), not category strings.
       const data: DatasourceLineChartData = {
         categories: ['2020', '2021', '2022', '2023'],
+        xValues: [2020, 2021, 2022, 2023],
         series: [
           { name: 'Cumulative', data: [10.5, 25.3, 50.8, 75.2] }
         ],
@@ -967,6 +969,7 @@ describe('chart-config', () => {
     it('should format y-axis as percentage', () => {
       const data: DatasourceLineChartData = {
         categories: ['2020'],
+        xValues: [2020],
         series: [{ name: 'Cumulative', data: [50] }]
       }
 
@@ -980,18 +983,21 @@ describe('chart-config', () => {
     it('should use default labels when not provided', () => {
       const data: DatasourceLineChartData = {
         categories: ['2020'],
+        xValues: [2020],
         series: [{ name: 'Cumulative', data: [50] }]
       }
 
       const options = dashboardCumulativeLineOptions(data)
 
-      expect((options.xAxis as ChartAxisOption).name).toBe('Year')
+      // Default x-axis label is 'Years' (plural) in the value-axis builder
+      expect((options.xAxis as ChartAxisOption).name).toBe('Years')
       expect((options.yAxis as ChartAxisOption).name).toBe('Percent of Persons')
     })
 
     it('should apply area gradient to series', () => {
       const data: DatasourceLineChartData = {
         categories: ['2020'],
+        xValues: [2020],
         series: [{ name: 'Cumulative', data: [50] }]
       }
 
@@ -1006,6 +1012,7 @@ describe('chart-config', () => {
     it('should handle multiple series', () => {
       const data: DatasourceLineChartData = {
         categories: ['2020', '2021'],
+        xValues: [2020, 2021],
         series: [
           { name: 'Male', data: [10, 20] },
           { name: 'Female', data: [12, 22] }
@@ -1024,6 +1031,7 @@ describe('chart-config', () => {
     it('should handle empty series', () => {
       const data: DatasourceLineChartData = {
         categories: ['2020'],
+        xValues: [2020],
         series: []
       }
 
@@ -1033,26 +1041,28 @@ describe('chart-config', () => {
     })
 
     it('calls the tooltip formatter', () => {
+      // The value-axis builder tooltip receives { value: [xValue, yValue] }
       const data: DatasourceLineChartData = {
-        categories: ['2020'],
+        categories: ['365'],
+        xValues: [365],
         series: [{ name: 'Cumulative', data: [45.7] }],
-        yAxisLabel: 'Percent'
+        yAxisLabel: 'Percent',
+        xAxisLabel: 'Days'
       }
       const options = dashboardCumulativeLineOptions(data)
       const formatter = (options.tooltip as any).formatter
-      const result = formatter([{ name: '2020', value: 45.7 }])
-      expect(result).toContain('2020')
+      const result = formatter([{ value: [365, 45.7] }])
+      expect(result).toContain('365')
       expect(result).toContain('45.7%')
-
-      const resultStr = formatter([{ name: '2021', value: '30.0' }])
-      expect(resultStr).toContain('30.0%')
     })
   })
 
   describe('dashboardObservationMonthLineOptions', () => {
     it('should generate observation by month line chart options', () => {
+      // The builder now uses a time x-axis (monthCodes), not category strings.
       const data: DatasourceLineChartData = {
-        categories: ['2020-01', '2020-02', '2020-03'],
+        categories: ['202001', '202002', '202003'],
+        monthCodes: [202001, 202002, 202003],
         series: [
           { name: 'Observations', data: [1000, 1500, 2000] }
         ],
@@ -1073,8 +1083,10 @@ describe('chart-config', () => {
     })
 
     it('should include data zoom controls', () => {
+      const monthCodes = Array.from({ length: 24 }, (_, i) => 202001 + i)
       const data: DatasourceLineChartData = {
-        categories: Array.from({ length: 24 }, (_, i) => `2020-${String(i + 1).padStart(2, '0')}`),
+        categories: monthCodes.map(m => m.toString()),
+        monthCodes,
         series: [{ name: 'Observations', data: Array(24).fill(1000) }]
       }
 
@@ -1086,31 +1098,25 @@ describe('chart-config', () => {
       expect((options.dataZoom as ChartDataZoomOption[])[1].type).toBe('slider')
     })
 
-    it('should rotate labels for many categories', () => {
+    it('should use a time x-axis (no label rotation — ECharts handles time axis labels)', () => {
+      // The time-axis builder lets ECharts auto-format labels; no manual rotation.
+      const monthCodes = Array.from({ length: 30 }, (_, i) => 202001 + i)
       const data: DatasourceLineChartData = {
-        categories: Array.from({ length: 30 }, (_, i) => `2020-${String(i + 1).padStart(2, '0')}`),
+        categories: monthCodes.map(m => m.toString()),
+        monthCodes,
         series: [{ name: 'Observations', data: Array(30).fill(1000) }]
       }
 
       const options = dashboardObservationMonthLineOptions(data)
 
-      expect((options.xAxis as ChartAxisOption).axisLabel?.rotate).toBe(45)
-    })
-
-    it('should not rotate labels for fewer categories', () => {
-      const data: DatasourceLineChartData = {
-        categories: Array.from({ length: 12 }, (_, i) => `2020-${String(i + 1).padStart(2, '0')}`),
-        series: [{ name: 'Observations', data: Array(12).fill(1000) }]
-      }
-
-      const options = dashboardObservationMonthLineOptions(data)
-
-      expect((options.xAxis as ChartAxisOption).axisLabel?.rotate).toBe(0)
+      // xAxis type is 'time', not 'category' — rotation is not configured
+      expect((options.xAxis as ChartAxisOption).type).toBe('time')
     })
 
     it('should use default labels when not provided', () => {
       const data: DatasourceLineChartData = {
-        categories: ['2020-01'],
+        categories: ['202001'],
+        monthCodes: [202001],
         series: [{ name: 'Observations', data: [1000] }]
       }
 
@@ -1122,7 +1128,8 @@ describe('chart-config', () => {
 
     it('should disable symbols for cleaner lines', () => {
       const data: DatasourceLineChartData = {
-        categories: ['2020-01'],
+        categories: ['202001'],
+        monthCodes: [202001],
         series: [{ name: 'Observations', data: [1000] }]
       }
 
@@ -1133,7 +1140,8 @@ describe('chart-config', () => {
 
     it('should use LTTB sampling', () => {
       const data: DatasourceLineChartData = {
-        categories: ['2020-01'],
+        categories: ['202001'],
+        monthCodes: [202001],
         series: [{ name: 'Observations', data: [1000] }]
       }
 
@@ -1142,27 +1150,34 @@ describe('chart-config', () => {
       expect((options.series as ChartSeriesItem[])[0].sampling).toBe('lttb')
     })
 
-    it('should calculate label interval based on category count', () => {
+    it('should produce time-series data points (YYYYMM → [timestamp, value])', () => {
       const data: DatasourceLineChartData = {
-        categories: Array.from({ length: 36 }, (_, i) => `2020-${String(i + 1).padStart(2, '0')}`),
-        series: [{ name: 'Observations', data: Array(36).fill(1000) }]
+        categories: ['202301', '202302'],
+        monthCodes: [202301, 202302],
+        series: [{ name: 'Observations', data: [1000, 1200] }]
       }
 
       const options = dashboardObservationMonthLineOptions(data)
-      const interval = (options.xAxis as ChartAxisOption).axisLabel?.interval
+      const seriesData = (options.series as ChartSeriesItem[])[0].data as [number, number][]
 
-      expect(interval).toBeGreaterThanOrEqual(0)
+      // Each point is [timestamp (ms), value]
+      expect(Array.isArray(seriesData[0])).toBe(true)
+      expect(seriesData[0][1]).toBe(1000)
+      expect(seriesData[1][1]).toBe(1200)
     })
 
     it('calls the tooltip formatter using default label when no yAxisLabel', () => {
+      // The time-axis tooltip receives { value: [timestamp, number] }
       const data: DatasourceLineChartData = {
-        categories: ['2020-01'],
+        categories: ['202001'],
+        monthCodes: [202001],
         series: [{ name: 'Data', data: [500] }]
       }
       const options = dashboardObservationMonthLineOptions(data)
       const formatter = (options.tooltip as ChartTooltipOption).formatter as (params: unknown) => string
-      const result = formatter([{ name: '2020-01', value: 500 }])
-      expect(result).toContain('2020-01')
+      // Formatter receives [{ value: [timestamp, number] }]
+      const jan2020 = Date.UTC(2020, 0) // 2020-01
+      const result = formatter([{ value: [jan2020, 500] }])
       expect(result).toContain('Observations')
     })
   })
@@ -1458,8 +1473,10 @@ describe('Dashboard-specific Chart Configurations', () => {
 
   describe('dashboardCumulativeLineOptions', () => {
     it('should generate cumulative line chart configuration', () => {
+      // Value x-axis: xValues required instead of category strings
       const data = {
         categories: ['2018', '2019', '2020', '2021'],
+        xValues: [2018, 2019, 2020, 2021],
         series: [{ name: 'Cumulative %', data: [25, 50, 75, 100] }],
         xAxisLabel: 'Year',
         yAxisLabel: 'Percentage'
@@ -1476,6 +1493,7 @@ describe('Dashboard-specific Chart Configurations', () => {
     it('should format y-axis as percentage', () => {
       const data = {
         categories: ['2020'],
+        xValues: [2020],
         series: [{ name: 'Data', data: [50] }]
       }
 
@@ -1489,6 +1507,7 @@ describe('Dashboard-specific Chart Configurations', () => {
     it('should handle multiple series with area styles', () => {
       const data = {
         categories: ['2020', '2021'],
+        xValues: [2020, 2021],
         series: [
           { name: 'Series A', data: [25, 50] },
           { name: 'Series B', data: [30, 60] }
@@ -1507,8 +1526,10 @@ describe('Dashboard-specific Chart Configurations', () => {
 
   describe('dashboardObservationMonthLineOptions', () => {
     it('should generate observation month line chart configuration', () => {
+      // Time x-axis: monthCodes (YYYYMM) required instead of category strings
       const data = {
-        categories: ['2020-01', '2020-02', '2020-03'],
+        categories: ['202001', '202002', '202003'],
+        monthCodes: [202001, 202002, 202003],
         series: [{ name: 'Observations', data: [1000, 1200, 1100] }],
         xAxisLabel: 'Month',
         yAxisLabel: 'Count'
@@ -1521,20 +1542,23 @@ describe('Dashboard-specific Chart Configurations', () => {
       expect((options.dataZoom as any)).toHaveLength(2)
     })
 
-    it('should rotate labels for many months', () => {
+    it('should use a time x-axis (ECharts auto-formats labels, no manual rotation)', () => {
+      const monthCodes = Array.from({ length: 30 }, (_, i) => 202001 + i)
       const data = {
-        categories: Array.from({ length: 30 }, (_, i) => `2020-${String(i + 1).padStart(2, '0')}`),
+        categories: monthCodes.map(m => m.toString()),
+        monthCodes,
         series: [{ name: 'Data', data: Array.from({ length: 30 }, () => 1000) }]
       }
 
       const options = dashboardObservationMonthLineOptions(data)
 
-      expect((options.xAxis as any).axisLabel.rotate).toBe(45)
+      expect((options.xAxis as any).type).toBe('time')
     })
 
     it('should include data zoom controls', () => {
       const data = {
-        categories: ['2020-01'],
+        categories: ['202001'],
+        monthCodes: [202001],
         series: [{ name: 'Data', data: [100] }]
       }
 
@@ -1546,15 +1570,18 @@ describe('Dashboard-specific Chart Configurations', () => {
     })
 
     it('calls the tooltip formatter', () => {
+      // The time-axis tooltip formatter receives [{ value: [timestamp, number] }]
       const data = {
-        categories: ['2020-01'],
+        categories: ['202001'],
+        monthCodes: [202001],
         series: [{ name: 'Observations', data: [1500] }],
         yAxisLabel: 'Count'
       }
       const options = dashboardObservationMonthLineOptions(data)
       const formatter = (options.tooltip as any).formatter
-      const result = formatter([{ name: '2020-01', value: 1500 }])
-      expect(result).toContain('2020-01')
+      const jan2020 = Date.UTC(2020, 0)
+      const result = formatter([{ value: [jan2020, 1500] }])
+      expect(result).toContain('01/2020')
       expect(result).toContain('Count')
     })
   })

@@ -49,6 +49,7 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
       const sorted = (raw.cumulativeObservation || []).slice().sort((a, b) => (a.xLengthOfObservation ?? 0) - (b.xLengthOfObservation ?? 0))
       return {
         categories: sorted.map(c => c.xLengthOfObservation?.toString() || ''),
+        xValues: sorted.map(c => c.xLengthOfObservation ?? 0),
         series: [
           {
             name: 'Cumulative Observation',
@@ -67,6 +68,7 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
       const sorted = (raw.observedByMonth || []).slice().sort((a, b) => (a.monthYear ?? 0) - (b.monthYear ?? 0))
       return {
         categories: sorted.map(o => o.monthYear?.toString() || ''),
+        monthCodes: sorted.map(o => o.monthYear ?? 0),
         series: [
           {
             name: 'Observation Count',
@@ -270,6 +272,8 @@ export function transformDataDensityReport(
 
   const totalRecords: import('@/models/datasource.types').MultiLineChartData = {
     categories: totalCategories,
+    xAxisType: 'time',
+    monthCodes: totalMonths,
     series: Array.from(totalSeriesNames).map(name => ({
       name,
       data: totalMonths.map(m => totalLookup.get(`${name}|${m}`) ?? 0),
@@ -296,6 +300,8 @@ export function transformDataDensityReport(
 
   const recordsPerPerson: import('@/models/datasource.types').MultiLineChartData = {
     categories: recCategories,
+    xAxisType: 'time',
+    monthCodes: recMonths,
     series: Array.from(recSeriesNames).map(name => ({
       name,
       data: recMonths.map(m => recLookup.get(`${name}|${m}`) ?? 0),
@@ -534,6 +540,8 @@ export function transformObservationPeriodReport(
           const sorted = (raw.cumulativeObservation || []).slice().sort((a, b) => (a.xLengthOfObservation ?? 0) - (b.xLengthOfObservation ?? 0))
           return {
             categories: sorted.map(i => i.xLengthOfObservation?.toString() || ''),
+            xAxisType: 'value' as const,
+            xValues: sorted.map(i => i.xLengthOfObservation ?? 0),
             series: [
               {
                 name: 'Cumulative %',
@@ -550,6 +558,8 @@ export function transformObservationPeriodReport(
           const sorted = (raw.observedByMonth || []).slice().sort((a, b) => (a.monthYear ?? 0) - (b.monthYear ?? 0))
           return {
             categories: sorted.map(i => i.monthYear?.toString() || ''),
+            xAxisType: 'time' as const,
+            monthCodes: sorted.map(i => i.monthYear ?? 0),
             series: [
               {
                 name: 'Persons',
@@ -637,6 +647,8 @@ export function transformDeathReport(
           const sorted = (raw.prevalenceByMonth || []).slice().sort((a, b) => (a.xCalendarMonth ?? 0) - (b.xCalendarMonth ?? 0))
           return {
             categories: sorted.map(i => i.xCalendarMonth?.toString() || ''),
+            xAxisType: 'time' as const,
+            monthCodes: sorted.map(i => i.xCalendarMonth ?? 0),
             series: [
               {
                 name: 'Prevalence per 1000',

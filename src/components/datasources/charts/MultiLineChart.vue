@@ -36,7 +36,7 @@ const props = withDefaults(defineProps<Props>(), {
 const chartRef = ref<any>(null)
 
 const chartOption = computed(() => {
-  if (!props.data || (props.data.categories ?? []).length === 0) return {}
+  if (!props.data || !props.data.series || props.data.series.length === 0) return {}
   return multiLineChartOptions(props.data)
 })
 
