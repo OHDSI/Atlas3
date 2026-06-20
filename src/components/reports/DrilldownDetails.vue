@@ -82,8 +82,9 @@
               Prevalence by Month
             </v-card-title>
             <v-card-text>
-              <LineChart
+              <AtlasLineChart
                 :data="formatTimeSeriesData(data.prevalenceByMonth)"
+                x-axis-type="time"
                 :height="400"
                 data-testid="drilldown-prevalenceByMonth"
               />
@@ -267,7 +268,8 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasCol, AtlasIconButton, AtlasProgressCircular, AtlasRow } from '@/components/ui'
 import { computed } from 'vue'
-import type { DrilldownReport, TimeSeriesData, LineChartData } from '@/models/report.types'
+import type { DrilldownReport, TimeSeriesData } from '@/models/report.types'
+import type { LineChartData as UILineChartData } from '@/ui/chart-types'
 import {
   DOMAIN_DRILLDOWN_FIELDS,
   type Domain,
@@ -275,9 +277,9 @@ import {
 } from '@/config/drilldown-config'
 import TrellisChart from '@/components/ui/charts/AtlasTrellisChart.vue'
 import BoxPlotChart from '@/components/ui/charts/AtlasBoxPlotChart.vue'
-import LineChart from './charts/LineChart.vue'
-import PieChart from './charts/PieChart.vue'
-import BarChart from './charts/BarChart.vue'
+import AtlasLineChart from '@/components/ui/charts/AtlasLineChart.vue'
+import PieChart from '@/components/ui/charts/AtlasPieChart.vue'
+import BarChart from '@/components/ui/charts/AtlasBarChart.vue'
 
 interface Props {
   data: DrilldownReport | null
@@ -317,11 +319,19 @@ const hasAnyData = computed(() => {
   })
 })
 
-function formatTimeSeriesData(timeSeriesData: TimeSeriesData[]): LineChartData {
+function formatTimeSeriesData(timeSeriesData: TimeSeriesData[]): UILineChartData {
   return {
-    xAxis: timeSeriesData.map(d => d.date),
-    yAxis: timeSeriesData.map(d => d.value),
-    seriesName: 'Prevalence per 1000 people',
+    monthCodes: timeSeriesData.map(d => {
+      const [mm, yyyy] = d.date.split('/')
+      return Number(yyyy) * 100 + Number(mm)
+    }),
+    series: [
+      {
+        name: 'Prevalence per 1000 people',
+        data: timeSeriesData.map(d => d.value),
+      },
+    ],
+    yAxisLabel: 'Prevalence per 1000 people',
   }
 }
 </script>
