@@ -562,6 +562,9 @@ onMounted(() => {
 .nav-bar__nav-wrapper {
   display: flex;
   align-items: center;
+  /* Space between the logo and the first menu item (does not affect the gap
+     between menu items, which is controlled by .nav-bar__nav-list `gap`). */
+  margin-left: 1.5rem;
 }
 
 .nav-bar__nav {
@@ -609,7 +612,10 @@ onMounted(() => {
 
 .nav-bar__nav-item--active .nav-bar__nav-link {
   color: rgb(var(--v-theme-primary));
-  font-weight: 700;
+  /* Faux-bold: keep font-weight 500 so the glyph metrics (and therefore the item
+     width) do not change on selection — avoids shifting the rest of the menu.
+     The text-shadow thickens the strokes to read as bold. */
+  text-shadow: 0.4px 0 0 currentColor, -0.4px 0 0 currentColor;
 }
 
 .nav-bar__nav-item--active::after {
