@@ -79,4 +79,13 @@ describe('multiLineChartOptions xAxisType', () => {
       [Date.UTC(2003, 1, 1), 2],
     ])
   })
+
+  it('rotates category labels when crowded (>24)', () => {
+    const cats = Array.from({ length: 30 }, (_, i) => `c${i}`)
+    const opt = multiLineChartOptions({
+      categories: cats,
+      series: [{ name: 's', data: cats.map(() => 1) }],
+    }) as any
+    expect(opt.xAxis.axisLabel.rotate).toBe(45)
+  })
 })

@@ -21,7 +21,16 @@ export function parseYyyymm(code: number | string): number {
 function buildLineXAxis(data: { xAxisType?: string; categories?: string[]; xAxisLabel?: string }) {
   const type = data.xAxisType ?? 'category'
   if (type === 'category') {
-    return { type: 'category' as const, boundaryGap: false, data: data.categories ?? [] }
+    return {
+      type: 'category' as const,
+      boundaryGap: false,
+      data: data.categories ?? [],
+      axisLabel: {
+        rotate: (data.categories?.length ?? 0) > 24 ? 45 : 0,
+        hideOverlap: true,
+        fontSize: 10,
+      },
+    }
   }
   return { type: type as 'value' | 'time', name: data.xAxisLabel }
 }
