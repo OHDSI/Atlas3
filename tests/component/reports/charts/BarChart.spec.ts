@@ -17,7 +17,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
-import BarChart from '@/components/reports/charts/BarChart.vue'
+import BarChart from '@/components/ui/charts/AtlasBarChart.vue'
 import type { BarChartData } from '@/models/report.types'
 
 const vuetify = createVuetify({
@@ -118,7 +118,7 @@ describe('BarChart', () => {
   describe('Rendering', () => {
     it('should render bar chart container', () => {
       const wrapper = createWrapper()
-      expect(wrapper.find('.bar-chart-container').exists()).toBe(true)
+      expect(wrapper.find('.atlas-bar-chart').exists()).toBe(true)
     })
 
     it('should render VChart component when not loading', () => {
@@ -562,7 +562,7 @@ describe('BarChart', () => {
         exportFilename: 'test-report'
       })
 
-      expect(wrapper.find('.bar-chart-container').exists()).toBe(true)
+      expect(wrapper.find('.atlas-bar-chart').exists()).toBe(true)
       expect(wrapper.findComponent({ name: 'VChart' }).exists()).toBe(true)
       expect(wrapper.findComponent({ name: 'ChartExport' }).exists()).toBe(true)
 

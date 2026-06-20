@@ -17,7 +17,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
-import PieChart from '@/components/reports/charts/PieChart.vue'
+import PieChart from '@/components/ui/charts/AtlasPieChart.vue'
 import type { PieChartData } from '@/models/report.types'
 
 const vuetify = createVuetify({
@@ -118,7 +118,7 @@ describe('PieChart', () => {
   describe('Rendering', () => {
     it('should render pie chart container', () => {
       const wrapper = createWrapper()
-      expect(wrapper.find('.pie-chart-container').exists()).toBe(true)
+      expect(wrapper.find('.atlas-pie-chart').exists()).toBe(true)
     })
 
     it('should render VChart component when not loading', () => {
@@ -659,7 +659,7 @@ describe('PieChart', () => {
         exportFilename: 'test-report'
       })
 
-      expect(wrapper.find('.pie-chart-container').exists()).toBe(true)
+      expect(wrapper.find('.atlas-pie-chart').exists()).toBe(true)
       expect(wrapper.findComponent({ name: 'VChart' }).exists()).toBe(true)
       expect(wrapper.findComponent({ name: 'ChartExport' }).exists()).toBe(true)
 
