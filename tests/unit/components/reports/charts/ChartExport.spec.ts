@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import ChartExport from '@/components/reports/charts/ChartExport.vue'
+import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
 
 const vuetify = createVuetify({ components, directives })
 

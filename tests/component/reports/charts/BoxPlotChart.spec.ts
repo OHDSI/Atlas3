@@ -15,7 +15,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
-import BoxPlotChart from '@/components/reports/charts/BoxPlotChart.vue'
+import BoxPlotChart from '@/components/ui/charts/AtlasBoxPlotChart.vue'
 import type { BoxPlotData } from '@/models/report.types'
 
 const vuetify = createVuetify({ components, directives })
