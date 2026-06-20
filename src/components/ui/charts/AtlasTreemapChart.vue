@@ -1,10 +1,10 @@
 <!--
-  BoxPlotChart Component
+  TreemapChart Component
 
-  ECharts box-and-whisker plot for statistical distributions
+  ECharts treemap wrapper with zoom interaction, loading states, and export functionality
 -->
 <template>
-  <div class="boxplot-chart-container">
+  <div class="treemap-chart-container">
     <!-- Export controls -->
     <div
       v-if="!loading && showExport"
@@ -29,6 +29,7 @@
       :option="chartOption"
       :style="{ height: `${height}px`, width: '100%' }"
       autoresize
+      @click="handleChartClick"
     />
   </div>
 </template>
@@ -36,9 +37,10 @@
 <script setup lang="ts">
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import type { BoxPlotData } from '@/models/report.types'
+import type { TreemapNode } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'
-import { boxPlotChartOptions, createResizeHandler } from '@/utils/chart-config'
+import type { TreemapSeriesOption } from 'echarts/charts'
+import { defaultTreemapOptions, createResizeHandler } from '@/ui/chart-config'
 import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
 
 /**
@@ -46,19 +48,21 @@ import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
  */
 const props = withDefaults(
   defineProps<{
-    data: BoxPlotData[]
+    data: TreemapNode[]
     title?: string
     loading?: boolean
     height?: number
+    enableZoom?: boolean
     showExport?: boolean
     exportFilename?: string
   }>(),
   {
     title: undefined,
     loading: false,
-    height: 400,
+    height: 500,
+    enableZoom: true,
     showExport: true,
-    exportFilename: 'boxplot-chart',
+    exportFilename: 'treemap-chart',
   }
 )
 
@@ -66,6 +70,7 @@ const props = withDefaults(
  * Emits
  */
 const emit = defineEmits<{
+  'node-click': [conceptId: number, conceptName: string, conceptPath: string]
   'export-success': [format: 'png' | 'svg', filename: string]
   'export-error': [format: 'png' | 'svg', error: Error]
 }>()
@@ -91,7 +96,20 @@ const chartOption = computed(() => {
     return {}
   }
 
-  return boxPlotChartOptions(props.data, props.title)
+  const baseOption = defaultTreemapOptions(props.data, props.title)
+
+  // Override roam setting if zoom is disabled
+  if (
+    !props.enableZoom &&
+    baseOption.series &&
+    Array.isArray(baseOption.series) &&
+    baseOption.series[0]
+  ) {
+    const seriesItem = baseOption.series[0] as TreemapSeriesOption
+    seriesItem.roam = false
+  }
+
+  return baseOption
 })
 
 /**
@@ -139,10 +157,25 @@ function handleExportSuccess(format: 'png' | 'svg', filename: string) {
 function handleExportError(format: 'png' | 'svg', error: Error) {
   emit('export-error', format, error)
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleChartClick(params: any) {
+  const data = params?.data
+  if (!data) return
+  // Only emit drill-down for leaf nodes (those carry conceptId).
+  // Parent-node clicks are handled by ECharts' built-in
+  // nodeClick: 'zoomToNode', which produces the breadcrumb. We
+  // intentionally don't emit for them.
+  const hasChildren = Array.isArray(data.children) && data.children.length > 0
+  if (hasChildren) return
+  if (data.conceptId !== undefined) {
+    emit('node-click', data.conceptId, data.name || '', data.conceptPath || '')
+  }
+}
 </script>
 
 <style scoped>
-.boxplot-chart-container {
+.treemap-chart-container {
   width: 100%;
   position: relative;
 }

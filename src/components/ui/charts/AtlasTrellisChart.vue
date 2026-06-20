@@ -1,10 +1,10 @@
 <!--
-  TreemapChart Component
+  TrellisChart Component
 
-  ECharts treemap wrapper with zoom interaction, loading states, and export functionality
+  ECharts small multiple line charts for stratified demographic analysis
 -->
 <template>
-  <div class="treemap-chart-container">
+  <div class="trellis-chart-container">
     <!-- Export controls -->
     <div
       v-if="!loading && showExport"
@@ -29,7 +29,6 @@
       :option="chartOption"
       :style="{ height: `${height}px`, width: '100%' }"
       autoresize
-      @click="handleChartClick"
     />
   </div>
 </template>
@@ -37,10 +36,9 @@
 <script setup lang="ts">
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import type { TreemapNode } from '@/models/report.types'
+import type { TrellisChartData } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'
-import type { TreemapSeriesOption } from 'echarts/charts'
-import { defaultTreemapOptions, createResizeHandler } from '@/utils/chart-config'
+import { trellisChartOptions, createResizeHandler } from '@/ui/chart-config'
 import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
 
 /**
@@ -48,21 +46,19 @@ import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
  */
 const props = withDefaults(
   defineProps<{
-    data: TreemapNode[]
+    data: TrellisChartData
     title?: string
     loading?: boolean
     height?: number
-    enableZoom?: boolean
     showExport?: boolean
     exportFilename?: string
   }>(),
   {
     title: undefined,
     loading: false,
-    height: 500,
-    enableZoom: true,
+    height: 600,
     showExport: true,
-    exportFilename: 'treemap-chart',
+    exportFilename: 'trellis-chart',
   }
 )
 
@@ -70,7 +66,6 @@ const props = withDefaults(
  * Emits
  */
 const emit = defineEmits<{
-  'node-click': [conceptId: number, conceptName: string, conceptPath: string]
   'export-success': [format: 'png' | 'svg', filename: string]
   'export-error': [format: 'png' | 'svg', error: Error]
 }>()
@@ -92,24 +87,11 @@ const chartInstance = computed<EChartsType | null>(() => {
  * Computed chart option
  */
 const chartOption = computed(() => {
-  if (!props.data || props.data.length === 0) {
+  if (!props.data || !props.data.series || props.data.series.length === 0) {
     return {}
   }
 
-  const baseOption = defaultTreemapOptions(props.data, props.title)
-
-  // Override roam setting if zoom is disabled
-  if (
-    !props.enableZoom &&
-    baseOption.series &&
-    Array.isArray(baseOption.series) &&
-    baseOption.series[0]
-  ) {
-    const seriesItem = baseOption.series[0] as TreemapSeriesOption
-    seriesItem.roam = false
-  }
-
-  return baseOption
+  return trellisChartOptions(props.data, props.title)
 })
 
 /**
@@ -157,25 +139,10 @@ function handleExportSuccess(format: 'png' | 'svg', filename: string) {
 function handleExportError(format: 'png' | 'svg', error: Error) {
   emit('export-error', format, error)
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function handleChartClick(params: any) {
-  const data = params?.data
-  if (!data) return
-  // Only emit drill-down for leaf nodes (those carry conceptId).
-  // Parent-node clicks are handled by ECharts' built-in
-  // nodeClick: 'zoomToNode', which produces the breadcrumb. We
-  // intentionally don't emit for them.
-  const hasChildren = Array.isArray(data.children) && data.children.length > 0
-  if (hasChildren) return
-  if (data.conceptId !== undefined) {
-    emit('node-click', data.conceptId, data.name || '', data.conceptPath || '')
-  }
-}
 </script>
 
 <style scoped>
-.treemap-chart-container {
+.trellis-chart-container {
   width: 100%;
   position: relative;
 }

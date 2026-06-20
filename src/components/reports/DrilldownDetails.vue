@@ -273,8 +273,8 @@ import {
   type Domain,
   type DrilldownField,
 } from '@/config/drilldown-config'
-import TrellisChart from './charts/TrellisChart.vue'
-import BoxPlotChart from './charts/BoxPlotChart.vue'
+import TrellisChart from '@/components/ui/charts/AtlasTrellisChart.vue'
+import BoxPlotChart from '@/components/ui/charts/AtlasBoxPlotChart.vue'
 import LineChart from './charts/LineChart.vue'
 import PieChart from './charts/PieChart.vue'
 import BarChart from './charts/BarChart.vue'

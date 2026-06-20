@@ -1,10 +1,10 @@
 <!--
-  TrellisChart Component
+  BoxPlotChart Component
 
-  ECharts small multiple line charts for stratified demographic analysis
+  ECharts box-and-whisker plot for statistical distributions
 -->
 <template>
-  <div class="trellis-chart-container">
+  <div class="boxplot-chart-container">
     <!-- Export controls -->
     <div
       v-if="!loading && showExport"
@@ -36,9 +36,9 @@
 <script setup lang="ts">
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import type { TrellisChartData } from '@/models/report.types'
+import type { BoxPlotData } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'
-import { trellisChartOptions, createResizeHandler } from '@/utils/chart-config'
+import { boxPlotChartOptions, createResizeHandler } from '@/ui/chart-config'
 import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
 
 /**
@@ -46,7 +46,7 @@ import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
  */
 const props = withDefaults(
   defineProps<{
-    data: TrellisChartData
+    data: BoxPlotData[]
     title?: string
     loading?: boolean
     height?: number
@@ -56,9 +56,9 @@ const props = withDefaults(
   {
     title: undefined,
     loading: false,
-    height: 600,
+    height: 400,
     showExport: true,
-    exportFilename: 'trellis-chart',
+    exportFilename: 'boxplot-chart',
   }
 )
 
@@ -87,11 +87,11 @@ const chartInstance = computed<EChartsType | null>(() => {
  * Computed chart option
  */
 const chartOption = computed(() => {
-  if (!props.data || !props.data.series || props.data.series.length === 0) {
+  if (!props.data || props.data.length === 0) {
     return {}
   }
 
-  return trellisChartOptions(props.data, props.title)
+  return boxPlotChartOptions(props.data, props.title)
 })
 
 /**
@@ -142,7 +142,7 @@ function handleExportError(format: 'png' | 'svg', error: Error) {
 </script>
 
 <style scoped>
-.trellis-chart-container {
+.boxplot-chart-container {
   width: 100%;
   position: relative;
 }

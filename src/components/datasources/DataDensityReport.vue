@@ -46,7 +46,7 @@ import { useI18n } from '@/composables/useI18n'
 import type { DataDensityReport as DataDensityReportData } from '@/models/datasource.types'
 import ChartSection from '@/components/datasources/shared/ChartSection.vue'
 import MultiLineChart from '@/components/datasources/charts/MultiLineChart.vue'
-import BoxPlotChart from '@/components/reports/charts/BoxPlotChart.vue'
+import BoxPlotChart from '@/components/ui/charts/AtlasBoxPlotChart.vue'
 
 const { t } = useI18n()
 

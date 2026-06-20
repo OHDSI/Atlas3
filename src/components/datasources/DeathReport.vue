@@ -92,8 +92,8 @@ import type { DeathReport } from '@/models/datasource.types'
 import ChartSection from './shared/ChartSection.vue'
 import EmptyReportState from './shared/EmptyReportState.vue'
 import PieChart from '@/components/reports/charts/PieChart.vue'
-import BoxPlotChart from '@/components/reports/charts/BoxPlotChart.vue'
-import TrellisChart from '@/components/reports/charts/TrellisChart.vue'
+import BoxPlotChart from '@/components/ui/charts/AtlasBoxPlotChart.vue'
+import TrellisChart from '@/components/ui/charts/AtlasTrellisChart.vue'
 import MultiLineChart from './charts/MultiLineChart.vue'
 
 const { t } = useI18n()

@@ -146,7 +146,7 @@
 import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { AtlasCard } from '@/components/ui'
-import BoxPlotChart from '@/components/reports/charts/BoxPlotChart.vue'
+import BoxPlotChart from '@/components/ui/charts/AtlasBoxPlotChart.vue'
 import type { BoxPlotData } from '@/models/report.types'
 import type { DistributionStat, LinkedCohort, PrevalenceStat } from '@/models/characterization.types'
 import { DEFAULT_STRATA_KEY } from '@/utils/characterization-result-mapper'
