@@ -751,13 +751,15 @@ export function mapBoxPlotData(
 ): import('@/models/report.types').BoxPlotData[] {
   const mapped = raw.map(item => ({
     category: item.category || `Interval ${item.intervalIndex || 0}`,
-    min: item.min || 0,
+    // WebAPI returns minValue/maxValue (consistent with p25Value/medianValue/…);
+    // fall back to min/max for any older payload shape.
+    min: item.minValue ?? item.min ?? 0,
     p10: item.p10Value || 0,
     p25: item.p25Value || 0,
     median: item.medianValue || item.avgValue || 0,
     p75: item.p75Value || 0,
     p90: item.p90Value || 0,
-    max: item.max || 0,
+    max: item.maxValue ?? item.max ?? 0,
   }))
   return sortByNumericLeadingPrefix(mapped)
 }

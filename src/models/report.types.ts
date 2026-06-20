@@ -511,12 +511,14 @@ export interface WebAPIBoxPlotRaw {
   category?: string
   intervalIndex?: number
   min?: number
+  minValue?: number
   p10Value?: number
   p25Value?: number
   medianValue?: number
   p75Value?: number
   p90Value?: number
   max?: number
+  maxValue?: number
   avgValue?: number
 }
 
