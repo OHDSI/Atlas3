@@ -13,8 +13,8 @@ import type { PersonReport as PersonReportData } from '@/models/datasource.types
 vi.mock('@/components/datasources/shared/ChartSection.vue', () => ({
   default: { name: 'ChartSection', template: '<div class="chart-section"><slot /></div>', props: ['title'] }
 }))
-vi.mock('@/components/reports/charts/PieChart.vue', () => ({
-  default: { name: 'PieChart', template: '<div class="pie-chart"></div>', props: ['data', 'height'] }
+vi.mock('@/components/ui/charts/AtlasPieChart.vue', () => ({
+  default: { name: 'AtlasPieChart', template: '<div class="pie-chart"></div>', props: ['data', 'height'] }
 }))
 vi.mock('@/components/datasources/charts/DashboardAgeChart.vue', () => ({
   default: { name: 'DashboardAgeChart', template: '<div class="dashboard-age-chart"></div>', props: ['data', 'height'] }
@@ -104,40 +104,40 @@ describe('PersonReport', () => {
   })
 
   it('should render gender pie chart', () => {
-    const pieCharts = wrapper.findAllComponents({ name: 'PieChart' })
+    const pieCharts = wrapper.findAllComponents({ name: 'AtlasPieChart' })
     expect(pieCharts.length).toBe(3)
   })
 
   it('should pass correct data to gender chart', () => {
-    const pieCharts = wrapper.findAllComponents({ name: 'PieChart' })
+    const pieCharts = wrapper.findAllComponents({ name: 'AtlasPieChart' })
     const genderChart = pieCharts[0]
     expect(genderChart.props('data')).toEqual(mockData.gender)
   })
 
   it('should render race pie chart', () => {
-    const pieCharts = wrapper.findAllComponents({ name: 'PieChart' })
+    const pieCharts = wrapper.findAllComponents({ name: 'AtlasPieChart' })
     expect(pieCharts.length).toBeGreaterThanOrEqual(2)
   })
 
   it('should pass correct data to race chart', () => {
-    const pieCharts = wrapper.findAllComponents({ name: 'PieChart' })
+    const pieCharts = wrapper.findAllComponents({ name: 'AtlasPieChart' })
     const raceChart = pieCharts[1]
     expect(raceChart.props('data')).toEqual(mockData.race)
   })
 
   it('should render ethnicity pie chart', () => {
-    const pieCharts = wrapper.findAllComponents({ name: 'PieChart' })
+    const pieCharts = wrapper.findAllComponents({ name: 'AtlasPieChart' })
     expect(pieCharts.length).toBe(3)
   })
 
   it('should pass correct data to ethnicity chart', () => {
-    const pieCharts = wrapper.findAllComponents({ name: 'PieChart' })
+    const pieCharts = wrapper.findAllComponents({ name: 'AtlasPieChart' })
     const ethnicityChart = pieCharts[2]
     expect(ethnicityChart.props('data')).toEqual(mockData.ethnicity)
   })
 
   it('should render all pie charts with same height', () => {
-    const pieCharts = wrapper.findAllComponents({ name: 'PieChart' })
+    const pieCharts = wrapper.findAllComponents({ name: 'AtlasPieChart' })
     pieCharts.forEach(chart => {
       expect(chart.props('height')).toBe(300)
     })

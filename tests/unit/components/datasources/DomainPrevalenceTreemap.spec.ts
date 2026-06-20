@@ -10,9 +10,9 @@ import DomainPrevalenceTreemap from '@/components/datasources/DomainPrevalenceTr
 import type { TreemapNode } from '@/models/datasource.types'
 
 // Mock child components
-vi.mock('@/components/reports/charts/TreemapChart.vue', () => ({
+vi.mock('@/components/ui/charts/AtlasTreemapChart.vue', () => ({
   default: {
-    name: 'TreemapChart',
+    name: 'AtlasTreemapChart',
     template: '<div class="treemap-chart"></div>',
     props: ['data', 'height'],
     emits: ['node-click']
@@ -75,17 +75,17 @@ describe('DomainPrevalenceTreemap', () => {
   })
 
   it('should render TreemapChart component', () => {
-    const treemapChart = wrapper.findComponent({ name: 'TreemapChart' })
+    const treemapChart = wrapper.findComponent({ name: 'AtlasTreemapChart' })
     expect(treemapChart.exists()).toBe(true)
   })
 
   it('should pass data prop to TreemapChart', () => {
-    const treemapChart = wrapper.findComponent({ name: 'TreemapChart' })
+    const treemapChart = wrapper.findComponent({ name: 'AtlasTreemapChart' })
     expect(treemapChart.props('data')).toEqual(mockData)
   })
 
   it('should render chart with correct height', () => {
-    const treemapChart = wrapper.findComponent({ name: 'TreemapChart' })
+    const treemapChart = wrapper.findComponent({ name: 'AtlasTreemapChart' })
     expect(treemapChart.props('height')).toBe(500)
   })
 
@@ -108,7 +108,7 @@ describe('DomainPrevalenceTreemap', () => {
   })
 
   it('should handle node click events', async () => {
-    const treemapChart = wrapper.findComponent({ name: 'TreemapChart' })
+    const treemapChart = wrapper.findComponent({ name: 'AtlasTreemapChart' })
     const mockEvent = new MouseEvent('click')
     const mockNode: TreemapNode = { name: 'Test Node', value: 100 }
 
@@ -120,7 +120,7 @@ describe('DomainPrevalenceTreemap', () => {
 
   it('should accept empty data array', () => {
     const wrapper2 = mountComponent({ data: [] })
-    const treemapChart = wrapper2.findComponent({ name: 'TreemapChart' })
+    const treemapChart = wrapper2.findComponent({ name: 'AtlasTreemapChart' })
     expect(treemapChart.props('data')).toEqual([])
   })
 
@@ -130,7 +130,7 @@ describe('DomainPrevalenceTreemap', () => {
       { name: 'Node 2', value: 200 }
     ]
     const wrapper2 = mountComponent({ data: flatData })
-    const treemapChart = wrapper2.findComponent({ name: 'TreemapChart' })
+    const treemapChart = wrapper2.findComponent({ name: 'AtlasTreemapChart' })
     expect(treemapChart.props('data')).toEqual(flatData)
   })
 
