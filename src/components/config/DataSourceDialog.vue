@@ -315,6 +315,9 @@ const isFormValid = ref(false)
 const isSaving = ref(false)
 const isDeleting = ref(false)
 const showDeleteConfirm = ref(false)
+// Numeric id of the loaded source — WebAPI's delete endpoint is keyed on
+// sourceId, not the string sourceKey.
+const loadedSourceId = ref<number | null>(null)
 
 const form = reactive({
   name: '',
@@ -400,6 +403,7 @@ function resetForm() {
   form.krbAuthMethod = 'KEYTAB'
   form.krbAdminServer = ''
   form.checkConnection = false
+  loadedSourceId.value = null
   keyfile.value = []
   keytabFile.value = []
 
@@ -415,6 +419,7 @@ async function loadSourceDetails(sourceKey: string) {
   try {
     const details: SourceDetails = await getSourceDetails(sourceKey)
 
+    loadedSourceId.value = details.sourceId
     form.name = details.sourceName
     form.key = details.sourceKey
     form.dialect = details.sourceDialect
@@ -514,12 +519,12 @@ function handleDelete() {
 }
 
 async function confirmDelete() {
-  if (!props.sourceKey) return
+  if (!props.sourceKey || loadedSourceId.value == null) return
 
   isDeleting.value = true
 
   try {
-    await deleteSource(props.sourceKey)
+    await deleteSource(loadedSourceId.value)
     showDeleteConfirm.value = false
     emit('deleted')
     handleClose()

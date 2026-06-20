@@ -733,6 +733,13 @@ watch(
       store.resetIncluded()
       document.body.style.overflow = ''
     } else {
+      // New concept sets open on the Search tab so the user can start adding
+      // concepts immediately; existing sets open on the Selected (expression)
+      // tab as before. See OHDSI/Atlas3 discussion #97. Read props directly
+      // rather than the `isEditMode` computed, which is declared later (this
+      // immediate watcher runs during setup, before that binding exists).
+      const isExisting = props.conceptSet?.id !== undefined && props.conceptSet?.id !== null
+      activeTab.value = isExisting ? 'selected' : 'search'
       document.body.style.overflow = 'hidden'
     }
   },

@@ -55,8 +55,8 @@ function mountComponent(props = {}) {
     global: {
       plugins: [vuetify],
       stubs: {
-        EntryEventCard: {
-          template: '<div class="entry-event-card"><slot /></div>',
+        CriteriaEventCard: {
+          template: '<div class="criteria-event-card"><slot /></div>',
           props: ['event']
         }
       }
@@ -101,7 +101,7 @@ describe('EntryEventsList', () => {
         events: [mockEvent, { ...mockEvent, id: 'event-2' }]
       })
 
-      const eventCards = wrapper.findAll('.entry-event-card')
+      const eventCards = wrapper.findAll('.criteria-event-card')
       expect(eventCards.length).toBe(2)
     })
   })
@@ -121,27 +121,21 @@ describe('EntryEventsList', () => {
 
     it('should handle empty events array', () => {
       const wrapper = mountComponent({ events: [] })
-      const eventCards = wrapper.findAll('.entry-event-card')
+      const eventCards = wrapper.findAll('.criteria-event-card')
       expect(eventCards.length).toBe(0)
     })
   })
 
-  describe('Observation Period Dialog', () => {
-    it('should not show dialog initially', () => {
+  describe('Continuous observation popover', () => {
+    it('renders the continuous-observation pill', () => {
       const wrapper = mountComponent()
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
-      expect(dialog.props('modelValue')).toBe(false)
+      expect(wrapper.findComponent({ name: 'VChip' }).exists()).toBe(true)
     })
 
-    it('should open dialog when chip is clicked', async () => {
+    it('uses an anchored menu rather than a page-dimming dialog (discussion #99)', () => {
       const wrapper = mountComponent()
-      const chip = wrapper.findComponent({ name: 'VChip' })
-
-      await chip.trigger('click')
-      await wrapper.vm.$nextTick()
-
-      const dialog = wrapper.findComponent({ name: 'VDialog' })
-      expect(dialog.props('modelValue')).toBe(true)
+      expect(wrapper.findComponent({ name: 'VMenu' }).exists()).toBe(true)
+      expect(wrapper.findComponent({ name: 'VDialog' }).exists()).toBe(false)
     })
   })
 

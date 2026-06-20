@@ -5,10 +5,13 @@ import { AtlasCard, AtlasChip, AtlasDataTable } from '@/components/ui'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
-const props = defineProps<{ related: RelatedConcept[] }>()
+const props = defineProps<{ related: RelatedConcept[]; sourceKey?: string }>()
 
+// Prefer the explicit sourceKey prop. The drawer renders this table over other
+// routes, so route.params.sourceKey is empty there and the link would no-op.
+// Fall back to the route param for the stand-alone /concept/:sourceKey page.
 const route = useRoute()
-const sourceKey = computed(() => (route.params.sourceKey as string) ?? '')
+const sourceKey = computed(() => props.sourceKey || ((route.params.sourceKey as string) ?? ''))
 const conceptDrawer = useConceptDetailDrawerStore()
 
 function openConceptDetail(conceptId: number) {

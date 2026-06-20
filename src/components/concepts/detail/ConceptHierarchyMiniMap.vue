@@ -44,6 +44,14 @@ function viewFull() {
   conceptDrawer.open(sourceKey.value, props.concept.conceptId)
 }
 
+// Jumping to a parent/child concept opens it in the same side-panel drawer
+// rather than routing the whole app to the stand-alone concept page — that
+// keeps the user in their current flow (cohort editor, search, etc.).
+function openConcept(conceptId: number) {
+  if (!sourceKey.value) return
+  conceptDrawer.open(sourceKey.value, conceptId)
+}
+
 const isEmpty = computed(() => props.parents.length === 0 && props.children.length === 0)
 
 const visibleParents = computed(() => props.parents.slice(0, 3))
@@ -80,12 +88,13 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
             class="node faded"
           >
             <span class="chev">▸</span>
-            <router-link
-              :to="`/concept/${sourceKey}/${p.conceptId}`"
+            <a
+              href="#"
               class="node-link"
+              @click.prevent="openConcept(p.conceptId)"
             >
               {{ p.conceptName }}
-            </router-link>
+            </a>
           </li>
           <li
             class="node current"
@@ -100,12 +109,13 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
             class="node child"
           >
             <span class="chev">▸</span>
-            <router-link
-              :to="`/concept/${sourceKey}/${c.conceptId}`"
+            <a
+              href="#"
               class="node-link"
+              @click.prevent="openConcept(c.conceptId)"
             >
               {{ c.conceptName }}
-            </router-link>
+            </a>
           </li>
           <li
             v-if="children.length > visibleChildren.length"
