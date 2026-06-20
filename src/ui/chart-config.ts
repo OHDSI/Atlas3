@@ -47,8 +47,13 @@ function mapLineSeriesData(
 ): number[] | [number, number][] {
   const type = data.xAxisType ?? 'category'
   if (type === 'category') return values
-  if (type === 'time') return values.map((v, i) => [parseYyyymm(data.monthCodes![i]!), v] as [number, number])
-  return values.map((v, i) => [data.xValues![i]!, v] as [number, number]) // value
+  // Guard against missing scalar/time arrays (e.g. stripped by schema validation):
+  // fall back to the point index rather than throwing during chart render.
+  if (type === 'time')
+    return values.map(
+      (v, i) => [data.monthCodes?.[i] != null ? parseYyyymm(data.monthCodes[i]) : i, v] as [number, number]
+    )
+  return values.map((v, i) => [data.xValues?.[i] ?? i, v] as [number, number]) // value
 }
 
 /**
@@ -858,7 +863,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       name: s.name,
       type: 'line',
       smooth: true,
-      data: s.data.map((v: number, i: number) => [data.xValues![i], v]),
+      data: s.data.map((v: number, i: number) => [data.xValues?.[i] ?? i, v]),
       symbol: 'circle',
       symbolSize: 6,
       itemStyle: {
@@ -947,7 +952,10 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       name: s.name,
       type: 'line',
       smooth: false,
-      data: s.data.map((v: number, i: number) => [parseYyyymm(data.monthCodes![i] as string | number), v]),
+      data: s.data.map((v: number, i: number) => [
+        data.monthCodes?.[i] != null ? parseYyyymm(data.monthCodes[i] as string | number) : i,
+        v,
+      ]),
       symbol: 'none',
       sampling: 'lttb',
       itemStyle: { color: CHART_COLORS[index % CHART_COLORS.length] },

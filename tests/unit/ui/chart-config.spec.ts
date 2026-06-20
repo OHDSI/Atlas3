@@ -89,3 +89,26 @@ describe('multiLineChartOptions xAxisType', () => {
     expect(opt.xAxis.axisLabel.rotate).toBe(45)
   })
 })
+
+// Regression: when the Zod report schema strips xValues/monthCodes (because the
+// schema didn't list them), the builders received undefined arrays and crashed
+// during chart render (TypeError: reading '0'), blanking the whole dashboard.
+// The builders must not throw when those arrays are absent.
+describe('builders are defensive when scalar/time arrays are missing', () => {
+  it('dashboardCumulativeLineOptions does not throw without xValues (falls back to index)', () => {
+    const opt = dashboardCumulativeLineOptions({
+      categories: ['0', '1', '2'],
+      series: [{ name: 'Percent', data: [100, 80, 60] }],
+    }) as any
+    expect(opt.series[0].data).toEqual([[0, 100], [1, 80], [2, 60]])
+  })
+
+  it('multiLineChartOptions time mode does not throw without monthCodes', () => {
+    expect(() =>
+      multiLineChartOptions({
+        xAxisType: 'time',
+        series: [{ name: 's', data: [1, 2] }],
+      })
+    ).not.toThrow()
+  })
+})
