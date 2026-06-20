@@ -234,9 +234,18 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
       },
     },
     legend: {
-      orient: 'vertical',
-      left: 'left',
-      top: 'middle',
+      // Horizontal legend along the bottom so long category names (e.g. ethnicity)
+      // never sit on top of the pie. Scrolls + truncates if there are many/long
+      // entries; the full name shows on legend hover.
+      orient: 'horizontal',
+      bottom: 0,
+      left: 'center',
+      type: 'scroll',
+      textStyle: {
+        overflow: 'truncate',
+        width: 120,
+      },
+      tooltip: { show: true },
       data: data.map(item => item.name),
     },
     series: [
@@ -244,16 +253,21 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
         name: title || 'Distribution',
         type: 'pie',
         radius: ['40%', '70%'],
-        center: ['60%', '50%'],
+        center: ['50%', '45%'],
         avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 10,
           borderColor: '#fff',
           borderWidth: 2,
         },
+        // Percentage drawn inside the ring (no leader lines that overflow the card
+        // edge); category names live in the legend below.
         label: {
           show: true,
-          formatter: '{b}: {d}%',
+          position: 'inside',
+          formatter: '{d}%',
+          color: '#fff',
+          fontSize: 11,
         },
         emphasis: {
           label: {
