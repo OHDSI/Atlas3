@@ -26,8 +26,8 @@ function fullData(): DrilldownReport {
       { category: 'M', min: 1, p10: 30, p25: 100, median: 365, p75: 730, p90: 1095, max: 3650 },
     ],
     prevalenceByMonth: [
-      { date: '2020-01', value: 10 },
-      { date: '2020-02', value: 15 },
+      { date: '01/2020', value: 10 },
+      { date: '02/2020', value: 15 },
     ],
     prevalenceByGenderAgeYear: {
       categories: ['M', 'F'],
@@ -152,7 +152,7 @@ describe('DrilldownDetails', () => {
       expect(data.series).toHaveLength(1)
       expect(data.series[0].name).toBe('Prevalence per 1000 people')
       expect(data.series[0].data).toEqual([10, 15])
-      expect(data.monthCodes).toHaveLength(2)
+      expect(data.monthCodes).toEqual([202001, 202002])
       expect(data.yAxisLabel).toBe('Prevalence per 1000 people')
     })
   })

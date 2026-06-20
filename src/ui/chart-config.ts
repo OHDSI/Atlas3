@@ -32,7 +32,13 @@ function buildLineXAxis(data: { xAxisType?: string; categories?: string[]; xAxis
       },
     }
   }
-  return { type: type as 'value' | 'time', name: data.xAxisLabel }
+  return {
+    type: type as 'value' | 'time',
+    name: data.xAxisLabel,
+    nameLocation: 'middle' as const,
+    nameGap: 30,
+    axisLabel: { fontSize: 10 },
+  }
 }
 
 function mapLineSeriesData(

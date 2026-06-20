@@ -48,3 +48,16 @@ export { default as AtlasTab } from '../../src/components/ui/AtlasTab.vue'
 export { default as AtlasTabs } from '../../src/components/ui/AtlasTabs.vue'
 export { default as AtlasTextField } from '../../src/components/ui/AtlasTextField.vue'
 export { default as AtlasTooltip } from '../../src/components/ui/AtlasTooltip.vue'
+
+// Chart data types + option-builders for external consumers
+export type { LineChartData, LineChartSeries, ChartXAxisType, PieChartData } from '../../src/ui/chart-types'
+export {
+  parseYyyymm,
+  multiLineChartOptions,
+  defaultPieChartOptions,
+  defaultBarChartOptions,
+  defaultTreemapOptions,
+  CHART_COLORS,
+  createResizeHandler,
+  getExportConfig,
+} from '../../src/ui/chart-config'
