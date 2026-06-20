@@ -9,7 +9,7 @@ import type {
   PrevalenceData,
   TreemapNode,
   PrevalenceTableRow,
-  BarChartData,
+  HistogramChartData,
   PieChartData,
   LineChartData,
   ReportType,
@@ -31,36 +31,50 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
     value: g.countValue,
   }))
 
-  const ageDistribution: BarChartData = {
-    categories: raw.ageAtFirstObservation.map(a => `${a.intervalIndex}`),
-    series: [
-      {
-        name: 'Person Count',
-        data: raw.ageAtFirstObservation.map(a => a.countValue),
-      },
-    ],
+  const ageDistribution: HistogramChartData = {
+    intervalSize: 1,
+    offset: 0,
+    bins: raw.ageAtFirstObservation.map(a => ({
+      intervalIndex: a.intervalIndex,
+      countValue: a.countValue,
+    })),
+    unit: 'Person Count',
+    seriesName: 'Person Count',
+    xAxisLabel: 'Age',
   }
 
   const cumulativeObservation: LineChartData = {
-    categories: raw.cumulativeObservation.map(c => c.xLengthOfObservation.toString()),
-    series: [
-      {
-        name: 'Cumulative Observation',
-        data: raw.cumulativeObservation.map(c => c.yPercentPersons),
-      },
-    ],
+    // Ensure categories/series are ordered by the x value used for the x-axis
+    ...(() => {
+      const sorted = (raw.cumulativeObservation || []).slice().sort((a, b) => (a.xLengthOfObservation ?? 0) - (b.xLengthOfObservation ?? 0))
+      return {
+        categories: sorted.map(c => c.xLengthOfObservation?.toString() || ''),
+        series: [
+          {
+            name: 'Cumulative Observation',
+            data: sorted.map(c => c.yPercentPersons || 0),
+          },
+        ],
+      }
+    })(),
     xAxisLabel: 'Days',
     yAxisLabel: 'Percent of Persons',
   }
 
   const observationByMonth: LineChartData = {
-    categories: raw.observedByMonth.map(o => o.monthYear.toString()),
-    series: [
-      {
-        name: 'Observation Count',
-        data: raw.observedByMonth.map(o => o.countValue),
-      },
-    ],
+    // Order by `monthYear` before splitting into parallel arrays
+    ...(() => {
+      const sorted = (raw.observedByMonth || []).slice().sort((a, b) => (a.monthYear ?? 0) - (b.monthYear ?? 0))
+      return {
+        categories: sorted.map(o => o.monthYear?.toString() || ''),
+        series: [
+          {
+            name: 'Observation Count',
+            data: sorted.map(o => o.countValue || 0),
+          },
+        ],
+      }
+    })(),
     xAxisLabel: 'Month',
     yAxisLabel: 'Count',
   }
@@ -236,50 +250,56 @@ interface DataDensityRaw {
 export function transformDataDensityReport(
   raw: DataDensityRaw
 ): import('@/models/datasource.types').DataDensityReport {
-  // Transform total records time series
-  const totalRecords: import('@/models/datasource.types').MultiLineChartData = {
-    categories: raw.totalRecords?.map(item => item.xCalendarMonth?.toString() || '') || [],
-    series: [],
-  }
-
-  // Group totalRecords by series name
-  if (raw.totalRecords && raw.totalRecords.length > 0) {
-    const groupedBySeriesName = new Map<string, number[]>()
-    raw.totalRecords.forEach(item => {
+  // Build union of months across all series for totalRecords so categories include every month
+  const totalRaw = raw.totalRecords || []
+    const totalMonthsSet = new Set<number>()
+    const totalSeriesNames = new Set<string>()
+    const totalLookup = new Map<string, number>()
+    totalRaw.forEach(item => {
+      const month = item.xCalendarMonth
+      if (month == null) return
+      totalMonthsSet.add(month)
       const seriesName = item.seriesName || 'Total'
-      if (!groupedBySeriesName.has(seriesName)) {
-        groupedBySeriesName.set(seriesName, [])
-      }
-      groupedBySeriesName.get(seriesName)!.push(item.yRecordCount || 0)
+      totalSeriesNames.add(seriesName)
+      totalLookup.set(`${seriesName}|${month}`, item.yRecordCount ?? 0)
     })
+    const totalMonths = Array.from(totalMonthsSet).sort((a, b) => a - b)
+    const totalCategories = totalMonths.map(m => m.toString())
 
-    totalRecords.series = Array.from(groupedBySeriesName.entries()).map(([name, data]) => ({
+  // totalLookup already populated above in the single iteration
+
+  const totalRecords: import('@/models/datasource.types').MultiLineChartData = {
+    categories: totalCategories,
+    series: Array.from(totalSeriesNames).map(name => ({
       name,
-      data,
-    }))
+      data: totalMonths.map(m => totalLookup.get(`${name}|${m}`) ?? 0),
+    })),
   }
 
-  // Transform records per person time series
-  const recordsPerPerson: import('@/models/datasource.types').MultiLineChartData = {
-    categories: raw.recordsPerPerson?.map(item => item.xCalendarMonth?.toString() || '') || [],
-    series: [],
-  }
-
-  // Group recordsPerPerson by series name
-  if (raw.recordsPerPerson && raw.recordsPerPerson.length > 0) {
-    const groupedBySeriesName = new Map<string, number[]>()
-    raw.recordsPerPerson.forEach(item => {
+  // Same for recordsPerPerson: union months across its series and align each series
+  const recRaw = raw.recordsPerPerson || []
+  const recMonthsSet = new Set<number>()
+  const recSeriesNames = new Set<string>()
+  const recLookup = new Map<string, number>()
+  recRaw.forEach(item => {
+      const month = item.xCalendarMonth
+      if (month == null) return
+      recMonthsSet.add(month)
       const seriesName = item.seriesName || 'Records'
-      if (!groupedBySeriesName.has(seriesName)) {
-        groupedBySeriesName.set(seriesName, [])
-      }
-      groupedBySeriesName.get(seriesName)!.push(item.yRecordCount || 0)
+      recSeriesNames.add(seriesName)
+      recLookup.set(`${seriesName}|${month}`, item.yRecordCount ?? 0)
     })
+    const recMonths = Array.from(recMonthsSet).sort((a, b) => a - b)
+    const recCategories = recMonths.map(m => m.toString())
 
-    recordsPerPerson.series = Array.from(groupedBySeriesName.entries()).map(([name, data]) => ({
+  // recLookup already populated above in the single iteration
+
+  const recordsPerPerson: import('@/models/datasource.types').MultiLineChartData = {
+    categories: recCategories,
+    series: Array.from(recSeriesNames).map(name => ({
       name,
-      data,
-    }))
+      data: recMonths.map(m => recLookup.get(`${name}|${m}`) ?? 0),
+    })),
   }
 
   const conceptsPerPerson = (raw.conceptsPerPerson || []).map(item => ({
@@ -301,10 +321,15 @@ export function transformDataDensityReport(
 }
 
 interface PersonRawYearOfBirth {
-  year?: number
-  yearOfBirth?: number
-  count?: number
+  intervalIndex?: number
+  percentValue?: number
   countValue?: number
+}
+
+interface PersonRawYearOfBirthStats {
+  minValue?: number
+  maxValue?: number
+  intervalSize?: number
 }
 
 interface PersonRawDistribution {
@@ -316,29 +341,57 @@ interface PersonRawDistribution {
 
 interface PersonRaw {
   yearOfBirth?: PersonRawYearOfBirth[]
+  yearOfBirthStats?: PersonRawYearOfBirthStats[]
   gender?: PersonRawDistribution[]
   race?: PersonRawDistribution[]
   ethnicity?: PersonRawDistribution[]
 }
 
 /**
- * Transform Person API response to internal format
+ * Transform Person API response to internal format.
+ * Mirrors Atlas 2.x logic:
+ *   offset       = yearOfBirthStats[0].minValue   (e.g. 1910)
+ *   intervalSize = yearOfBirthStats[0].intervalSize (e.g. 1)
+ *   bins         = yearOfBirth[].intervalIndex (0-based from offset)
+ *   → actual year = offset + intervalIndex * intervalSize
  */
 export function transformPersonReport(
   raw: PersonRaw
 ): import('@/models/datasource.types').PersonReport {
   // Year of birth distribution
-  const yearOfBirth: import('@/models/datasource.types').BarChartData = {
-    categories:
-      raw.yearOfBirth?.map(y => y.year?.toString() || y.yearOfBirth?.toString() || '') || [],
-    series: [
-      {
-        name: 'Person Count',
-        data: raw.yearOfBirth?.map(y => y.count || y.countValue || 0) || [],
-      },
-    ],
-    unit: 'People',
-  }
+  const yearOfBirth: import('@/models/datasource.types').HistogramChartData = (() => {
+    const yearData = raw.yearOfBirth || []
+    if (yearData.length === 0) {
+      return {
+        intervalSize: 1,
+        offset: 0,
+        bins: [],
+        unit: 'Person Count',
+        seriesName: 'Person Count',
+        xAxisLabel: 'Year of Birth',
+      }
+    }
+
+    const stats = raw.yearOfBirthStats?.[0]
+    const offset = stats?.minValue ?? 0
+    const intervalSize = stats?.intervalSize ?? 1
+
+    const bins = yearData
+      .map(y => ({
+        intervalIndex: y.intervalIndex ?? 0,
+        countValue: y.countValue ?? 0,
+      }))
+      .sort((a, b) => a.intervalIndex - b.intervalIndex)
+
+    return {
+      intervalSize,
+      offset,
+      bins,
+      unit: 'Person Count',
+      seriesName: 'Person Count',
+      xAxisLabel: 'Year of Birth',
+    }
+  })()
 
   // Gender distribution
   const gender: import('@/models/datasource.types').PieChartData[] =
@@ -398,6 +451,7 @@ function mapBoxPlotArray(
 
 interface ObservationPeriodRawHistItem {
   intervalIndex?: number
+  percentValue?: number
   countValue?: number
 }
 
@@ -426,7 +480,7 @@ interface ObservationPeriodRaw {
   durationByAgeDecile?: RawBoxPlotItem[]
   personsWithContinuousObservationsByYear?: ObservationPeriodRawHistItem[]
   observationPeriodsPerPerson?: ObservationPeriodsPerPersonItem[]
-  observationLengthStats?: Array<{ attributeName: string; attributeValue: string }>
+  observationLengthStats?: Array<{ minValue?: number; maxValue?: number; intervalSize?: number }>
 }
 
 /**
@@ -436,39 +490,74 @@ interface ObservationPeriodRaw {
 export function transformObservationPeriodReport(
   raw: ObservationPeriodRaw
 ): import('@/models/datasource.types').ObservationPeriodReport {
-  const ageAtFirst = raw.ageAtFirst
-    ? {
-        categories: raw.ageAtFirst.map(i => i.intervalIndex?.toString() || ''),
-        values: raw.ageAtFirst.map(i => i.countValue || 0),
-      }
-    : undefined
+  // ageAtFirst: offset=0, intervalSize=1 — intervalIndex IS the age (matches Atlas 2.x parseHistogramData)
+  const ageAtFirst: import('@/models/datasource.types').HistogramChartData | undefined =
+    raw.ageAtFirst
+      ? {
+          intervalSize: 1,
+          offset: 0,
+          bins: raw.ageAtFirst
+            .map(i => ({
+              intervalIndex: i.intervalIndex ?? 0,
+              countValue: i.countValue ?? 0,
+            }))
+            .sort((a, b) => a.intervalIndex - b.intervalIndex),
+          unit: 'Person Count',
+          seriesName: 'Person Count',
+          xAxisLabel: 'Age',
+        }
+      : undefined
 
-  const observationLength = raw.observationLength
-    ? {
-        categories: raw.observationLength.map(i => i.intervalIndex?.toString() || ''),
-        values: raw.observationLength.map(i => i.countValue || 0),
-      }
-    : undefined
+  // observationLength: offset=0, intervalSize from observationLengthStats (e.g. 30 days per bin)
+  // x-axis value = intervalIndex * intervalSize (days)
+  // Mirrors Atlas 2.x: parseObservationLength sets OFFSET=0, INTERVAL_SIZE=stats.intervalSize
+  const observationLength: import('@/models/datasource.types').HistogramChartData | undefined =
+    raw.observationLength
+      ? {
+          intervalSize: raw.observationLengthStats?.[0]?.intervalSize ?? 1,
+          offset: 0,
+          bins: raw.observationLength
+            .map(i => ({
+              intervalIndex: i.intervalIndex ?? 0,
+              countValue: i.countValue ?? 0,
+            }))
+            .sort((a, b) => a.intervalIndex - b.intervalIndex),
+          unit: 'Person Count',
+          seriesName: 'Person Count',
+          xAxisLabel: 'Days',
+        }
+      : undefined
 
   const cumulativeObservation: import('@/models/datasource.types').MultiLineChartData | undefined =
     raw.cumulativeObservation
-      ? {
-          categories: raw.cumulativeObservation.map(i => i.xLengthOfObservation?.toString() || ''),
-          series: [
-            {
-              name: 'Cumulative %',
-              data: raw.cumulativeObservation.map(i => i.yPercentPersons || 0),
-            },
-          ],
-        }
+      ? (() => {
+          const sorted = (raw.cumulativeObservation || []).slice().sort((a, b) => (a.xLengthOfObservation ?? 0) - (b.xLengthOfObservation ?? 0))
+          return {
+            categories: sorted.map(i => i.xLengthOfObservation?.toString() || ''),
+            series: [
+              {
+                name: 'Cumulative %',
+                data: sorted.map(i => i.yPercentPersons || 0),
+              },
+            ],
+          }
+        })()
       : undefined
 
   const observedByMonth: import('@/models/datasource.types').MultiLineChartData | undefined =
     raw.observedByMonth
-      ? {
-          categories: raw.observedByMonth.map(i => i.monthYear?.toString() || ''),
-          series: [{ name: 'Persons', data: raw.observedByMonth.map(i => i.countValue || 0) }],
-        }
+      ? (() => {
+          const sorted = (raw.observedByMonth || []).slice().sort((a, b) => (a.monthYear ?? 0) - (b.monthYear ?? 0))
+          return {
+            categories: sorted.map(i => i.monthYear?.toString() || ''),
+            series: [
+              {
+                name: 'Persons',
+                data: sorted.map(i => i.countValue || 0),
+              },
+            ],
+          }
+        })()
       : undefined
 
   const personsWithContinuousObsByYear = raw.personsWithContinuousObservationsByYear
@@ -500,7 +589,6 @@ export function transformObservationPeriodReport(
     durationByAgeDecile: mapBoxPlotArray(raw.durationByAgeDecile),
     personsWithContinuousObsByYear,
     observationPeriodsPerPerson,
-    observationLengthStats: raw.observationLengthStats,
   }
 }
 
@@ -545,15 +633,18 @@ export function transformDeathReport(
 
   const prevalenceByMonth: import('@/models/datasource.types').MultiLineChartData | undefined =
     raw.prevalenceByMonth
-      ? {
-          categories: raw.prevalenceByMonth.map(i => i.xCalendarMonth?.toString() || ''),
-          series: [
-            {
-              name: 'Prevalence per 1000',
-              data: raw.prevalenceByMonth.map(i => i.yPrevalence1000Pp || 0),
-            },
-          ],
-        }
+      ? (() => {
+          const sorted = (raw.prevalenceByMonth || []).slice().sort((a, b) => (a.xCalendarMonth ?? 0) - (b.xCalendarMonth ?? 0))
+          return {
+            categories: sorted.map(i => i.xCalendarMonth?.toString() || ''),
+            series: [
+              {
+                name: 'Prevalence per 1000',
+                data: sorted.map(i => i.yPrevalence1000Pp || 0),
+              },
+            ],
+          }
+        })()
       : undefined
 
   let prevalenceByGenderAgeYear: import('@/models/report.types').TrellisChartData | undefined

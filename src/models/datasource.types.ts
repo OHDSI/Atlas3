@@ -131,6 +131,19 @@ export interface BarChartData {
   unit?: string
 }
 
+export interface HistogramChartData {
+  intervalSize: number
+  offset: number
+  bins: Array<{
+    intervalIndex: number
+    countValue: number
+  }>
+  unit?: string
+  seriesName?: string
+  /** Label for the value (x) axis and tooltip prefix, e.g. 'Age', 'Year of Birth', 'Days'. */
+  xAxisLabel?: string
+}
+
 export interface LineChartData {
   categories: string[]
   series: Array<{
@@ -177,7 +190,7 @@ export interface DashboardReport {
     personCount: number
   }
   genderDistribution: PieChartData[]
-  ageDistribution: BarChartData
+  ageDistribution: HistogramChartData
   cumulativeObservation: LineChartData
   observationByMonth: LineChartData
 }
@@ -189,15 +202,15 @@ export interface DataDensityReport {
 }
 
 export interface PersonReport {
-  yearOfBirth: BarChartData
+  yearOfBirth: HistogramChartData
   gender: PieChartData[]
   race: PieChartData[]
   ethnicity: PieChartData[]
 }
 
 export interface ObservationPeriodReport {
-  ageAtFirst?: { categories: string[]; values: number[] }
-  observationLength?: { categories: string[]; values: number[] }
+  ageAtFirst?: HistogramChartData
+  observationLength?: HistogramChartData
   cumulativeObservation?: MultiLineChartData
   observedByMonth?: MultiLineChartData
   ageByGender?: BoxPlotData[]
@@ -205,7 +218,6 @@ export interface ObservationPeriodReport {
   durationByAgeDecile?: BoxPlotData[]
   personsWithContinuousObsByYear?: { categories: string[]; values: number[] }
   observationPeriodsPerPerson?: PieChartData[]
-  observationLengthStats?: Array<{ attributeName: string; attributeValue: string }>
 }
 
 export interface DeathReport {
@@ -349,6 +361,20 @@ export const BarChartDataSchema = z.object({
   unit: z.string().optional(),
 })
 
+export const HistogramChartDataSchema = z.object({
+  intervalSize: z.number().positive(),
+  offset: z.number(),
+  bins: z.array(
+    z.object({
+      intervalIndex: z.number(),
+      countValue: z.number().nonnegative(),
+    })
+  ),
+  unit: z.string().optional(),
+  seriesName: z.string().optional(),
+  xAxisLabel: z.string().optional(),
+})
+
 export const LineChartDataSchema = z.object({
   categories: z.array(z.string()),
   series: z.array(
@@ -391,7 +417,7 @@ export const DashboardReportSchema = z.object({
     personCount: z.number().int().nonnegative(),
   }),
   genderDistribution: z.array(PieChartDataSchema),
-  ageDistribution: BarChartDataSchema,
+  ageDistribution: HistogramChartDataSchema,
   cumulativeObservation: LineChartDataSchema,
   observationByMonth: LineChartDataSchema,
 })
@@ -416,7 +442,7 @@ export const DataDensityReportSchema = z.object({
 })
 
 export const PersonReportSchema = z.object({
-  yearOfBirth: BarChartDataSchema,
+  yearOfBirth: HistogramChartDataSchema,
   gender: z.array(PieChartDataSchema),
   race: z.array(PieChartDataSchema),
   ethnicity: z.array(PieChartDataSchema),

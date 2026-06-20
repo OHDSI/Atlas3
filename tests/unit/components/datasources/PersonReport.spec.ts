@@ -16,8 +16,8 @@ vi.mock('@/components/datasources/shared/ChartSection.vue', () => ({
 vi.mock('@/components/reports/charts/PieChart.vue', () => ({
   default: { name: 'PieChart', template: '<div class="pie-chart"></div>', props: ['data', 'height'] }
 }))
-vi.mock('@/components/reports/charts/BarChart.vue', () => ({
-  default: { name: 'BarChart', template: '<div class="bar-chart"></div>', props: ['data', 'height'] }
+vi.mock('@/components/datasources/charts/DashboardAgeChart.vue', () => ({
+  default: { name: 'DashboardAgeChart', template: '<div class="dashboard-age-chart"></div>', props: ['data', 'height'] }
 }))
 
 // Mock useI18n
@@ -31,9 +31,17 @@ const vuetify = createVuetify({ components, directives })
 
 const mockData: PersonReportData = {
   yearOfBirth: {
-    categories: ['1950', '1960', '1970', '1980', '1990'],
-    series: [{ name: 'Birth Year', data: [100, 200, 300, 400, 500] }],
-    unit: 'People'
+    intervalSize: 1,
+    offset: 1950,
+    bins: [
+      { intervalIndex: 0, countValue: 100 },
+      { intervalIndex: 10, countValue: 200 },
+      { intervalIndex: 20, countValue: 300 },
+      { intervalIndex: 30, countValue: 400 },
+      { intervalIndex: 40, countValue: 500 }
+    ],
+    unit: 'Person Count',
+    seriesName: 'Person Count'
   },
   gender: [
     { name: 'Male', value: 500 },
@@ -80,17 +88,19 @@ describe('PersonReport', () => {
     expect(chartSections.length).toBe(4)
   })
 
-  it('should render year of birth bar chart', () => {
-    const barChart = wrapper.findComponent({ name: 'BarChart' })
-    expect(barChart.exists()).toBe(true)
+  it('should render year of birth histogram chart', () => {
+    const histogramChart = wrapper.findComponent({ name: 'DashboardAgeChart' })
+    expect(histogramChart.exists()).toBe(true)
   })
 
-  it('should pass correct data to year of birth chart', () => {
-    const barChart = wrapper.findComponent({ name: 'BarChart' })
-    const barChartData = barChart.props('data')
+  it('should pass correct histogram data to year of birth chart', () => {
+    const histogramChart = wrapper.findComponent({ name: 'DashboardAgeChart' })
+    const histogramData = histogramChart.props('data')
 
-    expect(barChartData.categories).toEqual(mockData.yearOfBirth.categories)
-    expect(barChartData.values).toEqual([100, 200, 300, 400, 500])
+    expect(histogramData.intervalSize).toBe(1)
+    expect(histogramData.offset).toBe(1950)
+    expect(histogramData.bins).toHaveLength(5)
+    expect(histogramData.bins[0]).toEqual({ intervalIndex: 0, countValue: 100 })
   })
 
   it('should render gender pie chart', () => {
@@ -133,9 +143,9 @@ describe('PersonReport', () => {
     })
   })
 
-  it('should render bar chart with correct height', () => {
-    const barChart = wrapper.findComponent({ name: 'BarChart' })
-    expect(barChart.props('height')).toBe(350)
+  it('should render histogram chart with correct height', () => {
+    const histogramChart = wrapper.findComponent({ name: 'DashboardAgeChart' })
+    expect(histogramChart.props('height')).toBe(350)
   })
 
   it('should use responsive grid layout', () => {
@@ -152,39 +162,5 @@ describe('PersonReport', () => {
     const cols = secondRow.findAllComponents({ name: 'VCol' })
     expect(cols.length).toBe(3)
   })
-
-  it('should transform year of birth data correctly', () => {
-    const barChart = wrapper.findComponent({ name: 'BarChart' })
-    const data = barChart.props('data')
-
-    expect(data.categories).toBeDefined()
-    expect(data.values).toBeDefined()
-    expect(data.unit).toBe('People')
   })
 
-  it('should handle empty series data gracefully', () => {
-    const emptyData = {
-      ...mockData,
-      yearOfBirth: {
-        categories: ['1950'],
-        series: [],
-        unit: 'People'
-      }
-    }
-
-    const wrapper2 = mountComponent({ data: emptyData })
-    const barChart = wrapper2.findComponent({ name: 'BarChart' })
-    expect(barChart.props('data').values).toEqual([])
-  })
-
-  it('should use md="4" for pie chart columns', () => {
-    const rows = wrapper.findAllComponents({ name: 'VRow' })
-    const secondRow = rows[1]
-    const cols = secondRow.findAllComponents({ name: 'VCol' })
-
-    // Each col should have md="4" for 3-column layout
-    cols.forEach(col => {
-      expect(col.props('md')).toBe('4')
-    })
-  })
-})

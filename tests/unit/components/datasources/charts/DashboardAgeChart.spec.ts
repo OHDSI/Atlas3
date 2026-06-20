@@ -3,12 +3,12 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import type { BarChartData } from '@/models/datasource.types'
+import type { HistogramChartData } from '@/models/datasource.types'
 
 vi.mock('@/utils/chart-config', () => ({
   dashboardAgeBarOptions: vi.fn((data) => ({
-    xAxis: { data: data.categories },
-    series: data.series
+    xAxis: { min: data.offset, max: data.offset + data.intervalSize * Math.max(data.bins.length, 1) },
+    series: [{ data: data.bins }]
   })),
   createResizeHandler: vi.fn(() => vi.fn())
 }))
@@ -24,18 +24,24 @@ beforeAll(async () => {
 
 const vuetify = createVuetify({ components, directives })
 
-const mockBarData: BarChartData = {
-  categories: ['0-9', '10-19', '20-29', '30-39', '40-49'],
-  series: [{
-    name: 'Age Distribution',
-    data: [1000, 1500, 2000, 1800, 1200]
-  }]
+const mockHistogramData: HistogramChartData = {
+  intervalSize: 1,
+  offset: 0,
+  bins: [
+    { intervalIndex: 0, countValue: 1000 },
+    { intervalIndex: 1, countValue: 1500 },
+    { intervalIndex: 2, countValue: 2000 },
+    { intervalIndex: 3, countValue: 1800 },
+    { intervalIndex: 4, countValue: 1200 },
+  ],
+  unit: 'Persons',
+  seriesName: 'Person Count',
 }
 
 function mountComponent(props = {}) {
   return mount(DashboardAgeChart, {
     props: {
-      data: mockBarData,
+      data: mockHistogramData,
       ...props
     },
     global: {
@@ -89,13 +95,14 @@ describe('DashboardAgeChart', () => {
   it('should call chart options function with data', () => {
     mountComponent()
 
-    expect(chartConfig.dashboardAgeBarOptions).toHaveBeenCalledWith(mockBarData)
+    expect(chartConfig.dashboardAgeBarOptions).toHaveBeenCalledWith(mockHistogramData)
   })
 
   it('should handle empty data', () => {
-    const emptyData: BarChartData = {
-      categories: [],
-      series: []
+    const emptyData: HistogramChartData = {
+      intervalSize: 1,
+      offset: 0,
+      bins: []
     }
     const wrapper = mountComponent({ data: emptyData })
 
@@ -137,7 +144,7 @@ describe('DashboardAgeChart', () => {
   })
 
   it('should return empty chart options when data is null', () => {
-    const wrapper = mountComponent({ data: { categories: [], series: [] } })
+    const wrapper = mountComponent({ data: { intervalSize: 1, offset: 0, bins: [] } })
 
     expect(wrapper.find('.v-chart-stub').exists()).toBe(true)
   })

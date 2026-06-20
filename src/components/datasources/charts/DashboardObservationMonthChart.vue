@@ -1,25 +1,16 @@
 <template>
   <div class="dashboard-observation-month-chart">
-    <AtlasSkeleton
-      v-if="loading"
-      type="image"
-      :height="height"
-    />
-    <v-chart
-      v-else
-      ref="chartRef"
-      :option="chartOption"
-      :style="{ height: `${height}px`, width: '100%' }"
-      autoresize
+    <MultiLineChart
+      :data="props.data"
+      :loading="props.loading"
+      :height="props.height"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { AtlasSkeleton } from '@/components/ui'
-import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { LineChartData } from '@/models/datasource.types'
-import { dashboardObservationMonthLineOptions, createResizeHandler } from '@/utils/chart-config'
+import MultiLineChart from '@/components/datasources/charts/MultiLineChart.vue'
 
 interface Props {
   data: LineChartData
@@ -30,29 +21,6 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   height: 300,
-})
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const chartRef = ref<any>(null)
-
-const chartOption = computed(() => {
-  if (!props.data || props.data.categories.length === 0) return {}
-  return dashboardObservationMonthLineOptions(props.data)
-})
-
-let resizeHandler: (() => void) | null = null
-
-onMounted(() => {
-  if (chartRef.value) {
-    resizeHandler = createResizeHandler(chartRef.value)
-    window.addEventListener('resize', resizeHandler)
-  }
-})
-
-onUnmounted(() => {
-  if (resizeHandler) {
-    window.removeEventListener('resize', resizeHandler)
-  }
 })
 </script>
 

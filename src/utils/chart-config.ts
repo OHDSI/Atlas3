@@ -8,6 +8,34 @@ import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
 
 /**
+ * Format large numbers using SI notation (K, M, B, T)
+ * Examples: 1000 → "1.0k", 3000000 → "3.0M", 1500000000 → "1.5B"
+ */
+function formatSINumber(value: number): string {
+  if (value === 0) return '0'
+  if (!Number.isFinite(value)) return String(value)
+
+  const absValue = Math.abs(value)
+  const sign = value < 0 ? '-' : ''
+
+  const thresholds = [
+    { limit: 1e12, suffix: 'T' },
+    { limit: 1e9, suffix: 'B' },
+    { limit: 1e6, suffix: 'M' },
+    { limit: 1e3, suffix: 'k' },
+  ]
+
+  for (const { limit, suffix } of thresholds) {
+    if (absValue >= limit) {
+      const scaled = absValue / limit
+      return `${sign}${scaled.toFixed(1)}${suffix}`
+    }
+  }
+
+  return sign + absValue.toLocaleString()
+}
+
+/**
  * Modern, restrained categorical palette for charts — Tableau 10.
  *
  * Atlas 2.15 used D3's d3.scale.category10 (bright, saturated). This
@@ -60,7 +88,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
       formatter: (params: unknown) => {
         const paramsArray = Array.isArray(params) ? params : [params]
         const param = paramsArray[0] as { name: string; seriesName: string; value: number }
-        const value = param.value.toLocaleString()
+        const value = formatSINumber(param.value)
         const unit = data.unit ? ` ${data.unit}` : ''
         return `${param.name}<br/>${param.seriesName}: <strong>${value}${unit}</strong>`
       },
@@ -108,7 +136,7 @@ export function defaultBarChartOptions(data: BarChartData): EChartsOption {
         fontSize: 12,
       },
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString(),
+        formatter: (value: number) => formatSINumber(value),
       },
     },
     series: [
@@ -220,9 +248,9 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
-        const paramsArray = Array.isArray(params) ? params : [params]
-        const param = paramsArray[0] as { name: string; seriesName: string; value: number }
-        const value = param.value.toLocaleString()
+      const paramsArray = Array.isArray(params) ? params : [params]
+      const param = paramsArray[0] as { name: string; seriesName: string; value: number }
+      const value = formatSINumber(param.value)
         return `${param.name}<br/>${param.seriesName}: <strong>${value}</strong>`
       },
     },
@@ -248,7 +276,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
     yAxis: {
       type: 'value',
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString(),
+        formatter: (value: number) => formatSINumber(value),
       },
     },
     series: [
@@ -335,7 +363,7 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
       itemWidth: 12,
       itemHeight: 140,
       inRange: { color: [...TREEMAP_GRADIENT] },
-      text: [dataMax.toLocaleString(), dataMin.toLocaleString()],
+      text: [formatSINumber(dataMax), formatSINumber(dataMin)],
       textStyle: {
         fontSize: 11,
         color: '#5e6470',
@@ -552,16 +580,34 @@ export function getExportConfig(backgroundColor = '#ffffff') {
   }
 }
 
+// Minimal subset of the ECharts RenderItem API we use in renderItem
+type LocalRenderItemAPI = {
+  value: (idx: number) => number | string | undefined
+  coord: (v: number[]) => number[]
+  style: (opts: Record<string, unknown>) => unknown
+}
+
+// Encoded data slot indices used by histogram series data arrays
+const ENCODE_X_START = 0
+const ENCODE_X_END = 1
+const ENCODE_Y_VALUE = 2
+
+// Fraction of each bin's width left empty as the gap between bars, matching the
+// category gap a normal ECharts bar chart leaves between columns.
+const HISTOGRAM_BAR_GAP_RATIO = 0.2
+
 // ============================================================================
 // Dashboard-specific Chart Configurations
 // ============================================================================
 
 import type {
-  BarChartData as DatasourceBarChartData,
+  HistogramChartData as DatasourceHistogramChartData,
   PieChartData as DatasourcePieChartData,
   LineChartData as DatasourceLineChartData,
   MultiLineChartData as DatasourceMultiLineChartData,
 } from '@/models/datasource.types'
+
+import { logger } from '@/utils/logger'
 
 /**
  * Dashboard Gender Pie Chart Configuration
@@ -625,18 +671,37 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
 /**
  * Dashboard Age Bar Chart Configuration
  */
-export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOption {
+export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): EChartsOption {
+  const validBins = data.bins.filter(
+    b => Number.isFinite(b.intervalIndex) && Number.isFinite(b.countValue) && b.countValue >= 0
+  )
+
+  if (validBins.length === 0) {
+    // No numeric histogram bins — log and return an empty options object.
+    logger.error('Chart', 'DashboardAgeChart expected non-empty numeric histogram bins.', data.bins)
+    return {}
+  }
+
+  const intervalSize = data.intervalSize
+  const offset = data.offset
+  const binStarts = validBins.map(bin => offset + bin.intervalIndex * intervalSize)
+  const yValues = validBins.map(bin => bin.countValue)
+  const axisLabel = data.xAxisLabel || 'Age'
+
   return {
     tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow',
-      },
+      trigger: 'item',
       formatter: (params: unknown) => {
-        const paramsArray = Array.isArray(params) ? params : [params]
-        const param = paramsArray[0] as { name: string; value: number }
-        const value = param.value.toLocaleString()
-        return `<strong>Age: ${param.name}</strong><br/>${data.unit || 'Count'}: ${value}`
+        const param = params as { data?: [number, number, number] }
+        const point = param.data
+        if (!point) {
+          return ''
+        }
+
+        const [xStart, xEnd, yValue] = point
+        const value = formatSINumber(yValue)
+        const label = intervalSize === 1 ? `${xStart}` : `${xStart} - ${xEnd}`
+        return `<strong>${axisLabel}: ${label}</strong><br/>${data.seriesName || data.unit || 'Count'}: ${value}`
       },
     },
     grid: {
@@ -647,14 +712,14 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
       containLabel: true,
     },
     xAxis: {
-      type: 'category',
-      data: data.categories,
-      name: 'Age Group',
+      type: 'value',
+      min: Math.min(...binStarts),
+      max: Math.max(...binStarts) + intervalSize,
+      name: axisLabel,
       nameLocation: 'middle',
       nameGap: 30,
       axisLabel: {
-        rotate: data.categories.length > 12 ? 45 : 0,
-        interval: 0,
+        formatter: (value: number) => `${Math.floor(value)}`,
         fontSize: 11,
       },
     },
@@ -662,27 +727,57 @@ export function dashboardAgeBarOptions(data: DatasourceBarChartData): EChartsOpt
       type: 'value',
       name: data.unit || 'Person Count',
       nameLocation: 'middle',
-      nameGap: 50,
+      nameGap: 60,
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString(),
+        formatter: (value: number) => formatSINumber(value),
+        fontSize: 11,
       },
     },
-    series: data.series.map((s, index) => ({
-      name: s.name,
-      type: 'bar',
-      data: s.data,
-      itemStyle: {
-        color: CHART_COLORS[index % CHART_COLORS.length],
-        borderRadius: [4, 4, 0, 0],
-      },
-      emphasis: {
-        itemStyle: {
-          shadowBlur: 10,
-          shadowOffsetX: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.3)',
+    series: [
+      {
+        name: data.seriesName || data.unit || 'Count',
+        type: 'custom',
+        encode: {
+          x: [ENCODE_X_START, ENCODE_X_END],
+          y: ENCODE_Y_VALUE,
+          tooltip: [ENCODE_X_START, ENCODE_X_END, ENCODE_Y_VALUE],
+        },
+        data: binStarts.map((xStart, binIndex) => [xStart, xStart + intervalSize, yValues[binIndex]]),
+        renderItem: (_params: unknown, api: LocalRenderItemAPI) => {
+          const xStart = Number(api.value(ENCODE_X_START))
+          const xEnd = Number(api.value(ENCODE_X_END))
+          const yValue = Number(api.value(ENCODE_Y_VALUE))
+          const [xStartPx, yTopPx] = api.coord([xStart, yValue]) as [number, number]
+          const [xEndPx] = api.coord([xEnd, yValue]) as [number, number]
+          const [, yBasePx] = api.coord([xStart, 0]) as [number, number]
+
+          // Leave a gap between bars by shrinking the rect within its bin and
+          // centring it, so adjacent columns don't touch.
+          const fullWidthPx = xEndPx - xStartPx
+          const gapPx = fullWidthPx * HISTOGRAM_BAR_GAP_RATIO
+
+          return {
+            type: 'rect',
+            shape: {
+              x: xStartPx + gapPx / 2,
+              y: yTopPx,
+              width: Math.max(0.5, fullWidthPx - gapPx),
+              height: Math.max(0, yBasePx - yTopPx),
+            },
+            style: {
+              fill: CHART_COLORS[0],
+            },
+          }
+        },
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.3)',
+          },
         },
       },
-    })),
+    ],
   }
 }
 
@@ -774,7 +869,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       formatter: (params: unknown) => {
         const paramsArray = Array.isArray(params) ? params : [params]
         const param = paramsArray[0] as { name: string; value: number }
-        const value = param.value.toLocaleString()
+        const value = formatSINumber(param.value)
         return `<strong>${param.name}</strong><br/>${data.yAxisLabel || 'Observations'}: ${value}`
       },
     },
@@ -804,7 +899,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       nameLocation: 'middle',
       nameGap: 50,
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString(),
+        formatter: (value: number) => formatSINumber(value),
       },
     },
     dataZoom: [
@@ -854,6 +949,18 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
       axisPointer: {
         type: 'cross',
       },
+      formatter: (params: unknown) => {
+        type TooltipParam = { name?: string; seriesName?: string; value?: number }
+        const paramsArray = (Array.isArray(params) ? params : [params]) as TooltipParam[]
+        if (paramsArray.length === 0) return ''
+        const name = paramsArray[0]?.name ?? ''
+        const lines = paramsArray.map(param => {
+          const series = param.seriesName || ''
+          const val = typeof param.value === 'number' ? formatSINumber(param.value) : String(param.value)
+          return `${series}: <strong>${val}</strong>`
+        })
+        return `<strong>${name}</strong><br/>${lines.join('<br/>')}`
+      },
     },
     legend: {
       data: data.series.map(s => s.name),
@@ -880,7 +987,7 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
     yAxis: {
       type: 'value',
       axisLabel: {
-        formatter: (value: number) => value.toLocaleString(),
+        formatter: (value: number) => formatSINumber(value),
       },
     },
     series: data.series.map((s, index) => ({
@@ -925,10 +1032,10 @@ export function clinicalDomainTreemapOptions(nodes: TreemapNode[]): EChartsOptio
           value: number
           data: { prevalence?: number; metric?: number }
         }
-        const value = p.value.toLocaleString()
+        const value = formatSINumber(p.value)
         const name = p.name
-        const prevalence = p.data.prevalence
-        const metric = p.data.metric
+        const prevalence = p.data?.prevalence
+        const metric = p.data?.metric
 
         let tooltip = `<strong>${name}</strong><br/>`
         tooltip += `Value: ${value}<br/>`

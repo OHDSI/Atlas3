@@ -11,8 +11,26 @@ const vuetify = createVuetify({ components, directives })
 
 function makeData(overrides: Partial<OPR> = {}): OPR {
   return {
-    ageAtFirst: { categories: ['0', '1'], values: [1, 2] },
-    observationLength: { categories: ['30', '60'], values: [100, 200] },
+    ageAtFirst: {
+      intervalSize: 1,
+      offset: 0,
+      bins: [
+        { intervalIndex: 0, countValue: 1 },
+        { intervalIndex: 1, countValue: 2 },
+      ],
+      unit: 'Person Count',
+      seriesName: 'Person Count',
+    },
+    observationLength: {
+      intervalSize: 30,
+      offset: 0,
+      bins: [
+        { intervalIndex: 8, countValue: 3224696 },
+        { intervalIndex: 12, countValue: 7371766 },
+      ],
+      unit: 'Person Count',
+      seriesName: 'Person Count',
+    },
     cumulativeObservation: { categories: ['30', '60'], series: [{ name: 'c', data: [10, 20] }] },
     observedByMonth: { categories: ['202301'], series: [{ name: 'o', data: [100] }] },
     ageByGender: [{ category: 'M', min: 0, p10: 5, p25: 15, median: 35, p75: 55, p90: 70, max: 90 }],
@@ -57,8 +75,8 @@ describe('ObservationPeriodReport', () => {
       global: { plugins: [vuetify, createPinia()] },
       props: {
         data: {
-          ageAtFirst: { categories: [], values: [] },
-          observationLength: { categories: [], values: [] },
+          ageAtFirst: { intervalSize: 1, offset: 0, bins: [], unit: 'Person Count' },
+          observationLength: { intervalSize: 30, offset: 0, bins: [], unit: 'Person Count' },
           cumulativeObservation: { categories: [], series: [] },
           observedByMonth: { categories: [], series: [] },
           ageByGender: [],

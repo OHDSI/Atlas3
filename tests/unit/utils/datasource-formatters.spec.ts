@@ -63,7 +63,7 @@ describe('Data Source Formatters', () => {
       expect(result.summary.sourceName).toBe('Test DB')
       expect(result.summary.personCount).toBe(1000000)
       expect(result.genderDistribution).toHaveLength(2)
-      expect(result.ageDistribution.categories).toHaveLength(2)
+      expect(result.ageDistribution.bins).toHaveLength(2)
       expect(result.cumulativeObservation.categories).toHaveLength(2)
       expect(result.observationByMonth.categories).toHaveLength(2)
     })
@@ -246,9 +246,10 @@ describe('Data Source Formatters', () => {
     it('should transform person data', () => {
       const raw = {
         yearOfBirth: [
-          { year: 1980, countValue: 1000 },
-          { yearOfBirth: 1990, count: 2000 }
+          { intervalIndex: 60, countValue: 1000 },
+          { intervalIndex: 70, countValue: 2000 }
         ],
+        yearOfBirthStats: [{ minValue: 1920, maxValue: 2010, intervalSize: 1 }],
         gender: [
           { conceptName: 'Male', countValue: 5000 },
           { name: 'Female', count: 4000 }
@@ -263,7 +264,11 @@ describe('Data Source Formatters', () => {
 
       const result = transformPersonReport(raw)
 
-      expect(result.yearOfBirth.categories).toHaveLength(2)
+      expect(result.yearOfBirth.bins).toHaveLength(2)
+      expect(result.yearOfBirth.offset).toBe(1920)
+      expect(result.yearOfBirth.intervalSize).toBe(1)
+      // intervalIndex 60 with offset 1920 → x-axis year 1980
+      expect(result.yearOfBirth.bins[0]).toEqual({ intervalIndex: 60, countValue: 1000 })
       expect(result.gender).toHaveLength(2)
       expect(result.race).toHaveLength(1)
       expect(result.ethnicity).toHaveLength(1)
@@ -279,6 +284,7 @@ describe('Data Source Formatters', () => {
         observationLength: [
           { intervalIndex: 30, countValue: 200 }
         ],
+        observationLengthStats: [{ minValue: 0, maxValue: 7890, intervalSize: 30 }],
         cumulativeObservation: [
           { xLengthOfObservation: 365, yPercentPersons: 80 }
         ],
@@ -289,8 +295,12 @@ describe('Data Source Formatters', () => {
 
       const result = transformObservationPeriodReport(raw)
 
-      expect(result.ageAtFirst?.categories).toHaveLength(1)
-      expect(result.observationLength?.categories).toHaveLength(1)
+      expect(result.ageAtFirst?.bins).toHaveLength(1)
+      expect(result.ageAtFirst?.offset).toBe(0)
+      expect(result.ageAtFirst?.intervalSize).toBe(1)
+      expect(result.observationLength?.bins).toHaveLength(1)
+      expect(result.observationLength?.offset).toBe(0)
+      expect(result.observationLength?.intervalSize).toBe(30)
       expect(result.cumulativeObservation?.categories).toHaveLength(1)
       expect(result.observedByMonth?.categories).toHaveLength(1)
     })
@@ -483,7 +493,7 @@ describe('Data Source Formatters', () => {
       expect(result.summary.sourceName).toBe('')
       expect(result.summary.personCount).toBe(0)
       expect(result.genderDistribution).toEqual([])
-      expect(result.ageDistribution.categories).toEqual([])
+      expect(result.ageDistribution.bins).toEqual([])
       expect(result.cumulativeObservation.categories).toEqual([])
       expect(result.observationByMonth.categories).toEqual([])
     })
@@ -634,13 +644,19 @@ describe('Data Source Formatters', () => {
       expect(result.recordsPerPerson.series[0].data).toEqual([0])
     })
 
-    it('falls back to empty string for missing xCalendarMonth', () => {
+    it('skips rows with a missing xCalendarMonth instead of throwing', () => {
       const raw = {
-        totalRecords: [{ seriesName: 'A', yRecordCount: 10 }]
+        totalRecords: [
+          { seriesName: 'A', yRecordCount: 100 }, // no xCalendarMonth
+          { xCalendarMonth: 202301, seriesName: 'A', yRecordCount: 50 },
+        ],
+        recordsPerPerson: [{ seriesName: 'B', yRecordCount: 5 }], // no xCalendarMonth
       }
 
       const result = transformDataDensityReport(raw)
-      expect(result.totalRecords.categories).toEqual([''])
+      expect(result.totalRecords.categories).toEqual(['202301'])
+      expect(result.totalRecords.series[0].data).toEqual([50])
+      expect(result.recordsPerPerson.categories).toEqual([])
     })
 
     it('uses defaults for missing conceptsPerPerson percentile fields', () => {
@@ -667,7 +683,7 @@ describe('Data Source Formatters', () => {
       const xSeries = result.totalRecords.series.find(s => s.name === 'X')
       const ySeries = result.totalRecords.series.find(s => s.name === 'Y')
       expect(xSeries?.data).toEqual([10, 20])
-      expect(ySeries?.data).toEqual([5])
+      expect(ySeries?.data).toEqual([5, 0])
     })
   })
 
@@ -675,8 +691,8 @@ describe('Data Source Formatters', () => {
     it('returns empty arrays for fully empty input', () => {
       const result = transformPersonReport({})
 
-      expect(result.yearOfBirth.categories).toEqual([])
-      expect(result.yearOfBirth.series[0].data).toEqual([])
+      expect(result.yearOfBirth.bins).toEqual([])
+      expect(result.yearOfBirth.offset).toBe(0)
       expect(result.gender).toEqual([])
       expect(result.race).toEqual([])
       expect(result.ethnicity).toEqual([])
@@ -706,27 +722,32 @@ describe('Data Source Formatters', () => {
 
     it('falls back to empty string for yearOfBirth without year fields', () => {
       const raw = {
-        yearOfBirth: [{ count: 100 }]
+        yearOfBirth: [{ countValue: 100 }]
       }
 
       const result = transformPersonReport(raw)
-      expect(result.yearOfBirth.categories).toEqual([''])
-      expect(result.yearOfBirth.series[0].data).toEqual([100])
+      expect(result.yearOfBirth.bins).toHaveLength(1)
+      expect(result.yearOfBirth.bins[0].countValue).toBe(100)
+      expect(result.yearOfBirth.bins[0].intervalIndex).toBe(0)
     })
 
-    it('uses yearOfBirth field when year is missing', () => {
+    it('uses yearOfBirthStats minValue as offset', () => {
       const raw = {
-        yearOfBirth: [{ yearOfBirth: 1985, countValue: 200 }]
+        yearOfBirth: [{ intervalIndex: 65, countValue: 200 }],
+        yearOfBirthStats: [{ minValue: 1910, maxValue: 2021, intervalSize: 1 }]
       }
 
       const result = transformPersonReport(raw)
-      expect(result.yearOfBirth.categories).toEqual(['1985'])
-      expect(result.yearOfBirth.series[0].data).toEqual([200])
+      expect(result.yearOfBirth.offset).toBe(1910)
+      expect(result.yearOfBirth.intervalSize).toBe(1)
+      expect(result.yearOfBirth.bins[0].intervalIndex).toBe(65)
+      expect(result.yearOfBirth.bins[0].countValue).toBe(200)
+      // actual year = 1910 + 65 * 1 = 1975
     })
   })
 
   describe('transformObservationPeriodReport — fallback branches', () => {
-    it('falls back to empty strings for missing intervalIndex', () => {
+    it('falls back to empty bins for missing intervalIndex', () => {
       const raw = {
         ageAtFirst: [{ countValue: 50 }],
         observationLength: [{ countValue: 30 }],
@@ -734,9 +755,12 @@ describe('Data Source Formatters', () => {
       }
 
       const result = transformObservationPeriodReport(raw)
-      expect(result.ageAtFirst?.categories).toEqual([''])
-      expect(result.ageAtFirst?.values).toEqual([50])
-      expect(result.observationLength?.categories).toEqual([''])
+      expect(result.ageAtFirst?.bins).toHaveLength(1)
+      expect(result.ageAtFirst?.bins[0].intervalIndex).toBe(0)
+      expect(result.ageAtFirst?.bins[0].countValue).toBe(50)
+      expect(result.observationLength?.bins).toHaveLength(1)
+      expect(result.observationLength?.bins[0].intervalIndex).toBe(0)
+      expect(result.observationLength?.bins[0].countValue).toBe(30)
       expect(result.personsWithContinuousObsByYear?.categories).toEqual([''])
     })
 
@@ -747,8 +771,8 @@ describe('Data Source Formatters', () => {
       }
 
       const result = transformObservationPeriodReport(raw)
-      expect(result.ageAtFirst?.values).toEqual([0])
-      expect(result.observationLength?.values).toEqual([0])
+      expect(result.ageAtFirst?.bins[0].countValue).toBe(0)
+      expect(result.observationLength?.bins[0].countValue).toBe(0)
     })
 
     it('falls back to empty string and 0 for missing cumulativeObservation fields', () => {
@@ -813,10 +837,23 @@ describe('Data Source Formatters', () => {
       ])
     })
 
-    it('passes through observationLengthStats unchanged', () => {
-      const stats = [{ attributeName: 'Avg', attributeValue: '12.5' }]
+    it('uses intervalSize from observationLengthStats', () => {
+      const stats = [{ minValue: 0, maxValue: 7890, intervalSize: 30 }]
+      const result = transformObservationPeriodReport({
+        observationLength: [{ intervalIndex: 12, countValue: 7371766 }],
+        observationLengthStats: stats
+      })
+      expect(result.observationLength?.intervalSize).toBe(30)
+      expect(result.observationLength?.offset).toBe(0)
+      expect(result.observationLength?.bins[0]).toEqual({ intervalIndex: 12, countValue: 7371766 })
+      // actual days = 0 + 12 * 30 = 360
+    })
+
+    it('passes through observationLengthStats with correct shape', () => {
+      const stats = [{ minValue: 0, maxValue: 7890, intervalSize: 30 }]
       const result = transformObservationPeriodReport({ observationLengthStats: stats })
-      expect(result.observationLengthStats).toEqual(stats)
+      // observationLengthStats is consumed to build HistogramChartData but not forwarded
+      expect(result.observationLength).toBeUndefined()
     })
   })
 
