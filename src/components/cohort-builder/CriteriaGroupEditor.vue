@@ -167,231 +167,29 @@
                 <div
                   v-for="(event, index) in localGroup.events"
                   :key="event.id"
-                  class="criteria-event-card mb-2"
+                  class="mb-2"
                   data-testid="group-event-item"
                 >
-                  <!-- Cardinality Sidebar with Menu -->
-                  <AtlasMenu
-                    :close-on-content-click="false"
-                    location="end"
-                  >
-                    <template #activator="{ props: menuProps }">
-                      <div
-                        class="cardinality-sidebar"
-                        :class="`cardinality-${getCardinalityType(event)}`"
-                        v-bind="menuProps"
-                        title="Click to change cardinality"
-                      >
-                        <div class="cardinality-label">
-                          {{ getCardinalityDisplayForEvent(event) }}
-                        </div>
-                      </div>
-                    </template>
-                    <v-card class="cardinality-menu">
-                      <v-card-text class="pa-3">
-                        <div class="segmented-buttons">
-                          <AtlasButton
-                            :variant="
-                              getCardinalityType(event) === 'at_least' ? 'tonal' : 'secondary'
-                            "
-                            :tone="
-                              getCardinalityType(event) === 'at_least' ? undefined : 'neutral'
-                            "
-                            size="sm"
-                            class="flex-1"
-                            @click="
-                              updateEventCardinality(
-                                index,
-                                'AT_LEAST',
-                                event.cardinality?.count || 1
-                              )
-                            "
-                          >
-                            At least
-                          </AtlasButton>
-                          <AtlasButton
-                            :variant="
-                              getCardinalityType(event) === 'exactly' ? 'tonal' : 'secondary'
-                            "
-                            :tone="getCardinalityType(event) === 'exactly' ? undefined : 'neutral'"
-                            size="sm"
-                            class="flex-1"
-                            @click="
-                              updateEventCardinality(
-                                index,
-                                'EXACTLY',
-                                event.cardinality?.count || 1
-                              )
-                            "
-                          >
-                            Exactly
-                          </AtlasButton>
-                          <AtlasButton
-                            :variant="
-                              getCardinalityType(event) === 'at_most' ? 'tonal' : 'secondary'
-                            "
-                            :tone="getCardinalityType(event) === 'at_most' ? undefined : 'neutral'"
-                            size="sm"
-                            class="flex-1"
-                            @click="
-                              updateEventCardinality(
-                                index,
-                                'AT_MOST',
-                                event.cardinality?.count || 1
-                              )
-                            "
-                          >
-                            At most
-                          </AtlasButton>
-                        </div>
-                        <AtlasTextField
-                          :model-value="event.cardinality?.count || 1"
-                          type="number"
-                          label="Count"
-                          min="1"
-                          class="mt-3"
-                          @update:model-value="(v) => updateEventCardinalityCount(index, Number(v))"
-                        />
-                      </v-card-text>
-                    </v-card>
-                  </AtlasMenu>
-
-                  <!-- Event Content -->
-                  <div class="event-content">
-                    <!-- Event Header -->
-                    <div class="event-header">
-                      <div class="event-type-label">
-                        {{ getEventTypeLabel(event.criteriaType) }}
-                      </div>
-                      <div class="event-header-actions">
-                        <AtlasMenu>
-                          <template #activator="{ props: menuProps }">
-                            <AtlasButton
-                              v-bind="menuProps"
-                              icon="mdi-plus"
-                              size="sm"
-                              variant="ghost"
-                              data-testid="add-attribute-button"
-                            >
-                              {{ t('components.common.addAttribute') }}
-                            </AtlasButton>
-                          </template>
-                          <AtlasList>
-                            <AtlasListItem
-                              v-for="attr in getAvailableAttributesForEvent(event)"
-                              :key="attr.key"
-                              :title="attr.label"
-                              :subtitle="attr.description"
-                              :disabled="attr.type === 'nested' && !!event.nestedCriteria"
-                              @click="addAttributeToEvent(index, attr.key, attr.type)"
-                            />
-                          </AtlasList>
-                        </AtlasMenu>
-                        <AtlasIconButton
-                          icon="mdi-delete"
-                          v-bind="{ ariaLabel: 'Remove event' }"
-                          variant="text"
-                          tone="primary"
-                          size="sm"
-                          data-testid="remove-event-from-group"
-                          @click="removeEvent(index)"
-                        />
-                      </div>
-                    </div>
-
-                    <!-- Event Body -->
-                    <div class="event-body">
-                      <!-- Concept Set and Temporal Window Row -->
-                      <div class="concept-temporal-row">
-                        <!-- Concept Set Picker -->
-                        <div
-                          v-if="eventRequiresConceptSet(event.criteriaType)"
-                          class="concept-set-section"
-                        >
-                          <EventConceptSetField
-                            :concept-set="event.conceptSet"
-                            @select="selectConceptSetForEvent(index)"
-                            @edit="emit('edit-concept-set', $event)"
-                            @clear="clearConceptSet(index)"
-                          />
-                        </div>
-
-                        <!-- Temporal Window Display/Editor -->
-                        <div class="temporal-window-section">
-                          <AtlasMenu
-                            v-if="event.temporalWindow"
-                            :close-on-content-click="false"
-                            location="end"
-                          >
-                            <template #activator="{ props: menuProps }">
-                              <TemporalFilterChip
-                                v-bind="menuProps"
-                                :label="formatTemporalWindowDisplay(event.temporalWindow)"
-                                @close="removeTemporalWindow(index)"
-                              />
-                            </template>
-                            <v-card
-                              class="temporal-window-menu"
-                              style="min-width: 500px"
-                            >
-                              <v-card-text class="pa-3">
-                                <TemporalWindowEditor
-                                  :model-value="event.temporalWindow"
-                                  @update:model-value="updateEventTemporalWindow(index, $event)"
-                                />
-                              </v-card-text>
-                            </v-card>
-                          </AtlasMenu>
-                          <AtlasButton
-                            v-else
-                            size="sm"
-                            variant="secondary"
-                            icon="mdi-calendar-range"
-                            @click="addTemporalWindow(index)"
-                          >
-                            Add Temporal Window
-                          </AtlasButton>
-                        </div>
-                      </div>
-
-                      <!-- Attributes Section -->
-                      <div class="attributes-section mt-3">
-                        <AttributesEditor
-                          :model-value="event.attributes || []"
-                          :criteria-type="event.criteriaType"
-                          :has-nested-criteria="!!event.nestedCriteria"
-                          @update:model-value="updateEventAttributes(index, $event)"
-                          @add-nested-criteria="addNestedCriteria(index)"
-                          @select-concept-set-for-attribute="
-                            selectConceptSetForAttribute(index, $event)
-                          "
-                          @select-concept-for-attribute="
-                            (attributeIndex, domainFilter) =>
-                              selectConceptForAttribute(index, attributeIndex, domainFilter)
-                          "
-                        />
-                      </div>
-
-                      <!-- Nested Criteria Section -->
-                      <div
-                        v-if="event.nestedCriteria"
-                        class="nested-criteria-section mt-3"
-                      >
-                        <NestedCriteriaEditor
-                          :model-value="event.nestedCriteria"
-                          :depth="1"
-                          @update:model-value="updateEventNestedCriteria(index, $event)"
-                          @remove="removeEventNestedCriteria(index)"
-                          @select-concept-set="
-                            $emit('select-concept-set', {
-                              eventIndex: index,
-                              nestedEventIndex: $event.eventIndex,
-                            })
-                          "
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <CriteriaEventCard
+                    :event="event"
+                    section="criteriaGroup"
+                    show-cardinality
+                    show-temporal
+                    @update="onEventUpdate(index, $event)"
+                    @remove="removeEvent(index)"
+                    @select-concept-set="selectConceptSetForEvent(index)"
+                    @edit-concept-set="emit('edit-concept-set', $event)"
+                    @select-concept-set-nested="
+                      nestedEventIndex => emit('select-concept-set', { eventIndex: index, nestedEventIndex })
+                    "
+                    @select-concept-set-for-attribute="
+                      attributeIndex => selectConceptSetForAttribute(index, attributeIndex)
+                    "
+                    @select-concept-for-attribute="
+                      (attributeIndex, domainFilter) =>
+                        selectConceptForAttribute(index, attributeIndex, domainFilter)
+                    "
+                  />
                 </div>
               </div>
 
@@ -438,32 +236,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import { useMatchType } from '@/composables/useMatchType'
-import NestedCriteriaEditor from './NestedCriteriaEditor.vue'
+import CriteriaEventCard from './CriteriaEventCard.vue'
 import type {
   CriteriaGroup,
   CohortEvent,
   CriteriaType,
-  NestedCriteria,
 } from '@/models/cohort.types'
-import type {
-  EventAttribute,
-  TemporalWindow,
-  NumericAttributeKey,
-  ConceptAttributeKey,
-  DateAttributeKey,
-  TextAttributeKey,
-  BooleanAttributeKey,
-  TemporalAttributeKey,
-  DateAdjustmentAttributeKey,
-  UserDefinedPeriodAttributeKey,
-  Concept,
-} from '@/models/event.types'
-import { useTemporalWindows } from '@/composables/useTemporalWindows'
-import { useAttributeConfig } from '@/composables/useAttributeConfig'
-import AttributesEditor from './AttributesEditor.vue'
-import EventConceptSetField from './EventConceptSetField.vue'
-import TemporalWindowEditor from './TemporalWindowEditor.vue'
-import TemporalFilterChip from './TemporalFilterChip.vue'
+import type { Concept } from '@/models/event.types'
 
 const { t } = useI18n()
 
@@ -483,9 +262,6 @@ const emit = defineEmits<{
     context: { eventIndex: number; attributeIndex: number; domainFilter: string | undefined },
   ]
 }>()
-
-// Composables
-const { formatTemporalWindowDisplay } = useTemporalWindows()
 
 // Local state
 const localGroup = ref<CriteriaGroup>(
@@ -540,16 +316,6 @@ const selectedConceptDomainFilter = ref<string | undefined>(undefined)
 
 // Methods
 
-function getEventTypeLabel(criteriaType: string): string {
-  const type = criteriaTypes.value.find(t => t.value === criteriaType)
-  return type?.label || criteriaType
-}
-
-function eventRequiresConceptSet(criteriaType: string): boolean {
-  const filter = availableFilters.value.find(f => f.criteriaType === criteriaType)
-  return filter?.requiresConceptSet ?? true
-}
-
 function addEvent(criteriaType: CriteriaType) {
   // Create a new event with the selected criteria type
   const newEvent: CohortEvent = {
@@ -568,72 +334,13 @@ function removeEvent(index: number) {
   emitUpdate()
 }
 
-function updateEventAttributes(index: number, attributes: EventAttribute[]) {
-  const event = localGroup.value.events[index]
-  if (event) {
-    event.attributes = attributes
-    emitUpdate()
-  }
-}
-
-function addTemporalWindow(index: number) {
-  const event = localGroup.value.events[index]
-  if (event) {
-    // OHDSI long-term baseline: 365 days prior up to (and including)
-    // the index event. Matches FeatureExtraction's `longTerm` covariate
-    // window — the dominant convention for comorbidity / prior-
-    // medication assessment across OHDSI phenotypes. The user can edit
-    // it in place.
-    event.temporalWindow = {
-      startWindow: { days: 365, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
-      endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-    }
-    emitUpdate()
-  }
-}
-
-function updateEventTemporalWindow(index: number, temporalWindow: TemporalWindow) {
-  const event = localGroup.value.events[index]
-  if (event) {
-    event.temporalWindow = temporalWindow
-    emitUpdate()
-  }
-}
-
-function removeTemporalWindow(index: number) {
-  const event = localGroup.value.events[index]
-  if (event) {
-    delete event.temporalWindow
-    emitUpdate()
-  }
-}
-
-function addNestedCriteria(index: number) {
-  const event = localGroup.value.events[index]
-  if (event) {
-    event.nestedCriteria = {
-      id: uuidv4(),
-      logicType: 'ALL',
-      events: [],
-    }
-    emitUpdate()
-  }
-}
-
-function updateEventNestedCriteria(index: number, nested: NestedCriteria) {
-  const event = localGroup.value.events[index]
-  if (event) {
-    event.nestedCriteria = nested
-    emitUpdate()
-  }
-}
-
-function removeEventNestedCriteria(index: number) {
-  const event = localGroup.value.events[index]
-  if (event) {
-    delete event.nestedCriteria
-    emitUpdate()
-  }
+// The shared CriteriaEventCard emits the full mutated event (cardinality,
+// temporal window, attributes, nested criteria, concept-set clear); replace
+// the event at this index and bubble the group update up.
+function onEventUpdate(index: number, updatedEvent: CohortEvent) {
+  if (!localGroup.value.events[index]) return
+  localGroup.value.events[index] = updatedEvent
+  emitUpdate()
 }
 
 function addNestedGroup() {
@@ -692,13 +399,6 @@ function selectConceptForAttribute(
   emit('select-concept', { eventIndex, attributeIndex, domainFilter })
 }
 
-function clearConceptSet(index: number) {
-  if (localGroup.value.events[index]) {
-    localGroup.value.events[index].conceptSet = { id: null as unknown as number, name: 'Select concept set...' }
-    emitUpdate()
-  }
-}
-
 // Method to update event's concept set (called by parent)
 function updateEventConceptSet(index: number, conceptSet: { id: number; name: string }) {
   if (localGroup.value.events[index]) {
@@ -722,155 +422,6 @@ function updateEventConceptSet(index: number, conceptSet: { id: number; name: st
     }
     emitUpdate()
   }
-}
-
-function getCardinalityType(event: CohortEvent): string {
-  if (!event.cardinality) return 'at_least'
-  return event.cardinality.type.toLowerCase()
-}
-
-function getCardinalityDisplayForEvent(event: CohortEvent): string {
-  if (!event.cardinality) return `${t('options.atLeast', 'At least').value} 1`
-  const typeMap: Record<string, string> = {
-    AT_LEAST: t('options.atLeast', 'At least').value,
-    EXACTLY: t('options.exactly', 'Exactly').value,
-    AT_MOST: t('options.atMost', 'At most').value,
-  }
-  const type = typeMap[event.cardinality.type] || t('options.atLeast', 'At least').value
-  return `${type} ${event.cardinality.count ?? 1}`
-}
-
-function updateEventCardinality(index: number, type: string, count: number) {
-  const event = localGroup.value.events[index]
-  if (event) {
-    event.cardinality = {
-      type: type as 'AT_LEAST' | 'EXACTLY' | 'AT_MOST',
-      count: count,
-      countingMethod: 'ALL',
-    }
-    emitUpdate()
-  }
-}
-
-function updateEventCardinalityCount(index: number, count: number) {
-  const event = localGroup.value.events[index]
-  if (event && event.cardinality) {
-    event.cardinality.count = count
-    emitUpdate()
-  }
-}
-
-// Helper to convert PascalCase to camelCase for config lookup
-function toCamelCase(str: string): string {
-  return str.charAt(0).toLowerCase() + str.slice(1)
-}
-
-// Refs for getting available attributes (moved to component scope to avoid creating refs in functions)
-const attributeCriteriaTypeKey = ref('')
-const attributeSectionRef = ref('criteriaGroup')
-
-// Get available attributes for a specific event
-function getAvailableAttributesForEvent(event: CohortEvent) {
-  attributeCriteriaTypeKey.value = toCamelCase(event.criteriaType)
-  const { attributes } = useAttributeConfig(attributeCriteriaTypeKey, attributeSectionRef)
-  return attributes.value
-}
-
-// Add attribute to event
-function addAttributeToEvent(eventIndex: number, attributeKey: string, attributeType: string) {
-  const event = localGroup.value.events[eventIndex]
-  if (!event) return
-
-  // Handle nested criteria type specially - emit event instead of adding attribute
-  if (attributeType === 'nested') {
-    addNestedCriteria(eventIndex)
-    return
-  }
-
-  // Create a default attribute based on the type
-  let newAttribute: EventAttribute | null = null
-  if (attributeType === 'numericRange') {
-    newAttribute = {
-      type: 'numericRange',
-      attributeKey: attributeKey as NumericAttributeKey,
-      operator: 'GREATER_THAN_OR_EQUAL',
-      value: 0,
-    }
-  } else if (attributeType === 'conceptSet') {
-    newAttribute = {
-      type: 'conceptSet',
-      attributeKey: attributeKey as ConceptAttributeKey,
-      conceptSet: { id: '', name: '' },
-    }
-  } else if (attributeType === 'concept') {
-    newAttribute = {
-      type: 'concept',
-      attributeKey: attributeKey as ConceptAttributeKey,
-      concepts: [] as Concept[],
-    }
-  } else if (attributeType === 'dateRange') {
-    newAttribute = {
-      type: 'dateRange',
-      attributeKey: attributeKey as DateAttributeKey,
-      operator: 'AFTER',
-      value: new Date().toISOString().split('T')[0] ?? '',
-    }
-  } else if (attributeType === 'text') {
-    newAttribute = {
-      type: 'text',
-      attributeKey: attributeKey as TextAttributeKey,
-      operator: 'CONTAINS',
-      value: '',
-    }
-  } else if (attributeType === 'boolean') {
-    newAttribute = {
-      type: 'boolean',
-      attributeKey: attributeKey as BooleanAttributeKey,
-      value: true,
-    }
-  } else if (attributeType === 'temporalRelationship') {
-    newAttribute = {
-      type: 'temporalRelationship',
-      attributeKey: attributeKey as TemporalAttributeKey,
-      temporalWindow: {
-        startWindow: {
-          days: 0,
-          beforeAfter: 'AFTER',
-          referencePoint: 'INDEX_START',
-        },
-      },
-    }
-  } else if (attributeType === 'dateAdjustment') {
-    newAttribute = {
-      type: 'dateAdjustment',
-      attributeKey: attributeKey as DateAdjustmentAttributeKey,
-      dateAdjustment: {
-        startWith: 'START_DATE',
-        startOffset: 0,
-        endWith: 'END_DATE',
-        endOffset: 0,
-      },
-    }
-  } else if (attributeType === 'userDefinedPeriod') {
-    const today = new Date()
-    const tomorrow = new Date(today.getTime() + 86400000) // +1 day in milliseconds
-    newAttribute = {
-      type: 'userDefinedPeriod',
-      attributeKey: attributeKey as UserDefinedPeriodAttributeKey,
-      period: {
-        startDate: today.toISOString().split('T')[0] || '',
-        endDate: tomorrow.toISOString().split('T')[0] || '',
-      },
-    }
-  }
-
-  // Add the new attribute to the event
-  if (!newAttribute) return
-  if (!event.attributes) {
-    event.attributes = []
-  }
-  event.attributes.push(newAttribute)
-  emitUpdate()
 }
 
 // Method to update concept attribute (called by parent)

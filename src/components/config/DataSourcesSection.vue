@@ -464,7 +464,7 @@ async function executeDelete() {
   isDeleting.value = true
 
   try {
-    await deleteSource(deletingSource.value.sourceKey)
+    await deleteSource(deletingSource.value.sourceId)
     toastMessage.value = tv('executionStatus.values.COMPLETED')
     showToast.value = true
     showDeleteConfirm.value = false

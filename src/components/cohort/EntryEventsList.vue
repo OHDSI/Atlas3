@@ -28,84 +28,90 @@
           </AtlasList>
         </AtlasMenu>
 
-        <!-- Observation Period chip — orange/warning outlined to match
-             the other timeframe pills (TemporalFilterChip). Pushed to
-             the right edge of the toolbar via margin-left:auto. -->
-        <AtlasChip
-          class="obs-period-chip"
-          tone="warning"
-          variant="outlined"
-          size="sm"
-          @click="showObsPeriodDialog = true"
+        <!-- Continuous-observation pill + anchored popover editor. Clicking the
+             pill opens the editor in a menu anchored to it (no page-dimming
+             modal), keeping the user in context (discussion #99). Orange/warning
+             outlined to match the other timeframe pills. Pushed to the right
+             edge via margin-left:auto. -->
+        <AtlasMenu
+          :close-on-content-click="false"
+          location="bottom end"
+          offset="8"
         >
-          <AtlasIcon
-            start
-            size="small"
+          <template #activator="{ props: chipProps }">
+            <AtlasChip
+              v-bind="chipProps"
+              class="obs-period-chip"
+              tone="warning"
+              variant="outlined"
+              size="sm"
+            >
+              <AtlasIcon
+                start
+                size="small"
+              >
+                mdi-clock-outline
+              </AtlasIcon>
+              <!-- Short version for small screens -->
+              <span class="d-md-none">
+                {{ observationPeriod.priorDays }}d / {{ observationPeriod.postDays }}d
+              </span>
+              <!-- Full version for larger screens -->
+              <span class="d-none d-md-inline">
+                {{ t('components.cohortExpressionEditor.continuousObservationLabel', 'Continuous observation') }}:
+                {{ observationPeriod.priorDays }}d {{ t('options.before', 'before') }} ·
+                {{ observationPeriod.postDays }}d {{ t('options.after', 'after') }}
+              </span>
+            </AtlasChip>
+          </template>
+
+          <AtlasCard
+            class="obs-period-popover"
+            padding="md"
           >
-            mdi-clock-outline
-          </AtlasIcon>
-          <!-- Short version for small screens -->
-          <span class="d-md-none">
-            {{ observationPeriod.priorDays }} {{ t('options.before', 'before') }}
-            {{ observationPeriod.postDays }} {{ t('options.after', 'after') }}
-          </span>
-          <!-- Full version for larger screens -->
-          <span class="d-none d-md-inline">
-            {{ observationPeriod.priorDays }} {{ t('common.days', 'days') }}
-            {{ t('options.before', 'before') }} {{ t('common.and', 'and') }}
-            {{ observationPeriod.postDays }} {{ t('common.days', 'days') }}
-            {{ t('options.after', 'after') }}
-            {{ t('components.cohortExpressionEditor.eventIndexDate', 'the event index date') }}
-          </span>
-        </AtlasChip>
+            <div class="obs-period-popover__title">
+              <AtlasIcon
+                size="small"
+                class="obs-period-popover__icon"
+              >
+                mdi-clock-outline
+              </AtlasIcon>
+              {{ t('components.cohortExpressionEditor.continuousObservationTitle', 'Continuous observation window') }}
+            </div>
+            <div class="obs-period-popover__fields">
+              <AtlasTextField
+                :model-value="observationPeriod.priorDays"
+                :label="t('components.cohortExpressionEditor.continuousObservationBefore', 'Days before').value"
+                type="number"
+                variant="outlined"
+                density="compact"
+                hide-details
+                min="0"
+                @update:model-value="updateObservationPeriod('priorDays', $event)"
+              />
+              <AtlasTextField
+                :model-value="observationPeriod.postDays"
+                :label="t('components.cohortExpressionEditor.continuousObservationAfter', 'Days after').value"
+                type="number"
+                variant="outlined"
+                density="compact"
+                hide-details
+                min="0"
+                @update:model-value="updateObservationPeriod('postDays', $event)"
+              />
+            </div>
+            <p class="obs-period-popover__help">
+              {{ t('components.cohortExpressionEditor.continuousObservationHelp', 'People without this much continuous observation around the index date are excluded from the cohort.') }}
+            </p>
+          </AtlasCard>
+        </AtlasMenu>
       </div>
 
-      <!-- Observation Period Dialog -->
-      <AtlasDialog
-        v-model="showObsPeriodDialog"
-        eyebrow="COHORT"
-        :title="t('components.cohortExpressionEditor.cohortEntryEventsText_6', 'Observation Period').value"
-        max-width="500"
-        @close="showObsPeriodDialog = false"
-      >
-        <div class="obs-period-dialog-content">
-          <div class="obs-period-field">
-            <AtlasTextField
-              :model-value="observationPeriod.priorDays"
-              :label="t('components.cohortExpressionEditor.cohortEntryEventsText_3').value"
-              type="number"
-              variant="outlined"
-              hide-details
-              min="0"
-              @update:model-value="updateObservationPeriod('priorDays', $event)"
-            />
-          </div>
-          <div class="obs-period-field">
-            <AtlasTextField
-              :model-value="observationPeriod.postDays"
-              :label="t('components.cohortExpressionEditor.cohortEntryEventsText_4').value"
-              type="number"
-              variant="outlined"
-              hide-details
-              min="0"
-              @update:model-value="updateObservationPeriod('postDays', $event)"
-            />
-          </div>
-          <div class="obs-period-info">
-            {{ t('components.cohortExpressionEditor.cohortEntryEventsText_5') }}
-          </div>
-        </div>
-        <template #actions>
-          <AtlasButton @click="showObsPeriodDialog = false">
-            {{ t('common.close', 'Close') }}
-          </AtlasButton>
-        </template>
-      </AtlasDialog>
-
-      <entry-event-card
+      <CriteriaEventCard
         v-for="event in events"
         :key="event.id"
         :event="event"
+        section="initialEvents"
         @update="updateEvent"
         @remove="removeEvent(event.id)"
         @select-concept-set="selectConceptSetForEvent(event.id)"
@@ -126,13 +132,13 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasTextField } from '@/components/ui'
 import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import type { CohortEvent, CriteriaType, ObservationPeriod } from '@/models/cohort.types'
-import EntryEventCard from './EntryEventCard.vue'
+import CriteriaEventCard from '@/components/cohort-builder/CriteriaEventCard.vue'
 
 interface Props {
   events: CohortEvent[]
@@ -158,9 +164,6 @@ const emit = defineEmits<{
 
 // Get available filters for initial events section
 const { availableFilters } = useFilterConfig(ref('initialEvents'))
-
-// Dialog state
-const showObsPeriodDialog = ref(false)
 
 /**
  * Handle filter type selection from menu
@@ -229,28 +232,34 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   margin-left: auto;
 }
 
-.obs-period-dialog-content {
-  padding: 16px 0;
+/* Anchored popover editor (discussion #99) — replaces the page-dimming modal. */
+.obs-period-popover {
+  width: 320px;
+  max-width: 90vw;
 }
 
-.obs-period-field {
-  margin-bottom: 16px;
+.obs-period-popover__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
 }
 
-.obs-period-field label {
-  display: block;
-  font-size: 13px;
-  font-weight: 500;
-  margin-bottom: 8px;
-  color: #333;
+.obs-period-popover__icon {
+  color: rgb(var(--v-theme-orange, 230 126 34));
 }
 
-.obs-period-info {
+.obs-period-popover__fields {
+  display: flex;
+  gap: 12px;
+}
+
+.obs-period-popover__help {
+  margin: 12px 0 0;
   font-size: 12px;
-  color: #666;
-  padding: 12px;
-  background: #f5f5f5;
-  border-radius: 4px;
-  margin-top: 16px;
+  line-height: 1.5;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 </style>

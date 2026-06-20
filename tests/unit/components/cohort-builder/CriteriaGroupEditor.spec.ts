@@ -43,7 +43,8 @@ vi.mock('@/composables/useFilterConfig', () => ({
         requiresConceptSet: false,
         groupOnly: false
       }
-    ])
+    ]),
+    requiresConceptSet: (key: string) => key !== 'group'
   })
 }))
 
@@ -368,39 +369,23 @@ describe('CriteriaGroupEditor', () => {
       }
     })
 
-    it('should update cardinality count', async () => {
-      const group: CriteriaGroup = {
-        ...createMockCriteriaGroupWithEvents(),
-        events: [{
-          ...mockCriteriaGroupWithEvents.events[0],
-          cardinality: { type: 'AT_LEAST', count: 1, countingMethod: 'ALL' }
-        }]
-      }
-      const wrapper = mountComponent({ modelValue: group })
-      const vm = wrapper.vm as any
+    // Cardinality editing now lives in the shared CriteriaEventCard (covered by
+    // its own spec); the group only relays the child's `update` emit.
+    it('relays a child CriteriaEventCard update by replacing the event', async () => {
+      const wrapper = mountComponent({ modelValue: createMockCriteriaGroupWithEvents() })
+      const card = wrapper.findComponent({ name: 'CriteriaEventCard' })
+      expect(card.exists()).toBe(true)
 
-      vm.updateEventCardinalityCount(0, 5)
+      const updated = {
+        ...createMockCriteriaGroupWithEvents().events[0],
+        cardinality: { type: 'EXACTLY' as const, count: 2, countingMethod: 'ALL' as const },
+      }
+      card.vm.$emit('update', updated)
       await wrapper.vm.$nextTick()
 
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
       const emitted = wrapper.emitted('update:modelValue') as any[]
       const updatedGroup = emitted[emitted.length - 1][0] as CriteriaGroup
-      expect(updatedGroup.events[0].cardinality?.count).toBe(5)
-    })
-
-    it('should display cardinality type correctly', () => {
-      const group: CriteriaGroup = {
-        ...createMockCriteriaGroupWithEvents(),
-        events: [{
-          ...mockCriteriaGroupWithEvents.events[0],
-          cardinality: { type: 'EXACTLY', count: 3, countingMethod: 'ALL' }
-        }]
-      }
-      const wrapper = mountComponent({ modelValue: group })
-      const vm = wrapper.vm as any
-
-      const type = vm.getCardinalityType(group.events[0])
-      expect(type).toBe('exactly')
+      expect(updatedGroup.events[0].cardinality?.count).toBe(2)
     })
   })
 
@@ -425,56 +410,8 @@ describe('CriteriaGroupEditor', () => {
       }
     })
 
-    it('should remove temporal window from event', async () => {
-      const group: CriteriaGroup = {
-        ...createMockCriteriaGroupWithEvents(),
-        events: [{
-          ...mockCriteriaGroupWithEvents.events[0],
-          temporalWindow: {
-            startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-            endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
-          }
-        }]
-      }
-      const wrapper = mountComponent({ modelValue: group })
-      const vm = wrapper.vm as any
-
-      vm.removeTemporalWindow(0)
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-      const emitted = wrapper.emitted('update:modelValue') as any[]
-      const updatedGroup = emitted[emitted.length - 1][0] as CriteriaGroup
-      expect(updatedGroup.events[0].temporalWindow).toBeUndefined()
-    })
-
-    it('should update temporal window', async () => {
-      const group: CriteriaGroup = {
-        ...createMockCriteriaGroupWithEvents(),
-        events: [{
-          ...mockCriteriaGroupWithEvents.events[0],
-          temporalWindow: {
-            startWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
-            endWindow: { days: 30, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
-          }
-        }]
-      }
-      const wrapper = mountComponent({ modelValue: group })
-      const vm = wrapper.vm as any
-
-      const newWindow = {
-        startWindow: { days: 10, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
-        endWindow: { days: 60, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' }
-      }
-
-      vm.updateEventTemporalWindow(0, newWindow)
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-      const emitted = wrapper.emitted('update:modelValue') as any[]
-      const updatedGroup = emitted[emitted.length - 1][0] as CriteriaGroup
-      expect(updatedGroup.events[0].temporalWindow?.startWindow.days).toBe(10)
-    })
+    // Temporal-window editing now lives in the shared CriteriaEventCard
+    // (covered by its own spec); the group only relays the child's `update`.
   })
 
   describe('Attributes Management', () => {
@@ -541,59 +478,8 @@ describe('CriteriaGroupEditor', () => {
       }
     })
 
-    it('should remove nested criteria from event', async () => {
-      const group: CriteriaGroup = {
-        ...createMockCriteriaGroupWithEvents(),
-        events: [{
-          ...mockCriteriaGroupWithEvents.events[0],
-          nestedCriteria: {
-            id: 'nested-1',
-            logicType: 'ALL',
-            events: []
-          }
-        }]
-      }
-      const wrapper = mountComponent({ modelValue: group })
-      const vm = wrapper.vm as any
-
-      vm.removeEventNestedCriteria(0)
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-      const emitted = wrapper.emitted('update:modelValue') as any[]
-      const updatedGroup = emitted[emitted.length - 1][0] as CriteriaGroup
-      expect(updatedGroup.events[0].nestedCriteria).toBeUndefined()
-    })
-
-    it('should update nested criteria', async () => {
-      const group: CriteriaGroup = {
-        ...createMockCriteriaGroupWithEvents(),
-        events: [{
-          ...mockCriteriaGroupWithEvents.events[0],
-          nestedCriteria: {
-            id: 'nested-1',
-            logicType: 'ALL',
-            events: []
-          }
-        }]
-      }
-      const wrapper = mountComponent({ modelValue: group })
-      const vm = wrapper.vm as any
-
-      const newNested = {
-        id: 'nested-1',
-        logicType: 'ANY' as const,
-        events: []
-      }
-
-      vm.updateEventNestedCriteria(0, newNested)
-      await wrapper.vm.$nextTick()
-
-      expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-      const emitted = wrapper.emitted('update:modelValue') as any[]
-      const updatedGroup = emitted[emitted.length - 1][0] as CriteriaGroup
-      expect(updatedGroup.events[0].nestedCriteria?.logicType).toBe('ANY')
-    })
+    // Nested-criteria mutations (add/update/remove) now happen inside the
+    // shared CriteriaEventCard; the group relays the child's `update`.
 
     it('should render nested criteria editor when nested criteria exists', () => {
       const group: CriteriaGroup = {

@@ -1,0 +1,512 @@
+<template>
+  <div
+    data-testid="criteria-event-card"
+    class="event-card"
+  >
+    <!-- Optional cardinality sidebar (inclusion / nested criteria). Click to
+         change "At least / Exactly / At most N". Hidden for entry events. -->
+    <AtlasMenu
+      v-if="showCardinality"
+      :close-on-content-click="false"
+      location="end"
+    >
+      <template #activator="{ props: menuProps }">
+        <div
+          class="cardinality-sidebar"
+          :class="`cardinality-${cardinalityType}`"
+          v-bind="menuProps"
+          :title="t('components.nestedCriteria.clickToChange', 'Click to change').value"
+        >
+          <div class="cardinality-label">
+            {{ cardinalityDisplay }}
+          </div>
+        </div>
+      </template>
+      <v-card class="cardinality-menu">
+        <v-card-text class="pa-3">
+          <div class="segmented-buttons">
+            <AtlasButton
+              :variant="cardinalityType === 'at_least' ? 'tonal' : 'secondary'"
+              :tone="cardinalityType === 'at_least' ? undefined : 'neutral'"
+              size="sm"
+              class="flex-1"
+              @click="setCardinalityType('AT_LEAST')"
+            >
+              {{ t('options.atLeast', 'At least') }}
+            </AtlasButton>
+            <AtlasButton
+              :variant="cardinalityType === 'exactly' ? 'tonal' : 'secondary'"
+              :tone="cardinalityType === 'exactly' ? undefined : 'neutral'"
+              size="sm"
+              class="flex-1"
+              @click="setCardinalityType('EXACTLY')"
+            >
+              {{ t('options.exactly', 'Exactly') }}
+            </AtlasButton>
+            <AtlasButton
+              :variant="cardinalityType === 'at_most' ? 'tonal' : 'secondary'"
+              :tone="cardinalityType === 'at_most' ? undefined : 'neutral'"
+              size="sm"
+              class="flex-1"
+              @click="setCardinalityType('AT_MOST')"
+            >
+              {{ t('options.atMost', 'At most') }}
+            </AtlasButton>
+          </div>
+          <AtlasTextField
+            :model-value="event.cardinality?.count ?? 1"
+            type="number"
+            :label="t('columns.count', 'Count').value"
+            min="1"
+            class="mt-3"
+            @update:model-value="(v) => setCardinalityCount(Number(v))"
+          />
+        </v-card-text>
+      </v-card>
+    </AtlasMenu>
+
+    <!-- Event content -->
+    <div class="event-content">
+      <!-- Header: type label + concept-set picker (moved here) + actions -->
+      <div class="event-header">
+        <div class="event-header__left">
+          <span class="event-type-label">{{ eventTypeLabel }}</span>
+          <EventConceptSetField
+            v-if="eventRequiresConceptSet"
+            compact
+            :concept-set="event.conceptSet"
+            :select-label="t('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set').value"
+            @select="emit('select-concept-set')"
+            @edit="emit('edit-concept-set', $event)"
+            @clear="removeConceptSet"
+          />
+        </div>
+        <div class="event-header__right">
+          <AtlasMenu>
+            <template #activator="{ props: menuProps }">
+              <AtlasButton
+                v-bind="menuProps"
+                icon="mdi-plus"
+                size="sm"
+                variant="ghost"
+                data-testid="add-attribute-button"
+              >
+                {{ t('components.common.addAttribute') }}
+              </AtlasButton>
+            </template>
+            <AtlasList>
+              <AtlasListItem
+                v-for="attr in availableAttributes"
+                :key="attr.key"
+                :title="attr.label"
+                :subtitle="attr.description"
+                :disabled="attr.type === 'nested' && !!event.nestedCriteria"
+                @click="addAttribute(attr.key, attr.type)"
+              />
+            </AtlasList>
+          </AtlasMenu>
+          <AtlasIconButton
+            v-bind="{ ariaLabel: t('common.remove', 'Remove').value }"
+            icon="mdi-delete"
+            size="sm"
+            variant="text"
+            tone="primary"
+            data-testid="remove-criteria-event"
+            @click="emit('remove')"
+          />
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="event-body">
+        <!-- Optional temporal window (inclusion / nested criteria). -->
+        <div
+          v-if="showTemporal"
+          class="temporal-window-section"
+        >
+          <AtlasMenu
+            v-if="event.temporalWindow"
+            :close-on-content-click="false"
+            location="end"
+          >
+            <template #activator="{ props: menuProps }">
+              <TemporalFilterChip
+                v-bind="menuProps"
+                :label="formatTemporalWindowDisplay(event.temporalWindow)"
+                @close="removeTemporalWindow"
+              />
+            </template>
+            <v-card
+              class="temporal-window-menu"
+              style="min-width: 500px"
+            >
+              <v-card-text class="pa-3">
+                <TemporalWindowEditor
+                  :model-value="event.temporalWindow"
+                  @update:model-value="updateTemporalWindow"
+                />
+              </v-card-text>
+            </v-card>
+          </AtlasMenu>
+          <AtlasButton
+            v-else
+            size="sm"
+            variant="secondary"
+            icon="mdi-calendar-range"
+            @click="addTemporalWindow"
+          >
+            {{ t('components.criteriaGroup.addTemporalWindow', 'Add Temporal Window') }}
+          </AtlasButton>
+        </div>
+
+        <!-- Attributes -->
+        <div class="attributes-section mt-3">
+          <AttributesEditor
+            :model-value="event.attributes || []"
+            :criteria-type="event.criteriaType"
+            :section="section"
+            :has-nested-criteria="!!event.nestedCriteria"
+            @update:model-value="updateAttributes"
+            @add-nested-criteria="addNestedCriteria"
+            @select-concept-set-for-attribute="
+              attributeIndex => emit('select-concept-set-for-attribute', attributeIndex)
+            "
+            @select-concept-for-attribute="
+              (attributeIndex, domainFilter) =>
+                emit('select-concept-for-attribute', attributeIndex, domainFilter)
+            "
+          />
+        </div>
+
+        <!-- Nested criteria (recursive) -->
+        <div
+          v-if="event.nestedCriteria"
+          class="nested-criteria-section mt-3"
+        >
+          <NestedCriteriaEditor
+            :model-value="event.nestedCriteria"
+            :depth="depth + 1"
+            @update:model-value="updateNestedCriteria"
+            @remove="removeNestedCriteria"
+            @select-concept-set="emit('select-concept-set-nested', $event.eventIndex)"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTextField } from '@/components/ui'
+import { computed } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
+import { useI18n } from '@/composables/useI18n'
+import { useFilterConfig } from '@/composables/useFilterConfig'
+import { useAttributeConfig } from '@/composables/useAttributeConfig'
+import { useTemporalWindows } from '@/composables/useTemporalWindows'
+import type { CohortEvent, NestedCriteria, TemporalWindow } from '@/models/cohort.types'
+import type {
+  EventAttribute,
+  NumericAttributeKey,
+  ConceptAttributeKey,
+  DateAttributeKey,
+  TextAttributeKey,
+  BooleanAttributeKey,
+  TemporalAttributeKey,
+  DateAdjustmentAttributeKey,
+  UserDefinedPeriodAttributeKey,
+  Concept,
+} from '@/models/event.types'
+import AttributesEditor from '@/components/cohort-builder/AttributesEditor.vue'
+import EventConceptSetField from '@/components/cohort-builder/EventConceptSetField.vue'
+import NestedCriteriaEditor from '@/components/cohort-builder/NestedCriteriaEditor.vue'
+import TemporalFilterChip from '@/components/cohort-builder/TemporalFilterChip.vue'
+import TemporalWindowEditor from '@/components/cohort-builder/TemporalWindowEditor.vue'
+
+interface Props {
+  event: CohortEvent
+  /** Config section for filter/attribute lookups. */
+  section?: string
+  /** Show the cardinality sidebar (inclusion / nested criteria). */
+  showCardinality?: boolean
+  /** Show the temporal-window control (inclusion / nested criteria). */
+  showTemporal?: boolean
+  /** Nesting depth, forwarded to recursive NestedCriteriaEditor. */
+  depth?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  section: 'initialEvents',
+  showCardinality: false,
+  showTemporal: false,
+  depth: 0,
+})
+
+const { t } = useI18n()
+const { formatTemporalWindowDisplay } = useTemporalWindows()
+
+const emit = defineEmits<{
+  update: [event: CohortEvent]
+  remove: []
+  'select-concept-set': []
+  /** A nested-criteria child requested a concept set; payload is the child index. */
+  'select-concept-set-nested': [nestedEventIndex: number]
+  'select-concept-set-for-attribute': [attributeIndex: number]
+  'select-concept-for-attribute': [attributeIndex: number, domainFilter: string | undefined]
+  'edit-concept-set': [conceptSet: { id: number | string; name: string; items?: unknown[] }]
+}>()
+
+const sectionRef = computed(() => props.section)
+
+const { availableFilters, requiresConceptSet } = useFilterConfig(sectionRef)
+
+const toCamelCase = (str: string): string => str.charAt(0).toLowerCase() + str.slice(1)
+const criteriaTypeKey = computed(() => toCamelCase(props.event.criteriaType))
+
+// Some OMOP entities (e.g. Observation Period) have no concept_id, so the
+// concept-set picker is hidden for them (issue #98).
+const eventRequiresConceptSet = computed(() => requiresConceptSet(criteriaTypeKey.value))
+
+const eventTypeLabel = computed(() => {
+  const filter = availableFilters.value.find(f => f.criteriaType === props.event.criteriaType)
+  return filter?.name ?? t('components.cohortExpressionEditor.cohortEntryEvents').value
+})
+
+const { attributes: availableAttributes } = useAttributeConfig(criteriaTypeKey, sectionRef)
+
+// ── Cardinality ───────────────────────────────────────────────────────────
+const cardinalityType = computed(() =>
+  (props.event.cardinality?.type ?? 'AT_LEAST').toLowerCase(),
+)
+const cardinalityDisplay = computed(() => {
+  const typeMap: Record<string, string> = {
+    AT_LEAST: t('options.atLeast', 'At least').value,
+    EXACTLY: t('options.exactly', 'Exactly').value,
+    AT_MOST: t('options.atMost', 'At most').value,
+  }
+  const type = props.event.cardinality?.type ?? 'AT_LEAST'
+  return `${typeMap[type] ?? typeMap.AT_LEAST} ${props.event.cardinality?.count ?? 1}`
+})
+
+function setCardinalityType(type: 'AT_LEAST' | 'EXACTLY' | 'AT_MOST') {
+  emit('update', {
+    ...props.event,
+    cardinality: {
+      type,
+      count: props.event.cardinality?.count ?? 1,
+      countingMethod: props.event.cardinality?.countingMethod ?? 'ALL',
+    },
+  })
+}
+function setCardinalityCount(count: number) {
+  emit('update', {
+    ...props.event,
+    cardinality: {
+      type: props.event.cardinality?.type ?? 'AT_LEAST',
+      count,
+      countingMethod: props.event.cardinality?.countingMethod ?? 'ALL',
+    },
+  })
+}
+
+// ── Temporal window ───────────────────────────────────────────────────────
+function addTemporalWindow() {
+  // OHDSI long-term baseline: 365 days before index up to the index event.
+  emit('update', {
+    ...props.event,
+    temporalWindow: {
+      startWindow: { days: 365, beforeAfter: 'BEFORE', referencePoint: 'INDEX_START' },
+      endWindow: { days: 0, beforeAfter: 'AFTER', referencePoint: 'INDEX_START' },
+    },
+  })
+}
+function updateTemporalWindow(temporalWindow: TemporalWindow) {
+  emit('update', { ...props.event, temporalWindow })
+}
+function removeTemporalWindow() {
+  const updated = { ...props.event }
+  delete updated.temporalWindow
+  emit('update', updated)
+}
+
+// ── Concept set / attributes / nested ─────────────────────────────────────
+function removeConceptSet() {
+  emit('update', { ...props.event, conceptSet: undefined })
+}
+function updateAttributes(attributes: EventAttribute[]) {
+  emit('update', { ...props.event, attributes })
+}
+function addNestedCriteria() {
+  emit('update', {
+    ...props.event,
+    nestedCriteria: { id: uuidv4(), logicType: 'ALL', events: [] },
+  })
+}
+function updateNestedCriteria(nested: NestedCriteria) {
+  emit('update', { ...props.event, nestedCriteria: nested })
+}
+function removeNestedCriteria() {
+  const updated = { ...props.event }
+  delete updated.nestedCriteria
+  emit('update', updated)
+}
+
+function addAttribute(attributeKey: string, attributeType: string) {
+  if (attributeType === 'nested') {
+    addNestedCriteria()
+    return
+  }
+
+  let newAttribute: EventAttribute | null = null
+  if (attributeType === 'numericRange') {
+    newAttribute = {
+      type: 'numericRange',
+      attributeKey: attributeKey as NumericAttributeKey,
+      operator: 'GREATER_THAN_OR_EQUAL',
+      value: 0,
+    }
+  } else if (attributeType === 'conceptSet') {
+    newAttribute = {
+      type: 'conceptSet',
+      attributeKey: attributeKey as ConceptAttributeKey,
+      conceptSet: { id: '', name: '' },
+    }
+  } else if (attributeType === 'dateRange') {
+    newAttribute = {
+      type: 'dateRange',
+      attributeKey: attributeKey as DateAttributeKey,
+      operator: 'AFTER',
+      value: new Date().toISOString().split('T')[0] || '',
+    }
+  } else if (attributeType === 'text') {
+    newAttribute = {
+      type: 'text',
+      attributeKey: attributeKey as TextAttributeKey,
+      operator: 'CONTAINS',
+      value: '',
+    }
+  } else if (attributeType === 'boolean') {
+    newAttribute = {
+      type: 'boolean',
+      attributeKey: attributeKey as BooleanAttributeKey,
+      value: true,
+    }
+  } else if (attributeType === 'concept') {
+    newAttribute = {
+      type: 'concept',
+      attributeKey: attributeKey as ConceptAttributeKey,
+      concepts: [] as Concept[],
+    }
+  } else if (attributeType === 'temporalRelationship') {
+    newAttribute = {
+      type: 'temporalRelationship',
+      attributeKey: attributeKey as TemporalAttributeKey,
+      temporalWindow: { startWindow: undefined, endWindow: undefined },
+    }
+  } else if (attributeType === 'dateAdjustment') {
+    newAttribute = {
+      type: 'dateAdjustment',
+      attributeKey: attributeKey as DateAdjustmentAttributeKey,
+      dateAdjustment: { startWith: 'START_DATE', startOffset: 0, endWith: 'END_DATE', endOffset: 0 },
+    }
+  } else if (attributeType === 'userDefinedPeriod') {
+    const today = new Date()
+    const tomorrow = new Date(today.getTime() + 86400000)
+    newAttribute = {
+      type: 'userDefinedPeriod',
+      attributeKey: attributeKey as UserDefinedPeriodAttributeKey,
+      period: {
+        startDate: today.toISOString().split('T')[0] || '',
+        endDate: tomorrow.toISOString().split('T')[0] || '',
+      },
+    }
+  }
+
+  if (!newAttribute) return
+  emit('update', {
+    ...props.event,
+    attributes: [...(props.event.attributes || []), newAttribute],
+  })
+}
+</script>
+
+<style scoped>
+.event-card {
+  display: flex;
+  background: rgb(var(--v-theme-surface));
+  border: 1px solid rgb(var(--v-theme-outline-variant));
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+/* Cardinality sidebar (shared with the legacy criteria-group look) */
+.cardinality-sidebar {
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  border-right: 1px solid #616161;
+  background: linear-gradient(to right, #616161 30%, #f5f5f5 30%);
+}
+.cardinality-label {
+  writing-mode: sideways-lr;
+  text-orientation: sideways;
+  font-size: 13px;
+  font-weight: 600;
+  color: #616161;
+  white-space: nowrap;
+  padding-left: 8px;
+}
+
+.event-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgb(var(--v-theme-surface-variant), 0.4);
+  border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
+}
+.event-header__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.event-type-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+.event-header__right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.event-body {
+  padding: 12px 16px 16px;
+}
+.temporal-window-section {
+  display: flex;
+}
+
+.segmented-buttons {
+  display: flex;
+  gap: 4px;
+}
+.cardinality-menu {
+  min-width: 300px;
+}
+</style>

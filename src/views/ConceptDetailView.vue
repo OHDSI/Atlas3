@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConceptDetailStore } from '@/stores/concept-detail'
-import { AtlasAlert, AtlasProgressLinear } from '@/components/ui'
+import { useConceptSetsStore } from '@/stores/concept-sets'
+import { useI18n } from '@/composables/useI18n'
+import { AtlasAlert, AtlasProgressLinear, AtlasSnackbar } from '@/components/ui'
+import type { Concept } from '@/models/concept-set.types'
 import ConceptDetailHeader from '@/components/concepts/detail/ConceptDetailHeader.vue'
 import ConceptStatCards from '@/components/concepts/detail/ConceptStatCards.vue'
 import ConceptAttributesCard from '@/components/concepts/detail/ConceptAttributesCard.vue'
@@ -20,6 +23,33 @@ const props = defineProps<{
 const store = useConceptDetailStore()
 const { concept, isLoading, error, related, parents, children, recordCountsBySource } =
   storeToRefs(store)
+
+const conceptSetsStore = useConceptSetsStore()
+const { t } = useI18n()
+const feedback = ref<{ open: boolean; text: string }>({ open: false, text: '' })
+
+// Add the viewed concept to the open set, or start a new untitled set.
+function onAddToConceptSet(c: Concept) {
+  if (!conceptSetsStore.currentSet) {
+    conceptSetsStore.openCreateEditor()
+  }
+  conceptSetsStore.addConceptToSet(c)
+  const setName =
+    conceptSetsStore.currentSet?.name ||
+    t('components.conceptSetBuilder.newConceptSet', 'New concept set').value
+  feedback.value = {
+    open: true,
+    text: t('search.addedToSet', 'Added "{concept}" → {set}', {
+      concept: c.conceptName,
+      set: setName,
+    }).value,
+  }
+}
+
+// Grey out the previously-shown concept while a different one loads.
+const isStale = computed(
+  () => isLoading.value && !!concept.value && concept.value.conceptId !== props.conceptId,
+)
 
 async function load() {
   await store.loadConcept(props.sourceKey, props.conceptId)
@@ -50,9 +80,16 @@ watch(() => [props.sourceKey, props.conceptId], load)
     </AtlasAlert>
 
     <template v-if="concept && !error">
-      <ConceptDetailHeader :concept="concept" />
+      <ConceptDetailHeader
+        :class="{ 'is-stale': isStale }"
+        :concept="concept"
+        @add-to-concept-set="onAddToConceptSet"
+      />
 
-      <div class="concept-detail-body">
+      <div
+        class="concept-detail-body"
+        :class="{ 'is-stale': isStale }"
+      >
         <ConceptStatCards
           :concept-id="concept.conceptId"
           :primary-source-key="props.sourceKey"
@@ -68,7 +105,10 @@ watch(() => [props.sourceKey, props.conceptId], load)
           />
         </div>
 
-        <ConceptRelatedTable :related="related" />
+        <ConceptRelatedTable
+          :related="related"
+          :source-key="props.sourceKey"
+        />
 
         <DrilldownDetails
           v-if="domainPath(concept.domainId)"
@@ -81,6 +121,12 @@ watch(() => [props.sourceKey, props.conceptId], load)
         />
       </div>
     </template>
+
+    <AtlasSnackbar
+      v-model="feedback.open"
+      severity="success"
+      :text="feedback.text"
+    />
   </div>
 </template>
 
@@ -88,6 +134,12 @@ watch(() => [props.sourceKey, props.conceptId], load)
 .concept-detail-view {
   background: rgb(var(--v-theme-background));
   min-height: 100vh;
+}
+/* Stale content while a different concept loads: dim and freeze interaction. */
+.is-stale {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 120ms ease;
 }
 .concept-detail-body {
   padding: 16px;

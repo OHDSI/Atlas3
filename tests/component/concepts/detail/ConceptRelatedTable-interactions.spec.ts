@@ -82,6 +82,24 @@ describe('ConceptRelatedTable interactions', () => {
     expect(openSpy).toHaveBeenCalledWith('OHDSI', 73211009)
   })
 
+  it('opens the drawer using the sourceKey prop when the route has no param (drawer context)', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/c/:sourceKey?', name: 'c', component: { template: '<div />' } }],
+    })
+    router.push('/c/') // no route param — emulates the drawer rendered over another route
+    await router.isReady()
+    const wrapper = mount(ConceptRelatedTable, {
+      props: { related, sourceKey: 'OHDSI' },
+      global: { plugins: [vuetify, router] },
+    })
+    await flushPromises()
+    const drawer = useConceptDetailDrawerStore()
+    const openSpy = vi.spyOn(drawer, 'open')
+    await wrapper.find('a.concept-link').trigger('click')
+    expect(openSpy).toHaveBeenCalledWith('OHDSI', 73211009)
+  })
+
   it('does not open the drawer when sourceKey is empty', async () => {
     const wrapper = await mountWith(undefined)
     await flushPromises()
