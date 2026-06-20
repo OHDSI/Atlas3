@@ -19,7 +19,7 @@
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { HistogramChartData } from '@/models/datasource.types'
-import { dashboardAgeBarOptions, createResizeHandler } from '@/utils/chart-config'
+import { dashboardAgeBarOptions, createResizeHandler } from '@/ui/chart-config'
 
 interface Props {
   data: HistogramChartData

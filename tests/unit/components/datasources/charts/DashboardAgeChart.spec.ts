@@ -5,7 +5,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import type { HistogramChartData } from '@/models/datasource.types'
 
-vi.mock('@/utils/chart-config', () => ({
+vi.mock('@/ui/chart-config', () => ({
   dashboardAgeBarOptions: vi.fn((data) => ({
     xAxis: { min: data.offset, max: data.offset + data.intervalSize * Math.max(data.bins.length, 1) },
     series: [{ data: data.bins }]
@@ -13,12 +13,12 @@ vi.mock('@/utils/chart-config', () => ({
   createResizeHandler: vi.fn(() => vi.fn())
 }))
 
-let chartConfig: typeof import('@/utils/chart-config')
+let chartConfig: typeof import('@/ui/chart-config')
 let DashboardAgeChart: typeof import('@/components/datasources/charts/DashboardAgeChart.vue').default
 
 beforeAll(async () => {
   vi.resetModules()
-  chartConfig = await import('@/utils/chart-config')
+  chartConfig = await import('@/ui/chart-config')
   DashboardAgeChart = (await import('@/components/datasources/charts/DashboardAgeChart.vue')).default
 })
 

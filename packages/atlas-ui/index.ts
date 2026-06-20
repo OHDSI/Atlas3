@@ -11,6 +11,12 @@ export { default as AtlasBadge } from '../../src/components/ui/AtlasBadge.vue'
 export { default as AtlasBanner } from '../../src/components/ui/AtlasBanner.vue'
 export { default as AtlasButton } from '../../src/components/ui/AtlasButton.vue'
 export { default as AtlasCard } from '../../src/components/ui/AtlasCard.vue'
+export { default as AtlasBarChart } from '../../src/components/ui/charts/AtlasBarChart.vue'
+export { default as AtlasBoxPlotChart } from '../../src/components/ui/charts/AtlasBoxPlotChart.vue'
+export { default as AtlasChartExport } from '../../src/components/ui/charts/AtlasChartExport.vue'
+export { default as AtlasSunburstChart } from '../../src/components/ui/charts/AtlasSunburstChart.vue'
+export { default as AtlasTrellisChart } from '../../src/components/ui/charts/AtlasTrellisChart.vue'
+export { default as AtlasTreemapChart } from '../../src/components/ui/charts/AtlasTreemapChart.vue'
 export { default as AtlasCheckbox } from '../../src/components/ui/AtlasCheckbox.vue'
 export { default as AtlasChip } from '../../src/components/ui/AtlasChip.vue'
 export { default as AtlasCol } from '../../src/components/ui/AtlasCol.vue'
@@ -21,6 +27,8 @@ export { default as AtlasDivider } from '../../src/components/ui/AtlasDivider.vu
 export { default as AtlasFab } from '../../src/components/ui/AtlasFab.vue'
 export { default as AtlasIcon } from '../../src/components/ui/AtlasIcon.vue'
 export { default as AtlasIconButton } from '../../src/components/ui/AtlasIconButton.vue'
+export { default as AtlasLineChart } from '../../src/components/ui/charts/AtlasLineChart.vue'
+export { default as AtlasPieChart } from '../../src/components/ui/charts/AtlasPieChart.vue'
 export { default as AtlasList } from '../../src/components/ui/AtlasList.vue'
 export { default as AtlasListItem } from '../../src/components/ui/AtlasListItem.vue'
 export { default as AtlasMenu } from '../../src/components/ui/AtlasMenu.vue'
@@ -40,3 +48,16 @@ export { default as AtlasTab } from '../../src/components/ui/AtlasTab.vue'
 export { default as AtlasTabs } from '../../src/components/ui/AtlasTabs.vue'
 export { default as AtlasTextField } from '../../src/components/ui/AtlasTextField.vue'
 export { default as AtlasTooltip } from '../../src/components/ui/AtlasTooltip.vue'
+
+// Chart data types + option-builders for external consumers
+export type { LineChartData, LineChartSeries, ChartXAxisType, PieChartData } from '../../src/ui/chart-types'
+export {
+  parseYyyymm,
+  multiLineChartOptions,
+  defaultPieChartOptions,
+  defaultBarChartOptions,
+  defaultTreemapOptions,
+  CHART_COLORS,
+  createResizeHandler,
+  getExportConfig,
+} from '../../src/ui/chart-config'

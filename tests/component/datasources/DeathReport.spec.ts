@@ -30,7 +30,7 @@ describe('DeathReport', () => {
     })
 
     expect(wrapper.find('[data-testid=prevalence-by-gender-age-year-chart]').exists()).toBe(true)
-    expect(wrapper.findComponent({ name: 'TrellisChart' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'AtlasTrellisChart' }).exists()).toBe(true)
   })
 
   it('hides trellis section when data missing', () => {

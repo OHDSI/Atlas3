@@ -367,36 +367,29 @@ describe('DataSourceService', () => {
   })
 
   describe('Request Cancellation', () => {
-    it('should cancel previous request to same endpoint', async () => {
-      vi.useFakeTimers()
-      const abortError = new Error('Aborted')
-      abortError.name = 'AbortError'
+    it('coalesces concurrent sources requests instead of cancelling them', async () => {
+      // Several callers fetch the sources list on app start. Coalescing means the
+      // first request is NOT aborted by the second — they share one result — which
+      // avoids the spurious "Unable to load data sources" error on reload/deep-link.
+      const mockSources = [
+        {
+          sourceId: 1,
+          sourceName: 'Test Source',
+          sourceKey: 'TEST',
+          sourceDialect: 'postgresql',
+          daimons: [],
+        },
+      ]
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockSources),
+      })
 
-      mockFetch
-        .mockImplementationOnce(
-          () =>
-            new Promise((_, reject) => {
-              setTimeout(() => reject(abortError), 100)
-            })
-        )
-        .mockResolvedValueOnce({
-          ok: true,
-          json: () => Promise.resolve([]),
-        })
+      const [first, second] = await Promise.all([listDataSources(), listDataSources()])
 
-      // Start first request
-      const firstPromise = listDataSources().catch(() => 'cancelled')
-
-      // Start second request immediately (should cancel first)
-      const secondPromise = listDataSources()
-
-      // Advance time
-      await vi.advanceTimersByTimeAsync(200)
-
-      const [first, second] = await Promise.all([firstPromise, secondPromise])
-
-      expect(first).toBe('cancelled')
-      expect(second).toEqual([])
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(first).toEqual(second)
+      expect(first).toHaveLength(1)
     })
   })
 

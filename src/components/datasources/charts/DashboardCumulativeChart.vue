@@ -19,7 +19,7 @@
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { LineChartData } from '@/models/datasource.types'
-import { dashboardCumulativeLineOptions, createResizeHandler } from '@/utils/chart-config'
+import { dashboardCumulativeLineOptions, createResizeHandler } from '@/ui/chart-config'
 
 interface Props {
   data: LineChartData

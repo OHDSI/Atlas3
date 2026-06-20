@@ -1,10 +1,10 @@
 <!--
-  PieChart Component
+  TrellisChart Component
 
-  ECharts pie chart wrapper with loading states, responsive behavior, and export functionality
+  ECharts small multiple line charts for stratified demographic analysis
 -->
 <template>
-  <div class="pie-chart-container">
+  <div class="trellis-chart-container">
     <!-- Export controls -->
     <div
       v-if="!loading && showExport"
@@ -36,17 +36,17 @@
 <script setup lang="ts">
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import type { PieChartData } from '@/models/report.types'
+import type { TrellisChartData } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'
-import { defaultPieChartOptions, createResizeHandler } from '@/utils/chart-config'
-import ChartExport from './ChartExport.vue'
+import { trellisChartOptions, createResizeHandler } from '@/ui/chart-config'
+import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
 
 /**
  * Props
  */
 const props = withDefaults(
   defineProps<{
-    data: PieChartData[]
+    data: TrellisChartData
     title?: string
     loading?: boolean
     height?: number
@@ -56,9 +56,9 @@ const props = withDefaults(
   {
     title: undefined,
     loading: false,
-    height: 400,
+    height: 600,
     showExport: true,
-    exportFilename: 'pie-chart',
+    exportFilename: 'trellis-chart',
   }
 )
 
@@ -87,10 +87,11 @@ const chartInstance = computed<EChartsType | null>(() => {
  * Computed chart option
  */
 const chartOption = computed(() => {
-  if (!props.data || props.data.length === 0) {
+  if (!props.data || !props.data.series || props.data.series.length === 0) {
     return {}
   }
-  return defaultPieChartOptions(props.data, props.title)
+
+  return trellisChartOptions(props.data, props.title)
 })
 
 /**
@@ -141,7 +142,7 @@ function handleExportError(format: 'png' | 'svg', error: Error) {
 </script>
 
 <style scoped>
-.pie-chart-container {
+.trellis-chart-container {
   width: 100%;
   position: relative;
 }

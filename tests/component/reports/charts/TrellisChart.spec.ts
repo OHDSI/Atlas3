@@ -15,7 +15,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
-import TrellisChart from '@/components/reports/charts/TrellisChart.vue'
+import TrellisChart from '@/components/ui/charts/AtlasTrellisChart.vue'
 import type { TrellisChartData } from '@/models/report.types'
 
 const vuetify = createVuetify({ components, directives })

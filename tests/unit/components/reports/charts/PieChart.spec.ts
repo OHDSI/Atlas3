@@ -7,11 +7,11 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
-import PieChart from '@/components/reports/charts/PieChart.vue'
+import PieChart from '@/components/ui/charts/AtlasPieChart.vue'
 import type { PieChartData } from '@/models/report.types'
 
 // Mock chart config utilities
-vi.mock('@/utils/chart-config', () => ({
+vi.mock('@/ui/chart-config', () => ({
   defaultPieChartOptions: vi.fn((data, title) => ({
     title: { text: title },
     series: [{ type: 'pie', data }]
@@ -74,7 +74,7 @@ describe('PieChart', () => {
   describe('Rendering', () => {
     it('should render the component', () => {
       const wrapper = mountComponent()
-      expect(wrapper.find('.pie-chart-container').exists()).toBe(true)
+      expect(wrapper.find('.atlas-pie-chart').exists()).toBe(true)
     })
 
     it('should render v-chart when not loading', () => {
@@ -233,7 +233,7 @@ describe('PieChart', () => {
       global.dispatchEvent(new Event('resize'))
 
       // Component should still exist
-      expect(wrapper.find('.pie-chart-container').exists()).toBe(true)
+      expect(wrapper.find('.atlas-pie-chart').exists()).toBe(true)
     })
   })
 })

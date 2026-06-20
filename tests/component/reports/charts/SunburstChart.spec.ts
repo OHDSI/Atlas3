@@ -13,7 +13,7 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import SunburstChart, { type SunburstNode } from '@/components/reports/charts/SunburstChart.vue'
+import SunburstChart, { type SunburstNode } from '@/components/ui/charts/AtlasSunburstChart.vue'
 
 const vuetify = createVuetify({ components, directives })
 

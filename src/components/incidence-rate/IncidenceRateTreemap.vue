@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import TreemapChart from '@/components/reports/charts/TreemapChart.vue'
+import TreemapChart from '@/components/ui/charts/AtlasTreemapChart.vue'
 import type { TreemapNode } from '@/models/report.types'
 
 const props = defineProps<{

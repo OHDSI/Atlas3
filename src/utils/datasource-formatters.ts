@@ -15,6 +15,21 @@ import type {
   ReportType,
 } from '@/models/datasource.types'
 
+const DAYS_PER_YEAR = 365.25
+
+/**
+ * Observation x-values arrive from WebAPI as length-of-observation in DAYS.
+ * Matching the original Atlas behaviour, display them in years when the span is
+ * large (> 1000 days ≈ 2.7y); otherwise keep days. `days` must be sorted ascending.
+ */
+function lengthOfObservationAxis(days: number[]): { values: number[]; label: string } {
+  const span = days.length ? (days[days.length - 1] ?? 0) - (days[0] ?? 0) : 0
+  if (span > 1000) {
+    return { values: days.map(d => Math.round((d / DAYS_PER_YEAR) * 100) / 100), label: 'Years' }
+  }
+  return { values: days, label: 'Days' }
+}
+
 /**
  * Transform Dashboard API response to internal format
  */
@@ -43,21 +58,20 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
     xAxisLabel: 'Age',
   }
 
+  const cumulativeSorted = (raw.cumulativeObservation || [])
+    .slice()
+    .sort((a, b) => (a.xLengthOfObservation ?? 0) - (b.xLengthOfObservation ?? 0))
+  const cumulativeAxis = lengthOfObservationAxis(cumulativeSorted.map(c => c.xLengthOfObservation ?? 0))
   const cumulativeObservation: LineChartData = {
-    // Ensure categories/series are ordered by the x value used for the x-axis
-    ...(() => {
-      const sorted = (raw.cumulativeObservation || []).slice().sort((a, b) => (a.xLengthOfObservation ?? 0) - (b.xLengthOfObservation ?? 0))
-      return {
-        categories: sorted.map(c => c.xLengthOfObservation?.toString() || ''),
-        series: [
-          {
-            name: 'Cumulative Observation',
-            data: sorted.map(c => c.yPercentPersons || 0),
-          },
-        ],
-      }
-    })(),
-    xAxisLabel: 'Days',
+    categories: cumulativeSorted.map(c => c.xLengthOfObservation?.toString() || ''),
+    xValues: cumulativeAxis.values,
+    series: [
+      {
+        name: 'Cumulative Observation',
+        data: cumulativeSorted.map(c => c.yPercentPersons || 0),
+      },
+    ],
+    xAxisLabel: cumulativeAxis.label,
     yAxisLabel: 'Percent of Persons',
   }
 
@@ -67,6 +81,8 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
       const sorted = (raw.observedByMonth || []).slice().sort((a, b) => (a.monthYear ?? 0) - (b.monthYear ?? 0))
       return {
         categories: sorted.map(o => o.monthYear?.toString() || ''),
+        monthCodes: sorted.map(o => o.monthYear ?? 0),
+        xAxisType: 'time' as const,
         series: [
           {
             name: 'Observation Count',
@@ -270,6 +286,8 @@ export function transformDataDensityReport(
 
   const totalRecords: import('@/models/datasource.types').MultiLineChartData = {
     categories: totalCategories,
+    xAxisType: 'time',
+    monthCodes: totalMonths,
     series: Array.from(totalSeriesNames).map(name => ({
       name,
       data: totalMonths.map(m => totalLookup.get(`${name}|${m}`) ?? 0),
@@ -296,6 +314,8 @@ export function transformDataDensityReport(
 
   const recordsPerPerson: import('@/models/datasource.types').MultiLineChartData = {
     categories: recCategories,
+    xAxisType: 'time',
+    monthCodes: recMonths,
     series: Array.from(recSeriesNames).map(name => ({
       name,
       data: recMonths.map(m => recLookup.get(`${name}|${m}`) ?? 0),
@@ -513,27 +533,39 @@ export function transformObservationPeriodReport(
   // Mirrors Atlas 2.x: parseObservationLength sets OFFSET=0, INTERVAL_SIZE=stats.intervalSize
   const observationLength: import('@/models/datasource.types').HistogramChartData | undefined =
     raw.observationLength
-      ? {
-          intervalSize: raw.observationLengthStats?.[0]?.intervalSize ?? 1,
-          offset: 0,
-          bins: raw.observationLength
+      ? (() => {
+          const intervalSizeDays = raw.observationLengthStats?.[0]?.intervalSize ?? 1
+          const bins = raw.observationLength
             .map(i => ({
               intervalIndex: i.intervalIndex ?? 0,
               countValue: i.countValue ?? 0,
             }))
-            .sort((a, b) => a.intervalIndex - b.intervalIndex),
-          unit: 'Person Count',
-          seriesName: 'Person Count',
-          xAxisLabel: 'Days',
-        }
+            .sort((a, b) => a.intervalIndex - b.intervalIndex)
+          // x-position of a bin = intervalIndex * intervalSize (days). Show years
+          // when the span is large, scaling the interval so bins land on year ticks.
+          const maxDays = bins.length ? (bins[bins.length - 1]?.intervalIndex ?? 0) * intervalSizeDays : 0
+          const inYears = maxDays > 1000
+          return {
+            intervalSize: inYears ? intervalSizeDays / DAYS_PER_YEAR : intervalSizeDays,
+            offset: 0,
+            bins,
+            unit: 'Person Count',
+            seriesName: 'Person Count',
+            xAxisLabel: inYears ? 'Years' : 'Days',
+          }
+        })()
       : undefined
 
   const cumulativeObservation: import('@/models/datasource.types').MultiLineChartData | undefined =
     raw.cumulativeObservation
       ? (() => {
           const sorted = (raw.cumulativeObservation || []).slice().sort((a, b) => (a.xLengthOfObservation ?? 0) - (b.xLengthOfObservation ?? 0))
+          const axis = lengthOfObservationAxis(sorted.map(i => i.xLengthOfObservation ?? 0))
           return {
             categories: sorted.map(i => i.xLengthOfObservation?.toString() || ''),
+            xAxisType: 'value' as const,
+            xValues: axis.values,
+            xAxisLabel: axis.label,
             series: [
               {
                 name: 'Cumulative %',
@@ -550,6 +582,8 @@ export function transformObservationPeriodReport(
           const sorted = (raw.observedByMonth || []).slice().sort((a, b) => (a.monthYear ?? 0) - (b.monthYear ?? 0))
           return {
             categories: sorted.map(i => i.monthYear?.toString() || ''),
+            xAxisType: 'time' as const,
+            monthCodes: sorted.map(i => i.monthYear ?? 0),
             series: [
               {
                 name: 'Persons',
@@ -637,6 +671,8 @@ export function transformDeathReport(
           const sorted = (raw.prevalenceByMonth || []).slice().sort((a, b) => (a.xCalendarMonth ?? 0) - (b.xCalendarMonth ?? 0))
           return {
             categories: sorted.map(i => i.xCalendarMonth?.toString() || ''),
+            xAxisType: 'time' as const,
+            monthCodes: sorted.map(i => i.xCalendarMonth ?? 0),
             series: [
               {
                 name: 'Prevalence per 1000',

@@ -1,10 +1,10 @@
 <!--
-  BarChart Component
+  BoxPlotChart Component
 
-  ECharts bar chart wrapper with loading states, responsive behavior, and export functionality
+  ECharts box-and-whisker plot for statistical distributions
 -->
 <template>
-  <div class="bar-chart-container">
+  <div class="boxplot-chart-container">
     <!-- Export controls -->
     <div
       v-if="!loading && showExport"
@@ -36,27 +36,29 @@
 <script setup lang="ts">
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import type { BarChartData } from '@/models/report.types'
+import type { BoxPlotData } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'
-import { defaultBarChartOptions, createResizeHandler } from '@/utils/chart-config'
-import ChartExport from './ChartExport.vue'
+import { boxPlotChartOptions, createResizeHandler } from '@/ui/chart-config'
+import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
 
 /**
  * Props
  */
 const props = withDefaults(
   defineProps<{
-    data: BarChartData
+    data: BoxPlotData[]
+    title?: string
     loading?: boolean
     height?: number
     showExport?: boolean
     exportFilename?: string
   }>(),
   {
+    title: undefined,
     loading: false,
     height: 400,
     showExport: true,
-    exportFilename: 'bar-chart',
+    exportFilename: 'boxplot-chart',
   }
 )
 
@@ -85,10 +87,11 @@ const chartInstance = computed<EChartsType | null>(() => {
  * Computed chart option
  */
 const chartOption = computed(() => {
-  if (!props.data || props.data.categories.length === 0) {
+  if (!props.data || props.data.length === 0) {
     return {}
   }
-  return defaultBarChartOptions(props.data)
+
+  return boxPlotChartOptions(props.data, props.title)
 })
 
 /**
@@ -139,7 +142,7 @@ function handleExportError(format: 'png' | 'svg', error: Error) {
 </script>
 
 <style scoped>
-.bar-chart-container {
+.boxplot-chart-container {
   width: 100%;
   position: relative;
 }

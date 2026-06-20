@@ -26,8 +26,8 @@ function fullData(): DrilldownReport {
       { category: 'M', min: 1, p10: 30, p25: 100, median: 365, p75: 730, p90: 1095, max: 3650 },
     ],
     prevalenceByMonth: [
-      { date: '2020-01', value: 10 },
-      { date: '2020-02', value: 15 },
+      { date: '01/2020', value: 10 },
+      { date: '02/2020', value: 15 },
     ],
     prevalenceByGenderAgeYear: {
       categories: ['M', 'F'],
@@ -67,7 +67,7 @@ function createWrapper(props: Partial<{
       stubs: {
         TrellisChart: { name: 'TrellisChart', template: '<div class="trellis-stub" />', props: ['data', 'height'] },
         BoxPlotChart: { name: 'BoxPlotChart', template: '<div class="box-stub" />', props: ['data', 'height'] },
-        LineChart: { name: 'LineChart', template: '<div class="line-stub" />', props: ['data', 'height'] },
+        AtlasLineChart: { name: 'AtlasLineChart', template: '<div class="line-stub" />', props: ['data', 'height', 'xAxisType'] },
         PieChart: { name: 'PieChart', template: '<div class="pie-stub" />', props: ['data', 'height'] },
         BarChart: { name: 'BarChart', template: '<div class="bar-stub" />', props: ['data', 'height'] },
       },
@@ -131,9 +131,9 @@ describe('DrilldownDetails', () => {
       expect(trellis.props('data')).toBeDefined()
     })
 
-    it('renders LineChart when prevalenceByMonth is present', () => {
+    it('renders AtlasLineChart when prevalenceByMonth is present', () => {
       const w = createWrapper()
-      const line = w.findComponent({ name: 'LineChart' })
+      const line = w.findComponent({ name: 'AtlasLineChart' })
       expect(line.exists()).toBe(true)
     })
 
@@ -145,13 +145,15 @@ describe('DrilldownDetails', () => {
   })
 
   describe('formatTimeSeriesData transformation', () => {
-    it('flattens TimeSeriesData[] into LineChartData passed to LineChart', () => {
+    it('converts TimeSeriesData[] into LineChartData with series and monthCodes passed to AtlasLineChart', () => {
       const w = createWrapper()
-      const line = w.findComponent({ name: 'LineChart' })
-      const data = line.props('data') as { xAxis: string[]; yAxis: number[]; seriesName: string }
-      expect(data.xAxis).toEqual(['2020-01', '2020-02'])
-      expect(data.yAxis).toEqual([10, 15])
-      expect(data.seriesName).toBe('Prevalence per 1000 people')
+      const line = w.findComponent({ name: 'AtlasLineChart' })
+      const data = line.props('data') as { monthCodes: (number | string)[]; series: Array<{ name: string; data: number[] }>; yAxisLabel: string }
+      expect(data.series).toHaveLength(1)
+      expect(data.series[0].name).toBe('Prevalence per 1000 people')
+      expect(data.series[0].data).toEqual([10, 15])
+      expect(data.monthCodes).toEqual([202001, 202002])
+      expect(data.yAxisLabel).toBe('Prevalence per 1000 people')
     })
   })
 

@@ -1,10 +1,5 @@
-<!--
-  LineChart Component
-
-  ECharts line chart wrapper with loading states, responsive behavior, and export functionality
--->
 <template>
-  <div class="line-chart-container">
+  <div class="atlas-line-chart">
     <!-- Export controls -->
     <div
       v-if="!loading && showExport"
@@ -34,33 +29,29 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
-import type { LineChartData } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'
-import { defaultLineChartOptions, createResizeHandler } from '@/utils/chart-config'
-import ChartExport from './ChartExport.vue'
+import { AtlasSkeleton } from '@/components/ui'
+import type { LineChartData, ChartXAxisType } from '@/ui/chart-types'
+import { multiLineChartOptions, createResizeHandler } from '@/ui/chart-config'
+import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
 
-/**
- * Props
- */
-const props = withDefaults(
-  defineProps<{
-    data: LineChartData
-    title?: string
-    loading?: boolean
-    height?: number
-    showExport?: boolean
-    exportFilename?: string
-  }>(),
-  {
-    title: undefined,
-    loading: false,
-    height: 400,
-    showExport: true,
-    exportFilename: 'line-chart',
-  }
-)
+interface Props {
+  data: LineChartData
+  loading?: boolean
+  height?: number
+  xAxisType?: ChartXAxisType
+  showExport?: boolean
+  exportFilename?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  loading: false,
+  height: 400,
+  xAxisType: 'category',
+  showExport: true,
+  exportFilename: 'line-chart',
+})
 
 /**
  * Emits
@@ -70,9 +61,6 @@ const emit = defineEmits<{
   'export-error': [format: 'png' | 'svg', error: Error]
 }>()
 
-/**
- * Chart ref
- */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const chartRef = ref<any>(null)
 
@@ -83,37 +71,26 @@ const chartInstance = computed<EChartsType | null>(() => {
   return chartRef.value?.chart as EChartsType | null
 })
 
-/**
- * Computed chart option
- */
 const chartOption = computed(() => {
-  if (!props.data || props.data.xAxis.length === 0) {
-    return {}
-  }
-  return defaultLineChartOptions(props.data, props.title)
+  if (!props.data || props.data.series.length === 0) return {}
+  return multiLineChartOptions({ ...props.data, xAxisType: props.xAxisType })
 })
 
-/**
- * Resize handling
- */
 let resizeHandler: (() => void) | null = null
-
 onMounted(() => {
   if (chartRef.value) {
-    const chartInstance = chartRef.value
-    resizeHandler = createResizeHandler(chartInstance)
+    resizeHandler = createResizeHandler(chartRef.value)
     window.addEventListener('resize', resizeHandler)
   }
 })
-
 onUnmounted(() => {
-  if (resizeHandler) {
-    window.removeEventListener('resize', resizeHandler)
-  }
+  if (resizeHandler) window.removeEventListener('resize', resizeHandler)
 })
 
 /**
- * Watch for data changes and update chart
+ * Watch for data changes and update chart.
+ * Watching props.data deep; xAxisType is effectively static per usage and
+ * already reflected via chartOption computed re-evaluation.
  */
 watch(
   () => props.data,
@@ -141,7 +118,7 @@ function handleExportError(format: 'png' | 'svg', error: Error) {
 </script>
 
 <style scoped>
-.line-chart-container {
+.atlas-line-chart {
   width: 100%;
   position: relative;
 }

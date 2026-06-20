@@ -15,5 +15,10 @@
     "./tokens.css": "./dist/atlas-ui.css",
     "./style.css": "./dist/atlas-ui.css"
   },
-  "peerDependencies": { "vue": "^3.4.0", "vuetify": "^3.5.0" }
+  "peerDependencies": {
+    "vue": "^3.4.0",
+    "vuetify": "^3.5.0",
+    "echarts": "^6.0.0",
+    "vue-echarts": "^8.0.1"
+  }
 }

@@ -7,11 +7,11 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
-import TreemapChart from '@/components/reports/charts/TreemapChart.vue'
+import TreemapChart from '@/components/ui/charts/AtlasTreemapChart.vue'
 import type { TreemapNode } from '@/models/report.types'
 
 // Mock chart config utilities
-vi.mock('@/utils/chart-config', () => ({
+vi.mock('@/ui/chart-config', () => ({
   defaultTreemapOptions: vi.fn((data, title) => ({
     title: { text: title },
     series: [{ type: 'treemap', data, roam: true }]

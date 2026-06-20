@@ -1614,6 +1614,16 @@ describe('report-mapper', () => {
       expect(result[0].median).toBe(50)
     })
 
+    it('mapBoxPlotData reads WebAPI minValue/maxValue (not min/max)', () => {
+      // Real WebAPI payload uses minValue/maxValue (like p25Value/medianValue).
+      // Reading min/max yields 0 and collapses the box (the "max is 0" bug).
+      const result = mapBoxPlotData([
+        { category: 'MALE', minValue: 11438, p25Value: 17556, medianValue: 20972, p75Value: 24703, maxValue: 40005 },
+      ])
+      expect(result[0].min).toBe(11438)
+      expect(result[0].max).toBe(40005)
+    })
+
     it('mapTrellisData applies defaults when fields missing', () => {
       const result = mapTrellisData([
         {}, // all missing

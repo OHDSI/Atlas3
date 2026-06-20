@@ -56,7 +56,7 @@ import { AtlasCol, AtlasRow } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
 import type { PersonReport as PersonReportData } from '@/models/datasource.types'
 import ChartSection from '@/components/datasources/shared/ChartSection.vue'
-import PieChart from '@/components/reports/charts/PieChart.vue'
+import PieChart from '@/components/ui/charts/AtlasPieChart.vue'
 import DashboardAgeChart from '@/components/datasources/charts/DashboardAgeChart.vue'
 
 const { t } = useI18n()

@@ -19,7 +19,7 @@
 import { AtlasSkeleton } from '@/components/ui'
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { MultiLineChartData } from '@/models/datasource.types'
-import { multiLineChartOptions, createResizeHandler } from '@/utils/chart-config'
+import { multiLineChartOptions, createResizeHandler } from '@/ui/chart-config'
 
 interface Props {
   data: MultiLineChartData
@@ -36,7 +36,7 @@ const props = withDefaults(defineProps<Props>(), {
 const chartRef = ref<any>(null)
 
 const chartOption = computed(() => {
-  if (!props.data || props.data.categories.length === 0) return {}
+  if (!props.data || !props.data.series || props.data.series.length === 0) return {}
   return multiLineChartOptions(props.data)
 })
 

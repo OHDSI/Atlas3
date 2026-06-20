@@ -405,6 +405,11 @@ export interface LineChartData {
   xAxis: string[] | number[]
   yAxis: number[]
   seriesName?: string
+  xAxisType?: 'category' | 'value' | 'time'
+  categories?: string[]
+  monthCodes?: (number | string)[]
+  xValues?: number[]
+  xAxisLabel?: string
 }
 
 export interface TreemapNode {
@@ -506,12 +511,14 @@ export interface WebAPIBoxPlotRaw {
   category?: string
   intervalIndex?: number
   min?: number
+  minValue?: number
   p10Value?: number
   p25Value?: number
   medianValue?: number
   p75Value?: number
   p90Value?: number
   max?: number
+  maxValue?: number
   avgValue?: number
 }
 

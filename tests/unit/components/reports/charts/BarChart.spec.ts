@@ -7,11 +7,11 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
-import BarChart from '@/components/reports/charts/BarChart.vue'
+import BarChart from '@/components/ui/charts/AtlasBarChart.vue'
 import type { BarChartData } from '@/models/report.types'
 
 // Mock chart config utilities
-vi.mock('@/utils/chart-config', () => ({
+vi.mock('@/ui/chart-config', () => ({
   defaultBarChartOptions: vi.fn((data) => ({
     xAxis: { type: 'category', data: data.categories },
     yAxis: { type: 'value' },
@@ -74,7 +74,7 @@ describe('BarChart', () => {
   describe('Rendering', () => {
     it('should render the component', () => {
       const wrapper = mountComponent()
-      expect(wrapper.find('.bar-chart-container').exists()).toBe(true)
+      expect(wrapper.find('.atlas-bar-chart').exists()).toBe(true)
     })
 
     it('should render v-chart when not loading', () => {
@@ -285,7 +285,7 @@ describe('BarChart', () => {
 
       global.dispatchEvent(new Event('resize'))
 
-      expect(wrapper.find('.bar-chart-container').exists()).toBe(true)
+      expect(wrapper.find('.atlas-bar-chart').exists()).toBe(true)
     })
   })
 })

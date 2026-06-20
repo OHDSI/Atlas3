@@ -146,6 +146,8 @@ export interface HistogramChartData {
 
 export interface LineChartData {
   categories: string[]
+  monthCodes?: (number | string)[]
+  xValues?: number[]
   series: Array<{
     name: string
     data: number[]
@@ -155,7 +157,11 @@ export interface LineChartData {
 }
 
 export interface MultiLineChartData {
-  categories: string[]
+  categories?: string[]
+  xAxisType?: 'category' | 'value' | 'time'
+  monthCodes?: (number | string)[]
+  xValues?: number[]
+  xAxisLabel?: string
   series: Array<{
     name: string
     data: number[]
@@ -375,6 +381,13 @@ export const HistogramChartDataSchema = z.object({
   xAxisLabel: z.string().optional(),
 })
 
+// NOTE: xAxisType/monthCodes/xValues MUST be listed here. The dashboard report is
+// run through `DashboardReportSchema.safeParse` in the service layer, and Zod strips
+// any keys not declared in the schema — omitting these silently removes the
+// time/value-axis data, breaking axis rendering (and crashing builders that read the
+// stripped arrays). Keep in sync with the LineChartData/MultiLineChartData interfaces.
+const ChartXAxisTypeSchema = z.enum(['category', 'value', 'time'])
+
 export const LineChartDataSchema = z.object({
   categories: z.array(z.string()),
   series: z.array(
@@ -383,18 +396,25 @@ export const LineChartDataSchema = z.object({
       data: z.array(z.number()),
     })
   ),
+  xAxisType: ChartXAxisTypeSchema.optional(),
+  monthCodes: z.array(z.union([z.number(), z.string()])).optional(),
+  xValues: z.array(z.number()).optional(),
   xAxisLabel: z.string().optional(),
   yAxisLabel: z.string().optional(),
 })
 
 export const MultiLineChartDataSchema = z.object({
-  categories: z.array(z.string()),
+  categories: z.array(z.string()).optional(),
   series: z.array(
     z.object({
       name: z.string(),
       data: z.array(z.number()),
     })
   ),
+  xAxisType: ChartXAxisTypeSchema.optional(),
+  monthCodes: z.array(z.union([z.number(), z.string()])).optional(),
+  xValues: z.array(z.number()).optional(),
+  xAxisLabel: z.string().optional(),
 })
 
 export const TreemapNodeSchema: z.ZodType<TreemapNode> = z.lazy(() =>

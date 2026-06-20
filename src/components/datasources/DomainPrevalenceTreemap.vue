@@ -42,7 +42,7 @@
 import { AtlasIcon, AtlasSpacer, AtlasSwitch } from '@/components/ui'
 import { ref, computed } from 'vue'
 import type { TreemapNode } from '@/models/datasource.types'
-import TreemapChart from '@/components/reports/charts/TreemapChart.vue'
+import TreemapChart from '@/components/ui/charts/AtlasTreemapChart.vue'
 import { logger } from '@/utils/logger'
 
 interface Props {

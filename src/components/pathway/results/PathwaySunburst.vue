@@ -9,9 +9,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import SunburstChart from '@/components/reports/charts/SunburstChart.vue'
+import SunburstChart from '@/components/ui/charts/AtlasSunburstChart.vue'
 import { buildPathwayHierarchy } from '@/utils/pathway-hierarchy'
-import type { SunburstNode } from '@/components/reports/charts/SunburstChart.vue'
+import type { SunburstNode } from '@/components/ui/charts/AtlasSunburstChart.vue'
 import type { Pathway, PathwayResults } from '@/models/pathway.types'
 
 const props = defineProps<{

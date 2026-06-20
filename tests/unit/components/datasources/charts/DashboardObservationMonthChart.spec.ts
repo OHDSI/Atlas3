@@ -5,7 +5,7 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import type { LineChartData } from '@/models/datasource.types'
 
-vi.mock('@/utils/chart-config', async (importOriginal) => {
+vi.mock('@/ui/chart-config', async (importOriginal) => {
   const actual = await importOriginal()
   return {
     ...actual,
@@ -17,12 +17,12 @@ vi.mock('@/utils/chart-config', async (importOriginal) => {
   }
 })
 
-let chartConfig: typeof import('@/utils/chart-config')
+let chartConfig: typeof import('@/ui/chart-config')
 let DashboardObservationMonthChart: typeof import('@/components/datasources/charts/DashboardObservationMonthChart.vue').default
 
 beforeAll(async () => {
   vi.resetModules()
-  chartConfig = await import('@/utils/chart-config')
+  chartConfig = await import('@/ui/chart-config')
   DashboardObservationMonthChart = (await import('@/components/datasources/charts/DashboardObservationMonthChart.vue')).default
 })
 

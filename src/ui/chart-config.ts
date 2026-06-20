@@ -8,6 +8,55 @@ import type { EChartsOption } from 'echarts'
 import type { BarChartData, PieChartData, LineChartData, TreemapNode } from '@/models/report.types'
 
 /**
+ * Convert a YYYYMM code (e.g. 200301) to a UTC millisecond timestamp
+ * positioned at the first day of that month. Used for time-axis charts.
+ */
+export function parseYyyymm(code: number | string): number {
+  const s = String(code)
+  const year = Number(s.slice(0, 4))
+  const month = Number(s.slice(-2))
+  return Date.UTC(year, month - 1, 1)
+}
+
+function buildLineXAxis(data: { xAxisType?: string; categories?: string[]; xAxisLabel?: string }) {
+  const type = data.xAxisType ?? 'category'
+  if (type === 'category') {
+    return {
+      type: 'category' as const,
+      boundaryGap: false,
+      data: data.categories ?? [],
+      axisLabel: {
+        rotate: (data.categories?.length ?? 0) > 24 ? 45 : 0,
+        hideOverlap: true,
+        fontSize: 10,
+      },
+    }
+  }
+  return {
+    type: type as 'value' | 'time',
+    name: data.xAxisLabel,
+    nameLocation: 'middle' as const,
+    nameGap: 30,
+    axisLabel: { fontSize: 10 },
+  }
+}
+
+function mapLineSeriesData(
+  data: { xAxisType?: string; monthCodes?: (number | string)[]; xValues?: number[] },
+  values: number[]
+): number[] | [number, number][] {
+  const type = data.xAxisType ?? 'category'
+  if (type === 'category') return values
+  // Guard against missing scalar/time arrays (e.g. stripped by schema validation):
+  // fall back to the point index rather than throwing during chart render.
+  if (type === 'time')
+    return values.map(
+      (v, i) => [data.monthCodes?.[i] != null ? parseYyyymm(data.monthCodes[i]) : i, v] as [number, number]
+    )
+  return values.map((v, i) => [data.xValues?.[i] ?? i, v] as [number, number]) // value
+}
+
+/**
  * Format large numbers using SI notation (K, M, B, T)
  * Examples: 1000 → "1.0k", 3000000 → "3.0M", 1500000000 → "1.5B"
  */
@@ -185,9 +234,18 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
       },
     },
     legend: {
-      orient: 'vertical',
-      left: 'left',
-      top: 'middle',
+      // Horizontal legend along the bottom so long category names (e.g. ethnicity)
+      // never sit on top of the pie. Scrolls + truncates if there are many/long
+      // entries; the full name shows on legend hover.
+      orient: 'horizontal',
+      bottom: 0,
+      left: 'center',
+      type: 'scroll',
+      textStyle: {
+        overflow: 'truncate',
+        width: 120,
+      },
+      tooltip: { show: true },
       data: data.map(item => item.name),
     },
     series: [
@@ -195,16 +253,21 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
         name: title || 'Distribution',
         type: 'pie',
         radius: ['40%', '70%'],
-        center: ['60%', '50%'],
+        center: ['50%', '45%'],
         avoidLabelOverlap: true,
         itemStyle: {
           borderRadius: 10,
           borderColor: '#fff',
           borderWidth: 2,
         },
+        // Percentage drawn inside the ring (no leader lines that overflow the card
+        // edge); category names live in the legend below.
         label: {
           show: true,
-          formatter: '{b}: {d}%',
+          position: 'inside',
+          formatter: '{d}%',
+          color: '#fff',
+          fontSize: 11,
         },
         emphasis: {
           label: {
@@ -264,15 +327,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
       top: title ? 80 : 56,
       containLabel: true,
     },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: data.xAxis,
-      axisLabel: {
-        rotate: data.xAxis.length > 20 ? 45 : data.xAxis.length > 12 ? 30 : 0,
-        hideOverlap: true,
-      },
-    },
+    xAxis: buildLineXAxis({ ...data, categories: data.categories ?? (data.xAxis as string[]) }),
     yAxis: {
       type: 'value',
       axisLabel: {
@@ -284,7 +339,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
         name: data.seriesName || 'Value',
         type: 'line',
         smooth: true,
-        data: data.yAxis,
+        data: mapLineSeriesData(data, data.yAxis),
         itemStyle: {
           color: CHART_COLORS[0],
         },
@@ -606,6 +661,7 @@ import type {
   LineChartData as DatasourceLineChartData,
   MultiLineChartData as DatasourceMultiLineChartData,
 } from '@/models/datasource.types'
+import type { LineChartData as UILineChartData } from '@/ui/chart-types'
 
 import { logger } from '@/utils/logger'
 
@@ -789,10 +845,9 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
-        const paramsArray = Array.isArray(params) ? params : [params]
-        const param = paramsArray[0] as { name: string; value: number | string }
-        const value = typeof param.value === 'number' ? param.value.toFixed(1) : param.value
-        return `<strong>${data.xAxisLabel || 'Year'}: ${param.name}</strong><br/>${data.yAxisLabel || 'Percentage'}: ${value}%`
+        const arr = Array.isArray(params) ? params : [params]
+        const p = arr[0] as { value: [number, number] }
+        return `<strong>${data.xAxisLabel || 'Years'}: ${p.value[0]}</strong><br/>${data.yAxisLabel || 'Percentage'}: ${p.value[1].toFixed(1)}%`
       },
     },
     grid: {
@@ -803,15 +858,11 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       containLabel: true,
     },
     xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: data.categories,
-      name: data.xAxisLabel || 'Year',
+      type: 'value',
+      name: data.xAxisLabel || 'Years',
       nameLocation: 'middle',
       nameGap: 30,
-      axisLabel: {
-        fontSize: 11,
-      },
+      axisLabel: { fontSize: 11 },
     },
     yAxis: {
       type: 'value',
@@ -826,7 +877,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       name: s.name,
       type: 'line',
       smooth: true,
-      data: s.data,
+      data: s.data.map((v: number, i: number) => [data.xValues?.[i] ?? i, v]),
       symbol: 'circle',
       symbolSize: 6,
       itemStyle: {
@@ -867,10 +918,11 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
-        const paramsArray = Array.isArray(params) ? params : [params]
-        const param = paramsArray[0] as { name: string; value: number }
-        const value = formatSINumber(param.value)
-        return `<strong>${param.name}</strong><br/>${data.yAxisLabel || 'Observations'}: ${value}`
+        const arr = Array.isArray(params) ? params : [params]
+        const p = arr[0] as { value: [number, number] }
+        const d = new Date(p.value[0])
+        const label = `${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`
+        return `<strong>${label}</strong><br/>${data.yAxisLabel || 'Observations'}: ${formatSINumber(p.value[1])}`
       },
     },
     grid: {
@@ -881,17 +933,11 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       containLabel: true,
     },
     xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: data.categories,
+      type: 'time',
       name: data.xAxisLabel || 'Month',
       nameLocation: 'middle',
       nameGap: 40,
-      axisLabel: {
-        rotate: data.categories.length > 24 ? 45 : 0,
-        fontSize: 10,
-        interval: Math.max(0, Math.floor(data.categories.length / 12) - 1),
-      },
+      axisLabel: { fontSize: 10 },
     },
     yAxis: {
       type: 'value',
@@ -920,21 +966,15 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       name: s.name,
       type: 'line',
       smooth: false,
-      data: s.data,
+      data: s.data.map((v: number, i: number) => [
+        data.monthCodes?.[i] != null ? parseYyyymm(data.monthCodes[i] as string | number) : i,
+        v,
+      ]),
       symbol: 'none',
       sampling: 'lttb',
-      itemStyle: {
-        color: CHART_COLORS[index % CHART_COLORS.length],
-      },
-      lineStyle: {
-        width: 2,
-      },
-      emphasis: {
-        focus: 'series',
-        lineStyle: {
-          width: 3,
-        },
-      },
+      itemStyle: { color: CHART_COLORS[index % CHART_COLORS.length] },
+      lineStyle: { width: 2 },
+      emphasis: { focus: 'series', lineStyle: { width: 3 } },
     })),
   }
 }
@@ -942,7 +982,7 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
 /**
  * Multi-Line Chart Configuration for Data Density Reports
  */
-export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChartsOption {
+export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLineChartData): EChartsOption {
   return {
     tooltip: {
       trigger: 'axis',
@@ -975,15 +1015,7 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
       top: '8%',
       containLabel: true,
     },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: data.categories,
-      axisLabel: {
-        rotate: data.categories.length > 24 ? 45 : 0,
-        fontSize: 10,
-      },
-    },
+    xAxis: buildLineXAxis(data),
     yAxis: {
       type: 'value',
       axisLabel: {
@@ -994,7 +1026,7 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
       name: s.name,
       type: 'line',
       smooth: true,
-      data: s.data,
+      data: mapLineSeriesData(data, s.data),
       symbol: 'circle',
       symbolSize: 4,
       itemStyle: {

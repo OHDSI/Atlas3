@@ -19,7 +19,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { nextTick } from 'vue'
-import TreemapChart from '@/components/reports/charts/TreemapChart.vue'
+import TreemapChart from '@/components/ui/charts/AtlasTreemapChart.vue'
 import type { TreemapNode } from '@/models/report.types'
 
 const vuetify = createVuetify({

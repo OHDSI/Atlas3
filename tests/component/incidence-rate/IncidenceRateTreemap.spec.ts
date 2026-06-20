@@ -27,7 +27,7 @@ describe('IncidenceRateTreemap', () => {
       props: { treemapJson: json },
       global: { plugins: [vuetify], stubs: { 'v-chart': true } },
     })
-    expect(w.findComponent({ name: 'TreemapChart' }).exists()).toBe(true)
+    expect(w.findComponent({ name: 'AtlasTreemapChart' }).exists()).toBe(true)
   })
 
   it('handles empty input gracefully', () => {
