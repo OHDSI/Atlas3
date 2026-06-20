@@ -878,10 +878,11 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
     tooltip: {
       trigger: 'axis',
       formatter: (params: unknown) => {
-        const paramsArray = Array.isArray(params) ? params : [params]
-        const param = paramsArray[0] as { name: string; value: number }
-        const value = formatSINumber(param.value)
-        return `<strong>${param.name}</strong><br/>${data.yAxisLabel || 'Observations'}: ${value}`
+        const arr = Array.isArray(params) ? params : [params]
+        const p = arr[0] as { value: [number, number] }
+        const d = new Date(p.value[0])
+        const label = `${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`
+        return `<strong>${label}</strong><br/>${data.yAxisLabel || 'Observations'}: ${formatSINumber(p.value[1])}`
       },
     },
     grid: {
@@ -892,17 +893,11 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       containLabel: true,
     },
     xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: data.categories,
+      type: 'time',
       name: data.xAxisLabel || 'Month',
       nameLocation: 'middle',
       nameGap: 40,
-      axisLabel: {
-        rotate: data.categories.length > 24 ? 45 : 0,
-        fontSize: 10,
-        interval: Math.max(0, Math.floor(data.categories.length / 12) - 1),
-      },
+      axisLabel: { fontSize: 10 },
     },
     yAxis: {
       type: 'value',
@@ -931,21 +926,12 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
       name: s.name,
       type: 'line',
       smooth: false,
-      data: s.data,
+      data: s.data.map((v: number, i: number) => [parseYyyymm(data.monthCodes![i] as string | number), v]),
       symbol: 'none',
       sampling: 'lttb',
-      itemStyle: {
-        color: CHART_COLORS[index % CHART_COLORS.length],
-      },
-      lineStyle: {
-        width: 2,
-      },
-      emphasis: {
-        focus: 'series',
-        lineStyle: {
-          width: 3,
-        },
-      },
+      itemStyle: { color: CHART_COLORS[index % CHART_COLORS.length] },
+      lineStyle: { width: 2 },
+      emphasis: { focus: 'series', lineStyle: { width: 3 } },
     })),
   }
 }
