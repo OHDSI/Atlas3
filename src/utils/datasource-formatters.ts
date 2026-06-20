@@ -69,6 +69,7 @@ export function transformDashboardReport(raw: DashboardAPIResponse): DashboardRe
       return {
         categories: sorted.map(o => o.monthYear?.toString() || ''),
         monthCodes: sorted.map(o => o.monthYear ?? 0),
+        xAxisType: 'time' as const,
         series: [
           {
             name: 'Observation Count',
