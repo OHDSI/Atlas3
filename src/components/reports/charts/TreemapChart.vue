@@ -41,7 +41,7 @@ import type { TreemapNode } from '@/models/report.types'
 import type { EChartsType } from 'echarts/core'
 import type { TreemapSeriesOption } from 'echarts/charts'
 import { defaultTreemapOptions, createResizeHandler } from '@/utils/chart-config'
-import ChartExport from './ChartExport.vue'
+import ChartExport from '@/components/ui/charts/AtlasChartExport.vue'
 
 /**
  * Props
