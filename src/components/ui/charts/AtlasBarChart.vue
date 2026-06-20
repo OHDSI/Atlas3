@@ -1,10 +1,6 @@
 <template>
-  <div class="atlas-pie-chart">
-    <AtlasSkeleton
-      v-if="loading"
-      type="image"
-      :height="height"
-    />
+  <div class="atlas-bar-chart">
+    <AtlasSkeleton v-if="loading" type="image" :height="height" />
     <v-chart
       v-else
       ref="chartRef"
@@ -18,26 +14,22 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { AtlasSkeleton } from '@/components/ui'
-import type { PieChartData } from '@/ui/chart-types'
-import { defaultPieChartOptions, createResizeHandler } from '@/ui/chart-config'
+import type { BarChartData } from '@/models/report.types'
+import { defaultBarChartOptions, createResizeHandler } from '@/ui/chart-config'
 
 interface Props {
-  data: PieChartData[]
-  title?: string
+  data: BarChartData
   loading?: boolean
   height?: number
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  loading: false,
-  height: 300,
-})
+const props = withDefaults(defineProps<Props>(), { loading: false, height: 300 })
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const chartRef = ref<any>(null)
 const chartOption = computed(() => {
-  if (!props.data || props.data.length === 0) return {}
-  return defaultPieChartOptions(props.data, props.title)
+  if (!props.data || props.data.categories.length === 0) return {}
+  return defaultBarChartOptions(props.data)
 })
 
 let resizeHandler: (() => void) | null = null
@@ -53,5 +45,5 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.atlas-pie-chart { width: 100%; }
+.atlas-bar-chart { width: 100%; }
 </style>

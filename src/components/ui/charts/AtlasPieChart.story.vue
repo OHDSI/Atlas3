@@ -7,9 +7,15 @@ const data = [
 </script>
 
 <template>
-  <Story title="Charts/AtlasPieChart" group="charts">
+  <Story
+    title="Charts/AtlasPieChart"
+    group="charts"
+  >
     <Variant title="default">
-      <AtlasPieChart :data="data" title="Gender" />
+      <AtlasPieChart
+        :data="data"
+        title="Gender"
+      />
     </Variant>
   </Story>
 </template>
