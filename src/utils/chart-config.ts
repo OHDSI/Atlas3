@@ -592,6 +592,10 @@ const ENCODE_X_START = 0
 const ENCODE_X_END = 1
 const ENCODE_Y_VALUE = 2
 
+// Fraction of each bin's width left empty as the gap between bars, matching the
+// category gap a normal ECharts bar chart leaves between columns.
+const HISTOGRAM_BAR_GAP_RATIO = 0.2
+
 // ============================================================================
 // Dashboard-specific Chart Configurations
 // ============================================================================
@@ -747,12 +751,17 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
           const [xEndPx] = api.coord([xEnd, yValue]) as [number, number]
           const [, yBasePx] = api.coord([xStart, 0]) as [number, number]
 
+          // Leave a gap between bars by shrinking the rect within its bin and
+          // centring it, so adjacent columns don't touch.
+          const fullWidthPx = xEndPx - xStartPx
+          const gapPx = fullWidthPx * HISTOGRAM_BAR_GAP_RATIO
+
           return {
             type: 'rect',
             shape: {
-              x: xStartPx,
+              x: xStartPx + gapPx / 2,
               y: yTopPx,
-              width: Math.max(0.5, xEndPx - xStartPx),
+              width: Math.max(0.5, fullWidthPx - gapPx),
               height: Math.max(0, yBasePx - yTopPx),
             },
             style: {

@@ -851,12 +851,14 @@ describe('chart-config', () => {
         const [xEndPx] = coord([xEnd, y])
         const [, yBasePx] = coord([xStart, 0])
 
-        const expectedWidth = Math.max(0.5, xEndPx - xStartPx)
+        // Bars are inset by a 20% gap and centred within their bin.
+        const gap = (xEndPx - xStartPx) * 0.2
+        const expectedWidth = Math.max(0.5, xEndPx - xStartPx - gap)
         const expectedHeight = Math.max(0, yBasePx - yTopPx)
 
         expect(result.type).toBe('rect')
         expect(result.shape).toBeDefined()
-        expect(result.shape.x).toBe(xStartPx)
+        expect(result.shape.x).toBe(xStartPx + gap / 2)
         expect(result.shape.y).toBe(yTopPx)
         expect(result.shape.width).toBe(expectedWidth)
         expect(result.shape.height).toBe(expectedHeight)
@@ -891,14 +893,15 @@ describe('chart-config', () => {
 
       const rawWidth = xEndPx - xStartPx
       const rawHeight = yBasePx - yTopPx
+      const gap = rawWidth * 0.2
 
       // Ensure this is an unclamped case
       expect(rawWidth).toBeGreaterThan(0.5)
       expect(rawHeight).toBeGreaterThan(0)
 
-      expect(res.shape.x).toBe(xStartPx)
+      expect(res.shape.x).toBe(xStartPx + gap / 2)
       expect(res.shape.y).toBe(yTopPx)
-      expect(res.shape.width).toBe(rawWidth)
+      expect(res.shape.width).toBe(rawWidth - gap)
       expect(res.shape.height).toBe(rawHeight)
     })
 
@@ -925,11 +928,12 @@ describe('chart-config', () => {
       const [, yBasePx] = coord([dp[0], 0])
       const rawWidth = xEndPx - xStartPx
       const rawHeight = yBasePx - yTopPx
+      const gap = rawWidth * 0.2
 
       expect(rawWidth).toBeLessThan(0.5)
       expect(rawHeight).toBe(0)
 
-      expect(res.shape.x).toBe(xStartPx)
+      expect(res.shape.x).toBe(xStartPx + gap / 2)
       expect(res.shape.y).toBe(yTopPx)
       expect(res.shape.width).toBe(0.5)
       expect(res.shape.height).toBe(0)
