@@ -405,6 +405,11 @@ export interface LineChartData {
   xAxis: string[] | number[]
   yAxis: number[]
   seriesName?: string
+  xAxisType?: 'category' | 'value' | 'time'
+  categories?: string[]
+  monthCodes?: (number | string)[]
+  xValues?: number[]
+  xAxisLabel?: string
 }
 
 export interface TreemapNode {

@@ -40,7 +40,7 @@
     </AtlasRow>
 
     <!-- Prevalence by Month -->
-    <AtlasRow v-if="data.prevalenceByMonth && data.prevalenceByMonth.categories.length > 0">
+    <AtlasRow v-if="data.prevalenceByMonth && (data.prevalenceByMonth.categories ?? []).length > 0">
       <AtlasCol cols="12">
         <ChartSection
           :title="

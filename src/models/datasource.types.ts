@@ -157,7 +157,11 @@ export interface LineChartData {
 }
 
 export interface MultiLineChartData {
-  categories: string[]
+  categories?: string[]
+  xAxisType?: 'category' | 'value' | 'time'
+  monthCodes?: (number | string)[]
+  xValues?: number[]
+  xAxisLabel?: string
   series: Array<{
     name: string
     data: number[]

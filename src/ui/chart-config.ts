@@ -18,6 +18,24 @@ export function parseYyyymm(code: number | string): number {
   return Date.UTC(year, month - 1, 1)
 }
 
+function buildLineXAxis(data: { xAxisType?: string; categories?: string[]; xAxisLabel?: string }) {
+  const type = data.xAxisType ?? 'category'
+  if (type === 'category') {
+    return { type: 'category' as const, boundaryGap: false, data: data.categories ?? [] }
+  }
+  return { type: type as 'value' | 'time', name: data.xAxisLabel }
+}
+
+function mapLineSeriesData(
+  data: { xAxisType?: string; monthCodes?: (number | string)[]; xValues?: number[] },
+  values: number[]
+): number[] | [number, number][] {
+  const type = data.xAxisType ?? 'category'
+  if (type === 'category') return values
+  if (type === 'time') return values.map((v, i) => [parseYyyymm(data.monthCodes![i]!), v] as [number, number])
+  return values.map((v, i) => [data.xValues![i]!, v] as [number, number]) // value
+}
+
 /**
  * Format large numbers using SI notation (K, M, B, T)
  * Examples: 1000 → "1.0k", 3000000 → "3.0M", 1500000000 → "1.5B"
@@ -275,15 +293,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
       top: title ? 80 : 56,
       containLabel: true,
     },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: data.xAxis,
-      axisLabel: {
-        rotate: data.xAxis.length > 20 ? 45 : data.xAxis.length > 12 ? 30 : 0,
-        hideOverlap: true,
-      },
-    },
+    xAxis: buildLineXAxis({ ...data, categories: data.categories ?? (data.xAxis as string[]) }),
     yAxis: {
       type: 'value',
       axisLabel: {
@@ -295,7 +305,7 @@ export function defaultLineChartOptions(data: LineChartData, title?: string): EC
         name: data.seriesName || 'Value',
         type: 'line',
         smooth: true,
-        data: data.yAxis,
+        data: mapLineSeriesData(data, data.yAxis),
         itemStyle: {
           color: CHART_COLORS[0],
         },
@@ -967,15 +977,7 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
       top: '8%',
       containLabel: true,
     },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: data.categories,
-      axisLabel: {
-        rotate: data.categories.length > 24 ? 45 : 0,
-        fontSize: 10,
-      },
-    },
+    xAxis: buildLineXAxis(data),
     yAxis: {
       type: 'value',
       axisLabel: {
@@ -986,7 +988,7 @@ export function multiLineChartOptions(data: DatasourceMultiLineChartData): EChar
       name: s.name,
       type: 'line',
       smooth: true,
-      data: s.data,
+      data: mapLineSeriesData(data, s.data),
       symbol: 'circle',
       symbolSize: 4,
       itemStyle: {

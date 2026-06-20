@@ -54,3 +54,29 @@ describe('dashboardCumulativeLineOptions', () => {
     expect(opt.series[0].data).toEqual([[0, 100], [1, 80], [2, 60]])
   })
 })
+
+import { multiLineChartOptions } from '@/ui/chart-config'
+
+describe('multiLineChartOptions xAxisType', () => {
+  it('defaults to category axis (back-compat)', () => {
+    const opt = multiLineChartOptions({
+      categories: ['a', 'b'],
+      series: [{ name: 's', data: [1, 2] }],
+    }) as any
+    expect(opt.xAxis.type).toBe('category')
+    expect(opt.series[0].data).toEqual([1, 2])
+  })
+
+  it('uses time axis with [timestamp, value] pairs when xAxisType=time', () => {
+    const opt = multiLineChartOptions({
+      xAxisType: 'time',
+      monthCodes: [200301, 200302],
+      series: [{ name: 's', data: [1, 2] }],
+    }) as any
+    expect(opt.xAxis.type).toBe('time')
+    expect(opt.series[0].data).toEqual([
+      [Date.UTC(2003, 0, 1), 1],
+      [Date.UTC(2003, 1, 1), 2],
+    ])
+  })
+})
