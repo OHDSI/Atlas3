@@ -60,22 +60,22 @@ function primeComparable() {
 describe('CompareTab — mode toggle (#102)', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('renders Expression / Included / Source mode buttons', () => {
+  it('renders Expression / Included mode buttons and hides Source for now', () => {
     const wrapper = mountComponent()
     expect(wrapper.find('[data-testid="mode-expression"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="mode-included"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="mode-source"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="mode-source"]').exists()).toBe(false)
   })
 
-  it('switching to Source calls loadComparisonForMode with source', async () => {
+  it('switching to Expression calls loadComparisonForMode with expression', async () => {
     const wrapper = mountComponent()
     const store = primeComparable()
     const spy = vi.spyOn(store, 'loadComparisonForMode').mockResolvedValue()
     await wrapper.vm.$nextTick()
 
-    await wrapper.find('[data-testid="mode-source"]').trigger('click')
+    await wrapper.find('[data-testid="mode-expression"]').trigger('click')
 
-    expect(spy).toHaveBeenCalledWith('SRC', 2, 'source')
+    expect(spy).toHaveBeenCalledWith('SRC', 2, 'expression')
   })
 
   it('relabels the code/vocabulary columns in Source mode', async () => {

@@ -292,14 +292,18 @@ async function preloadOther(id: number) {
   }
 }
 
-const modes = computed(
-  () =>
-    [
-      { value: 'expression', label: t('cs.browser.compare.modeExpression', 'Expression concepts').value },
-      { value: 'included', label: t('cs.browser.compare.modeIncluded', 'Included concepts').value },
-      { value: 'source', label: t('cs.browser.compare.modeSource', 'Source concepts').value },
-    ] as const
-)
+// Source comparison is implemented in the store but hidden for now; flip to true
+// to re-expose the Source toggle.
+const SOURCE_MODE_ENABLED = false
+
+const modes = computed(() => {
+  const all = [
+    { value: 'expression', label: t('cs.browser.compare.modeExpression', 'Expression concepts').value },
+    { value: 'included', label: t('cs.browser.compare.modeIncluded', 'Included concepts').value },
+    { value: 'source', label: t('cs.browser.compare.modeSource', 'Source concepts').value },
+  ] as const
+  return SOURCE_MODE_ENABLED ? all : all.filter(m => m.value !== 'source')
+})
 
 function onModeChange(mode: ComparisonMode) {
   store.comparisonMode = mode
