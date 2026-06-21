@@ -178,6 +178,30 @@
           />
         </div>
 
+        <!-- Per-criteria option switches (wrapped criteria only). These map to
+             CIRCE Criteria.IgnoreObservationPeriod / RestrictVisit and are
+             irrelevant to entry events, so they're gated on showCriteriaOptions. -->
+        <div
+          v-if="showCriteriaOptions"
+          class="criteria-options mt-3"
+          data-testid="criteria-options"
+        >
+          <AtlasSwitch
+            :model-value="event.ignoreObservationPeriod ?? false"
+            :label="t('components.criteriaGroup.criteriaGroupText_2', 'allow events from outside observation period').value"
+            density="compact"
+            hide-details
+            @update:model-value="(v) => setIgnoreObservationPeriod(!!v)"
+          />
+          <AtlasSwitch
+            :model-value="event.restrictVisit ?? false"
+            :label="t('components.criteriaGroup.criteriaGroupText_1', 'restrict to the same visit occurrence').value"
+            density="compact"
+            hide-details
+            @update:model-value="(v) => setRestrictVisit(!!v)"
+          />
+        </div>
+
         <!-- Nested criteria (recursive) -->
         <div
           v-if="event.nestedCriteria"
@@ -197,7 +221,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
@@ -231,6 +255,12 @@ interface Props {
   showCardinality?: boolean
   /** Show the temporal-window control (inclusion / nested criteria). */
   showTemporal?: boolean
+  /**
+   * Show the per-criteria option switches (allow events outside observation
+   * period / restrict to same visit as index). These map to CIRCE wrapped-
+   * criteria flags and only apply to additional/inclusion/nested criteria.
+   */
+  showCriteriaOptions?: boolean
   /** Nesting depth, forwarded to recursive NestedCriteriaEditor. */
   depth?: number
 }
@@ -239,6 +269,7 @@ const props = withDefaults(defineProps<Props>(), {
   section: 'initialEvents',
   showCardinality: false,
   showTemporal: false,
+  showCriteriaOptions: false,
   depth: 0,
 })
 
@@ -327,6 +358,14 @@ function removeTemporalWindow() {
   const updated = { ...props.event }
   delete updated.temporalWindow
   emit('update', updated)
+}
+
+// ── Criteria options (wrapped-criteria flags) ─────────────────────────────
+function setIgnoreObservationPeriod(value: boolean) {
+  emit('update', { ...props.event, ignoreObservationPeriod: value })
+}
+function setRestrictVisit(value: boolean) {
+  emit('update', { ...props.event, restrictVisit: value })
 }
 
 // ── Concept set / attributes / nested ─────────────────────────────────────

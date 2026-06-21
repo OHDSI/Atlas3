@@ -175,6 +175,7 @@
                     section="criteriaGroup"
                     show-cardinality
                     show-temporal
+                    show-criteria-options
                     @update="onEventUpdate(index, $event)"
                     @remove="removeEvent(index)"
                     @select-concept-set="selectConceptSetForEvent(index)"
@@ -323,6 +324,10 @@ function addEvent(criteriaType: CriteriaType) {
     criteriaType,
     conceptSet: { id: null as unknown as number, name: 'Select concept set...' },
     attributes: [],
+    // Allow events outside the observation period by default (discussion #110):
+    // the common correlated-criteria use cases (exclusions, complications,
+    // post-index drugs) don't require the event to share an observation period.
+    ignoreObservationPeriod: true,
   }
 
   localGroup.value.events.push(newEvent)

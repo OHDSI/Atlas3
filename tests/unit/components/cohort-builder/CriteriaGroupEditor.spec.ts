@@ -247,6 +247,18 @@ describe('CriteriaGroupEditor', () => {
       expect(updatedGroup.events[0].criteriaType).toBe('ConditionOccurrence')
     })
 
+    it('defaults ignoreObservationPeriod to true for a newly added criteria', async () => {
+      const wrapper = mountComponent()
+      const vm = wrapper.vm as any
+
+      vm.addEvent('ConditionOccurrence')
+      await wrapper.vm.$nextTick()
+
+      const emitted = wrapper.emitted('update:modelValue') as any[]
+      const updatedGroup = emitted[emitted.length - 1][0] as CriteriaGroup
+      expect(updatedGroup.events[0].ignoreObservationPeriod).toBe(true)
+    })
+
     it('should remove event when remove button is clicked', async () => {
       const wrapper = mountComponent({ modelValue: createMockCriteriaGroupWithEvents() })
       const vm = wrapper.vm as any

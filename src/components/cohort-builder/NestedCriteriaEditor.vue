@@ -183,6 +183,7 @@
               section="criteriaGroup"
               show-cardinality
               show-temporal
+              show-criteria-options
               :depth="depth"
               @update="onEventUpdate(index, $event)"
               @remove="removeCriteria(index)"
@@ -321,6 +322,8 @@ function addCriteria(criteriaType: CriteriaType) {
       name: t('components.conceptAddBox.selectConceptSet', 'Select concept set...').value,
     },
     attributes: [],
+    // Allow events outside the observation period by default (discussion #110).
+    ignoreObservationPeriod: true,
   }
 
   localNested.value.events.push(newEvent)

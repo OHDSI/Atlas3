@@ -84,6 +84,15 @@ describe('EntryEventsList', () => {
       expect(wrapper.find('.vertical-label').exists()).toBe(false)
     })
 
+    it('renders a greyed, non-interactive ANY match-type label (#100)', () => {
+      const wrapper = mountComponent()
+      const label = wrapper.find('[data-testid="entry-any-label"]')
+      expect(label.exists()).toBe(true)
+      expect(label.text()).toMatch(/any/i)
+      // Non-interactive: it communicates the implicit OR, it is not a control.
+      expect(label.attributes('aria-disabled')).toBe('true')
+    })
+
     it('should render add entry event button', () => {
       const wrapper = mountComponent()
       const addBtn = wrapper.find('[data-testid="add-entry-event"]')

@@ -1,8 +1,19 @@
 <template>
-  <!-- Vertical "ALL" sticker retired (matches the inclusion-rules
-       panel). Section header toggle is the source of truth. -->
+  <!-- Entry events are an implicit OR. We show a greyed, non-interactive "ANY"
+       label (discussion #100) so the match semantics are visible without
+       offering a control that doesn't apply to entry events — unlike inclusion
+       rules, where the equivalent label is clickable. -->
   <div class="events-container">
-    <div class="events-container__body">
+    <div class="events-container__layout">
+      <div
+        class="entry-any-label"
+        data-testid="entry-any-label"
+        aria-disabled="true"
+        :title="t('components.cohortExpressionEditor.entryEventsAnyHint', 'Entry events are matched with ANY (or)').value"
+      >
+        {{ t('options.any', 'ANY') }}
+      </div>
+      <div class="events-container__body">
       <!-- Toolbar: add-criteria menu + observation-period pill -->
       <div class="add-filter-wrapper">
         <AtlasMenu>
@@ -127,6 +138,7 @@
         "
         @edit-concept-set="$emit('edit-concept-set', $event)"
       />
+      </div>
     </div>
   </div>
 </template>
@@ -213,9 +225,36 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   background: rgb(var(--v-theme-surface));
 }
 
+.events-container__layout {
+  display: flex;
+  align-items: stretch;
+}
+
 .events-container__body {
   flex: 1;
+  min-width: 0;
   padding: 12px 20px 16px;
+}
+
+/* Greyed, non-interactive "ANY" label (discussion #100). Mirrors the
+   inclusion-rule vertical match-type label but neutral and not clickable —
+   entry events are always an implicit OR. */
+.entry-any-label {
+  position: relative;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: sideways-lr;
+  text-orientation: sideways;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  background: rgb(var(--v-theme-surface-variant), 0.5);
+  border-right: 1px solid rgb(var(--v-theme-outline-variant));
+  user-select: none;
+  cursor: default;
 }
 
 .add-filter-wrapper {

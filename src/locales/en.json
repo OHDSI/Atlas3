@@ -452,6 +452,7 @@
       "continuousObservationBefore": "Days before",
       "continuousObservationAfter": "Days after",
       "continuousObservationHelp": "People without this much continuous observation around the index date are excluded from the cohort.",
+      "entryEventsAnyHint": "Entry events are matched with ANY (or)",
       "cohortErasText_1": "Specify era collapse gap size:",
       "cohortErasText_2": "Left censor cohort start dates to",
       "cohortErasText_2_1": " ",

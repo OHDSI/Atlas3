@@ -344,6 +344,34 @@ describe('CriteriaEventCard', () => {
     })
   })
 
+  describe('criteria options (allow outside observation period / restrict visit)', () => {
+    it('hides the options row by default and shows it when showCriteriaOptions is set', () => {
+      expect(mountComponent().find('[data-testid="criteria-options"]').exists()).toBe(false)
+      const withOptions = mountComponent(createMockEvent(), { showCriteriaOptions: true })
+      expect(withOptions.find('[data-testid="criteria-options"]').exists()).toBe(true)
+    })
+
+    it('emits update toggling ignoreObservationPeriod', async () => {
+      const wrapper = mountComponent(createMockEvent({ ignoreObservationPeriod: false }), {
+        showCriteriaOptions: true,
+      })
+      await (wrapper.vm as unknown as { setIgnoreObservationPeriod: (v: boolean) => void })
+        .setIgnoreObservationPeriod(true)
+      const emitted = wrapper.emitted('update')![0][0] as CohortEvent
+      expect(emitted.ignoreObservationPeriod).toBe(true)
+    })
+
+    it('emits update toggling restrictVisit', async () => {
+      const wrapper = mountComponent(createMockEvent({ restrictVisit: false }), {
+        showCriteriaOptions: true,
+      })
+      await (wrapper.vm as unknown as { setRestrictVisit: (v: boolean) => void })
+        .setRestrictVisit(true)
+      const emitted = wrapper.emitted('update')![0][0] as CohortEvent
+      expect(emitted.restrictVisit).toBe(true)
+    })
+  })
+
   describe('Event Type Options', () => {
     it('should compute event type label', () => {
       const event = createMockEvent({ criteriaType: 'ConditionOccurrence' })
