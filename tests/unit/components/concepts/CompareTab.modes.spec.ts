@@ -166,6 +166,22 @@ describe('CompareTab — mode toggle (#102)', () => {
     expect(store.comparisonOtherSet?.id).toBe(3)
   })
 
+  it('surfaces an error (and leaves the chip empty) when the other set fails to load', async () => {
+    const wrapper = mountComponent()
+    const store = primeComparable()
+    store.comparisonOtherSet = null
+    getConceptSetByIdMock.mockRejectedValue(
+      new Error('HTTP 400: Current data source does not contain required concepts (443238,201820)')
+    )
+    ;(wrapper.vm as unknown as { onOtherSelected: (id: number) => void }).onOtherSelected(3)
+    await flushPromises()
+
+    expect(store.comparisonOtherSet).toBeNull()
+    expect(store.comparisonError).toBeTruthy()
+    expect(store.comparisonError).toContain('required concepts')
+    expect(store.loadingComparison).toBe(false)
+  })
+
   it('includes the mode in the export filename', async () => {
     downloadCsvMock.mockClear()
     const wrapper = mountComponent()

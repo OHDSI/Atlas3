@@ -283,10 +283,17 @@ function onOtherSelected(id: number) {
 
 async function preloadOther(id: number) {
   store.loadingComparison = true
+  store.comparisonError = null
   try {
     const { getConceptSetById } = await import('@/services/concept-set.service')
-    const set = await getConceptSetById(id)
+    const set = await getConceptSetById(id, { rethrow: true })
     if (set) store.comparisonOtherSet = set
+  } catch (err) {
+    // A saved set often can't be resolved against the active vocabulary source
+    // (its concepts may not exist there). Surface the reason instead of leaving
+    // the chip silently empty with the Compare button stuck disabled.
+    store.comparisonOtherSet = null
+    store.comparisonError = err instanceof Error ? err.message : String(err)
   } finally {
     store.loadingComparison = false
   }

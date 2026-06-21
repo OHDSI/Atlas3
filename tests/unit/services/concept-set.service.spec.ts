@@ -174,6 +174,43 @@ describe('ConceptSetService', () => {
 
       expect(result).toBeNull()
     })
+
+    it('rethrows with the server message body when rethrow is requested', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ id: 3 }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          statusText: 'Bad Request',
+          text: () =>
+            Promise.resolve(
+              JSON.stringify({
+                message: 'Current data source does not contain required concepts (443238)',
+              })
+            ),
+        })
+
+      await expect(getConceptSetById(3, { rethrow: true })).rejects.toThrow(/required concepts/)
+    })
+
+    it('falls back to the raw body text when the error body is not JSON', async () => {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ id: 3 }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          statusText: 'Bad Request',
+          text: () => Promise.resolve('plain text failure'),
+        })
+
+      await expect(getConceptSetById(3, { rethrow: true })).rejects.toThrow(/plain text failure/)
+    })
   })
 
   describe('createConceptSet', () => {
