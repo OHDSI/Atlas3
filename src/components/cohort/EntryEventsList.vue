@@ -14,130 +14,130 @@
         {{ t('options.any', 'ANY') }}
       </div>
       <div class="events-container__body">
-      <!-- Toolbar: add-criteria menu + observation-period pill -->
-      <div class="add-filter-wrapper">
-        <AtlasMenu>
-          <template #activator="{ props: slotProps }">
-            <AtlasButton
-              v-bind="slotProps"
-              variant="secondary"
-              icon="mdi-plus"
-              size="sm"
-              data-testid="add-entry-event"
-            >
-              {{ t('components.criteriaGroup.addCriteria') }}
-            </AtlasButton>
-          </template>
-          <AtlasList>
-            <AtlasListItem
-              v-for="filter in availableFilters"
-              :key="filter.criteriaType"
-              :title="filter.name"
-              :subtitle="filter.description"
-              @click="handleFilterTypeSelected(filter.criteriaType)"
-            />
-          </AtlasList>
-        </AtlasMenu>
+        <!-- Toolbar: add-criteria menu + observation-period pill -->
+        <div class="add-filter-wrapper">
+          <AtlasMenu>
+            <template #activator="{ props: slotProps }">
+              <AtlasButton
+                v-bind="slotProps"
+                variant="secondary"
+                icon="mdi-plus"
+                size="sm"
+                data-testid="add-entry-event"
+              >
+                {{ t('components.criteriaGroup.addCriteria') }}
+              </AtlasButton>
+            </template>
+            <AtlasList>
+              <AtlasListItem
+                v-for="filter in availableFilters"
+                :key="filter.criteriaType"
+                :title="filter.name"
+                :subtitle="filter.description"
+                @click="handleFilterTypeSelected(filter.criteriaType)"
+              />
+            </AtlasList>
+          </AtlasMenu>
 
-        <!-- Continuous-observation pill + anchored popover editor. Clicking the
+          <!-- Continuous-observation pill + anchored popover editor. Clicking the
              pill opens the editor in a menu anchored to it (no page-dimming
              modal), keeping the user in context (discussion #99). Orange/warning
              outlined to match the other timeframe pills. Pushed to the right
              edge via margin-left:auto. -->
-        <AtlasMenu
-          :close-on-content-click="false"
-          location="bottom end"
-          offset="8"
-        >
-          <template #activator="{ props: chipProps }">
-            <AtlasChip
-              v-bind="chipProps"
-              class="obs-period-chip"
-              tone="warning"
-              variant="outlined"
-              size="sm"
-            >
-              <AtlasIcon
-                start
-                size="small"
-              >
-                mdi-clock-outline
-              </AtlasIcon>
-              <!-- Short version for small screens -->
-              <span class="d-md-none">
-                {{ observationPeriod.priorDays }}d / {{ observationPeriod.postDays }}d
-              </span>
-              <!-- Full version for larger screens -->
-              <span class="d-none d-md-inline">
-                {{ t('components.cohortExpressionEditor.continuousObservationLabel', 'Continuous observation') }}:
-                {{ observationPeriod.priorDays }}d {{ t('options.before', 'before') }} ·
-                {{ observationPeriod.postDays }}d {{ t('options.after', 'after') }}
-              </span>
-            </AtlasChip>
-          </template>
-
-          <AtlasCard
-            class="obs-period-popover"
-            padding="md"
+          <AtlasMenu
+            :close-on-content-click="false"
+            location="bottom end"
+            offset="8"
           >
-            <div class="obs-period-popover__title">
-              <AtlasIcon
-                size="small"
-                class="obs-period-popover__icon"
+            <template #activator="{ props: chipProps }">
+              <AtlasChip
+                v-bind="chipProps"
+                class="obs-period-chip"
+                tone="warning"
+                variant="outlined"
+                size="sm"
               >
-                mdi-clock-outline
-              </AtlasIcon>
-              {{ t('components.cohortExpressionEditor.continuousObservationTitle', 'Continuous observation window') }}
-            </div>
-            <div class="obs-period-popover__fields">
-              <AtlasTextField
-                :model-value="observationPeriod.priorDays"
-                :label="t('components.cohortExpressionEditor.continuousObservationBefore', 'Days before').value"
-                type="number"
-                variant="outlined"
-                density="compact"
-                hide-details
-                min="0"
-                @update:model-value="updateObservationPeriod('priorDays', $event)"
-              />
-              <AtlasTextField
-                :model-value="observationPeriod.postDays"
-                :label="t('components.cohortExpressionEditor.continuousObservationAfter', 'Days after').value"
-                type="number"
-                variant="outlined"
-                density="compact"
-                hide-details
-                min="0"
-                @update:model-value="updateObservationPeriod('postDays', $event)"
-              />
-            </div>
-            <p class="obs-period-popover__help">
-              {{ t('components.cohortExpressionEditor.continuousObservationHelp', 'People without this much continuous observation around the index date are excluded from the cohort.') }}
-            </p>
-          </AtlasCard>
-        </AtlasMenu>
-      </div>
+                <AtlasIcon
+                  start
+                  size="small"
+                >
+                  mdi-clock-outline
+                </AtlasIcon>
+                <!-- Short version for small screens -->
+                <span class="d-md-none">
+                  {{ observationPeriod.priorDays }}d / {{ observationPeriod.postDays }}d
+                </span>
+                <!-- Full version for larger screens -->
+                <span class="d-none d-md-inline">
+                  {{ t('components.cohortExpressionEditor.continuousObservationLabel', 'Continuous observation') }}:
+                  {{ observationPeriod.priorDays }}d {{ t('options.before', 'before') }} ·
+                  {{ observationPeriod.postDays }}d {{ t('options.after', 'after') }}
+                </span>
+              </AtlasChip>
+            </template>
 
-      <CriteriaEventCard
-        v-for="event in events"
-        :key="event.id"
-        :event="event"
-        section="initialEvents"
-        @update="updateEvent"
-        @remove="removeEvent(event.id)"
-        @select-concept-set="selectConceptSetForEvent(event.id)"
-        @select-concept-set-nested="
-          nestedEventIndex => emit('select-concept-set-nested', event.id, nestedEventIndex)
-        "
-        @select-concept-set-for-attribute="
-          attributeIndex => $emit('select-concept-set-for-attribute', event.id, attributeIndex)
-        "
-        @select-concept-for-attribute="
-          (attributeIndex, domainFilter) =>
-            $emit('select-concept-for-attribute', event.id, attributeIndex, domainFilter)
-        "
-        @edit-concept-set="$emit('edit-concept-set', $event)"
-      />
+            <AtlasCard
+              class="obs-period-popover"
+              padding="md"
+            >
+              <div class="obs-period-popover__title">
+                <AtlasIcon
+                  size="small"
+                  class="obs-period-popover__icon"
+                >
+                  mdi-clock-outline
+                </AtlasIcon>
+                {{ t('components.cohortExpressionEditor.continuousObservationTitle', 'Continuous observation window') }}
+              </div>
+              <div class="obs-period-popover__fields">
+                <AtlasTextField
+                  :model-value="observationPeriod.priorDays"
+                  :label="t('components.cohortExpressionEditor.continuousObservationBefore', 'Days before').value"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                  @update:model-value="updateObservationPeriod('priorDays', $event)"
+                />
+                <AtlasTextField
+                  :model-value="observationPeriod.postDays"
+                  :label="t('components.cohortExpressionEditor.continuousObservationAfter', 'Days after').value"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                  @update:model-value="updateObservationPeriod('postDays', $event)"
+                />
+              </div>
+              <p class="obs-period-popover__help">
+                {{ t('components.cohortExpressionEditor.continuousObservationHelp', 'People without this much continuous observation around the index date are excluded from the cohort.') }}
+              </p>
+            </AtlasCard>
+          </AtlasMenu>
+        </div>
+
+        <CriteriaEventCard
+          v-for="event in events"
+          :key="event.id"
+          :event="event"
+          section="initialEvents"
+          @update="updateEvent"
+          @remove="removeEvent(event.id)"
+          @select-concept-set="selectConceptSetForEvent(event.id)"
+          @select-concept-set-nested="
+            nestedEventIndex => emit('select-concept-set-nested', event.id, nestedEventIndex)
+          "
+          @select-concept-set-for-attribute="
+            attributeIndex => $emit('select-concept-set-for-attribute', event.id, attributeIndex)
+          "
+          @select-concept-for-attribute="
+            (attributeIndex, domainFilter) =>
+              $emit('select-concept-for-attribute', event.id, attributeIndex, domainFilter)
+          "
+          @edit-concept-set="$emit('edit-concept-set', $event)"
+        />
       </div>
     </div>
   </div>

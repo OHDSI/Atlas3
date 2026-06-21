@@ -464,9 +464,12 @@
     </div>
     <!-- /.cohort-builder__steps -->
 
-    <!-- Concept Set Selection Dialog (shows all system concept sets) -->
+    <!-- Concept Set Selection Dialog: in-definition (local) sets to reuse, plus
+         the repository to import a copy from (#111). -->
     <concept-set-selection-dialog
       v-model="isConceptSetDialogOpen"
+      :local-concept-sets="usedConceptSets"
+      @local-concept-set-selected="handleLocalConceptSetSelected"
       @concept-set-selected="handleConceptSetSelected"
       @edit-concept-set="handleEditConceptSet"
       @create-new="handleCreateNewConceptSet"
@@ -1721,6 +1724,19 @@ async function handleConceptSetSelected(conceptSet: {
   }
 
   assignConceptSetToContext(conceptSetRef)
+  isConceptSetDialogOpen.value = false
+}
+
+/**
+ * Called when the user picks a concept set that's already embedded in the
+ * definition (#111). Unlike the repository path, this reuses the existing
+ * local set in place: its id already matches an entry in `usedConceptSets`, so
+ * `assignConceptSetToContext` (via `ensureUniqueConceptSetId`) keeps that id and
+ * the cohort dedupes to a single CodesetId rather than minting a copy.
+ */
+function handleLocalConceptSetSelected(conceptSet: ConceptSetReference) {
+  if (!conceptSet || !selectedCriteriaContext.value) return
+  assignConceptSetToContext({ ...conceptSet })
   isConceptSetDialogOpen.value = false
 }
 

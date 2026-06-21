@@ -30,6 +30,55 @@
         </header>
 
         <div class="cs-picker__body">
+          <!-- Create a new empty concept set in this definition (#111). -->
+          <div class="cs-picker__create-row">
+            <AtlasButton
+              icon="mdi-plus"
+              variant="secondary"
+              @click="onCreateNew"
+            >
+              {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
+            </AtlasButton>
+          </div>
+
+          <!-- In-definition (local) concept sets (#111). Selecting one reuses it
+               in place; importing from the repository below makes a fresh copy. -->
+          <section
+            v-if="localConceptSets.length > 0"
+            class="cs-picker__local"
+            data-testid="local-concept-sets"
+          >
+            <h3 class="cs-picker__section-title">
+              {{ t('components.conceptSetBuilder.inThisDefinition', 'In this definition').value }}
+            </h3>
+            <AtlasCard padding="none">
+              <button
+                v-for="set in localConceptSets"
+                :key="`local-${set.id}`"
+                type="button"
+                class="cs-picker__local-item"
+                data-testid="local-concept-set-item"
+                @click="onLocalSelect(set)"
+              >
+                <span class="cs-picker__name">{{ set.name }}</span>
+                <AtlasChip
+                  size="sm"
+                  tone="neutral"
+                  variant="outlined"
+                >
+                  {{ t('columns.id', 'ID').value }} {{ set.id }}
+                </AtlasChip>
+              </button>
+            </AtlasCard>
+          </section>
+
+          <h3
+            v-if="localConceptSets.length > 0"
+            class="cs-picker__section-title"
+          >
+            {{ t('components.conceptSetBuilder.importFromRepository', 'Import from repository').value }}
+          </h3>
+
           <!-- Toolbar: search + count chip + create-new button.
                Mirrors the toolbar on the /concepts list page. -->
           <div class="cs-picker__toolbar">
@@ -51,15 +100,6 @@
             >
               {{ countLabel }}
             </AtlasChip>
-
-            <AtlasSpacer />
-
-            <AtlasButton
-              icon="mdi-plus"
-              @click="onCreateNew"
-            >
-              {{ t('components.conceptSetBuilder.newConceptSet', 'New concept set').value }}
-            </AtlasButton>
           </div>
 
           <!-- Loading -->
@@ -170,18 +210,27 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import type { ConceptSetListItem } from '@/models/concept-set.types'
-import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasSpacer, AtlasTextField } from '@/components/ui'
+import type { ConceptSetReference } from '@/models/cohort.types'
+import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasTextField } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
 
 interface Props {
   modelValue: boolean
+  /**
+   * Concept sets already embedded in the cohort definition (#111). Selecting one
+   * reuses it in-place; the repository table below imports a fresh copy instead.
+   */
+  localConceptSets?: ConceptSetReference[]
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  localConceptSets: () => [],
+})
 const { t } = useI18n()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
+  'local-concept-set-selected': [conceptSet: ConceptSetReference]
   'concept-set-selected': [conceptSet: ConceptSetListItem]
   'edit-concept-set': [conceptSet: ConceptSetListItem]
   'create-new': []
@@ -237,6 +286,11 @@ watch(
     }
   }
 )
+
+function onLocalSelect(ref: ConceptSetReference) {
+  emit('local-concept-set-selected', ref)
+  close()
+}
 
 function onRowClick(_event: Event, payload: { item: ConceptSetListItem }) {
   if (payload?.item) {
@@ -306,6 +360,46 @@ function close() {
   flex: 1;
   overflow-y: auto;
   padding: 8px 28px 24px;
+}
+
+.cs-picker__create-row {
+  display: flex;
+  margin-bottom: 16px;
+}
+
+.cs-picker__section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  margin: 0 0 8px;
+}
+
+.cs-picker__local {
+  margin-bottom: 20px;
+}
+
+.cs-picker__local-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.cs-picker__local-item:last-child {
+  border-bottom: none;
+}
+.cs-picker__local-item:hover,
+.cs-picker__local-item:focus-visible {
+  background: rgb(var(--v-theme-surface-variant), 0.5);
 }
 
 .cs-picker__toolbar {
