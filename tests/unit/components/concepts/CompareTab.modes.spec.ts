@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import { createPinia, setActivePinia } from 'pinia'
 import * as components from 'vuetify/components'
@@ -18,13 +18,20 @@ vi.mock('@/utils/csv', () => ({
   downloadCsv: (name: string, csv: string) => downloadCsvMock(name, csv),
 }))
 
+const getConceptSetByIdMock = vi.fn()
+vi.mock('@/services/concept-set.service', () => ({
+  getConceptSetById: (id: number | string) => getConceptSetByIdMock(id),
+}))
+
+const fetchSourcesMock = vi.fn()
+const webapiStub = {
+  getValidVocabularySource: () => '',
+  sources: [] as unknown[],
+  isLoadingSources: false,
+  fetchSources: fetchSourcesMock,
+}
 vi.mock('@/stores/webapi', () => ({
-  useWebAPIStore: vi.fn(() => ({
-    getValidVocabularySource: () => '',
-    sources: [],
-    isLoadingSources: false,
-    fetchSources: vi.fn(),
-  })),
+  useWebAPIStore: vi.fn(() => webapiStub),
 }))
 
 const vuetify = createVuetify({ components, directives })
@@ -78,6 +85,32 @@ describe('CompareTab — mode toggle (#102)', () => {
     expect(spy).toHaveBeenCalledWith('SRC', 2, 'expression')
   })
 
+  it('fetches vocabulary sources when activated with none loaded', () => {
+    fetchSourcesMock.mockClear()
+    mount(CompareTab, {
+      props: { active: true },
+      global: {
+        plugins: [vuetify],
+        provide: { sourceKey: { value: 'SRC' } },
+        stubs: { ComparisonVennDiagram: true, ConceptSetChooserDialog: true },
+      },
+    })
+    expect(fetchSourcesMock).toHaveBeenCalled()
+  })
+
+  it('clears comparisonError when the error alert is dismissed', async () => {
+    const wrapper = mountComponent()
+    const store = useConceptSetsStore()
+    store.comparisonError = 'boom'
+    await wrapper.vm.$nextTick()
+
+    const alert = wrapper.findComponent({ name: 'AtlasAlert' })
+    expect(alert.exists()).toBe(true)
+    await alert.vm.$emit('close')
+
+    expect(store.comparisonError).toBeNull()
+  })
+
   it('relabels the code/vocabulary columns in Source mode', async () => {
     const wrapper = mountComponent()
     const store = primeComparable()
@@ -97,6 +130,40 @@ describe('CompareTab — mode toggle (#102)', () => {
 
     expect(wrapper.text()).toContain('Concept Code')
     expect(wrapper.text()).not.toContain('Source Vocabulary')
+  })
+
+  it('onCompare clears the cache and loads the active mode', async () => {
+    const wrapper = mountComponent()
+    const store = primeComparable()
+    const clear = vi.spyOn(store, 'clearComparisonCache')
+    const load = vi.spyOn(store, 'loadComparisonForMode').mockResolvedValue()
+    await wrapper.vm.$nextTick()
+
+    await wrapper.find('[data-testid="compare-run"]').trigger('click')
+
+    expect(clear).toHaveBeenCalled()
+    expect(load).toHaveBeenCalledWith('SRC', 2, 'included')
+  })
+
+  it('clears the other set and comparison when the chip is dismissed', async () => {
+    const wrapper = mountComponent()
+    const store = primeComparable()
+    await wrapper.vm.$nextTick()
+    ;(wrapper.vm as unknown as { onClearOther: () => void }).onClearOther()
+
+    expect(store.comparisonOtherSet).toBeNull()
+    expect(store.comparison).toEqual([])
+  })
+
+  it('loads the chosen other set (onOtherSelected → preloadOther)', async () => {
+    const wrapper = mountComponent()
+    const store = primeComparable()
+    getConceptSetByIdMock.mockResolvedValue({ id: 3, name: 'CS3', items: [] })
+    ;(wrapper.vm as unknown as { onOtherSelected: (id: number) => void }).onOtherSelected(3)
+    await flushPromises()
+
+    expect(getConceptSetByIdMock).toHaveBeenCalledWith(3)
+    expect(store.comparisonOtherSet?.id).toBe(3)
   })
 
   it('includes the mode in the export filename', async () => {
