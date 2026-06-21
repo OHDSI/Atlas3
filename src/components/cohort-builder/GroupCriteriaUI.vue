@@ -95,6 +95,16 @@
 
       <!-- Main Content -->
       <div class="flex-grow-1">
+        <!-- Deep-nesting guard (carried over from the nested-criteria editor). -->
+        <AtlasAlert
+          v-if="depth > 10"
+          type="warning"
+          density="compact"
+          class="mb-2"
+          data-testid="depth-warning"
+        >
+          {{ t('components.nestedCriteria.depthWarning', 'Deep nesting detected') }} ({{ depth }})
+        </AtlasAlert>
         <!-- Header with Add Filter and Delete buttons -->
         <div class="group-header">
           <AtlasMenu>
@@ -175,6 +185,8 @@
                     section="criteriaGroup"
                     show-cardinality
                     show-temporal
+                    show-criteria-options
+                    :depth="depth"
                     @update="onEventUpdate(index, $event)"
                     @remove="removeEvent(index)"
                     @select-concept-set="selectConceptSetForEvent(index)"
@@ -217,8 +229,9 @@
             class="nested-group-item"
             data-testid="nested-group"
           >
-            <CriteriaGroupEditor
+            <GroupCriteriaUI
               :model-value="nested"
+              :depth="depth + 1"
               @update:model-value="updateNestedGroup(idx, $event)"
               @remove="removeNestedGroup(idx)"
             />
@@ -244,13 +257,21 @@ import type {
 } from '@/models/cohort.types'
 import type { Concept } from '@/models/event.types'
 
+// Explicit name: this component references itself recursively (nested groups)
+// and tests resolve it by name.
+defineOptions({ name: 'GroupCriteriaUI' })
+
 const { t } = useI18n()
 
 interface Props {
   modelValue?: CriteriaGroup
+  /** Nesting depth, for indentation and the deep-nesting warning. */
+  depth?: number
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  depth: 0,
+})
 const emit = defineEmits<{
   'update:modelValue': [value: CriteriaGroup]
   remove: []
@@ -323,6 +344,10 @@ function addEvent(criteriaType: CriteriaType) {
     criteriaType,
     conceptSet: { id: null as unknown as number, name: 'Select concept set...' },
     attributes: [],
+    // Allow events outside the observation period by default (discussion #110):
+    // the common correlated-criteria use cases (exclusions, complications,
+    // post-index drugs) don't require the event to share an observation period.
+    ignoreObservationPeriod: true,
   }
 
   localGroup.value.events.push(newEvent)

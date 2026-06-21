@@ -10,7 +10,7 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
-import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
+import GroupCriteriaUI from '@/components/cohort-builder/GroupCriteriaUI.vue'
 import type { CriteriaGroup } from '@/models/cohort.types'
 
 const vuetify = createVuetify({ components, directives })
@@ -21,13 +21,13 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }))
 
-describe('CriteriaGroupEditor', () => {
+describe('GroupCriteriaUI', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
   const createWrapper = (group?: CriteriaGroup) => {
-    return mount(CriteriaGroupEditor, {
+    return mount(GroupCriteriaUI, {
       global: { plugins: [vuetify] },
       props: { modelValue: group },
     })

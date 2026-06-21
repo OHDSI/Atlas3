@@ -3,7 +3,7 @@
   terminology.
 
   Per-subgroup criteria editing happens in a wide dialog because the
-  CriteriaGroupEditor is too dense for the 280px rail. Concept-set and
+  GroupCriteriaUI is too dense for the 280px rail. Concept-set and
   concept pickers are wired directly so the user can pick from existing
   concept sets or search the vocabulary while editing strata criteria.
 -->
@@ -102,7 +102,7 @@
       persistent
       @close="dialogOpen = false"
     >
-      <CriteriaGroupEditor
+      <GroupCriteriaUI
         v-if="dialogStratum"
         :model-value="dialogGroup"
         @update:model-value="onDialogGroupUpdate"
@@ -140,7 +140,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useCriteriaGroupPicker } from '@/composables/useCriteriaGroupPicker'
 import { AtlasButton, AtlasChip, AtlasDialog, AtlasIconButton, AtlasSwitch, AtlasTextField } from '@/components/ui'
-import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
+import GroupCriteriaUI from '@/components/cohort-builder/GroupCriteriaUI.vue'
 import ConceptSetSelectionDialog from '@/components/cohort/ConceptSetSelectionDialog.vue'
 import ConceptSearchDialog from '@/components/cohort/ConceptSearchDialog.vue'
 import type { Stratum } from '@/models/characterization.types'
@@ -258,7 +258,7 @@ function onDialogGroupUpdate(group: CriteriaGroup) {
   emitUpdate(next)
 }
 
-// Concept-set / concept picking for the embedded CriteriaGroupEditor. Shared
+// Concept-set / concept picking for the embedded GroupCriteriaUI. Shared
 // with the incidence-rate stratify editor so nested-child targeting (#93) stays
 // correct in one place.
 const {

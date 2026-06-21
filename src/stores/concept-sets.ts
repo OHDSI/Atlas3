@@ -25,6 +25,7 @@ import type { Version, VersionedAsset } from '@/components/versions/types'
 import type { Tag } from '@/models/cohort.types'
 import type { DateRange } from '@/composables/useCohorts'
 import { conceptToConceptSetItem, conceptSetItemToExpressionItem } from '@/utils/api-mappers'
+import { diffConceptLists } from '@/utils/concept-compare'
 import { getVersion as getVersionAPI } from '@/services/concept-set-versions.service'
 import {
   getRecommendedConcepts,
@@ -44,6 +45,9 @@ export interface ConceptSetFilterState {
   createdDateRange: DateRange
   modifiedDateRange: DateRange
 }
+
+/** Which projection of the two concept sets the Compare view diffs. */
+export type ComparisonMode = 'expression' | 'included' | 'source'
 
 export const useConceptSetsStore = defineStore('concept-sets', () => {
   // ============================================================================
@@ -84,6 +88,15 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
   const comparisonOtherSet = ref<ConceptSet | null>(null)
   const loadingComparison = ref<boolean>(false)
   const comparisonError = ref<string | null>(null)
+  const comparisonMode = ref<ComparisonMode>('included')
+  // Per-mode result cache, valid for the current (currentSet, other set) pair.
+  // Cleared when the other set changes or a fresh compare is requested.
+  let comparisonCache: Partial<Record<ComparisonMode, ComparisonResultItem[]>> = {}
+  let comparisonCacheOtherId: number | string | null = null
+  function clearComparisonCache(): void {
+    comparisonCache = {}
+    comparisonCacheOtherId = null
+  }
 
   const includedItems = ref<Concept[]>([])
   const includedLoading = ref<boolean>(false)
@@ -612,14 +625,27 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     }
   }
 
-  async function loadComparison(sourceKey: string, otherSetId: number | string): Promise<void> {
+  /**
+   * Compare the current set against another, projected through `mode`:
+   *  - expression: the literal expression items (client-side diff)
+   *  - included:   resolved standard concepts (server-side compare endpoint)
+   *  - source:     mapped source codes of each set's included concepts
+   * Results are cached per mode for the current (other set); a different other
+   * set or an explicit clearComparisonCache() invalidates the cache.
+   */
+  async function loadComparisonForMode(
+    sourceKey: string,
+    otherSetId: number | string,
+    mode: ComparisonMode
+  ): Promise<void> {
+    comparisonMode.value = mode
+
     if (!currentSet.value || (currentSet.value.items?.length ?? 0) === 0) {
       comparison.value = []
       comparisonOtherSet.value = null
       comparisonError.value = 'No concept set loaded'
       return
     }
-
     if (otherSetId === currentSet.value.id) {
       comparison.value = []
       comparisonOtherSet.value = null
@@ -627,36 +653,90 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
       return
     }
 
+    // Invalidate the cache when the other set changes.
+    if (comparisonCacheOtherId !== otherSetId) clearComparisonCache()
+    const cached = comparisonCache[mode]
+    if (cached) {
+      comparison.value = cached
+      return
+    }
+
     loadingComparison.value = true
     comparisonError.value = null
-
     try {
-      const cs2 = await getConceptSetById(otherSetId)
+      const cs2 =
+        comparisonOtherSet.value?.id === otherSetId
+          ? comparisonOtherSet.value
+          : await getConceptSetById(otherSetId)
       if (!cs2) {
         comparisonError.value = 'Other concept set not found'
         comparison.value = []
         comparisonOtherSet.value = null
         return
       }
-
-      const expr1: ConceptSetExpression = {
-        items: currentSet.value.items.map(conceptSetItemToExpressionItem),
-      }
-      const expr2: ConceptSetExpression = {
-        items: (cs2.items ?? []).map(conceptSetItemToExpressionItem),
-      }
-
-      const result = await compareConceptSets(sourceKey, expr1, expr2)
-      comparison.value = result
       comparisonOtherSet.value = cs2
+
+      let rows: ComparisonResultItem[]
+      if (mode === 'expression') {
+        rows = diffConceptLists(currentSet.value.items ?? [], cs2.items ?? [])
+      } else if (mode === 'included') {
+        const expr1: ConceptSetExpression = {
+          items: currentSet.value.items.map(conceptSetItemToExpressionItem),
+        }
+        const expr2: ConceptSetExpression = {
+          items: (cs2.items ?? []).map(conceptSetItemToExpressionItem),
+        }
+        rows = await compareConceptSets(sourceKey, expr1, expr2)
+      } else {
+        rows = await loadSourceComparisonRows(sourceKey, cs2)
+      }
+
+      comparisonCache[mode] = rows
+      comparisonCacheOtherId = otherSetId
+      comparison.value = rows
     } catch (err) {
       logger.error('ConceptSetsStore', 'Failed to load concept set comparison', err)
       comparisonError.value = String(err)
       comparison.value = []
-      comparisonOtherSet.value = null
     } finally {
       loadingComparison.value = false
     }
+  }
+
+  /** Back-compat wrapper: included-mode comparison. */
+  async function loadComparison(sourceKey: string, otherSetId: number | string): Promise<void> {
+    await loadComparisonForMode(sourceKey, otherSetId, 'included')
+  }
+
+  /**
+   * Source-mode rows: resolve each set's included concepts, fetch the source
+   * codes they map to, then diff the two source-code lists.
+   */
+  async function loadSourceComparisonRows(
+    sourceKey: string,
+    cs2: ConceptSet
+  ): Promise<ComparisonResultItem[]> {
+    const expr1: ConceptSetExpression = {
+      items: (currentSet.value?.items ?? []).map(conceptSetItemToExpressionItem),
+    }
+    const expr2: ConceptSetExpression = {
+      items: (cs2.items ?? []).map(conceptSetItemToExpressionItem),
+    }
+    const [inc1, inc2] = await Promise.all([
+      resolveConceptSetExpression(sourceKey, expr1),
+      resolveConceptSetExpression(sourceKey, expr2),
+    ])
+    const [src1, src2] = await Promise.all([
+      getMappedSourceCodes(
+        sourceKey,
+        inc1.map(c => c.conceptId)
+      ),
+      getMappedSourceCodes(
+        sourceKey,
+        inc2.map(c => c.conceptId)
+      ),
+    ])
+    return diffConceptLists(src1, src2)
   }
 
   // ============================================================================
@@ -875,6 +955,7 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     comparisonOtherSet,
     loadingComparison,
     comparisonError,
+    comparisonMode,
 
     // Getters
     filteredSets,
@@ -910,6 +991,8 @@ export const useConceptSetsStore = defineStore('concept-sets', () => {
     savePreviewAsCurrent,
     loadRecommendedConcepts,
     loadComparison,
+    loadComparisonForMode,
+    clearComparisonCache,
 
     // Included concepts
     includedItems,

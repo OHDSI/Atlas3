@@ -61,6 +61,24 @@
       </div>
     </div>
 
+    <div
+      class="compare-tab__modes mb-4"
+      role="group"
+      :aria-label="t('cs.browser.compare.modeGroupLabel', 'Comparison level').value"
+    >
+      <AtlasButton
+        v-for="m in modes"
+        :key="m.value"
+        size="sm"
+        :variant="store.comparisonMode === m.value ? 'tonal' : 'secondary'"
+        :tone="store.comparisonMode === m.value ? undefined : 'neutral'"
+        :data-testid="`mode-${m.value}`"
+        @click="onModeChange(m.value)"
+      >
+        {{ m.label }}
+      </AtlasButton>
+    </div>
+
     <AtlasAlert
       v-if="store.comparisonError"
       severity="danger"
@@ -150,6 +168,7 @@ import { AtlasAlert, AtlasButton, AtlasChip, AtlasDataTable, AtlasProgressCircul
 import { ref, computed, inject, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useConceptSetsStore } from '@/stores/concept-sets'
+import type { ComparisonMode } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import { arrayToCsv, downloadCsv } from '@/utils/csv'
 import ComparisonVennDiagram from './ComparisonVennDiagram.vue'
@@ -214,6 +233,8 @@ const rows = computed<Row[]>(() =>
   }))
 )
 
+const isSourceMode = computed(() => store.comparisonMode === 'source')
+
 const headers = computed(() => [
   { title: t('common.match', 'Match').value, key: 'match', sortable: true, width: '120px' },
   {
@@ -223,7 +244,9 @@ const headers = computed(() => [
     width: '110px',
   },
   {
-    title: t('columns.conceptCode', 'Concept Code').value,
+    title: isSourceMode.value
+      ? t('cs.browser.compare.sourceCode', 'Source Code').value
+      : t('columns.conceptCode', 'Concept Code').value,
     key: 'conceptCode',
     sortable: true,
     width: '130px',
@@ -231,7 +254,9 @@ const headers = computed(() => [
   { title: t('columns.conceptName', 'Concept Name').value, key: 'conceptName', sortable: true },
   { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true, width: '120px' },
   {
-    title: t('columns.vocabulary', 'Vocabulary').value,
+    title: isSourceMode.value
+      ? t('cs.browser.compare.sourceVocabulary', 'Source Vocabulary').value
+      : t('columns.vocabulary', 'Vocabulary').value,
     key: 'vocabularyId',
     sortable: true,
     width: '120px',
@@ -267,9 +292,32 @@ async function preloadOther(id: number) {
   }
 }
 
+// Source comparison is implemented in the store but hidden for now; flip to true
+// to re-expose the Source toggle.
+const SOURCE_MODE_ENABLED = false
+
+const modes = computed(() => {
+  const all = [
+    { value: 'expression', label: t('cs.browser.compare.modeExpression', 'Expression concepts').value },
+    { value: 'included', label: t('cs.browser.compare.modeIncluded', 'Included concepts').value },
+    { value: 'source', label: t('cs.browser.compare.modeSource', 'Source concepts').value },
+  ] as const
+  return SOURCE_MODE_ENABLED ? all : all.filter(m => m.value !== 'source')
+})
+
+function onModeChange(mode: ComparisonMode) {
+  store.comparisonMode = mode
+  // Lazy: compute (or serve from cache) only when a comparison can run.
+  if (canCompare.value && store.comparisonOtherSet?.id != null) {
+    void store.loadComparisonForMode(sourceKey.value, store.comparisonOtherSet.id, mode)
+  }
+}
+
 function onCompare() {
-  if (!canCompare.value || !store.comparisonOtherSet?.id) return
-  void store.loadComparison(sourceKey.value, store.comparisonOtherSet.id)
+  if (!canCompare.value || store.comparisonOtherSet?.id == null) return
+  // A fresh Compare recomputes from scratch, dropping any cached modes.
+  store.clearComparisonCache()
+  void store.loadComparisonForMode(sourceKey.value, store.comparisonOtherSet.id, store.comparisonMode)
 }
 
 function onClearOther() {
@@ -293,7 +341,7 @@ function onExport() {
   ])
   const left = (store.currentSet?.name ?? 'cs1').replace(/\s+/g, '_')
   const right = (store.comparisonOtherSet?.name ?? 'cs2').replace(/\s+/g, '_')
-  downloadCsv(`compare_${left}_vs_${right}.csv`, csv)
+  downloadCsv(`compare_${store.comparisonMode}_${left}_vs_${right}.csv`, csv)
 }
 </script>
 
@@ -310,6 +358,12 @@ function onExport() {
 .compare-tab__bar-right {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.compare-tab__modes {
+  display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
 }

@@ -1,132 +1,144 @@
 <template>
-  <!-- Vertical "ALL" sticker retired (matches the inclusion-rules
-       panel). Section header toggle is the source of truth. -->
+  <!-- Entry events are an implicit OR. We show a greyed, non-interactive "ANY"
+       label (discussion #100) so the match semantics are visible without
+       offering a control that doesn't apply to entry events — unlike inclusion
+       rules, where the equivalent label is clickable. -->
   <div class="events-container">
-    <div class="events-container__body">
-      <!-- Toolbar: add-criteria menu + observation-period pill -->
-      <div class="add-filter-wrapper">
-        <AtlasMenu>
-          <template #activator="{ props: slotProps }">
-            <AtlasButton
-              v-bind="slotProps"
-              variant="secondary"
-              icon="mdi-plus"
-              size="sm"
-              data-testid="add-entry-event"
-            >
-              {{ t('components.criteriaGroup.addCriteria') }}
-            </AtlasButton>
-          </template>
-          <AtlasList>
-            <AtlasListItem
-              v-for="filter in availableFilters"
-              :key="filter.criteriaType"
-              :title="filter.name"
-              :subtitle="filter.description"
-              @click="handleFilterTypeSelected(filter.criteriaType)"
-            />
-          </AtlasList>
-        </AtlasMenu>
+    <div class="events-container__layout">
+      <div
+        class="entry-any-label"
+        data-testid="entry-any-label"
+        aria-disabled="true"
+        :title="t('components.cohortExpressionEditor.entryEventsAnyHint', 'Entry events are matched with ANY (or)').value"
+      >
+        {{ t('options.any', 'ANY') }}
+      </div>
+      <div class="events-container__body">
+        <!-- Toolbar: add-criteria menu + observation-period pill -->
+        <div class="add-filter-wrapper">
+          <AtlasMenu>
+            <template #activator="{ props: slotProps }">
+              <AtlasButton
+                v-bind="slotProps"
+                variant="secondary"
+                icon="mdi-plus"
+                size="sm"
+                data-testid="add-entry-event"
+              >
+                {{ t('components.criteriaGroup.addCriteria') }}
+              </AtlasButton>
+            </template>
+            <AtlasList>
+              <AtlasListItem
+                v-for="filter in availableFilters"
+                :key="filter.criteriaType"
+                :title="filter.name"
+                :subtitle="filter.description"
+                @click="handleFilterTypeSelected(filter.criteriaType)"
+              />
+            </AtlasList>
+          </AtlasMenu>
 
-        <!-- Continuous-observation pill + anchored popover editor. Clicking the
+          <!-- Continuous-observation pill + anchored popover editor. Clicking the
              pill opens the editor in a menu anchored to it (no page-dimming
              modal), keeping the user in context (discussion #99). Orange/warning
              outlined to match the other timeframe pills. Pushed to the right
              edge via margin-left:auto. -->
-        <AtlasMenu
-          :close-on-content-click="false"
-          location="bottom end"
-          offset="8"
-        >
-          <template #activator="{ props: chipProps }">
-            <AtlasChip
-              v-bind="chipProps"
-              class="obs-period-chip"
-              tone="warning"
-              variant="outlined"
-              size="sm"
-            >
-              <AtlasIcon
-                start
-                size="small"
-              >
-                mdi-clock-outline
-              </AtlasIcon>
-              <!-- Short version for small screens -->
-              <span class="d-md-none">
-                {{ observationPeriod.priorDays }}d / {{ observationPeriod.postDays }}d
-              </span>
-              <!-- Full version for larger screens -->
-              <span class="d-none d-md-inline">
-                {{ t('components.cohortExpressionEditor.continuousObservationLabel', 'Continuous observation') }}:
-                {{ observationPeriod.priorDays }}d {{ t('options.before', 'before') }} ·
-                {{ observationPeriod.postDays }}d {{ t('options.after', 'after') }}
-              </span>
-            </AtlasChip>
-          </template>
-
-          <AtlasCard
-            class="obs-period-popover"
-            padding="md"
+          <AtlasMenu
+            :close-on-content-click="false"
+            location="bottom end"
+            offset="8"
           >
-            <div class="obs-period-popover__title">
-              <AtlasIcon
-                size="small"
-                class="obs-period-popover__icon"
+            <template #activator="{ props: chipProps }">
+              <AtlasChip
+                v-bind="chipProps"
+                class="obs-period-chip"
+                tone="warning"
+                variant="outlined"
+                size="sm"
               >
-                mdi-clock-outline
-              </AtlasIcon>
-              {{ t('components.cohortExpressionEditor.continuousObservationTitle', 'Continuous observation window') }}
-            </div>
-            <div class="obs-period-popover__fields">
-              <AtlasTextField
-                :model-value="observationPeriod.priorDays"
-                :label="t('components.cohortExpressionEditor.continuousObservationBefore', 'Days before').value"
-                type="number"
-                variant="outlined"
-                density="compact"
-                hide-details
-                min="0"
-                @update:model-value="updateObservationPeriod('priorDays', $event)"
-              />
-              <AtlasTextField
-                :model-value="observationPeriod.postDays"
-                :label="t('components.cohortExpressionEditor.continuousObservationAfter', 'Days after').value"
-                type="number"
-                variant="outlined"
-                density="compact"
-                hide-details
-                min="0"
-                @update:model-value="updateObservationPeriod('postDays', $event)"
-              />
-            </div>
-            <p class="obs-period-popover__help">
-              {{ t('components.cohortExpressionEditor.continuousObservationHelp', 'People without this much continuous observation around the index date are excluded from the cohort.') }}
-            </p>
-          </AtlasCard>
-        </AtlasMenu>
-      </div>
+                <AtlasIcon
+                  start
+                  size="small"
+                >
+                  mdi-clock-outline
+                </AtlasIcon>
+                <!-- Short version for small screens -->
+                <span class="d-md-none">
+                  {{ observationPeriod.priorDays }}d / {{ observationPeriod.postDays }}d
+                </span>
+                <!-- Full version for larger screens -->
+                <span class="d-none d-md-inline">
+                  {{ t('components.cohortExpressionEditor.continuousObservationLabel', 'Continuous observation') }}:
+                  {{ observationPeriod.priorDays }}d {{ t('options.before', 'before') }} ·
+                  {{ observationPeriod.postDays }}d {{ t('options.after', 'after') }}
+                </span>
+              </AtlasChip>
+            </template>
 
-      <CriteriaEventCard
-        v-for="event in events"
-        :key="event.id"
-        :event="event"
-        section="initialEvents"
-        @update="updateEvent"
-        @remove="removeEvent(event.id)"
-        @select-concept-set="selectConceptSetForEvent(event.id)"
-        @select-concept-set-nested="
-          nestedEventIndex => emit('select-concept-set-nested', event.id, nestedEventIndex)
-        "
-        @select-concept-set-for-attribute="
-          attributeIndex => $emit('select-concept-set-for-attribute', event.id, attributeIndex)
-        "
-        @select-concept-for-attribute="
-          (attributeIndex, domainFilter) =>
-            $emit('select-concept-for-attribute', event.id, attributeIndex, domainFilter)
-        "
-        @edit-concept-set="$emit('edit-concept-set', $event)"
-      />
+            <AtlasCard
+              class="obs-period-popover"
+              padding="md"
+            >
+              <div class="obs-period-popover__title">
+                <AtlasIcon
+                  size="small"
+                  class="obs-period-popover__icon"
+                >
+                  mdi-clock-outline
+                </AtlasIcon>
+                {{ t('components.cohortExpressionEditor.continuousObservationTitle', 'Continuous observation window') }}
+              </div>
+              <div class="obs-period-popover__fields">
+                <AtlasTextField
+                  :model-value="observationPeriod.priorDays"
+                  :label="t('components.cohortExpressionEditor.continuousObservationBefore', 'Days before').value"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                  @update:model-value="updateObservationPeriod('priorDays', $event)"
+                />
+                <AtlasTextField
+                  :model-value="observationPeriod.postDays"
+                  :label="t('components.cohortExpressionEditor.continuousObservationAfter', 'Days after').value"
+                  type="number"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  min="0"
+                  @update:model-value="updateObservationPeriod('postDays', $event)"
+                />
+              </div>
+              <p class="obs-period-popover__help">
+                {{ t('components.cohortExpressionEditor.continuousObservationHelp', 'People without this much continuous observation around the index date are excluded from the cohort.') }}
+              </p>
+            </AtlasCard>
+          </AtlasMenu>
+        </div>
+
+        <CriteriaEventCard
+          v-for="event in events"
+          :key="event.id"
+          :event="event"
+          section="initialEvents"
+          @update="updateEvent"
+          @remove="removeEvent(event.id)"
+          @select-concept-set="selectConceptSetForEvent(event.id)"
+          @select-concept-set-nested="
+            nestedEventIndex => emit('select-concept-set-nested', event.id, nestedEventIndex)
+          "
+          @select-concept-set-for-attribute="
+            attributeIndex => $emit('select-concept-set-for-attribute', event.id, attributeIndex)
+          "
+          @select-concept-for-attribute="
+            (attributeIndex, domainFilter) =>
+              $emit('select-concept-for-attribute', event.id, attributeIndex, domainFilter)
+          "
+          @edit-concept-set="$emit('edit-concept-set', $event)"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -213,9 +225,36 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   background: rgb(var(--v-theme-surface));
 }
 
+.events-container__layout {
+  display: flex;
+  align-items: stretch;
+}
+
 .events-container__body {
   flex: 1;
+  min-width: 0;
   padding: 12px 20px 16px;
+}
+
+/* Greyed, non-interactive "ANY" label (discussion #100). Mirrors the
+   inclusion-rule vertical match-type label but neutral and not clickable —
+   entry events are always an implicit OR. */
+.entry-any-label {
+  position: relative;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: sideways-lr;
+  text-orientation: sideways;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  background: rgb(var(--v-theme-surface-variant), 0.5);
+  border-right: 1px solid rgb(var(--v-theme-outline-variant));
+  user-select: none;
+  cursor: default;
 }
 
 .add-filter-wrapper {

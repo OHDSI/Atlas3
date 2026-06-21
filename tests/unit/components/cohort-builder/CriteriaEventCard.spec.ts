@@ -46,7 +46,8 @@ function mountComponent(event: CohortEvent = createMockEvent(), props: Record<st
           props: ['modelValue', 'criteriaType', 'section', 'hasNestedCriteria'],
           emits: ['update:modelValue', 'add-nested-criteria', 'select-concept-set-for-attribute', 'select-concept-for-attribute']
         },
-        NestedCriteriaEditor: {
+        GroupCriteriaUI: {
+          name: 'GroupCriteriaUI',
           template: '<div class="nested-criteria-stub"><slot /></div>',
           props: ['modelValue', 'depth'],
           emits: ['update:modelValue', 'remove', 'select-concept-set']
@@ -87,7 +88,7 @@ describe('CriteriaEventCard', () => {
       expect(header.find('[data-testid="event-concept-set-field"]').exists()).toBe(true)
     })
 
-    it('should show nested criteria editor when nestedCriteria exists', () => {
+    it('should render GroupCriteriaUI when nestedCriteria exists', () => {
       const event = createMockEvent({
         nestedCriteria: {
           id: 'nested-1',
@@ -96,7 +97,27 @@ describe('CriteriaEventCard', () => {
         }
       })
       const wrapper = mountComponent(event)
-      expect(wrapper.find('.nested-criteria-stub').exists()).toBe(true)
+      expect(wrapper.findComponent({ name: 'GroupCriteriaUI' }).exists()).toBe(true)
+    })
+
+    it('forwards a nested GroupCriteriaUI select-concept-set (number payload) as select-concept-set-nested', () => {
+      const event = createMockEvent({
+        nestedCriteria: { id: 'nested-1', logicType: 'ALL', events: [] },
+      })
+      const wrapper = mountComponent(event)
+      const group = wrapper.findComponent({ name: 'GroupCriteriaUI' })
+      group.vm.$emit('select-concept-set', 2)
+      expect(wrapper.emitted('select-concept-set-nested')![0]).toEqual([2])
+    })
+
+    it('forwards a nested GroupCriteriaUI select-concept-set (object payload) using eventIndex', () => {
+      const event = createMockEvent({
+        nestedCriteria: { id: 'nested-1', logicType: 'ALL', events: [] },
+      })
+      const wrapper = mountComponent(event)
+      const group = wrapper.findComponent({ name: 'GroupCriteriaUI' })
+      group.vm.$emit('select-concept-set', { eventIndex: 3, nestedEventIndex: 1 })
+      expect(wrapper.emitted('select-concept-set-nested')![0]).toEqual([3])
     })
 
     it('hides the cardinality sidebar by default and shows it when enabled', () => {
@@ -341,6 +362,34 @@ describe('CriteriaEventCard', () => {
       await addAttr(wrapper, 'age', 'numericRange')
       const emittedEvent = wrapper.emitted('update')![0][0] as CohortEvent
       expect(emittedEvent.attributes).toHaveLength(2)
+    })
+  })
+
+  describe('criteria options (allow outside observation period / restrict visit)', () => {
+    it('hides the options row by default and shows it when showCriteriaOptions is set', () => {
+      expect(mountComponent().find('[data-testid="criteria-options"]').exists()).toBe(false)
+      const withOptions = mountComponent(createMockEvent(), { showCriteriaOptions: true })
+      expect(withOptions.find('[data-testid="criteria-options"]').exists()).toBe(true)
+    })
+
+    it('emits update toggling ignoreObservationPeriod', async () => {
+      const wrapper = mountComponent(createMockEvent({ ignoreObservationPeriod: false }), {
+        showCriteriaOptions: true,
+      })
+      await (wrapper.vm as unknown as { setIgnoreObservationPeriod: (v: boolean) => void })
+        .setIgnoreObservationPeriod(true)
+      const emitted = wrapper.emitted('update')![0][0] as CohortEvent
+      expect(emitted.ignoreObservationPeriod).toBe(true)
+    })
+
+    it('emits update toggling restrictVisit', async () => {
+      const wrapper = mountComponent(createMockEvent({ restrictVisit: false }), {
+        showCriteriaOptions: true,
+      })
+      await (wrapper.vm as unknown as { setRestrictVisit: (v: boolean) => void })
+        .setRestrictVisit(true)
+      const emitted = wrapper.emitted('update')![0][0] as CohortEvent
+      expect(emitted.restrictVisit).toBe(true)
     })
   })
 

@@ -32,7 +32,7 @@ function mountDetail(props: Record<string, unknown> = {}) {
     global: {
       plugins: [vuetify],
       stubs: {
-        CriteriaGroupEditor: {
+        GroupCriteriaUI: {
           template: '<div class="criteria-group-editor-stub"/>',
           props: ['modelValue'],
           emits: ['update:modelValue', 'remove', 'select-concept-set', 'select-concept', 'edit-concept-set'],

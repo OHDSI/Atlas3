@@ -1,5 +1,5 @@
 /**
- * CriteriaGroupEditor Component Tests
+ * GroupCriteriaUI Component Tests
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -8,7 +8,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { ref } from 'vue'
-import CriteriaGroupEditor from '@/components/cohort-builder/CriteriaGroupEditor.vue'
+import GroupCriteriaUI from '@/components/cohort-builder/GroupCriteriaUI.vue'
 import type { CriteriaGroup } from '@/models/cohort.types'
 
 vi.mock('@/composables/useI18n', async () => {
@@ -101,7 +101,7 @@ function createMockCriteriaGroupWithEvents(): CriteriaGroup {
 const mockCriteriaGroupWithEvents: CriteriaGroup = createMockCriteriaGroupWithEvents()
 
 function mountComponent(props = {}) {
-  return mount(CriteriaGroupEditor, {
+  return mount(GroupCriteriaUI, {
     props: {
       modelValue: mockCriteriaGroup,
       ...props
@@ -109,11 +109,6 @@ function mountComponent(props = {}) {
     global: {
       plugins: [vuetify],
       stubs: {
-        NestedCriteriaEditor: {
-          template: '<div class="nested-criteria-editor-stub" />',
-          props: ['modelValue', 'depth'],
-          emits: ['update:modelValue', 'remove', 'select-concept-set']
-        },
         AttributesEditor: {
           template: '<div class="attributes-editor-stub" />',
           props: ['modelValue', 'criteriaType', 'hasNestedCriteria'],
@@ -129,7 +124,7 @@ function mountComponent(props = {}) {
   })
 }
 
-describe('CriteriaGroupEditor', () => {
+describe('GroupCriteriaUI', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
@@ -245,6 +240,18 @@ describe('CriteriaGroupEditor', () => {
       const updatedGroup = emitted[emitted.length - 1][0] as CriteriaGroup
       expect(updatedGroup.events.length).toBe(1)
       expect(updatedGroup.events[0].criteriaType).toBe('ConditionOccurrence')
+    })
+
+    it('defaults ignoreObservationPeriod to true for a newly added criteria', async () => {
+      const wrapper = mountComponent()
+      const vm = wrapper.vm as any
+
+      vm.addEvent('ConditionOccurrence')
+      await wrapper.vm.$nextTick()
+
+      const emitted = wrapper.emitted('update:modelValue') as any[]
+      const updatedGroup = emitted[emitted.length - 1][0] as CriteriaGroup
+      expect(updatedGroup.events[0].ignoreObservationPeriod).toBe(true)
     })
 
     it('should remove event when remove button is clicked', async () => {
@@ -481,21 +488,12 @@ describe('CriteriaGroupEditor', () => {
     // Nested-criteria mutations (add/update/remove) now happen inside the
     // shared CriteriaEventCard; the group relays the child's `update`.
 
-    it('should render nested criteria editor when nested criteria exists', () => {
-      const group: CriteriaGroup = {
-        ...createMockCriteriaGroupWithEvents(),
-        events: [{
-          ...mockCriteriaGroupWithEvents.events[0],
-          nestedCriteria: {
-            id: 'nested-1',
-            logicType: 'ALL',
-            events: []
-          }
-        }]
-      }
-      const wrapper = mountComponent({ modelValue: group })
-      const nestedEditor = wrapper.find('.nested-criteria-editor-stub')
-      expect(nestedEditor.exists()).toBe(true)
+    // Nested-criteria rendering now lives in the shared CriteriaEventCard
+    // (covered by CriteriaEventCard.spec). The group's job is to delegate each
+    // event to that card.
+    it('renders group events via the shared CriteriaEventCard', () => {
+      const wrapper = mountComponent({ modelValue: createMockCriteriaGroupWithEvents() })
+      expect(wrapper.findComponent({ name: 'CriteriaEventCard' }).exists()).toBe(true)
     })
   })
 

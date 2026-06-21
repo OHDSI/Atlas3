@@ -7,6 +7,7 @@ import type {
   CriteriaType,
   QualifyingLimit,
   LogicType,
+  CriteriaGroup,
 } from '@/models/cohort.types'
 import type { EventAttribute, TextAttributeKey } from '@/models/event.types'
 import type {
@@ -18,6 +19,7 @@ import type {
   AtlasCriteriaTypeObject,
   AtlasConceptSetItem,
   AtlasEndStrategy,
+  AtlasGroup,
 } from '@/models/atlas.types'
 
 interface AtlasJSON {
@@ -247,6 +249,21 @@ function convertDemographicEventToAtlas(event: CohortEvent): Record<string, unkn
   return out
 }
 
+/**
+ * Convert a CriteriaGroup (nested/correlated criteria or a sub-group) to the
+ * CIRCE group shape (Type/Count/CriteriaList/DemographicCriteriaList/Groups).
+ * Recurses through `nestedGroups` so sub-groups survive (#112).
+ */
+function convertGroupToAtlasGroup(group: CriteriaGroup): AtlasGroup {
+  return {
+    Type: group.logicType,
+    Count: group.count,
+    CriteriaList: group.events.map(e => convertEventToAtlas(e, true)),
+    DemographicCriteriaList: [],
+    Groups: (group.nestedGroups ?? []).map(convertGroupToAtlasGroup),
+  }
+}
+
 // CRITICAL: Uses ?? for zero-count preservation
 function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false): AtlasCriteria {
   if (event.criteriaType === 'Demographic') {
@@ -438,13 +455,7 @@ function convertEventToAtlas(event: CohortEvent, wrapInCriteria: boolean = false
   }
 
   if (event.nestedCriteria) {
-    atlasEvent.CorrelatedCriteria = {
-      Type: event.nestedCriteria.logicType,
-      Count: event.nestedCriteria.count,
-      CriteriaList: event.nestedCriteria.events.map(e => convertEventToAtlas(e, true)),
-      DemographicCriteriaList: [],
-      Groups: [],
-    }
+    atlasEvent.CorrelatedCriteria = convertGroupToAtlasGroup(event.nestedCriteria)
   }
 
   return atlasEvent
@@ -911,6 +922,32 @@ export function convertAtlasToInternal(atlas: AtlasJSON): Partial<CohortDefiniti
   }
 }
 
+/** CIRCE group shape as seen on the way back in (correlated criteria / sub-group). */
+interface AtlasGroupShape {
+  Type?: string
+  Count?: number
+  CriteriaList?: AtlasCriteria[]
+  Groups?: AtlasGroupShape[]
+}
+
+/**
+ * Convert a CIRCE group (correlated criteria or sub-group) back to a
+ * CriteriaGroup, recursing through `Groups` so sub-groups survive (#112).
+ */
+function convertAtlasGroupToGroup(
+  group: AtlasGroupShape,
+  conceptSets?: AtlasConceptSet[]
+): CriteriaGroup {
+  const nestedGroups = (group.Groups ?? []).map(g => convertAtlasGroupToGroup(g, conceptSets))
+  return {
+    id: generateId(),
+    logicType: (group.Type as LogicType) || 'ALL',
+    count: group.Count,
+    events: group.CriteriaList?.map((e: AtlasCriteria) => convertAtlasToEvent(e, conceptSets)) || [],
+    ...(nestedGroups.length > 0 ? { nestedGroups } : {}),
+  }
+}
+
 function convertAtlasToEvent(
   atlasEvent: AtlasCriteria,
   conceptSets?: AtlasConceptSet[]
@@ -1121,25 +1158,10 @@ function convertAtlasToEvent(
     }
   }
 
-  interface AtlasEventWithCorrelatedCriteria {
-    CorrelatedCriteria?: {
-      Type?: string
-      Count?: number
-      CriteriaList?: AtlasCriteria[]
-    }
-  }
-  const eventWithCorrelatedCriteria = atlasEvent as AtlasEventWithCorrelatedCriteria
+  const eventWithCorrelatedCriteria = atlasEvent as { CorrelatedCriteria?: AtlasGroupShape }
   const correlatedCriteria = eventWithCorrelatedCriteria.CorrelatedCriteria
   if (correlatedCriteria) {
-    event.nestedCriteria = {
-      id: generateId(),
-      logicType: (correlatedCriteria.Type as LogicType) || 'ALL',
-      count: correlatedCriteria.Count,
-      events:
-        correlatedCriteria.CriteriaList?.map((e: AtlasCriteria) =>
-          convertAtlasToEvent(e, conceptSets)
-        ) || [],
-    }
+    event.nestedCriteria = convertAtlasGroupToGroup(correlatedCriteria, conceptSets)
   }
 
   return event

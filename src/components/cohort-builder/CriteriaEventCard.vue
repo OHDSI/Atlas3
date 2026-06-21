@@ -178,17 +178,41 @@
           />
         </div>
 
+        <!-- Per-criteria option switches (wrapped criteria only). These map to
+             CIRCE Criteria.IgnoreObservationPeriod / RestrictVisit and are
+             irrelevant to entry events, so they're gated on showCriteriaOptions. -->
+        <div
+          v-if="showCriteriaOptions"
+          class="criteria-options mt-3"
+          data-testid="criteria-options"
+        >
+          <AtlasSwitch
+            :model-value="event.ignoreObservationPeriod ?? false"
+            :label="t('components.criteriaGroup.criteriaGroupText_2', 'allow events from outside observation period').value"
+            density="compact"
+            hide-details
+            @update:model-value="(v) => setIgnoreObservationPeriod(!!v)"
+          />
+          <AtlasSwitch
+            :model-value="event.restrictVisit ?? false"
+            :label="t('components.criteriaGroup.criteriaGroupText_1', 'restrict to the same visit occurrence').value"
+            density="compact"
+            hide-details
+            @update:model-value="(v) => setRestrictVisit(!!v)"
+          />
+        </div>
+
         <!-- Nested criteria (recursive) -->
         <div
           v-if="event.nestedCriteria"
           class="nested-criteria-section mt-3"
         >
-          <NestedCriteriaEditor
+          <GroupCriteriaUI
             :model-value="event.nestedCriteria"
             :depth="depth + 1"
             @update:model-value="updateNestedCriteria"
             @remove="removeNestedCriteria"
-            @select-concept-set="emit('select-concept-set-nested', $event.eventIndex)"
+            @select-concept-set="onNestedSelectConceptSet"
           />
         </div>
       </div>
@@ -197,7 +221,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasTextField } from '@/components/ui'
+import { AtlasButton, AtlasIconButton, AtlasList, AtlasListItem, AtlasMenu, AtlasSwitch, AtlasTextField } from '@/components/ui'
 import { computed } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
@@ -219,7 +243,7 @@ import type {
 } from '@/models/event.types'
 import AttributesEditor from '@/components/cohort-builder/AttributesEditor.vue'
 import EventConceptSetField from '@/components/cohort-builder/EventConceptSetField.vue'
-import NestedCriteriaEditor from '@/components/cohort-builder/NestedCriteriaEditor.vue'
+import GroupCriteriaUI from '@/components/cohort-builder/GroupCriteriaUI.vue'
 import TemporalFilterChip from '@/components/cohort-builder/TemporalFilterChip.vue'
 import TemporalWindowEditor from '@/components/cohort-builder/TemporalWindowEditor.vue'
 
@@ -231,7 +255,13 @@ interface Props {
   showCardinality?: boolean
   /** Show the temporal-window control (inclusion / nested criteria). */
   showTemporal?: boolean
-  /** Nesting depth, forwarded to recursive NestedCriteriaEditor. */
+  /**
+   * Show the per-criteria option switches (allow events outside observation
+   * period / restrict to same visit as index). These map to CIRCE wrapped-
+   * criteria flags and only apply to additional/inclusion/nested criteria.
+   */
+  showCriteriaOptions?: boolean
+  /** Nesting depth, forwarded to the recursive nested GroupCriteriaUI. */
   depth?: number
 }
 
@@ -239,6 +269,7 @@ const props = withDefaults(defineProps<Props>(), {
   section: 'initialEvents',
   showCardinality: false,
   showTemporal: false,
+  showCriteriaOptions: false,
   depth: 0,
 })
 
@@ -329,6 +360,14 @@ function removeTemporalWindow() {
   emit('update', updated)
 }
 
+// ── Criteria options (wrapped-criteria flags) ─────────────────────────────
+function setIgnoreObservationPeriod(value: boolean) {
+  emit('update', { ...props.event, ignoreObservationPeriod: value })
+}
+function setRestrictVisit(value: boolean) {
+  emit('update', { ...props.event, restrictVisit: value })
+}
+
 // ── Concept set / attributes / nested ─────────────────────────────────────
 function removeConceptSet() {
   emit('update', { ...props.event, conceptSet: undefined })
@@ -349,6 +388,13 @@ function removeNestedCriteria() {
   const updated = { ...props.event }
   delete updated.nestedCriteria
   emit('update', updated)
+}
+// GroupCriteriaUI reports concept-set selection as either the child event index
+// (number) or a richer object for deeper nesting; forward the immediate child
+// index, matching the prior NestedCriteriaEditor contract.
+function onNestedSelectConceptSet(payload: number | { eventIndex: number }) {
+  const index = typeof payload === 'number' ? payload : payload.eventIndex
+  emit('select-concept-set-nested', index)
 }
 
 function addAttribute(attributeKey: string, attributeType: string) {

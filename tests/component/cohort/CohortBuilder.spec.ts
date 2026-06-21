@@ -171,7 +171,7 @@ const childStubs = {
   InclusionCriteriaPanel: true,
   ExitCriteriaPanel: true,
   CensorWindowEditor: true,
-  CriteriaGroupEditor: true,
+  GroupCriteriaUI: true,
   CohortGenerationSection: true,
   VersionsTabContent: true,
   CohortBreadcrumb: true,
