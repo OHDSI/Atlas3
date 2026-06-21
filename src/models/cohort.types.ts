@@ -82,12 +82,13 @@ export interface CriteriaGroup {
   nestedGroups?: CriteriaGroup[] // Recursive nesting support
 }
 
-export interface NestedCriteria {
-  id: string
-  logicType: LogicType
-  count?: number // For AT_LEAST and AT_MOST
-  events: CohortEvent[] // Recursive: CohortEvent contains NestedCriteria
-}
+/**
+ * Nested (correlated) criteria are structurally a {@link CriteriaGroup} — same
+ * logic type, count, events and recursive sub-groups. They are unified into one
+ * type (and one editor, GroupCriteriaUI) per #112. Alias kept so existing
+ * `NestedCriteria` references keep compiling during/after the migration.
+ */
+export type NestedCriteria = CriteriaGroup
 
 export type LogicType = 'ALL' | 'ANY' | 'AT_LEAST' | 'AT_MOST'
 
