@@ -11,7 +11,7 @@
         aria-disabled="true"
         :title="t('components.cohortExpressionEditor.entryEventsAnyHint', 'Entry events are matched with ANY (or)').value"
       >
-        {{ t('options.any', 'ANY') }}
+        <span class="entry-any-label__text">{{ t('options.any', 'ANY') }}</span>
       </div>
       <div class="events-container__body">
         <!-- Toolbar: add-criteria menu + observation-period pill -->
@@ -236,25 +236,51 @@ function updateObservationPeriod(field: 'priorDays' | 'postDays', value: string 
   padding: 12px 20px 16px;
 }
 
-/* Greyed, non-interactive "ANY" label (discussion #100). Mirrors the
-   inclusion-rule vertical match-type label but neutral and not clickable —
-   entry events are always an implicit OR. */
+/* Greyed, non-interactive "ANY" label (discussion #100). Mirrors the geometry
+   of the inclusion-rule vertical match-type label (GroupCriteriaUI's
+   .vertical-label / ::before accent stripe) so the two read as the same family,
+   but neutral and not clickable — entry events are always an implicit OR, so
+   there's nothing to edit. Greys are hard-coded (not theme tokens) for the same
+   reason GroupCriteriaUI hard-codes its navy: this app's --v-theme-*-variant
+   tokens resolve to 0,0,0 and can't express a muted grey. */
 .entry-any-label {
   position: relative;
   width: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #d4d9e0;
+  border-radius: 0 0 0 8px;
+  background: #f6f7f9;
+  user-select: none;
+  cursor: default;
+}
+
+/* Left accent stripe — the grey counterpart of the coloured bar the editable
+   match-type marker shows. */
+.entry-any-label::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 30%;
+  background: #aab2bf;
+  border-radius: 0 0 0 6px;
+}
+
+.entry-any-label__text {
+  position: relative;
+  z-index: 1;
   writing-mode: sideways-lr;
   text-orientation: sideways;
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.5px;
-  color: rgb(var(--v-theme-on-surface-variant));
-  background: rgb(var(--v-theme-surface-variant), 0.5);
-  border-right: 1px solid rgb(var(--v-theme-outline-variant));
-  user-select: none;
-  cursor: default;
+  padding-left: 8px;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  color: #79828f;
 }
 
 .add-filter-wrapper {

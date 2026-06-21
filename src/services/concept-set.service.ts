@@ -52,7 +52,23 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
   })
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    // Surface the server's error body (e.g. WebAPI's "Current data source does
+    // not contain required concepts …") instead of the bare status text, which
+    // alone is useless for diagnosing why a concept set won't resolve.
+    let detail = response.statusText
+    try {
+      const text = await response.text()
+      if (text) {
+        try {
+          detail = (JSON.parse(text) as { message?: string }).message ?? text
+        } catch {
+          detail = text
+        }
+      }
+    } catch {
+      // keep statusText
+    }
+    throw new Error(`HTTP ${response.status}: ${detail}`)
   }
 
   // Handle 204 No Content
@@ -94,7 +110,10 @@ export async function getAllConceptSets(): Promise<ConceptSetListItem[]> {
  * @param id Concept set ID
  * @returns Concept set with items or null if not found
  */
-export async function getConceptSetById(id: number | string): Promise<ConceptSet | null> {
+export async function getConceptSetById(
+  id: number | string,
+  options?: { rethrow?: boolean }
+): Promise<ConceptSet | null> {
   try {
     // Fetch metadata and expression separately
     const [metadata, expression] = await Promise.all([
@@ -112,6 +131,9 @@ export async function getConceptSetById(id: number | string): Promise<ConceptSet
     return mapConceptSetFromAPI(combined)
   } catch (error) {
     logger.error('ConceptSet', `Failed to fetch concept set ${id}`, error)
+    // Most callers treat a failed load as "not found" (null). Callers that need
+    // to tell the user *why* it failed (e.g. the Compare picker) opt into rethrow.
+    if (options?.rethrow) throw error
     return null
   }
 }
