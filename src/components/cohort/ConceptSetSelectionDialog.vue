@@ -44,7 +44,7 @@
           <!-- In-definition (local) concept sets (#111). Selecting one reuses it
                in place; importing from the repository below makes a fresh copy. -->
           <section
-            v-if="localConceptSets.length > 0"
+            v-if="selectableLocalSets.length > 0"
             class="cs-picker__local"
             data-testid="local-concept-sets"
           >
@@ -53,7 +53,7 @@
             </h3>
             <AtlasCard padding="none">
               <button
-                v-for="set in localConceptSets"
+                v-for="set in selectableLocalSets"
                 :key="`local-${set.id}`"
                 type="button"
                 class="cs-picker__local-item"
@@ -73,7 +73,7 @@
           </section>
 
           <h3
-            v-if="localConceptSets.length > 0"
+            v-if="selectableLocalSets.length > 0"
             class="cs-picker__section-title"
           >
             {{ t('components.conceptSetBuilder.importFromRepository', 'Import from repository').value }}
@@ -213,6 +213,7 @@ import type { ConceptSetListItem } from '@/models/concept-set.types'
 import type { ConceptSetReference } from '@/models/cohort.types'
 import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasTextField } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
+import { hasRealConceptSetId } from '@/utils/concept-set-id'
 
 interface Props {
   modelValue: boolean
@@ -286,6 +287,12 @@ watch(
     }
   }
 )
+
+// Only sets with a real (positive numeric) id are selectable. The cohort seeds
+// not-yet-filled criteria with a placeholder { id: 0|null, name: 'Select…' }
+// concept set; those would otherwise surface here as bogus "Select concept set…"
+// rows that mint an empty set when clicked.
+const selectableLocalSets = computed(() => props.localConceptSets.filter(hasRealConceptSetId))
 
 function onLocalSelect(ref: ConceptSetReference) {
   emit('local-concept-set-selected', ref)

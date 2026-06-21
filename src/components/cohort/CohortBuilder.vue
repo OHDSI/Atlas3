@@ -628,7 +628,7 @@ import CohortBreadcrumb from './CohortBreadcrumb.vue'
 import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
-import { ensureUniqueConceptSetId } from '@/utils/concept-set-id'
+import { ensureUniqueConceptSetId, hasRealConceptSetId } from '@/utils/concept-set-id'
 import { resolveCriteriaTargetEvent } from '@/utils/criteria-target'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
@@ -1735,7 +1735,10 @@ async function handleConceptSetSelected(conceptSet: {
  * the cohort dedupes to a single CodesetId rather than minting a copy.
  */
 function handleLocalConceptSetSelected(conceptSet: ConceptSetReference) {
-  if (!conceptSet || !selectedCriteriaContext.value) return
+  // Guard the reuse invariant: only a set with a real id can be reused in place.
+  // The dialog already filters placeholders out, this just keeps it impossible
+  // for an id-less set to slip through and get minted as a new empty set.
+  if (!conceptSet || !hasRealConceptSetId(conceptSet) || !selectedCriteriaContext.value) return
   assignConceptSetToContext({ ...conceptSet })
   isConceptSetDialogOpen.value = false
 }

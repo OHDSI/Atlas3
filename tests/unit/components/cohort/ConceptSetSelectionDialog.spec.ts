@@ -172,6 +172,25 @@ describe('ConceptSetSelectionDialog', () => {
       expect(wrapper.text()).toContain('Hospital visits')
     })
 
+    it('excludes placeholder concept sets (id 0 / null / undefined) from the local list', () => {
+      const withPlaceholders = [
+        { id: 1, name: 'Diabetes drugs' },
+        { id: 0, name: 'Select concept set...' },
+        { id: null as unknown as number, name: 'Select concept set...' },
+      ]
+      const wrapper = mountComponent({ localConceptSets: withPlaceholders })
+      const items = wrapper.findAll('[data-testid="local-concept-set-item"]')
+      expect(items.length).toBe(1)
+      expect(wrapper.text()).toContain('Diabetes drugs')
+    })
+
+    it('hides the local section entirely when only placeholders are present', () => {
+      const wrapper = mountComponent({
+        localConceptSets: [{ id: 0, name: 'Select concept set...' }],
+      })
+      expect(wrapper.find('[data-testid="local-concept-sets"]').exists()).toBe(false)
+    })
+
     it('emits local-concept-set-selected with the ref and closes when a local row is clicked', async () => {
       const wrapper = mountComponent({ localConceptSets: localSets })
       const items = wrapper.findAll('[data-testid="local-concept-set-item"]')
