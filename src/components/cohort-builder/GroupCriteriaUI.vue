@@ -95,6 +95,16 @@
 
       <!-- Main Content -->
       <div class="flex-grow-1">
+        <!-- Deep-nesting guard (carried over from the nested-criteria editor). -->
+        <AtlasAlert
+          v-if="depth > 10"
+          type="warning"
+          density="compact"
+          class="mb-2"
+          data-testid="depth-warning"
+        >
+          {{ t('components.nestedCriteria.depthWarning', 'Deep nesting detected') }} ({{ depth }})
+        </AtlasAlert>
         <!-- Header with Add Filter and Delete buttons -->
         <div class="group-header">
           <AtlasMenu>
@@ -176,6 +186,7 @@
                     show-cardinality
                     show-temporal
                     show-criteria-options
+                    :depth="depth"
                     @update="onEventUpdate(index, $event)"
                     @remove="removeEvent(index)"
                     @select-concept-set="selectConceptSetForEvent(index)"
@@ -220,6 +231,7 @@
           >
             <GroupCriteriaUI
               :model-value="nested"
+              :depth="depth + 1"
               @update:model-value="updateNestedGroup(idx, $event)"
               @remove="removeNestedGroup(idx)"
             />
@@ -253,9 +265,13 @@ const { t } = useI18n()
 
 interface Props {
   modelValue?: CriteriaGroup
+  /** Nesting depth, for indentation and the deep-nesting warning. */
+  depth?: number
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  depth: 0,
+})
 const emit = defineEmits<{
   'update:modelValue': [value: CriteriaGroup]
   remove: []

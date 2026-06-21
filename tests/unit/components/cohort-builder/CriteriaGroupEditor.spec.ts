@@ -493,21 +493,11 @@ describe('CriteriaGroupEditor', () => {
     // Nested-criteria mutations (add/update/remove) now happen inside the
     // shared CriteriaEventCard; the group relays the child's `update`.
 
-    it('should render nested criteria editor when nested criteria exists', () => {
-      const group: CriteriaGroup = {
-        ...createMockCriteriaGroupWithEvents(),
-        events: [{
-          ...mockCriteriaGroupWithEvents.events[0],
-          nestedCriteria: {
-            id: 'nested-1',
-            logicType: 'ALL',
-            events: []
-          }
-        }]
-      }
-      const wrapper = mountComponent({ modelValue: group })
-      const nestedEditor = wrapper.find('.nested-criteria-editor-stub')
-      expect(nestedEditor.exists()).toBe(true)
+    // Nested-criteria rendering now lives in the shared CriteriaEventCard
+    // (covered by CriteriaEventCard.spec).
+    it('renders group events via the shared CriteriaEventCard', () => {
+      const wrapper = mountComponent({ modelValue: createMockCriteriaGroupWithEvents() })
+      expect(wrapper.findComponent({ name: 'CriteriaEventCard' }).exists()).toBe(true)
     })
   })
 

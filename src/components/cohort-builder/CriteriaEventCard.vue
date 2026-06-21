@@ -207,12 +207,12 @@
           v-if="event.nestedCriteria"
           class="nested-criteria-section mt-3"
         >
-          <NestedCriteriaEditor
+          <GroupCriteriaUI
             :model-value="event.nestedCriteria"
             :depth="depth + 1"
             @update:model-value="updateNestedCriteria"
             @remove="removeNestedCriteria"
-            @select-concept-set="emit('select-concept-set-nested', $event.eventIndex)"
+            @select-concept-set="onNestedSelectConceptSet"
           />
         </div>
       </div>
@@ -243,7 +243,7 @@ import type {
 } from '@/models/event.types'
 import AttributesEditor from '@/components/cohort-builder/AttributesEditor.vue'
 import EventConceptSetField from '@/components/cohort-builder/EventConceptSetField.vue'
-import NestedCriteriaEditor from '@/components/cohort-builder/NestedCriteriaEditor.vue'
+import GroupCriteriaUI from '@/components/cohort-builder/GroupCriteriaUI.vue'
 import TemporalFilterChip from '@/components/cohort-builder/TemporalFilterChip.vue'
 import TemporalWindowEditor from '@/components/cohort-builder/TemporalWindowEditor.vue'
 
@@ -388,6 +388,13 @@ function removeNestedCriteria() {
   const updated = { ...props.event }
   delete updated.nestedCriteria
   emit('update', updated)
+}
+// GroupCriteriaUI reports concept-set selection as either the child event index
+// (number) or a richer object for deeper nesting; forward the immediate child
+// index, matching the prior NestedCriteriaEditor contract.
+function onNestedSelectConceptSet(payload: number | { eventIndex: number }) {
+  const index = typeof payload === 'number' ? payload : payload.eventIndex
+  emit('select-concept-set-nested', index)
 }
 
 function addAttribute(attributeKey: string, attributeType: string) {
