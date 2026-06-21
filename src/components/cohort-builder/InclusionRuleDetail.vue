@@ -26,7 +26,7 @@
       :key="group.id"
       class="mb-3"
     >
-      <CriteriaGroupEditor
+      <GroupCriteriaUI
         :model-value="group"
         @update:model-value="onUpdateGroup(groupIndex, $event)"
         @remove="onRemoveGroup(groupIndex)"
@@ -57,7 +57,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import { AtlasButton } from '@/components/ui'
 import { useI18n } from '@/composables/useI18n'
-import CriteriaGroupEditor from './CriteriaGroupEditor.vue'
+import GroupCriteriaUI from './GroupCriteriaUI.vue'
 import type { CriteriaGroup, InclusionRule } from '@/models/cohort.types'
 
 const { t } = useI18n()

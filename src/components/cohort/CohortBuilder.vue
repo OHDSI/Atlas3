@@ -618,7 +618,7 @@ import ConceptSetEditor from '../concepts/ConceptSetEditor.vue'
 import InclusionCriteriaPanel from '../cohort-builder/InclusionCriteriaPanel.vue'
 import ExitCriteriaPanel from '../cohort-builder/ExitCriteriaPanel.vue'
 import CensorWindowEditor from '../cohort-builder/CensorWindowEditor.vue'
-import CriteriaGroupEditor from '../cohort-builder/CriteriaGroupEditor.vue'
+import GroupCriteriaUI from '../cohort-builder/GroupCriteriaUI.vue'
 import CohortGenerationSection from './CohortGenerationSection.vue'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import type { VersionsConfig, User } from '@/components/versions/types'
@@ -731,7 +731,7 @@ const isConfirmingNavigation = ref(false) // Flag to prevent double confirmation
 const loadedSnapshot = ref<string | null>(null)
 
 // Component refs
-const additionalCriteriaRef = ref<InstanceType<typeof CriteriaGroupEditor> | null>(null)
+const additionalCriteriaRef = ref<InstanceType<typeof GroupCriteriaUI> | null>(null)
 
 // Generation state
 const selectedSourceKey = ref<string | null>(null)
@@ -1549,7 +1549,7 @@ function handleSelectConceptForAdditionalCriteria(context: {
     ruleIndex: -2,
     groupIndex: 0,
     eventIndex: context.eventIndex,
-    attributeIndex: -1, // Will be set by CriteriaGroupEditor
+    attributeIndex: -1, // Will be set by GroupCriteriaUI
   }
   selectedConceptDomainFilter.value = context.domainFilter
   isConceptSearchDialogOpen.value = true

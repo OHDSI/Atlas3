@@ -39,7 +39,7 @@ function mountEditor(initial: Stratum[] = []) {
     global: {
       plugins: [vuetify],
       stubs: {
-        CriteriaGroupEditor: true,
+        GroupCriteriaUI: true,
         AtlasDialog: {
           name: 'AtlasDialog',
           template: '<div><slot /><slot name="actions" /></div>',
@@ -99,7 +99,7 @@ describe('StrataEditor', () => {
     expect(next[0]!.id).toBe('b')
   })
 
-  it('forwards CriteriaGroupEditor update:modelValue back into the stratum', async () => {
+  it('forwards GroupCriteriaUI update:modelValue back into the stratum', async () => {
     const group: CriteriaGroup = { id: 'g1', logicType: 'ALL', events: [] }
     const initial: Stratum[] = [{ id: 'a', name: 'A', criteria: group }]
     wrapper = mountEditor(initial)
@@ -107,7 +107,7 @@ describe('StrataEditor', () => {
     await wrapper.get('[data-testid="strata-editor-edit-criteria-0"]').trigger('click')
     await flushPromises()
 
-    const editor = wrapper.findComponent({ name: 'CriteriaGroupEditor' })
+    const editor = wrapper.findComponent({ name: 'GroupCriteriaUI' })
     expect(editor.exists()).toBe(true)
     const nextGroup: CriteriaGroup = { id: 'g1', logicType: 'ANY', events: [] }
     await editor.vm.$emit('update:modelValue', nextGroup)
