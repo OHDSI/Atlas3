@@ -159,6 +159,7 @@ export interface AtlasGroup {
   Count?: number
   CriteriaList: AtlasCriteria[]
   DemographicCriteriaList?: Record<string, unknown>[]
+  Groups?: AtlasGroup[] // CIRCE groups nest recursively (#112)
 }
 
 export interface AtlasQualifiedLimit {
