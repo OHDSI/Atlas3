@@ -109,11 +109,6 @@ function mountComponent(props = {}) {
     global: {
       plugins: [vuetify],
       stubs: {
-        NestedCriteriaEditor: {
-          template: '<div class="nested-criteria-editor-stub" />',
-          props: ['modelValue', 'depth'],
-          emits: ['update:modelValue', 'remove', 'select-concept-set']
-        },
         AttributesEditor: {
           template: '<div class="attributes-editor-stub" />',
           props: ['modelValue', 'criteriaType', 'hasNestedCriteria'],

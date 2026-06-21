@@ -261,7 +261,7 @@ interface Props {
    * criteria flags and only apply to additional/inclusion/nested criteria.
    */
   showCriteriaOptions?: boolean
-  /** Nesting depth, forwarded to recursive NestedCriteriaEditor. */
+  /** Nesting depth, forwarded to the recursive nested GroupCriteriaUI. */
   depth?: number
 }
 
