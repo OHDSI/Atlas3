@@ -963,7 +963,7 @@ describe('Concept Sets Store', () => {
       expect(compareConceptSets).not.toHaveBeenCalled()
     })
 
-    it('should set comparisonError, clear comparison and other set when service throws', async () => {
+    it('should set comparisonError and clear comparison when service throws (keeps the other set)', async () => {
       const store = useConceptSetsStore()
       store.currentSet = { id: 1, name: 'CS1', items: [makeItem(100)] }
 
@@ -978,7 +978,9 @@ describe('Concept Sets Store', () => {
 
       expect(store.comparisonError).toContain('boom')
       expect(store.comparison).toEqual([])
-      expect(store.comparisonOtherSet).toBeNull()
+      // The selected other set is retained on error so the user can retry or
+      // switch modes without re-picking it (multi-mode toggle behavior).
+      expect(store.comparisonOtherSet?.id).toBe(2)
       expect(store.loadingComparison).toBe(false)
     })
 
