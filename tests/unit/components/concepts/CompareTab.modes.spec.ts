@@ -12,6 +12,12 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
+const downloadCsvMock = vi.fn()
+vi.mock('@/utils/csv', () => ({
+  arrayToCsv: vi.fn(() => 'csv'),
+  downloadCsv: (name: string, csv: string) => downloadCsvMock(name, csv),
+}))
+
 vi.mock('@/stores/webapi', () => ({
   useWebAPIStore: vi.fn(() => ({
     getValidVocabularySource: () => '',
@@ -70,5 +76,39 @@ describe('CompareTab — mode toggle (#102)', () => {
     await wrapper.find('[data-testid="mode-source"]').trigger('click')
 
     expect(spy).toHaveBeenCalledWith('SRC', 2, 'source')
+  })
+
+  it('relabels the code/vocabulary columns in Source mode', async () => {
+    const wrapper = mountComponent()
+    const store = primeComparable()
+    store.comparisonMode = 'source'
+    await wrapper.vm.$nextTick()
+
+    const text = wrapper.text()
+    expect(text).toContain('Source Code')
+    expect(text).toContain('Source Vocabulary')
+  })
+
+  it('keeps Concept Code header in non-source modes', async () => {
+    const wrapper = mountComponent()
+    const store = primeComparable()
+    store.comparisonMode = 'included'
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Concept Code')
+    expect(wrapper.text()).not.toContain('Source Vocabulary')
+  })
+
+  it('includes the mode in the export filename', async () => {
+    downloadCsvMock.mockClear()
+    const wrapper = mountComponent()
+    const store = primeComparable()
+    store.comparisonMode = 'source'
+    await wrapper.vm.$nextTick()
+
+    await wrapper.find('[data-testid="compare-export"]').trigger('click')
+
+    expect(downloadCsvMock).toHaveBeenCalled()
+    expect(downloadCsvMock.mock.calls[0][0]).toMatch(/compare_source_/)
   })
 })

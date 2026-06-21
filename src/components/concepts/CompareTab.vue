@@ -233,6 +233,8 @@ const rows = computed<Row[]>(() =>
   }))
 )
 
+const isSourceMode = computed(() => store.comparisonMode === 'source')
+
 const headers = computed(() => [
   { title: t('common.match', 'Match').value, key: 'match', sortable: true, width: '120px' },
   {
@@ -242,7 +244,9 @@ const headers = computed(() => [
     width: '110px',
   },
   {
-    title: t('columns.conceptCode', 'Concept Code').value,
+    title: isSourceMode.value
+      ? t('cs.browser.compare.sourceCode', 'Source Code').value
+      : t('columns.conceptCode', 'Concept Code').value,
     key: 'conceptCode',
     sortable: true,
     width: '130px',
@@ -250,7 +254,9 @@ const headers = computed(() => [
   { title: t('columns.conceptName', 'Concept Name').value, key: 'conceptName', sortable: true },
   { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true, width: '120px' },
   {
-    title: t('columns.vocabulary', 'Vocabulary').value,
+    title: isSourceMode.value
+      ? t('cs.browser.compare.sourceVocabulary', 'Source Vocabulary').value
+      : t('columns.vocabulary', 'Vocabulary').value,
     key: 'vocabularyId',
     sortable: true,
     width: '120px',
@@ -331,7 +337,7 @@ function onExport() {
   ])
   const left = (store.currentSet?.name ?? 'cs1').replace(/\s+/g, '_')
   const right = (store.comparisonOtherSet?.name ?? 'cs2').replace(/\s+/g, '_')
-  downloadCsv(`compare_${left}_vs_${right}.csv`, csv)
+  downloadCsv(`compare_${store.comparisonMode}_${left}_vs_${right}.csv`, csv)
 }
 </script>
 
