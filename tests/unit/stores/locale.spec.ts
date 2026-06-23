@@ -33,6 +33,15 @@ vi.mock('@/locales/en.json', () => ({
   },
 }))
 
+vi.mock('@/locales/ja.json', () => ({
+  default: {
+    common: {
+      save: '保存',
+      cancel: 'キャンセル',
+    },
+  },
+}))
+
 import { i18nService } from '@/services/i18n'
 
 const mockLocales = [
@@ -40,6 +49,15 @@ const mockLocales = [
   { code: 'es', name: 'Spanish' },
   { code: 'fr', name: 'French' },
 ]
+
+// Locales bundled with the frontend, always merged into the available list.
+const bundledLocales = [
+  { code: 'en', name: 'English' },
+  { code: 'ja', name: '日本語' },
+]
+// What the store exposes when the WebAPI returns mockLocales: WebAPI list plus
+// any bundled locale (here `ja`) the WebAPI didn't advertise.
+const mergedLocales = [...mockLocales, { code: 'ja', name: '日本語' }]
 
 const mockTranslationBundle: TranslationBundle = {
   locale: 'es',
@@ -183,7 +201,7 @@ describe('Locale Store', () => {
       await store.initialize()
 
       expect(store.initialized).toBe(true)
-      expect(store.availableLocales).toEqual(mockLocales)
+      expect(store.availableLocales).toEqual(mergedLocales)
     })
 
     it('should set default locales if fetch fails', async () => {
@@ -193,7 +211,7 @@ describe('Locale Store', () => {
 
       await store.initialize()
 
-      expect(store.availableLocales).toEqual([{ code: 'en', name: 'English' }])
+      expect(store.availableLocales).toEqual(bundledLocales)
       expect(store.initialized).toBe(true)
     })
 
@@ -208,16 +226,20 @@ describe('Locale Store', () => {
       expect(store.locale).toBe('es')
     })
 
-    it('should handle initialization error gracefully', async () => {
+    it('should initialize gracefully with bundled English when the WebAPI is down', async () => {
       const store = useLocaleStore()
       vi.mocked(i18nService.fetchLocales).mockRejectedValue(new Error('Network error'))
       vi.mocked(i18nService.fetchTranslations).mockRejectedValue(new Error('Network error'))
 
       await store.initialize()
 
+      // English is bundled, so the default locale resolves from the bundle and
+      // initialization fully recovers — no error, no WebAPI dependency.
       expect(store.initialized).toBe(true)
-      // Error can be from fetchTranslations or initialize catch block
-      expect(store.error).toBeTruthy()
+      expect(store.error).toBeNull()
+      expect(store.locale).toBe('en')
+      expect((store.translations as { common: Record<string, string> }).common.save).toBe('Save')
+      expect(i18nService.fetchTranslations).not.toHaveBeenCalled()
     })
   })
 
@@ -228,16 +250,16 @@ describe('Locale Store', () => {
 
       await store.fetchAvailableLocales()
 
-      expect(store.availableLocales).toEqual(mockLocales)
+      expect(store.availableLocales).toEqual(mergedLocales)
     })
 
-    it('should fallback to English on error', async () => {
+    it('should fallback to bundled locales on error', async () => {
       const store = useLocaleStore()
       vi.mocked(i18nService.fetchLocales).mockRejectedValue(new Error('Network error'))
 
       await store.fetchAvailableLocales()
 
-      expect(store.availableLocales).toEqual([{ code: 'en', name: 'English' }])
+      expect(store.availableLocales).toEqual(bundledLocales)
     })
   })
 
@@ -313,6 +335,35 @@ describe('Locale Store', () => {
       await store.fetchTranslations('es')
 
       expect(i18nService.fetchTranslations).toHaveBeenCalled()
+    })
+
+    it('should load bundled translations without calling the WebAPI', async () => {
+      const store = useLocaleStore()
+      // Seed the bundled English fallback so missing-key fallback can resolve.
+      await store.loadFallbackTranslations()
+
+      await store.fetchTranslations('ja')
+
+      expect(i18nService.fetchTranslations).not.toHaveBeenCalled()
+      const after = store.translations as { common: Record<string, string> }
+      expect(after.common.save).toBe('保存')
+      expect(store.translationCache.has('ja')).toBe(true)
+    })
+
+    it('should load bundled English without the WebAPI (regression: ja → en switch)', async () => {
+      // Regression: en used to be fetched from the WebAPI. With no i18n
+      // backend, switching ja → en failed and the UI stayed Japanese. en is
+      // now bundled like ja, so it always resolves.
+      const store = useLocaleStore()
+      store.availableLocales = bundledLocales
+      await store.changeLocale('ja')
+      expect((store.translations as { common: Record<string, string> }).common.save).toBe('保存')
+
+      await store.changeLocale('en')
+
+      expect(i18nService.fetchTranslations).not.toHaveBeenCalled()
+      expect(store.locale).toBe('en')
+      expect((store.translations as { common: Record<string, string> }).common.save).toBe('Save')
     })
   })
 

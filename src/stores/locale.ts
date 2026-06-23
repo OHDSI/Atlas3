@@ -5,8 +5,10 @@
 import { defineStore } from 'pinia'
 import type {
   LocaleState,
+  Locale,
   LocaleCode,
   LocaleFormat,
+  TranslationBundle,
   TranslationCache,
   Translations,
 } from '@/types/i18n'
@@ -15,10 +17,42 @@ import { logger } from '@/utils/logger'
 
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000 // 24 hours
 
+// Locales whose translations ship with the frontend bundle. These are always
+// offered in the language selector regardless of what the WebAPI advertises,
+// and their translations are loaded from the bundled JSON rather than fetched.
+const BUNDLED_LOCALES: Locale[] = [
+  { code: 'en', name: 'English' },
+  { code: 'ja', name: '日本語' },
+]
+
+// Lazy loaders for bundled translation files. These locales are served
+// entirely from the bundle without touching the WebAPI, so they always work
+// regardless of whether an i18n backend is configured. `en` also doubles as
+// the fallback layer (see loadFallbackTranslations).
+const bundledTranslationLoaders: Record<LocaleCode, () => Promise<Translations>> = {
+  en: () => import('@/locales/en.json').then(unwrapTranslations),
+  ja: () => import('@/locales/ja.json').then(unwrapTranslations),
+}
+
 // Atlas3-only keys (e.g. `route.*`) that don't exist in WebAPI's translation
 // bundle. We keep the bundled en.json as a fallback layer and deep-merge any
 // WebAPI bundle on top so missing keys still resolve.
 let bundledFallback: Translations | null = null
+
+// Dynamic JSON import returns a module namespace; the actual content is under
+// `.default`. Spread to flatten in case future Vite versions change the shape.
+function unwrapTranslations(mod: unknown): Translations {
+  return (
+    (mod as { default?: Translations }).default ?? (mod as unknown as Translations)
+  )
+}
+
+// Merge bundled locales into a WebAPI-provided list, keeping WebAPI names for
+// shared codes and appending any bundled locale the WebAPI doesn't advertise.
+function mergeLocales(remote: Locale[], bundled: Locale[]): Locale[] {
+  const codes = new Set(remote.map(l => l.code))
+  return [...remote, ...bundled.filter(l => !codes.has(l.code))]
+}
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -76,7 +110,7 @@ export const useLocaleStore = defineStore('locale', {
 
         // Set default locales in case WebAPI fails
         if (this.availableLocales.length === 0) {
-          this.availableLocales = [{ code: 'en', name: 'English' }]
+          this.availableLocales = [...BUNDLED_LOCALES]
         }
 
         // Try to fetch available locales from WebAPI
@@ -86,7 +120,8 @@ export const useLocaleStore = defineStore('locale', {
         const detectedLocale = this.detectBrowserLanguage()
         const initialLocale = savedLocale || detectedLocale || 'en'
 
-        // Always fetch from WebAPI, even for English
+        // Load the initial locale (bundled locales resolve from the bundle,
+        // others are fetched from the WebAPI).
         await this.changeLocale(initialLocale)
 
         // Mark as initialized after initial translations are loaded
@@ -105,10 +140,12 @@ export const useLocaleStore = defineStore('locale', {
     async fetchAvailableLocales(): Promise<void> {
       try {
         const locales = await i18nService.fetchLocales()
-        this.availableLocales = locales
+        // Always offer the bundled locales (en, ja) even if the WebAPI
+        // doesn't advertise them.
+        this.availableLocales = mergeLocales(locales, BUNDLED_LOCALES)
       } catch (error) {
         logger.error('LocaleStore', 'Failed to fetch available locales', error)
-        this.availableLocales = [{ code: 'en', name: 'English' }]
+        this.availableLocales = [...BUNDLED_LOCALES]
       }
     },
 
@@ -120,6 +157,35 @@ export const useLocaleStore = defineStore('locale', {
 
       if (cached && this.isCacheValid(cached)) {
         this.translations = withFallback(cached.bundle.translations)
+        return
+      }
+
+      // Bundled locales (e.g. ja) ship with the frontend and are loaded from
+      // the bundle directly — no WebAPI round-trip or localStorage cache.
+      const bundledLoader = bundledTranslationLoaders[locale]
+      if (bundledLoader) {
+        this.loading = true
+        this.error = null
+        try {
+          const translations = await bundledLoader()
+          const bundle: TranslationBundle = {
+            locale,
+            translations,
+            fetchedAt: new Date(),
+          }
+          this.translationCache.set(locale, {
+            bundle,
+            cachedAt: Date.now(),
+            maxAge: CACHE_MAX_AGE,
+          })
+          this.translations = withFallback(translations)
+        } catch (error) {
+          logger.error('LocaleStore', `Failed to load bundled translations for ${locale}`, error)
+          this.error = `Failed to load ${locale} translations. Falling back to English.`
+          await this.loadFallbackTranslations()
+        } finally {
+          this.loading = false
+        }
         return
       }
 
@@ -230,12 +296,7 @@ export const useLocaleStore = defineStore('locale', {
      */
     async loadFallbackTranslations(): Promise<void> {
       try {
-        // Dynamic JSON import returns a module namespace; the actual content
-        // is under `.default`. Spread to flatten in case future Vite versions
-        // change the shape.
-        const englishTranslations = await import('@/locales/en.json')
-        const flat = (englishTranslations as { default?: Translations }).default
-          ?? (englishTranslations as unknown as Translations)
+        const flat = unwrapTranslations(await import('@/locales/en.json'))
         bundledFallback = flat
         this.translations = flat
       } catch (error) {

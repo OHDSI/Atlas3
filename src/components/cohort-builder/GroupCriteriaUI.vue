@@ -270,6 +270,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  modelValue: undefined,
   depth: 0,
 })
 const emit = defineEmits<{
