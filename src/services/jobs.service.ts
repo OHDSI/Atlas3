@@ -112,6 +112,75 @@ async function fetchCacheJobs(): Promise<Job[]> {
 }
 
 /**
+ * HADES/Strategus execution as returned by the hades-api plugin.
+ * Source: `GET /plugins/hades-api/hades-api/jobs`.
+ */
+interface HadesJob {
+  jobId: string
+  status: 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  pid: number | null
+  currentModule: string | null
+  modulesCompleted: string[]
+  elapsedMs: number
+  errorMessage: string | null
+  envName: string
+  databaseName: string
+}
+
+const HADES_STATUS_MAP: Record<string, JobStatus> = {
+  RUNNING: 'RUNNING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  CANCELLED: 'STOPPED',
+}
+
+/**
+ * Convert a HADES/Strategus execution into the unified `Job` shape used by
+ * the UI. `executionId` is synthesized from a hash of the job id so the
+ * table has a stable identifier (HADES jobs aren't in Spring Batch).
+ */
+export function mapHadesJob(h: HadesJob): Job {
+  const idStr = h.jobId
+  let hash = 0
+  for (let i = 0; i < idStr.length; i++) hash = ((hash << 5) - hash + idStr.charCodeAt(i)) | 0
+  const id = Math.abs(hash)
+  const status: JobStatus = HADES_STATUS_MAP[h.status] ?? 'UNKNOWN'
+  const name = h.currentModule ? `Strategus — ${h.currentModule}` : `Strategus — ${h.envName}`
+  return {
+    id,
+    executionId: id,
+    type: 'strategusExecution',
+    name,
+    status,
+    author: '',
+    startTime: null,
+    endTime: null,
+    duration: h.elapsedMs ?? null,
+    entityId: null,
+    sourceKey: h.databaseName ?? null,
+    exitMessage: h.errorMessage ?? null,
+  }
+}
+
+async function fetchHadesJobs(): Promise<Job[]> {
+  try {
+    const response = await fetch(`${location.origin}/plugins/hades-api/hades-api/jobs`)
+    if (!response.ok) return []
+    const data = await response.json()
+    const list = (data && typeof data === 'object' && 'jobs' in data
+      ? (data as { jobs?: unknown }).jobs
+      : null) as HadesJob[] | null
+    if (!Array.isArray(list)) return []
+    return list.map(mapHadesJob)
+  } catch (err) {
+    // HADES/Strategus job tracking is optional — never let a hades-api
+    // failure break the rest of the jobs view.
+    logger.debug('JobsService', 'HADES jobs fetch failed (non-fatal)', err)
+    return []
+  }
+}
+
+/**
  * Extract job executions from the response
  * Handles both array and paginated response formats
  */
@@ -140,12 +209,14 @@ function extractExecutions(data: unknown): JobExecution[] {
  */
 export async function getJobs(): Promise<ApiResult<Job[]>> {
   try {
-    // Pull Spring Batch executions and bao cache-build jobs in parallel.
-    // Cache-build jobs run outside Spring Batch (in bao's own _cache_jobs
-    // tracking) so they need a separate fetch + merge.
-    const [batchData, cacheJobs] = await Promise.all([
+    // Pull Spring Batch executions, bao cache-build jobs, and HADES/Strategus
+    // executions in parallel. Cache-build and HADES jobs run outside Spring
+    // Batch (in bao's own _cache_jobs tracking and the hades-api plugin,
+    // respectively) so they each need a separate fetch + merge.
+    const [batchData, cacheJobs, hadesJobs] = await Promise.all([
       httpGet<unknown>('/job/execution?comprehensivePage=true'),
       fetchCacheJobs(),
+      fetchHadesJobs(),
     ])
 
     // Validate Spring Batch response with Zod
@@ -159,8 +230,8 @@ export async function getJobs(): Promise<ApiResult<Job[]>> {
     // Extract executions from response (handles both array and paginated formats)
     const executions = extractExecutions(parsed.data)
 
-    // Transform to normalized Job format and merge with cache jobs
-    const jobs = [...executions.map(transformJobExecution), ...cacheJobs]
+    // Transform to normalized Job format and merge with cache + HADES jobs
+    const jobs = [...executions.map(transformJobExecution), ...cacheJobs, ...hadesJobs]
 
     // Sort by start time descending (most recent first)
     jobs.sort((a, b) => {

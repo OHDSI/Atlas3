@@ -41,6 +41,7 @@ export const JobTypeSchema = z.enum([
   'prediction',
   'estimation',
   'cacheGeneration',
+  'strategusExecution',
   'UNKNOWN',
 ])
 
@@ -192,6 +193,7 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
   prediction: 'Prediction',
   estimation: 'Estimation',
   cacheGeneration: 'Cache Build',
+  strategusExecution: 'Strategus Execution',
   UNKNOWN: 'Unknown',
 }
 
@@ -209,6 +211,7 @@ export const JOB_TYPE_ICONS: Record<JobType, string> = {
   prediction: 'mdi-crystal-ball',
   estimation: 'mdi-calculator',
   cacheGeneration: 'mdi-database-arrow-down',
+  strategusExecution: 'mdi-flask-outline',
   UNKNOWN: 'mdi-help-circle',
 }
 

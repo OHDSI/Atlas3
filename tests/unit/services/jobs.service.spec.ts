@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getJobs, jobsService } from '@/services/jobs.service'
+import { getJobs, jobsService, mapHadesJob } from '@/services/jobs.service'
 
 // Mock http-client
 vi.mock('@/services/http-client', () => ({
@@ -305,6 +305,179 @@ describe('JobsService', () => {
   describe('jobsService singleton', () => {
     it('exports getJobs function', () => {
       expect(jobsService.getJobs).toBe(getJobs)
+    })
+  })
+
+  describe('mapHadesJob', () => {
+    it('maps a running HADES job to the unified Job shape', () => {
+      const job = mapHadesJob({
+        jobId: 'job-123',
+        status: 'RUNNING',
+        pid: 4242,
+        currentModule: 'CohortDiagnostics',
+        modulesCompleted: [],
+        elapsedMs: 5000,
+        errorMessage: null,
+        envName: 'renv-1',
+        databaseName: 'SYNPUF1K',
+      })
+
+      expect(job.type).toBe('strategusExecution')
+      expect(typeof job.id).toBe('number')
+      expect(job.id).toBe(job.executionId)
+      expect(job.status).toBe('RUNNING')
+      expect(job.name).toBe('Strategus — CohortDiagnostics')
+      expect(job.duration).toBe(5000)
+      expect(job.sourceKey).toBe('SYNPUF1K')
+      expect(job.startTime).toBeNull()
+      expect(job.endTime).toBeNull()
+      expect(job.entityId).toBeNull()
+      expect(job.author).toBe('')
+      expect(job.exitMessage).toBeNull()
+    })
+
+    it('maps CANCELLED status to STOPPED', () => {
+      const job = mapHadesJob({
+        jobId: 'job-456',
+        status: 'CANCELLED',
+        pid: null,
+        currentModule: null,
+        modulesCompleted: [],
+        elapsedMs: 1200,
+        errorMessage: null,
+        envName: 'renv-2',
+        databaseName: 'CDM_A',
+      })
+
+      expect(job.status).toBe('STOPPED')
+      // Falls back to envName when currentModule is null.
+      expect(job.name).toBe('Strategus — renv-2')
+    })
+
+    it('maps COMPLETED and FAILED statuses through, and passes errorMessage as exitMessage', () => {
+      const completed = mapHadesJob({
+        jobId: 'job-a',
+        status: 'COMPLETED',
+        pid: null,
+        currentModule: 'X',
+        modulesCompleted: ['X'],
+        elapsedMs: 100,
+        errorMessage: null,
+        envName: 'e',
+        databaseName: 'd',
+      })
+      expect(completed.status).toBe('COMPLETED')
+
+      const failed = mapHadesJob({
+        jobId: 'job-b',
+        status: 'FAILED',
+        pid: null,
+        currentModule: 'Y',
+        modulesCompleted: [],
+        elapsedMs: 100,
+        errorMessage: 'boom',
+        envName: 'e',
+        databaseName: 'd',
+      })
+      expect(failed.status).toBe('FAILED')
+      expect(failed.exitMessage).toBe('boom')
+    })
+
+    it('produces a stable synthetic numeric id derived from jobId', () => {
+      const jobA = mapHadesJob({
+        jobId: 'same-id',
+        status: 'RUNNING',
+        pid: null,
+        currentModule: null,
+        modulesCompleted: [],
+        elapsedMs: 0,
+        errorMessage: null,
+        envName: 'e',
+        databaseName: 'd',
+      })
+      const jobB = mapHadesJob({
+        jobId: 'same-id',
+        status: 'COMPLETED',
+        pid: null,
+        currentModule: null,
+        modulesCompleted: [],
+        elapsedMs: 0,
+        errorMessage: null,
+        envName: 'e',
+        databaseName: 'd',
+      })
+      expect(jobA.id).toBe(jobB.id)
+    })
+  })
+
+  describe('hades jobs merge', () => {
+    it('merges HADES/Strategus jobs into getJobs results', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet)
+        .mockResolvedValueOnce([]) // /job/execution
+        .mockResolvedValueOnce({ jobs: [] }) // /trexsql/cache/jobs
+
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          jobs: [
+            {
+              jobId: 'hades-1',
+              status: 'RUNNING',
+              pid: 1,
+              currentModule: 'CohortDiagnostics',
+              modulesCompleted: [],
+              elapsedMs: 2500,
+              errorMessage: null,
+              envName: 'renv-1',
+              databaseName: 'SYNPUF1K',
+            },
+          ],
+        }),
+      } as Response)
+
+      const result = await getJobs()
+
+      expect(result.success).toBe(true)
+      expect(result.data).toHaveLength(1)
+      expect(result.data![0].type).toBe('strategusExecution')
+      expect(result.data![0].name).toBe('Strategus — CohortDiagnostics')
+    })
+
+    it('treats a failing hades-api fetch as non-fatal and still returns other jobs', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet)
+        .mockResolvedValueOnce([
+          {
+            executionId: 1,
+            status: 'COMPLETED',
+            startDate: Date.now(),
+            jobInstance: { name: 'generateCohort' },
+          },
+        ])
+        .mockResolvedValueOnce({ jobs: [] })
+
+      vi.mocked(global.fetch).mockRejectedValueOnce(new Error('hades-api down'))
+
+      const result = await getJobs()
+      expect(result.success).toBe(true)
+      expect(result.data).toHaveLength(1)
+    })
+
+    it('treats a non-array jobs field from hades-api as empty', async () => {
+      const { httpGet } = await import('@/services/http-client')
+      vi.mocked(httpGet).mockResolvedValueOnce([]).mockResolvedValueOnce({ jobs: [] })
+
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ jobs: 'not-an-array' }),
+      } as Response)
+
+      const result = await getJobs()
+      expect(result.success).toBe(true)
+      expect(result.data).toHaveLength(0)
     })
   })
 })
