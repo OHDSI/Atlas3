@@ -102,3 +102,6 @@ desktop.ini
 .superpowers/
 docs/superpowers/
 .gstack/
+
+# Differential-translation work files (transient)
+.i18n-work/

@@ -69,7 +69,7 @@ describe('concept-sets store — comparison modes', () => {
   })
 
   it('included mode delegates to compareConceptSets', async () => {
-    ;(compareConceptSets as ReturnType<typeof vi.fn>).mockResolvedValue([
+    (compareConceptSets as ReturnType<typeof vi.fn>).mockResolvedValue([
       { conceptId: 9, conceptIn1And2: 1, conceptIn1Only: 0, conceptIn2Only: 0, conceptName: 'X', conceptCode: 'x', conceptClassId: '', domainId: '', vocabularyId: '', standardConcept: 'S', invalidReason: null, validStartDate: null, validEndDate: null, nameMismatch: false },
     ])
     const store = useConceptSetsStore()
@@ -81,7 +81,7 @@ describe('concept-sets store — comparison modes', () => {
   })
 
   it('caches a computed mode (toggling back does not recompute)', async () => {
-    ;(compareConceptSets as ReturnType<typeof vi.fn>).mockResolvedValue([])
+    (compareConceptSets as ReturnType<typeof vi.fn>).mockResolvedValue([])
     const store = useConceptSetsStore()
     store.currentSet = { ...cs1 }
     await store.loadComparisonForMode('SRC', 2, 'included')
@@ -91,7 +91,7 @@ describe('concept-sets store — comparison modes', () => {
   })
 
   it('loadComparison remains an included-mode wrapper', async () => {
-    ;(compareConceptSets as ReturnType<typeof vi.fn>).mockResolvedValue([])
+    (compareConceptSets as ReturnType<typeof vi.fn>).mockResolvedValue([])
     const store = useConceptSetsStore()
     store.currentSet = { ...cs1 }
     await store.loadComparison('SRC', 2)
@@ -100,7 +100,7 @@ describe('concept-sets store — comparison modes', () => {
   })
 
   it('source mode resolves both sets and diffs their mapped source codes', async () => {
-    ;(resolveConceptSetExpression as ReturnType<typeof vi.fn>)
+    (resolveConceptSetExpression as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce([item(10)])
       .mockResolvedValueOnce([item(20)])
     ;(getMappedSourceCodes as ReturnType<typeof vi.fn>)

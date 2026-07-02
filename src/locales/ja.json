@@ -1,0 +1,5336 @@
+{
+  "locale": "ja",
+  "a11y": {
+    "skipToMain": "メインコンテンツへスキップ",
+    "logoHome": "OHDSI ATLAS ホーム"
+  },
+  "cohortAgent": {
+    "title": "Pythia AI エージェント",
+    "subtitle": "コホート設計アドバイザー",
+    "send": "送信",
+    "streaming": "ストリーミング中…",
+    "stop": "停止",
+    "history": "チャット履歴",
+    "newChat": "新規チャット",
+    "deleteChat": "チャットを削除",
+    "clear": "チャットをクリア",
+    "inputPlaceholder": "コホートについて Pythia に質問…",
+    "starters": {
+      "label": "スターターを試す",
+      "t2dm": "2型糖尿病のコホートを定義する",
+      "ckd": "慢性腎臓病にはどのフェノタイプを使うべきですか？",
+      "statins": "65歳以上でスタチンを使用している患者を追加する",
+      "renal": "腎不全の患者を除外する"
+    },
+    "proposal": {
+      "accept": "承認",
+      "reject": "却下",
+      "added": "コホートに追加しました",
+      "applied": "適用済み",
+      "rejected": "却下済み",
+      "includingDescendants": "下位コンセプトを含む"
+    }
+  },
+  "datatable": {
+    "language": {
+      "decimal": "",
+      "emptyTable": "テーブルに利用可能なデータがありません",
+      "info": "_TOTAL_ 件中 _START_ から _END_ までを表示",
+      "infoEmpty": "0 件中 0 から 0 までを表示",
+      "infoFiltered": "(全 _MAX_ 件からフィルター)",
+      "infoPostFix": "",
+      "thousands": ",",
+      "lengthMenu": "_MENU_ 件を表示",
+      "loadingRecords": "読み込み中...",
+      "processing": "処理中...",
+      "search": "フィルター:",
+      "searchPlaceholder": "検索...",
+      "zeroRecords": "一致するレコードが見つかりません",
+      "all": "すべて",
+      "paginate": {
+        "first": "最初",
+        "last": "最後",
+        "next": "次へ",
+        "previous": "前へ"
+      },
+      "buttons": {
+        "colvis": "列を表示",
+        "copy": "コピー",
+        "resetColumns": "列をリセット",
+        "showAllColumns": "すべての列を表示",
+        "changeColumns": "列を変更"
+      },
+      "aria": {
+        "sortAscending": ": 有効にすると列を昇順に並べ替えます",
+        "sortDescending": ": 有効にすると列を降順に並べ替えます"
+      }
+    }
+  },
+  "format": {
+    "number": "# ###.##",
+    "date": {
+      "shortdate": "MM/dd",
+      "mediumdate": "MM/dd/YYYY",
+      "datetime": "MM/DD/YYYY h:mm A",
+      "datetimeWithSeconds": "MM/DD/YYYY h:mm:ss A",
+      "minutes": "min",
+      "seconds": "sec"
+    }
+  },
+  "executionStatus": {
+    "values": {
+      "FAILED": "失敗",
+      "COMPLETED": "完了",
+      "STOPPED": "停止",
+      "CANCELED": "キャンセル",
+      "PENDING": "保留中",
+      "RUNNING": "実行中",
+      "STARTED": "開始済み"
+    }
+  },
+  "common": {
+    "accessDenied": "アクセスが拒否されました",
+    "add": "追加",
+    "and": "かつ",
+    "anonymous": "匿名",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "configureAccess": "アクセスを設定",
+    "configureAccessModal": {
+      "addWriteAccessToRole": "ロールに書き込みアクセスを追加:",
+      "loadingAccessList": "アクセスリストを読み込み中...",
+      "revoke": "取り消し",
+      "rolesWithWriteAccess": "書き込みアクセス権を持つロール:"
+    },
+    "copiedToClipboard": "クリップボードにコピーしました!",
+    "copy": "コピー",
+    "copyOf": "<%=name%> のコピー",
+    "copyToClipboard": "クリップボードにコピー",
+    "createACopy": "コピーを作成",
+    "create": "作成",
+    "days": "日",
+    "daysAbbr": "d",
+    "delete": "削除",
+    "deselectAll": "すべて選択解除",
+    "download": "ダウンロード",
+    "downloading": "ダウンロード中...",
+    "export": "エクスポート",
+    "import": "インポート",
+    "loading": "読み込み中",
+    "loadingWithDots": "読み込み中...",
+    "min": "分",
+    "noChangesToPersist": "保存する変更がありません",
+    "notEnoughPermissions": "権限が不足しています",
+    "or": "または",
+    "preview": "プレビュー",
+    "progress": "進捗",
+    "refresh": "更新",
+    "retry": "再試行",
+    "save": "保存",
+    "search": "検索",
+    "select": "選択",
+    "selectAll": "すべて選択",
+    "set": "設定",
+    "unsaved": "(未保存)",
+    "unspecified": "未指定!",
+    "menu": "メニュー",
+    "noData": "データなし",
+    "readOnly": "(読み取り専用)",
+    "tags": "タグ",
+    "backToCurrent": "現在のバージョンに戻る",
+    "saveAsCurrentVersion": "現在のバージョンとして保存",
+    "unsavedWarning": "未保存の変更は失われます。続行しますか?",
+    "savePreviewWarning": "現在のバージョンとして保存しますか?",
+    "conceptSet": "コンセプトセット",
+    "cohort": "コホート",
+    "characterization": "特性化",
+    "pathway": "パスウェイ解析",
+    "incidenceRate": "発生率",
+    "ple": "集団レベル効果推定",
+    "plp": "患者レベル予測",
+    "reusable": "再利用可能",
+    "death": "死亡",
+    "causeOfDeath": "死因",
+    "demographics": "人口統計",
+    "failedToLoad": "読み込みに失敗しました",
+    "noIssuesDetected": "問題は検出されませんでした",
+    "dataQuality": "データ品質",
+    "observationPeriods": "観察期間",
+    "conditions": "状態",
+    "conditionEras": "状態エラ",
+    "conditionsByIndex": "インデックス別の状態",
+    "drugExposure": "薬剤曝露",
+    "drugEras": "薬剤エラ",
+    "drugsByIndex": "インデックス別の薬剤",
+    "procedures": "処置",
+    "proceduresByIndex": "インデックス別の処置",
+    "tornado": "トルネード図",
+    "dataCompleteness": "データの完全性",
+    "entropy": "エントロピー",
+    "cohortSpecific": "コホート固有",
+    "tableView": "テーブルビュー",
+    "treemap": "ツリーマップ",
+    "cohortReports": "コホートレポート",
+    "generateReports": "レポートを生成",
+    "fullAnalysis": "完全解析",
+    "quickAnalysis": "クイック解析",
+    "utilization": "利用状況",
+    "reportNotImplemented": "レポートは未実装です",
+    "reportNotImplementedMessage": "このレポートはロードマップにありますが、まだ利用できません。",
+    "selectReportType": "コホート分析を表示するレポートタイプを選択してください",
+    "columns": "列",
+    "editName": "名前を編集",
+    "description": "説明"
+  },
+  "validation": {
+    "required": "このフィールドは必須です"
+  },
+  "commonErrors": {
+    "noSources": "現在の WebAPI にはソースが定義されていません。<br/><a href=\"#/configure\">構成</a>ページで1つ以上追加してください。",
+    "webapiConnectError": "WebAPI のインスタンスに接続できません。<br/>この問題を解決するには管理者にお問い合わせください。",
+    "browserWarning": "公式にサポートされているのは v.63 より新しい Chrome ブラウザのみであることにご注意ください",
+    "initFailed": "アプリケーションの初期化に失敗しました"
+  },
+  "navigation": {
+    "characterizations": "特性化",
+    "cohortdefinitions": "コホート定義",
+    "conceptsets": "コンセプトセット",
+    "configuration": "構成",
+    "datasources": "データソース",
+    "estimation": "推定",
+    "featureAnalyses": "特徴量解析",
+    "feedback": "フィードバック",
+    "home": "ホーム",
+    "incidencerate": "発生率",
+    "incidenceRates": "発生率",
+    "jobs": "ジョブ",
+    "pathways": "コホートパスウェイ",
+    "prediction": "予測",
+    "profiles": "プロファイル",
+    "search": "検索",
+    "tagging": "タグ付け"
+  },
+  "route": {
+    "home": {
+      "title": "ホーム"
+    },
+    "cohorts": {
+      "title": "コホート"
+    },
+    "cohortBuilder": {
+      "title": "コホートビルダー"
+    },
+    "conceptSets": {
+      "title": "コンセプトセット"
+    },
+    "profiles": {
+      "title": "プロファイル"
+    },
+    "analysis": {
+      "title": "解析"
+    },
+    "characterizations": {
+      "title": "特性化"
+    },
+    "featureAnalyses": {
+      "title": "特徴量解析"
+    },
+    "pathways": {
+      "title": "コホートパスウェイ"
+    },
+    "incidenceRates": {
+      "title": "発生率"
+    },
+    "dataSources": {
+      "title": "データソース"
+    },
+    "roleManagement": {
+      "title": "ロール管理"
+    }
+  },
+  "options": {
+    "after": "後",
+    "all": "すべて",
+    "allDrugSources": "すべての薬剤ソース",
+    "allEvents": "すべてのイベント",
+    "allVisitTypes": "すべての来院タイプ",
+    "allVisits": "すべての来院",
+    "any": "いずれか",
+    "atLeast": "少なくとも",
+    "atMost": "多くとも",
+    "before": "前",
+    "between": "範囲内",
+    "contains": "含む",
+    "drugSource": "薬剤ソース",
+    "earliestEvents": "最も早いイベント",
+    "endDate": "終了日",
+    "endOfContinuousDrugExposure": "連続した薬剤曝露の終了",
+    "endOfContinuousObservation": "連続観察の終了",
+    "endsWith": "で終わる",
+    "eventEnds": "イベント終了",
+    "eventStarts": "イベント開始",
+    "exactly": "ちょうど",
+    "fixedDurationRelativeToInitialEvent": "初回イベントに対する固定期間",
+    "indexEndDate": "インデックス終了日",
+    "indexStartDate": "インデックス開始日",
+    "isAnyOf": "いずれかに該当する",
+    "isNotAnyOf": "いずれにも該当しない",
+    "latestEvents": "最も遅いイベント",
+    "mm": "毎月",
+    "no": "いいえ",
+    "notBetween": "範囲外",
+    "notContains": "含まない",
+    "notEndsWith": "で終わらない",
+    "notStartsWith": "で始まらない",
+    "periodType": "期間タイプ",
+    "periods": "期間",
+    "qq": "四半期ごと",
+    "reports": "レポート",
+    "rollupUtilizationDrug": "薬剤",
+    "rollupUtilizationVisit": "来院",
+    "rollups": "ロールアップ",
+    "startDate": "開始日",
+    "startsWith": "で始まる",
+    "ww": "毎週",
+    "yes": "はい",
+    "yy": "毎年",
+    "yesDescendant": "はい（下位概念）",
+    "yesExact": "はい（完全一致）",
+    "yesParent": "はい（上位概念）",
+    "included": "含む",
+    "excluded": "除外",
+    "none": "なし",
+    "true": "true",
+    "false": "false",
+    "balanced": "バランス",
+    "time": "時間",
+    "person": "人",
+    "reporting": {
+      "personsAndExposureDuringBaselinePeriod": "ベースライン期間中の人および曝露",
+      "personsAndExposureDuringCohortPeriod": "コホート期間中の人および曝露",
+      "visitsDuringBaselinePeriod": "ベースライン期間中の訪問",
+      "visitDatesDuringBaselinePeriod": "ベースライン期間中の訪問日",
+      "careSiteVisitDatesDuringBaselinePeriod": "ベースライン期間中のケアサイト訪問日",
+      "visitsDuringCohortPeriod": "コホート期間中の訪問",
+      "visitDatesDuringCohortPeriod": "コホート期間中の訪問日",
+      "careSiteVisitDatesDuringCohortPeriod": "コホート期間中のケアサイト訪問日",
+      "drugUtilizationDuringBaselinePeriod": "ベースライン期間中の薬剤使用",
+      "drugUtilizationDuringCohortPeriod": "コホート期間中の薬剤使用"
+    },
+    "trexsql": {
+      "selectDataset": "データセットを選択",
+      "selectDatasetPrompt": "患者数を表示するデータセットを選択してください",
+      "counting": "カウント中...",
+      "countingInProgress": "患者をカウント中...",
+      "patients": "人の患者",
+      "addCriteria": "患者数を表示するには条件を追加してください",
+      "noPatients": "この条件に一致する患者はいません",
+      "cacheReady": "準備完了",
+      "cacheBuilding": "構築中",
+      "cacheStale": "古い",
+      "cacheError": "エラー",
+      "cacheNotBuilt": "未構築",
+      "staleCacheWarning": "キャッシュが古い可能性があります",
+      "lastBuilt": "最終構築",
+      "cacheTitle": "患者キャッシュ",
+      "cacheDescription": "高速なコホートカウントのために患者キャッシュを構築・管理します。各データソースは独自のキャッシュを持つことができます。",
+      "statusReady": "準備完了",
+      "statusBuilding": "構築中",
+      "statusStale": "古い",
+      "statusError": "エラー",
+      "statusNotBuilt": "未構築",
+      "build": "キャッシュを構築",
+      "rebuild": "再構築",
+      "building": "構築中...",
+      "noDataSources": "利用可能なデータソースがありません"
+    }
+  },
+  "components": {
+    "cardinalityInput": {
+      "title": "カーディナリティ",
+      "type": "タイプ",
+      "count": "件数",
+      "countingMethod": "カウント方法",
+      "help": {
+        "atLeast": "少なくとも{count}回の発生が必要です",
+        "exactly": "ちょうど{count}回の発生が必要です",
+        "atMost": "最大{count}回までの発生が必要です",
+        "exclusion": "（すべてのイベントを除外）"
+      }
+    },
+    "authorship": {
+      "created": "作成日",
+      "versionCreated": "バージョン作成日",
+      "modified": "変更日",
+      "on": "日時",
+      "byCreated": "作成者: <%=createdBy%>",
+      "byModified": "変更者: <%=modifiedBy%>"
+    },
+    "accessDenied": {
+      "forbidden": {
+        "message1": "この機能へのアクセス権がありません。",
+        "message2": "アクセス権の取得方法の詳細については、システム管理者にお問い合わせください。"
+      },
+      "unauthenticated": {
+        "login": "ログイン",
+        "message": "この機能は保護されています。次を行ってください"
+      }
+    },
+    "analysisExecution": {
+      "title": "実行",
+      "buttons": {
+        "allExecutions": "すべての実行（<%=submissions%>）",
+        "generate": "生成",
+        "generating": "生成中",
+        "pending": "保留中",
+        "latestResult": "最新の結果を表示",
+        "downloadLatestResult": "最新の結果をダウンロード"
+      },
+      "designModal": {
+        "title": "デザイン"
+      },
+      "exitModal": {
+        "title": "実行終了メッセージ"
+      },
+      "messages": {
+        "permissions": "結果を表示する権限がありません"
+      },
+      "datatable": {
+        "viewReports": "レポートを表示",
+        "sameAsNow": "（現在と同じ）"
+      },
+      "noCompletedExecutionsForDataSource": "このデータソースに対して完了した実行はまだありません。",
+      "stopGenerationConfirmation": "生成を停止しますか？"
+    },
+    "atlasCohortEditor": {
+      "enterCohortPlaceholder": "ここにコホート定義の説明を入力してください",
+      "importConceptSet": "リポジトリからコンセプトセットをインポート..."
+    },
+    "expressionCartoonBindings": {
+      "primaryCriteria": "主要条件",
+      "any": "いずれか",
+      "one": "1つ",
+      "s": "s",
+      "those": "それらの",
+      "the": "その",
+      "paramOf": "<%=param%>の",
+      "atParamOf": "<%=param%>において",
+      "or": "または",
+      "and": "かつ",
+      "anyParam": "いずれかの<%=param%>",
+      "domain": "ドメイン",
+      "all": "すべて",
+      "distinct": "個別",
+      "before": "前",
+      "after": "後",
+      "noCriteriaGroup": "条件グループなし",
+      "additionalCriteria": "追加条件",
+      "noAdditionalCriteria": "追加条件なし",
+      "inclusionRules": "包含ルール",
+      "noInclusionRules": "包含ルールなし",
+      "condition": "病態",
+      "drug": "薬剤",
+      "drugEra": "薬剤エラ",
+      "conditionEra": "病態エラ",
+      "doseEra": "用量エラ",
+      "procedure": "処置",
+      "observation": "観察",
+      "device": "デバイス",
+      "measurement": "測定",
+      "specimen": "検体",
+      "death": "死亡",
+      "observationPeriod": "観察期間",
+      "visit": "訪問",
+      "era": "エラ",
+      "daysSupply": "供給日数",
+      "visitCapital": "訪問",
+      "expressionCartoonBindingsText_1": "次の主要基準",
+      "expressionCartoonBindingsText_2": "次の<%=pcListLength%>件の主要基準のうち<%=oneOrAny%>",
+      "expressionCartoonBindingsText_3": "<%=pcCritMatch%>に一致するすべての人物イベントについて結果が生成されます。最終結果は、追加条件および包含ルールに一致する<%=thoseOrthe%>イベントに限定されます。",
+      "expressionCartoonBindingsText_4": "<%=pcCritMatch%>に一致する<%=pLimitTypeToLowerCase%>の単一イベントについて結果が生成されます。",
+      "expressionCartoonBindingsText_5": "結果のインデックス日<%=pcPlural%>は、一致する主要基準イベント<%=pcPlural%>の開始日<%=pcPlural%>となります。",
+      "expressionCartoonBindingsText_6": "次の条件の<%=critgroupTypeToLowerCase%>に一致するイベントを持つ人物に限定します。",
+      "expressionCartoonBindingsText_7": "イベントは括弧で囲まれた期間内に開始する必要があります",
+      "expressionCartoonBindingsText_8": "インデックス日を基準とします。線と矢印はこれらのイベントに必要な期間を表します。",
+      "expressionCartoonBindingsText_9": "<%=distinctOrAll%>の発生を用いた<%=type%> <%=count%>",
+      "expressionCartoonBindingsText_10": "インデックスの<%=startDays%>日<%=beforeArAfterStart%>から<%=endDays%>日<%=beforeArAfterEnd%>の間に発生"
+    },
+    "cohortExpressionEditor": {
+      "addCensoringEvent": "打ち切りイベントを追加...",
+      "addInitialEvent": "初回イベントを追加...",
+      "addTrimmingOptions": "トリミングオプションを追加...",
+      "censoringEvents": "打ち切りイベント:",
+      "cohortEntryEvents": "コホート登録イベント",
+      "cohortEntryEventsText_1": "イベントとは、薬剤曝露、病態、処置、測定、訪問など、対象者について記録されたタイムスタンプ付きの観察です。すべてのイベントには開始日と終了日がありますが、一部のイベント（処置や測定など）では開始日と終了日が同じ値になる場合があります。",
+      "cohortEntryEventsText_2": "次のいずれかの条件を持つイベント:",
+      "cohortEntryEventsText_3": "少なくとも次の連続観察を持つ",
+      "cohortEntryEventsText_4": "日前および",
+      "cohortEntryEventsText_5": "イベントのインデックス日からの日数",
+      "cohortEntryEventsText_6": "初回イベントを次に限定:",
+      "cohortEntryEventsText_7": "1人あたり。",
+      "continuousObservationLabel": "連続観察",
+      "continuousObservationTitle": "連続観察ウィンドウ",
+      "continuousObservationBefore": "日前",
+      "continuousObservationAfter": "日後",
+      "continuousObservationHelp": "インデックス日の前後にこれだけの連続観察がない人物はコホートから除外されます。",
+      "entryEventsAnyHint": "登録イベントはいずれか（または）で照合されます",
+      "cohortErasText_1": "エラ統合のギャップサイズを指定:",
+      "cohortErasText_2": "コホート開始日を左側で打ち切る対象:",
+      "cohortErasText_2_1": " ",
+      "cohortErasText_3": "コホート終了日を右側で打ち切る対象:",
+      "cohortErasText_3_1": " ",
+      "cohortErasTitle": "コホートエラ",
+      "cohortExit": "コホート退出",
+      "cohortExitText_1": "適格となるすべてのイベントについて、各イベントがいつコホートへの存在を終了するかの指定が必要です。デフォルトでは、適格な初回イベントを含む観察期間の終了時にイベントが終了しますが、イベント終了日を指定することもできます:",
+      "cohortExitText_2": "適格な初回イベントは、イベントの開始日または終了日を基準に一定期間後に終了するよう設定できます。または、コンセプトセットで識別される一連の薬剤への連続曝露の終了に基づいて終了日を設定することもできます。",
+      "cohortExitText_3": "条件を用いてイベントの終了を示すことができます。適格イベントの開始日と終了日の間に打ち切りイベントが識別された場合、その打ち切りイベントの日付が退出日として使用されます。",
+      "cohortExitText_4": "次の条件に基づいてコホートを退出:",
+      "cohortExitText_5": "打ち切りイベントが選択されていません。",
+      "cohortExitTitle": "コホート退出",
+      "cohortExitTitle_1": "イベント終了日",
+      "cohortExitTitle_2": "打ち切りイベント",
+      "copyOf": "コピー元: ",
+      "days": "日",
+      "deleteCriteria": "条件を削除",
+      "eventPersistence": "イベント持続:",
+      "inclusionCriteria": "包含条件",
+      "inclusionCriteriaText": "適格コホートは、初回イベントを持ち、初回イベントの包含条件を満たし、かつすべての追加適格包含条件を満たすすべての人物として定義されます。各適格包含条件は、初回コホートからの人物の脱落に対する条件の影響を判断するために評価されます。",
+      "inclusionCriteriaText_1": "適格イベントを次に限定:",
+      "inclusionCriteriaTitle": "包含条件",
+      "indexMessage": "インデックス日とは、コホート登録条件のイベントを指します。",
+      "newInclusionCriteria": "新しい包含条件",
+      "noCensoring": "打ち切りなし",
+      "removeRestriction": "初回イベントの制限を解除",
+      "restrictInitialEventsButton": "初回イベントを制限",
+      "restrictInitialEventsTitle": "初回イベントを次に制限:",
+      "unnamedCriteria": "名称未設定の条件"
+    },
+    "cohortExpressionViewer": {
+      "cohortExpressionViewerText_1": "次のいずれかを持つ人物:",
+      "cohortExpressionViewerText_10": "適格コホートを次に限定:",
+      "cohortExpressionViewerText_11": "打ち切りイベント:",
+      "cohortExpressionViewerText_12": "次に基づいてコホートを退出:",
+      "cohortExpressionViewerText_13": "コホート統合戦略:",
+      "cohortExpressionViewerText_14": "次のギャップサイズでエラごとにコホートを統合 ",
+      "cohortExpressionViewerText_15": "包含条件 #(<%=index%>): <%=name%>",
+      "cohortExpressionViewerText_2": "少なくとも次の連続観察を持つ",
+      "cohortExpressionViewerText_3": "日前および ",
+      "cohortExpressionViewerText_4": "イベントのインデックス日からの日数、",
+      "cohortExpressionViewerText_5": "初回イベントを次に限定: ",
+      "cohortExpressionViewerText_6": "1人あたり。",
+      "cohortExpressionViewerText_7": "主要イベントに一致する人物について、次を含める:",
+      "cohortExpressionViewerText_8": "初回イベントのコホートを次に限定:",
+      "cohortExpressionViewerText_9": "包含ルール",
+      "initialEventCohort": "初回イベントコホート"
+    },
+    "conceptPicker": {
+      "addAndClose": "追加して閉じる",
+      "addButton": "追加",
+      "addSelected": "選択項目を追加",
+      "close": "閉じる",
+      "done": "完了",
+      "importButton": "インポート",
+      "importConcepts": "コンセプトをインポート",
+      "search": "検索",
+      "selectConcept": "コンセプトを選択",
+      "waitMessage": "ボキャブラリプロバイダーの初期化中です。しばらくお待ちください..."
+    },
+    "conceptSet": {
+      "exportAllToCSV": "すべてのコンセプトセットをCSVにエクスポート",
+      "exportingToCsv": "すべてのコンセプトセットをCSVにエクスポート中",
+      "importingConceptSet": "コンセプトセットをインポート中",
+      "conceptSetExpression": "コンセプトセット式",
+      "includedConcepts": "含まれるコンセプト",
+      "includedSourceCodes": "含まれるソースコード",
+      "deleteConfirm": "<%=name%>を削除しますか？",
+      "conceptSetExpressionJSON": "コンセプトセット式JSON",
+      "clickToClear": "クリックしてクリア",
+      "closeConceptSet": "コンセプトセットを閉じる",
+      "conceptIdentifiers": "コンセプト識別子",
+      "conceptIdentifierList": "コンセプト識別子リスト",
+      "includedConceptIdentifierList": "含まれるコンセプト識別子リスト",
+      "loadingForExport": "エクスポート用に読み込み中...",
+      "exportToCsv": "CSVにエクスポート",
+      "sourceCodes": "ソースコード",
+      "conceptSet": "コンセプトセット",
+      "repository": "リポジトリ",
+      "appendConceptSetExpression": "コンセプトセット式に追加",
+      "overwriteConceptSetExpression": "コンセプトセット式を上書き",
+      "enterConceptIdentifiers": "コンセプト識別子を入力",
+      "name": "名前:",
+      "addConcepts": "コンセプトを追加",
+      "removeSelected": "選択項目を削除",
+      "deleteConceptSet": "コンセプトセットを削除",
+      "copyToConceptSetRepository": "コンセプトセットリポジトリにコピー",
+      "notEnoughPermissions": "コンセプトセットを<%=action%>する権限がありません",
+      "actionEdit": "編集",
+      "actionCreate": "作成",
+      "overwriteConfirm": "現在のコンセプトセット式を上書きしてもよろしいですか?",
+      "loadingIncludedConcepts": "包含コンセプトを読み込み中",
+      "loadingRecommendedConcepts": "推奨コンセプトを読み込み中",
+      "commonAncestors": "共通の祖先",
+      "loadingIncludedSourcecodes": "包含ソースコードを読み込み中",
+      "expressionResolveError": "式の解決中にエラーが発生しました!",
+      "forbiddenError": "コンセプトセット式を表示する権限がありません。",
+      "import": {
+        "repository": {
+          "overwriteCheckboxLabel": "コンセプトセット項目を上書き(チェックなしの場合は追加)"
+        },
+        "sourceCodes": {
+          "enterSourceCodes": "ソースコードを入力",
+          "searchConcepts": "コンセプトを検索",
+          "searchingConcepts": "コンセプトを検索中...",
+          "notFound": "見つかりません:"
+        }
+      }
+    },
+    "conceptLegend": {
+      "standard": "標準",
+      "nonStandard": "非標準",
+      "classification": "分類"
+    },
+    "conceptAddBox": {
+      "addToConceptSet": "コンセプトセットに追加",
+      "addToNewConceptSet": "新しいコンセプトセットに追加",
+      "selectConceptSet": "コンセプトセットを選択",
+      "exclude": "除外",
+      "descendants": "子孫",
+      "mapped": "マッピング済み",
+      "addedToConceptSet": "コンセプトセットに追加しました!"
+    },
+    "conceptSetBuilder": {
+      "conceptSet": "コンセプトセット",
+      "delete": "削除",
+      "export": "エクスポート",
+      "exportConceptSetTitle": "コンセプトセットをエクスポート...",
+      "import": "インポート",
+      "importConceptSetPlaceholder": "コンセプトセットをインポート",
+      "importConceptSetTitle": "コンセプトセットをインポート...",
+      "includedConcepts": "包含コンセプト",
+      "load": "読み込み",
+      "mappedConcepts": "マッピング済みコンセプト",
+      "newConceptSet": "新しいコンセプトセット",
+      "pleaseSelectCodesetToModify": "変更するコードセットを選択してください...",
+      "removeSelected": "選択項目を削除",
+      "selectConceptSet": "コンセプトセットを選択...",
+      "unnamedConceptSet": "名称未設定のコンセプトセット"
+    },
+    "conceptSetSaveModal": {
+      "conceptSetAlreadyExists": "コンセプトセットは既に存在します",
+      "conceptSetNameLabel": "コンセプトセット名:",
+      "conceptSetNamePlaceholder": "コンセプトセット名",
+      "saveNewConceptSet": "新しいコンセプトセットを保存"
+    },
+    "conceptSetSelector": {
+      "clearConceptSet": "コンセプトセットをクリア",
+      "importConcept": "コンセプトセットをインポート",
+      "searchWithTripleDots": "検索..."
+    },
+    "conditionDeath": {
+      "addAttribute": "属性を追加...",
+      "anyDeath": "任意の死亡",
+      "conditionDeathText_1": "以下からの死亡発生",
+      "conditionDeathText_2": "発生開始が次の場合:",
+      "conditionDeathText_3": "死亡ソースコンセプトが次の場合",
+      "conditionDeathText_4": "年齢が次の場合",
+      "conditionDeathText_5": "性別が次の場合:",
+      "conditionDeathText_6": "性別が次のいずれか:",
+      "deathType": "死亡タイプ",
+      "indexDataText": "インデックス日付は<%= conceptSetName %>の死亡イベントを参照します。"
+    },
+    "conditionDevice": {
+      "addAttribute": "属性を追加...",
+      "anyDevice": "任意のデバイス",
+      "conditionDeviceText_1": "次のデバイス曝露",
+      "conditionDeviceText_10": "プロバイダー専門分野が次の場合:",
+      "conditionDeviceText_11": "受診発生が次の場合:",
+      "conditionDeviceText_12": "性別が次のいずれか:",
+      "conditionDeviceText_13": "プロバイダー専門分野が次のいずれか:",
+      "conditionDeviceText_14": "受診発生が次のいずれか:",
+      "conditionDeviceText_2": "対象者の履歴で初めての場合",
+      "conditionDeviceText_3": "発生開始が次の場合:",
+      "conditionDeviceText_4": "発生終了が次の場合:",
+      "conditionDeviceText_5": "一意のデバイスIDあり",
+      "conditionDeviceText_6": "数量あり",
+      "conditionDeviceText_7": "デバイスソースコンセプトが次の場合",
+      "conditionDeviceText_8": "年齢が次の場合",
+      "conditionDeviceText_9": "性別が次の場合:",
+      "deviceType": "デバイスタイプ",
+      "indexDataText": "インデックス日付は<%= conceptSetName %>のデバイス曝露を参照します。"
+    },
+    "conditionDose": {
+      "addAttribute": "属性を追加...",
+      "anyDoseEra": "任意の用量エラ",
+      "anyDrug": "任意の薬剤",
+      "conditionDoseText_1": "次の用量エラ",
+      "conditionDoseText_10": "性別が次の場合:",
+      "conditionDoseText_11": "単位が次のいずれか:",
+      "conditionDoseText_12": "性別が次のいずれか:",
+      "conditionDoseText_2": "対象者の履歴で初めての場合",
+      "conditionDoseText_3": "エラ開始が次の場合:",
+      "conditionDoseText_4": "エラ終了が次の場合:",
+      "conditionDoseText_5": "単位あり:",
+      "conditionDoseText_6": "用量値あり",
+      "conditionDoseText_7": "エラ長あり",
+      "conditionDoseText_8": "エラ開始時の年齢(歳)あり",
+      "conditionDoseText_9": "エラ終了時の年齢(歳)あり",
+      "indexDataText": "インデックス日付は<%= conceptSetName %>の用量エラを参照します。"
+    },
+    "conditionDrug": {
+      "addAttribute": "属性を追加...",
+      "anyDrug": "任意の薬剤",
+      "conditionDrugText_1": "次の薬剤エラ",
+      "conditionDrugText_10": "エラ終了時の年齢(歳)あり",
+      "conditionDrugText_11": "性別が次の場合:",
+      "conditionDrugText_12": "性別が次のいずれか:",
+      "conditionDrugText_2": "対象者の履歴で初めての場合",
+      "conditionDrugText_3": "エラ開始が次の場合:",
+      "conditionDrugText_4": "エラ終了が次の場合:",
+      "conditionDrugText_5": "曝露回数あり",
+      "conditionDrugText_6": "ギャップ日数あり",
+      "conditionDrugText_7": "日",
+      "conditionDrugText_8": "エラ長あり",
+      "conditionDrugText_9": "エラ開始時の年齢(歳)あり",
+      "indexDataText": "インデックス日付は<%= conceptSetName %>の薬剤エラを参照します。"
+    },
+    "conditionDrugExposure": {
+      "addAttribute": "属性を追加...",
+      "anyDrug": "任意の薬剤",
+      "conditionDrugExposureText_1": "次の薬剤曝露",
+      "conditionDrugExposureText_10": "有効薬剤用量あり",
+      "conditionDrugExposureText_11": "用量単位が次の場合:",
+      "conditionDrugExposureText_12": "ロット番号あり",
+      "conditionDrugExposureText_13": "薬剤ソースコンセプトが次の場合:",
+      "conditionDrugExposureText_14": "年齢が次の場合",
+      "conditionDrugExposureText_15": "性別が次の場合:",
+      "conditionDrugExposureText_16": "プロバイダー専門分野が次の場合:",
+      "conditionDrugExposureText_17": "受診発生が次の場合:",
+      "conditionDrugExposureText_18": "投与経路コンセプトが次のいずれか:",
+      "conditionDrugExposureText_19": "用量単位が次のいずれか:",
+      "conditionDrugExposureText_2": "対象者の履歴で初めての場合",
+      "conditionDrugExposureText_20": "性別が次のいずれか:",
+      "conditionDrugExposureText_21": "プロバイダー専門分野が次のいずれか:",
+      "conditionDrugExposureText_22": "受診発生が次のいずれか:",
+      "conditionDrugExposureText_3": "発生開始が次の場合:",
+      "conditionDrugExposureText_4": "発生終了が次の場合:",
+      "conditionDrugExposureText_5": "中止理由あり",
+      "conditionDrugExposureText_6": "補充あり",
+      "conditionDrugExposureText_7": "数量あり",
+      "conditionDrugExposureText_8": "投与日数あり",
+      "conditionDrugExposureText_9": "投与経路コンセプトが次の場合:",
+      "drugType": "薬剤タイプ",
+      "indexDataText": "インデックス日付は<%= conceptSetName %>の薬剤曝露を参照します。"
+    },
+    "conditionEra": {
+      "addAttribute": "属性を追加...",
+      "anyConditionButton": "任意の状態",
+      "attributeText_1": "対象者の履歴で初めての場合",
+      "attributeText_2": "エラ開始が次の場合:",
+      "attributeText_3": "エラ終了が次の場合:",
+      "attributeText_4": "発生回数あり",
+      "attributeText_5": "エラ長あり",
+      "attributeText_6": "エラ開始時の年齢(歳)あり",
+      "attributeText_7": "エラ終了時の年齢(歳)あり",
+      "attributeText_8": "性別が次の場合:",
+      "attributeText_9": "日",
+      "criteriaText_1": "次の状態エラ",
+      "returnText_1": "インデックス日付は次の状態エラを参照します"
+    },
+    "conditionMeasurement": {
+      "addAttribute": "属性を追加...",
+      "anyMeasurement": "任意の測定",
+      "conditionMeasurementText_1": "次の測定",
+      "conditionMeasurementText_10": "範囲下限比あり",
+      "conditionMeasurementText_11": "範囲上限あり",
+      "conditionMeasurementText_12": "範囲上限比あり",
+      "conditionMeasurementText_13": "異常結果あり",
+      "conditionMeasurementText_14": "測定ソースコンセプトが次の場合",
+      "conditionMeasurementText_15": "年齢が次の場合",
+      "conditionMeasurementText_16": "性別が次の場合:",
+      "conditionMeasurementText_17": "プロバイダー専門分野が次の場合:",
+      "conditionMeasurementText_18": "受診が次の場合:",
+      "conditionMeasurementText_19": "測定値演算子が次のいずれか:",
+      "conditionMeasurementText_2": "対象者の履歴で初めての場合",
+      "conditionMeasurementText_20": "値(コンセプト)が次のいずれか:",
+      "conditionMeasurementText_21": "単位が次のいずれか:",
+      "conditionMeasurementText_22": "下限範囲あり",
+      "conditionMeasurementText_23": "下限範囲比あり",
+      "conditionMeasurementText_24": "上限範囲あり",
+      "conditionMeasurementText_25": "上限範囲比あり",
+      "conditionMeasurementText_26": "性別が次のいずれか:",
+      "conditionMeasurementText_27": "プロバイダー専門分野が次のいずれか:",
+      "conditionMeasurementText_28": "受診発生が次のいずれか:",
+      "conditionMeasurementText_3": "発生開始が次の場合:",
+      "conditionMeasurementText_5": "測定値演算子が次の場合:",
+      "conditionMeasurementText_6": "値(数値)あり",
+      "conditionMeasurementText_7": "値(コンセプト)が次の場合:",
+      "conditionMeasurementText_8": "単位が次の場合:",
+      "conditionMeasurementText_9": "範囲下限あり",
+      "measurementType": "測定タイプ",
+      "indexDataText": "インデックス日付は<%= conceptSetName %>の測定を参照します。"
+    },
+    "conditionObservation": {
+      "addAttribute": "属性を追加...",
+      "anyObservation": "任意の観察",
+      "conditionObservationText_1": "次の観察",
+      "conditionObservationText_10": "年齢が次の場合",
+      "conditionObservationText_11": "性別が次の場合:",
+      "conditionObservationText_12": "プロバイダー専門分野が次の場合:",
+      "conditionObservationText_13": "受診発生が次の場合:",
+      "conditionObservationText_14": "値(コンセプト)が次のいずれか:",
+      "conditionObservationText_15": "修飾子が次のいずれか:",
+      "conditionObservationText_16": "単位が次のいずれか:",
+      "conditionObservationText_17": "性別が次のいずれか:",
+      "conditionObservationText_18": "プロバイダー専門分野が次のいずれか:",
+      "conditionObservationText_19": "受診発生が次のいずれか:",
+      "conditionObservationText_2": "対象者の履歴で初めての場合",
+      "conditionObservationText_3": "発生開始が次の場合:",
+      "conditionObservationText_4": "値(数値)あり",
+      "conditionObservationText_5": "値(文字列)あり",
+      "conditionObservationText_6": "値(コンセプト)あり:",
+      "conditionObservationText_7": "修飾子あり:",
+      "conditionObservationText_8": "単位あり:",
+      "conditionObservationText_9": "観察ソースコンセプトが次の場合:",
+      "observationType": "観察タイプ",
+      "indexDataText": "インデックス日付は<%= conceptSetName %>の観察を参照します。"
+    },
+    "conditionObservationPeriod": {
+      "addAttribute": "属性を追加...",
+      "conditionObservationText_1": "以下の条件を満たす観察期間:",
+      "conditionObservationText_10": "日。",
+      "conditionObservationText_11": "観察期間",
+      "conditionObservationText_12": "期間タイプが次のいずれか:",
+      "conditionObservationText_2": "対象者の最初の観察期間に限定",
+      "conditionObservationText_3": "指定期間を使用:",
+      "conditionObservationText_4": "観察期間開始が次の場合:",
+      "conditionObservationText_5": "観察期間終了が次の場合:",
+      "conditionObservationText_6": "期間タイプが次の場合:",
+      "conditionObservationText_7": "期間開始時の年齢(歳)あり",
+      "conditionObservationText_8": "期間終了時の年齢(歳)あり",
+      "conditionObservationText_9": "期間の長さあり"
+    },
+    "conditionOccurrence": {
+      "addAttribute": "属性を追加...",
+      "anyCondition": "任意の状態（Condition）",
+      "conditionOccurrenceText_1": "次の状態（Condition）の発生：",
+      "conditionOccurrenceText_10": "次の受診（Visit）の発生を伴う：",
+      "conditionOccurrenceText_11": "性別が次のいずれか：",
+      "conditionOccurrenceText_12": "プロバイダの専門領域が次のいずれか：",
+      "conditionOccurrenceText_13": "受診（Visit）の発生が次のいずれか：",
+      "conditionOccurrenceText_2": "対象者の履歴で初めて",
+      "conditionOccurrenceText_3": "発生の開始：",
+      "conditionOccurrenceText_4": "発生の終了：",
+      "conditionOccurrenceText_5": "中止理由を伴う",
+      "conditionOccurrenceText_6": "状態ソースコンセプト（Condition Source Concept）が",
+      "conditionOccurrenceText_7": "年齢が",
+      "conditionOccurrenceText_8": "次の性別を伴う：",
+      "conditionOccurrenceText_9": "次のプロバイダ専門領域を伴う：",
+      "conditionType": "状態タイプ（Condition Type）",
+      "indexDataText": "インデックス日は <%= conceptSetName %> の状態（Condition）の発生を指します。"
+    },
+    "conditionPayerPlanPeriod": {
+      "addAttribute": "属性を追加...",
+      "anyPayer": "任意の支払者（Payer）",
+      "anyPayerSource": "任意の支払者ソース（Payer Source）",
+      "anyPlan": "任意のプラン（Plan）",
+      "anyPlanSource": "任意のプランソース（Plan Source）",
+      "anySponsor": "任意のスポンサー（Sponsor）",
+      "anySponsorSource": "任意のスポンサーソース（Sponsor Source）",
+      "anyStopReason": "任意の中止理由",
+      "anyStopReasonSource": "任意の中止理由ソース",
+      "conditionPayerPlanText_1": "次の条件を満たす支払者プラン期間：",
+      "conditionPayerPlanText_10": "支払者コンセプト（Payer Concept）が",
+      "conditionPayerPlanText_11": "プランコンセプト（Plan Concept）が",
+      "conditionPayerPlanText_12": "スポンサーコンセプト（Sponsor Concept）が",
+      "conditionPayerPlanText_13": "中止理由コンセプト（Stop Reason Concept）が",
+      "conditionPayerPlanText_14": "支払者ソースコンセプト（Payer Source Concept）が",
+      "conditionPayerPlanText_15": "プランソースコンセプト（Plan Source Concept）が",
+      "conditionPayerPlanText_16": "スポンサーソースコンセプト（Sponsor Source Concept）が",
+      "conditionPayerPlanText_17": "中止理由ソースコンセプト（Stop Reason Source Concept）が",
+      "conditionPayerPlanText_18": "注意：支払者プラン期間の条件は CDM v5.3 以降でのみ利用できます。",
+      "conditionPayerPlanText_19": "支払者プラン期間",
+      "conditionPayerPlanText_2": "対象者の最初の支払者プラン期間に限定",
+      "conditionPayerPlanText_20": "指定した期間を使用：",
+      "conditionPayerPlanText_21": "期間の開始が",
+      "conditionPayerPlanText_22": "期間の終了が",
+      "conditionPayerPlanText_23": "開始時の年齢が",
+      "conditionPayerPlanText_24": "終了時の年齢が",
+      "conditionPayerPlanText_25": "性別が次のいずれか：",
+      "conditionPayerPlanText_3": "期間開始時の年齢が",
+      "conditionPayerPlanText_4": "期間終了時の年齢が",
+      "conditionPayerPlanText_5": "期間の長さが",
+      "conditionPayerPlanText_6": "次の性別を伴う：",
+      "conditionPayerPlanText_7": "指定した期間を使用：",
+      "conditionPayerPlanText_8": "支払者プラン期間の開始：",
+      "conditionPayerPlanText_9": "支払者プラン期間の終了：",
+      "indexDataText": "インデックス日は支払者プラン期間を指します。"
+    },
+    "conditionProcedureOccurrence": {
+      "addAttribute": "属性を追加...",
+      "anyProcedure": "任意の処置（Procedure）",
+      "conditionProcedureOccurrenceText_1": "次の処置（Procedure）の発生：",
+      "conditionProcedureOccurrenceText_10": "次の受診（Visit）の発生を伴う：",
+      "conditionProcedureOccurrenceText_11": "修飾子（Modifier）が次のいずれか：",
+      "conditionProcedureOccurrenceText_12": "性別が次のいずれか：",
+      "conditionProcedureOccurrenceText_13": "プロバイダの専門領域が次のいずれか：",
+      "conditionProcedureOccurrenceText_14": "受診（Visit）の発生が次のいずれか：",
+      "conditionProcedureOccurrenceText_2": "対象者の履歴で初めて",
+      "conditionProcedureOccurrenceText_3": "発生の開始：",
+      "conditionProcedureOccurrenceText_4": "修飾子（Modifier）が：",
+      "conditionProcedureOccurrenceText_5": "数量が",
+      "conditionProcedureOccurrenceText_6": "処置ソースコンセプト（Procedure Source Concept）が：",
+      "conditionProcedureOccurrenceText_7": "年齢が：",
+      "conditionProcedureOccurrenceText_8": "次の性別を伴う：",
+      "conditionProcedureOccurrenceText_9": "次のプロバイダ専門領域を伴う：",
+      "procedureType": "処置タイプ（Procedure Type）",
+      "indexDataText": "インデックス日は <%= conceptSetName %> の処置（Procedure）を指します。"
+    },
+    "conditionSpecimen": {
+      "addAttribute": "属性を追加...",
+      "anySpecimen": "任意の検体（Specimen）",
+      "conditionSpecimeText_1": "次の検体（Specimen）：",
+      "conditionSpecimeText_10": "次の性別を伴う：",
+      "conditionSpecimeText_11": "単位が次のいずれか：",
+      "conditionSpecimeText_12": "解剖学的部位が次のいずれか：",
+      "conditionSpecimeText_13": "疾患ステータスが次のいずれか：",
+      "conditionSpecimeText_14": "性別が次のいずれか：",
+      "conditionSpecimeText_2": "対象者の履歴で初めて",
+      "conditionSpecimeText_3": "発生の開始：",
+      "conditionSpecimeText_4": "数量を伴う",
+      "conditionSpecimeText_5": "単位を伴う：",
+      "conditionSpecimeText_6": "解剖学的部位を伴う：",
+      "conditionSpecimeText_7": "疾患ステータスを伴う：",
+      "conditionSpecimeText_8": "ソースIDを伴う",
+      "conditionSpecimeText_9": "年齢が",
+      "specimenType": "検体タイプ（Specimen Type）",
+      "indexDataText": "インデックス日は <%= conceptSetName %> の検体（Specimen）を指します。"
+    },
+    "conditionVisit": {
+      "addAttribute": "属性を追加...",
+      "anyLocation": "任意の場所（Location）",
+      "anyVisit": "任意の受診（Visit）",
+      "conditionSpecimeText_1": "次の受診（Visit）の発生：",
+      "conditionSpecimeText_10": "次のサービス提供場所（Place of Service）を伴う：",
+      "conditionSpecimeText_11": "次の場所にあるサービス提供場所（Place of Service）を伴う：",
+      "conditionSpecimeText_12": "サービス提供場所（Place of Service）から患者までの距離を伴う",
+      "conditionSpecimeText_13": "受診の長さを伴う",
+      "conditionSpecimeText_14": "性別が次のいずれか：",
+      "conditionSpecimeText_15": "プロバイダの専門領域が次のいずれか：",
+      "conditionSpecimeText_2": "対象者の履歴で初めて",
+      "conditionSpecimeText_3": "発生の開始：",
+      "conditionSpecimeText_4": "発生の終了：",
+      "conditionSpecimeText_5": "受診ソースコンセプト（Visit Source Concept）が",
+      "conditionSpecimeText_6": "受診の長さを伴う",
+      "conditionSpecimeText_7": "年齢が",
+      "conditionSpecimeText_8": "次の性別を伴う：",
+      "conditionSpecimeText_9": "次のプロバイダ専門領域を伴う：",
+      "visitType": "受診タイプ（Visit Type）",
+      "indexDataText": "インデックス日は <%= conceptSetName %> の受診（Visit）を指します。"
+    },
+    "conditionVisitDetail": {
+      "addAttribute": "属性を追加...",
+      "anyVisitDetail": "任意の受診詳細（Visit Detail）",
+      "anyType": "任意の受診詳細タイプ（Visit Detail Type）",
+      "anySourceConcept": "任意の受診詳細ソースコンセプト（Visit Detail Source Concept）",
+      "anyGender": "任意の性別",
+      "anyProviderSpeciality": "任意のプロバイダ専門領域",
+      "anyPlaceService": "任意のサービス提供場所（Place of Service）",
+      "anyLocation": "任意の場所（Location）",
+      "conditionVisitDetailText_1": "次の受診詳細（Visit Detail）：",
+      "conditionVisitDetailText_10": "サービス提供場所（Place of Service）を伴う ",
+      "conditionVisitDetailText_11": "次の場所にあるサービス提供場所（Place of Service）を伴う：",
+      "conditionVisitDetailText_12": "サービス提供場所（Place of Service）から患者までの距離を伴う：",
+      "conditionVisitDetailText_2": "対象者の履歴で初めて",
+      "conditionVisitDetailText_3": "受診詳細の開始：",
+      "conditionVisitDetailText_4": "受診詳細の終了：",
+      "conditionVisitDetailText_5": "受診詳細ソースコンセプト（Visit Detail Source Concept）が",
+      "conditionVisitDetailText_6": "受診詳細の長さを伴う",
+      "conditionVisitDetailText_7": "年齢が",
+      "conditionVisitDetailText_8": "性別を伴う ",
+      "conditionVisitDetailText_9": "プロバイダ専門領域を伴う ",
+      "visitDetailType": "受診詳細タイプ（Visit Detail Type）",
+      "indexDataText": "インデックス日は <%= conceptSetName %> の受診詳細（Visit Detail）を指します。"
+    },
+    "criteriaGroup": {
+      "addAdditionalConstraint": "追加の制約を加える",
+      "addCriteria": "グループに条件を追加...",
+      "addNestedGroup": "ネストグループを追加",
+      "and": "かつ",
+      "between": "次の範囲：",
+      "criteriaGroupText_1": "同一の受診（Visit）の発生に限定する",
+      "criteriaGroupText_2": "観察期間外のイベントを許可する",
+      "deleteCriteria": "条件を削除",
+      "deleteGroup": "グループを削除",
+      "removeNestedGroup": "ネストグループを削除",
+      "followingCriteria": "次の条件の：",
+      "having": "次の回数で",
+      "havingCapital": "次の回数で",
+      "occurrencesOf": "回の発生：",
+      "occurrenceOf": "回の発生：",
+      "usingAll": "すべてを使用",
+      "usingDistinct": "個別のものを使用",
+      "where": "条件：",
+      "with": "次を伴う",
+      "withFollowingCriteria": "次のイベント条件を伴う：",
+      "occurringWithinTheSameVisit": "同一の受診内で発生する",
+      "nestedCriteria": {
+        "title": "ネスト条件",
+        "addCriteria": "条件を追加",
+        "logicTypes": {
+          "all": "次のすべて",
+          "any": "次のいずれか",
+          "atLeast": "{count} 回以上",
+          "atMost": "{count} 回以下"
+        },
+        "selectLogicType": "ロジックタイプを選択",
+        "selectCount": "回数を選択",
+        "maxDepthWarning": "最大ネスト深度（10階層）に達しました",
+        "depthWarning": "ネスト深度は {depth}/10 です",
+        "removeGroup": "ネストグループを削除",
+        "confirmRemove": "このネストグループとそのすべての条件を削除してもよろしいですか？"
+      }
+    },
+    "customEraStrategy": {
+      "customEraStrategyText_1": "継続的な曝露の持続：",
+      "customEraStrategyText_10": "薬剤曝露の供給日数を次に強制：",
+      "customEraStrategyText_11": "日。",
+      "customEraStrategyText_12": "この戦略では、指定したコンセプトセットに含まれるコードから薬剤エラ（drug era）を作成します。インデックスイベントがエラ内に存在する場合、コホート終了日にはそのエラの終了日が使用されます。それ以外の場合は、インデックスイベントを含む観察期間の終了日が使用されます。",
+      "customEraStrategyText_13": "次のエラ終了日を使用：",
+      "customEraStrategyText_14": "許容：",
+      "customEraStrategyText_15": "曝露間の日数",
+      "customEraStrategyText_16": "追加：",
+      "customEraStrategyText_17": "曝露終了後の日数",
+      "customEraStrategyText_18": "曝露期間に供給日数と曝露終了日を使用します。",
+      "customEraStrategyText_19": "薬剤曝露の供給日数を次に強制：",
+      "customEraStrategyText_2": "対象とする1つ以上の薬剤を含むコンセプトセットを指定します。コンセプトセット内のいずれかの薬剤に関するすべての薬剤曝露イベントから薬剤エラ（drug era）が導出されます。その際、指定した持続ウィンドウを連続する曝露イベント間に許容される最大の間隔（日数）として使用し、最終曝露イベントに指定したサーベイランスウィンドウを追加します。曝露イベント終了日が指定されていない場合、供給日数が利用可能なときはイベント開始日＋供給日数、それ以外のときはイベント開始日＋1日として曝露イベント終了日が推定されます。このイベント持続により、コホート終了日が薬剤エラ終了日を超えないことが保証されます。",
+      "customEraStrategyText_3": "対象とする薬剤を含むコンセプトセット：",
+      "customEraStrategyText_4": "持続ウィンドウ：最大で次を許容 ",
+      "customEraStrategyText_5": "持続曝露のエラを推定する際の曝露記録間の日数",
+      "customEraStrategyText_6": "サーベイランスウィンドウ：次を追加 ",
+      "customEraStrategyText_7": "コホート終了前の追加のサーベイランス期間として、持続曝露のエラの終了に日数を追加します。",
+      "customEraStrategyText_8": "曝露期間に供給日数と曝露終了日を使用します。 ",
+      "customEraStrategyText_9": "変更",
+      "selectDrugConceptSet": "薬剤コンセプトセットを選択"
+    },
+    "cyclops": {
+      "controlEditor": {
+        "convergenceType": "収束タイプを選択：",
+        "crossValidationSearchType": "交差検証の探索タイプを選択：",
+        "initialBound": "初期境界：",
+        "lowerPrior": "事前分散の下限：",
+        "maxBoundCount": "最大境界数：",
+        "maxIterations": "収束失敗エラーを返す前に試行する Cyclops の最大反復回数。",
+        "maxRelativeChange": "収束を達成するための、連続する反復間における収束基準の最大相対変化。",
+        "nameOfExchangeableSamplingUnit": "交換可能なサンプリング単位の名前。オプション <i>byPid</i> は層全体を選択します。オプション <i>byRow</i> は単一行を選択します。<i>auto</i> に設定すると、層あたりの平均行数が層数より小さい条件付きモデルを除き、すべてのモデルで <i>byRow</i> が使用されます：",
+        "noiseLevel": "Cyclops の画面出力のノイズレベル：",
+        "numberOfRandomFolds": "交差検証で使用するランダムフォールドの数：",
+        "numberOfRepetitions": "<%=num%> フォールド交差検証の反復回数：",
+        "numberOfSteps": "ステップ数：",
+        "resetAllCoefficients": "交差検証下でのモデルフィット間に、すべての係数を0にリセットする：",
+        "sizeMultiplier": "アクティブセットのサイズ乗数：",
+        "startingVariance": "自動探索交差検証の開始分散；-1 = データに基づく推定値を使用：",
+        "minDataCrossValidation": "交差検証に必要な最小データ量：",
+        "upperPrior": "事前分散の上限：",
+        "useTheKarush": "探索を制限するために Karush-Kuhn-Tucker 条件を使用："
+      },
+      "options": {
+        "auto": "自動",
+        "gradient": "勾配（Gradient）",
+        "grid": "グリッド（Grid）",
+        "hierarchical": "階層的（Hierarchical）",
+        "lange": "Lange",
+        "laplace": "Laplace",
+        "mittal": "Mittal",
+        "noisy": "ノイジー（Noisy）",
+        "none": "なし",
+        "normal": "正規（Normal）",
+        "quiet": "静か（Quiet）",
+        "silent": "サイレント（Silent）"
+      },
+      "prior": {
+        "crossValidation": "事前分散を決定するために交差検証を実行：",
+        "distribution": "事前分布を指定：",
+        "distributionVariance": "事前分布の分散を指定：",
+        "interceptCoefficient": "切片係数を事前分布に強制的に含める：",
+        "mapping": "階層的事前分布のための子から親へのマッピング：",
+        "neighborhoods": "部分的に融合した事前分布のための一次近傍のリスト：",
+        "vector": "事前分布から除外する数値または共変量IDのベクトルを指定："
+      }
+    },
+    "dateOffsetStrategy": {
+      "dateOffsetStrategyText_6": "日付オフセット終了条件",
+      "dateOffsetStrategyText_7": "このコホート定義の終了日はインデックスイベントの日付に",
+      "dateOffsetStrategyText_8": "プラス",
+      "dateOffsetStrategyText_1": "固定期間の持続:",
+      "dateOffsetStrategyText_2": "イベント終了日は、イベントの開始日または終了日に日数を加算して算出されます。オフセットがイベントの開始日に加算される場合、すべてのコホートエピソードは同じ固定期間になります(さらなる打ち切りの対象となります)。オフセットがイベントの終了日に加算される場合、イベント期間がさまざまであるため(持続的な薬剤曝露の期間や入院日数など)、コホート内の対象者のコホート期間は異なる場合があります。このイベント持続により、コホート終了日は選択したインデックスイベントの日付に日数オフセットを加えた日付を超えないことが保証されます。",
+      "dateOffsetStrategyText_3": "オフセットの起点となるイベント日:",
+      "dateOffsetStrategyText_3_1": " ",
+      "dateOffsetStrategyText_4": "オフセット日数:",
+      "dateOffsetStrategyText_5": "日"
+    },
+    "dateRange": {
+      "after": "後",
+      "and": "かつ",
+      "before": "前",
+      "between": "の間",
+      "firstPlaceholder": "YYYY-MM-DD",
+      "notBetween": "の間ではない",
+      "on": "に",
+      "onOrAfter": "以降",
+      "onOrBefore": "以前",
+      "inclusive": "を含む"
+    },
+    "demographicCriteria": {
+      "addAttribute": "属性を追加...",
+      "demographicCriteriaText_1": "性別が次のいずれか:",
+      "demographicCriteriaText_2": "人種が次のいずれか:",
+      "demographicCriteriaText_3": "民族が次のいずれか:",
+      "occurrenceEnd": "発生終了が:",
+      "occurrenceStart": "発生開始が:",
+      "withAge": "年齢が",
+      "withEthnicity": "民族が次の:",
+      "withGenderOf": "性別が次の:",
+      "withRaceOf": "人種が次の:"
+    },
+    "endStrategyEditor": {
+      "eventWillPersistUntil": "イベントは次まで持続:",
+      "eventWillPersistUntil2": " "
+    },
+    "endStrategyViewer": {
+      "endDateStrategy": "終了日戦略",
+      "endStrategyViewerText_1": "終了日戦略が選択されていません。デフォルトでは、コホート終了日はインデックスイベントを含む観察期間の終了日になります。"
+    },
+    "evidencePairViewer": {
+      "evidencePairViewerText_1": "エビデンスペアを読み込み中",
+      "evidencePairViewerText_2": "CommonEvidenceModel が選択した薬剤-病態ペアについて製品ラベル情報があると示している場合(1 = true、0 = false)、以下に多数の製品ラベルが表示されることがあります。あるラベル上の有害事象はすべての製品ラベルに記載されることになっているため、ラベルの数は情報的な意味を持ちません。したがって、このページでは選択した薬剤-病態ペアのすべての製品ラベルが表示されます。",
+      "evidencePairViewerText_3": "CommonEvidenceModel が多数の出版物を列挙している場合、「エビデンスの表示」ポップアップで、以下の結果に同じ出版物が複数回出現することがあります。これは、出版物が一致するすべての薬剤-病態ペアについて、その出版物が「エビデンスの表示」リストに表示されるためです。",
+      "evidencePairViewerText_4": "このエビデンスリストの詳細についてはこちらをクリックしてください",
+      "evidencePairViewerText_5": "詳細を非表示",
+      "evidencePairViewerText_6": "このコンセプトセットは結果を生成するのに有効としてマークされていません。このコンセプトセットに CONDITIONS または DRUGS のみが含まれていることを確認してください。"
+    },
+    "executionUtils": {
+      "startNewExecutionInParallelConfirmation": "このソースの生成はすでに開始されています。並行して新しい生成を開始してもよろしいですか?"
+    },
+    "exploreCohort": {
+      "fetchingFirst": "最初の件数を取得中",
+      "members": "メンバー",
+      "exploreCohortText_1": "このコホートには表示可能なメンバーがありません。Atlas のコホート定義セクションで生成ステータスを確認してください。",
+      "exploreCohortText_2": "選択したデータソースについて、このコホートには表示可能なメンバーがありません。生成タブを使用してコホートを生成したことを確認してください。"
+    },
+    "export": {
+      "button": "エクスポート",
+      "progress": "エクスポート実行中"
+    },
+    "exportSql": {
+      "incorrectDesign": "SQL を生成できません: 解析の設計が正しくありません"
+    },
+    "feasibilityAttritionReport": {
+      "attritionVisualization": "脱落の可視化",
+      "inclusionRule": "包含ルール",
+      "percentRemain": "残存率 (%)",
+      "precentDiff": "差分率 (%)"
+    },
+    "feasibilityIntersectReport": {
+      "inclusionRule": "包含ルール",
+      "percentSatisfied": "充足率 (%)",
+      "percentToGain": "獲得可能率 (%)",
+      "populationVisualization": "母集団の可視化",
+      "rectSummary": "<%=size%> 人 (<%=percentage%>%)、<%=passCount%> 件の条件を満たし、<%=failCount%> 件の条件を満たしませんでした。"
+    },
+    "feasibilityReportViewer": {
+      "feasibilityReportViewerText_1": "一致率",
+      "feasibilityReportViewerText_2": "一致数",
+      "feasibilityReportViewerText_3": "打ち切りによる喪失",
+      "feasibilityReportViewerText_4": "総イベント数",
+      "feasibilityReportViewerText_5": "サマリー統計:",
+      "feasibilityReportViewerText_6": "脱落ビューに切り替え",
+      "feasibilityReportViewerText_7": "交差ビューに切り替え",
+      "feasibilityReportViewerText_8": "このコホート定義には包含ルールが指定されていません。"
+    },
+    "featureextraction": {
+      "covariateSettingsEditor": {
+        "age": "年齢",
+        "ageGroups": "年齢グループ",
+        "allTime": "全期間",
+        "anyTimePrior": "それ以前のいずれかの時点",
+        "condition": "病態",
+        "conditionGroup": "病態グループ",
+        "conditionPrimaryInpatient": "病態 - 主要入院",
+        "demographics": "人口統計",
+        "device": "デバイス",
+        "distinctCount": "個別カウント",
+        "domain": "ドメイン",
+        "drug": "薬剤",
+        "drugGroup": "薬剤グループ",
+        "endDays": "終了日数",
+        "eraStart": "期間開始",
+        "ethnicity": "民族",
+        "gender": "性別",
+        "indexMonth": "インデックス月",
+        "indexScoreType": "インデックススコアタイプ",
+        "indexYear": "インデックス年",
+        "indexYearMonth": "インデックス<br/>年・月",
+        "longTerm": "長期",
+        "measurement": "測定",
+        "measurementRangeGroup": "測定 - 範囲グループ",
+        "measurementValue": "測定 - 値",
+        "mediumTerm": "中期",
+        "observation": "観察",
+        "overlapping": "重複",
+        "postObservationTime": "観察後<br/>期間",
+        "priorObservationTime": "観察前<br/>期間",
+        "procedure": "処置",
+        "race": "人種",
+        "setTheIndexScoreCovariates": "インデックススコア共変量を設定",
+        "setTheTimeBoundCovariates": "時間境界共変量を設定",
+        "setTheTimeBoundEraCovariates": "時間境界期間共変量を設定",
+        "setTheTimeWindows": "コホートインデックスを基準とした日数で、時間境界共変量の時間枠を設定",
+        "shortTerm": "短期",
+        "timeBoundCovariates": "時間境界共変量",
+        "timeInCohort": "コホート内<br/>期間",
+        "timeWindows": "時間枠",
+        "visitConceptCount": "受診 - コンセプト数",
+        "visitCount": "受診 - 回数"
+      }
+    },
+    "filterPanel": {
+      "buttons": {
+        "apply": "適用",
+        "clear": "クリア"
+      },
+      "title": "フィルターパネル"
+    },
+    "generateComponent": {
+      "generate": "生成",
+      "generating": "生成中..."
+    },
+    "import": {
+      "button": "インポート",
+      "denied": "インポートは許可されていません",
+      "progress": "インポート実行中"
+    },
+    "inclusionRuleEditor": {
+      "copy": "コピー",
+      "delete": "削除",
+      "ruleDescriptionPlaceholder": "包含ルールの説明を入力してください",
+      "unnamedCriteria": "名称未設定の条件"
+    },
+    "linkedCohortList": {
+      "defaultNewItemLabel": "インポート",
+      "defaultTitle": "コホート定義",
+      "dialog": {
+        "title": "コホート定義を選択"
+      },
+      "table": {
+        "actions": {
+          "edit": "コホートを編集",
+          "remove": "削除"
+        }
+      }
+    },
+    "linkedEntityList": {
+      "defaultNewItemLabel": "インポート"
+    },
+    "locationRegion": {
+      "anyLocationRegion": "任意の地域",
+      "criteria": {
+        "of": "次の地域",
+        "correlatedCriteria": {
+          "option": {
+            "description": "地域をインデックスイベントとして条件を適用",
+            "text": "ネストされた条件を追加..."
+          }
+        },
+        "startDate": {
+          "option": {
+            "description": "対象者が居住を開始した日付で地域をフィルター",
+            "text": "開始日条件を追加..."
+          },
+          "text": "開始が:"
+        },
+        "endDate": {
+          "option": {
+            "description": "対象者が居住を終了した日付で地域をフィルター",
+            "text": "終了日条件を追加..."
+          },
+          "text": "終了が:"
+        },
+        "indexData": {
+          "text": "インデックス日は <%= conceptSetName %> の地域を指します。"
+        }
+      }
+    },
+    "multiInput": {
+      "action": "アクション",
+      "add": "追加",
+      "remove": "削除"
+    },
+    "navigateControls": {
+      "navigateControlsText_1": "Common Evidence Model"
+    },
+    "numericRange": {
+      "between": "の間",
+      "equalTo": "等しい",
+      "greaterOrEqualTo": "以上",
+      "greaterThan": "より大きい",
+      "lessOrEqualTo": "以下",
+      "lessThan": "より小さい",
+      "notBetween": "の間ではない"
+    },
+    "period": {
+      "andEnding": "終了が",
+      "periodText_1": "注: 開始日と終了日を包含する観察期間のみが使用されます。",
+      "starting": "開始が"
+    },
+    "textFilter": {
+      "contains": "を含む",
+      "endsWith": "で終わる",
+      "notContains": "を含まない",
+      "notEndsWith": "で終わらない",
+      "notStartsWith": "で始まらない",
+      "startsWith": "で始まる"
+    },
+    "userBar": {
+      "signin": "サインイン",
+      "signout": "サインアウト"
+    },
+    "welcome": {
+      "close": "閉じる",
+      "loggedIn": "'<%=login%>' としてログイン中",
+      "loggedInExp": "'<%=login%>' としてログイン中 (有効期限: <%=expiration%>)",
+      "messages": {
+        "badCredentials": "認証情報が正しくありません",
+        "expired": "セッションの有効期限が切れました。再度ログインしてください。",
+        "loginFailed": "ログインに失敗しました",
+        "refresh": "セッションの有効期限が切れました。続行するにはページを更新してください。"
+      },
+      "password": "パスワード",
+      "runas": "実行ユーザー",
+      "signinWith": "次の方法でサインイン:",
+      "signout": "サインアウト",
+      "submit": "送信",
+      "username": "ユーザー名",
+      "wait": "お待ちください...",
+      "saml": {
+        "loginRequired": "ID プロバイダーからログアウトして、再度ログインしてください"
+      }
+    },
+    "windowInput": {
+      "windowInputText_1": "すべて",
+      "windowInputText_2": "日",
+      "windowInputText_3": "かつ"
+    },
+    "windowedCriteria": {
+      "windowedCriteriaText_1": "条件",
+      "windowedCriteriaText_2": "の間",
+      "windowedCriteriaText_3": "かつ",
+      "windowedCriteriaText_4": "追加の制約を追加",
+      "windowedCriteriaText_5": "同じ受診発生に限定",
+      "windowedCriteriaText_6": "観察期間を無視"
+    },
+    "common": {
+      "addAttribute": "属性を追加..."
+    },
+    "multiSelect": {
+      "noneSelectedText": "選択されていません",
+      "noneResultsText": "{0} に一致するものが見つかりません",
+      "countSelectedText": "{0} 件のアイテムが選択されました"
+    },
+    "generation": {
+      "selectSources": "ソースを選択",
+      "generate": "生成",
+      "pickAtLeastOneSourceAlert": "生成するソースを少なくとも1つ選択してください"
+    },
+    "nameValidation": {
+      "empty": "名前が空です。",
+      "invalidCharacters": "名前には次の文字を含めることはできません: \\/:*?\"<>|  別の名前を選択してください。",
+      "length": "名前の長さが <%=length%> 文字を超えています。別の名前を選択してください。",
+      "defaultName": "<%=analysisName%> の名前はデフォルトの名前とは異なるものにしてください。",
+      "conceptSet": "コンセプトセット",
+      "cohortDefinition": "コホート定義",
+      "characterization": "特性化",
+      "featureAnalysis": "特徴量解析",
+      "cohortPathway": "コホートパスウェイ",
+      "irAnalysis": "発生率解析",
+      "pleAnalysis": "PLE 解析",
+      "plpAnalysis": "PLP 解析",
+      "reusable": "再利用可能"
+    },
+    "checks": {
+      "runningDiagnostics": "診断を実行中",
+      "fixIt": "修正する"
+    },
+    "tags": {
+      "title": "タグを割り当て",
+      "tabs": {
+        "studyAssetTags": "スタディアセットタグ",
+        "reference": "リファレンス"
+      },
+      "availableTags": "利用可能なタグ:",
+      "assign": "割り当て",
+      "unassign": "割り当て解除",
+      "notPermitted": "許可されていません",
+      "assignExistingTag": "カスタムタグを作成",
+      "tagNamePlaceholder": "タグ名",
+      "assignedTags": "割り当て済みタグ:",
+      "tagGroups": "タググループ:",
+      "tagGroup:": "タググループ:",
+      "showTags": "タグを表示",
+      "tagNameExistsWarning": "タグ <%=tagName%> はすでに存在します。",
+      "cannotUnassignProtectedTagWarning": "保護されたタグの割り当てを解除できません: <%=tagName%>",
+      "reassignConfirm": "タググループ \"<%=tagGroup%>\" で割り当て可能なタグの最大数は <%=maxNumber%> です。タグ \"<%=tagName%>\" の割り当てが解除されます。続行しますか?"
+    },
+    "versions": {
+      "loading": "バージョンを読み込み中...",
+      "editComment": "コメントを編集",
+      "addComment": "コメントを追加",
+      "commentPlaceholder": "コメント",
+      "preview": "プレビュー",
+      "viewing": "現在表示中",
+      "createACopy": "コピーを作成",
+      "current": "現在"
+    },
+    "reusablesModal": {
+      "title": "再利用可能なものから挿入",
+      "loadingReusables": "再利用可能なものの一覧を読み込み中...",
+      "anyConceptSet": "任意のコンセプトセット"
+    },
+    "heading": {
+      "tag": {
+        "tooltip": {
+          "group": "グループ:",
+          "groups": "グループ:",
+          "tag": "タグ:"
+        }
+      }
+    }
+  },
+  "characterizations": {
+    "list": {
+      "title": "特性化",
+      "newButton": "新規特性化",
+      "searchPlaceholder": "特性化を検索...",
+      "empty": "特性化が見つかりません。",
+      "columns": {
+        "name": "名前",
+        "description": "説明",
+        "cohorts": "コホート",
+        "featureAnalyses": "特徴量解析",
+        "createdBy": "作成者",
+        "createdDate": "作成日",
+        "modifiedDate": "更新日",
+        "actions": "操作"
+      },
+      "actions": {
+        "edit": "編集",
+        "copy": "コピー",
+        "delete": "削除"
+      },
+      "deleteConfirm": "特性化「{name}」を削除しますか？"
+    },
+    "editor": {
+      "tabs": {
+        "design": "デザイン",
+        "conceptSets": "コンセプトセット",
+        "executions": "実行",
+        "versions": "バージョン",
+        "validation": "検証",
+        "utilities": "ユーティリティ"
+      },
+      "title": {
+        "new": "新規特性化",
+        "edit": "特性化の編集"
+      },
+      "metadata": {
+        "name": "名前",
+        "description": "説明",
+        "stratifiedBy": "層別化の基準",
+        "strataOnly": "層のみを計算する（全体をスキップ）"
+      },
+      "cohorts": {
+        "title": "リンクされたコホート",
+        "empty": "リンクされたコホートはありません。",
+        "add": "コホートを追加",
+        "selectDialogTitle": "リンクするコホートを選択",
+        "remove": "削除"
+      },
+      "featureAnalyses": {
+        "title": "リンクされた特徴量解析",
+        "empty": "リンクされた特徴量解析はありません。",
+        "add": "特徴量解析を追加",
+        "selectDialogTitle": "リンクする特徴量解析を選択",
+        "includeAnnual": "年次",
+        "includeTemporal": "時系列",
+        "annualPending": "FAバックエンドのサポート待ち",
+        "remove": "削除"
+      },
+      "strata": {
+        "title": "サブグループ（層）",
+        "empty": "層が定義されていません。",
+        "add": "層を追加",
+        "name": "層名",
+        "criteriaLabel": "条件（JSON）",
+        "criteriaPlaceholder": "条件ビルダーの統合は後続のリリースで提供されます。現時点では CriteriaGroup の JSON を貼り付けてください。",
+        "remove": "削除",
+        "invalidJson": "無効な JSON"
+      },
+      "conceptSetsTab": {
+        "title": "コンセプトセット",
+        "placeholder": "層から導出されたコンセプトセットは、条件ビルダーが導入されるとここに表示されます。",
+        "empty": "コンセプトセットがありません。"
+      },
+      "actions": {
+        "save": "保存",
+        "saveCopy": "コピーとして保存",
+        "delete": "削除",
+        "back": "戻る",
+        "run": "実行",
+        "runDisabled": "フェーズ4で利用可能"
+      },
+      "deleteConfirm": "特性化「{name}」を削除しますか？",
+      "leaveConfirm": "保存されていない変更があります。それでも移動しますか？",
+      "saveSuccess": "特性化を保存しました",
+      "saveError": "特性化の保存に失敗しました",
+      "nameRequired": "名前は必須です",
+      "versionsTodo": "バージョン統合 TODO — 後続のリリースで characterization-versions.service に接続されます。",
+      "comingSoon": "特性化エディタは近日公開予定です",
+      "back": "一覧に戻る",
+      "executions": {
+        "title": "実行",
+        "tabLabel": "実行",
+        "runButton": "実行",
+        "runDisabledNoId": "実行する前に特性化を保存してください。",
+        "runDisabledDirty": "実行する前に変更を保存してください。",
+        "dialog": {
+          "title": "特性化を実行",
+          "sourceLabel": "データソース",
+          "sourceRequired": "データソースを選択",
+          "run": "実行",
+          "cancel": "キャンセル"
+        },
+        "row": {
+          "source": "ソース",
+          "status": "ステータス",
+          "startTime": "開始",
+          "duration": "所要時間",
+          "actions": "操作",
+          "cancelAction": "キャンセル",
+          "resultsAction": "結果を表示",
+          "cancelConfirm": "「{source}」での実行をキャンセルしますか？"
+        },
+        "empty": "まだ実行がありません。",
+        "results": {
+          "comingSoon": "結果ビューアは近日公開予定です",
+          "back": "ビルダーに戻る"
+        }
+      },
+      "validation": {
+        "tabLabel": "検証",
+        "headers": {
+          "errors": "エラー",
+          "warnings": "警告",
+          "infos": "注記"
+        },
+        "empty": "問題はありません。デザインは有効です。",
+        "rules": {
+          "nameRequired": "名前は必須です。",
+          "cohortsRequired": "少なくとも1つのコホートをリンクする必要があります。",
+          "featureAnalysesRequired": "少なくとも1つの特徴量解析をリンクする必要があります。",
+          "strataNameMissing": "層 {n} に名前がありません。",
+          "strataNameDuplicate": "2つ以上の層が「{name}」という名前を共有しています。",
+          "strataCriteriaInvalid": "層「{name}」の条件 JSON が無効です。",
+          "strataOnlyButNoStrata": "層のみが有効になっていますが、層が定義されていません。",
+          "tooManyFeatureAnalyses": "{count} 件の特徴量解析は生成を遅くする可能性があります。"
+        },
+        "saveBlocked": "先に検証エラーを修正してください。"
+      },
+      "utilities": {
+        "tabLabel": "ユーティリティ",
+        "export": {
+          "title": "デザインをエクスポート",
+          "description": "デザインを JSON としてダウンロードします。",
+          "download": "デザイン JSON をダウンロード"
+        },
+        "import": {
+          "title": "デザインをインポート",
+          "description": "デザイン JSON ファイルをアップロードします。新しい特性化が作成されます。",
+          "fileLabel": "ファイルを選択",
+          "parseError": "デザイン JSON を解析できませんでした。",
+          "importError": "インポートに失敗しました。",
+          "importSuccess": "インポートに成功しました。"
+        },
+        "diagnostics": {
+          "title": "診断",
+          "comingSoon": "バックエンドの診断チェックは近日公開予定です。"
+        }
+      }
+    },
+    "results": {
+      "title": "結果",
+      "loading": "結果を読み込み中...",
+      "loadError": "結果の読み込みに失敗しました。",
+      "back": "ビルダーに戻る",
+      "exportCsv": "CSV をエクスポート",
+      "header": {
+        "source": "ソース",
+        "started": "開始",
+        "completed": "完了",
+        "duration": "所要時間",
+        "designHash": "デザインハッシュ",
+        "resultCount": "総行数",
+        "threshold": "有病割合が {n}% 以上の共変量を表示"
+      },
+      "filter": {
+        "title": "フィルター",
+        "domain": "ドメイン",
+        "analysis": "解析",
+        "cohort": "コホート",
+        "all": "すべて"
+      },
+      "table": {
+        "covariate": "共変量",
+        "conceptId": "コンセプト ID",
+        "count": "件数",
+        "pct": "%",
+        "stdDiff": "標準化差",
+        "explore": "探索",
+        "mean": "平均",
+        "sd": "SD",
+        "min": "最小",
+        "p25": "P25",
+        "median": "中央値",
+        "p75": "P75",
+        "max": "最大",
+        "empty": "現在のフィルターに一致する行がありません。"
+      },
+      "explore": {
+        "title": "共変量を探索: {name}",
+        "loading": "読み込み中...",
+        "empty": "関連するコンセプトはありません。",
+        "close": "閉じる"
+      }
+    }
+  },
+  "featureAnalyses": {
+    "list": {
+      "title": "特徴量解析",
+      "newButton": "新規特徴量解析",
+      "searchPlaceholder": "特徴量解析を検索...",
+      "empty": "特徴量解析が見つかりません。",
+      "columns": {
+        "name": "名前",
+        "type": "タイプ",
+        "domain": "ドメイン",
+        "statType": "統計タイプ",
+        "createdBy": "作成者",
+        "createdDate": "作成日",
+        "modifiedDate": "更新日",
+        "actions": "操作"
+      },
+      "actions": {
+        "edit": "編集",
+        "copy": "コピー",
+        "delete": "削除"
+      },
+      "deleteConfirm": "特徴量解析「{name}」を削除しますか？"
+    },
+    "editor": {
+      "comingSoon": "特徴量解析エディタは近日公開予定です",
+      "back": "一覧に戻る",
+      "title": {
+        "new": "新規特徴量解析",
+        "edit": "特徴量解析の編集"
+      },
+      "common": {
+        "name": "名前",
+        "description": "説明",
+        "type": "タイプ",
+        "domain": "ドメイン",
+        "statType": "統計タイプ"
+      },
+      "typeOptions": {
+        "PRESET": "プリセット（FeatureExtraction 設定）",
+        "CRITERIA_SET": "条件セット",
+        "CUSTOM_FE": "カスタム SQL"
+      },
+      "preset": {
+        "loadDefault": "デフォルトの共変量設定を読み込む",
+        "loadDefaultTemporal": "デフォルトの時系列共変量設定を読み込む",
+        "designLabel": "共変量設定（JSON）",
+        "invalidJson": "無効な JSON"
+      },
+      "criteriaSet": {
+        "explainer": "条件ビルダーの統合はフェーズ3で提供されます。現時点では JSON を直接編集してください。",
+        "conceptSetsLabel": "コンセプトセット（JSON 配列）",
+        "criteriaLabel": "条件グループ（JSON）"
+      },
+      "customFe": {
+        "sqlLabel": "カスタム SQL"
+      },
+      "actions": {
+        "save": "保存",
+        "saveCopy": "コピーとして保存",
+        "delete": "削除",
+        "back": "戻る"
+      },
+      "deleteConfirm": "特徴量解析「{name}」を削除しますか？",
+      "leaveConfirm": "保存されていない変更があります。それでも移動しますか？",
+      "saveSuccess": "特徴量解析を保存しました",
+      "saveError": "特徴量解析の保存に失敗しました",
+      "nameRequired": "名前は必須です"
+    }
+  },
+  "facets": {
+    "caption": {
+      "analysisName": "解析名",
+      "author": "作成者",
+      "class": "クラス",
+      "comparatorCohorts": "比較対象コホート",
+      "created": "作成日",
+      "domain": "ドメイン",
+      "drugLabelExists": "推奨されるネガティブコントロール",
+      "errorMsg": "エラーメッセージ",
+      "foundInProductLabelOrPublications": "製品ラベルまたは出版物で発見",
+      "foundInPublications": "出版物で発見",
+      "foundProductLabel": "製品ラベルで発見",
+      "hasDescendantRecords": "下位レコードあり",
+      "hasRecords": "レコードあり",
+      "invalidReason": "無効な理由",
+      "lastModified": "最終更新",
+      "mappingType": "マッピングタイプ",
+      "match": "一致",
+      "modelName": "モデル名",
+      "outcomeCohorts": "アウトカムコホート",
+      "provider": "プロバイダー",
+      "riskWindow": "リスクウィンドウ",
+      "signalInFaers": "FAERSのシグナル",
+      "source": "ソース",
+      "standardConcept": "標準コンセプト",
+      "startDate": "開始日",
+      "targetCohorts": "ターゲットコホート",
+      "type": "種類",
+      "updated": "更新日時",
+      "userSpecified": "ユーザー指定",
+      "vocabulary": "ボキャブラリ",
+      "relationship": "リレーションシップ",
+      "distance": "距離",
+      "severity": "重大度",
+      "designs": "デザイン"
+    },
+    "values": {
+      "warning": "警告",
+      "critical": "重大",
+      "info": "情報"
+    },
+    "date": {
+      "justNow": "たった今",
+      "lastWeek": "先週",
+      "others": "2週間以上前",
+      "thisWeek": "今週",
+      "within24Hours": "24時間以内"
+    },
+    "match": {
+      "both": "両方",
+      "only1": "CS1のみ",
+      "only2": "CS2のみ"
+    },
+    "type": {
+      "preset": "プリセット",
+      "criteriaSet": "条件セット",
+      "custom": "カスタム"
+    },
+    "designs": {
+      "myDesigns": "自分のデザイン",
+      "otherDesigns": "他のデザイン"
+    },
+    "tags": {
+      "untagged": "タグなし"
+    }
+  },
+  "columns": {
+    "action": "アクション",
+    "actions": "アクション",
+    "adLdapUsername": "AD/LDAPユーザー名",
+    "adjustmentStrategy": "調整戦略",
+    "allowed": "許容コスト",
+    "allowedChargedRatio": "許容/請求",
+    "allowedPmPm": "許容コストPMPM",
+    "analysis": "解析",
+    "analysisName": "解析名",
+    "ancestors": "上位概念",
+    "atlasLogin": "Atlasログイン",
+    "atlasRole": "Atlasロール",
+    "atlasRoles": "Atlasロール",
+    "author": "作成者",
+    "avg": "平均",
+    "binary": "バイナリ",
+    "broadConcept": "広義コンセプト",
+    "charged": "請求コスト",
+    "chargedPmPm": "請求コストPMPM",
+    "checkConnection": "接続を確認",
+    "class": "クラス",
+    "code": "コード",
+    "comparator": "比較対象",
+    "comparatorCohortName": "比較対象コホート名",
+    "comparatorId": "比較対象ID",
+    "conceptCode": "コンセプトコード",
+    "conceptId": "コンセプトID",
+    "conceptName": "コンセプト名",
+    "conditionConceptId": "病態コンセプトID",
+    "conditionConceptName": "病態コンセプト名",
+    "copy": "コピー",
+    "count": "件数",
+    "covariate": "共変量",
+    "covariateSettings": "共変量設定",
+    "created": "作成日時",
+    "date": "日付",
+    "daysSupplyAvg": "平均供給日数",
+    "daysSupplyPer1000PerYear": "供給日数/1K/年",
+    "daysSupplyTotal": "供給日数",
+    "descendants": "下位概念",
+    "description": "説明",
+    "design": "デザイン",
+    "dialect": "方言",
+    "distance": "距離",
+    "domain": "ドメイン",
+    "drc": "DRC",
+    "drugClass": "コンセプトクラス",
+    "drugConceptId": "薬剤コンセプトID",
+    "drugConceptName": "薬剤コンセプト名",
+    "drugId": "OMOPコンセプト",
+    "drugInducedConcept": "薬剤誘発コンセプト",
+    "drugLabelExists": "薬剤ラベルあり",
+    "drugName": "薬剤",
+    "drugVocabularyId": "コンセプトボキャブラリ",
+    "duration": "期間",
+    "enabled": "有効",
+    "endDate": "終了日",
+    "endDay": "終了日数",
+    "ends": "終了",
+    "evidence": "エビデンス",
+    "evidenceSource": "エビデンスソース",
+    "exclCovariates": "除外共変量",
+    "exclude": "除外する",
+    "excluded": "除外済み",
+    "execute": "実行",
+    "executionId": "実行ID",
+    "explore": "探索",
+    "exposurePct": "曝露割合",
+    "exposureAvg": "1,000人あたりの平均曝露年数",
+    "exposureTotal": "総曝露年数",
+    "faersCountAncestor": "FAERS件数（上位概念一致）",
+    "faersCountDescendant": "FAERS件数（下位概念一致）",
+    "faersCountExact": "FAERS件数（完全概念一致）",
+    "faersCountParent": "FAERS件数（親概念一致）",
+    "finished": "完了",
+    "firstExposureOnly": "初回曝露のみ",
+    "groupName": "グループ名",
+    "id": "ID",
+    "incidence": "発生数",
+    "inclCovariates": "含める共変量",
+    "includeAllOutcomes": "すべてのアウトカムを含める",
+    "included": "含む",
+    "includedUsers": "含まれるユーザー",
+    "indicatedContraindicated": "適応/禁忌",
+    "ingredient": "成分",
+    "jobName": "ジョブ名",
+    "lastExecuted": "最終実行",
+    "lengthOfStayAvg": "平均滞在日数",
+    "lengthOfStayTotal": "滞在日数",
+    "linkout": "リンクアウト",
+    "login": "ログイン",
+    "mapped": "マッピング済み",
+    "mappingType": "マッピング種類",
+    "match": "一致",
+    "max": "最大",
+    "median": "中央値",
+    "message": "メッセージ",
+    "min": "最小",
+    "minimumTimeAtRisk": "最小リスク期間",
+    "model": "モデル",
+    "modelName": "モデル名",
+    "modelSettings": "モデル設定",
+    "modified": "変更日時",
+    "name": "名前",
+    "ncOutcomes": "NCアウトカム",
+    "nextExecution": "次回実行",
+    "notPrevalent": "非有病",
+    "optimizedOut": "最適化により除外",
+    "options": "オプション",
+    "outcomeCohortName": "アウトカムコホート名",
+    "outcomeId": "アウトカムID",
+    "outcomeModel": "アウトカムモデル",
+    "outcomeName": "アウトカムコホート名",
+    "outcomes": "アウトカム",
+    "p10": "P10",
+    "p25": "P25",
+    "p75": "P75",
+    "p90": "P90",
+    "paid": "支払コスト",
+    "paidAllowedRatio": "支払/許容",
+    "paidPmPm": "支払コストPMPM",
+    "patients": "患者数",
+    "pct": "割合",
+    "diff": "差分",
+    "remain": "残り",
+    "periodEnd": "期間終了",
+    "periodStart": "期間開始",
+    "permission": "権限",
+    "personsCount": "人数",
+    "personCount": "人数カウント",
+    "personsPct": "人数 %",
+    "pregnancyConcept": "妊娠コンセプト",
+    "prevalence": "有病率",
+    "priorOutcomeLookback": "事前アウトカム遡及期間",
+    "productLabelAncestor": "製品ラベル（上位概念一致）",
+    "productLabelCountDescendant": "製品ラベル件数（下位概念一致）",
+    "productLabelExact": "製品ラベル（完全概念一致）",
+    "productLabelParent": "製品ラベル（親概念一致）",
+    "progress": "進捗",
+    "provider": "プロバイダー",
+    "publicationCountAncestor": "文献件数（上位概念一致）",
+    "publicationCountDescendant": "文献件数（下位概念一致）",
+    "publicationCountExact": "文献件数（完全概念一致）",
+    "publicationCountParent": "文献件数（親概念一致）",
+    "quantityAvg": "平均数量",
+    "quantityPer1000PerYear": "数量/1K/年",
+    "quantityTotal": "総数量",
+    "rc": "RC",
+    "recommendedRelationshipCount": "件数",
+    "recordCounts": "レコード件数（RC / DRC）",
+    "refreshCache": "キャッシュを更新",
+    "relationshipType": "リレーションシップ種類",
+    "remove": "削除",
+    "removeSubjectsWithPriorOutcome": "事前アウトカムのある対象者を除外",
+    "requireTimeAtRisk": "リスク期間を必須にする",
+    "results": "結果",
+    "riskWindowEnd": "リスクウィンドウ終了",
+    "riskWindowStart": "リスクウィンドウ開始",
+    "role": "ロール",
+    "roleName": "ロール名",
+    "selected": "選択済み",
+    "severity": "重大度",
+    "sortOrder": "並び順",
+    "sourceNameSourceKey": "ソース名 [ソースキー]",
+    "sourceName": "ソース名",
+    "standardConceptCaption": "標準コンセプトキャプション",
+    "standardConceptCode": "標準コンセプトコード",
+    "standardType": "標準タイプ",
+    "startDate": "開始日",
+    "startDay": "開始日数",
+    "started": "開始済み",
+    "status": "ステータス",
+    "standard": "標準",
+    "stddev": "標準偏差",
+    "strata": "層別",
+    "suggestedNegativeControl": "推奨ネガティブコントロール",
+    "tableQualifiers": "テーブル修飾子",
+    "target": "ターゲット",
+    "targetCohortName": "ターゲットコホート名",
+    "targetId": "ターゲットID",
+    "targetName": "ターゲットコホート名",
+    "temporal": "時間的",
+    "timeAtRisk": "リスク期間",
+    "timeAtRiskEnd": "リスク期間終了",
+    "timeAtRiskStart": "リスク期間開始",
+    "title": "タイトル",
+    "totalRecords": "総レコード数",
+    "type": "タイプ",
+    "uniqueIdentifier": "一意識別子",
+    "updated": "更新日時",
+    "userExcluded": "ユーザー除外",
+    "userIncluded": "ユーザー包含",
+    "validStartDate": "有効開始日",
+    "validEndDate": "有効終了日",
+    "validity": "有効性",
+    "value": "値",
+    "visitsCount": "レコード数",
+    "visitsPer1000": "レコード数/1000人",
+    "visitsPer1000PerYear": "レコード数/1000人/年",
+    "visitsPer1000WithVisits": "レコード数/1000人 +レコード",
+    "vocabulary": "ボキャブラリ",
+    "vocabularyVersion": "ボキャブラリバージョン",
+    "washoutPeriod": "ウォッシュアウト期間",
+    "pctWithPathway": "パスウェイあり %",
+    "pctOfCohort": "コホートに占める %",
+    "eventCohort": "イベントコホート",
+    "rank": "ランク",
+    "distinctEventCohorts": "個別イベントコホート",
+    "sampleId": "サンプルID",
+    "sampleName": "サンプル名",
+    "numberOfPatients": "患者数",
+    "selectionCriteria": "選択条件",
+    "personId": "人物ID",
+    "gender": "性別",
+    "ageAtIndex": "インデックス時の年齢",
+    "usageCount": "使用回数",
+    "group": "グループ",
+    "version": "バージョン",
+    "comment": "コメント",
+    "preview": "プレビュー",
+    "pc": "PC",
+    "dpc": "DPC",
+    "rcTooltip": "レコード数",
+    "drcTooltip": "子孫レコード数",
+    "pcTooltip": "人数",
+    "dpcTooltip": "子孫人数"
+  },
+  "dataSources": {
+    "const": {
+      "lengthOfEra": "エラの長さ",
+      "recordsPerPerson": "1人あたりレコード数"
+    },
+    "dashboardReport": {
+      "age": "年齢",
+      "ageAtFirstObservation": "初回観察時の年齢",
+      "cdmSummary": "CDM サマリー",
+      "cumulativeObservation": "累積観察",
+      "date": "日付",
+      "days": "日数",
+      "people": "人数",
+      "percentOfPopulation": "母集団に占める割合",
+      "personsWithContinuousObservationByMonth": "月別の連続観察対象者数",
+      "populationByGender": "性別ごとの母集団",
+      "years": "年数"
+    },
+    "datadensityReport": {
+      "conceptType": "コンセプトタイプ",
+      "conceptsPerPerson": "1人あたりコンセプト数",
+      "numberOfRecords": "レコード数",
+      "recordsPerPerson": "1人あたりレコード数",
+      "totalRows": "総行数",
+      "year": "年"
+    },
+    "deathReport": {
+      "ageAtDeath": "死亡時年齢",
+      "ageAtFirstOccurence": "初回発生時の年齢",
+      "ageDecile": "年齢階級(10歳刻み)",
+      "date": "日付",
+      "deathByType": "タイプ別死亡",
+      "deathPrevalenceByAgeGenderYear": "年齢・性別・年別の死亡有病率",
+      "deathPrevalenceByMonth": "月別死亡有病率",
+      "gender": "性別",
+      "prevalencePer1000People": "1000人あたり有病率",
+      "yearOfObservation": "観察年"
+    },
+    "drilldown": {
+      "ageAtFirstOccurrence": "初回発生時の年齢",
+      "chartFormat": {
+        "ageAtFirstOccurrence": "初回発生時の年齢",
+        "ageDecile": "年齢階級(10歳刻み)",
+        "date": "日付",
+        "frequencyDistribution": {
+          "xLabel1": "件数(\"x\" 以上の ",
+          "xLabel2": ")"
+        },
+        "gender": "性別",
+        "percentOfTotalNumberOfPersons": "総人数に占める %",
+        "prevalencePer1000People": "1000人あたり有病率",
+        "yearOfObservation": "観察年"
+      },
+      "drilldownReport": "ドリルダウンレポート",
+      "frequencyDistribution": "度数分布",
+      "lowerLimitDistribution": "下限分布",
+      "measurementRecordsByUnit": "単位別の測定レコード",
+      "measurementValueDistribution": "測定値分布",
+      "noData": "データなし",
+      "operatorConcept": "演算子コンセプト",
+      "prevalence": "有病率",
+      "prevalenceByMonth": "月別有病率",
+      "qualifierConcept": "修飾子コンセプト",
+      "type": "タイプ",
+      "upperLimitDistribution": "上限分布",
+      "valueAsConcept": "コンセプトとしての値",
+      "valuesRelativeToNormalRange": "正常範囲を基準とした値",
+      "lengthOfEraDistribution": "エラの長さの分布"
+    },
+    "errorLoadingReport": "レポートの読み込みエラー",
+    "headingTitle": "データソース",
+    "loadingDrilldownReport": "ドリルダウンレポートを読み込んでいます",
+    "loadingReport": "レポートを読み込んでいます",
+    "noPermission": "このレポートを表示する権限がありません",
+    "numberOfPeople": "人数",
+    "observationPeriodReport": {
+      "ageAtFirstObservation": "初回観察時の年齢",
+      "ageByGender": "性別ごとの年齢",
+      "observationLength": "観察期間の長さ",
+      "durationByGender": "性別ごとの期間",
+      "cumulativeObservation": "累積観察",
+      "durationByAgeDecile": "年齢階級(10歳刻み)ごとの期間",
+      "personsWithContinuousObservationByYear": "年別の連続観察対象者数",
+      "observationPeriodsPerPerson": "1人あたり観察期間数",
+      "personsWithContinuousObservationByMonth": "月別の連続観察対象者数",
+      "age": "年齢",
+      "people": "人数",
+      "gender": "性別",
+      "days": "日数",
+      "ageDecile": "年齢階級(10歳刻み)",
+      "percentOfPopulation": "母集団に占める割合",
+      "years": "年数",
+      "date": "日付"
+    },
+    "personReport": {
+      "ethnicity": "民族",
+      "ethnicityFooter": "このコホートを民族別に層別化した人数。",
+      "gender": "性別",
+      "genderFooter": "このコホートを性別で層別化した人数。",
+      "numberOfPersons": "人数",
+      "race": "人種",
+      "raceFooter": "このコホートを人種別に層別化した人数。",
+      "year": "年",
+      "yearOfBirth": "出生年",
+      "yearOfBirthFooter": "このコホートを出生年に基づいて示した人数。"
+    },
+    "prevalence": "有病率",
+    "reports": {
+      "conditionEra": "条件エラ",
+      "conditionOccurrence": "条件発生",
+      "dashboard": "ダッシュボード",
+      "dataDensity": "データ密度",
+      "death": "死亡",
+      "drugEra": "薬剤エラ",
+      "drugExposure": "薬剤曝露",
+      "measurement": "測定",
+      "observation": "観察",
+      "person": "人物",
+      "procedure": "処置",
+      "titleTail": " レポート",
+      "visit": "受診",
+      "observationPeriod": "観察期間"
+    },
+    "selectAReport": "レポートを選択",
+    "selectASource": "ソースを選択",
+    "table": {
+      "tableTab": "テーブル"
+    },
+    "treemap": {
+      "legend": {
+        "boxSize": "ボックスサイズ:",
+        "color": "色:",
+        "colorExplanation": "(薄い→濃い = 低い→高い)、Ctrl+クリックでズーム、Alt+クリックでズームをリセット"
+      },
+      "treemapTab": "ツリーマップ"
+    }
+  },
+  "search": {
+    "addedToSet": "「{concept}」を追加しました → {set}",
+    "advancedOptions": "詳細オプション",
+    "buttonTitle": "検索",
+    "classification": "分類",
+    "clearAllSelections": "すべての選択をクリア",
+    "domains": "ドメイン",
+    "headingTitle": "検索",
+    "loadingMessage": {
+      "domains": "ドメイン",
+      "loading": "読み込み中",
+      "searchResults": "検索結果",
+      "vocabularies": "ボキャブラリ"
+    },
+    "noDomainsAvailable": "利用可能なドメインがありません",
+    "noResultsFoundFor": "次の検索結果が見つかりませんでした:",
+    "noVocabulariesAvailable": "利用可能なボキャブラリがありません",
+    "nonStandard": "非標準",
+    "placeholder": "ここに検索語を入力してください",
+    "standard": "標準",
+    "tabs": {
+      "import": "インポート",
+      "search": "検索"
+    },
+    "vocabularies": "ボキャブラリ",
+    "viewCountMessage": "レコード数を表示する対象:"
+  },
+  "cs": {
+    "browser": {
+      "caption": "コンセプトセット",
+      "compare": {
+        "compareConceptSets": "コンセプトセットを比較",
+        "comparisonResults": "比較結果",
+        "conceptSet1": "コンセプトセット 1:",
+        "conceptSet2": "コンセプトセット 2:",
+        "modeGroupLabel": "比較レベル",
+        "modeExpression": "式のコンセプト",
+        "modeIncluded": "含まれるコンセプト",
+        "modeSource": "ソースコンセプト",
+        "sourceCode": "ソースコード",
+        "sourceVocabulary": "ソースボキャブラリ",
+        "heading": "コンセプトセットの比較",
+        "headingMessage": "このユーティリティを使用して2つのコンセプトセットの内容を比較し、共有しているコンセプトを確認します",
+        "modalTitle": "コンセプトセットを選択してください",
+        "sameConcepts": "比較したコンセプトセットには同一のコンセプトが含まれています",
+        "sameWarning": "同じコンセプトセット同士を比較することはできません。",
+        "saveFromComparisonNameTail": " - 比較から",
+        "saveMessage": "以下の選択内容から新しいコンセプトセットを保存",
+        "saveWarning": "この比較を実行する前に、現在のコンセプトセットを保存する必要があります。",
+        "vennDiagram": "ベン図",
+        "vennDiagramAmountConcepts": "数量: <%=count%>",
+        "vennDiagramAmountOnly": "これらのコンセプトはこのコンセプトセットにのみ存在します: <%=amountOnly%>",
+        "vennDiagramCommonConcepts": "共通コンセプト",
+        "vennDiagramNameConceptSet": "<%=name%> コンセプトセット",
+        "vennDiagramTotalAmountConcepts": "コンセプトの総数: <%=count%>",
+        "viewCountMessage": "データベースのレコード数(RC)および子孫レコード数(DRC)を表示する対象:"
+      },
+      "exportConceptSetsButton": "コンセプトセットをエクスポート",
+      "exportConceptSetsNumber": "<b><%=num%></b> 件のコンセプトセットがエクスポート用に選択されています。",
+      "exportInstructions": "手順:",
+      "exportInstructionsText": "グリッド内の各行を選択して、エクスポートするコンセプトセットを選択します。完了したら、「コンセプトセットをエクスポート」ボタンを使用すると、新しいウィンドウでダウンロードが開始されます。",
+      "tabs": {
+        "export": "エクスポート",
+        "list": "リスト"
+      }
+    },
+    "manager": {
+      "attemptingToFindMessage": "このコンセプトセットの最適な定義を検索しています...",
+      "cancelButton": "キャンセル",
+      "caption": "コンセプトセット #<%=id%>",
+      "captionVersion": "コンセプトセット #<%=id%> - バージョン <%=number%> プレビュー",
+      "changeColumnsButton": "列を変更",
+      "conceptsRemovedHeading": "削除されたコンセプト",
+      "conceptsRemovedMessage": "最適化されたバージョンにすでに含まれているため、以下のコンセプトは削除されました。",
+      "createOption": "新しいコンセプトセットを作成",
+      "csAlreadyExistsMessage": "この名前のコンセプトセットはすでに存在します。別の名前を選択してください。",
+      "csDeleteConfirmMessage": "コンセプトセットを削除しますか?警告: 削除は元に戻せません!",
+      "csNotSavedConfirmMessage": "コンセプトセットの変更が保存されていません。続行しますか?",
+      "csSaveErrorMessage": "コンセプトセットの保存中にエラーが発生しました。",
+      "exploreEvidence": {
+        "additionalInformation": "追加情報:",
+        "anchor1": "ATLAS からネガティブコントロールを取得する",
+        "anchor2": "ネガティブコントロール処理に関する概要情報",
+        "anchor3": "追加リソース",
+        "chooseAConceptSet": "コンセプトセットを選択してください",
+        "deletedCcMessage": "指定されたコンセプトセット(#<%=cs%>)は削除されました。別のコンセプトセットを選択してください。",
+        "drugLabelEvidence": "薬剤ラベルのエビデンス:",
+        "drugLabelEvidenceDetails": "詳細",
+        "drugLabelEvidenceEnd": "CEM内の医薬品ラベル。",
+        "drugLabelEvidenceFound": "検出",
+        "drugLabelEvidenceOf": "/",
+        "drugLabelsFound": "医薬品ラベルが見つかりました",
+        "drugLabelsNotFound": "医薬品ラベルが見つかりません",
+        "evidenceForAll": "すべてのエビデンス",
+        "evidenceForAllFor": "対象:",
+        "evidenceSources": "エビデンスソース",
+        "excludeLabel": "既知の陽性対照として除外したいコンセプトはどれですか？（任意）",
+        "generate": "生成",
+        "generated": "生成済み",
+        "generationDuration": "生成所要時間",
+        "generationSettings": "生成設定",
+        "generationStatus": "生成ステータス",
+        "includeLabel": "既知の陰性対照として含めたいコンセプトはどれですか？（任意）",
+        "invalidCsWarning": "保存されたコンセプトが複数のドメイン、または病態や医薬品以外のドメインに由来しています。エビデンスを調べるには、コンセプトセットに病態または医薬品のみが含まれている必要があります。",
+        "loadingEvidence": "エビデンスを読み込み中",
+        "message1": "エビデンスの出典:",
+        "message2": "エビデンスベースは、公開文献、製品ラベル、自発報告から得られたエビデンスで構成されています。以下のエビデンスソースを使用して、このコンセプトセットに含まれるコンセプトに関連付けられているエビデンスを確認してください。",
+        "noCsWarning": "RxNormボキャブラリのIngredientクラスレベルの医薬品、またはSNOMEDの病態でコンセプトセットを定義する必要があります。エビデンスを調べるには、コンセプトセットに病態または医薬品のみが含まれている必要があります。",
+        "noEvidenceFoundFor": "エビデンスが見つかりません:",
+        "saveNewButton": "以下の選択から新しいコンセプトセットを保存",
+        "title": "エビデンスを調べる:",
+        "viewDatabaseRecordCounts": "次の対象のデータベースレコード数（RC）および下位概念レコード数（DRC）を表示:",
+        "viewEvidence": "エビデンスを表示",
+        "viewingEvidence": "エビデンスを表示中"
+      },
+      "fullyOptimizedMessage": "現在のコンセプトセット定義は完全に最適化されています。",
+      "includedEmptyNoManual": "「選択済み」タブでコンセプトを追加すると、ここに表示されます。",
+      "includedEmptyNoResolve": "この式から解決されたコンセプトはありません。",
+      "sourceCodesEmpty": "含まれるコンセプトにマッピングされるソースコードはありません。",
+      "sourceCodesEmptyNoIncluded": "コンセプトを追加すると、マッピングされたソースコードがここに表示されます。",
+      "pasteIds": "IDを貼り付け",
+      "pasteIdsTitle": "コンセプトIDを貼り付け",
+      "pasteIdsHint": "IDはスペース、カンマ、セミコロン、または改行で区切ってください。追加前に各IDをボキャブラリと照合して解決します。",
+      "pasteIdsResolved": "解決済み",
+      "pasteIdsUnresolved": "見つかりません",
+      "pasteIdsResolveBtn": "解決",
+      "pasteIdsAddBtn": "追加",
+      "importSourceCodes": "コードをインポート",
+      "importSourceCodesTitle": "ソースコードでインポート",
+      "importSourceCodesHint": "ソースコードはカンマ、セミコロン、または改行で区切ってください。追加前に各コードをボキャブラリと照合して解決します。",
+      "importJson": "JSONをインポート",
+      "importJsonTitle": "コンセプトセットJSONをインポート",
+      "importJsonHint": "コンセプトセット式のJSON（{ \"items\": [ ... ] }）を貼り付けてください。各項目のコンセプトとそのフラグがセットに追加されます。",
+      "importJsonParseBtn": "解析",
+      "optimize": "最適化",
+      "optimizedConceptSetHeading": "最適化されたコンセプトセット",
+      "overwriteOption": "現在のコンセプトセットを上書き",
+      "pleaseProvideNameMessage": "新しいコンセプトセットの名前を入力してください:",
+      "pleaseReviewMessage": "最適化された定義と保存オプションを確認してください。",
+      "resetColumnsButton": "列をリセット",
+      "saveButton": "保存",
+      "saveOptions": "保存オプション",
+      "showAllColumnsButton": "すべての列を表示",
+      "tabs": {
+        "compare": "比較",
+        "conceptSetExpression": "コンセプトセット式",
+        "exploreEvidence": "エビデンスを調べる",
+        "export": "エクスポート",
+        "included": "含む",
+        "includedConcepts": "含まれるコンセプト",
+        "includedSourceCodes": "含まれるソースコード",
+        "sourceCodes": "ソースコード",
+        "selected": "選択済み",
+        "versions": "バージョン",
+        "messages": "メッセージ"
+      },
+      "concept": {
+        "title": "ボキャブラリ > コンセプト",
+        "standard": "標準",
+        "nonStandard": "非標準",
+        "classification": "分類",
+        "tabs": {
+          "details": {
+            "caption": "詳細",
+            "property": "プロパティ",
+            "value": "値",
+            "conceptName": "コンセプト名",
+            "domainId": "ドメインID",
+            "conceptClassId": "コンセプトクラスID",
+            "vocabularyId": "ボキャブラリID",
+            "conceptId": "コンセプトID",
+            "conceptCode": "コンセプトコード",
+            "invalidReason": "無効理由",
+            "standardConcept": "標準コンセプト",
+            "validStartDate": "有効開始日",
+            "validEndDate": "有効終了日"
+          },
+          "relatedConcepts": {
+            "loading": "関連コンセプトを読み込み中...",
+            "caption": "関連コンセプト"
+          },
+          "hierarchy": {
+            "loading": "階層を読み込み中...",
+            "caption": "階層",
+            "noHierarchyFoundMessage": "非標準コンセプトの階層は見つかりません。",
+            "view": "表示:",
+            "fullHierarchy": "完全な階層",
+            "parents": "親",
+            "currentConcept": "現在のコンセプト",
+            "children": "子",
+            "noParentConceptsFound": "親コンセプトが見つかりません",
+            "noChildConceptsFound": "子コンセプトが見つかりません"
+          },
+          "recordCounts": {
+            "loading": "レコード数を読み込み中...",
+            "caption": "レコード数",
+            "recordCountsAcrossSources": "ソース間のレコード数",
+            "failedToLoadData": "データの読み込みに失敗しました"
+          }
+        }
+      },
+      "conceptSetOptimization": "コンセプトセットの最適化"
+    }
+  },
+  "cc": {
+    "title": "コホート特性化",
+    "new": "新規",
+    "loading": "コホート特性化リストを読み込み中...",
+    "modals": {
+      "confirmChanges": "変更内容が保存されていません。続行しますか？",
+      "selectConceptSet": "コンセプトセットを選択...",
+      "chooseAFeatureAnalyses": "特徴量解析を選択..."
+    },
+    "tabs": {
+      "characterizations": {
+        "newLabel": "特性化",
+        "title": "特性化"
+      },
+      "featureAnalyses": {
+        "newLabel": "特徴量解析",
+        "title": "特徴量解析"
+      }
+    },
+    "viewEdit": {
+      "caption": "特性化 #<%=id%>",
+      "captionPreview": "特性化 #<%=id%> - バージョン <%=number%> プレビュー",
+      "loadingCohortCharacterization": "コホート特性化を読み込み中...",
+      "deleteConfirmation": "コホート特性化を削除しますか？警告: 削除は元に戻せません！",
+      "design": {
+        "description": "<b>コホート特性化</b>は、人レベルの共変量データからコホートレベルの記述的要約統計量を生成するプロセスと定義されます。これらの人レベルの共変量の要約統計量には、件数、平均、標準偏差、分散、最小値、最大値、中央値、範囲、分位数が含まれます。さらに、ある期間中の共変量は、時系列解析のために時間的単位に層別化することができます。たとえば、cohort_start_dateを基準とした固定の時間間隔（7日ごと、30日ごとなど）や、暦週、暦月、暦四半期、暦年といった絶対的な暦間隔などです。",
+        "fa": {
+          "actions": {
+            "remove": "削除"
+          },
+          "title": "特徴量解析"
+        },
+        "faParams": {
+          "modal": {
+            "namePlaceholder": "名前",
+            "submit": "送信",
+            "title": "新しいパラメータを作成",
+            "valuePlaceholder": "値"
+          },
+          "newLabel": "新しいパラメータ",
+          "title": "特徴量解析パラメータ"
+        },
+        "loading": "コホート特性化デザインを読み込み中...",
+        "subgroups": {
+          "messages": {
+            "nameIsEmpty": "サブグループ名が空です。",
+            "nameIsNotUnique": "サブグループ名が重複しています。"
+          },
+          "namePlaceholder": "層別名",
+          "newSubgroup": "新しいサブグループ",
+          "noSubgroups": "サブグループが定義されていません",
+          "stratifiedByPlaceholder": "層別化の基準",
+          "subgroupOnly": "サブグループ解析のみを計算",
+          "title": "サブグループ解析"
+        }
+      },
+      "executions": {
+        "title": "実行",
+        "prevalenceStatConverter": {
+          "allStrata": "すべての層",
+          "explore": "探索",
+          "loadingPrevalenceStats": "有病率統計を読み込み中...",
+          "cohort": "コホート:",
+          "exploringConceptHierarchyFor": "次のコンセプト階層を探索中:",
+          "ancestor": "上位概念",
+          "descendant": "下位概念",
+          "selected": "選択済み"
+        }
+      },
+      "results": {
+        "detail": {
+          "date": "日付:",
+          "design": "デザイン:",
+          "results": {
+            "label": "結果:",
+            "text": "<%= reports %> 件のレポート"
+          }
+        },
+        "exploring": "探索中",
+        "exportAll": "すべてエクスポート",
+        "filters": {
+          "analyses": "解析",
+          "cohorts": "コホート",
+          "domains": "ドメイン"
+        },
+        "hideEmptyResults": "空の結果を非表示",
+        "loading": "実行結果を読み込み中...",
+        "showAllResults": "すべての結果を表示",
+        "table": {
+          "buttons": {
+            "exportComparison": "比較をエクスポート"
+          }
+        },
+        "threshold": {
+          "apply": "適用",
+          "label": "結果を次の有病率を超える共変量に絞り込む:",
+          "placeholder": "しきい値",
+          "text": "全 <%=totalResultsCount%> 件のレコードのうち、最も有病率の高い <%=resultsCountFiltered%> 件を表示中"
+        },
+        "title": "<%= sourceName %> のレポート",
+        "series": "系列",
+        "covariate": "共変量",
+        "allPrevalenceCovariates": "すべての有病率共変量"
+      },
+      "tabs": {
+        "design": "デザイン",
+        "executions": "実行",
+        "utilities": "ユーティリティ",
+        "versions": "バージョン",
+        "messages": "メッセージ"
+      },
+      "utilities": {
+        "title": "ユーティリティ"
+      }
+    },
+    "fa": {
+      "tabs": {
+        "design": "デザイン",
+        "conceptSets": "コンセプトセット"
+      },
+      "addCriteriaFeature": "条件機能を追加",
+      "addNewCriteria": "新しい条件を追加...",
+      "analysisSql": "解析SQL:",
+      "analysisType": "解析タイプ:",
+      "availableVariables": "利用可能な変数:",
+      "availableVariablesNote": "コホート特性化パラメータで指定されたすべての変数",
+      "caption": "特徴量解析 #<%=id%>",
+      "copiedToClipboard": "クリップボードにコピーしました！",
+      "copySqlToClipboard": "解析SQLテンプレートをクリップボードにコピー",
+      "criteria": "条件",
+      "criteriaName": "条件名",
+      "custom": "カスタム",
+      "description": "説明",
+      "design": "デザイン",
+      "designOrNameAreEmpty": "デザインまたは名前が空です",
+      "domain": "ドメイン:",
+      "featureExtractionPresetName": "FeatureExtractionプリセット名:",
+      "loadingList": "特徴量解析リストを読み込み中...",
+      "nameExistsAlert": "この名前の特徴量解析は既に存在します。別の名前を選択してください。",
+      "preset": "プリセット",
+      "retrievingList": "特徴量解析リストを取得中...",
+      "saveError": "特徴量解析の保存中にエラーが発生しました。",
+      "selectConceptSet": "コンセプトセットを選択...",
+      "unsavedConfirmation": "変更内容が保存されていません。続行しますか？",
+      "warning": "警告:",
+      "warningText": "保存後は解析のタイプを変更できなくなります。"
+    }
+  },
+  "home": {
+    "description": "ATLASは<a href='http://www.ohdsi.org' target='_new'>OHDSI</a>の一環として開発されたオープンソースアプリケーションであり、患者レベルのデータと分析への統一されたインターフェースを提供することを目的としています。",
+    "documentation": {
+      "text": "ATLASユーザーガイドは<a target='_new' href='http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas'>こちら</a>でご覧いただけます。",
+      "title": "ドキュメント"
+    },
+    "gettingStarted": {
+      "newCohort": {
+        "button": "新しいコホートを定義",
+        "description": "研究対象とする人々のグループを定義して、研究を開始しましょう"
+      },
+      "title": "はじめに",
+      "vocabulary": {
+        "button": "ボキャブラリを検索",
+        "description": "世界中で患者レベルのデータを記述するために使用されるさまざまなオントロジーを検索"
+      }
+    },
+    "releaseNotes": {
+      "issues": "この最新リリースには、<b><%=issues%></b> 件の機能拡張と問題解決が含まれています:",
+      "loadingReleaseInfo": "リリース情報を読み込み中",
+      "title": "リリースノート"
+    },
+    "title": "ホーム",
+    "welcome": "ATLASへようこそ。"
+  },
+  "ir": {
+    "caption": "発生率解析 #<%=id%>",
+    "captionVersion": "発生率解析 #<%=id%> - バージョン <%=number%> プレビュー",
+    "cs": {
+      "modalTitle": "コンセプトセットを選択..."
+    },
+    "deleteConfirmation": "発生率解析を削除しますか？警告: 削除は元に戻せません！",
+    "deleteResultConfirmation": "<%=name%> の結果を本当に削除しますか？",
+    "editor": {
+      "addOutcomeCohort": "アウトカムコホートを追加",
+      "addStudyWindow": "観察期間を追加",
+      "addTargetCohort": "ターゲットコホートを追加",
+      "chooseACohort": "コホートを選択",
+      "newStratifyCriteria": "新しい層別化条件",
+      "noStudyWindowDefined": "観察期間が定義されていません。",
+      "outcomeCohorts": "アウトカムコホート",
+      "removeStudyWindow": "観察期間を削除",
+      "selectInclusionCriteriaMessage": "編集する包含条件を選択してください。",
+      "stratifyCriteria": "層別化条件:",
+      "stratifyCriteriaMessage": "解析に任意の層別化条件を指定でき、対象者が満たした条件に基づいて集団を一意のグループに分割できます。",
+      "studyCohorts": "対象コホート",
+      "studyWindowText1": "スタディウィンドウの開始日",
+      "studyWindowText2": "終了日",
+      "studyWindowText3": "。",
+      "targetCohorts": "ターゲットコホート",
+      "timeAtRisk": "リスク期間",
+      "timeAtRiskStartsWithDays": "日。",
+      "timeAtRiskEndsWithDays": "日。",
+      "timeAtRiskEndDate": "終了日",
+      "timeAtRiskEndsWith": "リスク期間の終了の起点",
+      "timeAtRiskMessage": "リスク期間は、対象者を転帰の「リスクあり」とみなすためのオフセットを伴って、コホートの開始日または終了日を基準とした時間ウィンドウを定義します。",
+      "timeAtRiskPlus": "プラス",
+      "timeAtRiskStartDate": "開始日",
+      "timeAtRiskStartsWith": "リスク期間の開始の起点",
+      "timeAtRiskWarningMessage": "エラー: リスク期間の開始がリスク期間の終了と同時かそれ以降のため、リスク期間がゼロになっています。開始オフセットが終了オフセットより大きくなるようにしてください。"
+    },
+    "nameConflict": "この名前の発生率は既に存在します。別の名前を選択してください。",
+    "newanalysis": "新規解析",
+    "notSavedMessage": "発生率解析の変更が保存されていません。続行しますか?",
+    "results": {
+      "accessDenied": "アクセスが拒否されました",
+      "andOutcomeCohort": "および転帰コホート:",
+      "canceled": "キャンセル済み",
+      "cases": "症例数",
+      "close": "閉じる",
+      "duration": "期間",
+      "exportToCsvButton": "解析をCSVにエクスポート",
+      "failed": "失敗",
+      "generationInProgress": "生成を実行中です",
+      "loadingGenerationResultErrorMessage": "生成結果レポートの読み込み中にエラーが発生しました",
+      "loadingSummary": "サマリーを読み込み中...",
+      "perPersons": "<%=multiplier%>人あたり",
+      "perYears": "<%=multiplier%>年あたり",
+      "persons": "人数",
+      "proportion": "割合",
+      "rate": "率",
+      "reports": "レポート",
+      "rerun": "再実行",
+      "running": "実行中",
+      "selectTargetAndOutcomeAlert": "生成するには、ターゲットコホートと転帰コホートを少なくとも1つずつ選択してください",
+      "showingTargetCohort": "ターゲットコホートを表示中:",
+      "sourceName": "ソース名",
+      "started": "開始済み",
+      "stratifyRule": "層別化ルール",
+      "summaryStatistics": "要約統計量:",
+      "timeAtRisk": "リスク期間",
+      "timeAtRiskYears": "(年)"
+    },
+    "savingError": "発生率の保存中にエラーが発生しました。",
+    "tabs": {
+      "conceptSets": "コンセプトセット",
+      "definition": "定義",
+      "generation": "生成",
+      "utilities": "ユーティリティ",
+      "versions": "バージョン",
+      "messages": "メッセージ"
+    },
+    "title": "発生率解析",
+    "workbench": {
+      "noRunsHint": "率を確認するには、データソースに対して生成してください。",
+      "noRunsTitle": "まだ実行されていません",
+      "noRunsYet": "まだ実行されていません",
+      "rateSummary": "率サマリー",
+      "runFailedHint": "以下のエラーを確認するか、再試行してください。",
+      "runFailedTitle": "生成に失敗しました",
+      "runPendingHint": "数分かかる場合があります。ページを離れても問題ありません。",
+      "runPendingTitle": "生成を実行中",
+      "saveFirstHint": "保存すると、データソースに対する生成が可能になります。",
+      "saveFirstTitle": "先に解析を保存してください",
+      "selectToHint": "率を表示するには、ツールバーのターゲット/転帰チップを使用してください。",
+      "selectToTitle": "ターゲットと転帰を選択してください",
+      "treemap": "ツリーマップ"
+    }
+  },
+  "profiles": {
+    "ageAt": "年齢 <%=age%>",
+    "atIndex": "インデックス時点",
+    "atStartOfObservation": "観察開始時点",
+    "chart": {
+      "event": "イベント: ",
+      "startDate": "開始日: ",
+      "startDay": "開始日(日数): "
+    },
+    "clearAllHighlightColors": "すべてのハイライト色をクリア",
+    "clickHereToSelectACohort": "ここをクリックしてコホートを選択",
+    "eventHighlighting": "イベントのハイライト",
+    "highlightEventsTooltip": "イベントをハイライト",
+    "loadingProfile": "データベースからプロファイルデータを読み込み中",
+    "personId": "人ID",
+    "processingProfile": "プロファイルデータを処理中",
+    "recordCounts": "<%=count%>件のイベント",
+    "selectADataSource": "データソースを選択",
+    "setSelectedEventsColor": "選択したイベントの色を設定",
+    "title": "プロファイル",
+    "toggleChartTooltip": "チャート表示を切り替え",
+    "toggleTableTooltip": "テーブル表示を切り替え",
+    "сantFind": "見つかりません"
+  },
+  "pathways": {
+    "loading": "パスウェイ解析リストを読み込み中...",
+    "manager": {
+      "caption": "コホートパスウェイ #<%=id%>",
+      "captionVersion": "コホートパスウェイ #<%=id%> - バージョン <%=number%> プレビュー",
+      "design": {
+        "analysisSettings": {
+          "combinationWindow": {
+            "description": "指定した集約日数内で見つかった日付は、最も早い日付に再割り当てされます。日付を集約することでパスウェイのばらつきが減り、結果の「ノイズ」が低減されます。",
+            "title": "集約日数:"
+          },
+          "description": "パスウェイ解析の実行時に、以下のパラメータセットが使用されます。",
+          "maximumPathLength": {
+            "description": "サンバーストプロットに含める、特定のパスウェイ内の最大ステップ数。",
+            "title": "最大パス長:"
+          },
+          "minimumCellCount": {
+            "description": "パスウェイにカウントされるための、特定のイベントにおけるターゲットコホートの最小対象者数。",
+            "title": "最小セル数:"
+          },
+          "allowRepeats": {
+            "description": "コホートイベント/組み合わせが同一パスウェイ内に複数回出現することを許可します。",
+            "title": "繰り返しを許可:"
+          },
+          "title": "解析設定"
+        },
+        "description": "<b>コホートパスウェイ</b>は、ターゲットコホートに含まれる人々において、イベントコホート間の遷移を集約したシーケンスを生成するプロセスとして定義されます。",
+        "eventCohorts": {
+          "description": "各イベントコホートは、ターゲットコホート内の人に発生し得るパスウェイのステップを定義します。",
+          "title": "イベントコホート"
+        },
+        "targetCohorts": {
+          "description": "各ターゲットコホートについて、イベントコホートを通るパスウェイが解析されます。",
+          "title": "ターゲットコホート"
+        }
+      },
+      "executions": {
+        "title": "実行",
+        "dialogs": {
+          "design": {
+            "loadError": "デザインを読み込めません",
+            "title": "デザイン"
+          }
+        },
+        "results": {
+          "date": "日付:",
+          "design": "デザイン:",
+          "details": {
+            "noPath": "パスが選択されていません: パスをクリックすると詳細が表示されます。",
+            "title": "パスの詳細"
+          },
+          "diagram": {
+            "title": "サンバーストプロット"
+          },
+          "filters": {
+            "cohorts": "コホート"
+          },
+          "legend": {
+            "eventCohorts": "イベントコホート",
+            "personsCount": "パスウェイを持つ人数:",
+            "personsPortion": "パスウェイを持つ人の割合:",
+            "targetCohort": "ターゲットコホート",
+            "targetCohortCount": "ターゲットコホート数:",
+            "title": "凡例"
+          },
+          "noPathways": "パスウェイが見つかりませんでした",
+          "title": "パスウェイ解析の対象:",
+          "visualization": "可視化",
+          "tabular": "表形式",
+          "tableview": {
+            "cohortName": "コホート <%=name%>",
+            "maximumPathLength": "最大パス長:",
+            "allPathwaysTitle": "表 <%=index%>a: すべてのパスウェイ",
+            "eventCohortCountsByRank": "表 <%=index%>b: ランク別イベントコホート数",
+            "eventCohortCounts": "表 <%=index%>c: イベントコホート数",
+            "distinctEventCohorts": "表 <%=index%>d: 個別のイベントコホート",
+            "stepN": "ステップ <%=i%>",
+            "exactly": "ちょうど <%=v%>"
+          }
+        }
+      },
+      "loading": "コホートパスウェイ解析を読み込み中...",
+      "messages": {
+        "alreadyExists": "この名前のコホートパスウェイは既に存在します。別の名前を選択してください。",
+        "beforeClose": "変更が保存されていません。続行しますか?",
+        "deleteConfirmation": "コホートパスウェイを削除しますか? 警告: 削除は元に戻せません!",
+        "saveFailed": "コホートパスウェイの保存中にエラーが発生しました。",
+        "notfound": "id = %d のパスウェイ解析は存在しません。"
+      },
+      "tabs": {
+        "design": "デザイン",
+        "executions": "実行",
+        "utilities": "ユーティリティ",
+        "versions": "バージョン",
+        "messages": "メッセージ"
+      },
+      "utilities": {
+        "title": "ユーティリティ"
+      }
+    },
+    "title": "コホートパスウェイ"
+  },
+  "ple": {
+    "analysisExistsAlert": "この名前の推定解析は既に存在します。別の名前を選択してください。",
+    "analysisSaveErrorAlert": "推定解析の保存中にエラーが発生しました。",
+    "caption": "比較コホート解析",
+    "captionNumber": "比較コホート解析 #<%=id%>",
+    "changesNotSavedConfirmation": "推定解析の変更が保存されていません。続行しますか?",
+    "deleteConfirmation": "推定仕様を削除しますか? 警告: 削除は元に戻せません!",
+    "retrievingEstimations": "推定を取得中",
+    "spec": {
+      "addAnalysisSettings": "解析設定を追加",
+      "addComparisons": "比較を追加",
+      "addOutcome": "転帰を追加",
+      "analysisName": "解析名:",
+      "analysisSettings": "解析設定",
+      "analysisSettingsDescription": "解析設定を追加または更新",
+      "chooseYourComparatorCohort": "比較対照コホートを選択してください:",
+      "chooseYourOutcomeCohorts:": "転帰コホートを選択してください:",
+      "chooseYourTargetCohort": "ターゲットコホートを選択してください:",
+      "clickToViewDetails": "クリックして詳細を表示",
+      "comparison": "比較",
+      "comparisonDescription": "ターゲット、比較対照、転帰コホートおよびネガティブコントロール転帰を追加または更新",
+      "conceptsToExcludeLabel": "この研究で使用する共変量を構築する際に<b>除外</b>するコンセプト。*",
+      "conceptsToExcludeNoteAnalysis": "* ここで定義したコンセプトは、比較セクションで定義したものと統合されます。",
+      "conceptsToExcludeNoteComparisons": "* ここで定義したコンセプトは、解析設定セクションで定義したものと統合されます。",
+      "conceptsToIncludeLabel": "この研究で使用する共変量を構築する際に<b>含める</b>コンセプト。(すべてのコンセプトを含める場合は空欄のままにしてください)。*",
+      "conceptsToIncludeNoteAnalysis": "* ここで定義したコンセプトは、比較セクションで定義したものと統合されます。",
+      "conceptsToIncludeNoteComparisons": "* ここで定義したコンセプトは、解析設定セクションで定義したものと統合されます。",
+      "controlSettings": "コントロール設定",
+      "covariateSelection": "共変量の選択",
+      "covariateSettings": "共変量設定",
+      "descriptionPlaceholder": "ここに説明を入力してください(最大1000文字)",
+      "evaluationSettings": "評価設定",
+      "evaluationSettingsPanel": {
+        "additionalSettings": "追加設定",
+        "advancedSettingsStartsHere": "詳細設定はここから始まります",
+        "allowedRatio": "ターゲットと注入されるシグナルサイズの間で許容される比率:",
+        "daysFrom": "日(起点:",
+        "daysFromCohortStartDate": "コホート開始日からの日数",
+        "defineTimeAtRiskWindowEnd": "リスク期間ウィンドウの終了を定義:",
+        "defineTimeAtRiskWindowStart": "ターゲット/比較対照コホートの登録を基準としたリスク期間ウィンドウの開始を定義:",
+        "effectSizes": "挿入する効果サイズ:",
+        "firstOutcomeToBeCreated": "作成する最初の新しい転帰IDは何にしますか?",
+        "maxNumberOfPeopleToFit": "転帰モデルの適合に使用する最大人数:",
+        "minNumberOfOutcomeEventsToBuildAModel": "モデルを構築するために必要な最小転帰イベント数:",
+        "minNumberofOutcomeEventsToInjectASignal": "シグナルを注入するために必要な最小転帰イベント数。",
+        "minimumRequiredTime": "曝露前に必要な最小連続観察期間(日数):",
+        "modelType": "モデルタイプ:",
+        "negativeControl": "ネガティブコントロール転帰コホート定義",
+        "negativeControlDesc": "この式は、ネガティブコントロール転帰として使用することを目的としたコホートの包含条件と期間を定義します。",
+        "onlyFirstExposure": "対象者ごとの最初の曝露のみを含めますか?",
+        "onlyFirstOutcome": "転帰のモデル化時に、人ごとの最初の転帰のみを考慮しますか?",
+        "positiveControl": "ポジティブコントロール合成",
+        "positiveControlPerform": "ポジティブコントロール合成を実行しますか?(信頼区間を較正するため)",
+        "removePeopleWithPrior": "事前に転帰のある人を除外しますか?",
+        "typeOfOccurence": "ドメインから選択する際のイベントの発生タイプ。",
+        "whatDomains": "ネガティブコントロール転帰を検出するために考慮するドメインは?(複数のドメインを選択するにはControlキーを押しながら選択)",
+        "whenTrueDescendantConcepts": "trueの場合、ネガティブコントロール転帰コンセプトIDの下位コンセプトを使用して転帰を検出し、発生をコンセプトIDに集約します:"
+      },
+      "from": "起点:",
+      "negativeControlConceptSet": "ネガティブコントロールコンセプトセット:",
+      "newAnalysis": "新規解析",
+      "options": {
+        "all": "すべて",
+        "allOccurrences": "すべての発生",
+        "byPercent": "割合(パーセント)で",
+        "cohortEndDate": "コホート終了日",
+        "cohortStartDate": "コホート開始日",
+        "comparator": "比較対照",
+        "condition": "条件",
+        "coxProportionalHazards": "Cox比例ハザード",
+        "device": "デバイス",
+        "drug": "薬剤",
+        "firstOccurrence": "最初の発生",
+        "keepAll": "すべて保持",
+        "keepFirst": "最初を保持",
+        "logisticRegression": "ロジスティック回帰",
+        "matchOnPropensityScore": "傾向スコアでマッチング",
+        "matching": "<%=ratio%>:1 マッチング",
+        "measurement": "測定",
+        "none": "なし",
+        "observation": "観察",
+        "poisson": "ポアソン",
+        "poissonRegression": "ポアソン回帰",
+        "procedure": "処置",
+        "propensityScore": "傾向スコア",
+        "removeAll": "すべて削除",
+        "standardized": "標準化",
+        "standardizedLogit": "標準化ロジット",
+        "stratification": "層別化 (層: <%=stratum%>)",
+        "stratifyOnPropensityScore": "傾向スコアで層別化",
+        "survival": "生存",
+        "target": "ターゲット",
+        "toEquipoise": "均衡点まで",
+        "visit": "受診"
+      },
+      "outcomeModel": "アウトカムモデル",
+      "outcomeModelPanel": {
+        "covariates": "共変量もアウトカムモデルに含めますか?",
+        "regression": "母集団オブジェクトで定義された層 (例: 傾向スコアによるマッチングまたは層別化) を条件として回帰を行いますか?",
+        "regularization": "アウトカムモデルの当てはめに正則化を使用しますか? *",
+        "regularizationNote": "* 正則化は対象の曝露には適用されず、共変量にのみ適用されます。",
+        "statisticalModel": "ターゲットコホートと比較対象コホートの間でアウトカムのリスクを推定するために使用する統計モデルを指定してください:",
+        "weighting": "治療の逆確率による重み付けを使用しますか?"
+      },
+      "prior": "事前分布",
+      "propensityScoreAdjustment": "傾向スコア調整",
+      "propensityScoreAdjustmentPanel": {
+        "baseSelection": "層の境界を決定する基準となる対象者の選択は何ですか? 層はこの選択範囲内で同じサイズの層として定義されます。",
+        "caliperForMatching": "マッチングのキャリパー:",
+        "caliperScale": "キャリパーのスケール:",
+        "covariateIdsMatch": "対象者を追加でマッチングする際の cohortMethodData オブジェクト内の 1 つ以上の共変量 ID。",
+        "covariateIdsPlaceholder": "1 つ以上の共変量 ID",
+        "covariateIdsStratify": "対象者を追加で層別化する際の cohortMethodData オブジェクト内の 1 つ以上の共変量 ID。",
+        "howManyStrata": "傾向スコアをいくつの層に分割しますか? 層の境界は、ターゲットの人数が均等になるように自動的に定義されます:",
+        "howToTrim": "傾向スコア分布に基づいてコホートをどのようにトリミングしますか?",
+        "lowerAndUpperBound": "人を保持するためのプリファレンススコアの下限と上限を指定してください (min %, max % の形式で指定、例: 25,75):",
+        "matchingOrStratification": "マッチングと層別化のどちらを実行しますか?",
+        "maxNumberOfPeople": "傾向スコアモデルの当てはめ時に含める人数の最大値は何ですか? この値を 0 に設定すると、ダウンサンプリングは適用されません:",
+        "maximumNumberOfPersons": "定義されたキャリパー内で、ターゲット群の各人にマッチングする比較対象群の人数の最大値は何ですか? (0 = 最大値なし - すべての比較対象がターゲットの人に割り当てられます):",
+        "testEachCovariate": "各共変量がターゲットの割り当てと相関しているかどうかをテストしますか? いずれかの共変量が異常に高い相関 (正または負) を持つ場合、エラーが発生します。",
+        "trimFraction": "トリミング割合 (1-100%):",
+        "useRegularization": "傾向モデルの当てはめに正則化を使用しますか?"
+      },
+      "selectCohort": "コホートを選択...",
+      "selectConceptSet": "コンセプトセットを選択...",
+      "selectCovariates": "共変量を選択...",
+      "studyPopulation": "研究対象母集団",
+      "studyPopulationPanel": {
+        "cohortCap": "ターゲットコホートまたは比較対象コホートのいずれかがこの数を超える場合、このサイズにサンプリングされます。(この値が 0 の場合は最大サイズなしを示します)",
+        "daysPriorOutcomes": "事前のアウトカムを特定する際、何日さかのぼって調べますか?",
+        "endDate": "研究終了日 - コホートのインデックスが出現できる最大の日付を指定する暦日 (空欄の場合は全期間を使用)。<b>重要</b>: 研究終了日はリスクウィンドウの切り捨てにも使用されるため、研究終了日を超えるアウトカムは考慮されません。",
+        "minimumObservations": "対象者をコホートに含めるために必要な、インデックス日より前の最小連続観察期間 (日数)。",
+        "onlyFirst": "対象者ごとの最初の曝露のみを含めますか?",
+        "removeDuplicates": "ターゲットコホートと比較対象コホートの両方に含まれる対象者を除外しますか?",
+        "removeSubjectsPriorRiskWindow": "リスクウィンドウ開始より前にアウトカムを有する対象者を除外しますか?",
+        "restrictToPeriod": "両方の曝露がデータ内に存在する期間に研究を限定しますか? (例: 両方の薬剤が市場に出ている場合)",
+        "startDate": "研究開始日 - コホートのインデックスが出現できる最小の日付を指定する暦日 (空欄の場合は全期間を使用):",
+        "subjectInMultipleCohorts": "ある対象者が複数のコホートに含まれる場合、重複を防ぐために新しいリスク期間の開始時にリスク期間を打ち切りますか?"
+      },
+      "timeAtRisk": "リスク期間",
+      "timeAtRiskPanel": {
+        "daysFrom": "日後 (起点:",
+        "defineTheTimeAtRiskWindowEnd": "リスク期間ウィンドウの終了を定義:",
+        "defineTheTimeAtRiskWindowStart": "ターゲット/比較対象コホートのエントリーを基準とした、リスク期間ウィンドウの開始を定義:",
+        "minimumNumberOfDaysAtRisk": "リスク期間の最小日数は?"
+      },
+      "usingCovariates": "傾向スコアモデルに OHDSI 共変量を使用しています。",
+      "view": "表示:",
+      "viewAnalysisSettings": "解析設定",
+      "viewComparisons": "比較",
+      "viewEvaluationSettings": "評価設定",
+      "viewFull": "すべて",
+      "viewFullSpecification": "完全な仕様"
+    },
+    "tabs": {
+      "executions": "実行",
+      "specification": "仕様",
+      "utilities": "ユーティリティ",
+      "messages": "メッセージ"
+    },
+    "title": "母集団レベル効果推定",
+    "util": {
+      "downloadNameNote": "<b>注意:</b> パッケージ名は英数字のみで構成する必要があります。スペースや特殊文字は使用できません。",
+      "downloadNote": "スタディパッケージの名前を入力し、ダウンロードをクリックして ZIP 形式のスタディパッケージを取得してください。",
+      "downloadPackage": "スタディパッケージをダウンロード",
+      "downloadProblemsNote": "解析仕様に関する問題を確認するには、ダウンロード領域をご覧ください。定義をエクスポートする前に、これらを修正する必要があります。",
+      "issueComparison": "比較設定で、少なくとも 1 つのターゲット、比較対象、アウトカムを指定する必要があります。",
+      "issueComparisonAndAnalysis": "少なくとも 1 つの有効な比較と解析設定を指定する必要があります。",
+      "issueDuplicate": "研究には次のいずれかの領域に重複した値が含まれています: 比較または解析設定。",
+      "issueNotSaved": "レビューおよびダウンロードする前に、解析を保存する必要があります。",
+      "issues": "研究には、完全な仕様の詳細をレビューしスタディパッケージをダウンロードすることを妨げる次の問題があります:",
+      "packageNamePlaceholder": "パッケージ名...",
+      "reviewDownload": "レビューとダウンロード",
+      "reviewFullSpec": "完全な研究仕様をレビュー"
+    }
+  },
+  "reusables": {
+    "title": "再利用可能アセット",
+    "loading": "再利用可能アセットを読み込み中...",
+    "manager": {
+      "loading": "再利用可能アセットを読み込み中...",
+      "caption": "再利用可能アセット #<%=id%>",
+      "captionVersion": "再利用可能アセット #<%=id%> - バージョン <%=number%> プレビュー",
+      "design": {
+        "description": "<b>再利用可能アセット</b>とは...",
+        "descriptionPlaceholder": "ここに説明を入力"
+      },
+      "messages": {
+        "alreadyExists": "この名前の再利用可能アセットは既に存在します。別の名前を選択してください。",
+        "beforeClose": "変更が保存されていません。続行しますか?",
+        "deleteConfirmation": "再利用可能アセットを削除しますか? 警告: 削除は元に戻せません!",
+        "saveFailed": "再利用可能アセットの保存中にエラーが発生しました。",
+        "notfound": "id = %d の再利用可能アセットはありません。"
+      },
+      "tabs": {
+        "design": "デザイン",
+        "versions": "バージョン"
+      }
+    }
+  },
+  "tagging": {
+    "tabs": {
+      "multiAssign": "複数割り当て"
+    },
+    "multiAssign": {
+      "selectedTags": "選択されたタグ",
+      "selectedAssets": "選択されたアセット",
+      "chooseTags": "タグを選択",
+      "chooseAssets": "アセットを選択",
+      "assignTags": "タグを割り当て",
+      "unassignTags": "タグの割り当てを解除",
+      "messageGroupNotMultiple": "グループ '<%=group%>' は複数のタグを許可していません。タグ '<%=replacedName%>' はタグ '<%=replacedWithName%>' に置き換えられました",
+      "success": "成功しました!",
+      "error": "エラー!",
+      "forbiddenError": "禁止されています!",
+      "tabs": {
+        "conceptsets": "コンセプトセット",
+        "cohorts": "コホート",
+        "characterizations": "特性化",
+        "incidenceRates": "発生率",
+        "cohortPathways": "コホートパスウェイ",
+        "reusables": "再利用可能アセット"
+      }
+    }
+  },
+  "jobs": {
+    "refreshJobs": "ジョブを更新"
+  },
+  "configuration": {
+    "alerts": {
+      "clearLocalCache": "ローカルストレージがクリアされました。設定情報を再読み込みするには、ページを更新してください。",
+      "clearServerCache": "サーバーキャッシュがクリアされました。",
+      "failUpdatePrioritySourceDaimon": "優先データソース daimon の更新に失敗しました"
+    },
+    "buttons": {
+      "check": "確認",
+      "refresh": "更新",
+      "clearConfigurationCache": "設定キャッシュをクリア",
+      "clearServerCache": "サーバーキャッシュをクリア",
+      "importUsers": "LDAP/AD からユーザーをインポート",
+      "managePermissions": "権限を管理",
+      "tagManagement": "タグ管理"
+    },
+    "changeSourcePriorities": "ソースの優先順位を変更:",
+    "confirms": {
+      "clearServerCache": "本当にサーバーキャッシュをクリアしますか?"
+    },
+    "jobs": {
+      "title": "ジョブ実行の概要",
+      "filters": {
+        "all": "すべて",
+        "running": "実行中",
+        "completed": "完了",
+        "failed": "失敗"
+      },
+      "columns": {
+        "executionId": "実行 ID",
+        "type": "タイプ",
+        "author": "作成者",
+        "startTime": "開始時刻"
+      },
+      "actions": {
+        "startPolling": "自動更新を開始",
+        "stopPolling": "自動更新を停止",
+        "retry": "再試行"
+      },
+      "empty": {
+        "title": "ジョブが見つかりません",
+        "description": "ジョブの実行が開始されると、ここに表示されます。"
+      },
+      "lastUpdated": "最終更新",
+      "autoRefreshOn": "自動更新オン"
+    },
+    "executionEngine": "実行エンジン",
+    "newSource": "新規ソース",
+    "priorityOptions": {
+      "application": "アプリケーション全体",
+      "session": "現在のセッション"
+    },
+    "roles": {
+      "importRoles": "ロールをインポート",
+      "nameIsEmpty": "ロール名が空です。",
+      "newRole": "新規ロール",
+      "roleTitle": "ロール #<%=id%>",
+      "tabs": {
+        "permissions": "権限",
+        "users": "ユーザー",
+        "utilities": "ユーティリティ"
+      },
+      "title": "ロール"
+    },
+    "rolesImport": {
+      "alertDanger": "リスト内の一部の権限とユーザーは、この Atlas インスタンスでは利用できません。これらの項目はインポート前にフィルタリングされます。",
+      "alertWarning": "リスト内の一部の権限には、ソースとターゲットの Atlas インスタンス間で一致するとは限らない特定のエンティティ ID が含まれています。",
+      "emptyMessage": "ロール定義を含む JSON をテキストエリアに挿入してください",
+      "fixJson": "JSON を修正",
+      "processed": "<%=len%> 個のロールのうち <%=proc> 個を作成しました。",
+      "removeThePermissions": "権限を削除",
+      "rolesDefinitionJson": "ロール定義 JSON",
+      "title": "ロールをインポート"
+    },
+    "title": "設定",
+    "userImport": {
+      "findGroup": "グループを検索",
+      "importNow": "今すぐインポート",
+      "loadingHistory": "ユーザーインポートジョブ履歴を読み込み中...",
+      "loadingUserImportJobList": "ユーザーインポートジョブリストを読み込み中...",
+      "newScheduledImport": "新規スケジュールインポート",
+      "scheduler": {
+        "after": "後",
+        "enabled": "有効",
+        "ends": "終了",
+        "execute": "実行:",
+        "executions": "回の実行",
+        "never": "なし",
+        "on": "オン",
+        "preserveAssignedRoles": "割り当てられたロールを保持",
+        "repeat": "繰り返し:",
+        "schedule": "スケジュール",
+        "startOn": "開始日:"
+      },
+      "searchGroup": "グループを検索:",
+      "searchGroupPlaceholder": "検索...",
+      "tabs": {
+        "jobHistory": "ジョブ履歴",
+        "roleMapping": "ロールマッピング",
+        "scheduler": "スケジューラー"
+      },
+      "title": "LDAP/Active Directory からユーザーをインポート",
+      "userImportJob": "ユーザーインポートジョブ",
+      "wizard": {
+        "buttons": {
+          "next": "次へ",
+          "prev": "前へ",
+          "startImport": "インポートを開始"
+        },
+        "editRoles": {
+          "title": "ロールを編集"
+        },
+        "finalPage": {
+          "message": "ユーザーのインポートが完了しました。"
+        },
+        "help": {
+          "adLdapUsername": "AD/LDAP ユーザー名",
+          "adLdapUsernameText": "このフィールドは LDAP/AD の<b>表示名</b>フィールドからマッピングされます。",
+          "atlasLogin": "Atlas ログイン",
+          "atlasLoginText": "このフィールドは LDAP/AD の<b>login</b>フィールドから直接マッピングされ、Atlas のログインとして使用されます。"
+        },
+        "import": {
+          "buttons": {
+            "checkAll": "すべてチェック",
+            "uncheckAll": "すべてのチェックを外す"
+          },
+          "header": "インポートするユーザーをチェックしてください"
+        },
+        "roleMapping": {
+          "header": "必要に応じて、LDAP/Active Directory グループの Atlas ロールへのマッピングを指定してください。"
+        },
+        "selectSource": {
+          "buttons": {
+            "details": "詳細",
+            "testConnection": "接続をテスト"
+          },
+          "header": "ユーザーをインポートするプロバイダーを選択してください。",
+          "source": {
+            "activeDirectory": "Active Directory",
+            "ldap": "LDAP サーバー"
+          }
+        },
+        "provider": {
+          "connection": {
+            "failed": "接続に失敗しました。詳細はサーバーログをご覧ください。"
+          }
+        },
+        "title": "ユーザーをインポート中"
+      }
+    },
+    "viewEdit": {
+      "bigQuery": {
+        "button": {
+          "remove": {
+            "label": "削除"
+          }
+        },
+        "password": {
+          "label": "サービスアカウントキーファイル (OAuthPvtKeyPath)"
+        }
+      },
+      "connectionString": {
+        "label": "接続文字列:",
+        "placeholder": "接続文字列",
+        "title": "接続文字列"
+      },
+      "dialect": {
+        "label": "ソース方言:",
+        "options": {
+          "bigquery": "Google BigQuery",
+          "hive": "Hive LLAP",
+          "impala": "Impala",
+          "netezza": "IBM Netezza",
+          "oracle": "Oracle",
+          "pdw": "Microsoft PDW",
+          "postgresql": "PostgreSQL",
+          "redshift": "Amazon Redshift",
+          "sqlserver": "SQL server",
+          "synapse": "Azure Synapse",
+          "snowflake": "Snowflake",
+          "spark": "Apache Spark"
+        },
+        "title": "ソースの方言"
+      },
+      "krb": {
+        "adminServer": {
+          "label": "KrbAdminServer:",
+          "placeholder": "KrbAdminServer",
+          "title": "KrbAdminServer"
+        },
+        "authenticationMethod": {
+          "label": "Kerberos 認証方式:"
+        },
+        "buttons": {
+          "remove": "削除:"
+        },
+        "hostFqdn": {
+          "label": "KrbHostFQDN:",
+          "placeholder": "KrbHostFQDN",
+          "title": "KrbHostFQDN は jdbc リンクから解析されました"
+        },
+        "keytab": {
+          "label": "Keytab"
+        },
+        "password": {
+          "label": "パスワード:",
+          "placeholder": "パスワード",
+          "title": "パスワード"
+        },
+        "realm": {
+          "label": "KrbRealm:",
+          "placeholder": "KrbAdminServer",
+          "title": "KrbRealm は jdbc リンクから解析されました"
+        },
+        "sourceDaimons": {
+          "label": "ソースデーモン"
+        },
+        "userPassword": {
+          "label": "ユーザー名とパスワード"
+        },
+        "validation": {
+          "host": "&quot;KrbHostFQDN&quot; が空です。次の形式で指定してください: &quot;KrbHostFQDN=[value];&quot;",
+          "realm": "&quot;KrbRealm&quot; が空です。次の形式で指定してください: &quot;KrbRealm=[value];&quot;"
+        }
+      },
+      "password": {
+        "label": "パスワード:",
+        "placeholder": "パスワード",
+        "title": "パスワード"
+      },
+      "source": {
+        "alerts": {
+          "save": {
+            "error": "データソースは保存されませんでした。<%= message %>",
+            "errorMessage": "この問題を解決するには管理者にお問い合わせください。"
+          },
+          "delete": {
+            "hasSelectedPriotirizableDaimons": "このソースの一部のデーモンには最高優先度が割り当てられており、アプリケーションで使用されています。ソースを削除するには、新しい最高優先度のデーモンを選択してください。"
+          },
+          "sourceSelectedError": "id=<%=selectedSourceId%> のソースの取得中にエラーが発生しました。"
+        },
+        "confirms": {
+          "close": "ソースの変更が保存されていません。続行しますか？",
+          "delete": "ソースを削除しますか？警告: 削除は元に戻せません！"
+        },
+        "label": "ソースキー:",
+        "new": {
+          "placeholder": "新規ソース"
+        },
+        "placeholder": "ソースキー",
+        "title": "ソース <%=name%>",
+        "validation": {
+          "empty": "ソース名が空です"
+        }
+      },
+      "username": {
+        "label": "ユーザー名:",
+        "placeholder": "ユーザー名",
+        "title": "ユーザー名",
+        "validation": {
+          "empty": "&quot;Username&quot; が空です。"
+        }
+      }
+    },
+    "tagManagement": {
+      "allowMultiple": "複数",
+      "allowCustom": "自由&#8209;形式",
+      "allowCustomCheckbox": "このグループでのカスタムタグの作成を許可する",
+      "apply": "送信",
+      "color": "色",
+      "createGroup": "グループを作成",
+      "createTag": "タグを作成",
+      "editTag": "タグを編集",
+      "editTagGroup": "タググループを編集",
+      "exampleTagGroup": "例",
+      "exampleTagGroupTag": "例: 名前",
+      "exampleTag": "例",
+      "icon": "アイコン",
+      "mandatory": "必須",
+      "multiSelectionCheckbox": "1 つのアセットでグループ内の複数タグを許可する",
+      "showGroupCheckbox": "アセットテーブルにタググループ列を表示する",
+      "showInAssetsBrowser": "列を&nbsp;表示",
+      "tagsInGroup": "グループ '<%=group%>' 内のタグ",
+      "tagGroups": "タググループ",
+      "tagGroupColor": "タググループの色",
+      "tagGroupColorPlaceholder": "タググループの色を #xxxxxx 形式で入力してください",
+      "tagGroupDescription": "タググループの説明",
+      "tagGroupDescriptionPlaceholder": "タググループの説明を入力してください",
+      "tagGroupIcon": "タググループのアイコン",
+      "tagGroupIconPlaceholder": "タググループのアイコンを font-awesome クラスとして入力してください",
+      "tagGroupName": "* タググループ名",
+      "tagGroupNamePlaceholder": "タググループ名を入力してください",
+      "tagGroupNameEmpty": "タググループ名は空にできません",
+      "hideTags": "タグを非表示",
+      "showTags": "タグを表示",
+      "edit": "編集",
+      "remove": "削除",
+      "overrideTagColor": "タググループの色を上書きする",
+      "overrideTagIcon": "タググループのアイコンを上書きする",
+      "protected": "保護済み",
+      "nameExistsWarning": "タグまたはグループ名 '<%=tagName%>' は既に使用されています。",
+      "errorGroupNotEmpty": "タググループを削除できません: グループにタグが含まれています。",
+      "deleteGroupConfirmation": "削除は元に戻せません！よろしいですか？",
+      "deleteTagConfirmation": "タグがアセットに割り当てられている場合、割り当ては解除されます。削除は元に戻せません。本当にタグを削除しますか？"
+    }
+  },
+  "feedback": {
+    "pleaseContact": "Atlas アプリケーションへのアクセスやご質問については、次の連絡先までお問い合わせください:",
+    "title": "フィードバック"
+  },
+  "licenseAgreement": {
+    "accept": "同意する",
+    "description": "SNOMED International SNOMED CT Browser および HemOnc を使用するには、次のライセンス契約に同意してください:",
+    "reject": "拒否する",
+    "rejectWarning": "この利用規約に同意しない場合、Atlas を使用できません",
+    "title": "ライセンス契約"
+  },
+  "cohort": {
+    "addAttribute": "属性を追加...",
+    "noAttributesAdded": "属性が追加されていません"
+  },
+  "cohortBuilder": {
+    "tabs": {
+      "definition": "定義",
+      "versions": "バージョン"
+    }
+  },
+  "cohortDefinitions": {
+    "closeYourCurrentCohort": "新しいコホート定義を作成する前に、現在のコホート定義を閉じてください",
+    "cohort": {
+      "modals": {
+        "analysisTypes": {
+          "bold_1": "クイック解析",
+          "bold_2": "医療利用状況",
+          "bold_3": "完全解析",
+          "text_1": "このコホートの出生年、人口統計、薬剤エラ、症状エラの概要を素早く把握するための最小限の解析を実行します。(推定: 10 分)",
+          "text_2": "曝露、来院、薬剤利用状況のレポートを提供する解析を実行します。(推定: 10～40 分)",
+          "text_3": "特性化レポートの完全なセットを実行します。(推定: 60 分)",
+          "title": "解析タイプ"
+        },
+        "cohortDefinition": {
+          "text_1": "コホートとは、一定期間にわたって 1 つ以上の包含条件を満たす対象者の集合として定義されます。1 人の対象者は、重複しない時間間隔内で複数回にわたって 1 つのコホートに該当することがあります。コホートは ATLAS において、コホート開始条件とコホート終了条件を指定することで構築されます。コホート開始条件では、コホート開始日を決定する 1 つ以上の初期イベントを選択し、任意で該当イベントを絞り込む追加の包含条件を指定します。コホート終了条件は各コホート開始レコードに適用され、その対象者のエピソードがコホートに該当しなくなる終了日を決定します。",
+          "title": "コホート定義"
+        },
+        "linkToCohortDefinition": {
+          "text_1": "このリンクは、R などの他のツールから WebAPI を介してこのコホート定義に直接アクセスする場合や、ATLAS インスタンス間でインポートする場合に使用できます。",
+          "title": "コホート定義へのリンク"
+        },
+        "configureReportsToRun": {
+          "title": "実行するレポートを設定",
+          "run": "実行"
+        }
+      }
+    },
+    "cohortDefinitionManager": {
+      "closeCohortTitle": "コホート定義を閉じる",
+      "generationExitMessage": "生成終了メッセージ",
+      "retrievingCohortDefinitions": "コホート定義を取得中",
+      "cohortDefinitionManagerText_1": "コホートが生成されていません",
+      "cohortDefinitionManagerText_10": "おっと",
+      "cohortDefinitionManagerText_11": "レポートシステムでエラーが発生しました。次の詳細を ATLAS 管理チームに提供するか、こちらに問題を報告してください: ",
+      "cohortDefinitionManagerText_12": "レポートジョブの作成に失敗しました",
+      "cohortDefinitionManagerText_13": "お待ちください",
+      "cohortDefinitionManagerText_14": "レポートステータスが読み込まれるまでお待ちください。",
+      "cohortDefinitionManagerText_2": "このコホートは、選択したデータソースで生成されていません。レポートにアクセスする前に、生成タブに戻ってコホートを生成してください。",
+      "cohortDefinitionManagerText_3": "レポートが生成されていません",
+      "cohortDefinitionManagerText_4": "このコホートのレポートはまだ生成されていません。下の生成ボタンをクリックしてレポートを生成してください。",
+      "cohortDefinitionManagerText_5": "選択してください",
+      "cohortDefinitionManagerText_6": "レポート選択パネルで選択してください。",
+      "cohortDefinitionManagerText_7": "レポートを生成中",
+      "cohortDefinitionManagerText_8": "レポートを利用できません",
+      "cohortDefinitionManagerText_9": "要求されたレポートは利用できません。生成ボタンをクリックして、このデータソースのコホートレポートを生成してください。",
+      "confirms": {
+        "close": "コホートの変更が保存されていません。続行しますか？",
+        "delete": "コホート定義を削除しますか？警告: 削除は元に戻せません！",
+        "deleteConflict": "このコホート定義は一部の解析で参照されているため削除できません。",
+        "generateAnalyses": "これにより <%=descr%> が実行され、約 <%=duration%> かかる場合があります。よろしいですか？",
+        "saveAlert": "この名前のコホート定義は既に存在します。別の名前を選択してください。",
+        "saveError": "コホート定義の保存中にエラーが発生しました。"
+      },
+      "createCopyCohortTitle": "このコホート定義のコピーを作成",
+      "failedWithoutAnyMessage": "メッセージなしで失敗しました",
+      "generateAllAnalyses": {
+        "descr": "すべての解析",
+        "duration": "60～90 分"
+      },
+      "generateHealthcareAnalyses": {
+        "descr": "コストと利用状況の解析",
+        "duration": "10～45 分"
+      },
+      "generateQuickAnalysis": {
+        "descr": "コホートの概要を素早く把握するための最小限の解析セット",
+        "duration": "10 分"
+      },
+      "getLinkCohortTitle": "このコホート定義へのリンクを取得",
+      "heraclesHeel": "Heracles Heel",
+      "panels": {
+        "appendix_1": "付録 1: コンセプトセット定義",
+        "availableCDMSources": "利用可能な CDM ソース",
+        "fullAnalysis": "完全解析",
+        "generate": "生成",
+        "generated": "生成済み",
+        "generationDuration": "生成時間",
+        "generationStatus": "生成ステータス",
+        "graphicalView": "グラフィカルビュー",
+        "hideReports": "レポートを非表示",
+        "importConceptIdentifiers": "コンセプト識別子をインポート",
+        "importConceptSetExpression": "コンセプトセット式をインポート",
+        "importSourceCodes": "ソースコードをインポート",
+        "json": "JSON",
+        "people": "人数",
+        "quickAnalysis": "クイック解析",
+        "records": "レコード",
+        "reload": "再読み込み",
+        "reportSelections": "レポート選択",
+        "sourceName": "ソース名",
+        "sql": "SQL",
+        "textView": "テキストビュー",
+        "utilization": "利用状況",
+        "viewReports": "レポートを表示"
+      },
+      "samples": {
+        "sampleSelections": "サンプル選択",
+        "selectASource": "ソースを選択",
+        "addNewSample": "新しいサンプルを追加",
+        "cohortNotGeneratedNote": "このコホートは、選択したデータソースで生成されていません。サンプルにアクセスする前に、生成タブに戻ってコホートを生成してください。",
+        "cohortShouldBeGenerated": "サンプルを作成する前にコホートを生成する必要があります",
+        "errorFetchingList": "サンプルリストの取得中にエラーが発生しました。後でもう一度お試しください",
+        "errorDeleting": "サンプルの削除中にエラーが発生しました。後でもう一度お試しください",
+        "errorFetchingData": "サンプルデータの取得中にエラーが発生しました。後でもう一度お試しください",
+        "errorRefreshing": "サンプルの更新中にエラーが発生しました。後でもう一度お試しください",
+        "modal": {
+          "title": "新しいサンプルを作成",
+          "mandatoryFields": "* 必須項目",
+          "sampleName": "* サンプル名",
+          "sampleNamePlaceholder": "サンプル名を入力してください",
+          "sampleNameEmpty": "サンプル名は空にできません",
+          "numberOfPatients": "* 患者数 (1～500)",
+          "numberOfPatientsPlaceholder": "数値を入力してください",
+          "numberOfPatientsEmpty": "患者数は 1～500 の正の整数でなければなりません",
+          "selectAgeCriteria": "年齢条件を選択",
+          "lessThan": "より小さい",
+          "lessOrEqualTo": "以下",
+          "equalTo": "等しい",
+          "greaterThan": "より大きい",
+          "greaterOrEqualTo": "以上",
+          "between": "範囲内",
+          "notBetween": "範囲外",
+          "agePlaceholder": "数値を入力してください",
+          "ageError": "年齢は 0 以上の整数でなければなりません",
+          "ageError2": "1 つ目と 2 つ目の年齢は 0 以上の整数で、かつ等しくない必要があります",
+          "indicateGender": "性別を指定 (すべての性別を選択するには空のままにしてください)",
+          "male": "男性",
+          "female": "女性",
+          "other": "その他",
+          "submit": "送信",
+          "creatingSample": "サンプルを作成中..."
+        }
+      },
+      "saveCohortTitle": "コホート定義を保存",
+      "selectReport": "レポートを選択",
+      "tabs": {
+        "conceptSets": "コンセプトセット",
+        "definition": "定義",
+        "explore": "探索",
+        "export": "エクスポート",
+        "generation": "生成",
+        "samples": "サンプル",
+        "messages": "メッセージ",
+        "versions": "バージョン",
+        "reporting": "レポート"
+      },
+      "designTab": {
+        "cardinalityOptions": {
+          "atLeast": "少なくとも",
+          "exactly": "ちょうど",
+          "atMost": "最大"
+        },
+        "countingOptions": {
+          "all": "すべての発生",
+          "distinctConcept": "個別のコンセプト",
+          "distinctDate": "個別の開始日",
+          "distinctVisit": "個別の来院"
+        }
+      }
+    },
+    "generation": {
+      "section": {
+        "title": "生成",
+        "statusSaveFirst": "生成するにはコホートを保存してください",
+        "statusNoRuns": "まだ生成がありません",
+        "statusCount": "{done} / {total} 生成済み",
+        "lastRunMeta": "前回の実行 · {source} で {time}",
+        "generateAll": "すべて生成"
+      },
+      "row": {
+        "inclusionReport": "包含レポート",
+        "samples": "サンプル"
+      },
+      "drawer": {
+        "inclusionTitle": "包含ルールレポート",
+        "samplesTitle": "コホートサンプル"
+      },
+      "permissions": {
+        "noWrite": "このソースへの書き込み権限がありません。"
+      }
+    },
+    "cohortCaption": "コホート #<%=id%>",
+    "cohortCaptionPreview": "コホート #<%=id%> - バージョン <%=number%> プレビュー",
+    "cohortreports": {
+      "inclusionReport": "包含レポート",
+      "inclusionReportFor": "包含レポート：対象",
+      "inclusionReportFor1": " ",
+      "tabs": {
+        "byEvents": "イベント別",
+        "byPerson": "人別"
+      }
+    },
+    "costUtilization": {
+      "visualization": "可視化",
+      "rawData": "生データ",
+      "allowedCharged": "許可額／請求額",
+      "allowedCost": "許可コスト",
+      "allowedCostPmpm": "許可コスト PMPM",
+      "averageLengthOfStay": "平均在院日数（日数）",
+      "chargedCost": "請求コスト",
+      "chargedCostPMPM": "請求コスト PMPM",
+      "costUtilizationText_1": "CSVとして保存",
+      "displayCharts": "表示するチャート：",
+      "drugUtilDetailedText_1": "薬剤サマリーに戻る",
+      "drugUtilSummaryText_1": "薬剤をクリックすると詳細な統計が表示されます：",
+      "drugUtilText_1": "全薬剤のサマリー",
+      "drugUtilText_2": "薬剤詳細レポート：対象",
+      "exposure1kYear": "曝露／1,000人あたり／年",
+      "paidAllowed": "支払額／許可額",
+      "paidCost": "支払コスト",
+      "paidCostPMPM": "支払コスト PMPM",
+      "periodStart": "期間開始",
+      "personCount": "人数",
+      "personExposureText_1": "人数",
+      "personExposureText_2": "総曝露年数",
+      "personExposureText_3": "1人あたり平均曝露年数",
+      "personExposureText_4": "詳細な統計は利用できません",
+      "personPercent": "人の割合",
+      "persons": "人数",
+      "recordsPer1000": "1,000人あたりレコード数",
+      "recordsPer1000PerYear": "1,000人あたり年間レコード数",
+      "recordsPer1000WithRecord": "レコードを持つ1,000人あたりレコード数",
+      "reportManager": {
+        "reportManagerText_1": "コホートレポート",
+        "reportManagerText_10": "人種",
+        "reportManagerText_11": "民族",
+        "reportManagerText_12": "レポートは未実装です",
+        "reportManagerText_13": "このレポートは実装されていません。",
+        "reportManagerText_14": "月別有病率",
+        "reportManagerText_15": "コホート開始",
+        "reportManagerText_16": "開始から終了までコホートに含まれる人",
+        "reportManagerText_17": "コホート開始からコホート終了までの期間別の人数",
+        "reportManagerText_18": "コホート開始年別のコホート開始時年齢分布",
+        "reportManagerText_19": "年齢分布",
+        "reportManagerText_2": "コホート定義を選択",
+        "reportManagerText_20": "性別ごとのコホート開始時年齢分布",
+        "reportManagerText_21": "インデックス時年齢",
+        "reportManagerText_22": "トルネード",
+        "reportManagerText_23": "サンプルプロファイル",
+        "reportManagerText_24": "トルネードプロットのバーを選択すると、その層のサンプルプロファイルが表示されます。",
+        "reportManagerText_25": "状態の有病率",
+        "reportManagerText_26": "テーブル",
+        "reportManagerText_27": "ツリーマップ",
+        "reportManagerText_28": "ボックスサイズ：有病率、色：相対リスクの対数（赤から緑＝負から正）、Ctrl+クリックでズーム、Alt+クリックでズームをリセット",
+        "reportManagerText_29": "ドリルダウンレポート",
+        "reportManagerText_3": "データの完全性",
+        "reportManagerText_30": "インデックス日付別の薬剤 ",
+        "reportManagerText_31": "初回観察時年齢",
+        "reportManagerText_32": "コホートにおける初回観察時の年齢分布。",
+        "reportManagerText_33": "性別ごとの年齢",
+        "reportManagerText_34": "性別で層別化したコホートにおける初回観察時の年齢分布。",
+        "reportManagerText_35": "観察期間の長さ",
+        "reportManagerText_36": "コホートにおける総観察期間の分布。",
+        "reportManagerText_37": "性別ごとの観察期間の長さ",
+        "reportManagerText_38": "性別ごとのコホートにおける総観察期間の分布。",
+        "reportManagerText_39": "年齢階級別の観察期間の長さ",
+        "reportManagerText_4": "ケアサイト",
+        "reportManagerText_40": "1人あたりの観察期間数",
+        "reportManagerText_41": "月別の継続観察を持つ人数",
+        "reportManagerText_42": "状態エラの有病率",
+        "reportManagerText_43": "月別の状態エラの有病率",
+        "reportManagerText_44": "初回診断時年齢",
+        "reportManagerText_45": "状態エラの長さ",
+        "reportManagerText_46": "手技の有病率",
+        "reportManagerText_47": "状態の有病率",
+        "reportManagerText_48": "月別の状態の有病率",
+        "reportManagerText_49": "状態タイプ",
+        "reportManagerText_5": "日付別エントロピー",
+        "reportManagerText_50": "薬剤エラの有病率",
+        "reportManagerText_51": "月別の薬剤エラの有病率",
+        "reportManagerText_52": "性別ごとの初回曝露時年齢",
+        "reportManagerText_53": "エラの長さの分布",
+        "reportManagerText_54": "薬剤曝露",
+        "reportManagerText_55": "薬剤曝露の有病率",
+        "reportManagerText_56": "月別の薬剤曝露の有病率",
+        "reportManagerText_57": "初回曝露時年齢",
+        "reportManagerText_58": "投与日数の分布",
+        "reportManagerText_59": "数量の分布",
+        "reportManagerText_6": "出生年",
+        "reportManagerText_60": "再調剤の分布",
+        "reportManagerText_61": "タイプ別の薬剤",
+        "reportManagerText_62": "手技の有病率",
+        "reportManagerText_63": "月別の手技の有病率",
+        "reportManagerText_64": "タイプ別の手技",
+        "reportManagerText_65": "初回発生時年齢",
+        "reportManagerText_66": "年齢・性別・年別の死亡有病率",
+        "reportManagerText_67": "月別の死亡有病率",
+        "reportManagerText_68": "死亡の詳細",
+        "reportManagerText_69": "死亡時年齢",
+        "reportManagerText_7": "出生年に対するこのコホートの人数。",
+        "reportManagerText_70": "タイプ別の死亡",
+        "reportManagerText_71": "ここをクリックしてコホートを選択",
+        "reportManagerText_8": "人口統計",
+        "reportManagerText_9": "性別"
+      },
+      "saveAsCSV": "CSVとして保存",
+      "totalExposure": "総曝露年数",
+      "totalLengthOfStay": "総在院日数（日数）",
+      "totalRecords": "総レコード数"
+    },
+    "filters": {
+      "visit": "来院",
+      "visitType": "来院タイプ"
+    },
+    "newDefinition": "新規コホート",
+    "newDefinitionTitle": "新しいコホート定義を作成",
+    "noConceptSets": "エクスポートするコンセプトセットがありません",
+    "runDiagnostics": "診断を実行",
+    "saveDefinitionBefore": "エクスポートする前に定義を保存する必要があります",
+    "title": "コホート定義",
+    "designTab": {
+      "collapseEntryLabel": "コホートエントリイベントを折りたたむ"
+    }
+  },
+  "const": {
+    "disabledReason": {
+      "dirty": "生成する前に変更を保存",
+      "accessDenied": "アクセスが拒否されました",
+      "invalidTar": "無効なTAR",
+      "invalidDesign": "デザインが無効です",
+      "engineNotAvalable": "実行エンジンが利用できません",
+      "emptyCohorts": "コホートが見つかりません",
+      "emptyInitionEvent": "初期イベントが設定されていません"
+    },
+    "eventsList": {
+      "addConditionEra": {
+        "title": "状態エラを追加",
+        "desc_initial": "特定の診断エラを持つ患者を検索します。",
+        "desc_censoring": "診断エラに基づいてコホートから退出します。",
+        "desc_group": "特定の状態エラを持つ患者を検索します。"
+      },
+      "addDemographic": {
+        "title": "人口統計を追加",
+        "desc_group": "人口統計条件に基づいてイベントをフィルターします。"
+      },
+      "addConditionOccurrence": {
+        "title": "状態発生を追加",
+        "desc_initial": "特定の診断を持つ患者を検索します。",
+        "desc_censoring": "診断に基づいてコホートから退出します。",
+        "desc_group": "特定の状態を持つ患者を検索します。"
+      },
+      "addDeath": {
+        "title": "死亡を追加",
+        "desc_initial": "死亡に基づいて患者を検索します。",
+        "desc_censoring": "死亡に基づいてコホートから退出します。",
+        "desc_group": "死亡に基づいて患者を検索します。"
+      },
+      "addDeviceExposure": {
+        "title": "デバイス曝露を追加",
+        "desc_initial": "デバイス曝露に基づいて患者を検索します。",
+        "desc_censoring": "デバイス曝露に基づいてコホートから退出します。",
+        "desc_group": "デバイス曝露に基づいて患者を検索します。"
+      },
+      "addDoseEra": {
+        "title": "用量エラを追加",
+        "desc_initial": "用量エラを持つ患者を検索します。",
+        "desc_censoring": "用量エラに基づいてコホートから退出します。",
+        "desc_group": "用量エラを持つ患者を検索します。"
+      },
+      "addDrugEra": {
+        "title": "薬剤エラを追加",
+        "desc_initial": "経時的な薬剤への曝露を持つ患者を検索します。",
+        "desc_censoring": "経時的な薬剤に基づいてコホートから退出します。",
+        "desc_group": "薬剤エラを持つ患者を検索します。"
+      },
+      "addDrugExposure": {
+        "title": "薬剤曝露を追加",
+        "desc_initial": "特定の薬剤または薬剤クラスへの曝露を持つ患者を検索します。",
+        "desc_censoring": "特定の薬剤または薬剤クラスへの曝露に基づいてコホートから退出します。",
+        "desc_group": "特定の薬剤または薬剤クラスへの曝露を持つ患者を検索します。"
+      },
+      "addMeasurement": {
+        "title": "測定を追加",
+        "desc_initial": "測定に基づいて患者を検索します。",
+        "desc_censoring": "測定に基づいてコホートから退出します。",
+        "desc_group": "測定に基づいて患者を検索します。"
+      },
+      "addObservation": {
+        "title": "観察を追加",
+        "desc_initial": "観察に基づいて患者を検索します。",
+        "desc_censoring": "検査またはその他の観察に基づいてコホートから退出します。",
+        "desc_group": "観察に基づいて患者を検索します。"
+      },
+      "addObservationPeriod": {
+        "title": "観察期間を追加",
+        "desc_initial": "観察期間に基づいて患者を検索します。",
+        "desc_group": "観察期間に基づいて患者を検索します。"
+      },
+      "addPayerPlanPeriod": {
+        "title": "支払者プラン期間を追加",
+        "desc_initial": "支払者プラン期間に基づいて患者を検索します。",
+        "desc_censoring": "支払者プラン期間に基づいて患者を検索します。",
+        "desc_group": "支払者プラン期間に基づいて患者を検索します。"
+      },
+      "addProcedureOccurrence": {
+        "title": "手技発生を追加",
+        "desc_initial": "特定の手技を受けた患者を検索します。",
+        "desc_censoring": "手技に基づいてコホートから退出します。",
+        "desc_group": "特定の手技を受けた患者を検索します。"
+      },
+      "addSpecimen": {
+        "title": "検体を追加",
+        "desc_initial": "検体に基づいて患者を検索します。",
+        "desc_censoring": "検体に基づいて患者を検索します。",
+        "desc_group": "検体に基づいて患者を検索します。"
+      },
+      "addLocationRegion": {
+        "title": "地域を追加",
+        "desc_group": "地理的領域内の患者を検索します。"
+      },
+      "addGroup": {
+        "title": "グループを追加",
+        "desc_group": "and/or関係を使って条件を組み合わせるグループを追加します。"
+      },
+      "addVisit": {
+        "title": "来院発生を追加",
+        "desc_initial": "来院情報に基づいて患者を検索します。",
+        "desc_censoring": "来院情報に基づいてコホートから退出します。",
+        "desc_group": "来院情報に基づいて患者を検索します。",
+        "title_occurrence": "来院を追加",
+        "desc_occurrence": "診断の来院発生に基づいて状態発生をフィルターします。",
+        "title_deviceexposure": "来院条件を追加",
+        "desc_deviceexposure": "曝露の来院発生に基づいてデバイス曝露をフィルターします。",
+        "title_drugexposure": "来院条件を追加",
+        "desc_drugexposure": "薬剤曝露の来院発生に基づいて薬剤曝露をフィルターします。",
+        "title_measurement": "来院条件を追加",
+        "desc_measurement": "測定の来院発生に基づいて測定をフィルターします。",
+        "title_observation": "来院条件を追加",
+        "desc_observation": "観察の来院発生に基づいて観察をフィルターします。",
+        "title_procedureoccurrence": "来院条件を追加",
+        "desc_procedureoccurrence": "手技の来院発生に基づいて手技発生をフィルターします。"
+      },
+      "addVisitDetail": {
+        "title": "来院詳細を追加",
+        "desc_initial": "来院詳細情報に基づいて患者を検索します。",
+        "desc_censoring": "来院詳細情報に基づいてコホートから退出します。",
+        "desc_group": "来院詳細情報に基づいて患者を検索します。",
+        "title_visit_detail": "来院詳細を追加",
+        "desc_occurrence": "診断の来院詳細に基づいて状態発生をフィルターします。",
+        "title_deviceexposure": "来院詳細条件を追加",
+        "desc_deviceexposure": "曝露の来院詳細に基づいてデバイス曝露をフィルターします。",
+        "title_drugexposure": "来院詳細条件を追加",
+        "desc_drugexposure": "薬剤曝露の来院詳細に基づいて薬剤曝露をフィルターします。",
+        "title_measurement": "来院詳細条件を追加",
+        "desc_measurement": "測定の来院詳細に基づいて測定をフィルターします。",
+        "title_observation": "来院詳細条件を追加",
+        "desc_observation": "観察の来院詳細に基づいて観察をフィルターします。",
+        "title_procedureoccurrence": "来院詳細条件を追加",
+        "desc_procedureoccurrence": "手技の来院詳細に基づいて手技発生をフィルターします。"
+      },
+      "addConditionStatus": {
+        "title_occurrence": "状態ステータスを追加",
+        "desc_occurrence": "状態ステータスに基づいて状態発生をフィルターします。"
+      },
+      "addFirstDiagnosis": {
+        "title_era": "初回診断条件を追加",
+        "desc_era": "条件エラを履歴上の初回診断エラに限定します。",
+        "title_occurrence": "初回診断を追加",
+        "desc_occurrence": "条件発生を新規診断に限定します。",
+        "title_deviceexposure": "初回曝露条件を追加",
+        "desc_deviceexposure": "デバイス曝露を履歴上の初回曝露に限定します。",
+        "title_dose": "初回曝露条件を追加",
+        "desc_dose": "用量エラを新規曝露に限定します。",
+        "title_drug": "初回曝露条件を追加",
+        "desc_drug": "薬剤エラを履歴上の初回曝露に限定します。",
+        "title_drugexposure": "初回曝露条件を追加",
+        "desc_drugexposure": "薬剤曝露を履歴上の初回曝露に限定します。",
+        "title_measurement": "初回測定条件を追加",
+        "desc_measurement": "測定を履歴上の初回発生に限定します。",
+        "title_observation": "初回観察条件を追加",
+        "desc_observation": "観察を初回発生に限定します。",
+        "title_observationperiod": "初回観察期間条件",
+        "desc_observationperiod": "観察期間を履歴上の初回期間に限定します。",
+        "title_payerplan": "初回支払者プラン期間条件",
+        "desc_payerplan": "支払者プラン期間を履歴上の初回期間に限定します。",
+        "title_procedureoccurrence": "初回処置条件を追加",
+        "desc_procedureoccurrence": "処置発生を履歴上の初回処置に限定します。",
+        "title_specimen": "初回発生条件を追加",
+        "desc_specimen": "検体を履歴上の初回発生に限定します。",
+        "title_visit": "初回受診条件を追加",
+        "desc_visit": "受診発生を初回受診に限定します。",
+        "title_visitDetail": "初回受診詳細条件を追加",
+        "desc_visitDetail": "受診詳細を初回受診に限定します。"
+      },
+      "addAgeAtStart": {
+        "title_era": "エラ開始時年齢条件を追加",
+        "desc_era": "条件エラをエラ開始時の年齢でフィルターします。",
+        "title_dose": "エラ開始時年齢条件を追加",
+        "desc_dose": "薬剤エラをエラ開始時の年齢でフィルターします。",
+        "title_drug": "エラ開始時年齢条件を追加",
+        "desc_drug": "薬剤エラをエラ開始時の年齢でフィルターします。",
+        "title_observationperiod": "開始時年齢条件を追加",
+        "desc_observationperiod": "期間を開始時の年齢でフィルターします。",
+        "title_payerplan": "開始時年齢条件を追加",
+        "desc_payerplan": "期間を開始時の年齢でフィルターします。"
+      },
+      "addAgeAtEnd": {
+        "title_era": "エラ終了時年齢条件を追加",
+        "desc_era": "条件エラをエラ終了時の年齢でフィルターします。",
+        "title_dose": "エラ終了時年齢条件を追加",
+        "desc_dose": "薬剤エラをエラ終了時の年齢でフィルターします。",
+        "title_drug": "エラ終了時年齢条件を追加",
+        "desc_drug": "薬剤エラをエラ終了時の年齢でフィルターします。",
+        "title_observationperiod": "終了時年齢条件を追加",
+        "desc_observationperiod": "期間を終了時の年齢でフィルターします。",
+        "title_payerplan": "終了時年齢条件を追加",
+        "desc_payerplan": "期間を終了時の年齢でフィルターします。"
+      },
+      "addGender": {
+        "title_era": "性別条件を追加",
+        "desc_era": "条件エラを性別に基づいてフィルターします。",
+        "title_occurrence": "性別を追加",
+        "desc_occurrence": "条件発生を性別に基づいてフィルターします。",
+        "title_death": "性別条件を追加",
+        "desc_death": "死亡を性別に基づいてフィルターします。",
+        "title_deviceexposure": "性別条件を追加",
+        "desc_deviceexposure": "デバイス曝露を性別に基づいてフィルターします。",
+        "title_dose": "性別条件を追加",
+        "desc_dose": "薬剤エラを性別に基づいてフィルターします。",
+        "title_drug": "性別条件を追加",
+        "desc_drug": "薬剤エラを性別に基づいてフィルターします。",
+        "title_drugexposure": "性別条件を追加",
+        "desc_drugexposure": "薬剤曝露を性別に基づいてフィルターします。",
+        "title_measurement": "性別条件を追加",
+        "desc_measurement": "測定を性別に基づいてフィルターします。",
+        "title_observation": "性別条件を追加",
+        "desc_observation": "観察を性別に基づいてフィルターします。",
+        "title_payerplan": "性別条件を追加",
+        "desc_payerplan": "支払者プラン期間を性別に基づいてフィルターします。",
+        "title_procedureoccurrence": "性別条件を追加",
+        "desc_procedureoccurrence": "処置発生を性別に基づいてフィルターします。",
+        "title_specimen": "性別条件を追加",
+        "desc_specimen": "検体を性別に基づいてフィルターします。",
+        "title_visit": "性別条件を追加",
+        "desc_visit": "受診発生を性別に基づいてフィルターします。",
+        "title_visitDetail": "性別条件を追加",
+        "desc_visitDetail": "受診詳細を性別に基づいてフィルターします。",
+        "title_demographic": "性別条件を追加",
+        "desc_demographic": "イベントを性別に基づいてフィルターします。"
+      },
+      "addStartDate": {
+        "title_era": "開始日条件を追加",
+        "desc_era": "条件エラをエラ開始日でフィルターします。",
+        "title_occurrence": "条件開始日を追加",
+        "desc_occurrence": "条件発生を条件開始日でフィルターします。",
+        "title_deviceexposure": "開始日条件を追加",
+        "desc_deviceexposure": "デバイス曝露を曝露開始日でフィルターします。",
+        "title_dose": "エラ開始日条件を追加",
+        "desc_dose": "用量エラをエラ開始日でフィルターします。",
+        "title_drug": "エラ開始日条件を追加",
+        "desc_drug": "薬剤エラをエラ開始日でフィルターします。",
+        "title_drugexposure": "開始日条件を追加",
+        "desc_drugexposure": "薬剤曝露を薬剤曝露開始日でフィルターします。",
+        "title_observationperiod": "期間開始日条件を追加",
+        "desc_observationperiod": "観察期間を開始日でフィルターします。",
+        "title_payerplan": "期間開始日条件を追加",
+        "desc_payerplan": "支払者プラン期間を開始日でフィルターします。",
+        "title_visit": "開始日条件を追加",
+        "desc_visit": "受診発生を条件開始日でフィルターします。",
+        "title_visitDetail": "開始日条件を追加",
+        "desc_visitDetail": "受診詳細を開始日でフィルターします。",
+        "title_demographic": "開始日条件を追加",
+        "desc_demographic": "イベントを開始日でフィルターします。"
+      },
+      "addEndDate": {
+        "title_era": "終了日条件を追加",
+        "desc_era": "条件エラをエラ終了日でフィルターします。",
+        "title_occurrence": "条件終了日を追加",
+        "desc_occurrence": "条件発生を条件終了日でフィルターします。",
+        "title_deviceexposure": "終了日条件を追加",
+        "desc_deviceexposure": "デバイス曝露を曝露終了日でフィルターします。",
+        "title_dose": "エラ終了日条件を追加",
+        "desc_dose": "用量エラをエラ終了日でフィルターします。",
+        "title_drug": "エラ終了日条件を追加",
+        "desc_drug": "薬剤エラをエラ終了日でフィルターします。",
+        "title_drugexposure": "終了日条件を追加",
+        "desc_drugexposure": "薬剤曝露を薬剤曝露終了日でフィルターします。",
+        "title_observationperiod": "期間終了日条件を追加",
+        "desc_observationperiod": "観察期間を終了日でフィルターします。",
+        "title_payerplan": "期間終了日条件を追加",
+        "desc_payerplan": "支払者プラン期間を終了日でフィルターします。",
+        "title_visit": "終了日条件を追加",
+        "desc_visit": "受診発生を条件終了日でフィルターします。",
+        "title_visitDetail": "終了日条件を追加",
+        "desc_visitDetail": "受診詳細を終了日でフィルターします。",
+        "title_demographic": "イベント終了日条件を追加",
+        "desc_demographic": "イベントを終了日でフィルターします。"
+      },
+      "addConditonCount": {
+        "title_era": "エラ条件件数条件を追加",
+        "desc_era": "条件エラを条件件数でフィルターします。",
+        "title_drug": "エラ曝露件数条件を追加",
+        "desc_drug": "薬剤エラを曝露件数でフィルターします。"
+      },
+      "addRace": {
+        "title_demographic": "人種条件を追加",
+        "desc_demographic": "イベントを人種に基づいてフィルターします。"
+      },
+      "addEthnicity": {
+        "title_demographic": "民族条件を追加",
+        "desc_demographic": "イベントを民族に基づいてフィルターします。"
+      },
+      "addLength": {
+        "title_era": "エラ期間長条件を追加",
+        "desc_era": "条件エラをエラの期間でフィルターします。",
+        "title_dose": "エラ期間長条件を追加",
+        "desc_dose": "薬剤エラをエラの期間でフィルターします。",
+        "title_drug": "エラ期間長条件を追加",
+        "desc_drug": "薬剤エラをエラの期間でフィルターします。",
+        "title_observationperiod": "期間長条件を追加",
+        "desc_observationperiod": "観察期間を期間長でフィルターします。",
+        "title_payerplan": "期間長条件を追加",
+        "desc_payerplan": "支払者プラン期間を期間長でフィルターします。",
+        "title_visit": "受診期間長条件を追加",
+        "desc_visit": "受診発生を期間長でフィルターします。",
+        "title_visitDetail": "受診詳細期間長条件を追加",
+        "desc_visitDetail": "受診詳細を期間長でフィルターします。"
+      },
+      "addNested": {
+        "title_era": "ネスト条件を追加...",
+        "desc_era": "条件エラをインデックスイベントとして条件を適用します。",
+        "title_occurrence": "条件発生をインデックスイベントとして条件を適用します。",
+        "desc_occurrence": "ネスト条件を追加...",
+        "title_death": "死亡発生をインデックスイベントとして条件を適用します。",
+        "desc_death": "ネスト条件を追加...",
+        "title_deviceexposure": "デバイス曝露をインデックスイベントとして条件を適用します。",
+        "desc_deviceexposure": "ネスト条件を追加...",
+        "title_dose": "用量エラをインデックスイベントとして条件を適用します。",
+        "desc_dose": "ネスト条件を追加...",
+        "title_drug": "薬剤エラをインデックスイベントとして条件を適用します。",
+        "desc_drug": "ネスト条件を追加...",
+        "title_drugexposure": "薬剤曝露をインデックスイベントとして条件を適用します。",
+        "desc_drugexposure": "ネスト条件を追加...",
+        "title_measurement": "測定をインデックスイベントとして条件を適用します。",
+        "desc_measurement": "ネスト条件を追加...",
+        "title_observation": "観察をインデックスイベントとして条件を適用します。",
+        "desc_observation": "ネスト条件を追加...",
+        "title_observationperiod": "観察期間をインデックスイベントとして条件を適用します。",
+        "desc_observationperiod": "ネスト条件を追加...",
+        "title_payerplan": "支払者プラン期間をインデックスイベントとして条件を適用します。",
+        "desc_payerplan": "ネスト条件を追加...",
+        "title_procedureoccurrence": "処置発生をインデックスイベントとして条件を適用します。",
+        "desc_procedureoccurrence": "ネスト条件を追加...",
+        "title_specimen": "検体をインデックスイベントとして条件を適用します。",
+        "desc_specimen": "ネスト条件を追加...",
+        "title_visit": "受診発生をインデックスイベントとして条件を適用します。",
+        "desc_visit": "ネスト条件を追加...",
+        "title_visitDetail": "受診詳細をインデックスイベントとして条件を適用します。",
+        "desc_visitDetail": "ネスト条件を追加..."
+      },
+      "addAge": {
+        "title_occurrence": "発生時年齢を追加",
+        "desc_occurrence": "条件発生を発生時の年齢でフィルターします。",
+        "title_death": "発生時年齢条件を追加",
+        "desc_death": "死亡時の年齢でフィルターします。",
+        "title_deviceexposure": "発生時年齢条件を追加",
+        "desc_deviceexposure": "デバイス曝露を発生時の年齢でフィルターします。",
+        "title_drugexposure": "発生時年齢条件を追加",
+        "desc_drugexposure": "薬剤曝露を発生時の年齢でフィルターします。",
+        "title_measurement": "発生時年齢条件を追加",
+        "desc_measurement": "測定を発生時の年齢でフィルターします。",
+        "title_observation": "発生時年齢条件を追加",
+        "desc_observation": "条件発生を発生時の年齢でフィルターします。",
+        "title_procedureoccurrence": "発生時年齢条件を追加",
+        "desc_procedureoccurrence": "処置発生を発生時の年齢でフィルターします。",
+        "title_specimen": "発生時年齢条件を追加",
+        "desc_specimen": "検体を発生時の年齢でフィルターします。",
+        "title_visit": "発生時年齢条件を追加",
+        "desc_visit": "受診発生を発生時の年齢でフィルターします。",
+        "title_visitDetail": "受診詳細発生時年齢条件を追加",
+        "desc_visitDetail": "受診詳細を発生時の年齢でフィルターします。",
+        "title_demographic": "年齢条件を追加",
+        "desc_demographic": "イベントを年齢に基づいてフィルターします。"
+      },
+      "addType": {
+        "title_occurrence": "条件タイプを追加",
+        "desc_occurrence": "条件発生を条件タイプでフィルターします。",
+        "title_death": "死亡タイプ条件を追加",
+        "desc_death": "死亡タイプでフィルターします。",
+        "title_deviceexposure": "デバイスタイプ条件を追加",
+        "desc_deviceexposure": "デバイス曝露を曝露タイプでフィルターします。",
+        "title_drugexposure": "薬剤タイプ条件を追加",
+        "desc_drugexposure": "薬剤曝露を薬剤タイプでフィルターします。",
+        "title_measurement": "測定タイプ条件を追加",
+        "desc_measurement": "測定を測定タイプでフィルターします。",
+        "title_observation": "観察タイプ条件を追加",
+        "desc_observation": "観察をタイプでフィルターします。",
+        "title_observationperiod": "期間タイプ条件を追加",
+        "desc_observationperiod": "観察期間をタイプでフィルターします。",
+        "title_procedureoccurrence": "処置タイプ条件を追加",
+        "desc_procedureoccurrence": "処置発生を処置タイプでフィルターします。",
+        "title_specimen": "検体タイプ条件を追加",
+        "desc_specimen": "検体をタイプでフィルターします。",
+        "title_visit": "受診タイプ条件を追加",
+        "desc_visit": "受診発生を条件タイプでフィルターします。",
+        "title_visitDetail": "受診詳細タイプ条件を追加",
+        "desc_visitDetail": "受診詳細をタイプでフィルターします。"
+      },
+      "addStopReason": {
+        "title_occurrence": "中止理由を追加",
+        "desc_occurrence": "条件発生を中止理由でフィルターします。",
+        "title_drugexposure": "中止理由条件を追加",
+        "desc_drugexposure": "中止理由でドラッグ曝露をフィルターします。"
+      },
+      "addPayerConcept": {
+        "title_payerplan": "支払者コンセプト条件を追加",
+        "desc_payerplan": "支払者コンセプトで支払者プラン期間をフィルターします。"
+      },
+      "addPlanConcept": {
+        "title_payerplan": "プランコンセプト条件を追加",
+        "desc_payerplan": "プランコンセプトで支払者プラン期間をフィルターします。"
+      },
+      "addSponsorConcept": {
+        "title_payerplan": "スポンサーコンセプト条件を追加",
+        "desc_payerplan": "スポンサーコンセプトで支払者プラン期間をフィルターします。"
+      },
+      "addStopReasonConcept": {
+        "title_payerplan": "中止理由コンセプト条件を追加",
+        "desc_payerplan": "中止理由コンセプトで支払者プラン期間をフィルターします。"
+      },
+      "addPayerSourceConcept": {
+        "title_payerplan": "支払者ソースコンセプト条件を追加",
+        "desc_payerplan": "支払者ソースコンセプトで支払者プラン期間をフィルターします。"
+      },
+      "addPlanSourceConcept": {
+        "title_payerplan": "プランソースコンセプト条件を追加",
+        "desc_payerplan": "プランソースコンセプトで支払者プラン期間をフィルターします。"
+      },
+      "addSponsorSourceConcept": {
+        "title_payerplan": "スポンサーソースコンセプト条件を追加",
+        "desc_payerplan": "スポンサーソースコンセプトで支払者プラン期間をフィルターします。"
+      },
+      "addStopReasonSourceConcept": {
+        "title_payerplan": "中止理由ソースコンセプト条件を追加",
+        "desc_payerplan": "中止理由ソースコンセプトで支払者プラン期間をフィルターします。"
+      },
+      "addSourceConcept": {
+        "title_occurrence": "状態ソースコンセプトを追加",
+        "desc_occurrence": "状態ソースコンセプトで状態発生をフィルターします。",
+        "title_death": "死因ソースコンセプト条件を追加",
+        "desc_death": "死亡ソースコンセプトで死亡をフィルターします。",
+        "title_deviceexposure": "デバイスソースコンセプト条件を追加",
+        "desc_deviceexposure": "デバイスソースコンセプトでデバイス曝露をフィルターします。",
+        "title_measurement": "測定ソースコンセプト条件を追加",
+        "desc_measurement": "測定ソースコンセプトで測定をフィルターします。",
+        "title_observation": "観測ソースコンセプト条件を追加",
+        "desc_observation": "ソースコンセプトで観測をフィルターします。",
+        "title_procedureoccurrence": "処置ソースコンセプト条件を追加",
+        "desc_procedureoccurrence": "処置ソースコンセプトで処置発生をフィルターします。",
+        "title_visit": "来院ソースコンセプト条件を追加",
+        "desc_visit": "来院ソースコンセプトで来院発生をフィルターします。",
+        "title_visitDetail": "来院詳細ソースコンセプト条件を追加",
+        "desc_visitDetail": "来院詳細ソースコンセプトで来院詳細をフィルターします。"
+      },
+      "addProviderSpecialty": {
+        "title_occurrence": "提供者専門分野を追加",
+        "desc_occurrence": "提供者専門分野に基づいて状態発生をフィルターします。",
+        "title_deviceexposure": "提供者専門分野条件を追加",
+        "desc_deviceexposure": "提供者専門分野に基づいてデバイス曝露をフィルターします。",
+        "title_drugexposure": "提供者専門分野条件を追加",
+        "desc_drugexposure": "提供者専門分野に基づいてドラッグ曝露をフィルターします。",
+        "title_measurement": "提供者専門分野条件を追加",
+        "desc_measurement": "提供者専門分野に基づいて測定をフィルターします。",
+        "title_observation": "提供者専門分野条件を追加",
+        "desc_observation": "提供者専門分野に基づいて観測をフィルターします。",
+        "title_procedureoccurrence": "提供者専門分野条件を追加",
+        "desc_procedureoccurrence": "提供者専門分野に基づいて処置発生をフィルターします。",
+        "title_visit": "提供者専門分野条件を追加",
+        "desc_visit": "提供者専門分野に基づいて来院発生をフィルターします。",
+        "title_visitDetail": "提供者専門分野条件を追加",
+        "desc_visitDetail": "提供者専門分野に基づいて来院詳細をフィルターします。"
+      },
+      "addDate": {
+        "title_death": "死亡日条件を追加",
+        "desc_death": "日付で死亡をフィルターします。",
+        "title_measurement": "測定日条件を追加",
+        "desc_measurement": "日付で測定をフィルターします。",
+        "title_observation": "観測日条件を追加",
+        "desc_observation": "日付で観測をフィルターします。",
+        "title_procedureoccurrence": "開始日条件を追加",
+        "desc_procedureoccurrence": "処置開始日で処置発生をフィルターします。",
+        "title_specimen": "検体日条件を追加",
+        "desc_specimen": "日付で検体をフィルターします。"
+      },
+      "addUniqueId": {
+        "title_deviceexposure": "一意ID条件を追加",
+        "desc_deviceexposure": "デバイス一意IDでデバイス曝露をフィルターします。"
+      },
+      "addQuantity": {
+        "title_deviceexposure": "数量条件を追加",
+        "desc_deviceexposure": "数量でデバイス曝露をフィルターします。",
+        "title_drugexposure": "数量条件を追加",
+        "desc_drugexposure": "数量でドラッグ曝露をフィルターします。",
+        "title_procedureoccurrence": "数量条件を追加",
+        "desc_procedureoccurrence": "数量で処置発生をフィルターします。",
+        "title_specimen": "数量条件を追加",
+        "desc_specimen": "数量で観測をフィルターします。"
+      },
+      "addUnit": {
+        "title_dose": "用量単位条件を追加",
+        "desc_dose": "単位で用量エラをフィルターします。",
+        "title_drugexposure": "用量単位条件を追加",
+        "desc_drugexposure": "用量単位でドラッグ曝露をフィルターします。",
+        "title_measurement": "単位条件を追加",
+        "desc_measurement": "単位で測定をフィルターします。",
+        "title_observation": "単位条件を追加",
+        "desc_observation": "単位で観測をフィルターします。",
+        "title_specimen": "単位条件を追加",
+        "desc_specimen": "単位で検体をフィルターします。"
+      },
+      "addValue": {
+        "title_dose": "用量値条件を追加",
+        "desc_dose": "用量値で用量エラをフィルターします。",
+        "title_measurement": "数値としての値条件を追加",
+        "desc_measurement": "数値としての値で測定をフィルターします。",
+        "title_observation": "数値としての値条件を追加",
+        "desc_observation": "数値としての値で観測をフィルターします。"
+      },
+      "addRefills": {
+        "title_drugexposure": "再処方条件を追加",
+        "desc_drugexposure": "再処方でドラッグ曝露をフィルターします。"
+      },
+      "addDaysSupply": {
+        "title_drugexposure": "投与日数条件を追加",
+        "desc_drugexposure": "投与日数でドラッグ曝露をフィルターします。"
+      },
+      "addRoute": {
+        "title_drugexposure": "経路条件を追加",
+        "desc_drugexposure": "経路でドラッグ曝露をフィルターします。"
+      },
+      "addEffective": {
+        "title_drugexposure": "有効用量条件を追加",
+        "desc_drugexposure": "有効用量でドラッグ曝露をフィルターします。"
+      },
+      "addLotNumber": {
+        "title_drugexposure": "ロット番号条件を追加",
+        "desc_drugexposure": "ロット番号でドラッグ曝露をフィルターします。"
+      },
+      "addSource": {
+        "title_drugexposure": "ドラッグソースコンセプト条件を追加",
+        "desc_drugexposure": "ドラッグソースコンセプトでドラッグ曝露をフィルターします。"
+      },
+      "addOperator": {
+        "title_measurement": "演算子条件を追加",
+        "desc_measurement": "演算子で測定をフィルターします。"
+      },
+      "addValueAsString": {
+        "title_observation": "文字列としての値条件を追加",
+        "desc_observation": "文字列としての値で観測をフィルターします。"
+      },
+      "addValueAsConcept": {
+        "title_measurement": "コンセプトとしての値条件を追加",
+        "desc_measurement": "コンセプトとしての値で測定をフィルターします。",
+        "title_observation": "コンセプトとしての値条件を追加",
+        "desc_observation": "コンセプトとしての値で観測をフィルターします。"
+      },
+      "addAbnormal": {
+        "title_measurement": "異常結果条件を追加",
+        "desc_measurement": "正常範囲外に該当するものを含むように測定をフィルターします。"
+      },
+      "addRangeLow": {
+        "title_measurement": "下限範囲条件を追加",
+        "desc_measurement": "測定の下限範囲をフィルターします。"
+      },
+      "addRangeHigh": {
+        "title_measurement": "上限範囲条件を追加",
+        "desc_measurement": "測定タイプで測定をフィルターします。"
+      },
+      "addRangeLowRatio": {
+        "title_measurement": "下限範囲比率条件を追加",
+        "desc_measurement": "数値としての値と下限範囲の比率で測定をフィルターします。"
+      },
+      "addRangeHighRatio": {
+        "title_measurement": "上限範囲比率条件を追加",
+        "desc_measurement": "数値としての値と上限範囲の比率で測定をフィルターします。"
+      },
+      "addQualifier": {
+        "title_observation": "修飾子条件を追加",
+        "desc_observation": "修飾子で観測をフィルターします。"
+      },
+      "addUserDefined": {
+        "title_observationperiod": "開始日と終了日を指定",
+        "desc_observationperiod": "観測期間に使用する開始日と終了日を指定します。",
+        "title_payerplan": "開始日と終了日を指定",
+        "desc_payerplan": "支払者プラン期間に使用する開始日と終了日を指定します。"
+      },
+      "addModifier": {
+        "title_procedureoccurrence": "モディファイア条件を追加",
+        "desc_procedureoccurrence": "モディファイアで処置発生をフィルターします。"
+      },
+      "addAnatomicSite": {
+        "title_specimen": "解剖学的部位条件を追加",
+        "desc_specimen": "解剖学的部位で検体をフィルターします。"
+      },
+      "addDiseaseStatus": {
+        "title_specimen": "疾患状態条件を追加",
+        "desc_specimen": "疾患状態で検体をフィルターします。"
+      },
+      "addSourceId": {
+        "title_specimen": "ソースID条件を追加",
+        "desc_specimen": "ソースIDで検体をフィルターします。"
+      },
+      "addPlaceService": {
+        "title_visit": "サービス提供場所条件を追加",
+        "desc_visit": "サービス提供場所に基づいて来院発生をフィルターします。",
+        "title_visitDetail": "サービス提供場所条件を追加",
+        "desc_visitDetail": "サービス提供場所に基づいて来院詳細をフィルターします。"
+      },
+      "addPlaceServiceLocation": {
+        "title_visit": "サービス提供場所ロケーション条件を追加",
+        "desc_visit": "サービス提供場所の所在地に基づいて来院発生をフィルターします。",
+        "title_visitDetail": "サービス提供場所ロケーション条件を追加",
+        "desc_visitDetail": "サービス提供場所の所在地に基づいて来院詳細をフィルターします。"
+      },
+      "addPlaceServiceDistance": {
+        "title_visit": "サービス提供場所距離条件を追加",
+        "desc_visit": "サービス提供場所から患者までの距離に基づいて来院発生をフィルターします。",
+        "title_visitDetail": "サービス提供場所距離条件を追加",
+        "desc_visitDetail": "サービス提供場所から患者までの距離に基づいて来院詳細をフィルターします。"
+      }
+    },
+    "newEntityNames": {
+      "characterization": "新規特性化",
+      "cohortDefinition": "新規コホート定義",
+      "conceptSet": "新規コンセプトセット",
+      "featureAnalysis": "新規特徴量解析",
+      "incidenceRate": "新規発生率解析",
+      "pathway": "新規コホートパスウェイ",
+      "ple": "新規集団レベル推定解析",
+      "plp": "新規患者レベル予測解析",
+      "role": "新規ロール",
+      "source": "新規ソース",
+      "reusable": "新規再利用可能要素"
+    },
+    "weekdays": {
+      "friday": {
+        "long": "金曜日",
+        "short": "金"
+      },
+      "monday": {
+        "long": "月曜日",
+        "short": "月"
+      },
+      "saturday": {
+        "long": "土曜日",
+        "short": "土"
+      },
+      "sunday": {
+        "long": "日曜日",
+        "short": "日"
+      },
+      "thursday": {
+        "long": "木曜日",
+        "short": "木"
+      },
+      "tuesday": {
+        "long": "火曜日",
+        "short": "火"
+      },
+      "wednesday": {
+        "long": "水曜日",
+        "short": "水"
+      }
+    }
+  },
+  "notifications": {
+    "duration": "期間",
+    "endTime": "終了時刻",
+    "explanation": "ジョブの通知はここに表示されます。ジョブには、コホート生成、コホートレポート、または完了までに時間がかかるその他のタスクが含まれます。新しい通知がある場合、この右上の通知アイコンが <i class='fa fa-bell pending'></i> でハイライトされます。",
+    "hideCompletedJobsButton": "完了したジョブを非表示",
+    "jobName": "ジョブ名",
+    "showCompletedJobsButton": "完了したジョブを表示",
+    "status": "ステータス",
+    "title": "通知（直近 <%=length%> 件）",
+    "tabs": {
+      "myJobs": "自分のジョブ",
+      "allJobs": "すべてのジョブ"
+    }
+  },
+  "predictions": {
+    "analysisSettings": "解析設定",
+    "confirmCatchSave": "予測解析の保存中にエラーが発生しました。",
+    "confirmChanges": "患者レベル予測の変更は保存されていません。続行しますか？",
+    "confirmDelete": "患者レベル予測の仕様を削除しますか？警告：削除は元に戻せません！",
+    "confirmSave": "この名前の予測解析は既に存在します。別の名前を選択してください。",
+    "covariateSettingsDesc": "共変量設定を追加または更新します",
+    "covariateSettingsTitle": "共変量設定",
+    "descriptionPlaceholder": "ここに説明を入力してください（最大1000文字）",
+    "downloadStudyPackage": "スタディパッケージをダウンロード",
+    "defaultValue": "（デフォルト = <%=defaultValue%>）：",
+    "retrievingPredictions": "予測を取得中",
+    "editors": {
+      "evaluationEditorText_1": "テスト／トレーニングセットの分割方法を指定します：",
+      "evaluationEditorText_2": "テストセットとして使用するデータの割合（0〜100%）：",
+      "evaluationEditorText_3": "交差検証で使用するフォールド数：",
+      "evaluationEditorText_4": "フォールド",
+      "evaluationEditorText_5": "person タイプの testSplit を使用する場合に、テスト／トレーニングセットの分割に使用するシード（任意）：",
+      "executionEditorText_1": "サンプリングを実行：",
+      "executionEditorText_2": "サブセットに使用する患者数は？",
+      "executionEditorText_3": "最小共変量出現：共変量がこの値未満の割合でターゲット集団に出現する場合、その共変量は除外されます：",
+      "executionEditorText_4": "共変量を正規化：",
+      "populationEditorText_1": "ターゲットコホート登録を基準とした、リスク時間ウィンドウの開始を定義します：",
+      "populationEditorText_2": "リスク時間ウィンドウの終了を定義します：",
+      "populationEditorText_3": "ターゲットコホートに適用する最小ルックバック期間：",
+      "populationEditorText_4": "リスク時間がない対象者を除外しますか？",
+      "populationEditorText_5": "最小リスク時間：",
+      "populationEditorText_6": "リスク期間全体を通して観察されていない、アウトカムを持つ人を含めますか？",
+      "populationEditorText_7": "対象者ごとの最初の曝露のみを含めますか？",
+      "populationEditorText_8": "コホート登録前にアウトカムが観察された患者を除外しますか？",
+      "populationEditorText_9": "アウトカムについてコホート登録から何日さかのぼりますか？",
+      "predictionCovariatePlaceholder": "共変量ID",
+      "predictionEditorText_1": "患者レベル予測モデルのベースライン共変量に含めるコンセプトはどれですか？（すべて含める場合は空欄のままにしてください）",
+      "predictionEditorText_2": "含めるコンセプトのリストに子孫コンセプトを追加しますか？",
+      "predictionEditorText_3": "患者レベル予測モデルのベースライン共変量から除外するコンセプトはどれですか？（すべて含める場合は空欄のままにしてください）",
+      "predictionEditorText_4": "除外するコンセプトのリストに子孫コンセプトを追加しますか？",
+      "predictionEditorText_5": "制限対象とする共変量IDのカンマ区切りリスト：",
+      "predictionSelectConceptSet": "コンセプトセットを選択...",
+      "predictionSelectCovariates": "共変量を選択"
+    },
+    "export": "エクスポート",
+    "fullAnalysisList": "全解析リスト",
+    "import": "インポート",
+    "inputTypes": {
+      "adaBoost": "Ada Boost",
+      "adaBoostSettings": {
+        "desc_learningRate": "学習率は各分類器の寄与を縮小します。学習率と nEstimators の間にはトレードオフがあります。",
+        "desc_nEstimators": "ブースティングを終了する推定器の最大数",
+        "name_learningRate": "学習率",
+        "name_nEstimators": "推定器の最大数"
+      },
+      "decisionTree": "決定木",
+      "decisionTreeSettings": {
+        "desc_classWeight": "クラスの重み",
+        "desc_maxDepth": "交互作用の最大数 - 値を大きくするとモデルの学習が遅くなります",
+        "desc_minImpurityDecrease": "木の成長における早期停止のしきい値。ノードの不純度がしきい値を超える場合に分割され、そうでない場合は葉になります。",
+        "desc_minSamplesLeaf": "葉あたりの最小サンプル数",
+        "desc_minSamplesSplit": "分割あたりの最小サンプル数",
+        "desc_plot": "分割あたりの最小サンプル数",
+        "name_classWeight": "クラスの重み",
+        "name_maxDepth": "最大深さ",
+        "name_minImpurityDecrease": "最小不純度分割",
+        "name_minSamplesLeaf": "葉あたりの最小サンプル数",
+        "name_minSamplesSplit": "分割あたりの最小サンプル数",
+        "name_plot": "分割あたりの最小サンプル数"
+      },
+      "gradientBoostingMachine": "勾配ブースティングマシン",
+      "gradientBoostingMachineSettings": {
+        "desc_learnRate": "ブースティングの学習率",
+        "desc_maxDepth": "交互作用の最大数 - 値を大きくするとモデルの学習が遅くなります",
+        "desc_minRows": "木の各終端ノードで必要となる最小行数",
+        "desc_nthread": "使用するコンピュータスレッド数（コア数はいくつですか？）",
+        "desc_ntrees": "構築する木の数",
+        "name_learnRate": "ブースティングの学習率",
+        "name_maxDepth": "交互作用の最大数",
+        "name_minRows": "最小行数",
+        "name_nthread": "計算用コンピュータスレッド",
+        "name_ntrees": "構築する木"
+      },
+      "knnSettings": {
+        "desc_k": "考慮する近傍の数",
+        "name_k": "近傍の数"
+      },
+      "lassoLogisticRegression": "Lassoロジスティック回帰",
+      "lassoLogisticRegressionSettings": {
+        "desc": "自動ラムダ探索の開始値として使用される単一の値",
+        "name": "自動ラムダ探索の開始値"
+      },
+      "mlpSettings": {
+        "desc_alpha": "L2正則化",
+        "desc_size": "隠れノードの数",
+        "name_alpha": "Alpha",
+        "name_size": "隠れノードの数"
+      },
+      "multilayerPerceptionModel": "多層パーセプトロンモデル",
+      "naiveBayes": "ナイーブベイズ",
+      "nearestNeighbors": "最近傍法",
+      "randomForest": "ランダムフォレスト",
+      "randomForestSettings": {
+        "desc_maxDepth": "交互作用の最大数 - 値を大きくするとモデルの学習が遅くなります",
+        "desc_mtries": "各木に含める特徴量の数（-1 は全特徴量の平方根がデフォルトになります）",
+        "desc_ntrees": "構築する木の数",
+        "desc_varImp": "モデルを適合させる前に有用な変数を選択するための初期変数選択を実行します",
+        "name_maxDepth": "最大深さ",
+        "name_mtries": "木の特徴量の数",
+        "name_ntrees": "構築する木の数",
+        "name_varImp": "初期変数選択を実行"
+      }
+    },
+    "item": {
+      "addCovariateSettings": "共変量設定を追加",
+      "addModelSettings": "モデル設定を追加",
+      "addOutcomeCohort": "アウトカムコホートを追加",
+      "addPopulationSettings": "母集団設定を追加",
+      "addTargetCohort": "ターゲットコホートを追加",
+      "all": "すべて",
+      "analysisSettings": "解析設定",
+      "covariateSettings": "共変量設定",
+      "executionSettings": "実行設定",
+      "modelSettings": "モデル設定",
+      "outcomeCohort": "アウトカムコホート",
+      "populationSettings": "母集団設定",
+      "predictionProblemSettings": "予測問題設定",
+      "targetCohort": "ターゲットコホート",
+      "trainingSettings": "学習設定",
+      "view": "表示:"
+    },
+    "itemId": "患者レベル予測 #<%=id%>",
+    "modelSettingsDesc": "以下のオプションを使用してモデル設定を編集します",
+    "modelSettingsTitle": "モデル設定",
+    "naiveMessage": "ナイーブベイズに編集できる設定はありません",
+    "newItem": "新規患者レベル予測",
+    "newItemPlaceholder": "新規患者レベル予測解析",
+    "pleaseNote": "ご注意:",
+    "populationSettingsDesc": "母集団設定を追加または更新します",
+    "populationSettingsTitle": "母集団設定",
+    "predictionProblemSettings": "予測問題設定",
+    "resetToDefault": "デフォルトにリセット",
+    "reviewAndDownload": "確認とダウンロード",
+    "reviewFullStudy": "完全な研究仕様を確認",
+    "selectCohort": "コホートを選択...",
+    "tabs": {
+      "executions": "実行",
+      "specification": "仕様",
+      "utilities": "ユーティリティ",
+      "messages": "メッセージ"
+    },
+    "title": "患者レベル予測",
+    "usingDefault": "デフォルトを使用",
+    "utilitiesText_1": "お使いの研究には、完全な仕様の詳細の確認および研究パッケージのダウンロードを妨げる以下の問題があります:",
+    "utilitiesText_2": "ターゲットコホート、アウトカムコホート、モデル設定、共変量設定、母集団設定をそれぞれ少なくとも1つ指定する必要があります。",
+    "utilitiesText_3": "お使いの研究には、次のいずれかの領域に重複した値が含まれています: モデル設定、共変量設定、母集団設定。続行するには、これらのエラーを確認して修正してください。",
+    "utilitiesText_4": "確認とダウンロードを行う前に解析を保存する必要があります。",
+    "utilitiesText_5": "以下の完全な研究仕様を確認し、ページを下にスクロールして研究パッケージをダウンロードしてください。",
+    "utilitiesText_6": "研究パッケージの名前を入力し、&quot;download&quot;をクリックしてZIP形式の研究パッケージを取得してください。",
+    "utilitiesText_7": "パッケージ名は英数字のみで構成する必要があります。スペースや特殊文字は使用できません。",
+    "utilitiesText_8": "ダウンロード領域で解析仕様の問題を確認してください。定義をエクスポートする前にこれらを修正する必要があります。",
+    "packageName": "パッケージ名..."
+  },
+  "auth": {
+    "sessionExpiringSoon": "セッションがまもなく期限切れになります",
+    "sessionActive": "セッション有効",
+    "extendSession": "セッションを延長",
+    "tokenInfoNotAvailable": "トークン情報は利用できません",
+    "sessionExpired": "セッションの有効期限が切れました。再度サインインしてください。",
+    "sessionExpiringMinutes": "セッションは <%=minutes%> 分後に期限切れになります。「セッションを延長」をクリックして続行してください。",
+    "sessionExpiringInMinutes": "セッションは <%=minutes%> 分後に期限切れになります。",
+    "sessionActiveHours": "セッション有効時間: <%=hours%> 時間",
+    "sessionActiveMinutes": "セッション有効時間: <%=minutes%> 分",
+    "runAsUser": "別ユーザーとして実行",
+    "currentlyRunningAs": "現在実行中のユーザー:",
+    "originalUser": "元のユーザー: <%=username%>",
+    "exitRunAs": "別ユーザー実行を終了",
+    "targetUsername": "ターゲットユーザー名",
+    "enterUsernameToImpersonate": "なりすますユーザー名を入力",
+    "runAsWarning": "別のユーザーとして実行すると、そのユーザーの権限と識別情報が引き継がれます。すべての操作はターゲットユーザーとして実行されます。",
+    "failedToRunAsUser": "別ユーザーとしての実行に失敗しました",
+    "failedToExitRunAs": "別ユーザー実行の終了に失敗しました"
+  },
+  "conceptSets": {
+    "title": "コンセプトセット",
+    "newConceptSet": "新規コンセプトセット",
+    "noConceptSets": "コンセプトセットが定義されていません。「新規コンセプトセット」をクリックして作成してください。",
+    "conceptCount": "<%=count%> 件のコンセプト",
+    "concepts": "コンセプト:",
+    "addConcepts": "コンセプトを追加",
+    "defaultName": "コンセプトセット <%=number%>"
+  },
+  "conceptSearch": {
+    "title": "OHDSIボキャブラリを検索",
+    "searchLabel": "コンセプトを検索",
+    "searchPlaceholder": "コンセプト名を入力（例: diabetes, metformin）",
+    "filterByDomain": "ドメインでフィルター",
+    "conceptInfo": "ID: <%=id%> | ドメイン: <%=domain%> | ボキャブラリ: <%=vocabulary%>",
+    "conceptDetails": "コード: <%=code%> | クラス: <%=class%>",
+    "noResults": "\"<%=query%>\" に一致するコンセプトが見つかりませんでした",
+    "instructions": "OHDSIボキャブラリ内のコンセプトを検索するための検索語を入力してください"
+  },
+  "conceptSetEditor": {
+    "editTitle": "コンセプトセットを編集",
+    "createTitle": "コンセプトセットを作成",
+    "nameLabel": "コンセプトセット名",
+    "namePlaceholder": "例: 2型糖尿病",
+    "conceptsCount": "コンセプト (<%=count%>)",
+    "conceptDetails": "ID: <%=id%> | <%=domain%> | <%=vocabulary%>",
+    "includeDescendants": "子孫を含める",
+    "noConceptsYet": "コンセプトはまだ追加されていません。検索を使用してコンセプトを追加してください。"
+  },
+  "conceptSetList": {
+    "createNew": "新規作成",
+    "searchLabel": "コンセプトセットを検索",
+    "subtitle": "ID: <%=id%> | <%=count%> 件のコンセプト",
+    "noMatch": "\"<%=query%>\" に一致するコンセプトセットはありません",
+    "noConceptSets": "コンセプトセットはまだ作成されていません。「新規作成」をクリックして開始してください。",
+    "confirmDeleteTitle": "削除の確認",
+    "confirmDeleteMessage": "このコンセプトセットを削除してもよろしいですか？この操作は元に戻せません。"
+  },
+  "conceptSearchInline": {
+    "searchLabel": "追加するコンセプトを検索",
+    "searchPlaceholder": "3文字以上入力してください..."
+  },
+  "reports": {
+    "selectReportType": "レポートタイプを選択",
+    "types": {
+      "person": {
+        "label": "人（人口統計）",
+        "description": "生年および人口統計分布"
+      },
+      "conditionEras": {
+        "label": "条件エラ（Condition Eras）",
+        "description": "病態の有病率と期間の解析"
+      },
+      "drugEras": {
+        "label": "薬剤エラ（Drug Eras）",
+        "description": "薬剤曝露の有病率と期間"
+      },
+      "cohortSpecific": {
+        "label": "コホート固有",
+        "description": "コホートのタイムラインと分布の分析"
+      },
+      "condition": {
+        "label": "病態の発生（Condition Occurrence）",
+        "description": "個々の病態の発生"
+      },
+      "conditionsByIndex": {
+        "label": "インデックスごとの病態",
+        "description": "コホート開始を基準とした病態"
+      },
+      "death": {
+        "label": "死亡",
+        "description": "死亡データと死因"
+      },
+      "drugExposure": {
+        "label": "薬剤曝露",
+        "description": "個々の薬剤曝露イベント"
+      },
+      "drugsByIndex": {
+        "label": "インデックスごとの薬剤",
+        "description": "コホート開始を基準とした薬剤曝露"
+      },
+      "observationPeriods": {
+        "label": "観察期間",
+        "description": "患者の観察期間カバレッジ"
+      },
+      "procedure": {
+        "label": "処置の発生（Procedure Occurrence）",
+        "description": "処置イベントと頻度"
+      },
+      "proceduresByIndex": {
+        "label": "インデックスごとの処置",
+        "description": "コホート開始を基準とした処置"
+      },
+      "dataCompleteness": {
+        "label": "データの完全性",
+        "description": "データ品質指標"
+      },
+      "entropy": {
+        "label": "エントロピー",
+        "description": "データエントロピー解析"
+      },
+      "tornado": {
+        "label": "トルネード",
+        "description": "トルネード図の可視化"
+      },
+      "personsExposureBaseline": {
+        "label": "人/曝露（ベースライン）",
+        "description": "ベースライン期間の人と曝露"
+      },
+      "personsExposureCohort": {
+        "label": "人/曝露（コホート）",
+        "description": "コホート期間の人と曝露"
+      },
+      "visitsBaseline": {
+        "label": "受診（ベースライン）",
+        "description": "ベースライン期間の受診データ"
+      },
+      "visitDatesBaseline": {
+        "label": "受診日（ベースライン）",
+        "description": "ベースラインの受診日分布"
+      },
+      "careSiteVisitDatesBaseline": {
+        "label": "ケアサイト受診日（ベースライン）",
+        "description": "ベースラインのケアサイト受診パターン"
+      },
+      "visitsCohort": {
+        "label": "受診（コホート）",
+        "description": "コホート期間の受診データ"
+      },
+      "visitDatesCohort": {
+        "label": "受診日（コホート）",
+        "description": "コホートの受診日分布"
+      },
+      "careSiteVisitDatesCohort": {
+        "label": "ケアサイト受診日（コホート）",
+        "description": "コホートのケアサイト受診パターン"
+      },
+      "drugUtilizationBaseline": {
+        "label": "薬剤使用状況（ベースライン）",
+        "description": "ベースラインの薬剤使用パターン"
+      },
+      "drugUtilizationCohort": {
+        "label": "薬剤使用状況（コホート）",
+        "description": "コホートの薬剤使用パターン"
+      },
+      "heraclesHeel": {
+        "label": "Heracles Heel",
+        "description": "データ品質 Achilles Heel の結果"
+      }
+    }
+  },
+  "criteria": {
+    "conditionEra": {
+      "name": "病態エラ（Condition Era）",
+      "description": {
+        "initial": "特定の診断エラを持つ患者を検索します。",
+        "censoring": "診断エラに基づいてコホートから離脱します。",
+        "group": "特定の病態エラを持つ患者を検索します。"
+      }
+    },
+    "conditionOccurrence": {
+      "name": "病態の発生（Condition Occurrence）",
+      "description": {
+        "initial": "特定の診断を持つ患者を検索します。",
+        "censoring": "診断に基づいてコホートから離脱します。",
+        "group": "特定の病態を持つ患者を検索します。"
+      }
+    },
+    "death": {
+      "name": "死亡",
+      "description": {
+        "all": "死亡に基づいて患者を検索します。"
+      }
+    },
+    "deviceExposure": {
+      "name": "デバイス曝露",
+      "description": {
+        "all": "デバイス曝露に基づいて患者を検索します。"
+      }
+    },
+    "doseEra": {
+      "name": "用量エラ（Dose Era）",
+      "description": {
+        "all": "用量エラを持つ患者を検索します。"
+      }
+    },
+    "drugEra": {
+      "name": "薬剤エラ（Drug Era）",
+      "description": {
+        "initial": "時間経過に伴う薬剤への曝露を持つ患者を検索します。",
+        "censoring": "時間経過に伴う薬剤に基づいてコホートから離脱します。",
+        "group": "薬剤エラを持つ患者を検索します。"
+      }
+    },
+    "drugExposure": {
+      "name": "薬剤曝露",
+      "description": {
+        "all": "特定の薬剤または薬剤クラスへの曝露を持つ患者を検索します。"
+      }
+    },
+    "measurement": {
+      "name": "測定",
+      "description": {
+        "initial": "測定に基づいて患者を検索します。",
+        "censoring": "測定に基づいてコホートから離脱します。",
+        "group": "測定に基づいて患者を検索します。"
+      }
+    },
+    "observation": {
+      "name": "観察",
+      "description": {
+        "initial": "観察に基づいて患者を検索します。",
+        "censoring": "検査やその他の観察に基づいてコホートから離脱します。",
+        "group": "観察に基づいて患者を検索します。"
+      }
+    },
+    "observationPeriod": {
+      "name": "観察期間",
+      "description": {
+        "all": "観察期間に基づいて患者を検索します。"
+      }
+    },
+    "payerPlanPeriod": {
+      "name": "支払者プラン期間",
+      "description": {
+        "all": "支払者プラン期間に基づいて患者を検索します。"
+      }
+    },
+    "procedureOccurrence": {
+      "name": "処置の発生",
+      "description": {
+        "initial": "特定の処置を経験した患者を検索します。",
+        "censoring": "処置に基づいてコホートを終了します。",
+        "group": "処置に基づいて患者を検索します。"
+      }
+    },
+    "specimen": {
+      "name": "検体",
+      "description": {
+        "all": "検体に基づいて患者を検索します。"
+      }
+    },
+    "visitOccurrence": {
+      "name": "受診の発生",
+      "description": {
+        "all": "受診情報に基づいて患者を検索します。"
+      }
+    },
+    "visitDetail": {
+      "name": "受診詳細",
+      "description": {
+        "all": "受診詳細情報に基づいて患者を検索します。"
+      }
+    },
+    "demographic": {
+      "name": "人口統計",
+      "description": {
+        "initial": "人口統計の条件に基づいて患者を検索します。",
+        "censoring": "人口統計の条件に基づいてコホートを終了します。",
+        "group": "人口統計の条件に基づいてイベントをフィルターします。"
+      }
+    },
+    "locationRegion": {
+      "name": "地域",
+      "description": {
+        "group": "地理的エリア内の患者を検索します。"
+      }
+    },
+    "group": {
+      "name": "グループ",
+      "description": {
+        "group": "and/or の関係を使って条件を組み合わせるネストされたグループを追加します。"
+      }
+    }
+  },
+  "attributes": {
+    "default": {
+      "name": "死亡コンセプトセット",
+      "description": "死亡コンセプトを選択"
+    },
+    "temporalRelationship": {
+      "name": "時間的関係",
+      "description": "インデックス日付を基準としたイベントの発生時期を定義します"
+    },
+    "first": {
+      "name": "最初の期間",
+      "description": "履歴の最初の期間に限定"
+    },
+    "age": {
+      "name": "年齢",
+      "description": "イベント発生時の年齢でフィルター"
+    },
+    "gender": {
+      "name": "性別",
+      "description": "患者の性別でフィルター"
+    },
+    "conditionStatus": {
+      "name": "状態のステータス",
+      "description": "状態のステータスでフィルター"
+    },
+    "startDate": {
+      "name": "開始日",
+      "description": "開始日でフィルター"
+    },
+    "endDate": {
+      "name": "終了日",
+      "description": "終了日でフィルター"
+    },
+    "dateAdjustment": {
+      "name": "日付調整",
+      "description": "イベント日付を調整します"
+    },
+    "conditionType": {
+      "name": "状態のタイプ",
+      "description": "状態のタイプでフィルター"
+    },
+    "visitType": {
+      "name": "受診タイプ",
+      "description": "受診タイプでフィルター"
+    },
+    "stopReason": {
+      "name": "停止理由",
+      "description": "停止理由テキストでフィルター"
+    },
+    "providerSpecialty": {
+      "name": "提供者の専門分野",
+      "description": "提供者の専門分野でフィルター"
+    },
+    "nested": {
+      "name": "ネストされた条件",
+      "description": "ネストされた条件グループを追加"
+    },
+    "ageAtStart": {
+      "name": "開始時の年齢",
+      "description": "期間開始時の年齢でフィルター"
+    },
+    "ageAtEnd": {
+      "name": "終了時の年齢",
+      "description": "期間終了時の年齢でフィルター"
+    },
+    "occurrenceCount": {
+      "name": "曝露回数",
+      "description": "曝露回数でフィルター"
+    },
+    "eraLength": {
+      "name": "エラ期間",
+      "description": "エラの継続期間でフィルター"
+    },
+    "drugType": {
+      "name": "薬剤タイプ",
+      "description": "薬剤タイプでフィルター"
+    },
+    "refills": {
+      "name": "リフィル回数",
+      "description": "リフィル回数でフィルター"
+    },
+    "quantity": {
+      "name": "数量",
+      "description": "数量でフィルター"
+    },
+    "daysSupply": {
+      "name": "供給日数",
+      "description": "薬剤の供給日数でフィルター"
+    },
+    "routeConcept": {
+      "name": "投与経路",
+      "description": "投与経路でフィルター"
+    },
+    "effectiveDrugDose": {
+      "name": "実効薬剤用量",
+      "description": "実効薬剤用量でフィルター"
+    },
+    "doseUnit": {
+      "name": "用量単位",
+      "description": "用量単位でフィルター"
+    },
+    "lotNumber": {
+      "name": "ロット番号",
+      "description": "ロット番号でフィルター"
+    },
+    "doseValue": {
+      "name": "用量値",
+      "description": "用量値でフィルター"
+    },
+    "deviceType": {
+      "name": "デバイスタイプ",
+      "description": "デバイスタイプでフィルター"
+    },
+    "deviceId": {
+      "name": "デバイス固有ID",
+      "description": "デバイス固有識別子でフィルター"
+    },
+    "deviceSourceConcept": {
+      "name": "デバイスソースコンセプト",
+      "description": "デバイスソースコンセプトでフィルター"
+    },
+    "measurementType": {
+      "name": "測定タイプの条件",
+      "description": "測定タイプでフィルター"
+    },
+    "operator": {
+      "name": "演算子",
+      "description": "演算子でフィルター"
+    },
+    "valueAsNumber": {
+      "name": "数値としての値",
+      "description": "数値でフィルター"
+    },
+    "valueAsConcept": {
+      "name": "コンセプトとしての値",
+      "description": "カテゴリ値でフィルター"
+    },
+    "unit": {
+      "name": "単位",
+      "description": "単位でフィルター"
+    },
+    "abnormal": {
+      "name": "異常",
+      "description": "異常結果でフィルター"
+    },
+    "rangeLow": {
+      "name": "範囲下限",
+      "description": "下限範囲でフィルター"
+    },
+    "rangeHigh": {
+      "name": "範囲上限",
+      "description": "上限範囲でフィルター"
+    },
+    "rangeLowRatio": {
+      "name": "範囲下限比",
+      "description": "下限範囲比でフィルター"
+    },
+    "rangeHighRatio": {
+      "name": "範囲上限比",
+      "description": "上限範囲比でフィルター"
+    },
+    "measurementSourceConcept": {
+      "name": "測定ソースコンセプト",
+      "description": "測定ソースコンセプトでフィルター"
+    },
+    "observationType": {
+      "name": "観察日の条件",
+      "description": "観察タイプでフィルター"
+    },
+    "valueAsString": {
+      "name": "文字列としての値",
+      "description": "テキスト値でフィルター"
+    },
+    "qualifier": {
+      "name": "修飾子の条件",
+      "description": "修飾子でフィルター"
+    },
+    "observationSourceConcept": {
+      "name": "観察ソースコンセプト",
+      "description": "ソースコンセプトでフィルター"
+    },
+    "procedureType": {
+      "name": "処置タイプ",
+      "description": "処置タイプでフィルター"
+    },
+    "modifier": {
+      "name": "修飾子",
+      "description": "処置修飾子でフィルター"
+    },
+    "procedureSourceConcept": {
+      "name": "処置ソースコンセプト",
+      "description": "ソースコンセプトでフィルター"
+    },
+    "specimenType": {
+      "name": "検体タイプ",
+      "description": "検体タイプでフィルター"
+    },
+    "anatomicSite": {
+      "name": "解剖学的部位",
+      "description": "解剖学的部位でフィルター"
+    },
+    "diseaseStatus": {
+      "name": "疾患ステータス",
+      "description": "疾患ステータスでフィルター"
+    },
+    "sourceId": {
+      "name": "ソースID",
+      "description": "ソースIDでフィルター"
+    },
+    "visitLength": {
+      "name": "受診期間",
+      "description": "受診期間の長さでフィルター"
+    },
+    "sourceConcept": {
+      "name": "ソースコンセプト",
+      "description": "ソースコンセプトでフィルター"
+    },
+    "placeOfService": {
+      "name": "サービス提供場所",
+      "description": "サービス提供場所でフィルター"
+    },
+    "visitDetailType": {
+      "name": "受診詳細タイプ",
+      "description": "受診タイプでフィルター"
+    },
+    "visitDetailLength": {
+      "name": "受診詳細期間",
+      "description": "受診期間の長さでフィルター"
+    },
+    "placeOfServiceLocation": {
+      "name": "サービス提供場所の所在地",
+      "description": "サービス提供場所の所在地でフィルター"
+    },
+    "userDefinedPeriod": {
+      "name": "ユーザー定義期間",
+      "description": "開始日と終了日を指定します"
+    },
+    "periodType": {
+      "name": "期間タイプ",
+      "description": "期間タイプでフィルター"
+    },
+    "periodLength": {
+      "name": "期間の長さ",
+      "description": "期間の長さでフィルター"
+    },
+    "payerConcept": {
+      "name": "支払者",
+      "description": "支払者コンセプトでフィルター"
+    },
+    "planConcept": {
+      "name": "プラン",
+      "description": "プランコンセプトでフィルター"
+    },
+    "sponsorConcept": {
+      "name": "スポンサー",
+      "description": "スポンサーコンセプトでフィルター"
+    },
+    "stopReasonConcept": {
+      "name": "停止理由",
+      "description": "停止理由コンセプトでフィルター"
+    },
+    "payerSourceConcept": {
+      "name": "支払者ソース",
+      "description": "支払者ソースコンセプトでフィルター"
+    },
+    "planSourceConcept": {
+      "name": "プランソース",
+      "description": "プランソースコンセプトでフィルター"
+    },
+    "sponsorSourceConcept": {
+      "name": "スポンサーソース",
+      "description": "スポンサーソースコンセプトでフィルター"
+    },
+    "stopReasonSourceConcept": {
+      "name": "停止理由ソース",
+      "description": "停止理由ソースコンセプトでフィルター"
+    },
+    "deathType": {
+      "name": "死亡タイプ",
+      "description": "死亡タイプでフィルター"
+    },
+    "deathSourceConcept": {
+      "name": "死亡ソースコンセプト",
+      "description": "死亡ソースコンセプトでフィルター"
+    },
+    "race": {
+      "name": "人種",
+      "description": "患者の人種でフィルター"
+    },
+    "ethnicity": {
+      "name": "民族",
+      "description": "患者の民族でフィルター"
+    }
+  },
+  "exitCriteria": {
+    "title": "終了条件",
+    "eventPersistence": "イベントの継続性:",
+    "censorWindow": "打ち切りウィンドウ",
+    "censoringEvents": "打ち切りイベント:",
+    "strategies": {
+      "continuousObservation": "連続観察の終了",
+      "fixedDuration": "初回イベントを基準とした固定期間",
+      "drugExposure": "連続的な薬剤曝露の終了"
+    },
+    "fields": {
+      "dateField": "日付フィールド",
+      "offset": "オフセット（日数）",
+      "startDate": "開始日",
+      "endDate": "終了日",
+      "conceptSet": "薬剤コンセプトセット",
+      "persistenceWindow": "継続ウィンドウ（日数）",
+      "surveillanceWindow": "監視ウィンドウ（日数）"
+    },
+    "help": {
+      "continuousObservation": "イベントは観察期間が終了するまで継続します",
+      "fixedDuration": "イベントは開始日または終了日から指定された日数だけ継続します",
+      "drugExposure": "イベントは曝露間に許容されるギャップを伴う連続的な薬剤曝露に基づいて継続します",
+      "censorWindow": "インデックスイベントを基準とした観察期間の境界を定義します",
+      "persistenceWindow": "曝露間の最大ギャップ日数",
+      "surveillanceWindow": "最終曝露後コホート終了までの追加日数",
+      "missingDaysSupply": "供給日数が欠落している場合、システムは曝露ごとに1日を想定します"
+    },
+    "validation": {
+      "offsetNonNegative": "オフセット値は負でない値にする必要があります",
+      "offsetRequired": "固定期間戦略にはオフセットが必要です",
+      "conceptSetRequired": "この戦略には薬剤コンセプトセットが必要です",
+      "conceptSetNotFound": "このコホートにコンセプトセットが見つかりません",
+      "invalidConceptSetReference": "無効なコンセプトセットリファレンスです",
+      "startGreaterThanEnd": "開始オフセットは終了オフセット以下にする必要があります",
+      "nonDrugConcepts": "薬剤コンセプトセットには {count} 件の非薬剤コンセプトが含まれています"
+    },
+    "actions": {
+      "addCensoringEvent": "打ち切りイベントを追加",
+      "clearCensorWindow": "打ち切りウィンドウをクリア",
+      "removeCensoringEvent": "削除"
+    },
+    "warnings": {
+      "legacyConflict": "このコホートにはレガシー形式と新しい終了条件形式の両方が含まれています。Atlas 形式を表示しています。"
+    }
+  },
+  "config": {
+    "title": "設定",
+    "panel": {
+      "title": "設定パネル",
+      "close": "設定パネルを閉じる"
+    },
+    "sections": {
+      "cache": "キャッシュ管理",
+      "vocabulary": "ボキャブラリスキーマ",
+      "tags": "タグ管理",
+      "jobs": "ジョブ"
+    },
+    "cache": {
+      "title": "キャッシュ管理",
+      "description": "読み込みの問題のトラブルシューティングや古いデータのクリアのために、キャッシュされた設定データを管理します。",
+      "clearButton": "設定キャッシュをクリア",
+      "confirmTitle": "設定キャッシュをクリア",
+      "confirmMessage": "設定キャッシュをクリアしてもよろしいですか？すべてのキャッシュデータが削除され、一時的にアプリケーションの動作が遅くなる場合があります。",
+      "success": "設定キャッシュを正常にクリアしました",
+      "error": "設定キャッシュのクリアに失敗しました",
+      "stats": {
+        "title": "キャッシュ統計",
+        "itemCount": "キャッシュされた項目",
+        "estimatedSize": "推定サイズ"
+      }
+    },
+    "vocabulary": {
+      "title": "ボキャブラリスキーマ",
+      "description": "ボキャブラリテーブルが配置されているデータベーススキーマを設定します。",
+      "label": "スキーマ名",
+      "hint": "ボキャブラリテーブルを含むデータベーススキーマ（例: public、cdm_vocab）",
+      "placeholder": "スキーマ名を入力",
+      "success": "ボキャブラリスキーマを更新しました",
+      "error": "ボキャブラリスキーマの更新に失敗しました",
+      "undo": "元に戻す",
+      "validation": {
+        "required": "スキーマ名は必須です",
+        "invalidFormat": "スキーマ名は英字またはアンダースコアで始める必要があります",
+        "invalidChars": "スキーマ名には英字、数字、アンダースコアのみ使用できます",
+        "tooLong": "スキーマ名は63文字以下にする必要があります"
+      }
+    },
+    "tags": {
+      "title": "タグ管理",
+      "description": "コホートとコンセプトセットを整理するためのタググループを作成・管理します。",
+      "createButton": "タググループを作成",
+      "table": {
+        "headers": {
+          "name": "名前",
+          "color": "色",
+          "icon": "アイコン",
+          "mandatory": "必須",
+          "showColumn": "列を表示",
+          "multiple": "複数可",
+          "freeForm": "自由入力",
+          "created": "作成日",
+          "author": "作成者",
+          "description": "説明",
+          "actions": "操作"
+        },
+        "empty": "タググループが見つかりません",
+        "loading": "タググループを読み込み中..."
+      },
+      "dialog": {
+        "createTitle": "タググループを作成",
+        "editTitle": "タググループを編集",
+        "fields": {
+          "name": {
+            "label": "名前",
+            "hint": "このタググループのわかりやすい名前",
+            "required": "名前は必須です"
+          },
+          "color": {
+            "label": "色",
+            "hint": "視覚的に識別するための色見本"
+          },
+          "icon": {
+            "label": "アイコン",
+            "hint": "Material Design アイコン名（例: mdi-tag）",
+            "placeholder": "mdi-tag"
+          },
+          "description": {
+            "label": "説明",
+            "hint": "このタググループの目的に関する任意の説明"
+          },
+          "mandatory": {
+            "label": "必須",
+            "hint": "このグループのタグはすべてのアセットで必須となります"
+          },
+          "showColumn": {
+            "label": "列として表示",
+            "hint": "アセットテーブルに列として表示します"
+          },
+          "multiple": {
+            "label": "複数を許可",
+            "hint": "アセットごとにこのグループから複数のタグを許可します"
+          },
+          "freeForm": {
+            "label": "自由入力",
+            "hint": "このグループでユーザーがカスタムタグを作成できるようにします"
+          }
+        },
+        "actions": {
+          "save": "保存",
+          "create": "作成",
+          "cancel": "キャンセル"
+        }
+      },
+      "delete": {
+        "confirmTitle": "タググループを削除",
+        "confirmMessage": "「%{name}」を本当に削除しますか?",
+        "success": "タググループを削除しました",
+        "error": "タググループの削除に失敗しました",
+        "errorNonEmpty": "タググループを削除できません: グループにタグが含まれています。先にすべてのタグを削除してください。",
+        "undo": "元に戻す"
+      },
+      "create": {
+        "success": "タググループを作成しました",
+        "error": "タググループの作成に失敗しました",
+        "undo": "元に戻す"
+      },
+      "update": {
+        "success": "タググループを更新しました",
+        "error": "タググループの更新に失敗しました",
+        "undo": "元に戻す"
+      }
+    },
+    "datasources": {
+      "title": "データソース",
+      "add": "データソースを追加",
+      "edit": "データソースを編集",
+      "delete": "削除",
+      "deleteConfirm": "このデータソースを本当に削除しますか? この操作は元に戻せません。",
+      "basicInfo": "基本情報",
+      "connection": "接続",
+      "name": "ソース名",
+      "key": "ソースキー",
+      "keyReadonly": "キーは作成後に変更できません",
+      "keyInvalid": "キーには英字、数字、ハイフン、アンダースコアのみ使用できます",
+      "dialect": "ダイアレクト",
+      "connectionString": "接続文字列",
+      "username": "ユーザー名",
+      "password": "パスワード",
+      "vocabulary": "ボキャブラリ",
+      "evidence": "エビデンス",
+      "results": "結果",
+      "actions": "操作",
+      "kerberos": "Kerberos 認証",
+      "krbAuthMethod": "認証方式",
+      "krbKeytab": "Keytab",
+      "krbPassword": "パスワード",
+      "krbAdminServer": "管理サーバー",
+      "keytabFile": "Keytab ファイル",
+      "bigqueryAuth": "BigQuery 認証",
+      "serviceAccountKey": "サービスアカウントキーファイル",
+      "existingKeyfile": "現在のファイル: {name}",
+      "daimons": "スキーマ設定 (Daimons)",
+      "daimonType": "種類",
+      "daimonEnabled": "有効",
+      "daimonSchema": "スキーマ",
+      "schemaPlaceholder": "スキーマ名を入力",
+      "testConnection": "保存時に接続をテスト",
+      "checkConnection": "接続を確認",
+      "refreshCache": "キャッシュを更新",
+      "createSuccess": "データソースを作成しました",
+      "updateSuccess": "データソースを更新しました",
+      "deleteSuccess": "データソースを削除しました",
+      "error": "操作に失敗しました",
+      "connectionSuccess": "{name} への接続に成功しました",
+      "connectionFailed": "{name} への接続に失敗しました",
+      "cacheRefreshStarted": "{name} のキャッシュ更新を開始しました",
+      "cacheRefreshFailed": "{name} のキャッシュ更新に失敗しました",
+      "localCacheCleared": "ローカルキャッシュをクリアしました。設定を再読み込みするにはページを更新してください。",
+      "serverCacheCleared": "サーバーキャッシュをクリアしました",
+      "serverCacheFailed": "サーバーキャッシュのクリアに失敗しました",
+      "clearServerCacheConfirm": "サーバーキャッシュを本当にクリアしますか?",
+      "priorityScope": "ソースの優先順位を変更:",
+      "sessionScope": "現在のセッション",
+      "applicationScope": "アプリケーション全体",
+      "noSources": "データソースが設定されていません。管理者に連絡してデータソースを追加してください。"
+    },
+    "accessibility": {
+      "openPanel": "設定パネルを開く",
+      "closePanel": "設定パネルを閉じる",
+      "cacheSection": "キャッシュ管理セクションへ移動",
+      "vocabularySection": "ボキャブラリスキーマセクションへ移動",
+      "tagsSection": "タグ管理セクションへ移動",
+      "jobsSection": "ジョブ概要セクションへ移動",
+      "editTagGroup": "タググループ %{name} を編集",
+      "deleteTagGroup": "タググループ %{name} を削除"
+    }
+  },
+  "versions": {
+    "tab": "バージョン",
+    "current": "現在",
+    "version": "バージョン",
+    "author": "作成者",
+    "created": "作成日",
+    "comment": "コメント",
+    "actions": "操作",
+    "addComment": "コメントを追加",
+    "editComment": "コメントを編集",
+    "preview": "プレビュー",
+    "copy": "コピーを作成",
+    "backToCurrent": "現在のバージョンに戻る",
+    "saveAsCurrent": "現在のバージョンとして保存",
+    "versionPreview": "バージョン {version} のプレビュー",
+    "previewingVersion": "バージョン {version} を表示しています",
+    "confirmSaveAsCurrent": "このバージョンを現在のバージョンとして保存しますか?",
+    "confirmSaveAsCurrentMessage": "プレビューを新しい現在のバージョンとして保存します。既存のドラフトは置き換えられます。",
+    "unsavedChanges": "保存していない変更があります。続行すると破棄されます。続けますか?",
+    "filterByAuthor": "作成者で絞り込み",
+    "filterByDate": "日付で絞り込み",
+    "loadError": "バージョン履歴を読み込めませんでした。後でもう一度お試しください。",
+    "previewError": "バージョンプレビューを読み込めませんでした。もう一度お試しください。",
+    "copySuccess": "コピーを作成しました",
+    "copyError": "コピーの作成に失敗しました。もう一度お試しください。",
+    "commentSaved": "コメントを保存しました",
+    "commentSaveError": "コメントの保存に失敗しました。もう一度お試しください。",
+    "versionNotFound": "バージョンが見つかりません。削除された可能性があります。",
+    "saveSuccess": "バージョンを現在のものとして保存しました",
+    "saveError": "バージョンを現在のものとして保存できませんでした。もう一度お試しください。",
+    "previewTitle": "%{name} - バージョン %{version} のプレビュー",
+    "loadingVersions": "バージョン履歴を読み込み中...",
+    "loadingPreview": "バージョンプレビューを読み込み中...",
+    "noVersions": "バージョン履歴はありません",
+    "commentPlaceholder": "このバージョンを説明するコメントを追加...",
+    "commentDialogTitle": "バージョンコメントを編集",
+    "commentMaxLength": "コメントは500文字以下にする必要があります",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "filterClear": "フィルターをクリア",
+    "filterApply": "フィルターを適用",
+    "dateFrom": "開始",
+    "dateTo": "終了",
+    "noComment": "コメントなし"
+  },
+  "incidenceRate": {
+    "tabs": {
+      "definition": "定義",
+      "conceptSets": "コンセプトセット",
+      "generation": "生成",
+      "versions": "バージョン"
+    },
+    "list": {
+      "loading": "読み込み中…",
+      "empty": "発生率はまだありません。"
+    },
+    "editor": {
+      "loading": "発生率を読み込み中…",
+      "loadError": "発生率の読み込みに失敗しました",
+      "name": "名前"
+    },
+    "description": "説明",
+    "targetCohorts": "ターゲットコホート",
+    "outcomeCohorts": "アウトカムコホート",
+    "timeAtRisk": "リスク期間",
+    "tarStart": "開始",
+    "tarEnd": "終了",
+    "tarDays": "日",
+    "tarError": "両方が同じ日付を参照する場合、リスク期間の終了は開始より後である必要があります",
+    "studyWindow": "調査期間",
+    "studyWindowStart": "開始日",
+    "studyWindowEnd": "終了日",
+    "stratifyRules": "層別化ルール",
+    "stratifyName": "ルール名",
+    "stratifyDescription": "説明",
+    "addStratifyRule": "ルールを追加",
+    "noStratifyRules": "層別化ルールはまだありません。",
+    "selectRulePrompt": "編集するルールを選択するか、追加してください。",
+    "untitled": "無題のルール",
+    "conceptSets": "コンセプトセット",
+    "noConceptSets": "この発生率にはコンセプトセットが添付されていません。",
+    "generation": "生成",
+    "target": "ターゲット",
+    "outcome": "アウトカム",
+    "rateMultiplier": "比率の分母",
+    "source": "データソース",
+    "status": "ステータス",
+    "persons": "人数",
+    "cases": "症例数",
+    "tarYears": "TAR（年）",
+    "rate": "比率",
+    "generateBtn": "生成",
+    "viewReport": "レポートを表示",
+    "noSources": "利用可能なデータソースがありません。",
+    "report": "レポート",
+    "loadingReport": "レポートを読み込み中…",
+    "exportSvg": "SVG",
+    "exportPng": "PNG",
+    "selectSourceTargetOutcome": "レポートを表示するにはソース、ターゲット、アウトカムを選択してください。",
+    "summary": "サマリー",
+    "proportion": "割合"
+  },
+  "incidenceRateAnalysis": {
+    "newAnalysis": "新しい発生率"
+  }
+}
