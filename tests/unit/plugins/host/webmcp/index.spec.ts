@@ -13,4 +13,16 @@ describe('initWebMcp', () => {
     initWebMcp()
     expect(registerTool.mock.calls.length).toBe(19)
   })
+  it('does not throw and returns a no-op disposer when registerTool throws', () => {
+    const registerTool = vi.fn().mockImplementation(() => {
+      throw new Error('invalid-schema')
+    })
+    ;(globalThis.navigator as any).modelContext = { registerTool }
+    let disposer: (() => void) | undefined
+    expect(() => {
+      disposer = initWebMcp()
+    }).not.toThrow()
+    expect(typeof disposer).toBe('function')
+    expect(() => disposer!()).not.toThrow()
+  })
 })

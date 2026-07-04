@@ -38,7 +38,7 @@ import type { CharacterizationDefinition } from '@/models/characterization.types
 import type { Pathway } from '@/models/pathway.types'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
-import { applyCapability } from './capabilities/apply'
+import { applyCapability, type ApplyResult } from './capabilities/apply'
 
 const PLUGIN_ID = 'pythia-plugin'
 
@@ -106,7 +106,13 @@ async function handleCapabilityApply(
   args: Record<string, unknown>,
   callbackId?: string
 ): Promise<void> {
-  const result = await applyCapability(name, args)
+  let result: ApplyResult
+  try {
+    result = await applyCapability(name, args)
+  } catch (err) {
+    logger.error('pythiaBridge', `capability.apply failed for "${name}"`, err)
+    result = { applied: false }
+  }
   if (callbackId) getHostMessageBus(PLUGIN_ID)?.handleResponse(callbackId, result)
 }
 

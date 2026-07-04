@@ -1,5 +1,6 @@
 import { translateCapability } from './translate'
 import { applyProposalDirect } from '@/plugins/host/pythiaBridge'
+import { logger } from '@/utils/logger'
 
 export interface ApplyResult {
   applied: boolean
@@ -14,6 +15,11 @@ export async function applyCapability(
 ): Promise<ApplyResult> {
   const proposal = translateCapability(name, args)
   if (!proposal) return { applied: false }
-  const res = await applyProposalDirect(proposal)
-  return { applied: true, kind: (proposal as { kind: string }).kind, id: res?.id, name: res?.name }
+  try {
+    const res = await applyProposalDirect(proposal)
+    return { applied: true, kind: (proposal as { kind: string }).kind, id: res?.id, name: res?.name }
+  } catch (err) {
+    logger.error('capabilities', `applyCapability failed for "${name}"`, err)
+    return { applied: false, kind: (proposal as { kind: string }).kind }
+  }
 }

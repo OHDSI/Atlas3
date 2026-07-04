@@ -18,4 +18,11 @@ describe('applyCapability', () => {
     const r = await applyCapability('set_entry_event', {})
     expect(r.applied).toBe(false)
   })
+
+  it('resolves applied:false instead of rejecting when applyProposalDirect throws', async () => {
+    vi.mocked(applyProposalDirect).mockRejectedValueOnce(new Error('boom'))
+    await expect(
+      applyCapability('set_observation_window', { priorDays: 365, postDays: 0 })
+    ).resolves.toMatchObject({ applied: false })
+  })
 })

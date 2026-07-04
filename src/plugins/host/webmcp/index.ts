@@ -10,5 +10,10 @@ export function initWebMcp(): () => void {
     return () => {}
   }
   logger.info('webmcp', `registering ${CAPABILITIES.length} capabilities (ungated)`)
-  return registerWebMcpCapabilities(host, CAPABILITIES)
+  try {
+    return registerWebMcpCapabilities(host, CAPABILITIES)
+  } catch (err) {
+    logger.warn('webmcp', 'registerWebMcpCapabilities threw — skipping WebMCP registration', err)
+    return () => {}
+  }
 }
