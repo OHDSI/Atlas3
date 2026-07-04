@@ -585,6 +585,107 @@ describe('CohortBuilder', () => {
   })
 
   // ---------------------------------------------------------------------------
+  // Criteria-selection service (issue #112): descendants request the pickers
+  // and CohortBuilder delivers the result back through a pending callback
+  // rather than the index-context relay.
+  // ---------------------------------------------------------------------------
+
+  it('provideCriteriaSelection.requestConcepts opens the search dialog and registers a pending callback', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+
+    const cb = vi.fn()
+    setup.provideCriteriaSelection // touch to ensure module wired
+    const service = (wrapper.vm as any).$.provides
+    // The service is provided under the criteria-selection injection key.
+    const key = Object.getOwnPropertySymbols(service).find(
+      s => s.toString() === 'Symbol(criteria-selection)'
+    )!
+    service[key].requestConcepts('Gender', cb)
+
+    expect(setup.isConceptSearchDialogOpen).toBe(true)
+    expect(setup.selectedConceptDomainFilter).toBe('Gender')
+    // A prior index-context is cleared so it can't hijack the result.
+    expect(setup.selectedCriteriaContext).toBeNull()
+
+    // Delivering the dialog result runs the pending-callback branch of
+    // handleConceptsSelected (converts + hands back Atlas-format concepts).
+    setup.handleConceptsSelected([
+      {
+        conceptId: 8507,
+        conceptName: 'MALE',
+        conceptCode: 'M',
+        domainId: 'Gender',
+        vocabularyId: 'Gender',
+        conceptClassId: 'Gender',
+        standardConcept: 'S',
+        invalidReason: null,
+      },
+    ])
+    expect(cb).toHaveBeenCalledTimes(1)
+    expect(cb.mock.calls[0][0][0]).toMatchObject({ CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE' })
+    expect(setup.isConceptSearchDialogOpen).toBe(false)
+  })
+
+  it('provideCriteriaSelection.requestConceptSet opens the picker and delivers the chosen set', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+
+    const cb = vi.fn()
+    const service = (wrapper.vm as any).$.provides
+    const key = Object.getOwnPropertySymbols(service).find(
+      s => s.toString() === 'Symbol(criteria-selection)'
+    )!
+    service[key].requestConceptSet(cb)
+
+    expect(setup.isConceptSetDialogOpen).toBe(true)
+    expect(setup.selectedCriteriaContext).toBeNull()
+
+    // Picking an in-definition set runs assignConceptSetToContext, which
+    // routes to the pending callback (not an index context).
+    setup.handleLocalConceptSetSelected({ id: 5, name: 'Diabetes', items: [] })
+    expect(cb).toHaveBeenCalledTimes(1)
+    expect(cb.mock.calls[0][0]).toMatchObject({ id: 5, name: 'Diabetes' })
+    expect(setup.isConceptSetDialogOpen).toBe(false)
+  })
+
+  it('provideCriteriaSelection.editConceptSet opens the concept-set editor', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+
+    const service = (wrapper.vm as any).$.provides
+    const key = Object.getOwnPropertySymbols(service).find(
+      s => s.toString() === 'Symbol(criteria-selection)'
+    )!
+    service[key].editConceptSet({ id: 9, name: 'Hypertension', items: [] })
+
+    expect(setup.conceptSetsStore.editorOpen).toBe(true)
+    expect(setup.conceptSetsStore.currentSet).toMatchObject({ id: 9, name: 'Hypertension' })
+  })
+
+  it('a later index-context selection clears a stale pending service callback', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+
+    const service = (wrapper.vm as any).$.provides
+    const key = Object.getOwnPropertySymbols(service).find(
+      s => s.toString() === 'Symbol(criteria-selection)'
+    )!
+    const stale = vi.fn()
+    service[key].requestConceptSet(stale)
+
+    // A legacy opener sets an index context — the watch must drop the stale
+    // callback so it can't swallow the next selection.
+    setup.handleSelectConceptSet('evt-1')
+    await wrapper.vm.$nextTick()
+    expect(setup.pendingConceptSetCallback).toBeNull()
+  })
+
+  // ---------------------------------------------------------------------------
   // Additional criteria
   // ---------------------------------------------------------------------------
 
