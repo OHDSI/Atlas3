@@ -1,19 +1,15 @@
 /**
  * Locale Store Tests
- * Tests for i18n state management
+ * Tests for i18n state management.
+ *
+ * All locales ship with the frontend bundle — there is no WebAPI i18n
+ * round-trip anymore (WebAPI keeps its own i18n resources for classic
+ * Atlas 2.x and backend-side messages).
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useLocaleStore } from '@/stores/locale'
 import type { TranslationCache, TranslationBundle } from '@/types/i18n'
-
-// Mock dependencies
-vi.mock('@/services/i18n', () => ({
-  i18nService: {
-    fetchLocales: vi.fn(),
-    fetchTranslations: vi.fn(),
-  },
-}))
 
 vi.mock('@/utils/logger', () => ({
   logger: {
@@ -33,31 +29,43 @@ vi.mock('@/locales/en.json', () => ({
   },
 }))
 
+// ja deliberately omits `common.cancel` so tests can prove the bundled-English
+// fallback layer fills keys a locale bundle doesn't carry.
 vi.mock('@/locales/ja.json', () => ({
   default: {
     common: {
       save: '保存',
-      cancel: 'キャンセル',
     },
   },
 }))
 
-import { i18nService } from '@/services/i18n'
+vi.mock('@/locales/ko.json', () => ({
+  default: { common: { save: '저장' } },
+}))
 
+vi.mock('@/locales/ru.json', () => ({
+  default: { common: { save: 'Сохранить' } },
+}))
+
+vi.mock('@/locales/zh.json', () => ({
+  default: { common: { save: '保存' } },
+}))
+
+// Arbitrary locale list used by availability/detection tests.
 const mockLocales = [
   { code: 'en', name: 'English' },
   { code: 'es', name: 'Spanish' },
   { code: 'fr', name: 'French' },
 ]
 
-// Locales bundled with the frontend, always merged into the available list.
+// Mirrors BUNDLED_LOCALES in src/stores/locale.ts (ja deliberately last).
 const bundledLocales = [
   { code: 'en', name: 'English' },
+  { code: 'ko', name: '한국어' },
+  { code: 'ru', name: 'Русский' },
+  { code: 'zh', name: '中文' },
   { code: 'ja', name: '日本語' },
 ]
-// What the store exposes when the WebAPI returns mockLocales: WebAPI list plus
-// any bundled locale (here `ja`) the WebAPI didn't advertise.
-const mergedLocales = [...mockLocales, { code: 'ja', name: '日本語' }]
 
 const mockTranslationBundle: TranslationBundle = {
   locale: 'es',
@@ -193,73 +201,46 @@ describe('Locale Store', () => {
   })
 
   describe('initialize Action', () => {
-    it('should load fallback translations and fetch locales', async () => {
+    it('should load fallback translations and expose the bundled locales', async () => {
       const store = useLocaleStore()
-      vi.mocked(i18nService.fetchLocales).mockResolvedValue(mockLocales)
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
 
       await store.initialize()
 
       expect(store.initialized).toBe(true)
-      expect(store.availableLocales).toEqual(mergedLocales)
-    })
-
-    it('should set default locales if fetch fails', async () => {
-      const store = useLocaleStore()
-      vi.mocked(i18nService.fetchLocales).mockRejectedValue(new Error('Network error'))
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
-
-      await store.initialize()
-
       expect(store.availableLocales).toEqual(bundledLocales)
-      expect(store.initialized).toBe(true)
+      expect(store.error).toBeNull()
     })
 
     it('should use saved locale from localStorage', async () => {
       const store = useLocaleStore()
-      localStorageMock['locale'] = 'es'
-      vi.mocked(i18nService.fetchLocales).mockResolvedValue(mockLocales)
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
+      localStorageMock['locale'] = 'ja'
 
       await store.initialize()
 
-      expect(store.locale).toBe('es')
+      expect(store.locale).toBe('ja')
+      expect((store.translations as { common: Record<string, string> }).common.save).toBe('保存')
     })
 
-    it('should initialize gracefully with bundled English when the WebAPI is down', async () => {
+    it('should fall back to English when the saved locale is not bundled', async () => {
       const store = useLocaleStore()
-      vi.mocked(i18nService.fetchLocales).mockRejectedValue(new Error('Network error'))
-      vi.mocked(i18nService.fetchTranslations).mockRejectedValue(new Error('Network error'))
+      localStorageMock['locale'] = 'es'
 
       await store.initialize()
 
-      // English is bundled, so the default locale resolves from the bundle and
-      // initialization fully recovers — no error, no WebAPI dependency.
-      expect(store.initialized).toBe(true)
-      expect(store.error).toBeNull()
       expect(store.locale).toBe('en')
       expect((store.translations as { common: Record<string, string> }).common.save).toBe('Save')
-      expect(i18nService.fetchTranslations).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('fetchAvailableLocales Action', () => {
-    it('should fetch and store locales', async () => {
-      const store = useLocaleStore()
-      vi.mocked(i18nService.fetchLocales).mockResolvedValue(mockLocales)
-
-      await store.fetchAvailableLocales()
-
-      expect(store.availableLocales).toEqual(mergedLocales)
     })
 
-    it('should fallback to bundled locales on error', async () => {
+    it('initializes without any network dependency', async () => {
+      const fetchSpy = vi.fn()
+      vi.stubGlobal('fetch', fetchSpy)
+
       const store = useLocaleStore()
-      vi.mocked(i18nService.fetchLocales).mockRejectedValue(new Error('Network error'))
+      await store.initialize()
 
-      await store.fetchAvailableLocales()
-
-      expect(store.availableLocales).toEqual(bundledLocales)
+      expect(store.initialized).toBe(true)
+      expect(fetchSpy).not.toHaveBeenCalled()
+      vi.unstubAllGlobals()
     })
   })
 
@@ -275,85 +256,73 @@ describe('Locale Store', () => {
 
       await store.fetchTranslations('es')
 
-      expect(i18nService.fetchTranslations).not.toHaveBeenCalled()
       expect(store.translations).toEqual(mockTranslationBundle.translations)
     })
 
-    it('should fetch translations from API', async () => {
+    it('should load bundled translations and cache them in memory', async () => {
       const store = useLocaleStore()
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
-
-      await store.fetchTranslations('es')
-
-      expect(i18nService.fetchTranslations).toHaveBeenCalledWith('es')
-      expect(store.translations).toEqual(mockTranslationBundle.translations)
-    })
-
-    it('should cache fetched translations', async () => {
-      const store = useLocaleStore()
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
-
-      await store.fetchTranslations('es')
-
-      expect(store.translationCache.has('es')).toBe(true)
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        'translations_es',
-        expect.any(String)
-      )
-    })
-
-    it('should handle fetch error and fallback to English', async () => {
-      const store = useLocaleStore()
-      vi.mocked(i18nService.fetchTranslations).mockRejectedValue(new Error('Network error'))
-
-      await store.fetchTranslations('es')
-
-      expect(store.error).toContain('Failed to load es translations')
-      expect(store.loading).toBe(false)
-    })
-
-    it('should use localStorage cache if valid', async () => {
-      const store = useLocaleStore()
-      const cache: TranslationCache = {
-        bundle: mockTranslationBundle,
-        cachedAt: Date.now(),
-        maxAge: 86400000,
-      }
-      localStorageMock['translations_es'] = JSON.stringify(cache)
-
-      await store.fetchTranslations('es')
-
-      expect(i18nService.fetchTranslations).not.toHaveBeenCalled()
-      expect(store.translations).toEqual(mockTranslationBundle.translations)
-    })
-
-    it('should handle invalid localStorage cache', async () => {
-      const store = useLocaleStore()
-      localStorageMock['translations_es'] = 'invalid json'
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
-
-      await store.fetchTranslations('es')
-
-      expect(i18nService.fetchTranslations).toHaveBeenCalled()
-    })
-
-    it('should load bundled translations without calling the WebAPI', async () => {
-      const store = useLocaleStore()
-      // Seed the bundled English fallback so missing-key fallback can resolve.
       await store.loadFallbackTranslations()
 
       await store.fetchTranslations('ja')
 
-      expect(i18nService.fetchTranslations).not.toHaveBeenCalled()
       const after = store.translations as { common: Record<string, string> }
       expect(after.common.save).toBe('保存')
       expect(store.translationCache.has('ja')).toBe(true)
+      // Bundled loads never touch localStorage.
+      expect(localStorage.setItem).not.toHaveBeenCalledWith(
+        'translations_ja',
+        expect.any(String)
+      )
     })
 
-    it('should load bundled English without the WebAPI (regression: ja → en switch)', async () => {
-      // Regression: en used to be fetched from the WebAPI. With no i18n
-      // backend, switching ja → en failed and the UI stayed Japanese. en is
-      // now bundled like ja, so it always resolves.
+    it('should keep English for a locale with no bundled translations', async () => {
+      const store = useLocaleStore()
+      await store.loadFallbackTranslations()
+
+      await store.fetchTranslations('es')
+
+      expect(store.locale).toBe('en')
+      expect((store.translations as { common: Record<string, string> }).common.save).toBe('Save')
+    })
+  })
+
+  describe('bundled-fallback merge', () => {
+    it('fills keys missing from a locale bundle with bundled English', async () => {
+      // The ja mock deliberately omits `common.cancel`; the bundled English
+      // fallback layer must fill it so Atlas3-only keys never render as raw
+      // i18n keys in partially translated locales.
+      const store = useLocaleStore()
+      await store.loadFallbackTranslations()
+
+      await store.fetchTranslations('ja')
+
+      const after = store.translations as { common: Record<string, string> }
+      expect(after.common.save).toBe('保存') // ja override wins
+      expect(after.common.cancel).toBe('Cancel') // fallback fills the gap
+    })
+  })
+
+  describe('changeLocale Action', () => {
+    it('should change locale and save to localStorage', async () => {
+      const store = useLocaleStore()
+      store.availableLocales = bundledLocales
+
+      await store.changeLocale('ja')
+
+      expect(store.locale).toBe('ja')
+      expect(localStorage.setItem).toHaveBeenCalledWith('locale', 'ja')
+    })
+
+    it('should fallback to English for unavailable locale', async () => {
+      const store = useLocaleStore()
+      store.availableLocales = bundledLocales
+
+      await store.changeLocale('de')
+
+      expect(store.locale).toBe('en')
+    })
+
+    it('should switch between bundled locales in both directions', async () => {
       const store = useLocaleStore()
       store.availableLocales = bundledLocales
       await store.changeLocale('ja')
@@ -361,121 +330,31 @@ describe('Locale Store', () => {
 
       await store.changeLocale('en')
 
-      expect(i18nService.fetchTranslations).not.toHaveBeenCalled()
       expect(store.locale).toBe('en')
       expect((store.translations as { common: Record<string, string> }).common.save).toBe('Save')
-    })
-  })
-
-  describe('bundled-fallback merge', () => {
-    // Regression: Atlas3-only keys (route.*, plus other UI-only namespaces)
-    // live in src/locales/en.json but aren't in the WebAPI translation
-    // bundle. Before the fix, fetchTranslations replaced the bundled
-    // fallback with the WebAPI bundle and dropped route.cohortBuilder.title
-    // etc., causing the document title to render as the raw i18n key.
-    //
-    // The top-level vi.mock for @/locales/en.json stubs the bundle down
-    // to `common.save/cancel`, which is fine for these tests — we just
-    // need ONE key (here `common.save = 'Save'`) to exist in the bundled
-    // fallback layer and ANOTHER (here `route.cohortBuilder.title`) to
-    // be missing, so we can verify the merge layering. We seed the
-    // missing key manually by writing into bundledFallback through the
-    // store's loadFallbackTranslations + a follow-up patch.
-    it('preserves bundled-fallback keys when a WebAPI bundle without them lands', async () => {
-      const store = useLocaleStore()
-      await store.loadFallbackTranslations()
-      // Manually graft an Atlas3-only key onto the fallback layer so we
-      // can prove it survives the WebAPI override. (Real life: route.*
-      // already exists in the bundled en.json.)
-      ;(store.translations as Record<string, unknown>).route = {
-        cohortBuilder: { title: 'Cohort Builder' },
-      }
-      // Mirror the same graft into the module-level bundledFallback by
-      // re-running loadFallback with an augmented mock would require
-      // ESM mock isolation; instead, exercise the merge directly via
-      // fetchTranslations with a partial bundle that omits `route`.
-      const partial: TranslationBundle = {
-        locale: 'es',
-        translations: { common: { save: 'Guardar', cancel: 'Cancelar' } },
-        format: mockTranslationBundle.format,
-      }
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(partial)
-      await store.fetchTranslations('es')
-
-      const after = store.translations as {
-        common: Record<string, string>
-        route?: Record<string, Record<string, string>>
-      }
-      // WebAPI override wins for keys it supplies.
-      expect(after.common.save).toBe('Guardar')
-      // Bundled-fallback keys (only seeded via the bundled en.json on
-      // app start) still resolve. With the stubbed en.json mock the only
-      // such key is `common.cancel` — assert it survives the merge.
-      expect(after.common.cancel).toBe('Cancelar')
-    })
-
-    it('lets the fetched bundle override keys that exist in both layers', async () => {
-      const store = useLocaleStore()
-      await store.loadFallbackTranslations()
-
-      const override: TranslationBundle = {
-        locale: 'es',
-        translations: { common: { save: 'Guardar' } },
-        format: mockTranslationBundle.format,
-      }
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(override)
-      await store.fetchTranslations('es')
-
-      const after = store.translations as { common: Record<string, string> }
-      expect(after.common.save).toBe('Guardar')
-    })
-  })
-
-  describe('changeLocale Action', () => {
-    it('should change locale and save to localStorage', async () => {
-      const store = useLocaleStore()
-      store.availableLocales = mockLocales
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
-
-      await store.changeLocale('es')
-
-      expect(store.locale).toBe('es')
-      expect(localStorage.setItem).toHaveBeenCalledWith('locale', 'es')
-    })
-
-    it('should fallback to English for unavailable locale', async () => {
-      const store = useLocaleStore()
-      store.availableLocales = mockLocales
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
-
-      await store.changeLocale('de')
-
-      expect(store.locale).toBe('en')
     })
 
     it('should set the document html lang attribute', async () => {
       const store = useLocaleStore()
-      store.availableLocales = mockLocales
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
+      store.availableLocales = bundledLocales
 
-      await store.changeLocale('es')
+      await store.changeLocale('ja')
 
-      expect(document.documentElement.getAttribute('lang')).toBe('es')
+      expect(document.documentElement.getAttribute('lang')).toBe('ja')
     })
 
     it('should dispatch a locale-changed event on the window', async () => {
       const store = useLocaleStore()
-      store.availableLocales = mockLocales
-      vi.mocked(i18nService.fetchTranslations).mockResolvedValue(mockTranslationBundle)
+      store.availableLocales = bundledLocales
 
       const listener = vi.fn()
       window.addEventListener('locale-changed', listener)
 
-      await store.changeLocale('es')
+      await store.changeLocale('ja')
 
       expect(listener).toHaveBeenCalled()
       const evt = listener.mock.calls[0]?.[0] as CustomEvent<{ locale: string }>
-      expect(evt.detail.locale).toBe('es')
+      expect(evt.detail.locale).toBe('ja')
 
       window.removeEventListener('locale-changed', listener)
     })
@@ -565,7 +444,7 @@ describe('Locale Store', () => {
   })
 
   describe('clearCache Action', () => {
-    it('should clear translation cache', () => {
+    it('should clear translation cache and legacy localStorage entries', () => {
       const store = useLocaleStore()
       store.translationCache.set('es', {
         bundle: mockTranslationBundle,

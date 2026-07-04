@@ -14,13 +14,6 @@ import { useLocaleStore } from '@/stores/locale'
 // Simulate a deployment WITHOUT a working i18n backend: both WebAPI calls
 // reject. en.json and ja.json are the real bundled files, so both locales must
 // still work entirely from the bundle.
-vi.mock('@/services/i18n', () => ({
-  i18nService: {
-    fetchLocales: vi.fn().mockRejectedValue(new Error('no backend')),
-    fetchTranslations: vi.fn().mockRejectedValue(new Error('no backend')),
-  },
-}))
-
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))

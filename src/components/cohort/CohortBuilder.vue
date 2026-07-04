@@ -587,6 +587,7 @@ import { useCohortStore } from '@/stores/cohort'
 import { useConceptSetsStore } from '@/stores/concept-sets'
 import { useWebAPIStore } from '@/stores/webapi'
 import { useAtlasConverter } from '@/composables/useAtlasConverter'
+import { provideCriteriaSelection } from '@/composables/useCriteriaSelection'
 import { useI18n } from '@/composables/useI18n'
 import { useCohortValidation } from '@/composables/useCohortValidation'
 import { usePermissions } from '@/composables/usePermissions'
@@ -628,7 +629,7 @@ import CohortBreadcrumb from './CohortBreadcrumb.vue'
 import CohortToolbarActions from './CohortToolbarActions.vue'
 import CohortToolbarStatus from './CohortToolbarStatus.vue'
 import AtlasActionToolbar from '@/components/ui/AtlasActionToolbar.vue'
-import { ensureUniqueConceptSetId, hasRealConceptSetId } from '@/utils/concept-set-id'
+import { ensureUniqueConceptSetId, hasNumericConceptSetId } from '@/utils/concept-set-id'
 import { resolveCriteriaTargetEvent } from '@/utils/criteria-target'
 import ConceptSetsListDialog from './ConceptSetsListDialog.vue'
 import ValidationMessagesDialog from './ValidationMessagesDialog.vue'
@@ -720,6 +721,46 @@ const selectedCriteriaContext = ref<{
   // child's concept set was written onto its parent event.
   nestedEventIndex?: number
 } | null>(null)
+
+// ── Criteria selection service (issue #112) ────────────────────────────────
+// Descendant criteria components at ANY nesting depth request the pickers
+// through this service and apply the result themselves via their normal
+// `update` emit. This replaces the fragile index-context relay for the
+// migrated components; the context/sentinel paths below remain for the
+// not-yet-migrated callers (entry-event concept set, exit criteria).
+const pendingConceptSetCallback = ref<((cs: ConceptSetReference) => void) | null>(null)
+const pendingConceptsCallback = ref<((concepts: Concept[]) => void) | null>(null)
+
+function clearPendingSelectionCallbacks() {
+  pendingConceptSetCallback.value = null
+  pendingConceptsCallback.value = null
+}
+
+// A legacy opener setting an index context supersedes any service request
+// still pending from a cancelled dialog — otherwise the stale callback would
+// swallow the next selection.
+watch(selectedCriteriaContext, context => {
+  if (context) clearPendingSelectionCallbacks()
+})
+
+provideCriteriaSelection({
+  requestConceptSet(onSelect) {
+    clearPendingSelectionCallbacks()
+    selectedCriteriaContext.value = null
+    pendingConceptSetCallback.value = onSelect
+    isConceptSetDialogOpen.value = true
+  },
+  requestConcepts(domainFilter, onSelect) {
+    clearPendingSelectionCallbacks()
+    selectedCriteriaContext.value = null
+    pendingConceptsCallback.value = onSelect
+    selectedConceptDomainFilter.value = domainFilter
+    isConceptSearchDialogOpen.value = true
+  },
+  editConceptSet(conceptSet) {
+    handleEditConceptSet(conceptSet)
+  },
+})
 const showError = ref(false)
 const errorMessage = ref('')
 const showSuccess = ref(false)
@@ -1582,8 +1623,9 @@ function handleConceptsSelected(
     invalidReason: string | null
   }>
 ) {
-  if (concepts.length === 0 || !selectedCriteriaContext.value) {
+  if (concepts.length === 0 || (!selectedCriteriaContext.value && !pendingConceptsCallback.value)) {
     isConceptSearchDialogOpen.value = false
+    clearPendingSelectionCallbacks()
     return
   }
 
@@ -1598,6 +1640,16 @@ function handleConceptsSelected(
     STANDARD_CONCEPT: c.standardConcept,
     INVALID_REASON: c.invalidReason,
   }))
+
+  // Service path (issue #112): deliver to the requesting component, which
+  // applies the concepts itself at whatever nesting depth it lives.
+  if (pendingConceptsCallback.value) {
+    const callback = pendingConceptsCallback.value
+    clearPendingSelectionCallbacks()
+    callback(convertedConcepts)
+    isConceptSearchDialogOpen.value = false
+    return
+  }
 
   // Concept attributes (Gender, Race, etc.) accept a list of concepts
   // but a duplicate concept_id has no semantic meaning — circe treats
@@ -1617,6 +1669,10 @@ function handleConceptsSelected(
   }
 
   const context = selectedCriteriaContext.value
+  if (!context) {
+    isConceptSearchDialogOpen.value = false
+    return
+  }
 
   // Handle entry events
   if (context.ruleIndex === -1 && context.eventId && context.attributeIndex !== undefined) {
@@ -1701,7 +1757,7 @@ async function handleConceptSetSelected(conceptSet: {
   name: string
   items?: unknown[]
 }) {
-  if (!conceptSet || !selectedCriteriaContext.value) return
+  if (!conceptSet || (!selectedCriteriaContext.value && !pendingConceptSetCallback.value)) return
 
   // Fetch the full concept set with items if we only have a reference
   let fullConceptSet: { id: number | string; name: string; items?: unknown[] } = conceptSet
@@ -1735,10 +1791,17 @@ async function handleConceptSetSelected(conceptSet: {
  * the cohort dedupes to a single CodesetId rather than minting a copy.
  */
 function handleLocalConceptSetSelected(conceptSet: ConceptSetReference) {
-  // Guard the reuse invariant: only a set with a real id can be reused in place.
-  // The dialog already filters placeholders out, this just keeps it impossible
-  // for an id-less set to slip through and get minted as a new empty set.
-  if (!conceptSet || !hasRealConceptSetId(conceptSet) || !selectedCriteriaContext.value) return
+  // Guard the reuse invariant: only a set with a numeric id can be reused in
+  // place. id 0 is allowed — legacy/imported cohorts start CodesetIds at 0
+  // and those sets are real, already-embedded members of this cohort. The
+  // dialog already filters id-less placeholders out; this keeps it impossible
+  // for one to slip through and get minted as a new empty set.
+  if (
+    !conceptSet ||
+    !hasNumericConceptSetId(conceptSet) ||
+    (!selectedCriteriaContext.value && !pendingConceptSetCallback.value)
+  )
+    return
   assignConceptSetToContext({ ...conceptSet })
   isConceptSetDialogOpen.value = false
 }
@@ -1795,7 +1858,7 @@ function handleCreateNewConceptSet() {
 function handleConceptSetSaved() {
   // After save, the store.currentSet should hold the saved concept set
   const conceptSet = conceptSetsStore.currentSet
-  if (!conceptSet || !selectedCriteriaContext.value) return
+  if (!conceptSet || (!selectedCriteriaContext.value && !pendingConceptSetCallback.value)) return
 
   // Copy the entire concept set including items into the cohort definition
   const conceptSetRef: ConceptSetReference = {
@@ -1811,7 +1874,7 @@ function handleConceptSetSaved() {
  * Helper to assign a concept set to the current context (entry event or criteria)
  */
 function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
-  if (!selectedCriteriaContext.value) return
+  if (!selectedCriteriaContext.value && !pendingConceptSetCallback.value) return
 
   // A concept set's id is its identity in the cohort — the Atlas CodesetId every
   // criterion references and the key the cohort dedupes on. A freshly created set
@@ -1820,7 +1883,17 @@ function assignConceptSetToContext(conceptSetRef: ConceptSetReference) {
   // Give any id-less set a unique numeric id before it enters the cohort.
   conceptSetRef = ensureUniqueConceptSetId(conceptSetRef, usedConceptSets.value)
 
+  // Service path (issue #112): deliver to the requesting component, which
+  // embeds the reference itself at whatever nesting depth it lives.
+  if (pendingConceptSetCallback.value) {
+    const callback = pendingConceptSetCallback.value
+    clearPendingSelectionCallbacks()
+    callback(conceptSetRef)
+    return
+  }
+
   const context = selectedCriteriaContext.value
+  if (!context) return
   const isNested = context.nestedEventIndex !== undefined && context.nestedEventIndex !== null
 
   // Handle entry event selection

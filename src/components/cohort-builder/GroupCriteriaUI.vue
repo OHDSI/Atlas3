@@ -32,7 +32,7 @@
                 :variant="matchTypeTemp === 'ALL' ? 'tonal' : 'secondary'"
                 :tone="matchTypeTemp === 'ALL' ? undefined : 'neutral'"
                 size="sm"
-                class="flex-1"
+                class="flex-1 match-chip--all"
                 @click="matchTypeTemp = 'ALL'"
               >
                 {{ t('options.all', 'All') }}
@@ -41,7 +41,7 @@
                 :variant="matchTypeTemp === 'ANY' ? 'tonal' : 'secondary'"
                 :tone="matchTypeTemp === 'ANY' ? undefined : 'neutral'"
                 size="sm"
-                class="flex-1"
+                class="flex-1 match-chip--any"
                 @click="matchTypeTemp = 'ANY'"
               >
                 {{ t('options.any', 'Any') }}
@@ -50,7 +50,7 @@
                 :variant="matchTypeTemp === 'AT_LEAST' ? 'tonal' : 'secondary'"
                 :tone="matchTypeTemp === 'AT_LEAST' ? undefined : 'neutral'"
                 size="sm"
-                class="flex-1"
+                class="flex-1 match-chip--at_least"
                 @click="matchTypeTemp = 'AT_LEAST'"
               >
                 {{ t('options.atLeast', 'At least') }}
@@ -59,7 +59,7 @@
                 :variant="matchTypeTemp === 'AT_MOST' ? 'tonal' : 'secondary'"
                 :tone="matchTypeTemp === 'AT_MOST' ? undefined : 'neutral'"
                 size="sm"
-                class="flex-1"
+                class="flex-1 match-chip--at_most"
                 @click="matchTypeTemp = 'AT_MOST'"
               >
                 {{ t('options.atMost', 'At most') }}
@@ -609,23 +609,6 @@ defineExpose({
   color: #336b91;
 }
 
-.cardinality-label {
-  font-size: 10px;
-  color: #69aed5;
-  border: 1px solid #69aed5;
-}
-
-.vertical-label-container:has(.cardinality-label)::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 30%;
-  background: #69aed5;
-  border-radius: 0 0 0 6px;
-}
-
 .segmented-buttons {
   display: flex;
   gap: 4px;
@@ -635,111 +618,23 @@ defineExpose({
   flex: 1;
 }
 
-.cardinality-menu,
 .match-type-menu {
   min-width: 350px;
 }
 
-/* Criteria Event Card with Cardinality Sidebar */
-.criteria-event-card {
-  display: flex;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  overflow: hidden;
+/* Selected match-type chip carries the same color as its vertical rail label
+ * (Vuetify's tonal variant derives text and tint from currentColor).
+ * !important outranks the .text-primary utility from color="primary". */
+.match-chip--all.v-btn--variant-tonal {
+  color: #1f425a !important;
 }
-
-.criteria-event-card .cardinality-sidebar {
-  width: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  cursor: pointer;
-  border-right: 1px solid #1f425a;
+.match-chip--any.v-btn--variant-tonal {
+  color: #eb6622 !important;
 }
-
-.criteria-event-card .cardinality-at_least {
-  background: linear-gradient(to right, #1f425a 30%, #ebf2fa 30%);
+.match-chip--at_least.v-btn--variant-tonal {
+  color: #4a90ba !important;
 }
-
-.criteria-event-card .cardinality-exactly {
-  background: linear-gradient(to right, #2e7d32 30%, #e8f5e9 30%);
-}
-
-.criteria-event-card .cardinality-at_most {
-  background: linear-gradient(to right, #c62828 30%, #ffebee 30%);
-}
-
-.criteria-event-card .cardinality-label {
-  writing-mode: sideways-lr;
-  text-orientation: sideways;
-  font-size: 13px;
-  font-weight: 600;
-  color: #1f425a;
-  position: relative;
-  z-index: 1;
-  white-space: nowrap;
-  border: none;
-  padding-left: 8px;
-}
-
-.criteria-event-card .cardinality-exactly .cardinality-label {
-  color: #2e7d32;
-}
-
-.criteria-event-card .cardinality-at_most .cardinality-label {
-  color: #c62828;
-}
-
-.criteria-event-card .event-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.criteria-event-card .event-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.criteria-event-card .event-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.criteria-event-card .event-type-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1f425a;
-}
-
-.criteria-event-card .event-body {
-  padding: 16px;
-}
-
-.criteria-event-card .concept-temporal-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  gap: 12px;
-}
-
-.criteria-event-card .concept-set-section {
-  flex: 0 0 auto;
-}
-
-.criteria-event-card .temporal-window-section {
-  flex: 0 0 auto;
-}
-
-.criteria-event-card .attributes-section {
-  margin-top: 16px;
+.match-chip--at_most.v-btn--variant-tonal {
+  color: #336b91 !important;
 }
 </style>

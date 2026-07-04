@@ -29,7 +29,7 @@
               :variant="cardinalityType === 'at_least' ? 'tonal' : 'secondary'"
               :tone="cardinalityType === 'at_least' ? undefined : 'neutral'"
               size="sm"
-              class="flex-1"
+              class="flex-1 cardinality-chip cardinality-chip--at_least"
               @click="setCardinalityType('AT_LEAST')"
             >
               {{ t('options.atLeast', 'At least') }}
@@ -38,7 +38,7 @@
               :variant="cardinalityType === 'exactly' ? 'tonal' : 'secondary'"
               :tone="cardinalityType === 'exactly' ? undefined : 'neutral'"
               size="sm"
-              class="flex-1"
+              class="flex-1 cardinality-chip cardinality-chip--exactly"
               @click="setCardinalityType('EXACTLY')"
             >
               {{ t('options.exactly', 'Exactly') }}
@@ -47,7 +47,7 @@
               :variant="cardinalityType === 'at_most' ? 'tonal' : 'secondary'"
               :tone="cardinalityType === 'at_most' ? undefined : 'neutral'"
               size="sm"
-              class="flex-1"
+              class="flex-1 cardinality-chip cardinality-chip--at_most"
               @click="setCardinalityType('AT_MOST')"
             >
               {{ t('options.atMost', 'At most') }}
@@ -76,8 +76,8 @@
             compact
             :concept-set="event.conceptSet"
             :select-label="t('components.conceptSetBuilder.selectConceptSet', 'Select Concept Set').value"
-            @select="emit('select-concept-set')"
-            @edit="emit('edit-concept-set', $event)"
+            @select="onSelectConceptSet"
+            @edit="onEditConceptSet"
             @clear="removeConceptSet"
           />
         </div>
@@ -227,6 +227,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
+import { useCriteriaSelection } from '@/composables/useCriteriaSelection'
 import { useTemporalWindows } from '@/composables/useTemporalWindows'
 import type { CohortEvent, NestedCriteria, TemporalWindow } from '@/models/cohort.types'
 import type {
@@ -369,6 +370,28 @@ function setRestrictVisit(value: boolean) {
 }
 
 // ── Concept set / attributes / nested ─────────────────────────────────────
+// Prefer the injected criteria-selection service (works at any nesting
+// depth); fall back to the legacy index-context emit chain without one.
+const selection = useCriteriaSelection()
+
+function onSelectConceptSet() {
+  if (selection) {
+    selection.requestConceptSet(conceptSet => {
+      emit('update', { ...props.event, conceptSet })
+    })
+    return
+  }
+  emit('select-concept-set')
+}
+
+function onEditConceptSet(conceptSet: { id: number | string; name: string; items?: unknown[] }) {
+  if (selection) {
+    selection.editConceptSet(conceptSet)
+    return
+  }
+  emit('edit-concept-set', conceptSet)
+}
+
 function removeConceptSet() {
   emit('update', { ...props.event, conceptSet: undefined })
 }
@@ -486,7 +509,10 @@ function addAttribute(attributeKey: string, attributeType: string) {
   margin-bottom: 12px;
 }
 
-/* Cardinality sidebar (shared with the legacy criteria-group look) */
+/* Cardinality sidebar. Color-coded by type, using the same palette as the
+ * group match-type rail (GroupCriteriaUI): AT_LEAST light blue, AT_MOST
+ * darker blue; EXACTLY gets green (its own semantic — an exact-count match,
+ * including "exactly 0" exclusions). */
 .cardinality-sidebar {
   width: 30px;
   display: flex;
@@ -494,15 +520,33 @@ function addAttribute(attributeKey: string, attributeType: string) {
   justify-content: center;
   position: relative;
   cursor: pointer;
-  border-right: 1px solid #616161;
-  background: linear-gradient(to right, #616161 30%, #f5f5f5 30%);
+}
+.cardinality-at_least {
+  border-right: 1px solid #69aed5;
+  background: linear-gradient(to right, #69aed5 30%, #ebf2fa 30%);
+}
+.cardinality-at_least .cardinality-label {
+  color: #336b91;
+}
+.cardinality-exactly {
+  border-right: 1px solid #2e7d32;
+  background: linear-gradient(to right, #2e7d32 30%, #e8f5e9 30%);
+}
+.cardinality-exactly .cardinality-label {
+  color: #2e7d32;
+}
+.cardinality-at_most {
+  border-right: 1px solid #336b91;
+  background: linear-gradient(to right, #336b91 30%, #e3ecf3 30%);
+}
+.cardinality-at_most .cardinality-label {
+  color: #336b91;
 }
 .cardinality-label {
   writing-mode: sideways-lr;
   text-orientation: sideways;
   font-size: 13px;
   font-weight: 600;
-  color: #616161;
   white-space: nowrap;
   padding-left: 8px;
 }
@@ -554,5 +598,18 @@ function addAttribute(attributeKey: string, attributeType: string) {
 }
 .cardinality-menu {
   min-width: 300px;
+}
+
+/* Selected cardinality chip carries its type color (Vuetify's tonal variant
+ * derives both text and tint from currentColor). !important is needed to
+ * outrank the .text-primary utility that color="primary" stamps on v-btn. */
+.cardinality-chip--at_least.v-btn--variant-tonal {
+  color: #4a90ba !important;
+}
+.cardinality-chip--exactly.v-btn--variant-tonal {
+  color: #2e7d32 !important;
+}
+.cardinality-chip--at_most.v-btn--variant-tonal {
+  color: #336b91 !important;
 }
 </style>
