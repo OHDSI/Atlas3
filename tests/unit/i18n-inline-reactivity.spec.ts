@@ -9,14 +9,6 @@ import { defineComponent, nextTick } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useLocaleStore } from '@/stores/locale'
 
-vi.mock('@/services/i18n', () => ({
-  i18nService: {
-    fetchLocales: vi.fn().mockResolvedValue([{ code: 'en', name: 'English' }]),
-    fetchTranslations: vi
-      .fn()
-      .mockResolvedValue({ locale: 'en', translations: {}, fetchedAt: new Date() }),
-  },
-}))
 vi.mock('@/utils/logger', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))

@@ -161,14 +161,6 @@ class AuthService implements IAuthService {
     const userInfo = await this.fetchUserInfo()
     authStore.setUser(userInfo)
 
-    import('@/stores/locale')
-      .then(({ useLocaleStore }) => {
-        useLocaleStore().fetchAvailableLocales()
-      })
-      .catch(err => {
-        logger.warn('Auth', 'Failed to refresh locales after login', err)
-      })
-
     authStore.closeLoginModal()
   }
 

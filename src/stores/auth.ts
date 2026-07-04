@@ -277,14 +277,6 @@ export const useAuthStore = defineStore('auth', {
             const { authService } = await import('@/services/auth/authService')
             const userInfo = await authService.fetchUserInfo()
             this.setUser(userInfo)
-
-            import('@/stores/locale')
-              .then(({ useLocaleStore }) => {
-                useLocaleStore().fetchAvailableLocales()
-              })
-              .catch(err => {
-                logger.warn('Auth', 'Failed to refresh locales on init', err)
-              })
           } catch (error) {
             logger.error('Auth', 'Failed to fetch user info on init', error)
             this.clearAuth()
