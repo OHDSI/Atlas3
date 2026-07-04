@@ -24,6 +24,7 @@
     "tokens:check": "tsx scripts/build-tokens.ts && git diff --exit-code src/ui/tokens.css",
     "predev": "npm run tokens:build",
     "generate:routes": "node scripts/emit-route-manifest.mjs",
+    "generate:capabilities": "vite-node --script scripts/emit-capabilities-manifest.mjs",
     "i18n:status": "node scripts/i18n-sync.mjs status",
     "i18n:extract": "node scripts/i18n-sync.mjs extract",
     "i18n:apply": "node scripts/i18n-sync.mjs apply",
