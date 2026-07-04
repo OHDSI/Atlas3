@@ -21,6 +21,22 @@ export function hasRealConceptSetId(ref: Pick<ConceptSetReference, 'id'>): boole
 }
 
 /**
+ * Whether a reference carries a numeric id at all — including `0`.
+ *
+ * `0` is ambiguous: it's the placeholder the new-set path stamps on
+ * not-yet-persisted sets (see `hasRealConceptSetId`), but it's ALSO a
+ * perfectly valid CodesetId in classic Atlas/CIRCE cohort JSON, whose
+ * ConceptSets arrays start at 0 (the Eunomia demo cohorts do). A set that is
+ * already embedded in the cohort definition with id 0 is real by construction
+ * — it exists — so surfaces that list the cohort's OWN sets (the in-definition
+ * picker, reuse-in-place) must use this check, not `hasRealConceptSetId`,
+ * or every id-0 legacy set becomes unselectable.
+ */
+export function hasNumericConceptSetId(ref: Pick<ConceptSetReference, 'id'>): boolean {
+  return typeof ref.id === 'number' && Number.isFinite(ref.id) && ref.id >= 0
+}
+
+/**
  * Pick the next free numeric concept-set id given the sets already used by the
  * cohort. Returns `max(existing numeric ids) + 1`, or `1` when there are none.
  */
@@ -65,6 +81,12 @@ export function ensureUniqueConceptSetId(
   ref: ConceptSetReference,
   existing: ReadonlyArray<Pick<ConceptSetReference, 'id' | 'name' | 'items'>>
 ): ConceptSetReference {
+  // Reusing one of the cohort's own sets is identity, not entry: return it
+  // unchanged even at id 0 (legacy/imported cohorts start CodesetIds at 0).
+  // Only NEW sets carrying the placeholder 0 fall through to get a fresh id.
+  const isExistingSet = existing.some(cs => isSameConceptSet(cs, ref))
+  if (isExistingSet && hasNumericConceptSetId(ref)) return ref
+
   const collidesWithDifferentSet = existing.some(cs => cs.id === ref.id && !isSameConceptSet(cs, ref))
   if (hasRealConceptSetId(ref) && !collidesWithDifferentSet) return ref
   return { ...ref, id: nextConceptSetId(existing) }

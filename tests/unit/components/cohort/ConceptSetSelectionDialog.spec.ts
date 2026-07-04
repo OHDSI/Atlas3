@@ -172,21 +172,26 @@ describe('ConceptSetSelectionDialog', () => {
       expect(wrapper.text()).toContain('Hospital visits')
     })
 
-    it('excludes placeholder concept sets (id 0 / null / undefined) from the local list', () => {
+    it('excludes id-less placeholders but keeps id 0 (a valid legacy CodesetId)', () => {
+      // Placeholders carry id null/''/undefined (GroupCriteriaUI.addEvent,
+      // useNestedCriteria). id 0 is a REAL CodesetId in legacy/imported
+      // cohorts (Eunomia demo) and must stay selectable.
       const withPlaceholders = [
         { id: 1, name: 'Diabetes drugs' },
-        { id: 0, name: 'Select concept set...' },
+        { id: 0, name: 'diclofenac' },
         { id: null as unknown as number, name: 'Select concept set...' },
+        { id: '', name: '' },
       ]
       const wrapper = mountComponent({ localConceptSets: withPlaceholders })
       const items = wrapper.findAll('[data-testid="local-concept-set-item"]')
-      expect(items.length).toBe(1)
+      expect(items.length).toBe(2)
       expect(wrapper.text()).toContain('Diabetes drugs')
+      expect(wrapper.text()).toContain('diclofenac')
     })
 
     it('hides the local section entirely when only placeholders are present', () => {
       const wrapper = mountComponent({
-        localConceptSets: [{ id: 0, name: 'Select concept set...' }],
+        localConceptSets: [{ id: null as unknown as number, name: 'Select concept set...' }],
       })
       expect(wrapper.find('[data-testid="local-concept-sets"]').exists()).toBe(false)
     })

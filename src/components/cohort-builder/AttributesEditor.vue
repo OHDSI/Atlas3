@@ -348,6 +348,7 @@ import { AtlasButton, AtlasCheckbox, AtlasChip, AtlasDialog, AtlasIcon, AtlasIco
 import { ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useAttributeConfig } from '@/composables/useAttributeConfig'
+import { useCriteriaSelection } from '@/composables/useCriteriaSelection'
 import TemporalWindowEditor from '@/components/cohort-builder/TemporalWindowEditor.vue'
 import DateAdjustmentEditor from '@/components/cohort-builder/DateAdjustmentEditor.vue'
 import TemporalFilterChip from '@/components/cohort-builder/TemporalFilterChip.vue'
@@ -361,6 +362,7 @@ import type {
   TextAttribute,
   NumericOperator,
   DateOperator,
+  Concept,
 } from '@/models/event.types'
 import type { CriteriaType } from '@/models/cohort.types'
 
@@ -551,7 +553,12 @@ function validateNumericAttribute(index: number) {
   }
 }
 
-// Concept attribute handlers
+// Concept attribute handlers.
+// When a criteria-selection service is provided (cohort builder), request the
+// picker directly and apply the result here — this works at any nesting depth.
+// Without a service, fall back to the legacy index-context emit chain.
+const selection = useCriteriaSelection()
+
 function openConceptPickerForAttribute(index: number) {
   const attr = props.modelValue[index]
   if (!attr || attr.type !== 'concept') return
@@ -560,7 +567,31 @@ function openConceptPickerForAttribute(index: number) {
   const attributeConfig = getAttribute(attr.attributeKey)
   const domainFilter = attributeConfig?.domainFilter
 
+  if (selection) {
+    selection.requestConcepts(domainFilter, concepts => applyConceptsToAttribute(index, concepts))
+    return
+  }
   emit('select-concept-for-attribute', index, domainFilter)
+}
+
+function applyConceptsToAttribute(index: number, concepts: Concept[]) {
+  const newAttributes = [...props.modelValue]
+  const attr = newAttributes[index]
+  if (!attr || attr.type !== 'concept') return
+
+  // Dedupe by CONCEPT_ID — circe treats `Gender IN (8507, 8507)` identically
+  // to a single 8507 and the chip UI would show duplicate pills.
+  const existing = attr.concepts || []
+  const seen = new Set(existing.map(c => c.CONCEPT_ID))
+  const merged = [...existing]
+  for (const c of concepts) {
+    if (!seen.has(c.CONCEPT_ID)) {
+      merged.push(c)
+      seen.add(c.CONCEPT_ID)
+    }
+  }
+  newAttributes[index] = { ...attr, concepts: merged }
+  emit('update:modelValue', newAttributes)
 }
 
 function removeConceptFromAttribute(attributeIndex: number, conceptIndex: number) {
@@ -578,6 +609,19 @@ function openConceptSetPickerForAttribute(index: number) {
   const attr = props.modelValue[index]
   if (!attr || attr.type !== 'conceptSet') return
 
+  if (selection) {
+    selection.requestConceptSet(conceptSet => {
+      const newAttributes = [...props.modelValue]
+      const target = newAttributes[index]
+      if (!target || target.type !== 'conceptSet') return
+      newAttributes[index] = {
+        ...target,
+        conceptSet: { id: conceptSet.id as number, name: conceptSet.name },
+      }
+      emit('update:modelValue', newAttributes)
+    })
+    return
+  }
   emit('select-concept-set-for-attribute', index)
 }
 
@@ -620,9 +664,9 @@ function updateTemporalWindow(temporalWindow: TemporalWindow) {
 
   newAttributes[selectedTemporalIndex.value] = { ...attr, temporalWindow }
   emit('update:modelValue', newAttributes)
-
-  temporalEditorOpen.value = false
-  selectedTemporalIndex.value = -1
+  // Apply live and keep the dialog open — the editor emits on every field
+  // change, so closing here would slam the dialog shut on the first edit.
+  // The user dismisses via Esc / outside click, like the popover editors.
 }
 
 function getTemporalWindowValue(index: number): TemporalWindow | undefined {
@@ -674,9 +718,7 @@ function updateDateAdjustment(dateAdjustment: DateAdjustment) {
 
   newAttributes[selectedDateAdjustmentIndex.value] = { ...attr, dateAdjustment }
   emit('update:modelValue', newAttributes)
-
-  dateAdjustmentEditorOpen.value = false
-  selectedDateAdjustmentIndex.value = -1
+  // Apply live and keep the dialog open (see updateTemporalWindow).
 }
 
 function getDateAdjustmentValue(index: number): DateAdjustment | undefined {

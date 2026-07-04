@@ -213,7 +213,7 @@ import type { ConceptSetListItem } from '@/models/concept-set.types'
 import type { ConceptSetReference } from '@/models/cohort.types'
 import { AtlasButton, AtlasCard, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasTextField } from '@/components/ui'
 import { formatDate } from '@/utils/date-format'
-import { hasRealConceptSetId } from '@/utils/concept-set-id'
+import { hasNumericConceptSetId } from '@/utils/concept-set-id'
 
 interface Props {
   modelValue: boolean
@@ -292,7 +292,7 @@ watch(
 // not-yet-filled criteria with a placeholder { id: 0|null, name: 'Select…' }
 // concept set; those would otherwise surface here as bogus "Select concept set…"
 // rows that mint an empty set when clicked.
-const selectableLocalSets = computed(() => props.localConceptSets.filter(hasRealConceptSetId))
+const selectableLocalSets = computed(() => props.localConceptSets.filter(hasNumericConceptSetId))
 
 function onLocalSelect(ref: ConceptSetReference) {
   emit('local-concept-set-selected', ref)

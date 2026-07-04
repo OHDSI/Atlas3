@@ -840,7 +840,9 @@ describe('AttributesEditor', () => {
       expect(wrapper.vm.temporalEditorOpen).toBe(true)
     })
 
-    it('updateTemporalWindow should update attribute and close dialog', () => {
+    it('updateTemporalWindow should apply live and keep the dialog open', () => {
+      // The editor emits update:model-value on every field change; closing
+      // here would slam the dialog shut on the first edit.
       const attributes: EventAttribute[] = [
         {
           type: 'temporalRelationship',
@@ -857,8 +859,8 @@ describe('AttributesEditor', () => {
       wrapper.vm.updateTemporalWindow(newWindow)
 
       expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-      expect(wrapper.vm.temporalEditorOpen).toBe(false)
-      expect(wrapper.vm.selectedTemporalIndex).toBe(-1)
+      expect(wrapper.vm.temporalEditorOpen).toBe(true)
+      expect(wrapper.vm.selectedTemporalIndex).toBe(0)
     })
   })
 
@@ -907,7 +909,9 @@ describe('AttributesEditor', () => {
       expect(wrapper.vm.dateAdjustmentEditorOpen).toBe(true)
     })
 
-    it('updateDateAdjustment should update attribute and close dialog', () => {
+    it('updateDateAdjustment should apply live and keep the dialog open', () => {
+      // The editor emits update:model-value on every field change; closing
+      // here would slam the dialog shut on the first edit.
       const attributes: EventAttribute[] = [
         {
           type: 'dateAdjustment',
@@ -934,8 +938,8 @@ describe('AttributesEditor', () => {
       wrapper.vm.updateDateAdjustment(newAdjustment)
 
       expect(wrapper.emitted('update:modelValue')).toBeTruthy()
-      expect(wrapper.vm.dateAdjustmentEditorOpen).toBe(false)
-      expect(wrapper.vm.selectedDateAdjustmentIndex).toBe(-1)
+      expect(wrapper.vm.dateAdjustmentEditorOpen).toBe(true)
+      expect(wrapper.vm.selectedDateAdjustmentIndex).toBe(0)
     })
   })
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   hasRealConceptSetId,
+  hasNumericConceptSetId,
   nextConceptSetId,
   ensureUniqueConceptSetId,
 } from '@/utils/concept-set-id'
@@ -16,6 +17,21 @@ describe('concept-set-id helpers', () => {
 
     it('treats a positive numeric id as real', () => {
       expect(hasRealConceptSetId({ id: 5 })).toBe(true)
+    })
+  })
+
+  describe('hasNumericConceptSetId', () => {
+    it('accepts id 0 — a valid CodesetId in legacy/imported cohorts', () => {
+      expect(hasNumericConceptSetId({ id: 0 })).toBe(true)
+      expect(hasNumericConceptSetId({ id: 5 })).toBe(true)
+    })
+
+    it('rejects id-less placeholders and non-numeric ids', () => {
+      expect(hasNumericConceptSetId({ id: undefined as unknown as number })).toBe(false)
+      expect(hasNumericConceptSetId({ id: '' })).toBe(false)
+      expect(hasNumericConceptSetId({ id: 'uuid-string' })).toBe(false)
+      expect(hasNumericConceptSetId({ id: -1 })).toBe(false)
+      expect(hasNumericConceptSetId({ id: NaN })).toBe(false)
     })
   })
 
@@ -99,6 +115,23 @@ describe('concept-set-id helpers', () => {
     it('leaves a concept set with a real, non-colliding id untouched', () => {
       const ref: ConceptSetReference = { id: 42, name: 'Existing', items: [] }
       expect(ensureUniqueConceptSetId(ref, [])).toBe(ref)
+    })
+
+    it('reuses an already-embedded id-0 set in place (legacy CodesetIds start at 0)', () => {
+      // The Eunomia demo cohort embeds "diclofenac" at CodesetId 0. Selecting
+      // it from the in-definition picker must keep id 0 — minting a fresh id
+      // would split one concept set across two CodesetIds.
+      const used: ConceptSetReference[] = [{ id: 0, name: 'diclofenac', items: [{}] }]
+      const again = ensureUniqueConceptSetId({ id: 0, name: 'diclofenac', items: [{}] }, used)
+      expect(again.id).toBe(0)
+    })
+
+    it('still mints a fresh id for a NEW set carrying the placeholder id 0', () => {
+      // A different (new) set that happens to arrive with the placeholder 0
+      // must NOT collide with the embedded id-0 set.
+      const used: ConceptSetReference[] = [{ id: 0, name: 'diclofenac', items: [{}] }]
+      const fresh = ensureUniqueConceptSetId({ id: 0, name: 'Hypertension', items: [] }, used)
+      expect(fresh.id).toBe(1)
     })
   })
 })
