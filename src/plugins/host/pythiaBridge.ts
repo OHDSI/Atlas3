@@ -38,6 +38,7 @@ import type { CharacterizationDefinition } from '@/models/characterization.types
 import type { Pathway } from '@/models/pathway.types'
 import type { IncidenceRate } from '@/models/incidence-rate.types'
 import { logger } from '@/utils/logger'
+import { applyCapability } from './capabilities/apply'
 
 const PLUGIN_ID = 'pythia-plugin'
 
@@ -70,6 +71,11 @@ export function setupPythiaBridge(): void {
       case 'notify.snackbar':
         handleSnackbar(detail.payload as { message: string; type?: string })
         break
+      case 'capability.apply': {
+        const { name, args } = detail.payload as { name: string; args: Record<string, unknown> }
+        void handleCapabilityApply(name, args, detail.callbackId)
+        break
+      }
       default:
         break
     }
@@ -87,6 +93,21 @@ async function handleApplyProposal(
     const bus = getHostMessageBus(PLUGIN_ID)
     bus?.handleResponse(callbackId, result ?? {})
   }
+}
+
+export async function applyProposalDirect(
+  proposal: AgentProposal
+): Promise<{ id?: number | string; name?: string } | void> {
+  return applyProposalInner({ proposal })
+}
+
+async function handleCapabilityApply(
+  name: string,
+  args: Record<string, unknown>,
+  callbackId?: string
+): Promise<void> {
+  const result = await applyCapability(name, args)
+  if (callbackId) getHostMessageBus(PLUGIN_ID)?.handleResponse(callbackId, result)
 }
 
 async function applyProposalInner(
