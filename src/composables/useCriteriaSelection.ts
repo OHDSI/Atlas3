@@ -38,7 +38,9 @@ export interface CriteriaSelectionService {
   editConceptSet(conceptSet: { id: number | string; name: string; items?: unknown[] }): void
 }
 
-const CriteriaSelectionKey: InjectionKey<CriteriaSelectionService> = Symbol('criteria-selection')
+export const CriteriaSelectionKey: InjectionKey<CriteriaSelectionService> = Symbol(
+  'criteria-selection'
+)
 
 export function provideCriteriaSelection(service: CriteriaSelectionService): void {
   provide(CriteriaSelectionKey, service)

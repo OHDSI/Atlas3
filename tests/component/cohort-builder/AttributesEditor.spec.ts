@@ -13,6 +13,7 @@ vi.mock('@/composables/useI18n', async () => {
 })
 
 import AttributesEditor from '@/components/cohort-builder/AttributesEditor.vue'
+import { CriteriaSelectionKey } from '@/composables/useCriteriaSelection'
 
 const vuetify = createVuetify({
   components,
@@ -962,6 +963,85 @@ describe('AttributesEditor', () => {
 
       expect(wrapper.emitted('select-concept-for-attribute')).toBeTruthy()
       expect(wrapper.emitted('select-concept-for-attribute')![0][0]).toBe(0)
+    })
+
+    it('openConceptPickerForAttribute should use the selection service and merge-dedupe the result', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'concept',
+          attributeKey: 'gender',
+          concepts: [
+            { CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE', CONCEPT_CODE: 'M', DOMAIN_ID: 'Gender', VOCABULARY_ID: 'Gender' },
+          ],
+        },
+      ]
+      let deliver: ((concepts: Array<{ CONCEPT_ID: number }>) => void) | undefined
+      const selection = {
+        requestConceptSet: vi.fn(),
+        requestConcepts: vi.fn((_domainFilter: string | undefined, cb: (c: never[]) => void) => {
+          deliver = cb as typeof deliver
+        }),
+        editConceptSet: vi.fn(),
+      }
+      const wrapper = mount(AttributesEditor, {
+        global: {
+          plugins: [vuetify],
+          provide: { [CriteriaSelectionKey as symbol]: selection },
+        },
+        props: { modelValue: attributes, criteriaType: 'ConditionOccurrence' },
+      })
+
+      wrapper.vm.openConceptPickerForAttribute(0)
+
+      // Service path: no legacy emit, picker requested from the owner.
+      expect(selection.requestConcepts).toHaveBeenCalledTimes(1)
+      expect(wrapper.emitted('select-concept-for-attribute')).toBeFalsy()
+
+      // Delivering MALE again plus FEMALE dedupes by CONCEPT_ID.
+      deliver?.([
+        { CONCEPT_ID: 8507, CONCEPT_NAME: 'MALE', CONCEPT_CODE: 'M', DOMAIN_ID: 'Gender', VOCABULARY_ID: 'Gender' },
+        { CONCEPT_ID: 8532, CONCEPT_NAME: 'FEMALE', CONCEPT_CODE: 'F', DOMAIN_ID: 'Gender', VOCABULARY_ID: 'Gender' },
+      ] as never[])
+      const emitted = wrapper.emitted('update:modelValue') as Array<[EventAttribute[]]>
+      expect(emitted).toBeTruthy()
+      const updated = emitted[0][0][0] as { concepts: Array<{ CONCEPT_ID: number }> }
+      expect(updated.concepts.map(c => c.CONCEPT_ID)).toEqual([8507, 8532])
+    })
+
+    it('openConceptSetPickerForAttribute should use the selection service and set the attribute concept set', () => {
+      const attributes: EventAttribute[] = [
+        {
+          type: 'conceptSet',
+          attributeKey: 'genderCS',
+          conceptSet: { id: '', name: '' },
+        },
+      ]
+      let deliver: ((cs: { id: number | string; name: string }) => void) | undefined
+      const selection = {
+        requestConceptSet: vi.fn((cb: (cs: never) => void) => {
+          deliver = cb as typeof deliver
+        }),
+        requestConcepts: vi.fn(),
+        editConceptSet: vi.fn(),
+      }
+      const wrapper = mount(AttributesEditor, {
+        global: {
+          plugins: [vuetify],
+          provide: { [CriteriaSelectionKey as symbol]: selection },
+        },
+        props: { modelValue: attributes, criteriaType: 'ConditionOccurrence' },
+      })
+
+      wrapper.vm.openConceptSetPickerForAttribute(0)
+
+      expect(selection.requestConceptSet).toHaveBeenCalledTimes(1)
+      expect(wrapper.emitted('select-concept-set-for-attribute')).toBeFalsy()
+
+      deliver?.({ id: 12, name: 'Gender concepts' } as never)
+      const emitted = wrapper.emitted('update:modelValue') as Array<[EventAttribute[]]>
+      expect(emitted).toBeTruthy()
+      const updated = emitted[0][0][0] as { conceptSet: { id: number; name: string } }
+      expect(updated.conceptSet).toEqual({ id: 12, name: 'Gender concepts' })
     })
 
     it('removeConceptFromAttribute should remove concept and emit update', () => {
