@@ -333,7 +333,7 @@ function loadPluginMenuItems() {
 
 function getNavTitle(key: string): string {
   const defaults: Record<string, string> = {
-    'navigation.conceptsets': 'Concept Sets',
+    'navigation.conceptsets': 'Concepts',
     'navigation.cohortdefinitions': 'Cohorts',
     'navigation.profiles': 'Profiles',
     'navigation.datasources': 'Data Sources',
