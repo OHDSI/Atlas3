@@ -148,7 +148,10 @@ async function load() {
   try {
     report.value = await getInclusionRuleReport(props.cohortId, props.sourceKey, mode.value)
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to load report'
+    error.value =
+      e instanceof Error
+        ? `Failed to load the inclusion-rule report: ${e.message}`
+        : 'Failed to load the inclusion-rule report.'
     report.value = null
   } finally {
     loading.value = false
