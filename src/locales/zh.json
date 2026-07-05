@@ -232,6 +232,41 @@
     }
   },
   "components": {
+    "inclusionRuleReport": {
+      "matchRate": "匹配率",
+      "matches": "匹配数",
+      "lost": "丢失",
+      "totalEvents": "事件总数",
+      "attritionFunnel": "减员漏斗",
+      "perRuleSatisfaction": "各规则满足情况",
+      "populationBreakdown": "人群细分",
+      "noReportData": "此队列和数据源没有可用的包含规则报告数据。该队列可能没有包含规则，或尚未生成。如果您已生成，请尝试重新运行。",
+      "loadError": "无法加载包含规则报告",
+      "attrition": "减员",
+      "noAttritionData": "没有减员数据",
+      "initial": "初始",
+      "final": "最终",
+      "saveAsPng": "另存为 PNG",
+      "colCumulativeRemaining": "累计剩余",
+      "colPercentOfInitial": "占初始的 %",
+      "colPersonsSatisfying": "满足人数",
+      "colPercentSatisfying": "满足 %",
+      "colPercentExcluded": "排除 %",
+      "noRulesToReport": "此队列没有可报告的包含规则。",
+      "hintCumulativeRemaining": "按顺序应用此规则及其之前所有规则后剩余的患者",
+      "hintPercentOfInitial": "累计剩余占初始入组事件数的百分比 — 与漏斗使用的指标相同",
+      "hintPersonsSatisfying": "无论其他规则如何，单独满足此规则的患者",
+      "hintPercentSatisfying": "入组事件人群中单独满足此规则的百分比（与顺序无关）",
+      "hintPercentExcluded": "此规则的边际成本：满足其他所有规则但未通过此规则的患者百分比。数值高表示移除此规则可恢复该部分。",
+      "downloadCsv": "下载 CSV",
+      "noAttritionHint": "生成带有包含规则的队列以查看减员",
+      "patients": "名患者",
+      "retained": "保留",
+      "rulesSatisfiedHigh": "满足 ≥ 80% 的规则",
+      "rulesSatisfiedLow": "满足 < 40% 的规则",
+      "tooltipRemaining": "剩余",
+      "tooltipExcludedAtStep": "此步骤排除"
+    },
     "authorship": {
       "createdLabel": "被创造 由 <%=createdBy%>创建 基于/在 <%=createdDate%>",
       "modifiedLabel": "修改的 由 <%=modifiedBy%>修改 基于/在 <%=modifiedDate%>"
@@ -2787,6 +2822,7 @@
       "inclusionReportFor1": "的纳入条件报告",
       "tabs": {
         "byEvents": "根据事件",
+        "byEvent": "根据事件",
         "byPerson": "根据人"
       }
     },

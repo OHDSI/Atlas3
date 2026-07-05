@@ -232,6 +232,41 @@
     }
   },
   "components": {
+    "inclusionRuleReport": {
+      "matchRate": "일치율",
+      "matches": "일치 수",
+      "lost": "손실",
+      "totalEvents": "총 이벤트",
+      "attritionFunnel": "이탈 퍼널",
+      "perRuleSatisfaction": "규칙별 충족",
+      "populationBreakdown": "인구 구성",
+      "noReportData": "이 코호트와 소스에 대한 포함 규칙 보고서 데이터가 없습니다. 코호트에 포함 규칙이 없거나 아직 생성되지 않았을 수 있습니다. 이미 생성했다면 다시 실행해 보세요.",
+      "loadError": "포함 규칙 보고서를 불러오지 못했습니다",
+      "attrition": "이탈",
+      "noAttritionData": "이탈 데이터가 없습니다",
+      "initial": "초기",
+      "final": "최종",
+      "saveAsPng": "PNG로 저장",
+      "colCumulativeRemaining": "누적 잔여",
+      "colPercentOfInitial": "초기 대비 %",
+      "colPersonsSatisfying": "충족 인원",
+      "colPercentSatisfying": "충족 %",
+      "colPercentExcluded": "제외 %",
+      "noRulesToReport": "이 코호트에는 보고할 포함 규칙이 없습니다.",
+      "hintCumulativeRemaining": "이 규칙과 그 앞의 모든 규칙을 순서대로 적용한 후 남은 환자",
+      "hintPercentOfInitial": "초기 진입 이벤트 수 대비 누적 잔여 비율 — 퍼널과 동일한 지표",
+      "hintPersonsSatisfying": "다른 규칙과 무관하게 이 규칙을 단독으로 충족하는 환자",
+      "hintPercentSatisfying": "진입 이벤트 인구 중 이 규칙을 단독으로 충족하는 비율(순서와 무관)",
+      "hintPercentExcluded": "이 규칙의 한계 비용: 다른 모든 규칙은 충족하지만 이 규칙만 충족하지 못하는 환자의 비율. 값이 크면 이 규칙을 제거할 경우 그만큼 회복됩니다.",
+      "downloadCsv": "CSV 다운로드",
+      "noAttritionHint": "이탈을 보려면 포함 규칙이 있는 코호트를 생성하세요",
+      "patients": "명",
+      "retained": "유지",
+      "rulesSatisfiedHigh": "규칙 80% 이상 충족",
+      "rulesSatisfiedLow": "규칙 40% 미만 충족",
+      "tooltipRemaining": "잔여",
+      "tooltipExcludedAtStep": "이 단계에서 제외"
+    },
     "authorship": {
       "createdLabel": "<%=createdBy%>가 <%=createdDate%> 경에 생성",
       "modifiedLabel": "<%=modifiedBy%>가 <%=modifiedDate%> 경에 수정"
@@ -2787,6 +2822,7 @@
       "inclusionReportFor1": "에 대한 포함 조건 레포트",
       "tabs": {
         "byEvents": "이벤트에 따라",
+        "byEvent": "이벤트별",
         "byPerson": "사람에 따라"
       }
     },

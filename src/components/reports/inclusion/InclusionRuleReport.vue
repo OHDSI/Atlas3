@@ -14,13 +14,13 @@
         :value="1"
         data-testid="inclusion-mode-by-person"
       >
-        By Person
+        {{ t('cohortDefinitions.cohortreports.tabs.byPerson', 'By Person').value }}
       </AtlasTab>
       <AtlasTab
         :value="0"
         data-testid="inclusion-mode-by-event"
       >
-        By Event
+        {{ t('cohortDefinitions.cohortreports.tabs.byEvent', 'By Event').value }}
       </AtlasTab>
     </AtlasTabs>
 
@@ -46,29 +46,34 @@
       severity="info"
       data-testid="inclusion-rule-report-empty"
     >
-      No inclusion-rule report data is available for this cohort and source. The cohort may have no inclusion rules, or it may not have been generated yet. If you've generated it already, try re-running.
+      {{
+        t(
+          'components.inclusionRuleReport.noReportData',
+          "No inclusion-rule report data is available for this cohort and source. The cohort may have no inclusion rules, or it may not have been generated yet. If you've generated it already, try re-running."
+        ).value
+      }}
     </AtlasAlert>
 
     <template v-else>
       <!-- Summary stats -->
       <div class="inclusion-rule-report__summary">
         <SummaryStat
-          label="Match rate"
+          :label="t('components.inclusionRuleReport.matchRate', 'Match rate').value"
           :value="formatPercent(report.summary.percentMatched)"
           data-testid="inclusion-summary-match-rate"
         />
         <SummaryStat
-          label="Matches"
+          :label="t('components.inclusionRuleReport.matches', 'Matches').value"
           :value="formatCount(report.summary.finalCount)"
           data-testid="inclusion-summary-final-count"
         />
         <SummaryStat
-          label="Lost"
+          :label="t('components.inclusionRuleReport.lost', 'Lost').value"
           :value="formatCount(report.summary.lostCount)"
           data-testid="inclusion-summary-lost-count"
         />
         <SummaryStat
-          label="Total events"
+          :label="t('components.inclusionRuleReport.totalEvents', 'Total events').value"
           :value="formatCount(report.summary.baseCount)"
           data-testid="inclusion-summary-base-count"
         />
@@ -77,7 +82,7 @@
       <!-- Attrition funnel (cumulative — lazy-loaded) -->
       <section class="mt-6">
         <h3 class="text-subtitle-1 font-weight-medium mb-2">
-          Attrition funnel
+          {{ t('components.inclusionRuleReport.attritionFunnel', 'Attrition funnel').value }}
         </h3>
         <InclusionRuleAttritionFunnel :report="report" />
       </section>
@@ -85,7 +90,7 @@
       <!-- Per-rule satisfaction table -->
       <section class="mt-6">
         <h3 class="text-subtitle-1 font-weight-medium mb-2">
-          Per-rule satisfaction
+          {{ t('components.inclusionRuleReport.perRuleSatisfaction', 'Per-rule satisfaction').value }}
         </h3>
         <InclusionRuleAttritionTable
           :rules="report.inclusionRuleStats"
@@ -97,7 +102,7 @@
       <!-- Treemap -->
       <section class="mt-6">
         <h3 class="text-subtitle-1 font-weight-medium mb-2">
-          Population breakdown
+          {{ t('components.inclusionRuleReport.populationBreakdown', 'Population breakdown').value }}
         </h3>
         <InclusionRuleTreemap
           :treemap="report.treemap"
@@ -115,6 +120,7 @@ import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { getInclusionRuleReport } from '@/services/webapi'
 import type { InclusionRuleReport, InclusionRuleReportMode } from '@/models/report.types'
 import { computeAttritionSteps } from '@/utils/inclusion-attrition'
+import { useI18n } from '@/composables/useI18n'
 import InclusionRuleAttritionTable from './InclusionRuleAttritionTable.vue'
 import InclusionRuleTreemap from './InclusionRuleTreemap.vue'
 import SummaryStat from './SummaryStat.vue'
@@ -129,6 +135,8 @@ const props = defineProps<{
   cohortId: number
   sourceKey: string
 }>()
+
+const { t, tv } = useI18n()
 
 const mode = ref<InclusionRuleReportMode>(1)
 const report = ref<InclusionRuleReport | null>(null)
@@ -148,10 +156,8 @@ async function load() {
   try {
     report.value = await getInclusionRuleReport(props.cohortId, props.sourceKey, mode.value)
   } catch (e) {
-    error.value =
-      e instanceof Error
-        ? `Failed to load the inclusion-rule report: ${e.message}`
-        : 'Failed to load the inclusion-rule report.'
+    const prefix = tv('components.inclusionRuleReport.loadError', 'Failed to load the inclusion-rule report')
+    error.value = e instanceof Error ? `${prefix}: ${e.message}` : `${prefix}.`
     report.value = null
   } finally {
     loading.value = false

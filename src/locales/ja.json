@@ -346,6 +346,41 @@
     }
   },
   "components": {
+    "inclusionRuleReport": {
+      "matchRate": "一致率",
+      "matches": "一致数",
+      "lost": "損失数",
+      "totalEvents": "総イベント数",
+      "attritionFunnel": "脱落ファネル",
+      "perRuleSatisfaction": "ルール別の充足",
+      "populationBreakdown": "集団の内訳",
+      "noReportData": "このコホートとソースには、包含ルールレポートのデータがありません。コホートに包含ルールがないか、まだ生成されていない可能性があります。すでに生成済みの場合は、再実行してください。",
+      "loadError": "包含ルールレポートの読み込みに失敗しました",
+      "attrition": "脱落",
+      "noAttritionData": "脱落データがありません",
+      "initial": "初期",
+      "final": "最終",
+      "saveAsPng": "PNGとして保存",
+      "colCumulativeRemaining": "累積残数",
+      "colPercentOfInitial": "初期比",
+      "colPersonsSatisfying": "充足人数",
+      "colPercentSatisfying": "充足率",
+      "colPercentExcluded": "除外率",
+      "noRulesToReport": "このコホートには報告する包含ルールがありません。",
+      "hintCumulativeRemaining": "このルールとそれ以前のすべてのルールを順に適用した後に残る患者数",
+      "hintPercentOfInitial": "初期のエントリーイベント数に対する累積残数の割合（ファネルと同じ指標）",
+      "hintPersonsSatisfying": "他のルールに関係なく、このルールを単独で満たす患者",
+      "hintPercentSatisfying": "エントリーイベント集団のうち、このルールを単独で満たす割合（順序に依存しない）",
+      "hintPercentExcluded": "このルールの限界コスト：他のすべてのルールを満たすがこのルールだけを満たさない患者の割合。高い場合、このルールを削除するとその分を回復できます。",
+      "downloadCsv": "CSVをダウンロード",
+      "noAttritionHint": "脱落を確認するには、包含ルールを含むコホートを生成してください",
+      "patients": "人",
+      "retained": "保持",
+      "rulesSatisfiedHigh": "ルールの80%以上を充足",
+      "rulesSatisfiedLow": "ルールの40%未満を充足",
+      "tooltipRemaining": "残数",
+      "tooltipExcludedAtStep": "このステップで除外"
+    },
     "cardinalityInput": {
       "title": "カーディナリティ",
       "type": "タイプ",
@@ -3451,6 +3486,7 @@
       "inclusionReportFor1": " ",
       "tabs": {
         "byEvents": "イベント別",
+        "byEvent": "イベント別",
         "byPerson": "人別"
       }
     },

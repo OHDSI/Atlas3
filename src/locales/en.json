@@ -325,6 +325,41 @@
     }
   },
   "components": {
+    "inclusionRuleReport": {
+      "matchRate": "Match rate",
+      "matches": "Matches",
+      "lost": "Lost",
+      "totalEvents": "Total events",
+      "attritionFunnel": "Attrition funnel",
+      "perRuleSatisfaction": "Per-rule satisfaction",
+      "populationBreakdown": "Population breakdown",
+      "noReportData": "No inclusion-rule report data is available for this cohort and source. The cohort may have no inclusion rules, or it may not have been generated yet. If you've generated it already, try re-running.",
+      "loadError": "Failed to load the inclusion-rule report",
+      "attrition": "Attrition",
+      "noAttritionData": "No attrition data available",
+      "initial": "Initial",
+      "final": "Final",
+      "saveAsPng": "Save as PNG",
+      "colCumulativeRemaining": "Cumulative remaining",
+      "colPercentOfInitial": "% of initial",
+      "colPersonsSatisfying": "Persons satisfying",
+      "colPercentSatisfying": "% satisfying",
+      "colPercentExcluded": "% excluded",
+      "noRulesToReport": "This cohort has no inclusion rules to report.",
+      "hintCumulativeRemaining": "Patients remaining after applying this rule and all preceding rules in order",
+      "hintPercentOfInitial": "Cumulative remaining as a percent of the initial entry-event count — same metric the funnel uses",
+      "hintPersonsSatisfying": "Patients who satisfy THIS rule independently, regardless of the other rules",
+      "hintPercentSatisfying": "Percent of the entry-event population who satisfy this rule on its own (independent of order)",
+      "hintPercentExcluded": "Marginal cost of this rule: percent of patients who satisfy every OTHER rule but fail this one. High = removing this rule would recover that share.",
+      "downloadCsv": "Download CSV",
+      "noAttritionHint": "Generate a cohort with inclusion rules to see attrition",
+      "patients": "patients",
+      "retained": "retained",
+      "rulesSatisfiedHigh": "≥ 80% rules satisfied",
+      "rulesSatisfiedLow": "< 40% rules satisfied",
+      "tooltipRemaining": "Remaining",
+      "tooltipExcludedAtStep": "Excluded at this step"
+    },
     "cardinalityInput": {
       "title": "Cardinality",
       "type": "Type",
@@ -3430,6 +3465,7 @@
       "inclusionReportFor1": " ",
       "tabs": {
         "byEvents": "By Events",
+        "byEvent": "By Event",
         "byPerson": "By Person"
       }
     },
