@@ -100,6 +100,10 @@ export interface AuthState {
   authClient: string | null
   tokenExpirationDate: Date | null
   isAuthenticated: boolean
+  // True once user/me has been resolved (authenticated OR anonymous), or an
+  // attempt to resolve it has failed. The login prompt is deferred until this
+  // flips so an anonymous subject with sufficient permissions never triggers it.
+  userResolved: boolean
   isRefreshing: boolean
   tokenExpired: boolean
   loginModalOpen: boolean

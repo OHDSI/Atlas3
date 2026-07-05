@@ -17,6 +17,7 @@ import { setupPythiaBridge } from './plugins/host/pythiaBridge.ts'
 import { tokenExpiryService } from './services/auth/tokenExpiry'
 import { configLoaderService } from './services/config-loader.service'
 import { loadAppConfig } from './config/app-config.loader'
+import { getAuthConfig } from './config/auth.config'
 import { logger } from './utils/logger'
 import '@/assets/styles/typography.css'
 import '@/assets/styles/vuetify-overrides.css'
@@ -193,6 +194,20 @@ loadAppConfig()
             logger.error('i18n', 'Initialization failed:', error)
           }),
         ]).then(async () => {
+          // The initial route guard ran before user/me resolved (userResolved
+          // was still false), so it deferred the login prompt. Now that the
+          // subject is resolved, prompt if the landing route needs auth and
+          // neither an authenticated nor anonymous subject was found.
+          const currentRoute = router.currentRoute.value
+          if (
+            currentRoute.meta.requiresAuth === true &&
+            !authStore.isAuthenticated &&
+            !authStore.user &&
+            getAuthConfig().userAuthenticationEnabled
+          ) {
+            authStore.openLoginModal()
+          }
+
           // Initialize plugin framework after auth is ready
           try {
             // Import permission service for proper permission checking

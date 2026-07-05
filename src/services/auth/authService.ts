@@ -332,15 +332,20 @@ class AuthService implements IAuthService {
     const authStore = useAuthStore()
 
     const baseUrl = this.webAPIRoot.endsWith('/') ? this.webAPIRoot : this.webAPIRoot + '/'
+    // Send the bearer token only when we have one. Without it, user/me
+    // resolves the anonymous subject (WebAPI returns 200 + anonymous authz
+    // when anonymous access is enabled, 401 otherwise).
+    const headers: Record<string, string> = {}
+    if (authStore.token) {
+      headers.Authorization = `Bearer ${authStore.token}`
+    }
     const response = await fetch(`${baseUrl}user/me`, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
+      headers,
     })
 
     if (!response.ok) {
-      throw new Error('Failed to fetch user info')
+      throw new Error(`Failed to fetch user info (${response.status})`)
     }
 
     const data = await response.json()
