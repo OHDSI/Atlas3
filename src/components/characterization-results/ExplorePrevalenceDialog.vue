@@ -7,7 +7,7 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    eyebrow="COVARIATE DETAIL"
+    :eyebrow="tv('components.characterizationResults.covariateDetail', 'COVARIATE DETAIL')"
     :title="stat?.covariateName ?? ''"
     max-width="720"
     data-testid="char-results-explore-dialog"
@@ -18,15 +18,15 @@
       <div class="explore__meta">
         <dl class="explore__dl">
           <div>
-            <dt>Analysis</dt>
+            <dt>{{ tv('columns.analysis', 'Analysis') }}</dt>
             <dd>{{ stat.analysisName }}</dd>
           </div>
           <div v-if="stat.domainId">
-            <dt>Domain</dt>
+            <dt>{{ tv('columns.domain', 'Domain') }}</dt>
             <dd>{{ stat.domainId }}</dd>
           </div>
           <div>
-            <dt>Concept ID</dt>
+            <dt>{{ tv('columns.conceptId', 'Concept ID') }}</dt>
             <dd>
               <a
                 v-if="stat.conceptId"
@@ -38,7 +38,7 @@
             </dd>
           </div>
           <div v-if="stat.conceptName">
-            <dt>Concept</dt>
+            <dt>{{ tv('components.characterizationResults.concept', 'Concept') }}</dt>
             <dd>{{ stat.conceptName }}</dd>
           </div>
         </dl>
@@ -48,13 +48,13 @@
         <thead>
           <tr>
             <th class="explore__th-label">
-              Cohort
+              {{ tv('common.cohort', 'Cohort') }}
             </th>
             <th class="explore__th-num">
-              Count
+              {{ tv('columns.count', 'Count') }}
             </th>
             <th class="explore__th-num">
-              %
+              {{ tv('columns.pct', '%') }}
             </th>
             <th class="explore__th-bar" />
           </tr>
@@ -87,7 +87,7 @@
         v-if="stat.stdDiff != null"
         class="explore__stddiff"
       >
-        Standardised mean difference: <strong>{{ stat.stdDiff.toFixed(4) }}</strong>
+        {{ tv('components.characterizationResults.smdLabel', 'Standardised mean difference') }}: <strong>{{ stat.stdDiff.toFixed(4) }}</strong>
       </div>
     </template>
 
@@ -95,7 +95,7 @@
       v-else
       class="explore__empty"
     >
-      No covariate selected.
+      {{ tv('components.characterizationResults.noCovariateSelected', 'No covariate selected.') }}
     </div>
 
     <template #actions>

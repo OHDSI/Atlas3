@@ -87,7 +87,7 @@
 
     <AtlasDialog
       v-model="dialogOpen"
-      eyebrow="DETAILS"
+      :eyebrow="tv('components.characterizationDesign.detailsEyebrow', 'DETAILS')"
       :title="t('cc.modals.chooseAFeatureAnalyses', 'Select feature analyses to link').value"
       max-width="800"
       @close="dialogOpen = false"

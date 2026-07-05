@@ -17,10 +17,18 @@
     >
       <button
         class="rail-toggle"
-        :title="railOpen ? 'Hide design panel' : 'Show design panel'"
+        :title="
+          railOpen
+            ? t('components.pathwayWorkbench.hideDesignPanel', 'Hide design panel').value
+            : t('components.pathwayWorkbench.showDesignPanel', 'Show design panel').value
+        "
         @click="railOpen = !railOpen"
       >
-        {{ railOpen ? '◂ Hide Analysis Design' : '▸ Show Analysis Design' }}
+        {{
+          railOpen
+            ? '◂ ' + t('components.pathwayWorkbench.hideAnalysisDesign', 'Hide Analysis Design').value
+            : '▸ ' + t('components.pathwayWorkbench.showAnalysisDesign', 'Show Analysis Design').value
+        }}
       </button>
       <PathwayCanvasToolbar
         :mode="mode"

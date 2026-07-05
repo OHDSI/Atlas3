@@ -26,7 +26,7 @@
             icon="mdi-close"
             size="sm"
             variant="text"
-            v-bind="{ ariaLabel: 'Remove cohort' }"
+            v-bind="{ ariaLabel: t('components.pathwayCohortList.removeCohort', 'Remove cohort').value }"
             :disabled="readonly"
             @click="emit('remove', c.id)"
           />

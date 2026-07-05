@@ -36,7 +36,8 @@ vi.mock('@/components/config/ConfigPanel.vue', () => ({
 // Mock composables
 vi.mock('@/composables/useI18n', () => ({
   useI18n: () => ({
-    t: (key: string, fallback: string) => fallback || key
+    t: (key: string, fallback: string) => ({ value: fallback || key }),
+    tv: (key: string, fallback: string) => fallback || key,
   })
 }))
 

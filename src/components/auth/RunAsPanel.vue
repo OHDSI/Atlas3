@@ -90,7 +90,7 @@ const isRunningAs = computed(() => {
 })
 
 const targetUsername = computed(() => {
-  return auth.user.value?.displayName || 'Unknown'
+  return auth.user.value?.displayName || tv('components.auth.unknownUser', 'Unknown')
 })
 
 const originalUsername = computed(() => {

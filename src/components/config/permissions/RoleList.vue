@@ -4,11 +4,11 @@
     <div class="role-list__header">
       <div class="role-list__header-left">
         <h2 class="text-h5">
-          Roles
+          {{ t('configuration.roles.title', 'Roles').value }}
         </h2>
         <AtlasTextField
           v-model="searchQuery"
-          placeholder="Search roles..."
+          :placeholder="tv('components.config.permissions.searchRoles', 'Search roles...')"
           prepend-icon="mdi-magnify"
           variant="outlined"
           hide-details
@@ -21,7 +21,7 @@
         icon="mdi-plus"
         @click="handleCreate"
       >
-        New Role
+        {{ t('components.config.permissions.newRole', 'New Role').value }}
       </AtlasButton>
     </div>
 
@@ -56,10 +56,15 @@
         mdi-shield-account-outline
       </AtlasIcon>
       <h3 class="text-h6 mt-4">
-        No roles found
+        {{ t('components.config.permissions.noRolesFoundTitle', 'No roles found').value }}
       </h3>
       <p class="text-body-2 text-medium-emphasis mt-2">
-        Create your first role to get started with role-based access control.
+        {{
+          t(
+            'components.config.permissions.createFirstRoleHint',
+            'Create your first role to get started with role-based access control.'
+          ).value
+        }}
       </p>
       <AtlasButton
         size="lg"
@@ -67,7 +72,7 @@
         icon="mdi-plus"
         @click="handleCreate"
       >
-        Create First Role
+        {{ t('components.config.permissions.createFirstRole', 'Create First Role').value }}
       </AtlasButton>
     </div>
 
@@ -122,20 +127,20 @@
         <div class="role-list__actions">
           <AtlasIconButton
             icon="mdi-pencil"
-            v-bind="{ ariaLabel: 'Edit Role' }"
+            v-bind="{ ariaLabel: tv('components.config.permissions.editRole', 'Edit Role') }"
             size="sm"
             variant="text"
-            title="Edit Role"
+            :title="tv('components.config.permissions.editRole', 'Edit Role')"
             @click.stop="handleEdit(item)"
           />
 
           <AtlasIconButton
             icon="mdi-delete"
-            v-bind="{ ariaLabel: 'Delete Role' }"
+            v-bind="{ ariaLabel: tv('components.config.permissions.deleteRoleButton', 'Delete Role') }"
             size="sm"
             variant="text"
             tone="danger"
-            title="Delete Role"
+            :title="tv('components.config.permissions.deleteRoleButton', 'Delete Role')"
             @click.stop="handleDelete(item)"
           />
         </div>
@@ -151,9 +156,25 @@
         <div class="role-list__footer">
           <div class="text-caption text-medium-emphasis pa-4">
             <span v-if="debouncedSearchQuery">
-              {{ filteredRoles.length }} of {{ roles.length }} roles
+              {{
+                t(
+                  'components.config.permissions.rolesFilteredCount',
+                  '{count} of {total} roles',
+                  { count: filteredRoles.length, total: roles.length }
+                ).value
+              }}
             </span>
-            <span v-else> {{ roles.length }} role{{ roles.length !== 1 ? 's' : '' }} total </span>
+            <span v-else>
+              {{
+                roles.length !== 1
+                  ? t('components.config.permissions.rolesTotal', '{count} roles total', {
+                    count: roles.length,
+                  }).value
+                  : t('components.config.permissions.roleTotal', '{count} role total', {
+                    count: roles.length,
+                  }).value
+              }}
+            </span>
           </div>
         </div>
       </template>
@@ -180,11 +201,13 @@
 import { AtlasAlert, AtlasButton, AtlasDataTable, AtlasIcon, AtlasIconButton, AtlasProgressLinear, AtlasSkeleton, AtlasTextField } from '@/components/ui'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'
 import RoleCreateDialog from './RoleCreateDialog.vue'
 import RoleDeleteDialog from './RoleDeleteDialog.vue'
 
+const { t, tv } = useI18n()
 const router = useRouter()
 const { roles, isLoadingRoles, rolesError, fetchRoles, fetchRoleUsers, roleUsers } = useRoles()
 
@@ -225,11 +248,11 @@ const filteredRoles = computed(() => {
 
 // Table configuration
 const headers = [
-  { title: 'Role Name', key: 'name', sortable: true },
-  { title: 'Description', key: 'description', sortable: false },
-  { title: 'Created', key: 'createdDate', sortable: true },
-  { title: 'Modified', key: 'modifiedDate', sortable: true },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const },
+  { title: tv('components.config.permissions.roleName', 'Role Name'), key: 'name', sortable: true },
+  { title: tv('common.description', 'Description'), key: 'description', sortable: false },
+  { title: tv('columns.created', 'Created'), key: 'createdDate', sortable: true },
+  { title: tv('columns.modified', 'Modified'), key: 'modifiedDate', sortable: true },
+  { title: tv('columns.actions', 'Actions'), key: 'actions', sortable: false, align: 'end' as const },
 ]
 
 // Load roles on mount

@@ -31,7 +31,7 @@
           severity="warning"
           class="mb-4"
         >
-          Role not found
+          {{ t('views.roleDetails.roleNotFound', 'Role not found').value }}
         </AtlasAlert>
 
         <!-- Role Details -->
@@ -46,7 +46,7 @@
                   class="mb-4"
                   @click="handleBack"
                 >
-                  Back to Roles
+                  {{ t('views.roleDetails.backToRoles', 'Back to Roles').value }}
                 </AtlasButton>
 
                 <div class="role-details-view__title-section">
@@ -83,13 +83,13 @@
                 class="mb-4"
               >
                 <AtlasTab value="users">
-                  Users
+                  {{ t('configuration.roles.tabs.users', 'Users').value }}
                 </AtlasTab>
                 <AtlasTab value="permissions">
-                  Permissions
+                  {{ t('configuration.roles.tabs.permissions', 'Permissions').value }}
                 </AtlasTab>
                 <AtlasTab value="utilities">
-                  Utilities
+                  {{ t('configuration.roles.tabs.utilities', 'Utilities').value }}
                 </AtlasTab>
               </AtlasTabs>
 
@@ -125,6 +125,7 @@
 import { AtlasAlert, AtlasButton, AtlasCol, AtlasContainer, AtlasProgressCircular, AtlasRow, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
 import RoleDetails from '@/components/config/permissions/RoleDetails.vue'
 import RolePermissionsTab from '@/components/config/permissions/RolePermissionsTab.vue'
@@ -133,6 +134,7 @@ import RoleUtilitiesTab from '@/components/config/permissions/RoleUtilitiesTab.v
 
 const router = useRouter()
 const route = useRoute()
+const { t } = useI18n()
 const { currentRole, isLoadingRoles, rolesError, fetchRoleById } = useRoles()
 
 const activeTab = ref('users')

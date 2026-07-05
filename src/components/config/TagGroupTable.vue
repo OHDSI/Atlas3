@@ -40,7 +40,7 @@
         size="sm"
         tone="danger"
       >
-        Required
+        {{ t('components.config.tags.requiredChip', 'Required').value }}
       </AtlasChip>
       <span
         v-else
@@ -54,7 +54,7 @@
         size="sm"
         tone="primary"
       >
-        Column
+        {{ t('components.config.tags.columnChip', 'Column').value }}
       </AtlasChip>
       <span
         v-else
@@ -68,7 +68,7 @@
         size="sm"
         tone="info"
       >
-        Multiple
+        {{ t('config.tags.table.headers.multiple', 'Multiple').value }}
       </AtlasChip>
       <span
         v-else
@@ -82,7 +82,7 @@
         size="sm"
         tone="success"
       >
-        Free-form
+        {{ t('config.tags.table.headers.freeForm', 'Free-form').value }}
       </AtlasChip>
       <span
         v-else
@@ -129,7 +129,7 @@
         size="sm"
         @click="$emit('showTags', item)"
       >
-        Show Tags
+        {{ t('components.config.tags.showTagsButton', 'Show Tags').value }}
       </AtlasButton>
     </template>
 
@@ -137,14 +137,14 @@
     <template #item.actions="{ item }">
       <AtlasIconButton
         icon="mdi-pencil"
-        v-bind="{ ariaLabel: 'Edit tag group' }"
+        v-bind="{ ariaLabel: tv('components.config.tags.editGroupAria', 'Edit tag group') }"
         variant="text"
         size="sm"
         @click="$emit('edit', item)"
       />
       <AtlasIconButton
         icon="mdi-delete"
-        v-bind="{ ariaLabel: 'Delete tag group' }"
+        v-bind="{ ariaLabel: tv('components.config.tags.deleteGroupAria', 'Delete tag group') }"
         variant="text"
         tone="danger"
         size="sm"
@@ -162,10 +162,15 @@
           mdi-tag-off-outline
         </AtlasIcon>
         <p class="text-h6 mt-2">
-          No tag groups found
+          {{ t('config.tags.table.empty', 'No tag groups found').value }}
         </p>
         <p class="text-body-2 text-grey">
-          Create your first tag group to get started
+          {{
+            t(
+              'components.config.tags.createFirstGroup',
+              'Create your first tag group to get started'
+            ).value
+          }}
         </p>
       </div>
     </template>
@@ -174,7 +179,10 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
 import type { TagGroup } from '@/models/config.types'
+
+const { t, tv } = useI18n()
 
 interface Props {
   items: TagGroup[]
@@ -190,18 +198,18 @@ defineEmits<{
 }>()
 
 const headers = [
-  { title: 'Name', key: 'name', sortable: true, width: '150px' },
-  { title: 'Color', key: 'color', sortable: false, width: '80px' },
-  { title: 'Icon', key: 'icon', sortable: false, width: '80px' },
-  { title: 'Mandatory', key: 'mandatory', sortable: true, width: '100px' },
-  { title: 'Show Column', key: 'showGroup', sortable: true, width: '120px' },
-  { title: 'Multiple', key: 'multiSelection', sortable: true, width: '100px' },
-  { title: 'Free-form', key: 'allowCustom', sortable: true, width: '100px' },
-  { title: 'Created', key: 'createdDate', sortable: true, width: '120px' },
-  { title: 'Author', key: 'createdBy', sortable: true, width: '120px' },
-  { title: 'Description', key: 'description', sortable: false, width: '200px' },
+  { title: tv('config.tags.table.headers.name', 'Name'), key: 'name', sortable: true, width: '150px' },
+  { title: tv('config.tags.table.headers.color', 'Color'), key: 'color', sortable: false, width: '80px' },
+  { title: tv('config.tags.table.headers.icon', 'Icon'), key: 'icon', sortable: false, width: '80px' },
+  { title: tv('config.tags.table.headers.mandatory', 'Mandatory'), key: 'mandatory', sortable: true, width: '100px' },
+  { title: tv('config.tags.table.headers.showColumn', 'Show Column'), key: 'showGroup', sortable: true, width: '120px' },
+  { title: tv('config.tags.table.headers.multiple', 'Multiple'), key: 'multiSelection', sortable: true, width: '100px' },
+  { title: tv('config.tags.table.headers.freeForm', 'Free-form'), key: 'allowCustom', sortable: true, width: '100px' },
+  { title: tv('config.tags.table.headers.created', 'Created'), key: 'createdDate', sortable: true, width: '120px' },
+  { title: tv('config.tags.table.headers.author', 'Author'), key: 'createdBy', sortable: true, width: '120px' },
+  { title: tv('config.tags.table.headers.description', 'Description'), key: 'description', sortable: false, width: '200px' },
   { title: '', key: 'showTagsBtn', sortable: false, width: '100px' },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
+  { title: tv('config.tags.table.headers.actions', 'Actions'), key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
 ]
 
 /**

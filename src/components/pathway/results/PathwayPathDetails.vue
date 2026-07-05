@@ -3,10 +3,10 @@
     <thead>
       <tr>
         <th />
-        <th>Event</th>
-        <th>Remain</th>
+        <th>{{ t('components.pathwayPathDetails.event', 'Event').value }}</th>
+        <th>{{ t('columns.remain', 'Remain').value }}</th>
         <th>%</th>
-        <th>Diff</th>
+        <th>{{ t('columns.diff', 'Diff').value }}</th>
         <th>%</th>
       </tr>
     </thead>
@@ -34,6 +34,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { PathwayEventCode } from '@/models/pathway.types'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 interface PathStep {
   code: number

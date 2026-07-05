@@ -95,7 +95,7 @@ import { useI18n } from '@/composables/useI18n'
 import CohortCard from './CohortCard.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 interface Props {
   cohorts: CohortDefinitionSummary[]
@@ -135,11 +135,22 @@ const isFiltered = computed(
  */
 const emptyMessage = computed(() => {
   if (props.searchQuery && (props.selectedTags?.length ?? 0) > 0) {
-    return `No cohorts match "${props.searchQuery}" with the selected tags.`
+    return tv(
+      'components.cohortList.emptyMatchQueryAndTags',
+      'No cohorts match "{query}" with the selected tags.',
+      { query: props.searchQuery }
+    )
   }
-  if (props.searchQuery) return `No cohorts match "${props.searchQuery}".`
-  if ((props.selectedTags?.length ?? 0) > 0) return 'No cohorts match the selected tags.'
-  return 'No cohorts yet — create one to start defining a study population.'
+  if (props.searchQuery)
+    return tv('components.cohortList.emptyMatchQuery', 'No cohorts match "{query}".', {
+      query: props.searchQuery,
+    })
+  if ((props.selectedTags?.length ?? 0) > 0)
+    return tv('components.cohortList.emptyMatchTags', 'No cohorts match the selected tags.')
+  return tv(
+    'components.cohortList.emptyNoCohorts',
+    'No cohorts yet — create one to start defining a study population.'
+  )
 })
 </script>
 

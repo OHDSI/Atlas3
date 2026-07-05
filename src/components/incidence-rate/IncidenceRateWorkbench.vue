@@ -18,10 +18,10 @@
     >
       <button
         class="rail-toggle"
-        :title="railOpen ? 'Hide design panel' : 'Show design panel'"
+        :title="railOpen ? tv('components.incidenceRate.hideDesignPanel', 'Hide design panel') : tv('components.incidenceRate.showDesignPanel', 'Show design panel')"
         @click="railOpen = !railOpen"
       >
-        {{ railOpen ? '◂ Hide Analysis Design' : '▸ Show Analysis Design' }}
+        {{ railOpen ? `◂ ${tv('components.incidenceRate.hideAnalysisDesign', 'Hide Analysis Design')}` : `▸ ${tv('components.incidenceRate.showAnalysisDesign', 'Show Analysis Design')}` }}
       </button>
       <template v-if="!store.currentIR?.id">
         <IncidenceRateEmptyState variant="no-id" />
@@ -80,7 +80,7 @@
             severity="info"
             class="mb-2"
           >
-            No cases found for this target/outcome combination. Try selecting a different outcome.
+            {{ t('components.incidenceRate.noCasesFound', 'No cases found for this target/outcome combination. Try selecting a different outcome.').value }}
           </AtlasAlert>
           <template v-else>
             <IncidenceRateTreemap
@@ -155,7 +155,7 @@ import type { CriteriaGroup } from '@/models/cohort.types'
 import type { StratifyRule } from '@/models/incidence-rate.types'
 import type { GenerationStatus } from '@/models/characterization.types'
 
-const { tv } = useI18n()
+const { t, tv } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const store = useIncidenceRateStore()

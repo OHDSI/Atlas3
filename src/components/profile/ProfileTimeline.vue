@@ -2,10 +2,10 @@
   <AtlasCard padding="md">
     <div class="section-header">
       <div class="section-header__title-row">
-        <span class="text-eyebrow">TIMELINE</span>
+        <span class="text-eyebrow">{{ t('components.profileTimeline.eyebrow', 'TIMELINE').value }}</span>
         <span class="section-header__rule" />
         <h2 class="section-title">
-          Event timeline
+          {{ t('components.profileTimeline.title', 'Event timeline').value }}
         </h2>
       </div>
     </div>
@@ -20,7 +20,7 @@
           data-test="profile-daterange-chip"
           @close="store.setDateRange(null)"
         >
-          Day {{ store.dateRange[0] }} → {{ store.dateRange[1] }}
+          {{ t('components.profileTimeline.dayRange', 'Day {start} → {end}', { start: store.dateRange[0], end: store.dateRange[1] }).value }}
         </AtlasChip>
       </div>
       <div
@@ -42,10 +42,12 @@
 import { computed } from 'vue'
 import { useTimelineFilters } from '@/composables/useTimelineFilters'
 import { useProfileStore } from '@/stores/profile'
+import { useI18n } from '@/composables/useI18n'
 import { DEFAULT_HIGHLIGHT_COLOR, OMOP_DOMAINS } from '@/models/profile.types'
 import { AtlasCard, AtlasChip } from '@/components/ui'
 import ProfileFilterChips from '@/components/profile/ProfileFilterChips.vue'
 
+const { t, tv } = useI18n()
 const store = useProfileStore()
 const { chartSeries, axisExtent } = useTimelineFilters()
 
@@ -75,7 +77,7 @@ const option = computed(() => {
     grid: { left: 120, right: 24, top: 16, bottom: 60 },
     xAxis: {
       type: 'value',
-      name: 'Day (0 = cohort entry)',
+      name: tv('components.profileTimeline.axisDay', 'Day (0 = cohort entry)'),
       nameGap: 24,
       nameLocation: 'middle',
       min,
@@ -141,7 +143,11 @@ const option = computed(() => {
               symbol: 'none',
               silent: true,
               lineStyle: { color: '#888', type: 'dashed', width: 1 },
-              label: { formatter: 'Cohort entry', position: 'insideEndTop', color: '#666' },
+              label: {
+                formatter: tv('components.profileTimeline.cohortEntry', 'Cohort entry'),
+                position: 'insideEndTop',
+                color: '#666',
+              },
               data: [{ xAxis: 0 }],
             }
           : undefined,

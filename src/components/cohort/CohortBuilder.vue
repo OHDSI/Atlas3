@@ -679,7 +679,7 @@ const cohortStore = useCohortStore()
 const conceptSetsStore = useConceptSetsStore()
 const webapiStore = useWebAPIStore()
 const { importFromFile, downloadAtlasJSON, exportToAtlas, conversionError } = useAtlasConverter()
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 // Core cohort state
 const cohortName = ref('')
@@ -797,19 +797,26 @@ interface SectionState {
 const entryEventsState = computed<SectionState>(() => {
   const events = entryEvents.value
   if (events.length === 0) {
-    return { label: 'Required', tone: 'warning' }
+    return { label: tv('components.cohortBuilder.stateRequired', 'Required'), tone: 'warning' }
   }
   const allHaveConceptSet = events.every(e => !!e.conceptSet)
-  const count = `${events.length} event${events.length === 1 ? '' : 's'}`
+  const count =
+    events.length === 1
+      ? tv('components.cohortBuilder.eventCountOne', '1 event')
+      : tv('components.cohortBuilder.eventCountOther', '{count} events', { count: events.length })
   return allHaveConceptSet ? { label: count, tone: 'success' } : { label: count, tone: 'warning' }
 })
 
 const inclusionRulesState = computed<SectionState>(() => {
   const rules = inclusionRules.value
   if (rules.length === 0) {
-    return { label: 'Optional', tone: 'muted' }
+    return { label: tv('components.cohortBuilder.stateOptional', 'Optional'), tone: 'muted' }
   }
-  return { label: `${rules.length} rule${rules.length === 1 ? '' : 's'}`, tone: 'primary' }
+  const label =
+    rules.length === 1
+      ? tv('components.cohortBuilder.ruleCountOne', '1 rule')
+      : tv('components.cohortBuilder.ruleCountOther', '{count} rules', { count: rules.length })
+  return { label, tone: 'primary' }
 })
 
 const exitCriteriaState = computed<SectionState>(() => {
@@ -818,22 +825,33 @@ const exitCriteriaState = computed<SectionState>(() => {
   // Continuous observation (default) is always valid on its own.
   if (ec.strategy === 'CONTINUOUS_OBSERVATION') {
     return censoringCount > 0
-      ? { label: `+${censoringCount} censoring`, tone: 'primary' }
-      : { label: 'End of observation', tone: 'muted' }
+      ? {
+          label: tv('components.cohortBuilder.stateCensoringCount', '+{count} censoring', {
+            count: censoringCount,
+          }),
+          tone: 'primary',
+        }
+      : {
+          label: tv('components.cohortBuilder.stateEndOfObservation', 'End of observation'),
+          tone: 'muted',
+        }
   }
   if (ec.strategy === 'FIXED_DURATION') {
     if (ec.offset === undefined || ec.offset === null) {
-      return { label: 'Needs offset', tone: 'warning' }
+      return { label: tv('components.cohortBuilder.stateNeedsOffset', 'Needs offset'), tone: 'warning' }
     }
-    return { label: `+${ec.offset} days`, tone: 'success' }
+    return {
+      label: tv('components.cohortBuilder.stateOffsetDays', '+{count} days', { count: ec.offset }),
+      tone: 'success',
+    }
   }
   if (ec.strategy === 'CONTINUOUS_DRUG') {
     if (!ec.conceptSet) {
-      return { label: 'Needs drug set', tone: 'warning' }
+      return { label: tv('components.cohortBuilder.stateNeedsDrugSet', 'Needs drug set'), tone: 'warning' }
     }
-    return { label: 'Drug exposure', tone: 'success' }
+    return { label: tv('components.cohortBuilder.stateDrugExposure', 'Drug exposure'), tone: 'success' }
   }
-  return { label: 'Configured', tone: 'muted' }
+  return { label: tv('components.cohortBuilder.stateConfigured', 'Configured'), tone: 'muted' }
 })
 
 // Two-way sync with the parent's inline-edit name + description
@@ -2038,7 +2056,7 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     const savedCohort = await saveCohortDefinition(atlasDefinition)
 
     if (!savedCohort || !savedCohort.id) {
-      errorMessage.value = 'Failed to save cohort to server'
+      errorMessage.value = tv('components.cohortBuilder.saveToServerError', 'Failed to save cohort to server')
       showError.value = true
       return {}
     }
@@ -2080,12 +2098,15 @@ async function handleSave(): Promise<{ id?: number; name?: string }> {
     cohortStore.clearDraft()
     loadedSnapshot.value = createStateSnapshot()
 
-    successMessage.value = 'Cohort saved successfully'
+    successMessage.value = tv('components.cohortBuilder.saveSuccess', 'Cohort saved successfully')
     showSuccess.value = true
     return { id: savedCohort.id, name: cohortDefinition.name }
   } catch (error) {
     logger.error('CohortBuilder', 'Failed to save cohort', error)
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to save cohort'
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : tv('components.cohortBuilder.saveError', 'Failed to save cohort')
     showError.value = true
     return {}
   }
@@ -2180,10 +2201,12 @@ function exportFilename(): string {
 function handleExportDownload() {
   downloadAtlasJSON(buildExportCohort(), exportFilename())
   if (conversionError.value) {
-    errorMessage.value = `Export failed: ${conversionError.value}`
+    errorMessage.value = tv('components.cohortBuilder.exportFailed', 'Export failed: {error}', {
+      error: conversionError.value,
+    })
     showError.value = true
   } else {
-    successMessage.value = 'Cohort JSON downloaded'
+    successMessage.value = tv('components.cohortBuilder.exportDownloaded', 'Cohort JSON downloaded')
     showSuccess.value = true
   }
 }
@@ -2191,17 +2214,22 @@ function handleExportDownload() {
 async function handleExportCopy() {
   const json = exportToAtlas(buildExportCohort())
   if (!json || conversionError.value) {
-    errorMessage.value = `Export failed: ${conversionError.value || 'Empty cohort'}`
+    errorMessage.value = tv('components.cohortBuilder.exportFailed', 'Export failed: {error}', {
+      error: conversionError.value || tv('components.cohortBuilder.emptyCohort', 'Empty cohort'),
+    })
     showError.value = true
     return
   }
   try {
     await navigator.clipboard.writeText(json)
-    successMessage.value = 'Cohort JSON copied to clipboard'
+    successMessage.value = tv(
+      'components.cohortBuilder.copiedToClipboard',
+      'Cohort JSON copied to clipboard'
+    )
     showSuccess.value = true
   } catch (err) {
     logger.error('CohortBuilder', 'Clipboard copy failed', err)
-    errorMessage.value = 'Could not copy to clipboard'
+    errorMessage.value = tv('components.cohortBuilder.copyFailed', 'Could not copy to clipboard')
     showError.value = true
   }
 }

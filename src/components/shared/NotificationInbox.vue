@@ -15,7 +15,7 @@
         <AtlasIconButton
           v-bind="menuProps"
           icon="mdi-bell-outline"
-          :aria-label="`Notifications (${store.unreadCount} unread)`"
+          :aria-label="t('components.notifications.bellAriaLabel', 'Notifications ({count} unread)', { count: store.unreadCount }).value"
           variant="text"
           size="sm"
         />
@@ -24,7 +24,7 @@
 
     <div class="notification-inbox">
       <div class="notification-inbox__head">
-        <span class="notification-inbox__title">Notifications</span>
+        <span class="notification-inbox__title">{{ t('components.notifications.heading', 'Notifications').value }}</span>
         <div class="notification-inbox__head-actions">
           <AtlasButton
             variant="ghost"
@@ -32,7 +32,7 @@
             data-testid="notification-mark-read"
             @click="store.markAllRead()"
           >
-            Mark all read
+            {{ t('components.notifications.markAllRead', 'Mark all read').value }}
           </AtlasButton>
           <AtlasButton
             variant="ghost"
@@ -40,7 +40,7 @@
             data-testid="notification-clear"
             @click="store.clear()"
           >
-            Clear
+            {{ t('components.notifications.clear', 'Clear').value }}
           </AtlasButton>
         </div>
       </div>
@@ -49,7 +49,7 @@
         v-if="store.items.length === 0"
         class="notification-inbox__empty"
       >
-        You're all caught up.
+        {{ t('components.notifications.allCaughtUp', "You're all caught up.").value }}
       </div>
 
       <div
@@ -62,7 +62,7 @@
           :severity="item.severity"
           :title="item.title"
           closable
-          close-label="Remove"
+          :close-label="t('components.notifications.remove', 'Remove').value"
           @close="store.remove(item.id)"
         >
           <template v-if="item.message">
@@ -82,7 +82,9 @@ import AtlasIconButton from '@/components/ui/AtlasIconButton.vue'
 import AtlasButton from '@/components/ui/AtlasButton.vue'
 import AtlasFeedbackBody from '@/components/ui/AtlasFeedbackBody.vue'
 import { useNotifications } from '@/stores/notifications'
+import { useI18n } from '@/composables/useI18n'
 
+const { t } = useI18n()
 const store = useNotifications()
 const open = computed({ get: () => store.inboxOpen, set: v => { store.inboxOpen = v } })
 

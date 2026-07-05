@@ -132,7 +132,7 @@ const canCopy = computed(() => hasPermission('create:incidence'))
 const entityAccess = useEntityAccessFor('incidenceRate')
 const store = useIncidenceRateStore()
 const notify = useNotifications()
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)
 const searchInput = ref('')
@@ -177,10 +177,10 @@ async function handleCopy(ir: IncidenceRate) {
   if (!ir.id) return
   const result = await copyIncidenceRate(ir.id)
   if (result.success && result.data.id) {
-    notify.success('Incidence rate copied')
+    notify.success(tv('views.incidenceRates.copied', 'Incidence rate copied'))
     router.push(`/incidence-rates/${result.data.id}`)
   } else {
-    notify.danger('Copy failed')
+    notify.danger(tv('views.incidenceRates.copyFailed', 'Copy failed'))
     logger.error(
       'IncidenceRatesView',
       'copyIncidenceRate failed',
@@ -199,10 +199,10 @@ async function confirmDelete() {
   if (!deleteTarget.value) return
   const ok = await deleteIncidenceRate(deleteTarget.value)
   if (ok) {
-    notify.success('Incidence rate deleted')
+    notify.success(tv('views.incidenceRates.deleted', 'Incidence rate deleted'))
     await fetchIncidenceRates()
   } else {
-    notify.danger('Delete failed')
+    notify.danger(tv('views.incidenceRates.deleteFailed', 'Delete failed'))
   }
   showDelete.value = false
   deleteTarget.value = null

@@ -19,7 +19,7 @@
             icon="mdi-close"
             size="sm"
             variant="text"
-            v-bind="{ ariaLabel: 'Remove cohort' }"
+            v-bind="{ ariaLabel: t('components.incidenceRate.removeCohort', 'Remove cohort').value }"
             @click="emit('remove', c.id)"
           />
         </td>

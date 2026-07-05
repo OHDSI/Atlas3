@@ -2,7 +2,11 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="SETTINGS"
-    :title="isEditMode ? 'Edit Role' : 'Create New Role'"
+    :title="
+      isEditMode
+        ? t('components.config.permissions.editRole', 'Edit Role').value
+        : t('components.config.permissions.createNewRole', 'Create New Role').value
+    "
     max-width="600"
     persistent
     @update:model-value="$emit('update:modelValue', $event)"
@@ -15,7 +19,7 @@
     >
       <AtlasTextField
         v-model="form.name"
-        label="Role Name *"
+        :label="tv('components.config.permissions.roleNameRequiredLabel', 'Role Name *')"
         :rules="nameRules"
         :error="errors.name"
         variant="outlined"
@@ -26,7 +30,7 @@
 
       <AtlasTextField
         v-model="form.description"
-        label="Description"
+        :label="tv('common.description', 'Description')"
         :rows="3"
         multiline
         :error="errors.description"
@@ -51,14 +55,18 @@
         :disabled="saving"
         @click="handleClose"
       >
-        Cancel
+        {{ t('common.cancel', 'Cancel').value }}
       </AtlasButton>
       <AtlasButton
         :disabled="!formValid || saving"
         :loading="saving"
         @click="handleSubmit"
       >
-        {{ isEditMode ? 'Save' : 'Create' }}
+        {{
+          isEditMode
+            ? t('common.save', 'Save').value
+            : t('common.create', 'Create').value
+        }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -67,8 +75,11 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasDialog, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'
+
+const { t, tv } = useI18n()
 
 interface Props {
   modelValue: boolean
@@ -100,9 +111,13 @@ const isEditMode = computed(() => !!props.role?.id)
 
 // Validation rules (FR-007: non-empty, 1-255 chars)
 const nameRules = [
-  (v: string) => !!v || 'Role name is required',
-  (v: string) => (v && v.trim().length > 0) || 'Role name cannot be empty',
-  (v: string) => (v && v.length <= 255) || 'Role name must be less than 255 characters',
+  (v: string) => !!v || tv('components.config.permissions.roleNameRequired', 'Role name is required'),
+  (v: string) =>
+    (v && v.trim().length > 0) ||
+    tv('components.config.permissions.roleNameEmpty', 'Role name cannot be empty'),
+  (v: string) =>
+    (v && v.length <= 255) ||
+    tv('components.config.permissions.roleNameTooLong', 'Role name must be less than 255 characters'),
   // FR-006: Check for duplicate names
   (v: string) => {
     if (!v) return true // Let required rule handle empty
@@ -112,7 +127,10 @@ const nameRules = [
       r => r.name.toLowerCase() === trimmedName && r.id !== props.role?.id
     )
 
-    return !isDuplicate || 'A role with this name already exists'
+    return (
+      !isDuplicate ||
+      tv('components.config.permissions.roleNameExists', 'A role with this name already exists')
+    )
   },
 ]
 
@@ -195,11 +213,14 @@ async function handleSubmit() {
       emit('update:modelValue', false)
     } else {
       serverError.value = isEditMode.value
-        ? 'Failed to update role. Please try again.'
-        : 'Failed to create role. Please try again.'
+        ? tv('components.config.permissions.updateRoleError', 'Failed to update role. Please try again.')
+        : tv('components.config.permissions.createRoleError', 'Failed to create role. Please try again.')
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    const message =
+      error instanceof Error
+        ? error.message
+        : tv('components.config.permissions.unexpectedError', 'An unexpected error occurred')
     serverError.value = message
   } finally {
     saving.value = false

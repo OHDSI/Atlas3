@@ -11,11 +11,19 @@ import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
 
 // Mock dependencies
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (key: string, fallback?: string) => ref(fallback || key)
-  })
-}))
+vi.mock('@/composables/useI18n', () => {
+  const interpolate = (template: string, params?: Record<string, unknown>) =>
+    params
+      ? template.replace(/\{(\w+)\}/g, (m, k) => (params[k] !== undefined ? String(params[k]) : m))
+      : template
+  return {
+    useI18n: () => ({
+      t: (key: string, fallback?: string) => ref(fallback || key),
+      tv: (key: string, fallback?: string, params?: Record<string, unknown>) =>
+        interpolate(fallback || key, params)
+    })
+  }
+})
 
 const vuetify = createVuetify({ components, directives })
 

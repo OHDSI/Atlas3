@@ -10,7 +10,7 @@
       :items="tagGroups"
       item-title="name"
       item-value="id"
-      label="Tag Group *"
+      :label="t('components.tags.tagGroupLabel', 'Tag Group *').value"
       :rules="groupRules"
       :error="errors.groups"
       variant="outlined"
@@ -26,7 +26,7 @@
     <!-- Tag Name -->
     <AtlasTextField
       v-model="form.name"
-      label="Tag Name *"
+      :label="t('components.tags.tagNameLabel', 'Tag Name *').value"
       :rules="nameRules"
       :error="errors.name"
       variant="outlined"
@@ -36,12 +36,12 @@
 
     <AtlasTextField
       v-model="form.color"
-      label="Color (optional)"
+      :label="t('components.tags.colorOptional', 'Color (optional)').value"
       type="color"
       :hint="
         form.selectedGroup
-          ? `Defaults to group color (${form.selectedGroup.color || '#1976D2'})`
-          : 'Select a tag group first'
+          ? t('components.tags.colorDefaultsHint', 'Defaults to group color ({color})', { color: form.selectedGroup.color || '#1976D2' }).value
+          : t('components.tags.selectGroupFirst', 'Select a tag group first').value
       "
       persistent-hint
       :error-messages="errors.color"
@@ -66,14 +66,14 @@
           <AtlasIcon start>
             mdi-cog
           </AtlasIcon>
-          Show Advanced Options
+          {{ t('components.tags.showAdvancedOptions', 'Show Advanced Options').value }}
         </v-expansion-panel-title>
         <v-expansion-panel-text>
           <!-- Icon Field -->
           <AtlasTextField
             v-model="form.icon"
-            label="Icon (optional)"
-            hint="Material Design Icon name (e.g., mdi-star)"
+            :label="t('components.tags.iconOptional', 'Icon (optional)').value"
+            :hint="t('components.tags.iconHint', 'Material Design Icon name (e.g., mdi-star)').value"
             persistent-hint
             :error-messages="errors.icon"
             variant="outlined"
@@ -89,8 +89,8 @@
           <!-- Permission Protected -->
           <AtlasCheckbox
             v-model="form.permissionProtected"
-            label="Permission Protected"
-            hint="Require special permissions to assign/unassign this tag"
+            :label="t('components.tags.permissionProtected', 'Permission Protected').value"
+            :hint="t('components.tags.permissionProtectedHint', 'Require special permissions to assign/unassign this tag').value"
             persistent-hint
             class="mb-2"
           />
@@ -98,7 +98,7 @@
           <!-- Description Field -->
           <AtlasTextField
             v-model="form.description"
-            label="Description"
+            :label="t('common.description', 'Description').value"
             :rows="2"
             multiline
             :error="errors.description"
@@ -115,14 +115,14 @@
         :disabled="saving"
         @click="handleCancel"
       >
-        Cancel
+        {{ t('common.cancel', 'Cancel').value }}
       </AtlasButton>
       <AtlasButton
         type="submit"
         :disabled="!formValid"
         :loading="saving"
       >
-        Create Tag
+        {{ t('configuration.tagManagement.createTag', 'Create Tag').value }}
       </AtlasButton>
     </div>
 
@@ -157,6 +157,7 @@ import { ref, computed } from 'vue'
 import { tagSchema, type Tag as ConfigTag, type TagGroup } from '@/models/config.types'
 import type { Tag } from '@/models/cohort.types'
 import { useConfigStore } from '@/stores/config'
+import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
 
 interface Props {
@@ -169,6 +170,7 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
+const { t, tv } = useI18n()
 const configStore = useConfigStore()
 
 const formRef = ref()
@@ -210,11 +212,15 @@ const isValidIcon = computed(() => {
 })
 
 const nameRules = [
-  (v: string) => !!v || 'Tag name is required',
-  (v: string) => v?.length <= 255 || 'Tag name must be less than 255 characters',
+  (v: string) => !!v || tv('components.tags.tagNameRequired', 'Tag name is required'),
+  (v: string) =>
+    v?.length <= 255 ||
+    tv('components.tags.tagNameMaxLength', 'Tag name must be less than 255 characters'),
 ]
 
-const groupRules = [(v: TagGroup | null) => !!v || 'Tag group is required']
+const groupRules = [
+  (v: TagGroup | null) => !!v || tv('components.tags.tagGroupRequired', 'Tag group is required'),
+]
 
 function resetForm() {
   form.value = {
@@ -236,7 +242,7 @@ async function handleSubmit() {
   errorMessage.value = ''
 
   if (!form.value.selectedGroup) {
-    errors.value.groups = 'Tag group is required'
+    errors.value.groups = tv('components.tags.tagGroupRequired', 'Tag group is required')
     return
   }
 
@@ -270,7 +276,11 @@ async function handleSubmit() {
       color: createdTag.color,
     }
 
-    successMessage.value = `Tag "${createdTag.name}" created successfully!`
+    successMessage.value = tv(
+      'components.tags.tagCreatedSuccess',
+      'Tag "{name}" created successfully!',
+      { name: createdTag.name }
+    )
     emit('created', cohortTag)
 
     setTimeout(() => {
@@ -280,7 +290,9 @@ async function handleSubmit() {
   } catch (error) {
     logger.error('CreateTagForm', 'Failed to create tag', error)
     errorMessage.value =
-      error instanceof Error ? error.message : 'Failed to create tag. Please try again.'
+      error instanceof Error
+        ? error.message
+        : tv('components.tags.createTagError', 'Failed to create tag. Please try again.')
   } finally {
     saving.value = false
   }

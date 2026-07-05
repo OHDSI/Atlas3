@@ -2,7 +2,7 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="IMPORT"
-    title="Import Role"
+    :title="t('components.config.permissions.importRole', 'Import Role').value"
     max-width="600"
     persistent
     @update:model-value="$emit('update:modelValue', $event)"
@@ -12,13 +12,17 @@
       <!-- File Upload -->
       <div v-if="!jsonData">
         <p class="text-body-2 mb-4">
-          Select a JSON file to import a role configuration. The file should be in Atlas 2.x
-          compatible format.
+          {{
+            t(
+              'components.config.permissions.importSelectFileHelp',
+              'Select a JSON file to import a role configuration. The file should be in Atlas 2.x compatible format.'
+            ).value
+          }}
         </p>
 
         <v-file-input
           v-model="selectedFile"
-          label="Select JSON file"
+          :label="tv('components.config.permissions.selectJsonFile', 'Select JSON file')"
           accept=".json,application/json"
           prepend-icon="mdi-file-upload"
           variant="outlined"
@@ -35,15 +39,17 @@
           class="mb-4"
         >
           <div class="text-h6 mb-2">
-            Role Name Conflict
+            {{ t('components.config.permissions.roleNameConflict', 'Role Name Conflict').value }}
           </div>
           <p class="text-body-2">
-            A role with the name <strong>"{{ parsedRoleName }}"</strong> already exists.
+            {{ t('components.config.permissions.roleWithNamePrefix', 'A role with the name').value }}
+            <strong>"{{ parsedRoleName }}"</strong>
+            {{ t('components.config.permissions.alreadyExistsSuffix', 'already exists.').value }}
           </p>
         </AtlasAlert>
 
         <p class="text-body-2 mb-4">
-          How would you like to proceed?
+          {{ t('components.config.permissions.howToProceed', 'How would you like to proceed?').value }}
         </p>
 
         <AtlasRadioGroup
@@ -52,21 +58,21 @@
         >
           <AtlasRadio
             value="skip"
-            label="Skip - Cancel the import"
+            :label="tv('components.config.permissions.conflictSkip', 'Skip - Cancel the import')"
           />
           <AtlasRadio
             value="rename"
-            label="Rename - Import with a new name"
+            :label="tv('components.config.permissions.conflictRename', 'Rename - Import with a new name')"
           />
         </AtlasRadioGroup>
 
         <AtlasTextField
           v-if="conflictResolution === 'rename'"
           v-model="newRoleName"
-          label="New Role Name"
+          :label="tv('components.config.permissions.newRoleName', 'New Role Name')"
           variant="outlined"
           :rules="nameRules"
-          hint="Enter a unique name for the imported role"
+          :hint="tv('components.config.permissions.newRoleNameHint', 'Enter a unique name for the imported role')"
           persistent-hint
         />
       </div>
@@ -77,7 +83,7 @@
           indeterminate
           color="primary"
         />
-        <span class="ml-2">Validating import data...</span>
+        <span class="ml-2">{{ t('components.config.permissions.validatingImport', 'Validating import data...').value }}</span>
       </div>
 
       <div v-else-if="validationComplete">
@@ -86,28 +92,33 @@
           class="mb-4"
         >
           <div class="text-h6 mb-2">
-            Ready to Import
+            {{ t('components.config.permissions.readyToImport', 'Ready to Import').value }}
           </div>
           <p class="text-body-2">
-            The following role configuration will be imported:
+            {{
+              t(
+                'components.config.permissions.importPreviewIntro',
+                'The following role configuration will be imported:'
+              ).value
+            }}
           </p>
         </AtlasAlert>
 
         <div class="import-preview">
           <div class="import-preview__item">
-            <strong>Role Name:</strong> {{ displayRoleName }}
+            <strong>{{ t('components.config.permissions.roleNameLabel', 'Role Name:').value }}</strong> {{ displayRoleName }}
           </div>
           <div
             v-if="parsedDescription"
             class="import-preview__item"
           >
-            <strong>Description:</strong> {{ parsedDescription }}
+            <strong>{{ t('components.config.permissions.descriptionLabel', 'Description:').value }}</strong> {{ parsedDescription }}
           </div>
           <div class="import-preview__item">
-            <strong>Permissions:</strong> {{ permissionCount }}
+            <strong>{{ t('components.config.permissions.permissionsLabel', 'Permissions:').value }}</strong> {{ permissionCount }}
           </div>
           <div class="import-preview__item">
-            <strong>Users:</strong> {{ userCount }}
+            <strong>{{ t('components.config.permissions.usersLabel', 'Users:').value }}</strong> {{ userCount }}
           </div>
         </div>
 
@@ -117,7 +128,7 @@
           class="mt-4"
         >
           <div class="text-body-2 font-weight-bold mb-2">
-            Warnings:
+            {{ t('components.config.permissions.warningsLabel', 'Warnings:').value }}
           </div>
           <ul class="text-body-2">
             <li
@@ -147,27 +158,27 @@
         :disabled="importing"
         @click="handleClose"
       >
-        Cancel
+        {{ t('common.cancel', 'Cancel').value }}
       </AtlasButton>
       <AtlasButton
         v-if="!jsonData"
         disabled
       >
-        Next
+        {{ t('components.config.permissions.next', 'Next').value }}
       </AtlasButton>
       <AtlasButton
         v-else-if="hasConflict"
         :disabled="conflictResolution === 'rename' && !isNewNameValid"
         @click="handleConflictResolution"
       >
-        Continue
+        {{ t('components.config.permissions.continue', 'Continue').value }}
       </AtlasButton>
       <AtlasButton
         v-else-if="validationComplete"
         :loading="importing"
         @click="handleImport"
       >
-        Import Role
+        {{ t('components.config.permissions.importRole', 'Import Role').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -176,7 +187,10 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasDialog, AtlasProgressCircular, AtlasRadio, AtlasRadioGroup, AtlasTextField } from '@/components/ui'
 import { ref, computed, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
+
+const { t, tv } = useI18n()
 
 interface Props {
   modelValue: boolean
@@ -217,14 +231,21 @@ const importing = ref(false)
 
 // Name validation rules
 const nameRules = [
-  (v: string) => !!v || 'Role name is required',
-  (v: string) => (v && v.trim().length > 0) || 'Role name cannot be empty',
-  (v: string) => (v && v.length <= 255) || 'Role name must be less than 255 characters',
+  (v: string) => !!v || tv('components.config.permissions.roleNameRequired', 'Role name is required'),
+  (v: string) =>
+    (v && v.trim().length > 0) ||
+    tv('components.config.permissions.roleNameEmpty', 'Role name cannot be empty'),
+  (v: string) =>
+    (v && v.length <= 255) ||
+    tv('components.config.permissions.roleNameTooLong', 'Role name must be less than 255 characters'),
   (v: string) => {
     if (!v) return true
     const trimmedName = v.trim().toLowerCase()
     const isDuplicate = roles.value.some(r => r.name.toLowerCase() === trimmedName)
-    return !isDuplicate || 'A role with this name already exists'
+    return (
+      !isDuplicate ||
+      tv('components.config.permissions.roleNameExists', 'A role with this name already exists')
+    )
   },
 ]
 
@@ -255,7 +276,7 @@ async function handleFileSelect(files: File | File[] | null) {
 
   // Validate file type
   if (!file.name.endsWith('.json')) {
-    fileError.value = 'Please select a JSON file'
+    fileError.value = tv('components.config.permissions.selectJsonFileError', 'Please select a JSON file')
     selectedFile.value = null
     return
   }
@@ -268,7 +289,10 @@ async function handleFileSelect(files: File | File[] | null) {
     // Validate and parse
     await validateImportData(text)
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to read file'
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : tv('components.config.permissions.readFileError', 'Failed to read file')
     selectedFile.value = null
   }
 }
@@ -287,7 +311,12 @@ async function validateImportData(data: string) {
 
     // Validate structure
     if (!parsed.role || !parsed.role.name) {
-      throw new Error('Invalid role import format: missing role name')
+      throw new Error(
+        tv(
+          'components.config.permissions.invalidImportFormat',
+          'Invalid role import format: missing role name'
+        )
+      )
     }
 
     // Extract data
@@ -311,18 +340,28 @@ async function validateImportData(data: string) {
     // Note: We can't validate if permissions/users exist in the system without fetching them
     // The import service will handle this validation
     if (permissionCount.value === 0) {
-      validationWarnings.value.push('Role has no permissions assigned')
+      validationWarnings.value.push(
+        tv('components.config.permissions.warnNoPermissions', 'Role has no permissions assigned')
+      )
     }
     if (userCount.value === 0) {
-      validationWarnings.value.push('Role has no users assigned')
+      validationWarnings.value.push(
+        tv('components.config.permissions.warnNoUsers', 'Role has no users assigned')
+      )
     }
 
     validationComplete.value = true
   } catch (error) {
     if (error instanceof SyntaxError) {
-      errorMessage.value = 'Invalid JSON format. Please check the file and try again.'
+      errorMessage.value = tv(
+        'components.config.permissions.invalidJsonFormat',
+        'Invalid JSON format. Please check the file and try again.'
+      )
     } else {
-      errorMessage.value = error instanceof Error ? error.message : 'Failed to validate import data'
+      errorMessage.value =
+        error instanceof Error
+          ? error.message
+          : tv('components.config.permissions.validateImportError', 'Failed to validate import data')
     }
   } finally {
     isValidating.value = false
@@ -351,7 +390,10 @@ function handleConflictResolution() {
       hasConflict.value = false
       validationComplete.value = true
     } catch (error) {
-      errorMessage.value = 'Failed to update role name'
+      errorMessage.value = tv(
+        'components.config.permissions.updateRoleNameFailed',
+        'Failed to update role name'
+      )
     }
   }
 }
@@ -372,10 +414,16 @@ async function handleImport() {
       emit('success', result.name)
       handleClose()
     } else {
-      errorMessage.value = 'Failed to import role. Please try again.'
+      errorMessage.value = tv(
+        'components.config.permissions.importRoleRetry',
+        'Failed to import role. Please try again.'
+      )
     }
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to import role'
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : tv('components.config.permissions.importRoleError', 'Failed to import role')
   } finally {
     importing.value = false
   }

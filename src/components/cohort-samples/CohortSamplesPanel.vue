@@ -6,11 +6,15 @@
     <div class="cohort-samples-panel__header">
       <div>
         <div class="text-subtitle-1 font-weight-medium">
-          Samples
+          {{ t('components.cohortSamples.title', 'Samples').value }}
         </div>
         <div class="text-caption text-grey-darken-1">
-          Random selections of persons drawn from the generated cohort, optionally filtered by age
-          and gender.
+          {{
+            t(
+              'components.cohortSamples.description',
+              'Random selections of persons drawn from the generated cohort, optionally filtered by age and gender.'
+            ).value
+          }}
         </div>
       </div>
       <AtlasButton
@@ -20,7 +24,7 @@
         data-testid="cohort-samples-new"
         @click="dialogOpen = true"
       >
-        New sample
+        {{ t('components.cohortSamples.newSample', 'New sample').value }}
       </AtlasButton>
     </div>
 
@@ -71,6 +75,7 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasDivider, AtlasSkeleton } from '@/components/ui'
 import { ref, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import {
   listCohortSamples,
   createCohortSample,
@@ -82,6 +87,8 @@ import type { CohortSample, SampleParameters } from '@/models/cohort-sample.type
 import CohortSamplesList from './CohortSamplesList.vue'
 import CohortSampleDetail from './CohortSampleDetail.vue'
 import CohortSampleCreateDialog from './CohortSampleCreateDialog.vue'
+
+const { t, tv } = useI18n()
 
 const props = defineProps<{
   cohortId: number
@@ -108,7 +115,10 @@ async function loadList() {
     const list = await listCohortSamples(props.cohortId, props.sourceKey)
     samples.value = list?.samples ?? []
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to load samples'
+    error.value =
+      e instanceof Error
+        ? e.message
+        : tv('components.cohortSamples.failedToLoadSamples', 'Failed to load samples')
   } finally {
     loading.value = false
   }
@@ -143,7 +153,10 @@ async function onCreate(parameters: SampleParameters) {
       await onSelect(created)
     }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to create sample'
+    error.value =
+      e instanceof Error
+        ? e.message
+        : tv('components.cohortSamples.failedToCreateSample', 'Failed to create sample')
   } finally {
     creating.value = false
   }

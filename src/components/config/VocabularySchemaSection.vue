@@ -1,18 +1,22 @@
 <template>
   <div class="vocabulary-schema-section">
     <v-card>
-      <v-card-title>Vocabulary Schema</v-card-title>
+      <v-card-title>{{ t('config.vocabulary.title', 'Vocabulary Schema').value }}</v-card-title>
       <v-card-text>
         <p class="text-body-1 mb-4">
-          Configure the database schema name for vocabulary lookups. This setting controls which
-          PostgreSQL schema is used when querying the OMOP vocabulary tables.
+          {{
+            t(
+              'components.config.vocabulary.help',
+              'Configure the database schema name for vocabulary lookups. This setting controls which PostgreSQL schema is used when querying the OMOP vocabulary tables.'
+            ).value
+          }}
         </p>
 
         <!-- Schema Input Field -->
         <AtlasTextField
           v-model="localSchema"
-          label="Vocabulary Schema"
-          hint="PostgreSQL schema name (e.g., 'public', 'vocab_v5')"
+          :label="t('config.vocabulary.title', 'Vocabulary Schema').value"
+          :hint="t('components.config.vocabulary.schemaHint', `PostgreSQL schema name (e.g., 'public', 'vocab_v5')`).value"
           persistent-hint
           :rules="validationRules"
           :disabled="isSaving"
@@ -47,13 +51,13 @@
           variant="ghost"
           @click="handleUndo"
         >
-          Undo
+          {{ t('config.vocabulary.undo', 'Undo').value }}
         </AtlasButton>
         <AtlasButton
           variant="ghost"
           @click="showToast = false"
         >
-          Close
+          {{ t('common.close', 'Close').value }}
         </AtlasButton>
       </template>
     </AtlasSnackbar>
@@ -72,11 +76,13 @@
 import { AtlasAlert, AtlasButton, AtlasSnackbar, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
+import { useI18n } from '@/composables/useI18n'
 import { useConfigStore } from '@/stores/config'
 import { useConfigUndo } from '@/composables/useConfigUndo'
 import { validateSchemaName } from '@/models/config.types'
 import { logger } from '@/utils/logger'
 
+const { t, tv } = useI18n()
 const configStore = useConfigStore()
 const { undoStack, isSaving, pushUndo, performUndo } = useConfigUndo<string>()
 
@@ -164,7 +170,11 @@ watchDebounced(
       previousSchema.value = newValue
 
       // Show success toast
-      toastMessage.value = `Vocabulary schema updated to "${newValue}"`
+      toastMessage.value = tv(
+        'components.config.vocabulary.updated',
+        'Vocabulary schema updated to "{value}"',
+        { value: newValue }
+      )
       showToast.value = true
     } catch (error: unknown) {
       // Rollback on error
@@ -172,7 +182,12 @@ watchDebounced(
       configStore.vocabularySchema = previousSchema.value
 
       errorMessage.value =
-        error instanceof Error ? error.message : 'Failed to update schema. Please try again.'
+        error instanceof Error
+          ? error.message
+          : tv(
+              'components.config.vocabulary.updateError',
+              'Failed to update schema. Please try again.'
+            )
       showErrorToast.value = true
     } finally {
       isSaving.value = false
@@ -200,12 +215,18 @@ async function handleUndo() {
       await configStore.updateVocabularySchema(previousValue)
 
       // Show feedback
-      toastMessage.value = `Reverted to "${previousValue}"`
+      toastMessage.value = tv(
+        'components.config.vocabulary.reverted',
+        'Reverted to "{value}"',
+        { value: previousValue }
+      )
       showToast.value = true
     })
   } catch (error: unknown) {
     errorMessage.value =
-      error instanceof Error ? error.message : 'Failed to undo. Please try again.'
+      error instanceof Error
+        ? error.message
+        : tv('components.config.vocabulary.undoError', 'Failed to undo. Please try again.')
     showErrorToast.value = true
   }
 }

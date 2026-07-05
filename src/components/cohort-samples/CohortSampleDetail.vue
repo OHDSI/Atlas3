@@ -6,7 +6,12 @@
           {{ sample.name }}
         </div>
         <div class="text-caption text-grey-darken-1">
-          {{ formatCount(sample.size) }} persons · created {{ formatDate(sample.createdDate) }}
+          {{
+            t('components.cohortSampleDetail.personsCreated', '{count} persons · created {date}', {
+              count: formatCount(sample.size),
+              date: formatDate(sample.createdDate),
+            }).value
+          }}
         </div>
       </div>
     </div>
@@ -24,16 +29,16 @@
     >
       <thead>
         <tr>
-          <th>Person ID</th>
-          <th>Gender</th>
+          <th>{{ tv('columns.personId', 'Person ID') }}</th>
+          <th>{{ tv('columns.gender', 'Gender') }}</th>
           <th class="text-right">
-            Age at index
+            {{ tv('columns.ageAtIndex', 'Age at index') }}
           </th>
           <th
             v-if="anyRecordCount"
             class="text-right"
           >
-            Records
+            {{ tv('components.cohortSampleDetail.records', 'Records') }}
           </th>
         </tr>
       </thead>
@@ -73,7 +78,7 @@
       class="text-center py-6 text-grey-darken-1"
       data-testid="cohort-sample-detail-empty"
     >
-      This sample has no person records.
+      {{ tv('components.cohortSampleDetail.noRecords', 'This sample has no person records.') }}
     </div>
   </div>
 </template>
@@ -87,6 +92,9 @@ import {
   type CohortSample,
 } from '@/models/cohort-sample.types'
 import { useDataSourcesStore } from '@/stores/datasources'
+import { useI18n } from '@/composables/useI18n'
+
+const { t, tv } = useI18n()
 
 const props = defineProps<{
   sample: CohortSample
@@ -113,9 +121,9 @@ function formatDate(value: string | number | undefined | null): string {
 }
 
 function formatGender(conceptId: number): string {
-  if (conceptId === GENDER_MALE_CONCEPT_ID) return 'Male'
-  if (conceptId === GENDER_FEMALE_CONCEPT_ID) return 'Female'
-  return 'Other'
+  if (conceptId === GENDER_MALE_CONCEPT_ID) return tv('components.cohortSamples.male', 'Male')
+  if (conceptId === GENDER_FEMALE_CONCEPT_ID) return tv('components.cohortSamples.female', 'Female')
+  return tv('components.cohortSamples.other', 'Other')
 }
 
 const anyRecordCount = computed(() =>

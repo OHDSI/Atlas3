@@ -32,7 +32,7 @@
         <aside
           v-if="highlightsOpen"
           class="psp__highlights"
-          aria-label="Highlights"
+          :aria-label="tv('components.profileSidePanel.highlights', 'Highlights')"
         >
           <button
             type="button"
@@ -60,7 +60,7 @@
             icon="mdi-chevron-left"
             size="18"
           />
-          <span class="psp__highlights-toggle-label">Highlights</span>
+          <span class="psp__highlights-toggle-label">{{ tv('components.profileSidePanel.highlights', 'Highlights') }}</span>
         </button>
       </div>
       <ProfileEventsTable />
@@ -71,12 +71,15 @@
 <script setup lang="ts">
 import { AtlasIcon, AtlasProgressCircular } from '@/components/ui'
 import { computed, ref } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import ProfileDemographics from '@/components/profile/ProfileDemographics.vue'
 import ProfileObservationBand from '@/components/profile/ProfileObservationBand.vue'
 import ProfileTimeline from '@/components/profile/ProfileTimeline.vue'
 import ProfileEventsTable from '@/components/profile/ProfileEventsTable.vue'
 import HighlightsPanel from '@/components/profile/HighlightsPanel.vue'
 import { usePersonProfile } from '@/composables/usePersonProfile'
+
+const { tv } = useI18n()
 
 const props = defineProps<{
   sourceKey: string
@@ -93,15 +96,18 @@ const params = computed(() => ({
 const { person, loading, error } = usePersonProfile(params)
 
 const highlightsOpen = ref(false)
-const expandLabel = 'Show highlights'
-const collapseLabel = 'Hide highlights'
+const expandLabel = tv('components.profileSidePanel.showHighlights', 'Show highlights')
+const collapseLabel = tv('components.profileSidePanel.hideHighlights', 'Hide highlights')
 
 const friendlyError = computed(() => {
   const msg = error.value ?? ''
   if (msg.includes('403')) {
-    return "You don't have access to this person's profile on this data source. Ask your admin to grant READ access to the source."
+    return tv(
+      'components.profileSidePanel.accessDenied403',
+      "You don't have access to this person's profile on this data source. Ask your admin to grant READ access to the source."
+    )
   }
-  return msg || 'Failed to load profile.'
+  return msg || tv('components.profileSidePanel.failedToLoadProfile', 'Failed to load profile.')
 })
 </script>
 

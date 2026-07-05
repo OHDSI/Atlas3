@@ -2,8 +2,11 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { AtlasCard, AtlasChip, AtlasDataTable } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { RelatedConcept } from '@/models/concept-detail.types'
+
+const { t } = useI18n()
 
 const props = defineProps<{ related: RelatedConcept[]; sourceKey?: string }>()
 
@@ -47,14 +50,14 @@ const rows = computed<Row[]>(() => {
   return out
 })
 
-const headers = [
-  { title: 'Relationship', key: 'relationship', sortable: true },
-  { title: 'Concept Name', key: 'conceptName', sortable: true },
-  { title: 'Vocabulary', key: 'vocabularyId', sortable: true },
-  { title: 'Code', key: 'conceptCode', sortable: true },
-  { title: 'Domain', key: 'domainId', sortable: true },
-  { title: 'Standard', key: 'standardConcept', sortable: true, width: 80 },
-]
+const headers = computed(() => [
+  { title: t('facets.caption.relationship', 'Relationship').value, key: 'relationship', sortable: true },
+  { title: t('columns.conceptName', 'Concept Name').value, key: 'conceptName', sortable: true },
+  { title: t('columns.vocabulary', 'Vocabulary').value, key: 'vocabularyId', sortable: true },
+  { title: t('columns.code', 'Code').value, key: 'conceptCode', sortable: true },
+  { title: t('columns.domain', 'Domain').value, key: 'domainId', sortable: true },
+  { title: t('columns.standard', 'Standard').value, key: 'standardConcept', sortable: true, width: 80 },
+])
 </script>
 
 <template>
@@ -63,14 +66,14 @@ const headers = [
     data-testid="concept-related-table"
   >
     <header class="card-title">
-      <span>Related Concepts</span>
-      <span class="muted">{{ rows.length }} relationships</span>
+      <span>{{ t('cs.manager.concept.tabs.relatedConcepts.caption', 'Related Concepts').value }}</span>
+      <span class="muted">{{ t('components.conceptDetail.relationshipsCount', '{count} relationships', { count: rows.length }).value }}</span>
     </header>
     <p
       v-if="rows.length === 0"
       class="empty"
     >
-      No related concepts found.
+      {{ t('components.conceptDetail.noRelatedConcepts', 'No related concepts found.').value }}
     </p>
     <AtlasDataTable
       v-else

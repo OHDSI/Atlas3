@@ -11,10 +11,10 @@
             <div class="role-management-view__header">
               <div>
                 <h1 class="text-h4 mb-2">
-                  Role &amp; Permissions Management
+                  {{ t('views.roleManagement.title', 'Role & Permissions Management').value }}
                 </h1>
                 <p class="text-body-2 text-medium-emphasis">
-                  Manage user roles, assign permissions, and control access to system features.
+                  {{ t('views.roleManagement.subtitle', 'Manage user roles, assign permissions, and control access to system features.').value }}
                 </p>
               </div>
             </div>
@@ -33,8 +33,11 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '@/composables/useI18n'
 import { AtlasCol, AtlasContainer, AtlasRow } from '@/components/ui'
 import RoleList from '@/components/config/permissions/RoleList.vue'
+
+const { t } = useI18n()
 </script>
 
 <style scoped>

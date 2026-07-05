@@ -32,8 +32,12 @@
             size="16"
             class="censoring-events__hint-icon"
           />
-          <span>No censoring events defined. Cohort membership will not be affected by additional
-            events.</span>
+          <span>{{
+            t(
+              'components.censoringEventsEditor.noEventsHint',
+              'No censoring events defined. Cohort membership will not be affected by additional events.'
+            ).value
+          }}</span>
         </div>
 
         <!-- Event list -->
@@ -93,7 +97,7 @@
                 >
                   <AtlasIconButton
                     icon="mdi-close"
-                    v-bind="{ ariaLabel: 'Remove event' }"
+                    v-bind="{ ariaLabel: tv('components.censoringEventsEditor.removeEvent', 'Remove event') }"
                     variant="text"
                     tone="danger"
                     size="sm"
@@ -130,7 +134,7 @@ import { useI18n } from '@/composables/useI18n'
 import type { CohortEvent, ConceptSetReference, CriteriaType } from '@/models/cohort.types'
 import type { ValidationError } from '@/models/validation.types'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 interface Props {
   modelValue: CohortEvent[]
@@ -153,23 +157,23 @@ const localEvents = ref<CohortEvent[]>([...props.modelValue])
 // Format criteria type for display
 function formatCriteriaType(type: CriteriaType): string {
   const typeMap: Record<CriteriaType, string> = {
-    ConditionOccurrence: 'Condition Occurrence',
-    ConditionEra: 'Condition Era',
-    DrugExposure: 'Drug Exposure',
-    DrugEra: 'Drug Era',
-    DoseEra: 'Dose Era',
-    ProcedureOccurrence: 'Procedure Occurrence',
-    Measurement: 'Measurement',
-    Observation: 'Observation',
-    ObservationPeriod: 'Observation Period',
-    DeviceExposure: 'Device Exposure',
-    VisitOccurrence: 'Visit Occurrence',
-    VisitDetail: 'Visit Detail',
-    Death: 'Death',
-    Specimen: 'Specimen',
-    PayerPlanPeriod: 'Payer Plan Period',
-    LocationRegion: 'Location Region',
-    Demographic: 'Demographic',
+    ConditionOccurrence: tv('criteria.conditionOccurrence.name', 'Condition Occurrence'),
+    ConditionEra: tv('criteria.conditionEra.name', 'Condition Era'),
+    DrugExposure: tv('criteria.drugExposure.name', 'Drug Exposure'),
+    DrugEra: tv('criteria.drugEra.name', 'Drug Era'),
+    DoseEra: tv('criteria.doseEra.name', 'Dose Era'),
+    ProcedureOccurrence: tv('criteria.procedureOccurrence.name', 'Procedure Occurrence'),
+    Measurement: tv('criteria.measurement.name', 'Measurement'),
+    Observation: tv('criteria.observation.name', 'Observation'),
+    ObservationPeriod: tv('criteria.observationPeriod.name', 'Observation Period'),
+    DeviceExposure: tv('criteria.deviceExposure.name', 'Device Exposure'),
+    VisitOccurrence: tv('criteria.visitOccurrence.name', 'Visit Occurrence'),
+    VisitDetail: tv('criteria.visitDetail.name', 'Visit Detail'),
+    Death: tv('criteria.death.name', 'Death'),
+    Specimen: tv('criteria.specimen.name', 'Specimen'),
+    PayerPlanPeriod: tv('criteria.payerPlanPeriod.name', 'Payer Plan Period'),
+    LocationRegion: tv('criteria.locationRegion.name', 'Location Region'),
+    Demographic: tv('criteria.demographic.name', 'Demographic'),
   }
   return typeMap[type] || type
 }

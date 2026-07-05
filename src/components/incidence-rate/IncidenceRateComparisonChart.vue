@@ -6,22 +6,22 @@
     data-testid="ir-comparison-chart"
   >
     <div class="ir-overview__title">
-      Outcome Overview
+      {{ t('components.incidenceRate.outcomeOverview', 'Outcome Overview').value }}
     </div>
     <div class="ir-overview__note">
-      Click a row to inspect. Each outcome excludes persons who already had the event at index.
+      {{ t('components.incidenceRate.outcomeOverviewNote', 'Click a row to inspect. Each outcome excludes persons who already had the event at index.').value }}
     </div>
     <table class="ir-overview__table">
       <thead>
         <tr>
           <th class="ir-overview__th">
-            Outcome
+            {{ t('columns.outcome', 'Outcome').value }}
           </th>
           <th class="ir-overview__th ir-overview__th--num">
-            Persons at Risk
+            {{ t('components.incidenceRate.personsAtRisk', 'Persons at risk').value }}
           </th>
           <th class="ir-overview__th ir-overview__th--num">
-            Cases
+            {{ t('ir.results.cases', 'Cases').value }}
           </th>
         </tr>
       </thead>
@@ -51,9 +51,12 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { AtlasCard } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
 import { getIncidenceRateReport } from '@/services/webapi'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import { logger } from '@/utils/logger'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   irId: number

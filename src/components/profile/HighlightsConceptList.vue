@@ -100,7 +100,14 @@ const search = ref('')
 
 // Per-row inline picker — no batch selection state. Names line up
 // 1:1 with HIGHLIGHT_PALETTE in src/models/profile.types.ts.
-const PALETTE_LABELS = ['Coral', 'Sky', 'Mint', 'Amber', 'Lavender', 'Rose'] as const
+const PALETTE_LABELS = [
+  tv('components.highlightsConceptList.colorCoral', 'Coral'),
+  tv('components.highlightsConceptList.colorSky', 'Sky'),
+  tv('components.highlightsConceptList.colorMint', 'Mint'),
+  tv('components.highlightsConceptList.colorAmber', 'Amber'),
+  tv('components.highlightsConceptList.colorLavender', 'Lavender'),
+  tv('components.highlightsConceptList.colorRose', 'Rose'),
+] as const
 const paletteEntries = HIGHLIGHT_PALETTE.map((color, i) => ({
   color,
   label: PALETTE_LABELS[i] ?? color,

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
 import type { CohortEvent } from '@/models/cohort.types'
 import type { EventAttribute } from '@/models/event.types'
@@ -28,6 +29,7 @@ const emit = defineEmits<{
   update: [event: CohortEvent]
 }>()
 
+const { t, tv } = useI18n()
 const { formatCardinalityDisplay, defaultCardinality } = useCardinality()
 const { formatTemporalWindowDisplay } = useTemporalWindows()
 
@@ -162,17 +164,17 @@ const removeEvent = () => {
               v-if="event.conceptSet?.conceptCount"
               class="event-card__concept-set-count"
             >
-              · {{ event.conceptSet.conceptCount }} concepts
+              · {{ event.conceptSet.conceptCount }} {{ t('components.eventCard.concepts', 'concepts').value }}
             </span>
           </template>
           <template v-else>
-            <span class="event-card__concept-set--placeholder">No concept set</span>
+            <span class="event-card__concept-set--placeholder">{{ t('components.eventCard.noConceptSet', 'No concept set').value }}</span>
           </template>
         </div>
       </div>
       <AtlasIconButton
         icon="mdi-chevron-down"
-        v-bind="{ ariaLabel: expanded ? 'Collapse' : 'Expand' }"
+        v-bind="{ ariaLabel: expanded ? tv('components.eventCard.collapse', 'Collapse') : tv('components.eventCard.expand', 'Expand') }"
         variant="text"
         size="sm"
         :class="{ 'rotate-180': expanded }"
@@ -180,7 +182,7 @@ const removeEvent = () => {
       />
       <AtlasIconButton
         icon="mdi-delete-outline"
-        v-bind="{ ariaLabel: 'Remove event' }"
+        v-bind="{ ariaLabel: tv('components.eventCard.removeEvent', 'Remove event') }"
         variant="text"
         tone="danger"
         size="sm"
@@ -219,7 +221,12 @@ const removeEvent = () => {
           variant="tonal"
           prepend-icon="mdi-filter"
         >
-          {{ event.attributes!.length }} attribute{{ event.attributes!.length > 1 ? 's' : '' }}
+          {{ event.attributes!.length }}
+          {{
+            event.attributes!.length > 1
+              ? t('components.eventCard.attributes', 'attributes').value
+              : t('components.eventCard.attribute', 'attribute').value
+          }}
         </AtlasChip>
       </div>
     </v-card-text>
@@ -238,7 +245,7 @@ const removeEvent = () => {
               icon="mdi-counter"
               @click="addCardinality"
             >
-              Add Cardinality
+              {{ t('components.eventCard.addCardinality', 'Add Cardinality').value }}
             </AtlasButton>
             <AtlasButton
               v-if="!hasTemporalWindows"
@@ -247,7 +254,7 @@ const removeEvent = () => {
               icon="mdi-calendar-range"
               @click="addTemporalWindow"
             >
-              Add Temporal Window
+              {{ t('components.eventCard.addTemporalWindow', 'Add Temporal Window').value }}
             </AtlasButton>
             <AtlasButton
               v-if="!hasAttributes"
@@ -256,7 +263,7 @@ const removeEvent = () => {
               icon="mdi-filter"
               @click="addAttributes"
             >
-              Add Attributes
+              {{ t('components.eventCard.addAttributes', 'Add Attributes').value }}
             </AtlasButton>
           </div>
 
@@ -267,14 +274,14 @@ const removeEvent = () => {
           >
             <div class="d-flex align-center mb-2">
               <div class="text-subtitle-2 flex-grow-1">
-                Cardinality
+                {{ t('components.cardinalityInput.title', 'Cardinality').value }}
               </div>
               <AtlasIconButton
                 v-if="hasCardinality"
                 icon="mdi-close"
                 variant="text"
                 size="sm"
-                v-bind="{ ariaLabel: 'Remove cardinality' }"
+                v-bind="{ ariaLabel: tv('components.eventCard.removeCardinality', 'Remove cardinality') }"
                 @click="removeCardinality"
               />
             </div>
@@ -291,14 +298,14 @@ const removeEvent = () => {
           >
             <div class="d-flex align-center mb-2">
               <div class="text-subtitle-2 flex-grow-1">
-                Temporal Windows
+                {{ t('components.eventCard.temporalWindows', 'Temporal Windows').value }}
               </div>
               <AtlasIconButton
                 v-if="hasTemporalWindows"
                 icon="mdi-close"
                 variant="text"
                 size="sm"
-                v-bind="{ ariaLabel: 'Remove temporal window' }"
+                v-bind="{ ariaLabel: tv('components.eventCard.removeTemporalWindow', 'Remove temporal window') }"
                 @click="removeTemporalWindow"
               />
             </div>
@@ -325,13 +332,13 @@ const removeEvent = () => {
           <AtlasDivider class="my-4" />
           <div class="text-caption text-medium-emphasis">
             <div class="mb-1">
-              <strong>Event ID:</strong> {{ event.id }}
+              <strong>{{ t('components.eventCard.eventIdLabel', 'Event ID:').value }}</strong> {{ event.id }}
             </div>
             <div class="mb-1">
-              <strong>Criteria Type:</strong> {{ event.criteriaType }}
+              <strong>{{ t('components.eventCard.criteriaTypeLabel', 'Criteria Type:').value }}</strong> {{ event.criteriaType }}
             </div>
             <div class="mb-1">
-              <strong>Concept Set ID:</strong> {{ event.conceptSet?.id || 'N/A' }}
+              <strong>{{ t('components.eventCard.conceptSetIdLabel', 'Concept Set ID:').value }}</strong> {{ event.conceptSet?.id || 'N/A' }}
             </div>
             <div
               v-if="event.restrictVisit"
@@ -343,7 +350,7 @@ const removeEvent = () => {
               >
                 mdi-information
               </AtlasIcon>
-              Event must occur in same visit as index
+              {{ t('components.eventCard.restrictVisitNote', 'Event must occur in same visit as index').value }}
             </div>
             <div
               v-if="event.ignoreObservationPeriod"
@@ -355,7 +362,7 @@ const removeEvent = () => {
               >
                 mdi-alert
               </AtlasIcon>
-              Event can occur outside observation period
+              {{ t('components.eventCard.ignoreObservationNote', 'Event can occur outside observation period').value }}
             </div>
           </div>
         </v-card-text>

@@ -10,10 +10,10 @@
     <div
       class="ir-insights__kpi"
       data-testid="ir-kpi"
-      :title="`Persons at risk in the target cohort during the time-at-risk window`"
+      :title="tv('components.incidenceRate.personsAtRiskTooltip', 'Persons at risk in the target cohort during the time-at-risk window')"
     >
       <div class="k-label">
-        Persons at risk
+        {{ t('components.incidenceRate.personsAtRisk', 'Persons at risk').value }}
       </div>
       <div class="k-val">
         {{ format(report.summary.totalPersons) }}
@@ -22,10 +22,10 @@
     <div
       class="ir-insights__kpi"
       data-testid="ir-kpi"
-      :title="`Persons who had the outcome during follow-up (${propPct})`"
+      :title="tv('components.incidenceRate.outcomeCasesTooltip', 'Persons who had the outcome during follow-up ({proportion})', { proportion: propPct })"
     >
       <div class="k-label">
-        Outcome cases
+        {{ t('components.incidenceRate.outcomeCases', 'Outcome cases').value }}
       </div>
       <div class="k-val">
         {{ format(report.summary.cases) }}
@@ -37,10 +37,10 @@
     <div
       class="ir-insights__kpi"
       data-testid="ir-kpi"
-      title="Total person-time observed across all persons, measured in person-years"
+      :title="tv('components.incidenceRate.personYearsTooltip', 'Total person-time observed across all persons, measured in person-years')"
     >
       <div class="k-label">
-        Person-years at risk
+        {{ t('components.incidenceRate.personYearsAtRisk', 'Person-years at risk').value }}
       </div>
       <div class="k-val">
         {{ formatYears(report.summary.timeAtRisk) }}
@@ -49,16 +49,16 @@
     <div
       class="ir-insights__kpi"
       data-testid="ir-kpi"
-      :title="`Incidence rate: ${format(report.summary.cases)} cases per ${formatYears(report.summary.timeAtRisk)} person-years, scaled by ${multiplier.toLocaleString()}`"
+      :title="tv('components.incidenceRate.incidenceRateTooltip', 'Incidence rate: {cases} cases per {years} person-years, scaled by {multiplier}', { cases: format(report.summary.cases), years: formatYears(report.summary.timeAtRisk), multiplier: multiplier.toLocaleString() })"
     >
       <div class="k-label">
-        Incidence rate per {{ multiplier.toLocaleString() }} PY
+        {{ tv('components.incidenceRate.incidenceRatePerPy', 'Incidence rate per {multiplier} PY', { multiplier: multiplier.toLocaleString() }) }}
       </div>
       <div class="k-val k-val--accent">
         {{ rate(report.summary.rate) }}
       </div>
       <div class="k-hint">
-        Not comparable across outcomes
+        {{ t('components.incidenceRate.notComparable', 'Not comparable across outcomes').value }}
       </div>
     </div>
 
@@ -148,7 +148,7 @@ import { useI18n } from '@/composables/useI18n'
 import type { IncidenceRateReport } from '@/models/incidence-rate.types'
 
 const props = defineProps<{ report: IncidenceRateReport; multiplier: number }>()
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 const sortedStrata = computed(() =>
   [...props.report.stratifyStats].sort((a, b) => {
@@ -158,7 +158,11 @@ const sortedStrata = computed(() =>
   })
 )
 
-const propPct = computed(() => `${(props.report.summary.proportion * 100).toFixed(1)}% proportion`)
+const propPct = computed(() =>
+  tv('components.incidenceRate.percentProportion', '{value}% proportion', {
+    value: (props.report.summary.proportion * 100).toFixed(1),
+  })
+)
 
 const casePct = computed(() => {
   const p = props.report.summary.proportion * 100

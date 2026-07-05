@@ -19,7 +19,7 @@
             <div
               class="vertical-label match-type-label"
               :data-type="localGroup.logicType || 'ALL'"
-              title="Click to change match type"
+              :title="t('components.criteriaGroup.clickToChangeMatchType', 'Click to change match type').value"
             >
               {{ getMatchTypeDisplay() }}
             </div>
@@ -148,7 +148,7 @@
 
           <AtlasIconButton
             icon="mdi-delete"
-            v-bind="{ ariaLabel: 'Remove group' }"
+            v-bind="{ ariaLabel: t('components.criteriaGroup.removeGroup', 'Remove group').value }"
             variant="text"
             tone="primary"
             size="sm"
@@ -211,7 +211,7 @@
                 variant="outlined"
               >
                 <div style="color: #666">
-                  No events in group. Add events to build criteria logic.
+                  {{ t('components.criteriaGroup.noEventsInGroup', 'No events in group. Add events to build criteria logic.').value }}
                 </div>
               </AtlasAlert>
             </div>

@@ -72,7 +72,7 @@
                 <AtlasIcon class="mr-2">
                   mdi-plus
                 </AtlasIcon>
-                Select Concept Set
+                {{ t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value }}
               </AtlasButton>
               <AtlasChip
                 v-else
@@ -88,7 +88,7 @@
               <AtlasCheckbox
                 :model-value="attribute.isExclusion ?? false"
                 hide-details
-                label="Exclude"
+                :label="t('components.conceptAddBox.exclude', 'Exclude').value"
                 class="ml-2"
                 data-testid="attribute-exclude-checkbox"
                 @update:model-value="(v) => updateAttributeExclude(index, v)"
@@ -167,7 +167,7 @@
                 :error="attributeErrors[index] || undefined"
                 variant="outlined"
                 class="value-input"
-                placeholder="Enter text value..."
+                :placeholder="t('components.attributesEditor.enterTextValue', 'Enter text value...').value"
                 data-testid="attribute-text-value-input"
                 @blur="validateTextAttribute(index)"
                 @update:model-value="(v) => updateAttributeValue(index, v as string)"
@@ -210,12 +210,12 @@
                   <AtlasIcon class="mr-2">
                     mdi-plus
                   </AtlasIcon>
-                  {{ attribute.concepts.length > 0 ? 'Edit' : 'Select Concept' }}
+                  {{ attribute.concepts.length > 0 ? t('components.attributesEditor.edit', 'Edit').value : t('components.conceptPicker.selectConcept', 'Select Concept').value }}
                 </AtlasButton>
                 <AtlasCheckbox
                   :model-value="attribute.isExclusion ?? false"
                   hide-details
-                  label="Exclude"
+                  :label="t('components.conceptAddBox.exclude', 'Exclude').value"
                   class="ml-2"
                   data-testid="attribute-exclude-checkbox"
                   @update:model-value="(v) => updateAttributeExclude(index, v)"
@@ -243,7 +243,7 @@
                 data-testid="attribute-temporal-add-button"
                 @click="openTemporalEditor(index)"
               >
-                Add Temporal Window
+                {{ t('components.criteriaGroup.addTemporalWindow', 'Add Temporal Window').value }}
               </AtlasButton>
             </template>
 
@@ -269,7 +269,7 @@
                 data-testid="attribute-date-adjustment-add-button"
                 @click="openDateAdjustmentEditor(index)"
               >
-                Add Date Adjustment
+                {{ t('components.attributesEditor.addDateAdjustment', 'Add Date Adjustment').value }}
               </AtlasButton>
             </template>
 
@@ -279,7 +279,7 @@
                 :model-value="attribute.period.startDate"
                 :error="attributeErrors[index] || undefined"
                 type="date"
-                label="Start Date"
+                :label="t('attributes.startDate.name', 'Start Date').value"
                 variant="outlined"
                 class="value-input"
                 data-testid="attribute-period-start-date"
@@ -290,7 +290,7 @@
               <AtlasTextField
                 :model-value="attribute.period.endDate"
                 type="date"
-                label="End Date"
+                :label="t('attributes.endDate.name', 'End Date').value"
                 variant="outlined"
                 class="value-input"
                 data-testid="attribute-period-end-date"
@@ -304,7 +304,7 @@
           <div class="attribute-actions">
             <AtlasIconButton
               icon="mdi-delete"
-              v-bind="{ ariaLabel: 'Remove attribute' }"
+              v-bind="{ ariaLabel: t('components.attributesEditor.removeAttribute', 'Remove attribute').value }"
               variant="text"
               size="sm"
               data-testid="remove-attribute-button"
@@ -366,7 +366,7 @@ import type {
 } from '@/models/event.types'
 import type { CriteriaType } from '@/models/cohort.types'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 interface Props {
   modelValue: EventAttribute[]
@@ -534,7 +534,7 @@ function validateTextAttribute(index: number) {
   if (!attr || attr.type !== 'text') return
 
   if (!attr.value || attr.value.trim() === '') {
-    attributeErrors.value[index] = 'Please enter a text value'
+    attributeErrors.value[index] = tv('components.attributesEditor.pleaseEnterTextValue', 'Please enter a text value')
   } else {
     attributeErrors.value[index] = null
   }
@@ -545,9 +545,9 @@ function validateNumericAttribute(index: number) {
   if (!attr || attr.type !== 'numericRange') return
 
   if (attr.value === undefined || attr.value === null) {
-    attributeErrors.value[index] = 'Please enter a numeric value'
+    attributeErrors.value[index] = tv('components.attributesEditor.pleaseEnterNumericValue', 'Please enter a numeric value')
   } else if (attr.operator === 'BETWEEN' && !attr.extent) {
-    attributeErrors.value[index] = 'BETWEEN operator requires both values'
+    attributeErrors.value[index] = tv('components.attributesEditor.betweenRequiresBothValues', 'BETWEEN operator requires both values')
   } else {
     attributeErrors.value[index] = null
   }
@@ -676,7 +676,7 @@ function getTemporalWindowValue(index: number): TemporalWindow | undefined {
 }
 
 function getTemporalWindowSummary(temporalWindow?: TemporalWindow): string {
-  if (!temporalWindow) return 'Not configured'
+  if (!temporalWindow) return tv('components.attributesEditor.notConfigured', 'Not configured')
 
   const parts: string[] = []
 
@@ -694,7 +694,7 @@ function getTemporalWindowSummary(temporalWindow?: TemporalWindow): string {
     parts.push(`End: ${daysStr} ${dirStr}`)
   }
 
-  return parts.length > 0 ? parts.join(', ') : 'Not configured'
+  return parts.length > 0 ? parts.join(', ') : tv('components.attributesEditor.notConfigured', 'Not configured')
 }
 
 // Date adjustment attribute state
@@ -728,7 +728,7 @@ function getDateAdjustmentValue(index: number): DateAdjustment | undefined {
 }
 
 function getDateAdjustmentSummary(dateAdjustment?: DateAdjustment): string {
-  if (!dateAdjustment) return 'Not configured'
+  if (!dateAdjustment) return tv('components.attributesEditor.notConfigured', 'Not configured')
 
   const startRef = dateAdjustment.startWith === 'START_DATE' ? 'Start' : 'End'
   const endRef = dateAdjustment.endWith === 'START_DATE' ? 'Start' : 'End'
@@ -769,9 +769,9 @@ function validatePeriodDates(index: number) {
   const endDate = new Date(attr.period.endDate)
 
   if (!attr.period.startDate || !attr.period.endDate) {
-    attributeErrors.value[index] = 'Both start and end dates are required'
+    attributeErrors.value[index] = tv('components.attributesEditor.bothDatesRequired', 'Both start and end dates are required')
   } else if (endDate <= startDate) {
-    attributeErrors.value[index] = 'End date must be after start date'
+    attributeErrors.value[index] = tv('components.attributesEditor.endDateAfterStart', 'End date must be after start date')
   } else {
     attributeErrors.value[index] = null
   }

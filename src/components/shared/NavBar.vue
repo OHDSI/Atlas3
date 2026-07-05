@@ -40,7 +40,7 @@
       </template>
       <nav
         class="nav-bar__nav-wrapper"
-        aria-label="Main"
+        :aria-label="t('components.navBar.mainNavigation', 'Main').value"
       >
         <!-- Full menu for larger screens -->
         <ul class="nav-bar__nav nav-bar__nav-list d-none d-md-flex">
@@ -113,7 +113,7 @@
           target="_blank"
           class="mr-4"
         >
-          Feedback
+          {{ t('navigation.feedback', 'Feedback').value }}
         </AtlasButton>
 
         <!-- Language Selector -->
@@ -147,7 +147,7 @@
         <AtlasIconButton
           v-if="showConfigButton && hasAnyAdminAccess"
           icon="mdi-cog"
-          v-bind="{ ariaLabel: 'Open configuration panel' }"
+          v-bind="{ ariaLabel: t('config.accessibility.openPanel', 'Open configuration panel').value }"
           variant="text"
           size="sm"
           @click="handleConfigClick"

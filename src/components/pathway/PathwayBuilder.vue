@@ -44,7 +44,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
+                v-bind="{ ...tipProps, ariaLabel: t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value }"
                 icon="mdi-history"
                 variant="text"
                 size="sm"
@@ -68,7 +68,7 @@
                 offset-y="6"
               >
                 <AtlasIconButton
-                  v-bind="{ ariaLabel: 'Tags' }"
+                  v-bind="{ ariaLabel: t('common.tags', 'Tags').value }"
                   icon="mdi-tag-outline"
                   variant="text"
                   size="sm"
@@ -99,7 +99,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Back to current version' }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.backToCurrent', 'Back to current version').value }"
                 icon="mdi-undo"
                 variant="text"
                 size="sm"
@@ -114,7 +114,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.import', 'Import design').value }"
                 icon="mdi-upload"
                 variant="text"
                 size="sm"
@@ -130,7 +130,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.export', 'Export design').value }"
                 icon="mdi-download"
                 variant="text"
                 size="sm"
@@ -145,7 +145,7 @@
             ref="importFileInput"
             type="file"
             accept="application/json,.json"
-            aria-label="Import pathway design"
+            :aria-label="t('components.pathwayBuilder.importPathwayDesign', 'Import pathway design').value"
             style="display: none"
             data-testid="pathway-builder-import-input"
             @change="handleImportFileChange"
@@ -211,8 +211,8 @@
 
     <AtlasDialog
       v-model="showVersions"
-      eyebrow="VERSIONS"
-      title="Version history"
+      :eyebrow="t('cohortDefinitions.cohortDefinitionManager.tabs.versions', 'Versions').value"
+      :title="t('components.pathwayBuilder.versionHistory', 'Version history').value"
       max-width="900"
       @close="showVersions = false"
     >

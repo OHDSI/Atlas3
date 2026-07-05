@@ -8,11 +8,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from '@/composables/useI18n'
 import VersionsTabContent from '@/components/versions/VersionsTabContent.vue'
 import { useIncidenceRateStore } from '@/stores/incidence-rate'
 import type { VersionsConfig, VersionsTableItem } from '@/components/versions/types'
 
 const props = defineProps<{ irId: number }>()
+const { tv } = useI18n()
 
 const store = useIncidenceRateStore()
 const { currentIR, previewVersion, isDirty, isPreviewMode } = storeToRefs(store)
@@ -36,7 +38,7 @@ const versionsConfig = computed<VersionsConfig | null>(() => {
           : '',
     comment: null,
     archived: false,
-    displayVersion: 'Current',
+    displayVersion: tv('versions.current', 'Current'),
     isCurrent: true,
     isPreviewing: false,
     formattedDate: '',

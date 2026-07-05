@@ -44,7 +44,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Concept sets' }"
+                v-bind="{ ...tipProps, ariaLabel: t('ir.tabs.conceptSets', 'Concept Sets').value }"
                 icon="mdi-shape"
                 variant="text"
                 size="sm"
@@ -59,7 +59,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
+                v-bind="{ ...tipProps, ariaLabel: t('ir.tabs.versions', 'Versions').value }"
                 icon="mdi-history"
                 variant="text"
                 size="sm"
@@ -83,7 +83,7 @@
                 offset-y="6"
               >
                 <AtlasIconButton
-                  v-bind="{ ariaLabel: 'Tags' }"
+                  v-bind="{ ariaLabel: t('common.tags', 'Tags').value }"
                   icon="mdi-tag-outline"
                   variant="text"
                   size="sm"
@@ -129,7 +129,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.import', 'Import design').value }"
                 icon="mdi-upload"
                 variant="text"
                 size="sm"
@@ -145,7 +145,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Export design' }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.export', 'Export design').value }"
                 icon="mdi-download"
                 variant="text"
                 size="sm"
@@ -160,7 +160,7 @@
             ref="importFileInput"
             type="file"
             accept="application/json,.json"
-            aria-label="Import incidence rate design"
+            :aria-label="t('components.incidenceRate.importInputAria', 'Import incidence rate design').value"
             style="display: none"
             data-testid="ir-builder-import-input"
             @change="handleImportFileChange"
@@ -241,7 +241,7 @@
 
     <AtlasDialog
       v-model="askDelete"
-      eyebrow="CONFIRM"
+      :eyebrow="t('common.confirm', 'Confirm').value"
       :title="t('common.delete', 'Delete incidence rate').value"
       max-width="400"
       @close="askDelete = false"

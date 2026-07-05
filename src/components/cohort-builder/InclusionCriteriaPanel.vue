@@ -50,7 +50,7 @@
               class="mb-2 inclusion-stats-error"
               data-testid="inclusion-stats-invalid-expression"
             >
-              <strong>Inclusion rule incomplete.</strong>
+              <strong>{{ t('components.inclusionCriteriaPanel.ruleIncomplete', 'Inclusion rule incomplete.').value }}</strong>
               <AtlasIcon
                 size="14"
                 class="ml-1 inclusion-stats-error__hint"
@@ -84,7 +84,7 @@
               density="compact"
               class="mb-2 inclusion-stats-error"
             >
-              <strong>Live preview failed.</strong>
+              <strong>{{ t('components.inclusionCriteriaPanel.livePreviewFailed', 'Live preview failed.').value }}</strong>
               <AtlasIcon
                 size="14"
                 class="ml-1 inclusion-stats-error__hint"

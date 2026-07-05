@@ -34,7 +34,7 @@
         </div>
         <AtlasIconButton
           icon="mdi-close"
-          v-bind="{ ariaLabel: 'Close' }"
+          v-bind="{ ariaLabel: t('common.close', 'Close').value }"
           variant="text"
           size="sm"
           @click="$emit('close')"
@@ -56,7 +56,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              Prevalence by Gender, Age, and Year
+              {{ t('components.drilldownDetails.prevalenceByGenderAgeYear', 'Prevalence by Gender, Age, and Year').value }}
             </v-card-title>
             <v-card-text>
               <TrellisChart
@@ -79,7 +79,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              Prevalence by Month
+              {{ t('dataSources.drilldown.prevalenceByMonth', 'Prevalence by Month').value }}
             </v-card-title>
             <v-card-text>
               <AtlasLineChart
@@ -103,7 +103,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              Age at First Occurrence
+              {{ t('dataSources.drilldown.ageAtFirstOccurrence', 'Age at First Occurrence').value }}
             </v-card-title>
             <v-card-text>
               <BoxPlotChart
@@ -122,7 +122,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              Length of Era
+              {{ t('components.drilldownDetails.lengthOfEra', 'Length of Era').value }}
             </v-card-title>
             <v-card-text>
               <BoxPlotChart
@@ -141,7 +141,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              Distribution by Type
+              {{ t('components.drilldownDetails.distributionByType', 'Distribution by Type').value }}
             </v-card-title>
             <v-card-text>
               <PieChart
@@ -160,7 +160,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              Distribution by Unit
+              {{ t('components.drilldownDetails.distributionByUnit', 'Distribution by Unit').value }}
             </v-card-title>
             <v-card-text>
               <PieChart
@@ -183,7 +183,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              Distribution by Value
+              {{ t('components.drilldownDetails.distributionByValue', 'Distribution by Value').value }}
             </v-card-title>
             <v-card-text>
               <PieChart
@@ -202,7 +202,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              Distribution by Operator
+              {{ t('components.drilldownDetails.distributionByOperator', 'Distribution by Operator').value }}
             </v-card-title>
             <v-card-text>
               <PieChart
@@ -221,7 +221,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              Distribution by Qualifier
+              {{ t('components.drilldownDetails.distributionByQualifier', 'Distribution by Qualifier').value }}
             </v-card-title>
             <v-card-text>
               <PieChart
@@ -240,7 +240,7 @@
         >
           <v-card elevation="2">
             <v-card-title class="text-h6 pb-2">
-              Frequency Distribution
+              {{ t('dataSources.drilldown.frequencyDistribution', 'Frequency Distribution').value }}
             </v-card-title>
             <v-card-text>
               <BarChart
@@ -258,7 +258,7 @@
         cols="12"
       >
         <AtlasAlert severity="info">
-          No detailed data available for this concept.
+          {{ t('components.drilldownDetails.noDetailedData', 'No detailed data available for this concept.').value }}
         </AtlasAlert>
       </AtlasCol>
     </AtlasRow>
@@ -268,6 +268,7 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasCol, AtlasIconButton, AtlasProgressCircular, AtlasRow } from '@/components/ui'
 import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { DrilldownReport, TimeSeriesData } from '@/models/report.types'
 import type { LineChartData as UILineChartData } from '@/ui/chart-types'
 import {
@@ -290,6 +291,8 @@ interface Props {
   showHeader?: boolean
   compact?: boolean
 }
+
+const { t, tv } = useI18n()
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
@@ -327,11 +330,11 @@ function formatTimeSeriesData(timeSeriesData: TimeSeriesData[]): UILineChartData
     }),
     series: [
       {
-        name: 'Prevalence per 1000 people',
+        name: tv('dataSources.drilldown.chartFormat.prevalencePer1000People', 'Prevalence per 1000 people'),
         data: timeSeriesData.map(d => d.value),
       },
     ],
-    yAxisLabel: 'Prevalence per 1000 people',
+    yAxisLabel: tv('dataSources.drilldown.chartFormat.prevalencePer1000People', 'Prevalence per 1000 people'),
   }
 }
 </script>

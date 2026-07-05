@@ -2,7 +2,7 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="TAGS"
-    title="Manage Tags"
+    :title="t('components.tags.manageTags', 'Manage Tags').value"
     max-width="900"
     persistent
     @update:model-value="$emit('update:modelValue', $event)"
@@ -13,7 +13,7 @@
       <AtlasTextField
         v-model="searchQuery"
         prepend-icon="mdi-magnify"
-        placeholder="Search tags..."
+        :placeholder="t('components.tags.searchTagsPlaceholder', 'Search tags...').value"
         clearable
         variant="outlined"
         class="mb-4"
@@ -27,14 +27,14 @@
       >
         <div class="d-flex align-center justify-space-between mb-2">
           <h4 class="text-subtitle-1">
-            Selected Tags ({{ localSelectedTags.length }})
+            {{ t('tagging.multiAssign.selectedTags', 'Selected Tags').value }} ({{ localSelectedTags.length }})
           </h4>
           <AtlasButton
             size="sm"
             variant="ghost"
             @click="clearAll"
           >
-            Clear All
+            {{ t('components.tags.clearAll', 'Clear All').value }}
           </AtlasButton>
         </div>
         <div class="selected-tags-chips">
@@ -68,7 +68,7 @@
           color="primary"
         />
         <p class="text-body-2 mt-2">
-          Loading tags...
+          {{ t('components.tags.loadingTags', 'Loading tags...').value }}
         </p>
       </div>
 
@@ -78,7 +78,7 @@
         severity="info"
         class="mb-4"
       >
-        No tag groups found. Please create tag groups in the configuration panel first.
+        {{ t('components.tags.noTagGroups', 'No tag groups found. Please create tag groups in the configuration panel first.').value }}
       </AtlasAlert>
 
       <AtlasAlert
@@ -86,7 +86,7 @@
         severity="info"
         class="mb-4"
       >
-        No tags found matching "{{ searchQuery }}"
+        {{ t('components.tags.noTagsMatching', 'No tags found matching "{query}"', { query: searchQuery }).value }}
       </AtlasAlert>
 
       <!-- Tag Groups -->
@@ -129,7 +129,7 @@
               v-if="getGroupTags(group).length === 0"
               class="text-body-2 text-disabled pa-2"
             >
-              No tags in this group yet.
+              {{ t('components.tags.noTagsInGroup', 'No tags in this group yet.').value }}
             </div>
             <div
               v-else
@@ -182,7 +182,7 @@
             <AtlasIcon start>
               mdi-plus
             </AtlasIcon>
-            Create New Tag
+            {{ t('components.tags.createNewTag', 'Create New Tag').value }}
           </v-expansion-panel-title>
           <v-expansion-panel-text>
             <create-tag-form
@@ -199,12 +199,12 @@
         variant="ghost"
         @click="cancel"
       >
-        Cancel
+        {{ t('common.cancel', 'Cancel').value }}
       </AtlasButton>
       <AtlasButton
         @click="apply"
       >
-        Apply
+        {{ t('components.filterPanel.buttons.apply', 'Apply').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -217,6 +217,7 @@ import { useConfigStore } from '@/stores/config'
 import type { Tag } from '@/models/cohort.types'
 import type { Tag as ConfigTag, TagGroup } from '@/models/config.types'
 import CreateTagForm from '@/components/tags/CreateTagForm.vue'
+import { useI18n } from '@/composables/useI18n'
 import { logger } from '@/utils/logger'
 
 interface Props {
@@ -230,6 +231,7 @@ const emit = defineEmits<{
   'update:selected-tags': [tags: Tag[]]
 }>()
 
+const { t } = useI18n()
 const configStore = useConfigStore()
 
 const searchQuery = ref('')

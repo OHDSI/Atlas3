@@ -120,9 +120,10 @@
     "addTools": "添加工具",
     "url": "网址",
     "apply": "申请",
-    "tools": "工具"
+    "tools": "工具",
+    "confirm": "确认"
   },
-  "tool":{
+  "tool": {
     "name": "* 名称",
     "url": "* URL",
     "nameValidMess": "工具名称不能为空。",
@@ -134,7 +135,7 @@
       "update": "更新工具失败。",
       "delete": "删除工具失败。"
     },
-    "toolDisabled":"工具已禁用",
+    "toolDisabled": "工具已禁用",
     "toolEnabled": "工具已启用"
   },
   "commonErrors": {
@@ -869,7 +870,10 @@
       "where": "其中",
       "with": "与",
       "withFollowingCriteria": "具有以下事件条件：",
-      "occurringWithinTheSameVisit": "在同一次就诊中发生"
+      "occurringWithinTheSameVisit": "在同一次就诊中发生",
+      "clickToChangeMatchType": "点击更改匹配类型",
+      "removeGroup": "移除组",
+      "noEventsInGroup": "组内没有事件。添加事件以构建条件逻辑。"
     },
     "customEraStrategy": {
       "customEraStrategyText_1": "持续使用的持续时间：",
@@ -1236,7 +1240,30 @@
       "showTags": "Show tags",
       "tagNameExistsWarning": "Tag <%=tagName%> already exists.",
       "cannotUnassignProtectedTagWarning": "Cannot unassign protected tag: <%=tagName%>",
-      "reassignConfirm": "The maximum number of assigned tags in the tag group \"<%=tagGroup%>\" is <%=maxNumber%>. The tag \"<%=tagName%>\" will be unassigned. Proceed?"
+      "reassignConfirm": "The maximum number of assigned tags in the tag group \"<%=tagGroup%>\" is <%=maxNumber%>. The tag \"<%=tagName%>\" will be unassigned. Proceed?",
+      "tagGroupLabel": "标签组 *",
+      "tagNameLabel": "标签名称 *",
+      "colorOptional": "颜色（可选）",
+      "colorDefaultsHint": "默认使用组颜色（{color}）",
+      "selectGroupFirst": "请先选择一个标签组",
+      "showAdvancedOptions": "显示高级选项",
+      "iconOptional": "图标（可选）",
+      "iconHint": "Material Design 图标名称（例如 mdi-star）",
+      "permissionProtected": "权限保护",
+      "permissionProtectedHint": "分配/取消分配此标签需要特殊权限",
+      "tagNameRequired": "标签名称为必填项",
+      "tagNameMaxLength": "标签名称必须少于 255 个字符",
+      "tagGroupRequired": "标签组为必填项",
+      "tagCreatedSuccess": "标签“{name}”创建成功！",
+      "createTagError": "创建标签失败。请重试。",
+      "manageTags": "管理标签",
+      "searchTagsPlaceholder": "搜索标签...",
+      "clearAll": "全部清除",
+      "loadingTags": "正在加载标签...",
+      "noTagGroups": "未找到标签组。请先在配置面板中创建标签组。",
+      "noTagsMatching": "未找到与“{query}”匹配的标签",
+      "noTagsInGroup": "此组中还没有标签。",
+      "createNewTag": "创建新标签"
     },
     "versions": {
       "loading": "Loading versions...",
@@ -1246,7 +1273,9 @@
       "preview": "Preview",
       "viewing": "Viewing now",
       "createACopy": "Create a copy",
-      "current": "Current"
+      "current": "Current",
+      "commentMaxLength": "评论必须少于 500 个字符",
+      "saveCommentError": "保存评论失败"
     },
     "reusablesModal": {
       "title": "Insert from Reusable",
@@ -1261,6 +1290,516 @@
           "tag": "Tag:"
         }
       }
+    },
+    "auth": {
+      "sessionEyebrow": "会话",
+      "sessionWillExpireIn": "您的会话将在",
+      "extendSessionPrompt": "要延长会话吗？",
+      "logout": "登出",
+      "unknownUser": "未知"
+    },
+    "profileTimeline": {
+      "eyebrow": "时间轴",
+      "title": "事件时间轴",
+      "dayRange": "第 {start} 天 → 第 {end} 天",
+      "axisDay": "天（0 = 队列入组）",
+      "cohortEntry": "队列入组"
+    },
+    "profileEventsTable": {
+      "eyebrow": "事件"
+    },
+    "profileObservationBand": {
+      "eyebrow": "观察",
+      "title": "观察期",
+      "empty": "没有记录观察期"
+    },
+    "highlightsConceptList": {
+      "colorCoral": "珊瑚色",
+      "colorSky": "天蓝色",
+      "colorMint": "薄荷色",
+      "colorAmber": "琥珀色",
+      "colorLavender": "薰衣草色",
+      "colorRose": "玫瑰色"
+    },
+    "cohortSamples": {
+      "male": "男性",
+      "female": "女性",
+      "other": "其他",
+      "otherNonBinary": "其他 / 非二元",
+      "allPersons": "所有人",
+      "title": "样本",
+      "description": "从生成的队列中随机抽取的人员，可按年龄和性别进行筛选。",
+      "newSample": "新建样本",
+      "failedToLoadSamples": "加载样本失败",
+      "failedToCreateSample": "创建样本失败"
+    },
+    "cohortSampleDetail": {
+      "personsCreated": "{count} 人 · 创建于 {date}",
+      "records": "记录",
+      "noRecords": "该样本没有人员记录。"
+    },
+    "cohortSampleCreate": {
+      "eyebrow": "队列",
+      "title": "新建队列样本",
+      "numberOfPersons": "人数",
+      "maximum": "最多 {max}",
+      "genderOptional": "性别（可选）",
+      "ageOptional": "年龄（可选）",
+      "minAge": "最小年龄",
+      "maxAge": "最大年龄",
+      "createSample": "创建样本",
+      "ageModeLessThan": "< 小于",
+      "ageModeAtMost": "≤ 至多",
+      "ageModeEqualTo": "= 等于",
+      "ageModeAtLeast": "≥ 至少",
+      "ageModeGreaterThan": "> 大于",
+      "ageModeBetween": "介于",
+      "ageModeNotBetween": "不介于"
+    },
+    "cohortSamplesList": {
+      "empty": "尚未为此队列和数据源生成样本。",
+      "persons": "人员",
+      "refreshSample": "刷新样本",
+      "deleteSample": "删除样本"
+    },
+    "profileSidePanel": {
+      "highlights": "高亮",
+      "showHighlights": "显示高亮",
+      "hideHighlights": "隐藏高亮",
+      "accessDenied403": "您无权访问此数据源中该人员的档案。请联系管理员授予该数据源的 READ 访问权限。",
+      "failedToLoadProfile": "加载档案失败。"
+    },
+    "characterizationDashboard": {
+      "distributions": "分布",
+      "demographicProfile": "人口统计概况",
+      "ageDistribution": "年龄分布",
+      "prevalenceComparison": "患病率比较",
+      "covariateBalance": "协变量平衡（标准化均值差）",
+      "imbalanceNote": "|SMD| > 0.1（虚线）的协变量被视为不平衡",
+      "topCovariates": "按患病率排名的主要协变量",
+      "noVisualizationData": "没有可用于可视化的数据。",
+      "smdAxis": "标准化均值差",
+      "smdShort": "SMD",
+      "cohortIndexed": "队列 {n}"
+    },
+    "characterizationTable1": {
+      "overall": "总体",
+      "colHint": "N（%）/ 均值（SD）",
+      "n": "N"
+    },
+    "characterizationWorkbench": {
+      "hideDesignPanel": "隐藏设计面板",
+      "showDesignPanel": "显示设计面板",
+      "hideAnalysisDesign": "隐藏分析设计",
+      "showAnalysisDesign": "显示分析设计"
+    },
+    "characterizationResults": {
+      "covariateDetail": "协变量详情",
+      "concept": "概念",
+      "smdLabel": "标准化均值差",
+      "noCovariateSelected": "未选择协变量。"
+    },
+    "characterizationDesign": {
+      "detailsEyebrow": "详情"
+    },
+    "inclusionCriteriaPanel": {
+      "ruleIncomplete": "纳入规则不完整。",
+      "livePreviewFailed": "实时预览失败。"
+    },
+    "nestedCriteriaRenderer": {
+      "deepNesting": "检测到深层嵌套（{depth} 层）。请考虑简化条件结构。",
+      "noConceptSet": "无概念集"
+    },
+    "temporalWindowEditor": {
+      "referencePoint": "参考点",
+      "startReferencePoint": "起始参考点",
+      "endReferencePoint": "结束参考点"
+    },
+    "conceptSetPicker": {
+      "clearSelection": "清除选择",
+      "conceptsSuffix": "个概念",
+      "setCountOne": "1 个集合",
+      "setCountOther": "{count} 个集合"
+    },
+    "censoringEventsEditor": {
+      "noEventsHint": "未定义删失事件。队列成员资格不会受到其他事件的影响。",
+      "removeEvent": "移除事件"
+    },
+    "attributesEditor": {
+      "enterTextValue": "输入文本值...",
+      "edit": "编辑",
+      "addDateAdjustment": "添加日期调整",
+      "removeAttribute": "移除属性",
+      "pleaseEnterTextValue": "请输入文本值",
+      "pleaseEnterNumericValue": "请输入数值",
+      "betweenRequiresBothValues": "BETWEEN 运算符需要两个值",
+      "notConfigured": "未配置",
+      "bothDatesRequired": "需要开始日期和结束日期",
+      "endDateAfterStart": "结束日期必须晚于开始日期"
+    },
+    "cardinalityInput": {
+      "typeAriaLabel": "基数类型"
+    },
+    "eventCard": {
+      "concepts": "个概念",
+      "noConceptSet": "无概念集",
+      "collapse": "收起",
+      "expand": "展开",
+      "removeEvent": "移除事件",
+      "attributes": "个属性",
+      "attribute": "个属性",
+      "addCardinality": "添加基数",
+      "addTemporalWindow": "添加时间窗口",
+      "addAttributes": "添加属性",
+      "removeCardinality": "移除基数",
+      "temporalWindows": "时间窗口",
+      "removeTemporalWindow": "移除时间窗口",
+      "eventIdLabel": "事件 ID：",
+      "criteriaTypeLabel": "条件类型：",
+      "conceptSetIdLabel": "概念集 ID：",
+      "restrictVisitNote": "事件必须发生在与索引相同的就诊中",
+      "ignoreObservationNote": "事件可以发生在观察期之外"
+    },
+    "filterTypeSelector": {
+      "label": "筛选类型",
+      "placeholder": "选择筛选类型...",
+      "groupOnly": "仅分组",
+      "noConceptSet": "无概念集"
+    },
+    "configurationWarningBanner": {
+      "title": "配置验证警告",
+      "description": "配置中的某些筛选类型无效或配置错误。这些筛选器将无法在界面中使用：",
+      "invalidFilterTypes": "无效的筛选类型",
+      "contactAdmin": "请联系管理员更新配置文件 (atlas-config.json)。"
+    },
+    "cohortList": {
+      "emptyMatchQueryAndTags": "没有与所选标签匹配的“{query}”队列。",
+      "emptyMatchQuery": "没有与“{query}”匹配的队列。",
+      "emptyMatchTags": "没有与所选标签匹配的队列。",
+      "emptyNoCohorts": "暂无队列——创建一个以开始定义研究人群。"
+    },
+    "cohortReportDrawer": {
+      "backToSamples": "返回样本",
+      "personTitle": "人员 {id}",
+      "profileTitle": "档案"
+    },
+    "conceptSearch": {
+      "searching": "正在搜索概念...",
+      "foundResults": "找到 {count} 条结果",
+      "conceptMeta": "ID: {id} | 代码: {code} | 域: {domain}",
+      "enterSearchTerm": "输入搜索词以查找概念"
+    },
+    "cohortBuilder": {
+      "stateRequired": "必填",
+      "stateOptional": "可选",
+      "eventCountOne": "1 个事件",
+      "eventCountOther": "{count} 个事件",
+      "ruleCountOne": "1 条规则",
+      "ruleCountOther": "{count} 条规则",
+      "stateCensoringCount": "+{count} 项删失",
+      "stateEndOfObservation": "观察期结束",
+      "stateNeedsOffset": "需要偏移量",
+      "stateOffsetDays": "+{count} 天",
+      "stateNeedsDrugSet": "需要药物集合",
+      "stateDrugExposure": "药物暴露",
+      "stateConfigured": "已配置",
+      "saveToServerError": "无法将队列保存到服务器",
+      "saveSuccess": "队列保存成功",
+      "saveError": "无法保存队列",
+      "exportFailed": "导出失败：{error}",
+      "exportDownloaded": "已下载队列 JSON",
+      "copiedToClipboard": "已将队列 JSON 复制到剪贴板",
+      "copyFailed": "无法复制到剪贴板",
+      "emptyCohort": "空队列"
+    },
+    "conceptDetail": {
+      "closeDetails": "关闭概念详情",
+      "goBack": "返回",
+      "addToConceptSet": "添加到概念集",
+      "copyId": "复制 ID",
+      "persons": "人",
+      "descAbbr": "后代",
+      "conceptDetailsTitle": "概念详情",
+      "conceptId": "概念 ID",
+      "conceptClass": "概念类别",
+      "viewFull": "查看完整内容",
+      "noHierarchyForConcept": "未找到该概念的层级结构。",
+      "moreDescendants": "还有 {count} 个后代",
+      "noRelatedConcepts": "未找到相关概念。",
+      "relationshipsCount": "{count} 个关系"
+    },
+    "conceptTable": {
+      "selectAllConcepts": "选择所有概念",
+      "selectConcept": "选择 {name}",
+      "noRecords": "没有可显示的记录",
+      "itemsPerPage": "每页条数："
+    },
+    "config": {
+      "cache": {
+        "clearHelp": "清除缓存的配置数据以强制从服务器刷新。这有助于解决数据过时或损坏的问题。",
+        "statusLabel": "缓存状态:",
+        "clearDialogTitle": "清除缓存",
+        "clearConfirm": "确定要清除配置缓存吗？此操作无法撤销。",
+        "clearError": "清除缓存失败。请重试。"
+      },
+      "panel": {
+        "closeAria": "关闭配置面板",
+        "tabCache": "缓存",
+        "noAdminAccess": "您无权访问任何管理设置。"
+      },
+      "dataSources": {
+        "loadError": "加载数据源失败"
+      },
+      "vocabulary": {
+        "help": "配置用于词汇表查询的数据库架构名称。此设置控制查询 OMOP 词汇表时使用的 PostgreSQL 架构。",
+        "schemaHint": "PostgreSQL 架构名称（例如 'public'、'vocab_v5'）",
+        "updated": "词汇表架构已更新为 \"{value}\"",
+        "updateError": "更新架构失败。请重试。",
+        "reverted": "已还原为 \"{value}\"",
+        "undoError": "撤销失败。请重试。"
+      },
+      "trexsql": {
+        "loadError": "加载数据源失败",
+        "buildStarted": "缓存构建已开始",
+        "buildStartError": "启动缓存构建失败",
+        "buildComplete": "缓存构建成功完成",
+        "buildFailed": "缓存构建失败"
+      },
+      "tags": {
+        "colorHexHint": "用于视觉识别的十六进制颜色代码",
+        "iconMdiFolderHint": "Material Design 图标名称（例如 mdi-tag、mdi-folder）",
+        "nameTooLong": "名称必须少于 255 个字符",
+        "colorOptional": "颜色（可选）",
+        "inheritColorHint": "留空以从组继承",
+        "iconOptional": "图标（可选）",
+        "iconInheritHint": "Material Design 图标名称，或留空以从组继承",
+        "permissionProtected": "权限保护",
+        "permissionProtectedHint": "分配/取消分配此标签需要特殊权限",
+        "tagColumn": "标签",
+        "usageColumn": "使用",
+        "editTagAria": "编辑标签",
+        "deleteTagAria": "删除标签",
+        "noTagsInGroup": "此组中没有标签",
+        "createFirstTag": "创建您的第一个标签以开始",
+        "requiredChip": "必需",
+        "columnChip": "列",
+        "showTagsButton": "显示标签",
+        "editGroupAria": "编辑标签组",
+        "deleteGroupAria": "删除标签组",
+        "createFirstGroup": "创建您的第一个标签组以开始",
+        "sectionHelp": "管理用于组织和分类队列和概念集的标签组。标签组允许您将结构化元数据应用于您的资产。",
+        "tagsInGroupTitle": "\"{name}\" 中的标签",
+        "backToGroups": "返回标签组",
+        "enableFreeFormTooltip": "在此标签组上启用“自由格式”以允许自定义标签。",
+        "noCustomTagsPrefix": "此标签组不允许自定义标签。请编辑组并启用",
+        "noCustomTagsSuffix": "以在此处添加标签。",
+        "deleteGroupConfirm": "确定要删除 \"{name}\" 吗？",
+        "deleteTagTitle": "删除标签",
+        "deleteTagConfirm": "确定要删除 \"{name}\" 吗？这将取消该标签在所有资产上的分配。",
+        "loadGroupsError": "加载标签组失败",
+        "groupUpdated": "标签组 \"{name}\" 已更新",
+        "groupCreated": "标签组 \"{name}\" 已创建",
+        "saveGroupError": "保存标签组失败",
+        "groupNotEmpty": "无法删除标签组：该组包含标签",
+        "groupDeleted": "标签组 \"{name}\" 已删除",
+        "tagUpdated": "标签 \"{name}\" 已更新",
+        "tagCreated": "标签 \"{name}\" 已创建",
+        "saveTagError": "保存标签失败",
+        "tagDeleted": "标签 \"{name}\" 已删除",
+        "deleteTagError": "删除标签失败"
+      },
+      "permissions": {
+        "editRole": "编辑角色",
+        "createNewRole": "创建新角色",
+        "roleNameRequiredLabel": "角色名称 *",
+        "roleNameRequired": "角色名称为必填项",
+        "roleNameEmpty": "角色名称不能为空",
+        "roleNameTooLong": "角色名称必须少于 255 个字符",
+        "roleNameExists": "具有此名称的角色已存在",
+        "updateRoleError": "更新角色失败。请重试。",
+        "createRoleError": "创建角色失败。请重试。",
+        "unexpectedError": "发生意外错误",
+        "deleteRoleTitle": "删除角色？",
+        "roleAssignedTo": "此角色已分配给",
+        "usersWord": "个用户",
+        "userWord": "个用户",
+        "deleteRemovesFromUsers": "删除此角色将从所有已分配的用户中移除它。",
+        "confirmDeleteRolePrefix": "确定要删除该角色",
+        "cannotBeUndone": "此操作无法撤销。",
+        "deleteRoleButton": "删除角色",
+        "deleteRoleError": "删除角色失败。请重试。",
+        "searchRoles": "搜索角色...",
+        "newRole": "新角色",
+        "noRolesFound": "未找到角色。创建您的第一个角色以开始。",
+        "noDescription": "无描述",
+        "backToRoles": "返回角色",
+        "editRoleAria": "编辑角色",
+        "deleteRoleAria": "删除角色",
+        "roleName": "角色名称",
+        "editRoleNameAria": "编辑角色名称",
+        "noDescriptionProvided": "未提供描述",
+        "editDescriptionAria": "编辑描述",
+        "updateRoleNameError": "更新角色名称失败。请重试。",
+        "updateDescriptionError": "更新描述失败。请重试。",
+        "noRolesFoundTitle": "未找到角色",
+        "createFirstRoleHint": "创建您的第一个角色以开始使用基于角色的访问控制。",
+        "createFirstRole": "创建第一个角色",
+        "rolesFilteredCount": "{total} 个角色中的 {count} 个",
+        "rolesTotal": "共 {count} 个角色",
+        "roleTotal": "共 {count} 个角色",
+        "searchPermissions": "搜索权限...",
+        "changesCount": "{count} 处更改",
+        "changeCount": "{count} 处更改",
+        "saveChanges": "保存更改",
+        "loadingPermissions": "正在加载权限...",
+        "ofWord": "/",
+        "permissionsAssigned": "项权限已分配",
+        "filteredFromTotal": "（从共 {total} 项中筛选）",
+        "allCategories": "所有类别",
+        "permissionColumn": "权限",
+        "categoryColumn": "类别",
+        "permissionsUpdated": "已成功更新 {count} 项权限",
+        "permissionUpdated": "已成功更新 {count} 项权限",
+        "savePermissionsError": "保存权限更改失败",
+        "searchUsers": "按登录名或电子邮件搜索用户...",
+        "loadingUsers": "正在加载用户...",
+        "usersAssigned": "个用户已分配",
+        "emailColumn": "电子邮件",
+        "userAssignmentsUpdated": "已成功更新 {count} 项用户分配",
+        "userAssignmentUpdated": "已成功更新 {count} 项用户分配",
+        "saveUsersError": "保存用户分配失败",
+        "utilitiesIntro": "导入和导出角色配置以进行备份、部署或跨环境共享。",
+        "exportRole": "导出角色",
+        "exportRoleDescription": "将此角色的配置下载为 JSON 文件，包括所有权限和用户分配。",
+        "exportCompatNote": "导出的文件将与 Atlas 2.x 兼容，并可导入任何 Atlas 实例。",
+        "exportRoleAsJson": "将角色导出为 JSON",
+        "importRole": "导入角色",
+        "importRoleDescription": "从 JSON 文件导入角色配置。这将创建一个具有指定权限和用户的新角色。",
+        "noteLabel": "注意：",
+        "importRoleNote": "导入角色将创建一个新角色。如果存在同名角色，系统将提示您重命名。",
+        "importRoleFromJson": "从 JSON 导入角色",
+        "exportRoleError": "导出角色失败",
+        "roleExported": "角色 \"{name}\" 已成功导出",
+        "roleImported": "角色 \"{name}\" 已成功导入",
+        "importSelectFileHelp": "选择要导入角色配置的 JSON 文件。该文件应为 Atlas 2.x 兼容格式。",
+        "selectJsonFile": "选择 JSON 文件",
+        "roleNameConflict": "角色名称冲突",
+        "roleWithNamePrefix": "名为",
+        "alreadyExistsSuffix": "的角色已存在。",
+        "howToProceed": "您想如何继续？",
+        "conflictSkip": "跳过 - 取消导入",
+        "conflictRename": "重命名 - 使用新名称导入",
+        "newRoleName": "新角色名称",
+        "newRoleNameHint": "为导入的角色输入唯一名称",
+        "validatingImport": "正在验证导入数据...",
+        "readyToImport": "准备导入",
+        "importPreviewIntro": "将导入以下角色配置：",
+        "roleNameLabel": "角色名称：",
+        "descriptionLabel": "描述：",
+        "permissionsLabel": "权限：",
+        "usersLabel": "用户：",
+        "warningsLabel": "警告：",
+        "next": "下一步",
+        "continue": "继续",
+        "selectJsonFileError": "请选择一个 JSON 文件",
+        "readFileError": "读取文件失败",
+        "invalidImportFormat": "无效的角色导入格式：缺少角色名称",
+        "warnNoPermissions": "角色未分配任何权限",
+        "warnNoUsers": "角色未分配任何用户",
+        "invalidJsonFormat": "无效的 JSON 格式。请检查文件后重试。",
+        "validateImportError": "验证导入数据失败",
+        "updateRoleNameFailed": "更新角色名称失败",
+        "importRoleRetry": "导入角色失败。请重试。",
+        "importRoleError": "导入角色失败"
+      }
+    },
+    "domainPrevalenceTable": {
+      "largeDatasetHint": "检测到大型数据集（{count} 条）。为提高性能，仅显示患病率排名前 1,000 条记录 — 请使用搜索或导出 CSV 获取完整数据。",
+      "prevalencePercent": "患病率 (%)",
+      "noEntriesFound": "未找到任何条目",
+      "showingAllEntries": "显示全部 {count} 条",
+      "showingRange": "显示第 {start} 到 {end} 条，共 {total} 条"
+    },
+    "domainPrevalenceTreemap": {
+      "clickAction": "点击",
+      "clickHint": "任意区域以查看详细分析",
+      "noHierarchyNote": "此数据源不支持分层分组",
+      "groupByHierarchy": "按层级分组"
+    },
+    "incidenceRate": {
+      "importInputAria": "导入发生率设计",
+      "removeCohort": "移除队列",
+      "selectCohorts": "选择队列",
+      "outcomeOverview": "结局概览",
+      "outcomeOverviewNote": "点击行以查看详情。每个结局均排除在索引时点已发生该事件的人群。",
+      "personsAtRisk": "风险人群",
+      "personsAtRiskTooltip": "在风险时间窗内目标队列中的风险人群",
+      "outcomeCases": "结局病例",
+      "outcomeCasesTooltip": "随访期间发生结局的人数（{proportion}）",
+      "personYearsTooltip": "所有人群观察到的总人时（以人年计）",
+      "personYearsAtRisk": "风险人年",
+      "incidenceRateTooltip": "发生率：每 {years} 人年 {cases} 例，按 {multiplier} 缩放",
+      "incidenceRatePerPy": "每 {multiplier} 人年发生率",
+      "notComparable": "不同结局之间不可比较",
+      "percentProportion": "比例 {value}%",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "removeRule": "移除规则",
+      "stratifiedIncidence": "分层发生率",
+      "lowerRate": "较低发生率",
+      "higherRate": "较高发生率",
+      "treemapLegendHint": "（颜色＝每人年发生率；面积＝风险人群）",
+      "hideDesignPanel": "隐藏设计面板",
+      "showDesignPanel": "显示设计面板",
+      "hideAnalysisDesign": "隐藏分析设计",
+      "showAnalysisDesign": "显示分析设计",
+      "noCasesFound": "未找到此目标/结局组合的病例。请尝试选择其他结局。"
+    },
+    "pathwayCohortList": {
+      "removeCohort": "移除队列"
+    },
+    "pathwayCohortPicker": {
+      "selectCohorts": "选择队列"
+    },
+    "pathwayWorkbench": {
+      "hideDesignPanel": "隐藏设计面板",
+      "showDesignPanel": "显示设计面板",
+      "hideAnalysisDesign": "隐藏分析设计",
+      "showAnalysisDesign": "显示分析设计"
+    },
+    "pathwayBuilder": {
+      "importPathwayDesign": "导入路径设计",
+      "versionHistory": "版本历史"
+    },
+    "pathwayPathDetails": {
+      "event": "事件"
+    },
+    "drilldownDetails": {
+      "prevalenceByGenderAgeYear": "按性别、年龄和年份的患病率",
+      "lengthOfEra": "时段长度",
+      "distributionByType": "按类型分布",
+      "distributionByUnit": "按单位分布",
+      "distributionByValue": "按值分布",
+      "distributionByOperator": "按运算符分布",
+      "distributionByQualifier": "按限定符分布",
+      "noDetailedData": "该概念没有可用的详细数据。"
+    },
+    "tableExport": {
+      "copiedRows": "已将 {count} 行复制到剪贴板",
+      "copyFailed": "无法将数据复制到剪贴板",
+      "exportedRows": "已将 {count} 行导出到 {filename}.csv",
+      "exportFailed": "无法导出 CSV 文件"
+    },
+    "notifications": {
+      "bellAriaLabel": "通知（{count} 条未读）",
+      "heading": "通知",
+      "markAllRead": "全部标为已读",
+      "clear": "清除",
+      "allCaughtUp": "没有新的通知。",
+      "remove": "移除"
+    },
+    "navBar": {
+      "mainNavigation": "主导航"
     }
   },
   "facets": {
@@ -1635,7 +2174,7 @@
     "loadingReport": "载入报告",
     "noPermission": "您无权查看此报告",
     "numberOfPeople": "人数",
-    "observationPeriodReport" : {
+    "observationPeriodReport": {
       "ageAtFirstObservation": "开始观察的年龄",
       "ageByGender": "年龄（按性别）",
       "observationLength": "观测长度",
@@ -1721,7 +2260,7 @@
       "search": "搜索"
     },
     "vocabularies": "术语集",
-    "viewCountMessage":  "View record count for:"
+    "viewCountMessage": "View record count for:"
   },
   "cs": {
     "browser": {
@@ -2492,7 +3031,7 @@
             "ldap": "LDAP服务器"
           }
         },
-        "provider" : {
+        "provider": {
           "connection": {
             "failed": "Connection failed. Please see server logs for details."
           }
@@ -2767,7 +3306,7 @@
         "selectASource": "请选择一个来源",
         "addNewSample": "添加新样本",
         "cohortNotGeneratedNote": "这个队列尚未在您选择的数据源中生成。在访问样本前，请返回到生成标签生成队列。",
-        "cohortShouldBeGenerated":  "必须在创建样本之前生成队列",
+        "cohortShouldBeGenerated": "必须在创建样本之前生成队列",
         "errorFetchingList": "取得样本列表时候有错误，请稍后再试",
         "errorDeleting": "删除样本时候有错误，请稍后再试",
         "errorFetchingData": "取得样本数据时候有错误，请稍后再试",
@@ -3768,5 +4307,50 @@
     "utilitiesText_7": "软件包名称应仅包含字母数字字符。不允许使用空格或特殊字符。",
     "utilitiesText_8": "请查看下载区域以查看分析规范中的问题。 必须先更正这些问题，然后才能导出定义。",
     "packageName": "封装名字..."
+  },
+  "views": {
+    "cohorts": {
+      "eyebrowMain": "OHDSI · 队列",
+      "eyebrowImport": "导入",
+      "eyebrowConfirm": "确认",
+      "eyebrowNew": "新建",
+      "eyebrowCohort": "队列",
+      "countSingular": "1 个队列",
+      "countPlural": "{count} 个队列"
+    },
+    "characterizationBuilder": {
+      "importInputAria": "导入特征分析设计"
+    },
+    "featureAnalysisEditor": {
+      "deleteEyebrow": "确认"
+    },
+    "dataSources": {
+      "reportNotImplemented": "报告类型\"{type}\"尚未实现。",
+      "noSources": "没有可用的数据源。",
+      "selectSourceHint": "选择数据源以查看其报告。"
+    },
+    "profile": {
+      "eyebrow": "个人档案"
+    },
+    "incidenceRates": {
+      "copied": "已复制发病率",
+      "copyFailed": "复制失败",
+      "deleted": "已删除发病率",
+      "deleteFailed": "删除失败"
+    },
+    "pathways": {
+      "copied": "已复制路径",
+      "copyFailed": "复制失败",
+      "deleted": "已删除路径",
+      "deleteFailed": "删除失败"
+    },
+    "roleDetails": {
+      "roleNotFound": "未找到角色",
+      "backToRoles": "返回角色列表"
+    },
+    "roleManagement": {
+      "title": "角色与权限管理",
+      "subtitle": "管理用户角色、分配权限并控制对系统功能的访问。"
+    }
   }
 }

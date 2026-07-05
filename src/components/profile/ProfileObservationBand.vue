@@ -2,10 +2,10 @@
   <AtlasCard padding="md">
     <div class="section-header">
       <div class="section-header__title-row">
-        <span class="text-eyebrow">OBSERVATION</span>
+        <span class="text-eyebrow">{{ tv('components.profileObservationBand.eyebrow', 'OBSERVATION') }}</span>
         <span class="section-header__rule" />
         <h2 class="section-title">
-          Observation periods
+          {{ tv('components.profileObservationBand.title', 'Observation periods') }}
         </h2>
       </div>
     </div>
@@ -40,7 +40,7 @@
             icon="mdi-information-outline"
             size="14"
           />
-          <span>No observation periods recorded</span>
+          <span>{{ tv('components.profileObservationBand.empty', 'No observation periods recorded') }}</span>
         </div>
       </div>
     </div>
@@ -50,8 +50,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useProfileStore } from '@/stores/profile'
+import { useI18n } from '@/composables/useI18n'
 import { AtlasCard, AtlasIcon } from '@/components/ui'
 
+const { tv } = useI18n()
 const store = useProfileStore()
 const viewWidth = 1000
 

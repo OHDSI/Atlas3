@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -25,7 +26,7 @@ describe('IncidenceRateTreemap', () => {
   it('renders TreemapChart with leaf data', () => {
     const w = mount(IncidenceRateTreemap, {
       props: { treemapJson: json },
-      global: { plugins: [vuetify], stubs: { 'v-chart': true } },
+      global: { plugins: [vuetify, createPinia()], stubs: { 'v-chart': true } },
     })
     expect(w.findComponent({ name: 'AtlasTreemapChart' }).exists()).toBe(true)
   })
@@ -33,7 +34,7 @@ describe('IncidenceRateTreemap', () => {
   it('handles empty input gracefully', () => {
     const w = mount(IncidenceRateTreemap, {
       props: { treemapJson: '' },
-      global: { plugins: [vuetify], stubs: { 'v-chart': true } },
+      global: { plugins: [vuetify, createPinia()], stubs: { 'v-chart': true } },
     })
     expect(w.html()).toBeDefined()
   })

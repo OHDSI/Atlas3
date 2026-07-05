@@ -2,7 +2,7 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="CONFIRM"
-    title="Delete Role?"
+    :title="t('components.config.permissions.deleteRoleTitle', 'Delete Role?').value"
     max-width="500"
     persistent
     @update:model-value="$emit('update:modelValue', $event)"
@@ -14,21 +14,36 @@
       class="mb-4"
     >
       <div class="text-body-1">
-        This role is assigned to
-        <strong>{{ userCount }} user{{ userCount !== 1 ? 's' : '' }}</strong>.
+        {{ t('components.config.permissions.roleAssignedTo', 'This role is assigned to').value }}
+        <strong>{{ userCount }}
+          {{
+            userCount !== 1
+              ? t('components.config.permissions.usersWord', 'users').value
+              : t('components.config.permissions.userWord', 'user').value
+          }}</strong>.
       </div>
       <div class="text-body-2 mt-2">
-        Deleting this role will remove it from all assigned users.
+        {{
+          t(
+            'components.config.permissions.deleteRemovesFromUsers',
+            'Deleting this role will remove it from all assigned users.'
+          ).value
+        }}
       </div>
     </AtlasAlert>
 
     <p class="text-body-1">
-      Are you sure you want to delete the role
+      {{
+        t(
+          'components.config.permissions.confirmDeleteRolePrefix',
+          'Are you sure you want to delete the role'
+        ).value
+      }}
       <strong>"{{ role?.name }}"</strong>?
     </p>
 
     <p class="text-body-2 text-medium-emphasis mt-2">
-      This action cannot be undone.
+      {{ t('components.config.permissions.cannotBeUndone', 'This action cannot be undone.').value }}
     </p>
 
     <AtlasAlert
@@ -46,7 +61,7 @@
         :disabled="deleting"
         @click="handleClose"
       >
-        Cancel
+        {{ t('common.cancel', 'Cancel').value }}
       </AtlasButton>
       <AtlasButton
         variant="danger"
@@ -54,7 +69,7 @@
         :loading="deleting"
         @click="handleDelete"
       >
-        Delete Role
+        {{ t('components.config.permissions.deleteRoleButton', 'Delete Role').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -63,8 +78,11 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasDialog } from '@/components/ui'
 import { ref, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
 import type { Role } from '@/models/role.types'
+
+const { t, tv } = useI18n()
 
 interface Props {
   modelValue: boolean
@@ -109,10 +127,16 @@ async function handleDelete() {
       emit('success')
       emit('update:modelValue', false)
     } else {
-      serverError.value = 'Failed to delete role. Please try again.'
+      serverError.value = tv(
+        'components.config.permissions.deleteRoleError',
+        'Failed to delete role. Please try again.'
+      )
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    const message =
+      error instanceof Error
+        ? error.message
+        : tv('components.config.permissions.unexpectedError', 'An unexpected error occurred')
     serverError.value = message
   } finally {
     deleting.value = false

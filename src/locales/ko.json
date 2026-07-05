@@ -120,9 +120,10 @@
     "addTools": "도구 추가",
     "url": "URL",
     "apply": "적용하다",
-    "tools": "도구"
+    "tools": "도구",
+    "confirm": "확인"
   },
-  "tool":{
+  "tool": {
     "name": "* 이름",
     "url": "* URL",
     "nameValidMess": "도구 이름은 비워둘 수 없습니다.",
@@ -820,7 +821,10 @@
       "where": "어디",
       "with": "와 함께",
       "withFollowingCriteria": "다음과 같은 이벤트 기준 :",
-      "occurringWithinTheSameVisit": "동일한 방문 내에서 발생"
+      "occurringWithinTheSameVisit": "동일한 방문 내에서 발생",
+      "clickToChangeMatchType": "클릭하여 일치 유형 변경",
+      "removeGroup": "그룹 제거",
+      "noEventsInGroup": "그룹에 이벤트가 없습니다. 이벤트를 추가하여 기준 로직을 구성하세요."
     },
     "customEraStrategy": {
       "customEraStrategyText_1": "연속 노출 지속성:",
@@ -1236,7 +1240,30 @@
       "showTags": "Show tags",
       "tagNameExistsWarning": "Tag <%=tagName%> already exists.",
       "cannotUnassignProtectedTagWarning": "Cannot unassign protected tag: <%=tagName%>",
-      "reassignConfirm": "The maximum number of assigned tags in the tag group \"<%=tagGroup%>\" is <%=maxNumber%>. The tag \"<%=tagName%>\" will be unassigned. Proceed?"
+      "reassignConfirm": "The maximum number of assigned tags in the tag group \"<%=tagGroup%>\" is <%=maxNumber%>. The tag \"<%=tagName%>\" will be unassigned. Proceed?",
+      "tagGroupLabel": "태그 그룹 *",
+      "tagNameLabel": "태그 이름 *",
+      "colorOptional": "색상(선택)",
+      "colorDefaultsHint": "기본값은 그룹 색상({color})",
+      "selectGroupFirst": "먼저 태그 그룹을 선택하세요",
+      "showAdvancedOptions": "고급 옵션 표시",
+      "iconOptional": "아이콘(선택)",
+      "iconHint": "Material Design 아이콘 이름(예: mdi-star)",
+      "permissionProtected": "권한 보호됨",
+      "permissionProtectedHint": "이 태그를 할당/해제하려면 특별 권한이 필요합니다",
+      "tagNameRequired": "태그 이름은 필수입니다",
+      "tagNameMaxLength": "태그 이름은 255자 미만이어야 합니다",
+      "tagGroupRequired": "태그 그룹은 필수입니다",
+      "tagCreatedSuccess": "태그 \"{name}\"을(를) 만들었습니다!",
+      "createTagError": "태그를 만들지 못했습니다. 다시 시도하세요.",
+      "manageTags": "태그 관리",
+      "searchTagsPlaceholder": "태그 검색...",
+      "clearAll": "모두 지우기",
+      "loadingTags": "태그 로드 중...",
+      "noTagGroups": "태그 그룹이 없습니다. 먼저 구성 패널에서 태그 그룹을 만드세요.",
+      "noTagsMatching": "\"{query}\"와(과) 일치하는 태그가 없습니다",
+      "noTagsInGroup": "이 그룹에는 아직 태그가 없습니다.",
+      "createNewTag": "새 태그 만들기"
     },
     "versions": {
       "loading": "Loading versions...",
@@ -1246,7 +1273,9 @@
       "preview": "Preview",
       "viewing": "Viewing now",
       "createACopy": "Create a copy",
-      "current": "Current"
+      "current": "Current",
+      "commentMaxLength": "댓글은 500자 미만이어야 합니다",
+      "saveCommentError": "댓글을 저장하지 못했습니다"
     },
     "reusablesModal": {
       "title": "Insert from Reusable",
@@ -1261,6 +1290,516 @@
           "tag": "Tag:"
         }
       }
+    },
+    "auth": {
+      "sessionEyebrow": "세션",
+      "sessionWillExpireIn": "세션 만료까지 남은 시간",
+      "extendSessionPrompt": "세션을 연장하시겠습니까?",
+      "logout": "로그아웃",
+      "unknownUser": "알 수 없음"
+    },
+    "profileTimeline": {
+      "eyebrow": "타임라인",
+      "title": "이벤트 타임라인",
+      "dayRange": "{start}일 → {end}일",
+      "axisDay": "일 (0 = 코호트 진입)",
+      "cohortEntry": "코호트 진입"
+    },
+    "profileEventsTable": {
+      "eyebrow": "이벤트"
+    },
+    "profileObservationBand": {
+      "eyebrow": "관찰",
+      "title": "관찰 기간",
+      "empty": "기록된 관찰 기간이 없습니다"
+    },
+    "highlightsConceptList": {
+      "colorCoral": "코랄",
+      "colorSky": "하늘색",
+      "colorMint": "민트",
+      "colorAmber": "앰버",
+      "colorLavender": "라벤더",
+      "colorRose": "로즈"
+    },
+    "cohortSamples": {
+      "male": "남성",
+      "female": "여성",
+      "other": "기타",
+      "otherNonBinary": "기타 / 논바이너리",
+      "allPersons": "모든 대상자",
+      "title": "샘플",
+      "description": "생성된 코호트에서 무작위로 추출한 대상자로, 연령과 성별로 선택적으로 필터링할 수 있습니다.",
+      "newSample": "새 샘플",
+      "failedToLoadSamples": "샘플을 불러오지 못했습니다",
+      "failedToCreateSample": "샘플을 만들지 못했습니다"
+    },
+    "cohortSampleDetail": {
+      "personsCreated": "{count}명 · 생성일 {date}",
+      "records": "레코드",
+      "noRecords": "이 샘플에는 대상자 레코드가 없습니다."
+    },
+    "cohortSampleCreate": {
+      "eyebrow": "코호트",
+      "title": "새 코호트 샘플",
+      "numberOfPersons": "대상자 수",
+      "maximum": "최대 {max}",
+      "genderOptional": "성별 (선택 사항)",
+      "ageOptional": "연령 (선택 사항)",
+      "minAge": "최소 연령",
+      "maxAge": "최대 연령",
+      "createSample": "샘플 만들기",
+      "ageModeLessThan": "< 미만",
+      "ageModeAtMost": "≤ 이하",
+      "ageModeEqualTo": "= 같음",
+      "ageModeAtLeast": "≥ 이상",
+      "ageModeGreaterThan": "> 초과",
+      "ageModeBetween": "사이",
+      "ageModeNotBetween": "사이 아님"
+    },
+    "cohortSamplesList": {
+      "empty": "이 코호트와 소스에 대해 아직 생성된 샘플이 없습니다.",
+      "persons": "대상자",
+      "refreshSample": "샘플 새로 고침",
+      "deleteSample": "샘플 삭제"
+    },
+    "profileSidePanel": {
+      "highlights": "하이라이트",
+      "showHighlights": "하이라이트 표시",
+      "hideHighlights": "하이라이트 숨기기",
+      "accessDenied403": "이 데이터 소스에서 이 대상자의 프로필에 접근할 권한이 없습니다. 관리자에게 소스에 대한 READ 권한을 요청하세요.",
+      "failedToLoadProfile": "프로필을 불러오지 못했습니다."
+    },
+    "characterizationDashboard": {
+      "distributions": "분포",
+      "demographicProfile": "인구통계 프로파일",
+      "ageDistribution": "연령 분포",
+      "prevalenceComparison": "유병률 비교",
+      "covariateBalance": "공변량 균형(표준화 평균 차이)",
+      "imbalanceNote": "|SMD| > 0.1(점선)인 공변량은 불균형으로 간주됩니다",
+      "topCovariates": "유병률 상위 공변량",
+      "noVisualizationData": "시각화할 데이터가 없습니다.",
+      "smdAxis": "표준화 평균 차이",
+      "smdShort": "SMD",
+      "cohortIndexed": "코호트 {n}"
+    },
+    "characterizationTable1": {
+      "overall": "전체",
+      "colHint": "N(%) / 평균(SD)",
+      "n": "N"
+    },
+    "characterizationWorkbench": {
+      "hideDesignPanel": "디자인 패널 숨기기",
+      "showDesignPanel": "디자인 패널 표시",
+      "hideAnalysisDesign": "분석 디자인 숨기기",
+      "showAnalysisDesign": "분석 디자인 표시"
+    },
+    "characterizationResults": {
+      "covariateDetail": "공변량 상세",
+      "concept": "개념",
+      "smdLabel": "표준화 평균 차이",
+      "noCovariateSelected": "선택된 공변량이 없습니다."
+    },
+    "characterizationDesign": {
+      "detailsEyebrow": "상세"
+    },
+    "inclusionCriteriaPanel": {
+      "ruleIncomplete": "포함 규칙이 완료되지 않았습니다.",
+      "livePreviewFailed": "실시간 미리보기에 실패했습니다."
+    },
+    "nestedCriteriaRenderer": {
+      "deepNesting": "깊은 중첩이 감지되었습니다({depth}단계). 기준 구조를 단순화하는 것을 고려하세요.",
+      "noConceptSet": "개념 집합 없음"
+    },
+    "temporalWindowEditor": {
+      "referencePoint": "기준점",
+      "startReferencePoint": "시작 기준점",
+      "endReferencePoint": "종료 기준점"
+    },
+    "conceptSetPicker": {
+      "clearSelection": "선택 해제",
+      "conceptsSuffix": "개념",
+      "setCountOne": "1개 집합",
+      "setCountOther": "{count}개 집합"
+    },
+    "censoringEventsEditor": {
+      "noEventsHint": "중도절단 이벤트가 정의되지 않았습니다. 추가 이벤트는 코호트 구성원에 영향을 주지 않습니다.",
+      "removeEvent": "이벤트 제거"
+    },
+    "attributesEditor": {
+      "enterTextValue": "텍스트 값 입력...",
+      "edit": "편집",
+      "addDateAdjustment": "날짜 조정 추가",
+      "removeAttribute": "속성 제거",
+      "pleaseEnterTextValue": "텍스트 값을 입력하세요",
+      "pleaseEnterNumericValue": "숫자 값을 입력하세요",
+      "betweenRequiresBothValues": "BETWEEN 연산자는 두 값이 모두 필요합니다",
+      "notConfigured": "구성되지 않음",
+      "bothDatesRequired": "시작 날짜와 종료 날짜가 모두 필요합니다",
+      "endDateAfterStart": "종료 날짜는 시작 날짜 이후여야 합니다"
+    },
+    "cardinalityInput": {
+      "typeAriaLabel": "카디널리티 유형"
+    },
+    "eventCard": {
+      "concepts": "개념",
+      "noConceptSet": "개념 집합 없음",
+      "collapse": "접기",
+      "expand": "펼치기",
+      "removeEvent": "이벤트 제거",
+      "attributes": "속성",
+      "attribute": "속성",
+      "addCardinality": "카디널리티 추가",
+      "addTemporalWindow": "시간 창 추가",
+      "addAttributes": "속성 추가",
+      "removeCardinality": "카디널리티 제거",
+      "temporalWindows": "시간 창",
+      "removeTemporalWindow": "시간 창 제거",
+      "eventIdLabel": "이벤트 ID:",
+      "criteriaTypeLabel": "기준 유형:",
+      "conceptSetIdLabel": "개념 집합 ID:",
+      "restrictVisitNote": "이벤트는 인덱스와 동일한 방문에서 발생해야 합니다",
+      "ignoreObservationNote": "이벤트는 관찰 기간 외에 발생할 수 있습니다"
+    },
+    "filterTypeSelector": {
+      "label": "필터 유형",
+      "placeholder": "필터 유형 선택...",
+      "groupOnly": "그룹 전용",
+      "noConceptSet": "개념 집합 없음"
+    },
+    "configurationWarningBanner": {
+      "title": "구성 검증 경고",
+      "description": "구성의 일부 필터 유형이 유효하지 않거나 잘못 구성되었습니다. 이러한 필터는 UI에서 사용할 수 없습니다:",
+      "invalidFilterTypes": "유효하지 않은 필터 유형",
+      "contactAdmin": "구성 파일(atlas-config.json)을 업데이트하려면 관리자에게 문의하세요."
+    },
+    "cohortList": {
+      "emptyMatchQueryAndTags": "선택한 태그와 함께 \"{query}\"과(와) 일치하는 코호트가 없습니다.",
+      "emptyMatchQuery": "\"{query}\"과(와) 일치하는 코호트가 없습니다.",
+      "emptyMatchTags": "선택한 태그와 일치하는 코호트가 없습니다.",
+      "emptyNoCohorts": "아직 코호트가 없습니다. 하나를 생성하여 연구 대상 집단 정의를 시작하세요."
+    },
+    "cohortReportDrawer": {
+      "backToSamples": "샘플로 돌아가기",
+      "personTitle": "대상자 {id}",
+      "profileTitle": "프로필"
+    },
+    "conceptSearch": {
+      "searching": "개념 검색 중...",
+      "foundResults": "{count}개의 결과를 찾았습니다",
+      "conceptMeta": "ID: {id} | 코드: {code} | 도메인: {domain}",
+      "enterSearchTerm": "개념을 찾으려면 검색어를 입력하세요"
+    },
+    "cohortBuilder": {
+      "stateRequired": "필수",
+      "stateOptional": "선택 사항",
+      "eventCountOne": "이벤트 1개",
+      "eventCountOther": "이벤트 {count}개",
+      "ruleCountOne": "규칙 1개",
+      "ruleCountOther": "규칙 {count}개",
+      "stateCensoringCount": "+{count} 중도절단",
+      "stateEndOfObservation": "관찰 종료",
+      "stateNeedsOffset": "오프셋 필요",
+      "stateOffsetDays": "+{count}일",
+      "stateNeedsDrugSet": "약물 집합 필요",
+      "stateDrugExposure": "약물 노출",
+      "stateConfigured": "구성됨",
+      "saveToServerError": "코호트를 서버에 저장하지 못했습니다",
+      "saveSuccess": "코호트를 저장했습니다",
+      "saveError": "코호트를 저장하지 못했습니다",
+      "exportFailed": "내보내기 실패: {error}",
+      "exportDownloaded": "코호트 JSON을 다운로드했습니다",
+      "copiedToClipboard": "코호트 JSON을 클립보드에 복사했습니다",
+      "copyFailed": "클립보드에 복사할 수 없습니다",
+      "emptyCohort": "빈 코호트"
+    },
+    "conceptDetail": {
+      "closeDetails": "개념 세부정보 닫기",
+      "goBack": "뒤로",
+      "addToConceptSet": "개념 집합에 추가",
+      "copyId": "ID 복사",
+      "persons": "명",
+      "descAbbr": "하위",
+      "conceptDetailsTitle": "개념 세부정보",
+      "conceptId": "개념 ID",
+      "conceptClass": "개념 클래스",
+      "viewFull": "전체 보기",
+      "noHierarchyForConcept": "이 개념에 대한 계층 구조를 찾을 수 없습니다.",
+      "moreDescendants": "하위 개념 {count}개 더",
+      "noRelatedConcepts": "관련 개념을 찾을 수 없습니다.",
+      "relationshipsCount": "관계 {count}개"
+    },
+    "conceptTable": {
+      "selectAllConcepts": "모든 개념 선택",
+      "selectConcept": "{name} 선택",
+      "noRecords": "표시할 레코드가 없습니다",
+      "itemsPerPage": "페이지당 항목 수:"
+    },
+    "config": {
+      "cache": {
+        "clearHelp": "서버에서 새로 고침을 강제하기 위해 캐시된 구성 데이터를 지웁니다. 오래되거나 손상된 데이터 문제를 해결하는 데 도움이 됩니다.",
+        "statusLabel": "캐시 상태:",
+        "clearDialogTitle": "캐시 지우기",
+        "clearConfirm": "구성 캐시를 지우시겠습니까? 이 작업은 취소할 수 없습니다.",
+        "clearError": "캐시를 지우지 못했습니다. 다시 시도하십시오."
+      },
+      "panel": {
+        "closeAria": "구성 패널 닫기",
+        "tabCache": "캐시",
+        "noAdminAccess": "관리 설정에 대한 액세스 권한이 없습니다."
+      },
+      "dataSources": {
+        "loadError": "데이터 소스를 불러오지 못했습니다"
+      },
+      "vocabulary": {
+        "help": "어휘 조회를 위한 데이터베이스 스키마 이름을 구성합니다. 이 설정은 OMOP 어휘 테이블을 쿼리할 때 사용되는 PostgreSQL 스키마를 제어합니다.",
+        "schemaHint": "PostgreSQL 스키마 이름 (예: 'public', 'vocab_v5')",
+        "updated": "어휘 스키마가 \"{value}\"(으)로 업데이트되었습니다",
+        "updateError": "스키마를 업데이트하지 못했습니다. 다시 시도하십시오.",
+        "reverted": "\"{value}\"(으)로 되돌렸습니다",
+        "undoError": "실행 취소하지 못했습니다. 다시 시도하십시오."
+      },
+      "trexsql": {
+        "loadError": "데이터 소스를 불러오지 못했습니다",
+        "buildStarted": "캐시 빌드를 시작했습니다",
+        "buildStartError": "캐시 빌드를 시작하지 못했습니다",
+        "buildComplete": "캐시 빌드가 성공적으로 완료되었습니다",
+        "buildFailed": "캐시 빌드에 실패했습니다"
+      },
+      "tags": {
+        "colorHexHint": "시각적 식별을 위한 16진수 색상 코드",
+        "iconMdiFolderHint": "Material Design 아이콘 이름 (예: mdi-tag, mdi-folder)",
+        "nameTooLong": "이름은 255자 미만이어야 합니다",
+        "colorOptional": "색상 (선택 사항)",
+        "inheritColorHint": "그룹에서 상속하려면 비워 두십시오",
+        "iconOptional": "아이콘 (선택 사항)",
+        "iconInheritHint": "Material Design 아이콘 이름 또는 그룹에서 상속하려면 비워 두십시오",
+        "permissionProtected": "권한 보호됨",
+        "permissionProtectedHint": "이 태그를 할당/해제하려면 특별한 권한이 필요합니다",
+        "tagColumn": "태그",
+        "usageColumn": "사용",
+        "editTagAria": "태그 편집",
+        "deleteTagAria": "태그 삭제",
+        "noTagsInGroup": "이 그룹에 태그가 없습니다",
+        "createFirstTag": "시작하려면 첫 번째 태그를 만드십시오",
+        "requiredChip": "필수",
+        "columnChip": "열",
+        "showTagsButton": "태그 표시",
+        "editGroupAria": "태그 그룹 편집",
+        "deleteGroupAria": "태그 그룹 삭제",
+        "createFirstGroup": "시작하려면 첫 번째 태그 그룹을 만드십시오",
+        "sectionHelp": "코호트와 개념 집합을 정리하고 분류하기 위한 태그 그룹을 관리합니다. 태그 그룹을 사용하면 자산에 구조화된 메타데이터를 적용할 수 있습니다.",
+        "tagsInGroupTitle": "\"{name}\"의 태그",
+        "backToGroups": "태그 그룹으로 돌아가기",
+        "enableFreeFormTooltip": "사용자 지정 태그를 허용하려면 이 태그 그룹에서 '자유 형식'을 활성화하십시오.",
+        "noCustomTagsPrefix": "이 태그 그룹은 사용자 지정 태그를 허용하지 않습니다. 그룹을 편집하고 다음을 활성화하십시오:",
+        "noCustomTagsSuffix": "태그를 여기에 추가하십시오.",
+        "deleteGroupConfirm": "\"{name}\"을(를) 삭제하시겠습니까?",
+        "deleteTagTitle": "태그 삭제",
+        "deleteTagConfirm": "\"{name}\"을(를) 삭제하시겠습니까? 이 작업을 수행하면 모든 자산에서 태그 할당이 해제됩니다.",
+        "loadGroupsError": "태그 그룹을 불러오지 못했습니다",
+        "groupUpdated": "태그 그룹 \"{name}\"이(가) 업데이트되었습니다",
+        "groupCreated": "태그 그룹 \"{name}\"이(가) 생성되었습니다",
+        "saveGroupError": "태그 그룹을 저장하지 못했습니다",
+        "groupNotEmpty": "태그 그룹을 삭제할 수 없습니다: 그룹에 태그가 포함되어 있습니다",
+        "groupDeleted": "태그 그룹 \"{name}\"이(가) 삭제되었습니다",
+        "tagUpdated": "태그 \"{name}\"이(가) 업데이트되었습니다",
+        "tagCreated": "태그 \"{name}\"이(가) 생성되었습니다",
+        "saveTagError": "태그를 저장하지 못했습니다",
+        "tagDeleted": "태그 \"{name}\"이(가) 삭제되었습니다",
+        "deleteTagError": "태그를 삭제하지 못했습니다"
+      },
+      "permissions": {
+        "editRole": "역할 편집",
+        "createNewRole": "새 역할 만들기",
+        "roleNameRequiredLabel": "역할 이름 *",
+        "roleNameRequired": "역할 이름은 필수입니다",
+        "roleNameEmpty": "역할 이름은 비워 둘 수 없습니다",
+        "roleNameTooLong": "역할 이름은 255자 미만이어야 합니다",
+        "roleNameExists": "이 이름의 역할이 이미 존재합니다",
+        "updateRoleError": "역할을 업데이트하지 못했습니다. 다시 시도하십시오.",
+        "createRoleError": "역할을 만들지 못했습니다. 다시 시도하십시오.",
+        "unexpectedError": "예기치 않은 오류가 발생했습니다",
+        "deleteRoleTitle": "역할을 삭제하시겠습니까?",
+        "roleAssignedTo": "이 역할은 다음에 할당되어 있습니다:",
+        "usersWord": "명의 사용자",
+        "userWord": "명의 사용자",
+        "deleteRemovesFromUsers": "이 역할을 삭제하면 할당된 모든 사용자에서 제거됩니다.",
+        "confirmDeleteRolePrefix": "다음 역할을 삭제하시겠습니까:",
+        "cannotBeUndone": "이 작업은 취소할 수 없습니다.",
+        "deleteRoleButton": "역할 삭제",
+        "deleteRoleError": "역할을 삭제하지 못했습니다. 다시 시도하십시오.",
+        "searchRoles": "역할 검색...",
+        "newRole": "새 역할",
+        "noRolesFound": "역할을 찾을 수 없습니다. 시작하려면 첫 번째 역할을 만드십시오.",
+        "noDescription": "설명 없음",
+        "backToRoles": "역할로 돌아가기",
+        "editRoleAria": "역할 편집",
+        "deleteRoleAria": "역할 삭제",
+        "roleName": "역할 이름",
+        "editRoleNameAria": "역할 이름 편집",
+        "noDescriptionProvided": "제공된 설명 없음",
+        "editDescriptionAria": "설명 편집",
+        "updateRoleNameError": "역할 이름을 업데이트하지 못했습니다. 다시 시도하십시오.",
+        "updateDescriptionError": "설명을 업데이트하지 못했습니다. 다시 시도하십시오.",
+        "noRolesFoundTitle": "역할을 찾을 수 없습니다",
+        "createFirstRoleHint": "역할 기반 액세스 제어를 시작하려면 첫 번째 역할을 만드십시오.",
+        "createFirstRole": "첫 번째 역할 만들기",
+        "rolesFilteredCount": "{total}개 중 {count}개 역할",
+        "rolesTotal": "총 {count}개 역할",
+        "roleTotal": "총 {count}개 역할",
+        "searchPermissions": "권한 검색...",
+        "changesCount": "{count}개 변경",
+        "changeCount": "{count}개 변경",
+        "saveChanges": "변경 사항 저장",
+        "loadingPermissions": "권한 로드 중...",
+        "ofWord": "/",
+        "permissionsAssigned": "개 권한 할당됨",
+        "filteredFromTotal": "(총 {total}개에서 필터링됨)",
+        "allCategories": "모든 카테고리",
+        "permissionColumn": "권한",
+        "categoryColumn": "카테고리",
+        "permissionsUpdated": "{count}개 권한을 성공적으로 업데이트했습니다",
+        "permissionUpdated": "{count}개 권한을 성공적으로 업데이트했습니다",
+        "savePermissionsError": "권한 변경 사항을 저장하지 못했습니다",
+        "searchUsers": "로그인 또는 이메일로 사용자 검색...",
+        "loadingUsers": "사용자 로드 중...",
+        "usersAssigned": "명 사용자 할당됨",
+        "emailColumn": "이메일",
+        "userAssignmentsUpdated": "{count}개 사용자 할당을 성공적으로 업데이트했습니다",
+        "userAssignmentUpdated": "{count}개 사용자 할당을 성공적으로 업데이트했습니다",
+        "saveUsersError": "사용자 할당을 저장하지 못했습니다",
+        "utilitiesIntro": "백업, 배포 또는 환경 간 공유를 위해 역할 구성을 가져오고 내보냅니다.",
+        "exportRole": "역할 내보내기",
+        "exportRoleDescription": "모든 권한 및 사용자 할당을 포함하여 이 역할의 구성을 JSON 파일로 다운로드합니다.",
+        "exportCompatNote": "내보낸 파일은 Atlas 2.x와 호환되며 모든 Atlas 인스턴스로 가져올 수 있습니다.",
+        "exportRoleAsJson": "역할을 JSON으로 내보내기",
+        "importRole": "역할 가져오기",
+        "importRoleDescription": "JSON 파일에서 역할 구성을 가져옵니다. 지정된 권한과 사용자를 가진 새 역할이 생성됩니다.",
+        "noteLabel": "참고:",
+        "importRoleNote": "역할을 가져오면 새 역할이 생성됩니다. 같은 이름의 역할이 있으면 이름을 변경하라는 메시지가 표시됩니다.",
+        "importRoleFromJson": "JSON에서 역할 가져오기",
+        "exportRoleError": "역할을 내보내지 못했습니다",
+        "roleExported": "역할 \"{name}\"을(를) 성공적으로 내보냈습니다",
+        "roleImported": "역할 \"{name}\"을(를) 성공적으로 가져왔습니다",
+        "importSelectFileHelp": "역할 구성을 가져올 JSON 파일을 선택하십시오. 파일은 Atlas 2.x 호환 형식이어야 합니다.",
+        "selectJsonFile": "JSON 파일 선택",
+        "roleNameConflict": "역할 이름 충돌",
+        "roleWithNamePrefix": "다음 이름의 역할이",
+        "alreadyExistsSuffix": "이미 존재합니다.",
+        "howToProceed": "어떻게 진행하시겠습니까?",
+        "conflictSkip": "건너뛰기 - 가져오기 취소",
+        "conflictRename": "이름 변경 - 새 이름으로 가져오기",
+        "newRoleName": "새 역할 이름",
+        "newRoleNameHint": "가져온 역할의 고유한 이름을 입력하십시오",
+        "validatingImport": "가져오기 데이터 검증 중...",
+        "readyToImport": "가져올 준비 완료",
+        "importPreviewIntro": "다음 역할 구성을 가져옵니다:",
+        "roleNameLabel": "역할 이름:",
+        "descriptionLabel": "설명:",
+        "permissionsLabel": "권한:",
+        "usersLabel": "사용자:",
+        "warningsLabel": "경고:",
+        "next": "다음",
+        "continue": "계속",
+        "selectJsonFileError": "JSON 파일을 선택하십시오",
+        "readFileError": "파일을 읽지 못했습니다",
+        "invalidImportFormat": "잘못된 역할 가져오기 형식: 역할 이름 없음",
+        "warnNoPermissions": "역할에 할당된 권한이 없습니다",
+        "warnNoUsers": "역할에 할당된 사용자가 없습니다",
+        "invalidJsonFormat": "잘못된 JSON 형식입니다. 파일을 확인하고 다시 시도하십시오.",
+        "validateImportError": "가져오기 데이터를 검증하지 못했습니다",
+        "updateRoleNameFailed": "역할 이름을 업데이트하지 못했습니다",
+        "importRoleRetry": "역할을 가져오지 못했습니다. 다시 시도하십시오.",
+        "importRoleError": "역할을 가져오지 못했습니다"
+      }
+    },
+    "domainPrevalenceTable": {
+      "largeDatasetHint": "대용량 데이터셋이 감지되었습니다({count}개 항목). 성능을 위해 유병률 상위 1,000개 항목을 표시합니다. 전체 데이터는 검색 또는 CSV 내보내기를 사용하세요.",
+      "prevalencePercent": "유병률 (%)",
+      "noEntriesFound": "항목을 찾을 수 없습니다",
+      "showingAllEntries": "전체 {count}개 항목 표시",
+      "showingRange": "{total}개 중 {start}~{end}개 항목 표시"
+    },
+    "domainPrevalenceTreemap": {
+      "clickAction": "클릭",
+      "clickHint": "하면 원하는 영역의 상세 분석을 볼 수 있습니다",
+      "noHierarchyNote": "이 데이터 소스에서는 계층적 그룹화를 사용할 수 없습니다",
+      "groupByHierarchy": "계층별 그룹화"
+    },
+    "incidenceRate": {
+      "importInputAria": "발생률 디자인 가져오기",
+      "removeCohort": "코호트 제거",
+      "selectCohorts": "코호트 선택",
+      "outcomeOverview": "결과 개요",
+      "outcomeOverviewNote": "행을 클릭하여 검토하십시오. 각 결과는 인덱스 시점에 이미 이벤트가 발생한 사람을 제외합니다.",
+      "personsAtRisk": "위험 대상자 수",
+      "personsAtRiskTooltip": "위험 기간 동안 대상 코호트에서 위험에 노출된 대상자",
+      "outcomeCases": "결과 발생 건수",
+      "outcomeCasesTooltip": "추적 기간 동안 결과가 발생한 대상자 ({proportion})",
+      "personYearsTooltip": "모든 대상자에서 관찰된 총 관찰 인시(인년 단위)",
+      "personYearsAtRisk": "위험 인년",
+      "incidenceRateTooltip": "발생률: {years} 인년당 {cases} 건, {multiplier} 배로 스케일",
+      "incidenceRatePerPy": "{multiplier} 인년당 발생률",
+      "notComparable": "결과 간 비교 불가",
+      "percentProportion": "비율 {value}%",
+      "moveUp": "위로 이동",
+      "moveDown": "아래로 이동",
+      "removeRule": "규칙 제거",
+      "stratifiedIncidence": "층화 발생률",
+      "lowerRate": "낮은 발생률",
+      "higherRate": "높은 발생률",
+      "treemapLegendHint": "(색상 = 인년당 발생률, 면적 = 위험 대상자 수)",
+      "hideDesignPanel": "디자인 패널 숨기기",
+      "showDesignPanel": "디자인 패널 표시",
+      "hideAnalysisDesign": "분석 디자인 숨기기",
+      "showAnalysisDesign": "분석 디자인 표시",
+      "noCasesFound": "이 대상/결과 조합에서 발생 건수를 찾을 수 없습니다. 다른 결과를 선택해 보십시오."
+    },
+    "pathwayCohortList": {
+      "removeCohort": "코호트 제거"
+    },
+    "pathwayCohortPicker": {
+      "selectCohorts": "코호트 선택"
+    },
+    "pathwayWorkbench": {
+      "hideDesignPanel": "디자인 패널 숨기기",
+      "showDesignPanel": "디자인 패널 표시",
+      "hideAnalysisDesign": "분석 디자인 숨기기",
+      "showAnalysisDesign": "분석 디자인 표시"
+    },
+    "pathwayBuilder": {
+      "importPathwayDesign": "경로 디자인 가져오기",
+      "versionHistory": "버전 기록"
+    },
+    "pathwayPathDetails": {
+      "event": "이벤트"
+    },
+    "drilldownDetails": {
+      "prevalenceByGenderAgeYear": "성별, 연령, 연도별 유병률",
+      "lengthOfEra": "기간(Era) 길이",
+      "distributionByType": "유형별 분포",
+      "distributionByUnit": "단위별 분포",
+      "distributionByValue": "값별 분포",
+      "distributionByOperator": "연산자별 분포",
+      "distributionByQualifier": "한정자별 분포",
+      "noDetailedData": "이 개념에 대한 상세 데이터가 없습니다."
+    },
+    "tableExport": {
+      "copiedRows": "{count}개 행을 클립보드에 복사했습니다",
+      "copyFailed": "클립보드에 데이터를 복사하지 못했습니다",
+      "exportedRows": "{count}개 행을 {filename}.csv로 내보냈습니다",
+      "exportFailed": "CSV 파일을 내보내지 못했습니다"
+    },
+    "notifications": {
+      "bellAriaLabel": "알림({count}개 읽지 않음)",
+      "heading": "알림",
+      "markAllRead": "모두 읽음으로 표시",
+      "clear": "지우기",
+      "allCaughtUp": "모든 알림을 확인했습니다.",
+      "remove": "제거"
+    },
+    "navBar": {
+      "mainNavigation": "기본"
     }
   },
   "facets": {
@@ -1635,7 +2174,7 @@
     "loadingReport": "보고서 로드중",
     "noPermission": "이 보고서를 볼 수 있는 권한이 없습니다.",
     "numberOfPeople": "사람 수",
-    "observationPeriodReport" : {
+    "observationPeriodReport": {
       "ageAtFirstObservation": "관찰 시작 연령",
       "ageByGender": "성별별 연령",
       "observationLength": "관찰기록 길이",
@@ -1721,7 +2260,7 @@
       "search": "검색"
     },
     "vocabularies": "용어(vocabularies)",
-    "viewCountMessage":  "View record count for:"
+    "viewCountMessage": "View record count for:"
   },
   "cs": {
     "browser": {
@@ -2492,7 +3031,7 @@
             "ldap": "LDAP 서버"
           }
         },
-        "provider" : {
+        "provider": {
           "connection": {
             "failed": "Connection failed. Please see server logs for details."
           }
@@ -2767,7 +3306,7 @@
         "selectASource": "소스를 선택하십시오",
         "addNewSample": "새로운 샘플 추가",
         "cohortNotGeneratedNote": "이 코호트는 선택한 데이터 소스에서 생성되지 않았습니다. 샘플에 접근하기 전에, 생성 탭으로 돌아가서 코호트를 생성하십시오.",
-        "cohortShouldBeGenerated":  "샘플을 만들기 전에 코호트가 생성되야 합니다",
+        "cohortShouldBeGenerated": "샘플을 만들기 전에 코호트가 생성되야 합니다",
         "errorFetchingList": "샘플 목록을 가져 오는 중에 오류가 발생했습니다. 나중에 다시 시도하십시오",
         "errorDeleting": "샘플을 삭제하는 중에 오류가 발생했습니다. 나중에 다시 시도하십시오",
         "errorFetchingData": "샘플 데이터를 가져오는 중에 오류가 발생했습니다. 나중에 다시 시도하십시오",
@@ -3768,5 +4307,50 @@
     "utilitiesText_7": "패키지 이름은 영숫자 문자로만 구성되어야합니다. 공백이나 특수 문자는 허용되지 않습니다.",
     "utilitiesText_8": "당신의 분석 사양의 문제를 검토하려면 다운로드 영역을 확인하십시오. Definition을 내보내기 전에 수정해야합니다..",
     "packageName": "패키지 이름..."
+  },
+  "views": {
+    "cohorts": {
+      "eyebrowMain": "OHDSI · 코호트",
+      "eyebrowImport": "가져오기",
+      "eyebrowConfirm": "확인",
+      "eyebrowNew": "새로 만들기",
+      "eyebrowCohort": "코호트",
+      "countSingular": "코호트 1개",
+      "countPlural": "코호트 {count}개"
+    },
+    "characterizationBuilder": {
+      "importInputAria": "특성화 디자인 가져오기"
+    },
+    "featureAnalysisEditor": {
+      "deleteEyebrow": "확인"
+    },
+    "dataSources": {
+      "reportNotImplemented": "보고서 유형 \"{type}\"은(는) 아직 구현되지 않았습니다.",
+      "noSources": "사용 가능한 데이터 소스가 없습니다.",
+      "selectSourceHint": "보고서를 보려면 데이터 소스를 선택하세요."
+    },
+    "profile": {
+      "eyebrow": "프로필"
+    },
+    "incidenceRates": {
+      "copied": "발생률이 복사되었습니다",
+      "copyFailed": "복사에 실패했습니다",
+      "deleted": "발생률이 삭제되었습니다",
+      "deleteFailed": "삭제에 실패했습니다"
+    },
+    "pathways": {
+      "copied": "경로가 복사되었습니다",
+      "copyFailed": "복사에 실패했습니다",
+      "deleted": "경로가 삭제되었습니다",
+      "deleteFailed": "삭제에 실패했습니다"
+    },
+    "roleDetails": {
+      "roleNotFound": "역할을 찾을 수 없습니다",
+      "backToRoles": "역할 목록으로 돌아가기"
+    },
+    "roleManagement": {
+      "title": "역할 및 권한 관리",
+      "subtitle": "사용자 역할을 관리하고, 권한을 할당하며, 시스템 기능에 대한 접근을 제어합니다."
+    }
   }
 }

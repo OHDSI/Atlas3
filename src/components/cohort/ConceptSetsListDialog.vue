@@ -35,7 +35,7 @@
           <td>
             <AtlasIconButton
               icon="mdi-pencil-outline"
-              v-bind="{ ariaLabel: 'Edit' }"
+              v-bind="{ ariaLabel: t('common.edit', 'Edit').value }"
               variant="text"
               size="sm"
               @click="$emit('view', conceptSet)"

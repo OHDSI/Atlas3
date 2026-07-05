@@ -63,7 +63,7 @@
 
     <AtlasDialog
       v-model="dialogOpen"
-      eyebrow="COHORT"
+      :eyebrow="tv('common.cohort', 'COHORT')"
       :title="t('ir.editor.chooseACohort', 'Select cohorts to link').value"
       max-width="700"
       @close="dialogOpen = false"
@@ -115,7 +115,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: LinkedCohort[]]
 }>()
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 const dialogOpen = ref(false)
 const selectedIds = ref<number[]>([])

@@ -190,7 +190,7 @@ import { getCacheStatus, buildCache } from '@/services/trexsql.service'
 import type { CacheStatusType, DataSourceWithCacheStatus } from '@/models/trexsql.types'
 import type { DataSource } from '@/models/datasource.types'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const auth = useAuth()
 const { isTrexSQLEnabled, initialize: initTrexSQL } = useTrexSQLCache()
 
@@ -241,7 +241,10 @@ async function loadDataSources(): Promise<void> {
     dataSourcesWithStatus.value = sourcesWithStatus
   } catch (error) {
     logger.error('TrexSQLCacheSection', 'Failed to load data sources', error)
-    showNotification('Failed to load data sources', 'error')
+    showNotification(
+      tv('components.config.trexsql.loadError', 'Failed to load data sources'),
+      'error'
+    )
   } finally {
     isLoading.value = false
   }
@@ -273,11 +276,17 @@ async function handleBuildCache(sourceKey: string): Promise<void> {
       }
     }
 
-    showNotification(response.message || 'Cache build started', 'success')
+    showNotification(
+      response.message || tv('components.config.trexsql.buildStarted', 'Cache build started'),
+      'success'
+    )
 
     pollCacheStatus(sourceKey)
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Failed to start cache build'
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : tv('components.config.trexsql.buildStartError', 'Failed to start cache build')
     showNotification(errorMessage, 'error')
     buildingSource.value = null
   }
@@ -303,9 +312,15 @@ async function pollCacheStatus(sourceKey: string): Promise<void> {
         buildingSource.value = null
 
         if (status.status === 'ready') {
-          showNotification('Cache build completed successfully', 'success')
+          showNotification(
+            tv('components.config.trexsql.buildComplete', 'Cache build completed successfully'),
+            'success'
+          )
         } else if (status.status === 'error') {
-          showNotification(status.errorMessage || 'Cache build failed', 'error')
+          showNotification(
+            status.errorMessage || tv('components.config.trexsql.buildFailed', 'Cache build failed'),
+            'error'
+          )
         }
       }
     } catch (error) {

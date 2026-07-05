@@ -23,7 +23,7 @@
               icon="mdi-magnify"
               size="sm"
               variant="text"
-              v-bind="{ ariaLabel: 'Search concepts' }"
+              v-bind="{ ariaLabel: tv('components.conceptSet.import.sourceCodes.searchConcepts', 'Search concepts') }"
               @click="showSearch = true"
             />
             <AtlasIconButton
@@ -31,7 +31,7 @@
               icon="mdi-close"
               size="sm"
               variant="text"
-              v-bind="{ ariaLabel: 'Clear selection' }"
+              v-bind="{ ariaLabel: tv('components.conceptSetPicker.clearSelection', 'Clear selection') }"
               @click="clearSingleConceptSelection"
             />
           </template>
@@ -97,7 +97,8 @@
           class="mt-2"
           @close="clearSelection"
         >
-          {{ selectedConceptSet.name }} ({{ getConceptCount(selectedConceptSet) }} concepts)
+          {{ selectedConceptSet.name }} ({{ getConceptCount(selectedConceptSet) }}
+          {{ t('components.conceptSetPicker.conceptsSuffix', 'concepts').value }})
         </AtlasChip>
       </template>
     </v-card-text>

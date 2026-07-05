@@ -190,7 +190,7 @@ import type { CohortDefinitionSummary } from '@/models/webapi.types'
 import { AtlasAlert, AtlasButton, AtlasCard, AtlasChip, AtlasIcon, AtlasIconButton, AtlasSkeleton } from '@/components/ui'
 import { tagColor, tagContrastColor } from '@/utils/tag-color'
 
-const { t, locale } = useI18n()
+const { t, tv, locale } = useI18n()
 const router = useRouter()
 const access = useEntityAccessFor('cohortDefinition')
 
@@ -224,11 +224,22 @@ const isFiltered = computed(
 
 const emptyMessage = computed(() => {
   if (props.searchQuery && (props.selectedTags?.length ?? 0) > 0) {
-    return `No cohorts match "${props.searchQuery}" with the selected tags.`
+    return tv(
+      'components.cohortList.emptyMatchQueryAndTags',
+      'No cohorts match "{query}" with the selected tags.',
+      { query: props.searchQuery }
+    )
   }
-  if (props.searchQuery) return `No cohorts match "${props.searchQuery}".`
-  if ((props.selectedTags?.length ?? 0) > 0) return 'No cohorts match the selected tags.'
-  return 'No cohorts yet — create one to start defining a study population.'
+  if (props.searchQuery)
+    return tv('components.cohortList.emptyMatchQuery', 'No cohorts match "{query}".', {
+      query: props.searchQuery,
+    })
+  if ((props.selectedTags?.length ?? 0) > 0)
+    return tv('components.cohortList.emptyMatchTags', 'No cohorts match the selected tags.')
+  return tv(
+    'components.cohortList.emptyNoCohorts',
+    'No cohorts yet — create one to start defining a study population.'
+  )
 })
 
 const unknownLabel = t('common.anonymous', 'Unknown')

@@ -1,8 +1,8 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    eyebrow="COHORT"
-    title="Select cohorts"
+    :eyebrow="t('common.cohort', 'Cohort').value"
+    :title="t('components.pathwayCohortPicker.selectCohorts', 'Select cohorts').value"
     max-width="600"
     @update:model-value="(v: boolean) => emit('update:modelValue', v)"
     @close="close"

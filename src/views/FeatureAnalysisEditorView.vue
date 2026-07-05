@@ -272,7 +272,7 @@
 
     <AtlasDialog
       v-model="showDeleteDialog"
-      eyebrow="CONFIRM"
+      :eyebrow="t('views.featureAnalysisEditor.deleteEyebrow', 'CONFIRM').value"
       :title="t('common.delete', 'Delete').value"
       max-width="500"
       @close="showDeleteDialog = false"

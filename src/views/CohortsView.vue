@@ -2,7 +2,7 @@
   <AtlasPageShell
     hero
     compact
-    eyebrow="OHDSI · Cohorts"
+    :eyebrow="t('views.cohorts.eyebrowMain', 'OHDSI · Cohorts').value"
     :title="pageTitle"
     :subtitle="pageSubtitle"
   >
@@ -150,7 +150,7 @@
       <!-- Import Dialog -->
       <AtlasDialog
         v-model="showImportDialog"
-        eyebrow="IMPORT"
+        :eyebrow="t('views.cohorts.eyebrowImport', 'IMPORT').value"
         :title="t('common.importCohort', 'Import cohort definition').value"
         max-width="640"
         @close="closeImportDialog"
@@ -231,7 +231,7 @@
       <!-- Delete Confirmation Dialog -->
       <AtlasDialog
         v-model="showDeleteDialog"
-        eyebrow="CONFIRM"
+        :eyebrow="t('views.cohorts.eyebrowConfirm', 'CONFIRM').value"
         :title="t('common.deleteCohortTitle', 'Delete cohort?').value"
         max-width="500"
         @close="showDeleteDialog = false"
@@ -270,7 +270,7 @@
       <!-- New Cohort Dialog -->
       <AtlasDialog
         v-model="showNewCohortDialog"
-        eyebrow="NEW"
+        :eyebrow="t('views.cohorts.eyebrowNew', 'NEW').value"
         :title="t('cohortDefinitions.newDefinitionTitle', 'Create new cohort').value"
         max-width="500"
         @close="showNewCohortDialog = false"
@@ -299,7 +299,7 @@
 
       <AtlasDialog
         v-model="showCohortInfoDialog"
-        eyebrow="COHORT"
+        :eyebrow="t('views.cohorts.eyebrowCohort', 'COHORT').value"
         :title="selectedCohort?.name || t('common.cohortInformation', 'Cohort information').value"
         max-width="900"
         @close="showCohortInfoDialog = false"
@@ -437,7 +437,9 @@ const paginatedCohorts = computed(() => {
 
 const countLabel = computed(() => {
   const n = filteredCohorts.value.length
-  return n === 1 ? '1 cohort' : `${n.toLocaleString()} cohorts`
+  return n === 1
+    ? t('views.cohorts.countSingular', '1 cohort').value
+    : t('views.cohorts.countPlural', '{count} cohorts', { count: n.toLocaleString() }).value
 })
 
 /**
