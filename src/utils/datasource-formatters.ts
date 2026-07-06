@@ -146,7 +146,7 @@ export function transformClinicalDomainReport(
     conceptId: item.conceptId,
     conceptName: item.conceptPath,
     personCount: item.numPersons,
-    prevalence: item.percentPersons,
+    prevalence: item.percentPersons * 100, // percentPersons arrives as a 0..1 fraction
     metric: isEra ? item.lengthOfEra || 0 : item.recordsPerPerson || 0,
   }))
 
@@ -566,6 +566,8 @@ export function transformObservationPeriodReport(
             xAxisType: 'value' as const,
             xValues: axis.values,
             xAxisLabel: axis.label,
+            yAxisLabel: 'Percent of Persons',
+            yAxisFormat: 'percent' as const,
             series: [
               {
                 name: 'Cumulative %',
