@@ -756,7 +756,10 @@ export function dashboardAgeBarOptions(data: DatasourceHistogramChartData): ECha
 
         const [xStart, xEnd, yValue] = point
         const value = formatSINumber(yValue)
-        const label = intervalSize === 1 ? `${xStart}` : `${xStart} - ${xEnd}`
+        // Bin bounds can be fractional (e.g. days expressed as years, interval
+        // ~0.082), so round for display instead of dumping raw floats.
+        const fmtBin = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
+        const label = intervalSize === 1 ? fmtBin(xStart) : `${fmtBin(xStart)} - ${fmtBin(xEnd)}`
         return `<strong>${axisLabel}: ${label}</strong><br/>${data.seriesName || data.unit || 'Count'}: ${value}`
       },
     },
@@ -995,13 +998,23 @@ export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLin
         type: 'cross',
       },
       formatter: (params: unknown) => {
-        type TooltipParam = { name?: string; seriesName?: string; value?: number }
+        type TooltipParam = {
+          name?: string
+          seriesName?: string
+          // For time/value x-axes the point is a [x, y] pair; for category axes
+          // it is the scalar y-value.
+          value?: number | Array<number | string>
+          axisValueLabel?: string
+        }
         const paramsArray = (Array.isArray(params) ? params : [params]) as TooltipParam[]
         if (paramsArray.length === 0) return ''
-        const name = paramsArray[0]?.name ?? ''
+        const name = paramsArray[0]?.axisValueLabel || paramsArray[0]?.name || ''
         const lines = paramsArray.map(param => {
           const series = param.seriesName || ''
-          const val = typeof param.value === 'number' ? formatValue(param.value) : String(param.value)
+          // ECharts hands back the whole data point: for time/value axes that is
+          // [x, y], so pull the y (last element) rather than stringifying the pair.
+          const y = Array.isArray(param.value) ? param.value[param.value.length - 1] : param.value
+          const val = typeof y === 'number' ? formatValue(y) : String(y)
           return `${series}: <strong>${val}</strong>`
         })
         return `<strong>${name}</strong><br/>${lines.join('<br/>')}`
