@@ -255,8 +255,10 @@ watch(
               :items="referencePointOptions"
               item-title="label"
               item-value="value"
-              label="Reference Point"
-              aria-label="Start Reference Point"
+              :label="t('components.temporalWindowEditor.referencePoint', 'Reference Point').value"
+              :aria-label="
+                t('components.temporalWindowEditor.startReferencePoint', 'Start Reference Point').value
+              "
               variant="outlined"
               hide-details
               @update:model-value="(v) => updateStartReferencePoint(v as Window['referencePoint'])"
@@ -339,8 +341,10 @@ watch(
               :items="referencePointOptions"
               item-title="label"
               item-value="value"
-              label="Reference Point"
-              aria-label="End Reference Point"
+              :label="t('components.temporalWindowEditor.referencePoint', 'Reference Point').value"
+              :aria-label="
+                t('components.temporalWindowEditor.endReferencePoint', 'End Reference Point').value
+              "
               variant="outlined"
               hide-details
               @update:model-value="(v) => updateEndReferencePoint(v as Window['referencePoint'])"

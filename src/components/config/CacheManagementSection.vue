@@ -1,11 +1,15 @@
 <template>
   <div class="cache-management-section">
     <v-card>
-      <v-card-title>Cache Management</v-card-title>
+      <v-card-title>{{ t('config.cache.title', 'Cache Management').value }}</v-card-title>
       <v-card-text>
         <p class="text-body-1 mb-4">
-          Clear cached configuration data to force a refresh from the server. This can help resolve
-          issues with outdated or corrupted data.
+          {{
+            t(
+              'components.config.cache.clearHelp',
+              'Clear cached configuration data to force a refresh from the server. This can help resolve issues with outdated or corrupted data.'
+            ).value
+          }}
         </p>
 
         <!-- Cache Statistics -->
@@ -14,7 +18,7 @@
           severity="info"
           class="mb-4"
         >
-          <strong>Cache Status:</strong>
+          <strong>{{ t('components.config.cache.statusLabel', 'Cache Status:').value }}</strong>
           {{ cacheStats.itemCount }} item{{ cacheStats.itemCount !== 1 ? 's' : '' }} cached ({{
             formatBytes(cacheStats.estimatedSize)
           }})
@@ -28,7 +32,7 @@
           :disabled="isLoading"
           @click="showConfirmDialog = true"
         >
-          Clear Configuration Cache
+          {{ t('config.cache.clearButton', 'Clear Configuration Cache').value }}
         </AtlasButton>
       </v-card-text>
     </v-card>
@@ -37,23 +41,28 @@
     <AtlasDialog
       v-model="showConfirmDialog"
       eyebrow="CONFIRM"
-      title="Clear Cache"
+      :title="t('components.config.cache.clearDialogTitle', 'Clear Cache').value"
       max-width="400"
       @close="showConfirmDialog = false"
     >
-      Are you sure you want to clear the configuration cache? This action cannot be undone.
+      {{
+        t(
+          'components.config.cache.clearConfirm',
+          'Are you sure you want to clear the configuration cache? This action cannot be undone.'
+        ).value
+      }}
       <template #actions>
         <AtlasButton
           variant="ghost"
           @click="showConfirmDialog = false"
         >
-          Cancel
+          {{ t('common.cancel', 'Cancel').value }}
         </AtlasButton>
         <AtlasButton
           :loading="isLoading"
           @click="handleClearCache"
         >
-          Clear Cache
+          {{ t('components.config.cache.clearDialogTitle', 'Clear Cache').value }}
         </AtlasButton>
       </template>
     </AtlasDialog>
@@ -76,10 +85,12 @@
 import { AtlasAlert, AtlasButton, AtlasDialog, AtlasSnackbar } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import { ref, onMounted } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useConfigStore } from '@/stores/config'
 import { logger } from '@/utils/logger'
 import TrexSQLCacheSection from './TrexSQLCacheSection.vue'
 
+const { t, tv } = useI18n()
 const configStore = useConfigStore()
 
 // State
@@ -119,14 +130,16 @@ async function handleClearCache() {
 
     // Success: update stats and show toast
     await loadCacheStats()
-    toastMessage.value = 'Configuration cache cleared successfully'
+    toastMessage.value = tv('config.cache.success', 'Configuration cache cleared successfully')
     toastSeverity.value = 'success'
     showToast.value = true
     showConfirmDialog.value = false
   } catch (error: unknown) {
     // Error: show error toast
     const errorMessage =
-      error instanceof Error ? error.message : 'Failed to clear cache. Please try again.'
+      error instanceof Error
+        ? error.message
+        : tv('components.config.cache.clearError', 'Failed to clear cache. Please try again.')
     toastMessage.value = errorMessage
     toastSeverity.value = 'danger'
     showToast.value = true

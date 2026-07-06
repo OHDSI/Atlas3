@@ -342,7 +342,10 @@ async function loadDataSources() {
     selectedResults.value =
       savedResults || dataSources.value.find(s => s.hasResults)?.sourceKey || ''
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to load data sources'
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : tv('components.config.dataSources.loadError', 'Failed to load data sources')
     showErrorToast.value = true
   }
 }

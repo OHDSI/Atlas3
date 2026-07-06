@@ -3,6 +3,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, VueWrapper } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -42,7 +43,7 @@ function mountComponent(props = {}) {
       ...props
     },
     global: {
-      plugins: [vuetify]
+      plugins: [createPinia(), vuetify]
     }
   })
 }

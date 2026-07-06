@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -10,7 +11,7 @@ const vuetify = createVuetify({ components, directives })
 describe('EventConceptSetField', () => {
   it('renders the picker button when no concept set is selected', () => {
     const wrapper = mount(EventConceptSetField, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, createPinia()] },
       props: { conceptSet: undefined },
     })
 
@@ -20,7 +21,7 @@ describe('EventConceptSetField', () => {
 
   it('renders the selected chip when a concept set is provided', () => {
     const wrapper = mount(EventConceptSetField, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, createPinia()] },
       props: { conceptSet: { id: 7, name: 'My set' } },
     })
 
@@ -30,7 +31,7 @@ describe('EventConceptSetField', () => {
 
   it('emits "select" when the picker button is clicked', async () => {
     const wrapper = mount(EventConceptSetField, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, createPinia()] },
       props: { conceptSet: undefined },
     })
 
@@ -41,7 +42,7 @@ describe('EventConceptSetField', () => {
   it('emits "edit" with the concept set when the chip is clicked', async () => {
     const cs = { id: 7, name: 'My set' }
     const wrapper = mount(EventConceptSetField, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, createPinia()] },
       props: { conceptSet: cs },
     })
 
@@ -51,7 +52,7 @@ describe('EventConceptSetField', () => {
 
   it('renders a custom title label when provided', () => {
     const wrapper = mount(EventConceptSetField, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, createPinia()] },
       props: { conceptSet: undefined, label: 'Codeset' },
     })
 

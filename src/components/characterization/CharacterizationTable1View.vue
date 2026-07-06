@@ -33,9 +33,9 @@
               v-if="showOverall"
               class="char-t1__col-value"
             >
-              Overall
+              {{ tv('components.characterizationTable1.overall', 'Overall') }}
               <div class="char-t1__col-hint">
-                N (%) / Mean (SD)
+                {{ tv('components.characterizationTable1.colHint', 'N (%) / Mean (SD)') }}
               </div>
             </th>
             <th
@@ -46,7 +46,7 @@
             >
               {{ col.cohortName }}
               <div class="char-t1__col-hint">
-                N (%) / Mean (SD)
+                {{ tv('components.characterizationTable1.colHint', 'N (%) / Mean (SD)') }}
               </div>
             </th>
             <th
@@ -62,7 +62,7 @@
         <tbody>
           <tr class="char-t1__row char-t1__row--total">
             <td class="char-t1__cell-label">
-              <strong>N</strong>
+              <strong>{{ tv('components.characterizationTable1.n', 'N') }}</strong>
             </td>
             <td
               v-if="showOverall"

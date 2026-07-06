@@ -723,40 +723,36 @@ export async function getInclusionRuleReport(
   sourceKey: string,
   mode: InclusionRuleReportMode = 0
 ): Promise<InclusionRuleReport | null> {
-  try {
-    const data = await fetchJSON<unknown>(
-      `/cohortdefinition/${cohortId}/report/${sourceKey}/inclusion?mode=${mode}`
-    )
+  // HTTP/network failures (403, 500, …) propagate to the caller so a real
+  // server error is not silently rendered as an empty "no data" state — that
+  // conflation hid a WebAPI serialization 500 behind "the cohort may have no
+  // inclusion rules". `null` is reserved for a response that reached us but
+  // carried no usable report shape.
+  const data = await fetchJSON<unknown>(
+    `/cohortdefinition/${cohortId}/report/${sourceKey}/inclusion?mode=${mode}`
+  )
 
-    const parsed = InclusionRuleReportSchema.safeParse(data)
-    if (!parsed.success) {
-      logger.error('WebAPI', 'Inclusion-rule report validation error', parsed.error)
-      return null
-    }
-
-    let treemap: InclusionTreemapNode | null = null
-    const raw = parsed.data.treemapData?.trim()
-    if (raw) {
-      try {
-        treemap = JSON.parse(raw) as InclusionTreemapNode
-      } catch (err) {
-        logger.warn('WebAPI', 'Inclusion-rule report: treemapData was not valid JSON', err)
-      }
-    }
-
-    return {
-      summary: parsed.data.summary,
-      inclusionRuleStats: parsed.data.inclusionRuleStats,
-      treemap,
-      prevalenceThreshold: parsed.data.prevalenceThreshold,
-    }
-  } catch (error) {
-    logger.error(
-      'WebAPI',
-      `Failed to fetch inclusion-rule report for ${cohortId}/${sourceKey} (mode=${mode})`,
-      error
-    )
+  const parsed = InclusionRuleReportSchema.safeParse(data)
+  if (!parsed.success) {
+    logger.error('WebAPI', 'Inclusion-rule report validation error', parsed.error)
     return null
+  }
+
+  let treemap: InclusionTreemapNode | null = null
+  const raw = parsed.data.treemapData?.trim()
+  if (raw) {
+    try {
+      treemap = JSON.parse(raw) as InclusionTreemapNode
+    } catch (err) {
+      logger.warn('WebAPI', 'Inclusion-rule report: treemapData was not valid JSON', err)
+    }
+  }
+
+  return {
+    summary: parsed.data.summary,
+    inclusionRuleStats: parsed.data.inclusionRuleStats,
+    treemap,
+    prevalenceThreshold: parsed.data.prevalenceThreshold,
   }
 }
 

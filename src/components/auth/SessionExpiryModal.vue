@@ -1,19 +1,19 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    eyebrow="SESSION"
-    title="Session Expiring Soon"
+    :eyebrow="t('components.auth.sessionEyebrow', 'SESSION').value"
+    :title="t('auth.sessionExpiringSoon', 'Session Expiring Soon').value"
     :persistent="true"
     max-width="480"
     @close="handleDismiss(false)"
     @update:model-value="handleDismiss"
   >
     <p class="text-body-1 mb-4">
-      Your session will expire in
+      {{ t('components.auth.sessionWillExpireIn', 'Your session will expire in').value }}
       <strong :class="countdownColorClass">{{ formattedTime }}</strong>.
     </p>
     <p class="text-body-2">
-      Would you like to extend your session?
+      {{ t('components.auth.extendSessionPrompt', 'Would you like to extend your session?').value }}
     </p>
 
     <AtlasAlert
@@ -29,14 +29,14 @@
         :loading="isExtending"
         @click="$emit('extend')"
       >
-        Extend Session
+        {{ t('auth.extendSession', 'Extend Session').value }}
       </AtlasButton>
       <AtlasButton
         variant="danger"
         :disabled="isExtending"
         @click="$emit('logout')"
       >
-        Logout
+        {{ t('components.auth.logout', 'Logout').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -45,7 +45,10 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasDialog } from '@/components/ui'
 import { computed, ref, watch, onUnmounted } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { SessionExpiryModalProps } from './types'
+
+const { t } = useI18n()
 
 const props = defineProps<SessionExpiryModalProps>()
 const emit = defineEmits<{

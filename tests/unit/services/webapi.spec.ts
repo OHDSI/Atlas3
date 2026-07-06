@@ -1602,10 +1602,9 @@ describe('WebAPI Service', () => {
       expect(result).toBe(false)
     })
 
-    it('getInclusionRuleReport returns null on error', async () => {
+    it('getInclusionRuleReport propagates HTTP/network errors so the caller can distinguish them from empty data', async () => {
       mockFetch.mockRejectedValueOnce(new Error('network error'))
-      const result = await webapi.getInclusionRuleReport(1, 'SYNPUF1K')
-      expect(result).toBeNull()
+      await expect(webapi.getInclusionRuleReport(1, 'SYNPUF1K')).rejects.toThrow('network error')
     })
 
     it('getCohortSpecificReport returns null on error', async () => {

@@ -10,7 +10,7 @@
       class="mb-2"
     >
       <AtlasIcon>mdi-alert</AtlasIcon>
-      Deep nesting detected ({{ depth }} levels). Consider simplifying your criteria structure.
+      {{ t('components.nestedCriteriaRenderer.deepNesting', 'Deep nesting detected ({depth} levels). Consider simplifying your criteria structure.', { depth }).value }}
     </AtlasAlert>
 
     <!-- Logic Type Display -->
@@ -41,7 +41,7 @@
 
         <v-list-item-title class="text-caption">
           {{ formatEventType(event.criteriaType) }}:
-          {{ event.conceptSet?.name || 'No concept set' }}
+          {{ event.conceptSet?.name || t('components.nestedCriteriaRenderer.noConceptSet', 'No concept set').value }}
         </v-list-item-title>
       </AtlasListItem>
     </AtlasList>
@@ -81,7 +81,7 @@ withDefaults(defineProps<Props>(), {
   depth: 0,
 })
 
-const { tv } = useI18n()
+const { t, tv } = useI18n()
 const { availableFilters } = useFilterConfig(ref('criteriaGroup'))
 
 // Format logic type for display with i18n

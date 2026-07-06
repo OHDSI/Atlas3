@@ -78,6 +78,11 @@ describe('Vue Router', () => {
     // Mock auth store
     mockAuthStore = {
       isAuthenticated: false,
+      // Steady state the guard evaluates against: the subject has been
+      // resolved (user/me returned) and no authenticated/anonymous user was
+      // found. The guard defers the prompt until userResolved flips true.
+      userResolved: true,
+      user: null,
       setToken: vi.fn(),
       setUser: vi.fn(),
       setAuthClient: vi.fn(),
@@ -455,6 +460,25 @@ describe('Vue Router', () => {
 
     it('should allow access to protected routes when authenticated', async () => {
       mockAuthStore.isAuthenticated = true
+
+      await router.push('/cohorts')
+
+      expect(mockAuthStore.openLoginModal).not.toHaveBeenCalled()
+    })
+
+    it('should defer the login modal until the subject is resolved', async () => {
+      mockAuthStore.isAuthenticated = false
+      mockAuthStore.userResolved = false
+
+      await router.push('/cohorts')
+
+      expect(mockAuthStore.openLoginModal).not.toHaveBeenCalled()
+    })
+
+    it('should not open login modal for an anonymous subject with access', async () => {
+      mockAuthStore.isAuthenticated = false
+      mockAuthStore.userResolved = true
+      mockAuthStore.user = { login: 'anonymous' }
 
       await router.push('/cohorts')
 

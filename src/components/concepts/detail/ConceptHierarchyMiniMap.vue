@@ -2,8 +2,11 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { AtlasCard } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import type { Concept } from '@/models/concept-set.types'
+
+const { t } = useI18n()
 import type { RelatedConcept } from '@/models/concept-detail.types'
 
 const props = defineProps<{
@@ -64,21 +67,21 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
     data-testid="concept-hierarchy-minimap"
   >
     <header class="card-title">
-      <span>Hierarchy</span>
+      <span>{{ t('cs.manager.concept.tabs.hierarchy.caption', 'Hierarchy').value }}</span>
       <a
         v-if="!isEmpty && canViewFull"
         href="#"
         class="view-full"
         data-testid="view-full"
         @click.prevent="viewFull"
-      >View full →</a>
+      >{{ t('components.conceptDetail.viewFull', 'View full').value }} →</a>
     </header>
     <div class="card-body">
       <p
         v-if="isEmpty"
         class="empty"
       >
-        No hierarchy found for this concept.
+        {{ t('components.conceptDetail.noHierarchyForConcept', 'No hierarchy found for this concept.').value }}
       </p>
       <template v-else>
         <ul class="tree">
@@ -121,7 +124,7 @@ const visibleChildren = computed(() => props.children.slice(0, 6))
             v-if="children.length > visibleChildren.length"
             class="node muted"
           >
-            … {{ children.length - visibleChildren.length }} more descendants
+            … {{ t('components.conceptDetail.moreDescendants', '{count} more descendants', { count: children.length - visibleChildren.length }).value }}
           </li>
         </ul>
       </template>

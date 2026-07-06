@@ -180,7 +180,8 @@
     "selectReportType": "コホート分析を表示するレポートタイプを選択してください",
     "columns": "列",
     "editName": "名前を編集",
-    "description": "説明"
+    "description": "説明",
+    "confirm": "確認"
   },
   "validation": {
     "required": "このフィールドは必須です"
@@ -194,7 +195,7 @@
   "navigation": {
     "characterizations": "特性化",
     "cohortdefinitions": "コホート定義",
-    "conceptsets": "コンセプトセット",
+    "conceptsets": "コンセプト",
     "configuration": "構成",
     "datasources": "データソース",
     "estimation": "推定",
@@ -346,6 +347,41 @@
     }
   },
   "components": {
+    "inclusionRuleReport": {
+      "matchRate": "一致率",
+      "matches": "一致数",
+      "lost": "損失数",
+      "totalEvents": "総イベント数",
+      "attritionFunnel": "脱落ファネル",
+      "perRuleSatisfaction": "ルール別の充足",
+      "populationBreakdown": "集団の内訳",
+      "noReportData": "このコホートとソースには、包含ルールレポートのデータがありません。コホートに包含ルールがないか、まだ生成されていない可能性があります。すでに生成済みの場合は、再実行してください。",
+      "loadError": "包含ルールレポートの読み込みに失敗しました",
+      "attrition": "脱落",
+      "noAttritionData": "脱落データがありません",
+      "initial": "初期",
+      "final": "最終",
+      "saveAsPng": "PNGとして保存",
+      "colCumulativeRemaining": "累積残数",
+      "colPercentOfInitial": "初期比",
+      "colPersonsSatisfying": "充足人数",
+      "colPercentSatisfying": "充足率",
+      "colPercentExcluded": "除外率",
+      "noRulesToReport": "このコホートには報告する包含ルールがありません。",
+      "hintCumulativeRemaining": "このルールとそれ以前のすべてのルールを順に適用した後に残る患者数",
+      "hintPercentOfInitial": "初期のエントリーイベント数に対する累積残数の割合（ファネルと同じ指標）",
+      "hintPersonsSatisfying": "他のルールに関係なく、このルールを単独で満たす患者",
+      "hintPercentSatisfying": "エントリーイベント集団のうち、このルールを単独で満たす割合（順序に依存しない）",
+      "hintPercentExcluded": "このルールの限界コスト：他のすべてのルールを満たすがこのルールだけを満たさない患者の割合。高い場合、このルールを削除するとその分を回復できます。",
+      "downloadCsv": "CSVをダウンロード",
+      "noAttritionHint": "脱落を確認するには、包含ルールを含むコホートを生成してください",
+      "patients": "人",
+      "retained": "保持",
+      "rulesSatisfiedHigh": "ルールの80%以上を充足",
+      "rulesSatisfiedLow": "ルールの40%未満を充足",
+      "tooltipRemaining": "残数",
+      "tooltipExcludedAtStep": "このステップで除外"
+    },
     "cardinalityInput": {
       "title": "カーディナリティ",
       "type": "タイプ",
@@ -356,7 +392,8 @@
         "exactly": "ちょうど{count}回の発生が必要です",
         "atMost": "最大{count}回までの発生が必要です",
         "exclusion": "（すべてのイベントを除外）"
-      }
+      },
+      "typeAriaLabel": "カーディナリティタイプ"
     },
     "authorship": {
       "created": "作成日",
@@ -988,7 +1025,10 @@
         "depthWarning": "ネスト深度は {depth}/10 です",
         "removeGroup": "ネストグループを削除",
         "confirmRemove": "このネストグループとそのすべての条件を削除してもよろしいですか？"
-      }
+      },
+      "clickToChangeMatchType": "クリックしてマッチタイプを変更",
+      "removeGroup": "グループを削除",
+      "noEventsInGroup": "グループにイベントがありません。イベントを追加して基準ロジックを構築してください。"
     },
     "customEraStrategy": {
       "customEraStrategyText_1": "継続的な曝露の持続：",
@@ -1378,7 +1418,30 @@
       "showTags": "タグを表示",
       "tagNameExistsWarning": "タグ <%=tagName%> はすでに存在します。",
       "cannotUnassignProtectedTagWarning": "保護されたタグの割り当てを解除できません: <%=tagName%>",
-      "reassignConfirm": "タググループ \"<%=tagGroup%>\" で割り当て可能なタグの最大数は <%=maxNumber%> です。タグ \"<%=tagName%>\" の割り当てが解除されます。続行しますか?"
+      "reassignConfirm": "タググループ \"<%=tagGroup%>\" で割り当て可能なタグの最大数は <%=maxNumber%> です。タグ \"<%=tagName%>\" の割り当てが解除されます。続行しますか?",
+      "tagGroupLabel": "タググループ *",
+      "tagNameLabel": "タグ名 *",
+      "colorOptional": "色（任意）",
+      "colorDefaultsHint": "既定はグループの色（{color}）",
+      "selectGroupFirst": "先にタググループを選択してください",
+      "showAdvancedOptions": "詳細オプションを表示",
+      "iconOptional": "アイコン（任意）",
+      "iconHint": "Material Design アイコン名（例: mdi-star）",
+      "permissionProtected": "権限で保護",
+      "permissionProtectedHint": "このタグの割り当て/解除には特別な権限が必要です",
+      "tagNameRequired": "タグ名は必須です",
+      "tagNameMaxLength": "タグ名は255文字未満にしてください",
+      "tagGroupRequired": "タググループは必須です",
+      "tagCreatedSuccess": "タグ「{name}」を作成しました！",
+      "createTagError": "タグの作成に失敗しました。もう一度お試しください。",
+      "manageTags": "タグの管理",
+      "searchTagsPlaceholder": "タグを検索...",
+      "clearAll": "すべてクリア",
+      "loadingTags": "タグを読み込み中...",
+      "noTagGroups": "タググループが見つかりません。まず設定パネルでタググループを作成してください。",
+      "noTagsMatching": "「{query}」に一致するタグが見つかりません",
+      "noTagsInGroup": "このグループにはまだタグがありません。",
+      "createNewTag": "新しいタグを作成"
     },
     "versions": {
       "loading": "バージョンを読み込み中...",
@@ -1388,7 +1451,9 @@
       "preview": "プレビュー",
       "viewing": "現在表示中",
       "createACopy": "コピーを作成",
-      "current": "現在"
+      "current": "現在",
+      "commentMaxLength": "コメントは500文字未満にしてください",
+      "saveCommentError": "コメントの保存に失敗しました"
     },
     "reusablesModal": {
       "title": "再利用可能なものから挿入",
@@ -1403,6 +1468,513 @@
           "tag": "タグ:"
         }
       }
+    },
+    "auth": {
+      "sessionEyebrow": "セッション",
+      "sessionWillExpireIn": "セッションの有効期限まで",
+      "extendSessionPrompt": "セッションを延長しますか？",
+      "logout": "ログアウト",
+      "unknownUser": "不明"
+    },
+    "profileTimeline": {
+      "eyebrow": "タイムライン",
+      "title": "イベントのタイムライン",
+      "dayRange": "{start}日目 → {end}日目",
+      "axisDay": "日（0 = コホート登録）",
+      "cohortEntry": "コホート登録"
+    },
+    "profileEventsTable": {
+      "eyebrow": "イベント"
+    },
+    "profileObservationBand": {
+      "eyebrow": "観察",
+      "title": "観察期間",
+      "empty": "観察期間の記録がありません"
+    },
+    "highlightsConceptList": {
+      "colorCoral": "コーラル",
+      "colorSky": "スカイ",
+      "colorMint": "ミント",
+      "colorAmber": "アンバー",
+      "colorLavender": "ラベンダー",
+      "colorRose": "ローズ"
+    },
+    "cohortSamples": {
+      "male": "男性",
+      "female": "女性",
+      "other": "その他",
+      "otherNonBinary": "その他 / ノンバイナリー",
+      "allPersons": "すべての対象者",
+      "title": "サンプル",
+      "description": "生成されたコホートから抽出された対象者のランダムな選択で、年齢と性別で任意に絞り込めます。",
+      "newSample": "新規サンプル",
+      "failedToLoadSamples": "サンプルの読み込みに失敗しました",
+      "failedToCreateSample": "サンプルの作成に失敗しました"
+    },
+    "cohortSampleDetail": {
+      "personsCreated": "{count}人 · 作成日 {date}",
+      "records": "レコード",
+      "noRecords": "このサンプルには対象者のレコードがありません。"
+    },
+    "cohortSampleCreate": {
+      "eyebrow": "コホート",
+      "title": "新規コホートサンプル",
+      "numberOfPersons": "対象者数",
+      "maximum": "最大 {max}",
+      "genderOptional": "性別（任意）",
+      "ageOptional": "年齢（任意）",
+      "minAge": "最小年齢",
+      "maxAge": "最大年齢",
+      "createSample": "サンプルを作成",
+      "ageModeLessThan": "< 未満",
+      "ageModeAtMost": "≤ 以下",
+      "ageModeEqualTo": "= 等しい",
+      "ageModeAtLeast": "≥ 以上",
+      "ageModeGreaterThan": "> より大きい",
+      "ageModeBetween": "範囲内",
+      "ageModeNotBetween": "範囲外"
+    },
+    "cohortSamplesList": {
+      "empty": "このコホートとソースにはまだサンプルが生成されていません。",
+      "persons": "対象者",
+      "refreshSample": "サンプルを更新",
+      "deleteSample": "サンプルを削除"
+    },
+    "profileSidePanel": {
+      "highlights": "ハイライト",
+      "showHighlights": "ハイライトを表示",
+      "hideHighlights": "ハイライトを非表示",
+      "accessDenied403": "このデータソースでこの対象者のプロファイルにアクセスする権限がありません。管理者にソースへの READ アクセス権の付与を依頼してください。",
+      "failedToLoadProfile": "プロファイルの読み込みに失敗しました。"
+    },
+    "characterizationDashboard": {
+      "distributions": "分布",
+      "demographicProfile": "人口統計プロファイル",
+      "ageDistribution": "年齢分布",
+      "prevalenceComparison": "有病率の比較",
+      "covariateBalance": "共変量バランス（標準化平均差）",
+      "imbalanceNote": "|SMD| > 0.1（破線）の共変量は不均衡とみなされます",
+      "topCovariates": "有病率上位の共変量",
+      "noVisualizationData": "可視化できるデータがありません。",
+      "smdAxis": "標準化平均差",
+      "smdShort": "SMD",
+      "cohortIndexed": "コホート {n}"
+    },
+    "characterizationTable1": {
+      "overall": "全体",
+      "colHint": "N（%）／平均（SD）",
+      "n": "N"
+    },
+    "characterizationWorkbench": {
+      "hideDesignPanel": "デザインパネルを隠す",
+      "showDesignPanel": "デザインパネルを表示",
+      "hideAnalysisDesign": "分析デザインを隠す",
+      "showAnalysisDesign": "分析デザインを表示"
+    },
+    "characterizationResults": {
+      "covariateDetail": "共変量の詳細",
+      "concept": "概念",
+      "smdLabel": "標準化平均差",
+      "noCovariateSelected": "共変量が選択されていません。"
+    },
+    "characterizationDesign": {
+      "detailsEyebrow": "詳細"
+    },
+    "inclusionCriteriaPanel": {
+      "ruleIncomplete": "包含ルールが未完成です。",
+      "livePreviewFailed": "ライブプレビューに失敗しました。"
+    },
+    "nestedCriteriaRenderer": {
+      "deepNesting": "深いネストが検出されました（{depth}レベル）。基準の構造を簡素化することを検討してください。",
+      "noConceptSet": "コンセプトセットなし"
+    },
+    "temporalWindowEditor": {
+      "referencePoint": "基準点",
+      "startReferencePoint": "開始基準点",
+      "endReferencePoint": "終了基準点"
+    },
+    "conceptSetPicker": {
+      "clearSelection": "選択をクリア",
+      "conceptsSuffix": "コンセプト",
+      "setCountOne": "1 セット",
+      "setCountOther": "{count} セット"
+    },
+    "censoringEventsEditor": {
+      "noEventsHint": "打ち切りイベントが定義されていません。追加のイベントによってコホートのメンバーシップは影響を受けません。",
+      "removeEvent": "イベントを削除"
+    },
+    "attributesEditor": {
+      "enterTextValue": "テキスト値を入力...",
+      "edit": "編集",
+      "addDateAdjustment": "日付調整を追加",
+      "removeAttribute": "属性を削除",
+      "pleaseEnterTextValue": "テキスト値を入力してください",
+      "pleaseEnterNumericValue": "数値を入力してください",
+      "betweenRequiresBothValues": "BETWEEN演算子には両方の値が必要です",
+      "notConfigured": "未設定",
+      "bothDatesRequired": "開始日と終了日の両方が必要です",
+      "endDateAfterStart": "終了日は開始日より後である必要があります"
+    },
+    "eventCard": {
+      "concepts": "コンセプト",
+      "noConceptSet": "コンセプトセットなし",
+      "collapse": "折りたたむ",
+      "expand": "展開",
+      "removeEvent": "イベントを削除",
+      "attributes": "属性",
+      "attribute": "属性",
+      "addCardinality": "カーディナリティを追加",
+      "addTemporalWindow": "時間ウィンドウを追加",
+      "addAttributes": "属性を追加",
+      "removeCardinality": "カーディナリティを削除",
+      "temporalWindows": "時間ウィンドウ",
+      "removeTemporalWindow": "時間ウィンドウを削除",
+      "eventIdLabel": "イベントID：",
+      "criteriaTypeLabel": "基準タイプ：",
+      "conceptSetIdLabel": "コンセプトセットID：",
+      "restrictVisitNote": "イベントはインデックスと同じ来院時に発生する必要があります",
+      "ignoreObservationNote": "イベントは観察期間外に発生する可能性があります"
+    },
+    "filterTypeSelector": {
+      "label": "フィルタータイプ",
+      "placeholder": "フィルタータイプを選択...",
+      "groupOnly": "グループのみ",
+      "noConceptSet": "コンセプトセットなし"
+    },
+    "configurationWarningBanner": {
+      "title": "構成検証の警告",
+      "description": "構成内の一部のフィルタータイプが無効または誤って構成されています。これらのフィルターはUIで使用できません：",
+      "invalidFilterTypes": "無効なフィルタータイプ",
+      "contactAdmin": "構成ファイル（atlas-config.json）を更新するには、管理者に連絡してください。"
+    },
+    "cohortList": {
+      "emptyMatchQueryAndTags": "「{query}」および選択したタグに一致するコホートはありません。",
+      "emptyMatchQuery": "「{query}」に一致するコホートはありません。",
+      "emptyMatchTags": "選択したタグに一致するコホートはありません。",
+      "emptyNoCohorts": "コホートはまだありません。作成して研究対象集団の定義を開始してください。"
+    },
+    "cohortReportDrawer": {
+      "backToSamples": "サンプルに戻る",
+      "personTitle": "対象者 {id}",
+      "profileTitle": "プロファイル"
+    },
+    "conceptSearch": {
+      "searching": "コンセプトを検索中...",
+      "foundResults": "{count} 件の結果が見つかりました",
+      "conceptMeta": "ID: {id} | コード: {code} | ドメイン: {domain}",
+      "enterSearchTerm": "コンセプトを検索するには検索語を入力してください"
+    },
+    "cohortBuilder": {
+      "stateRequired": "必須",
+      "stateOptional": "任意",
+      "eventCountOne": "1 件のイベント",
+      "eventCountOther": "{count} 件のイベント",
+      "ruleCountOne": "1 件のルール",
+      "ruleCountOther": "{count} 件のルール",
+      "stateCensoringCount": "+{count} 打ち切り",
+      "stateEndOfObservation": "観察期間の終了",
+      "stateNeedsOffset": "オフセットが必要",
+      "stateOffsetDays": "+{count} 日",
+      "stateNeedsDrugSet": "薬剤セットが必要",
+      "stateDrugExposure": "薬剤曝露",
+      "stateConfigured": "設定済み",
+      "saveToServerError": "コホートをサーバーに保存できませんでした",
+      "saveSuccess": "コホートを保存しました",
+      "saveError": "コホートを保存できませんでした",
+      "exportFailed": "エクスポートに失敗しました: {error}",
+      "exportDownloaded": "コホート JSON をダウンロードしました",
+      "copiedToClipboard": "コホート JSON をクリップボードにコピーしました",
+      "copyFailed": "クリップボードにコピーできませんでした",
+      "emptyCohort": "空のコホート"
+    },
+    "conceptDetail": {
+      "closeDetails": "コンセプトの詳細を閉じる",
+      "goBack": "戻る",
+      "addToConceptSet": "コンセプトセットに追加",
+      "copyId": "IDをコピー",
+      "persons": "人",
+      "descAbbr": "子孫",
+      "conceptDetailsTitle": "コンセプトの詳細",
+      "conceptId": "コンセプトID",
+      "conceptClass": "コンセプトクラス",
+      "viewFull": "全体を表示",
+      "noHierarchyForConcept": "このコンセプトの階層が見つかりません。",
+      "moreDescendants": "他 {count} 件の子孫",
+      "noRelatedConcepts": "関連コンセプトが見つかりません。",
+      "relationshipsCount": "{count} 件の関係"
+    },
+    "conceptTable": {
+      "selectAllConcepts": "すべてのコンセプトを選択",
+      "selectConcept": "{name} を選択",
+      "noRecords": "表示するレコードがありません",
+      "itemsPerPage": "1ページあたりの件数:"
+    },
+    "config": {
+      "cache": {
+        "clearHelp": "サーバーからの再読み込みを強制するためにキャッシュされた構成データをクリアします。これにより、古いデータや破損したデータの問題を解決できます。",
+        "statusLabel": "キャッシュの状態:",
+        "clearDialogTitle": "キャッシュをクリア",
+        "clearConfirm": "構成キャッシュをクリアしてもよろしいですか？この操作は元に戻せません。",
+        "clearError": "キャッシュのクリアに失敗しました。もう一度お試しください。"
+      },
+      "panel": {
+        "closeAria": "構成パネルを閉じる",
+        "tabCache": "キャッシュ",
+        "noAdminAccess": "管理設定へのアクセス権がありません。"
+      },
+      "dataSources": {
+        "loadError": "データソースの読み込みに失敗しました"
+      },
+      "vocabulary": {
+        "help": "ボキャブラリ検索用のデータベーススキーマ名を設定します。この設定は、OMOP ボキャブラリテーブルを照会する際に使用される PostgreSQL スキーマを制御します。",
+        "schemaHint": "PostgreSQL スキーマ名（例: 'public'、'vocab_v5'）",
+        "updated": "ボキャブラリスキーマを \"{value}\" に更新しました",
+        "updateError": "スキーマの更新に失敗しました。もう一度お試しください。",
+        "reverted": "\"{value}\" に戻しました",
+        "undoError": "元に戻すのに失敗しました。もう一度お試しください。"
+      },
+      "trexsql": {
+        "loadError": "データソースの読み込みに失敗しました",
+        "buildStarted": "キャッシュの構築を開始しました",
+        "buildStartError": "キャッシュ構築の開始に失敗しました",
+        "buildComplete": "キャッシュの構築が正常に完了しました",
+        "buildFailed": "キャッシュの構築に失敗しました"
+      },
+      "tags": {
+        "colorHexHint": "視覚的識別のための 16 進数カラーコード",
+        "iconMdiFolderHint": "Material Design アイコン名（例: mdi-tag、mdi-folder）",
+        "nameTooLong": "名前は 255 文字未満である必要があります",
+        "colorOptional": "色（任意）",
+        "inheritColorHint": "グループから継承するには空のままにします",
+        "iconOptional": "アイコン（任意）",
+        "iconInheritHint": "Material Design アイコン名、またはグループから継承するには空のままにします",
+        "permissionProtected": "権限で保護",
+        "permissionProtectedHint": "このタグの割り当て/解除には特別な権限が必要です",
+        "tagColumn": "タグ",
+        "usageColumn": "使用回数",
+        "editTagAria": "タグを編集",
+        "deleteTagAria": "タグを削除",
+        "noTagsInGroup": "このグループにはタグがありません",
+        "createFirstTag": "最初のタグを作成して開始します",
+        "requiredChip": "必須",
+        "columnChip": "列",
+        "showTagsButton": "タグを表示",
+        "editGroupAria": "タググループを編集",
+        "deleteGroupAria": "タググループを削除",
+        "createFirstGroup": "最初のタググループを作成して開始します",
+        "sectionHelp": "コホートとコンセプトセットを整理および分類するためのタググループを管理します。タググループを使用すると、アセットに構造化されたメタデータを適用できます。",
+        "tagsInGroupTitle": "\"{name}\" 内のタグ",
+        "backToGroups": "タググループに戻る",
+        "enableFreeFormTooltip": "カスタムタグを許可するには、このタググループで「自由形式」を有効にします。",
+        "noCustomTagsPrefix": "このタググループはカスタムタグを許可していません。グループを編集して次を有効にしてください:",
+        "noCustomTagsSuffix": "、ここにタグを追加します。",
+        "deleteGroupConfirm": "\"{name}\" を削除してもよろしいですか？",
+        "deleteTagTitle": "タグを削除",
+        "deleteTagConfirm": "\"{name}\" を削除してもよろしいですか？これにより、すべてのアセットからタグの割り当てが解除されます。",
+        "loadGroupsError": "タググループの読み込みに失敗しました",
+        "groupUpdated": "タググループ \"{name}\" を更新しました",
+        "groupCreated": "タググループ \"{name}\" を作成しました",
+        "saveGroupError": "タググループの保存に失敗しました",
+        "groupNotEmpty": "タググループを削除できません: グループにタグが含まれています",
+        "groupDeleted": "タググループ \"{name}\" を削除しました",
+        "tagUpdated": "タグ \"{name}\" を更新しました",
+        "tagCreated": "タグ \"{name}\" を作成しました",
+        "saveTagError": "タグの保存に失敗しました",
+        "tagDeleted": "タグ \"{name}\" を削除しました",
+        "deleteTagError": "タグの削除に失敗しました"
+      },
+      "permissions": {
+        "editRole": "ロールを編集",
+        "createNewRole": "新しいロールを作成",
+        "roleNameRequiredLabel": "ロール名 *",
+        "roleNameRequired": "ロール名は必須です",
+        "roleNameEmpty": "ロール名を空にすることはできません",
+        "roleNameTooLong": "ロール名は 255 文字未満である必要があります",
+        "roleNameExists": "この名前のロールは既に存在します",
+        "updateRoleError": "ロールの更新に失敗しました。もう一度お試しください。",
+        "createRoleError": "ロールの作成に失敗しました。もう一度お試しください。",
+        "unexpectedError": "予期しないエラーが発生しました",
+        "deleteRoleTitle": "ロールを削除しますか？",
+        "roleAssignedTo": "このロールは次に割り当てられています:",
+        "usersWord": "ユーザー",
+        "userWord": "ユーザー",
+        "deleteRemovesFromUsers": "このロールを削除すると、割り当てられているすべてのユーザーから削除されます。",
+        "confirmDeleteRolePrefix": "次のロールを削除してもよろしいですか:",
+        "cannotBeUndone": "この操作は元に戻せません。",
+        "deleteRoleButton": "ロールを削除",
+        "deleteRoleError": "ロールの削除に失敗しました。もう一度お試しください。",
+        "searchRoles": "ロールを検索...",
+        "newRole": "新しいロール",
+        "noRolesFound": "ロールが見つかりません。最初のロールを作成して開始してください。",
+        "noDescription": "説明なし",
+        "backToRoles": "ロールに戻る",
+        "editRoleAria": "ロールを編集",
+        "deleteRoleAria": "ロールを削除",
+        "roleName": "ロール名",
+        "editRoleNameAria": "ロール名を編集",
+        "noDescriptionProvided": "説明が提供されていません",
+        "editDescriptionAria": "説明を編集",
+        "updateRoleNameError": "ロール名の更新に失敗しました。もう一度お試しください。",
+        "updateDescriptionError": "説明の更新に失敗しました。もう一度お試しください。",
+        "noRolesFoundTitle": "ロールが見つかりません",
+        "createFirstRoleHint": "ロールベースのアクセス制御を開始するには、最初のロールを作成してください。",
+        "createFirstRole": "最初のロールを作成",
+        "rolesFilteredCount": "{total} 件中 {count} 件のロール",
+        "rolesTotal": "合計 {count} 件のロール",
+        "roleTotal": "合計 {count} 件のロール",
+        "searchPermissions": "権限を検索...",
+        "changesCount": "{count} 件の変更",
+        "changeCount": "{count} 件の変更",
+        "saveChanges": "変更を保存",
+        "loadingPermissions": "権限を読み込み中...",
+        "ofWord": "/",
+        "permissionsAssigned": "件の権限が割り当て済み",
+        "filteredFromTotal": "（合計 {total} 件からフィルタ）",
+        "allCategories": "すべてのカテゴリ",
+        "permissionColumn": "権限",
+        "categoryColumn": "カテゴリ",
+        "permissionsUpdated": "{count} 件の権限を正常に更新しました",
+        "permissionUpdated": "{count} 件の権限を正常に更新しました",
+        "savePermissionsError": "権限の変更の保存に失敗しました",
+        "searchUsers": "ログインまたはメールでユーザーを検索...",
+        "loadingUsers": "ユーザーを読み込み中...",
+        "usersAssigned": "人のユーザーが割り当て済み",
+        "emailColumn": "メール",
+        "userAssignmentsUpdated": "{count} 件のユーザー割り当てを正常に更新しました",
+        "userAssignmentUpdated": "{count} 件のユーザー割り当てを正常に更新しました",
+        "saveUsersError": "ユーザー割り当ての保存に失敗しました",
+        "utilitiesIntro": "バックアップ、デプロイ、または環境間での共有のためにロール構成をインポートおよびエクスポートします。",
+        "exportRole": "ロールをエクスポート",
+        "exportRoleDescription": "すべての権限とユーザー割り当てを含む、このロールの構成を JSON ファイルとしてダウンロードします。",
+        "exportCompatNote": "エクスポートされたファイルは Atlas 2.x と互換性があり、任意の Atlas インスタンスにインポートできます。",
+        "exportRoleAsJson": "ロールを JSON としてエクスポート",
+        "importRole": "ロールをインポート",
+        "importRoleDescription": "JSON ファイルからロール構成をインポートします。これにより、指定された権限とユーザーを持つ新しいロールが作成されます。",
+        "noteLabel": "注:",
+        "importRoleNote": "ロールをインポートすると、新しいロールが作成されます。同じ名前のロールが存在する場合は、名前を変更するよう求められます。",
+        "importRoleFromJson": "JSON からロールをインポート",
+        "exportRoleError": "ロールのエクスポートに失敗しました",
+        "roleExported": "ロール \"{name}\" を正常にエクスポートしました",
+        "roleImported": "ロール \"{name}\" を正常にインポートしました",
+        "importSelectFileHelp": "ロール構成をインポートする JSON ファイルを選択します。ファイルは Atlas 2.x 互換形式である必要があります。",
+        "selectJsonFile": "JSON ファイルを選択",
+        "roleNameConflict": "ロール名の競合",
+        "roleWithNamePrefix": "次の名前のロール:",
+        "alreadyExistsSuffix": "は既に存在します。",
+        "howToProceed": "どのように進めますか？",
+        "conflictSkip": "スキップ - インポートをキャンセル",
+        "conflictRename": "名前を変更 - 新しい名前でインポート",
+        "newRoleName": "新しいロール名",
+        "newRoleNameHint": "インポートするロールの一意の名前を入力してください",
+        "validatingImport": "インポートデータを検証中...",
+        "readyToImport": "インポート準備完了",
+        "importPreviewIntro": "次のロール構成がインポートされます:",
+        "roleNameLabel": "ロール名:",
+        "descriptionLabel": "説明:",
+        "permissionsLabel": "権限:",
+        "usersLabel": "ユーザー:",
+        "warningsLabel": "警告:",
+        "next": "次へ",
+        "continue": "続行",
+        "selectJsonFileError": "JSON ファイルを選択してください",
+        "readFileError": "ファイルの読み取りに失敗しました",
+        "invalidImportFormat": "無効なロールインポート形式: ロール名がありません",
+        "warnNoPermissions": "ロールに権限が割り当てられていません",
+        "warnNoUsers": "ロールにユーザーが割り当てられていません",
+        "invalidJsonFormat": "無効な JSON 形式です。ファイルを確認してもう一度お試しください。",
+        "validateImportError": "インポートデータの検証に失敗しました",
+        "updateRoleNameFailed": "ロール名の更新に失敗しました",
+        "importRoleRetry": "ロールのインポートに失敗しました。もう一度お試しください。",
+        "importRoleError": "ロールのインポートに失敗しました"
+      }
+    },
+    "domainPrevalenceTable": {
+      "largeDatasetHint": "大規模なデータセットが検出されました（{count} 件）。パフォーマンスのため有病率上位1,000件を表示しています。全データは検索またはCSVエクスポートをご利用ください。",
+      "prevalencePercent": "有病率 (%)",
+      "noEntriesFound": "該当する項目がありません",
+      "showingAllEntries": "全 {count} 件を表示",
+      "showingRange": "{total} 件中 {start}〜{end} 件を表示"
+    },
+    "domainPrevalenceTreemap": {
+      "clickAction": "クリック",
+      "clickHint": "して任意の領域の詳細な分析を表示します",
+      "noHierarchyNote": "このデータソースでは階層グループ化は利用できません",
+      "groupByHierarchy": "階層でグループ化"
+    },
+    "incidenceRate": {
+      "importInputAria": "発生率デザインをインポート",
+      "removeCohort": "コホートを削除",
+      "selectCohorts": "コホートを選択",
+      "outcomeOverview": "アウトカム概要",
+      "outcomeOverviewNote": "行をクリックして詳細を確認します。各アウトカムでは、インデックス時点で既にイベントが発生していた人を除外します。",
+      "personsAtRisk": "リスク集団の人数",
+      "personsAtRiskTooltip": "リスク期間中の対象コホートにおけるリスク集団の人数",
+      "outcomeCases": "アウトカム症例数",
+      "outcomeCasesTooltip": "追跡期間中にアウトカムが発生した人数（{proportion}）",
+      "personYearsTooltip": "全対象者で観察された総観察人時（人年単位）",
+      "personYearsAtRisk": "リスク人年",
+      "incidenceRateTooltip": "発生率：{years}人年あたり{cases}症例、{multiplier}倍でスケール",
+      "incidenceRatePerPy": "{multiplier}人年あたりの発生率",
+      "notComparable": "アウトカム間で比較できません",
+      "percentProportion": "割合 {value}%",
+      "moveUp": "上へ移動",
+      "moveDown": "下へ移動",
+      "removeRule": "ルールを削除",
+      "stratifiedIncidence": "層別化発生率",
+      "lowerRate": "低発生率",
+      "higherRate": "高発生率",
+      "treemapLegendHint": "（色＝人年あたりの発生率、面積＝リスク集団の人数）",
+      "hideDesignPanel": "デザインパネルを非表示",
+      "showDesignPanel": "デザインパネルを表示",
+      "hideAnalysisDesign": "分析デザインを非表示",
+      "showAnalysisDesign": "分析デザインを表示",
+      "noCasesFound": "この対象／アウトカムの組み合わせでは症例が見つかりませんでした。別のアウトカムを選択してください。"
+    },
+    "pathwayCohortList": {
+      "removeCohort": "コホートを削除"
+    },
+    "pathwayCohortPicker": {
+      "selectCohorts": "コホートを選択"
+    },
+    "pathwayWorkbench": {
+      "hideDesignPanel": "デザインパネルを非表示",
+      "showDesignPanel": "デザインパネルを表示",
+      "hideAnalysisDesign": "分析デザインを非表示",
+      "showAnalysisDesign": "分析デザインを表示"
+    },
+    "pathwayBuilder": {
+      "importPathwayDesign": "パスウェイデザインをインポート",
+      "versionHistory": "バージョン履歴"
+    },
+    "pathwayPathDetails": {
+      "event": "イベント"
+    },
+    "drilldownDetails": {
+      "prevalenceByGenderAgeYear": "性別・年齢・年別の有病率",
+      "lengthOfEra": "エラの長さ",
+      "distributionByType": "タイプ別分布",
+      "distributionByUnit": "単位別分布",
+      "distributionByValue": "値別分布",
+      "distributionByOperator": "演算子別分布",
+      "distributionByQualifier": "修飾子別分布",
+      "noDetailedData": "このコンセプトの詳細データはありません。"
+    },
+    "tableExport": {
+      "copiedRows": "{count} 行をクリップボードにコピーしました",
+      "copyFailed": "データのクリップボードへのコピーに失敗しました",
+      "exportedRows": "{count} 行を {filename}.csv にエクスポートしました",
+      "exportFailed": "CSVファイルのエクスポートに失敗しました"
+    },
+    "notifications": {
+      "bellAriaLabel": "通知（未読 {count} 件）",
+      "heading": "通知",
+      "markAllRead": "すべて既読にする",
+      "clear": "クリア",
+      "allCaughtUp": "新しい通知はありません。",
+      "remove": "削除"
+    },
+    "navBar": {
+      "mainNavigation": "メイン"
     }
   },
   "characterizations": {
@@ -3451,6 +4023,7 @@
       "inclusionReportFor1": " ",
       "tabs": {
         "byEvents": "イベント別",
+        "byEvent": "イベント別",
         "byPerson": "人別"
       }
     },
@@ -5332,5 +5905,50 @@
   },
   "incidenceRateAnalysis": {
     "newAnalysis": "新しい発生率"
+  },
+  "views": {
+    "cohorts": {
+      "eyebrowMain": "OHDSI · コホート",
+      "eyebrowImport": "インポート",
+      "eyebrowConfirm": "確認",
+      "eyebrowNew": "新規",
+      "eyebrowCohort": "コホート",
+      "countSingular": "コホート 1 件",
+      "countPlural": "コホート {count} 件"
+    },
+    "characterizationBuilder": {
+      "importInputAria": "特性化デザインをインポート"
+    },
+    "featureAnalysisEditor": {
+      "deleteEyebrow": "確認"
+    },
+    "dataSources": {
+      "reportNotImplemented": "レポートタイプ「{type}」はまだ実装されていません。",
+      "noSources": "利用可能なデータソースがありません。",
+      "selectSourceHint": "レポートを表示するにはデータソースを選択してください。"
+    },
+    "profile": {
+      "eyebrow": "プロフィール"
+    },
+    "incidenceRates": {
+      "copied": "インシデンス率をコピーしました",
+      "copyFailed": "コピーに失敗しました",
+      "deleted": "インシデンス率を削除しました",
+      "deleteFailed": "削除に失敗しました"
+    },
+    "pathways": {
+      "copied": "パスウェイをコピーしました",
+      "copyFailed": "コピーに失敗しました",
+      "deleted": "パスウェイを削除しました",
+      "deleteFailed": "削除に失敗しました"
+    },
+    "roleDetails": {
+      "roleNotFound": "ロールが見つかりません",
+      "backToRoles": "ロール一覧に戻る"
+    },
+    "roleManagement": {
+      "title": "ロールと権限の管理",
+      "subtitle": "ユーザーロールの管理、権限の割り当て、システム機能へのアクセス制御を行います。"
+    }
   }
 }

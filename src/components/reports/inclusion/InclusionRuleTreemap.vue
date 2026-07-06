@@ -35,6 +35,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { InclusionTreemapNode } from '@/models/report.types'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -173,12 +176,12 @@ defineExpose({ buildTooltip })
 
 const legend = computed(() => {
   if (props.ruleCount === 0) {
-    return [{ color: themeColor('success', 0.6), label: 'No inclusion rules' }]
+    return [{ color: themeColor('success', 0.6), label: t('components.expressionCartoonBindings.noInclusionRules', 'No inclusion rules').value }]
   }
   return [
-    { color: themeColor('success', 0.6), label: `≥ 80% rules satisfied` },
+    { color: themeColor('success', 0.6), label: t('components.inclusionRuleReport.rulesSatisfiedHigh', '≥ 80% rules satisfied').value },
     { color: themeColor('warning', 0.6), label: `40–80%` },
-    { color: themeColor('error', 0.6), label: `< 40% rules satisfied` },
+    { color: themeColor('error', 0.6), label: t('components.inclusionRuleReport.rulesSatisfiedLow', '< 40% rules satisfied').value },
   ]
 })
 </script>

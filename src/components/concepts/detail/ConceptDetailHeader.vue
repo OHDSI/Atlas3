@@ -3,7 +3,10 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { AtlasButton, AtlasChip, AtlasIconButton } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
+
+const { t, tv } = useI18n()
 
 const props = defineProps<{
   concept: Concept
@@ -43,11 +46,11 @@ function handleBack() {
 const standardLabel = computed(() => {
   switch (props.concept.standardConcept) {
     case 'S':
-      return 'Standard'
+      return tv('cs.manager.concept.standard', 'Standard')
     case 'C':
-      return 'Classification'
+      return tv('cs.manager.concept.classification', 'Classification')
     default:
-      return 'Non-standard'
+      return tv('cs.manager.concept.nonStandard', 'Non-standard')
   }
 })
 
@@ -76,7 +79,7 @@ async function onCopy() {
       icon="mdi-arrow-left"
       variant="text"
       size="sm"
-      v-bind="{ ariaLabel: 'Go back' }"
+      v-bind="{ ariaLabel: tv('components.conceptDetail.goBack', 'Go back') }"
       data-testid="concept-detail-back"
       @click="handleBack"
     />
@@ -114,7 +117,7 @@ async function onCopy() {
         data-testid="add-to-concept-set"
         @click="onAdd"
       >
-        Add to Concept Set
+        {{ t('components.conceptDetail.addToConceptSet', 'Add to Concept Set').value }}
       </AtlasButton>
       <AtlasButton
         variant="secondary"
@@ -123,7 +126,7 @@ async function onCopy() {
         data-testid="copy-concept-id"
         @click="onCopy"
       >
-        Copy ID
+        {{ t('components.conceptDetail.copyId', 'Copy ID').value }}
       </AtlasButton>
     </div>
   </div>

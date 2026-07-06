@@ -11,8 +11,13 @@
         class="domain-prevalence-table__hint-icon"
       />
       <span>
-        Large dataset detected ({{ formatNumber(props.data.length) }} entries). Displaying top 1,000
-        entries by prevalence for performance — use search or export CSV for the full dataset.
+        {{
+          t(
+            'components.domainPrevalenceTable.largeDatasetHint',
+            'Large dataset detected ({count} entries). Displaying top 1,000 entries by prevalence for performance — use search or export CSV for the full dataset.',
+            { count: formatNumber(props.data.length) }
+          ).value
+        }}
       </span>
     </div>
 
@@ -24,7 +29,7 @@
         >
           <AtlasTextField
             v-model="search"
-            label="Search"
+            :label="t('common.search', 'Search').value"
             prepend-icon="mdi-magnify"
             variant="outlined"
             hide-details
@@ -41,7 +46,7 @@
             icon="mdi-content-copy"
             @click="copyToClipboard"
           >
-            Copy
+            {{ t('common.copy', 'Copy').value }}
           </AtlasButton>
           <AtlasButton
             variant="secondary"
@@ -57,7 +62,7 @@
                 icon="mdi-view-column"
                 v-bind="menuProps"
               >
-                Columns
+                {{ t('common.columns', 'Columns').value }}
               </AtlasButton>
             </template>
             <AtlasList>
@@ -88,7 +93,7 @@
       :items="filteredData"
       :search="search"
       :items-per-page="itemsPerPage"
-      :items-per-page-options="[25, 50, 75, 100, { value: -1, title: 'All' }]"
+      :items-per-page-options="[25, 50, 75, 100, { value: -1, title: t('datatable.language.all', 'All').value }]"
       class="elevation-1"
       @update:items-per-page="handleItemsPerPageChange"
     >
@@ -130,9 +135,12 @@
 <script setup lang="ts">
 import { AtlasButton, AtlasCheckbox, AtlasCol, AtlasDataTable, AtlasIcon, AtlasList, AtlasListItem, AtlasMenu, AtlasPagination, AtlasRow, AtlasTextField } from '@/components/ui'
 import { ref, computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { PrevalenceTableRow } from '@/models/datasource.types'
 import { formatNumber, formatPercentage, exportTableToCSV } from '@/utils/datasource-formatters'
 import { logger } from '@/utils/logger'
+
+const { t, tv } = useI18n()
 
 interface Props {
   data: PrevalenceTableRow[]
@@ -156,10 +164,14 @@ interface TableHeader {
 }
 
 const headers = ref<TableHeader[]>([
-  { title: 'Concept ID', key: 'conceptId', sortable: true },
-  { title: 'Name', key: 'conceptName', sortable: true },
-  { title: 'Person Count', key: 'personCount', sortable: true },
-  { title: 'Prevalence (%)', key: 'prevalence', sortable: true },
+  { title: tv('columns.conceptId', 'Concept ID'), key: 'conceptId', sortable: true },
+  { title: tv('columns.name', 'Name'), key: 'conceptName', sortable: true },
+  { title: tv('columns.personCount', 'Person Count'), key: 'personCount', sortable: true },
+  {
+    title: tv('components.domainPrevalenceTable.prevalencePercent', 'Prevalence (%)'),
+    key: 'prevalence',
+    sortable: true,
+  },
   { title: props.metricLabel, key: 'metric', sortable: true },
 ])
 
@@ -221,14 +233,26 @@ const endItem = computed(() => {
 // Table status text
 const tableStatusText = computed(() => {
   if (totalItems.value === 0) {
-    return 'No entries found'
+    return tv('components.domainPrevalenceTable.noEntriesFound', 'No entries found')
   }
 
   if (itemsPerPage.value === -1) {
-    return `Showing all ${formatNumber(totalItems.value)} entries`
+    return tv(
+      'components.domainPrevalenceTable.showingAllEntries',
+      'Showing all {count} entries',
+      { count: formatNumber(totalItems.value) }
+    )
   }
 
-  return `Showing ${formatNumber(startItem.value)} to ${formatNumber(endItem.value)} of ${formatNumber(totalItems.value)} entries`
+  return tv(
+    'components.domainPrevalenceTable.showingRange',
+    'Showing {start} to {end} of {total} entries',
+    {
+      start: formatNumber(startItem.value),
+      end: formatNumber(endItem.value),
+      total: formatNumber(totalItems.value),
+    }
+  )
 })
 
 function handleItemsPerPageChange(value: number) {

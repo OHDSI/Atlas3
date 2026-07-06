@@ -319,4 +319,41 @@ describe('RoleCreateDialog interactions', () => {
     await flushPromises()
     expect(wrapper.text()).toMatch(/An unexpected error occurred/)
   })
+
+  it('name validation rules reject invalid input and accept valid input', async () => {
+    rolesRef.value = [{ id: 1, name: 'Existing', description: null }]
+    const wrapper = await mountIt({ role: null })
+
+    const rules = (wrapper.vm as unknown as { nameRules: Array<(v: string) => string | boolean> })
+      .nameRules
+    expect(rules.length).toBeGreaterThanOrEqual(4)
+
+    // required rule
+    expect(rules[0]!('')).not.toBe(true)
+    expect(rules[0]!('ok')).toBe(true)
+
+    // non-empty / whitespace-only rule
+    expect(typeof rules[1]!('   ')).toBe('string')
+    expect(rules[1]!('name')).toBe(true)
+
+    // max length (<= 255 chars) rule
+    expect(typeof rules[2]!('x'.repeat(300))).toBe('string')
+    expect(rules[2]!('short')).toBe(true)
+
+    // duplicate-name rule (case-insensitive, empty passes through)
+    expect(rules[3]!('')).toBe(true)
+    expect(typeof rules[3]!('Existing')).toBe('string')
+    expect(typeof rules[3]!('existing')).toBe('string')
+    expect(rules[3]!('BrandNew')).toBe(true)
+  })
+
+  it('duplicate-name rule ignores the role being edited', async () => {
+    rolesRef.value = [{ id: 7, name: 'admin', description: null }]
+    const wrapper = await mountIt({ role: { id: 7, name: 'admin', description: 'God mode' } })
+
+    const rules = (wrapper.vm as unknown as { nameRules: Array<(v: string) => string | boolean> })
+      .nameRules
+    // Same name, same id -> not a duplicate of another role
+    expect(rules[3]!('admin')).toBe(true)
+  })
 })

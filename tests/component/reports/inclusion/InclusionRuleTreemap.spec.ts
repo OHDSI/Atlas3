@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia } from 'pinia'
 import InclusionRuleTreemap from '@/components/reports/inclusion/InclusionRuleTreemap.vue'
 
 const vuetify = createVuetify({ components, directives })
@@ -10,7 +11,7 @@ const vuetify = createVuetify({ components, directives })
 // that *declares* the `option` prop so Vue evaluates the bound `chartOption`
 // computed (and its nested `decorate()` helper) for coverage.
 const global = {
-  plugins: [vuetify],
+  plugins: [vuetify, createPinia()],
   stubs: {
     VChart: {
       props: ['option', 'autoresize'],

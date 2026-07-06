@@ -2,8 +2,8 @@
   <AtlasSelect
     :model-value="modelValue"
     :items="filterItems"
-    :label="label"
-    :placeholder="placeholder"
+    :label="label ?? t('components.filterTypeSelector.label', 'Filter Type').value"
+    :placeholder="placeholder ?? t('components.filterTypeSelector.placeholder', 'Select a filter type...').value"
     item-title="name"
     item-value="criteriaType"
     variant="outlined"
@@ -21,14 +21,14 @@
             size="sm"
             tone="primary"
           >
-            Group Only
+            {{ t('components.filterTypeSelector.groupOnly', 'Group Only').value }}
           </AtlasChip>
           <AtlasChip
             v-if="!item.raw.requiresConceptSet"
             size="sm"
             color="secondary"
           >
-            No Concept Set
+            {{ t('components.filterTypeSelector.noConceptSet', 'No Concept Set').value }}
           </AtlasChip>
         </template>
       </AtlasListItem>
@@ -46,7 +46,10 @@ import { AtlasChip, AtlasListItem, AtlasSelect } from '@/components/ui'
  */
 
 import { computed, ref } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useFilterConfig } from '@/composables/useFilterConfig'
+
+const { t } = useI18n()
 
 export interface FilterTypeSelectorProps {
   /** Currently selected filter type */
@@ -64,8 +67,8 @@ export interface FilterTypeSelectorProps {
 
 const props = withDefaults(defineProps<FilterTypeSelectorProps>(), {
   modelValue: undefined,
-  label: 'Filter Type',
-  placeholder: 'Select a filter type...',
+  label: undefined,
+  placeholder: undefined,
 })
 
 const emit = defineEmits<{

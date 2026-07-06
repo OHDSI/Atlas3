@@ -5,7 +5,7 @@
       <div class="role-permissions-tab__header">
         <AtlasTextField
           v-model="searchQuery"
-          placeholder="Search permissions..."
+          :placeholder="tv('components.config.permissions.searchPermissions', 'Search permissions...')"
           prepend-icon="mdi-magnify"
           variant="outlined"
           hide-details
@@ -21,7 +21,15 @@
             size="sm"
             class="mr-2"
           >
-            {{ changeCount }} change{{ changeCount !== 1 ? 's' : '' }}
+            {{
+              changeCount !== 1
+                ? t('components.config.permissions.changesCount', '{count} changes', {
+                  count: changeCount,
+                }).value
+                : t('components.config.permissions.changeCount', '{count} change', {
+                  count: changeCount,
+                }).value
+            }}
           </AtlasChip>
 
           <AtlasButton
@@ -29,7 +37,7 @@
             :loading="isSaving"
             @click="handleSave"
           >
-            Save Changes
+            {{ t('components.config.permissions.saveChanges', 'Save Changes').value }}
           </AtlasButton>
         </div>
       </div>
@@ -45,7 +53,7 @@
           size="64"
         />
         <p class="text-body-1 mt-4">
-          Loading permissions...
+          {{ t('components.config.permissions.loadingPermissions', 'Loading permissions...').value }}
         </p>
       </div>
 
@@ -71,10 +79,18 @@
             mdi-shield-check
           </AtlasIcon>
           <span class="text-body-2">
-            <strong>{{ selectedPermissionIds.size }}</strong> of
-            <strong>{{ filteredPermissions.length }}</strong> permissions assigned
+            <strong>{{ selectedPermissionIds.size }}</strong>
+            {{ t('components.config.permissions.ofWord', 'of').value }}
+            <strong>{{ filteredPermissions.length }}</strong>
+            {{ t('components.config.permissions.permissionsAssigned', 'permissions assigned').value }}
             <span v-if="debouncedSearchQuery">
-              (filtered from {{ permissions.length }} total)
+              {{
+                t(
+                  'components.config.permissions.filteredFromTotal',
+                  '(filtered from {total} total)',
+                  { total: permissions.length }
+                ).value
+              }}
             </span>
           </span>
         </div>
@@ -94,7 +110,7 @@
               filter
               variant="outlined"
             >
-              All Categories
+              {{ t('components.config.permissions.allCategories', 'All Categories').value }}
             </AtlasChip>
             <AtlasChip
               v-for="category in availableCategories"
@@ -197,8 +213,11 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasProgressCircular, AtlasTextField, AtlasTooltip } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
 import type { Permission } from '@/models/role.types'
+
+const { t, tv } = useI18n()
 
 interface Props {
   roleId: number
@@ -243,9 +262,9 @@ const originalPermissionIds = ref<Set<number>>(new Set())
 // Table headers
 const headers = [
   { title: '', key: 'selected', sortable: false, width: '50px' },
-  { title: 'Permission', key: 'permission', sortable: true },
-  { title: 'Description', key: 'description', sortable: false },
-  { title: 'Category', key: 'category', sortable: true },
+  { title: tv('components.config.permissions.permissionColumn', 'Permission'), key: 'permission', sortable: true },
+  { title: tv('common.description', 'Description'), key: 'description', sortable: false },
+  { title: tv('components.config.permissions.categoryColumn', 'Category'), key: 'category', sortable: true },
 ]
 
 /**
@@ -418,10 +437,19 @@ async function handleSave() {
     // Refresh role permissions
     await fetchRolePermissions(props.roleId)
 
-    successMessage.value = `Successfully updated ${changeCount.value} permission${changeCount.value !== 1 ? 's' : ''}`
+    successMessage.value =
+      changeCount.value !== 1
+        ? tv('components.config.permissions.permissionsUpdated', 'Successfully updated {count} permissions', {
+            count: changeCount.value,
+          })
+        : tv('components.config.permissions.permissionUpdated', 'Successfully updated {count} permission', {
+            count: changeCount.value,
+          })
   } catch (error) {
     errorMessage.value =
-      error instanceof Error ? error.message : 'Failed to save permission changes'
+      error instanceof Error
+        ? error.message
+        : tv('components.config.permissions.savePermissionsError', 'Failed to save permission changes')
   } finally {
     isSaving.value = false
   }

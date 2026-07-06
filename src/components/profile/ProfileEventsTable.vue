@@ -2,10 +2,10 @@
   <AtlasCard padding="md">
     <div class="section-header">
       <div class="section-header__title-row">
-        <span class="text-eyebrow">EVENTS</span>
+        <span class="text-eyebrow">{{ tv('components.profileEventsTable.eyebrow', 'EVENTS') }}</span>
         <span class="section-header__rule" />
         <h2 class="section-title">
-          Events
+          {{ tv('profiles.events', 'Events') }}
         </h2>
       </div>
       <div class="section-header__actions">

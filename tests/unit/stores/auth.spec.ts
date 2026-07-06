@@ -594,6 +594,40 @@ describe('Auth Store', () => {
       expect(store.token).toBeNull()
       expect(store.loginModalOpen).toBe(true)
     })
+
+    it('resolves anonymous permissions without a token and does not prompt', async () => {
+      const store = useAuthStore()
+      store.closeLoginModal()
+      vi.mocked(storageManager.getToken).mockReturnValue(null)
+      vi.mocked(storageManager.getAuthClient).mockReturnValue(null)
+      const { authService } = await import('@/services/auth/authService')
+      vi.mocked(authService.fetchUserInfo).mockResolvedValue({
+        login: 'anonymous',
+        permissionIdx: { 'read:cohort-definition': ['read:cohort-definition'] },
+      } as unknown as UserInfo)
+
+      await store.initializeFromStorage()
+
+      expect(store.user?.login).toBe('anonymous')
+      expect(store.userResolved).toBe(true)
+      expect(store.loginModalOpen).toBe(false)
+    })
+
+    it('marks the subject resolved without prompting when anonymous access is denied', async () => {
+      const store = useAuthStore()
+      store.closeLoginModal()
+      vi.mocked(storageManager.getToken).mockReturnValue(null)
+      const { authService } = await import('@/services/auth/authService')
+      vi.mocked(authService.fetchUserInfo).mockRejectedValue(new Error('Failed to fetch user info (401)'))
+
+      await store.initializeFromStorage()
+
+      expect(store.user).toBeNull()
+      expect(store.userResolved).toBe(true)
+      // The store leaves the prompt to the route guard so anonymous-denied
+      // users can still browse public (requiresAuth:false) routes.
+      expect(store.loginModalOpen).toBe(false)
+    })
   })
 
   describe('hydrateAuth', () => {

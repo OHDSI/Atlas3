@@ -5,7 +5,7 @@
       <div class="role-users-tab__header">
         <AtlasTextField
           v-model="searchQuery"
-          placeholder="Search users by login or email..."
+          :placeholder="tv('components.config.permissions.searchUsers', 'Search users by login or email...')"
           prepend-icon="mdi-magnify"
           variant="outlined"
           hide-details
@@ -21,7 +21,15 @@
             size="sm"
             class="mr-2"
           >
-            {{ changeCount }} change{{ changeCount !== 1 ? 's' : '' }}
+            {{
+              changeCount !== 1
+                ? t('components.config.permissions.changesCount', '{count} changes', {
+                  count: changeCount,
+                }).value
+                : t('components.config.permissions.changeCount', '{count} change', {
+                  count: changeCount,
+                }).value
+            }}
           </AtlasChip>
 
           <AtlasButton
@@ -29,7 +37,7 @@
             :loading="isSaving"
             @click="handleSave"
           >
-            Save Changes
+            {{ t('components.config.permissions.saveChanges', 'Save Changes').value }}
           </AtlasButton>
         </div>
       </div>
@@ -45,7 +53,7 @@
           size="64"
         />
         <p class="text-body-1 mt-4">
-          Loading users...
+          {{ t('components.config.permissions.loadingUsers', 'Loading users...').value }}
         </p>
       </div>
 
@@ -71,9 +79,19 @@
             mdi-account-multiple
           </AtlasIcon>
           <span class="text-body-2">
-            <strong>{{ selectedUserIds.size }}</strong> of
-            <strong>{{ filteredUsers.length }}</strong> users assigned
-            <span v-if="debouncedSearchQuery"> (filtered from {{ users.length }} total) </span>
+            <strong>{{ selectedUserIds.size }}</strong>
+            {{ t('components.config.permissions.ofWord', 'of').value }}
+            <strong>{{ filteredUsers.length }}</strong>
+            {{ t('components.config.permissions.usersAssigned', 'users assigned').value }}
+            <span v-if="debouncedSearchQuery">
+              {{
+                t(
+                  'components.config.permissions.filteredFromTotal',
+                  '(filtered from {total} total)',
+                  { total: users.length }
+                ).value
+              }}
+            </span>
           </span>
         </div>
 
@@ -160,7 +178,10 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasChip, AtlasDataTable, AtlasIcon, AtlasProgressCircular, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
+
+const { t, tv } = useI18n()
 
 interface Props {
   roleId: number
@@ -204,9 +225,9 @@ const originalUserIds = ref<Set<number>>(new Set())
 // Table headers
 const headers = [
   { title: '', key: 'selected', sortable: false, width: '50px' },
-  { title: 'Login', key: 'login', sortable: true },
-  { title: 'Name', key: 'name', sortable: true },
-  { title: 'Email', key: 'email', sortable: true },
+  { title: tv('columns.login', 'Login'), key: 'login', sortable: true },
+  { title: tv('columns.name', 'Name'), key: 'name', sortable: true },
+  { title: tv('components.config.permissions.emailColumn', 'Email'), key: 'email', sortable: true },
 ]
 
 /**
@@ -345,9 +366,19 @@ async function handleSave() {
     // Refresh role users
     await fetchRoleUsers(props.roleId)
 
-    successMessage.value = `Successfully updated ${changeCount.value} user assignment${changeCount.value !== 1 ? 's' : ''}`
+    successMessage.value =
+      changeCount.value !== 1
+        ? tv('components.config.permissions.userAssignmentsUpdated', 'Successfully updated {count} user assignments', {
+            count: changeCount.value,
+          })
+        : tv('components.config.permissions.userAssignmentUpdated', 'Successfully updated {count} user assignment', {
+            count: changeCount.value,
+          })
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to save user assignments'
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : tv('components.config.permissions.saveUsersError', 'Failed to save user assignments')
   } finally {
     isSaving.value = false
   }

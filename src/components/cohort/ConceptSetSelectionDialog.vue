@@ -227,7 +227,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   localConceptSets: () => [],
 })
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
@@ -255,7 +255,9 @@ const filteredSets = computed(() => {
 
 const countLabel = computed(() => {
   const n = filteredSets.value.length
-  return n === 1 ? '1 set' : `${n} sets`
+  return n === 1
+    ? tv('components.conceptSetPicker.setCountOne', '1 set')
+    : tv('components.conceptSetPicker.setCountOther', '{count} sets', { count: n })
 })
 
 const headers = [

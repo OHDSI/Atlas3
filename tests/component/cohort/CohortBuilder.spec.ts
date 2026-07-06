@@ -23,11 +23,13 @@ vi.mock('@/composables/useI18n', async () => {
 
 // downloadAtlasJSON spy lifted out via hoisted so test bodies can assert on
 // the call site without re-importing the composable internals.
-const { downloadAtlasJSONSpy, exportToAtlasSpy, importFromFileSpy } = vi.hoisted(() => ({
-  downloadAtlasJSONSpy: vi.fn(),
-  exportToAtlasSpy: vi.fn(() => '{"mocked":true}'),
-  importFromFileSpy: vi.fn(),
-}))
+const { downloadAtlasJSONSpy, exportToAtlasSpy, importFromFileSpy, conversionErrorRef } =
+  vi.hoisted(() => ({
+    downloadAtlasJSONSpy: vi.fn(),
+    exportToAtlasSpy: vi.fn(() => '{"mocked":true}'),
+    importFromFileSpy: vi.fn(),
+    conversionErrorRef: { value: null as string | null },
+  }))
 
 vi.mock('@/composables/useAtlasConverter', () => {
   return {
@@ -35,7 +37,7 @@ vi.mock('@/composables/useAtlasConverter', () => {
       importFromFile: importFromFileSpy,
       downloadAtlasJSON: downloadAtlasJSONSpy,
       exportToAtlas: exportToAtlasSpy,
-      conversionError: { value: null },
+      conversionError: conversionErrorRef,
     }),
   }
 })
@@ -201,6 +203,7 @@ describe('CohortBuilder', () => {
       ],
     })
     vi.clearAllMocks()
+    conversionErrorRef.value = null
   })
 
   const createWrapper = (props: Record<string, unknown> = {}) => {
@@ -1426,5 +1429,159 @@ describe('CohortBuilder', () => {
     const setup = getSetup(wrapper)
     const result = await setup.handleSave()
     expect(result).toEqual({})
+  })
+
+  // ---------------------------------------------------------------------------
+  // Section-state chips (entryEventsState / inclusionRulesState /
+  // exitCriteriaState) — pluralization + tone/label branches rendered in the
+  // section headers.
+  // ---------------------------------------------------------------------------
+
+  it('inclusionRulesState pluralizes to "{count} rules" when more than one rule', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.inclusionRules = [
+      { name: 'r1', description: '', criteriaGroups: [] },
+      { name: 'r2', description: '', criteriaGroups: [] },
+    ]
+    await wrapper.vm.$nextTick()
+    expect(setup.inclusionRulesState).toEqual({ label: '2 rules', tone: 'primary' })
+  })
+
+  it('inclusionRulesState uses the singular label for exactly one rule', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.inclusionRules = [{ name: 'r1', description: '', criteriaGroups: [] }]
+    await wrapper.vm.$nextTick()
+    expect(setup.inclusionRulesState).toEqual({ label: '1 rule', tone: 'primary' })
+  })
+
+  it('exitCriteriaState flags a fixed-duration strategy with no offset as "Needs offset"', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.exitCriteria = { strategy: 'FIXED_DURATION' }
+    await wrapper.vm.$nextTick()
+    expect(setup.exitCriteriaState).toEqual({ label: 'Needs offset', tone: 'warning' })
+  })
+
+  it('exitCriteriaState reports "+{count} days" for a configured fixed-duration offset', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.exitCriteria = { strategy: 'FIXED_DURATION', offset: 30 }
+    await wrapper.vm.$nextTick()
+    expect(setup.exitCriteriaState).toEqual({ label: '+30 days', tone: 'success' })
+  })
+
+  it('exitCriteriaState flags a continuous-drug strategy with no concept set as "Needs drug set"', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.exitCriteria = { strategy: 'CONTINUOUS_DRUG' }
+    await wrapper.vm.$nextTick()
+    expect(setup.exitCriteriaState).toEqual({ label: 'Needs drug set', tone: 'warning' })
+  })
+
+  it('exitCriteriaState reports "Drug exposure" once a continuous-drug concept set is chosen', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.exitCriteria = { strategy: 'CONTINUOUS_DRUG', conceptSet: { id: 1, name: 'D', items: [] } }
+    await wrapper.vm.$nextTick()
+    expect(setup.exitCriteriaState).toEqual({ label: 'Drug exposure', tone: 'success' })
+  })
+
+  it('exitCriteriaState falls back to "Configured" for an unrecognized strategy', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.exitCriteria = { strategy: 'SOMETHING_ELSE' }
+    await wrapper.vm.$nextTick()
+    expect(setup.exitCriteriaState).toEqual({ label: 'Configured', tone: 'muted' })
+  })
+
+  // ---------------------------------------------------------------------------
+  // handleSave — server + catch error branches
+  // ---------------------------------------------------------------------------
+
+  it('handleSave surfaces a save-to-server error when the API returns no id', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.saveCohortDefinition).mockResolvedValueOnce(null as never)
+
+    const result = await setup.handleSave()
+    expect(result).toEqual({})
+    expect(setup.errorMessage).toBe('Failed to save cohort to server')
+    expect(setup.showError).toBe(true)
+  })
+
+  it('handleSave surfaces the thrown Error message when saving rejects', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.saveCohortDefinition).mockRejectedValueOnce(new Error('server boom'))
+
+    const result = await setup.handleSave()
+    expect(result).toEqual({})
+    expect(setup.errorMessage).toBe('server boom')
+    expect(setup.showError).toBe(true)
+  })
+
+  it('handleSave falls back to a generic message when a non-Error is thrown', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Savable'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+
+    const webapi = await import('@/services/webapi')
+    vi.mocked(webapi.saveCohortDefinition).mockRejectedValueOnce('plain string failure')
+
+    const result = await setup.handleSave()
+    expect(result).toEqual({})
+    expect(setup.errorMessage).toBe('Failed to save cohort')
+    expect(setup.showError).toBe(true)
+  })
+
+  // ---------------------------------------------------------------------------
+  // Export failure branches (conversionError set)
+  // ---------------------------------------------------------------------------
+
+  it('handleExportDownload surfaces an export-failed message when conversion errors', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Broken'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    conversionErrorRef.value = 'bad expression'
+
+    setup.handleExportDownload()
+    expect(setup.errorMessage).toBe('Export failed: bad expression')
+    expect(setup.showError).toBe(true)
+  })
+
+  it('handleExportCopy surfaces an export-failed message when conversion errors', async () => {
+    const wrapper = createWrapper()
+    await wrapper.vm.$nextTick()
+    const setup = getSetup(wrapper)
+    setup.cohortName = 'Broken2'
+    setup.entryEvents = [{ id: 'e1', criteriaType: 'X', attributes: [] }]
+    conversionErrorRef.value = 'cannot serialize'
+
+    await setup.handleExportCopy()
+    expect(setup.errorMessage).toBe('Export failed: cannot serialize')
+    expect(setup.showError).toBe(true)
   })
 })

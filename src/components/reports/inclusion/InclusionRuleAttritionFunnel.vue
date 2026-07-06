@@ -4,7 +4,7 @@
     data-testid="inclusion-attrition-funnel"
   >
     <div class="attrition-funnel__header">
-      <span class="attrition-funnel__title">Attrition</span>
+      <span class="attrition-funnel__title">{{ t('components.inclusionRuleReport.attrition', 'Attrition').value }}</span>
       <AtlasButton
         v-if="steps.length > 0"
         variant="tonal"
@@ -12,7 +12,7 @@
         data-testid="inclusion-attrition-funnel-csv"
         @click="exportCsv"
       >
-        Download CSV
+        {{ t('components.inclusionRuleReport.downloadCsv', 'Download CSV').value }}
       </AtlasButton>
     </div>
 
@@ -21,9 +21,9 @@
       class="attrition-funnel__empty"
       data-testid="inclusion-attrition-funnel-empty"
     >
-      <span class="attrition-funnel__empty-title">No attrition data available</span>
+      <span class="attrition-funnel__empty-title">{{ t('components.inclusionRuleReport.noAttritionData', 'No attrition data available').value }}</span>
       <span class="attrition-funnel__empty-hint">
-        Generate a cohort with inclusion rules to see attrition
+        {{ t('components.inclusionRuleReport.noAttritionHint', 'Generate a cohort with inclusion rules to see attrition').value }}
       </span>
     </div>
 
@@ -40,16 +40,16 @@
         class="attrition-funnel__footer"
         data-testid="inclusion-attrition-funnel-footer"
       >
-        <span>Initial:</span>
-        <span class="attrition-funnel__count">{{ formatCount(initial.remaining) }} patients</span>
+        <span>{{ t('components.inclusionRuleReport.initial', 'Initial').value }}:</span>
+        <span class="attrition-funnel__count">{{ formatCount(initial.remaining) }} {{ t('components.inclusionRuleReport.patients', 'patients').value }}</span>
         <span class="attrition-funnel__arrow">→</span>
-        <span>Final:</span>
-        <span class="attrition-funnel__count">{{ formatCount(final.remaining) }} patients</span>
+        <span>{{ t('components.inclusionRuleReport.final', 'Final').value }}:</span>
+        <span class="attrition-funnel__count">{{ formatCount(final.remaining) }} {{ t('components.inclusionRuleReport.patients', 'patients').value }}</span>
         <span
           class="attrition-funnel__retained"
           :style="{ color: finalColor }"
         >
-          ({{ final.percentOfInitial.toFixed(1) }}% retained)
+          ({{ final.percentOfInitial.toFixed(1) }}% {{ t('components.inclusionRuleReport.retained', 'retained').value }})
         </span>
       </div>
     </template>
@@ -61,6 +61,9 @@ import { computed } from 'vue'
 import AtlasButton from '@/components/ui/AtlasButton.vue'
 import { computeAttritionSteps, type AttritionStep } from '@/utils/inclusion-attrition'
 import type { InclusionRuleReport } from '@/models/report.types'
+import { useI18n } from '@/composables/useI18n'
+
+const { t, tv } = useI18n()
 
 const props = defineProps<{ report: InclusionRuleReport }>()
 
@@ -185,10 +188,13 @@ const chartOption = computed(() => {
         if (!s) return ''
         const lines = [
           `<strong>${s.label}</strong>`,
-          `Remaining: ${formatCount(s.remaining)}`,
-          `% of initial: ${s.percentOfInitial.toFixed(1)}%`,
+          `${tv('components.inclusionRuleReport.tooltipRemaining', 'Remaining')}: ${formatCount(s.remaining)}`,
+          `${tv('components.inclusionRuleReport.colPercentOfInitial', '% of initial')}: ${s.percentOfInitial.toFixed(1)}%`,
         ]
-        if (s.excluded > 0) lines.push(`Excluded at this step: ${formatCount(s.excluded)}`)
+        if (s.excluded > 0)
+          lines.push(
+            `${tv('components.inclusionRuleReport.tooltipExcludedAtStep', 'Excluded at this step')}: ${formatCount(s.excluded)}`
+          )
         return lines.join('<br/>')
       },
     },
@@ -196,7 +202,7 @@ const chartOption = computed(() => {
       right: 8,
       top: 4,
       feature: {
-        saveAsImage: { name: 'attrition_chart', pixelRatio: 2, title: 'Save as PNG' },
+        saveAsImage: { name: 'attrition_chart', pixelRatio: 2, title: tv('components.inclusionRuleReport.saveAsPng', 'Save as PNG') },
       },
     },
     series: [

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -63,7 +64,7 @@ function createWrapper(props: Partial<{
       ...props,
     },
     global: {
-      plugins: [vuetify],
+      plugins: [vuetify, createPinia()],
       stubs: {
         TrellisChart: { name: 'TrellisChart', template: '<div class="trellis-stub" />', props: ['data', 'height'] },
         BoxPlotChart: { name: 'BoxPlotChart', template: '<div class="box-stub" />', props: ['data', 'height'] },

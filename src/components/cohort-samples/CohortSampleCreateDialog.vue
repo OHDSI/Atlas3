@@ -1,8 +1,8 @@
 <template>
   <AtlasDialog
     :model-value="modelValue"
-    eyebrow="COHORT"
-    title="New cohort sample"
+    :eyebrow="tv('components.cohortSampleCreate.eyebrow', 'COHORT')"
+    :title="tv('components.cohortSampleCreate.title', 'New cohort sample')"
     max-width="560"
     @update:model-value="$emit('update:modelValue', $event)"
     @close="cancel"
@@ -10,7 +10,7 @@
     <div>
       <AtlasTextField
         v-model="form.name"
-        label="Sample name"
+        :label="tv('columns.sampleName', 'Sample name')"
         variant="outlined"
         data-testid="sample-name"
         required
@@ -18,41 +18,41 @@
       <AtlasTextField
         v-model.number="form.size"
         type="number"
-        label="Number of persons"
+        :label="tv('components.cohortSampleCreate.numberOfPersons', 'Number of persons')"
         :min="1"
         :max="SAMPLE_SIZE_MAX"
-        :hint="`Maximum ${SAMPLE_SIZE_MAX}`"
+        :hint="tv('components.cohortSampleCreate.maximum', 'Maximum {max}', { max: SAMPLE_SIZE_MAX })"
         persistent-hint
         variant="outlined"
         data-testid="sample-size"
       />
 
       <div class="text-subtitle-2 mt-4 mb-1">
-        Gender (optional)
+        {{ tv('components.cohortSampleCreate.genderOptional', 'Gender (optional)') }}
       </div>
       <div class="d-flex flex-wrap ga-3">
         <AtlasCheckbox
           v-model="genderMale"
-          label="Male"
+          :label="tv('components.cohortSamples.male', 'Male')"
           hide-details
           data-testid="sample-gender-male"
         />
         <AtlasCheckbox
           v-model="genderFemale"
-          label="Female"
+          :label="tv('components.cohortSamples.female', 'Female')"
           hide-details
           data-testid="sample-gender-female"
         />
         <AtlasCheckbox
           v-model="genderOther"
-          label="Other / non-binary"
+          :label="tv('components.cohortSamples.otherNonBinary', 'Other / non-binary')"
           hide-details
           data-testid="sample-gender-other"
         />
       </div>
 
       <div class="text-subtitle-2 mt-4 mb-1">
-        Age (optional)
+        {{ tv('components.cohortSampleCreate.ageOptional', 'Age (optional)') }}
       </div>
       <div class="d-flex ga-2 align-start">
         <AtlasSelect
@@ -60,7 +60,7 @@
           :items="ageModeOptions"
           item-title="label"
           item-value="value"
-          label="Comparator"
+          :label="tv('columns.comparator', 'Comparator')"
           variant="outlined"
           clearable
           data-testid="sample-age-mode"
@@ -72,7 +72,7 @@
             type="number"
             :min="0"
             :max="SAMPLE_AGE_MAX - 1"
-            label="Age"
+            :label="tv('columns.age', 'Age')"
             variant="outlined"
             data-testid="sample-age-value"
             style="max-width: 120px"
@@ -85,7 +85,7 @@
             type="number"
             :min="0"
             :max="SAMPLE_AGE_MAX - 1"
-            label="Min age"
+            :label="tv('components.cohortSampleCreate.minAge', 'Min age')"
             variant="outlined"
             data-testid="sample-age-min"
             style="max-width: 120px"
@@ -96,7 +96,7 @@
             type="number"
             :min="0"
             :max="SAMPLE_AGE_MAX - 1"
-            label="Max age"
+            :label="tv('components.cohortSampleCreate.maxAge', 'Max age')"
             variant="outlined"
             data-testid="sample-age-max"
             style="max-width: 120px"
@@ -130,7 +130,7 @@
         variant="ghost"
         @click="cancel"
       >
-        Cancel
+        {{ t('common.cancel', 'Cancel').value }}
       </AtlasButton>
       <AtlasButton
         :disabled="errors.length > 0 || submitting"
@@ -138,7 +138,7 @@
         data-testid="sample-submit"
         @click="submit"
       >
-        Create sample
+        {{ t('components.cohortSampleCreate.createSample', 'Create sample').value }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -147,6 +147,7 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasCheckbox, AtlasDialog, AtlasSelect, AtlasTextField } from '@/components/ui'
 import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import {
   GENDER_FEMALE_CONCEPT_ID,
   GENDER_MALE_CONCEPT_ID,
@@ -170,6 +171,8 @@ const emit = defineEmits<{
   submit: [parameters: SampleParameters]
 }>()
 
+const { t, tv } = useI18n()
+
 const form = reactive({ name: '', size: 100 })
 const genderMale = ref(true)
 const genderFemale = ref(true)
@@ -181,13 +184,13 @@ const ageMin = ref<number | null>(null)
 const ageMax = ref<number | null>(null)
 
 const ageModeOptions: Array<{ value: SampleAgeMode; label: string }> = [
-  { value: 'lessThan', label: '< less than' },
-  { value: 'lessThanOrEqual', label: '≤ at most' },
-  { value: 'equalTo', label: '= equal to' },
-  { value: 'greaterThanOrEqual', label: '≥ at least' },
-  { value: 'greaterThan', label: '> greater than' },
-  { value: 'between', label: 'between' },
-  { value: 'notBetween', label: 'not between' },
+  { value: 'lessThan', label: tv('components.cohortSampleCreate.ageModeLessThan', '< less than') },
+  { value: 'lessThanOrEqual', label: tv('components.cohortSampleCreate.ageModeAtMost', '≤ at most') },
+  { value: 'equalTo', label: tv('components.cohortSampleCreate.ageModeEqualTo', '= equal to') },
+  { value: 'greaterThanOrEqual', label: tv('components.cohortSampleCreate.ageModeAtLeast', '≥ at least') },
+  { value: 'greaterThan', label: tv('components.cohortSampleCreate.ageModeGreaterThan', '> greater than') },
+  { value: 'between', label: tv('components.cohortSampleCreate.ageModeBetween', 'between') },
+  { value: 'notBetween', label: tv('components.cohortSampleCreate.ageModeNotBetween', 'not between') },
 ]
 
 const isRangeMode = computed(() => ageMode.value === 'between' || ageMode.value === 'notBetween')

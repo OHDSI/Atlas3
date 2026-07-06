@@ -18,10 +18,14 @@
     <main class="char-workbench__canvas">
       <button
         class="rail-toggle"
-        :title="railOpen ? 'Hide design panel' : 'Show design panel'"
+        :title="railOpen
+          ? tv('components.characterizationWorkbench.hideDesignPanel', 'Hide design panel')
+          : tv('components.characterizationWorkbench.showDesignPanel', 'Show design panel')"
         @click="railOpen = !railOpen"
       >
-        {{ railOpen ? '◂ Hide Analysis Design' : '▸ Show Analysis Design' }}
+        {{ railOpen
+          ? '◂ ' + tv('components.characterizationWorkbench.hideAnalysisDesign', 'Hide Analysis Design')
+          : '▸ ' + tv('components.characterizationWorkbench.showAnalysisDesign', 'Show Analysis Design') }}
       </button>
       <DataSourceRunTable
         :sources="runTableSources"

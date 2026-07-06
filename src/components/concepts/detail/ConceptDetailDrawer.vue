@@ -3,7 +3,10 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { AtlasIconButton } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
 import ConceptDetailContent from '@/components/concepts/detail/ConceptDetailContent.vue'
+
+const { tv } = useI18n()
 
 const drawer = useConceptDetailDrawerStore()
 const { isOpen, sourceKey, conceptId } = storeToRefs(drawer)
@@ -37,7 +40,7 @@ const drawerWidth = computed(() => {
             icon="mdi-close"
             variant="text"
             size="sm"
-            v-bind="{ ariaLabel: 'Close concept details' }"
+            v-bind="{ ariaLabel: tv('components.conceptDetail.closeDetails', 'Close concept details') }"
             data-testid="concept-drawer-close"
             @click="drawer.close()"
           />

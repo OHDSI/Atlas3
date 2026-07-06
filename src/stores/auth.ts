@@ -34,6 +34,7 @@ export const useAuthStore = defineStore('auth', {
     authClient: null,
     tokenExpirationDate: null,
     isAuthenticated: false,
+    userResolved: false,
     isRefreshing: false,
     tokenExpired: false,
     loginModalOpen: false,
@@ -268,23 +269,39 @@ export const useAuthStore = defineStore('auth', {
       if (!this.token) {
         this.hydrateAuth()
       }
-      const token = this.token
+      // A token that's already invalid/expired is equivalent to no token —
+      // drop it so user/me runs anonymously (WebAPI may still grant anonymous
+      // access), matching ATLAS 2.15 which always loads user/me at startup.
+      if (this.token && (this.tokenExpired || !this.isTokenValid)) {
+        this.clearAuth()
+      }
 
-      if (token) {
-        // Fetch user info if we have a valid token
-        if (!this.tokenExpired && this.isTokenValid) {
-          try {
-            const { authService } = await import('@/services/auth/authService')
-            const userInfo = await authService.fetchUserInfo()
-            this.setUser(userInfo)
-          } catch (error) {
-            logger.error('Auth', 'Failed to fetch user info on init', error)
-            this.clearAuth()
-            if (getAuthConfig().userAuthenticationEnabled) {
-              this.openLoginModal()
-            }
+      const hadToken = !!this.token
+
+      // Always resolve the subject, with or without a token. When WebAPI is
+      // configured for anonymous access, user/me returns 200 with the
+      // anonymous permission set and no login prompt is shown; per-endpoint
+      // permissions still gate actions server-side.
+      try {
+        const { authService } = await import('@/services/auth/authService')
+        const userInfo = await authService.fetchUserInfo()
+        this.setUser(userInfo)
+      } catch (error) {
+        this.setUser(null)
+        if (hadToken) {
+          // A stored token was rejected: the session is stale. Clear it and
+          // prompt for re-auth directly — the user had a session and expects
+          // to sign back in.
+          this.clearAuth()
+          if (getAuthConfig().userAuthenticationEnabled) {
+            this.openLoginModal()
           }
         }
+        // No token → anonymous access was denied (401). Leave `user` null and
+        // let the router guard open the modal only on protected routes.
+        logger.info('Auth', 'No authenticated or anonymous subject resolved', error)
+      } finally {
+        this.userResolved = true
       }
 
       this.setupCrossTabSync()

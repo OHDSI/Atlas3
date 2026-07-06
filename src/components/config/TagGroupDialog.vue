@@ -2,7 +2,11 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="Tag Group"
-    :title="`${isEditMode ? 'Edit' : 'Create'} Tag Group`"
+    :title="
+      isEditMode
+        ? t('config.tags.dialog.editTitle', 'Edit Tag Group').value
+        : t('config.tags.dialog.createTitle', 'Create Tag Group').value
+    "
     max-width="600"
     persistent
     :show-close="false"
@@ -15,7 +19,7 @@
     >
       <AtlasTextField
         v-model="form.name"
-        label="Name"
+        :label="tv('config.tags.dialog.fields.name.label', 'Name')"
         :rules="nameRules"
         :error="errors.name"
         variant="outlined"
@@ -25,9 +29,9 @@
 
       <AtlasTextField
         v-model="form.color"
-        label="Color"
+        :label="tv('config.tags.dialog.fields.color.label', 'Color')"
         type="color"
-        hint="Hex color code for visual identification"
+        :hint="tv('components.config.tags.colorHexHint', 'Hex color code for visual identification')"
         persistent-hint
         :error="errors.color"
         variant="outlined"
@@ -44,8 +48,8 @@
 
       <AtlasTextField
         v-model="form.icon"
-        label="Icon"
-        hint="Material Design Icon name (e.g., mdi-tag, mdi-folder)"
+        :label="tv('config.tags.dialog.fields.icon.label', 'Icon')"
+        :hint="tv('components.config.tags.iconMdiFolderHint', 'Material Design Icon name (e.g., mdi-tag, mdi-folder)')"
         persistent-hint
         :error="errors.icon"
         variant="outlined"
@@ -54,35 +58,35 @@
 
       <AtlasCheckbox
         v-model="form.mandatory"
-        label="Mandatory"
-        hint="Tags from this group are required on all assets"
+        :label="tv('config.tags.dialog.fields.mandatory.label', 'Mandatory')"
+        :hint="tv('config.tags.dialog.fields.mandatory.hint', 'Tags from this group are required on all assets')"
         persistent-hint
       />
 
       <AtlasCheckbox
         v-model="form.showGroup"
-        label="Show as Column"
-        hint="Display as a column in asset tables"
+        :label="tv('config.tags.dialog.fields.showColumn.label', 'Show as Column')"
+        :hint="tv('config.tags.dialog.fields.showColumn.hint', 'Display as a column in asset tables')"
         persistent-hint
       />
 
       <AtlasCheckbox
         v-model="form.multiSelection"
-        label="Allow Multiple"
-        hint="Allow multiple tags from this group per asset"
+        :label="tv('config.tags.dialog.fields.multiple.label', 'Allow Multiple')"
+        :hint="tv('config.tags.dialog.fields.multiple.hint', 'Allow multiple tags from this group per asset')"
         persistent-hint
       />
 
       <AtlasCheckbox
         v-model="form.allowCustom"
-        label="Free-form"
-        hint="Allow users to create custom tags in this group"
+        :label="tv('config.tags.dialog.fields.freeForm.label', 'Free-form')"
+        :hint="tv('config.tags.dialog.fields.freeForm.hint', 'Allow users to create custom tags in this group')"
         persistent-hint
       />
 
       <AtlasTextField
         v-model="form.description"
-        label="Description"
+        :label="tv('config.tags.dialog.fields.description.label', 'Description')"
         :rows="3"
         multiline
         :error="errors.description"
@@ -96,14 +100,18 @@
         variant="ghost"
         @click="handleClose"
       >
-        Cancel
+        {{ t('config.tags.dialog.actions.cancel', 'Cancel').value }}
       </AtlasButton>
       <AtlasButton
         :disabled="!formValid"
         :loading="saving"
         @click="handleSubmit"
       >
-        {{ isEditMode ? 'Save' : 'Create' }}
+        {{
+          isEditMode
+            ? t('config.tags.dialog.actions.save', 'Save').value
+            : t('config.tags.dialog.actions.create', 'Create').value
+        }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -111,8 +119,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { tagGroupSchema, type TagGroup } from '@/models/config.types'
 import { AtlasButton, AtlasCheckbox, AtlasDialog, AtlasTextField } from '@/components/ui'
+
+const { t, tv } = useI18n()
 
 interface Props {
   modelValue: boolean
@@ -146,8 +157,10 @@ const isEditMode = computed(() => !!props.tagGroup?.id)
 
 
 const nameRules = [
-  (v: string) => !!v || 'Name is required',
-  (v: string) => v?.length <= 255 || 'Name must be less than 255 characters',
+  (v: string) => !!v || tv('config.tags.dialog.fields.name.required', 'Name is required'),
+  (v: string) =>
+    v?.length <= 255 ||
+    tv('components.config.tags.nameTooLong', 'Name must be less than 255 characters'),
 ]
 
 // Watch for tag group changes to populate form

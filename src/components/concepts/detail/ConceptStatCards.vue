@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { AtlasCard } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
 import { useDataSourcesStore } from '@/stores/datasources'
 import { useConceptDetailStore } from '@/stores/concept-detail'
 import type { ConceptRecordCount } from '@/models/concept-detail.types'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   conceptId: number
@@ -60,8 +63,8 @@ watch(() => [props.conceptId, props.primarySourceKey], ensureCounts)
         {{ formatCount(countsBySource.get(source.sourceKey)?.recordCount) }}
       </div>
       <div class="stat-sub">
-        {{ formatPercent(countsBySource.get(source.sourceKey)?.personCount) }} persons ·
-        {{ formatCount(countsBySource.get(source.sourceKey)?.descendantRecordCount) }} desc.
+        {{ formatPercent(countsBySource.get(source.sourceKey)?.personCount) }} {{ t('components.conceptDetail.persons', 'persons').value }} ·
+        {{ formatCount(countsBySource.get(source.sourceKey)?.descendantRecordCount) }} {{ t('components.conceptDetail.descAbbr', 'desc.').value }}
       </div>
     </AtlasCard>
   </section>

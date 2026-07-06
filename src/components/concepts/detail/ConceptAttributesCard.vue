@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { AtlasCard } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
 import type { Concept } from '@/models/concept-set.types'
+
+const { t } = useI18n()
 
 defineProps<{ concept: Concept }>()
 </script>
@@ -11,21 +14,21 @@ defineProps<{ concept: Concept }>()
     data-testid="concept-attributes-card"
   >
     <header class="card-title">
-      Concept Details
+      {{ t('components.conceptDetail.conceptDetailsTitle', 'Concept Details').value }}
     </header>
     <div class="card-body">
       <dl class="kv">
-        <dt>Concept ID</dt><dd class="mono">
+        <dt>{{ t('components.conceptDetail.conceptId', 'Concept ID').value }}</dt><dd class="mono">
           {{ concept.conceptId }}
         </dd>
-        <dt>Concept Code</dt><dd class="mono">
+        <dt>{{ t('cs.manager.concept.tabs.details.conceptCode', 'Concept Code').value }}</dt><dd class="mono">
           {{ concept.conceptCode }}
         </dd>
-        <dt>Domain</dt><dd>{{ concept.domainId }}</dd>
-        <dt>Vocabulary</dt><dd>{{ concept.vocabularyId }}</dd>
-        <dt>Concept Class</dt><dd>{{ concept.conceptClassId }}</dd>
-        <dt>Standard Concept</dt><dd>{{ concept.standardConcept ?? '—' }}</dd>
-        <dt>Invalid Reason</dt><dd>{{ concept.invalidReason ?? '—' }}</dd>
+        <dt>{{ t('columns.domain', 'Domain').value }}</dt><dd>{{ concept.domainId }}</dd>
+        <dt>{{ t('columns.vocabulary', 'Vocabulary').value }}</dt><dd>{{ concept.vocabularyId }}</dd>
+        <dt>{{ t('components.conceptDetail.conceptClass', 'Concept Class').value }}</dt><dd>{{ concept.conceptClassId }}</dd>
+        <dt>{{ t('cs.manager.concept.tabs.details.standardConcept', 'Standard Concept').value }}</dt><dd>{{ concept.standardConcept ?? '—' }}</dd>
+        <dt>{{ t('cs.manager.concept.tabs.details.invalidReason', 'Invalid Reason').value }}</dt><dd>{{ concept.invalidReason ?? '—' }}</dd>
       </dl>
     </div>
   </AtlasCard>

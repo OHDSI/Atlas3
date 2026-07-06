@@ -237,9 +237,17 @@ router.beforeEach(
     if (requiresAuth) {
       const authStore = useAuthStore()
 
-      // If not authenticated, show login modal and stay on current page
-      // BUT only if authentication is actually enabled
-      if (!authStore.isAuthenticated && getAuthConfig().userAuthenticationEnabled) {
+      // Open the login modal only once we've resolved the subject and found
+      // neither an authenticated nor an anonymous one. Deferring on
+      // `userResolved` avoids prompting during the initial user/me round-trip;
+      // `!authStore.user` keeps an anonymous subject (with server-granted
+      // permissions) from ever triggering the prompt.
+      if (
+        !authStore.isAuthenticated &&
+        authStore.userResolved &&
+        !authStore.user &&
+        getAuthConfig().userAuthenticationEnabled
+      ) {
         logger.debug('Router', 'Route requires auth, opening login modal')
         authStore.openLoginModal()
 

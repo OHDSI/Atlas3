@@ -64,13 +64,13 @@
           indeterminate
         />
         <p class="text-body-2 mt-2">
-          Searching concepts...
+          {{ t('components.conceptSearch.searching', 'Searching concepts...').value }}
         </p>
       </div>
 
       <div v-else-if="searchResults && searchResults.length > 0">
         <p class="text-subtitle-2 mb-2">
-          Found {{ searchResults.length }} results
+          {{ t('components.conceptSearch.foundResults', 'Found {count} results', { count: searchResults.length }).value }}
         </p>
 
         <v-virtual-scroll
@@ -91,8 +91,13 @@
                 {{ item.conceptName }}
               </v-list-item-title>
               <v-list-item-subtitle>
-                ID: {{ item.conceptId }} | Code: {{ item.conceptCode }} | Domain:
-                {{ item.domainId }}
+                {{
+                  t('components.conceptSearch.conceptMeta', 'ID: {id} | Code: {code} | Domain: {domain}', {
+                    id: item.conceptId,
+                    code: item.conceptCode,
+                    domain: item.domainId,
+                  }).value
+                }}
               </v-list-item-subtitle>
             </AtlasListItem>
           </template>

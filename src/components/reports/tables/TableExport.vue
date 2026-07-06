@@ -15,7 +15,7 @@
         :disabled="!data || data.length === 0 || copying || exporting"
         @click="handleCopy"
       >
-        Copy
+        {{ t('datatable.language.buttons.copy', 'Copy').value }}
       </AtlasButton>
       <AtlasButton
         size="sm"
@@ -45,6 +45,9 @@ import { AtlasButton, AtlasSnackbar } from '@/components/ui'
 import type { AtlasSnackbarSeverity } from '@/components/ui'
 import * as Papa from 'papaparse'
 import { logger } from '@/utils/logger'
+import { useI18n } from '@/composables/useI18n'
+
+const { t, tv } = useI18n()
 
 /**
  * Props
@@ -113,7 +116,12 @@ async function handleCopy() {
     // Try modern Clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(tsvContent)
-      showToastNotification(`Copied ${props.data.length} rows to clipboard`, 'success')
+      showToastNotification(
+        tv('components.tableExport.copiedRows', 'Copied {count} rows to clipboard', {
+          count: props.data.length,
+        }),
+        'success'
+      )
     } else {
       // Fallback for older browsers
       const textArea = document.createElement('textarea')
@@ -128,7 +136,12 @@ async function handleCopy() {
       try {
         const successful = document.execCommand('copy')
         if (successful) {
-          showToastNotification(`Copied ${props.data.length} rows to clipboard`, 'success')
+          showToastNotification(
+            tv('components.tableExport.copiedRows', 'Copied {count} rows to clipboard', {
+              count: props.data.length,
+            }),
+            'success'
+          )
         } else {
           throw new Error('Copy command failed')
         }
@@ -138,7 +151,11 @@ async function handleCopy() {
     }
   } catch (error) {
     logger.error('TableExport', 'Copy failed', error)
-    showToastNotification('Failed to copy data to clipboard', 'error', 5000)
+    showToastNotification(
+      tv('components.tableExport.copyFailed', 'Failed to copy data to clipboard'),
+      'error',
+      5000
+    )
   } finally {
     copying.value = false
   }
@@ -187,10 +204,21 @@ async function handleExportCSV() {
 
     URL.revokeObjectURL(url)
 
-    showToastNotification(`Exported ${props.data.length} rows to ${filename}.csv`, 'success', 4000)
+    showToastNotification(
+      tv('components.tableExport.exportedRows', 'Exported {count} rows to {filename}.csv', {
+        count: props.data.length,
+        filename,
+      }),
+      'success',
+      4000
+    )
   } catch (error) {
     logger.error('TableExport', 'CSV export failed', error)
-    showToastNotification('Failed to export CSV file', 'error', 5000)
+    showToastNotification(
+      tv('components.tableExport.exportFailed', 'Failed to export CSV file'),
+      'error',
+      5000
+    )
   } finally {
     exporting.value = false
   }

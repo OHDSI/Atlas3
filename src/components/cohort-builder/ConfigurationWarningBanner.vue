@@ -2,14 +2,18 @@
   <AtlasAlert
     v-if="validationResult && validationResult.invalidFilterTypes.length > 0"
     severity="warning"
-    title="Configuration Validation Warnings"
+    :title="t('components.configurationWarningBanner.title', 'Configuration Validation Warnings').value"
     :closable="true"
     class="configuration-warning-banner"
   >
     <div class="mt-2">
       <p class="mb-2">
-        Some filter types in the configuration are invalid or misconfigured. These filters will not
-        be available in the UI:
+        {{
+          t(
+            'components.configurationWarningBanner.description',
+            'Some filter types in the configuration are invalid or misconfigured. These filters will not be available in the UI:'
+          ).value
+        }}
       </p>
 
       <!-- Expandable details section -->
@@ -17,7 +21,8 @@
         <v-expansion-panel>
           <v-expansion-panel-title>
             <span class="font-weight-medium">
-              Invalid Filter Types ({{ validationResult.invalidFilterTypes.length }})
+              {{ t('components.configurationWarningBanner.invalidFilterTypes', 'Invalid Filter Types').value }}
+              ({{ validationResult.invalidFilterTypes.length }})
             </span>
           </v-expansion-panel-title>
           <v-expansion-panel-text>
@@ -41,7 +46,12 @@
       </v-expansion-panels>
 
       <p class="mt-3 text-caption">
-        Contact your administrator to update the configuration file (atlas-config.json).
+        {{
+          t(
+            'components.configurationWarningBanner.contactAdmin',
+            'Contact your administrator to update the configuration file (atlas-config.json).'
+          ).value
+        }}
       </p>
     </div>
   </AtlasAlert>
@@ -57,8 +67,11 @@ import { AtlasAlert, AtlasIcon, AtlasList, AtlasListItem } from '@/components/ui
  */
 
 import { ref, onMounted } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { configLoaderService } from '@/services/config-loader.service'
 import type { ValidationResult } from '@/models/config.types'
+
+const { t } = useI18n()
 
 const validationResult = ref<ValidationResult | null>(null)
 

@@ -9,12 +9,26 @@
           size="16"
           class="treemap-controls__hint-icon"
         />
-        <span> <strong>Click</strong> on any area to view detailed analytics </span>
+        <span>
+          <strong>{{ t('components.domainPrevalenceTreemap.clickAction', 'Click').value }}</strong>
+          {{
+            t(
+              'components.domainPrevalenceTreemap.clickHint',
+              'on any area to view detailed analytics'
+            ).value
+          }}
+        </span>
         <span
           v-if="!hasHierarchy"
           class="treemap-controls__hint-note"
         >
-          · Hierarchical grouping not available for this data source
+          ·
+          {{
+            t(
+              'components.domainPrevalenceTreemap.noHierarchyNote',
+              'Hierarchical grouping not available for this data source'
+            ).value
+          }}
         </span>
       </div>
 
@@ -24,7 +38,7 @@
         v-if="hasHierarchy"
         v-model="hierarchicalView"
         hide-details
-        label="Group by hierarchy"
+        :label="t('components.domainPrevalenceTreemap.groupByHierarchy', 'Group by hierarchy').value"
         class="treemap-controls__switch"
       />
     </div>
@@ -41,9 +55,12 @@
 <script setup lang="ts">
 import { AtlasIcon, AtlasSpacer, AtlasSwitch } from '@/components/ui'
 import { ref, computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import type { TreemapNode } from '@/models/datasource.types'
 import TreemapChart from '@/components/ui/charts/AtlasTreemapChart.vue'
 import { logger } from '@/utils/logger'
+
+const { t } = useI18n()
 
 interface Props {
   data: TreemapNode[]

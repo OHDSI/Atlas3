@@ -74,7 +74,7 @@
         severity="info"
         variant="flat"
       >
-        Enter a search term to find concepts
+        {{ t('components.conceptSearch.enterSearchTerm', 'Enter a search term to find concepts').value }}
       </AtlasAlert>
     </v-card-text>
   </v-card>

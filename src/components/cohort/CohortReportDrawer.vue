@@ -22,7 +22,7 @@
           <AtlasIconButton
             v-if="reportType === 'profile'"
             icon="mdi-arrow-left"
-            v-bind="{ ariaLabel: 'Back to samples' }"
+            v-bind="{ ariaLabel: t('components.cohortReportDrawer.backToSamples', 'Back to samples').value }"
             variant="text"
             size="sm"
             data-testid="report-drawer-back"
@@ -93,7 +93,7 @@ const emit = defineEmits<{
   back: []
 }>()
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 
 const drawerWidth = computed(() =>
   typeof window !== 'undefined' ? window.innerWidth - 100 : 1200
@@ -110,7 +110,9 @@ const headerTitle = computed(() => {
     return t('cohortDefinitions.generation.drawer.samplesTitle', 'Cohort samples').value
   }
   if (props.reportType === 'profile') {
-    return props.personId ? `Person ${props.personId}` : 'Profile'
+    return props.personId
+      ? tv('components.cohortReportDrawer.personTitle', 'Person {id}', { id: props.personId })
+      : tv('components.cohortReportDrawer.profileTitle', 'Profile')
   }
   return t('cohortDefinitions.generation.drawer.inclusionTitle', 'Inclusion rule report').value
 })

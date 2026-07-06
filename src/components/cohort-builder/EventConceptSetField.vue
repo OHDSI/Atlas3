@@ -8,7 +8,7 @@
       v-if="!compact"
       class="event-concept-set-field__title"
     >
-      {{ label }}
+      {{ label ?? t('common.conceptSet', 'Concept Set').value }}
     </div>
     <div class="event-concept-set-field__input">
       <AtlasButton
@@ -21,7 +21,7 @@
         <AtlasIcon class="mr-2">
           mdi-plus
         </AtlasIcon>
-        {{ selectLabel }}
+        {{ selectLabel ?? t('components.conceptAddBox.selectConceptSet', 'Select Concept Set').value }}
       </AtlasButton>
       <AtlasChip
         v-else
@@ -40,6 +40,10 @@
 
 <script setup lang="ts">
 import { AtlasButton, AtlasChip, AtlasIcon } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
+
 withDefaults(
   defineProps<{
     conceptSet: { id: number | string; name: string } | undefined | null
@@ -50,8 +54,8 @@ withDefaults(
   }>(),
   {
     conceptSet: undefined,
-    label: 'Concept Set',
-    selectLabel: 'Select Concept Set',
+    label: undefined,
+    selectLabel: undefined,
     compact: false,
   }
 )

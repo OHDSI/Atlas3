@@ -5,21 +5,24 @@
       :height="400"
       :show-export="false"
       :enable-zoom="true"
-      title="Stratified Incidence"
+      :title="tv('components.incidenceRate.stratifiedIncidence', 'Stratified Incidence')"
     />
     <div class="ir-treemap__legend">
-      <span class="ir-treemap__legend-label">Lower rate</span>
+      <span class="ir-treemap__legend-label">{{ t('components.incidenceRate.lowerRate', 'Lower rate').value }}</span>
       <div class="ir-treemap__legend-bar" />
-      <span class="ir-treemap__legend-label">Higher rate</span>
-      <span class="ir-treemap__legend-hint">(color = incidence rate per person-year; area = persons at risk)</span>
+      <span class="ir-treemap__legend-label">{{ t('components.incidenceRate.higherRate', 'Higher rate').value }}</span>
+      <span class="ir-treemap__legend-hint">{{ t('components.incidenceRate.treemapLegendHint', '(color = incidence rate per person-year; area = persons at risk)').value }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import TreemapChart from '@/components/ui/charts/AtlasTreemapChart.vue'
 import type { TreemapNode } from '@/models/report.types'
+
+const { t, tv } = useI18n()
 
 const props = defineProps<{
   treemapJson: string

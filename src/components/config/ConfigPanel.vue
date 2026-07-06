@@ -12,10 +12,10 @@
     >
       <!-- Header -->
       <v-card-title class="config-panel__header d-flex align-center justify-space-between">
-        <span class="config-panel-title">Configuration</span>
+        <span class="config-panel-title">{{ t('config.title', 'Configuration').value }}</span>
         <AtlasIconButton
           icon="mdi-close"
-          v-bind="{ ariaLabel: 'Close configuration panel' }"
+          v-bind="{ ariaLabel: tv('components.config.panel.closeAria', 'Close configuration panel') }"
           variant="text"
           size="sm"
           @click="handleClose"
@@ -39,7 +39,7 @@
             <AtlasIcon start>
               mdi-database
             </AtlasIcon>
-            Cache
+            {{ t('components.config.panel.tabCache', 'Cache').value }}
           </AtlasTab>
           <AtlasTab
             v-if="canSeeSources"
@@ -48,7 +48,7 @@
             <AtlasIcon start>
               mdi-database-cog
             </AtlasIcon>
-            Data Sources
+            {{ t('navigation.datasources', 'Data Sources').value }}
           </AtlasTab>
           <AtlasTab
             v-if="canSeeTags"
@@ -57,7 +57,7 @@
             <AtlasIcon start>
               mdi-tag-multiple
             </AtlasIcon>
-            Tags
+            {{ t('common.tags', 'Tags').value }}
           </AtlasTab>
           <AtlasTab
             v-if="canSeePermissions"
@@ -66,7 +66,7 @@
             <AtlasIcon start>
               mdi-shield-account
             </AtlasIcon>
-            Permissions
+            {{ t('configuration.roles.tabs.permissions', 'Permissions').value }}
           </AtlasTab>
         </AtlasTabs>
 
@@ -114,7 +114,12 @@
             class="config-section"
           >
             <AtlasAlert severity="info">
-              You don't have access to any administrative settings.
+              {{
+                t(
+                  'components.config.panel.noAdminAccess',
+                  "You don't have access to any administrative settings."
+                ).value
+              }}
             </AtlasAlert>
           </div>
         </v-card-text>
@@ -126,6 +131,7 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasDivider, AtlasIcon, AtlasIconButton, AtlasTab, AtlasTabs } from '@/components/ui'
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useUIStore } from '@/stores/ui'
 import { usePermissions } from '@/composables/usePermissions'
 import CacheManagementSection from './CacheManagementSection.vue'
@@ -133,6 +139,7 @@ import DataSourcesSection from './DataSourcesSection.vue'
 import TagManagementSection from './TagManagementSection.vue'
 import PermissionsSection from './PermissionsSection.vue'
 
+const { t, tv } = useI18n()
 const uiStore = useUIStore()
 const { hasPermission } = usePermissions()
 

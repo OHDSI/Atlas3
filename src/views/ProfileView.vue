@@ -2,7 +2,7 @@
   <AtlasPageShell
     hero
     compact
-    eyebrow="PROFILE"
+    :eyebrow="tv('views.profile.eyebrow', 'PROFILE')"
   >
     <template #title>
       <AtlasTextField
@@ -34,7 +34,7 @@
             data-test="profile-cohort-badge"
             @close="clearCohort"
           >
-            Cohort #{{ store.cohortDefinitionId }}
+            {{ tv('common.cohort', 'Cohort') }} #{{ store.cohortDefinitionId }}
           </AtlasChip>
         </template>
       </div>

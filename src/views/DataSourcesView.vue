@@ -116,7 +116,7 @@
               class="datasources-view__empty-icon"
             />
             <p class="datasources-view__empty-text">
-              Report type "{{ reportTypeLabel }}" is not yet implemented.
+              {{ t('views.dataSources.reportNotImplemented', 'Report type "{type}" is not yet implemented.', { type: reportTypeLabel }).value }}
             </p>
           </div>
         </AtlasCard>
@@ -132,7 +132,7 @@
             class="datasources-view__empty-icon"
           />
           <p class="datasources-view__empty-text">
-            No data sources available.
+            {{ t('views.dataSources.noSources', 'No data sources available.').value }}
           </p>
         </div>
 
@@ -147,7 +147,7 @@
             class="datasources-view__empty-icon"
           />
           <p class="datasources-view__empty-text">
-            Select a data source to view its reports.
+            {{ t('views.dataSources.selectSourceHint', 'Select a data source to view its reports.').value }}
           </p>
         </div>
       </div>

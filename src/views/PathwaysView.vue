@@ -136,7 +136,7 @@ const canCreate = computed(() => hasPermission('create:pathway'))
 const canCopy = computed(() => hasPermission('create:pathway'))
 const entityAccess = useEntityAccessFor('pathway')
 const store = usePathwayStore()
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const showDelete = ref(false)
 const deleteTarget = ref<number | null>(null)
 const feedback = ref<{ message: string; color: 'success' | 'error' | 'info' } | null>(null)
@@ -185,10 +185,10 @@ async function handleCopy(p: Pathway) {
   if (!p.id) return
   const result = await copyPathway(p.id)
   if (result.success && result.data.id) {
-    feedback.value = { message: 'Pathway copied', color: 'success' }
+    feedback.value = { message: tv('views.pathways.copied', 'Pathway copied'), color: 'success' }
     router.push(`/pathways/${result.data.id}`)
   } else {
-    feedback.value = { message: 'Copy failed', color: 'error' }
+    feedback.value = { message: tv('views.pathways.copyFailed', 'Copy failed'), color: 'error' }
     logger.error('PathwaysView', 'copyPathway failed', !result.success ? result.error : null)
   }
 }
@@ -203,10 +203,10 @@ async function confirmDelete() {
   if (!deleteTarget.value) return
   const ok = await deletePathway(deleteTarget.value)
   if (ok) {
-    feedback.value = { message: 'Pathway deleted', color: 'success' }
+    feedback.value = { message: tv('views.pathways.deleted', 'Pathway deleted'), color: 'success' }
     await fetchPathways()
   } else {
-    feedback.value = { message: 'Delete failed', color: 'error' }
+    feedback.value = { message: tv('views.pathways.deleteFailed', 'Delete failed'), color: 'error' }
   }
   showDelete.value = false
   deleteTarget.value = null

@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -18,6 +19,8 @@ const concept: Concept = {
 }
 
 describe('ConceptAttributesCard', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
   it('renders all primary concept attributes as label/value pairs', () => {
     const vuetify = createVuetify({ components, directives })
     const wrapper = mount(ConceptAttributesCard, {

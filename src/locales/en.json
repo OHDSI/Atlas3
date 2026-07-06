@@ -1,7 +1,8 @@
 {
   "locale": "en",
   "a11y": {
-    "closeDialog": "Close dialog"
+    "skipToMain": "Skip to main content",
+    "logoHome": "OHDSI ATLAS Home"
   },
   "cohortAgent": {
     "title": "Pythia AI Agent",
@@ -179,7 +180,8 @@
     "selectReportType": "Select a report type to view cohort analytics",
     "columns": "Columns",
     "editName": "Edit Name",
-    "description": "Description"
+    "description": "Description",
+    "confirm": "Confirm"
   },
   "validation": {
     "required": "This field is required"
@@ -193,7 +195,7 @@
   "navigation": {
     "characterizations": "Characterizations",
     "cohortdefinitions": "Cohort Definitions",
-    "conceptsets": "Concept Sets",
+    "conceptsets": "Concepts",
     "configuration": "Configuration",
     "datasources": "Data Sources",
     "estimation": "Estimation",
@@ -209,23 +211,43 @@
     "search": "Search",
     "tagging": "Tagging"
   },
-  "a11y": {
-    "skipToMain": "Skip to main content",
-    "logoHome": "OHDSI ATLAS Home"
-  },
   "route": {
-    "home": { "title": "Home" },
-    "cohorts": { "title": "Cohorts" },
-    "cohortBuilder": { "title": "Cohort Builder" },
-    "conceptSets": { "title": "Concept Sets" },
-    "profiles": { "title": "Profiles" },
-    "analysis": { "title": "Analysis" },
-    "characterizations": { "title": "Characterizations" },
-    "featureAnalyses": { "title": "Feature Analyses" },
-    "pathways": { "title": "Cohort Pathways" },
-    "incidenceRates": { "title": "Incidence Rates" },
-    "dataSources": { "title": "Data Sources" },
-    "roleManagement": { "title": "Role Management" }
+    "home": {
+      "title": "Home"
+    },
+    "cohorts": {
+      "title": "Cohorts"
+    },
+    "cohortBuilder": {
+      "title": "Cohort Builder"
+    },
+    "conceptSets": {
+      "title": "Concept Sets"
+    },
+    "profiles": {
+      "title": "Profiles"
+    },
+    "analysis": {
+      "title": "Analysis"
+    },
+    "characterizations": {
+      "title": "Characterizations"
+    },
+    "featureAnalyses": {
+      "title": "Feature Analyses"
+    },
+    "pathways": {
+      "title": "Cohort Pathways"
+    },
+    "incidenceRates": {
+      "title": "Incidence Rates"
+    },
+    "dataSources": {
+      "title": "Data Sources"
+    },
+    "roleManagement": {
+      "title": "Role Management"
+    }
   },
   "options": {
     "after": "After",
@@ -325,6 +347,41 @@
     }
   },
   "components": {
+    "inclusionRuleReport": {
+      "matchRate": "Match rate",
+      "matches": "Matches",
+      "lost": "Lost",
+      "totalEvents": "Total events",
+      "attritionFunnel": "Attrition funnel",
+      "perRuleSatisfaction": "Per-rule satisfaction",
+      "populationBreakdown": "Population breakdown",
+      "noReportData": "No inclusion-rule report data is available for this cohort and source. The cohort may have no inclusion rules, or it may not have been generated yet. If you've generated it already, try re-running.",
+      "loadError": "Failed to load the inclusion-rule report",
+      "attrition": "Attrition",
+      "noAttritionData": "No attrition data available",
+      "initial": "Initial",
+      "final": "Final",
+      "saveAsPng": "Save as PNG",
+      "colCumulativeRemaining": "Cumulative remaining",
+      "colPercentOfInitial": "% of initial",
+      "colPersonsSatisfying": "Persons satisfying",
+      "colPercentSatisfying": "% satisfying",
+      "colPercentExcluded": "% excluded",
+      "noRulesToReport": "This cohort has no inclusion rules to report.",
+      "hintCumulativeRemaining": "Patients remaining after applying this rule and all preceding rules in order",
+      "hintPercentOfInitial": "Cumulative remaining as a percent of the initial entry-event count — same metric the funnel uses",
+      "hintPersonsSatisfying": "Patients who satisfy THIS rule independently, regardless of the other rules",
+      "hintPercentSatisfying": "Percent of the entry-event population who satisfy this rule on its own (independent of order)",
+      "hintPercentExcluded": "Marginal cost of this rule: percent of patients who satisfy every OTHER rule but fail this one. High = removing this rule would recover that share.",
+      "downloadCsv": "Download CSV",
+      "noAttritionHint": "Generate a cohort with inclusion rules to see attrition",
+      "patients": "patients",
+      "retained": "retained",
+      "rulesSatisfiedHigh": "≥ 80% rules satisfied",
+      "rulesSatisfiedLow": "< 40% rules satisfied",
+      "tooltipRemaining": "Remaining",
+      "tooltipExcludedAtStep": "Excluded at this step"
+    },
     "cardinalityInput": {
       "title": "Cardinality",
       "type": "Type",
@@ -335,7 +392,8 @@
         "exactly": "Must have exactly {count} occurrence(s)",
         "atMost": "Must have at most {count} occurrence(s)",
         "exclusion": "(excludes all events)"
-      }
+      },
+      "typeAriaLabel": "Cardinality Type"
     },
     "authorship": {
       "created": "created",
@@ -967,7 +1025,10 @@
         "depthWarning": "Nesting depth is {depth}/10",
         "removeGroup": "Remove Nested Group",
         "confirmRemove": "Are you sure you want to remove this nested group and all its criteria?"
-      }
+      },
+      "clickToChangeMatchType": "Click to change match type",
+      "removeGroup": "Remove group",
+      "noEventsInGroup": "No events in group. Add events to build criteria logic."
     },
     "customEraStrategy": {
       "customEraStrategyText_1": "Continuous Exposure Persistence:",
@@ -1357,7 +1418,30 @@
       "showTags": "Show tags",
       "tagNameExistsWarning": "Tag <%=tagName%> already exists.",
       "cannotUnassignProtectedTagWarning": "Cannot unassign protected tag: <%=tagName%>",
-      "reassignConfirm": "The maximum number of assigned tags in the tag group \"<%=tagGroup%>\" is <%=maxNumber%>. The tag \"<%=tagName%>\" will be unassigned. Proceed?"
+      "reassignConfirm": "The maximum number of assigned tags in the tag group \"<%=tagGroup%>\" is <%=maxNumber%>. The tag \"<%=tagName%>\" will be unassigned. Proceed?",
+      "tagGroupLabel": "Tag Group *",
+      "tagNameLabel": "Tag Name *",
+      "colorOptional": "Color (optional)",
+      "colorDefaultsHint": "Defaults to group color ({color})",
+      "selectGroupFirst": "Select a tag group first",
+      "showAdvancedOptions": "Show Advanced Options",
+      "iconOptional": "Icon (optional)",
+      "iconHint": "Material Design Icon name (e.g., mdi-star)",
+      "permissionProtected": "Permission Protected",
+      "permissionProtectedHint": "Require special permissions to assign/unassign this tag",
+      "tagNameRequired": "Tag name is required",
+      "tagNameMaxLength": "Tag name must be less than 255 characters",
+      "tagGroupRequired": "Tag group is required",
+      "tagCreatedSuccess": "Tag \"{name}\" created successfully!",
+      "createTagError": "Failed to create tag. Please try again.",
+      "manageTags": "Manage Tags",
+      "searchTagsPlaceholder": "Search tags...",
+      "clearAll": "Clear All",
+      "loadingTags": "Loading tags...",
+      "noTagGroups": "No tag groups found. Please create tag groups in the configuration panel first.",
+      "noTagsMatching": "No tags found matching \"{query}\"",
+      "noTagsInGroup": "No tags in this group yet.",
+      "createNewTag": "Create New Tag"
     },
     "versions": {
       "loading": "Loading versions...",
@@ -1367,7 +1451,9 @@
       "preview": "Preview",
       "viewing": "Viewing now",
       "createACopy": "Create a copy",
-      "current": "Current"
+      "current": "Current",
+      "commentMaxLength": "Comment must be less than 500 characters",
+      "saveCommentError": "Failed to save comment"
     },
     "reusablesModal": {
       "title": "Insert from Reusable",
@@ -1382,6 +1468,513 @@
           "tag": "Tag:"
         }
       }
+    },
+    "auth": {
+      "sessionEyebrow": "SESSION",
+      "sessionWillExpireIn": "Your session will expire in",
+      "extendSessionPrompt": "Would you like to extend your session?",
+      "logout": "Logout",
+      "unknownUser": "Unknown"
+    },
+    "profileTimeline": {
+      "eyebrow": "TIMELINE",
+      "title": "Event timeline",
+      "dayRange": "Day {start} → {end}",
+      "axisDay": "Day (0 = cohort entry)",
+      "cohortEntry": "Cohort entry"
+    },
+    "profileEventsTable": {
+      "eyebrow": "EVENTS"
+    },
+    "profileObservationBand": {
+      "eyebrow": "OBSERVATION",
+      "title": "Observation periods",
+      "empty": "No observation periods recorded"
+    },
+    "highlightsConceptList": {
+      "colorCoral": "Coral",
+      "colorSky": "Sky",
+      "colorMint": "Mint",
+      "colorAmber": "Amber",
+      "colorLavender": "Lavender",
+      "colorRose": "Rose"
+    },
+    "cohortSamples": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "otherNonBinary": "Other / non-binary",
+      "allPersons": "All persons",
+      "title": "Samples",
+      "description": "Random selections of persons drawn from the generated cohort, optionally filtered by age and gender.",
+      "newSample": "New sample",
+      "failedToLoadSamples": "Failed to load samples",
+      "failedToCreateSample": "Failed to create sample"
+    },
+    "cohortSampleDetail": {
+      "personsCreated": "{count} persons · created {date}",
+      "records": "Records",
+      "noRecords": "This sample has no person records."
+    },
+    "cohortSampleCreate": {
+      "eyebrow": "COHORT",
+      "title": "New cohort sample",
+      "numberOfPersons": "Number of persons",
+      "maximum": "Maximum {max}",
+      "genderOptional": "Gender (optional)",
+      "ageOptional": "Age (optional)",
+      "minAge": "Min age",
+      "maxAge": "Max age",
+      "createSample": "Create sample",
+      "ageModeLessThan": "< less than",
+      "ageModeAtMost": "≤ at most",
+      "ageModeEqualTo": "= equal to",
+      "ageModeAtLeast": "≥ at least",
+      "ageModeGreaterThan": "> greater than",
+      "ageModeBetween": "between",
+      "ageModeNotBetween": "not between"
+    },
+    "cohortSamplesList": {
+      "empty": "No samples have been generated for this cohort and source yet.",
+      "persons": "Persons",
+      "refreshSample": "Refresh sample",
+      "deleteSample": "Delete sample"
+    },
+    "profileSidePanel": {
+      "highlights": "Highlights",
+      "showHighlights": "Show highlights",
+      "hideHighlights": "Hide highlights",
+      "accessDenied403": "You don't have access to this person's profile on this data source. Ask your admin to grant READ access to the source.",
+      "failedToLoadProfile": "Failed to load profile."
+    },
+    "characterizationDashboard": {
+      "distributions": "Distributions",
+      "demographicProfile": "Demographic Profile",
+      "ageDistribution": "Age Distribution",
+      "prevalenceComparison": "Prevalence Comparison",
+      "covariateBalance": "Covariate Balance (Std. Mean Difference)",
+      "imbalanceNote": "Covariates with |SMD| > 0.1 (dashed lines) are considered imbalanced",
+      "topCovariates": "Top Covariates by Prevalence",
+      "noVisualizationData": "No data available for visualization.",
+      "smdAxis": "Standardised Mean Difference",
+      "smdShort": "SMD",
+      "cohortIndexed": "Cohort {n}"
+    },
+    "characterizationTable1": {
+      "overall": "Overall",
+      "colHint": "N (%) / Mean (SD)",
+      "n": "N"
+    },
+    "characterizationWorkbench": {
+      "hideDesignPanel": "Hide design panel",
+      "showDesignPanel": "Show design panel",
+      "hideAnalysisDesign": "Hide Analysis Design",
+      "showAnalysisDesign": "Show Analysis Design"
+    },
+    "characterizationResults": {
+      "covariateDetail": "COVARIATE DETAIL",
+      "concept": "Concept",
+      "smdLabel": "Standardised mean difference",
+      "noCovariateSelected": "No covariate selected."
+    },
+    "characterizationDesign": {
+      "detailsEyebrow": "DETAILS"
+    },
+    "inclusionCriteriaPanel": {
+      "ruleIncomplete": "Inclusion rule incomplete.",
+      "livePreviewFailed": "Live preview failed."
+    },
+    "nestedCriteriaRenderer": {
+      "deepNesting": "Deep nesting detected ({depth} levels). Consider simplifying your criteria structure.",
+      "noConceptSet": "No concept set"
+    },
+    "temporalWindowEditor": {
+      "referencePoint": "Reference Point",
+      "startReferencePoint": "Start Reference Point",
+      "endReferencePoint": "End Reference Point"
+    },
+    "conceptSetPicker": {
+      "clearSelection": "Clear selection",
+      "conceptsSuffix": "concepts",
+      "setCountOne": "1 set",
+      "setCountOther": "{count} sets"
+    },
+    "censoringEventsEditor": {
+      "noEventsHint": "No censoring events defined. Cohort membership will not be affected by additional events.",
+      "removeEvent": "Remove event"
+    },
+    "attributesEditor": {
+      "enterTextValue": "Enter text value...",
+      "edit": "Edit",
+      "addDateAdjustment": "Add Date Adjustment",
+      "removeAttribute": "Remove attribute",
+      "pleaseEnterTextValue": "Please enter a text value",
+      "pleaseEnterNumericValue": "Please enter a numeric value",
+      "betweenRequiresBothValues": "BETWEEN operator requires both values",
+      "notConfigured": "Not configured",
+      "bothDatesRequired": "Both start and end dates are required",
+      "endDateAfterStart": "End date must be after start date"
+    },
+    "eventCard": {
+      "concepts": "concepts",
+      "noConceptSet": "No concept set",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "removeEvent": "Remove event",
+      "attributes": "attributes",
+      "attribute": "attribute",
+      "addCardinality": "Add Cardinality",
+      "addTemporalWindow": "Add Temporal Window",
+      "addAttributes": "Add Attributes",
+      "removeCardinality": "Remove cardinality",
+      "temporalWindows": "Temporal Windows",
+      "removeTemporalWindow": "Remove temporal window",
+      "eventIdLabel": "Event ID:",
+      "criteriaTypeLabel": "Criteria Type:",
+      "conceptSetIdLabel": "Concept Set ID:",
+      "restrictVisitNote": "Event must occur in same visit as index",
+      "ignoreObservationNote": "Event can occur outside observation period"
+    },
+    "filterTypeSelector": {
+      "label": "Filter Type",
+      "placeholder": "Select a filter type...",
+      "groupOnly": "Group Only",
+      "noConceptSet": "No Concept Set"
+    },
+    "configurationWarningBanner": {
+      "title": "Configuration Validation Warnings",
+      "description": "Some filter types in the configuration are invalid or misconfigured. These filters will not be available in the UI:",
+      "invalidFilterTypes": "Invalid Filter Types",
+      "contactAdmin": "Contact your administrator to update the configuration file (atlas-config.json)."
+    },
+    "cohortList": {
+      "emptyMatchQueryAndTags": "No cohorts match \"{query}\" with the selected tags.",
+      "emptyMatchQuery": "No cohorts match \"{query}\".",
+      "emptyMatchTags": "No cohorts match the selected tags.",
+      "emptyNoCohorts": "No cohorts yet — create one to start defining a study population."
+    },
+    "cohortReportDrawer": {
+      "backToSamples": "Back to samples",
+      "personTitle": "Person {id}",
+      "profileTitle": "Profile"
+    },
+    "conceptSearch": {
+      "searching": "Searching concepts...",
+      "foundResults": "Found {count} results",
+      "conceptMeta": "ID: {id} | Code: {code} | Domain: {domain}",
+      "enterSearchTerm": "Enter a search term to find concepts"
+    },
+    "cohortBuilder": {
+      "stateRequired": "Required",
+      "stateOptional": "Optional",
+      "eventCountOne": "1 event",
+      "eventCountOther": "{count} events",
+      "ruleCountOne": "1 rule",
+      "ruleCountOther": "{count} rules",
+      "stateCensoringCount": "+{count} censoring",
+      "stateEndOfObservation": "End of observation",
+      "stateNeedsOffset": "Needs offset",
+      "stateOffsetDays": "+{count} days",
+      "stateNeedsDrugSet": "Needs drug set",
+      "stateDrugExposure": "Drug exposure",
+      "stateConfigured": "Configured",
+      "saveToServerError": "Failed to save cohort to server",
+      "saveSuccess": "Cohort saved successfully",
+      "saveError": "Failed to save cohort",
+      "exportFailed": "Export failed: {error}",
+      "exportDownloaded": "Cohort JSON downloaded",
+      "copiedToClipboard": "Cohort JSON copied to clipboard",
+      "copyFailed": "Could not copy to clipboard",
+      "emptyCohort": "Empty cohort"
+    },
+    "conceptDetail": {
+      "closeDetails": "Close concept details",
+      "goBack": "Go back",
+      "addToConceptSet": "Add to Concept Set",
+      "copyId": "Copy ID",
+      "persons": "persons",
+      "descAbbr": "desc.",
+      "conceptDetailsTitle": "Concept Details",
+      "conceptId": "Concept ID",
+      "conceptClass": "Concept Class",
+      "viewFull": "View full",
+      "noHierarchyForConcept": "No hierarchy found for this concept.",
+      "moreDescendants": "{count} more descendants",
+      "noRelatedConcepts": "No related concepts found.",
+      "relationshipsCount": "{count} relationships"
+    },
+    "conceptTable": {
+      "selectAllConcepts": "Select all concepts",
+      "selectConcept": "Select {name}",
+      "noRecords": "No records to display",
+      "itemsPerPage": "Items per page:"
+    },
+    "config": {
+      "cache": {
+        "clearHelp": "Clear cached configuration data to force a refresh from the server. This can help resolve issues with outdated or corrupted data.",
+        "statusLabel": "Cache Status:",
+        "clearDialogTitle": "Clear Cache",
+        "clearConfirm": "Are you sure you want to clear the configuration cache? This action cannot be undone.",
+        "clearError": "Failed to clear cache. Please try again."
+      },
+      "panel": {
+        "closeAria": "Close configuration panel",
+        "tabCache": "Cache",
+        "noAdminAccess": "You don't have access to any administrative settings."
+      },
+      "dataSources": {
+        "loadError": "Failed to load data sources"
+      },
+      "vocabulary": {
+        "help": "Configure the database schema name for vocabulary lookups. This setting controls which PostgreSQL schema is used when querying the OMOP vocabulary tables.",
+        "schemaHint": "PostgreSQL schema name (e.g., 'public', 'vocab_v5')",
+        "updated": "Vocabulary schema updated to \"{value}\"",
+        "updateError": "Failed to update schema. Please try again.",
+        "reverted": "Reverted to \"{value}\"",
+        "undoError": "Failed to undo. Please try again."
+      },
+      "trexsql": {
+        "loadError": "Failed to load data sources",
+        "buildStarted": "Cache build started",
+        "buildStartError": "Failed to start cache build",
+        "buildComplete": "Cache build completed successfully",
+        "buildFailed": "Cache build failed"
+      },
+      "tags": {
+        "colorHexHint": "Hex color code for visual identification",
+        "iconMdiFolderHint": "Material Design Icon name (e.g., mdi-tag, mdi-folder)",
+        "nameTooLong": "Name must be less than 255 characters",
+        "colorOptional": "Color (optional)",
+        "inheritColorHint": "Leave empty to inherit from group",
+        "iconOptional": "Icon (optional)",
+        "iconInheritHint": "Material Design Icon name or leave empty to inherit from group",
+        "permissionProtected": "Permission Protected",
+        "permissionProtectedHint": "Require special permissions to assign/unassign this tag",
+        "tagColumn": "Tag",
+        "usageColumn": "Usage",
+        "editTagAria": "Edit tag",
+        "deleteTagAria": "Delete tag",
+        "noTagsInGroup": "No tags in this group",
+        "createFirstTag": "Create your first tag to get started",
+        "requiredChip": "Required",
+        "columnChip": "Column",
+        "showTagsButton": "Show Tags",
+        "editGroupAria": "Edit tag group",
+        "deleteGroupAria": "Delete tag group",
+        "createFirstGroup": "Create your first tag group to get started",
+        "sectionHelp": "Manage tag groups for organizing and categorizing cohorts and concept sets. Tag groups allow you to apply structured metadata to your assets.",
+        "tagsInGroupTitle": "Tags in \"{name}\"",
+        "backToGroups": "Back to Tag Groups",
+        "enableFreeFormTooltip": "Enable 'Free-form' on this tag group to allow custom tags.",
+        "noCustomTagsPrefix": "This tag group does not allow custom tags. Edit the group and enable",
+        "noCustomTagsSuffix": "to add tags here.",
+        "deleteGroupConfirm": "Are you sure you want to delete \"{name}\"?",
+        "deleteTagTitle": "Delete Tag",
+        "deleteTagConfirm": "Are you sure you want to delete \"{name}\"? This will unassign the tag from all assets.",
+        "loadGroupsError": "Failed to load tag groups",
+        "groupUpdated": "Tag group \"{name}\" updated",
+        "groupCreated": "Tag group \"{name}\" created",
+        "saveGroupError": "Failed to save tag group",
+        "groupNotEmpty": "Cannot delete tag group: the group contains tags",
+        "groupDeleted": "Tag group \"{name}\" deleted",
+        "tagUpdated": "Tag \"{name}\" updated",
+        "tagCreated": "Tag \"{name}\" created",
+        "saveTagError": "Failed to save tag",
+        "tagDeleted": "Tag \"{name}\" deleted",
+        "deleteTagError": "Failed to delete tag"
+      },
+      "permissions": {
+        "editRole": "Edit Role",
+        "createNewRole": "Create New Role",
+        "roleNameRequiredLabel": "Role Name *",
+        "roleNameRequired": "Role name is required",
+        "roleNameEmpty": "Role name cannot be empty",
+        "roleNameTooLong": "Role name must be less than 255 characters",
+        "roleNameExists": "A role with this name already exists",
+        "updateRoleError": "Failed to update role. Please try again.",
+        "createRoleError": "Failed to create role. Please try again.",
+        "unexpectedError": "An unexpected error occurred",
+        "deleteRoleTitle": "Delete Role?",
+        "roleAssignedTo": "This role is assigned to",
+        "usersWord": "users",
+        "userWord": "user",
+        "deleteRemovesFromUsers": "Deleting this role will remove it from all assigned users.",
+        "confirmDeleteRolePrefix": "Are you sure you want to delete the role",
+        "cannotBeUndone": "This action cannot be undone.",
+        "deleteRoleButton": "Delete Role",
+        "deleteRoleError": "Failed to delete role. Please try again.",
+        "searchRoles": "Search roles...",
+        "newRole": "New Role",
+        "noRolesFound": "No roles found. Create your first role to get started.",
+        "noDescription": "No description",
+        "backToRoles": "Back to Roles",
+        "editRoleAria": "Edit role",
+        "deleteRoleAria": "Delete role",
+        "roleName": "Role Name",
+        "editRoleNameAria": "Edit Role Name",
+        "noDescriptionProvided": "No description provided",
+        "editDescriptionAria": "Edit Description",
+        "updateRoleNameError": "Failed to update role name. Please try again.",
+        "updateDescriptionError": "Failed to update description. Please try again.",
+        "noRolesFoundTitle": "No roles found",
+        "createFirstRoleHint": "Create your first role to get started with role-based access control.",
+        "createFirstRole": "Create First Role",
+        "rolesFilteredCount": "{count} of {total} roles",
+        "rolesTotal": "{count} roles total",
+        "roleTotal": "{count} role total",
+        "searchPermissions": "Search permissions...",
+        "changesCount": "{count} changes",
+        "changeCount": "{count} change",
+        "saveChanges": "Save Changes",
+        "loadingPermissions": "Loading permissions...",
+        "ofWord": "of",
+        "permissionsAssigned": "permissions assigned",
+        "filteredFromTotal": "(filtered from {total} total)",
+        "allCategories": "All Categories",
+        "permissionColumn": "Permission",
+        "categoryColumn": "Category",
+        "permissionsUpdated": "Successfully updated {count} permissions",
+        "permissionUpdated": "Successfully updated {count} permission",
+        "savePermissionsError": "Failed to save permission changes",
+        "searchUsers": "Search users by login or email...",
+        "loadingUsers": "Loading users...",
+        "usersAssigned": "users assigned",
+        "emailColumn": "Email",
+        "userAssignmentsUpdated": "Successfully updated {count} user assignments",
+        "userAssignmentUpdated": "Successfully updated {count} user assignment",
+        "saveUsersError": "Failed to save user assignments",
+        "utilitiesIntro": "Import and export role configurations for backup, deployment, or sharing across environments.",
+        "exportRole": "Export Role",
+        "exportRoleDescription": "Download this role's configuration as a JSON file, including all permissions and user assignments.",
+        "exportCompatNote": "The exported file will be compatible with Atlas 2.x and can be imported into any Atlas instance.",
+        "exportRoleAsJson": "Export Role as JSON",
+        "importRole": "Import Role",
+        "importRoleDescription": "Import a role configuration from a JSON file. This will create a new role with the specified permissions and users.",
+        "noteLabel": "Note:",
+        "importRoleNote": "Importing a role will create a new role. If a role with the same name exists, you will be prompted to rename it.",
+        "importRoleFromJson": "Import Role from JSON",
+        "exportRoleError": "Failed to export role",
+        "roleExported": "Role \"{name}\" exported successfully",
+        "roleImported": "Role \"{name}\" imported successfully",
+        "importSelectFileHelp": "Select a JSON file to import a role configuration. The file should be in Atlas 2.x compatible format.",
+        "selectJsonFile": "Select JSON file",
+        "roleNameConflict": "Role Name Conflict",
+        "roleWithNamePrefix": "A role with the name",
+        "alreadyExistsSuffix": "already exists.",
+        "howToProceed": "How would you like to proceed?",
+        "conflictSkip": "Skip - Cancel the import",
+        "conflictRename": "Rename - Import with a new name",
+        "newRoleName": "New Role Name",
+        "newRoleNameHint": "Enter a unique name for the imported role",
+        "validatingImport": "Validating import data...",
+        "readyToImport": "Ready to Import",
+        "importPreviewIntro": "The following role configuration will be imported:",
+        "roleNameLabel": "Role Name:",
+        "descriptionLabel": "Description:",
+        "permissionsLabel": "Permissions:",
+        "usersLabel": "Users:",
+        "warningsLabel": "Warnings:",
+        "next": "Next",
+        "continue": "Continue",
+        "selectJsonFileError": "Please select a JSON file",
+        "readFileError": "Failed to read file",
+        "invalidImportFormat": "Invalid role import format: missing role name",
+        "warnNoPermissions": "Role has no permissions assigned",
+        "warnNoUsers": "Role has no users assigned",
+        "invalidJsonFormat": "Invalid JSON format. Please check the file and try again.",
+        "validateImportError": "Failed to validate import data",
+        "updateRoleNameFailed": "Failed to update role name",
+        "importRoleRetry": "Failed to import role. Please try again.",
+        "importRoleError": "Failed to import role"
+      }
+    },
+    "domainPrevalenceTable": {
+      "largeDatasetHint": "Large dataset detected ({count} entries). Displaying top 1,000 entries by prevalence for performance — use search or export CSV for the full dataset.",
+      "prevalencePercent": "Prevalence (%)",
+      "noEntriesFound": "No entries found",
+      "showingAllEntries": "Showing all {count} entries",
+      "showingRange": "Showing {start} to {end} of {total} entries"
+    },
+    "domainPrevalenceTreemap": {
+      "clickAction": "Click",
+      "clickHint": "on any area to view detailed analytics",
+      "noHierarchyNote": "Hierarchical grouping not available for this data source",
+      "groupByHierarchy": "Group by hierarchy"
+    },
+    "incidenceRate": {
+      "importInputAria": "Import incidence rate design",
+      "removeCohort": "Remove cohort",
+      "selectCohorts": "Select cohorts",
+      "outcomeOverview": "Outcome Overview",
+      "outcomeOverviewNote": "Click a row to inspect. Each outcome excludes persons who already had the event at index.",
+      "personsAtRisk": "Persons at risk",
+      "personsAtRiskTooltip": "Persons at risk in the target cohort during the time-at-risk window",
+      "outcomeCases": "Outcome cases",
+      "outcomeCasesTooltip": "Persons who had the outcome during follow-up ({proportion})",
+      "personYearsTooltip": "Total person-time observed across all persons, measured in person-years",
+      "personYearsAtRisk": "Person-years at risk",
+      "incidenceRateTooltip": "Incidence rate: {cases} cases per {years} person-years, scaled by {multiplier}",
+      "incidenceRatePerPy": "Incidence rate per {multiplier} PY",
+      "notComparable": "Not comparable across outcomes",
+      "percentProportion": "{value}% proportion",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "removeRule": "Remove rule",
+      "stratifiedIncidence": "Stratified Incidence",
+      "lowerRate": "Lower rate",
+      "higherRate": "Higher rate",
+      "treemapLegendHint": "(color = incidence rate per person-year; area = persons at risk)",
+      "hideDesignPanel": "Hide design panel",
+      "showDesignPanel": "Show design panel",
+      "hideAnalysisDesign": "Hide Analysis Design",
+      "showAnalysisDesign": "Show Analysis Design",
+      "noCasesFound": "No cases found for this target/outcome combination. Try selecting a different outcome."
+    },
+    "pathwayCohortList": {
+      "removeCohort": "Remove cohort"
+    },
+    "pathwayCohortPicker": {
+      "selectCohorts": "Select cohorts"
+    },
+    "pathwayWorkbench": {
+      "hideDesignPanel": "Hide design panel",
+      "showDesignPanel": "Show design panel",
+      "hideAnalysisDesign": "Hide Analysis Design",
+      "showAnalysisDesign": "Show Analysis Design"
+    },
+    "pathwayBuilder": {
+      "importPathwayDesign": "Import pathway design",
+      "versionHistory": "Version history"
+    },
+    "pathwayPathDetails": {
+      "event": "Event"
+    },
+    "drilldownDetails": {
+      "prevalenceByGenderAgeYear": "Prevalence by Gender, Age, and Year",
+      "lengthOfEra": "Length of Era",
+      "distributionByType": "Distribution by Type",
+      "distributionByUnit": "Distribution by Unit",
+      "distributionByValue": "Distribution by Value",
+      "distributionByOperator": "Distribution by Operator",
+      "distributionByQualifier": "Distribution by Qualifier",
+      "noDetailedData": "No detailed data available for this concept."
+    },
+    "tableExport": {
+      "copiedRows": "Copied {count} rows to clipboard",
+      "copyFailed": "Failed to copy data to clipboard",
+      "exportedRows": "Exported {count} rows to {filename}.csv",
+      "exportFailed": "Failed to export CSV file"
+    },
+    "notifications": {
+      "bellAriaLabel": "Notifications ({count} unread)",
+      "heading": "Notifications",
+      "markAllRead": "Mark all read",
+      "clear": "Clear",
+      "allCaughtUp": "You're all caught up.",
+      "remove": "Remove"
+    },
+    "navBar": {
+      "mainNavigation": "Main"
     }
   },
   "characterizations": {
@@ -3430,6 +4023,7 @@
       "inclusionReportFor1": " ",
       "tabs": {
         "byEvents": "By Events",
+        "byEvent": "By Event",
         "byPerson": "By Person"
       }
     },
@@ -5311,5 +5905,50 @@
   },
   "incidenceRateAnalysis": {
     "newAnalysis": "New incidence rate"
+  },
+  "views": {
+    "cohorts": {
+      "eyebrowMain": "OHDSI · Cohorts",
+      "eyebrowImport": "IMPORT",
+      "eyebrowConfirm": "CONFIRM",
+      "eyebrowNew": "NEW",
+      "eyebrowCohort": "COHORT",
+      "countSingular": "1 cohort",
+      "countPlural": "{count} cohorts"
+    },
+    "characterizationBuilder": {
+      "importInputAria": "Import characterization design"
+    },
+    "featureAnalysisEditor": {
+      "deleteEyebrow": "CONFIRM"
+    },
+    "dataSources": {
+      "reportNotImplemented": "Report type \"{type}\" is not yet implemented.",
+      "noSources": "No data sources available.",
+      "selectSourceHint": "Select a data source to view its reports."
+    },
+    "profile": {
+      "eyebrow": "PROFILE"
+    },
+    "incidenceRates": {
+      "copied": "Incidence rate copied",
+      "copyFailed": "Copy failed",
+      "deleted": "Incidence rate deleted",
+      "deleteFailed": "Delete failed"
+    },
+    "pathways": {
+      "copied": "Pathway copied",
+      "copyFailed": "Copy failed",
+      "deleted": "Pathway deleted",
+      "deleteFailed": "Delete failed"
+    },
+    "roleDetails": {
+      "roleNotFound": "Role not found",
+      "backToRoles": "Back to Roles"
+    },
+    "roleManagement": {
+      "title": "Role & Permissions Management",
+      "subtitle": "Manage user roles, assign permissions, and control access to system features."
+    }
   }
 }

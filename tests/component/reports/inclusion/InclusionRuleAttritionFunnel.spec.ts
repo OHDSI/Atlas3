@@ -3,12 +3,13 @@ import { mount } from '@vue/test-utils'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { createPinia } from 'pinia'
 import InclusionRuleAttritionFunnel from '@/components/reports/inclusion/InclusionRuleAttritionFunnel.vue'
 import type { InclusionRuleReport } from '@/models/report.types'
 
 const vuetify = createVuetify({ components, directives })
 const global = {
-  plugins: [vuetify],
+  plugins: [vuetify, createPinia()],
   stubs: {
     VChart: {
       props: ['option', 'autoresize'],

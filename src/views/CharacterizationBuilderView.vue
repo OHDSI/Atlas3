@@ -52,7 +52,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Concept sets' }"
+                v-bind="{ ...tipProps, ariaLabel: t('cc.fa.tabs.conceptSets', 'Concept sets').value }"
                 icon="mdi-shape"
                 variant="text"
                 size="sm"
@@ -76,7 +76,7 @@
               >
                 <AtlasIconButton
                   icon="mdi-message-text"
-                  v-bind="{ ariaLabel: 'Validation messages' }"
+                  v-bind="{ ariaLabel: t('cc.viewEdit.tabs.messages', 'Validation messages').value }"
                   variant="text"
                   size="sm"
                   data-testid="char-builder-validation-icon"
@@ -91,7 +91,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Versions' }"
+                v-bind="{ ...tipProps, ariaLabel: t('cc.viewEdit.tabs.versions', 'Versions').value }"
                 icon="mdi-history"
                 variant="text"
                 size="sm"
@@ -120,7 +120,7 @@
           >
             <template #activator="{ props: tipProps }">
               <AtlasIconButton
-                v-bind="{ ...tipProps, ariaLabel: 'Import design' }"
+                v-bind="{ ...tipProps, ariaLabel: t('common.import', 'Import design').value }"
                 icon="mdi-upload"
                 variant="text"
                 size="sm"
@@ -151,7 +151,7 @@
             ref="importFileInput"
             type="file"
             accept="application/json,.json"
-            aria-label="Import characterization design"
+            :aria-label="t('views.characterizationBuilder.importInputAria', 'Import characterization design').value"
             style="display: none"
             data-testid="char-builder-import-input"
             @change="handleImportFileChange"

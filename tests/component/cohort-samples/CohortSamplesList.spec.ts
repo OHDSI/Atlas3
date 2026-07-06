@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
@@ -30,7 +31,7 @@ const samples: CohortSample[] = [
 describe('CohortSamplesList', () => {
   it('renders the empty state when no samples are passed', () => {
     const wrapper = mount(CohortSamplesList, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, createPinia()] },
       props: { samples: [] },
     })
     expect(wrapper.find('[data-testid=cohort-samples-list-empty]').exists()).toBe(true)
@@ -39,7 +40,7 @@ describe('CohortSamplesList', () => {
 
   it('renders one row per sample with formatted criteria', () => {
     const wrapper = mount(CohortSamplesList, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, createPinia()] },
       props: { samples },
     })
     const rows = wrapper.findAll('[data-testid=cohort-samples-list-row]')
@@ -53,7 +54,7 @@ describe('CohortSamplesList', () => {
 
   it('emits select / refresh / delete with the right payload', async () => {
     const wrapper = mount(CohortSamplesList, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, createPinia()] },
       props: { samples },
     })
 
@@ -79,7 +80,7 @@ describe('CohortSamplesList', () => {
       { id: 8, name: 'female', size: 1, createdDate: 1737000000000, gender: { conceptIds: [8532], otherNonBinary: false } },
     ]
     const wrapper = mount(CohortSamplesList, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, createPinia()] },
       props: { samples: all },
     })
     const text = wrapper.text()
@@ -95,7 +96,7 @@ describe('CohortSamplesList', () => {
 
   it('renders an em-dash for missing createdBy / createdDate', () => {
     const wrapper = mount(CohortSamplesList, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, createPinia()] },
       props: {
         samples: [{ id: 1, name: 's', size: 1 }],
       },

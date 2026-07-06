@@ -2,7 +2,11 @@
   <AtlasDialog
     :model-value="modelValue"
     eyebrow="Tag"
-    :title="`${isEditMode ? 'Edit' : 'Create'} Tag`"
+    :title="
+      isEditMode
+        ? t('configuration.tagManagement.editTag', 'Edit Tag').value
+        : t('configuration.tagManagement.createTag', 'Create Tag').value
+    "
     max-width="600"
     persistent
     :show-close="false"
@@ -15,7 +19,7 @@
     >
       <AtlasTextField
         v-model="form.name"
-        label="Name"
+        :label="tv('config.tags.dialog.fields.name.label', 'Name')"
         :rules="nameRules"
         :error="errors.name"
         variant="outlined"
@@ -25,9 +29,9 @@
 
       <AtlasTextField
         v-model="form.color"
-        label="Color (optional)"
+        :label="tv('components.config.tags.colorOptional', 'Color (optional)')"
         type="color"
-        hint="Leave empty to inherit from group"
+        :hint="tv('components.config.tags.inheritColorHint', 'Leave empty to inherit from group')"
         persistent-hint
         :error="errors.color"
         variant="outlined"
@@ -44,8 +48,8 @@
 
       <AtlasTextField
         v-model="form.icon"
-        label="Icon (optional)"
-        hint="Material Design Icon name or leave empty to inherit from group"
+        :label="tv('components.config.tags.iconOptional', 'Icon (optional)')"
+        :hint="tv('components.config.tags.iconInheritHint', 'Material Design Icon name or leave empty to inherit from group')"
         persistent-hint
         :error="errors.icon"
         variant="outlined"
@@ -54,14 +58,14 @@
 
       <AtlasCheckbox
         v-model="form.permissionProtected"
-        label="Permission Protected"
-        hint="Require special permissions to assign/unassign this tag"
+        :label="tv('components.config.tags.permissionProtected', 'Permission Protected')"
+        :hint="tv('components.config.tags.permissionProtectedHint', 'Require special permissions to assign/unassign this tag')"
         persistent-hint
       />
 
       <AtlasTextField
         v-model="form.description"
-        label="Description"
+        :label="tv('config.tags.dialog.fields.description.label', 'Description')"
         :rows="3"
         multiline
         :error="errors.description"
@@ -75,14 +79,18 @@
         variant="ghost"
         @click="handleClose"
       >
-        Cancel
+        {{ t('config.tags.dialog.actions.cancel', 'Cancel').value }}
       </AtlasButton>
       <AtlasButton
         :disabled="!formValid"
         :loading="saving"
         @click="handleSubmit"
       >
-        {{ isEditMode ? 'Save' : 'Create' }}
+        {{
+          isEditMode
+            ? t('config.tags.dialog.actions.save', 'Save').value
+            : t('config.tags.dialog.actions.create', 'Create').value
+        }}
       </AtlasButton>
     </template>
   </AtlasDialog>
@@ -90,8 +98,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { tagSchema, type Tag, type TagGroup } from '@/models/config.types'
 import { AtlasButton, AtlasCheckbox, AtlasDialog, AtlasTextField } from '@/components/ui'
+
+const { t, tv } = useI18n()
 
 interface Props {
   modelValue: boolean
@@ -123,8 +134,10 @@ const isEditMode = computed(() => !!props.tag?.id)
 
 
 const nameRules = [
-  (v: string) => !!v || 'Name is required',
-  (v: string) => v?.length <= 255 || 'Name must be less than 255 characters',
+  (v: string) => !!v || tv('config.tags.dialog.fields.name.required', 'Name is required'),
+  (v: string) =>
+    v?.length <= 255 ||
+    tv('components.config.tags.nameTooLong', 'Name must be less than 255 characters'),
 ]
 
 // Watch for tag changes to populate form

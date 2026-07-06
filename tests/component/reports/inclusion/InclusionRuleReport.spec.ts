@@ -44,6 +44,20 @@ describe('InclusionRuleReport', () => {
     expect(wrapper.find('[data-testid=inclusion-summary-final-count]').exists()).toBe(false)
   })
 
+  it('renders the error state (not the empty state) when the fetch fails', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('HTTP 500'))
+
+    const wrapper = mount(InclusionRuleReport, {
+      global,
+      props: { cohortId: 1, sourceKey: 'EUNOMIA' },
+    })
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid=inclusion-rule-report-error]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid=inclusion-rule-report-empty]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('HTTP 500')
+  })
+
   it('renders summary, attrition table and treemap when data arrives', async () => {
     fetchMock.mockResolvedValueOnce(fullReport)
 
@@ -130,7 +144,7 @@ describe('InclusionRuleReport', () => {
 
     const alert = wrapper.find('[data-testid=inclusion-rule-report-error]')
     expect(alert.exists()).toBe(true)
-    expect(alert.text()).toContain('Failed to load report')
+    expect(alert.text()).toContain('Failed to load the inclusion-rule report.')
   })
 
   it('echoes the percent string back when it is a non-numeric value', async () => {

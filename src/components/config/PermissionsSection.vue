@@ -9,7 +9,7 @@
       <div class="permissions-section__header">
         <AtlasTextField
           v-model="searchQuery"
-          placeholder="Search roles..."
+          :placeholder="tv('components.config.permissions.searchRoles', 'Search roles...')"
           prepend-icon="mdi-magnify"
           variant="outlined"
           hide-details
@@ -20,7 +20,7 @@
           icon="mdi-plus"
           @click="showCreateDialog = true"
         >
-          New Role
+          {{ t('components.config.permissions.newRole', 'New Role').value }}
         </AtlasButton>
       </div>
 
@@ -54,7 +54,12 @@
           mdi-shield-account-outline
         </AtlasIcon>
         <p class="text-body-2 text-medium-emphasis mt-4">
-          No roles found. Create your first role to get started.
+          {{
+            t(
+              'components.config.permissions.noRolesFound',
+              'No roles found. Create your first role to get started.'
+            ).value
+          }}
         </p>
       </div>
 
@@ -67,7 +72,7 @@
           v-for="role in filteredRoles"
           :key="role.id"
           :title="role.name"
-          :subtitle="role.description || 'No description'"
+          :subtitle="role.description || tv('components.config.permissions.noDescription', 'No description')"
           @click="selectRole(role.id)"
         >
           <template #prepend>
@@ -96,7 +101,7 @@
         class="mb-4"
         @click="selectedRoleId = null"
       >
-        Back to Roles
+        {{ t('components.config.permissions.backToRoles', 'Back to Roles').value }}
       </AtlasButton>
 
       <!-- Role Header -->
@@ -106,20 +111,20 @@
             {{ currentRole?.name }}
           </h3>
           <p class="text-body-2 text-medium-emphasis">
-            {{ currentRole?.description || 'No description' }}
+            {{ currentRole?.description || t('components.config.permissions.noDescription', 'No description').value }}
           </p>
         </div>
         <div class="permissions-section__role-actions">
           <AtlasIconButton
             icon="mdi-pencil"
-            v-bind="{ ariaLabel: 'Edit role' }"
+            v-bind="{ ariaLabel: tv('components.config.permissions.editRoleAria', 'Edit role') }"
             variant="text"
             size="sm"
             @click="handleEditRole"
           />
           <AtlasIconButton
             icon="mdi-delete"
-            v-bind="{ ariaLabel: 'Delete role' }"
+            v-bind="{ ariaLabel: tv('components.config.permissions.deleteRoleAria', 'Delete role') }"
             variant="text"
             size="sm"
             tone="danger"
@@ -134,10 +139,10 @@
         class="mt-4 permissions-section__details-tabs"
       >
         <AtlasTab value="users">
-          Users
+          {{ t('configuration.roles.tabs.users', 'Users').value }}
         </AtlasTab>
         <AtlasTab value="permissions">
-          Permissions
+          {{ t('configuration.roles.tabs.permissions', 'Permissions').value }}
         </AtlasTab>
       </AtlasTabs>
 
@@ -173,6 +178,7 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasProgressLinear, AtlasTab, AtlasTabs, AtlasTextField } from '@/components/ui'
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
 import { useAuth } from '@/composables/useAuth'
 import type { Role } from '@/models/role.types'
@@ -181,6 +187,7 @@ import RoleUsersTab from '@/components/config/permissions/RoleUsersTab.vue'
 import RoleCreateDialog from '@/components/config/permissions/RoleCreateDialog.vue'
 import RoleDeleteDialog from '@/components/config/permissions/RoleDeleteDialog.vue'
 
+const { t, tv } = useI18n()
 const { roles, currentRole, isLoadingRoles, rolesError, fetchRoles, fetchRoleById } = useRoles()
 
 const auth = useAuth()

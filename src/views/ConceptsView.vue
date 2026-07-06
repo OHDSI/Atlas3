@@ -2,7 +2,7 @@
   <AtlasPageShell
     hero
     compact
-    eyebrow="OHDSI · Vocabulary"
+    :eyebrow="`OHDSI · ${t('facets.caption.vocabulary', 'Vocabulary').value}`"
     :title="pageTitle"
     :subtitle="pageSubtitle"
   >

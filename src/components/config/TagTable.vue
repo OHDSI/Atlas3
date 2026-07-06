@@ -35,7 +35,7 @@
         size="sm"
         tone="warning"
       >
-        Protected
+        {{ t('configuration.tagManagement.protected', 'Protected').value }}
       </AtlasChip>
       <span
         v-else
@@ -89,14 +89,14 @@
     <template #item.actions="{ item }">
       <AtlasIconButton
         icon="mdi-pencil"
-        v-bind="{ ariaLabel: 'Edit tag' }"
+        v-bind="{ ariaLabel: tv('components.config.tags.editTagAria', 'Edit tag') }"
         variant="text"
         size="sm"
         @click="$emit('edit', item)"
       />
       <AtlasIconButton
         icon="mdi-delete"
-        v-bind="{ ariaLabel: 'Delete tag' }"
+        v-bind="{ ariaLabel: tv('components.config.tags.deleteTagAria', 'Delete tag') }"
         variant="text"
         tone="danger"
         size="sm"
@@ -114,10 +114,10 @@
           mdi-tag-off-outline
         </AtlasIcon>
         <p class="text-h6 mt-2">
-          No tags in this group
+          {{ t('components.config.tags.noTagsInGroup', 'No tags in this group').value }}
         </p>
         <p class="text-body-2 text-grey">
-          Create your first tag to get started
+          {{ t('components.config.tags.createFirstTag', 'Create your first tag to get started').value }}
         </p>
       </div>
     </template>
@@ -126,7 +126,10 @@
 
 <script setup lang="ts">
 import { AtlasChip, AtlasDataTable, AtlasIcon, AtlasIconButton } from '@/components/ui'
+import { useI18n } from '@/composables/useI18n'
 import type { Tag } from '@/models/config.types'
+
+const { t, tv } = useI18n()
 
 interface Props {
   items: Tag[]
@@ -141,13 +144,13 @@ defineEmits<{
 }>()
 
 const headers = [
-  { title: 'Tag', key: 'name', sortable: true, width: '200px' },
-  { title: 'Protected', key: 'permissionProtected', sortable: true, width: '100px' },
-  { title: 'Created', key: 'createdDate', sortable: true, width: '120px' },
-  { title: 'Author', key: 'createdBy', sortable: true, width: '120px' },
-  { title: 'Description', key: 'description', sortable: false, width: '250px' },
-  { title: 'Usage', key: 'count', sortable: true, width: '80px' },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
+  { title: tv('components.config.tags.tagColumn', 'Tag'), key: 'name', sortable: true, width: '200px' },
+  { title: tv('configuration.tagManagement.protected', 'Protected'), key: 'permissionProtected', sortable: true, width: '100px' },
+  { title: tv('config.tags.table.headers.created', 'Created'), key: 'createdDate', sortable: true, width: '120px' },
+  { title: tv('columns.author', 'Author'), key: 'createdBy', sortable: true, width: '120px' },
+  { title: tv('config.tags.table.headers.description', 'Description'), key: 'description', sortable: false, width: '250px' },
+  { title: tv('components.config.tags.usageColumn', 'Usage'), key: 'count', sortable: true, width: '80px' },
+  { title: tv('columns.actions', 'Actions'), key: 'actions', sortable: false, align: 'end' as const, width: '100px' },
 ]
 
 /**

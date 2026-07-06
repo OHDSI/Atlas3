@@ -18,7 +18,7 @@
           <v-checkbox-btn
             :model-value="allVisibleSelected"
             :indeterminate="someVisibleSelected && !allVisibleSelected"
-            aria-label="Select all concepts"
+            :aria-label="t('components.conceptTable.selectAllConcepts', 'Select all concepts').value"
             density="compact"
             hide-details
             @update:model-value="onToggleSelectAll"
@@ -33,7 +33,7 @@
         <div :data-testid="`concept-table-row-checkbox-${item.conceptId}`">
           <v-checkbox-btn
             :model-value="isSelected(item.conceptId)"
-            :aria-label="`Select ${item.conceptName}`"
+            :aria-label="tv('components.conceptTable.selectConcept', 'Select {name}', { name: item.conceptName })"
             density="compact"
             hide-details
             @update:model-value="(v: boolean | null) => onToggleRow(item.conceptId, v)"
@@ -160,7 +160,7 @@
             icon="mdi-plus"
             @click="onAddConcept(item)"
           >
-            Add
+            {{ t('common.add', 'Add').value }}
           </AtlasButton>
           <AtlasButton
             v-else
@@ -170,7 +170,7 @@
             icon="mdi-minus"
             @click="onRemoveConcept(item)"
           >
-            Remove
+            {{ t('columns.remove', 'Remove').value }}
           </AtlasButton>
         </div>
       </template>
@@ -185,7 +185,7 @@
             mdi-database-search
           </AtlasIcon>
           <p class="text-body-1 mt-4 text-grey">
-            {{ loading ? 'Loading...' : 'No records to display' }}
+            {{ loading ? t('common.loadingWithDots', 'Loading...').value : t('components.conceptTable.noRecords', 'No records to display').value }}
           </p>
         </div>
       </template>
@@ -208,7 +208,7 @@
       </div>
 
       <div class="d-flex align-center gap-2">
-        <span class="text-body-2">Items per page:</span>
+        <span class="text-body-2">{{ t('components.conceptTable.itemsPerPage', 'Items per page:').value }}</span>
         <AtlasSelect
           :model-value="itemsPerPage"
           :items="[60, 120, 240]"
@@ -238,7 +238,7 @@ import { useConceptDetailDrawerStore } from '@/stores/concept-detail-drawer'
 import { getSourceKey as getDefaultSourceKey } from '@/config/webapi'
 import type { Concept } from '@/models/concept-set.types'
 
-const { t } = useI18n()
+const { t, tv } = useI18n()
 const webapiStore = useWebAPIStore()
 const conceptDrawer = useConceptDetailDrawerStore()
 const instance = getCurrentInstance()

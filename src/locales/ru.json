@@ -120,9 +120,10 @@
     "addTools": "Добавить инструмент",
     "url": "URL-адрес",
     "apply": "Применять",
-    "tools": "Инструменты"
+    "tools": "Инструменты",
+    "confirm": "Подтвердить"
   },
-  "tool":{
+  "tool": {
     "name": "* Имя",
     "url": "* URL",
     "nameValidMess": "Имя инструмента не может быть пустым.",
@@ -147,7 +148,7 @@
     "home": "Начало",
     "datasources": "Источники данных",
     "search": "Поиск",
-    "conceptsets": "Наборы концепций",
+    "conceptsets": "Концепты",
     "cohortdefinitions": "Когорты",
     "characterizations": "Характеризации",
     "pathways": "Исходы когорты",
@@ -232,6 +233,41 @@
     }
   },
   "components": {
+    "inclusionRuleReport": {
+      "matchRate": "Доля совпадений",
+      "matches": "Совпадения",
+      "lost": "Потеряно",
+      "totalEvents": "Всего событий",
+      "attritionFunnel": "Воронка отсева",
+      "perRuleSatisfaction": "Выполнение по правилам",
+      "populationBreakdown": "Разбивка популяции",
+      "noReportData": "Для этой когорты и источника нет данных отчёта по правилам включения. Возможно, у когорты нет правил включения или отчёт ещё не сформирован. Если он уже сформирован, попробуйте выполнить его повторно.",
+      "loadError": "Не удалось загрузить отчёт по правилам включения",
+      "attrition": "Отсев",
+      "noAttritionData": "Нет данных об отсеве",
+      "initial": "Начально",
+      "final": "Итог",
+      "saveAsPng": "Сохранить как PNG",
+      "colCumulativeRemaining": "Накопленный остаток",
+      "colPercentOfInitial": "% от начального",
+      "colPersonsSatisfying": "Удовлетворяющих лиц",
+      "colPercentSatisfying": "% удовлетворяющих",
+      "colPercentExcluded": "% исключённых",
+      "noRulesToReport": "У этой когорты нет правил включения для отчёта.",
+      "hintCumulativeRemaining": "Пациенты, оставшиеся после применения этого правила и всех предыдущих правил по порядку",
+      "hintPercentOfInitial": "Накопленный остаток в процентах от исходного числа событий входа — та же метрика, что и в воронке",
+      "hintPersonsSatisfying": "Пациенты, удовлетворяющие ЭТОМУ правилу отдельно, независимо от других правил",
+      "hintPercentSatisfying": "Доля популяции событий входа, удовлетворяющая этому правилу самостоятельно (независимо от порядка)",
+      "hintPercentExcluded": "Предельная «стоимость» этого правила: доля пациентов, удовлетворяющих всем ДРУГИМ правилам, но не этому. Высокое значение — удаление правила вернёт эту долю.",
+      "downloadCsv": "Скачать CSV",
+      "noAttritionHint": "Сформируйте когорту с правилами включения, чтобы увидеть отсев",
+      "patients": "пациентов",
+      "retained": "сохранено",
+      "rulesSatisfiedHigh": "≥ 80% правил выполнено",
+      "rulesSatisfiedLow": "< 40% правил выполнено",
+      "tooltipRemaining": "Осталось",
+      "tooltipExcludedAtStep": "Исключено на этом шаге"
+    },
     "analysisExecution": {
       "title": "Исследования",
       "buttons": {
@@ -825,7 +861,10 @@
       "addAdditionalConstraint": "добавить дополнительное ограничение",
       "criteriaGroupText_1": "ограничить одно и то же посещение",
       "criteriaGroupText_2": "разрешить события за пределами периода наблюдения",
-      "occurringWithinTheSameVisit": "встречаемое в пределах того же посещения"
+      "occurringWithinTheSameVisit": "встречаемое в пределах того же посещения",
+      "clickToChangeMatchType": "Нажмите, чтобы изменить тип соответствия",
+      "removeGroup": "Удалить группу",
+      "noEventsInGroup": "В группе нет событий. Добавьте события для построения логики критериев."
     },
     "customEraStrategy": {
       "customEraStrategyText_1": "Непрерывная выдержка:",
@@ -1214,7 +1253,30 @@
       "showTags": "Показать теги",
       "tagNameExistsWarning": "Тег <%=tagName%> уже существует.",
       "cannotUnassignProtectedTagWarning": "Невозможно отменить назначение защищенного тега: <%=tagName%>",
-      "reassignConfirm": "Превышено максимальное количество назначенных тегов в группе \"<%=tagGroup%>\": не более <%=maxNumber%>. Тег \"<%=tagName%>\" будет снят. Продолжить?"
+      "reassignConfirm": "Превышено максимальное количество назначенных тегов в группе \"<%=tagGroup%>\": не более <%=maxNumber%>. Тег \"<%=tagName%>\" будет снят. Продолжить?",
+      "tagGroupLabel": "Группа тегов *",
+      "tagNameLabel": "Имя тега *",
+      "colorOptional": "Цвет (необязательно)",
+      "colorDefaultsHint": "По умолчанию используется цвет группы ({color})",
+      "selectGroupFirst": "Сначала выберите группу тегов",
+      "showAdvancedOptions": "Показать дополнительные параметры",
+      "iconOptional": "Значок (необязательно)",
+      "iconHint": "Имя значка Material Design (например, mdi-star)",
+      "permissionProtected": "Защищено правами доступа",
+      "permissionProtectedHint": "Для назначения/снятия этого тега требуются особые права",
+      "tagNameRequired": "Имя тега обязательно",
+      "tagNameMaxLength": "Имя тега должно содержать менее 255 символов",
+      "tagGroupRequired": "Группа тегов обязательна",
+      "tagCreatedSuccess": "Тег «{name}» успешно создан!",
+      "createTagError": "Не удалось создать тег. Пожалуйста, повторите попытку.",
+      "manageTags": "Управление тегами",
+      "searchTagsPlaceholder": "Поиск тегов...",
+      "clearAll": "Очистить все",
+      "loadingTags": "Загрузка тегов...",
+      "noTagGroups": "Группы тегов не найдены. Сначала создайте группы тегов на панели настроек.",
+      "noTagsMatching": "Не найдено тегов, соответствующих «{query}»",
+      "noTagsInGroup": "В этой группе пока нет тегов.",
+      "createNewTag": "Создать новый тег"
     },
     "versions": {
       "loading": "Загрузка версий...",
@@ -1224,7 +1286,9 @@
       "preview": "Предпросмотр",
       "viewing": "Просматривается сейчас",
       "createACopy": "Создать копию",
-      "current": "Текущая"
+      "current": "Текущая",
+      "commentMaxLength": "Комментарий должен содержать менее 500 символов",
+      "saveCommentError": "Не удалось сохранить комментарий"
     },
     "reusablesModal": {
       "title": "Вставить из сниппета",
@@ -1239,6 +1303,516 @@
           "tag": "Тег:"
         }
       }
+    },
+    "auth": {
+      "sessionEyebrow": "СЕССИЯ",
+      "sessionWillExpireIn": "Ваша сессия истекает через",
+      "extendSessionPrompt": "Продлить сессию?",
+      "logout": "Выйти",
+      "unknownUser": "Неизвестно"
+    },
+    "profileTimeline": {
+      "eyebrow": "ХРОНОЛОГИЯ",
+      "title": "Хронология событий",
+      "dayRange": "День {start} → {end}",
+      "axisDay": "День (0 = вход в когорту)",
+      "cohortEntry": "Вход в когорту"
+    },
+    "profileEventsTable": {
+      "eyebrow": "СОБЫТИЯ"
+    },
+    "profileObservationBand": {
+      "eyebrow": "НАБЛЮДЕНИЕ",
+      "title": "Периоды наблюдения",
+      "empty": "Периоды наблюдения не зарегистрированы"
+    },
+    "highlightsConceptList": {
+      "colorCoral": "Коралловый",
+      "colorSky": "Небесный",
+      "colorMint": "Мятный",
+      "colorAmber": "Янтарный",
+      "colorLavender": "Лавандовый",
+      "colorRose": "Розовый"
+    },
+    "cohortSamples": {
+      "male": "Мужской",
+      "female": "Женский",
+      "other": "Другой",
+      "otherNonBinary": "Другой / небинарный",
+      "allPersons": "Все лица",
+      "title": "Выборки",
+      "description": "Случайная выборка лиц из сгенерированной когорты с возможностью фильтрации по возрасту и полу.",
+      "newSample": "Новая выборка",
+      "failedToLoadSamples": "Не удалось загрузить выборки",
+      "failedToCreateSample": "Не удалось создать выборку"
+    },
+    "cohortSampleDetail": {
+      "personsCreated": "{count} лиц · создано {date}",
+      "records": "Записи",
+      "noRecords": "В этой выборке нет записей о лицах."
+    },
+    "cohortSampleCreate": {
+      "eyebrow": "КОГОРТА",
+      "title": "Новая выборка когорты",
+      "numberOfPersons": "Количество лиц",
+      "maximum": "Максимум {max}",
+      "genderOptional": "Пол (необязательно)",
+      "ageOptional": "Возраст (необязательно)",
+      "minAge": "Мин. возраст",
+      "maxAge": "Макс. возраст",
+      "createSample": "Создать выборку",
+      "ageModeLessThan": "< меньше",
+      "ageModeAtMost": "≤ не более",
+      "ageModeEqualTo": "= равно",
+      "ageModeAtLeast": "≥ не менее",
+      "ageModeGreaterThan": "> больше",
+      "ageModeBetween": "между",
+      "ageModeNotBetween": "вне диапазона"
+    },
+    "cohortSamplesList": {
+      "empty": "Для этой когорты и источника выборки ещё не созданы.",
+      "persons": "Лица",
+      "refreshSample": "Обновить выборку",
+      "deleteSample": "Удалить выборку"
+    },
+    "profileSidePanel": {
+      "highlights": "Выделения",
+      "showHighlights": "Показать выделения",
+      "hideHighlights": "Скрыть выделения",
+      "accessDenied403": "У вас нет доступа к профилю этого лица в данном источнике данных. Обратитесь к администратору для предоставления доступа READ к источнику.",
+      "failedToLoadProfile": "Не удалось загрузить профиль."
+    },
+    "characterizationDashboard": {
+      "distributions": "Распределения",
+      "demographicProfile": "Демографический профиль",
+      "ageDistribution": "Распределение по возрасту",
+      "prevalenceComparison": "Сравнение распространённости",
+      "covariateBalance": "Баланс ковариат (станд. разность средних)",
+      "imbalanceNote": "Ковариаты с |SMD| > 0,1 (пунктирные линии) считаются несбалансированными",
+      "topCovariates": "Основные ковариаты по распространённости",
+      "noVisualizationData": "Нет данных для визуализации.",
+      "smdAxis": "Стандартизованная разность средних",
+      "smdShort": "SMD",
+      "cohortIndexed": "Когорта {n}"
+    },
+    "characterizationTable1": {
+      "overall": "Всего",
+      "colHint": "N (%) / Среднее (SD)",
+      "n": "N"
+    },
+    "characterizationWorkbench": {
+      "hideDesignPanel": "Скрыть панель дизайна",
+      "showDesignPanel": "Показать панель дизайна",
+      "hideAnalysisDesign": "Скрыть дизайн анализа",
+      "showAnalysisDesign": "Показать дизайн анализа"
+    },
+    "characterizationResults": {
+      "covariateDetail": "Сведения о ковариате",
+      "concept": "Концепт",
+      "smdLabel": "Стандартизованная разность средних",
+      "noCovariateSelected": "Ковариата не выбрана."
+    },
+    "characterizationDesign": {
+      "detailsEyebrow": "Сведения"
+    },
+    "inclusionCriteriaPanel": {
+      "ruleIncomplete": "Правило включения не завершено.",
+      "livePreviewFailed": "Не удалось выполнить предпросмотр."
+    },
+    "nestedCriteriaRenderer": {
+      "deepNesting": "Обнаружена глубокая вложенность ({depth} уровней). Рассмотрите возможность упрощения структуры критериев.",
+      "noConceptSet": "Нет набора концептов"
+    },
+    "temporalWindowEditor": {
+      "referencePoint": "Опорная точка",
+      "startReferencePoint": "Опорная точка начала",
+      "endReferencePoint": "Опорная точка окончания"
+    },
+    "conceptSetPicker": {
+      "clearSelection": "Очистить выбор",
+      "conceptsSuffix": "концептов",
+      "setCountOne": "1 набор",
+      "setCountOther": "Наборов: {count}"
+    },
+    "censoringEventsEditor": {
+      "noEventsHint": "События цензурирования не заданы. Дополнительные события не повлияют на членство в когорте.",
+      "removeEvent": "Удалить событие"
+    },
+    "attributesEditor": {
+      "enterTextValue": "Введите текстовое значение...",
+      "edit": "Изменить",
+      "addDateAdjustment": "Добавить корректировку даты",
+      "removeAttribute": "Удалить атрибут",
+      "pleaseEnterTextValue": "Введите текстовое значение",
+      "pleaseEnterNumericValue": "Введите числовое значение",
+      "betweenRequiresBothValues": "Оператор BETWEEN требует оба значения",
+      "notConfigured": "Не настроено",
+      "bothDatesRequired": "Требуются начальная и конечная даты",
+      "endDateAfterStart": "Конечная дата должна быть позже начальной"
+    },
+    "cardinalityInput": {
+      "typeAriaLabel": "Тип кардинальности"
+    },
+    "eventCard": {
+      "concepts": "концептов",
+      "noConceptSet": "Нет набора концептов",
+      "collapse": "Свернуть",
+      "expand": "Развернуть",
+      "removeEvent": "Удалить событие",
+      "attributes": "атрибуты",
+      "attribute": "атрибут",
+      "addCardinality": "Добавить кардинальность",
+      "addTemporalWindow": "Добавить временное окно",
+      "addAttributes": "Добавить атрибуты",
+      "removeCardinality": "Удалить кардинальность",
+      "temporalWindows": "Временные окна",
+      "removeTemporalWindow": "Удалить временное окно",
+      "eventIdLabel": "ID события:",
+      "criteriaTypeLabel": "Тип критерия:",
+      "conceptSetIdLabel": "ID набора концептов:",
+      "restrictVisitNote": "Событие должно произойти в рамках того же визита, что и индексное",
+      "ignoreObservationNote": "Событие может произойти вне периода наблюдения"
+    },
+    "filterTypeSelector": {
+      "label": "Тип фильтра",
+      "placeholder": "Выберите тип фильтра...",
+      "groupOnly": "Только группа",
+      "noConceptSet": "Без набора концептов"
+    },
+    "configurationWarningBanner": {
+      "title": "Предупреждения проверки конфигурации",
+      "description": "Некоторые типы фильтров в конфигурации недействительны или неправильно настроены. Эти фильтры будут недоступны в интерфейсе:",
+      "invalidFilterTypes": "Недопустимые типы фильтров",
+      "contactAdmin": "Обратитесь к администратору для обновления файла конфигурации (atlas-config.json)."
+    },
+    "cohortList": {
+      "emptyMatchQueryAndTags": "Нет когорт, соответствующих «{query}» с выбранными тегами.",
+      "emptyMatchQuery": "Нет когорт, соответствующих «{query}».",
+      "emptyMatchTags": "Нет когорт, соответствующих выбранным тегам.",
+      "emptyNoCohorts": "Когорт пока нет — создайте одну, чтобы начать определять исследуемую популяцию."
+    },
+    "cohortReportDrawer": {
+      "backToSamples": "Назад к выборкам",
+      "personTitle": "Пациент {id}",
+      "profileTitle": "Профиль"
+    },
+    "conceptSearch": {
+      "searching": "Поиск концептов...",
+      "foundResults": "Найдено результатов: {count}",
+      "conceptMeta": "ID: {id} | Код: {code} | Домен: {domain}",
+      "enterSearchTerm": "Введите поисковый запрос для поиска концептов"
+    },
+    "cohortBuilder": {
+      "stateRequired": "Обязательно",
+      "stateOptional": "Необязательно",
+      "eventCountOne": "1 событие",
+      "eventCountOther": "Событий: {count}",
+      "ruleCountOne": "1 правило",
+      "ruleCountOther": "Правил: {count}",
+      "stateCensoringCount": "+{count} цензурирование",
+      "stateEndOfObservation": "Конец наблюдения",
+      "stateNeedsOffset": "Требуется смещение",
+      "stateOffsetDays": "+{count} дн.",
+      "stateNeedsDrugSet": "Требуется набор препаратов",
+      "stateDrugExposure": "Воздействие препарата",
+      "stateConfigured": "Настроено",
+      "saveToServerError": "Не удалось сохранить когорту на сервере",
+      "saveSuccess": "Когорта успешно сохранена",
+      "saveError": "Не удалось сохранить когорту",
+      "exportFailed": "Ошибка экспорта: {error}",
+      "exportDownloaded": "JSON когорты загружен",
+      "copiedToClipboard": "JSON когорты скопирован в буфер обмена",
+      "copyFailed": "Не удалось скопировать в буфер обмена",
+      "emptyCohort": "Пустая когорта"
+    },
+    "conceptDetail": {
+      "closeDetails": "Закрыть сведения о концепте",
+      "goBack": "Назад",
+      "addToConceptSet": "Добавить в набор концептов",
+      "copyId": "Копировать ID",
+      "persons": "чел.",
+      "descAbbr": "потом.",
+      "conceptDetailsTitle": "Сведения о концепте",
+      "conceptId": "ID концепта",
+      "conceptClass": "Класс концепта",
+      "viewFull": "Показать полностью",
+      "noHierarchyForConcept": "Иерархия для этого концепта не найдена.",
+      "moreDescendants": "ещё потомков: {count}",
+      "noRelatedConcepts": "Связанные концепты не найдены.",
+      "relationshipsCount": "связей: {count}"
+    },
+    "conceptTable": {
+      "selectAllConcepts": "Выбрать все концепты",
+      "selectConcept": "Выбрать {name}",
+      "noRecords": "Нет записей для отображения",
+      "itemsPerPage": "Строк на странице:"
+    },
+    "config": {
+      "cache": {
+        "clearHelp": "Очистить кэшированные данные конфигурации, чтобы принудительно обновить их с сервера. Это может помочь устранить проблемы с устаревшими или поврежденными данными.",
+        "statusLabel": "Состояние кэша:",
+        "clearDialogTitle": "Очистить кэш",
+        "clearConfirm": "Вы уверены, что хотите очистить кэш конфигурации? Это действие нельзя отменить.",
+        "clearError": "Не удалось очистить кэш. Пожалуйста, попробуйте снова."
+      },
+      "panel": {
+        "closeAria": "Закрыть панель конфигурации",
+        "tabCache": "Кэш",
+        "noAdminAccess": "У вас нет доступа к каким-либо административным настройкам."
+      },
+      "dataSources": {
+        "loadError": "Не удалось загрузить источники данных"
+      },
+      "vocabulary": {
+        "help": "Настройте имя схемы базы данных для поиска в словаре. Этот параметр определяет, какая схема PostgreSQL используется при запросе таблиц словаря OMOP.",
+        "schemaHint": "Имя схемы PostgreSQL (например, 'public', 'vocab_v5')",
+        "updated": "Схема словаря обновлена до \"{value}\"",
+        "updateError": "Не удалось обновить схему. Пожалуйста, попробуйте снова.",
+        "reverted": "Возвращено к \"{value}\"",
+        "undoError": "Не удалось отменить. Пожалуйста, попробуйте снова."
+      },
+      "trexsql": {
+        "loadError": "Не удалось загрузить источники данных",
+        "buildStarted": "Начато построение кэша",
+        "buildStartError": "Не удалось начать построение кэша",
+        "buildComplete": "Построение кэша успешно завершено",
+        "buildFailed": "Не удалось построить кэш"
+      },
+      "tags": {
+        "colorHexHint": "Шестнадцатеричный код цвета для визуальной идентификации",
+        "iconMdiFolderHint": "Имя значка Material Design (например, mdi-tag, mdi-folder)",
+        "nameTooLong": "Имя должно содержать менее 255 символов",
+        "colorOptional": "Цвет (необязательно)",
+        "inheritColorHint": "Оставьте пустым для наследования от группы",
+        "iconOptional": "Значок (необязательно)",
+        "iconInheritHint": "Имя значка Material Design или оставьте пустым для наследования от группы",
+        "permissionProtected": "Защищено правами доступа",
+        "permissionProtectedHint": "Требуются особые права для назначения/отмены назначения этого тега",
+        "tagColumn": "Тег",
+        "usageColumn": "Использование",
+        "editTagAria": "Изменить тег",
+        "deleteTagAria": "Удалить тег",
+        "noTagsInGroup": "В этой группе нет тегов",
+        "createFirstTag": "Создайте свой первый тег, чтобы начать",
+        "requiredChip": "Обязательно",
+        "columnChip": "Столбец",
+        "showTagsButton": "Показать теги",
+        "editGroupAria": "Изменить группу тегов",
+        "deleteGroupAria": "Удалить группу тегов",
+        "createFirstGroup": "Создайте свою первую группу тегов, чтобы начать",
+        "sectionHelp": "Управление группами тегов для организации и категоризации когорт и наборов понятий. Группы тегов позволяют применять структурированные метаданные к вашим ресурсам.",
+        "tagsInGroupTitle": "Теги в \"{name}\"",
+        "backToGroups": "Назад к группам тегов",
+        "enableFreeFormTooltip": "Включите «Свободная форма» для этой группы тегов, чтобы разрешить пользовательские теги.",
+        "noCustomTagsPrefix": "Эта группа тегов не допускает пользовательские теги. Отредактируйте группу и включите",
+        "noCustomTagsSuffix": "чтобы добавлять теги здесь.",
+        "deleteGroupConfirm": "Вы уверены, что хотите удалить \"{name}\"?",
+        "deleteTagTitle": "Удалить тег",
+        "deleteTagConfirm": "Вы уверены, что хотите удалить \"{name}\"? Это отменит назначение тега для всех ресурсов.",
+        "loadGroupsError": "Не удалось загрузить группы тегов",
+        "groupUpdated": "Группа тегов \"{name}\" обновлена",
+        "groupCreated": "Группа тегов \"{name}\" создана",
+        "saveGroupError": "Не удалось сохранить группу тегов",
+        "groupNotEmpty": "Невозможно удалить группу тегов: группа содержит теги",
+        "groupDeleted": "Группа тегов \"{name}\" удалена",
+        "tagUpdated": "Тег \"{name}\" обновлен",
+        "tagCreated": "Тег \"{name}\" создан",
+        "saveTagError": "Не удалось сохранить тег",
+        "tagDeleted": "Тег \"{name}\" удален",
+        "deleteTagError": "Не удалось удалить тег"
+      },
+      "permissions": {
+        "editRole": "Изменить роль",
+        "createNewRole": "Создать новую роль",
+        "roleNameRequiredLabel": "Имя роли *",
+        "roleNameRequired": "Имя роли обязательно",
+        "roleNameEmpty": "Имя роли не может быть пустым",
+        "roleNameTooLong": "Имя роли должно содержать менее 255 символов",
+        "roleNameExists": "Роль с таким именем уже существует",
+        "updateRoleError": "Не удалось обновить роль. Пожалуйста, попробуйте снова.",
+        "createRoleError": "Не удалось создать роль. Пожалуйста, попробуйте снова.",
+        "unexpectedError": "Произошла непредвиденная ошибка",
+        "deleteRoleTitle": "Удалить роль?",
+        "roleAssignedTo": "Эта роль назначена",
+        "usersWord": "пользователей",
+        "userWord": "пользователь",
+        "deleteRemovesFromUsers": "Удаление этой роли удалит её у всех назначенных пользователей.",
+        "confirmDeleteRolePrefix": "Вы уверены, что хотите удалить роль",
+        "cannotBeUndone": "Это действие нельзя отменить.",
+        "deleteRoleButton": "Удалить роль",
+        "deleteRoleError": "Не удалось удалить роль. Пожалуйста, попробуйте снова.",
+        "searchRoles": "Поиск ролей...",
+        "newRole": "Новая роль",
+        "noRolesFound": "Роли не найдены. Создайте свою первую роль, чтобы начать.",
+        "noDescription": "Нет описания",
+        "backToRoles": "Назад к ролям",
+        "editRoleAria": "Изменить роль",
+        "deleteRoleAria": "Удалить роль",
+        "roleName": "Имя роли",
+        "editRoleNameAria": "Изменить имя роли",
+        "noDescriptionProvided": "Описание не предоставлено",
+        "editDescriptionAria": "Изменить описание",
+        "updateRoleNameError": "Не удалось обновить имя роли. Пожалуйста, попробуйте снова.",
+        "updateDescriptionError": "Не удалось обновить описание. Пожалуйста, попробуйте снова.",
+        "noRolesFoundTitle": "Роли не найдены",
+        "createFirstRoleHint": "Создайте свою первую роль, чтобы начать работу с управлением доступом на основе ролей.",
+        "createFirstRole": "Создать первую роль",
+        "rolesFilteredCount": "{count} из {total} ролей",
+        "rolesTotal": "всего {count} ролей",
+        "roleTotal": "всего {count} роль",
+        "searchPermissions": "Поиск разрешений...",
+        "changesCount": "{count} изменений",
+        "changeCount": "{count} изменение",
+        "saveChanges": "Сохранить изменения",
+        "loadingPermissions": "Загрузка разрешений...",
+        "ofWord": "из",
+        "permissionsAssigned": "разрешений назначено",
+        "filteredFromTotal": "(отфильтровано из {total})",
+        "allCategories": "Все категории",
+        "permissionColumn": "Разрешение",
+        "categoryColumn": "Категория",
+        "permissionsUpdated": "Успешно обновлено {count} разрешений",
+        "permissionUpdated": "Успешно обновлено {count} разрешение",
+        "savePermissionsError": "Не удалось сохранить изменения разрешений",
+        "searchUsers": "Поиск пользователей по логину или эл. почте...",
+        "loadingUsers": "Загрузка пользователей...",
+        "usersAssigned": "пользователей назначено",
+        "emailColumn": "Эл. почта",
+        "userAssignmentsUpdated": "Успешно обновлено {count} назначений пользователей",
+        "userAssignmentUpdated": "Успешно обновлено {count} назначение пользователя",
+        "saveUsersError": "Не удалось сохранить назначения пользователей",
+        "utilitiesIntro": "Импорт и экспорт конфигураций ролей для резервного копирования, развёртывания или совместного использования между средами.",
+        "exportRole": "Экспорт роли",
+        "exportRoleDescription": "Загрузите конфигурацию этой роли в виде файла JSON, включая все разрешения и назначения пользователей.",
+        "exportCompatNote": "Экспортированный файл будет совместим с Atlas 2.x и может быть импортирован в любой экземпляр Atlas.",
+        "exportRoleAsJson": "Экспортировать роль в JSON",
+        "importRole": "Импорт роли",
+        "importRoleDescription": "Импорт конфигурации роли из файла JSON. Это создаст новую роль с указанными разрешениями и пользователями.",
+        "noteLabel": "Примечание:",
+        "importRoleNote": "Импорт роли создаст новую роль. Если роль с таким именем существует, вам будет предложено переименовать её.",
+        "importRoleFromJson": "Импортировать роль из JSON",
+        "exportRoleError": "Не удалось экспортировать роль",
+        "roleExported": "Роль \"{name}\" успешно экспортирована",
+        "roleImported": "Роль \"{name}\" успешно импортирована",
+        "importSelectFileHelp": "Выберите файл JSON для импорта конфигурации роли. Файл должен быть в формате, совместимом с Atlas 2.x.",
+        "selectJsonFile": "Выберите файл JSON",
+        "roleNameConflict": "Конфликт имён ролей",
+        "roleWithNamePrefix": "Роль с именем",
+        "alreadyExistsSuffix": "уже существует.",
+        "howToProceed": "Как вы хотите продолжить?",
+        "conflictSkip": "Пропустить — отменить импорт",
+        "conflictRename": "Переименовать — импортировать с новым именем",
+        "newRoleName": "Новое имя роли",
+        "newRoleNameHint": "Введите уникальное имя для импортируемой роли",
+        "validatingImport": "Проверка данных импорта...",
+        "readyToImport": "Готово к импорту",
+        "importPreviewIntro": "Будет импортирована следующая конфигурация роли:",
+        "roleNameLabel": "Имя роли:",
+        "descriptionLabel": "Описание:",
+        "permissionsLabel": "Разрешения:",
+        "usersLabel": "Пользователи:",
+        "warningsLabel": "Предупреждения:",
+        "next": "Далее",
+        "continue": "Продолжить",
+        "selectJsonFileError": "Пожалуйста, выберите файл JSON",
+        "readFileError": "Не удалось прочитать файл",
+        "invalidImportFormat": "Неверный формат импорта роли: отсутствует имя роли",
+        "warnNoPermissions": "Роли не назначены разрешения",
+        "warnNoUsers": "Роли не назначены пользователи",
+        "invalidJsonFormat": "Неверный формат JSON. Проверьте файл и попробуйте снова.",
+        "validateImportError": "Не удалось проверить данные импорта",
+        "updateRoleNameFailed": "Не удалось обновить имя роли",
+        "importRoleRetry": "Не удалось импортировать роль. Пожалуйста, попробуйте снова.",
+        "importRoleError": "Не удалось импортировать роль"
+      }
+    },
+    "domainPrevalenceTable": {
+      "largeDatasetHint": "Обнаружен большой набор данных ({count} записей). Для производительности отображаются 1000 записей с наибольшей распространённостью — используйте поиск или экспорт в CSV для полного набора.",
+      "prevalencePercent": "Распространённость (%)",
+      "noEntriesFound": "Записи не найдены",
+      "showingAllEntries": "Показаны все записи: {count}",
+      "showingRange": "Показаны записи с {start} по {end} из {total}"
+    },
+    "domainPrevalenceTreemap": {
+      "clickAction": "Нажмите",
+      "clickHint": "на любую область, чтобы просмотреть подробную аналитику",
+      "noHierarchyNote": "Иерархическая группировка недоступна для этого источника данных",
+      "groupByHierarchy": "Группировать по иерархии"
+    },
+    "incidenceRate": {
+      "importInputAria": "Импорт дизайна частоты новых случаев",
+      "removeCohort": "Удалить когорту",
+      "selectCohorts": "Выбрать когорты",
+      "outcomeOverview": "Обзор исходов",
+      "outcomeOverviewNote": "Щёлкните строку для просмотра. Для каждого исхода исключаются лица, у которых событие уже было на дату индекса.",
+      "personsAtRisk": "Лица под риском",
+      "personsAtRiskTooltip": "Лица под риском в целевой когорте в течение периода риска",
+      "outcomeCases": "Случаи исхода",
+      "outcomeCasesTooltip": "Лица, у которых наступил исход в период наблюдения ({proportion})",
+      "personYearsTooltip": "Общее наблюдаемое время по всем лицам, измеренное в человеко-годах",
+      "personYearsAtRisk": "Человеко-годы под риском",
+      "incidenceRateTooltip": "Частота новых случаев: {cases} случаев на {years} человеко-лет, масштаб {multiplier}",
+      "incidenceRatePerPy": "Частота новых случаев на {multiplier} чел.-лет",
+      "notComparable": "Несопоставимо между исходами",
+      "percentProportion": "доля {value}%",
+      "moveUp": "Переместить вверх",
+      "moveDown": "Переместить вниз",
+      "removeRule": "Удалить правило",
+      "stratifiedIncidence": "Стратифицированная частота",
+      "lowerRate": "Ниже частота",
+      "higherRate": "Выше частота",
+      "treemapLegendHint": "(цвет = частота новых случаев на человеко-год; площадь = лица под риском)",
+      "hideDesignPanel": "Скрыть панель дизайна",
+      "showDesignPanel": "Показать панель дизайна",
+      "hideAnalysisDesign": "Скрыть дизайн анализа",
+      "showAnalysisDesign": "Показать дизайн анализа",
+      "noCasesFound": "Для этой комбинации цель/исход случаи не найдены. Попробуйте выбрать другой исход."
+    },
+    "pathwayCohortList": {
+      "removeCohort": "Удалить когорту"
+    },
+    "pathwayCohortPicker": {
+      "selectCohorts": "Выбрать когорты"
+    },
+    "pathwayWorkbench": {
+      "hideDesignPanel": "Скрыть панель дизайна",
+      "showDesignPanel": "Показать панель дизайна",
+      "hideAnalysisDesign": "Скрыть дизайн анализа",
+      "showAnalysisDesign": "Показать дизайн анализа"
+    },
+    "pathwayBuilder": {
+      "importPathwayDesign": "Импортировать дизайн пути",
+      "versionHistory": "История версий"
+    },
+    "pathwayPathDetails": {
+      "event": "Событие"
+    },
+    "drilldownDetails": {
+      "prevalenceByGenderAgeYear": "Распространённость по полу, возрасту и году",
+      "lengthOfEra": "Длительность эры",
+      "distributionByType": "Распределение по типу",
+      "distributionByUnit": "Распределение по единице измерения",
+      "distributionByValue": "Распределение по значению",
+      "distributionByOperator": "Распределение по оператору",
+      "distributionByQualifier": "Распределение по квалификатору",
+      "noDetailedData": "Для этого концепта нет подробных данных."
+    },
+    "tableExport": {
+      "copiedRows": "Скопировано строк в буфер обмена: {count}",
+      "copyFailed": "Не удалось скопировать данные в буфер обмена",
+      "exportedRows": "Экспортировано строк в {filename}.csv: {count}",
+      "exportFailed": "Не удалось экспортировать CSV-файл"
+    },
+    "notifications": {
+      "bellAriaLabel": "Уведомления ({count} непрочитанных)",
+      "heading": "Уведомления",
+      "markAllRead": "Отметить все как прочитанные",
+      "clear": "Очистить",
+      "allCaughtUp": "Новых уведомлений нет.",
+      "remove": "Удалить"
+    },
+    "navBar": {
+      "mainNavigation": "Основная"
     }
   },
   "facets": {
@@ -1280,8 +1854,8 @@
     },
     "values": {
       "warning": "Предупреждение",
-      "critical":"Критический",
-      "info":"Информация"
+      "critical": "Критический",
+      "info": "Информация"
     },
     "date": {
       "justNow": "Только что",
@@ -1655,7 +2229,7 @@
         }
       }
     },
-    "observationPeriodReport" : {
+    "observationPeriodReport": {
       "ageAtFirstObservation": "Возраст при первом наблюдении",
       "ageByGender": "Возраст по полу",
       "observationLength": "Длительность наблюдения",
@@ -1699,7 +2273,7 @@
     "noVocabulariesAvailable": "Нет доступных словарей",
     "noDomainsAvailable": "Нет доступных доменов",
     "noResultsFoundFor": "Ничего не найдено для",
-    "viewCountMessage":  "Отображать количество записей (RC, DRC) для:"
+    "viewCountMessage": "Отображать количество записей (RC, DRC) для:"
   },
   "cs": {
     "manager": {
@@ -2542,7 +3116,7 @@
             "ldap": "LDAP сервер"
           }
         },
-        "provider" : {
+        "provider": {
           "connection": {
             "failed": "Ошибка проверки соединения. Пожалуйста, смотрите подробности в логах сервера."
           }
@@ -2745,7 +3319,7 @@
         "selectASource": "Выберите источник данных",
         "addNewSample": "Добавить новый образец",
         "cohortNotGeneratedNote": "Когорта не сгенерирована на этом источнике. Пожалуйста, перейдите на вкладку генерации и сгенерируйте когорту перед тем, как получить доступ к образцам.",
-        "cohortShouldBeGenerated":  "Перед созданием образцов необходимо сгенерировать когорту",
+        "cohortShouldBeGenerated": "Перед созданием образцов необходимо сгенерировать когорту",
         "errorFetchingList": "Ошибка получения списка образцов",
         "errorDeleting": "Ошибка удаления образца",
         "errorFetchingData": "Ошибка получения данных образца",
@@ -2800,6 +3374,7 @@
       "inclusionReportFor1": " ",
       "tabs": {
         "byEvents": "По событиям",
+        "byEvent": "По событию",
         "byPerson": "По человеку"
       }
     },
@@ -3744,6 +4319,51 @@
     "tabs": {
       "myJobs": "Мои задачи",
       "allJobs": "Все задачи"
+    }
+  },
+  "views": {
+    "cohorts": {
+      "eyebrowMain": "OHDSI · Когорты",
+      "eyebrowImport": "ИМПОРТ",
+      "eyebrowConfirm": "ПОДТВЕРЖДЕНИЕ",
+      "eyebrowNew": "НОВАЯ",
+      "eyebrowCohort": "КОГОРТА",
+      "countSingular": "1 когорта",
+      "countPlural": "Когорт: {count}"
+    },
+    "characterizationBuilder": {
+      "importInputAria": "Импортировать дизайн характеризации"
+    },
+    "featureAnalysisEditor": {
+      "deleteEyebrow": "ПОДТВЕРЖДЕНИЕ"
+    },
+    "dataSources": {
+      "reportNotImplemented": "Тип отчёта «{type}» ещё не реализован.",
+      "noSources": "Нет доступных источников данных.",
+      "selectSourceHint": "Выберите источник данных, чтобы просмотреть его отчёты."
+    },
+    "profile": {
+      "eyebrow": "ПРОФИЛЬ"
+    },
+    "incidenceRates": {
+      "copied": "Частота случаев скопирована",
+      "copyFailed": "Не удалось скопировать",
+      "deleted": "Частота случаев удалена",
+      "deleteFailed": "Не удалось удалить"
+    },
+    "pathways": {
+      "copied": "Путь скопирован",
+      "copyFailed": "Не удалось скопировать",
+      "deleted": "Путь удалён",
+      "deleteFailed": "Не удалось удалить"
+    },
+    "roleDetails": {
+      "roleNotFound": "Роль не найдена",
+      "backToRoles": "Назад к ролям"
+    },
+    "roleManagement": {
+      "title": "Управление ролями и разрешениями",
+      "subtitle": "Управляйте ролями пользователей, назначайте разрешения и контролируйте доступ к функциям системы."
     }
   }
 }

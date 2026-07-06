@@ -2,8 +2,12 @@
   <v-card class="role-utilities-tab">
     <v-card-text>
       <p class="text-body-1 mb-6">
-        Import and export role configurations for backup, deployment, or sharing across
-        environments.
+        {{
+          t(
+            'components.config.permissions.utilitiesIntro',
+            'Import and export role configurations for backup, deployment, or sharing across environments.'
+          ).value
+        }}
       </p>
 
       <!-- Export Section -->
@@ -18,11 +22,15 @@
           </AtlasIcon>
           <div>
             <h3 class="text-h6">
-              Export Role
+              {{ t('components.config.permissions.exportRole', 'Export Role').value }}
             </h3>
             <p class="text-body-2 text-medium-emphasis">
-              Download this role's configuration as a JSON file, including all permissions and user
-              assignments.
+              {{
+                t(
+                  'components.config.permissions.exportRoleDescription',
+                  "Download this role's configuration as a JSON file, including all permissions and user assignments."
+                ).value
+              }}
             </p>
           </div>
         </div>
@@ -32,8 +40,12 @@
             severity="info"
             class="mb-4"
           >
-            The exported file will be compatible with Atlas 2.x and can be imported into any Atlas
-            instance.
+            {{
+              t(
+                'components.config.permissions.exportCompatNote',
+                'The exported file will be compatible with Atlas 2.x and can be imported into any Atlas instance.'
+              ).value
+            }}
           </AtlasAlert>
 
           <AtlasButton
@@ -41,7 +53,7 @@
             :loading="isExporting"
             @click="handleExport"
           >
-            Export Role as JSON
+            {{ t('components.config.permissions.exportRoleAsJson', 'Export Role as JSON').value }}
           </AtlasButton>
         </div>
       </div>
@@ -60,11 +72,15 @@
           </AtlasIcon>
           <div>
             <h3 class="text-h6">
-              Import Role
+              {{ t('components.config.permissions.importRole', 'Import Role').value }}
             </h3>
             <p class="text-body-2 text-medium-emphasis">
-              Import a role configuration from a JSON file. This will create a new role with the
-              specified permissions and users.
+              {{
+                t(
+                  'components.config.permissions.importRoleDescription',
+                  'Import a role configuration from a JSON file. This will create a new role with the specified permissions and users.'
+                ).value
+              }}
             </p>
           </div>
         </div>
@@ -74,15 +90,20 @@
             severity="warning"
             class="mb-4"
           >
-            <strong>Note:</strong> Importing a role will create a new role. If a role with the same
-            name exists, you will be prompted to rename it.
+            <strong>{{ t('components.config.permissions.noteLabel', 'Note:').value }}</strong>
+            {{
+              t(
+                'components.config.permissions.importRoleNote',
+                'Importing a role will create a new role. If a role with the same name exists, you will be prompted to rename it.'
+              ).value
+            }}
           </AtlasAlert>
 
           <AtlasButton
             icon="mdi-upload"
             @click="importDialogOpen = true"
           >
-            Import Role from JSON
+            {{ t('components.config.permissions.importRoleFromJson', 'Import Role from JSON').value }}
           </AtlasButton>
         </div>
       </div>
@@ -120,8 +141,11 @@
 <script setup lang="ts">
 import { AtlasAlert, AtlasButton, AtlasDivider, AtlasIcon } from '@/components/ui'
 import { ref } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import { useRoles } from '@/composables/useRoles'
 import RoleImportDialog from './RoleImportDialog.vue'
+
+const { t, tv } = useI18n()
 
 interface Props {
   roleId: number
@@ -150,7 +174,7 @@ async function handleExport() {
     const jsonData = await exportRole(props.roleId)
 
     if (!jsonData) {
-      throw new Error('Failed to export role')
+      throw new Error(tv('components.config.permissions.exportRoleError', 'Failed to export role'))
     }
 
     // Create blob and download
@@ -169,9 +193,16 @@ async function handleExport() {
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
 
-    successMessage.value = `Role "${props.roleName}" exported successfully`
+    successMessage.value = tv(
+      'components.config.permissions.roleExported',
+      'Role "{name}" exported successfully',
+      { name: props.roleName }
+    )
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to export role'
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : tv('components.config.permissions.exportRoleError', 'Failed to export role')
   } finally {
     isExporting.value = false
   }
@@ -181,7 +212,11 @@ async function handleExport() {
  * Handle import success
  */
 function handleImportSuccess(roleName: string) {
-  successMessage.value = `Role "${roleName}" imported successfully`
+  successMessage.value = tv(
+    'components.config.permissions.roleImported',
+    'Role "{name}" imported successfully',
+    { name: roleName }
+  )
   // Could emit event to parent to refresh role list if needed
 }
 </script>
