@@ -20,13 +20,15 @@ vi.mock('@/composables/useI18n', async () => {
   return mockUseI18n
 })
 
+const configUndoMock = vi.hoisted(() => ({
+  undoStack: { value: [] as Array<{ id: string; previousValue: string }> },
+  isSaving: { value: false },
+  pushUndo: vi.fn(),
+  performUndo: vi.fn()
+}))
+
 vi.mock('@/composables/useConfigUndo', () => ({
-  useConfigUndo: () => ({
-    undoStack: { value: [] },
-    isSaving: { value: false },
-    pushUndo: vi.fn(),
-    performUndo: vi.fn()
-  })
+  useConfigUndo: () => configUndoMock
 }))
 
 describe('VocabularySchemaSection.vue', () => {
@@ -41,6 +43,12 @@ describe('VocabularySchemaSection.vue', () => {
     configStore.fetchVocabularySchema = vi.fn().mockResolvedValue(undefined)
     configStore.updateVocabularySchema = vi.fn().mockResolvedValue(undefined)
     configStore.vocabularySchema = 'public'
+
+    // Reset the shared undo mock to its inert defaults
+    configUndoMock.undoStack.value = []
+    configUndoMock.isSaving.value = false
+    configUndoMock.pushUndo.mockReset()
+    configUndoMock.performUndo.mockReset()
   })
 
   afterEach(() => {
@@ -416,6 +424,105 @@ describe('VocabularySchemaSection.vue', () => {
 
       // Store should be updated immediately (optimistically)
       expect(configStore.vocabularySchema).toBe('immediate_update')
+    })
+  })
+
+  describe('Error handling fallbacks', () => {
+    it('shows the generic update-error message when a non-Error is thrown on save', async () => {
+      vi.useFakeTimers()
+      configStore.updateVocabularySchema = vi.fn().mockRejectedValue('plain failure')
+
+      wrapper = mount(VocabularySchemaSection, {
+        global: {
+          plugins: [vuetify]
+        }
+      })
+
+      await flushPromises()
+
+      const textField = wrapper.findComponent({ name: 'VTextField' })
+      await textField.setValue('bad_schema')
+      await wrapper.vm.$nextTick()
+
+      await vi.advanceTimersByTimeAsync(600)
+      await flushPromises()
+
+      const setup = (wrapper.vm as unknown as { $: { setupState: Record<string, unknown> } }).$
+        .setupState
+      expect(setup.errorMessage).toBe('Failed to update schema. Please try again.')
+      expect(setup.showErrorToast).toBe(true)
+
+      vi.useRealTimers()
+    })
+  })
+
+  describe('Undo handling', () => {
+    it('shows a "Reverted" toast after a successful undo', async () => {
+      configUndoMock.undoStack.value = [{ id: 'op1', previousValue: 'public' }]
+      configUndoMock.performUndo.mockImplementation(
+        async (_id: string, revertFn: (value: string) => Promise<void>) => {
+          await revertFn('public')
+        }
+      )
+
+      wrapper = mount(VocabularySchemaSection, {
+        global: {
+          plugins: [vuetify]
+        }
+      })
+
+      await flushPromises()
+
+      const setup = (wrapper.vm as unknown as { $: { setupState: Record<string, unknown> } }).$
+        .setupState
+      await (setup.handleUndo as () => Promise<void>)()
+      await flushPromises()
+
+      expect(configStore.updateVocabularySchema).toHaveBeenCalledWith('public')
+      expect(setup.toastMessage).toBe('Reverted to "public"')
+      expect(setup.showToast).toBe(true)
+    })
+
+    it('surfaces the thrown Error message when undo rejects with an Error', async () => {
+      configUndoMock.undoStack.value = [{ id: 'op1', previousValue: 'public' }]
+      configUndoMock.performUndo.mockRejectedValue(new Error('undo exploded'))
+
+      wrapper = mount(VocabularySchemaSection, {
+        global: {
+          plugins: [vuetify]
+        }
+      })
+
+      await flushPromises()
+
+      const setup = (wrapper.vm as unknown as { $: { setupState: Record<string, unknown> } }).$
+        .setupState
+      await (setup.handleUndo as () => Promise<void>)()
+      await flushPromises()
+
+      expect(setup.errorMessage).toBe('undo exploded')
+      expect(setup.showErrorToast).toBe(true)
+    })
+
+    it('falls back to the generic undo-error message when a non-Error is thrown', async () => {
+      configUndoMock.undoStack.value = [{ id: 'op1', previousValue: 'public' }]
+      configUndoMock.performUndo.mockRejectedValue('boom')
+
+      wrapper = mount(VocabularySchemaSection, {
+        global: {
+          plugins: [vuetify]
+        }
+      })
+
+      await flushPromises()
+
+      const setup = (wrapper.vm as unknown as { $: { setupState: Record<string, unknown> } }).$
+        .setupState
+      await (setup.handleUndo as () => Promise<void>)()
+      await flushPromises()
+
+      expect(setup.errorMessage).toBe('Failed to undo. Please try again.')
+      expect(setup.showErrorToast).toBe(true)
     })
   })
 

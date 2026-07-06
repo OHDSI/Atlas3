@@ -463,4 +463,221 @@ describe('TagManagementSection.vue', () => {
       expect(tagDialog.exists()).toBe(true)
     })
   })
+
+  describe('Error and toast branches', () => {
+    function mountSection() {
+      return mount(TagManagementSection, {
+        global: { plugins: [vuetify] }
+      })
+    }
+
+    it('sets error toast when loading tag groups fails (non-Error rejection)', async () => {
+      configStore.fetchTagGroups = vi.fn().mockRejectedValue('boom')
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as { showErrorToast: boolean; errorMessage: string }
+      expect(vm.showErrorToast).toBe(true)
+      expect(vm.errorMessage).toBeTruthy()
+    })
+
+    it('sets error toast when saving a new tag group fails (Error message)', async () => {
+      configStore.createTagGroup = vi.fn().mockRejectedValue(new Error('create boom'))
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as {
+        handleSaveGroup: (g: unknown) => Promise<void>
+        errorMessage: string
+        showErrorToast: boolean
+      }
+      const newGroup = { ...mockTagGroup }
+      delete (newGroup as { id?: number }).id
+      await vm.handleSaveGroup(newGroup)
+      await flushPromises()
+
+      expect(vm.errorMessage).toBe('create boom')
+      expect(vm.showErrorToast).toBe(true)
+    })
+
+    it('sets error toast when saving a tag group fails (non-Error fallback)', async () => {
+      configStore.updateTagGroup = vi.fn().mockRejectedValue('str boom')
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as {
+        handleSaveGroup: (g: unknown) => Promise<void>
+        errorMessage: string
+        showErrorToast: boolean
+      }
+      await vm.handleSaveGroup({ ...mockTagGroup, id: 1 })
+      await flushPromises()
+
+      expect(vm.showErrorToast).toBe(true)
+      expect(vm.errorMessage).not.toBe('str boom')
+    })
+
+    it('shows success toast when a tag group is deleted', async () => {
+      configStore.getTagsForGroup = vi.fn().mockReturnValue([])
+      configStore.deleteTagGroup = vi.fn().mockResolvedValue(undefined)
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as {
+        selectedTagGroup: TagGroup | null
+        handleDeleteGroup: () => Promise<void>
+        showToast: boolean
+        toastMessage: string
+      }
+      vm.selectedTagGroup = mockTagGroup
+      await vm.handleDeleteGroup()
+      await flushPromises()
+
+      expect(configStore.deleteTagGroup).toHaveBeenCalledWith(1)
+      expect(vm.showToast).toBe(true)
+      expect(vm.toastMessage).toContain('Category')
+    })
+
+    it('sets deleteError when deleting a tag group fails (Error message)', async () => {
+      configStore.getTagsForGroup = vi.fn().mockReturnValue([])
+      configStore.deleteTagGroup = vi.fn().mockRejectedValue(new Error('del boom'))
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as {
+        selectedTagGroup: TagGroup | null
+        handleDeleteGroup: () => Promise<void>
+        deleteError: string | null
+      }
+      vm.selectedTagGroup = mockTagGroup
+      await vm.handleDeleteGroup()
+      await flushPromises()
+
+      expect(vm.deleteError).toBe('del boom')
+    })
+
+    it('sets deleteError when deleting a tag group fails (non-Error fallback)', async () => {
+      configStore.getTagsForGroup = vi.fn().mockReturnValue([])
+      configStore.deleteTagGroup = vi.fn().mockRejectedValue('str del')
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as {
+        selectedTagGroup: TagGroup | null
+        handleDeleteGroup: () => Promise<void>
+        deleteError: string | null
+      }
+      vm.selectedTagGroup = mockTagGroup
+      await vm.handleDeleteGroup()
+      await flushPromises()
+
+      expect(vm.deleteError).toBeTruthy()
+      expect(vm.deleteError).not.toBe('str del')
+    })
+
+    it('sets error toast when saving a tag fails (Error message)', async () => {
+      configStore.createTag = vi.fn().mockRejectedValue(new Error('tag boom'))
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as {
+        handleSaveTag: (t: unknown) => Promise<void>
+        errorMessage: string
+        showErrorToast: boolean
+      }
+      const newTag = { ...mockTag }
+      delete (newTag as { id?: number }).id
+      await vm.handleSaveTag(newTag)
+      await flushPromises()
+
+      expect(vm.errorMessage).toBe('tag boom')
+      expect(vm.showErrorToast).toBe(true)
+    })
+
+    it('sets error toast when saving a tag fails (non-Error fallback)', async () => {
+      configStore.updateTag = vi.fn().mockRejectedValue('str tag')
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as {
+        handleSaveTag: (t: unknown) => Promise<void>
+        errorMessage: string
+        showErrorToast: boolean
+      }
+      await vm.handleSaveTag({ ...mockTag, id: 1 })
+      await flushPromises()
+
+      expect(vm.showErrorToast).toBe(true)
+      expect(vm.errorMessage).not.toBe('str tag')
+    })
+
+    it('shows success toast when a tag is deleted', async () => {
+      configStore.deleteTag = vi.fn().mockResolvedValue(undefined)
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as {
+        selectedTag: Tag | null
+        handleDeleteTag: () => Promise<void>
+        showToast: boolean
+        toastMessage: string
+      }
+      vm.selectedTag = mockTag
+      await vm.handleDeleteTag()
+      await flushPromises()
+
+      expect(configStore.deleteTag).toHaveBeenCalledWith(1)
+      expect(vm.showToast).toBe(true)
+      expect(vm.toastMessage).toContain('Test Tag')
+    })
+
+    it('sets error toast when deleting a tag fails (Error message)', async () => {
+      configStore.deleteTag = vi.fn().mockRejectedValue(new Error('dtag boom'))
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as {
+        selectedTag: Tag | null
+        handleDeleteTag: () => Promise<void>
+        errorMessage: string
+        showErrorToast: boolean
+      }
+      vm.selectedTag = mockTag
+      await vm.handleDeleteTag()
+      await flushPromises()
+
+      expect(vm.errorMessage).toBe('dtag boom')
+      expect(vm.showErrorToast).toBe(true)
+    })
+
+    it('sets error toast when deleting a tag fails (non-Error fallback)', async () => {
+      configStore.deleteTag = vi.fn().mockRejectedValue('str dtag')
+
+      wrapper = mountSection()
+      await flushPromises()
+
+      const vm = wrapper.vm as unknown as {
+        selectedTag: Tag | null
+        handleDeleteTag: () => Promise<void>
+        errorMessage: string
+        showErrorToast: boolean
+      }
+      vm.selectedTag = mockTag
+      await vm.handleDeleteTag()
+      await flushPromises()
+
+      expect(vm.showErrorToast).toBe(true)
+      expect(vm.errorMessage).not.toBe('str dtag')
+    })
+  })
 })
