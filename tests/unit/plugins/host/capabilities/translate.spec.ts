@@ -334,3 +334,161 @@ describe('navigate_to via manifest', () => {
     expect(route.params).toEqual({})
   })
 })
+
+type AnyPayload = { payload: Record<string, unknown> }
+type AnyConceptSet = { conceptSet: Record<string, unknown> }
+type AnyRule = { rule: { name: string } }
+
+describe('translateCapability — add_criteria derived names', () => {
+  const item = (conceptId: number, conceptName: string) => ({
+    conceptId,
+    conceptName,
+    domain: 'Condition',
+    includeDescendants: true,
+  })
+
+  it('derives "Require: <name>" for a single unnamed inclusion group', () => {
+    const p = translateCapability('add_criteria', {
+      items: [item(1, 'Diabetes')],
+      group: 'inclusion',
+    })
+    expect((p as unknown as AnyRule).rule.name).toBe('Require: Diabetes')
+  })
+
+  it('joins two names with " or " under OR logic', () => {
+    const p = translateCapability('add_criteria', {
+      items: [item(1, 'Diabetes'), item(2, 'Hypertension')],
+      logic: 'OR',
+    })
+    expect((p as unknown as AnyRule).rule.name).toBe('Require: Diabetes or Hypertension')
+  })
+
+  it('summarises 3+ names and labels exclusion groups', () => {
+    const p = translateCapability('add_criteria', {
+      items: [item(1, 'A'), item(2, 'B'), item(3, 'C')],
+      group: 'exclusion',
+    })
+    expect((p as unknown as AnyRule).rule.name).toBe('Exclude: A and B (+1 more)')
+  })
+
+  it('prefers an explicit name over the derived one', () => {
+    const p = translateCapability('add_criteria', {
+      items: [item(1, 'A')],
+      name: 'Custom rule',
+    })
+    expect((p as unknown as AnyRule).rule.name).toBe('Custom rule')
+  })
+})
+
+describe('translateCapability — update proposals', () => {
+  it('update_concept_set builds a payload with items and itemsToAdd', () => {
+    const p = translateCapability('update_concept_set', {
+      id: 42,
+      name: 'Updated set',
+      items: [{ conceptId: 201826, conceptName: 'T2DM', domain: 'Condition' }],
+      itemsToAdd: [
+        { conceptId: 1503297, conceptName: 'Metformin', domain: 'Drug' },
+        { conceptId: 0, badName: true }, // filtered out by asConceptRefList
+      ],
+    })
+    expect(p?.kind).toBe('updateConceptSet')
+    const payload = (p as unknown as AnyPayload).payload
+    expect(payload.id).toBe(42)
+    expect(payload.items).toHaveLength(1)
+    expect((payload.itemsToAdd as unknown[]).length).toBe(1)
+  })
+
+  it('update_concept_set returns null without a numeric id', () => {
+    expect(translateCapability('update_concept_set', { name: 'x' })).toBeNull()
+  })
+
+  it('update_feature_analysis builds a payload', () => {
+    const p = translateCapability('update_feature_analysis', {
+      id: 7,
+      name: 'FA',
+      type: 'PRESET',
+      domain: 'Condition',
+      statType: 'PREVALENCE',
+    })
+    expect(p?.kind).toBe('updateFeatureAnalysis')
+    expect((p as unknown as AnyPayload).payload.id).toBe(7)
+    expect(translateCapability('update_feature_analysis', {})).toBeNull()
+  })
+
+  it('update_characterization maps cohort and feature-analysis refs', () => {
+    const p = translateCapability('update_characterization', {
+      id: 3,
+      cohorts: [{ id: 1, name: 'C1' }],
+      cohortsToAdd: [{ id: 2, name: 'C2' }],
+      featureAnalyses: [{ id: 9, name: 'FA1' }],
+      featureAnalysesToAdd: [{ id: 10, name: 'FA2' }],
+    })
+    expect(p?.kind).toBe('updateCharacterization')
+    const payload = (p as unknown as AnyPayload).payload
+    expect(payload.cohorts).toEqual([{ id: 1, name: 'C1' }])
+    expect(payload.featureAnalysesToAdd).toEqual([{ id: 10, name: 'FA2' }])
+    expect(translateCapability('update_characterization', {})).toBeNull()
+  })
+
+  it('update_pathway carries cohort refs and scalar settings', () => {
+    const p = translateCapability('update_pathway', {
+      id: 4,
+      targetCohorts: [{ id: 1, name: 'T' }],
+      eventCohorts: [{ id: 2, name: 'E' }],
+      combinationWindow: 30,
+      minCellCount: 5,
+      maxDepth: 3,
+      allowRepeats: true,
+    })
+    expect(p?.kind).toBe('updatePathway')
+    const payload = (p as unknown as AnyPayload).payload
+    expect(payload.combinationWindow).toBe(30)
+    expect(payload.allowRepeats).toBe(true)
+    expect(translateCapability('update_pathway', {})).toBeNull()
+  })
+
+  it('update_incidence_rate filters number lists and maps time-at-risk', () => {
+    const p = translateCapability('update_incidence_rate', {
+      id: 8,
+      targetIds: [1, 2, 'bad'],
+      outcomeIds: [3],
+      targetIdsToAdd: [{ id: 9, name: 'T9' }],
+      timeAtRisk: {
+        start: { DateField: 'StartDate', Offset: 0 },
+        end: { DateField: 'EndDate', Offset: 1 },
+      },
+      studyWindow: { startDate: '2020-01-01', endDate: '2020-12-31' },
+    })
+    expect(p?.kind).toBe('updateIncidenceRate')
+    const payload = (p as unknown as AnyPayload).payload
+    expect(payload.targetIds).toEqual([1, 2])
+    expect(payload.studyWindow).toEqual({ startDate: '2020-01-01', endDate: '2020-12-31' })
+    expect(translateCapability('update_incidence_rate', {})).toBeNull()
+  })
+
+  it('update_incidence_rate passes through an explicit null study window', () => {
+    const p = translateCapability('update_incidence_rate', { id: 8, studyWindow: null })
+    expect((p as unknown as AnyPayload).payload.studyWindow).toBeNull()
+  })
+})
+
+describe('translateCapability — create_standalone_concept_set', () => {
+  it('builds a standalone concept set proposal', () => {
+    const p = translateCapability('create_standalone_concept_set', {
+      name: 'My set',
+      description: 'desc',
+      items: [{ conceptId: 201826, conceptName: 'T2DM', domain: 'Condition' }],
+    })
+    expect(p?.kind).toBe('createStandaloneConceptSet')
+    expect((p as unknown as AnyConceptSet).conceptSet.name).toBe('My set')
+  })
+
+  it('returns null without a name or items', () => {
+    expect(
+      translateCapability('create_standalone_concept_set', { items: [] })
+    ).toBeNull()
+    expect(
+      translateCapability('create_standalone_concept_set', { name: 'x' })
+    ).toBeNull()
+  })
+})
