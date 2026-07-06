@@ -228,7 +228,7 @@ export function defaultPieChartOptions(data: PieChartData[], title?: string): EC
       trigger: 'item',
       formatter: (params: unknown) => {
         const p = params as { name: string; value: number; percent: number }
-        const value = p.value.toLocaleString()
+        const value = formatSINumber(p.value)
         const percent = p.percent.toFixed(1)
         return `${p.name}<br/><strong>${value}</strong> (${percent}%)`
       },
@@ -385,7 +385,7 @@ export function defaultTreemapOptions(data: TreemapNode[], title?: string): ECha
       trigger: 'item',
       formatter: (params: unknown) => {
         const p = params as { name: string; value: number; data?: { conceptPath?: string } }
-        const value = p.value.toLocaleString()
+        const value = formatSINumber(p.value)
 
         // Format the concept path with newlines and tabs
         let displayName = p.name
@@ -674,7 +674,7 @@ export function dashboardGenderPieOptions(data: DatasourcePieChartData[]): EChar
       trigger: 'item',
       formatter: (params: unknown) => {
         const p = params as { name: string; value: number; percent: number }
-        const value = p.value.toLocaleString()
+        const value = formatSINumber(p.value)
         const percent = p.percent.toFixed(1)
         return `<strong>${p.name}</strong><br/>Count: ${value}<br/>Percentage: ${percent}%`
       },
@@ -847,7 +847,7 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       formatter: (params: unknown) => {
         const arr = Array.isArray(params) ? params : [params]
         const p = arr[0] as { value: [number, number] }
-        return `<strong>${data.xAxisLabel || 'Years'}: ${p.value[0]}</strong><br/>${data.yAxisLabel || 'Percentage'}: ${p.value[1].toFixed(1)}%`
+        return `<strong>${data.xAxisLabel || 'Years'}: ${p.value[0]}</strong><br/>${data.yAxisLabel || 'Percentage'}: ${(p.value[1] * 100).toFixed(1)}%`
       },
     },
     grid: {
@@ -869,8 +869,10 @@ export function dashboardCumulativeLineOptions(data: DatasourceLineChartData): E
       name: data.yAxisLabel || 'Percent of Persons',
       nameLocation: 'middle',
       nameGap: 50,
+      min: 0,
+      max: 1,
       axisLabel: {
-        formatter: (value: number) => `${value}%`,
+        formatter: (value: number) => `${Math.round(value * 100)}%`,
       },
     },
     series: data.series.map((s, index) => ({
@@ -983,6 +985,9 @@ export function dashboardObservationMonthLineOptions(data: DatasourceLineChartDa
  * Multi-Line Chart Configuration for Data Density Reports
  */
 export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLineChartData): EChartsOption {
+  const isPercent = 'yAxisFormat' in data && data.yAxisFormat === 'percent'
+  const formatValue = (value: number) =>
+    isPercent ? `${(value * 100).toFixed(1)}%` : formatSINumber(value)
   return {
     tooltip: {
       trigger: 'axis',
@@ -996,7 +1001,7 @@ export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLin
         const name = paramsArray[0]?.name ?? ''
         const lines = paramsArray.map(param => {
           const series = param.seriesName || ''
-          const val = typeof param.value === 'number' ? formatSINumber(param.value) : String(param.value)
+          const val = typeof param.value === 'number' ? formatValue(param.value) : String(param.value)
           return `${series}: <strong>${val}</strong>`
         })
         return `<strong>${name}</strong><br/>${lines.join('<br/>')}`
@@ -1018,8 +1023,11 @@ export function multiLineChartOptions(data: UILineChartData | DatasourceMultiLin
     xAxis: buildLineXAxis(data),
     yAxis: {
       type: 'value',
+      name: 'yAxisLabel' in data ? data.yAxisLabel : undefined,
+      ...(isPercent ? { min: 0, max: 1 } : {}),
       axisLabel: {
-        formatter: (value: number) => formatSINumber(value),
+        formatter: (value: number) =>
+          isPercent ? `${Math.round(value * 100)}%` : formatSINumber(value),
       },
     },
     series: data.series.map((s, index) => ({
@@ -1450,14 +1458,16 @@ export function boxPlotChartOptions(
         if (params.seriesType === 'boxplot') {
           const value = params.value
           const dataPoint = data[params.dataIndex]
+          const p90 = dataPoint?.p90 != null ? formatSINumber(dataPoint.p90) : 'N/A'
+          const p10 = dataPoint?.p10 != null ? formatSINumber(dataPoint.p10) : 'N/A'
           return `${params.name}<br/>
-            Max: ${value[5]}<br/>
-            P90: ${dataPoint?.p90 ?? 'N/A'}<br/>
-            P75: ${value[4]}<br/>
-            Median: ${value[3]}<br/>
-            P25: ${value[2]}<br/>
-            P10: ${dataPoint?.p10 ?? 'N/A'}<br/>
-            Min: ${value[1]}`
+            Max: ${formatSINumber(value[5])}<br/>
+            P90: ${p90}<br/>
+            P75: ${formatSINumber(value[4])}<br/>
+            Median: ${formatSINumber(value[3])}<br/>
+            P25: ${formatSINumber(value[2])}<br/>
+            P10: ${p10}<br/>
+            Min: ${formatSINumber(value[1])}`
         }
         return params.name
       },
@@ -1490,6 +1500,9 @@ export function boxPlotChartOptions(
       splitArea: {
         show: true,
       },
+      axisLabel: {
+        formatter: (value: number) => formatSINumber(value),
+      },
     },
     series: [
       {
@@ -1504,11 +1517,11 @@ export function boxPlotChartOptions(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           formatter: (param: any) => {
             return `${param.name}<br/>
-              Max: ${param.value[5]}<br/>
-              P75: ${param.value[4]}<br/>
-              Median: ${param.value[3]}<br/>
-              P25: ${param.value[2]}<br/>
-              Min: ${param.value[1]}`
+              Max: ${formatSINumber(param.value[5])}<br/>
+              P75: ${formatSINumber(param.value[4])}<br/>
+              Median: ${formatSINumber(param.value[3])}<br/>
+              P25: ${formatSINumber(param.value[2])}<br/>
+              Min: ${formatSINumber(param.value[1])}`
           },
         },
       },

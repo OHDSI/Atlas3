@@ -162,6 +162,13 @@ export interface MultiLineChartData {
   monthCodes?: (number | string)[]
   xValues?: number[]
   xAxisLabel?: string
+  yAxisLabel?: string
+  /**
+   * How to format y-axis values. 'percent' expects the series data as a 0..1
+   * fraction and renders it scaled to 0..100% (axis capped at 100%). Defaults
+   * to compact SI counts.
+   */
+  yAxisFormat?: 'si' | 'percent'
   series: Array<{
     name: string
     data: number[]
@@ -415,6 +422,8 @@ export const MultiLineChartDataSchema = z.object({
   monthCodes: z.array(z.union([z.number(), z.string()])).optional(),
   xValues: z.array(z.number()).optional(),
   xAxisLabel: z.string().optional(),
+  yAxisLabel: z.string().optional(),
+  yAxisFormat: z.enum(['si', 'percent']).optional(),
 })
 
 export const TreemapNodeSchema: z.ZodType<TreemapNode> = z.lazy(() =>

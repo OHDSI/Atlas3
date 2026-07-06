@@ -83,6 +83,16 @@ describe('Data Source Formatters', () => {
       expect(result.totalCount).toBe(2)
     })
 
+    it('scales percentPersons (a 0..1 fraction) to a 0..100 percentage', () => {
+      const raw = [
+        { conceptId: 1, conceptPath: 'Condition A', numPersons: 100, percentPersons: 0.0523, recordsPerPerson: 2 },
+      ]
+
+      const result = transformClinicalDomainReport(raw, 'conditionOccurrence')
+
+      expect(result.tableRows[0].prevalence).toBeCloseTo(5.23, 5)
+    })
+
     it('should use lengthOfEra for era reports', () => {
       const raw = [
         { conceptId: 1, conceptPath: 'Drug A', numPersons: 100, percentPersons: 10, lengthOfEra: 30 }
@@ -302,6 +312,8 @@ describe('Data Source Formatters', () => {
       expect(result.observationLength?.offset).toBe(0)
       expect(result.observationLength?.intervalSize).toBe(30)
       expect(result.cumulativeObservation?.categories).toHaveLength(1)
+      expect(result.cumulativeObservation?.yAxisFormat).toBe('percent')
+      expect(result.cumulativeObservation?.yAxisLabel).toBe('Percent of Persons')
       expect(result.observedByMonth?.categories).toHaveLength(1)
     })
 

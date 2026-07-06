@@ -615,7 +615,7 @@ describe('chart-config', () => {
       const formatter = (options.tooltip as any).formatter
       const result = formatter({ name: 'Male', value: 3000, percent: 60.0 })
       expect(result).toContain('Male')
-      expect(result).toContain('3,000')
+      expect(result).toContain('3.0k')
       expect(result).toContain('60.0%')
     })
   })
@@ -976,8 +976,10 @@ describe('chart-config', () => {
       const options = dashboardCumulativeLineOptions(data)
       const formatter = (options.yAxis as ChartAxisOption).axisLabel?.formatter
 
-      expect(formatter?.(25)).toBe('25%')
-      expect(formatter?.(100)).toBe('100%')
+      // yPercentPersons arrives as a 0..1 fraction; the axis renders it as 0..100%
+      expect(formatter?.(0.25)).toBe('25%')
+      expect(formatter?.(1)).toBe('100%')
+      expect((options.yAxis as ChartAxisOption).max).toBe(1)
     })
 
     it('should use default labels when not provided', () => {
@@ -1045,13 +1047,13 @@ describe('chart-config', () => {
       const data: DatasourceLineChartData = {
         categories: ['365'],
         xValues: [365],
-        series: [{ name: 'Cumulative', data: [45.7] }],
+        series: [{ name: 'Cumulative', data: [0.457] }],
         yAxisLabel: 'Percent',
         xAxisLabel: 'Days'
       }
       const options = dashboardCumulativeLineOptions(data)
       const formatter = (options.tooltip as any).formatter
-      const result = formatter([{ value: [365, 45.7] }])
+      const result = formatter([{ value: [365, 0.457] }])
       expect(result).toContain('365')
       expect(result).toContain('45.7%')
     })
@@ -1201,6 +1203,40 @@ describe('chart-config', () => {
       expect((options.legend as ChartLegendOption).data).toEqual(['Condition', 'Drug', 'Procedure'])
       expect(options.series).toBeDefined()
       expect((options.series as ChartSeriesItem[])).toHaveLength(3)
+    })
+
+    it('formats the y-axis as counts by default (SI compact)', () => {
+      const data: DatasourceMultiLineChartData = {
+        categories: ['2020'],
+        series: [{ name: 'Records', data: [1500000] }]
+      }
+
+      const formatter = (multiLineChartOptions(data).yAxis as ChartAxisOption).axisLabel?.formatter
+
+      expect(formatter?.(1500000)).toBe('1.5M')
+    })
+
+    it('renders a 0..1 fraction as 0..100% when yAxisFormat is percent', () => {
+      const data: DatasourceMultiLineChartData = {
+        categories: ['365'],
+        xAxisType: 'value',
+        xValues: [365],
+        yAxisLabel: 'Percent of Persons',
+        yAxisFormat: 'percent',
+        series: [{ name: 'Cumulative %', data: [0.5] }]
+      }
+
+      const options = multiLineChartOptions(data)
+      const yAxis = options.yAxis as ChartAxisOption
+
+      expect(yAxis.max).toBe(1)
+      expect(yAxis.name).toBe('Percent of Persons')
+      expect(yAxis.axisLabel?.formatter?.(0.5)).toBe('50%')
+      expect(yAxis.axisLabel?.formatter?.(1)).toBe('100%')
+
+      const tooltip = (options.tooltip as any).formatter
+      const result = tooltip([{ name: '365', seriesName: 'Cumulative %', value: 0.457 }])
+      expect(result).toContain('45.7%')
     })
 
     it('should use scrollable legend', () => {
@@ -1500,8 +1536,8 @@ describe('Dashboard-specific Chart Configurations', () => {
       const options = dashboardCumulativeLineOptions(data)
       const formatter = (options.yAxis as any).axisLabel.formatter
 
-      expect(formatter(50)).toBe('50%')
-      expect(formatter(100)).toBe('100%')
+      expect(formatter(0.5)).toBe('50%')
+      expect(formatter(1)).toBe('100%')
     })
 
     it('should handle multiple series with area styles', () => {
