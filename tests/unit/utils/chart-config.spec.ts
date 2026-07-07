@@ -690,6 +690,27 @@ describe('chart-config', () => {
       expect(result).toContain('250')
     })
 
+    it('rounds fractional bin bounds in the tooltip (e.g. days shown as years)', () => {
+      // Observation Length: 30-day bins expressed as years -> intervalSize ~0.082
+      const data: DatasourceHistogramChartData = {
+        intervalSize: 30 / 365.25,
+        offset: 0,
+        bins: [{ intervalIndex: 379, countValue: 1 }],
+        unit: 'Person Count',
+        seriesName: 'Person Count',
+        xAxisLabel: 'Years',
+      }
+
+      const options = dashboardAgeBarOptions(data)
+      const formatter = (options.tooltip as any).formatter
+      const xStart = 379 * (30 / 365.25)
+      const result = formatter({ data: [xStart, xStart + 30 / 365.25, 1] })
+
+      // Rounded bounds, not raw floats.
+      expect(result).toContain('Years: 31.1 - 31.2')
+      expect(result).not.toContain('31.123')
+    })
+
     it('formats tooltip with large numbers using SI notation', () => {
       const data: DatasourceHistogramChartData = {
         intervalSize: 1,
@@ -1235,8 +1256,29 @@ describe('chart-config', () => {
       expect(yAxis.axisLabel?.formatter?.(1)).toBe('100%')
 
       const tooltip = (options.tooltip as any).formatter
-      const result = tooltip([{ name: '365', seriesName: 'Cumulative %', value: 0.457 }])
+      // A value x-axis feeds ECharts [x, y] pairs, so the tooltip param.value is
+      // the pair — the formatter must read the y (last element), not stringify it.
+      const result = tooltip([{ name: '365', seriesName: 'Cumulative %', value: [365, 0.457] }])
       expect(result).toContain('45.7%')
+      expect(result).not.toContain('365,')
+    })
+
+    it('reads the y-value from [x, y] pairs on a time x-axis (not the raw pair)', () => {
+      const data: DatasourceMultiLineChartData = {
+        xAxisType: 'time',
+        monthCodes: [201905],
+        yAxisLabel: 'Persons',
+        series: [{ name: 'Persons', data: [583] }]
+      }
+
+      const tooltip = (multiLineChartOptions(data).tooltip as any).formatter
+      // ECharts hands the whole [timestamp, count] point to the formatter.
+      const result = tooltip([
+        { seriesName: 'Persons', axisValueLabel: '2019-05', value: [1556668800000, 583] }
+      ])
+
+      expect(result).toContain('Persons: <strong>583</strong>')
+      expect(result).not.toContain('1556668800000')
     })
 
     it('should use scrollable legend', () => {
