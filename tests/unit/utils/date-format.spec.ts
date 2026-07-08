@@ -160,5 +160,28 @@ describe('Date Format Utils', () => {
 
       expect(result).toBe('Today')
     })
+
+    it('should return Today for a timestamp a few hours in the future (clock skew)', () => {
+      const threeHoursAhead = Date.now() + (3 * 60 * 60 * 1000)
+
+      const result = formatRelativeTime(threeHoursAhead)
+
+      expect(result).toBe('Today')
+    })
+
+    it('should never render a negative "days ago" for future dates', () => {
+      const threeDaysAhead = Date.now() + (3 * 24 * 60 * 60 * 1000)
+
+      const result = formatRelativeTime(threeDaysAhead)
+
+      expect(result).toBe('Today')
+      expect(result).not.toContain('-')
+    })
+
+    it('should return Unknown for an invalid date string', () => {
+      const result = formatRelativeTime('not-a-date')
+
+      expect(result).toBe('Unknown')
+    })
   })
 })
