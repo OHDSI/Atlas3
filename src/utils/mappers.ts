@@ -31,18 +31,19 @@ export const ATLAS_TO_OPERATOR: Record<string, string> = {
 
 /**
  * Cardinality type mappings
- * Internal (AT_LEAST) ↔ Atlas (0)
+ * Per the CIRCE Occurrence.Type enum: EXACTLY = 0, AT_MOST = 1, AT_LEAST = 2
+ * (must stay in sync with the inline mapping in services/atlas-converter.ts)
  */
 export const CARDINALITY_TO_ATLAS: Record<CardinalityType, 0 | 1 | 2> = {
-  AT_LEAST: 0,
+  EXACTLY: 0,
   AT_MOST: 1,
-  EXACTLY: 2,
+  AT_LEAST: 2,
 }
 
 export const ATLAS_TO_CARDINALITY: Record<0 | 1 | 2, CardinalityType> = {
-  0: 'AT_LEAST',
+  0: 'EXACTLY',
   1: 'AT_MOST',
-  2: 'EXACTLY',
+  2: 'AT_LEAST',
 }
 
 /**
