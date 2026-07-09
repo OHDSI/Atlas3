@@ -91,4 +91,56 @@ describe('LinkedCohortPicker', () => {
     expect(dialog).not.toBeNull()
     wrapper.unmount()
   })
+
+  // Discussion #123: the picker dialog had no way to filter a long cohort
+  // list, unlike the Pathways/Incidence-Rate cohort pickers.
+  describe('search (discussion #123)', () => {
+    it('renders a search field in the picker dialog', async () => {
+      const wrapper = mountPicker([])
+
+      await wrapper.get('[data-testid="linked-cohort-picker-add"]').trigger('click')
+      await flushPromises()
+
+      const search = document.querySelector('[data-testid="linked-cohort-picker-search"]')
+      expect(search).not.toBeNull()
+      wrapper.unmount()
+    })
+
+    it('filters the selectable cohorts as the user types', async () => {
+      const wrapper = mountPicker([])
+
+      await wrapper.get('[data-testid="linked-cohort-picker-add"]').trigger('click')
+      await flushPromises()
+
+      wrapper.vm.search = 'asthma'
+      await flushPromises()
+
+      const rows = document.querySelectorAll('[data-testid="linked-cohort-picker-table"] tbody tr')
+      const rowText = Array.from(rows).map(r => r.textContent)
+      expect(rowText.some(text => text?.includes('Asthma'))).toBe(true)
+      expect(rowText.some(text => text?.includes('Diabetes'))).toBe(false)
+      wrapper.unmount()
+    })
+
+    it('resets the search text each time the dialog is reopened', async () => {
+      const wrapper = mountPicker([])
+
+      await wrapper.get('[data-testid="linked-cohort-picker-add"]').trigger('click')
+      await flushPromises()
+      wrapper.vm.search = 'asthma'
+      // The dialog's Cancel button teleports to document.body, outside the
+      // wrapper's own root — click it via the raw DOM node.
+      const cancelBtn = document.querySelector<HTMLElement>(
+        '[data-testid="linked-cohort-picker-cancel"]'
+      )
+      cancelBtn?.click()
+      await flushPromises()
+
+      await wrapper.get('[data-testid="linked-cohort-picker-add"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.vm.search).toBe('')
+      wrapper.unmount()
+    })
+  })
 })

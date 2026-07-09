@@ -164,6 +164,16 @@
                   @click.stop="$emit('show-info', cohort)"
                 />
                 <AtlasIconButton
+                  icon="mdi-content-copy"
+                  v-bind="{ ariaLabel: t('common.duplicate', 'Duplicate').value }"
+                  variant="text"
+                  size="sm"
+                  data-testid="cohort-table-copy"
+                  :disabled="!canCopy || copyingId === cohort.id"
+                  :loading="copyingId === cohort.id"
+                  @click.stop="$emit('copy', cohort)"
+                />
+                <AtlasIconButton
                   icon="mdi-delete-outline"
                   v-bind="{ ariaLabel: t('common.delete', 'Delete').value }"
                   variant="text"
@@ -200,6 +210,8 @@ interface Props {
   error?: Error | null
   searchQuery?: string
   selectedTags?: string[]
+  canCopy?: boolean
+  copyingId?: number | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -207,6 +219,8 @@ const props = withDefaults(defineProps<Props>(), {
   error: null,
   searchQuery: '',
   selectedTags: () => [],
+  canCopy: false,
+  copyingId: null,
 })
 
 defineEmits<{
@@ -214,6 +228,7 @@ defineEmits<{
   'create-cohort': []
   'clear-filters': []
   delete: [cohort: CohortDefinitionSummary]
+  copy: [cohort: CohortDefinitionSummary]
   'tag-click': [tagName: string]
   'show-info': [cohort: CohortDefinitionSummary]
 }>()
@@ -312,7 +327,7 @@ function openCohort(cohort: CohortDefinitionSummary) {
   font-variant-numeric: tabular-nums;
 }
 .cohort-table__col-actions {
-  width: 96px;
+  width: 132px;
   white-space: nowrap;
   text-align: right;
 }

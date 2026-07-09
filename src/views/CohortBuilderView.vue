@@ -58,6 +58,8 @@
           :is-previewing-version="builderRef.isPreviewingVersion"
           @cancel="builderRef.handleCancel()"
           @save="builderRef.handleSave()"
+          @export-download="builderRef.handleExportDownload()"
+          @export-copy="builderRef.handleExportCopy()"
         />
       </div>
     </template>

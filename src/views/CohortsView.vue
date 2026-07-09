@@ -109,10 +109,13 @@
         :error="error"
         :search-query="searchQuery"
         :selected-tags="filters.selectedTags"
+        :can-copy="canCreateCohort"
+        :copying-id="copyingId"
         @retry="fetchCohorts"
         @create-cohort="handleCreateCohort"
         @clear-filters="clearFilters"
         @delete="handleDeleteClick"
+        @copy="handleCopyClick"
         @tag-click="handleTagClick"
         @show-info="handleShowInfo"
       />
@@ -123,10 +126,13 @@
         :error="error"
         :search-query="searchQuery"
         :selected-tags="filters.selectedTags"
+        :can-copy="canCreateCohort"
+        :copying-id="copyingId"
         @retry="fetchCohorts"
         @create-cohort="handleCreateCohort"
         @clear-filters="clearFilters"
         @delete="handleDeleteClick"
+        @copy="handleCopyClick"
         @tag-click="handleTagClick"
         @show-info="handleShowInfo"
       />
@@ -336,12 +342,20 @@
           }}
         </div>
       </AtlasDialog>
+
+      <AtlasSnackbar
+        v-model="snackbar.show"
+        :severity="snackbar.severity"
+        :text="snackbar.message"
+        :timeout="snackbar.timeout"
+        data-testid="cohorts-view-snackbar"
+      />
     </div>
   </AtlasPageShell>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
 import { useCohorts } from '@/composables/useCohorts'
@@ -354,12 +368,14 @@ import {
   saveCohortDefinition,
 } from '@/services/webapi'
 import { logger } from '@/utils/logger'
-import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasTextField } from '@/components/ui'
+import { AtlasAlert, AtlasButton, AtlasChip, AtlasDialog, AtlasIcon, AtlasPageShell, AtlasProgressCircular, AtlasProgressLinear, AtlasSnackbar, AtlasTextField } from '@/components/ui'
+import type { AtlasSnackbarSeverity } from '@/components/ui'
 import CohortGrid from '@/components/cohort/CohortGrid.vue'
 import CohortTable from '@/components/cohort/CohortTable.vue'
 import CohortPagination from '@/components/cohort/CohortPagination.vue'
 import CohortFilters from '@/components/cohort/CohortFilters.vue'
 import type { CohortDefinitionSummary } from '@/models/webapi.types'
+import type { AtlasCohortDefinition } from '@/models/atlas.types'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -403,6 +419,28 @@ const importing = ref(false)
 const showCohortInfoDialog = ref(false)
 const cohortInfoHtml = ref<string | null>(null)
 const loadingCohortInfo = ref(false)
+
+// Copy-cohort state
+const copyingId = ref<number | null>(null)
+
+const snackbar = reactive<{
+  show: boolean
+  message: string
+  severity: AtlasSnackbarSeverity
+  timeout: number
+}>({
+  show: false,
+  message: '',
+  severity: 'success',
+  timeout: 3000,
+})
+
+function showSnackbar(message: string, severity: AtlasSnackbarSeverity = 'success') {
+  snackbar.message = message
+  snackbar.severity = severity
+  snackbar.timeout = severity === 'danger' ? 5000 : 3000
+  snackbar.show = true
+}
 
 // Cohorts state management
 const {
@@ -560,6 +598,80 @@ async function confirmImport() {
     ).value
   } finally {
     importing.value = false
+  }
+}
+
+/**
+ * Build a "{name} (copy)" name that doesn't collide with an existing
+ * cohort name, falling back to "{name} (copy 2)", "(copy 3)", … so
+ * repeated copies of the same cohort stay distinguishable.
+ */
+function buildCopyName(sourceName: string): string {
+  const existingNames = new Set(cohorts.value.map(c => c.name))
+  const base = `${sourceName} (copy)`
+  if (!existingNames.has(base)) return base
+
+  let n = 2
+  while (existingNames.has(`${sourceName} (copy ${n})`)) {
+    n += 1
+  }
+  return `${sourceName} (copy ${n})`
+}
+
+/**
+ * Duplicate a cohort: fetch its full definition, save it as a new cohort
+ * with a "(copy)" name, then jump into the new cohort's builder — WebAPI
+ * has no server-side /cohortdefinition/{id}/copy endpoint (unlike pathways
+ * or incidence rates), so the duplicate is built client-side.
+ */
+async function handleCopyClick(cohort: CohortDefinitionSummary) {
+  if (copyingId.value) return
+  copyingId.value = cohort.id
+
+  try {
+    const definition = await getCohortDefinition(cohort.id)
+    if (!definition) {
+      showSnackbar(
+        t('cohortDefinitions.copyLoadError', 'Failed to load the cohort to copy.').value,
+        'danger'
+      )
+      return
+    }
+
+    const {
+      id: _id,
+      name: _name,
+      description,
+      createdBy: _createdBy,
+      createdDate: _createdDate,
+      modifiedBy: _modifiedBy,
+      modifiedDate: _modifiedDate,
+      tags: _tags,
+      ...expression
+    } = definition as AtlasCohortDefinition
+
+    const created = await saveCohortDefinition({
+      name: buildCopyName(cohort.name),
+      description,
+      expressionType: 'SIMPLE_EXPRESSION',
+      expression,
+    })
+
+    if (!created?.id) {
+      showSnackbar(
+        t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value,
+        'danger'
+      )
+      return
+    }
+
+    await fetchCohorts()
+    router.push(`/cohorts/${created.id}`)
+  } catch (err) {
+    logger.error('CohortsView', 'Failed to copy cohort', err)
+    showSnackbar(t('cohortDefinitions.copyError', 'Failed to copy the cohort.').value, 'danger')
+  } finally {
+    copyingId.value = null
   }
 }
 

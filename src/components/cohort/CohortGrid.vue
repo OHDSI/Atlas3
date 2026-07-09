@@ -79,8 +79,11 @@
         :key="cohort.id"
         :cohort="cohort"
         :selected-tags="selectedTags"
+        :can-copy="canCopy"
+        :copying="copyingId === cohort.id"
         class="cohort-grid__card"
         @delete="$emit('delete', $event)"
+        @copy="$emit('copy', $event)"
         @tag-click="$emit('tag-click', $event)"
         @show-info="$emit('show-info', $event)"
       />
@@ -103,6 +106,8 @@ interface Props {
   error?: Error | null
   searchQuery?: string
   selectedTags?: string[]
+  canCopy?: boolean
+  copyingId?: number | null
 }
 
 interface Emits {
@@ -110,6 +115,7 @@ interface Emits {
   (e: 'create-cohort'): void
   (e: 'clear-filters'): void
   (e: 'delete', cohort: CohortDefinitionSummary): void
+  (e: 'copy', cohort: CohortDefinitionSummary): void
   (e: 'tag-click', tagName: string): void
   (e: 'show-info', cohort: CohortDefinitionSummary): void
 }
@@ -119,6 +125,8 @@ const props = withDefaults(defineProps<Props>(), {
   error: null,
   searchQuery: '',
   selectedTags: () => [],
+  canCopy: false,
+  copyingId: null,
 })
 
 defineEmits<Emits>()

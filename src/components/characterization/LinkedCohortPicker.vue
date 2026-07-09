@@ -69,10 +69,21 @@
       @close="dialogOpen = false"
     >
       <div class="linked-cohort-picker__dialog-body">
+        <AtlasTextField
+          v-model="search"
+          :label="t('common.search', 'Search').value"
+          prepend-icon="mdi-magnify"
+          variant="outlined"
+          hide-details
+          clearable
+          class="mb-3"
+          data-testid="linked-cohort-picker-search"
+        />
         <AtlasDataTable
           v-model="selectedIds"
           :headers="dialogHeaders"
           :items="selectableItems"
+          :search="search"
           item-value="id"
           show-select
           data-testid="linked-cohort-picker-table"
@@ -99,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { AtlasButton, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem } from '@/components/ui'
+import { AtlasButton, AtlasDataTable, AtlasDialog, AtlasIcon, AtlasIconButton, AtlasList, AtlasListItem, AtlasTextField } from '@/components/ui'
 import { computed, ref } from 'vue'
 
 import { useI18n } from '@/composables/useI18n'
@@ -119,6 +130,7 @@ const { t, tv } = useI18n()
 
 const dialogOpen = ref(false)
 const selectedIds = ref<number[]>([])
+const search = ref('')
 
 const dialogHeaders = computed(() => [
   { title: t('cc.viewEdit.results.filters.cohorts', 'Linked Cohorts').value, key: 'name' },
@@ -133,6 +145,7 @@ const selectableItems = computed(() => {
 
 function openDialog() {
   selectedIds.value = []
+  search.value = ''
   dialogOpen.value = true
 }
 
